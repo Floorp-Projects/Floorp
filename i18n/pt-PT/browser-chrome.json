@@ -66,32 +66,34 @@
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Eliminar espaço de trabalho",
       "manage": "Gerir o espaço de trabalho",
-      "archive": "Archive Workspace"
+      "archive": "Arquivar Espaço de Trabalho"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
       "manage": "Gerir espaços de trabalho",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Mostrar espaços de trabalho arquivados",
+      "restore-cancel": "Sair do modo de restauro",
+      "restore-title": "Espaços de trabalho arquivados",
+      "restore-loading": "Carregamento de espaços de trabalho arquivados…",
+      "restore-empty": "Nenhum espaço de trabalho arquivado",
+      "restore-error": "Falha ao carregar espaços de trabalho arquivados",
+      "restore-tooltip": "Alternar o modo de restauro",
+      "restore-item": "Restaurar \"{{name}}\"",
+      "restore-delete-tooltip": "Eliminar este arquivo",
+      "restore-tab-count": "{{count}} separador",
+      "restore-tab-count_plural": "{{count}} separadores",
+      "restore-time-just-now": "Agora mesmo",
+      "restore-time-minutes": "{{minutes}} minuto atrás",
+      "restore-time-minutes_plural": "há {{minutes}} minutos",
+      "restore-time-hours": "há {{hours}} hora",
+      "restore-time-hours_plural": "{{hours}} horas atrás",
+      "restore-time-days": "{{days}} dia atrás",
+      "restore-time-days_plural": "{{days}} dias atrás"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho"
+      "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho",
+      "openLinkInWorkspace": "Abrir uma ligação noutro espaço de trabalho",
+      "noOtherWorkspace": "Não existem outros espaços de trabalho disponíveis"
     },
     "error": {
       "invalidWorkspaceID": "ID não válido para espaços de trabalho (talvez a ordem não esteja atualizada)"
@@ -103,19 +105,6 @@
   },
   "statusbar": {
     "toggle": "Barra de estado{{mark}}"
-  },
-  "splitview": {
-    "title": "Vista dividida",
-    "position": "Posição",
-    "position-left": "Esquerda",
-    "position-right": "Certo",
-    "flex-row": "Fila",
-    "flex-column": "Coluna",
-    "remove-button": "Remover vista atual",
-    "tab-context": {
-      "split-tabs": "Separadores divididos",
-      "split-fixed-tab": "Dividir em separador fixo"
-    }
   },
   "ssb": {
     "menu": {
@@ -292,6 +281,93 @@
       "restart-cache-clear": "Reiniciar com limpeza de cache",
       "restart-safe-mode": "Reiniciar no modo de segurança",
       "restart-profile-manager": "Reiniciar com o Profile Manager"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} está a funcionar",
+    "panelDefaultMessage": "{{action}} em curso...",
+    "panelProgressSummary": "Afecta o(s) {{count}} elemento(s)",
+    "formSummary": "Preenchimento do formulário: {{count}} campo(s)",
+    "formFieldProgress": "Campo {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Definir valor de entrada: \"{{value}}\"",
+    "clickElementWithText": "Clique em {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicar em {{tag}} elemento",
+    "inspectPageHtml": "Página completa HTML recuperada",
+    "inspectGetElement": "Elemento recuperado: {{selector}}",
+    "inspectGetElements": "{{count}} elemento(s) emparelhado(s): {{selector}}",
+    "inspectGetElementByText": "Elemento recuperado que corresponde ao texto: \"{{text}}\"",
+    "inspectGetElementText": "Texto retirado de: {{selector}}",
+    "inspectGetValue": "Valor recuperado: {{selector}}",
+    "submitForm": "Formulário de apresentação: {{name}}",
+    "actionLabelHighlight": "Destaque",
+    "actionLabelInspect": "Inspecionar",
+    "actionLabelFill": "Preencher",
+    "actionLabelInput": "Entrada",
+    "actionLabelClick": "Clicar",
+    "actionLabelSubmit": "Enviar"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Abrir separador no navegador externo",
+      "openLinkIn": "Abrir ligação num navegador externo",
+      "defaultBrowser": "Navegador predefinido do sistema",
+      "noBrowsers": "Não foram detectados navegadores externos",
+      "noValidUrl": "Nenhum URL válido para abrir"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Adicionar ao Floorp",
+      "installing": "Instalando...",
+      "success": "Adicionado!",
+      "error": "Ocorreu um erro",
+      "installed": "Instalado"
+    },
+    "error": {
+      "title": "Erro de instalação",
+      "compatibilityNote": "Esta extensão pode não ser compatível com o Firefox/Floorp.",
+      "alreadyInstalled": "Esta extensão já está instalada ({{name}})",
+      "downloadFailed": "Falha ao descarregar o ficheiro CRX",
+      "conversionFailed": "Falha ao converter a extensão: {{error}}",
+      "conversionFailedGeneric": "Falha ao converter CRX em XPI",
+      "installError": "Erro de instalação: {{error}}",
+      "installFailed": "A instalação falhou",
+      "noData": "Não foram fornecidos dados de instalação",
+      "addonManagerUnavailable": "O AddonManager não está disponível",
+      "noBrowserWindow": "Não foi possível encontrar a janela do navegador para a instalação",
+      "createInstallFailed": "Falha ao criar o objeto de instalação",
+      "cancelledByUser": "Instalação cancelada pelo utilizador",
+      "downloadCancelled": "Transferência cancelada",
+      "timeout": "A instalação expirou",
+      "xpiInstallError": "Erro de instalação do XPI: {{error}}",
+      "errorWithCode": "Erro de instalação (código: {{code}})",
+      "experimentDisabled": "Esta funcionalidade não está atualmente disponível"
+    },
+    "installErrors": {
+      "downloadFailed": "Transferência falhou",
+      "signatureVerifyFailed": "Falha ao verificar a assinatura da extensão",
+      "corruptOrIncompatible": "A extensão está corrompida ou é incompatível",
+      "incompatible": "Esta extensão não é compatível com o Floorp",
+      "blocked": "Esta extensão está bloqueada",
+      "timeout": "A instalação da extensão expirou",
+      "installFailed": "Falha na instalação da extensão",
+      "parseFailed": "Falha ao analisar a extensão",
+      "invalidFile": "Ficheiro de extensão inválido",
+      "networkError": "Ocorreu um erro de rede"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Deseja adicionar a extensão do Chrome \"{{name}}\"? Esta extensão foi convertida da Chrome Web Store.",
+      "chromeExtensionPrompt": "Pretende adicionar a extensão do Chrome \"{{name}}\"?",
+      "defaultExtensionName": "esta extensão",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "Esta extensão do Chrome foi convertida para um formato compatível com o Firefox. Algumas funcionalidades podem não funcionar corretamente."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Hub Floorp"
     }
   }
 }

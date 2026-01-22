@@ -187,6 +187,21 @@
                 "overlap": "Show Sidebar over website content"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Pengecualian Tab Tidur",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Tambah",
+            "remove": "Hapus",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "Kustomisasi UI",
             "needRestartDescriptionForEnableAndDisable": "Pemulaian ulang {{productName}} diperlukan untuk benar-benar mengaktifkan atau menonaktifkan fitur kustomisasi antarmuka ini.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Tab Baru",
-                "disableFloorpStart": "Disable Floorp Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Tab Multibaris",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Bilah Markah",
+                "position": "Posisi (Eksperimen)",
+                "top": "Atas",
+                "bottom": "Bawah",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
@@ -236,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Tutup munculan ruang kerja saat memilih ruang kerja",
         "closePopupWhenSelectingWorkspaceDescription": "Pilih apakah munculan ruang kerja ditutup setelah memilih ruang kerja.",
         "showWorkspaceNameOnToolbar": "Tampilkan nama ruang kerja di sebelah ikon",
-        "exitOnLastTabClose": "Tutup Floorp saat tab ruang kerja terakhir ditutup",
+        "exitOnLastTabClose": "Keluar dari {{productName}} ketika tab ruang kerja terakhir ditutup",
         "manageOnBms": "Kelola ruang kerja di bilah sisi {{productName}}",
         "manageOnBmsDescription": "Ketika fitur ini diaktifkan, Anda hanya dapat mengelola ruang kerja di bilah sisi {{productName}}. Anda tidak akan dapat mengelola ruang kerja menggunakan tombol bilah alat.",
         "backup": "Pencadangan Ruang Kerja",
@@ -255,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Profil dan Akun",
-        "profileDescription": "Profil mengandung informasi terkait penelusuran seperti riwayat, markah, pengaturan, dan pengaya. Floorp menggunakan profil ini untuk menyimpan data.",
+        "profileDescription": "Profil mengandung informasi terkait penelusuran seperti riwayat, markah, pengaturan, dan pengaya. {{productName}} menggunakan profil ini untuk menyimpan data.",
         "profileManagement": "Manajemen Profil",
         "profileManagementDescription": "Profil bisa dibuat dan dipisahkan satu sama lain, dan datanya disimpan dalam folder profil.",
         "currentProfileName": "Nama Profil Saat Ini: {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Buka Lokasi Penyimpanan Profil",
         "mozillaAccountSyncSettings": "Pengaturan Sinkronisasi Akun Mozilla",
         "syncedTo": "Disinkronkan ke {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sinkronisasikan Catatan Floorp ke Akun Mozilla (Eksperimental)",
-        "floorpFeatureSyncSettings": "Pengaturan Sinkronisasi Fitur Floorp",
+        "syncNotesToMozillaAccount": "Sinkronisasikan Catatan {{productName}} ke Akun Mozilla (Eksperimental)",
+        "featureSyncSettings": "Pengaturan Sinkronisasi Fitur {{productName}}",
         "manageMozillaAccount": "Kelola Akun Mozilla",
         "manageFirefoxFeatureSync": "Kelola Sinkronisasi Fitur Firefox",
         "aboutMozillaAccount": "Tentang Akun Mozilla",
@@ -289,8 +307,8 @@
         "title": "Pembaruan & Eksperimen",
         "description": "Kelola pengaturan pembaruan dan fitur-fitur eksperimental.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "Partisipasi Flasco {{productName}}",
+            "description": "Atur cara {{productName}} mendaftarkan Anda dalam fitur eksperimental dan Flasco {{productName}}.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Bawaan (Direkomendasikan)",
@@ -298,31 +316,50 @@
                 "never": "Jangan Pernah Ikut"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Ikuti kebijakan partisipasi yang direkomendasikan. Anda dapat terdaftar di {{productName}} Flasco berdasarkan persentase peluncuran.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
             "troubleshooting": "Troubleshooting",
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Nonaktif",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
-            "lastUpdated": "Last updated:"
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
+            "lastUpdated": "Terakhir diperbarui:"
+        },
+        "availableFlascos": {
+            "title": "Flasco Tersedia",
+            "description": "Semua Flasco yang tersedia untuk versi {{productName}} Anda. Beberapa mungkin tidak tersedia karena batas peluncuran.",
+            "noExperiments": "Tidak ada eksperimen yang tersedia.",
+            "rollout": "Peuncuran: {{percentage}}%",
+            "forceEnroll": "Daftar",
+            "forceEnrolled": "Terdaftar",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Terdaftar",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Terdaftar",
+                "disabled": "Nonaktif",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Memuat..."
+        "loading": "Memuat...",
+        "cancel": "Batal"
     },
     "search": {
         "title": "Telusuri Pengaturan",
@@ -417,12 +454,12 @@
         "uninstall": "Copot"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Kelola modul dan layanan backend Floorp OS",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Memuat...",
         "statusCard": {
             "title": "Status",
-            "description": "Status Floorp OS saat ini",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Dukungan Platform",
             "platformSupported": "Platform Anda didukung",
             "platformUnsupported": "Platform Anda tidak didukung",
@@ -436,24 +473,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Aktifkan atau nonaktifkan Floorp OS",
-            "enable": "Aktifkan Floorp OS",
-            "disable": "Nonaktifkan Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Segarkan Status"
         },
         "messages": {
-            "enabling": "Mengaktifkan Floorp OS...",
-            "disabling": "Menonaktifkan Floorp OS...",
-            "enableSuccess": "Floorp OS berhasil diaktifkan!",
-            "disableSuccess": "Floorp OS berhasil dinonaktifkan!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "API OSAutomotor tidak tersedia.",
             "loadStatus": "Gagal memuat status: {{reason}}",
-            "enable": "Gagal mengaktifkan Floorp OS.",
-            "disable": "Gagal menonaktifkan Floorp OS.",
-            "enableAction": "Galat mengaktifkan Floorp OS: {{reason}}",
-            "disableAction": "Galat menonaktifkan Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Pengaturan Umum",
         "generalSettingsDescription": "Pengaturan gestur tetikus dasar",
         "enabled": "Aktifkan gestur tetikus",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Tampilkan jejak gestur",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Tampilkan label gestur",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Sensitivitas",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Rendah",
         "high": "Tinggi",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Lebak jejak",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "Warna jejak",
         "actionsSettings": "Tindakan Gestur",
         "actionsSettingsDescription": "Atur tindakan gestur tetikus",

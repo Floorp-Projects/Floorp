@@ -23,6 +23,26 @@ import {
 } from "../localization/dataManager.ts";
 import type { LangPack, LocaleData } from "../localization/type.ts";
 
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string =>
+      typeof item === "string" && item.trim().length > 0
+    );
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0 ? [value] : [];
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).filter((item): item is string =>
+      typeof item === "string" && item.trim().length > 0
+    );
+  }
+
+  return [];
+}
+
 export default function WhatsNewPage() {
   const { t, i18n } = useTranslation();
   const version = (() => {
@@ -33,6 +53,19 @@ export default function WhatsNewPage() {
       return "12";
     }
   })();
+
+  useEffect(() => {
+    const previousTitle = globalThis.document.title;
+    const nextTitle = t("whatsNew.documentTitle", {
+      version,
+      defaultValue: `Floorp – What's New`,
+    });
+    globalThis.document.title = nextTitle;
+
+    return () => {
+      globalThis.document.title = previousTitle;
+    };
+  }, [i18n.language, t, version]);
 
   // Localization state
   const [localeData, setlocaleData] = useState<LocaleData | null>(null);
@@ -67,10 +100,17 @@ export default function WhatsNewPage() {
     }
   }, [localeData]);
 
-  // Auto-apply system language when locale data is loaded
+  // Auto-apply system language for new users (no upgrade parameter)
   useEffect(() => {
+    // Only auto-apply if there's no upgrade parameter (new installation)
+    const params = new URLSearchParams(globalThis.location.search);
+    const hasUpgradeParam = params.has("upgrade");
+    const isUserLocaleSet = localeData?.localeInfo.isUserLocaleSet;
+
     if (
+      !hasUpgradeParam &&
       localeData &&
+      isUserLocaleSet === false &&
       localeData.localeInfo.systemLocale.language !==
         localeData.localeInfo.appLocaleRaw &&
       !installingLanguage
@@ -280,7 +320,7 @@ export default function WhatsNewPage() {
               <div className="card bg-base-100 shadow-xl">
                 <div className="card-body p-6">
                   {/* Icon and Title */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-3 shrink-0">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
                       <Globe size={24} className="text-primary" />
                     </div>
@@ -290,7 +330,7 @@ export default function WhatsNewPage() {
                   </div>
                   <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center">
                     {/* Current Language Info */}
-                    <div className="bg-base-200 p-3 rounded-lg flex-grow min-w-0">
+                    <div className="bg-base-200 p-3 rounded-lg grow min-w-0">
                       <h4 className="font-semibold mb-2 text-xs">
                         {t("localizationPage.currentLanguageInfo")}
                       </h4>
@@ -317,7 +357,7 @@ export default function WhatsNewPage() {
                     </div>
 
                     {/* System Language Button */}
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <button
                         type="button"
                         className="btn btn-primary btn-sm whitespace-nowrap"
@@ -335,7 +375,7 @@ export default function WhatsNewPage() {
                     </div>
 
                     {/* Language Dropdown */}
-                    <div className="flex-shrink-0 min-w-48">
+                    <div className="shrink-0 min-w-48">
                       <div
                         className={`dropdown ${dropdownDirection} w-full language-dropdown`}
                       >
@@ -365,9 +405,12 @@ export default function WhatsNewPage() {
                                 key={locale}
                                 onClick={() => {
                                   handleLocaleChange(locale);
-                                  document.activeElement instanceof
-                                      HTMLElement &&
+                                  if (
+                                    document.activeElement instanceof
+                                      HTMLElement
+                                  ) {
                                     document.activeElement.blur();
+                                  }
                                 }}
                                 className="w-full"
                               >
@@ -422,9 +465,11 @@ export default function WhatsNewPage() {
             title={t("featuresPage.panelSidebar.title")}
             description={t("featuresPage.panelSidebar.description")}
             image={panelSidebarSvg}
-            bullets={(t("featuresPage.panelSidebar.features", {
-              returnObjects: true,
-            }) as string[]) || []}
+            bullets={toStringArray(
+              t("featuresPage.panelSidebar.features", {
+                returnObjects: true,
+              }),
+            )}
             reverse
           />
 
@@ -433,9 +478,11 @@ export default function WhatsNewPage() {
             title={t("featuresPage.workspaces.title")}
             description={t("featuresPage.workspaces.description")}
             image={workspacesSvg}
-            bullets={(t("featuresPage.workspaces.features", {
-              returnObjects: true,
-            }) as string[]) || []}
+            bullets={toStringArray(
+              t("featuresPage.workspaces.features", {
+                returnObjects: true,
+              }),
+            )}
           />
 
           <FeatureSection
@@ -443,9 +490,11 @@ export default function WhatsNewPage() {
             title={t("featuresPage.pwa.title")}
             description={t("featuresPage.pwa.description")}
             image={pwaSvg}
-            bullets={(t("featuresPage.pwa.features", {
-              returnObjects: true,
-            }) as string[]) || []}
+            bullets={toStringArray(
+              t("featuresPage.pwa.features", {
+                returnObjects: true,
+              }),
+            )}
             reverse
           />
 
@@ -454,9 +503,11 @@ export default function WhatsNewPage() {
             title={t("featuresPage.mouseGesture.title")}
             description={t("featuresPage.mouseGesture.description")}
             image={mouseGestureSvg}
-            bullets={(t("featuresPage.mouseGesture.features", {
-              returnObjects: true,
-            }) as string[]) || []}
+            bullets={toStringArray(
+              t("featuresPage.mouseGesture.features", {
+                returnObjects: true,
+              }),
+            )}
           />
 
           <div className="py-16 text-center">
@@ -590,7 +641,7 @@ function FeatureSection(props: {
               <ol className="space-y-2">
                 {props.bullets.map((feature, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-content rounded-full flex items-center justify-center text-sm font-medium">
+                    <span className="shrink-0 w-6 h-6 bg-primary text-primary-content rounded-full flex items-center justify-center text-sm font-medium">
                       {index + 1}
                     </span>
                     <span className="text-base-content/80">{feature}</span>

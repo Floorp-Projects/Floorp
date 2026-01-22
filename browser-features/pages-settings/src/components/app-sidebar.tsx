@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: t("pages.home"), url: "/overview/home", icon: House },
   ];
 
-  const [isFloorpOSEnabled, setIsFloorpOSEnabled] = useState<boolean | null>(
+  const [isFloorpOSVisible, setIsFloorpOSVisible] = useState<boolean | null>(
     null,
   );
 
@@ -39,17 +39,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     let mounted = true;
     (async () => {
       try {
-        const val = await rpc.getBoolPref(
-          "floorp.experiment.floorpos.enabled",
-          false,
+        const hidden = await rpc.getBoolPref(
+          "floorp.os.hidden",
         );
-        if (mounted) setIsFloorpOSEnabled(Boolean(val));
+        // Show Floorp OS section when floorp.os.hidden is false
+        if (mounted) setIsFloorpOSVisible(!hidden);
       } catch (e) {
         console.error(
-          "failed to get pref floorp.experiment.floorpos.enabled",
+          "failed to get pref floorp.os.hidden",
           e,
         );
-        if (mounted) setIsFloorpOSEnabled(false);
+        if (mounted) setIsFloorpOSVisible(false);
       }
     })();
     return () => {
@@ -84,8 +84,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Option,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
-    // Floorp OS entry is conditional based on pref floorp.experiment.floorpos.enabled
-    ...(isFloorpOSEnabled
+    // Floorp OS entry is conditional based on pref floorp.os.hidden
+    ...(isFloorpOSVisible
       ? [
         {
           title: "Floorp OS",
@@ -99,7 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/accounts",
       icon: UserRoundPen,
     },
-  ], [isFloorpOSEnabled, t]);
+  ], [isFloorpOSVisible, t]);
 
   const about = [
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },

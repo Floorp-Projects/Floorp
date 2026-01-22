@@ -98,6 +98,9 @@ export const zFloorpDesignConfigs = t.intersection([
           t.type({
             focusExpand: t.boolean,
           }),
+          t.partial({
+            position: t.union([t.literal("top"), t.literal("bottom")]),
+          }),
           t.UnknownRecord,
         ]),
         qrCode: t.intersection([

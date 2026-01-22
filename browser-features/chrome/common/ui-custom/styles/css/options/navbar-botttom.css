@@ -6,6 +6,7 @@
   border-inline: 0 !important;
   border-inline-style: none !important;
   border-right-width: 0 !important;
+  z-index: 1000 !important;
 }
 
 #urlbar {
@@ -24,4 +25,18 @@
     position: unset !important;
     top: 0 !important;
   }
+}
+
+#floorp-tabbar-window-manage-container {
+  display: none !important;
+}
+
+/* Limit nav-bar height to 30px in macOS native fullscreen */
+:root[macOSNativeFullscreen] #nav-bar,
+:root[inFullscreen] #nav-bar {
+  max-height: 30px !important;
+}
+
+:root[inDOMFullscreen] #nav-bar {
+  display: none !important;
 }

@@ -71,6 +71,7 @@ export const zDesignFormData = t.type({
   multirowTabNewtabInside: t.boolean,
   disableFloorpStart: t.boolean,
   bookmarkBarFocusExpand: t.boolean,
+  bookmarkBarPosition: t.union([t.literal("top"), t.literal("bottom")]),
   disableQRCodeButton: t.boolean,
 });
 
@@ -165,13 +166,20 @@ export const zGestureAction = t.type({
   action: t.string,
 });
 
+export const zMouseGestureContextMenu = t.type({
+  minDistance: t.number,
+  preventionTimeout: t.number,
+});
+
 export const zMouseGestureConfig = t.type({
   enabled: t.boolean,
+  rockerGesturesEnabled: t.boolean,
   sensitivity: t.number,
   showTrail: t.boolean,
   showLabel: t.boolean,
   trailColor: t.string,
   trailWidth: t.number,
+  contextMenu: zMouseGestureContextMenu,
   actions: t.array(zGestureAction),
 });
 

@@ -150,4 +150,7 @@ export class NRSettingsChild extends JSWindowActorChild {
       return null;
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

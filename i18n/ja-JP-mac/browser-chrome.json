@@ -66,32 +66,34 @@
       "move-down": "このワークスペースを下に移動",
       "delete": "ワークスペースを削除",
       "manage": "ワークスペースを管理",
-      "archive": "Archive Workspace"
+      "archive": "ワークスペースをアーカイブ"
     },
     "popup": {
       "create-new": "新規ワークスペースを作成...",
       "manage": "ワークスペースを管理",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "アーカイブされたワークスペースを表示",
+      "restore-cancel": "復元モードを終了",
+      "restore-title": "アーカイブされたワークスペース",
+      "restore-loading": "アーカイブされたワークスペースを読み込み中...",
+      "restore-empty": "アーカイブされたワークスペースはありません",
+      "restore-error": "アーカイブされたワークスペースの読み込みに失敗しました",
+      "restore-tooltip": "復元モードを切り替える",
+      "restore-item": "\"{{name}}\" を復元",
+      "restore-delete-tooltip": "このアーカイブを削除",
+      "restore-tab-count": "{{count}} タブ",
+      "restore-tab-count_plural": "{{count}} タブ",
+      "restore-time-just-now": "たった今",
+      "restore-time-minutes": "{{minutes}} 分前",
+      "restore-time-minutes_plural": "{{minutes}} 分前",
+      "restore-time-hours": "{{hours}} 時間前",
+      "restore-time-hours_plural": "{{hours}} 時間前",
+      "restore-time-days": "{{days}} 日前",
+      "restore-time-days_plural": "{{days}} 日前"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動"
+      "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動",
+      "openLinkInWorkspace": "リンクを別のワークスペースで開く",
+      "noOtherWorkspace": "他のワークスペースがありません"
     },
     "error": {
       "invalidWorkspaceID": "ワークスペースの ID が無効です (並べ替えが反映されていない可能性があります)"
@@ -103,19 +105,6 @@
   },
   "statusbar": {
     "toggle": "ステータスバー{{mark}}"
-  },
-  "splitview": {
-    "title": "分割ビュー",
-    "position": "位置",
-    "position-left": "左",
-    "position-right": "右",
-    "flex-row": "横並び",
-    "flex-column": "縦並び",
-    "remove-button": "現在のビューを解除",
-    "tab-context": {
-      "split-tabs": "これらのタブを分割",
-      "split-fixed-tab": "分割して固定表示"
-    }
   },
   "ssb": {
     "menu": {
@@ -292,6 +281,93 @@
       "restart-cache-clear": "キャッシュを消去して再起動",
       "restart-safe-mode": "セーフモードで再起動",
       "restart-profile-manager": "再起動してプロファイルマネージャーを表示"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} は稼働中です",
+    "panelDefaultMessage": "{{action}} が進行中...",
+    "panelProgressSummary": "{{count}} 個の要素に影響します",
+    "formSummary": "記入フォーム: {{count}} 件の入力欄",
+    "formFieldProgress": "入力欄 {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "入力値を設定: \"{{value}}\"",
+    "clickElementWithText": "{{tag}} をクリック: \"{{text}}\"",
+    "clickElementNoText": "{{tag}} 要素をクリックします",
+    "inspectPageHtml": "ページ全体の HTML を取得しました",
+    "inspectGetElement": "取得した要素: {{selector}}",
+    "inspectGetElements": "{{count}} 個の要素が一致しました: {{selector}}",
+    "inspectGetElementByText": "次のテキストに一致する要素を取得しました: \"{{text}}\"",
+    "inspectGetElementText": "次からテキストを取得しました: {{selector}}",
+    "inspectGetValue": "次から値を取得しました: {{selector}}",
+    "submitForm": "送信フォーム: {{name}}",
+    "actionLabelHighlight": "ハイライト",
+    "actionLabelInspect": "調査",
+    "actionLabelFill": "記入",
+    "actionLabelInput": "入力",
+    "actionLabelClick": "クリック",
+    "actionLabelSubmit": "送信"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "外部ブラウザーでタブを開く",
+      "openLinkIn": "外部ブラウザーでリンクを開く",
+      "defaultBrowser": "システムのデフォルトウェブブラウザー",
+      "noBrowsers": "外部ブラウザーが見つかりません",
+      "noValidUrl": "開ける URL がありません"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Floorp に追加",
+      "installing": "インストール中...",
+      "success": "追加完了！",
+      "error": "エラーが発生しました",
+      "installed": "インストール済み"
+    },
+    "error": {
+      "title": "インストールエラー",
+      "compatibilityNote": "この拡張機能は Firefox/Floorp と互換性がない可能性があります。",
+      "alreadyInstalled": "この拡張機能はすでにインストールされています ({{name}})",
+      "downloadFailed": "CRX ファイルをダウンロードできませんでした",
+      "conversionFailed": "拡張機能を変換できませんでした: {{error}}",
+      "conversionFailedGeneric": "CRX から XPI に変換できませんでした",
+      "installError": "インストールエラー: {{error}}",
+      "installFailed": "インストール失敗",
+      "noData": "インストールデータが提供されていません",
+      "addonManagerUnavailable": "AddonManager は使用できません",
+      "noBrowserWindow": "インストール用のブラウザーウィンドウが見つかりません",
+      "createInstallFailed": "インストールオブジェクトを作成できませんでした",
+      "cancelledByUser": "インストールはユーザーによってキャンセルされました",
+      "downloadCancelled": "ダウンロードがキャンセルされました",
+      "timeout": "インストールがタイムアウトしました",
+      "xpiInstallError": "XPI インストールエラー: {{error}}",
+      "errorWithCode": "インストールエラー (コード: {{code}})",
+      "experimentDisabled": "この機能は現在使用できません"
+    },
+    "installErrors": {
+      "downloadFailed": "ダウンロード失敗",
+      "signatureVerifyFailed": "拡張機能の署名を検証できませんでした",
+      "corruptOrIncompatible": "拡張機能が壊れているか、互換性がありません",
+      "incompatible": "この拡張機能は Floorp と互換性がありません",
+      "blocked": "この拡張機能はブロックされています",
+      "timeout": "拡張機能のインストールがタイムアウトしました",
+      "installFailed": "拡張機能のインストールに失敗しました",
+      "parseFailed": "拡張機能の解析に失敗しました",
+      "invalidFile": "無効な拡張機能ファイルです",
+      "networkError": "ネットワークエラーが発生しました"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Chrome 拡張機能 \"{{name}}\" を追加しますか？ この拡張機能は Chrome ウェブストアから変換されました。",
+      "chromeExtensionPrompt": "Chrome 拡張機能 \"{{name}}\" を追加しますか？",
+      "defaultExtensionName": "この拡張機能",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "この Chrome 拡張機能は Firefox 互換形式に変換されています。一部の機能は正しく動作しない可能性があります。"
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
     }
   }
 }

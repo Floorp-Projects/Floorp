@@ -3,10 +3,10 @@
   "links": ["libs/@types/gecko"],
   "workspace": ["./libs/*", "./browser-features/*", "./bridge/*"],
   "imports": {
-    "@std/cli": "jsr:@std/cli@^1.0.21",
+    "@std/cli": "jsr:@std/cli@^1.0.25",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
-    "@std/fs": "jsr:@std/fs@^1.0.18",
-    "@std/path": "jsr:@std/path@^1.1.2",
+    "@std/fs": "jsr:@std/fs@^1.0.20",
+    "@std/path": "jsr:@std/path@^1.1.4",
     "#i18n/": "./i18n/",
     "#chrome/": "./chrome/",
     "#libs/": "./libs/",
@@ -14,9 +14,9 @@
     "#modules/": "./browser-features/modules/",
     "#ui/": "./src/ui/",
     "#themes/": "./src/themes/",
-    "@std/streams": "jsr:@std/streams@^1.0.11",
-    "@std/toml": "npm:@jsr/std__toml@^1.0.9",
-    "vite": "npm:rolldown-vite@^7.1.4"
+    "@std/streams": "jsr:@std/streams@^1.0.14",
+    "@std/toml": "npm:@jsr/std__toml@^1.0.11",
+    "vite": "npm:rolldown-vite@^7.3.0"
   },
   "compilerOptions": {
     "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],
@@ -37,5 +37,5 @@
     "feles-build": "deno run -A tools/feles-build.ts",
     "act": "deno run -A tools/act/run-package-workflow.ts"
   },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "manual"
 }

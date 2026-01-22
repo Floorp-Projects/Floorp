@@ -6,14 +6,65 @@
 import type {
   LegacyPWAEntry,
   Manifest,
-} from "../../../../main/core/common/pwa/type.ts";
+} from "#features-chrome/common/pwa/type.ts";
+
+const { JsonSchema } = ChromeUtils.importESModule(
+  "resource://gre/modules/JsonSchema.sys.mjs",
+);
+
+// Schema URL for validation
+const SSB_SCHEMA_URL = "resource://noraneko/modules/pwa/ssb.schema.json";
+
+/**
+ * Get JSON Schema validator for SSB data
+ */
+async function getSchemaValidator() {
+  const response = await fetch(SSB_SCHEMA_URL);
+  const schema = await response.json();
+  return new JsonSchema!.Validator(schema);
+}
 
 export class DataManager {
+  private schemaValidator: Awaited<
+    ReturnType<typeof getSchemaValidator>
+  > | null = null;
+
   private get ssbStoreFile() {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
   }
 
-  constructor() {
+  constructor() {}
+
+  /**
+   * Initialize schema validator lazily
+   */
+  private async getValidator() {
+    if (!this.schemaValidator) {
+      try {
+        this.schemaValidator = await getSchemaValidator();
+      } catch (e) {
+        console.warn("[DataManager] Failed to load schema validator:", e);
+      }
+    }
+    return this.schemaValidator;
+  }
+
+  /**
+   * Validate data against JSON schema
+   */
+  private async validateData(data: unknown): Promise<boolean> {
+    const validator = await this.getValidator();
+    if (!validator) {
+      // If validator failed to load, skip validation
+      return true;
+    }
+
+    const result = validator.validate(data);
+    if (!result.valid) {
+      console.warn("[DataManager] Schema validation failed:", result.errors);
+      return false;
+    }
+    return true;
   }
 
   public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
@@ -35,10 +86,13 @@ export class DataManager {
       return migratedData;
     }
 
+    // Validate data against schema (non-blocking warning only)
+    await this.validateData(data);
+
     return data as Record<string, Manifest>;
   }
 
-  private isLegacyFormat(data: any): boolean {
+  private isLegacyFormat(data: Record<string, LegacyPWAEntry>): boolean {
     // Check if the data has the structure of legacy format
     // In legacy format, entries have 'startURI' and 'manifest' properties
     if (!data) return false;
@@ -133,7 +187,6 @@ export class DataManager {
   }
 }
 
-// シングルトンインスタンスを提供するユーティリティ
 export class DataStoreProvider {
   private static instance: DataManager | null = null;
 

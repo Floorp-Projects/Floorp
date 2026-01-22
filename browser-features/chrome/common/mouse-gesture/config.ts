@@ -13,11 +13,13 @@ import {
 import { createRootHMR } from "@nora/solid-xul";
 import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";
-import { getActionDisplayName } from "./utils/gestures";
 
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 export const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
+/**
+ * Gesture direction types matching the existing preference format.
+ */
 export const GestureDirectionCodec = t.union([
   t.literal("up"),
   t.literal("down"),
@@ -31,6 +33,9 @@ export const GestureDirectionCodec = t.union([
 export type GestureDirection = t.TypeOf<typeof GestureDirectionCodec>;
 export type GesturePattern = GestureDirection[];
 
+/**
+ * A gesture action maps a pattern to an action name.
+ */
 export const GestureActionCodec = t.type({
   pattern: t.array(GestureDirectionCodec),
   action: t.string,
@@ -64,7 +69,12 @@ export const MouseGestureConfigCodec = t.intersection([
 ]);
 export type MouseGestureConfig = t.TypeOf<typeof MouseGestureConfigCodec>;
 
-export const defaultConfig: MouseGestureConfig = {
+const MIN_CONTEXT_MENU_DISTANCE = 5;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
   enabled: false,
   rockerGesturesEnabled: true,
   wheelGesturesEnabled: true,
@@ -74,57 +84,58 @@ export const defaultConfig: MouseGestureConfig = {
   trailColor: "#37ff00",
   trailWidth: 6,
   contextMenu: {
-    minDistance: 5,
+    minDistance: MIN_CONTEXT_MENU_DISTANCE,
     preventionTimeout: 200,
   },
   actions: [
-    {
-      pattern: ["left"],
-      action: "gecko-back",
-    },
-    {
-      pattern: ["right"],
-      action: "gecko-forward",
-    },
-    {
-      pattern: ["up", "down"],
-      action: "gecko-reload",
-    },
-    {
-      pattern: ["down", "right"],
-      action: "gecko-close-tab",
-    },
-    {
-      pattern: ["down", "up"],
-      action: "gecko-open-new-tab",
-    },
-    {
-      pattern: ["up"],
-      action: "gecko-scroll-to-top",
-    },
-    {
-      pattern: ["down"],
-      action: "gecko-scroll-to-bottom",
-    },
-    {
-      pattern: ["left", "down"],
-      action: "gecko-scroll-up",
-    },
-    {
-      pattern: ["right", "down"],
-      action: "gecko-scroll-down",
-    },
+    { pattern: ["left"], action: "gecko-back" },
+    { pattern: ["right"], action: "gecko-forward" },
+    { pattern: ["up", "down"], action: "gecko-reload" },
+    { pattern: ["down", "right"], action: "gecko-close-tab" },
+    { pattern: ["down", "up"], action: "gecko-open-new-tab" },
+    { pattern: ["up"], action: "gecko-scroll-to-top" },
+    { pattern: ["down"], action: "gecko-scroll-to-bottom" },
+    { pattern: ["left", "down"], action: "gecko-scroll-up" },
+    { pattern: ["right", "down"], action: "gecko-scroll-down" },
   ],
 };
 
+const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig => {
+  const sensitivity = clamp(
+    Number.isFinite(config?.sensitivity)
+      ? (config.sensitivity as number)
+      : BASE_DEFAULT_CONFIG.sensitivity,
+    1,
+    100,
+  );
+
+  const contextMenu = {
+    ...BASE_DEFAULT_CONFIG.contextMenu,
+    ...(config?.contextMenu as Record<string, unknown> | undefined),
+    minDistance: Math.max(
+      ((config?.contextMenu as Record<string, unknown> | undefined)
+        ?.minDistance as number) ?? BASE_DEFAULT_CONFIG.contextMenu.minDistance,
+      MIN_CONTEXT_MENU_DISTANCE,
+    ),
+  };
+
+  return {
+    ...BASE_DEFAULT_CONFIG,
+    ...config,
+    sensitivity,
+    contextMenu,
+    actions: Array.isArray(config?.actions)
+      ? (config.actions as GestureAction[])
+      : BASE_DEFAULT_CONFIG.actions,
+  } as MouseGestureConfig;
+};
+
+export const defaultConfig = normalizeConfig(BASE_DEFAULT_CONFIG);
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
 function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   const [enabled, setEnabled] = createSignal(
-    Services.prefs.getBoolPref(
-      MOUSE_GESTURE_ENABLED_PREF,
-      defaultConfig.enabled,
-    ),
+    Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
   );
 
   createEffect(() => {
@@ -133,10 +144,7 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
 
   const enabledObserver = () => {
     setEnabled(
-      Services.prefs.getBoolPref(
-        MOUSE_GESTURE_ENABLED_PREF,
-        defaultConfig.enabled,
-      ),
+      Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
     );
   };
 
@@ -148,20 +156,20 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   return [enabled, setEnabled];
 }
 
-function createConfig(): [
-  Accessor<MouseGestureConfig>,
-  Setter<MouseGestureConfig>,
-] {
+function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfig>] {
   const parseConfig = (jsonStr: string): MouseGestureConfig => {
-    const parsed = JSON.parse(jsonStr);
-    const result = MouseGestureConfigCodec.decode(parsed);
-    if (isRight(result)) {
-      return result.right;
+    try {
+      const parsed = JSON.parse(jsonStr);
+      const result = MouseGestureConfigCodec.decode(parsed);
+      if (isRight(result)) {
+        return normalizeConfig(result.right);
+      }
+      console.warn("Mouse gesture config validation failed, recovering partial data");
+      return normalizeConfig(parsed);
+    } catch (e) {
+      console.error("Failed to parse mouse gesture config, using default", e);
+      return defaultConfig;
     }
-    console.error(
-      "Failed to decode mouse gesture configuration, using default",
-    );
-    return defaultConfig;
   };
 
   const [config, setConfig] = createSignal<MouseGestureConfig>(
@@ -171,24 +179,18 @@ function createConfig(): [
   );
 
   createEffect(() => {
-    Services.prefs.setStringPref(
-      MOUSE_GESTURE_CONFIG_PREF,
-      JSON.stringify(config()),
-    );
+    Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, JSON.stringify(config()));
   });
 
   const configObserver = () => {
     try {
       setConfig(
         parseConfig(
-          Services.prefs.getStringPref(
-            MOUSE_GESTURE_CONFIG_PREF,
-            strDefaultConfig,
-          ),
+          Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
         ),
       );
     } catch (e) {
-      console.error("Failed to parse mouse gesture configuration:", e);
+      console.error("Failed to parse mouse gesture config:", e);
       setConfig(defaultConfig);
       Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig);
     }
@@ -202,19 +204,13 @@ function createConfig(): [
   return [config, setConfig];
 }
 
-export const [_enabled, _setEnabled] = createRootHMR(
-  createEnabled,
-  import.meta.hot,
-);
-export const [_config, _setConfig] = createRootHMR(
-  createConfig,
-  import.meta.hot,
-);
+export const [_enabled, _setEnabled] = createRootHMR(createEnabled, import.meta.hot);
+export const [_config, _setConfig] = createRootHMR(createConfig, import.meta.hot);
 
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
-export const setConfig = (value: MouseGestureConfig) => _setConfig(value);
+export const setConfig = (value: MouseGestureConfig) => _setConfig(normalizeConfig(value));
 
 export function patternToString(pattern: GesturePattern): string {
   return pattern.join("-");
@@ -222,8 +218,4 @@ export function patternToString(pattern: GesturePattern): string {
 
 export function stringToPattern(str: string): GesturePattern {
   return str.split("-") as GesturePattern;
-}
-
-export function getGestureActionName(gestureAction: GestureAction): string {
-  return getActionDisplayName(gestureAction.action);
 }

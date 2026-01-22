@@ -11,6 +11,9 @@ import { SsbRunner } from "./ssbRunner.ts";
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
+const { TaskbarExperiment } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
+);
 
 let SupportClass: any | null = null;
 if (AppConstants.platform === "win") {
@@ -170,9 +173,18 @@ export class SiteSpecificBrowserManager {
   private async install(manifest: Manifest) {
     if (SupportClass) {
       if (AppConstants.platform === "win") {
-        const windowsSupport = new SupportClass(this);
-        await windowsSupport.install(manifest);
+        // Windows install (taskbar integration) is controlled by A/B test
+        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
+          const windowsSupport = new SupportClass(this);
+          await windowsSupport.install(manifest);
+        } else {
+          console.debug(
+            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
+          );
+        }
       } else if (AppConstants.platform === "linux") {
+        // Linux install (.desktop file generation) is NOT controlled by A/B test
+        // This is excluded from A/B test as per requirements
         const linuxSupport = new SupportClass(this);
         await linuxSupport.install(manifest);
       }
@@ -184,9 +196,18 @@ export class SiteSpecificBrowserManager {
   private async uninstall(manifest: Manifest) {
     if (SupportClass) {
       if (AppConstants.platform === "win") {
-        const windowsSupport = new SupportClass(this);
-        await windowsSupport.uninstall(manifest);
+        // Windows uninstall (taskbar integration) is controlled by A/B test
+        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
+          const windowsSupport = new SupportClass(this);
+          await windowsSupport.uninstall(manifest);
+        } else {
+          console.debug(
+            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
+          );
+        }
       } else if (AppConstants.platform === "linux") {
+        // Linux uninstall (.desktop file removal) is NOT controlled by A/B test
+        // This is excluded from A/B test as per requirements
         const linuxSupport = new SupportClass(this);
         await linuxSupport.uninstall(manifest);
       }
@@ -219,7 +240,7 @@ export class SiteSpecificBrowserManager {
   }
 
   public async runSsbByUrl(url: string) {
-    this.ssbRunner.runSsbByUrl(url);
+    await this.ssbRunner.runSsbByUrl(url);
   }
 
   private async onCurrentTabChangedOrLoaded() {

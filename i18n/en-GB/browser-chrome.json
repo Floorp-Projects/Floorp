@@ -91,7 +91,9 @@
       "restore-time-days_plural": "{{days}} days ago"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Move Tab to Another Workspace"
+      "moveTabToAnotherWorkspace": "Move Tab to Another Workspace",
+      "openLinkInWorkspace": "Open Link in Another Workspace",
+      "noOtherWorkspace": "No other workspaces available"
     },
     "error": {
       "invalidWorkspaceID": "Not valid ID for Workspaces (maybe order is not updated)"
@@ -103,19 +105,6 @@
   },
   "statusbar": {
     "toggle": "Status Bar{{mark}}"
-  },
-  "splitview": {
-    "title": "Split View",
-    "position": "Position",
-    "position-left": "Left",
-    "position-right": "Right",
-    "flex-row": "Row",
-    "flex-column": "Column",
-    "remove-button": "Remove Current View",
-    "tab-context": {
-      "split-tabs": "Split Tabs",
-      "split-fixed-tab": "Split to Fixed Tab"
-    }
   },
   "ssb": {
     "menu": {
@@ -292,6 +281,93 @@
       "restart-cache-clear": "Restart with Cache Clear",
       "restart-safe-mode": "Restart in Safe Mode",
       "restart-profile-manager": "Restart with Profile Manager"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Open Tab in External Browser",
+      "openLinkIn": "Open Link in External Browser",
+      "defaultBrowser": "System Default Browser",
+      "noBrowsers": "No external browsers detected",
+      "noValidUrl": "No valid URL to open"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Add to Floorp",
+      "installing": "Installing...",
+      "success": "Added!",
+      "error": "Error occurred",
+      "installed": "Installed"
+    },
+    "error": {
+      "title": "Installation Error",
+      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
+      "alreadyInstalled": "This extension is already installed ({{name}})",
+      "downloadFailed": "Failed to download CRX file",
+      "conversionFailed": "Failed to convert extension: {{error}}",
+      "conversionFailedGeneric": "Failed to convert CRX to XPI",
+      "installError": "Installation error: {{error}}",
+      "installFailed": "Installation failed",
+      "noData": "No installation data provided",
+      "addonManagerUnavailable": "AddonManager is not available",
+      "noBrowserWindow": "Could not find browser window for installation",
+      "createInstallFailed": "Failed to create installation object",
+      "cancelledByUser": "Installation cancelled by user",
+      "downloadCancelled": "Download cancelled",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "XPI installation error: {{error}}",
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
+    },
+    "installErrors": {
+      "downloadFailed": "Download failed",
+      "signatureVerifyFailed": "Failed to verify extension signature",
+      "corruptOrIncompatible": "Extension is corrupted or incompatible",
+      "incompatible": "This extension is not compatible with Floorp",
+      "blocked": "This extension is blocked",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Extension installation failed",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Invalid extension file",
+      "networkError": "A network error occurred"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub Title"
     }
   }
 }

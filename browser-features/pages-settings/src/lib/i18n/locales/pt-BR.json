@@ -72,7 +72,7 @@
         },
         "browserSupport": {
             "title": "Guia do {{productName}}",
-            "description": "Acesse o guia de suporte escrito por colaboradores do {{productName}} .",
+            "description": "Acesse o guia de suporte escrito por colaboradores do {{productName}}.",
             "footerLinkText": "Guia do Floorp"
         }
     },
@@ -187,6 +187,21 @@
                 "overlap": "Mostrar barra lateral sobre o conteúdo do site"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Exclusão do modo de inatividade",
+            "description": "Excluir sites específicos de modo de inatividade (descarregamento). Abas que correspondem a esses padrões permanecerão ativas e não serão automaticamente descarregadas quando a memória estiver baixa.",
+            "enable": "Ativar exclusão do modo de inatividade",
+            "patterns": "Padrões de exclusão",
+            "patternsDescription": "Adicione padrões de URL para excluir do modo de inatividade. As abas que corresponderem a esses padrões não serão descarregadas.",
+            "patternPlaceholder": "Insira o padrão de URL (por exemplo: example.com, *.google.com)",
+            "add": "Adicionar",
+            "remove": "Excluir",
+            "noPatterns": "Não há padrões de exclusão configurados. Adicione padrões para manter abas específicas ativas.",
+            "examples": "Exemplos de padrões",
+            "exampleDomain": "Corresponder a qualquer URL que contenha esse domínio",
+            "exampleWildcard": "Corresponder a todos os subdomínios de google.com",
+            "exampleFullUrl": "Corresponder apenas a URLs do Gmail"
+        },
         "uiCustomization": {
             "title": "Personalização da interface do usuário",
             "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o {{productName}} para ativar ou desativar completamente este recurso de personalização da interface do usuário.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Nova aba",
-                "disableFloorpStart": "Desativar o Floorp Start"
+                "disableFloorpStart": "Desativar {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Aba multilinha",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Barra de favoritos",
+                "position": "Posição (experimental)",
+                "top": "Superior",
+                "bottom": "Inferior",
                 "focusExpand": "Expandir a barra de favoritos ao focalizar"
             }
         }
@@ -236,26 +254,26 @@
         "closePopupWhenSelectingWorkspace": "Fechar o pop-up do espaço de trabalho ao selecionar um espaço de trabalho",
         "closePopupWhenSelectingWorkspaceDescription": "Escolha se deseja fechar o pop-up do espaço de trabalho ao selecionar um espaço de trabalho.",
         "showWorkspaceNameOnToolbar": "Mostrar o nome do espaço de trabalho ao lado do ícone",
-        "exitOnLastTabClose": "Sair do Floorp quando a última aba do espaço de trabalho for fechada",
+        "exitOnLastTabClose": "Sair do {{productName}} quando a última aba do espaço de trabalho for fechada",
         "manageOnBms": "Gerenciar espaços de trabalho na barra lateral do {{productName}}",
         "manageOnBmsDescription": "Quando esse recurso estiver ativado, você só poderá gerenciar espaços de trabalho na barra lateral {{productName}}. Não será possível gerenciar espaços de trabalho usando o botão da barra de ferramentas.",
         "backup": "Backup do espaço de trabalho",
         "backupComingSoon": "Em breve",
         "backupDescription": "Saiba mais sobre o backup dos espaços de trabalho",
-        "dangerZone": "Danger Zone",
-        "initializeTitle": "Initialize workspaces",
-        "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
-        "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
-        "initializeFailure": "Failed to initialize workspaces. Please try again.",
-        "initializeConfirmTitle": "Initialize Workspaces",
-        "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
-        "initializeConfirmAction": "Initialize",
+        "dangerZone": "Zona de perigo",
+        "initializeTitle": "Inicializar espaços de trabalho",
+        "initializeDescription": "Redefinir dados do espaço de trabalho para o formato padrão. Todas as áreas de trabalho personalizadas serão removidas e todas as guias serão reatribuídas ao novo espaço de trabalho.",
+        "initializeAction": "Inicializar espaços de trabalho",
+        "initializeSuccess": "Os espaços de trabalho foram redefinidos para formato padrão.",
+        "initializeFailure": "Falha ao inicializar espaços de trabalho. Por favor, tente novamente.",
+        "initializeConfirmTitle": "Inicializar espaços de trabalho",
+        "initializeConfirmDescription": "Isso remove todos os dados dos espaços de trabalho e recria um único espaço de trabalho padrão. Deseja continuar?",
+        "initializeConfirmAction": "Inicializar",
         "initializeConfirmCancel": "Cancelar"
     },
     "accounts": {
         "profileAndAccount": "Perfil e conta",
-        "profileDescription": "Os perfis contêm informações relacionadas à navegação, como histórico, favoritos, configurações e complementos. O Floorp usa esse perfil para salvar dados.",
+        "profileDescription": "Os perfis contêm informações relacionadas à navegação, como histórico, favoritos, configurações e complementos. O {{productName}} usa esse perfil para salvar dados.",
         "profileManagement": "Gerenciamento de perfis",
         "profileManagementDescription": "Os perfis podem ser criados e separados uns dos outros, e os dados são armazenados na pasta de perfis.",
         "currentProfileName": "Nome do perfil atual: {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Abrir Local para Salvar Perfil",
         "mozillaAccountSyncSettings": "Configurações de sincronização da conta Mozilla",
         "syncedTo": "Sincronizado com {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sincronizar Notas Floorp com a conta Mozilla (experimental)",
-        "floorpFeatureSyncSettings": "Configurações de sincronização de recursos do Floorp",
+        "syncNotesToMozillaAccount": "Sincronizar Notas {{productName}} com a conta Mozilla (experimental)",
+        "featureSyncSettings": "Configurações de sincronização de recursos {{productName}}",
         "manageMozillaAccount": "Gerenciar conta Mozilla",
         "manageFirefoxFeatureSync": "Gerenciar sincronização de recursos do Firefox",
         "aboutMozillaAccount": "Sobre a conta Mozilla",
@@ -298,20 +316,20 @@
                 "never": "Nunca participar"
             },
             "policyHelp": {
-                "default": "Siga a política de participação recomendada. Você pode ser inscrito em testes do {{productName}} com base em porcentagens de lançamento.",
-                "always": "Sempre participe de todos os testes do {{productName}} disponíveis. Essa opção é para usuários que desejam testar novos recursos antecipadamente.",
-                "never": "Nunca participe dos testes do {{productName}}. Você só receberá recursos estáveis e testados."
+                "default": "Seguir a política de participação recomendada. Você poderá ser inscrito em testes do {{productName}} com base em porcentagens de lançamento.",
+                "always": "Sempre participar de todos os testes do {{productName}} disponíveis. Essa opção é para usuários que desejam testar novos recursos antecipadamente.",
+                "never": "Nunca participar dos testes do {{productName}}. Você só receberá recursos estáveis e testados."
             },
             "confirmClearCache": "Tem certeza de que deseja limpar todos os dados do experimento? Isso redefinirá suas atribuições e não poderá ser desfeito.",
             "troubleshooting": "Resolução de problemas",
             "clearCacheDescription": "Se estiver tendo problemas com os experimentos, a limpeza do cache pode resolvê-los, redefinindo todos os dados relacionados aos testes para o estado inicial.",
             "clearCache": "Limpar o cache de testes"
         },
-        "activeTests": {
-            "title": "Ativar testes do {{productName}}",
+        "activeFlascos": {
+            "title": "Testes do {{productName}} ativados",
             "description": "Veja e gerencie suas inscrições de teste ativas no momento.",
             "refresh": "Atualizar",
-            "noTests": "Você não está inscrito em nenhum teste no momento.",
+            "noFlascos": "Você não está inscrito em nenhum teste no momento.",
             "assignedAt": "Inscrito em {{date}}",
             "disable": "Desativar",
             "enable": "Ativar",
@@ -319,10 +337,29 @@
             "confirmDisable": "Tem certeza de que deseja desativar este teste? Você pode reativá-lo mais tarde.",
             "confirmEnable": "Tem certeza de que deseja reativar este teste?",
             "lastUpdated": "Última atualização:"
+        },
+        "availableFlascos": {
+            "title": "Testes disponíveis",
+            "description": "Todos os testes disponíveis para sua versão do {{productName}}. Alguns podem estar indisponíveis devido a limites de implementação.",
+            "noExperiments": "Sem testes disponíveis.",
+            "rollout": "Implementação: {{percentage}}%",
+            "forceEnroll": "Inscrever-se",
+            "forceEnrolled": "Inscrito",
+            "removeForceEnrollment": "Reverter para o padrão",
+            "confirmForceEnroll": "Tem certeza de que deseja se inscrever neste teste? Isso substituirá as configurações de lançamento.",
+            "confirmRemoveForceEnrollment": "Remover o registro e retornar ao modelo normal de distribuição?",
+            "status": {
+                "enrolled": "Inscrito",
+                "not_in_rollout": "Não está implementado",
+                "force_enrolled": "Inscrito",
+                "disabled": "Desativado",
+                "control": "Controle"
+            }
         }
     },
     "common": {
-        "loading": "Carregando..."
+        "loading": "Carregando...",
+        "cancel": "Cancelar"
     },
     "search": {
         "title": "Configurações de pesquisa",
@@ -334,14 +371,14 @@
         "searchResultsDescription": "Resultados da pesquisa para \"{{query}}\". Somente as configurações do {{productName}} são pesquisadas; as configurações do Firefox não estão incluídas."
     },
     "panelSidebar": {
-        "title": "Barra lateral do painel",
-        "description": "O Panel Sidebar é um recurso que permite exibir várias ferramentas, sites e extensões na lateral da janela. Aqui, você pode personalizar, adicionar, excluir e gerenciar painéis.",
+        "title": "Barra lateral",
+        "description": "A barra lateral é um recurso que permite exibir várias ferramentas, sites e extensões na lateral da janela. Aqui, você pode personalizar, adicionar, excluir e gerenciar painéis.",
         "basicSettings": "Configurações básicas",
-        "howToUseAndCustomize": "Como usar e personalizar a barra lateral do painel",
+        "howToUseAndCustomize": "Como usar e personalizar a barra lateral",
         "enableOrDisable": "Ativar/Desativar",
-        "enablePanelSidebar": "Ativar a barra lateral do painel",
-        "enableDescription": "O Panel Sidebar é diferente da barra lateral do Firefox e não interfere nela. A barra lateral do painel pode exibir páginas da Web, ao contrário da barra lateral do Firefox. Você também pode gerenciar espaços de trabalho na barra lateral.",
-        "otherSettings": "Outras configurações da barra lateral do painel",
+        "enablePanelSidebar": "Ativar a barra lateral",
+        "enableDescription": "A barra lateral do Floorp é diferente da barra lateral do Firefox e não interfere nela. Ela pode exibir páginas da Web, ao contrário da barra lateral do Firefox. Você também pode gerenciar espaços de trabalho na barra lateral.",
+        "otherSettings": "Outras configurações da barra lateral",
         "autoUnloadOnClose": "Descarregar ao fechar o painel",
         "position": "Posição da barra lateral",
         "positionLeft": "Esquerda",
@@ -384,7 +421,7 @@
         "errors": {
             "typeRequired": "O tipo de painel é necessário",
             "urlRequired": "O URL é necessário para os painéis da Web",
-            "invalidUrl": "",
+            "invalidUrl": "Por favor, insira uma URL válida",
             "extensionIdRequired": "A ID de extensão é necessária para os painéis de extensão",
             "staticPanelRequired": "Selecione uma ferramenta da barra lateral",
             "invalidWidth": "A largura deve ser de pelo menos 100 pixels"
@@ -405,7 +442,7 @@
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
         "installedApps": "Aplicativos instalados",
-        "noInstalledApps": "Nenhum aplicativo progressivo da Web instalado",
+        "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
         "renameApp": "Renomear aplicativo",
         "enterNewName": "Insira o novo nome",
@@ -417,12 +454,12 @@
         "uninstall": "Desinstalar"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Gerenciar módulos e serviços de backend do Floorp OS",
+        "title": "{{productName}} OS",
+        "description": "Gerenciar módulos e serviços de backend do {{productName}} OS",
         "loading": "Carregando...",
         "statusCard": {
             "title": "Status",
-            "description": "Status atual do Floorp OS",
+            "description": "Status atual do {{productName}} OS",
             "platformSupport": "Suporte à plataforma",
             "platformSupported": "Sua plataforma é compatível",
             "platformUnsupported": "Sua plataforma não é compatível",
@@ -436,24 +473,24 @@
         },
         "controlsCard": {
             "title": "Controles",
-            "description": "Ativar ou desativar o Floorp OS",
-            "enable": "Ativar o Floorp OS",
-            "disable": "Desativar o Floorp OS",
+            "description": "Ativar ou desativar o {{productName}} OS",
+            "enable": "Ativar o {{productName}} OS",
+            "disable": "Desativar o {{productName}} OS",
             "refresh": "Atualizar status"
         },
         "messages": {
-            "enabling": "Ativando o Floorp OS...",
-            "disabling": "Desativando o Floorp OS...",
-            "enableSuccess": "Floorp OS ativado com sucesso!",
-            "disableSuccess": "Floorp OS desativado com sucesso!"
+            "enabling": "Ativando o {{productName}} OS...",
+            "disabling": "Desativando o {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS ativado com sucesso!",
+            "disableSuccess": "{{productName}} OS desativado com sucesso!"
         },
         "errors": {
             "apiUnavailable": "A API do OSAutomotor não está disponível.",
             "loadStatus": "Falha ao carregar status: {{reason}}",
-            "enable": "Falha ao ativar o Floorp OS.",
-            "disable": "Falha ao desativar o Floorp OS.",
-            "enableAction": "Erro ao ativar o Floorp OS: {{reason}}",
-            "disableAction": "Erro ao desativar o Floorp OS: {{reason}}"
+            "enable": "Falha ao ativar o {{productName}} OS.",
+            "disable": "Falha ao desativar o {{productName}} OS.",
+            "enableAction": "Erro ao ativar o {{productName}} OS: {{reason}}",
+            "disableAction": "Erro ao desativar o {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Configurações gerais",
         "generalSettingsDescription": "Configurações básicas de gestos do mouse",
         "enabled": "Ativar os gestos do mouse",
+        "enabledDescription": "Permite controlar o navegador com movimentos do mouse",
         "showTrail": "Mostrar rastro de gestos",
+        "showTrailDescription": "Desenhe uma linha seguindo os movimentos do mouse",
         "showLabel": "Mostrar etiqueta do gesto",
+        "showLabelDescription": "Exibir o nome da ação durante o gesto",
+        "sensitivitySettings": "Opções de sensibilidade",
+        "sensitivitySettingsDescription": "Ajustar sensibilidade ao reconhecimento de gestos.",
         "sensitivity": "Sensibilidade",
+        "sensitivityDescription": "Ajustar sensibilidade ao reconhecimento de gestos",
         "low": "Baixa",
         "high": "Alta",
+        "minDistance": "Distância mínima",
+        "minDistanceDescription": "Distância mínima de movimento para ser reconhecido como um gesto",
+        "preventionTimeout": "Tempo de supressão do clique com o botão direito do mouse",
+        "preventionTimeoutDescription": "Tempo para suprimir o meu do botão direito do mouse após o gesto",
+        "trailSettings": "Configurações de trilhas de gestos",
+        "trailSettingsDescription": "Personalize a aparência das trilhas de gestos.",
         "trailWidth": "Largura do rastro",
+        "trailWidthDescription": "Largura da linha de trilha do gesto",
         "trailColor": "Cor dos rastros",
         "actionsSettings": "Ações com gestos",
         "actionsSettingsDescription": "Configurar ações de gestos do mouse",

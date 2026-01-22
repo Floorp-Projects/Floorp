@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import { onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import type {
@@ -23,6 +28,7 @@ import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_TAB_ATTRIBUTION_ID,
+  WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
@@ -74,6 +80,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       restoreArchivedWorkspace: this.restoreArchivedWorkspace.bind(this),
       deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
       resetWorkspaces: this.resetWorkspaces.bind(this),
+      getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
+      changeWorkspace: this.changeWorkspace.bind(this),
+      isWorkspaceID: this.isWorkspaceID.bind(this),
     };
 
     if (workspacesDataStore.data.size === 0) {
@@ -92,6 +101,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         "TabOpen",
         this.boundHandleTabOpen,
       );
+      window.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      window.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
     });
 
     onCleanup(() => {
@@ -257,6 +268,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   public changeWorkspace(id: TWorkspaceID) {
     this.tabManagerCtx.changeWorkspace(id);
+    Services.obs.notifyObservers(
+      null as unknown as nsISupports,
+      WORKSPACES_CHANGED_OBSERVER_TOPIC,
+      id,
+    );
   }
 
   public async captureWorkspaceSnapshot(id?: TWorkspaceID) {

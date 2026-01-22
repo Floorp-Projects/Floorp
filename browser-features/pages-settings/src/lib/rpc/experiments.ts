@@ -1,7 +1,5 @@
 import { createBirpc } from "birpc";
-import type {
-  NRExperimemmtParentFunctions,
-} from "../../../../modules/common/defines.ts";
+import type { NRExperimemmtParentFunctions } from "../../../../modules/common/defines.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const ChromeUtils: any;
@@ -32,6 +30,10 @@ const directExperimentsFunctions: NRExperimemmtParentFunctions = {
     const { Experiments } = await getExperimentsModule();
     return Experiments.getActiveExperiments();
   },
+  async getAllExperiments() {
+    const { Experiments } = await getExperimentsModule();
+    return Experiments.getAllExperiments();
+  },
   async disableExperiment(experimentId) {
     const { Experiments } = await getExperimentsModule();
     if (typeof experimentId !== "string" || !experimentId) {
@@ -45,6 +47,20 @@ const directExperimentsFunctions: NRExperimemmtParentFunctions = {
       return { success: false, error: "Invalid experimentId" };
     }
     return Experiments.enableExperiment(experimentId);
+  },
+  async forceEnrollExperiment(experimentId) {
+    const { Experiments } = await getExperimentsModule();
+    if (typeof experimentId !== "string" || !experimentId) {
+      return { success: false, error: "Invalid experimentId" };
+    }
+    return Experiments.forceEnrollExperiment(experimentId);
+  },
+  async removeForceEnrollment(experimentId) {
+    const { Experiments } = await getExperimentsModule();
+    if (typeof experimentId !== "string" || !experimentId) {
+      return { success: false, error: "Invalid experimentId" };
+    }
+    return Experiments.removeForceEnrollment(experimentId);
   },
   async clearExperimentCache() {
     const { Experiments } = await getExperimentsModule();
@@ -68,16 +84,14 @@ const directExperimentsFunctions: NRExperimemmtParentFunctions = {
 
 export const experimentsRpc = hasBridge
   ? createBirpc<NRExperimemmtParentFunctions, Record<string, never>>(
-    {},
-    {
-      post: (data) => window.NRExperimemmtSend(data),
-      on: (callback) => {
-        window.NRExperimemmtRegisterReceiveCallback(callback);
+      {},
+      {
+        post: (data) => window.NRExperimemmtSend(data),
+        on: (callback) => {
+          window.NRExperimemmtRegisterReceiveCallback(callback);
+        },
+        serialize: (value) => JSON.stringify(value),
+        deserialize: (value) => JSON.parse(value),
       },
-      serialize: (value) => JSON.stringify(value),
-      deserialize: (value) => JSON.parse(value),
-    },
-  )
+    )
   : directExperimentsFunctions;
-
-

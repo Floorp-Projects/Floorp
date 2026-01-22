@@ -15,6 +15,7 @@ export type Manifest = {
   display?: string;
   theme_color?: string;
   background_color?: string;
+  pinPromptShown?: boolean;
 };
 
 export type Icon = {
@@ -69,3 +70,12 @@ export const zPwaConfig = t.type({
 });
 
 export type TPwaConfig = t.TypeOf<typeof zPwaConfig>;
+
+export interface CustomTitlebarAPI {
+  allowedBy(condition: string, allow: boolean): void;
+  __floorpSsbPatched?: boolean;
+}
+
+export type FloorpChromeWindow = Window & {
+  CustomTitlebar?: CustomTitlebarAPI;
+};

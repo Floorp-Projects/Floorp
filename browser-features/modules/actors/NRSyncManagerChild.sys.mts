@@ -36,4 +36,7 @@ export class NRSyncManagerChild extends JSWindowActorChild {
       }
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

@@ -16,7 +16,9 @@ const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
 
 export const useMouseGestureConfig = () => {
-  const [config, setConfig] = useState<MouseGestureConfig>({} as MouseGestureConfig);
+  const [config, setConfig] = useState<MouseGestureConfig>(
+    {} as MouseGestureConfig,
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,25 +29,47 @@ export const useMouseGestureConfig = () => {
         let enabled: boolean;
         try {
           const result = await rpc.getBoolPref(MOUSE_GESTURE_ENABLED_PREF);
-          enabled = result === null ? true : result;
+          enabled = result === null ? false : result;
         } catch (e) {
           console.error("Failed to get enabled state", e);
-          enabled = true;
+          enabled = false;
         }
+
+        const defaultConfig: MouseGestureConfig = {
+          enabled,
+          rockerGesturesEnabled: true,
+          sensitivity: 40,
+          showTrail: true,
+          showLabel: true,
+          trailColor: "#37ff00",
+          trailWidth: 6,
+          contextMenu: {
+            minDistance: 12,
+            preventionTimeout: 200,
+          },
+          actions: [],
+        };
 
         try {
           const configStr = await rpc.getStringPref(MOUSE_GESTURE_CONFIG_PREF);
           if (configStr) {
             const parsedConfig = JSON.parse(configStr);
-            // Backward compatibility defaults
-            const showLabel = parsedConfig.showLabel ?? true;
-            setConfig({ ...parsedConfig, showLabel, enabled });
+            // Merge defaults with parsed config
+            setConfig({
+              ...defaultConfig,
+              ...parsedConfig,
+              contextMenu: {
+                ...defaultConfig.contextMenu,
+                ...parsedConfig.contextMenu,
+              },
+              enabled,
+            });
           } else {
-            throw new Error("Configuration not found");
+            setConfig(defaultConfig);
           }
         } catch (parseError) {
           console.error("Failed to parse configuration", parseError);
-          throw parseError;
+          setConfig(defaultConfig);
         }
       } catch (error) {
         console.error("Failed to load configuration", error);
@@ -113,7 +137,7 @@ export const useMouseGestureConfig = () => {
 };
 
 export const patternToString = (pattern: GestureDirection[]) => {
-  const directionMap = {
+  const directionMap: Record<GestureDirection, string> = {
     up: "↑",
     down: "↓",
     left: "←",

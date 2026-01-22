@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
-import { MessageCircleWarningIcon } from "lucide-react/icons";
+import { MessageCircleWarningIcon } from "lucide-react";
 
 // WindowにNRRestartBrowserメソッドを追加するための型拡張
 declare global {

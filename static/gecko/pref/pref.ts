@@ -6,7 +6,7 @@ import { BIN_DIR } from "../../../tools/src/defines.ts";
 
 const logger = new Logger("pref");
 
-const PREF_OVERRIDE_DIR = "static/gecko/pref";
+const PREF_OVERRIDE_DIR = path.dirname(path.fromFileUrl(import.meta.url));
 
 function ensureScriptPermissions(): void {
   if (Deno.build.os === "windows") return;

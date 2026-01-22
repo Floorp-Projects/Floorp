@@ -1,8 +1,7 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
-index 3d51733..07b64ea 100644
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -127,6 +127,21 @@ var gBrowserInit = {
+@@ -148,6 +148,20 @@
    },
  
    onDOMContentLoaded() {
@@ -15,35 +14,33 @@ index 3d51733..07b64ea 100644
 +      "floorpWebPanelId"
 +    );
 +    if (!webPanelId) {
-+      /**
-+      * * NORANEKO PATCH - 0.1.19
-+      * * [PANEL_SIDEBAR]
-+      * * END
-+      * */
-+
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -136,6 +151,18 @@ var gBrowserInit = {
+@@ -156,6 +170,17 @@
+       { categoryName: "browser-window-domcontentloaded-before-tabbrowser" },
        window
      );
- 
-+   /**
-+    * * NORANEKO PATCH - 0.1.19
-+    * * [PANEL_SIDEBAR]
-+    * * START
-+    **/
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
 +    }
 +    /**
 +     * * NORANEKO PATCH - 0.1.19
 +     * * [PANEL_SIDEBAR]
 +     * * END
-+    **/
-+
++     */
+ 
      gBrowser = new window.Tabbrowser();
      gBrowser.init();
- 
-@@ -1089,10 +1116,37 @@ var gBrowserInit = {
+@@ -1162,6 +1187,20 @@
      // Final window teardown, do this last.
      gBrowser.destroy();
      window.XULBrowserWindow = null;
@@ -60,24 +57,24 @@ index 3d51733..07b64ea 100644
 +     * * NORANEKO PATCH - 0.1.19
 +     * * [PANEL_SIDEBAR]
 +     * * END
-+    **/
-+
++     */
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
- 
-+    /**
-+    * * NORANEKO PATCH - 0.1.19
-+    * * [PANEL_SIDEBAR]
-+    * * START
-+    */
-+    }
-+    /**
-+       * * NORANEKO PATCH - 0.1.19
-+       * * [PANEL_SIDEBAR]
-+       * * END
-+    **/
-+
-     BrowserUtils.callModulesFromCategory(
+@@ -1170,5 +1209,16 @@
        { categoryName: "browser-window-unload" },
        window
+     );
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
++    }
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+   },
+ };

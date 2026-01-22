@@ -20,34 +20,50 @@ export class FloorpPrivateContainer {
     PrivateContainer.StartupCreatePrivateContainer();
     PrivateContainer.removePrivateContainerData();
 
-    window.SessionStore.promiseInitialized.then(() => {
-      window.gBrowser.tabContainer.addEventListener(
-        "TabClose",
-        FloorpPrivateContainer.removeDataIfPrivateContainerTabNotExist,
+    const tabContainer = window.gBrowser?.tabContainer;
+    if (!tabContainer) {
+      console.error(
+        "[FloorpPrivateContainer] Tab container is unavailable; skip listener registration.",
       );
+      return;
+    }
 
-      window.gBrowser.tabContainer.addEventListener(
-        "TabOpen",
-        FloorpPrivateContainer.handleTabModifications,
+    tabContainer.addEventListener(
+      "TabClose",
+      FloorpPrivateContainer.removeDataIfPrivateContainerTabNotExist,
+    );
+
+    tabContainer.addEventListener(
+      "TabOpen",
+      FloorpPrivateContainer.handleTabModifications,
+    );
+
+    FloorpPrivateContainer.handleTabModifications();
+
+    const sessionInitialized = window.SessionStore?.promiseInitialized;
+    sessionInitialized?.catch((error: Error) => {
+      console.error(
+        "[FloorpPrivateContainer] SessionStore initialization failure detected",
+        error,
       );
-
-      createRootHMR(() => {
-        // add URL link a context menu to open in private container.
-        ContextMenuUtils.addContextBox(
-          "open_in_private_container",
-          "privateContainer.openInPrivateContainer",
-          "context-openlink",
-          () =>
-            FloorpPrivateContainer.openWithPrivateContainer(
-              window.gContextMenu.linkURL,
-            ),
-          "context-openlink",
-          () => {
-            this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
-          },
-        );
-      }, import.meta.hot);
     });
+
+    createRootHMR(() => {
+      // add URL link a context menu to open in private container.
+      ContextMenuUtils.addContextBox(
+        "open_in_private_container",
+        "privateContainer.openInPrivateContainer",
+        "context-openlink",
+        () =>
+          FloorpPrivateContainer.openWithPrivateContainer(
+            window.gContextMenu.linkURL,
+          ),
+        "context-openlink",
+        () => {
+          this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
+        },
+      );
+    }, import.meta.hot);
   }
 
   public static checkPrivateContainerTabExist() {
@@ -88,7 +104,22 @@ export class FloorpPrivateContainer {
   }) {
     tab.linkedBrowser.setAttribute("disablehistory", "true");
     tab.linkedBrowser.setAttribute("disableglobalhistory", "true");
+    tab.setAttribute("historydisabled", "true");
     tab.setAttribute("floorp-disablehistory", "true");
+
+    const linkedBrowser = tab.linkedBrowser as unknown as {
+      disableGlobalHistory?: () => void;
+      docShell?: { useGlobalHistory: boolean };
+      browsingContext?: { useGlobalHistory: boolean };
+    };
+
+    linkedBrowser.disableGlobalHistory?.();
+    if (linkedBrowser.docShell) {
+      linkedBrowser.docShell.useGlobalHistory = false;
+    }
+    if (linkedBrowser.browsingContext) {
+      linkedBrowser.browsingContext.useGlobalHistory = false;
+    }
   }
 
   private static checkTabIsPrivateContainer(tab: { userContextId: number }) {
@@ -127,18 +158,60 @@ export class FloorpPrivateContainer {
     }
     const privateContainerUserContextID = PrivateContainer
       .getPrivateContainerUserContextId();
-    Services.obs.notifyObservers(
+    if (!privateContainerUserContextID) {
+      console.error(
+        "[FloorpPrivateContainer] Failed to resolve private container userContextId",
+      );
+      return;
+    }
+
+    console.info(
+      "[FloorpPrivateContainer] Opening URL in private container tab",
       {
-        wrappedJSObject: new Promise((resolve) => {
-          window.openTrustedLinkIn(url, "tab", {
-            relatedToCurrent,
-            resolveOnNewTabCreated: resolve,
-            userContextId: privateContainerUserContextID,
-          });
-        }),
-      } as nsISupports,
-      "browser-open-newtab-start",
+        url: String(url),
+      },
     );
+
+    const triggeringPrincipal = Services.scriptSecurityManager
+      .createNullPrincipal({
+        userContextId: privateContainerUserContextID,
+      });
+
+    const newTab = window.gBrowser.addTrustedTab("about:blank", {
+      relatedToCurrent,
+      userContextId: privateContainerUserContextID,
+      triggeringPrincipal,
+    });
+
+    if (!newTab?.linkedBrowser) {
+      console.error(
+        "[FloorpPrivateContainer] Failed to create browser element for private container tab",
+      );
+      return;
+    }
+
+    const uri = typeof url === "string" ? Services.io.newURI(url) : url;
+
+    try {
+      FloorpPrivateContainer.applyDoNotSaveHistoryToTab(newTab);
+
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: Promise.resolve(newTab.linkedBrowser),
+        } as nsISupports,
+        "browser-open-newtab-start",
+      );
+
+      newTab.linkedBrowser.loadURI(uri, {
+        triggeringPrincipal,
+        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+      });
+    } catch (error) {
+      console.error(
+        "[FloorpPrivateContainer] Failed to load URL in private container tab",
+        error,
+      );
+    }
   }
 
   public static reopenInPrivateContainer() {
@@ -164,7 +237,11 @@ export class FloorpPrivateContainer {
           triggeringPrincipal = window.E10SUtils.deserializePrincipal(
             tabState.triggeringPrincipal_base64,
           );
-        } catch (ex) {
+        } catch (error) {
+          console.error(
+            "[FloorpPrivateContainer] Failed to deserialize tab principal",
+            error,
+          );
           continue;
         }
       }

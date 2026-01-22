@@ -5,7 +5,6 @@
 
 import { render } from "@nora/solid-xul";
 import type { WorkspacesService } from "./workspacesService.ts";
-import { For } from "solid-js";
 import { workspacesDataStore } from "./data/data.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -71,37 +70,6 @@ export class WorkspacesTabContextMenu {
     }
   }
 
-  private menuItem(order: string[]) {
-    return (
-      <For each={order}>
-        {(id) => {
-          if (this.ctx.isWorkspaceID(id)) {
-            const workspace = this.ctx.getRawWorkspace(id);
-            if (!workspace) return null;
-            const icon = () =>
-              this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
-            return (
-              <xul:menuitem
-                id="context_MoveTabToOtherWorkspace"
-                label={workspace.name}
-                class="menuitem-iconic"
-                style={`list-style-image: url(${icon()})`}
-                onCommand={() =>
-                  this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
-                    id,
-                  )}
-              />
-            );
-          } else {
-            console.error(
-              getTranslatedText(translationKeys.invalidWorkspaceID) + ": " + id,
-            );
-          }
-        }}
-      </For>
-    );
-  }
-
   public contextMenu() {
     return (
       <xul:menu
@@ -139,17 +107,37 @@ export class WorkspacesTabContextMenu {
       (w) => w !== tabWorkspaceId,
     );
 
-    try {
-      render(
-        () => this.menuItem(excludeHasTabWorkspaceIdWorkspaces),
-        menuElem,
-      );
-    } catch (error) {
-      const reason = error instanceof Error ? error : new Error(String(error));
-      console.error(
-        "[WorkspacesTabContextMenu] Failed to render workspace menu items.",
-        reason,
-      );
+    for (const workspaceId of excludeHasTabWorkspaceIdWorkspaces) {
+      if (!this.ctx.isWorkspaceID(workspaceId)) {
+        console.error(
+          `${getTranslatedText(translationKeys.invalidWorkspaceID)}: ${workspaceId}`,
+        );
+        continue;
+      }
+      const workspace = this.ctx.getRawWorkspace(workspaceId);
+      if (!workspace) {
+        continue;
+      }
+      const menuitem = document?.createXULElement?.("menuitem") as
+        | XULElement
+        | undefined;
+      if (!menuitem) {
+        continue;
+      }
+      menuitem.classList.add("menuitem-iconic");
+      menuitem.setAttribute("label", workspace.name);
+      const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
+      if (iconUrl) {
+        menuitem.setAttribute("image", iconUrl);
+      } else {
+        menuitem.removeAttribute("image");
+      }
+      menuitem.addEventListener("command", () => {
+        this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
+          workspaceId,
+        );
+      });
+      menuElem.appendChild(menuitem);
     }
   }
 }

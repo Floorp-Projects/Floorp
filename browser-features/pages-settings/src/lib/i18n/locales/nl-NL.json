@@ -1,74 +1,74 @@
 {
     "title": {
-        "default": "{{productName}} Settings"
+        "default": "{{productName}} Instellingen"
     },
     "header": {
-        "title": "Settings",
-        "searchPlaceholder": "Search Settings",
-        "darkMode": "Dark Mode"
+        "title": "Instellingen",
+        "searchPlaceholder": "Zoekinstellingen",
+        "darkMode": "Donkere Modus"
     },
     "restartWarningDialog": {
-        "title": "Restart Required",
-        "description": "After restarting, the opened private windows and private tabs will be lost.",
-        "cancel": "Later",
-        "restart": "Restart Now"
+        "title": "Opnieuw opstarten vereist",
+        "description": "Na het opnieuw opstarten gaan de geopende privévensters en privétabbladen verloren.",
+        "cancel": "Niet nu",
+        "restart": "Nu opnieuw opstarten"
     },
     "sidebar": {
-        "firefoxSettings": "Firefox Settings",
-        "about": "About",
-        "aboutNoraneko": "About Noraneko",
+        "firefoxSettings": "Firefox-instellingen",
+        "about": "Over",
+        "aboutNoraneko": "Over Noraneko",
         "debug": "Debug",
-        "overview": "Overview",
-        "features": "Features"
+        "overview": "Overzicht",
+        "features": "Functies"
     },
     "pages": {
-        "home": "Home",
-        "tabAndAppearance": "Tab & Appearance",
-        "browserSidebar": "Panel Sidebar",
+        "home": "Startscherm",
+        "tabAndAppearance": "Tabblad & Uiterlijk",
+        "browserSidebar": "Paneel zijbalk",
         "workspaces": "Workspaces",
-        "keyboardShortcuts": "Keyboard Shortcuts",
+        "keyboardShortcuts": "Sneltoetsen",
         "webApps": "Web Apps",
-        "profileAndAccount": "Profile and Account",
-        "aboutBrowser": "About {{productName}}",
-        "updates": "Updates & Experiments",
+        "profileAndAccount": "Profiel en Account",
+        "aboutBrowser": "Over {{productName}}",
+        "updates": "Updates & Experimenten",
         "debug": "Debug",
-        "mouseGesture": "Mouse Gestures",
-        "keyboardShortcut": "Keyboard Shortcuts",
+        "mouseGesture": "Muis gebaren",
+        "keyboardShortcut": "Sneltoetsen",
         "search": {
-            "title": "Search Settings",
-            "resultsFor": "Search results for \"{{query}}\"",
-            "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
-            "noResults": "No results found",
+            "title": "Zoekinstellingen",
+            "resultsFor": "Zoekresultaten voor \"{{query}}\"",
+            "searchResultsDescription": "Zoekresultaten voor \"{{query}}\". Er wordt alleen gezocht op {{productName}} instellingen; Firefox-instellingen worden niet meegenomen.",
+            "noResults": "Geen zoekresultaten",
             "open": "Open \"{{title}}\"",
-            "matchedText": "Matched Text",
-            "results": "Search Results"
+            "matchedText": "Overeenkomende tekst",
+            "results": "Zoekresultaten"
         }
     },
     "home": {
-        "welcome": "Welcome, {{name}} 👋",
-        "defaultAccountName": "{{productName}} User",
-        "description": "Manage your account, privacy, and security to enhance your {{productName}} experience.",
+        "welcome": "Welkom, {{name}}👋",
+        "defaultAccountName": "{{productName}} Gebruiker",
+        "description": "Beheer uw account, privacy en beveiliging om uw {{productName}} ervaring te verbeteren.",
         "setup": {
-            "title": "Setup",
-            "footerLinkText": "Log in to Accounts",
-            "setupDescription": "Complete the setup to maximize your {{productName}} experience.",
-            "setupProgressTitle": "Setup Progress",
-            "step": "Step {{step}} of {{total}}"
+            "title": "Installatie",
+            "footerLinkText": "Inloggen bij Accounts",
+            "setupDescription": "Voltooi de installatie om uw {{productName}} ervaring te maximaliseren.",
+            "setupProgressTitle": "Voortgang van de installatie",
+            "step": "Stap {{step}} van {{total}}"
         },
         "privacyAndTrackingProtection": {
-            "title": "Privacy and Tracking Protection",
-            "footerLinkText": "Privacy and Tracking Protection",
-            "description": "{{productName}} protects your data and privacy by default, but you can also manage these settings manually."
+            "title": "Privacy en Tracking Bescherming",
+            "footerLinkText": "Privacy en Tracking Bescherming",
+            "description": "{{productName}} beschermt standaard je gegevens en privacy, maar je kunt deze instellingen ook handmatig beheren."
         },
         "ablazeAccount": {
-            "title": "Ablaze Account (Coming Soon)",
+            "title": "Ablaze Account (binnenkort beschikbaar)",
             "footerLinkText": "Ablaze Account",
-            "description": "Use a Mozilla Account to sync some data with other devices. Ablaze Account syncs data that can't be synced with a Mozilla Account."
+            "description": "Gebruik een Mozilla-account om bepaalde gegevens met andere apparaten te synchroniseren. Ablaze Account synchroniseert gegevens die niet met een Mozilla-account gesynchroniseerd kunnen worden."
         },
         "manageExtensions": {
-            "title": "Manage Extensions",
-            "description": "{{productName}} allows you to manage extensions available on addons.mozilla.org.",
-            "footerLinkText": "Manage Extensions"
+            "title": "Extensies beheren",
+            "description": "Met {{productName}} kunt u extensies beheren die beschikbaar zijn op addons.mozilla.org.",
+            "footerLinkText": "Extensies beheren"
         },
         "browserSupport": {
             "title": "{{productName}} Support",
@@ -187,6 +187,21 @@
                 "overlap": "Show Sidebar over website content"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Toevoegen",
+            "remove": "Verwijderen",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "UI Customization",
             "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable this UI customization feature.",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Bookmark Bar",
+                "position": "Position (Experiment)",
+                "top": "Top",
+                "bottom": "Bottom",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Open Profile Save Location",
         "mozillaAccountSyncSettings": "Mozilla Account Sync Settings",
         "syncedTo": "Synced to {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Sync Floorp Notes to Mozilla Account (Experimental)",
-        "floorpFeatureSyncSettings": "Floorp Feature Sync Settings",
+        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Manage Mozilla Account",
         "manageFirefoxFeatureSync": "Manage Firefox Feature Sync",
         "aboutMozillaAccount": "About Mozilla Account",
@@ -307,22 +325,41 @@
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
+        },
+        "availableFlascos": {
+            "title": "Available Flascos",
+            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
+            "noExperiments": "No experiments available.",
+            "rollout": "Rollout: {{percentage}}%",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Enrolled",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Enrolled",
+                "disabled": "Disabled",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "cancel": "Annuleren"
     },
     "search": {
         "title": "Search Settings",
@@ -461,12 +498,25 @@
         "generalSettings": "General Settings",
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Show gesture trail",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Show gesture label",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Sensitivity",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Low",
         "high": "High",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Trail width",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "Trail color",
         "actionsSettings": "Gesture Actions",
         "actionsSettingsDescription": "Configure mouse gesture actions",
@@ -506,9 +556,9 @@
             "gecko-mute-current-tab": "Mute Current Tab",
             "gecko-show-source-of-page": "Show Source Of Page",
             "gecko-show-page-info": "Show Page Info",
-            "floorp-rest-mode": "Enable Rest Mode",
-            "floorp-hide-user-interface": "Hide Interface",
-            "floorp-toggle-navigation-panel": "Toggle Navigation Panel",
+            "floorp-rest-mode": "Rustmodus inschakelen",
+            "floorp-hide-user-interface": "Interface verbergen",
+            "floorp-toggle-navigation-panel": "Navigatiepaneel in-/uitschakelen",
             "gecko-stop": "Stop",
             "gecko-search-in-this-page": "Search In This Page",
             "gecko-show-next-search-result": "Show Next Search Result",
@@ -519,7 +569,7 @@
             "gecko-enter-into-customize-mode": "Enter Customize Mode",
             "gecko-enter-into-offline-mode": "Enter Offline Mode",
             "gecko-open-screen-capture": "Open Screen Capture",
-            "floorp-show-pip": "Show Picture-in-Picture",
+            "floorp-show-pip": "Picture-in-Picture openen",
             "gecko-open-bookmark-add-tool": "Open Bookmark Add Tool",
             "gecko-open-bookmarks-manager": "Open Bookmarks Manager",
             "gecko-toggle-bookmark-toolbar": "Toggle Bookmark Toolbar",

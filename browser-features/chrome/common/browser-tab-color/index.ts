@@ -17,6 +17,18 @@ export let manager: TabColorManager;
 @noraComponent(import.meta.hot)
 export default class BrowserTabColor extends NoraComponentBase {
   init() {
+    // Check if gBrowser is available
+    const gBrowser =
+      globalThis.gBrowser ??
+      (window as typeof window & { gBrowser?: typeof globalThis.gBrowser })
+        .gBrowser;
+    if (!gBrowser) {
+      this.logger.warn(
+        "gBrowser is not available; browser tab color feature will not be initialized.",
+      );
+      return;
+    }
+
     const _changeTabColor = this.changeTabColor.bind(this);
     const listener = {
       onLocationChange: (_webProgress, _request, _location, _flags) => {
@@ -25,11 +37,8 @@ export default class BrowserTabColor extends NoraComponentBase {
     } satisfies Pick<nsIWebProgressListener, "onLocationChange">;
 
     manager = new TabColorManager();
-    globalThis.gBrowser.addTabsProgressListener(listener);
-    globalThis.gBrowser.tabContainer.addEventListener(
-      "TabSelect",
-      this.changeTabColor,
-    );
+    gBrowser.addTabsProgressListener(listener);
+    gBrowser.tabContainer.addEventListener("TabSelect", this.changeTabColor);
 
     createEffect(() => {
       if (manager.enableTabColor()) {
@@ -40,11 +49,13 @@ export default class BrowserTabColor extends NoraComponentBase {
     });
 
     onCleanup(() => {
-      globalThis.gBrowser.removeTabsProgressListener(listener);
-      globalThis.gBrowser.tabContainer.removeEventListener(
-        "TabSelect",
-        this.changeTabColor,
-      );
+      if (gBrowser) {
+        gBrowser.removeTabsProgressListener(listener);
+        gBrowser.tabContainer.removeEventListener(
+          "TabSelect",
+          this.changeTabColor,
+        );
+      }
     });
     manager.init();
   }
@@ -87,9 +98,14 @@ export default class BrowserTabColor extends NoraComponentBase {
 }
 
 async function getManifest() {
-  return await ManifestObtainer.browserObtainManifest(
-    window.gBrowser.selectedBrowser,
-  );
+  const gBrowser =
+    globalThis.gBrowser ??
+    (window as typeof window & { gBrowser?: typeof globalThis.gBrowser })
+      .gBrowser;
+  if (!gBrowser?.selectedBrowser) {
+    return null;
+  }
+  return await ManifestObtainer.browserObtainManifest(gBrowser.selectedBrowser);
 }
 function getTextColor(backgroundColor: string) {
   if (chroma.valid(backgroundColor)) {

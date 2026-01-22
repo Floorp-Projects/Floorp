@@ -45,9 +45,11 @@ export class CPanelSidebar {
     this.owner = getOwner();
     const exec = () => {
       createEffect(() => {
+        // Only clear selection marker from sidebar panels (not workspaces).
         const currentCheckedPanels = Array.from(
-          document?.querySelectorAll(".panel-sidebar-panel[data-checked]") ??
-            [],
+          document?.querySelectorAll(
+            '.panel-sidebar-panel[data-checked][data-panel-id]',
+          ) ?? [],
         );
         // Use forEach instead of map to avoid type error
         (currentCheckedPanels as XULElement[]).forEach((panel) => {
@@ -57,7 +59,10 @@ export class CPanelSidebar {
         const currentPanel = this.getPanelData(selectedPanelId() ?? "");
         if (currentPanel) {
           document
-            ?.querySelector(`.panel-sidebar-panel[id="${currentPanel.id}"]`)
+            // Select by data-panel-id to avoid touching workspace entries.
+            ?.querySelector(
+              `.panel-sidebar-panel[data-panel-id="${currentPanel.id}"]`,
+            )
             ?.setAttribute("data-checked", "true");
         }
       });

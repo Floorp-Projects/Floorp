@@ -39,7 +39,9 @@ export function NavFeatures({
               <Link to={feature.url} className="block w-full">
                 <SidebarMenuButton
                   className={`${
-                    isActive ? "bg-primary" : "hover:bg-primary/30"
+                    isActive
+                      ? "bg-primary text-primary-content"
+                      : "hover:bg-primary/30"
                   } w-full flex items-center rounded-lg p-4`}
                 >
                   <feature.icon className="size-4" />

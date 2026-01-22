@@ -1,0 +1,79 @@
+--- /tmp/original.js	2026-01-12 21:58:05.633109825 +0000
++++ /tmp/modified.js	2026-01-12 21:58:52.962558976 +0000
+@@ -148,6 +148,20 @@
+   },
+ 
+   onDOMContentLoaded() {
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (!webPanelId) {
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+     // All of this needs setting up before we create the first remote browser.
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+@@ -168,6 +182,17 @@
+       { categoryName: "browser-window-domcontentloaded" },
+       window
+     );
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
++    }
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+ 
+     FirefoxViewHandler.init();
+ 
+@@ -1162,6 +1187,20 @@
+     // Final window teardown, do this last.
+     gBrowser.destroy();
+     window.XULBrowserWindow = null;
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
++    let webPanelId = new URL(window.location.href).searchParams.get(
++      "floorpWebPanelId"
++    );
++    if (!webPanelId) {
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+     window.docShell.treeOwner
+       .QueryInterface(Ci.nsIInterfaceRequestor)
+       .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
+@@ -1170,5 +1209,16 @@
+       { categoryName: "browser-window-unload" },
+       window
+     );
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * START
++     */
++    }
++    /**
++     * * NORANEKO PATCH - 0.1.19
++     * * [PANEL_SIDEBAR]
++     * * END
++     */
+   },
+ };

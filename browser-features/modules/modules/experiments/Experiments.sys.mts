@@ -24,6 +24,8 @@ const PARTICIPATION_POLICY_PREF = "floorp.experiments.participationPolicy";
 const LAST_POLICY_PREF = "floorp.experiments.lastPolicy";
 // List of experiment IDs that the user has explicitly disabled
 const DISABLED_EXPERIMENTS_PREF = "floorp.experiments.disabled";
+// List of experiment IDs that the user has force-enrolled (overriding rollout)
+const FORCE_ENROLLED_EXPERIMENTS_PREF = "floorp.experiments.forceEnrolled";
 
 // IMPORTANT: The experiments manifest URL is defined inside this module.
 // Edit this constant when you want to change the source for experiments.
@@ -67,6 +69,7 @@ export class ExperimentsClient {
   configs: Record<string, unknown> = {};
   installId: string | null = null;
   disabledExperiments: Set<string> = new Set();
+  forceEnrolledExperiments: Set<string> = new Set();
   // IMPORTANT: do NOT call async initialization (e.g. `init()`) from the
   // constructor. Calling an async method from a constructor creates a
   // fire-and-forget promise which can lead to race conditions where the
@@ -205,6 +208,27 @@ export class ExperimentsClient {
     }
   }
 
+  private loadForceEnrolledExperiments(): Set<string> {
+    try {
+      const raw = this.getPrefString(FORCE_ENROLLED_EXPERIMENTS_PREF, null);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw) as string[];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      console.error("Failed to parse force-enrolled experiments: " + String(e));
+      return new Set();
+    }
+  }
+
+  private saveForceEnrolledExperiments(): void {
+    try {
+      const arr = Array.from(this.forceEnrolledExperiments);
+      this.setPrefString(FORCE_ENROLLED_EXPERIMENTS_PREF, JSON.stringify(arr));
+    } catch (e) {
+      console.error("Failed to save force-enrolled experiments: " + String(e));
+    }
+  }
+
   private storageKeyForConfig(experimentId: string, variantId: string): string {
     return CONFIG_CACHE_PREFIX + experimentId + ":" + variantId;
   }
@@ -270,7 +294,9 @@ export class ExperimentsClient {
     if (policy === "always") {
       // Skip rollout check and go straight to variant selection
       // Exclude "control" variant when policy is "always" to ensure user gets experimental features
-      const experimentalVariants = variants.filter((v: Variant) => v.id !== "control");
+      const experimentalVariants = variants.filter(
+        (v: Variant) => v.id !== "control",
+      );
 
       // If no experimental variants available, fall back to control
       if (experimentalVariants.length === 0) {
@@ -285,6 +311,38 @@ export class ExperimentsClient {
       );
       if (!totalWeight) {
         // If all weights are 0, return first experimental variant
+        return experimentalVariants[0].id;
+      }
+      const salt = exp.salt || exp.id || "";
+      const pickHash = this.fnv1a32Hash(installId + "::" + salt + ":variant");
+      let r = pickHash % totalWeight;
+      for (const v of experimentalVariants) {
+        const w = typeof v.weight === "number" ? Math.max(0, v.weight) : 1;
+        if (r < w) return v.id;
+        r -= w;
+      }
+      return experimentalVariants[0].id;
+    }
+
+    // Check if this experiment is force-enrolled (overrides default rollout behavior)
+    const isForceEnrolled = this.forceEnrolledExperiments.has(exp.id);
+    if (isForceEnrolled) {
+      // Force-enrolled experiments behave like "always" policy for this specific experiment
+      const experimentalVariants = variants.filter(
+        (v: Variant) => v.id !== "control",
+      );
+
+      if (experimentalVariants.length === 0) {
+        const control = variants.find((v) => v.id === "control");
+        return control ? control.id : null;
+      }
+
+      const totalWeight = experimentalVariants.reduce(
+        (s: number, v: Variant) =>
+          s + (typeof v.weight === "number" ? Math.max(0, v.weight) : 1),
+        0,
+      );
+      if (!totalWeight) {
         return experimentalVariants[0].id;
       }
       const salt = exp.salt || exp.id || "";
@@ -436,6 +494,7 @@ export class ExperimentsClient {
     }
     this.assignments = this.loadAssignmentsFromPrefs();
     this.disabledExperiments = this.loadDisabledExperiments();
+    this.forceEnrolledExperiments = this.loadForceEnrolledExperiments();
 
     const timeoutMs = options.timeoutMs || 5000;
     try {
@@ -472,7 +531,10 @@ export class ExperimentsClient {
     let disabledChanged = false;
 
     // Check if participation policy has changed
-    const currentPolicy = this.getPrefString(PARTICIPATION_POLICY_PREF, "default");
+    const currentPolicy = this.getPrefString(
+      PARTICIPATION_POLICY_PREF,
+      "default",
+    );
     const lastPolicy = this.getPrefString(LAST_POLICY_PREF, null);
     const policyChanged = lastPolicy !== null && currentPolicy !== lastPolicy;
 
@@ -513,7 +575,8 @@ export class ExperimentsClient {
       // 1. No previous assignment, OR
       // 2. InstallId changed, OR
       // 3. Participation policy changed (need to recalculate all variants)
-      const shouldReassign = !prev || prev.installId !== this.installId || policyChanged;
+      const shouldReassign =
+        !prev || prev.installId !== this.installId || policyChanged;
 
       if (!shouldReassign) continue;
 
@@ -636,8 +699,9 @@ export class ExperimentsClient {
       if (!this.clearPref(ASSIGNMENTS_PREF)) errors.push(ASSIGNMENTS_PREF);
       if (!this.clearPref(DISABLED_EXPERIMENTS_PREF))
         errors.push(DISABLED_EXPERIMENTS_PREF);
-      if (!this.clearPref(LAST_POLICY_PREF))
-        errors.push(LAST_POLICY_PREF);
+      if (!this.clearPref(FORCE_ENROLLED_EXPERIMENTS_PREF))
+        errors.push(FORCE_ENROLLED_EXPERIMENTS_PREF);
+      if (!this.clearPref(LAST_POLICY_PREF)) errors.push(LAST_POLICY_PREF);
       // Clear all cached configuration preferences
       const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
       for (const prefName of configPrefs) {
@@ -647,6 +711,7 @@ export class ExperimentsClient {
       this.assignments = {};
       this.configs = {};
       this.disabledExperiments.clear();
+      this.forceEnrolledExperiments.clear();
 
       if (errors.length) {
         console.error(`Some prefs failed to clear: ${errors.join(", ")}`);
@@ -745,6 +810,151 @@ export class ExperimentsClient {
       // Remove from disabled list
       this.disabledExperiments.delete(experimentId);
       this.saveDisabledExperiments();
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Get all available experiments with their enrollment status
+   * This includes experiments where the user is outside the rollout range
+   * @returns Array of all experiments with status information
+   */
+  getAllExperiments(): Array<{
+    id: string;
+    name: string | undefined;
+    description: string | undefined;
+    rollout: number;
+    start: string | undefined;
+    end: string | undefined;
+    isActive: boolean;
+    enrollmentStatus:
+      | "enrolled"
+      | "not_in_rollout"
+      | "force_enrolled"
+      | "disabled"
+      | "control";
+    currentVariantId: string | null;
+    experimentData: Experiment;
+  }> {
+    const results = [];
+
+    for (const exp of this.experiments) {
+      const isActive = this.isExperimentActive(exp);
+      const assignment = this.assignments[exp.id];
+      const isDisabled = this.disabledExperiments.has(exp.id);
+      const isForceEnrolled = this.forceEnrolledExperiments.has(exp.id);
+      const currentVariantId = assignment?.variantId || null;
+
+      let enrollmentStatus:
+        | "enrolled"
+        | "not_in_rollout"
+        | "force_enrolled"
+        | "disabled"
+        | "control";
+
+      if (isDisabled) {
+        enrollmentStatus = "disabled";
+      } else if (isForceEnrolled) {
+        enrollmentStatus = "force_enrolled";
+      } else if (currentVariantId === "control") {
+        enrollmentStatus = "control";
+      } else if (currentVariantId && currentVariantId !== "control") {
+        enrollmentStatus = "enrolled";
+      } else {
+        enrollmentStatus = "not_in_rollout";
+      }
+
+      results.push({
+        id: exp.id,
+        name: exp.name,
+        description: exp.description,
+        rollout: typeof exp.rollout === "number" ? exp.rollout : 100,
+        start: exp.start,
+        end: exp.end,
+        isActive,
+        enrollmentStatus,
+        currentVariantId,
+        experimentData: exp,
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Force-enroll in an experiment, overriding rollout settings
+   * @param experimentId The experiment ID to force-enroll in
+   * @returns Object with success status and optional error message
+   */
+  forceEnrollExperiment(experimentId: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      const experiment = this.getExperimentById(experimentId);
+      if (!experiment) {
+        return { success: false, error: "Experiment not found" };
+      }
+
+      // Add to force-enrolled list
+      this.forceEnrolledExperiments.add(experimentId);
+      this.saveForceEnrolledExperiments();
+
+      // Remove from disabled list if it was disabled
+      if (this.disabledExperiments.has(experimentId)) {
+        this.disabledExperiments.delete(experimentId);
+        this.saveDisabledExperiments();
+      }
+
+      // Recalculate assignment for this experiment
+      const variantId = this.chooseVariantForExperiment(
+        experiment,
+        this.installId as string,
+      );
+      this.assignments[experimentId] = {
+        installId: this.installId,
+        variantId,
+        assignedAt: new Date().toISOString(),
+      };
+      this.saveAssignmentsToPrefs();
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Remove force-enrollment from an experiment, returning to normal rollout behavior
+   * @param experimentId The experiment ID to remove force-enrollment from
+   * @returns Object with success status and optional error message
+   */
+  removeForceEnrollment(experimentId: string): {
+    success: boolean;
+    error?: string;
+  } {
+    try {
+      // Remove from force-enrolled list
+      this.forceEnrolledExperiments.delete(experimentId);
+      this.saveForceEnrolledExperiments();
+
+      // Recalculate assignment based on normal rollout
+      const experiment = this.getExperimentById(experimentId);
+      if (experiment && this.installId) {
+        const variantId = this.chooseVariantForExperiment(
+          experiment,
+          this.installId,
+        );
+        this.assignments[experimentId] = {
+          installId: this.installId,
+          variantId,
+          assignedAt: new Date().toISOString(),
+        };
+        this.saveAssignmentsToPrefs();
+      }
 
       return { success: true };
     } catch (error) {

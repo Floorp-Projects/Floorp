@@ -1,169 +1,169 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
-        "featureIntroduction": "Feature Introduction",
+        "welcome": "Καλώς ήλθατε",
+        "language": "Γλώσσα",
+        "languageSupport": "Υποστήριξη γλώσσας",
+        "features": "Λειτουργίες",
+        "featureIntroduction": "Παρουσίαση λειτουργιών",
         "hub": "Floorp Hub",
-        "hubIntro": "About Floorp Hub",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
-        "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "hubIntro": "Σχετικά με το Floorp Hub",
+        "customize": "Προσαρμογή",
+        "initialSettings": "Αρχικές ρυθμίσεις",
+        "complete": "Ολοκληρώθηκε",
+        "previous": "Προηγούμενο",
+        "next": "Επόμενο"
     },
     "hubPage": {
-        "title": "About Floorp Hub",
-        "subtitle": "A central place for Floorp-specific settings.",
+        "title": "Σχετικά με το Floorp Hub",
+        "subtitle": "Ένα κεντρικό μέρος για τις αποκλειστικές ρυθμίσεις του Floorp.",
         "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-        "openHub": "Open about:hub",
-        "openPreferences": "Open Settings (about:preferences)",
-        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "description": "Το Floorp Hub είναι ένα ειδικό κέντρο ρυθμίσεων για επιλογές που αφορούν το Floorp. Μπορείτε να το ανοίξετε με πλοήγηση στο 'about:hub'. Μπορείτε επίσης να έχετε πρόσβαση από την αριστερή πλευρική γραμμή της σελίδας ρυθμίσεων του Firefox στο 'about:preferences'.",
+        "openHub": "Άνοιγμα about:hub",
+        "openPreferences": "Άνοιγμα ρυθμίσεων (about:preferences)",
+        "tip": "Συμβουλή: Μπορείτε επίσης να αποκτήσετε πρόσβαση στο Floorp Hub από την πλευρική γραμμή ρυθμίσεων του Firefox.",
         "features": {
-            "dedicated": "Dedicated Floorp settings center",
-            "accessible": "Accessible from about:hub or Firefox settings",
-            "centralized": "All Floorp-specific options in one place"
+            "dedicated": "Κέντρο εξειδικευμένων ρυθμίσεων του Floorp",
+            "accessible": "Προσβάσιμο από το about:hub ή τις ρυθμίσεις του Firefox",
+            "centralized": "Όλες οι εξειδικευμένες επιλογές του Floorp σε ένα μέρος"
         }
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Προσαρμογή του Floorp",
+        "description": "Προσαρμόστε τις προτιμώμενες ρυθμίσεις σας. Μπορείτε πάντα να τις αλλάξετε αργότερα από το Floorp Hub ή τη σελίδα ρυθμίσεων.",
         "appearance": {
-            "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "title": "Ρυθμίσεις εμφάνισης",
+            "description": "Μπορείτε να προσαρμόσετε την εμφάνιση του Floorp στις προτιμήσεις σας. Επιλέξτε ένα ανοιχτό ή σκούρο θέμα, ή να αλλάζει αυτόματα με βάση τις ρυθμίσεις του συστήματός σας."
         },
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "Follow system settings"
+            "light": "Φωτεινό",
+            "dark": "Σκοτεινό",
+            "system": "Χρήση ρυθμίσεων συστήματος"
         },
         "themeInfo": {
-            "light": "Light theme",
-            "dark": "Dark theme",
-            "system": "System preference"
+            "light": "Φωτεινό θέμα",
+            "dark": "Σκοτεινό θέμα",
+            "system": "Προτίμηση συστήματος"
         },
         "searchEngine": {
-            "title": "Default Search Engine",
-            "default": "Default",
-            "search": "Search",
-            "noEnginesFound": "No search engines found."
+            "title": "Προεπιλεγμένη μηχανή αναζήτησης",
+            "default": "Προεπιλογή",
+            "search": "Αναζήτηση",
+            "noEnginesFound": "Δεν βρέθηκαν μηχανές αναζήτησης."
         },
         "floorpHub": {
             "title": "Floorp Hub",
-            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-            "openHub": "Open about:hub",
-            "openPreferences": "Open Settings (about:preferences)"
+            "description": "Το Floorp Hub είναι ένα ειδικό κέντρο ρυθμίσεων για επιλογές που αφορούν το Floorp. Μπορείτε να το ανοίξετε με πλοήγηση στο 'about:hub'. Μπορείτε επίσης να έχετε πρόσβαση από την αριστερή πλευρική γραμμή της σελίδας ρυθμίσεων του Firefox στο 'about:preferences'.",
+            "openHub": "Άνοιγμα about:hub",
+            "openPreferences": "Άνοιγμα ρυθμίσεων (about:preferences)"
         }
     },
     "finish": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
+        "title": "Η εγκατάσταση ολοκληρώθηκε!",
+        "subtitle": "Συγχαρητήρια! Ολοκληρώσατε τη ρύθμιση του Floorp. Απολαύστε μια άνετη και ασφαλή εμπειρία περιήγησης στο διαδίκτυο.",
         "nextSteps": {
-            "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "title": "Επόμενα βήματα (προαιρετικά)",
+            "setDefault": "Ορισμός ως προεπιλεγμένου προγράμματος περιήγησης",
+            "documentation": "Τεκμηρίωση"
         },
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "getStarted": "Ξεκινήστε με το Floorp",
+        "hint": "Για πιο λεπτομερείς ρυθμίσεις, μπορείτε να τις προσαρμόσετε μέσω της επιλογής Ρυθμίσεις στο κουμπί μενού πάνω δεξιά."
     },
     "welcomePage": {
-        "welcome": "Welcome to Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Get Started"
+        "welcome": "Καλώς ήλθατε στο Floorp!",
+        "description": "Το Floorp είναι ένα γρήγορο και φιλικό προς το χρήστη πρόγραμμα περιήγησης ιστού που δίνει έμφαση στην ιδιωτικότητα και την ασφάλεια. Αυτός ο οδηγός θα σας παρουσιάσει τα κύρια χαρακτηριστικά και τις ρυθμίσεις του Floorp.",
+        "readyToStart": "Όταν είστε έτοιμοι, κάντε κλικ στο παρακάτω πλήκτρο για να συνεχίσετε.",
+        "features": "Λειτουργίες Floorp",
+        "privacy": "Ιδιωτικότητα",
+        "privacyDesc": "Προστατεύει τα δεδομένα σας",
+        "speed": "Ταχύτητα",
+        "speedDesc": "Βελτιστοποιημένη απόδοση",
+        "customization": "Προσαρμογή",
+        "customizationDesc": "Τακτοποιήστε την προτίμησή σας",
+        "start": "Ας ξεκινήσουμε"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
-        "subtitle": "Check language settings and change if needed",
-        "languageSettings": "Language Settings",
-        "languageChanged": "Language Changed!",
-        "currentLanguageInfo": "Current Language Information",
-        "systemLanguage": "System Language",
-        "floorpLanguage": "Floorp Language",
-        "selectLanguage": "Select Language",
-        "useSystemLanguage": "Use System Language",
-        "multilingual": "Multilingual Support",
-        "chooseLanguage": "Choose from a wide range of languages",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "title": "Το Floorp μιλάει τη γλώσσα σας",
+        "subtitle": "Ελέγξτε τις ρυθμίσεις γλώσσας και αλλάξτε αν χρειάζεται",
+        "languageSettings": "Ρυθμίσεις γλώσσας",
+        "languageChanged": "Η γλώσσα άλλαξε!",
+        "currentLanguageInfo": "Πληροφορίες για την τρέχουσα γλώσσα",
+        "systemLanguage": "Γλώσσα συστήματος",
+        "floorpLanguage": "Γλώσσα Floorp",
+        "selectLanguage": "Επιλέξτε γλώσσα",
+        "useSystemLanguage": "Χρήση της γλώσσας συστήματος",
+        "multilingual": "Πολύγλωσση υποστήριξη",
+        "chooseLanguage": "Επιλέξτε από ένα ευρύ φάσμα γλωσσών",
+        "languageChangeNotice": "Η αλλαγή γλώσσας θα εφαρμόσει τη νέα γλώσσα χωρίς επανεκκίνηση του Floorp. Ορισμένα πρόσθετα ενδέχεται να μην υποστηρίζουν αλλαγές γλώσσας."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Βασικές λειτουργίες του Floorp",
+        "subtitle": "Το Floorp διαθέτει πολλά χρήσιμα χαρακτηριστικά. Ελέγξτε την επισκόπηση των χαρακτηριστικών!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "Πίνακας πλευρικής γραμμής",
+            "description": "Αποκτήστε πρόσβαση σε βολικές λειτουργίες από την πλευρική γραμμή στα δεξιά κατά την περιήγηση. Μπορείτε να τοποθετήσετε πίνακες ιστού, λειτουργίες σημειώσεων, πρόσθετα, σελιδοδείκτες κ.λπ. στην πλευρική γραμμή.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "Καρφίτσωμα ιστοσελίδων στην πλευρική μπάρα",
+                "Κρατήστε γρήγορα σημειώσεις με τις Σημειώσεις Floorp κατά την περιήγηση",
+                "Υποστηρίζει περιέκτες"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "Χώροι εργασίας",
+            "description": "Οργανώστε πολλαπλά σύνολα καρτελών για να εξορθολογήσετε την εργασία σας. Μεταβείτε γρήγορα μεταξύ χώρων εργασίας με διακριτικά εικονίδια και ονόματα. Πρόσβαση μέσω του κουμπιού χώρου εργασίας στην επάνω αριστερή πλευρά.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Κατηγοριοποιήστε με βάση τον σκοπό: εργασία, προσωπικά, κ.λπ.",
+                "Οπτική αναγνώριση με προσαρμοσμένα εικονίδια",
+                "Εύκολη διαχείριση καρτελών"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "Υποστήριξη Προοδευτικών Εφαρμογών Web",
+            "description": "Στα Windows, μπορείτε να προσθέσετε ιστότοπους συμβατούς με PWA ως εφαρμογές επιφάνειας εργασίας όταν τους επισκέπτεστε. Μπορούν επίσης να εγκατασταθούν κανονικοί ιστότοποι.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "Εκτέλεση ως ανεξάρτητων εφαρμογών επιφάνειας εργασίας",
+                "Μπορεί να καρφιτσωθεί στη γραμμή εργασιών",
+                "Τα πρόσθετα του Firefox λειτουργούν επίσης"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "Χειρονομίες ποντικιού",
+            "description": "Ελέγξτε το πρόγραμμα περιήγησής σας πιο διαισθητικά με τη λειτουργία χειρονομιών του ποντικιού που έχει ενσωματωθεί εγγενώς. Εκτελέστε χειρονομίες κρατώντας πατημένο το κουμπί δεξιού κλικ και μετακινώντας το ποντίκι σας.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "Λειτουργήστε χωρίς συντομεύσεις πληκτρολογίου",
+                "Πλήρως παραμετροποιήσιμες χειρονομίες",
+                "Περιηγηθείτε γρήγορα σελίδες και ιστορικό"
             ]
         },
-        "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "notebook": "Σημειωματάριο",
+        "nextTab": "Μετάβαση στην επόμενη καρτέλα"
     },
     "finishPage": {
-        "title": "Setup Complete!",
-        "subtitle": "Congratulations! You've completed the Floorp setup. You can now enjoy comfortable and secure internet browsing.",
-        "nextSteps": "Next Steps (Optional)",
-        "defaultBrowser": "Set as Default Browser",
-        "support": "Support",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "title": "Η εγκατάσταση ολοκληρώθηκε!",
+        "subtitle": "Συγχαρητήρια! Ολοκληρώσατε τη ρύθμιση του Floorp. Απολαύστε μια άνετη και ασφαλή εμπειρία περιήγησης στο διαδίκτυο.",
+        "nextSteps": "Επόμενα βήματα (προαιρετικά)",
+        "defaultBrowser": "Ορισμός ως προεπιλεγμένου προγράμματος περιήγησης",
+        "support": "Υποστήριξη",
+        "documentation": "Τεκμηρίωση",
+        "getStarted": "Ξεκινήστε με το Floorp",
+        "hint": "Για πιο λεπτομερείς ρυθμίσεις, μπορείτε να τις προσαρμόσετε μέσω της επιλογής Ρυθμίσεις στο κουμπί μενού πάνω δεξιά.",
+        "resourcesLabel": "Πόροι",
+        "defaultBrowserSuccess": "Το Floorp έχει οριστεί ως προεπιλεγμένο πρόγραμμα περιήγησης!"
     },
     "whatsNew": {
-        "title": "Welcome to Floorp {{version}}!",
-        "subtitle": "Check out what's new in Floorp!",
+        "title": "Καλώς ήλθατε στο Floorp {{version}}!",
+        "subtitle": "Δείτε τι νέο υπάρχει στο Floorp!",
         "tags": {
-            "settings": "Settings",
-            "productivity": "Productivity",
-            "workspaces": "Workspaces",
+            "settings": "Ρυθμίσεις",
+            "productivity": "Παραγωγικότητα",
+            "workspaces": "Χώροι εργασίας",
             "pwa": "PWA",
-            "gestures": "Gestures"
+            "gestures": "Χειρονομίες"
         },
         "footer": {
-            "follow": "Follow",
-            "privacy": "Privacy & Terms",
-            "about": "About Floorp",
-            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+            "follow": "Ακολουθήστε",
+            "privacy": "Ιδιωτικότητα & Όροι",
+            "about": "Σχετικά με το Floorp",
+            "copyright": "©️ {{year}} Floorp Projects. Όλα τα δικαιώματα κατοχυρωμένα."
         }
     }
 }

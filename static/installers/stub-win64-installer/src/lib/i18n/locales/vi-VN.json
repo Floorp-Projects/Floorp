@@ -1,18 +1,18 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Cài đặt trong nền....",
+            "installComplete": "Cài đặt hoàn tất"
         },
         "installer": {
             "title": "Trình cài đặt Floorp",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
+            "description": "Cài đặt trình duyệt Floorp và tận hưởng trải nghiệm duyệt mạng riêng tư, nhanh chóng và mạng mẽ.",
             "adminRights": "Install with admin rights",
             "adminRightsEnabled": "Install for all users with admin rights.",
             "adminRightsDisabled": "Install for current user only.",
             "customPathRequired": "Custom installation path requires admin rights.",
             "installLocation": "Địa điểm cài đặt",
-            "change": "Change",
+            "change": "Đổi",
             "installButton": "Start Installation",
             "retryButton": "Thử lại"
         },
@@ -22,18 +22,18 @@
         },
         "modal": {
             "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
+            "installPath": "Vị trí cài đặt",
             "browse": "Duyệt",
-            "resetDefault": "Reset to Default",
+            "resetDefault": "Đặt về mặc định",
             "cancel": "Hủy",
             "save": "Save Settings",
             "close": "Đóng"
         },
         "exitConfirmation": {
             "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "message": "Hủy quá trình cài đặt sẽ ngăn Floorp được cài đặt",
+            "cancelButton": "Hủy",
+            "confirmButton": "Hủy cài đặt"
         },
         "complete": {
             "success": "Installation Successful",

@@ -9,57 +9,101 @@ import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
 import type { KeyboardShortcutConfig } from "./type.ts";
 
-let globalController: KeyboardShortcutController | null = null;
-
 export class KeyboardShortcutService {
-  private controller: KeyboardShortcutController | null = null;
+  private controllers: Map<Window, KeyboardShortcutController> = new Map();
   private lastConfigString = "";
 
   constructor() {
-    if (globalController) {
-      globalController.destroy();
-      globalController = null;
-    }
-
     this.initialize();
 
     createEffect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
+      const enabled = isEnabled();
 
       if (this.lastConfigString && this.lastConfigString !== configString) {
-        this.destroyController();
-        if (isEnabled()) {
-          this.createController();
+        this.destroyAllControllers();
+        if (enabled) {
+          this.attachToAllWindows();
         }
       }
 
       this.lastConfigString = configString;
     });
+
+    createEffect(() => {
+      const enabled = isEnabled();
+      if (enabled) {
+        this.attachToAllWindows();
+      } else {
+        this.destroyAllControllers();
+      }
+    });
+  }
+
+  private attachToAllWindows(): void {
+    const windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      const win = windows.getNext() as Window;
+      this.attachToWindow(win);
+    }
+  }
+
+  public attachToWindow(win: Window): void {
+    // Check if this window already has a controller registered from ANY context
+    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
+    if ((win as any).__keyboardShortcutControllerAttached === true) {
+      return;
+    }
+
+    if (this.controllers.has(win)) {
+      return;
+    }
+
+    if (isEnabled()) {
+      const controller = new KeyboardShortcutController(win);
+      this.controllers.set(win, controller);
+
+      // Mark the window as having a controller attached
+      (win as any).__keyboardShortcutControllerAttached = true;
+
+      const onUnload = () => {
+        controller.destroy();
+        this.controllers.delete(win);
+        // Clean up the marker when the window is closed
+        try {
+          delete (win as any).__keyboardShortcutControllerAttached;
+        } catch (_e) {
+          // Window might be already gone
+        }
+        try {
+          win.removeEventListener("unload", onUnload);
+        } catch (_e) {
+          // Window might be already gone
+        }
+      };
+
+      win.addEventListener("unload", onUnload, { once: true });
+    }
+  }
+
+  private destroyAllControllers(): void {
+    for (const [win, controller] of this.controllers.entries()) {
+      controller.destroy();
+      // Clean up the marker
+      try {
+        delete (win as any).__keyboardShortcutControllerAttached;
+      } catch (_e) {
+        // Window might be already gone
+      }
+    }
+    this.controllers.clear();
   }
 
   private initialize(): void {
     this.lastConfigString = JSON.stringify(getConfig());
     if (isEnabled()) {
-      this.createController();
-    }
-  }
-
-  private createController(): void {
-    this.destroyController();
-
-    this.controller = new KeyboardShortcutController();
-    globalController = this.controller;
-  }
-
-  private destroyController(): void {
-    if (this.controller) {
-      this.controller.destroy();
-      this.controller = null;
-
-      if (globalController === this.controller) {
-        globalController = null;
-      }
+      this.attachToAllWindows();
     }
   }
 
@@ -68,14 +112,12 @@ export class KeyboardShortcutService {
   }
 
   public setEnabled(value: boolean): void {
-    const currentState = isEnabled();
-
     setEnabled(value);
 
-    if (value && !currentState) {
-      this.createController();
-    } else if (!value && currentState) {
-      this.destroyController();
+    if (value) {
+      this.attachToAllWindows();
+    } else {
+      this.destroyAllControllers();
     }
   }
 
@@ -86,9 +128,9 @@ export class KeyboardShortcutService {
   public updateConfig(newConfig: KeyboardShortcutConfig): void {
     setConfig(newConfig);
 
+    this.destroyAllControllers();
     if (isEnabled()) {
-      this.destroyController();
-      this.createController();
+      this.attachToAllWindows();
     }
   }
 }

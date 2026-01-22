@@ -290,6 +290,9 @@ export class NRProfileManagerChild extends JSWindowActorChild {
       // swallow errors to avoid throwing inside receiveMessage
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }
 
 function safeParseJSON(s: unknown) {

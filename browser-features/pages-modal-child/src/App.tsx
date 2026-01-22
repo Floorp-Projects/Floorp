@@ -34,7 +34,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null,
+  );
 
   useEffect(() => {
     setPortalContainer(document.body);
@@ -53,12 +55,12 @@ const FormField = ({ item, control }: FormFieldProps) => {
       const buttonWidth = rect.width;
       const spaceBelow = windowHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       // Use available space, but cap at reasonable maximum (250px)
       // This ensures dropdowns don't overflow the modal and look balanced
       const dropdownMaxHeight = Math.min(
         Math.max(spaceBelow, spaceAbove),
-        250
+        250,
       );
 
       let top = rect.bottom + scrollY;
@@ -79,14 +81,14 @@ const FormField = ({ item, control }: FormFieldProps) => {
       }
 
       setDropdownStyle({
-        position: 'fixed',
+        position: "fixed",
         top: `${top}px`,
         left: `${left}px`,
         width: `${buttonWidth}px`,
         maxHeight: `${dropdownMaxHeight}px`,
         zIndex: 1000,
-        scrollbarWidth: 'thin',
-        overflowY: 'auto' as const
+        scrollbarWidth: "thin",
+        overflowY: "auto" as const,
       });
     }
   }, [dropdownOpen]);
@@ -145,21 +147,20 @@ const FormField = ({ item, control }: FormFieldProps) => {
                 type={item.type === "url" ? "text" : item.type}
                 className={`w-full px-4 py-2
                 ${item.type === "url" ? "need-url-validation" : ""}
-                  text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
-                  }`}
+                  text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
+                  item.classList || ""
+                }`}
                 placeholder={item.placeholder || ""}
                 maxLength={item.maxLength}
-                onBlur={
-                  item.type === "url"
-                    ? (e) => {
-                      const formattedUrl = validateAndFormatUrl(
-                        e.target.value,
-                      );
-                      field.onChange(formattedUrl);
-                      e.target.value = formattedUrl;
-                    }
-                    : field.onBlur
-                }
+                onBlur={item.type === "url"
+                  ? (e) => {
+                    const formattedUrl = validateAndFormatUrl(
+                      e.target.value,
+                    );
+                    field.onChange(formattedUrl);
+                    e.target.value = formattedUrl;
+                  }
+                  : field.onBlur}
               />
             )}
           />
@@ -182,8 +183,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <textarea
                 {...field}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
-                  }`}
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
+                  item.classList || ""
+                }`}
                 placeholder={item.placeholder || ""}
                 rows={item.rows || 4}
               />
@@ -208,8 +210,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <select
                 {...field}
-                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
-                  }`}
+                className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
+                  item.classList || ""
+                }`}
               >
                 {item.options?.map((opt: { label: string; value: string }) => (
                   <option key={opt.value} value={opt.value}>
@@ -240,8 +243,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
                 <button
                   ref={buttonRef}
                   type="button"
-                  className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${item.classList || ""
-                    }`}
+                  className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
+                    item.classList || ""
+                  }`}
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
                   {item.options?.find((opt) => opt.value === value)?.label ||
@@ -263,15 +267,21 @@ const FormField = ({ item, control }: FormFieldProps) => {
                             setDropdownOpen(false);
                           }}
                         >
-                          {opt.icon ? (
-                            <img src={opt.icon} className="w-4 h-4 mr-2" alt="" />
-                          ) : null}
+                          {opt.icon
+                            ? (
+                              <img
+                                src={opt.icon}
+                                className="w-4 h-4 mr-2"
+                                alt=""
+                              />
+                            )
+                            : null}
                           <span>{opt.label}</span>
                         </li>
                       ))}
                     </ul>
                   </div>,
-                  portalContainer
+                  portalContainer,
                 )}
               </div>
             )}
@@ -290,8 +300,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
               render={({ field: { onChange, value } }) => (
                 <input
                   type="checkbox"
-                  className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] rounded focus:ring-[#0061E0] ${item.classList || ""
-                    }`}
+                  className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] rounded focus:ring-[#0061E0] ${
+                    item.classList || ""
+                  }`}
                   checked={value === "true"}
                   onChange={(e) => onChange(String(e.target.checked))}
                 />
@@ -327,8 +338,9 @@ const FormField = ({ item, control }: FormFieldProps) => {
                       >
                         <input
                           type="radio"
-                          className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${item.classList || ""
-                            }`}
+                          className={`mr-2 h-4 w-4 text-[#0061E0] bg-white dark:bg-[#42414D] border-gray-300 dark:border-[#42414D] focus:ring-[#0061E0] ${
+                            item.classList || ""
+                          }`}
                           value={opt.value}
                           checked={value === opt.value}
                           onChange={(e) => onChange(e.target.value)}
@@ -351,6 +363,46 @@ const FormField = ({ item, control }: FormFieldProps) => {
   }
 };
 
+interface NoraModalInitMessage {
+  type: "nora-modal-init";
+  detail: string | TForm;
+}
+
+interface NoraModalRemoveMessage {
+  type: "nora-modal-remove";
+}
+
+interface NoraModalSubmitMessage {
+  type: "nora-modal-submit";
+  detail: FormValues | null;
+}
+
+type NoraMessage =
+  | NoraModalInitMessage
+  | NoraModalRemoveMessage
+  | NoraModalSubmitMessage;
+
+function isNoraMessage(data: unknown): data is NoraMessage {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    typeof (data as { type: unknown }).type === "string" &&
+    (data as { type: string }).type.startsWith("nora-modal-")
+  );
+}
+
+function postNoraMessage(message: NoraMessage) {
+  // 1. Post to current window (for actor listening on window)
+  window.postMessage(message, "*");
+
+  // 2. Post to opener/parent if available
+  if (window.opener || window.parent !== window) {
+    const target = window.opener || window.parent;
+    target.postMessage(message, "*");
+  }
+}
+
 function App() {
   const methods = useForm<FormValues>();
   const { control, watch } = methods;
@@ -361,7 +413,7 @@ function App() {
   const getVisibleFormItems = (items: TFormItem[]): TFormItem[] => {
     if (!items) return [];
 
-    return items.filter(item => {
+    return items.filter((item) => {
       if (!item.when) return true;
 
       const { id, value } = item.when;
@@ -376,11 +428,19 @@ function App() {
   };
 
   const onSubmit = (data: FormValues) => {
-    globalThis.sendForm(data);
+    postNoraMessage({ type: "nora-modal-submit", detail: data });
+
+    if (typeof globalThis.sendForm === "function") {
+      globalThis.sendForm(data);
+    }
   };
 
   const handleCancel = () => {
-    globalThis.sendForm(null);
+    postNoraMessage({ type: "nora-modal-submit", detail: null });
+
+    if (typeof globalThis.sendForm === "function") {
+      globalThis.sendForm(null);
+    }
   };
 
   useEffect(() => {
@@ -390,14 +450,55 @@ function App() {
       }
     };
 
+    const messageHandler = (e: MessageEvent) => {
+      if (!isNoraMessage(e.data)) {
+        return;
+      }
+
+      const message = e.data;
+
+      if (message.type === "nora-modal-init") {
+        try {
+          const detail = message.detail;
+          const config = typeof detail === "string"
+            ? JSON.parse(detail)
+            : detail;
+
+          if (!config || !config.forms) {
+            console.error("Invalid config received:", config);
+            return;
+          }
+
+          setFormConfig(config);
+          const initialValues: FormValues = {};
+          config.forms.forEach((item: TFormItem) => {
+            initialValues[item.id] = String(item.value || "");
+          });
+          methods.reset(initialValues);
+        } catch (err) {
+          console.error("Failed to parse modal config:", err);
+        }
+      } else if (message.type === "nora-modal-remove") {
+        setFormConfig(null);
+      }
+    };
+
     globalThis.addEventListener("form-update", handler);
-    return () => globalThis.removeEventListener("form-update", handler);
+    globalThis.addEventListener("message", messageHandler);
+
+    // Signal readiness
+    document.documentElement.dataset.noraModalReady = "true";
+
+    return () => {
+      globalThis.removeEventListener("form-update", handler);
+      globalThis.removeEventListener("message", messageHandler);
+    };
   }, [methods]);
 
   globalThis.buildFormFromConfig = (config: TForm) => {
     setFormConfig(config);
     const initialValues: FormValues = {};
-    config.forms.forEach(item => {
+    config.forms.forEach((item) => {
       initialValues[item.id] = String(item.value || "");
     });
     methods.reset(initialValues);

@@ -40,7 +40,7 @@
             "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included.",
             "noResults": "Нічого не знайдено",
             "open": "Відкрийте \"{{title}}\"",
-            "matchedText": "Matched Text",
+            "matchedText": "Відповідний текст",
             "results": "Результати пошуку"
         }
     },
@@ -136,8 +136,8 @@
             "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Експериментальні можливості",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
+                "description": "Ці налаштування є експериментальними і офіційно не підтримуються. Можуть виникнути проблеми.",
+                "leptonRepository": "Lepton — це тема css для Firefox.",
                 "visitRepository": "Visit Repository Page"
             },
             "autohide": {
@@ -187,6 +187,21 @@
                 "overlap": "Показати бічну панель над вмістом сайту"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Додати",
+            "remove": "Remove",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "Налаштування інтерфейсу",
             "needRestartDescriptionForEnableAndDisable": "Щоб повністю увімкнути або вимкнути цю функцію налаштування інтерфейсу, потрібно перезапустити {{productName}}.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Нова вкладка",
-                "disableFloorpStart": "Disable Floorp Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Multirow Tab",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Панель закладок",
+                "position": "Позиція (Експеримент)",
+                "top": "Top",
+                "bottom": "Bottom",
                 "focusExpand": "Розгорнути панель закладок на фокусі"
             }
         }
@@ -236,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Закрити спливаюче вікно під час вибору робочої області",
         "closePopupWhenSelectingWorkspaceDescription": "Виберіть, чи закривати спливаюче вікно робочої області під час вибору робочої області.",
         "showWorkspaceNameOnToolbar": "Показати назву робочої області біля іконки",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Керувати робочими областями на бічній панелі {{productName}}",
         "manageOnBmsDescription": "Якщо цю функцію ввімкнено, можна керувати лише робочими областями на бічній панелі {{productName}}. Ви не зможете керувати робочими областями за допомогою кнопки панелі інструментів.",
         "backup": "Резервне копіювання робочої області",
@@ -246,7 +264,7 @@
         "initializeTitle": "Initialize workspaces",
         "initializeDescription": "Reset workspace data to its default state. All custom workspaces will be removed and all tabs will be reassigned to the new workspace.",
         "initializeAction": "Initialize workspaces",
-        "initializeSuccess": "Workspaces have been reset to their default state.",
+        "initializeSuccess": "Робочі простори були скинуті до стану за замовчуванням.",
         "initializeFailure": "Failed to initialize workspaces. Please try again.",
         "initializeConfirmTitle": "Initialize Workspaces",
         "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
@@ -255,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Профіль та обліковий запис",
-        "profileDescription": "Профілі містять інформацію, пов'язану з переглядом, таку як історія, закладки, налаштування та доповнення. Floorp використовує цей профіль для збереження даних.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Керування профілями",
         "profileManagementDescription": "Профілі можна створювати і розділяти один від одного, а їх дані зберігаються в теці профілю.",
         "currentProfileName": "Ім'я поточного профілю: {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Відкрити місце збереження профілю",
         "mozillaAccountSyncSettings": "Налаштування синхронізації облікових записів Mozilla",
         "syncedTo": "Синхронізовано з {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Синхронізувати нотатки Floorp з обліковим записом Mozilla (експериментально)",
-        "floorpFeatureSyncSettings": "Налаштування синхронізації функцій Floorp",
+        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Керування обліковим записом Mozilla",
         "manageFirefoxFeatureSync": "Керування синхронізацією функцій Firefox",
         "aboutMozillaAccount": "Про обліковий запис Mozilla",
@@ -289,8 +307,8 @@
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Default (Recommended)",
@@ -298,31 +316,50 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Дотримуйтесь рекомендованої політики участі. Ви можете бути зареєстровані в {{productName}} Flasco на основі показників впровадження.",
+                "always": "Завжди брати участь у всіх доступних {{productName}} Flascos. Ця опція призначена для користувачів, які одні з найперших хочуть випробувати нові функції.",
+                "never": "Ніколи не брати участь у {{productName}} Flascos. Ви отримаєте лише стабільні, перевірені функції."
             },
-            "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
-            "troubleshooting": "Troubleshooting",
-            "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
+            "confirmClearCache": "Ви впевнені, що хочете видалити всі дані експерименту? Це призведе до скидання ваших завдань і не матиме зворотньої дії.",
+            "troubleshooting": "Усунення несправностей",
+            "clearCacheDescription": "Якщо у вас виникають проблеми з експериментами, очищення кешу може вирішити їх, скинувши всі дані, пов'язані з експериментами, до початкового стану.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Ви впевнені, що хочете вимкнути цей Flasco? Ви можете увімкнути його пізніше.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
+        },
+        "availableFlascos": {
+            "title": "Available Flascos",
+            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
+            "noExperiments": "No experiments available.",
+            "rollout": "Rollout: {{percentage}}%",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Enrolled",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Enrolled",
+                "disabled": "Disabled",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "cancel": "Скасувати"
     },
     "search": {
         "title": "Налаштування пошуку",
@@ -417,12 +454,12 @@
         "uninstall": "Видалити"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -436,24 +473,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Загальні налаштування",
         "generalSettingsDescription": "Основні налаштування жестів миші",
         "enabled": "Увімкнути жести миші",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Показати слід жесту",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Show gesture label",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Чутливість",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Низька",
         "high": "Висока",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Ширина сліду",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "Колір сліду",
         "actionsSettings": "Дії жестів",
         "actionsSettingsDescription": "Налаштування дії жестів миші",

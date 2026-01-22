@@ -10,7 +10,7 @@ export function NavHeader() {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton className="pointer-events-none">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-primary-foreground">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-primary">
             <Settings className="size-6" />
           </div>
           <div className="text-sm">

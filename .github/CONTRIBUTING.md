@@ -3,7 +3,7 @@
 Thank you for interest!
 
 First, please ask "how to contribute" in GitHub Issues or [Ablaze Community Discord](https://aka.ablaze.one/discord) \
-It can be help if you stuck, or for communication to start contribution.
+It can be helpful if you are stuck, or for communication to start contributing.
 
 When you ask, make an issue and make pull request, please use 5W1H as a reference for description.
 
@@ -21,5 +21,7 @@ e.g.
 4. Custom Shortcut Keys
 5. wanted to improve User Experience with changing some UI
 6. that was inconvenient because too many information in screen
+
+Please add MPL 2.0 headers to new files you submit, where appropriate. For example, a PNG or JPEG would not require an individual notice. A sample of some headers is available at: https://www.mozilla.org/en-US/MPL/headers/.
 
 Thank you for reading. Have a nice day!

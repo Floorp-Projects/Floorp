@@ -245,4 +245,7 @@ export class NRI18nChild extends JSWindowActorChild {
   _pendingRegisterReject: ((reason?: unknown) => void) | null = null;
   _pendingUnregisterResolve: ((value?: unknown) => void) | null = null;
   _pendingUnregisterReject: ((reason?: unknown) => void) | null = null;
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

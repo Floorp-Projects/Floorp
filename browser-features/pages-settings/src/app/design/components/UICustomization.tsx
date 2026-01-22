@@ -121,8 +121,6 @@ export function UICustomization() {
                 />
               </div>
 
-
-
               <div className="flex items-center justify-between gap-2">
                 <label htmlFor="disable-qr-code-button">
                   {t("design.uiCustomization.display.disableQRCodeButton")}
@@ -210,6 +208,40 @@ export function UICustomization() {
               {t("design.uiCustomization.bookmarkBar.title")}
             </h3>
             <div className="space-y-4">
+              <div>
+                <label className="block mb-2">
+                  {t("design.uiCustomization.bookmarkBar.position")}
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="bookmarkBarPosition"
+                      value="top"
+                      checked={getValues("bookmarkBarPosition") === "top"}
+                      onChange={(e) => {
+                        setValue("bookmarkBarPosition", e.target.value);
+                      }}
+                    />
+                    <span>{t("design.uiCustomization.bookmarkBar.top")}</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="bookmarkBarPosition"
+                      value="bottom"
+                      checked={getValues("bookmarkBarPosition") === "bottom"}
+                      onChange={(e) => {
+                        setValue("bookmarkBarPosition", e.target.value);
+                      }}
+                    />
+                    <span>
+                      {t("design.uiCustomization.bookmarkBar.bottom")}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between gap-2">
                 <label htmlFor="bookmark-bar-focus-expand">
                   {t("design.uiCustomization.bookmarkBar.focusExpand")}

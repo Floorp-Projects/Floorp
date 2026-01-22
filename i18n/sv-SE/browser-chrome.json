@@ -4,12 +4,12 @@
     "tooltiptext": "Öppna den senaste stängda fliken {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Floorp-specifika inställningar som panelens sidofält, arbetsytor och musgester hanteras i Floorp Hub.",
+    "openButton": "Öppna Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "För att ändra \"Hem\"-inställningen, inaktivera Floorp Start från Floorp Hub (about:hub#/features/design).",
+    "openButton": "Öppna Floorp Hub — Design"
   },
   "workspaces": {
     "modal": {
@@ -66,56 +66,45 @@
       "move-down": "Flytta denna arbetsyta nedåt",
       "delete": "Radera arbetsyta",
       "manage": "Hantera arbetsyta",
-      "archive": "Archive Workspace"
+      "archive": "Arkivera arbetsytan"
     },
     "popup": {
       "create-new": "Skapa ny arbetsyta...",
       "manage": "Hantera arbetsytor",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Visa arkiverade arbetsytor",
+      "restore-cancel": "Avsluta återställningsläge",
+      "restore-title": "Arkiverade arbetsytor",
+      "restore-loading": "Laddar arkiverade arbetsytor…",
+      "restore-empty": "Ingen arkiverade arbetsytor",
+      "restore-error": "Misslyckades med att ladda arkiverade arbetsytor",
+      "restore-tooltip": "Växla återställningsläge",
+      "restore-item": "Återställ \"{{name}}\"",
+      "restore-delete-tooltip": "Ta bort detta arkiv",
+      "restore-tab-count": "{{count}} flik",
+      "restore-tab-count_plural": "{{count}} flikar",
+      "restore-time-just-now": "Precis nu",
+      "restore-time-minutes": "{{minutes}} minut sedan",
+      "restore-time-minutes_plural": "{{minutes}} minuter sedan",
+      "restore-time-hours": "{{hours}} timme sedan",
+      "restore-time-hours_plural": "{{hours}} timmar sedan",
+      "restore-time-days": "{{days}} dag sedan",
+      "restore-time-days_plural": "{{days}} dagar sedan"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta"
+      "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta",
+      "openLinkInWorkspace": "Öppna länk i en annan arbetsyta",
+      "noOtherWorkspace": "Inga andra arbetsytor tillgängliga"
     },
     "error": {
       "invalidWorkspaceID": "Ej giltigt ID för arbetsytor (kanske är placeringen inte uppdaterad)"
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
+    "label": "Profilhanteraren",
     "tooltiptext": "Öppna profilhanteraren"
   },
   "statusbar": {
     "toggle": "Statusfält{{mark}}"
-  },
-  "splitview": {
-    "title": "Delad vy",
-    "position": "Position",
-    "position-left": "Vänster",
-    "position-right": "Höger",
-    "flex-row": "Rad",
-    "flex-column": "Kolumn",
-    "remove-button": "Ta bort aktuell vy",
-    "tab-context": {
-      "split-tabs": "Dela flikar",
-      "split-fixed-tab": "Dela till fast flik"
-    }
   },
   "ssb": {
     "menu": {
@@ -133,7 +122,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Öppna i privat behållare",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "Återöppna i privat behållare",
     "name": "Privat behållare"
   },
   "mouseGesture": {
@@ -209,8 +198,8 @@
       "gecko-scroll-left": "Scrolla vänster",
       "gecko-scroll-to-top": "Scrolla till toppen",
       "gecko-scroll-to-bottom": "Scrolla till botten",
-      "gecko-workspace-next": "Switch to Next Workspace",
-      "gecko-workspace-previous": "Switch to Previous Workspace"
+      "gecko-workspace-next": "Växla till nästa arbetsyta",
+      "gecko-workspace-previous": "Växla till föregående arbetsyta"
     },
     "descriptions": {
       "gecko-back": "Navigera tillbaka till föregående sida",
@@ -243,7 +232,7 @@
         "web": "Webbsida",
         "sidebar-tool": "Sidofält för verktyg",
         "extension": "Sidofält för tillägg",
-        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+        "builtin": "Inbyggda sidor (nedladdningar, bokmärken, historik)"
       },
       "width": "Panelbredd",
       "url": "Webbsida URL",
@@ -292,6 +281,93 @@
       "restart-cache-clear": "Starta om med cache rensning",
       "restart-safe-mode": "Starta om i felsäkert läge",
       "restart-profile-manager": "Starta om med profilhanterare"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} är i drift",
+    "panelDefaultMessage": "{{action}} pågår...",
+    "panelProgressSummary": "Påverkar {{count}} element(er)",
+    "formSummary": "Fyll i formulär: {{count}} fält(er)",
+    "formFieldProgress": "Fält {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Ställ in ingångsvärde: \"{{value}}\"",
+    "clickElementWithText": "Klicka {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Klicka på {{tag}} element",
+    "inspectPageHtml": "Hämta HTML-kod för hela sidan",
+    "inspectGetElement": "Hämtat element: {{selector}}",
+    "inspectGetElements": "{{count}} element(en) matchade: {{selector}}",
+    "inspectGetElementByText": "Hämtat element som matchar text: \"{{text}}\"",
+    "inspectGetElementText": "Hämtade text från: {{selector}}",
+    "inspectGetValue": "Hämtade värde: {{selector}}",
+    "submitForm": "Skickar formulär: {{name}}",
+    "actionLabelHighlight": "Höjdpunkt",
+    "actionLabelInspect": "Inspektera",
+    "actionLabelFill": "Fyll",
+    "actionLabelInput": "Indata",
+    "actionLabelClick": "Klick",
+    "actionLabelSubmit": "Skicka"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Öppna flik i extern webbläsare",
+      "openLinkIn": "Öppna länk i extern webbläsare",
+      "defaultBrowser": "Systemets standardwebbläsare",
+      "noBrowsers": "Inga externa webbläsare upptäcktes",
+      "noValidUrl": "Ingen giltig URL att öppna"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Lägg till i Floorp",
+      "installing": "Installerar...",
+      "success": "Tillagd!",
+      "error": "Fel uppstod",
+      "installed": "Installerad"
+    },
+    "error": {
+      "title": "Installationsfel",
+      "compatibilityNote": "Det här tillägget kanske inte är kompatibelt med Firefox/Floorp.",
+      "alreadyInstalled": "Detta tillägg är redan installerat ({{name}})",
+      "downloadFailed": "Misslyckades med att ladda ner CRX fil",
+      "conversionFailed": "Misslyckades med att konvertera tillägg: {{error}}",
+      "conversionFailedGeneric": "Misslyckades med att konvertera CRX till XPI",
+      "installError": "Installationsfel: {{error}}",
+      "installFailed": "Installationen misslyckades",
+      "noData": "Inga installationsdata tillhandahålls",
+      "addonManagerUnavailable": "AddonManager är inte tillgängligt",
+      "noBrowserWindow": "Kunde inte hitta webbläsarfönster för installation",
+      "createInstallFailed": "Misslyckades med att skapa installationsobjekt",
+      "cancelledByUser": "Installationen avbröts av användaren",
+      "downloadCancelled": "Nedladdningen avbruten",
+      "timeout": "Installationen tog för lång tid",
+      "xpiInstallError": "XPI-installationsfel: {{error}}",
+      "errorWithCode": "Installationsfel (kod: {{code}})",
+      "experimentDisabled": "Denna funktion är för närvarande inte tillgänglig"
+    },
+    "installErrors": {
+      "downloadFailed": "Nedladdning misslyckad",
+      "signatureVerifyFailed": "Misslyckades med att verifiera tilläggssignatur",
+      "corruptOrIncompatible": "Tillägget är korrupt eller inkompatibelt",
+      "incompatible": "Detta tillägg är inte kompatibelt med Floorp",
+      "blocked": "Detta tillägg är blockerat",
+      "timeout": "Tilläggsinstallationen har gått ut",
+      "installFailed": "Installation av tillägg misslyckades",
+      "parseFailed": "Misslyckades med att tolka tillägg",
+      "invalidFile": "Ogiltig tilläggsfil",
+      "networkError": "Ett nätverksfel inträffade"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Vill du lägga till Chrome-tillägget \"{{name}}\"? Det här tillägget har konverterats från Chrome Web Store.",
+      "chromeExtensionPrompt": "Vill du lägga till Chrome-tillägget \"{{name}}\"?",
+      "defaultExtensionName": "detta tillägg",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "Detta Chrome-tillägg har konverterats till Firefox-kompatibelt format. Vissa funktioner kanske inte fungerar korrekt."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
     }
   }
 }

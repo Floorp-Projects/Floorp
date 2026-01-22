@@ -29,7 +29,7 @@ class i18nUtils {
   }
 
   private async getLangPackInfoFromPref(): Promise<unknown | null> {
-    const requestedLocale = this.getRequestedLocaleFromPref;
+    const requestedLocale = this.mapLocale(this.getRequestedLocaleFromPref);
     const availableLangPacks =
       await LangPackMatcher.mockable.getAvailableLangpacks();
 

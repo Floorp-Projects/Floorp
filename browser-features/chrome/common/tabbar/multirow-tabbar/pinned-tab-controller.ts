@@ -4,9 +4,7 @@ export class PinnedTabController {
   private mutationObserver: MutationObserver | null = null;
   private isRegistered = false;
 
-  constructor(
-    private readonly resolveTabsContainer: () => XULElement | null,
-  ) {}
+  constructor(private readonly resolveTabsContainer: () => XULElement | null) {}
 
   register(): void {
     if (this.isRegistered) return;
@@ -30,6 +28,14 @@ export class PinnedTabController {
     });
 
     this.mutationObserver.observe(pinnedTabsContainer, { childList: true });
+
+    // Migrate existing pinned tabs
+    if (pinnedTabsContainer.childElementCount > 0) {
+      this.migratePinnedTabs(
+        tabsContainer,
+        pinnedTabsContainer.childNodes as NodeListOf<Element>,
+      );
+    }
 
     gBrowser.tabContainer.addEventListener(
       "TabUnpinned",
@@ -63,7 +69,7 @@ export class PinnedTabController {
   ): void {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
-    pinnedTabs.forEach((tab: Element) => {
+    Array.from(pinnedTabs).forEach((tab: Element) => {
       tab.setAttribute("newPin", "true");
 
       const firstUnpinnedTab = newContainer.querySelector(
@@ -98,8 +104,8 @@ export class PinnedTabController {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
     const lastPinnedTab = pinnedTabs[pinnedTabs.length - 1];
-    const indexToInsertBefore = findChildIndex(tabsContainer, lastPinnedTab) +
-      1;
+    const indexToInsertBefore =
+      findChildIndex(tabsContainer, lastPinnedTab) + 1;
 
     tabsContainer.insertBefore(
       tab,

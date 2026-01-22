@@ -32,4 +32,7 @@ export class NRRestartBrowserChild extends JSWindowActorChild {
       }
     }
   }
+  handleEvent(_event: Event): void {
+    // No-op
+  }
 }

@@ -1,3 +1,8 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 import {
   noraComponent,
   NoraComponentBase,
@@ -14,6 +19,7 @@ import { WorkspacesTabContextMenu } from "./tabContextMenu.tsx";
 import { migrateWorkspacesData } from "./data/migrate/migration.ts";
 import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
+import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -75,6 +81,7 @@ export default class Workspaces extends NoraComponentBase {
         new WorkspacesToolbarButton(ctx);
         new WorkspacesPopupContextMenu(ctx);
         new WorkspacesTabContextMenu(ctx);
+        new WorkspacesLinkContextMenu(ctx);
       };
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);

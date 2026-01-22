@@ -28,10 +28,6 @@ export async function browserCommand(port: number): Promise<string[]> {
     BIN_PATH_EXE,
     "--profile",
     PATHS.profile_test,
-    "--remote-debugging-port",
-    String(port),
-    "--wait-for-browser",
-    "--jsdebugger",
   ];
 }
 

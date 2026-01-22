@@ -3,144 +3,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRoot, createSignal, Show } from "solid-js";
-import { render } from "@nora/solid-xul";
+// no solid-js runtime required for this module
 import type { GestureDirection } from "../config.ts";
 import { getConfig } from "../config.ts";
 
-export function GestureDisplayUI(props: {
-  trail: { x: number; y: number }[];
-  actionName: string;
-  isVisible: boolean;
-  feedbackVisible?: boolean;
-  directions?: GestureDirection[];
-}) {
-  const getTrailElements = () => {
-    if (props.trail.length < 2 || !getConfig().showTrail) {
-      return null;
-    }
+// Plain DOM implementation using createElementNS; the previous Solid-based
+// UI was removed in favor of direct DOM manipulation so we don't depend on
+// Solid at runtime for this small visual overlay.
 
-    const config = getConfig();
-    const trailColor = config.trailColor || "#37ff00";
-    const trailWidth = config.trailWidth || 6;
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-    return props.trail.map((point, index) => {
-      if (index === 0) return null;
-
-      const prevPoint = props.trail[index - 1];
-      const dx = point.x - prevPoint.x;
-      const dy = point.y - prevPoint.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-      if (length < 0.1) return null;
-
-      const displayLength = Math.max(length, 2);
-      const displayWidth = Math.max(trailWidth, 3);
-      const opacity = length < 5 ? 0.9 : 0.7;
-
-      return (
-        <div
-          style={{
-            position: "fixed",
-            height: `${displayWidth}px`,
-            width: `${displayLength}px`,
-            "background-color": trailColor,
-            opacity: opacity.toString(),
-            left: `${prevPoint.x}px`,
-            top: `${prevPoint.y}px`,
-            transform: `rotate(${angle}deg)`,
-            "transform-origin": "left center",
-            "pointer-events": "none",
-            "border-radius": "1px",
-            "box-shadow": `0 0 2px ${trailColor}`,
-          }}
-        />
-      );
-    });
-  };
-
-  return (
-    <>
-      <Show when={props.isVisible}>
-        <div
-          style={{
-            position: "fixed",
-            top: "0",
-            left: "0",
-            width: "100vw",
-            height: "100vh",
-            "pointer-events": "none",
-            "z-index": "999999",
-          }}
-        >
-          <div
-            style={{
-              position: "fixed",
-              top: "0",
-              left: "0",
-              width: "100%",
-              height: "100%",
-              "pointer-events": "none",
-              overflow: "visible",
-            }}
-          >
-            {getTrailElements()}
-          </div>
-
-          <Show when={props.actionName && getConfig().showLabel}>
-            <div
-              style={{
-                position: "fixed",
-                bottom: "50%",
-                left: "50%",
-                transform: "translateX(-50%)",
-                "background-color": "rgba(0, 0, 0, 0.7)",
-                color: "white",
-                padding: "8px 16px",
-                "font-weight": "bold",
-                "z-index": "1000000",
-                "font-size": "50px",
-              }}
-            >
-              {props.actionName}
-            </div>
-          </Show>
-        </div>
-      </Show>
-    </>
-  );
-}
-
-let gestureDisplayInstance: GestureDisplay | null = null;
-let styleAdded = false;
+// Track GestureDisplay instances per window to avoid conflicts in multi-window environment
+const gestureDisplayInstances = new WeakMap<Window, GestureDisplay>();
 
 export class GestureDisplay {
   private mountContainer: HTMLDivElement | null = null;
-  private trailSignal = createSignal<{ x: number; y: number }[]>([]);
-  private actionSignal = createSignal<string>("");
-  private visibleSignal = createSignal<boolean>(false);
-  private feedbackTextSignal = createSignal<string>("");
-  private feedbackVisibleSignal = createSignal<boolean>(false);
-  private directionsSignal = createSignal<GestureDirection[]>([]);
+  private trail: { x: number; y: number }[] = [];
+  private actionName: string = "";
+  private visible: boolean = false;
+  private feedbackText: string = "";
+  private feedbackVisible: boolean = false;
+  private directions: GestureDirection[] = [];
+  // DOM elements
+  private canvasEl: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private labelEl: HTMLDivElement | null = null;
+  private resizeHandler: (() => void) | null = null;
+  private targetWindow: Window;
   private disposeFn: (() => void) | null = null;
 
-  constructor() {
-    if (gestureDisplayInstance) {
-      gestureDisplayInstance.destroy();
+  constructor(win: Window) {
+    this.targetWindow = win;
+
+    // Destroy previous instance for this specific window only (not other windows)
+    const existingInstance = gestureDisplayInstances.get(win);
+    if (existingInstance) {
+      existingInstance.destroy();
     }
 
-    // eslint-disable-next-line no-this-alias
-    gestureDisplayInstance = this;
+    gestureDisplayInstances.set(win, this);
     this.addGlobalStyles();
     this.createMountPoint();
     this.initializeComponent();
   }
 
   private addGlobalStyles(): void {
-    if (styleAdded || !document || !document.head) return;
+    if (
+      !this.targetWindow.document ||
+      !this.targetWindow.document.head
+    ) return;
 
-    const styleElement = document.createElement("style");
+    // Check if styles already exist in this window's document
+    if (this.targetWindow.document.getElementById("mouse-gesture-global-styles")) {
+      return;
+    }
+
+    const styleElement = this.targetWindow.document.createElement("style");
     styleElement.id = "mouse-gesture-global-styles";
     styleElement.textContent = `
             #mouse-gesture-display-container {
@@ -154,121 +72,202 @@ export class GestureDisplay {
                 overflow: visible;
             }
 
-            #mouse-gesture-display-container * {
-                position: fixed;
+            #mouse-gesture-display-container > * {
                 pointer-events: none;
             }
         `;
-    document.head.appendChild(styleElement);
-    styleAdded = true;
+    this.targetWindow.document.head.appendChild(styleElement);
   }
 
   private createMountPoint(): void {
-    if (!document || !document.body) return;
+    if (!this.targetWindow.document || !this.targetWindow.document.body) return;
 
-    const existingContainer = document.getElementById(
+    const existingContainer = this.targetWindow.document.getElementById(
       "mouse-gesture-display-container",
     );
     if (existingContainer && existingContainer.parentNode) {
       existingContainer.parentNode.removeChild(existingContainer);
     }
 
-    const existingStyle = document.getElementById(
-      "mouse-gesture-global-styles",
-    );
-    if (existingStyle && existingStyle.parentNode) {
-      existingStyle.parentNode.removeChild(existingStyle);
-      styleAdded = false;
-      this.addGlobalStyles();
-    }
+    // Ensure styles exist (addGlobalStyles already checks for duplicates)
+    this.addGlobalStyles();
 
-    this.mountContainer = document.createElement("div");
+    this.mountContainer = this.targetWindow.document.createElement("div");
     this.mountContainer.id = "mouse-gesture-display-container";
-    document.body.appendChild(this.mountContainer);
+    this.targetWindow.document.body.appendChild(this.mountContainer);
   }
 
   private initializeComponent(): void {
-    if (!this.mountContainer) return;
+    if (
+      !this.mountContainer || !this.targetWindow || !this.targetWindow.document
+    ) return;
 
-    const dispose = createRoot((dispose) => {
-      const [trail] = this.trailSignal;
-      const [actionName] = this.actionSignal;
-      const [isVisible] = this.visibleSignal;
-      const [feedbackVisible] = this.feedbackVisibleSignal;
-      const [directions] = this.directionsSignal;
+    // Create canvas and label elements using createElementNS
+    const doc = this.targetWindow.document;
+    this.canvasEl = doc.createElementNS(HTML_NS, "canvas") as HTMLCanvasElement;
+    this.canvasEl.style.position = "fixed";
+    this.canvasEl.style.top = "0";
+    this.canvasEl.style.left = "0";
+    this.canvasEl.style.width = "100vw";
+    this.canvasEl.style.height = "100vh";
+    this.canvasEl.style.pointerEvents = "none";
+    this.canvasEl.style.overflow = "visible";
+    this.canvasEl.style.zIndex = "999998";
 
-      render(
-        () => (
-          <GestureDisplayUI
-            trail={trail()}
-            actionName={actionName()}
-            isVisible={isVisible()}
-            feedbackVisible={feedbackVisible()}
-            directions={directions()}
-          />
-        ),
-        this.mountContainer,
-        {
-          hotCtx: import.meta.hot,
-        },
-      );
+    this.labelEl = doc.createElementNS(HTML_NS, "div") as HTMLDivElement;
+    this.labelEl.style.position = "fixed";
+    this.labelEl.style.bottom = "50%";
+    this.labelEl.style.left = "50%";
+    this.labelEl.style.transform = "translateX(-50%)";
+    this.labelEl.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+    this.labelEl.style.color = "white";
+    this.labelEl.style.padding = "8px 16px";
+    this.labelEl.style.fontWeight = "bold";
+    this.labelEl.style.zIndex = "1000000";
+    this.labelEl.style.fontSize = "50px";
+    this.labelEl.style.display = "none";
 
-      return dispose;
-    });
+    this.mountContainer.appendChild(this.canvasEl);
+    this.mountContainer.appendChild(this.labelEl);
 
-    this.disposeFn = dispose;
+    // initial canvas setup
+    this.setupCanvas();
+
+    // resize handler
+    this.resizeHandler = () => {
+      this.setupCanvas();
+      this.draw();
+    };
+    this.targetWindow.addEventListener("resize", this.resizeHandler);
+
+    // dispose function
+    this.disposeFn = () => {
+      if (this.resizeHandler) {
+        this.targetWindow.removeEventListener("resize", this.resizeHandler);
+        this.resizeHandler = null;
+      }
+    };
+  }
+
+  private setupCanvas(): void {
+    if (!this.canvasEl || !this.targetWindow) return;
+    const dpr = this.targetWindow.devicePixelRatio || 1;
+    const width = this.targetWindow.innerWidth;
+    const height = this.targetWindow.innerHeight;
+    this.canvasEl.width = Math.max(1, Math.floor(width * dpr));
+    this.canvasEl.height = Math.max(1, Math.floor(height * dpr));
+    this.canvasEl.style.width = `${width}px`;
+    this.canvasEl.style.height = `${height}px`;
+    this.ctx = this.canvasEl.getContext("2d");
+    if (this.ctx) {
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  private draw(): void {
+    if (!this.canvasEl || !this.ctx) return;
+    const dpr = this.targetWindow.devicePixelRatio || 1;
+    const w = this.canvasEl.width / dpr;
+    const h = this.canvasEl.height / dpr;
+    this.ctx.clearRect(0, 0, w, h);
+
+    const trail = this.trail || [];
+    if (trail.length < 2) return;
+
+    this.ctx.save();
+    this.ctx.lineJoin = "round";
+    this.ctx.lineCap = "round";
+    this.ctx.globalAlpha = 0.9;
+    this.ctx.strokeStyle = getConfig().trailColor || "#37ff00";
+    this.ctx.lineWidth = getConfig().trailWidth || 6;
+    this.ctx.beginPath();
+    this.ctx.moveTo(trail[0].x, trail[0].y);
+    for (let i = 1; i < trail.length; i++) {
+      this.ctx.lineTo(trail[i].x, trail[i].y);
+    }
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   public show(): void {
-    this.visibleSignal[1](true);
+    this.visible = true;
+    if (this.mountContainer) this.mountContainer.style.display = "block";
   }
 
   public hide(): void {
-    this.visibleSignal[1](false);
+    this.visible = false;
+    if (this.mountContainer) this.mountContainer.style.display = "none";
   }
 
   public updateTrail(points: { x: number; y: number }[]): void {
-    const newPoints = [...points];
+    let newPoints = [...points];
+
+    // Decimate when too many points to reduce draw cost
+    const MAX_POINTS = 400;
+    if (newPoints.length > MAX_POINTS) {
+      const stride = Math.ceil(newPoints.length / MAX_POINTS);
+      newPoints = newPoints.filter((_, idx) =>
+        idx % stride === 0 || idx === newPoints.length - 1
+      );
+    }
 
     //TODO: Performance optimization
     // if (newPoints.length > 100) {
     //     const stride = Math.ceil(newPoints.length);
     //     const optimizedPoints = [];
-
+    //
     //     for (let i = 0; i < newPoints.length; i += stride) {
     //         optimizedPoints.push(newPoints[i]);
     //     }
-
+    //
     //     if (optimizedPoints[optimizedPoints.length - 1] !== newPoints[newPoints.length - 1]) {
     //         optimizedPoints.push(newPoints[newPoints.length - 1]);
     //     }
-
+    //
     //     this.trailSignal[1](optimizedPoints);
     // } else {
     //     this.trailSignal[1](newPoints);
     // }
 
-    this.trailSignal[1](newPoints);
+    this.trail = newPoints;
+    this.draw();
 
-    if (!this.visibleSignal[0]()) {
-      this.visibleSignal[1](true);
+    if (!this.visible) {
+      this.show();
     }
   }
 
   public updateActionName(name: string): void {
-    this.actionSignal[1](name);
+    this.actionName = name;
+    if (this.labelEl) {
+      this.labelEl.textContent = name || "";
+      this.labelEl.style.display = (name && getConfig().showLabel)
+        ? "block"
+        : "none";
+    }
   }
 
   public showFeedback(text: string, directions?: GestureDirection[]): void {
-    this.feedbackTextSignal[1](text);
-    if (directions) {
-      this.directionsSignal[1](directions);
+    this.feedbackText = text;
+    if (directions) this.directions = directions;
+    this.feedbackVisible = true;
+    if (this.labelEl) {
+      this.labelEl.textContent = text;
+      this.labelEl.style.display = "block";
     }
-    this.feedbackVisibleSignal[1](true);
   }
 
   public hideFeedback(): void {
-    this.feedbackVisibleSignal[1](false);
+    this.feedbackVisible = false;
+    if (this.labelEl) {
+      // restore action name if configured, otherwise hide
+      if (this.actionName && getConfig().showLabel) {
+        this.labelEl.textContent = this.actionName;
+        this.labelEl.style.display = "block";
+      } else {
+        this.labelEl.style.display = "none";
+      }
+    }
   }
 
   public destroy(): void {
@@ -282,9 +281,9 @@ export class GestureDisplay {
     }
 
     this.mountContainer = null;
-
-    if (gestureDisplayInstance === this) {
-      gestureDisplayInstance = null;
+    // Remove from instances map if this is the current instance for the window
+    if (gestureDisplayInstances.get(this.targetWindow) === this) {
+      gestureDisplayInstances.delete(this.targetWindow);
     }
   }
 }

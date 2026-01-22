@@ -187,6 +187,21 @@
                 "overlap": "Afficher la barre latérale sur le contenu du site web"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Ajouter",
+            "remove": "Remove",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "Personnalisation de l'interface utilisateur",
             "needRestartDescriptionForEnableAndDisable": "Un redémarrage de {{productName}} est nécessaire pour activer ou désactiver complètement cette fonction de personnalisation de l'interface utilisateur.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Nouvel onglet",
-                "disableFloorpStart": "Désactiver Floorp Start"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Onglet multi-lignes",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Barre de marque-pages",
+                "position": "Position (expérience)",
+                "top": "Haut",
+                "bottom": "Bas",
                 "focusExpand": "Expand bookmark bar on focus"
             }
         }
@@ -236,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Fermer la fenêtre contextuelle des espaces de travail lors de la sélection d'un espace de travail",
         "closePopupWhenSelectingWorkspaceDescription": "Choisissez de fermer ou non la fenêtre contextuelle de l'espace de travail lors de la sélection d'un espace de travail.",
         "showWorkspaceNameOnToolbar": "Afficher le nom de l'espace de travail à côté de l'icône",
-        "exitOnLastTabClose": "Exit Floorp when last workspace tab is closed",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Gérer les espaces de travail sur la barre latérale de {{productName}}",
         "manageOnBmsDescription": "Lorsque cette fonctionnalité est activée, vous ne pouvez gérer les espaces de travail que dans la barre latérale de {{productName}} . Vous ne pourrez pas gérer les espaces de travail à l'aide du bouton de la barre d'outils.",
         "backup": "Sauvegarde de l'espace de travail",
@@ -255,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Profil et compte",
-        "profileDescription": "Les profils contiennent des informations liées à la navigation telles que l'historique, les marque-pages, les paramètres et les modules complémentaires. Floorp utilise ce profil pour sauvegarder les données.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Gestion du profil",
         "profileManagementDescription": "Les profils peuvent être créés et séparés les uns des autres, et leurs données sont stockées dans le dossier du profil.",
         "currentProfileName": "Nom du profil actuel : {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Ouvrir l’emplacement d’enregistrement du profil",
         "mozillaAccountSyncSettings": "Paramètres de synchronisation du compte Mozilla",
         "syncedTo": "Synchronisé vers {{email}}",
-        "syncFloorpNotesToMozillaAccount": "Synchroniser Floorp Notes sur le compte Mozilla (expérimental)",
-        "floorpFeatureSyncSettings": "Paramètres de synchronisation des fonctionnalités de Floorp",
+        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Gérer le compte Mozilla",
         "manageFirefoxFeatureSync": "Gestion de la fonctionnalité de synchronisation de Firefox",
         "aboutMozillaAccount": "À propos du compte Mozilla",
@@ -289,8 +307,8 @@
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
-            "title": "{{productName}} Test Participation",
-            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} tests.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Participation Policy",
             "policy": {
                 "default": "Default (Recommended)",
@@ -298,31 +316,50 @@
                 "never": "Never Participate"
             },
             "policyHelp": {
-                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} tests based on rollout percentages.",
-                "always": "Always participate in all available {{productName}} tests. This option is for users who want to test new features early.",
-                "never": "Never participate in {{productName}} tests. You will only receive stable, tested features."
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Are you sure you want to clear all experiment data? This will reset your assignments and cannot be undone.",
             "troubleshooting": "Troubleshooting",
             "clearCacheDescription": "If you are experiencing issues with experiments, clearing the cache may resolve them by resetting all experiment-related data to its initial state.",
             "clearCache": "Clear Experiment Cache"
         },
-        "activeTests": {
-            "title": "Active {{productName}} Tests",
-            "description": "View and manage your currently active test enrollments.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Refresh",
-            "noTests": "You are not currently enrolled in any tests.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "Enrolled on {{date}}",
             "disable": "Disable",
             "enable": "Enable",
             "disabledLabel": "Disabled",
-            "confirmDisable": "Are you sure you want to disable this experiment? You can re-enable it later.",
-            "confirmEnable": "Are you sure you want to re-enable this experiment?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Last updated:"
+        },
+        "availableFlascos": {
+            "title": "Available Flascos",
+            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
+            "noExperiments": "No experiments available.",
+            "rollout": "Rollout: {{percentage}}%",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Enrolled",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Enrolled",
+                "disabled": "Disabled",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "cancel": "Annuler"
     },
     "search": {
         "title": "Paramètres de recherche",
@@ -417,12 +454,12 @@
         "uninstall": "Désinstaller"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Manage Floorp OS backend modules and services",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Loading...",
         "statusCard": {
             "title": "Status",
-            "description": "Current status of Floorp OS",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Support",
             "platformSupported": "Your platform is supported",
             "platformUnsupported": "Your platform is not supported",
@@ -436,24 +473,24 @@
         },
         "controlsCard": {
             "title": "Controls",
-            "description": "Enable or disable Floorp OS",
-            "enable": "Enable Floorp OS",
-            "disable": "Disable Floorp OS",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Refresh Status"
         },
         "messages": {
-            "enabling": "Enabling Floorp OS...",
-            "disabling": "Disabling Floorp OS...",
-            "enableSuccess": "Floorp OS enabled successfully!",
-            "disableSuccess": "Floorp OS disabled successfully!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API is not available.",
             "loadStatus": "Failed to load status: {{reason}}",
-            "enable": "Failed to enable Floorp OS.",
-            "disable": "Failed to disable Floorp OS.",
-            "enableAction": "Error enabling Floorp OS: {{reason}}",
-            "disableAction": "Error disabling Floorp OS: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Paramètres généraux",
         "generalSettingsDescription": "Paramètres de base des gestes de la souris",
         "enabled": "Activer les mouvements de la souris",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Afficher la trace des gestes",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Show gesture label",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Sensibilité",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Faible",
         "high": "Élevé",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "Épaisseur du tracé",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "Couleur du tracé",
         "actionsSettings": "Actions gestuelles",
         "actionsSettingsDescription": "Configurer les actions gestuelles de la souris",

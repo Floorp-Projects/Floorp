@@ -187,6 +187,21 @@
                 "overlap": "Kenar Çubuğunu web sitesi içeriğinin üzerinde göster"
             }
         },
+        "tabSleepExclusion": {
+            "title": "Tab Sleep Exclusion",
+            "description": "Exclude specific websites from tab sleep (unloading). Tabs matching these patterns will remain active and won't be automatically unloaded when memory is low.",
+            "enable": "Enable tab sleep exclusion",
+            "patterns": "Exclusion Patterns",
+            "patternsDescription": "Add URL patterns to exclude from tab sleep. Tabs matching these patterns will not be unloaded.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Ekle",
+            "remove": "Kaldır",
+            "noPatterns": "No exclusion patterns configured. Add patterns to keep specific tabs active.",
+            "examples": "Pattern Examples",
+            "exampleDomain": "Matches any URL containing this domain",
+            "exampleWildcard": "Matches all subdomains of google.com",
+            "exampleFullUrl": "Matches Gmail URLs only"
+        },
         "uiCustomization": {
             "title": "UI Kişiselleştirme",
             "needRestartDescriptionForEnableAndDisable": "Arayüz Özelleştirmesini tamamen etkinleştirmek veya devre dışı bırakmak için {{productName}}'un yeniden başlatılması gerekir.",
@@ -211,7 +226,7 @@
             },
             "newtab": {
                 "title": "Yeni Sekme",
-                "disableFloorpStart": "Floorp Start'ı Devre Dışı Bırak"
+                "disableFloorpStart": "Disable {{productName}} Start"
             },
             "multirowTab": {
                 "title": "Çok Satırlı Sekme",
@@ -219,6 +234,9 @@
             },
             "bookmarkBar": {
                 "title": "Yer imleri Çubuğu",
+                "position": "Konum (Deneysel)",
+                "top": "En üst",
+                "bottom": "En alt",
                 "focusExpand": "Odaklanıldığında yer imi çubuğunu genişlet"
             }
         }
@@ -236,7 +254,7 @@
         "closePopupWhenSelectingWorkspace": "Bir çalışma alanı seçerken çalışma alanları açılır penceresini kapat",
         "closePopupWhenSelectingWorkspaceDescription": "Bir çalışma alanı seçerken çalışma alanı açılır penceresinin kapatılıp kapatılmayacağını seçin.",
         "showWorkspaceNameOnToolbar": "Simgenin yanında çalışma alanı adını göster",
-        "exitOnLastTabClose": "Son çalışma alanı sekmesi kapatıldığında Floorp'tan çıkın",
+        "exitOnLastTabClose": "Exit {{productName}} when last workspace tab is closed",
         "manageOnBms": "Çalışma alanlarını {{productName}} kenar çubuğu üzerinden yönetin",
         "manageOnBmsDescription": "Bu özellik etkinleştirildiğinde, çalışma alanlarını yalnızca {{productName}} kenar çubuğu üzerinden yönetebilirsiniz. Araç çubuğu düğmesini kullanarak çalışma alanlarını yönetemezsiniz.",
         "backup": "Çalışma Alanı Yedekleme",
@@ -255,7 +273,7 @@
     },
     "accounts": {
         "profileAndAccount": "Profil ve Hesap",
-        "profileDescription": "Profiller geçmiş, yer imleri, ayarlar ve eklentiler gibi tarama ile ilgili bilgileri içerir. Floorp bu profili verileri kaydetmek için kullanır.",
+        "profileDescription": "Profiles contain browsing-related information such as history, bookmarks, settings, and add-ons. {{productName}} uses this profile to save data.",
         "profileManagement": "Profil Yönetimi",
         "profileManagementDescription": "Profiller oluşturulabili ve birbirlerinden ayrılabilir. Verileri profil klasörlerinde saklanır.",
         "currentProfileName": "Mevcut Profil Adı: {{name}}",
@@ -264,8 +282,8 @@
         "openProfileSaveLocation": "Profil kayıt yerini aç",
         "mozillaAccountSyncSettings": "Mozilla Hesap Senkronizasyon Ayarları",
         "syncedTo": "{{email}} ile senkronize edildi",
-        "syncFloorpNotesToMozillaAccount": "Floorp Notlar'ı Mozilla Hesabı İle Senkronize Et(Deneysel)",
-        "floorpFeatureSyncSettings": "Floorp Özellik Senkronizasyon Ayarları",
+        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
+        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Mozilla Hesabını Yönet",
         "manageFirefoxFeatureSync": "Firefox Özellik Senkronizasyonunu Yönet",
         "aboutMozillaAccount": "Mozilla Hesabı Hakkında",
@@ -289,8 +307,8 @@
         "title": "Güncellemeler & Deneyler",
         "description": "Güncelleme ayarlarını ve deneysel özelliklerin katılımını yönetin.",
         "experiments": {
-            "title": "{{productName}} Teste Katılın",
-            "description": "{{productName}} 'un sizi deneysel özelliklere ve {{productName}} testlerine nasıl kaydedeceğini kontrol edin.",
+            "title": "{{productName}} Flasco Participation",
+            "description": "Control how {{productName}} enrolls you in experimental features and {{productName}} Flascos.",
             "policyLabel": "Katılım Politikası",
             "policy": {
                 "default": "Varsayılan (Önerilen)",
@@ -298,31 +316,50 @@
                 "never": "Asla Katılma"
             },
             "policyHelp": {
-                "default": "Önerilen katılım politikasını izleyin. Katılım yüzdelerine göre {{productName}} testlerine kaydolabilirsiniz.",
-                "always": "Her zaman mevcut {{productName}} testlerine katılın. Bu seçenek, yeni özellikleri erkenden test etmek isteyen kullanıcılar içindir.",
-                "never": "Asla {{productName}} testlerine katılmayın. Yalnızca kararlı, test edilmiş özellikler alacaksınız."
+                "default": "Follow the recommended participation policy. You may be enrolled in {{productName}} Flasco based on rollout percentages.",
+                "always": "Always participate in all available {{productName}} Flascos. This option is for users who want to test new features early.",
+                "never": "Never participate in {{productName}} Flascos. You will only receive stable, tested features."
             },
             "confirmClearCache": "Tüm deney verilerini silmek istediğinizden emin misiniz? Bu işlem ödevlerinizi sıfırlar ve geri alınamaz.",
             "troubleshooting": "Sorun giderme",
             "clearCacheDescription": "Deneylerle ilgili sorunlar yaşıyorsanız, önbelleği temizlemek deneyle ilgili tüm verileri başlangıç durumuna sıfırlayarak sorunları çözebilir.",
             "clearCache": "Deney Önbelleğini Temizle"
         },
-        "activeTests": {
-            "title": "{{productName}} Aktif Testler",
-            "description": "Şu anda aktif olan test kayıtlarınızı görüntüleyin ve yönetin.",
+        "activeFlascos": {
+            "title": "Active {{productName}} Flascos",
+            "description": "View and manage your currently active Flasco enrollments.",
             "refresh": "Yenile",
-            "noTests": "Şu anda herhangi bir teste kayıtlı değilsiniz.",
+            "noFlascos": "You are not currently enrolled in any Flascos.",
             "assignedAt": "{{date}} tarihinde kayıt oldu",
             "disable": "Devre dışı",
             "enable": "Etkinleştir",
             "disabledLabel": "Devre dışı",
-            "confirmDisable": "Bu deneyi devre dışı bırakmak istediğinizden emin misiniz? Daha sonra yeniden etkinleştirebilirsiniz.",
-            "confirmEnable": "Bu deneyi yeniden etkinleştirmek istediğinizden emin misiniz?",
+            "confirmDisable": "Are you sure you want to disable this Flasco? You can re-enable it later.",
+            "confirmEnable": "Are you sure you want to re-enable this Flasco?",
             "lastUpdated": "Son güncelleme:"
+        },
+        "availableFlascos": {
+            "title": "Available Flascos",
+            "description": "All available Flascos for your {{productName}} version. Some may be unavailable due to rollout limits.",
+            "noExperiments": "No experiments available.",
+            "rollout": "Rollout: {{percentage}}%",
+            "forceEnroll": "Enroll",
+            "forceEnrolled": "Enrolled",
+            "removeForceEnrollment": "Remove Override",
+            "confirmForceEnroll": "Are you sure you want to enroll in this Flasco? This will override the rollout settings.",
+            "confirmRemoveForceEnrollment": "Remove enrollment and return to normal rollout behavior?",
+            "status": {
+                "enrolled": "Enrolled",
+                "not_in_rollout": "Not in rollout",
+                "force_enrolled": "Enrolled",
+                "disabled": "Devre dışı",
+                "control": "Control"
+            }
         }
     },
     "common": {
-        "loading": "Yükleniyor..."
+        "loading": "Yükleniyor...",
+        "cancel": "İptal Et"
     },
     "search": {
         "title": "Arama Ayarları",
@@ -417,12 +454,12 @@
         "uninstall": "Kaldır"
     },
     "floorpOS": {
-        "title": "Floorp OS",
-        "description": "Floorp OS arka uç modüllerini ve hizmetlerini yönet",
+        "title": "{{productName}} OS",
+        "description": "Manage {{productName}} OS backend modules and services",
         "loading": "Yükleniyor...",
         "statusCard": {
             "title": "Durum",
-            "description": "Floorp OS'nin güncel durumu",
+            "description": "Current status of {{productName}} OS",
             "platformSupport": "Platform Desteği",
             "platformSupported": "Platformunuz destekleniyor",
             "platformUnsupported": "Platformunuz desteklenmiyor",
@@ -436,24 +473,24 @@
         },
         "controlsCard": {
             "title": "Kontroller",
-            "description": "Floorp OS'yi etkinleştir / devre dışı bırak",
-            "enable": "Floorp OS'yi Etkinleştir",
-            "disable": "Floorp OS'yi devre dışı bırakın",
+            "description": "Enable or disable {{productName}} OS",
+            "enable": "Enable {{productName}} OS",
+            "disable": "Disable {{productName}} OS",
             "refresh": "Durumu Yenile"
         },
         "messages": {
-            "enabling": "Floorp OS'yi Etkinleştirme",
-            "disabling": "Floorp OS'yi Devre dışı bırakma",
-            "enableSuccess": "Floorp OS başarıyla etkinleştirildi!",
-            "disableSuccess": "Floorp OS başarıyla devre dışı bırakıldı!"
+            "enabling": "Enabling {{productName}} OS...",
+            "disabling": "Disabling {{productName}} OS...",
+            "enableSuccess": "{{productName}} OS enabled successfully!",
+            "disableSuccess": "{{productName}} OS disabled successfully!"
         },
         "errors": {
             "apiUnavailable": "OSAutomotor API mevcut değil.",
             "loadStatus": "Durum yüklenemedi: {{reason}}",
-            "enable": "Floorp OS etkinleştirilemedi.",
-            "disable": "Floorp OS devre dışı bırakılamadı.",
-            "enableAction": "Floorp OS etkinleştirilirken hata oluştu: {{reason}}",
-            "disableAction": "Floorp OS devre dışı bırakılırken hata oluştu: {{reason}}"
+            "enable": "Failed to enable {{productName}} OS.",
+            "disable": "Failed to disable {{productName}} OS.",
+            "enableAction": "Error enabling {{productName}} OS: {{reason}}",
+            "disableAction": "Error disabling {{productName}} OS: {{reason}}"
         }
     },
     "mouseGesture": {
@@ -461,12 +498,25 @@
         "generalSettings": "Genel Ayarlar",
         "generalSettingsDescription": "Temel fare hareketi ayarları",
         "enabled": "Fare hareketlerini etkinleştir",
+        "enabledDescription": "Allows you to control your browser with mouse movements",
         "showTrail": "Hareket izini göster",
+        "showTrailDescription": "Draw a line following your mouse movements",
         "showLabel": "Hareket izini göster",
+        "showLabelDescription": "Display the action name during gesture",
+        "sensitivitySettings": "Sensitivity Settings",
+        "sensitivitySettingsDescription": "Adjust gesture recognition sensitivity.",
         "sensitivity": "Hassasiyet",
+        "sensitivityDescription": "Adjust gesture recognition sensitivity",
         "low": "Düşük",
         "high": "Yüksek",
+        "minDistance": "Minimum distance",
+        "minDistanceDescription": "Minimum movement distance to be recognized as a gesture",
+        "preventionTimeout": "Right-click suppression time",
+        "preventionTimeoutDescription": "Time to suppress right-click menu after gesture",
+        "trailSettings": "Trail Settings",
+        "trailSettingsDescription": "Customize the appearance of gesture trails.",
         "trailWidth": "İz genişliği",
+        "trailWidthDescription": "Width of the gesture trail line",
         "trailColor": "İz rengi",
         "actionsSettings": "Hareket Eylemleri",
         "actionsSettingsDescription": "Fare hareketi eylemlerini yapılandır",

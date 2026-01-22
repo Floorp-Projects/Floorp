@@ -1,0 +1,67 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "ssb.schema.json",
+    "title": "Floorp PWA Data Store",
+    "description": "Schema for SSB (Site Specific Browser) data storage",
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/definitions/Manifest"
+    },
+    "definitions": {
+        "Manifest": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "start_url",
+                "icon"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the PWA"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Display name of the PWA"
+                },
+                "short_name": {
+                    "type": "string",
+                    "description": "Short display name for the PWA"
+                },
+                "start_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL to open when PWA is launched"
+                },
+                "icon": {
+                    "type": "string",
+                    "description": "Icon URL or data URI for the PWA"
+                },
+                "scope": {
+                    "type": "string",
+                    "description": "Navigation scope for the PWA"
+                },
+                "display": {
+                    "type": "string",
+                    "enum": [
+                        "fullscreen",
+                        "standalone",
+                        "minimal-ui",
+                        "browser"
+                    ],
+                    "description": "Display mode for the PWA"
+                },
+                "theme_color": {
+                    "type": "string",
+                    "description": "Theme color for the PWA"
+                },
+                "background_color": {
+                    "type": "string",
+                    "description": "Background color for the PWA splash screen"
+                }
+            },
+            "additionalProperties": true
+        }
+    }
+}

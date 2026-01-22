@@ -66,32 +66,34 @@
       "move-down": "Pindahkan Ruang Kerja ini ke bawah",
       "delete": "Hapus Ruang Kerja",
       "manage": "Kelola Ruang Kerja",
-      "archive": "Archive Workspace"
+      "archive": "Arsipkan Ruang Kerja"
     },
     "popup": {
       "create-new": "Buat Ruang Kerja Baru …",
       "manage": "Kelola Ruang Kerja",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
+      "restore": "Tampilkan Ruang Kerja Terarsipkan",
+      "restore-cancel": "Keluar dari Mode Pemulihan",
+      "restore-title": "Ruang Kerja Terarsip",
+      "restore-loading": "Memuat ruang kerja terarsip…",
+      "restore-empty": "Tidak ada ruang kerja terarsip",
+      "restore-error": "Gagal memuat ruang kerja terarsip",
       "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
+      "restore-item": "Pulihkan \"{{name}}\"",
+      "restore-delete-tooltip": "Hapus arsip ini",
       "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore-tab-count_plural": "{{count}} tab",
+      "restore-time-just-now": "Baru saja",
+      "restore-time-minutes": "{{minutes}} menit yang lalu",
+      "restore-time-minutes_plural": "{{minutes}} menit yang lalu",
+      "restore-time-hours": "{{hours}} jam yang lalu",
+      "restore-time-hours_plural": "{{hours}} jam yang lalu",
+      "restore-time-days": "{{days}} hari yang lalu",
+      "restore-time-days_plural": "{{days}} hari yang lalu"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain"
+      "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain",
+      "openLinkInWorkspace": "Buka Tautan di Ruang Kerja Lain",
+      "noOtherWorkspace": "Tidak ada ruang kerja lain yang tersedia"
     },
     "error": {
       "invalidWorkspaceID": "ID Ruang Kerja tidak valid (mungkin urutan belum diperbarui)"
@@ -103,19 +105,6 @@
   },
   "statusbar": {
     "toggle": "Bilah Status{{mark}}"
-  },
-  "splitview": {
-    "title": "Tampilan Belah",
-    "position": "Posisi",
-    "position-left": "Kiri",
-    "position-right": "Kanan",
-    "flex-row": "Baris",
-    "flex-column": "Kolom",
-    "remove-button": "Hapus Tampilan Saat Ini",
-    "tab-context": {
-      "split-tabs": "Tab Belah",
-      "split-fixed-tab": "Split to Fixed Tab"
-    }
   },
   "ssb": {
     "menu": {
@@ -292,6 +281,93 @@
       "restart-cache-clear": "Mulai Ulang dengan Pembersihan Cache",
       "restart-safe-mode": "Mulai Ulang dalam Mode Aman",
       "restart-profile-manager": "Mulai Ulang dengan Manajer Profil"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is operating",
+    "panelDefaultMessage": "{{action}} in progress...",
+    "panelProgressSummary": "Affects {{count}} element(s)",
+    "formSummary": "Filling form: {{count}} field(s)",
+    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Set input value: \"{{value}}\"",
+    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Clicking {{tag}} element",
+    "inspectPageHtml": "Retrieved full page HTML",
+    "inspectGetElement": "Retrieved element: {{selector}}",
+    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
+    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
+    "inspectGetElementText": "Retrieved text from: {{selector}}",
+    "inspectGetValue": "Retrieved value: {{selector}}",
+    "submitForm": "Submitting form: {{name}}",
+    "actionLabelHighlight": "Highlight",
+    "actionLabelInspect": "Inspect",
+    "actionLabelFill": "Fill",
+    "actionLabelInput": "Input",
+    "actionLabelClick": "Click",
+    "actionLabelSubmit": "Submit"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Buka Tab di Peramban Eksternal",
+      "openLinkIn": "Buka Tautan di Peramban Eksternal",
+      "defaultBrowser": "Peramban Bawaan Sistem",
+      "noBrowsers": "Tidak ada peramban eksternal terdeteksi",
+      "noValidUrl": "Tidak ada URL valid untuk dibuka"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Tambahkan ke Floorp",
+      "installing": "Memasang …",
+      "success": "Ditambahkan!",
+      "error": "Terjadi galat",
+      "installed": "Terpasang"
+    },
+    "error": {
+      "title": "Galat pemasangan",
+      "compatibilityNote": "Ekstensi ini mungkin tidak kompatibel dengan Firefox/Floorp.",
+      "alreadyInstalled": "Ekstensi ini sudah terpasang ({{name}})",
+      "downloadFailed": "Gagal mengunduh berkas CRX",
+      "conversionFailed": "Gagal mengonversi ekstensi: {{error}}",
+      "conversionFailedGeneric": "Gagal mengonversi CRX ke XPI",
+      "installError": "Galat pemasangan: {{error}}",
+      "installFailed": "Pemasangan gagal",
+      "noData": "Tidak ada data pemasangan tersedia",
+      "addonManagerUnavailable": "AddonManager tidak tersedia",
+      "noBrowserWindow": "Tidak dapat menemukan jendela peramban untuk pemasangan",
+      "createInstallFailed": "Gagal membuat objek pemasangan",
+      "cancelledByUser": "Pemasangan dibatalkan pengguna",
+      "downloadCancelled": "Unduhan dibatalkan",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "Galat pemasangan XPI: {{error}}",
+      "errorWithCode": "Galat pemasangan (kode: {{code}})",
+      "experimentDisabled": "Fitur ini tidak tersedia saat ini"
+    },
+    "installErrors": {
+      "downloadFailed": "Unduhan gagal",
+      "signatureVerifyFailed": "Gagal memverifikasi tanda tangan ekstensi",
+      "corruptOrIncompatible": "Ekstensi rusak atau tak kompatibel",
+      "incompatible": "Ekstensi ini tidak kompatibel dengan Floorp",
+      "blocked": "Ekstensi ini diblokir",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Pemasangan ekstensi gagal",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Berkas ekstensi tidak valid",
+      "networkError": "Terjadi kesalahan jaringan"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
     }
   }
 }

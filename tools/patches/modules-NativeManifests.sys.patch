@@ -1,0 +1,19 @@
+diff --git a/modules/NativeManifests.sys.mjs b/modules/NativeManifests.sys.mjs
+index 5c9cee1..fce977c 100644
+--- ./modules/NativeManifests.sys.mjs
++++ ./modules/NativeManifests.sys.mjs
+@@ -37,8 +37,12 @@ export var NativeManifests = {
+         this._lookup = this._winLookup;
+       } else if (platform == "macosx" || platform == "linux") {
+         let dirs = [
+-          Services.dirsvc.get("XREUserNativeManifests", Ci.nsIFile).path,
+-          Services.dirsvc.get("XRESysNativeManifests", Ci.nsIFile).path,
++          Services.dirsvc
++            .get("XREUserNativeManifests", Ci.nsIFile)
++            .path.replace("Floorp", "Mozilla"),
++          Services.dirsvc
++            .get("XRESysNativeManifests", Ci.nsIFile)
++            .path.replace("Floorp", "Mozilla"),
+         ];
+         this._lookup = (type, name, context) =>
+           this._tryPaths(type, name, dirs, context);

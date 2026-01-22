@@ -19,6 +19,14 @@ export interface Context<J = unknown> {
   json<T = J>(): T | null;
 }
 
+export interface StreamResult {
+  isStream: true;
+  onConnect: (
+    send: (data: string) => void,
+    close: () => void,
+  ) => (() => void) | void;
+}
+
 export interface HttpResult<T = unknown> {
   status?: number;
   body?: T;
@@ -26,7 +34,7 @@ export interface HttpResult<T = unknown> {
 
 export type Handler<Req = unknown, Res = unknown> = (
   ctx: Context<Req>,
-) => Promise<HttpResult<Res>> | HttpResult<Res>;
+) => Promise<HttpResult<Res> | StreamResult> | HttpResult<Res> | StreamResult;
 
 interface CompiledRoute {
   method: HttpMethod;
@@ -67,9 +75,10 @@ export class Router {
   }
 }
 
-function compilePattern(
-  pattern: string,
-): { regex: RegExp; paramNames: string[] } {
+function compilePattern(pattern: string): {
+  regex: RegExp;
+  paramNames: string[];
+} {
   const parts = pattern.split("/").filter(Boolean);
   const names: string[] = [];
   const re = parts
@@ -90,7 +99,10 @@ function escapeRegex(s: string) {
 }
 
 export class NamespaceBuilder {
-  constructor(private router: Router, private base: string) {}
+  constructor(
+    private router: Router,
+    private base: string,
+  ) {}
 
   namespace(seg: string, fn: (ns: NamespaceBuilder) => void) {
     const next = new NamespaceBuilder(this.router, join(this.base, seg));
@@ -106,7 +118,10 @@ export class NamespaceBuilder {
     this.router.register("POST", join(this.base, seg), handler);
     return this;
   }
-  delete<Req = unknown, Res = unknown>(seg: string, handler: Handler<Req, Res>) {
+  delete<Req = unknown, Res = unknown>(
+    seg: string,
+    handler: Handler<Req, Res>,
+  ) {
     this.router.register("DELETE", join(this.base, seg), handler);
     return this;
   }

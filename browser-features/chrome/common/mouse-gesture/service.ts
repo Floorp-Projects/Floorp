@@ -19,39 +19,106 @@ interface nsIObserver {
   observe(subject: unknown, topic: string, data: string): void;
 }
 
-let globalController: MouseGestureController | null = null;
-
+/**
+ * MouseGestureService manages the lifecycle of gesture controllers across windows.
+ */
 export class MouseGestureService {
-  private controller: MouseGestureController | null = null;
+  private controllers: Map<Window, MouseGestureController> = new Map();
   private lastConfigString = "";
   private configObserver: nsIObserver | null = null;
 
   constructor() {
-    if (globalController) {
-      globalController.destroy();
-      globalController = null;
-    }
-
     this.initialize();
 
+    // React to config changes
     createEffect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
       const enabled = isEnabled();
 
       if (this.lastConfigString && this.lastConfigString !== configString) {
-        this.destroyController();
+        // Recreate controllers when config changes
+        this.destroyAllControllers();
         if (enabled) {
-          this.createController();
+          this.attachToAllWindows();
         }
-
         handleContextMenuAfterMouseUp(enabled);
       }
 
       this.lastConfigString = configString;
     });
 
+    // React to enabled state changes
+    createEffect(() => {
+      const enabled = isEnabled();
+      if (enabled) {
+        this.attachToAllWindows();
+      } else {
+        this.destroyAllControllers();
+      }
+      handleContextMenuAfterMouseUp(enabled);
+    });
+
     this.setupEnabledObserver();
+  }
+
+  private attachToAllWindows(): void {
+    const windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      const win = windows.getNext() as Window;
+      this.attachToWindow(win);
+    }
+  }
+
+  public attachToWindow(win: Window): void {
+    // Check if this window already has a controller registered from ANY context
+    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
+    if ((win as any).__mouseGestureControllerAttached === true) {
+      return;
+    }
+
+    if (this.controllers.has(win)) {
+      return;
+    }
+
+    if (isEnabled()) {
+      const controller = new MouseGestureController(win);
+      this.controllers.set(win, controller);
+
+      // Mark the window as having a controller attached
+      (win as any).__mouseGestureControllerAttached = true;
+
+      const onUnload = () => {
+        controller.destroy();
+        this.controllers.delete(win);
+        // Clean up the marker when the window is closed
+        try {
+          delete (win as any).__mouseGestureControllerAttached;
+        } catch (_e) {
+          // Window might be already gone
+        }
+        try {
+          win.removeEventListener("unload", onUnload);
+        } catch (_e) {
+          // Window might be already gone
+        }
+      };
+
+      win.addEventListener("unload", onUnload, { once: true });
+    }
+  }
+
+  private destroyAllControllers(): void {
+    for (const [win, controller] of this.controllers.entries()) {
+      controller.destroy();
+      // Clean up the marker
+      try {
+        delete (win as any).__mouseGestureControllerAttached;
+      } catch (_e) {
+        // Window might be already gone
+      }
+    }
+    this.controllers.clear();
   }
 
   private setupEnabledObserver(): void {
@@ -77,10 +144,10 @@ export class MouseGestureService {
             false,
           );
 
-          if (enabled && !this.controller) {
-            this.createController();
-          } else if (!enabled && this.controller) {
-            this.destroyController();
+          if (enabled) {
+            this.attachToAllWindows();
+          } else {
+            this.destroyAllControllers();
           }
 
           handleContextMenuAfterMouseUp(enabled);
@@ -99,27 +166,9 @@ export class MouseGestureService {
     const enabled = isEnabled();
 
     if (enabled) {
-      this.createController();
+      this.attachToAllWindows();
     }
     handleContextMenuAfterMouseUp(enabled);
-  }
-
-  private createController(): void {
-    this.destroyController();
-
-    this.controller = new MouseGestureController();
-    globalController = this.controller;
-  }
-
-  private destroyController(): void {
-    if (this.controller) {
-      this.controller.destroy();
-      this.controller = null;
-
-      if (globalController === this.controller) {
-        globalController = null;
-      }
-    }
   }
 
   public isEnabled(): boolean {
@@ -129,10 +178,10 @@ export class MouseGestureService {
   public setEnabled(value: boolean): void {
     setEnabled(value);
 
-    if (value && !this.controller) {
-      this.createController();
-    } else if (!value && this.controller) {
-      this.destroyController();
+    if (value) {
+      this.attachToAllWindows();
+    } else {
+      this.destroyAllControllers();
     }
 
     handleContextMenuAfterMouseUp(value);
@@ -145,9 +194,9 @@ export class MouseGestureService {
   public updateConfig(newConfig: MouseGestureConfig): void {
     setConfig(newConfig);
 
+    this.destroyAllControllers();
     if (isEnabled()) {
-      this.destroyController();
-      this.createController();
+      this.attachToAllWindows();
     }
   }
 
@@ -179,7 +228,7 @@ const PREF_LAST_ENABLED_STATE = "floorp.mousegesture.last_enabled_state";
 
 let lastEnabledState: boolean | null = null;
 
-// Initialize lastEnabledState from pref if it exists so the value survives restarts
+// Initialize from pref if it exists
 try {
   if (
     Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) ===
@@ -188,28 +237,25 @@ try {
     lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
   }
 } catch (e) {
-  // It's expected that the preference might not exist on first run, so we'll just log it for debugging.
-  console.log("[MouseGestureService] Could not read preference for last enabled state:", e);
+  console.log(
+    "[MouseGestureService] Could not read last enabled state pref:",
+    e,
+  );
 }
 
 function handleContextMenuAfterMouseUp(enabled: boolean) {
-  if (Services.appinfo.OS === "WINNT") {
-    return;
-  }
+  if (Services.appinfo.OS === "WINNT") return;
 
-  if (lastEnabledState === enabled) {
-    return;
-  }
+  if (lastEnabledState === enabled) return;
 
   Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
   lastEnabledState = enabled;
 
-  // persist lastEnabledState so it is available after restart
   try {
     Services.prefs.setBoolPref(PREF_LAST_ENABLED_STATE, enabled);
   } catch (e) {
     console.error(
-      "[MouseGestureService] Failed to save last enabled state pref:",
+      "[MouseGestureService] Failed to save last enabled state:",
       e,
     );
   }

@@ -106,8 +106,6 @@
 }
 
 .tabbrowser-tab {
-  /* chrome-like margin top */
-  margin-top: 6px;
   .tab-content {
     position: relative !important;
     overflow: hidden !important;
@@ -136,7 +134,6 @@
   }
   .tab-background {
     margin-block: 0 !important;
-    margin-top: 4px !important;
     /* rounded top corners */
     border-radius: 8px 8px 0 0 !important;
     position: relative !important;

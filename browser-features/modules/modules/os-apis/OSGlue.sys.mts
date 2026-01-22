@@ -25,6 +25,7 @@ class OSGlue {
     this.localPathToResourceURI("./web/WebScraperServices.sys.mts"),
     this.localPathToResourceURI("./web/TabManagerServices.sys.mts"),
     this.localPathToResourceURI("./browser-info/BrowserInfo.sys.mts"),
+    this.localPathToResourceURI("./workspaces/WorkspacesApiService.sys.mts"),
   ];
 
   private localPathToResourceURI(path: string) {

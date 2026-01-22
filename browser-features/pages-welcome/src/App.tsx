@@ -23,9 +23,11 @@ function App() {
   // If upgrade mode, show only the WhatsNew page, similar to Chrome's post-update UI
   if (upgrade) {
     return (
-      <div className="min-h-screen bg-base-100 text-base-content flex flex-col">
-        <WhatsNewPage />
-      </div>
+      <I18nProvider>
+        <div className="min-h-screen bg-base-100 text-base-content flex flex-col">
+          <WhatsNewPage />
+        </div>
+      </I18nProvider>
     );
   }
 

@@ -1,75 +1,75 @@
 {
     "app": {
         "status": {
-            "installing": "Installing in the background...",
-            "installComplete": "Installation complete"
+            "installing": "Installeren op de achtergrond...",
+            "installComplete": "Installatie voltooid"
         },
         "installer": {
             "title": "Floorp Installer",
-            "description": "Install Floorp browser and start a privacy-focused, fast, and customizable browsing experience.",
-            "adminRights": "Install with admin rights",
-            "adminRightsEnabled": "Install for all users with admin rights.",
-            "adminRightsDisabled": "Install for current user only.",
-            "customPathRequired": "Custom installation path requires admin rights.",
-            "installLocation": "Install location",
-            "change": "Change",
-            "installButton": "Start Installation",
-            "retryButton": "Retry"
+            "description": "Installeer Floorp browser en start een privacy-gerichte, snelle en aanpasbare browse-ervaring.",
+            "adminRights": "Installeer met beheerdersrechten",
+            "adminRightsEnabled": "Installeer voor alle gebruikers met beheerdersrechten.",
+            "adminRightsDisabled": "Alleen installeren voor huidige gebruiker.",
+            "customPathRequired": "Voor een aangepast installatiepad zijn beheerdersrechten vereist.",
+            "installLocation": "Installatie locatie",
+            "change": "Wijzigen",
+            "installButton": "Start Installatie",
+            "retryButton": "Opnieuw proberen"
         },
         "progress": {
-            "installing": "Installing...",
-            "slideCounter": "Slide {{current}}/{{total}}"
+            "installing": "Installeren...",
+            "slideCounter": "Dia {{current}}/{{total}}"
         },
         "modal": {
-            "selectLocation": "Select Installation Location",
-            "installPath": "Installation path",
-            "browse": "Browse",
-            "resetDefault": "Reset to Default",
-            "cancel": "Cancel",
-            "save": "Save Settings",
-            "close": "Close"
+            "selectLocation": "Selecteer installatielocatie",
+            "installPath": "Installatiepad",
+            "browse": "Bladeren",
+            "resetDefault": "Standaardinstelling herstellen",
+            "cancel": "Annuleren",
+            "save": "Instellingen opslaan",
+            "close": "Sluiten"
         },
         "exitConfirmation": {
-            "title": "Cancel Installation?",
-            "message": "Canceling the installation process will prevent Floorp from being installed.",
-            "cancelButton": "Cancel",
-            "confirmButton": "Cancel Installation"
+            "title": "Installatie annuleren?",
+            "message": "Als u het installatieproces annuleert, wordt Floorp niet geïnstalleerd.",
+            "cancelButton": "Annuleren",
+            "confirmButton": "Installatie annuleren"
         },
         "complete": {
-            "success": "Installation Successful",
-            "error": "Installation Failed",
-            "launchCheckbox": "Launch Floorp browser after installation",
-            "closeButton": "Close Installer",
-            "countdownMessage": "Installer will close in {{count}} seconds",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "success": "Installatie Succesvol",
+            "error": "Installatie mislukt",
+            "launchCheckbox": "Start Floorp browser na installatie",
+            "closeButton": "Installatieprogramma sluiten",
+            "countdownMessage": "Installatieprogramma wordt afgesloten in {{count}} seconden",
+            "legacyDownloadMessage": "U kunt ook de oudere installateur proberen.",
             "legacyDownloadButton": "Downloaden"
         }
     },
     "slides": {
         "slide1": {
-            "title": "Welcome to Floorp",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "title": "Welkom bij Floorp",
+            "description": "Welkom bij de nieuwste versie van Floorp, een webbrowser ontwikkeld met een focus op ontwikkeling en onderzoek in Japan. De volgende inhoud is slechts een deel van het project."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "Regelmatige updates",
+            "description": "Floorp wordt continu onderhouden en bijgewerkt, zelfs als een op gemeenschap gebaseerd project. We leveren veilig browsen in overeenstemming met het beginsel dat het internet voor iedereen vrij toegankelijk moet zijn."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "Nieuwste functies",
+            "description": "De nieuwste versie van Floorp maakt gebruik van geavanceerde webfuncties die zijn ontwikkeld door Mozilla's Firefox. Het is ook opnieuw ontworpen om tools die iedereen wenst gemakkelijk toegankelijk te maken."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "Geavanceerde aanpassing",
+            "description": "Uitgerust met talloze aanpassingsopties om de privacy beter te bewaren dan je standaardbrowser. Met Floorp kun je de configuratie van je voorkeur realiseren."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "Vecht voor jou",
+            "description": "Floorp blokkeert schadelijke tracking. Wij houden de werking van de website en de rechten van de gebruikers in evenwicht en werken aan het verbeteren van het web zowel in functionaliteit als privacy."
         }
     },
     "rust": {
         "success": {
-            "downloaded_dev_mode": "Floorp installer has been downloaded (development mode)",
+            "downloaded_dev_mode": "Floorp-installer is gedownload (ontwikkelmodus)",
             "installation_complete": "Floorp installation completed successfully."
         },
         "errors": {

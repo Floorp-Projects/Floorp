@@ -53,10 +53,18 @@ while IFS= read -r line; do
         continue
     fi
 
-    # Parse preference line (pref_name = value)
-    if [[ "$line" =~ ^[[:space:]]*([^=]+)[[:space:]]*=[[:space:]]*(.+)$ ]]; then
-        pref_name="${BASH_REMATCH[1]// /}"  # Remove leading/trailing spaces
-        pref_value="${BASH_REMATCH[2]}"
+    # Parse preference line (@pref_name = value or pref_name = value)
+    if [[ "$line" =~ ^[[:space:]]*(@?)([^=]+)[[:space:]]*=[[:space:]]*(.+)$ ]]; then
+        is_locked="${BASH_REMATCH[1]}"
+        pref_name="${BASH_REMATCH[2]// /}"  # Remove leading/trailing spaces
+        pref_value="${BASH_REMATCH[3]}"
+
+        # Determine function name
+        if [[ -n "$is_locked" ]]; then
+            func_name="lockPref"
+        else
+            func_name="pref"
+        fi
 
         # Remove leading/trailing spaces
         pref_value=$(echo "$pref_value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -84,12 +92,14 @@ while IFS= read -r line; do
         # Search for existing preference
         escaped_pref_name=$(printf '%s\n' "$pref_name" | sed 's/[[\.*^$()+?{|]/\\&/g')
 
+        # Check for existing pref or lockPref
         if grep -q "pref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
-            # Replace existing preference (using | as delimiter to avoid conflicts with URLs)
-            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|pref(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+        elif grep -q "lockPref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
+            sed -i.bak "s|lockPref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
         else
             # Add as new preference
-            NEW_PREFS+=("pref(\"$pref_name\", $formatted_value);")
+            NEW_PREFS+=("$func_name(\"$pref_name\", $formatted_value);")
         fi
     fi
 done < "$OVERRIDE_INI"

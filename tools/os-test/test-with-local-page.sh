@@ -90,6 +90,26 @@ echo -e "${RED}✓ フォーム送信（赤色のエフェクト + 情報パネ�
 echo -e "${YELLOW}👀 フォーム全体に赤色のハイライトが表示されました${NC}"
 echo ""
 
+# 取得系 API で Inspect ハイライトを確認
+echo -e "${BLUE}📋 Step 6: Inspect APIs (highlight only)${NC}"
+echo -e "${BLUE}  └ getHTML${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/html" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getElement (#submitBtn)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/element?selector=%23submitBtn" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getElements (form input)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/elements?selector=form%20input" | jq .
+sleep 2
+
+echo -e "${BLUE}  └ getValue (#name)${NC}"
+curl -s "${BASE_URL}/tabs/instances/${INSTANCE_ID}/value?selector=%23name" | jq .
+sleep 2
+echo -e "${GREEN}✓ Inspect ハイライトの挙動を確認${NC}"
+echo ""
+
 # クリーンアップ
 echo -e "${BLUE}🧹 Cleanup: Destroying instance${NC}"
 curl -s -X DELETE "${BASE_URL}/tabs/instances/${INSTANCE_ID}" | jq .

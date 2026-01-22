@@ -23,7 +23,22 @@ permissions:
   contents: write
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check if version already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if gh release view "v$VERSION"; then
+            echo "Version v$VERSION already exists. Exiting..."
+            exit 1
+          fi
+
   package-windows:
+    needs: check-version
     uses: ./.github/workflows/package.yml
     with:
       platform: Windows-x64
@@ -31,6 +46,7 @@ jobs:
     secrets: inherit
 
   package-linux:
+    needs: check-version
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-x64
@@ -38,6 +54,7 @@ jobs:
     secrets: inherit
 
   package-macos:
+    needs: check-version
     uses: ./.github/workflows/package.yml
     with:
       platform: macOS-x64
@@ -45,6 +62,7 @@ jobs:
     secrets: inherit
 
   package-linux-aarch64:
+    needs: check-version
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-aarch64

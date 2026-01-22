@@ -68,6 +68,11 @@ export class WebsitePanelWindowChild {
     }
 
     globalThis.floorpWebPanelWindow = true;
+
+    // Set taskbartab attribute to leverage SessionStore's existing handling
+    // This excludes WebPanel windows from session restore
+    document?.documentElement?.setAttribute("taskbartab", this.webpanelId);
+
     globalThis.SessionStore.promiseInitialized.then(() =>
       this.createWebpanelWindow(),
     );

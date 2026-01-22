@@ -66,32 +66,34 @@
       "move-down": "下移此工作区",
       "delete": "删除工作区",
       "manage": "管理工作区",
-      "archive": "Archive Workspace"
+      "archive": "归档工作区"
     },
     "popup": {
       "create-new": "创建新工作区……",
       "manage": "管理工作区",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "显示归档工作区",
+      "restore-cancel": "退出恢复模式",
+      "restore-title": "归档工作区",
+      "restore-loading": "加载归档工作区…",
+      "restore-empty": "未归档工作区",
+      "restore-error": "加载归档工作区失败",
+      "restore-tooltip": "切换恢复模式",
+      "restore-item": "恢复 “{{name}}”",
+      "restore-delete-tooltip": "删除此归档",
+      "restore-tab-count": "{{count}} 标签",
+      "restore-tab-count_plural": "{{count}} 标签",
+      "restore-time-just-now": "现在",
+      "restore-time-minutes": "{{minutes}} 分钟前",
+      "restore-time-minutes_plural": "{{minutes}} 分钟前",
+      "restore-time-hours": "{{hours}} 小时前",
+      "restore-time-hours_plural": "{{hours}} 小时前",
+      "restore-time-days": "{{days}} 天前",
+      "restore-time-days_plural": "{{days}} 天前"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "移动标签到另一个工作区"
+      "moveTabToAnotherWorkspace": "移动标签到另一个工作区",
+      "openLinkInWorkspace": "在另一工作区打开链接",
+      "noOtherWorkspace": "无可用的工作区"
     },
     "error": {
       "invalidWorkspaceID": "工作区 ID 无效（可能请求未更新）"
@@ -103,19 +105,6 @@
   },
   "statusbar": {
     "toggle": "状态栏{{mark}}"
-  },
-  "splitview": {
-    "title": "拆分视图",
-    "position": "位置",
-    "position-left": "左边",
-    "position-right": "右边",
-    "flex-row": "行",
-    "flex-column": "列",
-    "remove-button": "移除当前视图",
-    "tab-context": {
-      "split-tabs": "拆分标签",
-      "split-fixed-tab": "拆分为固定标签"
-    }
   },
   "ssb": {
     "menu": {
@@ -292,6 +281,93 @@
       "restart-cache-clear": "清空缓存后重新启动",
       "restart-safe-mode": "以安全模式重新启动",
       "restart-profile-manager": "使用配置文件管理器重新启动"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} 在运行",
+    "panelDefaultMessage": "{{action}} 进行中……",
+    "panelProgressSummary": "影响 {{count}} 元素(s)",
+    "formSummary": "填写：{{count}} 字段(s)",
+    "formFieldProgress": "字段 {{current}}/{{total}}：“{{value}}”",
+    "inputValueSet": "设置输入值：“{{value}}”",
+    "clickElementWithText": "点击 {{tag}}：“{{text}}”",
+    "clickElementNoText": "点击 {{tag}} 元素",
+    "inspectPageHtml": "获取完整页面 HTML",
+    "inspectGetElement": "获取元素：{{selector}}",
+    "inspectGetElements": "{{count}} 元素匹配：{{selector}}(s)",
+    "inspectGetElementByText": "获取元素匹配文本：“{{text}}”",
+    "inspectGetElementText": "获取文本：{{selector}}",
+    "inspectGetValue": "获取值：{{selector}}",
+    "submitForm": "提交：{{name}}",
+    "actionLabelHighlight": "高亮",
+    "actionLabelInspect": "检查",
+    "actionLabelFill": "填充",
+    "actionLabelInput": "输入",
+    "actionLabelClick": "点击",
+    "actionLabelSubmit": "提交"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "在外部浏览器中打开标签页",
+      "openLinkIn": "在外部浏览器中打开链接",
+      "defaultBrowser": "系统默认浏览器",
+      "noBrowsers": "未检测到外部浏览器",
+      "noValidUrl": "没有可打开的有效网址"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "添加到 Floorp 浏览器",
+      "installing": "正在安装……",
+      "success": "添加成功！",
+      "error": "错误",
+      "installed": "已安装"
+    },
+    "error": {
+      "title": "安装错误",
+      "compatibilityNote": "此扩展程序可能与 Firefox/Floorp 不兼容。",
+      "alreadyInstalled": "此扩展程序已安装 ({{name}})",
+      "downloadFailed": "下载 CRX 文件失败",
+      "conversionFailed": "Failed to convert extension: {{error}}",
+      "conversionFailedGeneric": "Failed to convert CRX to XPI",
+      "installError": "Installation error: {{error}}",
+      "installFailed": "安装失败",
+      "noData": "未提供安装数据",
+      "addonManagerUnavailable": "AddonManager is not available",
+      "noBrowserWindow": "Could not find browser window for installation",
+      "createInstallFailed": "Failed to create installation object",
+      "cancelledByUser": "Installation cancelled by user",
+      "downloadCancelled": "Download cancelled",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "XPI installation error: {{error}}",
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
+    },
+    "installErrors": {
+      "downloadFailed": "Download failed",
+      "signatureVerifyFailed": "Failed to verify extension signature",
+      "corruptOrIncompatible": "Extension is corrupted or incompatible",
+      "incompatible": "This extension is not compatible with Floorp",
+      "blocked": "This extension is blocked",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Extension installation failed",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Invalid extension file",
+      "networkError": "A network error occurred"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp 中心"
     }
   }
 }

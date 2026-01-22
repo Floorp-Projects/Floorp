@@ -10,6 +10,7 @@ import { Interface } from "@/app/design/components/Interface.tsx";
 import { Tabbar } from "@/app/design/components/Tabbar.tsx";
 import { Tab } from "@/app/design/components/Tab.tsx";
 import { UICustomization } from "@/app/design/components/UICustomization.tsx";
+import { TabSleepExclusion } from "@/app/design/components/TabSleepExclusion.tsx";
 import type { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
@@ -18,18 +19,30 @@ export default function Page() {
   const methods = useForm<DesignFormData>({
     defaultValues: {} as DesignFormData,
   });
-  const { control, setValue, formState } = methods;
-  const { isDirty, dirtyFields } = formState;
+  const { control, setValue } = methods;
   const watchAll = useWatch({ control });
+  const [hasLoadedDefaults, setHasLoadedDefaults] = React.useState(false);
+  const lastSavedSettingsRef = React.useRef<DesignFormData | null>(null);
+
+  const cloneDesignSettings = React.useCallback(
+    (data: DesignFormData): DesignFormData => JSON.parse(JSON.stringify(data)),
+    [],
+  );
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
       const values = await getDesignSettings();
       if (values) {
+        lastSavedSettingsRef.current = cloneDesignSettings(values);
         Object.entries(values).forEach(([key, value]) => {
-          setValue(key as keyof DesignFormData, value);
+          setValue(key as keyof DesignFormData, value, {
+            shouldDirty: false,
+            shouldTouch: false,
+          });
         });
       }
+
+      setHasLoadedDefaults(true);
     };
     fetchDefaultValues();
     document.documentElement.addEventListener("onfocus", fetchDefaultValues);
@@ -39,10 +52,10 @@ export default function Page() {
         fetchDefaultValues,
       );
     };
-  }, [setValue]);
+  }, [cloneDesignSettings, setValue]);
 
   React.useEffect(() => {
-    if (!isDirty) {
+    if (!hasLoadedDefaults) {
       return;
     }
 
@@ -50,12 +63,24 @@ export default function Page() {
       return;
     }
 
-    void saveDesignSettings(watchAll as DesignFormData, {
-      hasTabStyleChanged: Boolean(
-        (dirtyFields as Record<string, unknown>)?.style,
-      ),
+    const currentSettings = watchAll as DesignFormData;
+    const lastSaved = lastSavedSettingsRef.current;
+
+    if (
+      lastSaved &&
+      JSON.stringify(lastSaved) === JSON.stringify(currentSettings)
+    ) {
+      return;
+    }
+
+    const styleChanged = lastSaved?.style !== currentSettings.style;
+    const snapshot = cloneDesignSettings(currentSettings);
+    lastSavedSettingsRef.current = snapshot;
+
+    void saveDesignSettings(snapshot, {
+      hasTabStyleChanged: styleChanged,
     });
-  }, [dirtyFields, isDirty, watchAll]);
+  }, [cloneDesignSettings, hasLoadedDefaults, watchAll]);
 
   const LeptonSettingsButton = () => {
     return (
@@ -103,6 +128,7 @@ export default function Page() {
           {isLeptonCompatible && <LeptonSettingsButton />}
           <Tabbar />
           <Tab />
+          <TabSleepExclusion />
           <UICustomization />
         </form>
       </FormProvider>

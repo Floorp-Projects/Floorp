@@ -4,11 +4,11 @@
     "tooltiptext": "Heropen het laatst gesloten tabblad {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
+    "message": "Floorp-specifieke instellingen zoals de paneelzijbalk, workspaces, en muis gebaren worden beheerd in Floorp Hub.",
     "openButton": "Open Floorp Hub"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
+    "message": "Als u de \"Home\" instelling wilt wijzigen, schakelt u de Floorp Start uit van de Floorp Hub (about:hub#/features/design).",
     "openButton": "Open Floorp Hub — Design"
   },
   "workspaces": {
@@ -66,56 +66,45 @@
       "move-down": "Deze workspace naar beneden verplaatsen",
       "delete": "Workspace verwijderen",
       "manage": "Workspace beheren",
-      "archive": "Archive Workspace"
+      "archive": "Archiveer Werkruimte"
     },
     "popup": {
       "create-new": "Nieuwe workspace maken...",
       "manage": "Workspaces beheren",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Gearchiveerde Workspaces weergeven",
+      "restore-cancel": "Verlaat Herstelmodus",
+      "restore-title": "Gearchiveerde workspaces",
+      "restore-loading": "Gearchiveerde workspaces laden…",
+      "restore-empty": "Geen gearchiveerde workspaces",
+      "restore-error": "Laden van gearchiveerde workspaces mislukt",
+      "restore-tooltip": "Herstel modus in-/uitschakelen",
+      "restore-item": "Herstel \"{{name}}\"",
+      "restore-delete-tooltip": "Dit archief verwijderen",
+      "restore-tab-count": "{{count}} tabblad",
+      "restore-tab-count_plural": "{{count}} tabbladen",
+      "restore-time-just-now": "Zojuist",
+      "restore-time-minutes": "{{minutes}} minuut geleden",
+      "restore-time-minutes_plural": "{{minutes}} minuten geleden",
+      "restore-time-hours": "{{hours}} uur geleden",
+      "restore-time-hours_plural": "{{hours}} uren geleden",
+      "restore-time-days": "{{days}} dag geleden",
+      "restore-time-days_plural": "{{days}} dagen geleden"
     },
     "menu": {
-      "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace"
+      "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace",
+      "openLinkInWorkspace": "Open link in een andere workspace",
+      "noOtherWorkspace": "Geen andere workspace beschikbaar"
     },
     "error": {
       "invalidWorkspaceID": "Geen geldig ID voor Workspaces (misschien is de volgorde niet bijgewerkt)"
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
-    "tooltiptext": "Open Profile Manager"
+    "label": "Profiel beheer",
+    "tooltiptext": "Profielbeheer openen"
   },
   "statusbar": {
     "toggle": "Statusbalk{{mark}}"
-  },
-  "splitview": {
-    "title": "Gesplitste weergave",
-    "position": "Positie",
-    "position-left": "Links",
-    "position-right": "Rechts",
-    "flex-row": "Rij",
-    "flex-column": "Kolom",
-    "remove-button": "Huidige weergave verwijderen",
-    "tab-context": {
-      "split-tabs": "Tabbladen splitsen",
-      "split-fixed-tab": "Splitsen naar vast tabblad"
-    }
   },
   "ssb": {
     "menu": {
@@ -133,7 +122,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Openen in Privécontainer",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "Heropenen in Privécontainer",
     "name": "Privécontainer"
   },
   "mouseGesture": {
@@ -204,28 +193,28 @@
       "gecko-hide-sidebar": "Zijbalk verbergen",
       "gecko-toggle-sidebar": "Zijbalk in-/uitschakelen",
       "gecko-scroll-up": "Scroll omhoog",
-      "gecko-scroll-down": "Scroll omlaag",
+      "gecko-scroll-down": "Scroll Down",
       "gecko-scroll-right": "Scroll naar rechts",
       "gecko-scroll-left": "Scroll naar links",
       "gecko-scroll-to-top": "Scroll helemaal naar boven",
       "gecko-scroll-to-bottom": "Scroll helemaal naar beneden",
-      "gecko-workspace-next": "Switch to Next Workspace",
-      "gecko-workspace-previous": "Switch to Previous Workspace"
+      "gecko-workspace-next": "Schakel over naar volgende werkruimte",
+      "gecko-workspace-previous": "Schakel over naar vorige werkruimte"
     },
     "descriptions": {
       "gecko-back": "Ga terug naar de vorige pagina",
       "gecko-forward": "Ga verder naar de volgende pagina",
       "gecko-reload": "Huidige pagina opnieuw laden",
-      "gecko-close-tab": "Huidige tabblad sluiten",
+      "gecko-close-tab": "Huidig tabblad sluiten",
       "gecko-open-new-tab": "Nieuw tabblad openen",
-      "gecko-duplicate-tab": "Huidige tabblad dupliceren",
+      "gecko-duplicate-tab": "Huidig tabblad dupliceren",
       "gecko-reload-all-tabs": "Alle tabbladen herladen",
       "gecko-restore-last-tab": "Laatst gesloten tabblad heropenen"
     }
   },
   "qrCode": {
     "pageAction": "QR-code genereren",
-    "modalTitle": "QR Code Generator",
+    "modalTitle": "QR-code Generator",
     "loading": "QR-code genereren...",
     "copyButton": "Afbeelding kopiëren",
     "downloadButton": "Downloaden",
@@ -235,7 +224,7 @@
     "generateError": "QR-code genereren is mislukt"
   },
   "qrcode-generate-page-action": "QR-code genereren voor deze pagina",
-  "qrcode-generate-page-action-title": "QR Code Generator",
+  "qrcode-generate-page-action-title": "QR-code Generator",
   "panelSidebar": {
     "modal": {
       "type": "Paneel Type",
@@ -243,7 +232,7 @@
         "web": "Webpagina",
         "sidebar-tool": "Zijbalk Tool",
         "extension": "Zijbalk Extensie",
-        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+        "builtin": "Ingebouwde pagina's (downloads, bladwijzers, geschiedenis)"
       },
       "width": "Paneelbreedte",
       "url": "URL van webpagina",
@@ -258,7 +247,7 @@
     },
     "contextMenu": {
       "unload": "Dit webpaneel ontladen",
-      "mute": "Geluid van dit webpaneel uit/aan",
+      "mute": "Geluid van dit webpaneel uitzetten/aanzetten",
       "changeZoom": "Zoomniveau wijzigen",
       "zoomIn": "Inzoomen",
       "zoomOut": "Uitzoomen",
@@ -268,13 +257,13 @@
     }
   },
   "chrome_css": {
-    "menu": "Style",
-    "rebuild": "Rebuild Style Sheets",
-    "create": "Create New Style Sheet",
-    "open_folder": "Open Style Sheets Folder",
+    "menu": "Stijl",
+    "rebuild": "Stylesheet herbouwen",
+    "create": "Nieuwe Style Sheet aanmaken",
+    "open_folder": "Open Style Sheets folder",
     "edit_user_chrome": "Bewerk userChrome.css",
     "edit_user_content": "Bewerk userContent.css",
-    "rebuild_complete": "Style sheets rebuilt",
+    "rebuild_complete": "Style Sheets herbouwd",
     "editor_path_not_found": "Editor pad niet gevonden",
     "set_pref_description": "Stel het pad van de editor in",
     "please_enter_filename": "Voer een bestandsnaam in",
@@ -292,6 +281,93 @@
       "restart-cache-clear": "Herstart en cache wissen",
       "restart-safe-mode": "Herstarten in veilige modus",
       "restart-profile-manager": "Herstarten met Profielbeheerder"
+    }
+  },
+  "nr-webscraper": {
+    "panelTitle": "{{productName}} is actief",
+    "panelDefaultMessage": "{{action}} wordt uitgevoerd...",
+    "panelProgressSummary": "Beïnvloedt {{count}} element(en)",
+    "formSummary": "Invulformulier: {{count}} veld(en)",
+    "formFieldProgress": "Veld {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Invoerwaarde instellen: \"{{value}}\"",
+    "clickElementWithText": "Klik op {{tag}}: \"{{text}}\"",
+    "clickElementNoText": "Klikken op {{tag}} element",
+    "inspectPageHtml": "Volledige pagina HTML opgehaald",
+    "inspectGetElement": "Opgehaald element: {{selector}}",
+    "inspectGetElements": "{{count}} element(en) komen overeen: {{selector}}",
+    "inspectGetElementByText": "Element met overeenkomende tekst opgehaald: \"{{text}}\"",
+    "inspectGetElementText": "Tekst opgehaald van: {{selector}}",
+    "inspectGetValue": "Opgehaalde waarde: {{selector}}",
+    "submitForm": "Formulier versturen: {{name}}",
+    "actionLabelHighlight": "Markeren",
+    "actionLabelInspect": "Inspecteren",
+    "actionLabelFill": "Vullen",
+    "actionLabelInput": "Invoer",
+    "actionLabelClick": "Klik",
+    "actionLabelSubmit": "Versturen"
+  },
+  "externalBrowser": {
+    "menu": {
+      "openTabIn": "Open Tab in External Browser",
+      "openLinkIn": "Open Link in External Browser",
+      "defaultBrowser": "System Default Browser",
+      "noBrowsers": "No external browsers detected",
+      "noValidUrl": "No valid URL to open"
+    }
+  },
+  "chromeWebStore": {
+    "button": {
+      "addToFloorp": "Add to Floorp",
+      "installing": "Installeren...",
+      "success": "Added!",
+      "error": "Error occurred",
+      "installed": "Installed"
+    },
+    "error": {
+      "title": "Installation Error",
+      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
+      "alreadyInstalled": "This extension is already installed ({{name}})",
+      "downloadFailed": "Failed to download CRX file",
+      "conversionFailed": "Failed to convert extension: {{error}}",
+      "conversionFailedGeneric": "Failed to convert CRX to XPI",
+      "installError": "Installation error: {{error}}",
+      "installFailed": "Installation failed",
+      "noData": "No installation data provided",
+      "addonManagerUnavailable": "AddonManager is not available",
+      "noBrowserWindow": "Could not find browser window for installation",
+      "createInstallFailed": "Failed to create installation object",
+      "cancelledByUser": "Installation cancelled by user",
+      "downloadCancelled": "Download cancelled",
+      "timeout": "Installation timed out",
+      "xpiInstallError": "XPI installation error: {{error}}",
+      "errorWithCode": "Installation error (code: {{code}})",
+      "experimentDisabled": "This feature is not currently available"
+    },
+    "installErrors": {
+      "downloadFailed": "Download failed",
+      "signatureVerifyFailed": "Failed to verify extension signature",
+      "corruptOrIncompatible": "Extension is corrupted or incompatible",
+      "incompatible": "This extension is not compatible with Floorp",
+      "blocked": "This extension is blocked",
+      "timeout": "Extension installation timed out",
+      "installFailed": "Extension installation failed",
+      "parseFailed": "Failed to parse extension",
+      "invalidFile": "Invalid extension file",
+      "networkError": "A network error occurred"
+    }
+  },
+  "addons": {
+    "notification": {
+      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
+      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
+      "defaultExtensionName": "this extension",
+      "chromeBadge": "[Chrome]",
+      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+    }
+  },
+  "hub": {
+    "menu": {
+      "title": "Floorp Hub"
     }
   }
 }

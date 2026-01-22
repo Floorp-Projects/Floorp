@@ -27,20 +27,44 @@ export const overrides = [
 
       // Merge options, applying workspace container if:
       // 1. Workspace has a container (userContextId > 0)
-      // 2. No userContextId is specified in options (or it's 0/default)
+      // 2. No userContextId is explicitly specified in options
+      // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
+      const baseOptions = options ?? {};
+      const hasExplicitUserContextId = "userContextId" in baseOptions;
+      const originalUserContextId =
+        typeof baseOptions.userContextId === "number"
+          ? baseOptions.userContextId
+          : undefined;
+
+      const potentialTargetBrowser = baseOptions.targetBrowser;
+      const targetBrowserUserContextId =
+        typeof potentialTargetBrowser === "object" &&
+        potentialTargetBrowser !== null &&
+        typeof (potentialTargetBrowser as { userContextId?: unknown })
+          .userContextId === "number"
+          ? (potentialTargetBrowser as { userContextId: number }).userContextId
+          : undefined;
+
+      const shouldRespectExistingContext =
+        where === "current" || targetBrowserUserContextId !== undefined;
+
+      const shouldApplyWorkspaceContainer =
+        workspaceUserContextId > 0 &&
+        !hasExplicitUserContextId &&
+        !shouldRespectExistingContext;
+
       const mergedOptions = {
-        ...options,
-        userContextId:
-          workspaceUserContextId > 0 &&
-          (!options?.userContextId || options.userContextId === 0)
-            ? workspaceUserContextId
-            : (options?.userContextId ?? 0),
+        ...baseOptions,
+        userContextId: shouldApplyWorkspaceContainer
+          ? workspaceUserContextId
+          : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
       };
 
       console.debug("Workspaces: openTrustedLinkIn override", {
         url: typeof url === "string" ? url : url.spec,
         where,
-        originalUserContextId: options?.userContextId,
+        originalUserContextId,
+        shouldApplyWorkspaceContainer,
         appliedUserContextId: mergedOptions.userContextId,
       });
 
@@ -65,20 +89,45 @@ export const overrides = [
 
         // Merge params, applying workspace container if:
         // 1. Workspace has a container (userContextId > 0)
-        // 2. No userContextId is specified in params (or it's 0/default)
+        // 2. No userContextId is explicitly specified in params
+        // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
+        const baseParams = params ?? {};
+        const hasExplicitUserContextId = "userContextId" in baseParams;
+        const originalUserContextId =
+          typeof baseParams.userContextId === "number"
+            ? baseParams.userContextId
+            : undefined;
+
+        const potentialTargetBrowser = baseParams.targetBrowser;
+        const targetBrowserUserContextId =
+          typeof potentialTargetBrowser === "object" &&
+          potentialTargetBrowser !== null &&
+          typeof (potentialTargetBrowser as { userContextId?: unknown })
+            .userContextId === "number"
+            ? (potentialTargetBrowser as { userContextId: number })
+                .userContextId
+            : undefined;
+
+        const shouldRespectExistingContext =
+          where === "current" || targetBrowserUserContextId !== undefined;
+
+        const shouldApplyWorkspaceContainer =
+          workspaceUserContextId > 0 &&
+          !hasExplicitUserContextId &&
+          !shouldRespectExistingContext;
+
         const mergedParams = {
-          ...params,
-          userContextId:
-            workspaceUserContextId > 0 &&
-            (!params?.userContextId || params.userContextId === 0)
-              ? workspaceUserContextId
-              : (params?.userContextId ?? 0),
+          ...baseParams,
+          userContextId: shouldApplyWorkspaceContainer
+            ? workspaceUserContextId
+            : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
         };
 
         console.debug("Workspaces: openUILinkIn override", {
           url: typeof url === "string" ? url : url.spec,
           where,
-          originalUserContextId: params?.userContextId,
+          originalUserContextId,
+          shouldApplyWorkspaceContainer,
           appliedUserContextId: mergedParams.userContextId,
         });
 
@@ -150,12 +199,18 @@ export const overrides = [
       Services.obs.notifyObservers(
         {
           wrappedJSObject: new Promise((resolve) => {
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            const options: any = {
+            const options = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
               userContextId:
                 gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0,
+              allowThirdPartyFixup: undefined as boolean | undefined,
+            } satisfies {
+              relatedToCurrent: boolean;
+              resolveOnNewTabCreated: (browser: unknown) => void;
+              userContextId: number;
+              allowThirdPartyFixup?: boolean;
+              [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
               let clipboard = window.readFromClipboard();

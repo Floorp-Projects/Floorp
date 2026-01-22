@@ -21,6 +21,24 @@ export interface ActiveExperiment {
   disabled: boolean;
 }
 
+export interface AvailableExperiment {
+  id: string;
+  name: string | undefined;
+  description: string | undefined;
+  rollout: number;
+  start: string | undefined;
+  end: string | undefined;
+  isActive: boolean;
+  enrollmentStatus:
+    | "enrolled"
+    | "not_in_rollout"
+    | "force_enrolled"
+    | "disabled"
+    | "control";
+  currentVariantId: string | null;
+  experimentData: Experiment;
+}
+
 export interface NRSettingsParentFunctions {
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
@@ -32,10 +50,17 @@ export interface NRSettingsParentFunctions {
 
 export interface NRExperimemmtParentFunctions {
   getActiveExperiments(): Promise<ActiveExperiment[]>;
+  getAllExperiments(): Promise<AvailableExperiment[]>;
   disableExperiment(
     experimentId: string,
   ): Promise<{ success: boolean; error?: string }>;
   enableExperiment(
+    experimentId: string,
+  ): Promise<{ success: boolean; error?: string }>;
+  forceEnrollExperiment(
+    experimentId: string,
+  ): Promise<{ success: boolean; error?: string }>;
+  removeForceEnrollment(
     experimentId: string,
   ): Promise<{ success: boolean; error?: string }>;
   clearExperimentCache(): Promise<{ success: boolean; error?: string }>;

@@ -33,19 +33,28 @@ export const useKeyboardShortcutConfig = () => {
           enabled = true;
         }
 
+        const defaultConfig: KeyboardShortcutConfig = {
+          enabled,
+          shortcuts: {},
+        };
+
         try {
           const configStr = await rpc.getStringPref(
             KEYBOARD_SHORTCUT_CONFIG_PREF,
           );
           if (configStr) {
             const parsedConfig = JSON.parse(configStr);
-            setConfig({ ...parsedConfig, enabled });
+            setConfig({
+              ...defaultConfig,
+              ...parsedConfig,
+              enabled,
+            });
           } else {
-            throw new Error("Configuration not found");
+            setConfig(defaultConfig);
           }
         } catch (parseError) {
           console.error("Failed to parse configuration", parseError);
-          throw parseError;
+          setConfig(defaultConfig);
         }
       } catch (error) {
         console.error("Failed to load configuration", error);
@@ -61,7 +70,7 @@ export const useKeyboardShortcutConfig = () => {
     try {
       await rpc.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, newConfig.enabled);
       const configToSave = { ...newConfig };
-      const { enabled, ...configWithoutEnabled } = configToSave;
+      const { enabled: _, ...configWithoutEnabled } = configToSave;
       await rpc.setStringPref(
         KEYBOARD_SHORTCUT_CONFIG_PREF,
         JSON.stringify(configWithoutEnabled),
