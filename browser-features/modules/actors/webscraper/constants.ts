@@ -122,7 +122,8 @@ export const FALLBACK_TRANSLATIONS: Record<string, string> = {
 /**
  * CSS styles for highlight overlays and panels
  */
-export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
+export const HIGHLIGHT_STYLES = `
+@keyframes nr-webscraper-highlight-pulse {
   0% {
     box-shadow: 0 0 0 0 var(--nr-highlight-color-alpha-45),
                 0 0 20px var(--nr-highlight-color-alpha-25);
@@ -482,4 +483,5 @@ export const HIGHLIGHT_STYLES = `@keyframes nr-webscraper-highlight-pulse {
 
 @keyframes nr-webscraper-control-spin {
   to { transform: rotate(360deg); }
-}`;
+}
+`;
