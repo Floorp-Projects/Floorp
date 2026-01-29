@@ -475,7 +475,8 @@ export class WorkspacesTabManager {
     const tabsToRemove = [];
 
     for (const tab of tabs) {
-      if (this.getWorkspaceIdFromAttribute(tab) === workspaceId) {
+      const tabWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
+      if (tabWorkspaceId === workspaceId) {
         tabsToRemove.push(tab);
       }
     }

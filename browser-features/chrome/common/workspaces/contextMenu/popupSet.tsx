@@ -10,6 +10,8 @@ import { ContextMenu } from "./contextMenu.tsx";
 import { createSignal, Show } from "solid-js";
 import type { TWorkspaceID } from "../utils/type.ts";
 
+type ChromeDocument = Document & { popupNode?: Element | null };
+
 export class WorkspacesPopupContextMenu {
   ctx: WorkspacesService;
   constructor(ctx: WorkspacesService) {
@@ -38,8 +40,17 @@ export class WorkspacesPopupContextMenu {
       firstChild.remove();
     }
 
-    const eventTargetElement = event.explicitOriginalTarget as XULElement;
-    const contextWorkspaceId = eventTargetElement.id.replace("workspace-", "");
+    // Use popupNode if available (set by panel sidebar), otherwise explicitOriginalTarget (toolbar)
+    const chromeDoc = document as ChromeDocument;
+    let eventTargetElement = (chromeDoc.popupNode ?? event.explicitOriginalTarget) as XULElement;
+
+    // Traverse up to find the workspace div if we got a child element
+    while (eventTargetElement && !eventTargetElement.id?.startsWith("workspace-")) {
+      eventTargetElement = eventTargetElement.parentElement as XULElement;
+    }
+
+    // Extract workspace ID with validation
+    const contextWorkspaceId = eventTargetElement?.id?.replace("workspace-", "") ?? "";
     if (this.ctx.isWorkspaceID(contextWorkspaceId)) {
       this.contextWorkspaceID = contextWorkspaceId;
     }
