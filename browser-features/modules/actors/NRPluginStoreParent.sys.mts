@@ -649,7 +649,7 @@ export class NRPluginStoreParent extends JSWindowActorParent {
   }
 
   /**
-   * Install a plugin (shows centered modal dialog)
+   * Install a plugin (redirects to Sapphillon Frontend)
    */
   private installPlugin(request: InstallRequest): Promise<InstallResult> {
     const { pluginId, metadata } = request;
@@ -672,195 +672,57 @@ export class NRPluginStoreParent extends JSWindowActorParent {
       });
     }
 
-    const pluginName = metadata?.name ?? pluginId;
-    const pluginAuthor = metadata?.author ?? "不明";
-    const pluginDescription = metadata?.description ?? "";
+    // Build the frontend URL with query parameters
+    const frontendBaseUrl = "http://localhost:8081/install-plugin";
+    const params = new URLSearchParams();
+    
+    if (metadata?.uri) {
+      params.set("uri", metadata.uri);
+    }
+    if (pluginId) {
+      params.set("id", pluginId);
+    }
+    if (metadata?.name) {
+      params.set("name", metadata.name);
+    }
+    if (metadata?.author) {
+      params.set("author", metadata.author);
+    }
+    if (metadata?.version) {
+      params.set("version", metadata.version);
+    }
+    if (metadata?.description) {
+      params.set("description", metadata.description);
+    }
 
-    // Prepare full metadata with defaults
-    const fullMetadata: PluginMetadata = {
-      id: pluginId,
-      name: pluginName,
-      author: pluginAuthor,
-      description: pluginDescription,
-      version: metadata?.version,
-      icon: metadata?.icon,
-      category: metadata?.category,
-      functions: metadata?.functions,
-      isOfficial: metadata?.isOfficial,
-      uri: metadata?.uri,
-    };
+    const frontendUrl = `${frontendBaseUrl}?${params.toString()}`;
+    console.log("[NRPluginStoreParent] Opening Frontend URL:", frontendUrl);
 
-    return new Promise<InstallResult>((resolve) => {
-      let resolved = false;
-      let modalOverlay: HTMLElement | null = null;
-      let tabSelectHandler: ((e: Event) => void) | null = null;
-      // Store reference to the browser that triggered the install
-      const originBrowser = this.browsingContext?.top?.embedderElement;
-
-      const cleanup = () => {
-        // Remove tab select listener
-        if (tabSelectHandler && win.gBrowser?.tabContainer) {
-          win.gBrowser.tabContainer.removeEventListener(
-            "TabSelect",
-            tabSelectHandler,
-          );
-          tabSelectHandler = null;
-        }
-        if (modalOverlay && modalOverlay.parentNode) {
-          modalOverlay.parentNode.removeChild(modalOverlay);
-        }
-        modalOverlay = null;
+    // Open the frontend in a new tab
+    try {
+      // Use openTrustedLinkIn if available (Firefox API)
+      const winAny = win as unknown as {
+        openTrustedLinkIn?: (url: string, where: string) => void;
       };
-
-      const handleInstall = async () => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-        console.log("[NRPluginStoreParent] User confirmed installation");
-
-        // Call Sapphillon backend to install the plugin
-        if (fullMetadata.uri) {
-          try {
-            console.log(
-              "[NRPluginStoreParent] Calling Sapphillon InstallPlugin API",
-            );
-            const grpcResponse = await callGrpcWeb<{
-              plugin?: Record<string, unknown>;
-              status?: { code: number; message: string };
-            }>("sapphillon.v1.PluginService", "InstallPlugin", {
-              uri: fullMetadata.uri,
-            });
-
-            console.log(
-              "[NRPluginStoreParent] Sapphillon InstallPlugin response:",
-              grpcResponse,
-            );
-
-            // Check status from response
-            if (grpcResponse.status && grpcResponse.status.code !== 0) {
-              console.error(
-                "[NRPluginStoreParent] Sapphillon returned error:",
-                grpcResponse.status.message,
-              );
-              resolve({
-                success: false,
-                error: grpcResponse.status.message || "Installation failed",
-              });
-              return;
-            }
-          } catch (error) {
-            console.error(
-              "[NRPluginStoreParent] Failed to call Sapphillon API:",
-              error,
-            );
-            // Continue with success even if backend call fails (for now)
-            // In production, you might want to fail the installation
-          }
-        } else {
-          console.warn(
-            "[NRPluginStoreParent] No URI provided, skipping Sapphillon API call",
-          );
-        }
-
-        resolve({
-          success: true,
-          pluginId,
-        });
-      };
-
-      const handleCancel = () => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-        console.log("[NRPluginStoreParent] User cancelled installation");
-        resolve({
-          success: false,
-          error: "Installation cancelled by user",
-        });
-      };
-
-      try {
-        const doc = win.document;
-        if (!doc) {
-          throw new Error("Document not available");
-        }
-
-        // Remove any existing modal
-        const existingModal = doc.getElementById(
-          "floorp-os-plugin-install-overlay",
-        );
-        if (existingModal) {
-          existingModal.remove();
-        }
-
-        // Create and show modal
-        modalOverlay = this.createModalDialog(
-          doc,
-          fullMetadata,
-          handleInstall,
-          handleCancel,
-        );
-
-        // Append to browser content area to allow tab switching
-        // Priority: #appcontent (Firefox content area) > #browser > #main-window
-        const target =
-          doc.getElementById("appcontent") ||
-          doc.getElementById("browser") ||
-          doc.getElementById("main-window") ||
-          doc.documentElement;
-        if (target) {
-          // Ensure the target has position: relative for absolute positioning to work
-          const computedStyle = win.getComputedStyle(target);
-          if (
-            computedStyle &&
-            (computedStyle.getPropertyValue("position") as string) === "static"
-          ) {
-            (target as HTMLElement).style.cssText += "position: relative;";
-          }
-          target.appendChild(modalOverlay);
-        } else {
-          throw new Error("Could not find target element to append modal");
-        }
-
-        // Add tab switch listener to show/hide dialog based on active tab
-        if (win.gBrowser?.tabContainer && originBrowser) {
-          tabSelectHandler = () => {
-            if (!modalOverlay) return;
-            const currentBrowser = win.gBrowser?.selectedBrowser;
-            if (currentBrowser === originBrowser) {
-              // Back to the original tab - show dialog
-              (modalOverlay as HTMLElement).style.cssText =
-                modalOverlay.style.cssText.replace(
-                  /display\s*:\s*none\s*;?/gi,
-                  "",
-                ) + "; display: flex;";
-            } else {
-              // Switched to another tab - hide dialog
-              (modalOverlay as HTMLElement).style.cssText =
-                modalOverlay.style.cssText.replace(
-                  /display\s*:\s*flex\s*;?/gi,
-                  "",
-                ) + "; display: none;";
-            }
-          };
-          win.gBrowser.tabContainer.addEventListener(
-            "TabSelect",
-            tabSelectHandler,
-          );
-        }
-
-        console.log("[NRPluginStoreParent] Modal dialog shown");
-      } catch (error) {
-        console.error("[NRPluginStoreParent] Failed to show modal:", error);
-        if (!resolved) {
-          resolved = true;
-          resolve({
-            success: false,
-            error: "Failed to show installation dialog",
-          });
-        }
+      if (typeof winAny.openTrustedLinkIn === "function") {
+        winAny.openTrustedLinkIn(frontendUrl, "tab");
+      } else {
+        // Fallback to window.open
+        win.open(frontendUrl, "_blank");
       }
-    });
+
+      // Return success immediately - the actual installation will happen in Frontend
+      return Promise.resolve({
+        success: true,
+        pluginId,
+      });
+    } catch (error) {
+      console.error("[NRPluginStoreParent] Failed to open Frontend:", error);
+      return Promise.resolve({
+        success: false,
+        error: "Failed to open plugin installation page",
+      });
+    }
   }
 
   /**
