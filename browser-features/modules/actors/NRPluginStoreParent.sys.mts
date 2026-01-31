@@ -675,7 +675,7 @@ export class NRPluginStoreParent extends JSWindowActorParent {
     // Build the frontend URL with query parameters
     const frontendBaseUrl = "http://localhost:8081/install-plugin";
     const params = new URLSearchParams();
-    
+
     if (metadata?.uri) {
       params.set("uri", metadata.uri);
     }
@@ -693,6 +693,18 @@ export class NRPluginStoreParent extends JSWindowActorParent {
     }
     if (metadata?.description) {
       params.set("description", metadata.description);
+    }
+    if (metadata?.category) {
+      params.set("category", metadata.category);
+    }
+    if (metadata?.isOfficial !== undefined) {
+      params.set("isOfficial", String(metadata.isOfficial));
+    }
+    if (metadata?.functions && metadata.functions.length > 0) {
+      params.set(
+        "functions",
+        encodeURIComponent(JSON.stringify(metadata.functions)),
+      );
     }
 
     const frontendUrl = `${frontendBaseUrl}?${params.toString()}`;
