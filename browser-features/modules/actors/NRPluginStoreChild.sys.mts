@@ -6,10 +6,8 @@
 /**
  * NRPluginStoreChild - Content process actor for Floorp OS Plugin Store integration
  *
- * This actor runs in the content process and provides functionality to:
- * - Expose Floorp Plugin Store API to web pages
- * - Handle plugin installation requests from the web store
- * - Communicate with the parent process for plugin management
+ * This actor runs in the content process and exposes the Floorp Plugin Store API
+ * to web pages via the `window.floorpPluginStore` object.
  *
  * @module NRPluginStoreChild
  */
@@ -65,98 +63,59 @@ export class NRPluginStoreChild extends JSWindowActorChild {
    * Handle DOM events
    */
   handleEvent(event: Event): void {
-    console.debug("[NRPluginStoreChild] Event received:", event.type);
-    switch (event.type) {
-      case "DOMContentLoaded":
-        this.onDOMContentLoaded();
-        break;
+    if (event.type === "DOMContentLoaded") {
+      this.injectFloorpAPI();
     }
   }
 
-  /**
-   * Handle DOMContentLoaded event
-   */
-  private onDOMContentLoaded(): void {
-    console.debug("[NRPluginStoreChild] DOMContentLoaded, injecting API...");
-    this.injectFloorpAPI();
-  }
-
   // ==========================================================================
-  // API Methods - These are exposed to the web content
+  // API Methods
   // All async methods use callbacks since Promises cannot cross compartment boundaries
   // ==========================================================================
 
-  /**
-   * Check if the browser is Floorp
-   */
-  NRPluginStore_isFloorp(): boolean {
+  private isFloorp(): boolean {
     return true;
   }
 
-  /**
-   * Get Floorp version (callback-based)
-   */
-  NRPluginStore_getVersion(callback: (result: string) => void): void {
+  private getVersion(callback: (result: string) => void): void {
     this.sendQuery("PluginStore:GetVersion", {})
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ error: String(error) }));
-      });
+      .then((result) => callback(JSON.stringify(result)))
+      .catch((error) => callback(JSON.stringify({ error: String(error) })));
   }
 
-  /**
-   * Install a plugin by ID (callback-based)
-   */
-  NRPluginStore_installPlugin(
+  private installPlugin(
     pluginId: string,
     metadataJson: string,
     callback: (result: string) => void,
   ): void {
     const metadata = metadataJson ? JSON.parse(metadataJson) : undefined;
-    this.sendQuery("PluginStore:Install", {
-      pluginId,
-      metadata,
-    })
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ success: false, error: String(error) }));
-      });
+    this.sendQuery("PluginStore:Install", { pluginId, metadata })
+      .then((result) => callback(JSON.stringify(result)))
+      .catch((error) =>
+        callback(JSON.stringify({ success: false, error: String(error) })),
+      );
   }
 
-  /**
-   * Uninstall a plugin by ID (callback-based)
-   */
-  NRPluginStore_uninstallPlugin(
+  private uninstallPlugin(
     pluginId: string,
     callback: (result: string) => void,
   ): void {
     this.sendQuery("PluginStore:Uninstall", { pluginId })
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ success: false, error: String(error) }));
-      });
+      .then((result) => callback(JSON.stringify(result)))
+      .catch((error) =>
+        callback(JSON.stringify({ success: false, error: String(error) })),
+      );
   }
 
-  /**
-   * Check if a plugin is installed (callback-based)
-   */
-  NRPluginStore_isPluginInstalled(
+  private isPluginInstalled(
     pluginId: string,
     callback: (result: string) => void,
   ): void {
     this.sendQuery("PluginStore:IsInstalled", { pluginId })
-      .then((result) => {
-        callback(JSON.stringify(result));
-      })
-      .catch((error) => {
-        callback(JSON.stringify({ installed: false, error: String(error) }));
-      });
+      .then((result) => callback(JSON.stringify(result)))
+      .catch((error) =>
+        callback(JSON.stringify({ installed: false, error: String(error) })),
+      );
   }
 
   // ==========================================================================
@@ -165,7 +124,6 @@ export class NRPluginStoreChild extends JSWindowActorChild {
 
   /**
    * Inject Floorp Plugin Store API into the page
-   * This exposes a global `floorpPluginStore` object that the web page can use
    */
   private injectFloorpAPI(): void {
     if (this.apiInjected) return;
@@ -174,85 +132,40 @@ export class NRPluginStoreChild extends JSWindowActorChild {
     if (!win) return;
 
     try {
-      // Export API functions to window using bind(this) pattern
-      Cu.exportFunction(this.NRPluginStore_isFloorp.bind(this), win, {
-        defineAs: "NRPluginStore_isFloorp",
+      // Create floorpPluginStore object in content compartment
+      const pluginStoreObj = Cu.cloneInto({}, win, { cloneFunctions: false });
+
+      // Export each method to the object
+      Cu.exportFunction(this.isFloorp.bind(this), pluginStoreObj, {
+        defineAs: "isFloorp",
+      });
+      Cu.exportFunction(this.getVersion.bind(this), pluginStoreObj, {
+        defineAs: "getVersion",
+      });
+      Cu.exportFunction(this.installPlugin.bind(this), pluginStoreObj, {
+        defineAs: "installPlugin",
+      });
+      Cu.exportFunction(this.uninstallPlugin.bind(this), pluginStoreObj, {
+        defineAs: "uninstallPlugin",
+      });
+      Cu.exportFunction(this.isPluginInstalled.bind(this), pluginStoreObj, {
+        defineAs: "isPluginInstalled",
       });
 
-      Cu.exportFunction(this.NRPluginStore_getVersion.bind(this), win, {
-        defineAs: "NRPluginStore_getVersion",
-      });
-
-      Cu.exportFunction(this.NRPluginStore_installPlugin.bind(this), win, {
-        defineAs: "NRPluginStore_installPlugin",
-      });
-
-      Cu.exportFunction(this.NRPluginStore_uninstallPlugin.bind(this), win, {
-        defineAs: "NRPluginStore_uninstallPlugin",
-      });
-
-      Cu.exportFunction(this.NRPluginStore_isPluginInstalled.bind(this), win, {
-        defineAs: "NRPluginStore_isPluginInstalled",
-      });
-
-      // Create floorpPluginStore wrapper object using Cu.cloneInto
-      // This provides a clean API interface for web content
-      this.createPluginStoreObject(win);
+      // Assign to window.floorpPluginStore
+      win.wrappedJSObject.floorpPluginStore = pluginStoreObj;
 
       // Set isFloorp flag
       win.wrappedJSObject.isFloorp = true;
 
       this.apiInjected = true;
-      console.debug(
-        "[NRPluginStoreChild] API injected successfully, floorpPluginStore:",
-        !!win.wrappedJSObject.floorpPluginStore,
-      );
+      console.debug("[NRPluginStoreChild] API injected successfully");
 
       // Dispatch ready event
       this.dispatchReadyEvent(win);
     } catch (e) {
       console.error("[NRPluginStoreChild] Failed to inject API:", e);
     }
-  }
-
-  /**
-   * Create the floorpPluginStore object on the window using Cu.cloneInto
-   */
-  private createPluginStoreObject(win: Window): void {
-    // Create empty object in content compartment
-    const pluginStoreObj = Cu.cloneInto({}, win, { cloneFunctions: false });
-
-    // Export each method to the object
-    Cu.exportFunction(this.NRPluginStore_isFloorp.bind(this), pluginStoreObj, {
-      defineAs: "isFloorp",
-    });
-
-    Cu.exportFunction(
-      this.NRPluginStore_getVersion.bind(this),
-      pluginStoreObj,
-      { defineAs: "getVersion" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_installPlugin.bind(this),
-      pluginStoreObj,
-      { defineAs: "installPlugin" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_uninstallPlugin.bind(this),
-      pluginStoreObj,
-      { defineAs: "uninstallPlugin" },
-    );
-
-    Cu.exportFunction(
-      this.NRPluginStore_isPluginInstalled.bind(this),
-      pluginStoreObj,
-      { defineAs: "isPluginInstalled" },
-    );
-
-    // Assign to window.floorpPluginStore
-    win.wrappedJSObject.floorpPluginStore = pluginStoreObj;
   }
 
   /**
@@ -284,7 +197,7 @@ export class NRPluginStoreChild extends JSWindowActorChild {
       const EventCtor = win.CustomEvent || CustomEvent;
       const event = new EventCtor(eventName, { detail });
       win.dispatchEvent(event);
-    } catch (_e) {
+    } catch {
       // Ignore errors
     }
   }
