@@ -305,7 +305,8 @@ jobs:
               echo "Trying branch: $BRANCH"
 
               # Try different platform variations
-              for PLATFORM_PATH in "macosx64-aarch64-shippable-opt" "macosx64-x64-shippable-opt"; do
+              # Note: index paths use "opt" not "shippable-opt" for platform names
+              for PLATFORM_PATH in "macosx64-aarch64-opt" "macosx64-x64-opt"; do
                 INDEX_PATH="gecko.v2.${BRANCH}.shippable.latest.firefox.${PLATFORM_PATH}"
 
                 echo "Checking index: $INDEX_PATH"
