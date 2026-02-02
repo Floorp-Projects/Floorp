@@ -311,69 +311,44 @@ jobs:
 
                 echo "Checking index: $INDEX_PATH"
 
-                # Get the latest build task from the index
-                BUILD_TASK_JSON=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/index/v1/tasks/$INDEX_PATH")
+                # Get the latest build task from the index (singular /task/ endpoint)
+                BUILD_TASK_JSON=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/$INDEX_PATH")
 
-                # Check if we got a valid task
-                if echo "$BUILD_TASK_JSON" | grep -q '"taskId"'; then
-                  TASK_ID=$(echo "$BUILD_TASK_JSON" | jq -r '.taskId // .taskId')
+                # Check if we got a valid task (response should contain a taskId)
+                TASK_ID=$(echo "$BUILD_TASK_JSON" | jq -r '.taskId // empty')
+                if [ -n "$TASK_ID" ] && [ "$TASK_ID" != "null" ]; then
                   echo "Found build task: $TASK_ID"
 
-                  # Get the task details to find dependencies
+                  # Get the task details - we can extract task IDs directly from MOZ_FETCHES env var
                   TASK_DETAILS=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/$TASK_ID")
 
-                  # Extract dependencies and find dmg/hfsplus toolchain tasks
-                  DEPENDENCIES=$(echo "$TASK_DETAILS" | jq -r '.dependencies[]? // empty' 2>/dev/null || echo "")
+                  # Extract MOZ_FETCHES and parse it to find dmg and hfsplus task IDs
+                  # MOZ_FETCHES is a JSON string array containing artifact/task pairs
+                  MOZ_FETCHES=$(echo "$TASK_DETAILS" | jq -r '.payload.env.MOZ_FETCHES // empty')
 
-                  if [ -n "$DEPENDENCIES" ]; then
-                    # Iterate through dependencies to find toolchain tasks
-                    while read -r DEP_TASK_ID; do
-                      # Skip empty strings
-                      [ -z "$DEP_TASK_ID" ] && continue
+                  if [ -n "$MOZ_FETCHES" ]; then
+                    # Parse MOZ_FETCHES to find dmg and hfsplus task IDs
+                    DMG_TASK_ID=$(echo "$MOZ_FETCHES" | jq -r 'map(select(.artifact == "public/build/dmg.tar.zst"))[0].task // empty')
+                    HFSPLUS_TASK_ID=$(echo "$MOZ_FETCHES" | jq -r 'map(select(.artifact == "public/build/hfsplus.tar.zst"))[0].task // empty')
 
-                      # Check if this is a valid task ID format (base62-like)
-                      if ! echo "$DEP_TASK_ID" | grep -qE '^[A-Za-z0-9_-]{22}$'; then
-                        continue
-                      fi
+                    if [ -n "$DMG_TASK_ID" ] && [ "$DMG_TASK_ID" != "null" ]; then
+                      echo "Found dmg toolchain task: $DMG_TASK_ID"
+                    fi
+                    if [ -n "$HFSPLUS_TASK_ID" ] && [ "$HFSPLUS_TASK_ID" != "null" ]; then
+                      echo "Found hfsplus toolchain task: $HFSPLUS_TASK_ID"
+                    fi
 
-                      # Get task metadata to check if it's the toolchain we need
-                      DEP_META=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/$DEP_TASK_ID" 2>/dev/null || echo "{}")
-                      DEP_NAME=$(echo "$DEP_META" | jq -r '.metadata.name // empty' 2>/dev/null || echo "")
-
-                      # Check for dmg toolchain
-                      if echo "$DEP_NAME" | grep -q "toolchain.*linux64.*libdmg" && [ -z "$DMG_TASK_ID" ]; then
-                        DMG_TASK_ID="$DEP_TASK_ID"
-                        echo "Found dmg toolchain task: $DMG_TASK_ID"
-                      fi
-
-                      # Check for hfsplus toolchain
-                      if echo "$DEP_NAME" | grep -q "toolchain.*linux64.*hfsplus" && [ -z "$HFSPLUS_TASK_ID" ]; then
-                        HFSPLUS_TASK_ID="$DEP_TASK_ID"
-                        echo "Found hfsplus toolchain task: $HFSPLUS_TASK_ID"
-                      fi
-
-                      # Break early if both found
-                      if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
-                        break 2
-                      fi
-                    done <<< "$DEPENDENCIES"
-                  fi
-
-                  # If we found both tasks, break out of the platform loop
-                  if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
-                    break
+                    # If we found both tasks, break out of loops
+                    if [ -n "$DMG_TASK_ID" ] && [ "$DMG_TASK_ID" != "null" ] && [ -n "$HFSPLUS_TASK_ID" ] && [ "$HFSPLUS_TASK_ID" != "null" ]; then
+                      break 2
+                    fi
                   fi
                 fi
               done
-
-              # If we found both tasks, break out of the branch loop
-              if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
-                break
-              fi
             done
 
             # Fallback to hardcoded task IDs if dynamic lookup failed
-            if [ -z "$DMG_TASK_ID" ] || [ -z "$HFSPLUS_TASK_ID" ]; then
+            if [ -z "$DMG_TASK_ID" ] || [ "$DMG_TASK_ID" = "null" ] || [ -z "$HFSPLUS_TASK_ID" ] || [ "$HFSPLUS_TASK_ID" = "null" ]; then
               echo "Warning: Could not dynamically fetch all toolchain task IDs"
               echo "DMG_TASK_ID: ${DMG_TASK_ID:-not found}"
               echo "HFSPLUS_TASK_ID: ${HFSPLUS_TASK_ID:-not found}"
