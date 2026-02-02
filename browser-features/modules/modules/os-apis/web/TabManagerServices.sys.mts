@@ -236,8 +236,9 @@ class TabManager {
       }
     }
 
-    // Last resort recovery: if there is exactly one automated tab, bind this instanceId to it.
-    // This helps when the service is reloaded and the map was lost, but the client still holds the ID.
+    // Last resort recovery: if there is exactly one automated tab AND it has NO instanceId attribute,
+    // bind this instanceId to it. This helps when the service is reloaded and the map was lost,
+    // but the client still holds the ID. We should NOT bind if the tab already has a different instanceId.
     if (!entry) {
       try {
         const automatedTabs: BrowserTab[] = [];
@@ -251,11 +252,17 @@ class TabManager {
         }
         if (automatedTabs.length === 1) {
           const targetTab = automatedTabs[0];
-          entry = { tab: targetTab, browser: targetTab.linkedBrowser };
-          this._browserInstances.set(instanceId, entry);
-          TAB_MANAGER_ACTOR_SETS.add(entry.browser);
-          if (targetTab.setAttribute) {
-            targetTab.setAttribute("data-floorp-os-instance-id", instanceId);
+          const existingInstanceId = targetTab.getAttribute?.(
+            "data-floorp-os-instance-id",
+          );
+          // Only bind if the tab has no instanceId or if it matches the requested instanceId
+          if (!existingInstanceId || existingInstanceId === instanceId) {
+            entry = { tab: targetTab, browser: targetTab.linkedBrowser };
+            this._browserInstances.set(instanceId, entry);
+            TAB_MANAGER_ACTOR_SETS.add(entry.browser);
+            if (targetTab.setAttribute && !existingInstanceId) {
+              targetTab.setAttribute("data-floorp-os-instance-id", instanceId);
+            }
           }
         }
       } catch {
@@ -603,7 +610,12 @@ class TabManager {
   }
 
   public async destroyInstance(instanceId: string): Promise<void> {
-    const { tab, browser } = this._getInstance(instanceId);
+    const entry = this._getEntry(instanceId);
+    if (!entry) {
+      // Already destroyed or never existed - silently succeed
+      return;
+    }
+    const { tab, browser } = entry;
     try {
       await this._queryActor(instanceId, "WebScraper:ClearEffects");
     } catch (error) {
