@@ -123,7 +123,7 @@ jobs:
       - name: Setup
         run: |
           sudo apt update
-          sudo apt install msitools -y
+          sudo apt install msitools jq -y
           ./mach --no-interactive bootstrap --application-choice browser_artifact_mode
 
       - name: Write Versions
@@ -292,8 +292,104 @@ jobs:
 
           if [ "${CANON_PLATFORM}" = "macOS-x86_64" ]; then
             mkdir -p ~/tools
-            curl -L https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/ceSQWV1AS76UlhYJ0_PfJQ/artifacts/public/build/dmg.tar.zst -o dmg.tar.zst
-            curl -L https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/N2SwCRLrRw2l-UWP4N7dhQ/artifacts/public/build/hfsplus.tar.zst -o hfsplus.tar.zst
+
+            # Dynamically fetch the latest macOS build task and extract toolchain task IDs
+            # This avoids hardcoded task IDs that expire
+            echo "Fetching latest macOS build task to find toolchain dependencies..."
+
+            DMG_TASK_ID=""
+            HFSPLUS_TASK_ID=""
+
+            # Try different branches in order of preference
+            for BRANCH in "mozilla-central" "autoland"; do
+              echo "Trying branch: $BRANCH"
+
+              # Try different platform variations
+              for PLATFORM_PATH in "macosx64-aarch64-shippable-opt" "macosx64-x64-shippable-opt"; do
+                INDEX_PATH="gecko.v2.${BRANCH}.shippable.latest.firefox.${PLATFORM_PATH}"
+
+                echo "Checking index: $INDEX_PATH"
+
+                # Get the latest build task from the index
+                BUILD_TASK_JSON=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/index/v1/tasks/$INDEX_PATH")
+
+                # Check if we got a valid task
+                if echo "$BUILD_TASK_JSON" | grep -q '"taskId"'; then
+                  TASK_ID=$(echo "$BUILD_TASK_JSON" | jq -r '.taskId // .taskId')
+                  echo "Found build task: $TASK_ID"
+
+                  # Get the task details to find dependencies
+                  TASK_DETAILS=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/$TASK_ID")
+
+                  # Extract dependencies and find dmg/hfsplus toolchain tasks
+                  DEPENDENCIES=$(echo "$TASK_DETAILS" | jq -r '.dependencies[]? // empty' 2>/dev/null || echo "")
+
+                  if [ -n "$DEPENDENCIES" ]; then
+                    # Iterate through dependencies to find toolchain tasks
+                    while read -r DEP_TASK_ID; do
+                      # Skip empty strings
+                      [ -z "$DEP_TASK_ID" ] && continue
+
+                      # Check if this is a valid task ID format (base62-like)
+                      if ! echo "$DEP_TASK_ID" | grep -qE '^[A-Za-z0-9_-]{22}$'; then
+                        continue
+                      fi
+
+                      # Get task metadata to check if it's the toolchain we need
+                      DEP_META=$(curl -s "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/$DEP_TASK_ID" 2>/dev/null || echo "{}")
+                      DEP_NAME=$(echo "$DEP_META" | jq -r '.metadata.name // empty' 2>/dev/null || echo "")
+
+                      # Check for dmg toolchain
+                      if echo "$DEP_NAME" | grep -q "toolchain.*linux64.*libdmg" && [ -z "$DMG_TASK_ID" ]; then
+                        DMG_TASK_ID="$DEP_TASK_ID"
+                        echo "Found dmg toolchain task: $DMG_TASK_ID"
+                      fi
+
+                      # Check for hfsplus toolchain
+                      if echo "$DEP_NAME" | grep -q "toolchain.*linux64.*hfsplus" && [ -z "$HFSPLUS_TASK_ID" ]; then
+                        HFSPLUS_TASK_ID="$DEP_TASK_ID"
+                        echo "Found hfsplus toolchain task: $HFSPLUS_TASK_ID"
+                      fi
+
+                      # Break early if both found
+                      if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
+                        break 2
+                      fi
+                    done <<< "$DEPENDENCIES"
+                  fi
+
+                  # If we found both tasks, break out of the platform loop
+                  if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
+                    break
+                  fi
+                fi
+              done
+
+              # If we found both tasks, break out of the branch loop
+              if [ -n "$DMG_TASK_ID" ] && [ -n "$HFSPLUS_TASK_ID" ]; then
+                break
+              fi
+            done
+
+            # Fallback to hardcoded task IDs if dynamic lookup failed
+            if [ -z "$DMG_TASK_ID" ] || [ -z "$HFSPLUS_TASK_ID" ]; then
+              echo "Warning: Could not dynamically fetch all toolchain task IDs"
+              echo "DMG_TASK_ID: ${DMG_TASK_ID:-not found}"
+              echo "HFSPLUS_TASK_ID: ${HFSPLUS_TASK_ID:-not found}"
+              echo "Using fallback task IDs..."
+
+              # These are known working task IDs as of 2025-08
+              DMG_TASK_ID="${DMG_TASK_ID:-U_fBTvlRQ-WAnyEnouK0rw}"
+              HFSPLUS_TASK_ID="${HFSPLUS_TASK_ID:-GgaQwED_SdeRkH3h2FANYQ}"
+            fi
+
+            echo "Using dmg task: $DMG_TASK_ID"
+            echo "Using hfsplus task: $HFSPLUS_TASK_ID"
+
+            # Download the tools using the (dynamically fetched or fallback) task IDs
+            curl -L "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/${DMG_TASK_ID}/artifacts/public/build/dmg.tar.zst" -o dmg.tar.zst
+            curl -L "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/${HFSPLUS_TASK_ID}/artifacts/public/build/hfsplus.tar.zst" -o hfsplus.tar.zst
+
             tar -I zstd -xf dmg.tar.zst -C ~/tools
             tar -I zstd -xf hfsplus.tar.zst -C ~/tools
             chmod 777 ~/tools/dmg ~/tools/hfsplus
