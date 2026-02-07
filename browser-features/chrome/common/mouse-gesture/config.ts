@@ -49,7 +49,6 @@ const ContextMenuCodec = t.type({
 
 const MouseGestureConfigRequired = t.type({
   rockerGesturesEnabled: t.boolean,
-  wheelGesturesEnabled: t.boolean,
   sensitivity: t.number,
   showTrail: t.boolean,
   showLabel: t.boolean,
@@ -77,7 +76,6 @@ const clamp = (value: number, min: number, max: number) =>
 const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
   enabled: false,
   rockerGesturesEnabled: true,
-  wheelGesturesEnabled: true,
   sensitivity: 40,
   showTrail: true,
   showLabel: true,
