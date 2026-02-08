@@ -38,6 +38,7 @@ export const useMouseGestureConfig = () => {
         const defaultConfig: MouseGestureConfig = {
           enabled,
           rockerGesturesEnabled: true,
+          wheelGesturesEnabled: true,
           sensitivity: 40,
           showTrail: true,
           showLabel: true,
