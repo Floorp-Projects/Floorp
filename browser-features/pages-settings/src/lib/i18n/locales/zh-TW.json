@@ -526,7 +526,6 @@
         "actionDescription": "手勢說明",
         "rockerGesturesEnabled": "啟用搖桿手勢",
         "rockerGesturesDescription": "按一下滑鼠右鍵並向左移動可返回，按一下滑鼠右鍵並向右移動可向前。(實驗性質)",
-        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "返回",
             "gecko-forward": "前進",

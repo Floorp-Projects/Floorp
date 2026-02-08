@@ -526,7 +526,6 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar os gestos de baloiço",
         "rockerGesturesDescription": "Clique com o botão direito do rato e mova para a esquerda para voltar atrás, clique com o botão direito do rato e mova para a direita para avançar. (Experimental)",
-        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Voltar atrás",
             "gecko-forward": "Avançar",

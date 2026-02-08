@@ -526,7 +526,6 @@
         "actionDescription": "Beskrivelse af bevægelsen",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
-        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Gå tilbage",
             "gecko-forward": "Gå frem",

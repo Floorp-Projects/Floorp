@@ -526,7 +526,6 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar gestos de balanço",
         "rockerGesturesDescription": "Clique com o botão direito do mouse e mova para a esquerda para voltar, clique com o botão direito do mouse e mova para a direita para avançar. (experimental)",
-        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Voltar",
             "gecko-forward": "Avançar",
