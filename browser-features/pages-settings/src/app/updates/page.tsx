@@ -339,7 +339,7 @@ export default function Page() {
 
         <Card>
           <CardHeader>
-            <div className="flex flex-row items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="flex-1">
                 <CardTitle>{t("updates.activeFlascos.title")}</CardTitle>
                 <CardDescription>
@@ -384,15 +384,15 @@ export default function Page() {
                   {activeExperiments.map((experiment) => (
                     <div
                       key={experiment.id}
-                      className={`flex items-start justify-between p-4 rounded-lg border transition-colors ${
+                      className={`flex flex-col gap-3 rounded-lg border p-4 transition-colors md:flex-row md:items-start md:justify-between ${
                         experiment.disabled
                           ? "opacity-50 bg-base-content/5 border-base-content/10"
                           : "border-base-content/20 hover:border-base-content/40"
                       }`}
                     >
-                      <div className="flex-1 pr-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">
+                      <div className="min-w-0 flex-1 md:pr-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="min-w-0 break-words font-medium">
                             {experiment.name || experiment.id}
                           </h3>
                           <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
@@ -409,8 +409,8 @@ export default function Page() {
                             {experiment.description}
                           </p>
                         )}
-                        <div className="text-xs text-base-content/50 mt-2 space-x-4">
-                          <span>ID: {experiment.id}</span>
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-base-content/50">
+                          <span className="break-all">ID: {experiment.id}</span>
                           {experiment.assignedAt && (
                             <span>
                               {t("updates.activeFlascos.assignedAt", {
@@ -429,7 +429,7 @@ export default function Page() {
                             : handleDisableExperiment(experiment.id)}
                         variant="secondary"
                         size="sm"
-                        className="shrink-0 h-8 mt-1"
+                        className="h-8 self-start shrink-0 md:mt-1"
                       >
                         <X className="h-4 w-4 mr-1" />
                         {experiment.disabled
@@ -446,7 +446,7 @@ export default function Page() {
         {/* Available Flascos Section */}
         <Card>
           <CardHeader>
-            <div className="flex flex-row items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div className="flex-1">
                 <CardTitle className="flex items-center gap-2">
                   <FlaskConical className="h-5 w-5" />
@@ -501,7 +501,7 @@ export default function Page() {
                       return (
                         <div
                           key={experiment.id}
-                          className={`flex items-start justify-between p-4 rounded-lg border transition-colors ${
+                          className={`flex flex-col gap-3 rounded-lg border p-4 transition-colors md:flex-row md:items-start md:justify-between ${
                             experiment.enrollmentStatus === "disabled"
                               ? "opacity-50 bg-base-content/5 border-base-content/10"
                               : experiment.enrollmentStatus === "force_enrolled"
@@ -511,9 +511,9 @@ export default function Page() {
                               : "border-base-content/20 hover:border-base-content/40"
                           }`}
                         >
-                          <div className="flex-1 pr-4">
+                          <div className="min-w-0 flex-1 md:pr-4">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="font-medium">
+                              <h3 className="min-w-0 break-words font-medium">
                                 {experiment.name || experiment.id}
                               </h3>
                               <span
@@ -536,16 +536,16 @@ export default function Page() {
                                 {experiment.description}
                               </p>
                             )}
-                            <div className="text-xs text-base-content/50 mt-2 space-x-4">
-                              <span>ID: {experiment.id}</span>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-base-content/50">
+                              <span className="break-all">ID: {experiment.id}</span>
                               {experiment.currentVariantId && (
-                                <span>
+                                <span className="break-all">
                                   Variant: {experiment.currentVariantId}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex flex-col gap-2">
+                          <div className="flex shrink-0 flex-col gap-2 self-start">
                             {experiment.enrollmentStatus === "not_in_rollout" ||
                                 experiment.enrollmentStatus === "control"
                               ? (

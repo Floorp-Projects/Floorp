@@ -110,8 +110,8 @@ export function ActionsSettings({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div>
-                    <table className="table w-full">
+                <div className="overflow-x-auto">
+                    <table className="table w-full min-w-[36rem]">
                         <thead>
                             <tr>
                                 <th className="text-base-content/70">{t("mouseGesture.action")}</th>
@@ -204,4 +204,4 @@ export function ActionsSettings({
             )}
         </Card>
     );
-} 
+}

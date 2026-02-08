@@ -28,11 +28,11 @@ export default function App() {
   useHashSync(location.pathname);
 
   return (
-    <div className="flex flex-col w-screen">
+    <div className="flex min-h-screen w-full flex-col">
       <AppBackground />
-      <div className="flex flex-1 z-1">
+      <div className="z-1 flex min-w-0 flex-1">
         <AppSidebar />
-        <div className="flex-1 max-w-3xl">
+        <div className="min-w-0 flex-1 max-w-3xl">
           <Header />
           <div className="p-4">
             <Routes>
