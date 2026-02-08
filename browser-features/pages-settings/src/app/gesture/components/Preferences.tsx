@@ -136,6 +136,20 @@ export function GeneralSettings({
                 disabled={!config.enabled}
               />
             </div>
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-base-content/90 font-medium">
+                {t("mouseGesture.wheelGesturesEnabled")}
+              </span>
+              <Switch
+                checked={config.wheelGesturesEnabled ?? true}
+                onChange={() =>
+                  updateConfig({
+                    wheelGesturesEnabled: !(config.wheelGesturesEnabled ?? true),
+                  })}
+                disabled={!config.enabled}
+              />
+            </div>
           </div>
 
           <div className="divider" />

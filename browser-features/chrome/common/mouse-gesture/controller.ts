@@ -62,6 +62,9 @@ export class MouseGestureController {
       this.handleContextMenu,
       true,
     );
+    this.targetWindow.addEventListener("wheel", this.handleMouseWheel, {
+      passive: false,
+    });
     this.eventListenersAttached = true;
   }
 
@@ -75,6 +78,7 @@ export class MouseGestureController {
         this.handleContextMenu,
         true,
       );
+      this.targetWindow.removeEventListener("wheel", this.handleMouseWheel);
       this.eventListenersAttached = false;
     }
 
@@ -379,6 +383,43 @@ export class MouseGestureController {
     }, preventionTimeout);
     this.resetGestureState();
   };
+
+  private handleMouseWheel = (event: WheelEvent): void => {
+    if (!this.isGestureActive || !isEnabled()) {
+      return;
+    }
+
+    const config = getConfig();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!config.wheelGesturesEnabled) {
+      return;
+    }
+
+    let action: string | null = null;
+    if (event.deltaY < 0) {
+      action = "gecko-show-previous-tab";
+    } else if (event.deltaY > 0) {
+      action = "gecko-show-next-tab";
+    }
+
+    if (action) {
+      executeGestureAction(action, this.targetWindow);
+      event.preventDefault();
+      event.stopPropagation();
+
+      this.isContextMenuPrevented = true;
+
+      if (this.preventionTimeoutId) {
+        clearTimeout(this.preventionTimeoutId);
+        this.preventionTimeoutId = null;
+      }
+      this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
+        this.isContextMenuPrevented = false;
+        this.preventionTimeoutId = null;
+      }, getConfig().contextMenu.preventionTimeout);
+    }
+  };
+
   private handleContextMenu = (event: MouseEvent): void => {
     if ((this.isGestureActive || this.isContextMenuPrevented) && isEnabled()) {
       event.preventDefault();

@@ -174,6 +174,7 @@ export const zMouseGestureContextMenu = t.type({
 export const zMouseGestureConfig = t.type({
   enabled: t.boolean,
   rockerGesturesEnabled: t.boolean,
+  wheelGesturesEnabled: t.boolean,
   sensitivity: t.number,
   showTrail: t.boolean,
   showLabel: t.boolean,

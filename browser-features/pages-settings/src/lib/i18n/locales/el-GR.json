@@ -526,6 +526,7 @@
         "actionDescription": "Περιγραφή της χειρονομίας",
         "rockerGesturesEnabled": "Ενεργοποίηση χειρονομιών ποντικιού",
         "rockerGesturesDescription": "Κάντε δεξί κλικ και μετακινηθείτε αριστερά για να πάτε πίσω, δεξί κλικ και μετακινηθείτε δεξιά για να πάτε μπροστά. (Πειραματικό)",
+        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Μετάβαση πίσω",
             "gecko-forward": "Μετάβαση εμπρός",
