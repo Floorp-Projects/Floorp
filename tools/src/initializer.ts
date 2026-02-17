@@ -17,7 +17,7 @@ import { Logger, runCommand, exists, safeRemove } from "./utils.ts";
 
 const logger = new Logger("initializer");
 
-const RUNTIME_BASE_URL = "https://dev-assets.floorp.app/runtime-builds/";
+const RUNTIME_BASE_URL = "https://dev-assets.floorp.app/floorp-runtime-builds/";
 const RUNTIME_INDEX_URL = `${RUNTIME_BASE_URL}.ftp-deploy-sync-state.json`;
 
 interface RuntimeDeployEntry {
