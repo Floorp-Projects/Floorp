@@ -526,6 +526,7 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar gestos de balanço",
         "rockerGesturesDescription": "Clique com o botão direito do mouse e mova para a esquerda para voltar, clique com o botão direito do mouse e mova para a direita para avançar. (experimental)",
+        "wheelGesturesEnabled": "Ativar gestos com a roda do mouse",
         "actions": {
             "gecko-back": "Voltar",
             "gecko-forward": "Avançar",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "Restaurar a última janela",
             "gecko-show-next-tab": "Mostrar próxima aba",
             "gecko-show-previous-tab": "Mostrar aba anterior",
+            "gecko-show-previously-selected-tab": "Mostrar aba selecionada anteriormente",
             "gecko-show-all-tabs-panel": "Mostrar todas as abas",
             "gecko-force-reload": "Forçar atualização",
             "gecko-zoom-in": "Aproximar",

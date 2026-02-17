@@ -526,6 +526,7 @@
         "actionDescription": "手势说明",
         "rockerGesturesEnabled": "启用摇杆手势",
         "rockerGesturesDescription": "右键单击并向左移动以返回，右键单击并向右移动以前进。(实验性)",
+        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "转到上一页",
             "gecko-forward": "转到下一页",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "恢复上一个已关闭的窗口",
             "gecko-show-next-tab": "显示下一个标签页",
             "gecko-show-previous-tab": "显示上一个标签页",
+            "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
             "gecko-show-all-tabs-panel": "显示所有标签面板",
             "gecko-force-reload": "强制刷新",
             "gecko-zoom-in": "放大",

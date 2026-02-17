@@ -526,6 +526,7 @@
         "actionDescription": "Beskrivelse af bevægelsen",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Gå tilbage",
             "gecko-forward": "Gå frem",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "Gendan sidste vindue",
             "gecko-show-next-tab": "Vis næste fane",
             "gecko-show-previous-tab": "Vis forrige fane",
+            "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
             "gecko-show-all-tabs-panel": "Show All Tabs Panel",
             "gecko-force-reload": "Tving genindlæsning",
             "gecko-zoom-in": "Zoom ind",

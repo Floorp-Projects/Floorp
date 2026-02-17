@@ -526,6 +526,7 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar os gestos de baloiço",
         "rockerGesturesDescription": "Clique com o botão direito do rato e mova para a esquerda para voltar atrás, clique com o botão direito do rato e mova para a direita para avançar. (Experimental)",
+        "wheelGesturesEnabled": "Ativar os gestos da roda",
         "actions": {
             "gecko-back": "Voltar atrás",
             "gecko-forward": "Avançar",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "Restaurar a última janela",
             "gecko-show-next-tab": "Mostrar separador seguinte",
             "gecko-show-previous-tab": "Mostrar separador anterior",
+            "gecko-show-previously-selected-tab": "Mostrar separador anteriormente selecionado",
             "gecko-show-all-tabs-panel": "Painel Mostrar todos os separadores",
             "gecko-force-reload": "Forçar Recarregamento",
             "gecko-zoom-in": "Ampliar",

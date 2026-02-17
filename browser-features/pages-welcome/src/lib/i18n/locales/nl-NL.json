@@ -1,25 +1,25 @@
 {
     "navigation": {
-        "welcome": "Welcome",
-        "language": "Language",
-        "languageSupport": "Language Support",
-        "features": "Features",
+        "welcome": "Welkom",
+        "language": "Taal",
+        "languageSupport": "Taal ondersteuning",
+        "features": "Functies",
         "featureIntroduction": "Feature Introduction",
-        "hub": "Floorp Hub",
-        "hubIntro": "About Floorp Hub",
-        "customize": "Customize",
-        "initialSettings": "Initial Settings",
+        "hub": "Floor Hub",
+        "hubIntro": "Over Floorp Hub",
+        "customize": "Personaliseren ",
+        "initialSettings": "Standaard instellingen",
         "complete": "Complete",
-        "previous": "Previous",
-        "next": "Next"
+        "previous": "Vorige",
+        "next": "Volgende"
     },
     "hubPage": {
-        "title": "About Floorp Hub",
-        "subtitle": "A central place for Floorp-specific settings.",
+        "title": "Over Floorp Hub ",
+        "subtitle": "Een centrale plek voor Floorp specifieke instellingen",
         "sectionTitle": "Floorp Hub",
         "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
         "openHub": "Open about:hub",
-        "openPreferences": "Open Settings (about:preferences)",
+        "openPreferences": "Open instellingen about:preferences",
         "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
         "features": {
             "dedicated": "Dedicated Floorp settings center",

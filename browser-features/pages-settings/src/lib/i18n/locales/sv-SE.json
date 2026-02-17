@@ -526,6 +526,7 @@
         "actionDescription": "Beskrivning av gest",
         "rockerGesturesEnabled": "Aktivera rocker gester",
         "rockerGesturesDescription": "Högerklicka och flytta till vänster för att gå tillbaka, högerklicka och flytta till höger för att gå framåt. (Experimentell)",
+        "wheelGesturesEnabled": "Aktivera scrollhjuls gester",
         "actions": {
             "gecko-back": "Gå tillbaka",
             "gecko-forward": "Gå framåt",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "Återställ senaste fönster",
             "gecko-show-next-tab": "Visa nästa flik",
             "gecko-show-previous-tab": "Visa föregående flik",
+            "gecko-show-previously-selected-tab": "Visa tidigare vald flik",
             "gecko-show-all-tabs-panel": "Visa alla flikar panel",
             "gecko-force-reload": "Tvinga omladdning",
             "gecko-zoom-in": "Zooma In",

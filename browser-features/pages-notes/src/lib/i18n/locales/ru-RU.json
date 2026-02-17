@@ -3,37 +3,37 @@
         "default": "Заметки {{productName}}"
     },
     "notes": {
-        "welcome": "Welcome to {{productName}} Notes!",
-        "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
+        "welcome": "Добро пожаловать в «Заметки {{productName}}»!",
+        "welcomeContent": "Добро пожаловать в «Заметки {{productName}}»! Вот как этим пользоваться.\n\n«Заметки {{productName}}» — это функция ведения заметок, которую можно синхронизировать между устройствами. Чтобы включить синхронизацию, вам нужно войти на {{productName}} под аккаунтом Mozilla.\n«Заметки {{productName}}» хранятся в {{productName}} и синхронизируются между устройствами с помощью Firefox. Синхронизация Firefox шифрует содержимое синхронизации с помощью пароля аккаунта Mozilla, поэтому никто не сможет узнать его содержимое.",
         "new": "Новая заметка",
-        "reorder": "Reorder",
-        "done": "Done",
-        "emptyTitle": "Untitled",
-        "emptyContent": "No content",
-        "noNotesSelected": "Select a note or create a new one",
-        "createNew": "Create New Note",
-        "titlePlaceholder": "Title",
-        "loading": "Loading notes...",
+        "reorder": "Пересортировать",
+        "done": "Готово",
+        "emptyTitle": "Безымянный",
+        "emptyContent": "Нет содержания",
+        "noNotesSelected": "Выберите заметку или создайте новую",
+        "createNew": "Создать новую заметку",
+        "titlePlaceholder": "Заголовок",
+        "loading": "Загрузка заметок...",
         "delete": "Удалить"
     },
     "editor": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strikethrough",
-        "bulletList": "Bullet List",
-        "numberedList": "Numbered List",
-        "alignLeft": "Align Left",
-        "alignCenter": "Align Center",
-        "alignRight": "Align Right",
-        "quote": "Quote",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3"
+        "bold": "Жирный",
+        "italic": "Курсив",
+        "underline": "Подчёркивание",
+        "strikethrough": "Зачёркивание",
+        "bulletList": "Маркированный список",
+        "numberedList": "Нумерованный список",
+        "alignLeft": "Выровнять по левому краю",
+        "alignCenter": "Выровнять по центру",
+        "alignRight": "Выровнять по правому краю",
+        "quote": "Цитата",
+        "heading1": "Заголовок 1",
+        "heading2": "Заголовок 2",
+        "heading3": "Заголовок 3"
     },
     "error": {
-        "loadFailed": "Failed to load note data",
-        "saveFailed": "Failed to save note data",
-        "indexOutOfRange": "Index {{index}} is out of range"
+        "loadFailed": "Не удалось загрузить данные заметки",
+        "saveFailed": "Не удалось сохранить данные заметки",
+        "indexOutOfRange": "Индекс {{index}} находится вне диапазона"
     }
 }

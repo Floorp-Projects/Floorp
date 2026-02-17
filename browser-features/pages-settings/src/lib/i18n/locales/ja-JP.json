@@ -526,6 +526,7 @@
         "actionDescription": "ジェスチャーの説明",
         "rockerGesturesEnabled": "ロッカージェスチャーを有効にする",
         "rockerGesturesDescription": "右クリックしながら左に動かすとページを戻り、右クリックしながら右に動かすと進みます。 (実験的)",
+        "wheelGesturesEnabled": "ホイールジェスチャーを有効にする",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "最後に閉じたウィンドウを復元",
             "gecko-show-next-tab": "次のタブを表示",
             "gecko-show-previous-tab": "前のタブを表示",
+            "gecko-show-previously-selected-tab": "前に選択したタブを表示",
             "gecko-show-all-tabs-panel": "タブを一覧表示",
             "gecko-force-reload": "強制的に再読み込み",
             "gecko-zoom-in": "拡大",

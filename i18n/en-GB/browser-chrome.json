@@ -141,6 +141,7 @@
       "gecko-restore-last-window": "Restore Last Window",
       "gecko-show-next-tab": "Show Next Tab",
       "gecko-show-previous-tab": "Show Previous Tab",
+      "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
       "gecko-show-all-tabs-panel": "Show All Tabs Panel",
       "gecko-force-reload": "Force Reload",
       "gecko-zoom-in": "Zoom In",

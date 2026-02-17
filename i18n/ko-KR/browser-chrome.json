@@ -141,6 +141,7 @@
       "gecko-restore-last-window": "마지막 창 복원",
       "gecko-show-next-tab": "다음 탭 표시",
       "gecko-show-previous-tab": "이전 탭 표시",
+      "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
       "gecko-show-all-tabs-panel": "모든 탭 패널 표시",
       "gecko-force-reload": "강제 새로 고림",
       "gecko-zoom-in": "확대",

@@ -526,6 +526,7 @@
         "actionDescription": "Deskripsi gestur",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "wheelGesturesEnabled": "Aktifkan gestur roda tetikus",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -541,6 +542,7 @@
             "gecko-restore-last-window": "Restore Last Window",
             "gecko-show-next-tab": "Show Next Tab",
             "gecko-show-previous-tab": "Show Previous Tab",
+            "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
             "gecko-show-all-tabs-panel": "Show All Tabs Panel",
             "gecko-force-reload": "Force Reload",
             "gecko-zoom-in": "Zum Masuk",

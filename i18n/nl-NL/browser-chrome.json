@@ -141,6 +141,7 @@
       "gecko-restore-last-window": "Laatste venster herstellen",
       "gecko-show-next-tab": "Volgend tabblad tonen",
       "gecko-show-previous-tab": "Vorig tabblad tonen",
+      "gecko-show-previously-selected-tab": "Eerder geselecteerde tabblad weergeven",
       "gecko-show-all-tabs-panel": "Toon alle tabbladen",
       "gecko-force-reload": "Geforceerd Herladen",
       "gecko-zoom-in": "Inzoomen",
@@ -308,31 +309,31 @@
   },
   "externalBrowser": {
     "menu": {
-      "openTabIn": "Open Tab in External Browser",
-      "openLinkIn": "Open Link in External Browser",
-      "defaultBrowser": "System Default Browser",
-      "noBrowsers": "No external browsers detected",
-      "noValidUrl": "No valid URL to open"
+      "openTabIn": "Tabblad openen in externe browser",
+      "openLinkIn": "Koppeling openen in externe browser",
+      "defaultBrowser": "Systeem standaard browser",
+      "noBrowsers": "Geen externe browsers gedetecteerd",
+      "noValidUrl": "Geen geldige URL om te openen"
     }
   },
   "chromeWebStore": {
     "button": {
-      "addToFloorp": "Add to Floorp",
+      "addToFloorp": "Toevoegen aan Floorp",
       "installing": "Installeren...",
-      "success": "Added!",
-      "error": "Error occurred",
-      "installed": "Installed"
+      "success": "Toegevoegd!",
+      "error": "Er is iets fout gegaan",
+      "installed": "Geïnstalleerd"
     },
     "error": {
-      "title": "Installation Error",
-      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
-      "alreadyInstalled": "This extension is already installed ({{name}})",
-      "downloadFailed": "Failed to download CRX file",
-      "conversionFailed": "Failed to convert extension: {{error}}",
-      "conversionFailedGeneric": "Failed to convert CRX to XPI",
-      "installError": "Installation error: {{error}}",
-      "installFailed": "Installation failed",
-      "noData": "No installation data provided",
+      "title": "Installatie fout",
+      "compatibilityNote": "Deze extensie is mogelijk niet compatibel met Firefox/Floorp.",
+      "alreadyInstalled": "Deze extensie is al geïnstalleerd ({{name}})",
+      "downloadFailed": "Fout bij downloaden van CRX-bestand",
+      "conversionFailed": "Conversie van extensie mislukt: {{error}}",
+      "conversionFailedGeneric": "Converteren van CRX naar XPI mislukt",
+      "installError": "Installatie fout: {{error}}",
+      "installFailed": "Installatie mislukt",
+      "noData": "Geen installatiegegevens beschikbaar",
       "addonManagerUnavailable": "AddonManager is not available",
       "noBrowserWindow": "Could not find browser window for installation",
       "createInstallFailed": "Failed to create installation object",
