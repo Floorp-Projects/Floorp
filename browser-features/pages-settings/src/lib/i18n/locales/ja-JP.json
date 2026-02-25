@@ -34,6 +34,7 @@
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
         "keyboardShortcut": "キーボードショートカット",
+        "llmProviders": "AIプロバイダー",
         "search": {
             "title": "検索の設定",
             "resultsFor": "[{{query}}] の検索結果",
@@ -409,7 +410,8 @@
             "bookmarks": "ブックマーク",
             "history": "履歴",
             "downloads": "ダウンロード",
-            "notes": "Notes"
+            "notes": "Notes",
+            "llm-chat": "AIチャット"
         },
         "url": "URL",
         "untitled": "無題",
@@ -675,5 +677,19 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "llmProviders": {
+        "title": "AIプロバイダー",
+        "description": "サイドバーチャット、コンテンツ生成、ワークフロー自動化などのインテリジェント機能で使用するAIプロバイダーを設定します。",
+        "defaultProvider": "デフォルトプロバイダー",
+        "defaultProviderDescription": "インテリジェント機能でデフォルトで使用するAIプロバイダーを選択します。",
+        "selectProvider": "プロバイダーを選択",
+        "disabled": "無効",
+        "apiKey": "APIキー",
+        "apiKeyPlaceholder": "APIキーを入力",
+        "baseUrl": "ベースURL",
+        "baseUrlPlaceholder": "オプション - デフォルトエンドポイントを使用する場合は空欄",
+        "defaultModel": "デフォルトモデル",
+        "selectModel": "モデルを選択"
     }
 }

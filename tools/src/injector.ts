@@ -49,9 +49,9 @@ export async function injectXhtmlFromTs(
             break;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         logger.warn(
-          `Could not read dist directory ${distDir} for macOS .app bundle search: ${e.message}`,
+          `Could not read dist directory ${distDir} for macOS .app bundle search: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
       if (!appBundleFound) {
@@ -99,6 +99,7 @@ export function createManifest(mode: string, dirPath: string) {
       "content noraneko-modal-child pages-modal-child/ contentaccessible=yes",
       "content noraneko-settings pages-settings/ contentaccessible=yes",
       "content noraneko-profile-manager pages-profile-manager/ contentaccessible=yes",
+      "content noraneko-llm-chat pages-llm-chat/ contentaccessible=yes",
     ].join("\n");
     manifestContent += "\n" + devEntries;
   }

@@ -1,0 +1,45 @@
+{
+  "name": "llm-chat",
+  "version": "1.0.0",
+  "description": "LLM Chat UI for Floorp sidebar",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MPL-2.0",
+  "type": "module",
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "autoprefixer": "^10.4.23",
+    "daisyui": "^5.5.14",
+    "postcss": "^8.5.6",
+    "react": "^19.2.3",
+    "vite": "^7.3.0",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "dependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.59.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "birpc": "^4.0.0",
+    "clsx": "^2.1.1",
+    "i18next": "^25.7.3",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "lightningcss": "^1.31.1",
+    "lucide-react": "^0.562.0",
+    "react-dom": "^19.2.3",
+    "react-i18next": "^16.5.0",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.1",
+    "tailwindcss": "^4.1.18"
+  },
+  "optionalDependencies": {
+    "@aspect-build/lightningcss-win32-x64-msvc": "*",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.2.1",
+    "lightningcss-win32-x64-msvc": "^1.31.1",
+    "lightningcss.win32-x64-msvc.node": "*"
+  }
+}

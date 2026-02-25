@@ -69,6 +69,15 @@ const BASE_STATIC_PANEL_DATA: StaticPanelData = {
     l10n: "notes-sidebar",
     defaultWidth: 550,
   },
+
+  "floorp//llm-chat": {
+    url: import.meta.env.DEV
+      ? "http://localhost:5190"
+      : "chrome://noraneko-llm-chat/content/index.html",
+    icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJjb250ZXh0LWZpbGwiPgogIDxwYXRoIGQ9Ik0xMyA2YTIgMiAwIDAgMSAyIDJ2MWEyIDIgMCAwIDEtMiAyaC0xLjVhLjUuNSAwIDAgMS0uNS0uNXYtNGEuNS41IDAgMCAxIC41LS41SDEzWm0tMTAgMGEyIDIgMCAwIDAtMiAydjFhMiAyIDAgMCAwIDIgMmgxLjVhLjUuNSAwIDAgMCAuNS0uNXYtNGEuNS41IDAgMCAwLS41LS41SDNaIi8+CiAgPHBhdGggZD0iTTggMGE4IDggMCAxIDAgOCA4QTggOCAwIDAgMCA4IDBabTAgMTRBNiA2IDAgMSAxIDggMmE2IDYgMCAwIDEgMCAxMloiLz4KPC9zdmc+",
+    l10n: "llm-chat-sidebar",
+    defaultWidth: 450,
+  },
 };
 
 /**

@@ -1,4 +1,55 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+
+/* ── Scroll-reveal animation ────────────────────────────── */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.reveal.visible {
+  animation: reveal-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger children */
+.reveal.visible:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.reveal.visible:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.reveal.visible:nth-child(4) {
+  animation-delay: 0.24s;
+}
+.reveal.visible:nth-child(5) {
+  animation-delay: 0.32s;
+}
+
+/* ── Hero overlay ────────────────────────────────────────── */
+.hero-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    oklch(0.2 0 0 / 0.35) 0%,
+    oklch(0.15 0 0 / 0.65) 100%
+  );
+  pointer-events: none;
 }

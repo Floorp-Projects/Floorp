@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Panel } from "../../../../../main/core/common/panel-sidebar/utils/type.ts";
 import { X } from "lucide-react";

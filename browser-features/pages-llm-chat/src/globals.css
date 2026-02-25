@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Scrollbar — thin, VS Code style */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.1);
+  border-radius: 2.5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--bc) / 0.2);
+}
+
+/* Markdown — compact for Copilot-style inline content */
+.markdown-content {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content p {
+  margin: 0.25rem 0;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  margin: 0.5rem 0 0.15rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-content h1 {
+  font-size: 1.1rem;
+}
+.markdown-content h2 {
+  font-size: 1rem;
+}
+.markdown-content h3 {
+  font-size: 0.9rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.2rem 0;
+  padding-left: 1.2rem;
+}
+
+.markdown-content li {
+  margin: 0.1rem 0;
+}
+
+.markdown-content ul {
+  list-style-type: disc;
+}
+
+.markdown-content ol {
+  list-style-type: decimal;
+}
+
+.markdown-content code {
+  background-color: oklch(var(--b3) / 0.7);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.markdown-content pre {
+  margin: 0.4rem 0;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  margin: 0.2rem 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid oklch(var(--b3));
+  color: oklch(var(--bc) / 0.55);
+}
+
+.markdown-content a {
+  color: oklch(var(--p));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-content a:hover {
+  color: oklch(var(--pf));
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  margin: 0.4rem 0;
+  font-size: 0.8125rem;
+  width: 100%;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid oklch(var(--b3));
+  padding: 0.2rem 0.4rem;
+}
+
+.markdown-content th {
+  background-color: oklch(var(--b2));
+  font-weight: 600;
+}
+
+.markdown-content hr {
+  margin: 0.4rem 0;
+  border-color: oklch(var(--b3));
+}

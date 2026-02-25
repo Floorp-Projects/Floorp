@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "llmProviders": "AI Providers",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -409,7 +410,8 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notes",
+            "llm-chat": "AI Chat"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -675,5 +677,19 @@
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
         }
+    },
+    "llmProviders": {
+        "title": "AI Providers",
+        "description": "Configure AI providers for intelligent features like sidebar chat, content generation, and workflow automation.",
+        "defaultProvider": "Default Provider",
+        "defaultProviderDescription": "Select the AI provider to use by default for intelligent features.",
+        "selectProvider": "Select a provider",
+        "disabled": "Disabled",
+        "apiKey": "API Key",
+        "apiKeyPlaceholder": "Enter your API key",
+        "baseUrl": "Base URL",
+        "baseUrlPlaceholder": "Optional - leave empty for default endpoint",
+        "defaultModel": "Default Model",
+        "selectModel": "Select a model"
     }
 }

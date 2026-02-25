@@ -370,5 +370,8 @@
     "menu": {
       "title": "Floorp Hub"
     }
+  },
+  "panelSidebar": {
+    "llm-chat-sidebar": "AIチャット"
   }
 }

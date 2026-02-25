@@ -2,6 +2,7 @@ import type * as React from "react";
 import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
+  Brain,
   Briefcase,
   Cpu,
   Grip,
@@ -84,6 +85,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Option,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
+    {
+      title: t("pages.llmProviders"),
+      url: "/features/llm-providers",
+      icon: Brain,
+    },
     // Floorp OS entry is conditional based on pref floorp.os.hidden
     ...(isFloorpOSVisible
       ? [

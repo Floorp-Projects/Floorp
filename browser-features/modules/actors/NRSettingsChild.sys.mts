@@ -18,6 +18,8 @@ export class NRSettingsChild extends JSWindowActorChild {
       window?.location.port === "5186" ||
       window?.location.port === "5187" ||
       window?.location.port === "5188" ||
+      window?.location.port === "5190" ||
+      window?.location.port === "5199" ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
@@ -42,6 +44,39 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
 
   sendToPage: ((data: string) => void) | null = null;
+
+  private formatRPCError(error: unknown): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    if (typeof error === "string" && error.trim() !== "") {
+      return error;
+    }
+    try {
+      const json = JSON.stringify(error);
+      if (json && json !== "{}" && json !== "[]") {
+        return json;
+      }
+    } catch {
+      // ignore
+    }
+    return "Unknown parent actor error";
+  }
+
+  private async sendQueryWithFallback<T extends object>(
+    name: string,
+    data: Record<string, unknown>,
+    fallback: T,
+  ): Promise<T & { error?: string }> {
+    try {
+      return (await this.sendQuery(name, data)) as T & { error?: string };
+    } catch (error) {
+      return {
+        ...fallback,
+        error: this.formatRPCError(error),
+      };
+    }
+  }
 
   NRSettingsSend(data: string) {
     if (this.sendToPage) {
@@ -72,6 +107,154 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
+        },
+        // Browser operations
+        listTabs: async () => {
+          return await this.sendQuery("listTabs", {});
+        },
+        createTab: async (url: string) => {
+          return await this.sendQuery("createTab", { url });
+        },
+        navigateTab: async (tabId: string, url: string) => {
+          return await this.sendQuery("navigateTab", { tabId, url });
+        },
+        closeTab: async (tabId: string) => {
+          return await this.sendQuery("closeTab", { tabId });
+        },
+        searchWeb: async (query: string) => {
+          return await this.sendQuery("searchWeb", { query });
+        },
+        getBrowserHistory: async (limit?: number) => {
+          return await this.sendQuery("getBrowserHistory", { limit });
+        },
+        // Scraper operations - Content reading
+        createScraperInstance: async () => {
+          return await this.sendQueryWithFallback(
+            "createScraperInstance",
+            {},
+            { success: false },
+          );
+        },
+        destroyScraperInstance: async (id: string) => {
+          return await this.sendQueryWithFallback(
+            "destroyScraperInstance",
+            { id },
+            { success: false },
+          );
+        },
+        scraperNavigate: async (id: string, url: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperNavigate",
+            { id, url },
+            { success: false },
+          );
+        },
+        scraperGetHtml: async (id: string) => {
+          return await this.sendQueryWithFallback("scraperGetHtml", { id }, {
+            html: "",
+          });
+        },
+        scraperGetText: async (id: string) => {
+          return await this.sendQueryWithFallback("scraperGetText", { id }, {
+            text: "",
+          });
+        },
+        scraperGetElementText: async (id: string, selector: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperGetElementText",
+            {
+              id,
+              selector,
+            },
+            { text: "" },
+          );
+        },
+        scraperGetElements: async (id: string, selector: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperGetElements",
+            { id, selector },
+            { elements: [] },
+          );
+        },
+        scraperGetElementAttribute: async (
+          id: string,
+          selector: string,
+          attribute: string,
+        ) => {
+          return await this.sendQueryWithFallback(
+            "scraperGetElementAttribute",
+            {
+              id,
+              selector,
+              attribute,
+            },
+            { value: "" },
+          );
+        },
+        // Scraper operations - Actions
+        scraperClick: async (id: string, selector: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperClick",
+            { id, selector },
+            { success: false },
+          );
+        },
+        scraperFillForm: async (
+          id: string,
+          fields: Array<{ selector: string; value: string }>,
+        ) => {
+          return await this.sendQueryWithFallback(
+            "scraperFillForm",
+            { id, fields },
+            { success: false },
+          );
+        },
+        scraperClearInput: async (id: string, selector: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperClearInput",
+            { id, selector },
+            { success: false },
+          );
+        },
+        scraperSubmit: async (id: string, selector: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperSubmit",
+            { id, selector },
+            { success: false },
+          );
+        },
+        scraperWaitForElement: async (
+          id: string,
+          selector: string,
+          timeout?: number,
+        ) => {
+          return await this.sendQueryWithFallback(
+            "scraperWaitForElement",
+            {
+              id,
+              selector,
+              timeout,
+            },
+            { success: false },
+          );
+        },
+        scraperExecuteScript: async (id: string, script: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperExecuteScript",
+            { id, script },
+            { value: "" },
+          );
+        },
+        // Scraper operations - Screenshot
+        scraperTakeScreenshot: async (id: string, selector?: string) => {
+          return await this.sendQueryWithFallback(
+            "scraperTakeScreenshot",
+            {
+              id,
+              selector,
+            },
+            { data: "" },
+          );
         },
       },
       {

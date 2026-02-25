@@ -38,7 +38,7 @@ const FRAME = new HiddenFrame();
  */
 const GlobalHTTPTracker = {
   activeRequests: new Map<number, Set<nsIRequest>>(),
-  
+
   init() {
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
@@ -81,7 +81,7 @@ const GlobalHTTPTracker = {
 
   getActiveCount(bcid: number): number {
     return this.activeRequests.get(bcid)?.size || 0;
-  }
+  },
 };
 
 GlobalHTTPTracker.init();
@@ -93,8 +93,6 @@ GlobalHTTPTracker.init();
  * navigating browser instances without visible UI elements.
  */
 class webScraper {
-
-
   // Map to store browser instances with their unique IDs
   private _browserInstances: Map<string, XULBrowserElement> = new Map();
   private _instanceId!: string;
@@ -242,7 +240,7 @@ class webScraper {
                 .catch(() => null);
             }
           }
-        } catch (_) {
+        } catch {
           // ignore
         }
         await this._delayForUser();
@@ -1306,7 +1304,7 @@ class webScraper {
 
           // Verify cookie was actually stored
           const storedDomain = cookie.domain ?? uri.host;
-          
+
           // Check if cookie actually exists after add
           let cookieActuallyExists = false;
           try {
@@ -1319,7 +1317,7 @@ class webScraper {
           } catch {
             // cookieExists check failed, assume cookie not stored
           }
-          
+
           if (cookieActuallyExists) {
             return true;
           } else {
@@ -1362,7 +1360,7 @@ class webScraper {
           }
 
           const cookieString = parts.filter(Boolean).join("; ");
-          
+
           const fallback = await actor
             .sendQuery("WebScraper:SetCookieString", {
               cookieString: cookieString,
@@ -1411,8 +1409,6 @@ class webScraper {
     return Promise.resolve(true);
   }
 
-
-
   /**
    * Waits for network to become idle (no pending requests)
    */
@@ -1438,7 +1434,9 @@ class webScraper {
         startTime: Date.now(),
       };
 
-      console.log(`[WebScraper] Waiting for network idle on BCID: ${bcid}, Timeout: ${timeout}ms`);
+      console.log(
+        `[WebScraper] Waiting for network idle on BCID: ${bcid}, Timeout: ${timeout}ms`,
+      );
 
       const resetIdleTimer = () => {
         if (state.idleTimer) {
@@ -1447,8 +1445,10 @@ class webScraper {
         state.idleTimer = setTimeout(() => {
           const activeCount = GlobalHTTPTracker.getActiveCount(bcid);
           const elapsed = Date.now() - state.startTime;
-          console.log(`[WebScraper] Idle Check - Active Count: ${activeCount}, Elapsed: ${elapsed}ms`);
-          
+          console.log(
+            `[WebScraper] Idle Check - Active Count: ${activeCount}, Elapsed: ${elapsed}ms`,
+          );
+
           if (!state.resolved && activeCount === 0) {
             console.log(`[WebScraper] Network reached idle for BCID ${bcid}.`);
             state.resolved = true;
@@ -1457,9 +1457,9 @@ class webScraper {
           } else if (activeCount > 0) {
             // Still active, check again later
             // Exponential backoff or just plain reset? Keep it simple for now.
-             if (!state.resolved) {
-                 resetIdleTimer();
-             }
+            if (!state.resolved) {
+              resetIdleTimer();
+            }
           }
         }, idleThreshold);
       };
@@ -1484,7 +1484,9 @@ class webScraper {
             // deno-lint-ignore no-explicit-any
             const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
             if (channel.loadInfo?.browsingContextID === bcid) {
-               console.log(`[WebScraper] Observed ${topic} for BCID ${bcid} - URI: ${channel.URI?.spec}`);
+              console.log(
+                `[WebScraper] Observed ${topic} for BCID ${bcid} - URI: ${channel.URI?.spec}`,
+              );
               if (topic === "http-on-opening-request") {
                 if (state.idleTimer) {
                   clearTimeout(state.idleTimer);
@@ -1497,7 +1499,7 @@ class webScraper {
           } catch {
             // Ignore
           }
-        }
+        },
       };
 
       try {
@@ -1515,7 +1517,9 @@ class webScraper {
         if (!state.resolved) {
           console.log("[WebScraper] waitForNetworkIdle timed out.");
           const finalCount = GlobalHTTPTracker.getActiveCount(bcid);
-          console.log(`[WebScraper] Final Active Count at timeout: ${finalCount}`);
+          console.log(
+            `[WebScraper] Final Active Count at timeout: ${finalCount}`,
+          );
           state.resolved = true;
           cleanup();
           resolve(false);

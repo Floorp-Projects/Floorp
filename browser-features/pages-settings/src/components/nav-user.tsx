@@ -6,7 +6,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/common/sidebar";
 
 export function NavUser({
@@ -18,15 +17,11 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const { isMobile } = useSidebar();
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="dropdown dropdown-end">
-          <SidebarMenuButton
-            className="hover:bg-base-300"
-          >
+          <SidebarMenuButton className="hover:bg-base-300">
             <div className="avatar">
               <div className="w-8 h-8 rounded-lg">
                 <img src={user.avatar} alt={user.name} />
@@ -42,7 +37,7 @@ export function NavUser({
           </SidebarMenuButton>
           <ul
             tabIndex={0}
-            className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-56 mt-4"
+            className="dropdown-content z-1 menu p-2 shadow bg-base-100 rounded-box w-56 mt-4"
           >
             <li className="menu-title">
               <div className="flex items-center gap-2 px-1">

@@ -218,3 +218,35 @@ export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
 export type KeyboardShortcutFormData = t.TypeOf<
   typeof zKeyboardShortcutFormData
 >;
+
+/* LLM Providers */
+export const zLLMProviderType = t.union([
+  t.literal("openai"),
+  t.literal("anthropic"),
+  t.literal("ollama"),
+  t.literal("openai-compatible"),
+  t.literal("anthropic-compatible"),
+]);
+
+export const zLLMProviderConfig = t.type({
+  enabled: t.boolean,
+  apiKey: t.union([t.string, t.null]),
+  defaultModel: t.string,
+  baseUrl: t.union([t.string, t.null]),
+});
+
+export const zLLMProvidersConfig = t.record(
+  zLLMProviderType,
+  zLLMProviderConfig,
+);
+
+export type LLMProviderType = t.TypeOf<typeof zLLMProviderType>;
+export type LLMProviderConfig = t.TypeOf<typeof zLLMProviderConfig>;
+export type LLMProvidersConfig = t.TypeOf<typeof zLLMProvidersConfig>;
+
+export const zLLMProvidersFormData = t.type({
+  providers: zLLMProvidersConfig,
+  defaultProvider: zLLMProviderType,
+});
+
+export type LLMProvidersFormData = t.TypeOf<typeof zLLMProvidersFormData>;

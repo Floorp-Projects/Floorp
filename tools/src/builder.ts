@@ -212,6 +212,21 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     [
       [
         deno,
+        "run",
+        "-A",
+        "vite",
+        "build",
+        "--config",
+        "vite.config.ts",
+        "--base",
+        "chrome://noraneko-llm-chat/content",
+      ],
+      path.join(PROJECT_ROOT, "browser-features/pages-llm-chat"),
+    ],
+
+    [
+      [
+        deno,
         "task",
         "build",
         `--env.__BUILDID2__=${buildid2}`,
@@ -251,6 +266,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
       ["pages-notes", "browser-features/pages-notes/_dist"],
       ["pages-modal-child", "browser-features/pages-modal-child/_dist"],
       ["pages-profile-manager", "browser-features/pages-profile-manager/_dist"],
+      ["pages-llm-chat", "browser-features/pages-llm-chat/_dist"],
     ];
 
     const dirPath = "_dist/noraneko";

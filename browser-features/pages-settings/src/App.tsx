@@ -9,6 +9,7 @@ import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import FloorpOS from "@/app/floorp-os/page.tsx";
+import LLMProviders from "@/app/llm-providers/page.tsx";
 import About from "./app/about/noraneko.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
@@ -50,6 +51,10 @@ export default function App() {
               <Route path="/features/sidebar" element={<PanelSidebar />} />
               <Route path="/features/workspaces" element={<Workspaces />} />
               <Route path="/features/webapps" element={<ProgressiveWebApp />} />
+              <Route
+                path="/features/llm-providers"
+                element={<LLMProviders />}
+              />
               <Route path="/features/floorp-os" element={<FloorpOS />} />
               <Route
                 path="/features/accounts"
