@@ -612,17 +612,21 @@ export async function runAgenticLoop(
       // Add assistant message if not already added
       if (content) {
         conversationMessages.push({
+          id: crypto.randomUUID(),
           role: "assistant",
           content,
-        });
+          timestamp: Date.now(),
+        } as Message);
       }
       break;
     }
 
     // Add assistant message with tool calls
     conversationMessages.push({
+      id: crypto.randomUUID(),
       role: "assistant",
       content: content || null,
+      timestamp: Date.now(),
       tool_calls: toolCalls,
     } as Message);
 
@@ -659,8 +663,10 @@ export async function runAgenticLoop(
 
       // Add tool result message
       conversationMessages.push({
+        id: crypto.randomUUID(),
         role: "tool",
         content: result,
+        timestamp: Date.now(),
         tool_call_id: toolCall.id,
       } as Message);
     }
@@ -858,17 +864,21 @@ export async function runAgenticLoopWithStream(
       if (!toolCalls || toolCalls.length === 0) {
         if (accumulatedContent) {
           conversationMessages.push({
+            id: crypto.randomUUID(),
             role: "assistant",
             content: accumulatedContent,
-          });
+            timestamp: Date.now(),
+          } as Message);
         }
         break;
       }
 
       // Add assistant message with tool calls
       conversationMessages.push({
+        id: crypto.randomUUID(),
         role: "assistant",
         content: accumulatedContent || null,
+        timestamp: Date.now(),
         tool_calls: toolCalls,
       } as Message);
 
@@ -927,8 +937,10 @@ export async function runAgenticLoopWithStream(
 
         // Add tool result message
         conversationMessages.push({
+          id: crypto.randomUUID(),
           role: "tool",
           content: result,
+          timestamp: Date.now(),
           tool_call_id: toolCall.id,
         } as Message);
       }
