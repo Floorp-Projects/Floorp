@@ -1,11 +1,15 @@
-import type { LLMProviderSettings, LLMRequest, Message } from "../types";
-import type { ToolCall } from "./tools";
-import { BROWSER_TOOLS, executeToolCall, supportsToolCalling } from "./tools";
+import type { LLMProviderSettings, LLMRequest, Message } from "../types.ts";
+import type { ToolCall } from "./tools.ts";
+import {
+  BROWSER_TOOLS,
+  executeToolCall,
+  supportsToolCalling,
+} from "./tools.ts";
 import { FLOORP_LLM_DEFAULT_MODELS } from "../../../modules/common/defines.ts";
-import { getRpc, isRpcAvailable } from "./rpc";
+import { getRpc, isRpcAvailable } from "./rpc.ts";
 
 // Re-export types for convenience
-export type { LLMProviderSettings } from "../types";
+export type { LLMProviderSettings } from "../types.ts";
 
 // Types matching settings page format
 interface LLMProviderConfig {
@@ -469,7 +473,7 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
-export async function sendMessage(
+export function sendMessage(
   settings: LLMProviderSettings,
   messages: Message[],
 ): Promise<string> {

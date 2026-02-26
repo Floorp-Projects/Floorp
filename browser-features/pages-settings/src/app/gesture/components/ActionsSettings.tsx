@@ -111,12 +111,12 @@ export function ActionsSettings({
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <table className="table w-full min-w-[36rem]">
+                    <table className="table w-full min-w-xl">
                         <thead>
                             <tr>
                                 <th className="text-base-content/70">{t("mouseGesture.action")}</th>
                                 <th className="text-base-content/70">{t("mouseGesture.pattern")}</th>
-                                <th className="text-base-content/70 w-[140px]" />
+                                <th className="text-base-content/70 w-35" />
                             </tr>
                         </thead>
                         <tbody>

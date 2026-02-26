@@ -231,6 +231,49 @@ export function ChatMessage(
                   </SyntaxHighlighter>
                 );
               },
+              table({ children, ...props }) {
+                return (
+                  <div className="overflow-x-auto my-2">
+                    <table
+                      className="min-w-full border-collapse border border-base-300 text-[12px]"
+                      {...props}
+                    >
+                      {children}
+                    </table>
+                  </div>
+                );
+              },
+              thead({ children, ...props }) {
+                return (
+                  <thead className="bg-base-200" {...props}>
+                    {children}
+                  </thead>
+                );
+              },
+              tbody({ children, ...props }) {
+                return <tbody {...props}>{children}</tbody>;
+              },
+              tr({ children, ...props }) {
+                return (
+                  <tr className="border-b border-base-300" {...props}>
+                    {children}
+                  </tr>
+                );
+              },
+              th({ children, ...props }) {
+                return (
+                  <th className="border border-base-300 px-2 py-1 text-left font-medium" {...props}>
+                    {children}
+                  </th>
+                );
+              },
+              td({ children, ...props }) {
+                return (
+                  <td className="border border-base-300 px-2 py-1" {...props}>
+                    {children}
+                  </td>
+                );
+              },
             }}
           >
             {message.content || (isStreaming ? "" : "")}
