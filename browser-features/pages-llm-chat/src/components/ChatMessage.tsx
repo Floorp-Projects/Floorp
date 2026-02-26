@@ -3,7 +3,6 @@ import {
   Bot,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Copy,
   Sparkles,
   ThumbsDown,
@@ -41,7 +40,14 @@ function truncate(value: string, max = 200): string {
 function toolStatusIcon(run: ToolRun) {
   switch (run.status) {
     case "running":
-      return <Clock3 size={14} className="animate-spin text-base-content/50" />;
+      return (
+        <span className="relative flex h-3.5 w-3.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75">
+          </span>
+          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-primary">
+          </span>
+        </span>
+      );
     case "error":
       return <XCircle size={14} className="text-error" />;
     default:

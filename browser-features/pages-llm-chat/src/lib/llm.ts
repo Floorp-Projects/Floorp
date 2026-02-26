@@ -31,7 +31,9 @@ function resolveChatBaseUrl(
   type: LLMProviderSettings["type"],
   configuredBaseUrl: string | null | undefined,
 ): string {
-  const baseUrl = normalizeBaseUrl(configuredBaseUrl || getDefaultBaseUrl(type));
+  const baseUrl = normalizeBaseUrl(
+    configuredBaseUrl || getDefaultBaseUrl(type),
+  );
 
   if (type !== "ollama") {
     return baseUrl;
@@ -127,7 +129,9 @@ function normalizeProvidersSettings(
   value: Partial<LLMProvidersFormData>,
 ): LLMProvidersFormData {
   const defaults = getDefaultSettings();
-  const providers: Record<string, LLMProviderConfig> = { ...defaults.providers };
+  const providers: Record<string, LLMProviderConfig> = {
+    ...defaults.providers,
+  };
   for (const [type, config] of Object.entries(value.providers ?? {})) {
     providers[type] = {
       ...(defaults.providers[type] ?? defaults.providers["openai-compatible"]),
@@ -139,7 +143,7 @@ function normalizeProvidersSettings(
     providers,
     defaultProvider:
       typeof value.defaultProvider === "string" &&
-        value.defaultProvider in providers
+      value.defaultProvider in providers
         ? value.defaultProvider
         : defaults.defaultProvider,
   };
@@ -176,7 +180,10 @@ export async function getProviderSettingsAsync(
   return {
     type: type as LLMProviderSettings["type"],
     apiKey: config.apiKey || "",
-    baseUrl: resolveChatBaseUrl(type as LLMProviderSettings["type"], config.baseUrl),
+    baseUrl: resolveChatBaseUrl(
+      type as LLMProviderSettings["type"],
+      config.baseUrl,
+    ),
     defaultModel: config.defaultModel || "",
     enabled: config.enabled,
   };
@@ -384,15 +391,104 @@ function extractContent(json: unknown, providerType: string): string {
   return data.choices?.[0]?.delta?.content || "";
 }
 
+// ============================================================================
+// Retry Utilities
+// ============================================================================
+
+interface RetryOptions {
+  maxRetries?: number;
+  initialDelayMs?: number;
+  maxDelayMs?: number;
+  backoffMultiplier?: number;
+  onRetry?: (attempt: number, error: unknown) => void;
+}
+
+function isTransientApiError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    const statusMatch = message.match(/api error:\s*(\d+)/);
+    if (statusMatch) {
+      const status = Number.parseInt(statusMatch[1], 10);
+      // Retry on 429 (rate limit), 500, 502, 503, 504
+      return status === 429 || status >= 500;
+    }
+    // Retry on network errors
+    return (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("econnrefused") ||
+      message.includes("enotfound") ||
+      message.includes("failed to fetch")
+    );
+  }
+  if (typeof error === "string") {
+    const message = error.toLowerCase();
+    return (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("econnrefused") ||
+      message.includes("enotfound")
+    );
+  }
+  return false;
+}
+
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  options: RetryOptions = {},
+): Promise<T> {
+  const {
+    maxRetries = 3,
+    initialDelayMs = 500,
+    maxDelayMs = 10000,
+    backoffMultiplier = 2,
+    onRetry,
+  } = options;
+
+  let lastError: unknown;
+  let delay = initialDelayMs;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === maxRetries || !isTransientApiError(error)) {
+        throw error;
+      }
+
+      onRetry?.(attempt + 1, error);
+      await new Promise((resolve) => globalThis.setTimeout(resolve, delay));
+      delay = Math.min(delay * backoffMultiplier, maxDelayMs);
+    }
+  }
+
+  throw lastError;
+}
+
 export async function sendMessage(
   settings: LLMProviderSettings,
   messages: Message[],
 ): Promise<string> {
-  let fullResponse = "";
-  for await (const chunk of streamChat(settings, messages)) {
-    fullResponse += chunk;
-  }
-  return fullResponse;
+  return retryWithBackoff(
+    async () => {
+      let fullResponse = "";
+      for await (const chunk of streamChat(settings, messages)) {
+        fullResponse += chunk;
+      }
+      return fullResponse;
+    },
+    {
+      maxRetries: 3,
+      initialDelayMs: 500,
+      onRetry: (attempt, error) => {
+        console.warn(`[LLM] sendMessage retry ${attempt}:`, error);
+      },
+    },
+  );
 }
 
 interface LLMRequestWithTools extends LLMRequest {
@@ -406,6 +502,7 @@ interface ToolCallResponse {
     name: string;
     arguments: string;
   };
+  index?: number;
 }
 
 export interface AgenticLoopCallbacks {
@@ -549,8 +646,7 @@ export async function runAgenticLoop(
       // Execute the tool
       const result = await executeToolCall(toolCall as ToolCall);
       const isError =
-        result.startsWith("Error executing ") ||
-        result.startsWith("Failed ");
+        result.startsWith("Error executing ") || result.startsWith("Failed ");
 
       callbacks.onToolCallEnd?.({
         id: toolCall.id,
@@ -567,6 +663,278 @@ export async function runAgenticLoop(
         content: result,
         tool_call_id: toolCall.id,
       } as Message);
+    }
+  }
+
+  return conversationMessages;
+}
+
+// ============================================================================
+// Streaming with Tools Support
+// ============================================================================
+
+interface StreamMessagesWithToolsCallbacks {
+  onChunk?: (chunk: string) => void;
+}
+
+// Streaming request with tool support
+// Streams content chunks via onChunk callback
+// Returns tool_calls when stream completes
+async function streamMessagesWithTools(
+  settings: LLMProviderSettings,
+  messages: Message[],
+  callbacks: StreamMessagesWithToolsCallbacks = {},
+): Promise<{ content: string; toolCalls: ToolCallResponse[] }> {
+  if (!supportsToolCalling(settings)) {
+    throw new Error(
+      `Provider '${settings.type}' tool calling is not supported in pages-llm-chat.`,
+    );
+  }
+
+  const url = getApiUrl(settings);
+  const headers = getHeaders(settings);
+
+  const body: LLMRequestWithTools = {
+    messages: messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+      ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+      ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+    })),
+    model: settings.defaultModel,
+    stream: true, // Enable streaming
+    max_tokens: 4096,
+  };
+
+  if (supportsToolCalling(settings)) {
+    body.tools = BROWSER_TOOLS;
+  }
+
+  const response = await retryWithBackoff(
+    async () => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(`API error: ${res.status} - ${error}`);
+      }
+
+      return res;
+    },
+    {
+      maxRetries: 3,
+      initialDelayMs: 500,
+      onRetry: (attempt, error) => {
+        console.warn(`[LLM] streamMessagesWithTools retry ${attempt}:`, error);
+      },
+    },
+  );
+
+  // Parse streaming response
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("No response body");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let accumulatedContent = "";
+  const toolCalls: ToolCallResponse[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === "data: [DONE]") continue;
+      if (!trimmed.startsWith("data: ")) continue;
+
+      try {
+        const json = JSON.parse(trimmed.slice(6));
+
+        // Extract content chunk
+        const content = extractContent(json, settings.type);
+        if (content) {
+          accumulatedContent += content;
+          callbacks.onChunk?.(content);
+        }
+
+        // Extract tool calls (OpenAI format)
+        if (json.choices?.[0]?.delta?.tool_calls) {
+          const deltaToolCalls = json.choices[0].delta.tool_calls as Array<{
+            index?: number;
+            id?: string;
+            function?: {
+              name?: string;
+              arguments?: string;
+            };
+          }>;
+          for (const deltaTool of deltaToolCalls) {
+            const index = deltaTool.index ?? 0;
+            // Find or create tool call entry
+            let existingTool = toolCalls.find((t) => t.index === index);
+            if (!existingTool) {
+              existingTool = {
+                id: deltaTool.id || crypto.randomUUID(),
+                type: "function",
+                function: {
+                  name: deltaTool.function?.name || "",
+                  arguments: deltaTool.function?.arguments || "",
+                },
+                index,
+              } as ToolCallResponse & { index: number };
+              toolCalls.push(existingTool);
+            } else if (existingTool.function && deltaTool.function) {
+              if (deltaTool.function.name) {
+                existingTool.function.name += deltaTool.function.name;
+              }
+              if (deltaTool.function.arguments) {
+                existingTool.function.arguments += deltaTool.function.arguments;
+              }
+            }
+          }
+        }
+      } catch {
+        // Skip invalid JSON
+      }
+    }
+  }
+
+  return { content: accumulatedContent, toolCalls };
+}
+
+// Extended callbacks with streaming support
+export interface StreamAgenticLoopCallbacks extends AgenticLoopCallbacks {
+  onStreamStart?: () => void;
+  onStreamEnd?: () => void;
+  onError?: (error: Error) => void;
+}
+
+// Run agentic loop with streaming support
+export async function runAgenticLoopWithStream(
+  settings: LLMProviderSettings,
+  messages: Message[],
+  callbacks: StreamAgenticLoopCallbacks,
+  maxIterations: number = 5,
+): Promise<Message[]> {
+  if (!supportsToolCalling(settings)) {
+    throw new Error(
+      `Provider '${settings.type}' is not supported in the current chat UI yet.`,
+    );
+  }
+
+  const conversationMessages = [...messages];
+  let iterations = 0;
+
+  while (iterations < maxIterations) {
+    iterations++;
+
+    callbacks.onStreamStart?.();
+
+    let accumulatedContent = "";
+
+    try {
+      const { toolCalls } = await streamMessagesWithTools(
+        settings,
+        conversationMessages,
+        {
+          onChunk: (chunk) => {
+            accumulatedContent += chunk;
+            callbacks.onContent(accumulatedContent); // Send accumulated content
+          },
+        },
+      );
+
+      callbacks.onStreamEnd?.();
+
+      // If no tool calls, we're done
+      if (!toolCalls || toolCalls.length === 0) {
+        if (accumulatedContent) {
+          conversationMessages.push({
+            role: "assistant",
+            content: accumulatedContent,
+          });
+        }
+        break;
+      }
+
+      // Add assistant message with tool calls
+      conversationMessages.push({
+        role: "assistant",
+        content: accumulatedContent || null,
+        tool_calls: toolCalls,
+      } as Message);
+
+      // Execute each tool call
+      for (const toolCall of toolCalls) {
+        const toolName = toolCall.function.name;
+        let args: unknown;
+        try {
+          args = JSON.parse(toolCall.function.arguments);
+        } catch {
+          args = { _raw: toolCall.function.arguments };
+        }
+
+        callbacks.onToolCallStart?.({
+          id: toolCall.id,
+          name: toolName,
+          args,
+          iteration: iterations,
+        });
+
+        // Execute the tool with retry for transient errors
+        let result = "";
+        let attempts = 0;
+        const maxToolAttempts = 2;
+
+        while (attempts <= maxToolAttempts) {
+          try {
+            result = await executeToolCall(toolCall as ToolCall);
+            break;
+          } catch (error) {
+            attempts++;
+            if (attempts > maxToolAttempts) {
+              result = `Error after ${maxToolAttempts} retries: ${error}`;
+            } else {
+              // Wait before retry
+              await new Promise((resolve) =>
+                globalThis.setTimeout(resolve, 300),
+              );
+            }
+          }
+        }
+
+        const isError =
+          result.startsWith("Error executing ") ||
+          result.startsWith("Failed ") ||
+          result.startsWith("Error after");
+
+        callbacks.onToolCallEnd?.({
+          id: toolCall.id,
+          name: toolName,
+          args,
+          result,
+          iteration: iterations,
+          isError,
+        });
+
+        // Add tool result message
+        conversationMessages.push({
+          role: "tool",
+          content: result,
+          tool_call_id: toolCall.id,
+        } as Message);
+      }
+    } catch (error) {
+      callbacks.onError?.(error as Error);
+      throw error;
     }
   }
 

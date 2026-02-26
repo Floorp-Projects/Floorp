@@ -18,7 +18,7 @@ import { ChatMessage } from "./ChatMessage.tsx";
 import {
   getAllEnabledProvidersAsync,
   type LLMProviderSettings,
-  runAgenticLoop,
+  runAgenticLoopWithStream,
 } from "../lib/llm.ts";
 
 // Tool call display type
@@ -40,8 +40,39 @@ interface ChatSession {
 
 const CHAT_SESSIONS_STORAGE_KEY = "floorp-chat-sessions";
 
+// Safe localStorage with fallback for private browsing mode
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn("[Chat] localStorage unavailable, using memory:", e);
+    return null;
+  }
+}
+
+function safeSetItem(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    console.warn("[Chat] localStorage write failed:", e);
+    return false;
+  }
+}
+
+// Reserved for future use
+function _safeRemoveItem(key: string): boolean {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (e) {
+    console.warn("[Chat] localStorage remove failed:", e);
+    return false;
+  }
+}
+
 function persistChatSessions(sessions: ChatSession[]): void {
-  localStorage.setItem(CHAT_SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+  safeSetItem(CHAT_SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
 }
 
 function truncateToolResult(result: string, max = 240): string {
@@ -68,6 +99,8 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false); // LLM is generating text
+  const [isRunningTool, setIsRunningTool] = useState(false); // Tool is executing
   const [error, setError] = useState<string | null>(null);
   const [currentToolCall, setCurrentToolCall] = useState<ToolCallInfo | null>(
     null,
@@ -84,6 +117,7 @@ export function Chat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const toolCallStatusTimerRef = useRef<number | null>(null);
   const toolCallStatusTokenRef = useRef(0);
+  const inMemorySessions = useRef<Map<string, ChatSession>>(new Map());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,9 +138,32 @@ export function Chat() {
     loadProviders();
   }, []);
 
-  // Load chat sessions from localStorage
+  // Listen for provider changes from settings
   useEffect(() => {
-    const saved = localStorage.getItem(CHAT_SESSIONS_STORAGE_KEY);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "floorp.llm.providers") {
+        // Reload providers when settings change
+        getAllEnabledProvidersAsync().then((enabledProviders) => {
+          setProviders(enabledProviders);
+          if (selectedProvider) {
+            const updated = enabledProviders.find(
+              (p) => p.type === selectedProvider.type,
+            );
+            if (updated) setSelectedProvider(updated);
+          }
+        }).catch((err) => {
+          console.error("[Chat] Failed to reload providers:", err);
+        });
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [selectedProvider]);
+
+  // Load chat sessions from localStorage (safe version)
+  useEffect(() => {
+    const saved = safeGetItem(CHAT_SESSIONS_STORAGE_KEY);
     if (saved) {
       try {
         const sessions = JSON.parse(saved) as ChatSession[];
@@ -121,6 +178,17 @@ export function Chat() {
         }
       } catch {
         console.error("Failed to load chat sessions");
+      }
+    } else {
+      // Load from in-memory storage as fallback
+      const memorySessions = Array.from(inMemorySessions.current.values());
+      if (memorySessions.length > 0) {
+        setChatSessions(memorySessions);
+        const latest = memorySessions.sort((a, b) =>
+          b.updatedAt - a.updatedAt
+        )[0];
+        setCurrentSessionId(latest.id);
+        setMessages(latest.messages);
       }
     }
   }, []);
@@ -292,28 +360,35 @@ export function Chat() {
     setInput("");
     setError(null);
     setIsLoading(true);
+    setIsGenerating(true);
+    setIsRunningTool(false);
     setCurrentToolCall(null);
 
     try {
       const allMessages = [...messages, userMessage];
-      let accumulatedContent = "";
 
-      // Run agentic loop with tool support
-      await runAgenticLoop(
+      // Run agentic loop with streaming support
+      await runAgenticLoopWithStream(
         provider,
         allMessages,
         {
+          onStreamStart: () => {
+            setIsGenerating(true);
+            setIsRunningTool(false);
+          },
           onContent: (content) => {
-            accumulatedContent += content;
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === assistantMessage.id
-                  ? { ...m, content: accumulatedContent }
-                  : m
+                m.id === assistantMessage.id ? { ...m, content } : m
               )
             );
           },
+          onStreamEnd: () => {
+            setIsGenerating(false);
+          },
           onToolCallStart: ({ id, name, args }) => {
+            setIsGenerating(false);
+            setIsRunningTool(true);
             toolCallStatusTokenRef.current += 1;
             if (toolCallStatusTimerRef.current !== null) {
               globalThis.clearTimeout(toolCallStatusTimerRef.current);
@@ -392,6 +467,9 @@ export function Chat() {
               })
             );
           },
+          onError: (error) => {
+            setError(error.message);
+          },
         },
         5, // max iterations
       );
@@ -408,6 +486,8 @@ export function Chat() {
         toolCallStatusTimerRef.current = null;
       }
       setIsLoading(false);
+      setIsGenerating(false);
+      setIsRunningTool(false);
       setCurrentToolCall(null);
     }
   };
@@ -601,7 +681,8 @@ export function Chat() {
             ))}
 
             {/* Thinking indicator — minimal, inline */}
-            {isLoading && messages[messages.length - 1]?.content === "" &&
+            {isLoading && !isGenerating && !isRunningTool &&
+              messages[messages.length - 1]?.content === "" &&
               !currentToolCall && (
               <div className="flex items-center gap-2 py-3 pl-8 text-[13px] text-base-content/50">
                 <span className="loading loading-dots loading-xs" />
@@ -609,19 +690,36 @@ export function Chat() {
               </div>
             )}
 
-            {currentToolCall && (
-              <div className="flex items-center gap-2 py-2 pl-8 text-[12px] text-base-content/50">
-                <Wrench
-                  size={13}
-                  className={currentToolCall.status === "running"
-                    ? "animate-spin text-base-content/40"
-                    : "text-success"}
-                />
-                <span className="truncate">
-                  {currentToolCall.status === "running"
-                    ? `Running ${currentToolCall.name}…`
-                    : `Completed ${currentToolCall.name}`}
-                </span>
+            {/* Generating indicator — distinct from tool running */}
+            {isGenerating &&
+              messages[messages.length - 1]?.id === latestMessageId && (
+              <div className="flex items-center gap-2 py-3 pl-8 text-[13px] text-base-content/50">
+                <span className="loading loading-dots loading-xs" />
+                <span>Generating…</span>
+              </div>
+            )}
+
+            {/* Tool running indicator with details */}
+            {isRunningTool && currentToolCall && (
+              <div className="flex flex-col gap-1 py-2 pl-8 text-[12px] text-base-content/50">
+                <div className="flex items-center gap-2">
+                  <Wrench
+                    size={13}
+                    className={currentToolCall.status === "running"
+                      ? "animate-spin text-primary"
+                      : "text-success"}
+                  />
+                  <span className="truncate">
+                    {currentToolCall.status === "running"
+                      ? `Running ${currentToolCall.name}…`
+                      : `Completed ${currentToolCall.name}`}
+                  </span>
+                </div>
+                {currentToolCall.args && (
+                  <div className="ml-5 text-[11px] text-base-content/40 truncate max-w-md">
+                    {JSON.stringify(currentToolCall.args)}
+                  </div>
+                )}
               </div>
             )}
 

@@ -44,10 +44,20 @@ export interface ChatSession {
   updatedAt: number;
 }
 
+// Agentic loop state for UI tracking
+export interface AgenticState {
+  isGenerating: boolean;
+  isRunningTool: boolean;
+  currentTool: string | null;
+  iteration: number;
+}
+
 export interface LLMRequest {
   messages: Array<{
-    role: "user" | "assistant" | "system";
-    content: string;
+    role: "user" | "assistant" | "system" | "tool";
+    content: string | null;
+    tool_calls?: unknown[];
+    tool_call_id?: string;
   }>;
   model: string;
   stream?: boolean;
