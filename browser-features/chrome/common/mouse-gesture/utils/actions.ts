@@ -147,27 +147,6 @@ export const actions: GestureActionRegistration[] = [
     fn: (win) => win.BrowserOpenAddonsMgr(),
   },
   {
-    name: "gecko-restore-last-tab",
-    fn: (win) => {
-      try {
-        if (win?.undoCloseTab) {
-          win.undoCloseTab();
-          return;
-        }
-
-        const undoMenuItem = win.document?.getElementById(
-          "toolbar-context-undoCloseTab",
-        );
-
-        if (undoMenuItem instanceof XULElement) {
-          undoMenuItem.doCommand();
-        }
-      } catch (error) {
-        console.error("[mouse-gesture] Failed to trigger undoCloseTab:", error);
-      }
-    },
-  },
-  {
     name: "gecko-send-with-mail",
     fn: (win) =>
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser),

@@ -35,7 +35,6 @@ export const GESTURE_ACTIONS = [
   "gecko-bookmark-this-page",
   "gecko-open-home-page",
   "gecko-open-addons-manager",
-  "gecko-restore-last-tab",
   "gecko-send-with-mail",
   "gecko-save-page",
   "gecko-print-page",
