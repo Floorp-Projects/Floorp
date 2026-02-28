@@ -24,7 +24,7 @@ jobs:
         steps:
             - name: Moderate content
               id: moderator
-              uses: Walkmana-25/github-comment-moderation@v1.0.0
+              uses: Walkmana-25/github-comment-moderation@v1.0.1
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   openai-api-key: ${{ secrets.OPENROUTER_API_KEY }}
