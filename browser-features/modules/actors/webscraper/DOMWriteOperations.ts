@@ -622,7 +622,7 @@ export class DOMWriteOperations {
         return true;
       }
 
-      // Fallback: try execCommand
+      // Fallback: try execCommand (deprecated but works in many cases)
       if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertText", text)) {
         rawElement.dispatchEvent(
           new EventCtor("input", { bubbles: true, cancelable: true }),
@@ -631,13 +631,12 @@ export class DOMWriteOperations {
         return true;
       }
 
-      // Last resort: set textContent directly
-      rawElement.textContent = text;
-      rawElement.dispatchEvent(
-        new EventCtor("input", { bubbles: true, cancelable: true }),
+      // No fallback available - setting textContent directly breaks Draft.js
+      // because it doesn't update the editor's internal EditorState
+      console.warn(
+        "DOMWriteOperations: dispatchTextInput failed - no fallback available for this editor"
       );
-      rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
-      return true;
+      return false;
     } catch (e) {
       console.error("DOMWriteOperations: Error in dispatchTextInput:", e);
       return false;
