@@ -503,4 +503,38 @@ export function registerCommonAutomationRoutes(
       return { status: 200, body: { ok: !!ok } };
     },
   );
+
+  // Set clipboard content (for paste-based input in rich text editors)
+  // This is a global operation - no instance ID required
+  ns.post<{ text?: string }, OkResponse | ErrorResponse>(
+    "/clipboard",
+    async (ctx: RouterContext) => {
+      const json = ctx.json() as { text?: string } | null;
+      if (json?.text === undefined) {
+        return { status: 400, body: { error: "text required" } };
+      }
+      const service = getService();
+      const ok = await service.setClipboard(json.text ?? "");
+      return { status: 200, body: { ok } };
+    },
+  );
+
+  // Dispatch text input event (for rich text editors like Draft.js)
+  // Properly fires beforeinput event with inputType: insertText
+  ns.post<{ selector?: string; text?: string }, OkResponse | ErrorResponse>(
+    "/instances/:id/dispatchTextInput",
+    async (ctx: RouterContext) => {
+      const json = ctx.json() as { selector?: string; text?: string } | null;
+      if (!json?.selector || json.text === undefined) {
+        return { status: 400, body: { error: "selector and text required" } };
+      }
+      const service = getService();
+      const ok = await service.dispatchTextInput(
+        ctx.params.id,
+        json.selector,
+        json.text,
+      );
+      return { status: 200, body: { ok: !!ok } };
+    },
+  );
 }

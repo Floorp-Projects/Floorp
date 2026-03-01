@@ -1596,5 +1596,48 @@ class webScraper {
   }
 }
 
+
+  /**
+   * Sets the system clipboard text content (for paste-based input in rich text editors)
+   * This is a global operation that doesn't require an instance.
+   */
+  public async setClipboard(text: string): Promise<boolean> {
+    try {
+      const clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
+        Ci.nsIClipboardHelper
+      );
+      clipboardHelper.copyString(text);
+      return true;
+    } catch (e) {
+      console.error("WebScraper: Error setting clipboard:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Dispatches a proper text input event sequence for rich text editors.
+   * This fires beforeinput with inputType: insertText, which Draft.js and similar
+   * frameworks listen for to update their internal state.
+   */
+  public async dispatchTextInput(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DispatchTextInput", {
+      selector,
+      text,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
+  }
+
 // Export a singleton instance of the WebScraper service
 export const WebScraper = new webScraper();

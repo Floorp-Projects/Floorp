@@ -239,6 +239,11 @@ export class DOMOperations {
     }
   }
 
+
+  dispatchTextInput(selector: string, text: string): Promise<boolean> {
+    return this.writeOps.dispatchTextInput(selector, text);
+  }
+
   destroy(): void {
     this.highlightManager.destroy();
   }

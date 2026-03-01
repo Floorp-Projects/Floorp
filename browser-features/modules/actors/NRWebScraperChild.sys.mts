@@ -364,6 +364,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
           );
         }
         break;
+      case "WebScraper:DispatchTextInput":
+        if (message.data?.selector && typeof message.data?.text === "string") {
+          return domOps.dispatchTextInput(
+            message.data.selector,
+            message.data.text,
+          );
+        }
+        break;
+
     }
     return null;
   }
