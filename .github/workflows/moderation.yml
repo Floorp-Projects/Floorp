@@ -1,0 +1,38 @@
+name: Moderate Content
+
+on:
+    issues:
+        types: [opened, edited]
+    pull_request:
+        types: [opened, edited]
+    issue_comment:
+        types: [created, edited]
+    pull_request_review_comment:
+        types: [created, edited]
+    discussion:
+        types: [created, edited]
+    discussion_comment:
+        types: [created, edited]
+
+jobs:
+    moderate:
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+            pull-requests: write
+            discussions: write
+        steps:
+            - name: Moderate content
+              id: moderator
+              uses: Walkmana-25/github-comment-moderation@v1.1.3
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  openai-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+                  openai-endpoint: ${{ secrets.OPENROUTER_ENDPOINT }}
+                  openai-model: "google/gemma-3-27b-it:free"
+                  # text-to-moderate is optional - auto-populated from event
+
+            - name: Post-moderation summary
+              if: steps.moderator.outputs.is-inappropriate == 'true'
+              run: |
+                  echo "Content was flagged for the following reasons: ${{ steps.moderator.outputs.flagged-categories }}"
