@@ -553,80 +553,12 @@ export class DOMWriteOperations {
 
   /**
    * Dispatches a proper text input event sequence for rich text editors.
-   * This fires beforeinput with inputType: insertText, which Draft.js and similar
-   * frameworks listen for to update their internal state.
+   * This is a thin wrapper around setTextContent for API compatibility.
+   * setTextContent already fires beforeinput with inputType: insertText.
    */
   async dispatchTextInput(selector: string, text: string): Promise<boolean> {
-    try {
-      const doc = this.document;
-      if (!doc) return false;
-
-      const element = doc.querySelector(selector) as HTMLElement | null;
-      if (!element) {
-        console.warn(
-          `DOMWriteOperations: Element not found for dispatchTextInput: ${selector}`,
-        );
-        return false;
-      }
-
-      this.deps.eventDispatcher.scrollIntoViewIfNeeded(element);
-      this.deps.eventDispatcher.focusElementSoft(element);
-
-      const win = this.contentWindow;
-      const rawWin = unwrapWindow(win);
-      const rawElement = unwrapElement(
-        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
-      );
-      if (!rawWin) return false;
-
-      const InputEv = rawWin.InputEvent ?? null;
-      const EventCtor = rawWin.Event ?? globalThis.Event;
-
-      // Draft.js and similar editors listen for beforeinput with inputType: insertText
-      if (InputEv) {
-        // 1. Fire beforeinput (this is what Draft.js listens for)
-        const beforeInputEvent = new InputEv("beforeinput", {
-          bubbles: true,
-          cancelable: true,
-          inputType: "insertText",
-          data: text,
-        });
-        const notCancelled = rawElement.dispatchEvent(beforeInputEvent);
-        
-        // If the event was cancelled, don't proceed
-        if (!notCancelled) {
-          console.log("DOMWriteOperations: beforeinput was cancelled");
-          return false;
-        }
-      }
-
-      // 2. Set the text content
-      rawElement.textContent = text;
-
-      // 3. Fire input event (for good measure)
-      if (InputEv) {
-        rawElement.dispatchEvent(
-          new InputEv("input", {
-            bubbles: true,
-            cancelable: false,
-            inputType: "insertText",
-            data: text,
-          }),
-        );
-      } else {
-        rawElement.dispatchEvent(
-          new EventCtor("input", { bubbles: true, cancelable: true }),
-        );
-      }
-
-      // 4. Fire change event
-      rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
-
-      return true;
-    } catch (e) {
-      console.error("DOMWriteOperations: Error in dispatchTextInput:", e);
-      return false;
-    }
+    // Reuse setTextContent logic - it already fires beforeinput correctly
+    return this.setTextContent(selector, text);
   }
 
   setCookieString(

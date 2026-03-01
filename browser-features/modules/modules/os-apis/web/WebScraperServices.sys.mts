@@ -1594,7 +1594,6 @@ class webScraper {
     await this._delayForUser(1000);
     return result;
   }
-}
 
 
   /**
@@ -1638,6 +1637,9 @@ class webScraper {
     await this._delayForUser(1000);
     return result;
   }
+
+
+}
 
 // Export a singleton instance of the WebScraper service
 export const WebScraper = new webScraper();

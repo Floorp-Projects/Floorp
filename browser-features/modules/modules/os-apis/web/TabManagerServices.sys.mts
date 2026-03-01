@@ -1751,7 +1751,6 @@ class TabManager {
     await this._delayForUser(1000);
     return result;
   }
-}
 
 
   /**
@@ -1790,6 +1789,9 @@ class TabManager {
     await this._delayForUser(1000);
     return result;
   }
+
+
+}
 
 // Export a singleton instance of the TabManager service
 export const TabManagerServices = new TabManager();
