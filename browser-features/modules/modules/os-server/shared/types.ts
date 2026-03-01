@@ -167,10 +167,6 @@ export interface BrowserAutomationService {
     eventType: string,
     options?: { bubbles?: boolean; cancelable?: boolean },
   ): Promise<boolean | null>;
-
-  // Clipboard operations (for paste-based input in rich text editors like Draft.js)
-  setClipboard(text: string): Promise<boolean>;
-
   // Rich text editor input (for Draft.js and similar frameworks)
   dispatchTextInput(
     instanceId: string,
