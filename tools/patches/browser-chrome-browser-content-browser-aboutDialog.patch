@@ -1,0 +1,24 @@
+diff --git a/browser/chrome/browser/content/browser/aboutDialog.css b/browser/chrome/browser/content/browser/aboutDialog.css
+index bca264f..6860af7 100755
+--- ./browser/chrome/browser/content/browser/aboutDialog.css
++++ ./browser/chrome/browser/content/browser/aboutDialog.css
+@@ -17,7 +17,10 @@
+ }
+ 
+ #leftBox {
+-  background-image: image-set(url("chrome://branding/content/about-logo.png"), url("chrome://branding/content/about-logo@2x.png") 2x);
++  background-image: image-set(
++    url("chrome://branding/content/about-logo.png"),
++    url("chrome://branding/content/about-logo@2x.png") 2x
++  );
+   background-repeat: no-repeat;
+   background-size: 192px auto;
+   background-position: center 40px;
+@@ -33,6 +36,7 @@
+   background-image: url("chrome://branding/content/about-wordmark.svg");
+   background-repeat: no-repeat;
+   background-size: 288px auto;
++  padding-top: 75px;
+   /* move wordmark down a bit so it doesnt bump up too closely to top of dialog */
+   margin-top: 20px;
+   /* We don't want this box to contribute arbitrarily to the intrinsic size of
