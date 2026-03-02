@@ -1763,7 +1763,15 @@ class TabManager {
     return result;
   }
 
-   * frameworks listen for to update their internal state.
+  /**
+   * Dispatches a text input event on an element, simulating user typing.
+   * This triggers the same `beforeinput`/`input` events that many frameworks
+   * listen for to update their internal state (e.g., Draft.js).
+   *
+   * @param instanceId - The ID of the browser instance to use.
+   * @param selector - CSS selector for the target element.
+   * @param text - The text value to dispatch as input.
+   * @returns Promise<boolean | null> - True if successful, false on error, null if instance not found.
    */
   public async dispatchTextInput(
     instanceId: string,

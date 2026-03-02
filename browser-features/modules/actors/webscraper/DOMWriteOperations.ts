@@ -623,11 +623,8 @@ export class DOMWriteOperations {
       }
 
       // Fallback: try execCommand (deprecated but works in many cases)
+      // Note: tryExecCommand is responsible for dispatching input/change events.
       if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertText", text)) {
-        rawElement.dispatchEvent(
-          new EventCtor("input", { bubbles: true, cancelable: true }),
-        );
-        rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
         return true;
       }
 

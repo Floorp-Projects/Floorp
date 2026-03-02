@@ -201,8 +201,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
           );
         }
         break;
-      case "WebScraper:WaitForReady":
-        return domOps.waitForReady(message.data?.timeout || 15000);
       case "WebScraper:TakeScreenshot":
         return screenshotOps.takeScreenshot();
       case "WebScraper:TakeElementScreenshot":
@@ -368,14 +366,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
           );
         }
         break;
-      case "WebScraper:DispatchTextInput":
-        if (message.data?.selector && typeof message.data?.text === "string") {
-          return domOps.dispatchTextInput(
-            message.data.selector,
-            message.data.text,
-          );
+      case "WebScraper:DispatchTextInput": {
+        const text = (
+          message.data as (NRWebScraperMessageData & { text?: string }) | undefined
+        )?.text;
+        if (message.data?.selector && typeof text === "string") {
+          return domOps.dispatchTextInput(message.data.selector, text);
         }
         break;
+      }
 
     }
     return null;
