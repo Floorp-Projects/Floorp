@@ -70,6 +70,7 @@ export interface BrowserAutomationService {
     instanceId: string,
     selector: string,
     timeout?: number,
+    state?: "attached" | "visible" | "hidden" | "detached",
   ): Promise<boolean | null>;
 
   // Screenshots

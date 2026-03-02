@@ -782,10 +782,12 @@ class TabManager {
     instanceId: string,
     selector: string,
     timeout = 5000,
+    state: "attached" | "visible" | "hidden" | "detached" = "attached",
   ): Promise<boolean | null> {
     return this._queryActor<boolean>(instanceId, "WebScraper:WaitForElement", {
       selector,
       timeout,
+      state,
     });
   }
 

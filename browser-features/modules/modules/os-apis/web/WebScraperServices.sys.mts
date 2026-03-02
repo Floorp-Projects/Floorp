@@ -591,6 +591,7 @@ class webScraper {
     instanceId: string,
     selector: string,
     timeout = 5000,
+    state: "attached" | "visible" | "hidden" | "detached" = "attached",
   ): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
@@ -602,6 +603,7 @@ class webScraper {
     return (await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
       timeout,
+      state,
     })) as boolean;
   }
 
