@@ -20,6 +20,15 @@ export type WaitForElementState =
 export class DOMWaitOperations {
   constructor(private deps: DOMOpsDeps) {}
 
+  /**
+   * Check if an error is a "dead object" error (occurs when document is navigated away)
+   */
+  private isDeadObjectError(e: unknown): boolean {
+    if (!e || typeof e !== "object") return false;
+    const message = (e as { message?: unknown }).message;
+    return typeof message === "string" && message.includes("dead object");
+  }
+
   private get contentWindow(): (Window & typeof globalThis) | null {
     return this.deps.getContentWindow();
   }
@@ -122,14 +131,7 @@ export class DOMWaitOperations {
             finish(true);
           }
         } catch (e) {
-          if (
-            e &&
-            typeof e === "object" &&
-            "message" in e &&
-            typeof (e as { message?: unknown }).message === "string" &&
-            ((e as { message: string }).message?.includes("dead object") ??
-              false)
-          ) {
+          if (this.isDeadObjectError(e)) {
             finish(false);
             return;
           }
@@ -206,14 +208,7 @@ export class DOMWaitOperations {
             finish(true);
           }
         } catch (e) {
-          if (
-            e &&
-            typeof e === "object" &&
-            "message" in e &&
-            typeof (e as { message?: unknown }).message === "string" &&
-            ((e as { message: string }).message?.includes("dead object") ??
-              false)
-          ) {
+          if (this.isDeadObjectError(e)) {
             finish(false);
             return;
           }
@@ -294,14 +289,7 @@ export class DOMWaitOperations {
             finish(true);
           }
         } catch (e) {
-          if (
-            e &&
-            typeof e === "object" &&
-            "message" in e &&
-            typeof (e as { message?: unknown }).message === "string" &&
-            ((e as { message: string }).message?.includes("dead object") ??
-              false)
-          ) {
+          if (this.isDeadObjectError(e)) {
             finish(false);
             return;
           }

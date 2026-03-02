@@ -558,6 +558,15 @@ export class DOMWriteOperations {
    * 
    * Unlike setTextContent, this does NOT set textContent directly - it lets the
    * editor handle the text insertion via the beforeinput event.
+   *
+   * Event sequence:
+   * 1. beforeinput (cancelable) - If cancelled, editor handles insertion
+   * 2. input (non-cancelable) - Fired only if beforeinput was not cancelled
+   * 3. change (bubbles) - Fired only if beforeinput was not cancelled
+   *
+   * Note: The actual text insertion is expected to be handled by the editor
+   * in response to the beforeinput event. We don't set textContent directly
+   * as it would break Draft.js's internal state.
    */
   async dispatchTextInput(selector: string, text: string): Promise<boolean> {
     try {
