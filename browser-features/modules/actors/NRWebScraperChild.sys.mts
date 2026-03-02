@@ -199,6 +199,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
           );
         }
         break;
+      case "WebScraper:WaitForReady":
+        return domOps.waitForReady(message.data?.timeout || 15000);
       case "WebScraper:TakeScreenshot":
         return screenshotOps.takeScreenshot();
       case "WebScraper:TakeElementScreenshot":

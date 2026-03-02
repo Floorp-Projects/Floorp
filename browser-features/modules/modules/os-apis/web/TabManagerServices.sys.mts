@@ -789,6 +789,15 @@ class TabManager {
     });
   }
 
+  public waitForReady(
+    instanceId: string,
+    timeout = 15000,
+  ): Promise<boolean | null> {
+    return this._queryActor<boolean>(instanceId, "WebScraper:WaitForReady", {
+      timeout,
+    });
+  }
+
   public takeScreenshot(instanceId: string): Promise<string | null> {
     return this._queryActor<string>(instanceId, "WebScraper:TakeScreenshot");
   }

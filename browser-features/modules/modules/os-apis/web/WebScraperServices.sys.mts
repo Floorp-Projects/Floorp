@@ -606,6 +606,33 @@ class webScraper {
   }
 
   /**
+   * Waits for the document to be ready (DOMContentLoaded)
+   *
+   * This method waits until the document's readyState is "interactive" or "complete",
+   * meaning the DOM is fully parsed and ready for manipulation.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param timeout - Maximum time to wait in milliseconds (default: 15000)
+   * @returns Promise<boolean | null> - True if document is ready, false if timeout, null if error
+   * @throws Error - If the browser instance is not found
+   */
+  public async waitForReady(
+    instanceId: string,
+    timeout = 15000,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return (await actor.sendQuery("WebScraper:WaitForReady", {
+      timeout,
+    })) as boolean | null;
+  }
+
+  /**
    * Takes a screenshot of the current viewport
    *
    * This method captures the visible area of the page and returns it

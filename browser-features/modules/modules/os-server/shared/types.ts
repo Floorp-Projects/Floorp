@@ -144,6 +144,12 @@ export interface BrowserAutomationService {
   // PDF export
   saveAsPDF(instanceId: string): Promise<string | null>;
 
+  // Document readiness
+  waitForReady(
+    instanceId: string,
+    timeout?: number,
+  ): Promise<boolean | null>;
+
   // Network
   waitForNetworkIdle(
     instanceId: string,

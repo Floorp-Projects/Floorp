@@ -385,6 +385,15 @@ export function registerCommonAutomationRoutes(
     return { status: 200, body: { ok: ok ?? false } };
   });
 
+  // Wait for document ready (DOMContentLoaded)
+  ns.post("/instances/:id/waitForReady", async (ctx: RouterContext) => {
+    const json = ctx.json() as { timeout?: number } | null;
+    const timeout = json?.timeout ?? 15000;
+    const service = getService();
+    const ok = await service.waitForReady(ctx.params.id, timeout);
+    return { status: 200, body: { ok: ok ?? false } };
+  });
+
   // Set innerHTML (for contenteditable elements)
   ns.post("/instances/:id/setInnerHTML", async (ctx: RouterContext) => {
     const json = ctx.json() as { selector?: string; html?: string } | null;
