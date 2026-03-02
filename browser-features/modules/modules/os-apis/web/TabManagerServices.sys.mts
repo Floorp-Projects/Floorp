@@ -778,11 +778,13 @@ class TabManager {
     return result;
   }
 
+import type { WaitForElementState } from "../../../modules/os-server/shared/types.js";
+
   public waitForElement(
     instanceId: string,
     selector: string,
     timeout = 5000,
-    state: "attached" | "visible" | "hidden" | "detached" = "attached",
+    state: WaitForElementState = "attached",
   ): Promise<boolean | null> {
     return this._queryActor<boolean>(instanceId, "WebScraper:WaitForElement", {
       selector,

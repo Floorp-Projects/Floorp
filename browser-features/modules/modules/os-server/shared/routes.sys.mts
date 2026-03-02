@@ -121,7 +121,7 @@ export function registerCommonAutomationRoutes(
     const json = ctx.json() as {
       selector?: string;
       timeout?: number;
-      state?: "attached" | "visible" | "hidden" | "detached";
+      state?: WaitForElementState;
     } | null;
     const sel = json?.selector ?? "";
     const to = json?.timeout ?? 5000;

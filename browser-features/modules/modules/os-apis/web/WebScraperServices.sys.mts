@@ -587,11 +587,13 @@ class webScraper {
    * @returns Promise<boolean> - True if element was found, false if timeout reached
    * @throws Error - If the browser instance is not found
    */
+import type { WaitForElementState } from "../../../modules/os-server/shared/types.js";
+
   public async waitForElement(
     instanceId: string,
     selector: string,
     timeout = 5000,
-    state: "attached" | "visible" | "hidden" | "detached" = "attached",
+    state: WaitForElementState = "attached",
   ): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
