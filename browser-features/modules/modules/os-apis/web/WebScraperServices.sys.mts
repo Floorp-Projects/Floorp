@@ -587,10 +587,13 @@ class webScraper {
    * @returns Promise<boolean> - True if element was found, false if timeout reached
    * @throws Error - If the browser instance is not found
    */
+import type { WaitForElementState } from "../../../modules/os-server/shared/types.js";
+
   public async waitForElement(
     instanceId: string,
     selector: string,
     timeout = 5000,
+    state: WaitForElementState = "attached",
   ): Promise<boolean> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
@@ -602,7 +605,35 @@ class webScraper {
     return (await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
       timeout,
+      state,
     })) as boolean;
+  }
+
+  /**
+   * Waits for the document to be ready (DOMContentLoaded)
+   *
+   * This method waits until the document's readyState is "interactive" or "complete",
+   * meaning the DOM is fully parsed and ready for manipulation.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @param timeout - Maximum time to wait in milliseconds (default: 15000)
+   * @returns Promise<boolean | null> - True if document is ready, false if timeout, null if error
+   * @throws Error - If the browser instance is not found
+   */
+  public async waitForReady(
+    instanceId: string,
+    timeout = 15000,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    return (await actor.sendQuery("WebScraper:WaitForReady", {
+      timeout,
+    })) as boolean | null;
   }
 
   /**
@@ -1594,6 +1625,38 @@ class webScraper {
     await this._delayForUser(1000);
     return result;
   }
+
+  /**
+   * Dispatches a text input event on an element, simulating user typing.
+   * This triggers the same `beforeinput`/`input` events that many frameworks
+   * listen for to update their internal state (e.g., Draft.js).
+   *
+   * @param instanceId - The ID of the browser instance to use.
+   * @param selector - CSS selector for the target element.
+   * @param text - The text value to dispatch as input.
+   * @returns Promise<boolean | null> - True if successful, false on error, null if instance not found.
+   */
+  public async dispatchTextInput(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DispatchTextInput", {
+      selector,
+      text,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
+  }
+
+
 }
 
 // Export a singleton instance of the WebScraper service

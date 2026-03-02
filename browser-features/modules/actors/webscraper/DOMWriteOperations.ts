@@ -550,6 +550,105 @@ export class DOMWriteOperations {
     }
   }
 
+
+  /**
+   * Dispatches a proper text input event sequence for rich text editors.
+   * This fires beforeinput with inputType: insertText, which Draft.js and similar
+   * frameworks listen for to update their internal state.
+   * 
+   * Unlike setTextContent, this does NOT set textContent directly - it lets the
+   * editor handle the text insertion via the beforeinput event.
+   *
+   * Event sequence:
+   * 1. beforeinput (cancelable) - If cancelled, editor handles insertion
+   * 2. input (non-cancelable) - Fired only if beforeinput was not cancelled
+   * 3. change (bubbles) - Fired only if beforeinput was not cancelled
+   *
+   * Note: The actual text insertion is expected to be handled by the editor
+   * in response to the beforeinput event. We don't set textContent directly
+   * as it would break Draft.js's internal state.
+   */
+  async dispatchTextInput(selector: string, text: string): Promise<boolean> {
+    try {
+      const doc = this.document;
+      if (!doc) return false;
+
+      const element = doc.querySelector(selector) as HTMLElement | null;
+      if (!element) {
+        console.warn(
+          `DOMWriteOperations: Element not found for dispatchTextInput: ${selector}`,
+        );
+        return false;
+      }
+
+      this.deps.eventDispatcher.scrollIntoViewIfNeeded(element);
+      this.deps.eventDispatcher.focusElementSoft(element);
+
+      const win = this.contentWindow;
+      const rawWin = unwrapWindow(win);
+      const rawDoc = this.document
+        ? unwrapDocument(
+            this.document as Document & Partial<{ wrappedJSObject: Document }>,
+          )
+        : null;
+      const rawElement = unwrapElement(
+        element as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
+      );
+      if (!rawWin || !rawDoc) return false;
+
+      const InputEv = rawWin.InputEvent ?? null;
+      const EventCtor = rawWin.Event ?? globalThis.Event;
+
+      // 1. Fire beforeinput (this is what Draft.js listens for)
+      if (InputEv) {
+        const beforeInputEvent = new InputEv("beforeinput", {
+          bubbles: true,
+          cancelable: true,
+          inputType: "insertText",
+          data: text,
+        });
+        const notCancelled = rawElement.dispatchEvent(beforeInputEvent);
+        
+        // If the editor cancelled the event, it will handle the insertion itself
+        // Don't set textContent - let the editor do it
+        if (notCancelled) {
+          // 2. Fire input event for good measure
+          rawElement.dispatchEvent(
+            new InputEv("input", {
+              bubbles: true,
+              cancelable: false,
+              inputType: "insertText",
+              data: text,
+            }),
+          );
+          
+          // 3. Fire change event
+          rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
+          return true;
+        }
+        
+        // Editor handled it via beforeinput
+        return true;
+      }
+
+      // Fallback: try execCommand (deprecated but works in many cases)
+      // Note: tryExecCommand is responsible for dispatching input/change events.
+      if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertText", text)) {
+        return true;
+      }
+
+      // No fallback available - setting textContent directly breaks Draft.js
+      // because it doesn't update the editor's internal EditorState
+      console.warn(
+        "DOMWriteOperations: dispatchTextInput failed - no fallback available for this editor"
+      );
+      return false;
+    } catch (e) {
+      console.error("DOMWriteOperations: Error in dispatchTextInput:", e);
+      return false;
+    }
+  }
+
   setCookieString(
     cookieString: string,
     cookieName?: string,

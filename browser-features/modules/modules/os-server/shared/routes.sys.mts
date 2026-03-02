@@ -121,11 +121,13 @@ export function registerCommonAutomationRoutes(
     const json = ctx.json() as {
       selector?: string;
       timeout?: number;
+      state?: WaitForElementState;
     } | null;
     const sel = json?.selector ?? "";
     const to = json?.timeout ?? 5000;
+    const state = json?.state ?? "attached";
     const service = getService();
-    const found = await service.waitForElement(ctx.params.id, sel, to);
+    const found = await service.waitForElement(ctx.params.id, sel, to, state);
     return { status: 200, body: { ok: found ?? false } };
   });
 
@@ -385,6 +387,15 @@ export function registerCommonAutomationRoutes(
     return { status: 200, body: { ok: ok ?? false } };
   });
 
+  // Wait for document ready (DOMContentLoaded)
+  ns.post("/instances/:id/waitForReady", async (ctx: RouterContext) => {
+    const json = ctx.json() as { timeout?: number } | null;
+    const timeout = json?.timeout ?? 15000;
+    const service = getService();
+    const ok = await service.waitForReady(ctx.params.id, timeout);
+    return { status: 200, body: { ok: ok ?? false } };
+  });
+
   // Set innerHTML (for contenteditable elements)
   ns.post("/instances/:id/setInnerHTML", async (ctx: RouterContext) => {
     const json = ctx.json() as { selector?: string; html?: string } | null;
@@ -499,6 +510,26 @@ export function registerCommonAutomationRoutes(
         ctx.params.id,
         json.selector,
         json.filePath,
+      );
+      return { status: 200, body: { ok: !!ok } };
+    },
+  );
+
+
+  // Dispatch text input event (for rich text editors like Draft.js)
+  // Properly fires beforeinput event with inputType: insertText
+  ns.post<{ selector?: string; text?: string }, OkResponse | ErrorResponse>(
+    "/instances/:id/dispatchTextInput",
+    async (ctx: RouterContext) => {
+      const json = ctx.json() as { selector?: string; text?: string } | null;
+      if (!json?.selector || json.text === undefined) {
+        return { status: 400, body: { error: "selector and text required" } };
+      }
+      const service = getService();
+      const ok = await service.dispatchTextInput(
+        ctx.params.id,
+        json.selector,
+        json.text,
       );
       return { status: 200, body: { ok: !!ok } };
     },

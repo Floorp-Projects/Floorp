@@ -201,8 +201,9 @@ export class DOMOperations {
     selector: string,
     timeout = 5000,
     signal?: AbortSignal,
+    state?: "attached" | "visible" | "hidden" | "detached",
   ): Promise<boolean> {
-    return this.waitOps.waitForElement(selector, timeout, signal);
+    return this.waitOps.waitForElement(selector, timeout, signal, state);
   }
 
   waitForReady(timeout = 15000, signal?: AbortSignal): Promise<boolean> {
@@ -237,6 +238,11 @@ export class DOMOperations {
       console.error("DOMOperations: Error in dispatchEvent:", e);
       return false;
     }
+  }
+
+
+  dispatchTextInput(selector: string, text: string): Promise<boolean> {
+    return this.writeOps.dispatchTextInput(selector, text);
   }
 
   destroy(): void {
