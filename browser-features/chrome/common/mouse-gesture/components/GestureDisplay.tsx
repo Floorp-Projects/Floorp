@@ -165,12 +165,14 @@ export class GestureDisplay {
   }
 
   private draw(): void {
-    const showTrail = getConfig().showTrail;
+    const config = getConfig();
     if (!this.canvasEl || !this.ctx) return;
     const dpr = this.targetWindow.devicePixelRatio || 1;
     const w = this.canvasEl.width / dpr;
     const h = this.canvasEl.height / dpr;
     this.ctx.clearRect(0, 0, w, h);
+
+    if (!config.showTrail) return;
 
     const trail = this.trail || [];
     if (trail.length < 2) return;
@@ -179,10 +181,8 @@ export class GestureDisplay {
     this.ctx.lineJoin = "round";
     this.ctx.lineCap = "round";
     this.ctx.globalAlpha = 0.9;
-    this.ctx.strokeStyle = getConfig().trailColor || "#37ff00";
-    if(!showTrail)
-      this.ctx.strokeStyle = "transparent";
-    this.ctx.lineWidth = getConfig().trailWidth || 6;
+    this.ctx.strokeStyle = config.trailColor || "#37ff00";
+    this.ctx.lineWidth = config.trailWidth || 6;
     this.ctx.beginPath();
     this.ctx.moveTo(trail[0].x, trail[0].y);
     for (let i = 1; i < trail.length; i++) {
