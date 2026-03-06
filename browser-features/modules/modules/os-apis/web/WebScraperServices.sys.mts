@@ -1594,6 +1594,30 @@ class webScraper {
     await this._delayForUser(1000);
     return result;
   }
+
+   * frameworks listen for to update their internal state.
+   */
+  public async dispatchTextInput(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    const actor = await this._getActorForBrowser(browser);
+    if (!actor) return null;
+    const result = (await actor.sendQuery("WebScraper:DispatchTextInput", {
+      selector,
+      text,
+    })) as boolean;
+    await this._delayForUser(1000);
+    return result;
+  }
+
+
 }
 
 // Export a singleton instance of the WebScraper service

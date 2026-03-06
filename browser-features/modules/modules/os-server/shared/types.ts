@@ -167,4 +167,10 @@ export interface BrowserAutomationService {
     eventType: string,
     options?: { bubbles?: boolean; cancelable?: boolean },
   ): Promise<boolean | null>;
+  // Rich text editor input (for Draft.js and similar frameworks)
+  dispatchTextInput(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null>;
 }

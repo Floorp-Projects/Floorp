@@ -1751,6 +1751,25 @@ class TabManager {
     await this._delayForUser(1000);
     return result;
   }
+
+   * frameworks listen for to update their internal state.
+   */
+  public async dispatchTextInput(
+    instanceId: string,
+    selector: string,
+    text: string,
+  ): Promise<boolean | null> {
+    this._focusInstance(instanceId);
+    const result = await this._queryActor<boolean>(
+      instanceId,
+      "WebScraper:DispatchTextInput",
+      { selector, text },
+    );
+    await this._delayForUser(1000);
+    return result;
+  }
+
+
 }
 
 // Export a singleton instance of the TabManager service
