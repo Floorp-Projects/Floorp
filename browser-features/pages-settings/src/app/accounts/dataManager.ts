@@ -6,11 +6,18 @@ export async function getCurrentProfile(): Promise<{
   profilePath: string;
 }> {
   return await new Promise((resolve) => {
-    window.NRGetCurrentProfile((data: string) => {
-      const profileInfo = JSON.parse(data) as {
-        profileName: string;
-        profilePath: string;
-      };
+    window.NRGetCurrentProfile((data: unknown) => {
+      // Handle null or undefined data
+      if (!data) {
+        resolve({ profileName: "", profilePath: "" });
+        return;
+      }
+
+      // data might already be an object (from Cu.cloneInto) or a JSON string
+      const profileInfo = typeof data === "string"
+        ? JSON.parse(data) as { profileName: string; profilePath: string }
+        : data as { profileName: string; profilePath: string };
+
       resolve(profileInfo);
     });
   });
@@ -21,13 +28,11 @@ export async function useAccountAndProfileData(): Promise<AccountsFormData> {
   const accountImage = await getAccountImage();
   const profileInfo = await getCurrentProfile();
 
-  console.log("accountInfo", profileInfo);
-
   return {
     accountInfo: accountInfo,
     accountImage: accountImage,
-    profileDir: profileInfo.profilePath,
-    profileName: profileInfo.profileName,
+    profileDir: profileInfo?.profilePath ?? "",
+    profileName: profileInfo?.profileName ?? "",
     asyncNoesViaMozillaAccount: true,
   };
 }

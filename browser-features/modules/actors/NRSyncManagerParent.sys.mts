@@ -11,6 +11,12 @@ export class NRSyncManagerParent extends JSWindowActorParent {
           "resource://services-sync/UIState.sys.mjs",
         );
 
+        // Ensure UIState is initialized before getting account info
+        // to avoid returning incomplete data (e.g., missing displayName)
+        if (!UIState.isReady()) {
+          await UIState.refresh();
+        }
+
         this.sendAsyncMessage(
           "SyncManager:GetAccountInfo",
           JSON.stringify(UIState.get()),

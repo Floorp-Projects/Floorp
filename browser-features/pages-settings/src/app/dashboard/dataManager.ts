@@ -20,12 +20,11 @@ async function getAccountName(): Promise<string | null> {
   const accountInfo = await getAccountInfo();
   return accountInfo.status === "not_configured"
     ? null
-    : (accountInfo.displayName ?? accountInfo.email);
+    : (accountInfo.displayName ?? accountInfo.email ?? null);
 }
 
 export async function getAccountImage(): Promise<string> {
   const accountInfo = await getAccountInfo();
-  console.log(accountInfo);
   return accountInfo.status === "not_configured"
     ? "chrome://browser/skin/fxa/avatar-color.svg"
     : (accountInfo.avatarURL ?? "chrome://browser/skin/fxa/avatar-color.svg");

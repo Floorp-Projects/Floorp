@@ -7,10 +7,16 @@ import * as t from "io-ts";
 
 /* Home */
 export const zAccountInfo = t.type({
-  email: t.string,
+  uid: t.union([t.string, t.undefined]),
+  email: t.union([t.string, t.undefined]),
   status: t.string,
-  displayName: t.string,
-  avatarURL: t.string,
+  displayName: t.union([t.string, t.undefined]),
+  avatarURL: t.union([t.string, t.undefined]),
+  avatarIsDefault: t.union([t.boolean, t.undefined]),
+  syncEnabled: t.union([t.boolean, t.undefined]),
+  hasSyncKeys: t.union([t.boolean, t.undefined]),
+  lastSync: t.union([t.string, t.undefined]),
+  syncing: t.union([t.boolean, t.undefined]),
 });
 
 export interface HomeData {

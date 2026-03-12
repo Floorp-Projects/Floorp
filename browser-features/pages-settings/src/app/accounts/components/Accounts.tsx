@@ -33,12 +33,14 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
             <AvatarImage
               src={accountAndProfileData?.accountImage}
               alt={accountAndProfileData?.accountInfo.displayName ??
+                accountAndProfileData?.accountInfo.email ??
                 t("accounts.notLoggedIn")}
             />
           </Avatar>
           <div className="space-y-1">
             <p className="font-medium">
               {accountAndProfileData?.accountInfo.displayName ??
+                accountAndProfileData?.accountInfo.email ??
                 t("accounts.notLoggedIn")}
             </p>
             <p className="text-base-content/70">
