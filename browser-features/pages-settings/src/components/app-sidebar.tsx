@@ -11,6 +11,7 @@ import {
   PanelLeft,
   PencilRuler,
   RefreshCw,
+  Settings,
   UserRoundPen,
 } from "lucide-react";
 import { NavHeader } from "@/components/nav-header.tsx";
@@ -20,7 +21,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
-import { NavFeatures } from "@/components/nav-features.tsx";
+import { NavFeatures, type Feature } from "@/components/nav-features.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { rpc } from "../lib/rpc/rpc.ts";
 
@@ -101,7 +102,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ], [isFloorpOSVisible, t]);
 
-  const about = [
+  const about: Feature[] = [
+    {
+      title: t("sidebar.firefoxSettings"),
+      url: "",
+      icon: Settings,
+      isExternal: true,
+      onClick: () => window.NRAddTab("about:preferences"),
+    },
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
     { title: t("pages.updates"), url: "/about/updates", icon: RefreshCw },
   ];

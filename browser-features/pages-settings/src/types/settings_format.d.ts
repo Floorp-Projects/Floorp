@@ -56,3 +56,16 @@ export interface TNumberSetting extends TSetting {
   title: string;
   description: string;
 }
+
+// Global type declarations for Floorp native APIs
+declare global {
+  interface Window {
+    /**
+     * Open a new tab in Floorp with the given URL
+     * @param url - The URL to open in the new tab
+     */
+    NRAddTab: (url: string) => void;
+  }
+}
+
+export {};
