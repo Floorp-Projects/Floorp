@@ -811,16 +811,12 @@ export class DOMWriteOperations {
       );
       if (!rawWin || !rawDoc) return false;
 
-      const EventCtor = rawWin.Event ?? globalThis.Event;
-
+      // Note: tryExecCommand is responsible for dispatching input/change events.
       if (this.tryExecCommand(rawWin, rawDoc, rawElement, "insertText", text)) {
-        rawElement.dispatchEvent(
-          new EventCtor("input", { bubbles: true, cancelable: true }),
-        );
-        rawElement.dispatchEvent(new EventCtor("change", { bubbles: true }));
         return true;
       }
 
+      const EventCtor = rawWin.Event ?? globalThis.Event;
       const InputEv = rawWin.InputEvent ?? null;
 
       if (InputEv) {
