@@ -21,7 +21,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
-import { NavFeatures } from "@/components/nav-features.tsx";
+import { NavFeatures, type Feature } from "@/components/nav-features.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { rpc } from "../lib/rpc/rpc.ts";
 
@@ -102,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ], [isFloorpOSVisible, t]);
 
-  const about = [
+  const about: Feature[] = [
     {
       title: t("sidebar.firefoxSettings"),
       url: "",
