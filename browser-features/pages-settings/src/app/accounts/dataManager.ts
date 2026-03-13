@@ -13,10 +13,29 @@ export async function getCurrentProfile(): Promise<{
         return;
       }
 
-      // data might already be an object (from Cu.cloneInto) or a JSON string
-      const profileInfo = typeof data === "string"
-        ? JSON.parse(data) as { profileName: string; profilePath: string }
-        : data as { profileName: string; profilePath: string };
+      let profileInfo: { profileName: string; profilePath: string } | null = null;
+
+      if (typeof data === "string") {
+        try {
+          profileInfo = JSON.parse(data) as { profileName: string; profilePath: string };
+        } catch {
+          // Fallback to a safe default if JSON parsing fails
+          resolve({ profileName: "", profilePath: "" });
+          return;
+        }
+      } else if (
+        typeof data === "object" &&
+        data !== null &&
+        "profileName" in data &&
+        "profilePath" in data
+      ) {
+        profileInfo = data as { profileName: string; profilePath: string };
+      }
+
+      if (!profileInfo) {
+        resolve({ profileName: "", profilePath: "" });
+        return;
+      }
 
       resolve(profileInfo);
     });
@@ -31,8 +50,8 @@ export async function useAccountAndProfileData(): Promise<AccountsFormData> {
   return {
     accountInfo: accountInfo,
     accountImage: accountImage,
-    profileDir: profileInfo?.profilePath ?? "",
-    profileName: profileInfo?.profileName ?? "",
+    profileDir: profileInfo.profilePath,
+    profileName: profileInfo.profileName,
     asyncNoesViaMozillaAccount: true,
   };
 }
