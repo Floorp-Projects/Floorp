@@ -104,6 +104,7 @@ interface GBrowser {
 interface TabListEntry {
   browserId: string;
   instanceId?: string;
+  windowId: string;
   title: string;
   url: string;
   selected: boolean;
@@ -164,6 +165,16 @@ function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
     }
   }
   return windows;
+}
+
+/**
+ * Returns a unique identifier for a browser window.
+ */
+function getWindowId(win: Window): string {
+  return String(
+    (win as unknown as { docShell?: { outerWindowID: number } }).docShell
+      ?.outerWindowID ?? 0,
+  );
 }
 
 /**
@@ -525,12 +536,13 @@ class TabManager {
   }
 
   public async attachToTab(browserId: string): Promise<string | null> {
-    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-    const gBrowser = win.gBrowser;
-
-    const targetTab = gBrowser.tabs.find(
-      (tab: BrowserTab) => tab.linkedBrowser.browserId.toString() === browserId,
-    );
+    let targetTab: BrowserTab | undefined;
+    for (const win of getBrowserWindows()) {
+      targetTab = win.gBrowser.tabs.find(
+        (tab: BrowserTab) => tab.linkedBrowser.browserId.toString() === browserId,
+      );
+      if (targetTab) break;
+    }
 
     if (!targetTab) {
       return null;
@@ -556,11 +568,11 @@ class TabManager {
   }
 
   public listTabs(): Promise<TabListEntry[]> {
-    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
-    const gBrowser = win.gBrowser;
-
-    return Promise.resolve(
-      gBrowser.tabs.map((tab: BrowserTab) => {
+    const results: TabListEntry[] = [];
+    for (const win of getBrowserWindows()) {
+      const gBrowser = win.gBrowser;
+      const wid = getWindowId(win);
+      for (const tab of gBrowser.tabs) {
         const browserId = tab.linkedBrowser.browserId.toString();
         // Find if this tab is already an instance
         let instanceId: string | undefined;
@@ -571,23 +583,26 @@ class TabManager {
           }
         }
 
-        return {
+        results.push({
           browserId,
           instanceId,
+          windowId: wid,
           title: tab.label,
           url: tab.linkedBrowser.currentURI.spec,
           selected: tab.selected,
           pinned: tab.pinned,
-        };
-      }),
-    );
+        });
+      }
+    }
+    return Promise.resolve(results);
   }
 
   public async getInstanceInfo(
     instanceId: string,
   ): Promise<TabInstanceInfo | null> {
     const { tab, browser } = this._getInstance(instanceId);
-    const win = getBrowserWindow() as Window & { gBrowser: GBrowser };
+    const win = (browser.ownerGlobal as Window & { gBrowser: GBrowser })
+      ?? (getBrowserWindow() as Window & { gBrowser: GBrowser });
     const gBrowser = win.gBrowser;
 
     const [html, screenshot] = await Promise.all([

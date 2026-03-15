@@ -15,6 +15,7 @@ export type { ScreenshotRect };
 
 export interface TabInfo {
   browserId: string;
+  windowId: string;
   title: string;
   url: string;
   selected: boolean;
