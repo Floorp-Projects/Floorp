@@ -392,6 +392,38 @@ class webScraper {
   }
 
   /**
+   * Retrieves the visible text content from a browser instance
+   *
+   * This method:
+   * - Validates the browser instance exists
+   * - Gets the NRWebScraper actor from the current window global
+   * - Sends a query to extract visible text content
+   * - Returns text that excludes hidden elements (display:none), making it much smaller than raw HTML
+   *
+   * The actor communication allows safe access to content process DOM
+   * without violating cross-process security boundaries.
+   *
+   * @param instanceId - The unique identifier of the browser instance
+   * @returns Promise<string | null> - The visible text content, or null if unavailable
+   * @throws Error - If the browser instance is not found
+   */
+  public async getText(instanceId: string): Promise<string | null> {
+    const browser = this._browserInstances.get(instanceId);
+    if (!browser) {
+      throw new Error(`Browser not found for instance ${instanceId}`);
+    }
+
+    try {
+      const actor = await this._getActorForBrowser(browser);
+      if (!actor) return null;
+      return (await actor.sendQuery("WebScraper:GetText")) as string | null;
+    } catch (e) {
+      console.error("Error getting text:", e);
+      return null;
+    }
+  }
+
+  /**
    * Retrieves a specific element from a browser instance using the NRWebScraper actor
    *
    * This method:

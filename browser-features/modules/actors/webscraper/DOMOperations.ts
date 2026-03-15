@@ -115,6 +115,15 @@ export class DOMOperations {
     return this.readOps.getPageTitle();
   }
 
+  /**
+   * Gets the page content as Markdown.
+   * Converts HTML to Markdown format, preserving headings, lists, links,
+   * and other formatting while excluding hidden elements.
+   */
+  getText(): string | null {
+    return this.readOps.getText();
+  }
+
   // Write/input ops
   inputElement(
     selector: string,

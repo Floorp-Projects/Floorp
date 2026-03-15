@@ -62,6 +62,13 @@ export function registerCommonAutomationRoutes(
     return { status: 200, body: html != null ? { html } : {} };
   });
 
+  // Get visible text content (as Markdown)
+  ns.get("/instances/:id/text", async (ctx: RouterContext) => {
+    const service = getService();
+    const text = await service.getText(ctx.params.id);
+    return { status: 200, body: text != null ? { text } : {} };
+  });
+
   // Get element by selector (optional - only Tab exposes this)
   if (options.includeGetElement) {
     ns.get("/instances/:id/element", async (ctx: RouterContext) => {

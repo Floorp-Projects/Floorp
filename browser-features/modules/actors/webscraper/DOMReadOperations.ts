@@ -5,6 +5,7 @@
 
 import type { DOMOpsDeps } from "./DOMDeps.ts";
 import { unwrapElement } from "./utils.ts";
+import { TurndownService } from "./turndown/index.ts";
 
 /**
  * Read-only DOM utilities (queries, getters)
@@ -19,6 +20,12 @@ export class DOMReadOperations {
   private get document(): Document | null {
     return this.deps.getDocument();
   }
+
+  private markdownConverter = new TurndownService({
+    headingStyle: "atx",
+    codeBlockStyle: "fenced",
+    bulletListMarker: "-",
+  });
 
   getHTML(): string | null {
     try {
@@ -292,5 +299,145 @@ export class DOMReadOperations {
       console.error("DOMReadOperations: Error getting page title:", e);
       return null;
     }
+  }
+
+  /**
+   * Gets the page content as Markdown.
+   * Uses Turndown library to convert HTML to Markdown format.
+   * Excludes script/style/noscript elements for cleaner output.
+   *
+   * Also includes content from iframes and Shadow DOM for dynamic sites.
+   */
+  getText(): string | null {
+    try {
+      const doc = this.document;
+      if (!doc?.body) return null;
+
+      // Clone body to avoid modifying the original document
+      const bodyClone = doc.body.cloneNode(true) as Element;
+
+      // Remove non-content elements (scripts, styles, noscript) before conversion
+      const elementsToRemove = bodyClone.querySelectorAll(
+        "script, style, noscript",
+      );
+      for (const elem of Array.from(elementsToRemove)) {
+        elem.remove();
+      }
+
+      // Convert body element to Markdown using TurndownService
+      const markdown = this.markdownConverter.turndown(bodyClone);
+
+      if (!markdown) return null;
+
+      let result = markdown;
+
+      // Also include text from Shadow DOM (for React/Web Components sites)
+      const shadowText = this.getTextFromShadowDOM(doc.body);
+      if (shadowText) {
+        result += "\n\n---\n\n#### Shadow DOM Content\n\n" + shadowText.trim() + "\n\n";
+      }
+
+      // Also include text from iframes (for Gmail, email clients, etc.)
+      const iframeText = this.getTextFromIframes(doc);
+      if (iframeText) {
+        result += "\n\n---\n\n#### iframe Content\n\n" + iframeText.trim() + "\n\n";
+      }
+
+      // Normalize whitespace
+      return result
+        .replace(/\n{3,}/g, "\n\n") // Limit consecutive newlines
+        .trim();
+    } catch (e) {
+      console.error("DOMReadOperations: Error getting text:", e);
+      return null;
+    }
+  }
+
+  /**
+   * Extracts text from Shadow DOM trees.
+   * Uses TreeWalker for efficient traversal of large DOMs.
+   */
+  private getTextFromShadowDOM(root: Element): string {
+    let text = "";
+
+    try {
+      // Use TreeWalker for efficient traversal (avoids querySelectorAll("*"))
+      const ownerDocument = root.ownerDocument || document;
+      const walker = ownerDocument.createTreeWalker(
+        root,
+        NodeFilter.SHOW_ELEMENT,
+      );
+
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const elem = node as Element;
+        // shadowRoot exists on Element in Firefox's DOM but not in TypeScript's lib
+        const shadowRoot = (elem as unknown as { shadowRoot?: ShadowRoot })
+          .shadowRoot;
+        if (shadowRoot) {
+          // Extract text from shadow root using textContent
+          const shadowBody = shadowRoot as unknown as { body?: HTMLElement };
+          if (shadowBody.body) {
+            const shadowText = shadowBody.body.textContent || "";
+            if (shadowText) {
+              text += shadowText + "\n";
+            }
+          } else {
+            // Fallback: use textContent directly
+            const shadowText = shadowRoot.textContent || "";
+            if (shadowText) {
+              text += shadowText + "\n";
+            }
+          }
+
+          // Recursively handle nested shadow roots
+          text += this.getTextFromShadowDOM(shadowRoot as Element);
+        }
+      }
+    } catch (e) {
+      console.error("DOMReadOperations: Error reading Shadow DOM:", e);
+    }
+
+    return text;
+  }
+
+  /**
+   * Extracts text from same-origin iframes.
+   * Cross-origin iframes are skipped due to security restrictions.
+   * Also extracts text from Shadow DOM within iframes.
+   */
+  private getTextFromIframes(doc: Document): string {
+    let text = "";
+
+    try {
+      const iframes = doc.querySelectorAll("iframe");
+
+      for (const iframe of iframes) {
+        try {
+          const iframeDoc = iframe.contentDocument;
+          if (iframeDoc?.body) {
+            const iframeBody = iframeDoc.body as HTMLElement;
+            let iframeText = iframeBody.textContent || "";
+
+            // Also extract from Shadow DOM within iframe
+            const shadowText = this.getTextFromShadowDOM(iframeBody);
+            if (shadowText) {
+              iframeText += "\n" + shadowText;
+            }
+
+            if (iframeText) {
+              text += iframeText + "\n";
+            }
+          }
+        } catch (e) {
+          // Skip cross-origin iframes (security restriction)
+          // console.debug("Skipping cross-origin iframe");
+        }
+      }
+    } catch (e) {
+      console.error("DOMReadOperations: Error reading iframes:", e);
+    }
+
+    return text;
   }
 }

@@ -142,6 +142,8 @@ export class NRWebScraperChild extends JSWindowActorChild {
         const to = message.data?.timeout || 15000;
         return domOps.waitForReady(to);
       }
+      case "WebScraper:GetText":
+        return domOps.getText();
       case "WebScraper:GetHTML":
         return domOps.getHTML();
       case "WebScraper:GetElements":

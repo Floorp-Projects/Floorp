@@ -139,6 +139,48 @@ class FloorpTabManager:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return result
 
+    def get_text(self):
+        """Get page content as Markdown"""
+        if not self.instance_id:
+            raise ValueError("No instance created")
+        resp = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/text"
+        )
+        resp.raise_for_status()
+        result = resp.json()
+        text = result.get("text", "")
+        print(f"{GREEN}📄 Markdown Output ({len(text)} chars):{NC}")
+        print("-" * 40)
+        print(text[:500] + ("..." if len(text) > 500 else ""))
+        print("-" * 40)
+        return result
+
+    def get_markdown_size_comparison(self):
+        """Compare sizes of HTML vs Markdown output"""
+        if not self.instance_id:
+            raise ValueError("No instance created")
+
+        # Get HTML
+        resp_html = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/html"
+        )
+        resp_html.raise_for_status()
+        html_size = len(resp_html.json().get("html", ""))
+
+        # Get Text (Markdown)
+        resp_text = requests.get(
+            f"{self.base_url}/tabs/instances/{self.instance_id}/text"
+        )
+        resp_text.raise_for_status()
+        text_size = len(resp_text.json().get("text", ""))
+
+        ratio = (text_size / html_size * 100) if html_size > 0 else 0
+        print(f"{BLUE}📊 Size Comparison:{NC}")
+        print(f"  HTML:    {html_size:,} chars")
+        print(f"  Markdown: {text_size:,} chars")
+        print(f"  {GREEN}Reduction: {100 - ratio:.1f}%{NC}")
+        return {"html_size": html_size, "text_size": text_size, "ratio": ratio}
+
 
 def main():
     print("=" * 42)
@@ -204,6 +246,14 @@ def main():
         print(f"{BLUE}📋 Step 6: Inspect APIs (highlight only){NC}")
         print(f"{BLUE}  └ getHTML{NC}")
         manager.get_html()
+        time.sleep(2.2)
+
+        print(f"{BLUE}  └ getText (Markdown output){NC}")
+        manager.get_text()
+        time.sleep(2.2)
+
+        print(f"{BLUE}  └ Size Comparison (HTML vs Markdown){NC}")
+        manager.get_markdown_size_comparison()
         time.sleep(2.2)
 
         print(f"{BLUE}  └ getElement (Submit Button){NC}")

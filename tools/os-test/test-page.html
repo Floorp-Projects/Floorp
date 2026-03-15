@@ -98,27 +98,50 @@
     <div class="card">
         <h1>🎨 Floorp エフェクトテストページ</h1>
         <p class="subtitle">API から操作してエフェクトを確認してください</p>
-        
+
+        <h2>Markdown変換テスト用コンテンツ</h2>
+        <p>このページのコンテンツは <strong>/text</strong> エンドポイントでMarkdownに変換されます。</p>
+
+        <h3>特徴的な要素</h3>
+        <ul>
+            <li>見出し (h1, h2, h3)</li>
+            <li><strong>太字</strong> と <em>イタリック</em></li>
+            <li><a href="#">リンク</a></li>
+        </ul>
+
+        <h3>コードブロック</h3>
+        <pre><code>function hello() {
+    console.log("Hello, Floorp!");
+}</code></pre>
+
+        <h3>引用</h3>
+        <blockquote>
+            <p>Floorp は Firefox ベースの強力なブラウザです。</p>
+        </blockquote>
+
+        <hr>
+
+        <h2>フォームテスト</h2>
         <form id="testForm">
             <div class="form-group">
                 <label for="name">名前</label>
                 <input type="text" id="name" name="name" placeholder="山田太郎">
             </div>
-            
+
             <div class="form-group">
                 <label for="email">メールアドレス</label>
                 <input type="email" id="email" name="email" placeholder="example@floorp.app">
             </div>
-            
+
             <div class="form-group">
                 <label for="message">メッセージ</label>
                 <textarea id="message" name="message" rows="4" placeholder="ここにメッセージを入力してください"></textarea>
             </div>
-            
+
             <button type="submit" id="submitBtn">送信</button>
             <button type="button" class="btn-secondary" id="resetBtn">リセット</button>
         </form>
-        
+
         <div id="result"></div>
     </div>
     

@@ -340,11 +340,18 @@ def test_shared_automation(
         expect_description="contains 'Floorp OS Test'",
     )
     run_value_test(
+        "Get Text (Markdown)",
+        f"{prefix}/text",
+        key="text",
+        predicate=lambda v: isinstance(v, str) and len(v) > 0,
+        expect_description="non-empty Markdown output",
+    )
+    run_value_test(
         "Wait For Element (#title)",
         f"{prefix}/waitForElement",
         method="POST",
         data={"selector": "#title", "timeout": 2000},
-        key="found",
+        key="ok",
         expected=True,
     )
     if include_get_element:
