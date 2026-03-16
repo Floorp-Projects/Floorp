@@ -37,6 +37,7 @@ interface BrowserTab {
 interface GBrowser {
   tabs: BrowserTab[];
   selectedTab: BrowserTab;
+  tabContainer: EventTarget & { addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void };
   addTab(
     url: string,
     options: {
@@ -203,7 +204,7 @@ class TabManager {
    * Prevents zombie entries when tabs are closed manually by the user.
    */
   private _onTabClose = (event: Event) => {
-    const tab = event.target as BrowserTab;
+    const tab = event.target as unknown as BrowserTab;
     for (const [instanceId, entry] of this._browserInstances.entries()) {
       if (entry.tab === tab) {
         // Clean up GlobalHTTPTracker for this tab's browsing context
