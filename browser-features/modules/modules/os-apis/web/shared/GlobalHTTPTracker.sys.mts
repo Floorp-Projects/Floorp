@@ -9,8 +9,11 @@
  */
 const GlobalHTTPTracker = {
   activeRequests: new Map<number, Set<nsIRequest>>(),
+  _initialized: false,
 
   init() {
+    if (this._initialized) return;
+    this._initialized = true;
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
       Services.obs.addObserver(this, "http-on-stop-request");

@@ -408,7 +408,7 @@ class LocalHttpServer implements nsIServerSocketListener {
           "\r\n";
         writeUtf8(output, headers);
 
-        // Callback to clean up
+        // Callback to clean up — stream callbacks own the stream lifecycle
         streamResult.onConnect(
           (data) => {
             try {
@@ -428,6 +428,9 @@ class LocalHttpServer implements nsIServerSocketListener {
             }
           },
         );
+        // Prevent onSocketAccepted's finally from double-closing stream-owned handles
+        input = null;
+        output = null;
         return;
       }
 

@@ -108,17 +108,24 @@ export class DOMReadOperations {
       const doc = this.document;
       if (!doc?.body) return null;
 
-      // Check root element first (TreeWalker skips the root node)
+      // Check root element first (TreeWalker skips the root node).
+      // Only match body itself if the text is in body's direct text nodes,
+      // not inherited from child elements — avoids returning the entire page HTML.
       const bodyText = doc.body.textContent;
       if (bodyText && bodyText.includes(textContent)) {
-        this.deps.highlightManager.runAsyncInspection(
-          doc.body,
-          "inspectGetElementByText",
-          {
-            text: this.deps.translationHelper.truncate(textContent, 30),
-          },
-        );
-        return String(doc.body.outerHTML);
+        const childText = Array.from(doc.body.children)
+          .map((c) => c.textContent ?? "")
+          .join("");
+        if (!childText.includes(textContent)) {
+          this.deps.highlightManager.runAsyncInspection(
+            doc.body,
+            "inspectGetElementByText",
+            {
+              text: this.deps.translationHelper.truncate(textContent, 30),
+            },
+          );
+          return String(doc.body.outerHTML);
+        }
       }
 
       const walker = doc.createTreeWalker(

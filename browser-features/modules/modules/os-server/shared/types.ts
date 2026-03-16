@@ -102,7 +102,7 @@ export interface BrowserAutomationService {
     state?: WaitForElementState,
   ): Promise<boolean | null>;
   waitForReady(instanceId: string, timeout?: number): Promise<boolean | null>;
-  waitForNetworkIdle?(instanceId: string, timeout?: number): Promise<boolean>;
+  waitForNetworkIdle?(instanceId: string, timeout?: number): Promise<boolean | null>;
 
   // Screenshots
   takeScreenshot(instanceId: string): Promise<string | null>;
