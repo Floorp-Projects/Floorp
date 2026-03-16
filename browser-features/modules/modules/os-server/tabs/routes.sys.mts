@@ -86,15 +86,31 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
     // Destroy instance (async cleanup, does not close the tab)
     t.delete("/instances/:id", async (ctx: RouterContext) => {
       const { TabManagerServices } = TabManagerModule();
-      await TabManagerServices.destroyInstance(ctx.params.id);
-      return { status: 200, body: { ok: true } };
+      try {
+        await TabManagerServices.destroyInstance(ctx.params.id);
+        return { status: 200, body: { ok: true } };
+      } catch (e) {
+        const msg = (e as Error)?.message ?? String(e);
+        if (msg.includes("not found")) {
+          return { status: 404, body: { error: msg } };
+        }
+        return { status: 500, body: { error: msg } };
+      }
     });
 
     // Close tab (destroys instance AND closes the actual browser tab)
     t.post("/instances/:id/close", async (ctx: RouterContext) => {
       const { TabManagerServices } = TabManagerModule();
-      await TabManagerServices.closeTab(ctx.params.id);
-      return { status: 200, body: { ok: true } };
+      try {
+        await TabManagerServices.closeTab(ctx.params.id);
+        return { status: 200, body: { ok: true } };
+      } catch (e) {
+        const msg = (e as Error)?.message ?? String(e);
+        if (msg.includes("not found")) {
+          return { status: 404, body: { error: msg } };
+        }
+        return { status: 500, body: { error: msg } };
+      }
     });
 
     // -- Common automation routes --
