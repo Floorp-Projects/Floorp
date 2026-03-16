@@ -75,7 +75,7 @@ export function registerCommonAutomationRoutes(
       const sel = ctx.searchParams.get("selector") ?? "";
       const service = getService();
       if (!service.getElement) {
-        return { status: 200, body: {} };
+        return { status: 200, body: { element: null } };
       }
       const element = await service.getElement(ctx.params.id, sel);
       return { status: 200, body: { element } };

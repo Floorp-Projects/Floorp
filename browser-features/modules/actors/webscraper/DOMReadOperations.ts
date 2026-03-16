@@ -108,6 +108,19 @@ export class DOMReadOperations {
       const doc = this.document;
       if (!doc?.body) return null;
 
+      // Check root element first (TreeWalker skips the root node)
+      const bodyText = doc.body.textContent;
+      if (bodyText && bodyText.includes(textContent)) {
+        this.deps.highlightManager.runAsyncInspection(
+          doc.body,
+          "inspectGetElementByText",
+          {
+            text: this.deps.translationHelper.truncate(textContent, 30),
+          },
+        );
+        return String(doc.body.outerHTML);
+      }
+
       const walker = doc.createTreeWalker(
         doc.body,
         NodeFilter.SHOW_ELEMENT,
