@@ -13,6 +13,8 @@
  */
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
+import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
+import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -31,62 +33,7 @@ interface WebScraperActor {
 
 // Global sets to prevent garbage collection of active components
 const SCRAPER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
-const PROGRESS_LISTENERS = new Set();
 const FRAME = new HiddenFrame();
-
-/**
- * Global HTTP request tracker to accurately monitor network idle state.
- * This tracker lives for the lifetime of the module and monitors all instances.
- */
-const GlobalHTTPTracker = {
-  activeRequests: new Map<number, Set<nsIRequest>>(),
-
-  init() {
-    try {
-      Services.obs.addObserver(this, "http-on-opening-request");
-      Services.obs.addObserver(this, "http-on-stop-request");
-    } catch (e) {
-      console.error("WebScraper: GlobalHTTPTracker init failed:", e);
-    }
-  },
-
-  observe(subject: nsISupports, topic: string, _data: string | null) {
-    try {
-      // deno-lint-ignore no-explicit-any
-      const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
-      const bcid = channel.loadInfo?.browsingContextID;
-      if (!bcid) return;
-
-      if (topic === "http-on-opening-request") {
-        const url = channel.URI.spec;
-        if (url.startsWith("http") || url.startsWith("https")) {
-          let requests = this.activeRequests.get(bcid);
-          if (!requests) {
-            requests = new Set();
-            this.activeRequests.set(bcid, requests);
-          }
-          requests.add(channel);
-        }
-      } else if (topic === "http-on-stop-request") {
-        const requests = this.activeRequests.get(bcid);
-        if (requests) {
-          requests.delete(channel);
-          if (requests.size === 0) {
-            this.activeRequests.delete(bcid);
-          }
-        }
-      }
-    } catch {
-      // Ignore
-    }
-  },
-
-  getActiveCount(bcid: number): number {
-    return this.activeRequests.get(bcid)?.size || 0;
-  },
-};
-
-GlobalHTTPTracker.init();
 
 /**
  * WebScraper class that manages headless browser instances for web scraping
@@ -268,13 +215,12 @@ class webScraper {
       const { webProgress } = browser;
 
       // Delay before navigation
-      this._delayForUser().then(() => {
-        if (typeof browser.loadURI === "function") {
-          browser.loadURI(uri, loadURIOptions);
-        } else {
-          throw new Error("browser.loadURI is not defined");
-        }
-      });
+      await this._delayForUser();
+      if (typeof browser.loadURI === "function") {
+        browser.loadURI(uri, loadURIOptions);
+      } else {
+        throw new Error("browser.loadURI is not defined");
+      }
 
       /**
        * Progress listener to monitor page load completion

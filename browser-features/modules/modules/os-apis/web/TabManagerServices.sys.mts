@@ -7,6 +7,8 @@
  */
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
+import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
+import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -15,59 +17,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-/**
- * Global HTTP request tracker to accurately monitor network idle state.
- * This tracker lives for the lifetime of the module and monitors all instances.
- */
-const GlobalHTTPTracker = {
-  activeRequests: new Map<number, Set<nsIRequest>>(),
-
-  init() {
-    try {
-      Services.obs.addObserver(this, "http-on-opening-request");
-      Services.obs.addObserver(this, "http-on-stop-request");
-    } catch (e) {
-      console.error("TabManager: GlobalHTTPTracker init failed:", e);
-    }
-  },
-
-  observe(subject: nsISupports, topic: string, _data: string | null) {
-    try {
-      // deno-lint-ignore no-explicit-any
-      const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
-      const bcid = channel.loadInfo?.browsingContextID;
-      if (!bcid) return;
-
-      if (topic === "http-on-opening-request") {
-        const url = channel.URI.spec;
-        if (url.startsWith("http") || url.startsWith("https")) {
-          let requests = this.activeRequests.get(bcid);
-          if (!requests) {
-            requests = new Set();
-            this.activeRequests.set(bcid, requests);
-          }
-          requests.add(channel);
-        }
-      } else if (topic === "http-on-stop-request") {
-        const requests = this.activeRequests.get(bcid);
-        if (requests) {
-          requests.delete(channel);
-          if (requests.size === 0) {
-            this.activeRequests.delete(bcid);
-          }
-        }
-      }
-    } catch {
-      // Ignore
-    }
-  },
-
-  getActiveCount(bcid: number): number {
-    return this.activeRequests.get(bcid)?.size || 0;
-  },
-};
-
-GlobalHTTPTracker.init();
 // Actor interface for WebScraper communication
 interface WebScraperActor {
   sendQuery(name: string, data?: object): Promise<unknown>;
@@ -125,7 +74,6 @@ interface TabInstanceInfo {
 
 // Global sets to prevent garbage collection of active components
 const TAB_MANAGER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
-const PROGRESS_LISTENERS = new Set();
 
 /**
  * A utility function to get the most recent browser window.
@@ -220,6 +168,17 @@ class TabManager {
         },
       },
       "domwindowopened",
+    );
+
+    // Clean up _listenedWindows when windows are closed
+    Services.obs.addObserver(
+      {
+        observe: (subject: nsISupports) => {
+          const win = subject.QueryInterface(Ci.nsIDOMWindow) as Window;
+          this._listenedWindows.delete(win);
+        },
+      },
+      "domwindowclosed",
     );
   }
 
@@ -422,7 +381,7 @@ class TabManager {
             "NRWebScraper",
           ) as WebScraperActor | undefined;
           if (!actor) {
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 50; i++) {
               await new Promise((r) => setTimeout(r, 100));
               actor = browser.browsingContext?.currentWindowGlobal?.getActor(
                 "NRWebScraper",
@@ -433,18 +392,18 @@ class TabManager {
           if (actor) {
             // Prefer readiness wait; fallback to element waits for heavy SPAs (X.com等)
             let ok = await actor
-              .sendQuery("WebScraper:WaitForReady", { timeout: 20000 })
+              .sendQuery("WebScraper:WaitForReady", { timeout: 5000 })
               .catch(() => false);
-            const tryWait = async (sel: string, to = 20000) =>
+            const tryWait = async (sel: string, to = 5000) =>
               await actor!.sendQuery("WebScraper:WaitForElement", {
                 selector: sel,
                 timeout: to,
               });
             if (!ok)
-              ok = (await tryWait("body", 20000).catch(() => false)) as boolean;
+              ok = (await tryWait("body", 5000).catch(() => false)) as boolean;
             if (!ok)
-              ok = (await tryWait("html", 8000).catch(() => false)) as boolean;
-            if (!ok) await tryWait("main", 8000).catch(() => false);
+              ok = (await tryWait("html", 3000).catch(() => false)) as boolean;
+            if (!ok) await tryWait("main", 3000).catch(() => false);
           }
         } catch {
           // ignore
@@ -564,6 +523,13 @@ class TabManager {
     await this._waitForLoad(browser, url);
     await this._delayForUser();
 
+    // Check tab is still alive (user may have closed it during load)
+    const currentBrowser = tab.linkedBrowser;
+    if (!currentBrowser?.ownerGlobal ||
+      (currentBrowser.ownerGlobal as Window).closed) {
+      throw new Error("Tab was closed during load");
+    }
+
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab, browser });
     TAB_MANAGER_ACTOR_SETS.add(browser);
@@ -648,7 +614,10 @@ class TabManager {
     const { tab, browser } = this._getInstance(instanceId);
     const win = (browser.ownerGlobal as Window & { gBrowser: GBrowser })
       ?? (getBrowserWindow() as Window & { gBrowser: GBrowser });
-    const gBrowser = win.gBrowser;
+    const gBrowser = win?.gBrowser;
+    if (!gBrowser) {
+      return null;
+    }
 
     const [html, screenshot] = await Promise.all([
       this.getHTML(instanceId),
@@ -769,7 +738,11 @@ class TabManager {
       // Throw an error if loadURI is not available
       throw new Error("browser.loadURI is not defined");
     }
-    await this._waitForLoad(browser, url);
+
+    // Refresh browser reference after loadURI (process swap may occur on cross-origin nav)
+    const freshEntry = this._getEntry(instanceId);
+    const loadBrowser = freshEntry?.browser ?? browser;
+    await this._waitForLoad(loadBrowser, url);
     await this._delayForUser();
 
     // Re-show control overlay after navigation (new document, new actor)

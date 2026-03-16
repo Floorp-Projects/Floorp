@@ -105,12 +105,17 @@ export class DOMReadOperations {
 
   getElementByText(textContent: string): string | null {
     try {
-      const nodeList = this.document?.querySelectorAll("*") as
-        | NodeListOf<Element>
-        | undefined;
-      if (!nodeList) return null;
-      const elArray = Array.from(nodeList as NodeListOf<Element>) as Element[];
-      for (const el of elArray) {
+      const doc = this.document;
+      if (!doc?.body) return null;
+
+      const walker = doc.createTreeWalker(
+        doc.body,
+        NodeFilter.SHOW_ELEMENT,
+      );
+
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const el = node as Element;
         const txt = el.textContent;
         if (txt && txt.includes(textContent)) {
           this.deps.highlightManager.runAsyncInspection(
@@ -359,7 +364,9 @@ export class DOMReadOperations {
    * Extracts text from Shadow DOM trees.
    * Uses TreeWalker for efficient traversal of large DOMs.
    */
-  private getTextFromShadowDOM(root: Element): string {
+  private getTextFromShadowDOM(root: Element, depth = 0): string {
+    const MAX_SHADOW_DEPTH = 5;
+    if (depth >= MAX_SHADOW_DEPTH) return "";
     let text = "";
 
     try {
@@ -393,7 +400,7 @@ export class DOMReadOperations {
           }
 
           // Recursively handle nested shadow roots
-          text += this.getTextFromShadowDOM(shadowRoot as Element);
+          text += this.getTextFromShadowDOM(shadowRoot as Element, depth + 1);
         }
       }
     } catch (e) {

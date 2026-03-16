@@ -228,9 +228,11 @@ class LocalHttpServer implements nsIServerSocketListener {
   // nsIServerSocketListener
   onSocketAccepted(_serv: nsIServerSocket, transport: nsISocketTransport) {
     const handle = async () => {
+      let input: nsIAsyncInputStream | null = null;
+      let output: nsIAsyncOutputStream | null = null;
       try {
-        const input = transport.openInputStream(0, 0, 0);
-        const output = transport.openOutputStream(0, 0, 0);
+        input = transport.openInputStream(0, 0, 0);
+        output = transport.openOutputStream(0, 0, 0);
         const sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
           Ci.nsIScriptableInputStream,
         );
@@ -248,10 +250,7 @@ class LocalHttpServer implements nsIServerSocketListener {
             if (head.includes("\r\n\r\n")) break;
           } else {
             if (Date.now() > headDeadline) {
-              const res = requestTimeout();
-              writeUtf8(output, res);
-              output.close();
-              input.close();
+              writeUtf8(output, requestTimeout());
               return;
             }
             await new Promise<void>((resolve) =>
@@ -263,29 +262,18 @@ class LocalHttpServer implements nsIServerSocketListener {
         const headStr = split >= 0 ? head.slice(0, split) : head;
         const req = parseRequestHead(headStr);
         if (!req) {
-          {
-            const res = jsonResponse(400, { error: "malformed request" });
-            writeUtf8(output, res);
-          }
-          output.close();
-          input.close();
+          writeUtf8(output, jsonResponse(400, { error: "malformed request" }));
           return;
         }
         // Determine body length
         const contentLength =
           Number.parseInt(req.headers["content-length"] || "0", 10) || 0;
         if (contentLength < 0) {
-          const res = badRequest("invalid content-length");
-          writeUtf8(output, res);
-          output.close();
-          input.close();
+          writeUtf8(output, badRequest("invalid content-length"));
           return;
         }
         if (contentLength > LocalHttpServer.MAX_BODY_BYTES) {
-          const res = payloadTooLarge();
-          writeUtf8(output, res);
-          output.close();
-          input.close();
+          writeUtf8(output, payloadTooLarge());
           return;
         }
         const leftover = split >= 0 ? head.slice(split + 4) : "";
@@ -298,10 +286,7 @@ class LocalHttpServer implements nsIServerSocketListener {
             bodyBytes.push(...binaryStringToByteArray(piece));
           } else {
             if (Date.now() > bodyDeadline) {
-              const res = badRequest("incomplete body");
-              writeUtf8(output, res);
-              output.close();
-              input.close();
+              writeUtf8(output, badRequest("incomplete body"));
               return;
             }
             await new Promise<void>((resolve) =>
@@ -316,29 +301,28 @@ class LocalHttpServer implements nsIServerSocketListener {
           const auth = req.headers["authorization"] || "";
           const expect = `Bearer ${this._token}`;
           if (auth !== expect) {
-            {
-              const res = unauthorized();
-              writeUtf8(output, res);
-            }
-            output.close();
-            input.close();
+            writeUtf8(output, unauthorized());
             return;
           }
         }
 
-        // Route (async)
+        // Route (async) — route handler is responsible for writing and closing streams
         await this.routeAsync(req, output, input);
+        // Prevent finally from double-closing
+        input = null;
+        output = null;
       } catch (e) {
         try {
-          // Only try to send error if stream is still writable
-          const output = transport.openOutputStream(0, 0, 0);
-          const res = serverError(String(e));
-          writeUtf8(output, res);
-          output.close();
+          if (output) {
+            writeUtf8(output, serverError(String(e)));
+          }
         } catch {
-          // ignore
+          // ignore write failure on already-closed stream
         }
         err("socket error: ", e);
+      } finally {
+        try { output?.close(); } catch { /* ignore */ }
+        try { input?.close(); } catch { /* ignore */ }
       }
     };
     // Fire and forget

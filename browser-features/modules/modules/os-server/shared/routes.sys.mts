@@ -59,14 +59,14 @@ export function registerCommonAutomationRoutes(
   ns.get("/instances/:id/html", async (ctx: RouterContext) => {
     const service = getService();
     const html = await service.getHTML(ctx.params.id);
-    return { status: 200, body: html != null ? { html } : {} };
+    return { status: 200, body: { html } };
   });
 
   // Get visible text content (as Markdown)
   ns.get("/instances/:id/text", async (ctx: RouterContext) => {
     const service = getService();
     const text = await service.getText(ctx.params.id);
-    return { status: 200, body: text != null ? { text } : {} };
+    return { status: 200, body: { text } };
   });
 
   // Get element by selector (optional - only Tab exposes this)
@@ -78,7 +78,7 @@ export function registerCommonAutomationRoutes(
         return { status: 200, body: {} };
       }
       const element = await service.getElement(ctx.params.id, sel);
-      return { status: 200, body: element != null ? { element } : {} };
+      return { status: 200, body: { element } };
     });
   }
 
@@ -87,7 +87,7 @@ export function registerCommonAutomationRoutes(
     const sel = ctx.searchParams.get("selector") ?? "";
     const service = getService();
     const text = await service.getElementText(ctx.params.id, sel);
-    return { status: 200, body: text != null ? { text } : {} };
+    return { status: 200, body: { text } };
   });
 
   // Get all matching elements (outerHTML array)
@@ -111,7 +111,7 @@ export function registerCommonAutomationRoutes(
     const sel = ctx.searchParams.get("selector") ?? "";
     const service = getService();
     const text = await service.getElementTextContent(ctx.params.id, sel);
-    return { status: 200, body: text != null ? { text } : {} };
+    return { status: 200, body: { text } };
   });
 
   // Click element
@@ -142,7 +142,7 @@ export function registerCommonAutomationRoutes(
   ns.get("/instances/:id/screenshot", async (ctx: RouterContext) => {
     const service = getService();
     const image = await service.takeScreenshot(ctx.params.id);
-    return { status: 200, body: image != null ? { image } : {} };
+    return { status: 200, body: { image } };
   });
 
   // Take element screenshot
@@ -150,14 +150,14 @@ export function registerCommonAutomationRoutes(
     const sel = ctx.searchParams.get("selector") ?? "";
     const service = getService();
     const image = await service.takeElementScreenshot(ctx.params.id, sel);
-    return { status: 200, body: image != null ? { image } : {} };
+    return { status: 200, body: { image } };
   });
 
   // Take full page screenshot
   ns.get("/instances/:id/fullPageScreenshot", async (ctx: RouterContext) => {
     const service = getService();
     const image = await service.takeFullPageScreenshot(ctx.params.id);
-    return { status: 200, body: image != null ? { image } : {} };
+    return { status: 200, body: { image } };
   });
 
   // Take region screenshot
@@ -165,7 +165,7 @@ export function registerCommonAutomationRoutes(
     const json = ctx.json() as { rect?: ScreenshotRect } | null;
     const service = getService();
     const image = await service.takeRegionScreenshot(ctx.params.id, json?.rect);
-    return { status: 200, body: image != null ? { image } : {} };
+    return { status: 200, body: { image } };
   });
 
   // Fill form fields
@@ -189,7 +189,7 @@ export function registerCommonAutomationRoutes(
     const sel = ctx.searchParams.get("selector") ?? "";
     const service = getService();
     const value = await service.getValue(ctx.params.id, sel);
-    return { status: 200, body: value != null ? { value } : {} };
+    return { status: 200, body: { value } };
   });
 
   // Submit form

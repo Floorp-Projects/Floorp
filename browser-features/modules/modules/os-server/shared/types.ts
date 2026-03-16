@@ -22,6 +22,20 @@ export type ScreenshotRect = {
 };
 
 /**
+ * Cookie data type for get/set cookie operations
+ */
+export interface CookieData {
+  name: string;
+  value: string;
+  domain?: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+  expirationDate?: number;
+}
+
+/**
  * Common browser automation service interface
  * Implemented by both WebScraper and TabManager services
  */
@@ -56,29 +70,29 @@ export interface BrowserAutomationService {
   isEnabled(instanceId: string, selector: string): Promise<boolean>;
 
   // Element interactions
-  clickElement(instanceId: string, selector: string): Promise<boolean>;
-  doubleClick?(instanceId: string, selector: string): Promise<boolean>;
-  rightClick?(instanceId: string, selector: string): Promise<boolean>;
-  hoverElement(instanceId: string, selector: string): Promise<boolean>;
-  scrollToElement(instanceId: string, selector: string): Promise<boolean>;
-  focusElement?(instanceId: string, selector: string): Promise<boolean>;
+  clickElement(instanceId: string, selector: string): Promise<boolean | null>;
+  doubleClick?(instanceId: string, selector: string): Promise<boolean | null>;
+  rightClick?(instanceId: string, selector: string): Promise<boolean | null>;
+  hoverElement(instanceId: string, selector: string): Promise<boolean | null>;
+  scrollToElement(instanceId: string, selector: string): Promise<boolean | null>;
+  focusElement?(instanceId: string, selector: string): Promise<boolean | null>;
 
   // Form operations
   fillForm(
     instanceId: string,
     formData: Record<string, string>,
     options?: { typingMode?: boolean; typingDelayMs?: number },
-  ): Promise<boolean>;
+  ): Promise<boolean | null>;
   inputElement?(
     instanceId: string,
     selector: string,
     value: string,
     options?: { typingMode?: boolean; typingDelayMs?: number },
-  ): Promise<boolean>;
-  clearInput(instanceId: string, selector: string): Promise<boolean>;
-  submit(instanceId: string, selector: string): Promise<boolean>;
-  selectOption(instanceId: string, selector: string, value: string): Promise<boolean>;
-  setChecked(instanceId: string, selector: string, checked: boolean): Promise<boolean>;
+  ): Promise<boolean | null>;
+  clearInput(instanceId: string, selector: string): Promise<boolean | null>;
+  submit(instanceId: string, selector: string): Promise<boolean | null>;
+  selectOption(instanceId: string, selector: string, value: string): Promise<boolean | null>;
+  setChecked(instanceId: string, selector: string, checked: boolean): Promise<boolean | null>;
 
   // Waiting
   waitForElement(
@@ -86,8 +100,8 @@ export interface BrowserAutomationService {
     selector: string,
     timeout?: number,
     state?: WaitForElementState,
-  ): Promise<boolean>;
-  waitForReady(instanceId: string, timeout?: number): Promise<boolean>;
+  ): Promise<boolean | null>;
+  waitForReady(instanceId: string, timeout?: number): Promise<boolean | null>;
   waitForNetworkIdle?(instanceId: string, timeout?: number): Promise<boolean>;
 
   // Screenshots
@@ -97,26 +111,26 @@ export interface BrowserAutomationService {
   takeRegionScreenshot(instanceId: string, rect?: ScreenshotRect): Promise<string | null>;
 
   // Cookie management
-  getCookies(instanceId: string): Promise<unknown[]>;
-  setCookie(instanceId: string, cookie: unknown): Promise<boolean>;
+  getCookies(instanceId: string): Promise<CookieData[]>;
+  setCookie(instanceId: string, cookie: CookieData): Promise<boolean | null>;
 
   // Advanced operations
-  setInnerHTML(instanceId: string, selector: string, html: string): Promise<boolean>;
-  setTextContent(instanceId: string, selector: string, text: string): Promise<boolean>;
+  setInnerHTML(instanceId: string, selector: string, html: string): Promise<boolean | null>;
+  setTextContent(instanceId: string, selector: string, text: string): Promise<boolean | null>;
   dispatchEvent(
     instanceId: string,
     selector: string,
     eventType: string,
     options?: { bubbles?: boolean; cancelable?: boolean },
-  ): Promise<boolean>;
-  pressKey?(instanceId: string, key: string): Promise<boolean>;
-  uploadFile?(instanceId: string, selector: string, filePath: string): Promise<boolean>;
-  dispatchTextInput(instanceId: string, selector: string, text: string): Promise<boolean>;
+  ): Promise<boolean | null>;
+  pressKey?(instanceId: string, key: string): Promise<boolean | null>;
+  uploadFile?(instanceId: string, selector: string, filePath: string): Promise<boolean | null>;
+  dispatchTextInput(instanceId: string, selector: string, text: string): Promise<boolean | null>;
 
   // Dialogs
-  acceptAlert?(instanceId: string): Promise<boolean>;
-  dismissAlert?(instanceId: string): Promise<boolean>;
+  acceptAlert?(instanceId: string): Promise<boolean | null>;
+  dismissAlert?(instanceId: string): Promise<boolean | null>;
 
   // Drag and drop
-  dragAndDrop(instanceId: string, sourceSelector: string, targetSelector: string): Promise<boolean>;
+  dragAndDrop(instanceId: string, sourceSelector: string, targetSelector: string): Promise<boolean | null>;
 }
