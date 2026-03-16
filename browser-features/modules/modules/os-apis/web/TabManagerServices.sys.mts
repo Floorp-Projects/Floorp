@@ -168,7 +168,8 @@ function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
 }
 
 /**
- * Returns a unique identifier for a browser window.
+ * Returns an identifier for a browser window.
+ * Falls back to "0" if docShell is unavailable (rare edge case).
  */
 function getWindowId(win: Window): string {
   return String(
@@ -191,6 +192,9 @@ class TabManager {
 
   // Set of instance IDs currently being destroyed (TOCTOU guard)
   private _destroying: Set<string> = new Set();
+
+  // Track windows with registered TabClose listeners to prevent duplicates
+  private _listenedWindows: Set<Window> = new Set();
 
   constructor() {
     // Register TabClose listeners on all existing windows
@@ -221,10 +225,13 @@ class TabManager {
 
   /**
    * Registers TabClose listener on a window's tab container.
+   * Guards against duplicate registration.
    */
   private _setupWindowListeners(win: Window & { gBrowser: GBrowser }) {
+    if (this._listenedWindows.has(win)) return;
     try {
       win.gBrowser.tabContainer.addEventListener("TabClose", this._onTabClose);
+      this._listenedWindows.add(win);
     } catch (e) {
       console.warn("TabManager: Failed to attach TabClose listener:", e);
     }
@@ -672,18 +679,21 @@ class TabManager {
     this._destroying.add(instanceId);
     const { tab, browser } = entry;
     try {
-      await this._queryActor(instanceId, "WebScraper:ClearEffects");
-    } catch (error) {
-      void error;
+      try {
+        await this._queryActor(instanceId, "WebScraper:ClearEffects");
+      } catch (error) {
+        void error;
+      }
+      // Remove automated attribute from tab
+      if (tab && tab.removeAttribute) {
+        tab.removeAttribute("data-floorp-os-automated");
+        tab.removeAttribute("data-floorp-os-instance-id");
+      }
+      this._browserInstances.delete(instanceId);
+      TAB_MANAGER_ACTOR_SETS.delete(browser);
+    } finally {
+      this._destroying.delete(instanceId);
     }
-    // Remove automated attribute from tab
-    if (tab && tab.removeAttribute) {
-      tab.removeAttribute("data-floorp-os-automated");
-      tab.removeAttribute("data-floorp-os-instance-id");
-    }
-    this._browserInstances.delete(instanceId);
-    TAB_MANAGER_ACTOR_SETS.delete(browser);
-    this._destroying.delete(instanceId);
   }
 
   /**
@@ -702,34 +712,36 @@ class TabManager {
 
     const { tab, browser } = entry;
 
-    // First, clear any visual effects
     try {
-      await this._queryActor(instanceId, "WebScraper:ClearEffects");
-    } catch {
-      // ignore
-    }
-
-    // Remove from tracking
-    this._browserInstances.delete(instanceId);
-    TAB_MANAGER_ACTOR_SETS.delete(browser);
-
-    // Remove automated attributes
-    if (tab && tab.removeAttribute) {
-      tab.removeAttribute("data-floorp-os-automated");
-      tab.removeAttribute("data-floorp-os-instance-id");
-    }
-
-    // Actually close the tab
-    try {
-      const win = browser.ownerGlobal as Window & { gBrowser: GBrowser };
-      if (win && !win.closed && win.gBrowser) {
-        win.gBrowser.removeTab(tab);
+      // First, clear any visual effects
+      try {
+        await this._queryActor(instanceId, "WebScraper:ClearEffects");
+      } catch {
+        // ignore
       }
-    } catch (e) {
-      console.error("TabManager: Failed to close tab", e);
-    }
 
-    this._destroying.delete(instanceId);
+      // Remove from tracking
+      this._browserInstances.delete(instanceId);
+      TAB_MANAGER_ACTOR_SETS.delete(browser);
+
+      // Remove automated attributes
+      if (tab && tab.removeAttribute) {
+        tab.removeAttribute("data-floorp-os-automated");
+        tab.removeAttribute("data-floorp-os-instance-id");
+      }
+
+      // Actually close the tab
+      try {
+        const win = browser.ownerGlobal as Window & { gBrowser: GBrowser };
+        if (win && !win.closed && win.gBrowser) {
+          win.gBrowser.removeTab(tab);
+        }
+      } catch (e) {
+        console.error("TabManager: Failed to close tab", e);
+      }
+    } finally {
+      this._destroying.delete(instanceId);
+    }
   }
 
   public async navigate(instanceId: string, url: string): Promise<void> {
