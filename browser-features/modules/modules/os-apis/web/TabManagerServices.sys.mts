@@ -153,7 +153,8 @@ class TabManager {
     Services.obs.addObserver(
       {
         observe: (subject: nsISupports) => {
-          const win = subject.QueryInterface(Ci.nsIDOMWindow) as Window;
+          // deno-lint-ignore no-explicit-any
+          const win = (subject as any).QueryInterface(Ci.nsIDOMWindow) as Window;
           win.addEventListener(
             "load",
             () => {
@@ -174,7 +175,8 @@ class TabManager {
     Services.obs.addObserver(
       {
         observe: (subject: nsISupports) => {
-          const win = subject.QueryInterface(Ci.nsIDOMWindow) as Window;
+          // deno-lint-ignore no-explicit-any
+          const win = (subject as any).QueryInterface(Ci.nsIDOMWindow) as Window;
           this._listenedWindows.delete(win);
         },
       },
