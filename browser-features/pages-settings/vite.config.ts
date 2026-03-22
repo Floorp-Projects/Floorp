@@ -9,6 +9,9 @@ export default defineConfig(({ command }) => ({
   build: {
     outDir: "_dist",
   },
+  resolve: {
+    dedupe: ["react", "react-dom"],
+  },
   plugins: [
     tailwindcss(),
     react({
