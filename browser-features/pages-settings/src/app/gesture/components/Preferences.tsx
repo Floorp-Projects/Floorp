@@ -9,6 +9,7 @@ import { Settings } from "lucide-react";
 import { Switch } from "@/components/common/switch.tsx";
 import { Seekbar } from "@/components/common/seekbar.tsx";
 import type { MouseGestureConfig } from "@/types/pref.ts";
+import { useAvailableActions } from "../useAvailableActions.ts";
 import {
   Card,
   CardContent,
@@ -21,14 +22,20 @@ interface GeneralSettingsProps {
   config: MouseGestureConfig;
   toggleEnabled: () => Promise<boolean>;
   updateConfig: (config: Partial<MouseGestureConfig>) => Promise<boolean>;
+  updateRockerAction: (
+    rockerType: "leftRight" | "rightLeft",
+    action: string,
+  ) => Promise<boolean>;
 }
 
 export function GeneralSettings({
   config,
   toggleEnabled,
   updateConfig,
+  updateRockerAction,
 }: GeneralSettingsProps) {
   const { t } = useTranslation();
+  const availableActions = useAvailableActions();
 
   const toggleShowTrail = async () => {
     await updateConfig({ showTrail: !config.showTrail });
@@ -136,6 +143,59 @@ export function GeneralSettings({
                 disabled={!config.enabled}
               />
             </div>
+
+            {/* Rocker Actions - only show when enabled */}
+            {config.rockerGesturesEnabled && (
+              <>
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.rockerLeftRight")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.rockerLeftRightDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    value={config.rockerActions.leftRight}
+                    onChange={(e) =>
+                      updateRockerAction("leftRight", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {availableActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.rockerRightLeft")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.rockerRightLeftDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    value={config.rockerActions.rightLeft}
+                    onChange={(e) =>
+                      updateRockerAction("rightLeft", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {availableActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center justify-between py-2">
               <span className="text-base-content/90 font-medium">

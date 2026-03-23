@@ -49,6 +49,10 @@ export const useMouseGestureConfig = () => {
             preventionTimeout: 200,
           },
           actions: [],
+          rockerActions: {
+            leftRight: "gecko-forward",
+            rightLeft: "gecko-back",
+          },
         };
 
         try {
@@ -125,6 +129,15 @@ export const useMouseGestureConfig = () => {
     return updateConfig({ actions: newActions });
   };
 
+  const updateRockerAction = (rockerType: "leftRight" | "rightLeft", action: string) => {
+    return updateConfig({
+      rockerActions: {
+        ...config.rockerActions,
+        [rockerType]: action,
+      },
+    });
+  };
+
   return {
     config,
     loading,
@@ -134,6 +147,7 @@ export const useMouseGestureConfig = () => {
     addAction,
     updateAction,
     deleteAction,
+    updateRockerAction,
   };
 };
 
