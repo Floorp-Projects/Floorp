@@ -16,7 +16,7 @@
 import COMMONMARK_RULES from "./commonmark-rules";
 import Rules, { type TurndownOptions, type Rule } from "./rules";
 import type { ExtendedNode } from "./node";
-import { extend, trimLeadingNewlines, trimTrailingNewlines } from "./utilities";
+import { extend } from "./utilities";
 import RootNode from "./root-node";
 import wrapNode from "./node";
 import {
@@ -26,26 +26,19 @@ import {
   type ElementFingerprint,
 } from "./fingerprint";
 
-interface EscapePattern {
-  pattern: RegExp;
-  replacement: string;
-}
+// Global (position-independent) escape characters — single regex + map
+const globalEscapeRe = /[\\*`\[\]_]/g;
+const globalEscapeMap: Record<string, string> = {
+  "\\": "\\\\",
+  "*": "\\*",
+  "`": "\\`",
+  "[": "\\[",
+  "]": "\\]",
+  "_": "\\_",
+};
 
-const escapes: EscapePattern[] = [
-  { pattern: /\\/g, replacement: "\\\\" },
-  { pattern: /\*/g, replacement: "\\*" },
-  { pattern: /^-/g, replacement: "\\-" },
-  { pattern: /^\+ /g, replacement: "\\+ " },
-  { pattern: /^(=+)/g, replacement: "\\$1" },
-  { pattern: /^(#{1,6}) /g, replacement: "\\$1 " },
-  { pattern: /`/g, replacement: "\\`" },
-  { pattern: /^~~~/g, replacement: "\\~~~" },
-  { pattern: /\[/g, replacement: "\\[" },
-  { pattern: /\]/g, replacement: "\\]" },
-  { pattern: /^>/g, replacement: "\\>" },
-  { pattern: /_/g, replacement: "\\_" },
-  { pattern: /^(\d+)\. /g, replacement: "$1\\\. " },
-];
+// Line-start (anchored) patterns — single regex with alternation
+const lineStartEscapeRe = /^(?:(-)|(\+ )|(=+)|(#{1,6}) |(~~~)|(>)|(\d+)\. )/;
 
 export interface TurndownServiceOptions {
   headingStyle?: "setext" | "atx";
@@ -242,9 +235,22 @@ export class TurndownService {
    * @returns A string with Markdown syntax escaped
    */
   escape(string: string): string {
-    return escapes.reduce(function (accumulator, escape) {
-      return accumulator.replace(escape.pattern, escape.replacement);
-    }, string);
+    // Handle line-start patterns (single regex, replaces 7 anchored patterns)
+    string = string.replace(
+      lineStartEscapeRe,
+      (_match, dash, plus, equals, hash, tilde, gt, digits) => {
+        if (dash) return "\\-";
+        if (plus) return "\\+ ";
+        if (equals) return "\\" + equals;
+        if (hash) return "\\" + hash + " ";
+        if (tilde) return "\\~~~";
+        if (gt) return "\\>";
+        if (digits) return digits + "\\. ";
+        return _match;
+      },
+    );
+    // Handle global patterns (single regex, replaces 6 character-level patterns)
+    return string.replace(globalEscapeRe, (ch) => globalEscapeMap[ch]);
   }
 }
 
@@ -350,15 +356,24 @@ function replacementForNode(this: TurndownService, node: ExtendedNode): string {
  * Joins replacement to the current output with appropriate number of new lines
  */
 function join(output: string, replacement: string): string {
-  const s1 = trimTrailingNewlines(output);
-  const s2 = trimLeadingNewlines(replacement);
-  const nls = Math.max(
-    output.length - s1.length,
-    replacement.length - s2.length,
-  );
+  // Count trailing newlines in output without creating a substring
+  let trailingNLs = 0;
+  for (let i = output.length - 1; i >= 0 && output[i] === "\n"; i--) {
+    trailingNLs++;
+  }
+  // Count leading newlines in replacement without creating a substring
+  let leadingNLs = 0;
+  for (let j = 0; j < replacement.length && replacement[j] === "\n"; j++) {
+    leadingNLs++;
+  }
+  const nls = Math.max(trailingNLs, leadingNLs);
   const separator = "\n\n".substring(0, nls);
 
-  return s1 + separator + s2;
+  return (
+    output.substring(0, output.length - trailingNLs) +
+    separator +
+    replacement.substring(leadingNLs)
+  );
 }
 
 /**

@@ -55,6 +55,8 @@ export default class Rules {
   options: TurndownOptions;
   private _keep: ReplacementRule[] = [];
   private _remove: ReplacementRule[] = [];
+  private _tagMap: Map<string, Rule> = new Map();
+  private _functionRules: Rule[] = [];
   blankRule: ReplacementRule;
   keepReplacement: (content: string, node: ExtendedNode) => string;
   defaultRule: ReplacementRule;
@@ -79,10 +81,34 @@ export default class Rules {
     for (const key in options.rules) {
       this.array.push(options.rules[key] as Rule);
     }
+    this._buildLookup();
+  }
+
+  private _buildLookup(): void {
+    this._tagMap = new Map();
+    this._functionRules = [];
+    for (const rule of this.array) {
+      const filter = rule.filter;
+      if (typeof filter === "string") {
+        // First rule wins (array is ordered by priority: unshift puts higher-priority rules first)
+        if (!this._tagMap.has(filter)) {
+          this._tagMap.set(filter, rule);
+        }
+      } else if (Array.isArray(filter)) {
+        for (const tag of filter) {
+          if (!this._tagMap.has(tag)) {
+            this._tagMap.set(tag, rule);
+          }
+        }
+      } else if (typeof filter === "function") {
+        this._functionRules.push(rule);
+      }
+    }
   }
 
   add(key: string, rule: Rule): void {
     this.array.unshift(rule);
+    this._buildLookup();
   }
 
   keep(filter: string | string[]): void {
@@ -106,7 +132,16 @@ export default class Rules {
       return this.blankRule;
     }
 
-    let rule = findRule(this.array, node, this.options);
+    const tag = node.nodeName.toLowerCase();
+
+    // O(1) lookup for string/array filter rules
+    const mapRule = this._tagMap.get(tag);
+    if (mapRule) {
+      return mapRule;
+    }
+
+    // Only iterate function-filter rules (typically 3-4)
+    let rule = findRule(this._functionRules, node, this.options);
     if (rule) {
       return rule;
     }

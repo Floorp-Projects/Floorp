@@ -23,7 +23,7 @@ export function extend(
 }
 
 export function repeat(character: string, count: number): string {
-  return Array(count + 1).join(character);
+  return character.repeat(count);
 }
 
 export function trimLeadingNewlines(string: string): string {
@@ -91,8 +91,10 @@ export const blockElements = [
   "UL",
 ];
 
+const blockElementSet = new Set(blockElements);
+
 export function isBlock(node: Node): boolean {
-  return is(node, blockElements);
+  return blockElementSet.has(node.nodeName);
 }
 
 export const voidElements = [
@@ -114,12 +116,14 @@ export const voidElements = [
   "WBR",
 ];
 
+const voidElementSet = new Set(voidElements);
+
 export function isVoid(node: Node): boolean {
-  return is(node, voidElements);
+  return voidElementSet.has(node.nodeName);
 }
 
 export function hasVoid(node: Node): boolean {
-  return has(node, voidElements);
+  return hasDescendant(node, voidSelector);
 }
 
 const meaningfulWhenBlankElements = [
@@ -136,24 +140,24 @@ const meaningfulWhenBlankElements = [
   "VIDEO",
 ];
 
+const meaningfulWhenBlankElementSet = new Set(meaningfulWhenBlankElements);
+
 export function isMeaningfulWhenBlank(node: Node): boolean {
-  return is(node, meaningfulWhenBlankElements);
+  return meaningfulWhenBlankElementSet.has(node.nodeName);
 }
 
 export function hasMeaningfulWhenBlank(node: Node): boolean {
-  return has(node, meaningfulWhenBlankElements);
+  return hasDescendant(node, meaningfulWhenBlankSelector);
 }
 
-function is(node: Node, tagNames: string[]): boolean {
-  return tagNames.indexOf(node.nodeName) >= 0;
-}
+// Pre-computed selectors for querySelector (single call replaces N getElementsByTagName calls)
+const voidSelector = voidElements.map(e => e.toLowerCase()).join(",");
+const meaningfulWhenBlankSelector = meaningfulWhenBlankElements.map(e => e.toLowerCase()).join(",");
 
-function has(node: Node, tagNames: string[]): boolean {
+function hasDescendant(node: Node, selector: string): boolean {
   const element = node as Element;
   return (
-    element.getElementsByTagName !== undefined &&
-    tagNames.some(function (tagName) {
-      return element.getElementsByTagName(tagName).length > 0;
-    })
+    element.querySelector !== undefined &&
+    element.querySelector(selector) !== null
   );
 }
