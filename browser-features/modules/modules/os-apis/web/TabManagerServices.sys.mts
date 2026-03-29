@@ -150,6 +150,9 @@ class TabManager {
     { tab: BrowserTab; browser: XULBrowserElement }
   > = new Map();
 
+  // Reverse index: tab → instanceId for O(1) lookup in listTabs()
+  private _tabToInstanceId: Map<BrowserTab, string> = new Map();
+
   // Set of instance IDs currently being destroyed (TOCTOU guard)
   private _destroying: Set<string> = new Set();
 
@@ -237,6 +240,7 @@ class TabManager {
           GlobalHTTPTracker.clearForContext(bcid);
         }
         this._browserInstances.delete(instanceId);
+        this._tabToInstanceId.delete(tab);
         TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
         this._destroying.delete(instanceId);
         if (tab.removeAttribute) {
@@ -279,6 +283,7 @@ class TabManager {
         if (targetTab) {
           entry = { tab: targetTab, browser: targetTab.linkedBrowser };
           this._browserInstances.set(instanceId, entry);
+          this._tabToInstanceId.set(targetTab, instanceId);
           TAB_MANAGER_ACTOR_SETS.add(entry.browser);
           if (targetTab.setAttribute) {
             targetTab.setAttribute("data-floorp-os-automated", "true");
@@ -294,6 +299,7 @@ class TabManager {
       const browser = entry.tab.linkedBrowser;
       if (!browser || !browser.ownerGlobal || browser.ownerGlobal.closed) {
         this._browserInstances.delete(instanceId);
+        this._tabToInstanceId.delete(entry.tab);
         TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
         return null;
       }
@@ -560,6 +566,7 @@ class TabManager {
 
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab, browser });
+    this._tabToInstanceId.set(tab, instanceId);
     TAB_MANAGER_ACTOR_SETS.add(browser);
 
     // Mark tab as automated
@@ -598,6 +605,7 @@ class TabManager {
     const browser = targetTab.linkedBrowser;
     const instanceId = crypto.randomUUID();
     this._browserInstances.set(instanceId, { tab: targetTab, browser });
+    this._tabToInstanceId.set(targetTab, instanceId);
     TAB_MANAGER_ACTOR_SETS.add(browser);
 
     // Mark tab as automated
@@ -619,14 +627,8 @@ class TabManager {
       const wid = getWindowId(win);
       for (const tab of gBrowser.tabs) {
         const browserId = tab.linkedBrowser.browserId.toString();
-        // Find if this tab is already an instance
-        let instanceId: string | undefined;
-        for (const [id, entry] of this._browserInstances.entries()) {
-          if (entry.tab === tab) {
-            instanceId = id;
-            break;
-          }
-        }
+        // O(1) reverse index lookup instead of linear scan
+        const instanceId = this._tabToInstanceId.get(tab);
 
         results.push({
           browserId,
@@ -703,6 +705,7 @@ class TabManager {
         tab.removeAttribute("data-floorp-os-instance-id");
       }
       this._browserInstances.delete(instanceId);
+      if (tab) this._tabToInstanceId.delete(tab);
       TAB_MANAGER_ACTOR_SETS.delete(browser);
     } finally {
       this._destroying.delete(instanceId);
@@ -735,6 +738,7 @@ class TabManager {
 
       // Remove from tracking
       this._browserInstances.delete(instanceId);
+      if (tab) this._tabToInstanceId.delete(tab);
       TAB_MANAGER_ACTOR_SETS.delete(browser);
 
       // Remove automated attributes
