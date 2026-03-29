@@ -88,7 +88,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     "Starting staged production build (production assets) with browser in dev mode...",
   );
   if (!marionette) {
-    logger.info("Marionette is disabled (--no-marionette).");
+    logger.info("Marionette is disabled by default (use --marionette to enable).");
   }
 
   // Initial setup

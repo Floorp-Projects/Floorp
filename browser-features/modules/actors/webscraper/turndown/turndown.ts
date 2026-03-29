@@ -235,8 +235,11 @@ export class TurndownService {
    * @returns A string with Markdown syntax escaped
    */
   escape(string: string): string {
-    // Handle line-start patterns (single regex, replaces 7 anchored patterns)
-    string = string.replace(
+    // Global patterns first — so backslashes inserted by line-start escaping
+    // below are not re-escaped.
+    string = string.replace(globalEscapeRe, (ch) => globalEscapeMap[ch]);
+    // Line-start patterns (single regex, replaces 7 anchored patterns)
+    return string.replace(
       lineStartEscapeRe,
       (_match, dash, plus, equals, hash, tilde, gt, digits) => {
         if (dash) return "\\-";
@@ -249,8 +252,6 @@ export class TurndownService {
         return _match;
       },
     );
-    // Handle global patterns (single regex, replaces 6 character-level patterns)
-    return string.replace(globalEscapeRe, (ch) => globalEscapeMap[ch]);
   }
 }
 
