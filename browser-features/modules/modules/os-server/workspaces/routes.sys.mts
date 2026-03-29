@@ -19,6 +19,7 @@ import type {
 } from "../router.sys.mts";
 import type { WorkspacesApiModule } from "./types.ts";
 import type { ErrorResponse } from "../_os-plugin/api-spec/types.ts";
+import { safeRoute } from "../shared/routes.sys.mts";
 
 // Lazy import of WorkspacesApiService module
 const WorkspacesApiModule = () =>
@@ -31,7 +32,7 @@ const WorkspacesApiModule = () =>
 export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
   api.namespace("/workspaces", (w: NamespaceBuilder) => {
     // List all workspaces
-    w.get("/", () => {
+    w.get("/", safeRoute(async () => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const workspaces = WorkspacesApiService.listWorkspaces();
       const currentId = WorkspacesApiService.getCurrentWorkspaceId();
@@ -42,23 +43,23 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
           currentId,
         },
       };
-    });
+    }));
 
     // Get current workspace ID
-    w.get("/current", () => {
+    w.get("/current", safeRoute(async () => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const currentId = WorkspacesApiService.getCurrentWorkspaceId();
       return {
         status: 200,
         body: { workspaceId: currentId },
       };
-    });
+    }));
 
     // Switch to next workspace
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/next", () => {
+    >("/next", safeRoute(async () => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const success = WorkspacesApiService.switchToNext();
       if (!success) {
@@ -72,13 +73,13 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
         status: 200,
         body: { success: true, workspaceId: currentId },
       };
-    });
+    }));
 
     // Switch to previous workspace
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/previous", () => {
+    >("/previous", safeRoute(async () => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const success = WorkspacesApiService.switchToPrevious();
       if (!success) {
@@ -92,13 +93,13 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
         status: 200,
         body: { success: true, workspaceId: currentId },
       };
-    });
+    }));
 
     // Switch to specific workspace by ID
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/:id/switch", (ctx: RouterContext) => {
+    >("/:id/switch", safeRoute(async (ctx: RouterContext) => {
       const { id } = ctx.params;
       if (!id) {
         return {
@@ -119,6 +120,6 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
         status: 200,
         body: { success: true, workspaceId: id },
       };
-    });
+    }));
   });
 }

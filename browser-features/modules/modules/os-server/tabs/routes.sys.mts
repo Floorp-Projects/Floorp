@@ -16,7 +16,7 @@ import type {
 import type { ErrorResponse } from "../_os-plugin/api-spec/types.ts";
 import type { TabManagerAPI } from "./types.ts";
 import type { ActionResponse } from "../shared/types.ts";
-import { registerCommonAutomationRoutes } from "../shared/routes.sys.mts";
+import { registerCommonAutomationRoutes, safeRoute } from "../shared/routes.sys.mts";
 
 // Lazy import of TabManager module
 const TabManagerModule = () =>
@@ -92,34 +92,18 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
     });
 
     // Destroy instance (async cleanup, does not close the tab)
-    t.delete<unknown, ActionResponse>("/instances/:id", async (ctx: RouterContext) => {
+    t.delete<unknown, ActionResponse>("/instances/:id", safeRoute(async (ctx: RouterContext) => {
       const { TabManagerServices } = TabManagerModule();
-      try {
-        await TabManagerServices.destroyInstance(ctx.params.id);
-        return { status: 200, body: { ok: true } };
-      } catch (e) {
-        const msg = (e as Error)?.message ?? String(e);
-        if (msg.includes("not found")) {
-          return { status: 404, body: { error: msg } };
-        }
-        return { status: 500, body: { error: msg } };
-      }
-    });
+      await TabManagerServices.destroyInstance(ctx.params.id);
+      return { status: 200, body: { ok: true } };
+    }));
 
     // Close tab (destroys instance AND closes the actual browser tab)
-    t.post<unknown, ActionResponse>("/instances/:id/close", async (ctx: RouterContext) => {
+    t.post<unknown, ActionResponse>("/instances/:id/close", safeRoute(async (ctx: RouterContext) => {
       const { TabManagerServices } = TabManagerModule();
-      try {
-        await TabManagerServices.closeTab(ctx.params.id);
-        return { status: 200, body: { ok: true } };
-      } catch (e) {
-        const msg = (e as Error)?.message ?? String(e);
-        if (msg.includes("not found")) {
-          return { status: 404, body: { error: msg } };
-        }
-        return { status: 500, body: { error: msg } };
-      }
-    });
+      await TabManagerServices.closeTab(ctx.params.id);
+      return { status: 200, body: { ok: true } };
+    }));
 
     // -- Common automation routes --
     registerCommonAutomationRoutes(
