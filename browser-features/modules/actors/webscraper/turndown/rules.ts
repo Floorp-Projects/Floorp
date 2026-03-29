@@ -132,18 +132,18 @@ export default class Rules {
       return this.blankRule;
     }
 
-    const tag = node.nodeName.toLowerCase();
-
-    // O(1) lookup for string/array filter rules
-    const mapRule = this._tagMap.get(tag);
-    if (mapRule) {
-      return mapRule;
-    }
-
-    // Only iterate function-filter rules (typically 3-4)
+    // Function-filter rules first — they may be user-added via addRule()
+    // (unshifted to front) and should take precedence over tag-based rules.
     let rule = findRule(this._functionRules, node, this.options);
     if (rule) {
       return rule;
+    }
+
+    // O(1) lookup for string/array filter rules
+    const tag = node.nodeName.toLowerCase();
+    const mapRule = this._tagMap.get(tag);
+    if (mapRule) {
+      return mapRule;
     }
 
     rule = findRule(this._keep, node, this.options);
