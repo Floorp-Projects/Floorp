@@ -17,12 +17,24 @@ const GlobalHTTPTracker = {
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
       Services.obs.addObserver(this, "http-on-stop-request");
+      Services.obs.addObserver(this, "browsing-context-discarded");
     } catch (e) {
       console.error("GlobalHTTPTracker: init failed:", e);
     }
   },
 
   observe(subject: nsISupports, topic: string, _data: string | null) {
+    // Auto-cleanup when a browsing context is destroyed (tab closed, process crash)
+    if (topic === "browsing-context-discarded") {
+      try {
+        const bc = subject.QueryInterface(Ci.nsIBrowsingContext);
+        this.clearForContext(bc.id);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
     try {
       // deno-lint-ignore no-explicit-any
       const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
