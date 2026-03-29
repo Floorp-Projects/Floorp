@@ -9,6 +9,7 @@
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
+import { waitForActor } from "./shared/waitForActor.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -394,13 +395,11 @@ class TabManager {
             "NRWebScraper",
           ) as WebScraperActor | undefined;
           if (!actor) {
-            for (let i = 0; i < 50; i++) {
-              await new Promise((r) => setTimeout(r, 100));
-              actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-                "NRWebScraper",
-              ) as WebScraperActor | undefined;
-              if (actor) break;
-            }
+            actor = (await waitForActor<WebScraperActor>(
+              () => browser,
+              "NRWebScraper",
+              { maxMs: 5000 },
+            )) ?? undefined;
           }
           if (actor) {
             // Prefer readiness wait; fallback to element waits for heavy SPAs (X.com等)
@@ -508,19 +507,14 @@ class TabManager {
         "NRWebScraper",
       ) as WebScraperActor | undefined;
 
-      // Retry a few times after navigation for actor readiness
-      // Bug #5: refresh browser reference in case of process swap during retry
+      // Retry with exponential backoff after navigation for actor readiness
+      // Bug #5: getBrowser callback refreshes browser reference for process swaps
       if (!actor) {
-        for (let i = 0; i < 150; i++) {
-          await new Promise((r) => setTimeout(r, 100));
-          const freshEntry = this._getEntry(instanceId);
-          if (!freshEntry) break;
-          actor =
-            freshEntry.browser.browsingContext?.currentWindowGlobal?.getActor(
-              "NRWebScraper",
-            ) as WebScraperActor | undefined;
-          if (actor) break;
-        }
+        actor = (await waitForActor<WebScraperActor>(
+          () => this._getEntry(instanceId)?.browser,
+          "NRWebScraper",
+          { maxMs: 15000 },
+        )) ?? undefined;
       }
 
       if (!actor) {

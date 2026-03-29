@@ -16,6 +16,7 @@ import type { WaitForElementState } from "../../os-server/shared/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
 import { AutomationConstants } from "../../os-server/shared/http-tracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
+import { waitForActor } from "./shared/waitForActor.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -61,16 +62,13 @@ class webScraper {
     tries = 100,
     delayMs = 100,
   ): Promise<WebScraperActor | null> {
-    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+    // Use exponential backoff. Preserve total timeout budget from original
+    // fixed-interval polling: tries * delayMs.
+    return waitForActor<WebScraperActor>(
+      () => browser,
       "NRWebScraper",
-    ) as WebScraperActor | undefined;
-    for (let i = 0; !actor && i < tries; i++) {
-      await new Promise((r) => setTimeout(r, delayMs));
-      actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-        "NRWebScraper",
-      ) as WebScraperActor | undefined;
-    }
-    return actor ?? null;
+      { maxMs: tries * delayMs },
+    );
   }
 
   /**
