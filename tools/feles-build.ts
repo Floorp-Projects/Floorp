@@ -82,10 +82,14 @@ async function runDev(): Promise<void> {
   // Keep process alive until SIGINT or process termination from BrowserLauncher path
 }
 
-async function runStage(): Promise<void> {
+async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
+  const marionette = options.marionette ?? false;
   logger.info(
     "Starting staged production build (production assets) with browser in dev mode...",
   );
+  if (!marionette) {
+    logger.info("Marionette is disabled (--no-marionette).");
+  }
 
   // Initial setup
   await Initializer.run();
@@ -136,7 +140,7 @@ async function runStage(): Promise<void> {
       readyReceived = true;
       logger.success("Dev servers are ready.");
       // Launch browser
-      BrowserLauncher.run().catch((e: any) => {
+      BrowserLauncher.run({ marionette }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
       });
     }
@@ -206,10 +210,10 @@ async function main(): Promise<void> {
     }
     case "stage": {
       if (argv.includes("--help") || argv.includes("-h")) {
-        console.log("Usage: feles-build stage");
+        console.log("Usage: feles-build stage [--marionette]");
         return;
       }
-      await runStage();
+      await runStage({ marionette: argv.includes("--marionette") });
       break;
     }
     case "build": {

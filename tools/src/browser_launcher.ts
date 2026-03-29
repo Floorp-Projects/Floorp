@@ -26,18 +26,31 @@ function printFirefoxLog(line: string) {
   }
 }
 
-export async function browserCommand(port: number): Promise<string[]> {
-  return [
+export interface BrowserLaunchOptions {
+  port?: number;
+  marionette?: boolean;
+}
+
+export async function browserCommand(options: BrowserLaunchOptions = {}): Promise<string[]> {
+  const { marionette = true } = options;
+  const args = [
     BIN_PATH_EXE,
     "--profile",
     PATHS.profile_test,
-    "--marionette",
-    "--remote-allow-system-access",
   ];
+  if (marionette) {
+    args.push("--marionette", "--remote-allow-system-access");
+  }
+  return args;
 }
 
-export async function run(port = 5180): Promise<void> {
-  const cmd = await browserCommand(port);
+export async function run(portOrOptions: number | BrowserLaunchOptions = 5180): Promise<void> {
+  const options: BrowserLaunchOptions = typeof portOrOptions === "number"
+    ? { port: portOrOptions, marionette: true }
+    : portOrOptions;
+  const port = options.port ?? 5180;
+  const marionette = options.marionette ?? true;
+  const cmd = await browserCommand({ port, marionette });
 
   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
 
