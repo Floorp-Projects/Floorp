@@ -17,7 +17,7 @@ const GlobalHTTPTracker = {
     try {
       Services.obs.addObserver(this, "http-on-opening-request");
       Services.obs.addObserver(this, "http-on-stop-request");
-      Services.obs.addObserver(this, "browsing-context-discarded");
+      Services.obs.addObserver(this, "browsing-context-detached");
     } catch (e) {
       console.error("GlobalHTTPTracker: init failed:", e);
     }
@@ -25,10 +25,11 @@ const GlobalHTTPTracker = {
 
   observe(subject: nsISupports, topic: string, _data: string | null) {
     // Auto-cleanup when a browsing context is destroyed (tab closed, process crash)
-    if (topic === "browsing-context-discarded") {
+    if (topic === "browsing-context-detached") {
       try {
-        const bc = subject.QueryInterface(Ci.nsIBrowsingContext);
-        this.clearForContext(bc.id);
+        // BrowsingContext is a WebIDL object, not XPCOM — no QueryInterface needed
+        const bc = subject as { id?: number };
+        if (bc.id != null) this.clearForContext(bc.id);
       } catch {
         // ignore
       }
