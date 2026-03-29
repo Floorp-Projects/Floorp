@@ -241,14 +241,14 @@ class LocalHttpServer implements nsIServerSocketListener {
         sis.init(input);
 
         // Read until we hit CRLF CRLF for headers
-        const chunks: string[] = [];
+        // Use string concatenation (rope-based O(1) amortized in SpiderMonkey)
+        // instead of chunks.join("") per read which copies the entire string each time.
         let head = "";
         const headDeadline = Date.now() + LocalHttpServer.READ_HEAD_TIMEOUT_MS;
         while (true) {
           const avail = sis.available();
           if (avail > 0) {
-            chunks.push(sis.read(avail));
-            head = chunks.join("");
+            head += sis.read(avail);
             if (head.includes("\r\n\r\n")) break;
           } else {
             if (Date.now() > headDeadline) {
@@ -279,13 +279,17 @@ class LocalHttpServer implements nsIServerSocketListener {
           return;
         }
         const leftover = split >= 0 ? head.slice(split + 4) : "";
-        const bodyBytes: number[] = binaryStringToByteArray(leftover);
+        // Accumulate binary strings and convert once at end,
+        // instead of push(...bytes) per chunk which is O(n²).
+        const bodyParts: string[] = [leftover];
+        let bodyLen = leftover.length;
         const bodyDeadline = Date.now() + LocalHttpServer.READ_BODY_TIMEOUT_MS;
-        while (bodyBytes.length < contentLength) {
+        while (bodyLen < contentLength) {
           const avail = sis.available();
           if (avail > 0) {
             const piece = sis.read(avail);
-            bodyBytes.push(...binaryStringToByteArray(piece));
+            bodyParts.push(piece);
+            bodyLen += piece.length;
           } else {
             if (Date.now() > bodyDeadline) {
               writeUtf8(output, badRequest("incomplete body"));
@@ -296,7 +300,10 @@ class LocalHttpServer implements nsIServerSocketListener {
             );
           }
         }
-        req.body = new Uint8Array(bodyBytes.slice(0, contentLength));
+        const fullBody = bodyParts.join("");
+        req.body = new Uint8Array(
+          binaryStringToByteArray(fullBody).slice(0, contentLength),
+        );
 
         // Auth (optional)
         if (this._token) {

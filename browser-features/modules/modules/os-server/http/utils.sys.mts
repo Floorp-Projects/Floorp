@@ -8,6 +8,9 @@
 
 import type { HeadersMap, HttpRequest } from "./types.ts";
 
+// Shared TextEncoder singleton (stateless, safe to reuse)
+const TEXT_ENCODER = new TextEncoder();
+
 // -- Logging utilities --------------------------------------------------------
 
 export function log(...args: unknown[]) {
@@ -125,8 +128,7 @@ export function jsonResponse(
   extraHeaders: HeadersMap = {},
 ): string {
   const body = JSON.stringify(bodyObj);
-  const enc = new TextEncoder();
-  const bytes = enc.encode(body);
+  const bytes = TEXT_ENCODER.encode(body);
   const headers: HeadersMap = {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": String(bytes.length),
@@ -147,8 +149,7 @@ export function jsonResponse(
 
 // Write UTF-8 bytes to an nsIOutputStream safely
 export function writeUtf8(out: nsIOutputStream, text: string) {
-  const enc = new TextEncoder();
-  const bytes = enc.encode(text);
+  const bytes = TEXT_ENCODER.encode(text);
   const bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
     Ci.nsIBinaryOutputStream,
   );
