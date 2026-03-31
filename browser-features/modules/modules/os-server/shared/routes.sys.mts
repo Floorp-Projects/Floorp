@@ -57,7 +57,7 @@ export function safeRoute<F extends (...args: never[]) => Promise<unknown>>(hand
       if (/(?:instance|browser)\s+not\s+found/i.test(msg)) {
         return { status: 404, body: { error: msg } };
       }
-      return { status: 500, body: { error: "Internal server error" } };
+      return { status: 500, body: { error: `Internal server error: ${msg}` } };
     }
   }) as unknown as F;
 }

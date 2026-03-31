@@ -8,6 +8,17 @@
  * with exponential backoff.
  */
 
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
+/** Minimal shape of a XUL browser element for actor access. */
+interface BrowserLike {
+  browsingContext?: {
+    currentWindowGlobal?: { getActor(name: string): unknown } | null;
+  } | null;
+}
+
 interface WaitForActorOptions {
   /** Maximum total wait time in milliseconds (default: 15000) */
   maxMs?: number;
@@ -37,7 +48,7 @@ interface WaitForActorOptions {
  *          returns null.
  */
 export async function waitForActor<T = unknown>(
-  getBrowser: () => { browsingContext?: { currentWindowGlobal?: { getActor(name: string): unknown } | null } | null } | null | undefined,
+  getBrowser: () => BrowserLike | null | undefined,
   actorName: string,
   opts?: WaitForActorOptions,
 ): Promise<T | null> {
