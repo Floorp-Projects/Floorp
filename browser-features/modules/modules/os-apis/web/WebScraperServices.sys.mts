@@ -55,24 +55,25 @@ class webScraper {
   private _windowlessBrowser!: nsIWindowlessBrowser;
 
   /**
-   * Try to get NRWebScraper actor with small retries to avoid race after navigation
+   * Try to get NRWebScraper actor with exponential backoff.
+   *
+   * Uses instanceId-based lookup so the browser reference is refreshed each
+   * poll iteration, correctly handling process swaps (remoteness changes).
    */
-  private async _getActorForBrowser(
-    browser: XULBrowserElement,
+  private _getActorForBrowser(
+    instanceId: string,
     tries = 100,
     delayMs = 100,
   ): Promise<WebScraperActor | null> {
-    // Use exponential backoff. Preserve total timeout budget from original
-    // fixed-interval polling: tries * delayMs.
     return waitForActor<WebScraperActor>(
-      () => browser,
+      () => this._browserInstances.get(instanceId) ?? null,
       "NRWebScraper",
       { maxMs: tries * delayMs },
     );
   }
 
   /**
-   * Common helper: get browser → get actor → sendQuery.
+   * Common helper: get browser ↁEget actor ↁEsendQuery.
    * Reduces boilerplate across all service methods.
    */
   private async withActor<T>(
@@ -81,12 +82,8 @@ class webScraper {
     data?: object,
     fallback: T | null = null,
   ): Promise<T | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
     try {
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return fallback;
       const _t0 = Date.now();
       const result = (await actor.sendQuery(queryName, data)) as T;
@@ -296,7 +293,7 @@ class webScraper {
 
     // Wait for content actor readiness
     try {
-      const actor = await this._getActorForBrowser(browser, 150, 100);
+      const actor = await this._getActorForBrowser(instanceId, 150, 100);
       if (actor) {
         const ok = await actor
           .sendQuery("WebScraper:WaitForReady", { timeout: 15000 })
@@ -350,13 +347,8 @@ class webScraper {
     instanceId: string,
     options?: { selector?: string },
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
     try {
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return null;
       return (await actor.sendQuery(
         "WebScraper:GetHTML",
@@ -396,17 +388,12 @@ class webScraper {
           includeSelectorMap?: boolean;
         } = false,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    // Normalize: boolean → old-style { includeSelectorMap }
+    // Normalize: boolean ↁEold-style { includeSelectorMap }
     const data =
       typeof options === "boolean" ? { includeSelectorMap: options } : options;
 
     try {
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return null;
       return (await actor.sendQuery("WebScraper:GetText", data)) as
         | string
@@ -438,12 +425,8 @@ class webScraper {
     instanceId: string,
     options: { interestingOnly?: boolean; root?: string } = {},
   ): Promise<unknown> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
     try {
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return null;
       return await actor.sendQuery("WebScraper:GetAccessibilityTree", options);
     } catch (e) {
@@ -460,12 +443,8 @@ class webScraper {
     markdown: string;
     length: number;
   } | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
     try {
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return null;
       return (await actor.sendQuery("WebScraper:GetArticle")) as {
         title: string;
@@ -483,12 +462,7 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetElement", {
       selector,
@@ -516,7 +490,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return [];
     return ((await actor.sendQuery("WebScraper:GetElements", {
       selector,
@@ -545,7 +519,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetElementByText", {
       textContent,
@@ -574,7 +548,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetElementTextContent", {
       selector,
@@ -604,7 +578,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetElementText", {
       selector,
@@ -632,7 +606,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:ResolveFingerprint", {
       fingerprint,
@@ -654,7 +628,7 @@ class webScraper {
         throw new Error(`Browser not found for instance ${instanceId}`);
       }
 
-      const actor = await this._getActorForBrowser(browser);
+      const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return false;
       await actor.sendQuery("WebScraper:ClearEffects");
       return true;
@@ -686,7 +660,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:ClickElement", {
       selector,
@@ -721,7 +695,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     return (await actor.sendQuery("WebScraper:WaitForElement", {
       selector,
@@ -750,7 +724,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:WaitForReady", {
       timeout,
@@ -773,7 +747,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:TakeScreenshot")) as
       | string
@@ -800,7 +774,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:TakeElementScreenshot", {
       selector,
@@ -825,7 +799,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:TakeFullPageScreenshot")) as
       | string
@@ -852,7 +826,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
       rect,
@@ -878,7 +852,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:FillForm", {
       formData,
@@ -902,7 +876,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:InputElement", {
       selector,
@@ -922,7 +896,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:PressKey", {
       key,
@@ -943,7 +917,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:UploadFile", {
       selector,
@@ -964,7 +938,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetValue", {
       selector,
@@ -989,7 +963,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetAttribute", {
       selector,
@@ -1013,7 +987,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     return (await actor.sendQuery("WebScraper:IsVisible", {
       selector,
@@ -1036,7 +1010,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     return (await actor.sendQuery("WebScraper:IsEnabled", {
       selector,
@@ -1059,7 +1033,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:ClearInput", {
       selector,
@@ -1076,7 +1050,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return false;
     const result = (await actor.sendQuery("WebScraper:Submit", {
       selector,
@@ -1102,7 +1076,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:SelectOption", {
       selector,
@@ -1129,7 +1103,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:SetChecked", {
       selector,
@@ -1154,7 +1128,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:HoverElement", {
       selector,
@@ -1174,7 +1148,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:ScrollToElement", {
       selector,
@@ -1191,7 +1165,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     return (await actor.sendQuery("WebScraper:GetPageTitle")) as string | null;
   }
@@ -1208,7 +1182,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:DoubleClick", {
       selector,
@@ -1228,7 +1202,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:RightClick", {
       selector,
@@ -1248,7 +1222,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:Focus", {
       selector,
@@ -1269,7 +1243,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:DragAndDrop", {
       selector: sourceSelector,
@@ -1395,7 +1369,7 @@ class webScraper {
       const isSecure = cookie.secure ?? uri.schemeIs("https");
       let requestedSameSite = cookie.sameSite ?? "Lax";
       if (requestedSameSite === "None" && !isSecure) {
-        // SameSite=None には Secure が必須。HTTP では Lax にフォールバックする。
+        // SameSite=None には Secure が忁E��、ETTP では Lax にフォールバックする、E
         requestedSameSite = "Lax";
       }
       const schemeMap = isSecure
@@ -1480,7 +1454,7 @@ class webScraper {
 
       // Fallback: try document.cookie within the content process
       try {
-        const actor = await this._getActorForBrowser(browser, 80, 100);
+        const actor = await this._getActorForBrowser(instanceId, 80, 100);
         if (actor) {
           const parts = [
             `${cookie.name}=${cookie.value}`,
@@ -1564,7 +1538,7 @@ class webScraper {
           ignorePatterns?: string[];
         } = {},
   ): Promise<boolean | null> {
-    // Backward compatibility: number → { timeout }
+    // Backward compatibility: number ↁE{ timeout }
     const opts =
       typeof options === "number" ? { timeout: options } : options;
     const {
@@ -1664,7 +1638,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:SetInnerHTML", {
       selector,
@@ -1686,7 +1660,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:SetTextContent", {
       selector,
@@ -1709,7 +1683,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:DispatchEvent", {
       selector,
@@ -1739,7 +1713,7 @@ class webScraper {
       throw new Error(`Browser not found for instance ${instanceId}`);
     }
 
-    const actor = await this._getActorForBrowser(browser);
+    const actor = await this._getActorForBrowser(instanceId);
     if (!actor) return null;
     const result = (await actor.sendQuery("WebScraper:DispatchTextInput", {
       selector,
