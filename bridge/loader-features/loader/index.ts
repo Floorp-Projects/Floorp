@@ -11,6 +11,13 @@ import {
 console.log("[noraneko] Initializing scripts...");
 
 export default async function initScripts() {
+  console.log("[noraneko] initScripts called");
+  try {
+    Services.prefs.setStringPref("nora.loader.initialized", String(Date.now()));
+  } catch (e) {
+    console.error("[noraneko] Failed to set loader initialized marker:", e);
+  }
+
   // Import required modules and initialize i18n
   ChromeUtils.importESModule("resource://noraneko/modules/BrowserGlue.sys.mjs");
   const { NoranekoConstants } = ChromeUtils.importESModule(

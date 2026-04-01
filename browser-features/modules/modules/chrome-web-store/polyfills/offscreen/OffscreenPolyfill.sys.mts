@@ -107,6 +107,12 @@ export interface OffscreenAPI {
   hasDocument(): Promise<boolean>;
 }
 
+type OffscreenPolyfillOptions = {
+  debug?: boolean;
+  createHiddenIframeForTest?: (url: string) => HTMLIFrameElement;
+  waitForIframeLoadForTest?: (_iframe: HTMLIFrameElement) => Promise<void>;
+};
+
 // =============================================================================
 // Polyfill Implementation
 // =============================================================================
@@ -123,9 +129,17 @@ export interface OffscreenAPI {
 class OffscreenPolyfillImpl implements OffscreenAPI {
   private offscreenFrame: HTMLIFrameElement | null = null;
   private readonly debugMode: boolean = false;
+  private readonly createHiddenIframeForTest?: (
+    url: string,
+  ) => HTMLIFrameElement;
+  private readonly waitForIframeLoadForTest?: (
+    _iframe: HTMLIFrameElement,
+  ) => Promise<void>;
 
-  constructor(options?: { debug?: boolean }) {
+  constructor(options?: OffscreenPolyfillOptions) {
     this.debugMode = options?.debug ?? false;
+    this.createHiddenIframeForTest = options?.createHiddenIframeForTest;
+    this.waitForIframeLoadForTest = options?.waitForIframeLoadForTest;
   }
 
   /**
@@ -169,10 +183,16 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
 
     try {
       // Create the hidden iframe
-      const iframe = this.createHiddenIframe(options.url);
+      const iframe = this.createHiddenIframeForTest
+        ? this.createHiddenIframeForTest(options.url)
+        : this.createHiddenIframe(options.url);
 
       // Wait for iframe to load
-      await this.waitForIframeLoad(iframe);
+      if (this.waitForIframeLoadForTest) {
+        await this.waitForIframeLoadForTest(iframe);
+      } else {
+        await this.waitForIframeLoad(iframe);
+      }
 
       // Store reference
       this.offscreenFrame = iframe;
@@ -265,27 +285,65 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
    */
   private waitForIframeLoad(iframe: HTMLIFrameElement): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("Offscreen document load timeout"));
+      const isAlreadyLoaded = (): boolean => {
+        const readyState = iframe.contentDocument?.readyState;
+        return readyState === "interactive" || readyState === "complete";
+      };
+
+      // about:blank can load synchronously, so handle already-loaded frames.
+      if (isAlreadyLoaded()) {
+        resolve();
+        return;
+      }
+
+      let settled = false;
+      let timeout: number | undefined;
+
+      const cleanup = () => {
+        iframe.removeEventListener("load", onLoad);
+        iframe.removeEventListener("error", onError);
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+        }
+      };
+
+      const resolveOnce = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const rejectOnce = (message: string) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        reject(new Error(message));
+      };
+
+      const onLoad = () => {
+        resolveOnce();
+      };
+
+      const onError = () => {
+        rejectOnce("Failed to load offscreen document");
+      };
+
+      iframe.addEventListener("load", onLoad, { once: true });
+      iframe.addEventListener("error", onError, { once: true });
+
+      timeout = setTimeout(() => {
+        rejectOnce("Offscreen document load timeout");
       }, OFFSCREEN_LOAD_TIMEOUT_MS);
 
-      iframe.addEventListener(
-        "load",
-        () => {
-          clearTimeout(timeout);
-          resolve();
-        },
-        { once: true },
-      );
-
-      iframe.addEventListener(
-        "error",
-        () => {
-          clearTimeout(timeout);
-          reject(new Error("Failed to load offscreen document"));
-        },
-        { once: true },
-      );
+      // Re-check to close the race between first check and listener registration.
+      if (isAlreadyLoaded()) {
+        resolveOnce();
+      }
     });
   }
 

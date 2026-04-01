@@ -10,9 +10,43 @@ import * as DevServer from "./src/dev_server.ts";
 import * as Injector from "./src/injector.ts";
 import * as BrowserLauncher from "./src/browser_launcher.ts";
 import * as DevEnvManager from "./src/dev_env_manager.ts";
+import { DEV_SERVER } from "./src/defines.ts";
 import { Logger } from "./src/utils.ts";
 
 const logger = new Logger("feles-build");
+
+type ReadyPipe = {
+  on(event: "data", cb: (chunk: string) => void): void;
+  write(chunk: Uint8Array | string): void;
+  end(): void;
+};
+
+function createReadyPipe(): ReadyPipe {
+  class ReadyPipeImpl implements ReadyPipe {
+    private listeners: Array<(chunk: string) => void> = [];
+
+    on(event: "data", cb: (chunk: string) => void) {
+      if (event === "data") this.listeners.push(cb);
+    }
+
+    write(chunk: Uint8Array | string) {
+      const s =
+        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      for (const cb of this.listeners) cb(s);
+    }
+
+    end() {
+      // no-op
+    }
+  }
+
+  return new ReadyPipeImpl();
+}
+
+function isDevServerReady(chunk: string): boolean {
+  const s = chunk.toString().trim();
+  return s === DEV_SERVER.ready_string || s.includes("nora-");
+}
 
 async function runDev(): Promise<void> {
   logger.info("Starting development environment...");
@@ -36,31 +70,10 @@ async function runDev(): Promise<void> {
     Deno.exit(130);
   });
 
-  // Simple writable-like object to capture ready signal from DevServer.run
-  class ReadyPipe {
-    private listeners: Array<(chunk: string) => void> = [];
-    on(event: "data", cb: (chunk: string) => void) {
-      if (event === "data") this.listeners.push(cb);
-    }
-    write(chunk: Uint8Array | string) {
-      const s =
-        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
-      for (const cb of this.listeners) cb(s);
-    }
-    end() {
-      // no-op
-    }
-  }
-  const pipe = new ReadyPipe();
-  let readyReceived = false;
+  const pipe = createReadyPipe();
 
   pipe.on("data", (chunk: string) => {
-    const s = chunk.toString().trim();
-    if (
-      s === (DevServer as any).DEV_SERVER?.ready_string ||
-      s.includes("nora-")
-    ) {
-      readyReceived = true;
+    if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
       // Launch browser
       BrowserLauncher.run().catch((e: any) => {
@@ -88,7 +101,9 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     "Starting staged production build (production assets) with browser in dev mode...",
   );
   if (!marionette) {
-    logger.info("Marionette is disabled by default (use --marionette to enable).");
+    logger.info(
+      "Marionette is disabled by default (use --marionette to enable).",
+    );
   }
 
   // Initial setup
@@ -113,31 +128,10 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     Deno.exit(130);
   });
 
-  // Simple writable-like object to capture ready signal from DevServer.run
-  class ReadyPipe {
-    private listeners: Array<(chunk: string) => void> = [];
-    on(event: "data", cb: (chunk: string) => void) {
-      if (event === "data") this.listeners.push(cb);
-    }
-    write(chunk: Uint8Array | string) {
-      const s =
-        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
-      for (const cb of this.listeners) cb(s);
-    }
-    end() {
-      // no-op
-    }
-  }
-  const pipe = new ReadyPipe();
-  let readyReceived = false;
+  const pipe = createReadyPipe();
 
   pipe.on("data", (chunk: string) => {
-    const s = chunk.toString().trim();
-    if (
-      s === (DevServer as any).DEV_SERVER?.ready_string ||
-      s.includes("nora-")
-    ) {
-      readyReceived = true;
+    if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
       // Launch browser
       BrowserLauncher.run({ marionette }).catch((e: any) => {
@@ -156,11 +150,52 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   // Keep process alive until SIGINT or browser termination like runDev
 }
 
+async function runTest(): Promise<void> {
+  logger.info("Starting test environment...");
+
+  // Initial setup
+  await Initializer.run();
+  Patcher.run("apply");
+  Pref.run();
+  Symlinker.run();
+
+  const buildid2 = Update.generateUuidV7();
+  await Builder.run("test", buildid2);
+  Injector.run("dev");
+  await Injector.injectXhtmlFromTs(true);
+  DevEnvManager.setup();
+
+  // Graceful shutdown
+  Deno.addSignalListener("SIGINT", () => {
+    logger.info("Shutting down...");
+    DevServer.shutdown();
+    Deno.exit(130);
+  });
+
+  const pipe = createReadyPipe();
+
+  pipe.on("data", (chunk: string) => {
+    if (isDevServerReady(chunk)) {
+      logger.success(
+        "Dev servers are ready. Launching browser in test mode...",
+      );
+      BrowserLauncher.run({ marionette: true }).catch((e: any) => {
+        logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+      });
+    }
+  });
+
+  DevServer.run(pipe as any).catch((e: any) => {
+    logger.error(`Dev server failed: ${e?.message ?? e}`);
+    Deno.exit(1);
+  });
+}
+
 async function runBuild(phase?: string): Promise<void> {
   const optionsPhase = phase ?? null;
   if (!optionsPhase) {
     console.error("Error: --phase is required for the build command.");
-    process.exit(1);
+    Deno.exit(1);
   }
 
   if (optionsPhase === "before-mach") {
@@ -173,7 +208,7 @@ async function runBuild(phase?: string): Promise<void> {
     await Injector.injectXhtmlFromTs(false, true);
   } else {
     console.error(`Unknown phase: ${optionsPhase}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 
@@ -185,6 +220,9 @@ function printHelp(): void {
   console.log("Usage: deno task feles-build <command> [options]\n");
   console.log("Commands:");
   console.log("  dev        Run the development workflow");
+  console.log(
+    "  test       Build with MODE=test and launch browser for browser tests",
+  );
   console.log(
     "  stage      Build production assets and run browser in dev mode",
   );
@@ -206,6 +244,17 @@ async function main(): Promise<void> {
         return;
       }
       await runDev();
+      break;
+    }
+    case "test": {
+      if (argv.includes("--help") || argv.includes("-h")) {
+        console.log("Usage: feles-build test");
+        console.log(
+          "  Build with MODE=test, start dev servers, and launch browser.",
+        );
+        return;
+      }
+      await runTest();
       break;
     }
     case "stage": {

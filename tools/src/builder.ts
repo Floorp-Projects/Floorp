@@ -13,6 +13,10 @@ import { writeBuildid2 } from "./update.ts";
 
 const logger = new Logger("builder");
 
+function errorToMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Get the full path to the deno executable.
  * This ensures we can find deno even if PATH resolution is problematic.
@@ -39,7 +43,7 @@ export function packageVersion(): string {
 
 type CommandTuple = readonly [readonly string[], string];
 
-export async function runInParallel(commands: CommandTuple[]): Promise<void> {
+export function runInParallel(commands: CommandTuple[]): void {
   const results = commands.map(([cmd, dir]) => {
     logger.info(`Running \`${cmd.join(" ")}\` in \`${dir}\``);
     // Use runCommandChecked (sync) to capture stdout/stderr concisely in Deno
@@ -63,13 +67,25 @@ export async function runInParallel(commands: CommandTuple[]): Promise<void> {
 }
 
 export async function run(mode = "dev", buildid2: string): Promise<void> {
-  logger.info(`Building features with mode=${mode}`);
+  await Promise.resolve();
+  const buildMode = mode.trim().toLowerCase();
+  logger.info(`Building features with mode=${buildMode}`);
+
+  if (
+    buildMode !== "dev" &&
+    buildMode !== "test" &&
+    buildMode !== "production"
+  ) {
+    throw new Error(
+      `Unsupported build mode: ${mode}. Allowed: dev, test, production`,
+    );
+  }
 
   // Ensure buildid2 is written to the expected path so other tools can read it.
   try {
     writeBuildid2(PATHS.buildid2, buildid2);
-  } catch (e: any) {
-    logger.error(`Failed to write buildid2: ${e?.message ?? e}`);
+  } catch (error: unknown) {
+    logger.error(`Failed to write buildid2: ${errorToMessage(error)}`);
   }
 
   const version = packageVersion();
@@ -77,7 +93,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
   const devCommands: CommandTuple[] = [
     [
-      [deno, "task", "build", `--env.MODE=${mode}`],
+      [deno, "task", "build", `--env.MODE=${buildMode}`],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
@@ -248,13 +264,13 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     // ],
   ];
 
-  if (mode.startsWith("dev")) {
-    await runInParallel(devCommands);
+  if (buildMode === "dev" || buildMode === "test") {
+    runInParallel(devCommands);
   } else {
-    await runInParallel(prodCommands);
+    runInParallel(prodCommands);
   }
 
-  if (mode.startsWith("production")) {
+  if (buildMode === "production") {
     const mounts: Array<[string, string]> = [
       ["content", "bridge/loader-features/_dist"],
       ["startup", "bridge/startup/_dist"],
@@ -274,7 +290,9 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
       if (exists(dirPath)) {
         safeRemove(dirPath);
       }
-    } catch {}
+    } catch {
+      // ignore cleanup errors before creating the dist directory
+    }
     Deno.mkdirSync(dirPath);
 
     for (const [subdir, target] of mounts) {
@@ -290,9 +308,9 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
       try {
         createSymlink(linkPath, targetPath);
-      } catch (e: any) {
+      } catch (error: unknown) {
         logger.warn(
-          `Failed to create symlink ${linkPath} -> ${targetPath}: ${e?.message ?? e}`,
+          `Failed to create symlink ${linkPath} -> ${targetPath}: ${errorToMessage(error)}`,
         );
       }
     }

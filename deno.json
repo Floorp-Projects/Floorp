@@ -1,7 +1,13 @@
 {
   "license": "MPL-2.0",
-  "links": ["libs/@types/gecko"],
-  "workspace": ["./libs/*", "./browser-features/*", "./bridge/*"],
+  "links": [
+    "libs/@types/gecko"
+  ],
+  "workspace": [
+    "./libs/*",
+    "./browser-features/*",
+    "./bridge/*"
+  ],
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.25",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
@@ -19,15 +25,22 @@
     "vite": "npm:rolldown-vite@^7.3.0"
   },
   "compilerOptions": {
-    "lib": ["deno.ns", "ESNext", "dom", "dom.asynciterable"],
+    "lib": [
+      "deno.ns",
+      "ESNext",
+      "dom",
+      "dom.asynciterable"
+    ],
     "checkJs": true
   },
   "exclude": [
     "tools/build/tasks/inject/wasm/nora-inject.js",
     "**/_dist/**/*",
+    "**/*.timestamp-*.mjs",
     "libs/@types/gecko/**/*",
     "libs/user-js-runner/**/*",
     "tools/build/tasks/inject/mixins/**/*",
+    "logs/**/*",
     "chrome/**/*",
     "modules/**/*",
     "src/**/*",
@@ -36,7 +49,9 @@
   "tasks": {
     "feles-build": "deno run -A tools/feles-build.ts",
     "act": "deno run -A tools/act/run-package-workflow.ts",
-    "dev-tool": "deno run -A tools/dev-tool.ts"
+    "dev-tool": "deno run -A tools/dev-tool.ts",
+    "test": "deno run -A tools/src/colocated_test_runner.ts",
+    "test:smoke": "deno run -A tools/src/smoke_runner.ts"
   },
   "nodeModulesDir": "manual"
 }

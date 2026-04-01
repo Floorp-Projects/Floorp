@@ -3,9 +3,27 @@
 import * as path from "@std/path";
 import { PROJECT_ROOT, DEV_SERVER } from "./defines.ts";
 import { Logger } from "./utils.ts";
+import { sleep } from "./async_utils.ts";
 
 const logger = new Logger("dev-server");
-let viteProcesses: Array<{ pid?: number }> = [];
+
+type ManagedViteProcess = {
+  name: string;
+  port: number;
+  child: Deno.ChildProcess;
+};
+
+let viteProcesses: ManagedViteProcess[] = [];
+
+async function detectEarlyExit(
+  proc: ManagedViteProcess,
+  graceMs: number,
+): Promise<Deno.CommandStatus | null> {
+  return await Promise.race([
+    proc.child.status,
+    sleep(graceMs).then(() => null),
+  ]);
+}
 
 export async function run(writer: any): Promise<void> {
   logger.info("Starting Vite dev servers...");
@@ -52,10 +70,10 @@ export async function run(writer: any): Promise<void> {
   }
 
   for (const server of servers) {
-    const port = getPortFor(server.name).toString();
+    const port = getPortFor(server.name);
     // Run Vite via Deno's npm compatibility (Deno-only)
     const cmd = "deno";
-    const args = ["run", "-A", "npm:vite", "--port", port];
+    const args = ["run", "-A", "npm:vite", "--port", String(port)];
 
     const child = new Deno.Command(cmd, {
       args,
@@ -100,16 +118,34 @@ export async function run(writer: any): Promise<void> {
     pipeToFile(child.stdout, fh);
     pipeToFile(child.stderr, fh);
 
-    viteProcesses.push(child);
+    viteProcesses.push({ name: server.name, port, child });
 
     logger.info(
       `Started Vite dev server for ${server.name} with PID: ${child.pid}, logging to ${logFilePath}`,
     );
   }
 
-  logger.info("All Vite dev servers started.");
-  // Wait a short time for servers to start (parity with original sleep 5)
-  await new Promise((res) => setTimeout(res, 5000));
+  logger.info("All Vite dev servers started. Verifying startup health...");
+
+  const startupFailures: string[] = [];
+  for (const proc of viteProcesses) {
+    const status = await detectEarlyExit(proc, 2_000);
+    if (status && status.code !== 0) {
+      startupFailures.push(
+        `${proc.name} (port ${proc.port}) exited early with code ${status.code}`,
+      );
+    }
+  }
+
+  if (startupFailures.length > 0) {
+    shutdown();
+    throw new Error(
+      `One or more Vite dev servers failed to start:\n${startupFailures.join("\n")}`,
+    );
+  }
+
+  // Keep a small additional wait for initial compile/warm-up.
+  await sleep(3_000);
 
   try {
     if (typeof writer?.write === "function") {
@@ -133,17 +169,19 @@ export async function run(writer: any): Promise<void> {
 
 export function shutdown(): void {
   logger.info("Shutting down Vite dev servers...");
-  for (const child of viteProcesses) {
+  for (const proc of viteProcesses) {
     try {
-      if (child?.pid) {
+      if (proc.child?.pid) {
         try {
-          Deno.kill(child.pid);
+          Deno.kill(proc.child.pid);
         } catch {
           // ignore
         }
       }
     } catch (e: any) {
-      logger.warn(`Failed to stop process ${child?.pid}: ${e?.message ?? e}`);
+      logger.warn(
+        `Failed to stop process ${proc.child?.pid}: ${e?.message ?? e}`,
+      );
     }
   }
   viteProcesses = [];

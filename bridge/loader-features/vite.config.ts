@@ -16,6 +16,14 @@ export default defineConfig({
   server: {
     port: 5181,
     strictPort: true,
+    cors: {
+      origin: [
+        /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/,
+        /^moz-extension:\/\/.+$/,
+        /^chrome:\/\/.+$/,
+        "null",
+      ],
+    },
   },
 
   define: {
@@ -182,6 +190,10 @@ export default defineConfig({
       {
         find: "#features-chrome",
         replacement: r("./link-features-chrome"),
+      },
+      {
+        find: "#features-modules",
+        replacement: r("../../browser-features/modules"),
       },
     ],
   },

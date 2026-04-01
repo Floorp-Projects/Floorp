@@ -23,6 +23,7 @@ Process management:
   stop                      Stop all dev processes cleanly
   restart                   Restart dev processes
   rebuild                   Rebuild assets without restarting browser
+  smoke [options]           Run smoke test suite
 
 Browser commands:
   status                    Check browser connection
@@ -40,12 +41,20 @@ Options:
   --limit, -l <n>           Console: max messages (default: 50)
   --filter, -f <pattern>    Console: filter by text pattern
   --level <level>           Console: filter by level (error/warn/info/debug/all, default: all)
+  --mode <all|unit|runtime> Smoke: choose smoke subset (default: all)
   --help, -h                Show this help
 `.trim();
 
 const args = parseArgs(Deno.args, {
-  string: ["context", "selector", "output", "limit", "filter", "level"],
-  alias: { c: "context", s: "selector", o: "output", h: "help", l: "limit", f: "filter" },
+  string: ["context", "selector", "output", "limit", "filter", "level", "mode"],
+  alias: {
+    c: "context",
+    s: "selector",
+    o: "output",
+    h: "help",
+    l: "limit",
+    f: "filter",
+  },
   boolean: ["help"],
   default: { context: "chrome" },
 });
@@ -59,8 +68,10 @@ if (!command || args.help) {
 
 // Validate --context
 const VALID_CONTEXTS = ["chrome", "content"] as const;
-if (!VALID_CONTEXTS.includes(args.context as typeof VALID_CONTEXTS[number])) {
-  console.error(`Invalid --context "${args.context}". Allowed: chrome, content`);
+if (!VALID_CONTEXTS.includes(args.context as (typeof VALID_CONTEXTS)[number])) {
+  console.error(
+    `Invalid --context "${args.context}". Allowed: chrome, content`,
+  );
   Deno.exit(1);
 }
 const context = args.context as "chrome" | "content";
@@ -79,6 +90,9 @@ async function main() {
       break;
     case "rebuild":
       await cmdRebuild();
+      break;
+    case "smoke":
+      await cmdSmoke();
       break;
     case "status":
       await cmdStatus();
@@ -116,14 +130,20 @@ async function cmdStart() {
     const check = new Deno.Command(
       PLATFORM === "windows" ? "tasklist" : "ps",
       PLATFORM === "windows"
-        ? { args: ["/FI", `PID eq ${existingPid}`, "/NH"], stdout: "piped", stderr: "null" }
+        ? {
+            args: ["/FI", `PID eq ${existingPid}`, "/NH"],
+            stdout: "piped",
+            stderr: "null",
+          }
         : { args: ["-p", existingPid], stdout: "piped", stderr: "null" },
     );
     const out = await check.output();
     const text = new TextDecoder().decode(out.stdout);
     if (text.includes(existingPid)) {
       console.log(`Dev server already running (PID ${existingPid}).`);
-      console.log("Use 'dev-tool stop' to stop it first, or 'dev-tool restart'.");
+      console.log(
+        "Use 'dev-tool stop' to stop it first, or 'dev-tool restart'.",
+      );
       return;
     }
   } catch {
@@ -133,11 +153,19 @@ async function cmdStart() {
   console.log("Starting feles-build dev...");
 
   const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
-  const marionetteFile = path.join(PROJECT_ROOT, "_dist", "marionette-port.txt");
+  const marionetteFile = path.join(
+    PROJECT_ROOT,
+    "_dist",
+    "marionette-port.txt",
+  );
 
   // Remove stale state files
   for (const f of [marionetteFile, PID_FILE]) {
-    try { Deno.removeSync(f); } catch { /* ignore */ }
+    try {
+      Deno.removeSync(f);
+    } catch {
+      /* ignore */
+    }
   }
 
   // Spawn a fully detached process that survives parent exit
@@ -204,14 +232,19 @@ async function cmdStop() {
     //    (bash & spawns outside the process tree, so /T may miss children)
     const findCmd = new Deno.Command("powershell", {
       args: [
-        "-NoProfile", "-Command",
+        "-NoProfile",
+        "-Command",
         `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'deno.exe' -and $_.CommandLine -like '*feles-build*' } | ForEach-Object { $_.ProcessId }`,
       ],
       stdout: "piped",
       stderr: "null",
     });
     const findOut = await findCmd.output();
-    const pids = new TextDecoder().decode(findOut.stdout).trim().split(/\r?\n/).filter(Boolean);
+    const pids = new TextDecoder()
+      .decode(findOut.stdout)
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean);
     for (const p of pids) {
       await runSilent("taskkill", ["/PID", p, "/T", "/F"]);
     }
@@ -219,14 +252,19 @@ async function cmdStop() {
     // 3. Kill only dev floorp.exe (uses test profile, not the user's regular browser)
     const findBrowser = new Deno.Command("powershell", {
       args: [
-        "-NoProfile", "-Command",
+        "-NoProfile",
+        "-Command",
         `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'floorp.exe' -and $_.CommandLine -like '*_dist*profile*test*' } | ForEach-Object { $_.ProcessId }`,
       ],
       stdout: "piped",
       stderr: "null",
     });
     const browserOut = await findBrowser.output();
-    const browserPids = new TextDecoder().decode(browserOut.stdout).trim().split(/\r?\n/).filter(Boolean);
+    const browserPids = new TextDecoder()
+      .decode(browserOut.stdout)
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean);
     for (const p of browserPids) {
       await runSilent("taskkill", ["/PID", p, "/F"]);
     }
@@ -234,14 +272,19 @@ async function cmdStop() {
       // Fallback: find floorp by parent PID (never kill by image name alone)
       const findChild = new Deno.Command("powershell", {
         args: [
-          "-NoProfile", "-Command",
+          "-NoProfile",
+          "-Command",
           `Get-WmiObject Win32_Process | Where-Object { $_.Name -eq 'floorp.exe' -and $_.ParentProcessId -eq ${pid} } | ForEach-Object { $_.ProcessId }`,
         ],
         stdout: "piped",
         stderr: "null",
       });
       const childOut = await findChild.output();
-      const childPids = new TextDecoder().decode(childOut.stdout).trim().split(/\r?\n/).filter(Boolean);
+      const childPids = new TextDecoder()
+        .decode(childOut.stdout)
+        .trim()
+        .split(/\r?\n/)
+        .filter(Boolean);
       for (const p of childPids) {
         await runSilent("taskkill", ["/PID", p, "/F"]);
       }
@@ -258,8 +301,15 @@ async function cmdStop() {
   }
 
   // Clean up state files
-  for (const f of [PID_FILE, path.join(PROJECT_ROOT, "_dist", "marionette-port.txt")]) {
-    try { Deno.removeSync(f); } catch { /* ignore */ }
+  for (const f of [
+    PID_FILE,
+    path.join(PROJECT_ROOT, "_dist", "marionette-port.txt"),
+  ]) {
+    try {
+      Deno.removeSync(f);
+    } catch {
+      /* ignore */
+    }
   }
 
   console.log("Stopped.");
@@ -267,8 +317,14 @@ async function cmdStop() {
 
 async function runSilent(cmd: string, args: string[]): Promise<void> {
   try {
-    await new Deno.Command(cmd, { args, stdout: "null", stderr: "null" }).output();
-  } catch { /* ignore */ }
+    await new Deno.Command(cmd, {
+      args,
+      stdout: "null",
+      stderr: "null",
+    }).output();
+  } catch {
+    /* ignore */
+  }
 }
 
 async function cmdRebuild() {
@@ -293,7 +349,13 @@ async function cmdRebuild() {
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
-      [denoPath, "task", "build", `--env.__BUILDID2__=${buildid2}`, `--env.__VERSION2__=${version}`],
+      [
+        denoPath,
+        "task",
+        "build",
+        `--env.__BUILDID2__=${buildid2}`,
+        `--env.__VERSION2__=${version}`,
+      ],
       path.join(PROJECT_ROOT, "bridge/loader-modules"),
     ],
   ]);
@@ -301,6 +363,23 @@ async function cmdRebuild() {
   Injector.run("dev");
   await Injector.injectXhtmlFromTs(true);
   console.log("Rebuild complete. (loader-features is handled by HMR)");
+}
+
+async function cmdSmoke() {
+  const mode = typeof args.mode === "string" ? args.mode : "all";
+  const denoPath = Deno.execPath();
+
+  const child = new Deno.Command(denoPath, {
+    args: ["run", "-A", "tools/src/smoke_runner.ts", "--mode", mode],
+    cwd: PROJECT_ROOT,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+
+  const status = await child.status;
+  if (!status.success) {
+    Deno.exit(status.code);
+  }
 }
 
 async function cmdConsole() {
@@ -405,8 +484,8 @@ async function cmdTitle() {
 }
 
 async function cmdScreenshot() {
-  const outputPath = args.output ??
-    path.join(PROJECT_ROOT, "_dist", "screenshot.png");
+  const outputPath =
+    args.output ?? path.join(PROJECT_ROOT, "_dist", "screenshot.png");
 
   await withBrowser(async (client) => {
     await client.setContext(context);

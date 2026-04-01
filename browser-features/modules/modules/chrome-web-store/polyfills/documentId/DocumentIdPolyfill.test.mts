@@ -2,11 +2,12 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @colocated-env browser
 
 /**
  * Unit tests for DocumentId API Polyfill
  *
- * Tests the documentId generation, parsing, and API wrapping functionality.
+ * Browser-only, deterministic tests that avoid Node-specific helpers.
  */
 
 import {
@@ -14,58 +15,52 @@ import {
   wrapScriptingAPI,
   wrapTabsAPI,
 } from "./DocumentIdPolyfill.sys.mts";
+import {
+  assert,
+  assertEquals,
+  assertRejects,
+} from "../test-helpers/assertions.mts";
+
+function createPolyfill(): DocumentIdPolyfill {
+  return new DocumentIdPolyfill({ debug: true });
+}
 
 // =============================================================================
 // Test Suite: DocumentId Generation and Parsing
 // =============================================================================
 
 /**
- * Test: Should generate valid documentId
+ * Test: Should generate and parse documentId consistently
  */
-function testGenerateDocumentId() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+function testGenerateAndParseRoundTrip() {
+  const polyfill = createPolyfill();
 
-  const documentId = polyfill.generateDocumentId(123, 0);
+  const documentId = polyfill.generateDocumentId(123, 7);
 
-  console.assert(
+  assert(
     documentId.startsWith("floorp-doc-"),
     "DocumentId should start with floorp-doc-",
   );
-  console.assert(
-    documentId.includes("123"),
-    "DocumentId should contain tabId",
-  );
-
-  console.log("✓ testGenerateDocumentId passed");
-}
-
-/**
- * Test: Should parse valid documentId
- */
-function testParseDocumentId() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
-
-  const documentId = polyfill.generateDocumentId(456, 2);
   const parsed = polyfill.parseDocumentId(documentId);
 
-  console.assert(parsed !== null, "Parsed result should not be null");
-  console.assert(parsed?.tabId === 456, "TabId should be 456");
-  console.assert(parsed?.frameId === 2, "FrameId should be 2");
+  assert(parsed !== null, "Parsed result should not be null");
+  assertEquals(parsed.tabId, 123, "tabId should round-trip correctly");
+  assertEquals(parsed.frameId, 7, "frameId should round-trip correctly");
 
-  console.log("✓ testParseDocumentId passed");
+  console.log("✓ testGenerateAndParseRoundTrip passed");
 }
 
 /**
  * Test: Should return null for invalid documentId
  */
 function testParseInvalidDocumentId() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
   const parsed1 = polyfill.parseDocumentId("invalid-id");
-  console.assert(parsed1 === null, "Should return null for invalid prefix");
+  assertEquals(parsed1, null, "Should return null for invalid prefix");
 
   const parsed2 = polyfill.parseDocumentId("floorp-doc-abc-def");
-  console.assert(parsed2 === null, "Should return null for non-numeric values");
+  assertEquals(parsed2, null, "Should return null for non-numeric values");
 
   console.log("✓ testParseInvalidDocumentId passed");
 }
@@ -74,16 +69,18 @@ function testParseInvalidDocumentId() {
  * Test: Should validate documentId correctly
  */
 function testIsValidDocumentId() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
   const documentId = polyfill.generateDocumentId(789, 1);
 
-  console.assert(
-    polyfill.isValidDocumentId(documentId) === true,
+  assertEquals(
+    polyfill.isValidDocumentId(documentId),
+    true,
     "Generated documentId should be valid",
   );
-  console.assert(
-    polyfill.isValidDocumentId("invalid") === false,
+  assertEquals(
+    polyfill.isValidDocumentId("invalid"),
+    false,
     "Invalid documentId should not be valid",
   );
 
@@ -91,21 +88,21 @@ function testIsValidDocumentId() {
 }
 
 /**
- * Test: Should convert documentIds to targets
+ * Test: Should convert documentIds to targets and skip invalid values
  */
 function testDocumentIdsToTargets() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
   const docId1 = polyfill.generateDocumentId(100, 0);
   const docId2 = polyfill.generateDocumentId(200, 1);
 
   const targets = polyfill.documentIdsToTargets([docId1, docId2, "invalid"]);
 
-  console.assert(targets.length === 2, "Should have 2 valid targets");
-  console.assert(targets[0].tabId === 100, "First target tabId should be 100");
-  console.assert(targets[0].frameId === 0, "First target frameId should be 0");
-  console.assert(targets[1].tabId === 200, "Second target tabId should be 200");
-  console.assert(targets[1].frameId === 1, "Second target frameId should be 1");
+  assertEquals(targets.length, 2, "Should have 2 valid targets");
+  assertEquals(targets[0].tabId, 100, "First target tabId should be 100");
+  assertEquals(targets[0].frameId, 0, "First target frameId should be 0");
+  assertEquals(targets[1].tabId, 200, "Second target tabId should be 200");
+  assertEquals(targets[1].frameId, 1, "Second target frameId should be 1");
 
   console.log("✓ testDocumentIdsToTargets passed");
 }
@@ -114,12 +111,12 @@ function testDocumentIdsToTargets() {
  * Test: Should generate unique documentIds
  */
 function testUniqueDocumentIds() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
   const ids = new Set<string>();
   for (let i = 0; i < 100; i++) {
     const id = polyfill.generateDocumentId(1, 0);
-    console.assert(!ids.has(id), "DocumentId should be unique");
+    assert(!ids.has(id), "DocumentId should be unique");
     ids.add(id);
   }
 
@@ -130,23 +127,19 @@ function testUniqueDocumentIds() {
  * Test: Should prune cache when exceeding limit
  */
 function testCachePruning() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
-  // Generate many documentIds to trigger cache pruning
-  // The MAX_CACHE_SIZE is 1000, so we generate 1100+
-  const generatedIds: string[] = [];
+  // Generate many IDs to exceed MAX_CACHE_SIZE and trigger pruning.
+  let latestId = "";
   for (let i = 0; i < 1100; i++) {
-    const id = polyfill.generateDocumentId(i, 0);
-    generatedIds.push(id);
+    latestId = polyfill.generateDocumentId(i, i % 3);
   }
 
-  // After pruning, the cache should still work
-  // The most recent entries should still be valid
-  const lastId = generatedIds[generatedIds.length - 1];
-  const parsed = polyfill.parseDocumentId(lastId);
+  const parsed = polyfill.parseDocumentId(latestId);
 
-  console.assert(parsed !== null, "Recent documentId should still be parseable");
-  console.assert(parsed?.tabId === 1099, "TabId should match");
+  assert(parsed !== null, "Recent documentId should still be parseable");
+  assertEquals(parsed.tabId, 1099, "tabId should match latest entry");
+  assertEquals(parsed.frameId, 1, "frameId should match latest entry");
 
   console.log("✓ testCachePruning passed");
 }
@@ -159,55 +152,91 @@ function testCachePruning() {
  * Test: Should wrap scripting API correctly
  */
 async function testWrapScriptingAPI() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
-  const docId = polyfill.generateDocumentId(42, 0);
+  const polyfill = createPolyfill();
+  const docId1 = polyfill.generateDocumentId(42, 0);
+  const docId2 = polyfill.generateDocumentId(42, 3);
 
-  let capturedDetails: unknown = null;
+  const capturedDetails: Array<Record<string, unknown>> = [];
   const mockScripting = {
-    executeScript: (details: unknown) => {
-      capturedDetails = details;
-      return Promise.resolve([{ result: "success" }]);
+    executeScript: (details: Record<string, unknown>) => {
+      capturedDetails.push(details);
+      return Promise.resolve([{ callIndex: capturedDetails.length }]);
     },
   };
 
   const wrapped = wrapScriptingAPI(polyfill, mockScripting);
 
-  await wrapped.executeScript({
+  const result = await wrapped.executeScript({
     target: {
-      documentIds: [docId],
+      documentIds: [docId1, docId2],
     },
     func: () => {},
   });
 
-  console.assert(capturedDetails !== null, "Should have captured details");
-  console.assert(
-    // deno-lint-ignore no-explicit-any
-    (capturedDetails as any).target.tabId === 42,
-    "Should convert documentId to tabId",
+  assertEquals(capturedDetails.length, 2, "Should execute once per documentId");
+  assert(Array.isArray(result), "Wrapped result should be an array");
+  assertEquals(
+    result.length,
+    2,
+    "Wrapped result should merge execution results",
   );
-  console.assert(
-    // deno-lint-ignore no-explicit-any
-    (capturedDetails as any).target.documentIds === undefined,
-    "Should remove documentIds from target",
+
+  const firstTarget = capturedDetails[0].target as Record<string, unknown>;
+  const secondTarget = capturedDetails[1].target as Record<string, unknown>;
+
+  assert(firstTarget.tabId === 42, "First execution should keep tabId");
+  assert(
+    Array.isArray(firstTarget.frameIds) &&
+      (firstTarget.frameIds as unknown[])[0] === 0,
+    "First execution should map frameId from documentId",
+  );
+  assert(
+    Array.isArray(secondTarget.frameIds) &&
+      (secondTarget.frameIds as unknown[])[0] === 3,
+    "Second execution should map frameId from documentId",
+  );
+  assert(
+    firstTarget.documentIds === undefined &&
+      secondTarget.documentIds === undefined,
+    "Wrapped executions should remove documentIds from target",
   );
 
   console.log("✓ testWrapScriptingAPI passed");
 }
 
 /**
+ * Test: Should reject when all documentIds are invalid
+ */
+async function testWrapScriptingRejectsInvalidDocumentIds() {
+  const polyfill = createPolyfill();
+  const mockScripting = {
+    executeScript: () => Promise.resolve([] as unknown[]),
+  };
+  const wrapped = wrapScriptingAPI(polyfill, mockScripting);
+
+  await assertRejects(
+    () =>
+      wrapped.executeScript({
+        target: { documentIds: ["invalid-document-id"] },
+        func: () => {},
+      }),
+    "No valid documentIds provided",
+    "Invalid documentIds should cause rejection",
+  );
+
+  console.log("✓ testWrapScriptingRejectsInvalidDocumentIds passed");
+}
+
+/**
  * Test: Should wrap tabs API correctly
  */
 async function testWrapTabsAPI() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
   const docId = polyfill.generateDocumentId(55, 3);
 
   let capturedOptions: unknown = null;
   const mockTabs = {
-    sendMessage: (
-      _tabId: number,
-      _message: unknown,
-      options: unknown,
-    ) => {
+    sendMessage: (_tabId: number, _message: unknown, options: unknown) => {
       capturedOptions = options;
       return Promise.resolve({ response: true });
     },
@@ -217,13 +246,13 @@ async function testWrapTabsAPI() {
 
   await wrapped.sendMessage(55, { action: "test" }, { documentId: docId });
 
-  console.assert(capturedOptions !== null, "Should have captured options");
-  console.assert(
+  assert(capturedOptions !== null, "Should have captured options");
+  assert(
     // deno-lint-ignore no-explicit-any
     (capturedOptions as any).frameId === 3,
     "Should convert documentId to frameId",
   );
-  console.assert(
+  assert(
     // deno-lint-ignore no-explicit-any
     (capturedOptions as any).documentId === undefined,
     "Should remove documentId from options",
@@ -233,10 +262,29 @@ async function testWrapTabsAPI() {
 }
 
 /**
+ * Test: Should reject tabs.sendMessage when documentId is invalid
+ */
+async function testWrapTabsRejectsInvalidDocumentId() {
+  const polyfill = createPolyfill();
+  const mockTabs = {
+    sendMessage: () => Promise.resolve({ ok: true }),
+  };
+  const wrapped = wrapTabsAPI(polyfill, mockTabs);
+
+  await assertRejects(
+    () => wrapped.sendMessage(1, { ping: true }, { documentId: "invalid" }),
+    "Invalid documentId",
+    "Invalid documentId should reject wrapped tabs API",
+  );
+
+  console.log("✓ testWrapTabsRejectsInvalidDocumentId passed");
+}
+
+/**
  * Test: Should pass through when no documentId
  */
 async function testPassThroughWithoutDocumentId() {
-  const polyfill = new DocumentIdPolyfill({ debug: true });
+  const polyfill = createPolyfill();
 
   let capturedDetails: unknown = null;
   const mockScripting = {
@@ -255,7 +303,7 @@ async function testPassThroughWithoutDocumentId() {
 
   await wrapped.executeScript(originalDetails);
 
-  console.assert(
+  assert(
     // deno-lint-ignore no-explicit-any
     (capturedDetails as any).target.tabId === 99,
     "Should pass through original tabId",
@@ -274,10 +322,12 @@ async function testPassThroughWithoutDocumentId() {
 async function runAllTests() {
   console.log("Running DocumentId API Polyfill Tests...\n");
 
-  const tests = [
+  const tests: Array<{ name: string; fn: () => void | Promise<void> }> = [
     // Generation and Parsing
-    { name: "Generate documentId", fn: testGenerateDocumentId },
-    { name: "Parse documentId", fn: testParseDocumentId },
+    {
+      name: "Generate and parse documentId",
+      fn: testGenerateAndParseRoundTrip,
+    },
     { name: "Parse invalid documentId", fn: testParseInvalidDocumentId },
     { name: "Validate documentId", fn: testIsValidDocumentId },
     { name: "Convert documentIds to targets", fn: testDocumentIdsToTargets },
@@ -286,12 +336,24 @@ async function runAllTests() {
 
     // API Wrapping
     { name: "Wrap scripting API", fn: testWrapScriptingAPI },
+    {
+      name: "Wrap scripting API invalid input",
+      fn: testWrapScriptingRejectsInvalidDocumentIds,
+    },
     { name: "Wrap tabs API", fn: testWrapTabsAPI },
-    { name: "Pass through without documentId", fn: testPassThroughWithoutDocumentId },
+    {
+      name: "Wrap tabs API invalid input",
+      fn: testWrapTabsRejectsInvalidDocumentId,
+    },
+    {
+      name: "Pass through without documentId",
+      fn: testPassThroughWithoutDocumentId,
+    },
   ];
 
   let passed = 0;
   let failed = 0;
+  const failureDetails: string[] = [];
 
   for (const test of tests) {
     try {
@@ -301,12 +363,18 @@ async function runAllTests() {
     } catch (error) {
       console.error(`✗ ${test.name} failed:`, error);
       failed++;
+      const message = error instanceof Error ? error.message : String(error);
+      failureDetails.push(`${test.name}: ${message}`);
     }
   }
 
   console.log(`\nTest Results: ${passed} passed, ${failed} failed`);
 
-  return failed === 0;
+  if (failed > 0) {
+    throw new Error(`DocumentId test failures: ${failureDetails.join(" | ")}`);
+  }
+
+  return true;
 }
 
 // =============================================================================
@@ -314,33 +382,16 @@ async function runAllTests() {
 // =============================================================================
 
 export {
-  testGenerateDocumentId,
-  testParseDocumentId,
+  testGenerateAndParseRoundTrip,
   testParseInvalidDocumentId,
   testIsValidDocumentId,
   testDocumentIdsToTargets,
   testUniqueDocumentIds,
   testCachePruning,
   testWrapScriptingAPI,
+  testWrapScriptingRejectsInvalidDocumentIds,
   testWrapTabsAPI,
+  testWrapTabsRejectsInvalidDocumentId,
   testPassThroughWithoutDocumentId,
   runAllTests,
 };
-
-// Test file detection constant
-const TEST_FILE_NAME = "DocumentIdPolyfill.test";
-
-// Process type for Node.js/Deno compatibility
-declare const process:
-  | { argv: string[]; exit: (code: number) => never }
-  | undefined;
-
-// Run tests if this file is executed directly
-if (
-  typeof process !== "undefined" &&
-  process.argv[1]?.includes(TEST_FILE_NAME)
-) {
-  runAllTests().then((success) => {
-    process!.exit(success ? 0 : 1);
-  });
-}
