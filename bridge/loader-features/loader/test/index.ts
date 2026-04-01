@@ -159,13 +159,20 @@ export default async function runBrowserTests(): Promise<void> {
   try {
     // Chrome layer tests (via #features-chrome alias)
     const chromeTests = import.meta.glob(
-      "#features-chrome/**/test/**/*.test.{ts,mts}",
+      "#features-chrome/**/test/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
     );
 
     // ESM layer tests (via #features-modules alias)
-    const esmTests = import.meta.glob("#features-modules/**/*.test.{ts,mts}");
+    const esmTests = import.meta.glob(
+      "#features-modules/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
+    );
 
-    const allTests = { ...chromeTests, ...esmTests };
+    // Pages layer tests (via #features-pages alias)
+    const pagesTests = import.meta.glob(
+      "#features-pages/pages-*/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
+    );
+
+    const allTests = { ...chromeTests, ...esmTests, ...pagesTests };
     const entries = Object.entries(allTests) as Array<[string, LazyModule]>;
     discoveredFiles.push(
       ...entries.map(([file]) => file).sort((a, b) => a.localeCompare(b)),

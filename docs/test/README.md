@@ -7,8 +7,9 @@ This directory documents the colocated test style only.
 - Tests are placed next to source files or under a sibling `test/` folder.
 - Default execution is browser integration testing.
 - Browser test discovery follows the browser loader patterns:
-- `browser-features/chrome/**/test/**/*.test.{ts,mts}`
-- `browser-features/modules/**/*.test.{ts,mts}`
+- `browser-features/chrome/**/test/**/*.test.{ts,mts,tsx,js,mjs,jsx}`
+- `browser-features/modules/**/*.test.{ts,mts,tsx,js,mjs,jsx}`
+- `browser-features/pages-*/**/*.test.{ts,mts,tsx,js,mjs,jsx}`
 
 ## Tasks
 
@@ -88,6 +89,7 @@ Smoke runner policy:
 - Place browser tests as `*.test.ts` or `*.test.mts`.
 - Chrome layer browser tests should be under a `test/` directory in `browser-features/chrome/**`.
 - ESM layer browser tests can be colocated under `browser-features/modules/**`.
+- Pages layer browser tests can be colocated under `browser-features/pages-*/**`.
 - If a test module exports `runAllTests`, the runner calls it.
 - Otherwise, the module is imported and treated as pass when import succeeds.
 - Layer mapping (`--layer`):

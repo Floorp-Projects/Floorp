@@ -123,9 +123,15 @@ function discoverAllTests(): string[] {
 function isBrowserDiscoverableTest(relPath: string): boolean {
   const normalized = relPath.replaceAll("\\", "/");
   return (
-    /^browser-features\/chrome\/(?:.*\/)?test\/.*\.test\.(?:ts|mts)$/.test(
+    /^browser-features\/chrome\/(?:.*\/)?test\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
       normalized,
-    ) || /^browser-features\/modules\/.*\.test\.(?:ts|mts)$/.test(normalized)
+    ) ||
+    /^browser-features\/modules\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
+      normalized,
+    ) ||
+    /^browser-features\/pages-[^/]+\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
+      normalized,
+    )
   );
 }
 

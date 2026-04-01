@@ -60,6 +60,10 @@ function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
       args: ["task", "test", "--list", "--layer", "esm"],
     },
     {
+      name: "runtime scan: floorp pages test targets",
+      args: ["task", "test", "--list", "--layer", "pages"],
+    },
+    {
       name: "runtime check: floorp source directories",
       args: ["check", "tools", "bridge", "browser-features", "i18n", "libs"],
     },
