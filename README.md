@@ -53,7 +53,7 @@ A browser built for keeping the Open, Private and Sustainable Web alive. Based o
 
 Floorp Browser is a free and open-source project. If you like Floorp Browser, please consider sponsoring us. Your sponsorship will help us to continue development and pay for the server costs. You may advertise if you continuously sponsor a minimum of $100 per month.
 
-- [GitHub Sponsors](https://github.com/sponsors/surapunoyousei)
+- [GitHub Sponsors](https://github.com/sponsors/Ryosuke-Asano)
 
 <h2> 💕 Special Sponsors </h2>
 <div align="left" style="display: flex; flex-wrap: wrap;">
