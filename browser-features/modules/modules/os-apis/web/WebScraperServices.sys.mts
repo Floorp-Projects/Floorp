@@ -65,6 +65,7 @@ class webScraper {
     tries = 100,
     delayMs = 100,
   ): Promise<WebScraperActor | null> {
+    // Preserve original total timeout budget from fixed-interval polling.
     return waitForActor<WebScraperActor>(
       () => this._browserInstances.get(instanceId) ?? null,
       "NRWebScraper",

@@ -18,7 +18,6 @@ interface BrowserLike {
     currentWindowGlobal?: { getActor(name: string): unknown } | null;
   } | null;
 }
-
 interface WaitForActorOptions {
   /** Maximum total wait time in milliseconds (default: 15000) */
   maxMs?: number;
