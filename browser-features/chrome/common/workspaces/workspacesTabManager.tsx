@@ -216,7 +216,6 @@ export class WorkspacesTabManager {
     if (!workspaceId) {
       const currentId = this.dataManagerCtx.getSelectedWorkspaceID();
       if (currentId) {
-        this.setWorkspaceIdToAttribute(tab, currentId);
         workspaceId = currentId;
       } else {
         return;
