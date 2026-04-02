@@ -69,7 +69,9 @@ function publishState(state: TestState): void {
   setSharedStatePref(state);
 }
 
-const PER_TEST_TIMEOUT_MS = 30_000;
+// Keep this below host-side collection timeout defaults while giving slow
+// test environments enough room.
+const PER_TEST_TIMEOUT_MS = 120_000;
 
 type LazyModule = () => Promise<unknown>;
 

@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: "(CI) 🧪 Browser Integration + Runner Tests"
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Smoke: lint / type check / test discovery (fast, no browser) ──
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ hashFiles('deno.lock') }}
+          restore-keys: deno-
+      - run: deno task test:smoke
+
+  # ── Browser integration tests (requires smoke to pass) ──
+  browser-integration:
+    needs: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ hashFiles('deno.lock') }}
+          restore-keys: deno-
+
+      - name: Start browser and run integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _dist
+          rm -f _dist/marionette-port.txt
+
+          deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
+          FELES_PID=$!
+
+          cleanup() {
+            if kill -0 "$FELES_PID" >/dev/null 2>&1; then
+              kill "$FELES_PID" >/dev/null 2>&1 || true
+              sleep 5
+              kill -9 "$FELES_PID" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          for i in {1..300}; do
+            if [[ -s _dist/marionette-port.txt ]]; then
+              echo "Marionette ready on port $(cat _dist/marionette-port.txt)"
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ ! -s _dist/marionette-port.txt ]]; then
+            echo "::error::Marionette startup timed out"
+            cat _dist/ci-feles-build-test.log || true
+            exit 1
+          fi
+
+          deno task test --no-autostart
+
+      - name: Run runner unit tests
+        run: deno test -A tools/src/colocated_test_runner.test.ts
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: |
+            logs/test/latest.log
+            _dist/ci-feles-build-test.log

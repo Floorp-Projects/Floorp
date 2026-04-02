@@ -22,11 +22,14 @@ import {
   type BrowserTestResult,
 } from "./browser_test_collector.ts";
 
-interface RunnerOptions {
+export interface RunnerOptions {
   near?: string;
   listOnly: boolean;
   layer: TestLayer;
   autoStart: boolean;
+  timeoutMs: number;
+  startupTimeoutMs: number;
+  help: boolean;
 }
 
 const TEST_LOG_DIR = path.join(PROJECT_ROOT, "logs", "test");
@@ -35,9 +38,36 @@ const MARIONETTE_PORT_FILE = path.join(
   "_dist",
   "marionette-port.txt",
 );
-const AUTOSTART_READY_TIMEOUT_MS = 180_000;
+const MAX_TEST_EXECUTION_TIMEOUT_MS = 1_800_000;
+const DEFAULT_TEST_COLLECTION_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
+const DEFAULT_AUTOSTART_READY_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
 const AUTOSTART_POLL_INTERVAL_MS = 1_000;
 const AUTOSTART_STOP_TIMEOUT_MS = 5_000;
+const ALLOWED_LONG_OPTIONS = new Set([
+  "near",
+  "env",
+  "layer",
+  "list",
+  "no-autostart",
+  "timeout-ms",
+  "startup-timeout-ms",
+  "help",
+]);
+const ALLOWED_SHORT_OPTIONS = new Set(["n", "l", "h"]);
+
+const HELP = `
+Usage: deno task test [path] [options]
+
+Options:
+  --near, -n <path>              Run tests near a directory or source file
+  --list, -l                     List resolved targets without executing
+  --layer <all|chrome|esm|pages> Filter by test layer (default: all)
+  --timeout-ms <ms>              Browser result collection timeout (default/max: 1800000)
+  --startup-timeout-ms <ms>      Auto-start browser ready timeout (default/max: 1800000)
+  --no-autostart                 Do not auto-start browser when unavailable
+  --env browser                  Accepted for compatibility; host mode is not supported
+  --help, -h                     Show this help
+`.trim();
 
 type LogLevel = "INFO" | "ERROR";
 
@@ -221,19 +251,86 @@ function errorToMessage(error: unknown): string {
   return String(error);
 }
 
-function parseOptions(args: string[]): RunnerOptions {
+function ensureSupportedOptions(args: string[]): void {
+  for (const arg of args) {
+    if (arg === "--") {
+      break;
+    }
+
+    if (!arg.startsWith("-") || arg === "-") {
+      continue;
+    }
+
+    if (arg.startsWith("--")) {
+      const [name] = arg.slice(2).split("=", 1);
+      if (!ALLOWED_LONG_OPTIONS.has(name)) {
+        throw new Error(
+          `Unknown option: --${name}. Use --help to see supported options.`,
+        );
+      }
+      continue;
+    }
+
+    const shortGroup = arg.slice(1);
+    for (const shortName of shortGroup) {
+      if (!ALLOWED_SHORT_OPTIONS.has(shortName)) {
+        throw new Error(
+          `Unknown option: -${shortName}. Use --help to see supported options.`,
+        );
+      }
+    }
+  }
+}
+
+function parsePositiveIntegerMs(
+  rawValue: string | number | undefined,
+  flagName: string,
+  fallback: number,
+  maxValue: number,
+): number {
+  if (rawValue === undefined) {
+    return fallback;
+  }
+
+  const value = Number(rawValue);
+  if (!Number.isInteger(value) || value <= 0 || value > maxValue) {
+    throw new Error(
+      `Invalid --${flagName} value: ${rawValue}. Use a positive integer (milliseconds) up to ${maxValue}.`,
+    );
+  }
+
+  return value;
+}
+
+export function parseOptions(args: string[]): RunnerOptions {
+  ensureSupportedOptions(args);
+
   const parsed = parseArgs(args, {
-    string: ["near", "env", "layer"],
-    boolean: ["list", "no-autostart"],
+    string: ["near", "env", "layer", "timeout-ms", "startup-timeout-ms"],
+    boolean: ["list", "no-autostart", "help"],
     alias: {
       n: "near",
       l: "list",
+      h: "help",
     },
     default: {
       list: false,
       layer: "all",
+      "timeout-ms": String(DEFAULT_TEST_COLLECTION_TIMEOUT_MS),
+      "startup-timeout-ms": String(DEFAULT_AUTOSTART_READY_TIMEOUT_MS),
     },
   });
+
+  if (parsed.help) {
+    return {
+      listOnly: true,
+      layer: "all",
+      autoStart: true,
+      timeoutMs: DEFAULT_TEST_COLLECTION_TIMEOUT_MS,
+      startupTimeoutMs: DEFAULT_AUTOSTART_READY_TIMEOUT_MS,
+      help: true,
+    };
+  }
 
   const positional = parsed._.map(String);
   if (parsed.near && positional.length > 0) {
@@ -254,6 +351,19 @@ function parseOptions(args: string[]): RunnerOptions {
     listOnly: Boolean(parsed.list),
     layer: parseLayer(parsed.layer),
     autoStart: parsed["no-autostart"] !== true,
+    timeoutMs: parsePositiveIntegerMs(
+      parsed["timeout-ms"],
+      "timeout-ms",
+      DEFAULT_TEST_COLLECTION_TIMEOUT_MS,
+      MAX_TEST_EXECUTION_TIMEOUT_MS,
+    ),
+    startupTimeoutMs: parsePositiveIntegerMs(
+      parsed["startup-timeout-ms"],
+      "startup-timeout-ms",
+      DEFAULT_AUTOSTART_READY_TIMEOUT_MS,
+      MAX_TEST_EXECUTION_TIMEOUT_MS,
+    ),
+    help: false,
   };
 }
 
@@ -313,8 +423,9 @@ function startTestBrowserProcess(): Deno.ChildProcess {
 
 async function waitForAutoStartedBrowser(
   child: Deno.ChildProcess,
+  startupTimeoutMs: number,
 ): Promise<void> {
-  const deadline = Date.now() + AUTOSTART_READY_TIMEOUT_MS;
+  const deadline = Date.now() + startupTimeoutMs;
 
   while (Date.now() < deadline) {
     const maybeStatus = await Promise.race([
@@ -334,7 +445,7 @@ async function waitForAutoStartedBrowser(
   }
 
   throw new Error(
-    `Timed out after ${AUTOSTART_READY_TIMEOUT_MS}ms while waiting for test browser startup`,
+    `Timed out after ${startupTimeoutMs}ms while waiting for test browser startup`,
   );
 }
 
@@ -445,18 +556,37 @@ function sanitizeKillTargets(pids: number[]): number[] {
 async function stopPosixProcessTree(
   child: Deno.ChildProcess,
   rootPid: number,
+  writeLog?: (level: LogLevel, message: string) => void,
 ): Promise<void> {
+  writeLog?.(
+    "INFO",
+    `Stopping auto-started browser process tree (posix, root pid=${rootPid})`,
+  );
+
   let descendants: number[] = [];
   try {
     descendants = await listDescendantPids(rootPid);
+    writeLog?.(
+      "INFO",
+      `Discovered ${descendants.length} descendant process(es) for teardown`,
+    );
   } catch {
     // fallback to root process only
+    writeLog?.(
+      "INFO",
+      "Could not enumerate descendants; falling back to root process only",
+    );
   }
 
   const initialTargets = sanitizeKillTargets([...descendants, rootPid]);
   if (initialTargets.length === 0) {
+    writeLog?.("INFO", "No valid teardown targets after sanitization");
     return;
   }
+  writeLog?.(
+    "INFO",
+    `Sending SIGTERM to ${initialTargets.length} process(es): ${initialTargets.join(", ")}`,
+  );
   signalPids(initialTargets, "SIGTERM");
 
   await Promise.race([
@@ -469,35 +599,61 @@ async function stopPosixProcessTree(
     remaining = await listRunningPids(initialTargets);
   } catch {
     // if process table is unavailable, do not hard-fail teardown
+    writeLog?.(
+      "INFO",
+      "Could not verify remaining processes after SIGTERM; skipping SIGKILL phase",
+    );
     return;
   }
 
   if (remaining.size === 0) {
+    writeLog?.("INFO", "All auto-started processes exited after SIGTERM");
     return;
   }
 
-  signalPids(sanitizeKillTargets(Array.from(remaining)), "SIGKILL");
+  const killTargets = sanitizeKillTargets(Array.from(remaining));
+  writeLog?.(
+    "INFO",
+    `Sending SIGKILL to ${killTargets.length} remaining process(es): ${killTargets.join(", ")}`,
+  );
+  signalPids(killTargets, "SIGKILL");
 }
 
-async function stopAutoStartedBrowser(child: Deno.ChildProcess): Promise<void> {
+async function stopAutoStartedBrowser(
+  child: Deno.ChildProcess,
+  writeLog?: (level: LogLevel, message: string) => void,
+): Promise<void> {
   if (child.pid === undefined) {
+    writeLog?.(
+      "INFO",
+      "Auto-started browser PID is unavailable; skipping teardown",
+    );
     return;
   }
 
   if (Deno.build.os === "windows") {
+    writeLog?.(
+      "INFO",
+      `Stopping auto-started browser process tree (windows, root pid=${child.pid})`,
+    );
     try {
       await new Deno.Command("taskkill", {
         args: ["/PID", String(child.pid), "/T", "/F"],
         stdout: "null",
         stderr: "null",
       }).output();
+      writeLog?.(
+        "INFO",
+        "taskkill completed for auto-started browser process tree",
+      );
     } catch {
       // process may have exited already
+      writeLog?.("INFO", "taskkill failed or process already exited");
     }
     return;
   }
 
-  await stopPosixProcessTree(child, child.pid);
+  await stopPosixProcessTree(child, child.pid, writeLog);
 }
 
 function formatScope(options: RunnerOptions): string {
@@ -624,11 +780,34 @@ async function main(): Promise<number> {
       return exitCode;
     }
 
+    if (options.help) {
+      console.log(HELP);
+      return exitCode;
+    }
+
+    const runDeadlineMs = Date.now() + MAX_TEST_EXECUTION_TIMEOUT_MS;
+    const resolveStageTimeoutMs = (
+      requestedMs: number,
+      stageName: string,
+    ): number => {
+      const remainingMs = runDeadlineMs - Date.now();
+      if (remainingMs <= 0) {
+        throw new Error(
+          `Overall test execution exceeded ${MAX_TEST_EXECUTION_TIMEOUT_MS}ms before ${stageName}.`,
+        );
+      }
+      return Math.min(requestedMs, remainingMs);
+    };
+
     writeLine(
       "INFO",
       `Running browser integration tests (layer=${options.layer}${
         options.near ? `, near=${options.near}` : ""
       })`,
+    );
+    writeLine(
+      "INFO",
+      `Configured timeouts: collection=${options.timeoutMs}ms, startup=${options.startupTimeoutMs}ms, overall-cap=${MAX_TEST_EXECUTION_TIMEOUT_MS}ms`,
     );
     writeSection("Discovered Test Targets");
 
@@ -667,7 +846,10 @@ async function main(): Promise<number> {
 
       try {
         autoStartedBrowser = startTestBrowserProcess();
-        await waitForAutoStartedBrowser(autoStartedBrowser);
+        await waitForAutoStartedBrowser(
+          autoStartedBrowser,
+          resolveStageTimeoutMs(options.startupTimeoutMs, "browser startup"),
+        );
         writeLine(
           "INFO",
           "Auto-started test browser is ready. Reconnecting...",
@@ -711,7 +893,10 @@ async function main(): Promise<number> {
 
       try {
         autoStartedBrowser = startTestBrowserProcess();
-        await waitForAutoStartedBrowser(autoStartedBrowser);
+        await waitForAutoStartedBrowser(
+          autoStartedBrowser,
+          resolveStageTimeoutMs(options.startupTimeoutMs, "browser startup"),
+        );
         writeLine(
           "INFO",
           "Auto-started test browser is ready. Reconnecting...",
@@ -731,7 +916,10 @@ async function main(): Promise<number> {
     writeLine("INFO", "Connected. Waiting for browser test results...");
 
     try {
-      const browserCollection = await collectBrowserTestResults(client);
+      const browserCollection = await collectBrowserTestResults(
+        client,
+        resolveStageTimeoutMs(options.timeoutMs, "browser test collection"),
+      );
       const browserResults = browserCollection.results;
       const results = filterBrowserResults(browserResults, targetRels);
       const missingTargets = findMissingTargets(results, targetRels);
@@ -818,6 +1006,10 @@ async function main(): Promise<number> {
         "ERROR",
         `Browser test collection failed: ${errorToMessage(error)}`,
       );
+      writeLine(
+        "ERROR",
+        `Hint: increase timeout with --timeout-ms <ms> (current: ${options.timeoutMs}) or ensure browser startup is stable.`,
+      );
       exitCode = 1;
     } finally {
       await client.close();
@@ -827,7 +1019,7 @@ async function main(): Promise<number> {
     exitCode = 1;
   } finally {
     if (autoStartedBrowser) {
-      await stopAutoStartedBrowser(autoStartedBrowser);
+      await stopAutoStartedBrowser(autoStartedBrowser, writeLine);
     }
 
     const finishedAt = new Date();

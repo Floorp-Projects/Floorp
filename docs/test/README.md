@@ -62,6 +62,12 @@ deno task test browser-features/chrome --layer chrome
 deno task test --list
 ```
 
+1. Run with explicit (generous) timeouts:
+
+```bash
+deno task test --timeout-ms 1800000 --startup-timeout-ms 1800000
+```
+
 1. Run smoke suite:
 
 ```bash
@@ -80,9 +86,16 @@ Smoke runner policy:
 
 - Smoke checks run only on Deno runtime commands (`deno test`, `deno check`, `deno lint`).
 - Browser auto-launch and Marionette-based integration execution are excluded from smoke.
-- Smoke includes lightweight Floorp-side scan via `deno task test --list --layer chrome|esm`.
+- Smoke includes lightweight Floorp-side scan via `deno task test --list --layer chrome|esm|pages`.
 - Smoke runs `deno check` and `deno lint` across Floorp source directories (`tools`, `bridge`, `browser-features`, `i18n`, `libs`).
 - Smoke does not stop on first failure; it executes all steps and returns a summarized failure at the end.
+
+Runner timeout policy:
+
+- `--timeout-ms` controls host-side browser result collection timeout (default/max: `1800000`).
+- `--startup-timeout-ms` controls how long auto-start waits for a test browser (default/max: `1800000`).
+- Runner enforces an overall execution cap of `1800000`ms (`30` minutes) across startup and collection stages.
+- Invalid timeout values (non-integer, <= `0`, or > `1800000`) fail fast with an input error.
 
 ## Conventions
 

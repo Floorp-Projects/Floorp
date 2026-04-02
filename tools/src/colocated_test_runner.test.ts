@@ -9,6 +9,7 @@ import {
   normalizeBrowserResultPath,
   parseLayer,
 } from "./colocated_test_utils.ts";
+import { parseOptions } from "./colocated_test_runner.ts";
 
 Deno.test("isTestFile detects supported test patterns", () => {
   assertEquals(isTestFile("foo/bar.test.ts"), true);
@@ -126,4 +127,75 @@ Deno.test("isResultMatchTarget matches normalized browser paths", () => {
     ),
     false,
   );
+});
+
+Deno.test("parseOptions applies default timeout values", () => {
+  const options = parseOptions([]);
+
+  assertEquals(options.near, undefined);
+  assertEquals(options.listOnly, false);
+  assertEquals(options.layer, "all");
+  assertEquals(options.autoStart, true);
+  assertEquals(options.timeoutMs, 1_800_000);
+  assertEquals(options.startupTimeoutMs, 1_800_000);
+  assertEquals(options.help, false);
+});
+
+Deno.test("parseOptions accepts explicit timeout and startup values", () => {
+  const options = parseOptions([
+    "browser-features/chrome",
+    "--layer",
+    "chrome",
+    "--timeout-ms",
+    "450000",
+    "--startup-timeout-ms=360000",
+  ]);
+
+  assertEquals(options.near, "browser-features/chrome");
+  assertEquals(options.layer, "chrome");
+  assertEquals(options.timeoutMs, 450_000);
+  assertEquals(options.startupTimeoutMs, 360_000);
+});
+
+Deno.test("parseOptions rejects unknown options", () => {
+  assertThrows(
+    () => parseOptions(["--timeout", "100"]),
+    Error,
+    "Unknown option: --timeout",
+  );
+});
+
+Deno.test("parseOptions rejects invalid timeout values", () => {
+  assertThrows(
+    () => parseOptions(["--timeout-ms", "abc"]),
+    Error,
+    "Invalid --timeout-ms value",
+  );
+
+  assertThrows(
+    () => parseOptions(["--startup-timeout-ms", "0"]),
+    Error,
+    "Invalid --startup-timeout-ms value",
+  );
+
+  assertThrows(
+    () => parseOptions(["--timeout-ms", "1800001"]),
+    Error,
+    "Invalid --timeout-ms value",
+  );
+});
+
+Deno.test("parseOptions rejects --near with positional path", () => {
+  assertThrows(
+    () => parseOptions(["foo", "--near", "bar"]),
+    Error,
+    "Use either --near or a positional path",
+  );
+});
+
+Deno.test("parseOptions supports help mode", () => {
+  const options = parseOptions(["--help"]);
+  assertEquals(options.help, true);
+  assertEquals(options.timeoutMs, 1_800_000);
+  assertEquals(options.startupTimeoutMs, 1_800_000);
 });
