@@ -59,6 +59,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return 0;
   }
 
+  private findFallbackWorkspaceID(excludeId: TWorkspaceID): TWorkspaceID | null {
+    const fromOrder = workspacesDataStore.order.find((id) => id !== excludeId);
+    if (fromOrder && this.isWorkspaceID(fromOrder)) {
+      return fromOrder;
+    }
+
+    for (const id of workspacesDataStore.data.keys()) {
+      if (id !== excludeId) {
+        return id;
+      }
+    }
+
+    return null;
+  }
+
   constructor(
     tabManagerCtx: WorkspacesTabManager,
     iconCtx: WorkspaceIcons,
@@ -139,7 +154,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
-    this.tabManagerCtx.removeTabByWorkspaceId(workspaceID);
+
+    const fallbackWorkspaceID = this.findFallbackWorkspaceID(workspaceID);
+    const defaultWorkspaceID = this.getDefaultWorkspaceID();
+    if (
+      defaultWorkspaceID === workspaceID &&
+      fallbackWorkspaceID &&
+      fallbackWorkspaceID !== workspaceID
+    ) {
+      this.setDefaultWorkspace(fallbackWorkspaceID);
+    }
+
+    this.tabManagerCtx.removeTabByWorkspaceId(
+      workspaceID,
+      fallbackWorkspaceID ?? undefined,
+    );
     setWorkspacesDataStore("order", (prev) =>
       prev.filter((v) => v !== workspaceID),
     );

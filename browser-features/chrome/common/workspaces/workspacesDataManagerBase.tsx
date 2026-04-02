@@ -25,6 +25,16 @@ export interface WorkspacesDataManagerBase {
 }
 
 export class WorkspacesDataManager implements WorkspacesDataManagerBase {
+  private findFallbackWorkspaceID(excludeId: TWorkspaceID): TWorkspaceID | null {
+    for (const id of workspacesDataStore.data.keys()) {
+      if (id !== excludeId) {
+        return id;
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Returns new workspace object.
    * @param name The name of the workspace.
@@ -58,7 +68,22 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(id: TWorkspaceID): void {
-    this.setCurrentWorkspaceID(workspacesDataStore.defaultID as TWorkspaceID);
+    const currentID = selectedWorkspaceID();
+    const defaultID = workspacesDataStore.defaultID as TWorkspaceID;
+    const fallbackID = defaultID !== id && this.isWorkspaceID(defaultID)
+      ? defaultID
+      : this.findFallbackWorkspaceID(id);
+
+    if (defaultID === id && fallbackID) {
+      this.setDefaultWorkspace(fallbackID);
+    }
+
+    if (
+      fallbackID &&
+      (currentID === id || currentID === null || !this.isWorkspaceID(currentID))
+    ) {
+      this.setCurrentWorkspaceID(fallbackID);
+    }
 
     setWorkspacesDataStore("data", (prev) => {
       prev.delete(id);

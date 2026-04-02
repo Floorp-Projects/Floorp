@@ -361,7 +361,7 @@ export class WorkspacesTabManager {
         this.setWorkspaceIdToAttribute(tab, wsId);
       }
       this.recentOpenedAtPerWorkspace.set(wsId, now);
-    } catch (_openErr) {
+    } catch {
       // ignore tab-open handler error
     }
   };
@@ -457,8 +457,13 @@ export class WorkspacesTabManager {
   /**
    * Remove tab by workspace id.
    * @param workspaceId The workspace id.
+   * @param fallbackWorkspaceId Optional fallback workspace id used when
+   * deleting the current/default workspace.
    */
-  public removeTabByWorkspaceId(workspaceId: TWorkspaceID) {
+  public removeTabByWorkspaceId(
+    workspaceId: TWorkspaceID,
+    fallbackWorkspaceId?: TWorkspaceID,
+  ) {
     const tabs = globalThis.gBrowser.tabs;
     const tabsToRemove = [];
 
@@ -479,22 +484,25 @@ export class WorkspacesTabManager {
       const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
       if (workspaceId === currentWorkspaceId) {
         const defaultId = this.dataManagerCtx.getDefaultWorkspaceID();
+        const targetWorkspaceId = defaultId !== workspaceId
+          ? defaultId
+          : fallbackWorkspaceId && fallbackWorkspaceId !== workspaceId
+          ? fallbackWorkspaceId
+          : null;
 
-        if (defaultId !== workspaceId) {
+        if (targetWorkspaceId) {
           const defaultTabs = document?.querySelectorAll(
-            `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${defaultId}"]`,
+            `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${targetWorkspaceId}"]`,
           ) as NodeListOf<XULElement>;
 
           if (defaultTabs?.length > 0) {
             globalThis.gBrowser.selectedTab = defaultTabs[0];
           } else {
-            this.createTabForWorkspace(defaultId, true);
+            this.createTabForWorkspace(targetWorkspaceId, true);
           }
 
-          this.dataManagerCtx.setCurrentWorkspaceID(defaultId);
+          this.dataManagerCtx.setCurrentWorkspaceID(targetWorkspaceId);
           this.updateTabsVisibility();
-        } else {
-          this.createTabForWorkspace(defaultId, true);
         }
       }
 
