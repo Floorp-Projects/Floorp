@@ -38,6 +38,10 @@ export function normalizeBrowserResultPath(resultFile: string): string {
     );
   }
 
+  if (normalized.startsWith("#features-pages/")) {
+    return normalized.replace("#features-pages/", "browser-features/");
+  }
+
   if (normalized.startsWith("#")) {
     return `[unknown-alias] ${normalized}`;
   }
