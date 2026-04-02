@@ -37,6 +37,7 @@ const MARIONETTE_PORT_FILE = path.join(
 );
 const AUTOSTART_READY_TIMEOUT_MS = 180_000;
 const AUTOSTART_POLL_INTERVAL_MS = 1_000;
+const AUTOSTART_STOP_TIMEOUT_MS = 5_000;
 
 type LogLevel = "INFO" | "ERROR";
 
@@ -337,6 +338,145 @@ async function waitForAutoStartedBrowser(
   );
 }
 
+async function listDescendantPids(rootPid: number): Promise<number[]> {
+  const output = await new Deno.Command("ps", {
+    args: ["-axo", "pid=,ppid="],
+    stdout: "piped",
+    stderr: "null",
+  }).output();
+
+  if (!output.success) {
+    return [];
+  }
+
+  const table = new Map<number, number[]>();
+  const rows = new TextDecoder().decode(output.stdout).split("\n");
+
+  for (const row of rows) {
+    const trimmed = row.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    const [pidRaw, ppidRaw] = trimmed.split(/\s+/, 2);
+    const pid = Number(pidRaw);
+    const ppid = Number(ppidRaw);
+    if (!Number.isFinite(pid) || !Number.isFinite(ppid)) {
+      continue;
+    }
+
+    const children = table.get(ppid) ?? [];
+    children.push(pid);
+    table.set(ppid, children);
+  }
+
+  const descendants: number[] = [];
+  const queue: number[] = [rootPid];
+  const seen = new Set<number>(queue);
+
+  while (queue.length > 0) {
+    const parent = queue.shift();
+    if (parent === undefined) {
+      continue;
+    }
+
+    const children = table.get(parent) ?? [];
+    for (const child of children) {
+      if (seen.has(child)) {
+        continue;
+      }
+      seen.add(child);
+      descendants.push(child);
+      queue.push(child);
+    }
+  }
+
+  return descendants;
+}
+
+async function listRunningPids(pids: number[]): Promise<Set<number>> {
+  const uniquePids = Array.from(new Set(pids));
+  if (uniquePids.length === 0) {
+    return new Set<number>();
+  }
+
+  const output = await new Deno.Command("ps", {
+    args: ["-p", uniquePids.join(","), "-o", "pid="],
+    stdout: "piped",
+    stderr: "null",
+  }).output();
+
+  if (!output.success) {
+    return new Set<number>();
+  }
+
+  const running = new Set<number>();
+  const rows = new TextDecoder().decode(output.stdout).split("\n");
+  for (const row of rows) {
+    const pid = Number(row.trim());
+    if (Number.isFinite(pid)) {
+      running.add(pid);
+    }
+  }
+  return running;
+}
+
+function signalPids(pids: number[], signal: Deno.Signal): void {
+  for (const pid of pids) {
+    try {
+      Deno.kill(pid, signal);
+    } catch {
+      // process may have already exited
+    }
+  }
+}
+
+function sanitizeKillTargets(pids: number[]): number[] {
+  const protectedPids = new Set<number>([Deno.pid, Deno.ppid]);
+  return Array.from(
+    new Set(
+      pids.filter((pid) => Number.isInteger(pid) && pid > 0 && !protectedPids.has(pid)),
+    ),
+  );
+}
+
+async function stopPosixProcessTree(
+  child: Deno.ChildProcess,
+  rootPid: number,
+): Promise<void> {
+  let descendants: number[] = [];
+  try {
+    descendants = await listDescendantPids(rootPid);
+  } catch {
+    // fallback to root process only
+  }
+
+  const initialTargets = sanitizeKillTargets([...descendants, rootPid]);
+  if (initialTargets.length === 0) {
+    return;
+  }
+  signalPids(initialTargets, "SIGTERM");
+
+  await Promise.race([
+    child.status,
+    sleep(AUTOSTART_STOP_TIMEOUT_MS).then(() => null),
+  ]);
+
+  let remaining = new Set<number>();
+  try {
+    remaining = await listRunningPids(initialTargets);
+  } catch {
+    // if process table is unavailable, do not hard-fail teardown
+    return;
+  }
+
+  if (remaining.size === 0) {
+    return;
+  }
+
+  signalPids(sanitizeKillTargets(Array.from(remaining)), "SIGKILL");
+}
+
 async function stopAutoStartedBrowser(child: Deno.ChildProcess): Promise<void> {
   if (child.pid === undefined) {
     return;
@@ -355,23 +495,7 @@ async function stopAutoStartedBrowser(child: Deno.ChildProcess): Promise<void> {
     return;
   }
 
-  try {
-    child.kill("SIGTERM");
-  } catch {
-    // process may have exited already
-  }
-
-  const maybeStatus = await Promise.race([
-    child.status,
-    sleep(5_000).then(() => null),
-  ]);
-  if (!maybeStatus) {
-    try {
-      child.kill("SIGKILL");
-    } catch {
-      // process may have exited already
-    }
-  }
+  await stopPosixProcessTree(child, child.pid);
 }
 
 function formatScope(options: RunnerOptions): string {
