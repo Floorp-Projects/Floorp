@@ -44,6 +44,13 @@ jobs:
           key: deno-${{ hashFiles('deno.lock') }}
           restore-keys: deno-
 
+      - name: Set up virtual display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          Xvfb :99 -screen 0 1280x1024x24 &
+
       - name: Start browser and run integration tests
         shell: bash
         run: |
