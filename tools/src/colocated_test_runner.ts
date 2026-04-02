@@ -435,7 +435,9 @@ function sanitizeKillTargets(pids: number[]): number[] {
   const protectedPids = new Set<number>([Deno.pid, Deno.ppid]);
   return Array.from(
     new Set(
-      pids.filter((pid) => Number.isInteger(pid) && pid > 0 && !protectedPids.has(pid)),
+      pids.filter(
+        (pid) => Number.isInteger(pid) && pid > 0 && !protectedPids.has(pid),
+      ),
     ),
   );
 }
