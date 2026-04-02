@@ -224,11 +224,13 @@ export class WorkspacesTabManager {
 
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const isCurrentWorkspace = workspaceId === currentWorkspaceId;
-    const workspaceTabs = Array.from(
-      document?.querySelectorAll(
-        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
-      ) as NodeListOf<XULElement>,
-    ).filter((t) => t !== tab);
+    const allTabs = globalThis.gBrowser.tabs as XULElement[];
+    const resolveWorkspaceIdForClose = (targetTab: XULElement): TWorkspaceID => {
+      return this.getWorkspaceIdFromAttribute(targetTab) ?? currentWorkspaceId;
+    };
+    const workspaceTabs = allTabs.filter((t) => {
+      return t !== tab && resolveWorkspaceIdForClose(t) === workspaceId;
+    });
 
     const now = Date.now();
     const validWorkspaceTabs = workspaceTabs.filter((t) => {
@@ -268,11 +270,10 @@ export class WorkspacesTabManager {
     if (isCurrentWorkspace && validWorkspaceTabs.length === 0) {
       // Current workspace is becoming empty.
       // Check if there are tabs in OTHER workspaces.
-      const allTabs = globalThis.gBrowser.tabs as XULElement[];
       const otherWorkspaceTabs = allTabs.filter((t) => {
         if (t === tab) return false;
-        const wsId = this.getWorkspaceIdFromAttribute(t);
-        return wsId && wsId !== workspaceId;
+        const wsId = resolveWorkspaceIdForClose(t);
+        return wsId !== workspaceId;
       });
 
       if (otherWorkspaceTabs.length > 0) {
