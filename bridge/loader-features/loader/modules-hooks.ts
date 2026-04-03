@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
+type RejectFn = (reason: unknown) => void;
+
 const _mapPromiseModuleState = new Map<
   string,
-  [Promise<void>, () => void, (reason: any) => void]
+  [Promise<void>, () => void, RejectFn]
 >();
 
-function createPromise(): [Promise<void>, () => void, (reason: any) => void] {
+function createPromise(): [Promise<void>, () => void, RejectFn] {
   let rs: (() => void) | null = null;
-  let rj: ((reason: any) => void) | null = null;
+  let rj: RejectFn | null = null;
   const p = new Promise<void>((resolve, reject) => {
     rs = resolve;
     rj = reject;

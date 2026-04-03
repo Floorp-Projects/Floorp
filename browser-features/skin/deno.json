@@ -1,6 +1,6 @@
 {
   "name": "@nora/skin",
   "exports": {
-    ".": "./*"
+    ".": "./deno.json"
   }
 }

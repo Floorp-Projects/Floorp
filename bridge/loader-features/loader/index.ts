@@ -47,7 +47,7 @@ export default async function initScripts() {
   await initializeModules(modules);
 }
 
-async function setPrefFeatures(all_features_keys: typeof MODULES_KEYS) {
+function setPrefFeatures(all_features_keys: typeof MODULES_KEYS) {
   // Set up preferences for features
   const prefs = Services.prefs.getDefaultBranch(null as unknown as string);
   prefs.setStringPref(

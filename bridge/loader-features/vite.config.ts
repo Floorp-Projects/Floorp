@@ -73,7 +73,7 @@ export default defineConfig({
             if (result?.at(1) != null) {
               return `modules/${result[1]}`;
             }
-          } catch {}
+          } catch { /* non-matching module path */ }
         },
         assetFileNames(assetInfo) {
           if (assetInfo.originalFileNames.at(0)?.endsWith(".svg")) {

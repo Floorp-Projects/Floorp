@@ -8,7 +8,7 @@
     "vite": "npm:rolldown-vite@^7.3.0"
   },
   "exports": {
-    ".": "./*"
+    ".": "./deno.json"
   },
   "compilerOptions": {
     "types": [
