@@ -26,6 +26,7 @@ jobs:
           path: ~/.cache/deno
           key: deno-${{ hashFiles('deno.lock') }}
           restore-keys: deno-
+      - run: deno install
       - run: deno task test:smoke
 
   # ── Browser integration tests (requires smoke to pass) ──

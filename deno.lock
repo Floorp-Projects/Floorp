@@ -4550,8 +4550,7 @@
       "jsr:@std/path@^1.1.4",
       "jsr:@std/streams@^1.0.14",
       "npm:@jsr/std__toml@^1.0.11",
-      "npm:rolldown-vite@^7.3.0",
-      "npm:uuid@13"
+      "npm:rolldown-vite@^7.3.0"
     ],
     "packageJson": {
       "dependencies": [
