@@ -17,7 +17,6 @@ const CStyleObject = t.record(t.string, t.string);
 
 const hotCtxMap = new Map<ViteHotContext, Array<() => void>>();
 
-
 const {
   render: _render_unused,
   effect,
@@ -147,7 +146,6 @@ const _render = (
   });
   return disposer;
 };
-
 
 export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
   return createRoot((disposer) => {
