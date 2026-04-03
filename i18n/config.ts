@@ -30,7 +30,7 @@ const _meta = import.meta.glob("./*/_meta.toml", {
 const fallbackLng: Record<string, string> = {};
 for (const path in _meta) {
   fallbackLng[path.replaceAll("./", "").replaceAll("/_meta.toml", "")] = parse(
-    _meta[path].default,
+    (_meta[path] as { default: string }).default,
   )["fallback-language"] as string;
 }
 
@@ -44,7 +44,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
     resources: modules,
     defaultNS: defaultNamespace,
     ns: namespace,
-    fallbackLng,
+    fallbackLng: fallbackLng as unknown as i18next.FallbackLng,
     interpolation: {
       escapeValue: false,
       defaultVariables: {

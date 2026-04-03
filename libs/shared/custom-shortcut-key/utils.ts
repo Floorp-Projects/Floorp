@@ -108,7 +108,7 @@ const remapKeys = {
  */
 function remapKey(string: string) {
   if (Object.hasOwn(remapKeys, string)) {
-    return remapKeys[string];
+    return remapKeys[string as keyof typeof remapKeys];
   }
   return string;
 }

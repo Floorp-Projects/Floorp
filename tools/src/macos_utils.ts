@@ -47,8 +47,8 @@ export async function patchAppInfoPlists(
 
   try {
     walk(rootDir);
-  } catch (e) {
-    logger.error(`Failed to walk ${rootDir}: ${e.message ?? e}`);
+  } catch (e: unknown) {
+    logger.error(`Failed to walk ${rootDir}: ${e instanceof Error ? e.message : e}`);
     return;
   }
 
@@ -95,8 +95,8 @@ export async function patchAppInfoPlists(
       }
       Deno.writeTextFileSync(infoPlist, newContent);
       logger.info(`Patched ${infoPlist} with developer paths`);
-    } catch (e) {
-      logger.error(`Error patching ${infoPlist}: ${e.message ?? e}`);
+    } catch (e: unknown) {
+      logger.error(`Error patching ${infoPlist}: ${e instanceof Error ? e.message : e}`);
     }
   }
 }
