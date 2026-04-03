@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertThrows } from "@jsr/std__assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
   detectLayer,
   escapeRegExp,
