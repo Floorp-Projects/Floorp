@@ -1,5 +1,5 @@
 import { rpc } from "../../lib/rpc/rpc.ts";
-import {
+import type {
   TProgressiveWebAppFormData,
   TProgressiveWebAppObject,
 } from "@/types/pref.ts";
@@ -33,10 +33,10 @@ export async function getPwaSettings(): Promise<TProgressiveWebAppFormData> {
   };
 }
 
-export async function getInstalledApps(): Promise<TProgressiveWebAppObject> {
+export function getInstalledApps(): Promise<TProgressiveWebAppObject> {
   return new Promise((resolve, _reject) => {
     try {
-      window.NRGetInstalledApps((installedApps: string) => {
+      globalThis.NRGetInstalledApps((installedApps: string) => {
         if (!installedApps) {
           resolve({});
           return;
@@ -56,10 +56,10 @@ export async function getInstalledApps(): Promise<TProgressiveWebAppObject> {
   });
 }
 
-export async function renamePwaApp(id: string, newName: string): Promise<void> {
+export function renamePwaApp(id: string, newName: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      window.NRRenameSsb(id, newName);
+      globalThis.NRRenameSsb(id, newName);
       resolve();
     } catch (e) {
       console.error("Failed to rename PWA:", e);
@@ -68,10 +68,10 @@ export async function renamePwaApp(id: string, newName: string): Promise<void> {
   });
 }
 
-export async function uninstallPwaApp(id: string): Promise<void> {
+export function uninstallPwaApp(id: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      window.NRUninstallSsb(id);
+      globalThis.NRUninstallSsb(id);
       resolve();
     } catch (e) {
       console.error("Failed to uninstall PWA:", e);

@@ -59,6 +59,7 @@ jobs:
           mkdir -p _dist
           rm -f _dist/marionette-port.txt
 
+          deno install
           deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
           FELES_PID=$!
 

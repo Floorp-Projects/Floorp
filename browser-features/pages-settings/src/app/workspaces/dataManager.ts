@@ -1,5 +1,5 @@
 import { rpc } from "../../lib/rpc/rpc.ts";
-import { type WorkspacesFormData } from "../../types/pref.ts";
+import type { WorkspacesFormData } from "../../types/pref.ts";
 
 const WORKSPACES_INIT_TOPIC = "floorp.workspaces.initialize";
 

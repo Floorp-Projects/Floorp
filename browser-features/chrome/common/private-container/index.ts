@@ -61,6 +61,6 @@ export default class PrivateContainer extends NoraComponentBase {
     }
 
     // Inject menu item to open link in private container.
-    window.gFloorpPrivateContainer = new FloorpPrivateContainer();
+    globalThis.gFloorpPrivateContainer = new FloorpPrivateContainer();
   }
 }

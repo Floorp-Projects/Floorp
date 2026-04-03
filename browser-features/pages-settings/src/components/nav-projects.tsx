@@ -25,7 +25,7 @@ export function NavProjects({
     icon: LucideIcon;
   }[];
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile: _isMobile } = useSidebar();
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">

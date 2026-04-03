@@ -5,6 +5,7 @@ import type { JSXElement } from "solid-js";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { createRootHMR } from "@nora/solid-xul";
 
+// deno-lint-ignore no-namespace
 export namespace ContextMenuUtils {
   const checkItems: (() => void)[] = [];
   const contextMenuObserver: MutationObserver = new MutationObserver(() => {
@@ -80,7 +81,7 @@ export namespace ContextMenuUtils {
       if (nextSibling) nextSibling.hidden = false;
     }
 
-    (async () => {
+    (() => {
       for (const contextMenuSeparator of contextMenuSeparators()) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
 

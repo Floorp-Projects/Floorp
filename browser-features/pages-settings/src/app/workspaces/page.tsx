@@ -2,7 +2,6 @@ import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
-import { BackupSettings } from "./components/BackupSettings.tsx";
 import { getWorkspaceSettings, saveWorkspaceSettings } from "./dataManager.ts";
 import type { WorkspacesFormData } from "@/types/pref.ts";
 
@@ -26,9 +25,9 @@ export default function Page() {
     };
 
     fetchDefaultValues();
-    window.addEventListener("focus", fetchDefaultValues);
+    globalThis.addEventListener("focus", fetchDefaultValues);
     return () => {
-      window.removeEventListener("focus", fetchDefaultValues);
+      globalThis.removeEventListener("focus", fetchDefaultValues);
     };
   }, [setValue]);
 

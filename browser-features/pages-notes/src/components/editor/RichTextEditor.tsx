@@ -36,6 +36,7 @@ interface RichTextEditorProps {
 }
 
 function insertCompressedImage(
+    // deno-lint-ignore no-explicit-any
     view: { state: { schema: any; tr: any }; dispatch: (tr: any) => void },
     file: File | Blob,
 ) {
@@ -55,7 +56,6 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
     const parsedContent = useMemo(
         () => migrateLexicalContent(initialContent),
         // initialContent is only used on mount (component is keyed by note id)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
 

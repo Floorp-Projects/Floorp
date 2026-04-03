@@ -31,7 +31,7 @@ export interface BrowserLaunchOptions {
   marionette?: boolean;
 }
 
-export async function browserCommand(options: BrowserLaunchOptions = {}): Promise<string[]> {
+export function browserCommand(options: BrowserLaunchOptions = {}): string[] {
   const { marionette = true } = options;
   const args = [
     BIN_PATH_EXE,
@@ -56,7 +56,7 @@ export async function run(portOrOptions: number | BrowserLaunchOptions = 5180): 
 
   await ProcessUtils.runCommandWithLogging(
     cmd,
-    (stream: "stdout" | "stderr", line: string) => {
+    (_stream: "stdout" | "stderr", line: string) => {
       const m = line.match(/Marionette\tINFO\tListening on port (\d+)/);
       if (m) {
         console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver");

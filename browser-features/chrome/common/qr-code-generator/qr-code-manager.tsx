@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSignal } from "solid-js";
-import i18next from "i18next";
 
 export class QRCodeManager {
   _showPanel = createSignal(false);
@@ -15,24 +14,25 @@ export class QRCodeManager {
   currentUrl = this._currentUrl[0];
   setCurrentUrl = this._currentUrl[1];
 
+  // deno-lint-ignore no-explicit-any
   private qrCode: any = null;
 
   constructor() {
-    if (!window.gFloorp) {
-      window.gFloorp = {};
+    if (!globalThis.gFloorp) {
+      globalThis.gFloorp = {};
     }
 
-    window.gFloorp.qrCode = {
+    globalThis.gFloorp.qrCode = {
       show: () => this.showQRPanel(),
       hide: () => this.hideQRPanel(),
       generateForUrl: (url: string) => this.generateQRCode(url),
     };
 
-    if (!window.gFloorpPageAction) {
-      window.gFloorpPageAction = {};
+    if (!globalThis.gFloorpPageAction) {
+      globalThis.gFloorpPageAction = {};
     }
 
-    window.gFloorpPageAction.qrCode = {
+    globalThis.gFloorpPageAction.qrCode = {
       onPopupShowing: () => this.handlePopupShowing(),
     };
   }
@@ -55,7 +55,7 @@ export class QRCodeManager {
   init() {
     this.updateCurrentTabUrl();
 
-    window.gBrowser?.tabContainer.addEventListener("TabSelect", () => {
+    globalThis.gBrowser?.tabContainer.addEventListener("TabSelect", () => {
       this.updateCurrentTabUrl();
     });
   }
@@ -71,7 +71,7 @@ export class QRCodeManager {
 
   updateCurrentTabUrl() {
     try {
-      const currentTab = window.gBrowser?.selectedTab;
+      const currentTab = globalThis.gBrowser?.selectedTab;
       if (currentTab) {
         const currentTabURL = currentTab.linkedBrowser?.currentURI?.spec;
         if (currentTabURL) {
@@ -83,6 +83,7 @@ export class QRCodeManager {
     }
   }
 
+  // deno-lint-ignore no-explicit-any
   async generateQRCode(url: string, container?: HTMLElement): Promise<any> {
     if (!url) return null;
 
@@ -117,6 +118,7 @@ export class QRCodeManager {
         },
       };
 
+      // deno-lint-ignore no-explicit-any
       this.qrCode = new (QRCodeStylingClass as any)(options);
 
       if (container) {

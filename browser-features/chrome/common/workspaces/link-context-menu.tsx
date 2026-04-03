@@ -135,7 +135,7 @@ export class WorkspacesLinkContextMenu {
       (id) => id !== currentWorkspaceId,
     );
     const hasAlternativeWorkspace = availableTargets.length > 0;
-    const hasLink = Boolean(window.gContextMenu?.linkURL);
+    const hasLink = Boolean(globalThis.gContextMenu?.linkURL);
     const isOpenLinkHidden = Boolean(
       openLink.getAttribute("hidden") === "true" ||
         openLink.hasAttribute("hidden"),
@@ -168,7 +168,7 @@ export class WorkspacesLinkContextMenu {
       popup.removeChild(popup.firstChild);
     }
 
-    const currentTab = window.gBrowser?.selectedTab as XULElement | null;
+    const currentTab = globalThis.gBrowser?.selectedTab as XULElement | null;
     const currentWorkspaceId = (currentTab &&
       this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(currentTab)) ||
       this.ctx.getSelectedWorkspaceID();
@@ -222,7 +222,7 @@ export class WorkspacesLinkContextMenu {
   }
 
   private openLinkInWorkspace(workspaceId: TWorkspaceID) {
-    const url = window.gContextMenu?.linkURL;
+    const url = globalThis.gContextMenu?.linkURL;
     if (!url) {
       return;
     }
@@ -232,7 +232,7 @@ export class WorkspacesLinkContextMenu {
     const triggeringPrincipal = Services.scriptSecurityManager
       .getSystemPrincipal();
 
-    const newTab = window.gBrowser.addTrustedTab("about:blank", {
+    const newTab = globalThis.gBrowser.addTrustedTab("about:blank", {
       relatedToCurrent: false,
       inBackground: true,
       userContextId,
@@ -246,7 +246,7 @@ export class WorkspacesLinkContextMenu {
 
     try {
       const uri = Services.io.newURI(url);
-      window.gBrowser.getBrowserForTab(newTab).loadURI(uri, {
+      globalThis.gBrowser.getBrowserForTab(newTab).loadURI(uri, {
         triggeringPrincipal,
         loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
       });
@@ -255,7 +255,7 @@ export class WorkspacesLinkContextMenu {
         "[WorkspacesLinkContextMenu] Failed to open link in workspace",
         error,
       );
-      window.gBrowser.removeTab(newTab);
+      globalThis.gBrowser.removeTab(newTab);
       return;
     }
 

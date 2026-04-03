@@ -199,7 +199,7 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button onClick={() => handleClose(renameDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(renameDialogRef)}>close</button>
         </form>
       </dialog>
 
@@ -240,7 +240,7 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button onClick={() => handleClose(uninstallDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>close</button>
         </form>
       </dialog>
     </>

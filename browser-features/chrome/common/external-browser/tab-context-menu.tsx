@@ -98,8 +98,8 @@ export class ExternalBrowserTabContextMenu {
     await this.loadBrowsers();
 
     // Get the URL of the context tab
-    const contextTab = window.TabContextMenu.contextTab;
-    const browser = window.gBrowser.getBrowserForTab(contextTab);
+    const contextTab = globalThis.TabContextMenu.contextTab;
+    const browser = globalThis.gBrowser.getBrowserForTab(contextTab);
     const url = browser?.currentURI?.spec || "";
 
     if (!url || url === "about:blank" || url === "about:newtab") {

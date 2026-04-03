@@ -6,4 +6,5 @@ export interface ServerFunctions {
   onDOMContentLoaded(href: string | undefined): void;
 }
 
+// deno-lint-ignore no-empty-interface
 export interface ClientFunctions {}

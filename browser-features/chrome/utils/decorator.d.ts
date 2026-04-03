@@ -1,6 +1,7 @@
 // from https://github.com/tc39/proposal-decorators/blob/8936bfe642c63db0c6565572c4847c120400dac3/README.md
 
 export type ClassMethodDecorator = (
+  // deno-lint-ignore ban-types
   value: Function,
   context: {
     kind: "method";
@@ -10,9 +11,11 @@ export type ClassMethodDecorator = (
     private: boolean;
     addInitializer(initializer: () => void): void;
   },
+// deno-lint-ignore ban-types
 ) => Function | void;
 
 export type ClassGetterDecorator = (
+  // deno-lint-ignore ban-types
   value: Function,
   context: {
     kind: "getter";
@@ -22,9 +25,11 @@ export type ClassGetterDecorator = (
     private: boolean;
     addInitializer(initializer: () => void): void;
   },
+// deno-lint-ignore ban-types
 ) => Function | void;
 
 export type ClassSetterDecorator = (
+  // deno-lint-ignore ban-types
   value: Function,
   context: {
     kind: "setter";
@@ -34,6 +39,7 @@ export type ClassSetterDecorator = (
     private: boolean;
     addInitializer(initializer: () => void): void;
   },
+// deno-lint-ignore ban-types
 ) => Function | void;
 
 export type ClassFieldDecorator = (
@@ -48,7 +54,9 @@ export type ClassFieldDecorator = (
   },
 ) => (initialValue: unknown) => unknown | void;
 
+// deno-lint-ignore no-explicit-any
 export type ClassDecorator<T = any> = <
+  // deno-lint-ignore no-explicit-any
   Class extends new (...args: any) => T = new (...args: any) => T,
 >(
   value: Class,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { createRoot, type JSX, onCleanup } from "solid-js";
-import { RootFunction } from "solid-js/types/reactive/signal.js";
+import type { RootFunction } from "solid-js/types/reactive/signal.js";
 import { createRenderer } from "solid-js/universal";
 import type { ViteHotContext } from "vite/types/hot.js";
 import * as t from "io-ts";
@@ -17,8 +17,9 @@ const CStyleObject = t.record(t.string, t.string);
 
 const hotCtxMap = new Map<ViteHotContext, Array<() => void>>();
 
+
 const {
-  render,
+  render: _render_unused,
   effect,
   memo,
   createComponent,
@@ -35,12 +36,13 @@ const {
 } = createRenderer<JSX.Element>({
   createElement: (tag: string): Element => {
     if (tag.startsWith("xul:")) {
-      return document.createXULElement(tag.replace("xul:", ""));
+      // deno-lint-ignore no-explicit-any
+      return (document as any).createXULElement(tag.replace("xul:", ""));
     }
-    return document.createElement(tag);
+    return document!.createElement(tag);
   },
   createTextNode: (value: string): Text => {
-    return document.createTextNode(value);
+    return document!.createTextNode(value);
   },
   replaceText: (textNode: Text, value: string): void => {
     textNode.data = value;
@@ -52,7 +54,7 @@ const {
     node: JSX.Element,
     name: string,
     value: T,
-    prev?: T,
+    _prev?: T,
   ): void => {
     if (node instanceof Element) {
       const resultStyleObject = CStyleObject.decode(value);
@@ -60,7 +62,7 @@ const {
         //? the eventListener name is on~~~
         //? so have to remove the `on`
         const evName = name.slice(2).toLowerCase();
-        node.addEventListener(evName, value);
+        node.addEventListener(evName, value as EventListener);
       } else if (resultStyleObject._tag === "Right") {
         let tmp = "";
         for (const [idx, v] of Object.entries(resultStyleObject.right)) {
@@ -121,6 +123,7 @@ const {
  * @param options
  * @returns
  */
+
 const _render = (
   code: () => JSX.Element,
   node: JSX.Element,
@@ -144,6 +147,7 @@ const _render = (
   });
   return disposer;
 };
+
 
 export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
   return createRoot((disposer) => {

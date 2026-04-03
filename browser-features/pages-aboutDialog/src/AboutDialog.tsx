@@ -1,10 +1,15 @@
 import { useEffect, useState, useRef, useMemo } from "preact/hooks";
 import { useTranslation } from "react-i18next";
 
+// deno-lint-ignore no-explicit-any
 declare const ChromeUtils: any;
+// deno-lint-ignore no-explicit-any
 declare const Services: any;
+// deno-lint-ignore no-explicit-any
 declare const Ci: any;
+// deno-lint-ignore no-explicit-any
 declare const Cc: any;
+// deno-lint-ignore no-explicit-any
 declare const openHelpLink: any;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -103,6 +108,7 @@ export function AboutDialog() {
     panel: "noUpdater",
   });
 
+  // deno-lint-ignore no-explicit-any
   const appUpdaterRef = useRef<any>(null);
   const actionButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -125,9 +131,9 @@ export function AboutDialog() {
 
   useEffect(() => {
     const onKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") window.close();
+      if (e.key === "Escape") globalThis.close();
     };
-    window.addEventListener("keydown", onKeydown);
+    globalThis.addEventListener("keydown", onKeydown);
 
     try {
       const defaults = Services.prefs.getDefaultBranch(null);
@@ -166,6 +172,7 @@ export function AboutDialog() {
       const updater = new AppUpdater();
       appUpdaterRef.current = updater;
 
+      // deno-lint-ignore no-explicit-any
       const onUpdate = (status: any, ...args: any[]) => {
         switch (status) {
           case AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY:
@@ -217,10 +224,11 @@ export function AboutDialog() {
       return () => {
         updater.removeListener(onUpdate);
         updater.stop();
-        window.removeEventListener("keydown", onKeydown);
+        globalThis.removeEventListener("keydown", onKeydown);
       };
+    // deno-lint-ignore no-empty
     } catch {}
-    return () => window.removeEventListener("keydown", onKeydown);
+    return () => globalThis.removeEventListener("keydown", onKeydown);
   }, [AppConstants]);
 
   useEffect(() => {
@@ -272,6 +280,7 @@ export function AboutDialog() {
     if (updateStatus.panel === "idle")
       return (
         <button
+          type="button"
           ref={actionButtonRef}
           class="ad-btn ad-btn-primary"
           onClick={checkForUpdates}
@@ -283,6 +292,7 @@ export function AboutDialog() {
     if (updateStatus.panel === "available")
       return (
         <button
+          type="button"
           ref={actionButtonRef}
           class="ad-btn ad-btn-primary"
           onClick={downloadUpdate}
@@ -298,6 +308,7 @@ export function AboutDialog() {
     if (updateStatus.panel === "readyToRestart")
       return (
         <button
+          type="button"
           ref={actionButtonRef}
           class="ad-btn ad-btn-primary"
           onClick={restartToUpdate}
@@ -316,6 +327,7 @@ export function AboutDialog() {
             {updateLabel(updateStatus, t).text}
           </span>
           <button
+            type="button"
             ref={actionButtonRef}
             class="ad-btn ad-btn-ghost"
             onClick={checkForUpdates}

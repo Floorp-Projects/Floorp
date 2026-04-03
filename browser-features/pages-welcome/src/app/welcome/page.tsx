@@ -31,6 +31,7 @@ export default function WelcomePage() {
                         </p>
 
                         <button
+                            type="button"
                             className="btn btn-primary btn-lg shadow-xl hover:shadow-primary/20 transform hover:-translate-y-1 transition-all duration-300 px-8 text-white font-bold mt-4"
                             onClick={handleStart}
                         >

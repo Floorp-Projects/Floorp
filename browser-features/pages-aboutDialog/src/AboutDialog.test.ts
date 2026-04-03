@@ -7,7 +7,7 @@ function assert(condition: unknown, message: string): asserts condition {
   }
 }
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   assert(typeof document !== "undefined", "Document should exist in browser test context");
   assert(typeof window !== "undefined", "Window should exist in browser test context");
 }

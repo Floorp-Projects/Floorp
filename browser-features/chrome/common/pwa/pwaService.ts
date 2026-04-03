@@ -15,35 +15,35 @@ export class PwaService {
     private dataManager: DataManager,
   ) {}
 
-  async installOrRunCurrentPageAsSsb(browser: Browser, asPwa = true) {
+  installOrRunCurrentPageAsSsb(browser: Browser, asPwa = true) {
     return this.ssbManager.installOrRunCurrentPageAsSsb(browser, asPwa);
   }
 
-  async checkCurrentPageIsInstalled(browser: Browser): Promise<boolean> {
+  checkCurrentPageIsInstalled(browser: Browser) {
     return this.ssbManager.checkCurrentPageIsInstalled(browser);
   }
 
-  async getIcon(browser: Browser) {
+  getIcon(browser: Browser) {
     return this.ssbManager.getIcon(browser);
   }
 
-  async getManifest(browser: Browser) {
+  getManifest(browser: Browser) {
     return this.ssbManager.getManifest(browser);
   }
 
-  async checkBrowserCanBeInstallAsPwa(browser: Browser) {
+  checkBrowserCanBeInstallAsPwa(browser: Browser) {
     return this.manifestProcesser.checkBrowserCanBeInstallAsPwa(browser);
   }
 
-  async getInstalledApps() {
+  getInstalledApps() {
     return this.ssbManager.getInstalledApps();
   }
 
-  async renameSsb(id: string, newName: string): Promise<boolean> {
+  renameSsb(id: string, newName: string) {
     return this.ssbManager.renameSsb(id, newName);
   }
 
-  async uninstallById(id: string) {
+  uninstallById(id: string) {
     return this.ssbManager.uninstallById(id);
   }
 
@@ -59,15 +59,15 @@ export class PwaService {
     this.ssbManager.closePopup();
   }
 
-  async getSsbObj(id: string) {
+  getSsbObj(id: string) {
     return this.ssbManager.getSsbObj(id);
   }
 
-  async runSsbByUrl(url: string) {
+  runSsbByUrl(url: string) {
     return this.ssbManager.runSsbByUrl(url);
   }
 
-  async saveSsbData(manifest: import("./type").Manifest) {
+  saveSsbData(manifest: import("./type").Manifest) {
     return this.dataManager.saveSsbData(manifest);
   }
 }

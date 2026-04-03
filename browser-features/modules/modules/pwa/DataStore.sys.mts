@@ -157,7 +157,7 @@ export class DataManager {
 
       // Copy any config values if they exist
       if (entry.config) {
-        // @ts-ignore - Adding non-standard property that may be in the data
+        // @ts-expect-error - Adding non-standard property that may be in the data
         manifest.config = { ...entry.config };
       }
 

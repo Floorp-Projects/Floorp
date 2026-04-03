@@ -6,6 +6,7 @@ declare global {
       callback: (response: string) => void,
     ) => void;
     NRInstallLangPack: (
+      // deno-lint-ignore no-explicit-any
       langPack: any,
       callback: (response: string) => void,
     ) => void;

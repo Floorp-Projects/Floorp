@@ -71,7 +71,7 @@ export class RebootPanelMenu {
   }
 
   private static async showRebootPanelSubView() {
-    await window.PanelUI.showSubView(
+    await globalThis.PanelUI.showSubView(
       "PanelUI-reboot",
       document?.getElementById("appMenu-restart-button"),
     );

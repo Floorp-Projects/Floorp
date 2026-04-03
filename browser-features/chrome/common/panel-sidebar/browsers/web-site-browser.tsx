@@ -5,7 +5,7 @@
 
 import type { Panel } from "../utils/type.ts";
 
-export function WebSiteBrowser({ id, type, url, userContextId }: Panel) {
+export function WebSiteBrowser({ id, userContextId }: Panel) {
   return (
     <xul:browser
       id={`sidebar-panel-${id}`}

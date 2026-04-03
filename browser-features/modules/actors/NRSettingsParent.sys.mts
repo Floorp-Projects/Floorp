@@ -3,6 +3,7 @@ export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
     super();
   }
+  // deno-lint-ignore require-await
   async receiveMessage(message: { name: string; data?: unknown }): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {

@@ -16,11 +16,8 @@ interface FormValues {
 }
 
 declare global {
-  // deno-lint-ignore no-var
   var buildFormFromConfig: (config: TForm) => void;
-  // deno-lint-ignore no-var
   var sendForm: (data: FormValues | null) => void;
-  // deno-lint-ignore no-var
   var removeForm: () => void;
 }
 
@@ -394,11 +391,11 @@ function isNoraMessage(data: unknown): data is NoraMessage {
 
 function postNoraMessage(message: NoraMessage) {
   // 1. Post to current window (for actor listening on window)
-  window.postMessage(message, "*");
+  globalThis.postMessage(message, "*");
 
   // 2. Post to opener/parent if available
-  if (window.opener || window.parent !== window) {
-    const target = window.opener || window.parent;
+  if (globalThis.opener || globalThis.parent !== window) {
+    const target = globalThis.opener || globalThis.parent;
     target.postMessage(message, "*");
   }
 }

@@ -10,7 +10,7 @@ export function Counter() {
       <div
         style="font-size:30px"
         onClick={() => {
-          window.alert("click!");
+          globalThis.alert("click!");
         }}
       >
         Count aa hmr: {count()}

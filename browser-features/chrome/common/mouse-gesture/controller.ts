@@ -390,7 +390,6 @@ export class MouseGestureController {
     }
 
     const config = getConfig();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!config.wheelGesturesEnabled) {
       return;
     }

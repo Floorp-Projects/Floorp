@@ -81,6 +81,7 @@ export class NRWebContentModifierChild extends JSWindowActorChild {
     }, delayTime);
   }
 
+  // deno-lint-ignore no-explicit-any
   receiveMessage(message: any) {
     console.log(`NRWebContentModifier: Received message: ${message.name}`);
     switch (message.name) {
@@ -162,6 +163,7 @@ export class NRWebContentModifierChild extends JSWindowActorChild {
     }
   }
 
+  // deno-lint-ignore no-explicit-any
   extractOneDriveFileList(): any {
     try {
       console.log("NRWebContentModifier: Extracting OneDrive file list");

@@ -208,10 +208,10 @@ export class ChromeCSSService {
         try {
           const rebuildCompleteMsg = i18next.t("chrome_css.rebuild_complete") ??
             "CSS files rebuilt";
-          if (typeof window.StatusPanel !== "undefined") {
-            window.StatusPanel._label = rebuildCompleteMsg;
-          } else if (typeof window.XULBrowserWindow !== "undefined") {
-            window.XULBrowserWindow.statusTextField.label = rebuildCompleteMsg;
+          if (typeof globalThis.StatusPanel !== "undefined") {
+            globalThis.StatusPanel._label = rebuildCompleteMsg;
+          } else if (typeof globalThis.XULBrowserWindow !== "undefined") {
+            globalThis.XULBrowserWindow.statusTextField.label = rebuildCompleteMsg;
           }
         } catch (error) {
           console.debug("Status display not available:", error);
@@ -758,7 +758,7 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
 
   const showSubView = async () => {
     try {
-      await window.PanelUI.showSubView(
+      await globalThis.PanelUI.showSubView(
         "PanelUI-usercss",
         document?.getElementById("appMenu-usercss-button"),
       );
@@ -880,8 +880,8 @@ const CSSItem = (props: {
       safeToggle();
     } else if (event.button === 2) {
       if (event.target instanceof Element) {
-        if (typeof window.closeMenus === "function") {
-          window.closeMenus(event.target);
+        if (typeof globalThis.closeMenus === "function") {
+          globalThis.closeMenus(event.target);
         }
       }
 
@@ -913,7 +913,7 @@ const CSSItem = (props: {
       <xul:image
         class="usercssloader-checkbox ctaMenuLogo toolbarbutton-icon"
         src={enabled ? "chrome://global/skin/icons/check.svg" : ""}
-        style={"fill: var(--toolbar-text-color); width: 16px; height: 16px;"}
+        style="fill: var(--toolbar-text-color); width: 16px; height: 16px;"
       />
       <xul:label class="usercssloader-label">{fileName}</xul:label>
     </xul:hbox>

@@ -339,11 +339,11 @@ export class DOMActionOperations {
     }
   }
 
-  async doubleClickElement(selector: string): Promise<boolean> {
+  doubleClickElement(selector: string): Promise<boolean> {
     return this.clickElement(selector, { clickCount: 2 });
   }
 
-  async rightClickElement(selector: string): Promise<boolean> {
+  rightClickElement(selector: string): Promise<boolean> {
     return this.clickElement(selector, { button: "right" });
   }
 

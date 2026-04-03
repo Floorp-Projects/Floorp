@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { WorkspaceIcons } from "./utils/workspace-icons.ts";
+import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
 import type { TWorkspace, TWorkspaceID } from "./utils/type.ts";
-import { WorkspacesService } from "./workspacesService.ts";
+import type { WorkspacesService } from "./workspacesService.ts";
 import ModalParent from "../modal-parent/index.ts";
-import { TForm, TFormResult } from "@core/common/modal-parent/utils/type.ts";
+import type { TForm, TFormResult } from "@core/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";

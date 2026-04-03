@@ -34,6 +34,7 @@ export class DataManager {
     return data as Record<string, Manifest>;
   }
 
+  // deno-lint-ignore no-explicit-any
   private isLegacyFormat(data: any): boolean {
     // Check if the data has the structure of legacy format
     // In legacy format, entries have 'startURI' and 'manifest' properties
@@ -99,7 +100,7 @@ export class DataManager {
 
       // Copy any config values if they exist
       if (entry.config) {
-        // @ts-ignore - Adding non-standard property that may be in the data
+        // @ts-expect-error - Adding non-standard property that may be in the data
         manifest.config = { ...entry.config };
       }
 

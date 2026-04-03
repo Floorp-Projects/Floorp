@@ -15,6 +15,7 @@ const { TaskbarExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
 );
 
+// deno-lint-ignore no-explicit-any
 let SupportClass: any | null = null;
 if (AppConstants.platform === "win") {
   const { WindowsSupport } = ChromeUtils.importESModule(
@@ -39,8 +40,9 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    window.gBrowser.addProgressListener(this.listener);
+    globalThis.gBrowser.addProgressListener(this.listener);
 
+    // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
       await this.renameSsb(
         subject?.wrappedJSObject?.id as string,
@@ -48,6 +50,7 @@ export class SiteSpecificBrowserManager {
       );
     }, "nora-ssb-rename");
 
+    // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
       await this.uninstallById(subject?.wrappedJSObject?.id as string);
     }, "nora-ssb-uninstall");
@@ -59,8 +62,8 @@ export class SiteSpecificBrowserManager {
     },
   };
 
-  async onCommand() {
-    this.installOrRunCurrentPageAsSsb(window.gBrowser.selectedBrowser, true);
+  onCommand() {
+    this.installOrRunCurrentPageAsSsb(globalThis.gBrowser.selectedBrowser, true);
   }
 
   closePopup() {
@@ -100,7 +103,7 @@ export class SiteSpecificBrowserManager {
       const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
 
       if (ssbObj) {
-        await this.runSsbByUrl(window.gBrowser.selectedBrowser.currentURI.spec);
+        await this.runSsbByUrl(globalThis.gBrowser.selectedBrowser.currentURI.spec);
       }
     } else {
       const manifest = await this.createFromBrowser(browser, {
@@ -114,7 +117,7 @@ export class SiteSpecificBrowserManager {
       await this.install(manifest);
 
       // Installing needs some time to finish
-      window.setTimeout(() => {
+      globalThis.setTimeout(() => {
         this.runSsbByUrl(manifest.start_url);
       }, 3000);
     }
@@ -244,7 +247,7 @@ export class SiteSpecificBrowserManager {
   }
 
   private async onCurrentTabChangedOrLoaded() {
-    const browser = window.gBrowser.selectedBrowser;
+    const browser = globalThis.gBrowser.selectedBrowser;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );

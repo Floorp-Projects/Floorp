@@ -27,7 +27,7 @@ export class ScreenshotOperations {
   /**
    * Takes a screenshot of the current viewport
    */
-  async takeScreenshot(): Promise<string | null> {
+  takeScreenshot(): string | null {
     try {
       if (!this.contentWindow) {
         return null;
@@ -67,7 +67,7 @@ export class ScreenshotOperations {
   /**
    * Takes a screenshot of a specific element
    */
-  async takeElementScreenshot(selector: string): Promise<string | null> {
+  takeElementScreenshot(selector: string): string | null {
     try {
       if (!this.contentWindow) {
         return null;
@@ -121,7 +121,7 @@ export class ScreenshotOperations {
   /**
    * Takes a screenshot of the full page
    */
-  async takeFullPageScreenshot(): Promise<string | null> {
+  takeFullPageScreenshot(): string | null {
     try {
       if (!this.contentWindow) {
         return null;
@@ -166,7 +166,7 @@ export class ScreenshotOperations {
   /**
    * Takes a screenshot of a specific region
    */
-  async takeRegionScreenshot(rect: ScreenshotRect): Promise<string | null> {
+  takeRegionScreenshot(rect: ScreenshotRect): string | null {
     try {
       if (!this.contentWindow) {
         return null;

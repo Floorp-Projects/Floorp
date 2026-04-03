@@ -70,6 +70,7 @@ export async function getCurrentProfile(): Promise<{
         Components?.interfaces?.nsIProperties,
       ) as unknown as Record<string, unknown>;
 
+      // deno-lint-ignore no-explicit-any
       const profileDir = (dirService as any).get(
         "ProfD",
         Components.interfaces.nsIFile,
@@ -144,18 +145,22 @@ export async function getProfiles(): Promise<unknown[]> {
 
       const currentProfile = profileService.currentProfile;
 
+      // deno-lint-ignore no-explicit-any
       const profiles: any[] = [];
       for (const profile of profileService.profiles) {
-        let isCurrentProfile = profile == currentProfile;
+        const isCurrentProfile = profile == currentProfile;
         let isInUse = isCurrentProfile;
         if (!isInUse) {
           try {
-            let lock = profile.lock({});
+            const lock = profile.lock({});
             lock.unlock();
           } catch (err) {
+            // deno-lint-ignore no-explicit-any
             const r = (err as any)?.result;
             if (
+              // deno-lint-ignore no-explicit-any
               r != (globalThis as any).Cr?.NS_ERROR_FILE_NOT_DIRECTORY &&
+              // deno-lint-ignore no-explicit-any
               r != (globalThis as any).Cr?.NS_ERROR_FILE_NOT_FOUND
             ) {
               isInUse = true;
@@ -221,6 +226,7 @@ export async function getFxAccountsInfo(): Promise<unknown | null> {
 
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const FxAccounts = (globalThis as any).ChromeUtils.importESModule(
         "resource://gre/modules/FxAccounts.sys.mjs",
       ).getFxAccountsSingleton();
@@ -270,12 +276,15 @@ export function openUrl(url: string): void {
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const Services = (globalThis as any).Services;
       const win = Services.wm.getMostRecentWindow("navigator:browser");
       if (win) {
         try {
+          // deno-lint-ignore no-explicit-any
           (win as any).openUILinkIn(url, "tab");
         } catch {
+          // deno-lint-ignore no-explicit-any
           (win as any).gBrowser.addTab(url);
         }
       }
@@ -302,10 +311,13 @@ export function openProfile(profileIdentifier: string): void {
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const profileService = (globalThis as any).Components.classes[
         "@mozilla.org/toolkit/profile-service;1"
       ]?.getService?.(
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+      // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -320,6 +332,7 @@ export function openProfile(profileIdentifier: string): void {
         }
       }
       if (target) {
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Services.startup.createInstanceWithProfile(target);
       }
       return;
@@ -343,14 +356,18 @@ export function createProfileWizard(): void {
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const win = (globalThis as any).Services.wm.getMostRecentWindow(
         "navigator:browser",
       );
       if (win) {
+        // deno-lint-ignore no-explicit-any
         const profileService = (globalThis as any).Components.classes[
           "@mozilla.org/toolkit/profile-service;1"
         ]?.getService?.(
+          // deno-lint-ignore no-explicit-any
           (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+        // deno-lint-ignore no-explicit-any
         ) as any;
 
         const persistProfiles = () => {
@@ -374,6 +391,7 @@ export function createProfileWizard(): void {
         };
 
         const callbacks = {
+          // deno-lint-ignore no-explicit-any
           CreateProfile: (profile: any) => {
             if (!profile) {
               return;
@@ -390,6 +408,7 @@ export function createProfileWizard(): void {
           },
         };
 
+        // deno-lint-ignore no-explicit-any
         (win as any).openDialog(
           "chrome://mozapps/content/profile/createProfileWizard.xhtml",
           "",
@@ -422,10 +441,13 @@ export function flushProfiles(): void {
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const profileService = (globalThis as any).Components.classes[
         "@mozilla.org/toolkit/profile-service;1"
       ]?.getService?.(
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+      // deno-lint-ignore no-explicit-any
       ) as any;
       profileService.flush();
       return;
@@ -452,10 +474,13 @@ export async function removeProfile(
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const profileService = (globalThis as any).Components.classes[
         "@mozilla.org/toolkit/profile-service;1"
       ]?.getService?.(
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+      // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -513,10 +538,13 @@ export async function renameProfile(
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const profileService = (globalThis as any).Components.classes[
         "@mozilla.org/toolkit/profile-service;1"
       ]?.getService?.(
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+      // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -573,10 +601,13 @@ export async function setDefaultProfile(
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
+      // deno-lint-ignore no-explicit-any
       const profileService = (globalThis as any).Components.classes[
         "@mozilla.org/toolkit/profile-service;1"
       ]?.getService?.(
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
+      // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -631,9 +662,12 @@ export function restart(safeMode = false): void {
   const hasChrome = __hasChrome;
   if (!isDev && hasChrome) {
     try {
-      let cancelQuit = (globalThis as any).Cc[
+      // deno-lint-ignore no-explicit-any
+      const cancelQuit = (globalThis as any).Cc[
         "@mozilla.org/supports-PRBool;1"
+      // deno-lint-ignore no-explicit-any
       ].createInstance((globalThis as any).Ci.nsISupportsPRBool);
+      // deno-lint-ignore no-explicit-any
       (globalThis as any).Services.obs.notifyObservers(
         cancelQuit,
         "quit-application-requested",
@@ -642,13 +676,18 @@ export function restart(safeMode = false): void {
       if (cancelQuit.data) {
         return;
       }
+      // deno-lint-ignore no-explicit-any
       const flags = (globalThis as any).Ci.nsIAppStartup
+        // deno-lint-ignore no-explicit-any
         ? (globalThis as any).Ci.nsIAppStartup.eAttemptQuit |
+          // deno-lint-ignore no-explicit-any
           (globalThis as any).Ci.nsIAppStartup.eRestart
         : 0;
       if (safeMode) {
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Services.startup.restartInSafeMode(flags);
       } else {
+        // deno-lint-ignore no-explicit-any
         (globalThis as any).Services.startup.quit(flags);
       }
       return;

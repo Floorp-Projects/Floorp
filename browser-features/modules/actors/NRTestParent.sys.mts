@@ -1,5 +1,5 @@
 import { createBirpc } from "birpc";
-import { ClientFunctions, ServerFunctions } from "../common/NRTestTypes";
+import type { ClientFunctions, ServerFunctions } from "../common/NRTestTypes";
 
 export class NRTestParent extends JSWindowActorParent {
   serverFunctions: ServerFunctions = {
@@ -17,6 +17,7 @@ export class NRTestParent extends JSWindowActorParent {
     deserialize: (v) => JSON.parse(v),
   });
   onRPCMessage: ((data: unknown) => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     if (message.name === "rpc") {
       this.onRPCMessage?.(message.data);

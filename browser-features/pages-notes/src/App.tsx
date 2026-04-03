@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { NoteList } from "./components/notes/NoteList.tsx";
 import { RichTextEditor } from "./components/editor/RichTextEditor.tsx";
 import type { JSONContent } from "@tiptap/react";
-import { getNotes, NotesData, saveNotes } from "./lib/dataManager.ts";
+import { getNotes, type NotesData, saveNotes } from "./lib/dataManager.ts";
 import { useTranslation } from "react-i18next";
 import { ConfirmModal } from "./components/common/ConfirmModal.tsx";
 import { SaveStatus } from "./components/common/SaveStatus.tsx";
@@ -71,7 +71,6 @@ function App() {
     };
 
     loadNotes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const buildNotesData = useCallback((notesToSave: Note[]): NotesData => ({
@@ -136,9 +135,9 @@ function App() {
       }
     };
 
-    window.addEventListener("beforeunload", flushSave);
+    globalThis.addEventListener("beforeunload", flushSave);
     return () => {
-      window.removeEventListener("beforeunload", flushSave);
+      globalThis.removeEventListener("beforeunload", flushSave);
       flushSave();
     };
   }, [buildNotesData]);

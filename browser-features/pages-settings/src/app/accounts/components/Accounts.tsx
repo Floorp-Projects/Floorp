@@ -83,7 +83,7 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            window.NRAddTab("about:preferences#sync");
+            globalThis.NRAddTab("about:preferences#sync");
           }}
           className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
         >

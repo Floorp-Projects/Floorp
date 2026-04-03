@@ -36,6 +36,7 @@ export function safeRemove(p: string): void {
     if (exists(p)) {
       Deno.removeSync(p, { recursive: true });
     }
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     // keep parity with Ruby behavior (warn)
     // No logger available here by default.
@@ -49,6 +50,7 @@ export function createSymlink(link: string, target: string): void {
     safeRemove(link);
     // Deno.symlinkSync(target, path) => target then path (link)
     Deno.symlinkSync(target, link);
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     console.warn(
       `Failed to create symlink ${link} -> ${target}: ${e?.message ?? e}`,
@@ -146,7 +148,6 @@ export class Logger {
   }
 
   info(message: string, ...args: unknown[]) {
-    // eslint-disable-next-line no-console
     console.log(
       `${Logger.COLORS.info}${this.format("INFO", message)}${Logger.COLORS.reset}`,
       ...args,
@@ -154,7 +155,6 @@ export class Logger {
   }
 
   warn(message: string, ...args: unknown[]) {
-    // eslint-disable-next-line no-console
     console.log(
       `${Logger.COLORS.warn}${this.format("WARN", message)}${Logger.COLORS.reset}`,
       ...args,
@@ -162,7 +162,6 @@ export class Logger {
   }
 
   error(message: string, ...args: unknown[]) {
-    // eslint-disable-next-line no-console
     console.log(
       `${Logger.COLORS.error}${this.format("ERROR", message)}${Logger.COLORS.reset}`,
       ...args,
@@ -170,7 +169,6 @@ export class Logger {
   }
 
   success(message: string, ...args: unknown[]) {
-    // eslint-disable-next-line no-console
     console.log(
       `${Logger.COLORS.success}${this.format("SUCCESS", message)}${Logger.COLORS.reset}`,
       ...args,

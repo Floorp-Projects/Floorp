@@ -46,7 +46,7 @@ function clampTimeout(value: number | undefined, fallback: number): number {
  * Wraps a route handler with try/catch to prevent service exceptions
  * from propagating as unhandled rejections.
  */
-export function safeRoute<F extends (...args: never[]) => Promise<unknown>>(handler: F): F {
+export function safeRoute<F extends (...args: never[]) => unknown | Promise<unknown>>(handler: F): F {
   return (async (...args: unknown[]) => {
     try {
       return await handler(...(args as Parameters<F>));

@@ -30,6 +30,7 @@ async function loadIcon(window: Window | null, uri: nsIURL) {
 }
 
 export class NRProgressiveWebAppChild extends JSWindowActorChild {
+  // deno-lint-ignore require-await
   async handleEvent(event: Event) {
     // On page show or page hide,
     // check if the page has a manifest and show or hide the page action.

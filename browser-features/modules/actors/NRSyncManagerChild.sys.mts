@@ -27,6 +27,7 @@ export class NRSyncManagerChild extends JSWindowActorChild {
   }
 
   resolveGetAccountInfo: ((accountInfo: string) => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "SyncManager:GetAccountInfo": {

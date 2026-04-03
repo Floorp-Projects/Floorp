@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import type React, { useState } from "react";
 import { getOneDriveFileNameList } from "./dataManager";
 
 const OneDriveFileList: React.FC = () => {
@@ -28,6 +28,7 @@ const OneDriveFileList: React.FC = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">OneDriveファイルリスト</h2>
         <button
+          type="button"
           onClick={handleFetchFiles}
           disabled={loading}
           className={`px-4 py-2 bg-blue-500 text-white rounded ${

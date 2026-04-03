@@ -25,7 +25,7 @@ export function RestartModal(props: { onClose: () => void, label: string }) {
 
     const handleRestart = () => {
         props.onClose();
-        window.NRRestartBrowser();
+        globalThis.NRRestartBrowser();
     };
 
     return (

@@ -8,6 +8,7 @@ const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
 );
 const ios = Services.io;
 
+// deno-lint-ignore no-namespace
 export namespace StyleSheetServiceUtils {
   /**
    * load styleSheet with NsStyleSheetService

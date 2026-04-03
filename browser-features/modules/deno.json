@@ -11,6 +11,10 @@
     ".": "./deno.json"
   },
   "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "types": [
       "npm:vite/client",
       "jsr:@types/gecko"

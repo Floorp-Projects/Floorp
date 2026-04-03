@@ -65,19 +65,11 @@ function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
     },
     {
       name: "runtime check: floorp source directories",
-      args: ["check", "--sloppy-imports", "tools"],
+      args: ["check", "--sloppy-imports", "tools", "i18n", "libs"],
     },
     {
       name: "runtime lint: floorp source directories",
-      args: [
-        "lint",
-        "--rules-exclude=no-explicit-any,no-slow-types,no-import-prefix,no-empty,require-await,no-unused-vars,prefer-const,ban-ts-comment,no-window,no-var,no-inner-declarations,no-array-constructor,jsx-button-has-type,no-window-prefix,verbatim-module-syntax,no-namespace,ban-types,jsx-boolean-value,no-this-alias,no-dupe-keys,ban-unused-ignore,no-redeclare,no-empty-interface,jsx-curly-braces",
-        "tools",
-        "bridge",
-        "browser-features",
-        "i18n",
-        "libs",
-      ],
+      args: ["lint", "tools", "bridge", "browser-features", "i18n", "libs"],
     },
   ];
 

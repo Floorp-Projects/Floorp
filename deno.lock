@@ -4638,8 +4638,10 @@
       },
       "bridge/startup": {
         "dependencies": [
+          "jsr:@types/gecko@*",
           "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5",
-          "npm:tsdown@~0.18.2"
+          "npm:tsdown@~0.18.2",
+          "npm:vite@*"
         ]
       },
       "browser-features/chrome": {
@@ -4914,6 +4916,12 @@
             "npm:vite@^7.3.0"
           ]
         }
+      },
+      "i18n": {
+        "dependencies": [
+          "jsr:@types/gecko@*",
+          "npm:vite@*"
+        ]
       },
       "libs/shared": {
         "dependencies": [

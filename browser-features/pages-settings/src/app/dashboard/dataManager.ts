@@ -1,4 +1,4 @@
-import { type AccountInfo, type HomeData } from "@/types/pref";
+import type { AccountInfo, HomeData } from "@/types/pref";
 
 export async function useHomeData(): Promise<HomeData> {
   return {
@@ -9,7 +9,7 @@ export async function useHomeData(): Promise<HomeData> {
 
 export async function getAccountInfo(): Promise<AccountInfo> {
   return await new Promise((resolve) => {
-    window.NRGetAccountInfo((data: string) => {
+    globalThis.NRGetAccountInfo((data: string) => {
       const accountInfo = JSON.parse(data) as AccountInfo;
       resolve(accountInfo);
     });

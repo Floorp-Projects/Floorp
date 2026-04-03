@@ -195,7 +195,7 @@ export class PanelSidebarAddModal {
         id: "url",
         type: "url",
         label: texts.url,
-        value: window.gBrowser.currentURI.spec,
+        value: globalThis.gBrowser.currentURI.spec,
         required: true,
         placeholder: "https://floorp.app",
         when: { id: "type", value: "web" },

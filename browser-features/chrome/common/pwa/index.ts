@@ -90,7 +90,6 @@ export default class Pwa extends NoraComponentBase {
       } catch (e) {
         // If the pref doesn't exist or any error occurs, ignore it so startup
         // proceeds normally.
-        // eslint-disable-next-line no-console
         console.debug("No startup SSB id or failed to start SSB:", e);
       }
     })();

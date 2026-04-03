@@ -28,6 +28,7 @@ export class NRAppConstantsChild extends JSWindowActorChild {
   }
 
   resolveGetConstants: ((constants: string) => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "AppConstants:GetConstants": {

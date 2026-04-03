@@ -76,7 +76,7 @@ export class SsbPanelView {
   }
 
   private static async showSsbPanelSubView() {
-    await window.PanelUI.showSubView(
+    await globalThis.PanelUI.showSubView(
       "PanelUI-ssb",
       document?.getElementById("appMenu-ssb-button"),
     );
@@ -94,7 +94,7 @@ export class SsbPanelView {
 
   private static handleInstallOrRunCurrentPageAsSsb() {
     SsbPanelView.pwaService.installOrRunCurrentPageAsSsb(
-      window.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser,
       false,
     );
   }
@@ -164,7 +164,7 @@ export class SsbPanelView {
               id="panelMenu_installedSsbMenu"
               orient="vertical"
               smoothscroll={false}
-              flatList={true}
+              flatList
               tooltip="bhTooltip"
               context="ssbInstalledAppMenu-context"
               aria-labelledby="panelMenu_openInstalledApps"
@@ -172,11 +172,11 @@ export class SsbPanelView {
               <SsbPanelView.InstalledAppsList />
             </xul:toolbaritem>
           </xul:vbox>
-          <xul:toolbarseparator hidden={true} />
+          <xul:toolbarseparator hidden />
           <xul:toolbarbutton
             id="PanelUI-openManageSsbPage"
             class="subviewbutton panel-subview-footer-button"
-            hidden={true}
+            hidden
           />
         </xul:panelview>
       </>

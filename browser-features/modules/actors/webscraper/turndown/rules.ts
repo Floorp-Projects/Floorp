@@ -106,7 +106,7 @@ export default class Rules {
     }
   }
 
-  add(key: string, rule: Rule): void {
+  add(_key: string, rule: Rule): void {
     this.array.unshift(rule);
     this._buildLookup();
   }

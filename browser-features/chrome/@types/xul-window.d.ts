@@ -46,13 +46,9 @@ declare global {
   namespace globalThis {
     // Using 'var'/'const' mirrors runtime globals exposed by Gecko
     // and allows property access off globalThis without index errors.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     var gBrowser: GBrowser;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     var TabContextMenu: TabContextMenu;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     var PanelUI: PanelUI;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   }
 
   // Add custom XUL events we listen to

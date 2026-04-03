@@ -6,7 +6,7 @@ export async function getCurrentProfile(): Promise<{
   profilePath: string;
 }> {
   return await new Promise((resolve) => {
-    window.NRGetCurrentProfile((data: unknown) => {
+    globalThis.NRGetCurrentProfile((data: unknown) => {
       // Handle null or undefined data
       if (!data) {
         resolve({ profileName: "", profilePath: "" });

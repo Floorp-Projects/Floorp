@@ -8,6 +8,7 @@ import { config } from "../../designs/configs.ts";
 import { TabbarStyleModifyCSSElement } from "./tabbar-style-element.tsx";
 import { render } from "@nora/solid-xul";
 
+// deno-lint-ignore no-namespace
 export namespace gTabbarStyleFunctions {
   function getPanelUIMenuButton(): XULElement | null {
     return document?.querySelector("#PanelUI-menu-button") as XULElement | null;

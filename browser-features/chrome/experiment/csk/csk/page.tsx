@@ -62,16 +62,16 @@ export function CustomShortcutKeyPage() {
                             ? editingStatus()!
                             : cskDatumToString(cskData(), key)
                         }
-                        onFocus={(ev) => {
+                        onFocus={(_ev) => {
                           setCurrentFocus(key);
                         }}
-                        onBlur={(ev) => {
+                        onBlur={(_ev) => {
                           setEditingStatus(null);
                           if (currentFocus() === key) {
                             setCurrentFocus(null);
                           }
                         }}
-                        readonly={true}
+                        readonly
                         placeholder="Type a shortcut"
                         style={{
                           "border-radius": "5px",

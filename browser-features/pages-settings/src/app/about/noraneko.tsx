@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Separator } from "@/components/common/separator.tsx";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { ExternalLink, Scale } from "lucide-react";
 import { useEffect, useState } from "react";

@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from "react";
+import { type PropsWithChildren, useEffect, useState } from "react";
 import { initializeI18n } from "@/lib/i18n/init.ts";
 
 export function I18nProvider({ children }: PropsWithChildren) {

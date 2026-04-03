@@ -203,9 +203,9 @@ export class PanelSidebarFloating {
         const deltaY = e.clientY - startY;
 
         const browserW = document?.getElementById("browser")?.clientWidth ??
-          window.innerWidth;
+          globalThis.innerWidth;
         const browserH = document?.getElementById("browser")?.clientHeight ??
-          window.innerHeight;
+          globalThis.innerHeight;
         pendingLeft = Math.max(
           0,
           Math.min(browserW - sidebarBox.clientWidth, startLeft + deltaX),
@@ -346,9 +346,9 @@ export class PanelSidebarFloating {
       const height = config.floatingHeight ||
         sidebarBox.getBoundingClientRect().height;
       const browserW = document?.getElementById("browser")?.clientWidth ??
-        window.innerWidth;
+        globalThis.innerWidth;
       const browserH = document?.getElementById("browser")?.clientHeight ??
-        window.innerHeight;
+        globalThis.innerHeight;
       const left = Math.max(
         0,
         Math.min(browserW - width, config.floatingPositionLeft),
@@ -365,7 +365,7 @@ export class PanelSidebarFloating {
       const isStart = panelSidebarConfig().position_start;
       const currentWidth = sidebarBox.getBoundingClientRect().width || 400;
       const browserW = document?.getElementById("browser")?.clientWidth ??
-        window.innerWidth;
+        globalThis.innerWidth;
       const margin = 20;
       const defaultLeft = isStart
         ? margin
@@ -435,7 +435,7 @@ export class PanelSidebarFloating {
 
     if (currentPanelId) {
       try {
-        const panelSidebarInstance = window.gFloorpPanelSidebar;
+        const panelSidebarInstance = globalThis.gFloorpPanelSidebar;
         if (panelSidebarInstance) {
           setSelectedPanelId(null);
 

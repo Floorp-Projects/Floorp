@@ -115,14 +115,19 @@ function remapKey(string: string) {
 
 const keyOptions = [
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // deno-lint-ignore no-explicit-any
   (e: any) => String.fromCharCode(e.which), // A letter?
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // deno-lint-ignore no-explicit-any
   (e: any) => e.code.toUpperCase(), // A letter.
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // deno-lint-ignore no-explicit-any
   (e: any) => trimPrefix(e.code), // Digit3, ArrowUp, Numpad9.
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // deno-lint-ignore no-explicit-any
   (e: any) => trimPrefix(e.key), // Digit3, ArrowUp, Numpad9.
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // deno-lint-ignore no-explicit-any
   (e: any) => remapKey(e.key), // Comma, Period, Space.
 ];
 /**
@@ -149,6 +154,7 @@ function getStringForEvent(event: Event) {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+// deno-lint-ignore no-explicit-any
 function getShortcutForEvent(e: any) {
   let modifierMap: {
     MacCtrl?: boolean;
@@ -186,7 +192,7 @@ const { ShortcutUtils } = ChromeUtils.importESModule(
 
 export function checkIsSystemShortcut(ev: Event): boolean {
   const shortcutString = getShortcutForEvent(ev);
-  //@ts-ignore
-  const chromeWindow = window.windowRoot.ownerGlobal;
+  //@ts-expect-error - windowRoot is available in chrome privileged contexts
+  const chromeWindow = globalThis.windowRoot.ownerGlobal;
   return ShortcutUtils.isSystem(chromeWindow, shortcutString) ?? false;
 }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, For, onCleanup } from "solid-js";
+import { createEffect, createMemo, onCleanup } from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs.ts";

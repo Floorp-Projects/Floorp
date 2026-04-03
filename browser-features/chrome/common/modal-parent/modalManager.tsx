@@ -27,10 +27,10 @@ export class ModalManager {
     onCleanup(() => globalThis.removeEventListener("keydown", handleKeydown));
   }
 
-  public async show(
+  public show(
     form: TForm,
     options: { width: number; height: number },
-  ): Promise<TFormResult | null | undefined> {
+  ): Promise<TFormResult | null> | undefined {
     const container = document?.getElementById(
       "modal-parent-container",
     ) as XULElement;
@@ -44,6 +44,7 @@ export class ModalManager {
 
       const browser = document?.getElementById(
         "modal-child-browser",
+      // deno-lint-ignore no-explicit-any
       ) as XULElement & { browsingContext: any };
 
       const actor = browser.browsingContext.currentWindowGlobal.getActor(
@@ -78,7 +79,7 @@ export class ModalManager {
     setModalSize((current) => ({ ...current, ...newSize }));
   }
 
-  public handleBackdropClick(event: MouseEvent): void {
+  public handleBackdropClick(_event: MouseEvent): void {
     //TODO: Make more stable
     // const target = event.target as HTMLElement;
     // if (target.id === "modal-parent-container") {

@@ -25,6 +25,7 @@ async function detectEarlyExit(
   ]);
 }
 
+// deno-lint-ignore no-explicit-any
 export async function run(writer: any): Promise<void> {
   logger.info("Starting Vite dev servers...");
 
@@ -65,6 +66,7 @@ export async function run(writer: any): Promise<void> {
   const logsDir = path.join(PROJECT_ROOT, "logs");
   try {
     Deno.mkdirSync(logsDir, { recursive: true });
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.warn(`Failed to create logs dir ${logsDir}: ${e?.message ?? e}`);
   }
@@ -91,6 +93,7 @@ export async function run(writer: any): Promise<void> {
         create: true,
         truncate: true,
       });
+    // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       logger.warn(`Failed to open log file ${logFilePath}: ${e?.message ?? e}`);
     }
@@ -109,6 +112,7 @@ export async function run(writer: any): Promise<void> {
             await file.write(value);
           }
         }
+      // deno-lint-ignore no-explicit-any
       } catch (e: any) {
         logger.warn(`Error piping to file ${logFilePath}: ${e?.message ?? e}`);
       }
@@ -162,6 +166,7 @@ export async function run(writer: any): Promise<void> {
     if (typeof writer?.end === "function") {
       writer.end();
     }
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
   }
@@ -178,6 +183,7 @@ export function shutdown(): void {
           // ignore
         }
       }
+    // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       logger.warn(
         `Failed to stop process ${proc.child?.pid}: ${e?.message ?? e}`,

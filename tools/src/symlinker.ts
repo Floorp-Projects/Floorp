@@ -26,6 +26,7 @@ export function run(): void {
         }
       }
       createSymlink(link, target);
+    // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       console.warn(
         `Failed to create symlink ${link} -> ${target}: ${e?.message ?? e}`,

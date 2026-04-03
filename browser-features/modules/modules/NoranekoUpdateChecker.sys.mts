@@ -12,8 +12,6 @@ const PREF_OLD_VERSION2 = "floorp.startup.oldVersion2";
 // Legacy preference from older Floorp versions (pre-version2 system)
 const PREF_OLD_VERSION_LEGACY = "floorp.startup.oldVersion";
 
-const URI_UPDATE_NS = "http://www.mozilla.org/2005/app-update";
-
 export type UpdateType = "major" | "minor" | "patch" | null;
 
 export interface UpdateInfo {
@@ -124,7 +122,7 @@ function getUpdateType(oldVersion: string, newVersion: string): UpdateType {
  * Get the update.xml URL using nsIUpdateChecker.
  * This respects MOZ_UPDATE_URL and other Firefox update settings.
  */
-async function getUpdateXmlUrl(): Promise<string> {
+function getUpdateXmlUrl(): string {
   // DEV ENVIRONMENT OVERRIDE
   const url = "http://localhost:5173/update.xml";
   console.log(`[NoranekoUpdateChecker] Using DEV URL: ${url}`);
@@ -159,7 +157,7 @@ export async function fetchRemoteUpdateInfo(): Promise<RemoteUpdateInfo | null> 
  */
 function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
   try {
-    // @ts-ignore
+    // @ts-expect-error - DOMParser is available in privileged contexts
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, "application/xml");
 

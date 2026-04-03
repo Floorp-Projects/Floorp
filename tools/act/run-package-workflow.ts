@@ -1,5 +1,6 @@
 #!/usr/bin/env -S deno run --allow-run --allow-env --allow-read --allow-write
 
+// deno-lint-ignore no-import-prefix
 import { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
 
 const DEFAULT_PLATFORMS = ["Linux-x64"] as const;

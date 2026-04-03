@@ -1,5 +1,5 @@
 import {
-  FormEvent,
+  type FormEvent,
   type KeyboardEvent,
   useEffect,
   useMemo,

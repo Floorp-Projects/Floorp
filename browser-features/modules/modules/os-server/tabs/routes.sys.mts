@@ -31,7 +31,7 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
     // -- Tab-specific routes --
 
     // Check if instance exists (lightweight — no IPC, no DOM access)
-    t.get("/instances/:id/exists", async (ctx: RouterContext) => {
+    t.get("/instances/:id/exists", (ctx: RouterContext) => {
       const { TabManagerServices } = TabManagerModule();
       const exists = TabManagerServices.hasInstance(ctx.params.id);
       return { status: 200, body: { exists } };

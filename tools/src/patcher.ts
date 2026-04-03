@@ -3,7 +3,6 @@
 import * as path from "@std/path";
 import {
   runCommandChecked,
-  runCommand,
   Logger,
   exists,
   safeRemove,
@@ -146,6 +145,7 @@ export function applyPatches(): void {
     if (result.success) {
       try {
         Deno.copyFileSync(patchPath, path.join(PATCHES_TMP, patch));
+      // deno-lint-ignore no-explicit-any
       } catch (e: any) {
         logger.warn(`Failed to copy patch to tmp: ${e?.message ?? e}`);
         aborted = true;
@@ -186,7 +186,7 @@ export function createPatches(): void {
       continue;
     }
 
-    let modifiedDiff =
+    const modifiedDiff =
       diffRes.stdout
         .replace(/^--- a\//gm, "--- ./")
         .replace(/^\+\+\+ b\//gm, "+++ ./")

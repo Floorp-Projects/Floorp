@@ -11,8 +11,8 @@ export const overrides = [
   () => {
     // Override openTrustedLinkIn to apply workspace container
     // This handles tabs opened from bookmarks, external links, etc.
-    const originalOpenTrustedLinkIn = window.openTrustedLinkIn;
-    window.openTrustedLinkIn = function (
+    const originalOpenTrustedLinkIn = globalThis.openTrustedLinkIn;
+    globalThis.openTrustedLinkIn = function (
       url: string | nsIURI,
       where: string,
       options?: {
@@ -32,10 +32,13 @@ export const overrides = [
       if (
         urlStr === "about:newtab" &&
         where === "current" &&
+        // deno-lint-ignore no-explicit-any
         (window as any).gBrowser?.selectedTab?.splitview
       ) {
+        // deno-lint-ignore no-explicit-any
         const gBrowser = (window as any).gBrowser;
         // Find the about:opentabs tab in the split view
+        // deno-lint-ignore no-explicit-any
         const opentabsTab = gBrowser.tabs.find((t: any) => {
           try {
             return t.linkedBrowser?.currentURI?.spec === "about:opentabs";
@@ -116,9 +119,9 @@ export const overrides = [
 
     // Override openUILinkIn to apply workspace container
     // This is used by some bookmark and external link handlers
-    if (window.openUILinkIn) {
-      const originalOpenUILinkIn = window.openUILinkIn;
-      window.openUILinkIn = function (
+    if (globalThis.openUILinkIn) {
+      const originalOpenUILinkIn = globalThis.openUILinkIn;
+      globalThis.openUILinkIn = function (
         url: string | nsIURI,
         where: string,
         params?: {
@@ -178,7 +181,7 @@ export const overrides = [
       };
     }
 
-    window.BrowserCommands.openTab = ({
+    globalThis.BrowserCommands.openTab = ({
       event,
       url,
     }: {
@@ -186,9 +189,9 @@ export const overrides = [
       url?: string;
     } = {}) => {
       const werePassedURL = !!url;
-      url ??= window.BROWSER_NEW_TAB_URL;
+      url ??= globalThis.BROWSER_NEW_TAB_URL;
       const searchClipboard =
-        window.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
+        globalThis.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
 
       let relatedToCurrent = false;
       let where = "tab";
@@ -205,7 +208,7 @@ export const overrides = [
           break;
         default:
           if (event) {
-            where = window.BrowserUtils.whereToOpenLink(event, false, true);
+            where = globalThis.BrowserUtils.whereToOpenLink(event, false, true);
 
             switch (where) {
               case "tab":
@@ -256,15 +259,15 @@ export const overrides = [
               [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
-              let clipboard = window.readFromClipboard();
+              let clipboard = globalThis.readFromClipboard();
               clipboard =
-                window.UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
+                globalThis.UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;
               }
             }
-            window.openTrustedLinkIn(url, where, options);
+            globalThis.openTrustedLinkIn(url, where, options);
           }),
         },
         "browser-open-newtab-start",

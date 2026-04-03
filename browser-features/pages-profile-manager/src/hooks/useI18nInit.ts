@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { initI18nextInstance } from "@/lib/i18n/i18n.ts";
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface GlobalThis {
     NRI18n?: {
       getPrimaryBrowserLocaleMapped?: () => Promise<string>;

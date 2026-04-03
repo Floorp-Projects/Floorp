@@ -23,6 +23,7 @@ export class NRRestartBrowserChild extends JSWindowActorChild {
   }
 
   resolveRestartBrowser: ((result: boolean) => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "RestartBrowser:Result": {

@@ -60,7 +60,7 @@ export function FloatingSplitter() {
       const deltaX = e.clientX - startX;
       const browserW =
         (document?.getElementById("browser") as HTMLElement | null)
-          ?.clientWidth ?? window.innerWidth;
+          ?.clientWidth ?? globalThis.innerWidth;
       const minW = 225;
       const maxW = browserW * 0.8;
       if (isLeftSide) {
@@ -152,7 +152,7 @@ export function FloatingSplitter() {
       const deltaY = e.clientY - startY;
       const browserH =
         (document?.getElementById("browser") as HTMLElement | null)
-          ?.clientHeight ?? window.innerHeight;
+          ?.clientHeight ?? globalThis.innerHeight;
       const minH = 200;
       const maxH = browserH * 0.9;
       if (isTopSide) {
@@ -269,10 +269,10 @@ export function FloatingSplitter() {
 
       const browserW =
         (document?.getElementById("browser") as HTMLElement | null)
-          ?.clientWidth ?? window.innerWidth;
+          ?.clientWidth ?? globalThis.innerWidth;
       const browserH =
         (document?.getElementById("browser") as HTMLElement | null)
-          ?.clientHeight ?? window.innerHeight;
+          ?.clientHeight ?? globalThis.innerHeight;
       const minW = 225;
       const maxW = browserW * 0.8;
       const minH = 200;

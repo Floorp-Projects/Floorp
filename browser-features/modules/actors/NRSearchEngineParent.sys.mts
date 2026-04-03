@@ -326,8 +326,11 @@ export class NRSearchEngineParent extends JSWindowActorParent {
           }
 
           const suggestionsResponse = await response.json();
+          // deno-lint-ignore no-explicit-any
           const suggestions = (suggestionsResponse as any).suggestions ||
+            // deno-lint-ignore no-explicit-any
             (suggestionsResponse as any)[1] ||
+            // deno-lint-ignore no-explicit-any
             (suggestionsResponse as any).suggestions?.map((
               suggestion: string,
             ) => ({

@@ -18,6 +18,7 @@ type Orders = {
   floorpSidebarSelectBox: number;
 };
 
+// deno-lint-ignore no-namespace
 export namespace gFlexOrder {
   const fxSidebarPosition = "sidebar.position_start";
   const fxSidebarId = "sidebar-box";

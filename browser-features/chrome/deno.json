@@ -30,7 +30,7 @@
   },
   "lint": {
     "rules": {
-      "exclude": ["no-sloppy-imports", "no-window"]
+      "exclude": ["no-sloppy-imports", "no-window", "no-slow-types"]
     }
   },
   "exports": {

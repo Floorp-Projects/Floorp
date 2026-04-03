@@ -10,7 +10,7 @@ import {
 import { ModalManager } from "./modalManager.tsx";
 import { ModalElement } from "./modalElement.tsx";
 import type { ModalSize } from "./data/data.ts";
-import { TForm, TFormResult } from "./utils/type.ts";
+import type { TForm, TFormResult } from "./utils/type.ts";
 
 @noraComponent(import.meta.hot)
 export default class ModalParent extends NoraComponentBase {

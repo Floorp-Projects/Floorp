@@ -1,8 +1,11 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
+// deno-lint-ignore no-explicit-any
 declare const Services: any;
+// deno-lint-ignore no-explicit-any
 declare const ChromeUtils: any;
+// deno-lint-ignore no-explicit-any
 declare const Cu: any;
 declare global {
   interface Window {
@@ -47,10 +50,10 @@ const directServicesFunctions: NRSettingsParentFunctions = {
     return Promise.resolve();
   },
   // フォルダ選択関連のメソッド
-  selectFolder: async () => {
+  selectFolder: () => {
     return Promise.resolve(null);
   },
-  getRandomImageFromFolder: async (path) => {
+  getRandomImageFromFolder: (_path) => {
     return Promise.resolve(null);
   },
   // Actor通信用メソッド

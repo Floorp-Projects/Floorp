@@ -32,16 +32,16 @@ declare global {
 export function App() {
   const [progress, setProgress] = useState<WorkflowProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [debugStatus, setDebugStatus] = useState<string>("Ready");
+  const [_debugStatus, setDebugStatus] = useState<string>("Ready");
 
   const fetchProgress = useCallback(async () => {
-    if (!window.OSAutomotor?.getWorkflowProgress) {
+    if (!globalThis.OSAutomotor?.getWorkflowProgress) {
       setDebugStatus("API Missing in fetch");
       return;
     }
 
     try {
-      const result = await window.OSAutomotor.getWorkflowProgress();
+      const result = await globalThis.OSAutomotor.getWorkflowProgress();
       if (result.success && result.progress) {
         setProgress(result.progress);
         setError(null);
@@ -64,32 +64,32 @@ export function App() {
     console.log("[WorkflowProgress] handleClose called");
     console.log(
       "[WorkflowProgress] window.OSAutomotor exists:",
-      !!window.OSAutomotor,
+      !!globalThis.OSAutomotor,
     );
     console.log(
       "[WorkflowProgress] closeProgressWindow exists:",
-      !!window.OSAutomotor?.closeProgressWindow,
+      !!globalThis.OSAutomotor?.closeProgressWindow,
     );
 
     try {
-      if (window.OSAutomotor?.closeProgressWindow) {
+      if (globalThis.OSAutomotor?.closeProgressWindow) {
         setDebugStatus("Calling API...");
         console.log(
           "[WorkflowProgress] Calling OSAutomotor.closeProgressWindow()",
         );
-        const result = await window.OSAutomotor.closeProgressWindow();
+        const result = await globalThis.OSAutomotor.closeProgressWindow();
         setDebugStatus(`API Result: ${JSON.stringify(result)}`);
         console.log("[WorkflowProgress] closeProgressWindow result:", result);
       } else {
         setDebugStatus("Fallback window.close");
         console.log("[WorkflowProgress] Fallback to window.close()");
-        window.close();
+        globalThis.close();
       }
     } catch (error) {
       setDebugStatus(`Error: ${String(error)}`);
       console.error("[WorkflowProgress] Failed to close window:", error);
       console.log("[WorkflowProgress] Emergency fallback to window.close()");
-      window.close(); // Fallback
+      globalThis.close(); // Fallback
     }
   };
 
@@ -145,6 +145,7 @@ export function App() {
           </h1>
         </div>
         <button
+          type="button"
           onClick={handleClose}
           className="p-2 rounded-md hover:bg-zinc-800 transition-colors relative z-50 cursor-pointer"
           style={{ MozWindowDragging: "no-drag" } as React.CSSProperties}

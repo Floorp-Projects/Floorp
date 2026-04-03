@@ -28,6 +28,7 @@ export class NRTabManagerChild extends JSWindowActorChild {
 
   resolveAddTab: (() => void) | null = null;
   resolveLoadTrustedUrl: (() => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "Tabs:AddTab": {

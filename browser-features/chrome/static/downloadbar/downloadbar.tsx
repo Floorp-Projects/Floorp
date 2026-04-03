@@ -150,6 +150,7 @@ export function DonwloadBar() {
                 <vbox id="downloadsFooterButtons">
                   <toolbarseparator />
                   <button
+                    type="button"
                     id="downloadsHistory"
                     data-l10n-id="downloads-history"
                     class="downloadsPanelFooterButton subviewbutton panel-subview-footer-button toolbarbutton-1"

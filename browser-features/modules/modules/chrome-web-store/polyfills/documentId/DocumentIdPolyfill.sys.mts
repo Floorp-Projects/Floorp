@@ -365,7 +365,6 @@ export function installDocumentIdPolyfill(
 // Global declarations
 // =============================================================================
 
-/* eslint-disable no-var */
 declare global {
   var chrome: {
     // deno-lint-ignore no-explicit-any

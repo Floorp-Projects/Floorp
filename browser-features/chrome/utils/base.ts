@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { ViteHotContext } from "vite/types/hot";
+import type { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
 import type { ClassDecorator } from "./decorator";
 import { createRootHMR } from "@nora/solid-xul";
@@ -19,7 +19,7 @@ import { onCleanup } from "solid-js";
 export function noraComponent(
   aViteHotContext: ViteHotContext | undefined,
 ): ClassDecorator<NoraComponentBase> {
-  return (clazz, ctx) => {
+  return (_clazz, ctx) => {
     if (_NoraComponentBase_viteHotContext.has(ctx.name!)) {
       throw new Error(`Duplicate NoraComponent Name: ${ctx.name}`);
     }
@@ -33,7 +33,7 @@ const nora_component_base_console = console.createInstance({
   prefix: `nora@nora-component-base`,
 });
 
-let _NoraComponentBase_viteHotContext = new Map<
+const _NoraComponentBase_viteHotContext = new Map<
   string,
   ViteHotContext | undefined
 >();

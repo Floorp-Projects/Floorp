@@ -16,7 +16,6 @@
 import COMMONMARK_RULES from "./commonmark-rules";
 import Rules, { type TurndownOptions, type Rule } from "./rules";
 import type { ExtendedNode } from "./node";
-import { extend } from "./utilities";
 import RootNode from "./root-node";
 import wrapNode from "./node";
 import {
@@ -86,10 +85,10 @@ export class TurndownService {
       preformattedCode: false,
       enableFingerprints: false,
       fingerprintSelectorMap: false,
-      blankReplacement: function (content: string, node: ExtendedNode): string {
+      blankReplacement: function (_content: string, node: ExtendedNode): string {
         return node.isBlock ? "\n\n" : "";
       },
-      keepReplacement: function (content: string, node: ExtendedNode): string {
+      keepReplacement: function (_content: string, node: ExtendedNode): string {
         const html = (node as unknown as Element).outerHTML as unknown as string;
         return node.isBlock ? "\n\n" + html + "\n\n" : html;
       },
@@ -259,6 +258,7 @@ export class TurndownService {
  * Reduces a DOM node down to its Markdown string equivalent
  */
 function process(this: TurndownService, parentNode: Node): string {
+  // deno-lint-ignore no-this-alias
   const self = this;
   const childNodes = parentNode.childNodes
     ? (Array.from(parentNode.childNodes) as Array<Node | null>).filter(
@@ -288,6 +288,7 @@ function process(this: TurndownService, parentNode: Node): string {
  * Appends strings as each rule requires and trims the output
  */
 function postProcess(this: TurndownService, output: string): string {
+  // deno-lint-ignore no-this-alias
   const self = this;
   self.rules.forEach(function (rule) {
     if (typeof rule.append === "function") {
@@ -302,6 +303,7 @@ function postProcess(this: TurndownService, output: string): string {
  * Converts an element node to its Markdown equivalent
  */
 function replacementForNode(this: TurndownService, node: ExtendedNode): string {
+  // deno-lint-ignore no-this-alias
   const self = this;
   const rule = this.rules.forNode(node);
   let content = process.call(this, node as unknown as Node);

@@ -3,7 +3,7 @@ import type { Floorp11Workspaces, WorkspaceDetail } from "./old_type.ts";
 import type { TWorkspace, TWorkspaceID } from "../../utils/type.ts";
 import { zWorkspaceID } from "../../utils/type.ts";
 import {
-  setSelectedWorkspaceID as _setSelectedWorkspaceID,
+  type setSelectedWorkspaceID as _setSelectedWorkspaceID,
   setWorkspacesDataStore,
 } from "../data.ts";
 import { isRight } from "fp-ts/Either";

@@ -344,10 +344,10 @@ function createConfig(): [
 
 export const [config, setConfig] = createRootHMR(createConfig, import.meta.hot);
 
-if (!window.gFloorp) {
-  window.gFloorp = {};
+if (!globalThis.gFloorp) {
+  globalThis.gFloorp = {};
 }
-window.gFloorp.designs = {
+globalThis.gFloorp.designs = {
   setInterface: setBrowserInterface,
 };
 

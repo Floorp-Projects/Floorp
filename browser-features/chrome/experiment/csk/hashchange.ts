@@ -4,14 +4,14 @@ import { createEffect, createSignal } from "solid-js";
 
 export const [hash, setHash] = createSignal("");
 
-const onHashChange = (ev: Event | null) => setHash(window.location.hash);
+const onHashChange = (_ev: Event | null) => setHash(globalThis.location.hash);
 
 export function initHashChange() {
   createEffect(() => {
     changeCSK();
   });
-  window.addEventListener("hashchange", onHashChange);
-  window.addEventListener("load", changeCSK);
+  globalThis.addEventListener("hashchange", onHashChange);
+  globalThis.addEventListener("load", changeCSK);
   onHashChange(null);
 }
 

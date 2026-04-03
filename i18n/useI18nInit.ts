@@ -1,7 +1,6 @@
 import i18n from "i18next";
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface GlobalThis {
     NRI18n?: {
       getPrimaryBrowserLocaleMapped?: () => Promise<string>;

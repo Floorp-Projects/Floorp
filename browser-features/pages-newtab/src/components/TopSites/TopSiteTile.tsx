@@ -1,4 +1,4 @@
-import { type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { PinIcon } from "lucide-react";
 import type { PinnedSite, TopSite } from "./index.tsx";
 

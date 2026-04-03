@@ -6,7 +6,8 @@
   "workspace": [
     "./libs/*",
     "./browser-features/*",
-    "./bridge/*"
+    "./bridge/*",
+    "./i18n"
   ],
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.25",
@@ -28,11 +29,11 @@
   "compilerOptions": {
     "lib": [
       "deno.ns",
-      "ESNext",
-      "dom",
-      "dom.asynciterable"
+      "deno.window",
+      "ESNext"
     ],
-    "checkJs": true
+    "checkJs": true,
+    "skipLibCheck": true
   },
   "exclude": [
     "tools/build/tasks/inject/wasm/nora-inject.js",
@@ -40,9 +41,9 @@
     "**/*.timestamp-*.mjs",
     "libs/@types/gecko/**/*",
     "libs/user-js-runner/**/*",
-    "libs/solid-xul/**/*",
+    "libs/vite-plugin-gen-jarmn/**/*",
+    "libs/vite-plugin-disable-csp/**/*",
     "tools/build/tasks/inject/mixins/**/*",
-    "bridge/loader-features/vite.config.ts",
     "logs/**/*",
     "chrome/**/*",
     "modules/**/*",

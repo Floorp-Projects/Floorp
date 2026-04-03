@@ -120,6 +120,7 @@ const SortablePanel = ({
           <Edit size={16} />
         </button>
         <button
+          type="button"
           onClick={() => onDelete(panel.id)}
           className="btn btn-ghost btn-sm btn-square"
           aria-label={t("common.delete")}
@@ -164,10 +165,10 @@ const DeleteConfirmationModal = ({
           {t("panelSidebar.confirmDelete", { name: panelName })}
         </p>
         <div className="modal-action">
-          <button onClick={onClose} className="btn btn-outline">
+          <button type="button" onClick={onClose} className="btn btn-outline">
             {t("panelSidebar.cancel")}
           </button>
-          <button onClick={onConfirm} className="btn btn-error">
+          <button type="button" onClick={onConfirm} className="btn btn-error">
             {t("panelSidebar.delete")}
           </button>
         </div>
@@ -277,7 +278,7 @@ export const PanelList: React.FC = () => {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
 

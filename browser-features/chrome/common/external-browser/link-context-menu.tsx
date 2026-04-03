@@ -129,7 +129,7 @@ export class ExternalBrowserLinkContextMenu {
       return;
     }
 
-    const hasLink = Boolean(window.gContextMenu?.linkURL);
+    const hasLink = Boolean(globalThis.gContextMenu?.linkURL);
     const isOpenLinkHidden = Boolean(
       openLink.getAttribute("hidden") === "true" ||
         openLink.hasAttribute("hidden"),
@@ -165,7 +165,7 @@ export class ExternalBrowserLinkContextMenu {
     await this.loadBrowsers();
 
     // Get the link URL from context menu
-    const url = window.gContextMenu?.linkURL;
+    const url = globalThis.gContextMenu?.linkURL;
 
     if (!url) {
       const emptyItem = this.createMenuItem(

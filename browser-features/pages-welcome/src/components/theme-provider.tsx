@@ -24,7 +24,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "floorp-ui-theme",
+  storageKey: _storageKey = "floorp-ui-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
@@ -49,12 +49,12 @@ export function ThemeProvider({
   }, []);
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = globalThis.document.documentElement;
 
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";

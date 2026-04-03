@@ -32,7 +32,7 @@ const WorkspacesApiModule = () =>
 export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
   api.namespace("/workspaces", (w: NamespaceBuilder) => {
     // List all workspaces
-    w.get("/", safeRoute(async () => {
+    w.get("/", safeRoute(() => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const workspaces = WorkspacesApiService.listWorkspaces();
       const currentId = WorkspacesApiService.getCurrentWorkspaceId();
@@ -46,7 +46,7 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
     }));
 
     // Get current workspace ID
-    w.get("/current", safeRoute(async () => {
+    w.get("/current", safeRoute(() => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const currentId = WorkspacesApiService.getCurrentWorkspaceId();
       return {
@@ -59,7 +59,7 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/next", safeRoute(async () => {
+    >("/next", safeRoute(() => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const success = WorkspacesApiService.switchToNext();
       if (!success) {
@@ -79,7 +79,7 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/previous", safeRoute(async () => {
+    >("/previous", safeRoute(() => {
       const { WorkspacesApiService } = WorkspacesApiModule();
       const success = WorkspacesApiService.switchToPrevious();
       if (!success) {
@@ -99,7 +99,7 @@ export function registerWorkspaceRoutes(api: NamespaceBuilder): void {
     w.post<
       undefined,
       { success: boolean; workspaceId: string | null } | ErrorResponse
-    >("/:id/switch", safeRoute(async (ctx: RouterContext) => {
+    >("/:id/switch", safeRoute((ctx: RouterContext) => {
       const { id } = ctx.params;
       if (!id) {
         return {

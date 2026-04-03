@@ -18,7 +18,7 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile: _isMobile } = useSidebar();
 
   return (
     <SidebarMenu>

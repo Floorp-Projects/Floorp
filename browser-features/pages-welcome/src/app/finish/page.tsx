@@ -1,4 +1,3 @@
-// eslint-disable jsx-no-target-blank
 import Navigation from "../../components/Navigation.tsx";
 import { useTranslation } from "react-i18next";
 import { setDefaultBrowser } from "@/app/finish/dataManager.ts";
@@ -20,9 +19,9 @@ export default function FinishPage() {
     };
 
     const closeWelcomePage = () => {
-        window.open("about:newtab", "_blank");
+        globalThis.open("about:newtab", "_blank");
         setTimeout(() => {
-            window.close();
+            globalThis.close();
         }, 50);
     };
 
@@ -63,6 +62,7 @@ export default function FinishPage() {
 
                         <div className="flex flex-col gap-3">
                             <button
+                                type="button"
                                 className="btn btn-primary btn-md md:btn-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full"
                                 onClick={setAsDefaultBrowser}
                             >
@@ -92,6 +92,7 @@ export default function FinishPage() {
 
                 <div className="flex flex-col items-center">
                     <button
+                        type="button"
                         className="btn btn-success btn-md md:btn-lg shadow-xl hover:shadow-success/20 transform hover:-translate-y-1 transition-all duration-300 px-6 md:px-8 text-white font-bold"
                         onClick={closeWelcomePage}
                     >

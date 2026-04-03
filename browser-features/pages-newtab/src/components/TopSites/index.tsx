@@ -7,7 +7,6 @@ import {
   saveNewTabSettings,
 } from "@/utils/dataManager.ts";
 import { useTranslation } from "react-i18next";
-import { PinIcon } from "lucide-react";
 import { callNRWithRetry } from "@/utils/nrRetry.ts";
 import { TopSiteTile } from "./TopSiteTile.tsx";
 
@@ -20,15 +19,6 @@ export interface TopSite {
 }
 
 export type PinnedSite = PinnedSiteType;
-
-const TRUNCATE_TITLE_MAX = 18;
-function truncateTopSiteTitle(
-  title: string | undefined,
-  max: number = TRUNCATE_TITLE_MAX,
-): string {
-  if (!title) return "";
-  return title.length <= max ? title : title.slice(0, max - 1) + "…";
-}
 
 declare global {
   interface Window {
@@ -356,7 +346,7 @@ export function TopSites({ isFirefoxMode = false }: { isFirefoxMode?: boolean })
             <TopSiteTile
               key={site.url}
               site={site}
-              isPinned={true}
+              isPinned
               isFirefoxMode={isFirefoxMode}
               onContextMenu={handleContextMenu}
             />

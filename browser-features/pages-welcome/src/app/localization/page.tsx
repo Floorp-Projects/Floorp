@@ -29,7 +29,7 @@ export default function LocalizationPage() {
             const dropdownElement = document.querySelector('.language-dropdown');
             if (dropdownElement) {
                 const rect = dropdownElement.getBoundingClientRect();
-                const windowHeight = window.innerHeight;
+                const windowHeight = globalThis.innerHeight;
                 const dropdownHeight = 240; // Estimated dropdown height
 
                 if (rect.bottom + dropdownHeight > windowHeight) {
@@ -42,10 +42,10 @@ export default function LocalizationPage() {
 
         // Check on mount and window resize
         checkDropdownDirection();
-        window.addEventListener('resize', checkDropdownDirection);
+        globalThis.addEventListener('resize', checkDropdownDirection);
 
         return () => {
-            window.removeEventListener('resize', checkDropdownDirection);
+            globalThis.removeEventListener('resize', checkDropdownDirection);
         };
     }, []);
 
@@ -89,8 +89,8 @@ export default function LocalizationPage() {
         try {
             setInstallingLanguage(true);
 
-            // @ts-ignore
-            const normalizedLocale = await window.NRI18n.normalizeLocale(locale);
+            // @ts-expect-error - NRI18n is injected at runtime
+            const normalizedLocale = await globalThis.NRI18n.normalizeLocale(locale);
 
             if (!localeData?.installedLocales.includes(locale)) {
                 const targetLangPack = localeData?.availableLocales.find(langPack => getLocaleFromLangPack(langPack) === locale);
@@ -184,6 +184,7 @@ export default function LocalizationPage() {
                                     <h3 className="font-bold mb-2">{t('localizationPage.selectLanguage')}</h3>
                                     <div className="mb-3">
                                         <button
+                                            type="button"
                                             className="btn btn-sm btn-primary w-full justify-start"
                                             onClick={() => handleLocaleChange(localeData.localeInfo.systemLocale.language)}
                                             disabled={installingLanguage || localeData.localeInfo.systemLocaleRaw === selectedLocale}

@@ -31,7 +31,6 @@ declare global {
   }
 
   // Declare chrome namespace
-  // eslint-disable-next-line no-var
   var chrome: {
     offscreen?: OffscreenAPI;
     runtime?: {
@@ -42,7 +41,6 @@ declare global {
   };
 
   // Declare browser namespace
-  // eslint-disable-next-line no-var
   var browser: {
     offscreen?: OffscreenAPI;
     runtime?: {
@@ -97,7 +95,7 @@ function createDeterministicPolyfill(): OffscreenPolyfill {
   });
 }
 
-async function withMockExtensionGlobals<T>(fn: () => Promise<T>): Promise<T> {
+async function withMockExtensionGlobals<T>(fn: () => T | Promise<T>): Promise<T> {
   const g = globalThis as unknown as Record<string, unknown>;
   const hadChrome = Object.prototype.hasOwnProperty.call(g, "chrome");
   const hadBrowser = Object.prototype.hasOwnProperty.call(g, "browser");
@@ -318,8 +316,8 @@ async function testRequireJustification() {
  * Test: Should install polyfill into chrome object
  */
 async function testInstallation() {
-  await withMockExtensionGlobals(async () => {
-    // @ts-ignore test reset
+  await withMockExtensionGlobals(() => {
+    // @ts-expect-error test reset
     delete chrome.offscreen;
 
     const installed = installOffscreenPolyfill({ debug: true });
@@ -353,7 +351,7 @@ async function testInstallation() {
  * Test: Should not reinstall if already exists
  */
 async function testNoReinstall() {
-  await withMockExtensionGlobals(async () => {
+  await withMockExtensionGlobals(() => {
     installOffscreenPolyfill({ debug: true, force: true });
     const installed = installOffscreenPolyfill({ debug: true });
     assertEquals(
@@ -368,7 +366,7 @@ async function testNoReinstall() {
  * Test: Should force reinstall with force option
  */
 async function testForceReinstall() {
-  await withMockExtensionGlobals(async () => {
+  await withMockExtensionGlobals(() => {
     installOffscreenPolyfill({ debug: true, force: true });
     const installed = installOffscreenPolyfill({ debug: true, force: true });
     assertEquals(installed, true, "Should reinstall when force option is true");

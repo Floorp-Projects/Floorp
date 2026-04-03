@@ -3,6 +3,7 @@
 export type HttpMethod = "GET" | "POST" | "DELETE" | "OPTIONS";
 
 export interface RouteMatch {
+  // deno-lint-ignore no-explicit-any
   handler: Handler<any, any>;
   params: Record<string, string>;
 }
@@ -41,6 +42,7 @@ interface CompiledRoute {
   pattern: string;
   regex: RegExp;
   paramNames: string[];
+  // deno-lint-ignore no-explicit-any
   handler: Handler<any, any>;
 }
 
@@ -58,6 +60,7 @@ export class Router {
       pattern,
       regex,
       paramNames,
+      // deno-lint-ignore no-explicit-any
       handler: handler as unknown as Handler<any, any>,
     });
   }

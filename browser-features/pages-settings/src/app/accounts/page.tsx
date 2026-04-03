@@ -13,7 +13,7 @@ export default function Page() {
   });
 
   const { setValue } = methods;
-  const watchAll = useWatch({
+  const _watchAll = useWatch({
     control: methods.control,
   });
 

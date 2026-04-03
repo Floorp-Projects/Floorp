@@ -15,10 +15,10 @@ declare global {
 
 const hasBridge =
   typeof window !== "undefined" &&
-  typeof window.NRExperimemmtSend === "function" &&
-  typeof window.NRExperimemmtRegisterReceiveCallback === "function";
+  typeof globalThis.NRExperimemmtSend === "function" &&
+  typeof globalThis.NRExperimemmtRegisterReceiveCallback === "function";
 
-const getExperimentsModule = async () => {
+const getExperimentsModule = () => {
   // We lazily import to avoid unnecessary module loading when the actor bridge is available.
   return ChromeUtils.importESModule(
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
@@ -86,9 +86,9 @@ export const experimentsRpc = hasBridge
   ? createBirpc<NRExperimemmtParentFunctions, Record<string, never>>(
       {},
       {
-        post: (data) => window.NRExperimemmtSend(data),
+        post: (data) => globalThis.NRExperimemmtSend(data),
         on: (callback) => {
-          window.NRExperimemmtRegisterReceiveCallback(callback);
+          globalThis.NRExperimemmtRegisterReceiveCallback(callback);
         },
         serialize: (value) => JSON.stringify(value),
         deserialize: (value) => JSON.parse(value),

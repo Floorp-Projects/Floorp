@@ -22,7 +22,7 @@ export async function initI18nextInstance() {
   // Determine the initial language from I18nUtils
   let initialLng = "en-US";
   try {
-    // @ts-ignore - ChromeUtils is available in chrome privileged contexts
+    // @ts-expect-error - ChromeUtils is available in chrome privileged contexts
     const { I18nUtils } = ChromeUtils.importESModule(
       "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
     );

@@ -108,7 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "",
       icon: Settings,
       isExternal: true,
-      onClick: () => window.NRAddTab("about:preferences"),
+      onClick: () => globalThis.NRAddTab("about:preferences"),
     },
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
     { title: t("pages.updates"), url: "/about/updates", icon: RefreshCw },

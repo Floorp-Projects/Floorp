@@ -27,6 +27,7 @@ type ExtensionPanel = {
 
 export function getStaticPanelDisplayName(
   value: string | null,
+  // deno-lint-ignore ban-types
   t: Function,
 ): string {
   if (!value) return t("panelSidebar.untitled");
@@ -133,9 +134,9 @@ const fetchState = {
   isGettingExtensionPanels: false,
 };
 
-export async function getContainers(): Promise<Container[]> {
+export function getContainers(): Promise<Container[]> {
   if (containersCache.length > 0) {
-    return containersCache;
+    return Promise.resolve(containersCache);
   }
 
   if (fetchState.isGettingContainers) {
@@ -151,10 +152,11 @@ export async function getContainers(): Promise<Container[]> {
 
   fetchState.isGettingContainers = true;
 
+  // deno-lint-ignore no-explicit-any
   if (typeof (window as any).NRGetContainerContexts !== "function") {
     console.error("NRGetContainerContexts is not available");
     fetchState.isGettingContainers = false;
-    return [];
+    return Promise.resolve([]);
   }
 
   try {
@@ -170,6 +172,7 @@ export async function getContainers(): Promise<Container[]> {
         try {
           const parsedData = JSON.parse(dataStr);
           const formattedData = Array.isArray(parsedData)
+            // deno-lint-ignore no-explicit-any
             ? parsedData.map((container: any) => {
               let containerId: number | string = 0;
 
@@ -215,18 +218,19 @@ export async function getContainers(): Promise<Container[]> {
         }
       };
 
+      // deno-lint-ignore no-explicit-any
       (window as any).NRGetContainerContexts(callback);
     });
   } catch (error) {
     console.error("Failed to get containers:", error);
     fetchState.isGettingContainers = false;
-    return [];
+    return Promise.resolve([]);
   }
 }
 
-export async function getStaticPanels(): Promise<StaticPanel[]> {
+export function getStaticPanels(): Promise<StaticPanel[]> {
   if (staticPanelsCache.length > 0) {
-    return staticPanelsCache;
+    return Promise.resolve(staticPanelsCache);
   }
 
   if (fetchState.isGettingStaticPanels) {
@@ -242,10 +246,11 @@ export async function getStaticPanels(): Promise<StaticPanel[]> {
 
   fetchState.isGettingStaticPanels = true;
 
+  // deno-lint-ignore no-explicit-any
   if (typeof (window as any).NRGetStaticPanels !== "function") {
     console.error("NRGetStaticPanels is not available");
     fetchState.isGettingStaticPanels = false;
-    return [];
+    return Promise.resolve([]);
   }
 
   try {
@@ -261,6 +266,7 @@ export async function getStaticPanels(): Promise<StaticPanel[]> {
         try {
           const parsedData = JSON.parse(dataStr);
           const formattedData = Array.isArray(parsedData)
+            // deno-lint-ignore no-explicit-any
             ? parsedData.map((panel: any) => ({
               value: panel.id,
               label: panel.title,
@@ -280,18 +286,19 @@ export async function getStaticPanels(): Promise<StaticPanel[]> {
         }
       };
 
+      // deno-lint-ignore no-explicit-any
       (window as any).NRGetStaticPanels(callback);
     });
   } catch (error) {
     console.error("Failed to get static panels:", error);
     fetchState.isGettingStaticPanels = false;
-    return [];
+    return Promise.resolve([]);
   }
 }
 
-export async function getExtensionPanels(): Promise<ExtensionPanel[]> {
+export function getExtensionPanels(): Promise<ExtensionPanel[]> {
   if (extensionPanelsCache.length > 0) {
-    return extensionPanelsCache;
+    return Promise.resolve(extensionPanelsCache);
   }
 
   if (fetchState.isGettingExtensionPanels) {
@@ -310,10 +317,11 @@ export async function getExtensionPanels(): Promise<ExtensionPanel[]> {
 
   fetchState.isGettingExtensionPanels = true;
 
+  // deno-lint-ignore no-explicit-any
   if (typeof (window as any).NRGetExtensionPanels !== "function") {
     console.error("NRGetExtensionPanels is not available");
     fetchState.isGettingExtensionPanels = false;
-    return [];
+    return Promise.resolve([]);
   }
 
   try {
@@ -329,6 +337,7 @@ export async function getExtensionPanels(): Promise<ExtensionPanel[]> {
         try {
           const parsedData = JSON.parse(dataStr);
           const formattedData = Array.isArray(parsedData)
+            // deno-lint-ignore no-explicit-any
             ? parsedData.map((ext: any) => ({
               extensionId: ext.value,
               title: ext.label,
@@ -348,11 +357,12 @@ export async function getExtensionPanels(): Promise<ExtensionPanel[]> {
         }
       };
 
+      // deno-lint-ignore no-explicit-any
       (window as any).NRGetExtensionPanels(callback);
     });
   } catch (error) {
     console.error("Failed to get extension panels:", error);
     fetchState.isGettingExtensionPanels = false;
-    return [];
+    return Promise.resolve([]);
   }
 }

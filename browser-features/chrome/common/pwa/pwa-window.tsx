@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,7 +41,7 @@ export class PwaWindowSupport {
   }
 
   private initializeWindow(): void {
-    window.floorpSsbWindow = true;
+    globalThis.floorpSsbWindow = true;
     this.configureTitlebarBehavior();
     this.updateToolbarVisibility(this.shouldShowToolbar());
   }
@@ -64,7 +63,7 @@ export class PwaWindowSupport {
   }
 
   private setupTabs(): void {
-    window.gBrowser.tabs.forEach((tab: XULElement) => {
+    globalThis.gBrowser.tabs.forEach((tab: XULElement) => {
       tab.setAttribute("floorpSSB", "true");
     });
   }

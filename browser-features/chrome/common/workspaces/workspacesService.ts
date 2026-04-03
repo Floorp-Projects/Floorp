@@ -106,23 +106,23 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       this.setCurrentWorkspaceID(id);
     }
 
-    window.gBrowser.addProgressListener(this.listener);
+    globalThis.gBrowser.addProgressListener(this.listener);
 
     // Listen for TabOpen events to apply workspace container to new tabs
     // This handles tabs opened from bookmarks, external links, etc.
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
-    window.SessionStore.promiseInitialized.then(() => {
-      window.gBrowser.tabContainer.addEventListener(
+    globalThis.SessionStore.promiseInitialized.then(() => {
+      globalThis.gBrowser.tabContainer.addEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
       );
-      window.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-      window.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
     });
 
     onCleanup(() => {
-      window.gBrowser.removeProgressListener(this.listener);
-      window.gBrowser.tabContainer.removeEventListener(
+      globalThis.gBrowser.removeProgressListener(this.listener);
+      globalThis.gBrowser.tabContainer.removeEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
       );

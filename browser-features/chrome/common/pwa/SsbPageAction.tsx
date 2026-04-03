@@ -46,7 +46,7 @@ export class SsbPageAction {
       () => this.onCheckPageHasManifest(),
       "nora-pwa-check-page-has-manifest",
     );
-    window.gBrowser.tabContainer.addEventListener(
+    globalThis.gBrowser.tabContainer.addEventListener(
       "TabSelect",
       () => this.onCheckPageHasManifest(),
     );
@@ -65,7 +65,7 @@ export class SsbPageAction {
   }
 
   private async onCheckPageHasManifest() {
-    const browser = window.gBrowser.selectedBrowser;
+    const browser = globalThis.gBrowser.selectedBrowser;
 
     const canBeInstallAsPwa = await this.pwaService
       .checkBrowserCanBeInstallAsPwa(browser);
@@ -81,23 +81,23 @@ export class SsbPageAction {
 
   private onCommand = () => {
     this.pwaService.installOrRunCurrentPageAsSsb(
-      window.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser,
       true,
     );
     this.isInstalling[1](true);
   };
 
   private onPopupShowing = async () => {
-    const icon = await this.pwaService.getIcon(window.gBrowser.selectedBrowser);
+    const icon = await this.pwaService.getIcon(globalThis.gBrowser.selectedBrowser);
     this.icon[1](icon);
 
     const manifest = await this.pwaService.getManifest(
-      window.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser,
     );
     this.title[1](
-      manifest?.name ?? window.gBrowser.selectedBrowser.currentURI.spec,
+      manifest?.name ?? globalThis.gBrowser.selectedBrowser.currentURI.spec,
     );
-    this.description[1](window.gBrowser.selectedBrowser.currentURI.host);
+    this.description[1](globalThis.gBrowser.selectedBrowser.currentURI.host);
   };
 
   private onPopupHiding = () => {

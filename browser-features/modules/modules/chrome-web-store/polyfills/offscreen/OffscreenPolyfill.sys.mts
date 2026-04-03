@@ -32,7 +32,6 @@ declare global {
   }
 
   // Declare chrome namespace
-  // eslint-disable-next-line no-var
   var chrome: {
     offscreen?: OffscreenAPI;
     runtime?: {
@@ -43,7 +42,6 @@ declare global {
   };
 
   // Declare browser namespace
-  // eslint-disable-next-line no-var
   var browser: {
     offscreen?: OffscreenAPI;
     runtime?: {
@@ -297,7 +295,6 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
       }
 
       let settled = false;
-      let timeout: number | undefined;
 
       const cleanup = () => {
         iframe.removeEventListener("load", onLoad);
@@ -336,7 +333,7 @@ class OffscreenPolyfillImpl implements OffscreenAPI {
       iframe.addEventListener("load", onLoad, { once: true });
       iframe.addEventListener("error", onError, { once: true });
 
-      timeout = setTimeout(() => {
+      const timeout: number | undefined = setTimeout(() => {
         rejectOnce("Offscreen document load timeout");
       }, OFFSCREEN_LOAD_TIMEOUT_MS);
 

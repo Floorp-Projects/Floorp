@@ -105,7 +105,7 @@ export class SidebarContextMenuElem {
       if (typeof document !== "undefined" && document) {
         const contextMenu = document.getElementById("webpanel-context");
         if (contextMenu) {
-          // @ts-ignore - Fix type error
+          // @ts-expect-error - Fix type error
           contextMenu.hidePopup();
         }
       }

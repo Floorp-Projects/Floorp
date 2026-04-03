@@ -1,4 +1,3 @@
-// eslint-disable no-unsafe-optional-chaining
 import type { GestureActionRegistration } from "./gestures.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {

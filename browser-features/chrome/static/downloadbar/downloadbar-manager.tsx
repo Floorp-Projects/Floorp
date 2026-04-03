@@ -15,10 +15,10 @@ export class DownloadBarManager {
       "noraneko.downloadbar.enable",
       this.observerDownloadbarPref,
     );
-    if (!window.gFloorp) {
-      window.gFloorp = {};
+    if (!globalThis.gFloorp) {
+      globalThis.gFloorp = {};
     }
-    window.gFloorp.downloadBar = {
+    globalThis.gFloorp.downloadBar = {
       setShow: this.setShowDownloadBar,
     };
   }

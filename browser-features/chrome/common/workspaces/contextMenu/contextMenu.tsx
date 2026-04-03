@@ -6,7 +6,7 @@
 import type { TWorkspaceID } from "../utils/type";
 import type { WorkspacesService } from "../workspacesService";
 import i18next from "i18next";
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const translationKeys = {

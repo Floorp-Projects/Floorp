@@ -8,7 +8,7 @@ import type { MapSidebars, Sidebar } from "./utils/type";
 const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
 export function getFirefoxSidebarPanels(): Sidebar[] {
-  return Array.from(window.SidebarController.sidebars as MapSidebars)
+  return Array.from(globalThis.SidebarController.sidebars as MapSidebars)
     .filter((sidebar) => {
       return sidebar[1].extensionId;
     })

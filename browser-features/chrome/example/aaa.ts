@@ -4,5 +4,5 @@ function aaa() {
   console.log("hi");
 }
 
-window.noraAAA = aaa;
+globalThis.noraAAA = aaa;
 export {};

@@ -6,7 +6,7 @@ export async function useConstantsData(): Promise<ConstantsData> {
 
 async function getConstants(): Promise<ConstantsData> {
   return await new Promise((resolve) => {
-    window.NRGetConstants((data: string) => {
+    globalThis.NRGetConstants((data: string) => {
       resolve(JSON.parse(data));
     });
   });

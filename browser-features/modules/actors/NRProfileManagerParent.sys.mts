@@ -1,4 +1,4 @@
-//@ts-ignore: decorator
+//@ts-expect-error: decorator
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,15 +39,17 @@ export class NRProfileManagerParent extends JSWindowActorParent {
           if (win) {
             // prefer opening in a new tab. Use any cast because this is chrome window API.
             try {
-              // @ts-ignore: openUILinkIn exists on chrome browser windows
+              // @ts-expect-error: openUILinkIn exists on chrome browser windows
+              // deno-lint-ignore no-explicit-any
               (win as any).openUILinkIn(url, "tab");
             } catch {
               // fallback to creating a tab
-              // @ts-ignore: gBrowser exists on chrome browser windows
+              // @ts-expect-error: gBrowser exists on chrome browser windows
+              // deno-lint-ignore no-explicit-any
               (win as any).gBrowser.addTab(url);
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // ignore errors for open
         }
         break;
@@ -56,7 +58,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
       case "NRProfileManager:GetProfiles": {
         try {
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
           const defaultProfile = (() => {
@@ -69,15 +73,17 @@ export class NRProfileManagerParent extends JSWindowActorParent {
 
           const currentProfile = profileService.currentProfile;
 
+          // deno-lint-ignore no-explicit-any
           const profiles: any[] = [];
           for (const profile of profileService.profiles) {
-            let isCurrentProfile = profile == currentProfile;
+            const isCurrentProfile = profile == currentProfile;
             let isInUse = isCurrentProfile;
             if (!isInUse) {
               try {
-                let lock = profile.lock({});
+                const lock = profile.lock({});
                 lock.unlock();
               } catch (err) {
+                // deno-lint-ignore no-explicit-any
                 const r = (err as any)?.result;
                 if (
                   r != Cr.NS_ERROR_FILE_NOT_DIRECTORY &&
@@ -119,7 +125,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
         try {
           const { profileIdentifier } = message.data || {};
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
           let target = null;
@@ -149,7 +157,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
             const profileService = (
               Components.classes[
                 "@mozilla.org/toolkit/profile-service;1"
+              // deno-lint-ignore no-explicit-any
               ] as any
+            // deno-lint-ignore no-explicit-any
             ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
             const persistProfiles = () => {
@@ -176,6 +186,7 @@ export class NRProfileManagerParent extends JSWindowActorParent {
             };
 
             const callbacks = {
+              // deno-lint-ignore no-explicit-any
               CreateProfile: (profile: any) => {
                 if (!profile) {
                   return;
@@ -192,7 +203,8 @@ export class NRProfileManagerParent extends JSWindowActorParent {
               },
             };
 
-            // @ts-ignore: openDialog is available on chrome windows
+            // @ts-expect-error: openDialog is available on chrome windows
+            // deno-lint-ignore no-explicit-any
             (win as any).openDialog(
               "chrome://mozapps/content/profile/createProfileWizard.xhtml",
               "",
@@ -210,7 +222,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
       case "NRProfileManager:FlushProfiles": {
         try {
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
           profileService.flush();
         } catch {
@@ -223,7 +237,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
         try {
           const { profileIdentifier, deleteFiles } = message.data || {};
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
           let target = null;
@@ -267,7 +283,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
         try {
           const { profileIdentifier, newName } = message.data || {};
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
           let target = null;
@@ -311,7 +329,9 @@ export class NRProfileManagerParent extends JSWindowActorParent {
         try {
           const { profileIdentifier } = message.data || {};
           const profileService = (
+            // deno-lint-ignore no-explicit-any
             Components.classes["@mozilla.org/toolkit/profile-service;1"] as any
+          // deno-lint-ignore no-explicit-any
           ).getService(Components.interfaces.nsIToolkitProfileService) as any;
 
           let target = null;
@@ -354,7 +374,7 @@ export class NRProfileManagerParent extends JSWindowActorParent {
       case "NRProfileManager:Restart": {
         try {
           const { safeMode } = message.data || {};
-          let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+          const cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
             Ci.nsISupportsPRBool,
           );
           Services.obs.notifyObservers(
@@ -389,6 +409,7 @@ export class NRProfileManagerParent extends JSWindowActorParent {
 
         // Get profile directory
         const dirService = (
+          // deno-lint-ignore no-explicit-any
           Components.classes["@mozilla.org/file/directory_service;1"] as any
         ).getService(Components.interfaces.nsIProperties);
 

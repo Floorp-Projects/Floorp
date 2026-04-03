@@ -9,6 +9,7 @@ const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
+// deno-lint-ignore no-namespace
 export namespace BrowserActionUtils {
   export function createToolbarClickActionButton(
     widgetId: string,

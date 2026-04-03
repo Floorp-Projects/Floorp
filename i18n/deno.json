@@ -1,0 +1,16 @@
+{
+  "name": "@nora/i18n",
+  "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "npm:vite/client",
+      "jsr:@types/gecko"
+    ]
+  },
+  "exports": {
+    ".": "./deno.json"
+  }
+}

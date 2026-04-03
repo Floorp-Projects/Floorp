@@ -73,6 +73,7 @@ export class MouseGestureService {
   public attachToWindow(win: Window): void {
     // Check if this window already has a controller registered from ANY context
     // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
+    // deno-lint-ignore no-explicit-any
     if ((win as any).__mouseGestureControllerAttached === true) {
       return;
     }
@@ -86,6 +87,7 @@ export class MouseGestureService {
       this.controllers.set(win, controller);
 
       // Mark the window as having a controller attached
+      // deno-lint-ignore no-explicit-any
       (win as any).__mouseGestureControllerAttached = true;
 
       const onUnload = () => {
@@ -93,6 +95,7 @@ export class MouseGestureService {
         this.controllers.delete(win);
         // Clean up the marker when the window is closed
         try {
+          // deno-lint-ignore no-explicit-any
           delete (win as any).__mouseGestureControllerAttached;
         } catch (_e) {
           // Window might be already gone
@@ -113,6 +116,7 @@ export class MouseGestureService {
       controller.destroy();
       // Clean up the marker
       try {
+        // deno-lint-ignore no-explicit-any
         delete (win as any).__mouseGestureControllerAttached;
       } catch (_e) {
         // Window might be already gone

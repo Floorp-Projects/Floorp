@@ -79,6 +79,7 @@ export class NRPanelSidebarChild extends JSWindowActorChild {
 
   resolveGetExtensionPanels: ((extensions: string) => void) | null = null;
 
+  // deno-lint-ignore no-explicit-any
   receiveMessage(message: { name: string; data: any }) {
     switch (message.name) {
       case "NRPanelSidebar:GetContainerContexts": {

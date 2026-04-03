@@ -9,6 +9,7 @@ const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
 );
 
+// deno-lint-ignore no-namespace
 export namespace PrivateContainer {
   export const ENABLE_PRIVATE_CONTAINER_PREF =
     "floorp.privateContainer.enabled";
@@ -37,7 +38,7 @@ export namespace PrivateContainer {
     });
   }
 
-  export async function StartupCreatePrivateContainer() {
+  export function StartupCreatePrivateContainer() {
     ContextualIdentityService.ensureDataReady();
 
     if (PrivateContainer.getPrivateContainer()) {

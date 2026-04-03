@@ -22,7 +22,6 @@ export class NROSAutomotorChild extends JSWindowActorChild {
         // Helper to export async functions
         const exportAsync = (
           name: string,
-          // deno-lint-ignore no-explicit-any
           fn: (...args: any[]) => any,
         ) => {
           Cu.exportFunction(
@@ -37,8 +36,7 @@ export class NROSAutomotorChild extends JSWindowActorChild {
                     Promise.resolve(result).then(resolve, (err: unknown) => {
                       try {
                         if (err && typeof err === "object") {
-                          // deno-lint-ignore no-explicit-any
-                          const msg = (err as any).message ?? String(err);
+                                const msg = (err as any).message ?? String(err);
                           reject(String(msg));
                         } else {
                           reject(
@@ -54,8 +52,7 @@ export class NROSAutomotorChild extends JSWindowActorChild {
                   } catch (err) {
                     reject(
                       err && typeof err === "object"
-                        ? // deno-lint-ignore no-explicit-any
-                          String((err as any).message ?? err)
+                        ? String((err as any).message ?? err)
                         : String(err),
                     );
                   }

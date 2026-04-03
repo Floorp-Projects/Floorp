@@ -87,7 +87,7 @@ function createSelectedPanelId(): [
     null,
   );
   createEffect(() => {
-    window.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
+    globalThis.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
   });
   return [selectedPanelId, setSelectedPanelId];
 }

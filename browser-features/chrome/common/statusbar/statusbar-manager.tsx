@@ -31,20 +31,20 @@ export class StatusBarManager {
       });
     });
 
-    if (!window.gFloorp) {
-      window.gFloorp = {};
+    if (!globalThis.gFloorp) {
+      globalThis.gFloorp = {};
     }
-    window.gFloorp.statusBar = {
+    globalThis.gFloorp.statusBar = {
       setShow: this.setShowStatusBar,
     };
     onCleanup(() => {
-      window.CustomizableUI.unregisterArea("nora-statusbar", true);
+      globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
   }
 
   init() {
-    window.CustomizableUI.registerArea("nora-statusbar", {
-      type: window.CustomizableUI.TYPE_TOOLBAR,
+    globalThis.CustomizableUI.registerArea("nora-statusbar", {
+      type: globalThis.CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: ["screenshot-button", "fullscreen-button"],
     });
 
@@ -56,7 +56,7 @@ export class StatusBarManager {
       return;
     }
 
-    window.CustomizableUI.registerToolbarNode(statusbarNode);
+    globalThis.CustomizableUI.registerToolbarNode(statusbarNode);
 
     //move elem to bottom of window
     const appContent = document?.querySelector("#appcontent");

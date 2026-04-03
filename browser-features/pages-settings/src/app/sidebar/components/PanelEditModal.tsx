@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Panel } from "../../../../../main/core/common/panel-sidebar/utils/type.ts";
 import { X } from "lucide-react";
@@ -60,6 +60,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
         ]);
 
       if (containersData && Array.isArray(containersData)) {
+        // deno-lint-ignore no-explicit-any
         setContainers(containersData as any);
       } else {
         console.error("Invalid containers data", containersData);
@@ -216,6 +217,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     <div className="modal modal-open">
       <div className="modal-box relative max-w-2xl">
         <button
+          type="button"
           onClick={onClose}
           className="btn btn-sm btn-circle absolute right-2 top-2"
         >

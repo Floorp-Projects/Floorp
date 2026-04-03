@@ -38,7 +38,7 @@ async function injectXHTMLDev(binPath: string) {
       "text/xml",
     );
 
-    const meta = document.querySelector("meta") as HTMLMetaElement;
+    const meta = document.querySelector("meta");
     if (meta) {
       meta.setAttribute(
         "content",

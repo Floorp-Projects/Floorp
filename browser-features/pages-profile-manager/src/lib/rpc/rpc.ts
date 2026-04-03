@@ -1,4 +1,4 @@
-import { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
+import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
 // deno-lint-ignore no-explicit-any

@@ -8,12 +8,12 @@ export async function getOneDriveFileNameList(): Promise<string[]> {
       resolve([]);
     }, 30000);
 
-    if (window.NRGetOneDriveFileNameList) {
+    if (globalThis.NRGetOneDriveFileNameList) {
       console.log(
         "dataManager: NRGetOneDriveFileNameList is available, calling it",
       );
 
-      window.NRGetOneDriveFileNameList((data: string) => {
+      globalThis.NRGetOneDriveFileNameList((data: string) => {
         clearTimeout(timeoutId);
 
         console.log("dataManager: Received data from OneDrive callback");
@@ -66,9 +66,9 @@ export async function sendGmailViaActor(
       reject(new Error("Timeout waiting for Gmail send result"));
     }, 60000);
 
-    if (window.NRSendGmail) {
+    if (globalThis.NRSendGmail) {
       console.log("dataManager: NRSendGmail is available, calling it");
-      window.NRSendGmail(to, subject, body, (result) => {
+      globalThis.NRSendGmail(to, subject, body, (result) => {
         clearTimeout(timeoutId);
         console.log(
           "dataManager: Received result from Gmail callback:",

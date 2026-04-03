@@ -984,7 +984,7 @@ export class DOMReadOperations {
               text += iframeText + "\n";
             }
           }
-        } catch (e) {
+        } catch (_e) {
           // Skip cross-origin iframes (security restriction)
           // console.debug("Skipping cross-origin iframe");
         }

@@ -32,6 +32,7 @@ export function savePrefs(profileDir: string): void {
     const p = path.join(profileDir, "user.js");
     Deno.writeTextFileSync(p, USER_JS);
     logger.success(`user.js written to ${p}`);
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.error(`Failed to write user.js: ${e?.message ?? e}`);
   }
@@ -57,6 +58,7 @@ export function writeDevVersionInfo(): void {
       `buildid2: ${buildid2}\n`,
     );
     logger.success("Wrote dev version info.");
+  // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.error(`Failed to write dev version info: ${e?.message ?? e}`);
   }

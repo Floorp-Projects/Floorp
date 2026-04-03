@@ -48,7 +48,7 @@ function estimateBytesFromDataURL(dataUrl: string): number {
   return (base64.length * 3) / 4 - padding;
 }
 
-async function loadImageElement(dataUrl: string): Promise<HTMLImageElement> {
+function loadImageElement(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.decoding = "async";

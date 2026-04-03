@@ -15,7 +15,6 @@ import {
   ExternalLink,
   HelpCircle,
   PuzzleIcon,
-  Rocket,
   Shield,
   UserRound,
 } from "lucide-react";
@@ -31,10 +30,6 @@ export default function Page() {
     }
     fetchHomeData();
   }, []);
-
-  function isLoggedInToMozillaAccount() {
-    return homeData?.accountName !== null;
-  }
 
   return (
     <div className="py-2 space-y-3">

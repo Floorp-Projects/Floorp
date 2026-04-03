@@ -76,6 +76,7 @@ async function runDev(): Promise<void> {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
       // Launch browser
+      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run().catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
       });
@@ -84,6 +85,7 @@ async function runDev(): Promise<void> {
 
   // Start dev server (it will write to the writer and end it)
   // DevServer.run expects a writable-like object.
+  // deno-lint-ignore no-explicit-any
   DevServer.run(pipe as any).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
@@ -134,6 +136,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
       // Launch browser
+      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run({ marionette }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
       });
@@ -142,6 +145,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
 
   // Start dev server (it will write to the writer and end it)
   // DevServer.run expects a writable-like object.
+  // deno-lint-ignore no-explicit-any
   DevServer.run(pipe as any).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
@@ -179,12 +183,14 @@ async function runTest(): Promise<void> {
       logger.success(
         "Dev servers are ready. Launching browser in test mode...",
       );
+      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run({ marionette: true }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
       });
     }
   });
 
+  // deno-lint-ignore no-explicit-any
   DevServer.run(pipe as any).catch((e: any) => {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
@@ -212,7 +218,7 @@ async function runBuild(phase?: string): Promise<void> {
   }
 }
 
-async function runPatch(action = "apply"): Promise<void> {
+function runPatch(action = "apply"): void {
   Patcher.run(action);
 }
 
@@ -311,6 +317,7 @@ async function main(): Promise<void> {
   }
 }
 
+// deno-lint-ignore no-explicit-any
 main().catch((e: any) => {
   logger.error(`Unhandled error: ${e?.message ?? e}`);
   Deno.exit(1);

@@ -17,6 +17,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
   private static tabCallbacks: Map<string, TabCallbackInfo> = new Map(); // Keep track of tabs expecting callbacks (like OneDrive)
   // No need for a separate map for Gmail callbacks in the parent, the ID is passed through
 
+  // deno-lint-ignore no-explicit-any
   receiveMessage(message: any) {
     console.log(
       `NRWebContentModifierParent: Received message: ${message.name}`,
@@ -30,10 +31,11 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
         );
 
         try {
-          const { url, status } = message.data;
+          const { url: _url, status } = message.data;
           if (status === "success") {
             const win = Services.wm.getMostRecentWindow(
               "navigator:browser",
+            // deno-lint-ignore no-explicit-any
             ) as any;
             if (
               win?.PopupNotifications && this.browsingContext?.topFrameElement
@@ -113,7 +115,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           message.data,
         );
         try {
-          const { count, fileList } = message.data;
+          const { count: _count, fileList } = message.data;
 
           if (fileList && this.browsingContext && this.browsingContext.top) {
             for (
@@ -181,7 +183,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
       );
 
       try {
-        // @ts-ignore - Suppress error for currentWindowGlobal access
+        // @ts-expect-error - Suppress error for currentWindowGlobal access
         if (!tabInfo.browsingContext.currentWindowGlobal) {
           console.error(
             `NRWebContentModifierParent: Tab ${tabId} has no currentWindowGlobal`,
@@ -189,7 +191,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           return;
         }
 
-        // @ts-ignore - Suppress error for currentWindowGlobal access
+        // @ts-expect-error - Suppress error for currentWindowGlobal access
         const actor = tabInfo.browsingContext.currentWindowGlobal.getActor(
           "NRWebContentModifier",
         );
@@ -215,7 +217,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
     }
   }
 
-  async openOneDrivePage(url: string, callbackTabId?: string) {
+  openOneDrivePage(url: string, callbackTabId?: string) {
     try {
       console.log(
         `NRWebContentModifierParent: Opening OneDrive page: ${url} (callback: ${
@@ -225,19 +227,21 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
 
       const window = Services.wm.getMostRecentWindow(
         "navigator:browser",
+      // deno-lint-ignore no-explicit-any
       ) as any;
       if (!window) {
         console.error("NRWebContentModifierParent: No browser window found");
         return;
       }
 
+      // deno-lint-ignore no-explicit-any
       const registerCallbackToNewTab = (newTab: any, tabId: string) => {
         setTimeout(() => {
           try {
             const browserContext = newTab.linkedBrowser?.browsingContext;
-            // @ts-ignore - Suppress error for currentWindowGlobal access
+            // @ts-expect-error - Suppress error for currentWindowGlobal access
             if (browserContext && browserContext.currentWindowGlobal) {
-              // @ts-ignore - Suppress error for currentWindowGlobal access
+              // @ts-expect-error - Suppress error for currentWindowGlobal access
               const actor = browserContext.currentWindowGlobal.getActor(
                 "NRWebContentModifier",
               );
@@ -260,9 +264,9 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           setTimeout(() => {
             try {
               const browserContext = newTab.linkedBrowser?.browsingContext;
-              // @ts-ignore - Suppress error for currentWindowGlobal access
+              // @ts-expect-error - Suppress error for currentWindowGlobal access
               if (browserContext && browserContext.currentWindowGlobal) {
-                // @ts-ignore - Suppress error for currentWindowGlobal access
+                // @ts-expect-error - Suppress error for currentWindowGlobal access
                 const actor = browserContext.currentWindowGlobal.getActor(
                   "NRWebContentModifier",
                 );
@@ -314,10 +318,11 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
     }
   }
 
-  async checkAndModifyFloorpWebsite(browser: any) {
+  // deno-lint-ignore no-explicit-any
+  checkAndModifyFloorpWebsite(browser: any) {
     try {
       const context = browser.browsingContext;
-      // @ts-ignore - Suppress error for currentWindowGlobal access
+      // @ts-expect-error - Suppress error for currentWindowGlobal access
       if (!context || !context.currentWindowGlobal) {
         console.log(
           "NRWebContentModifierParent: Browser context not available",
@@ -325,7 +330,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
         return null;
       }
 
-      // @ts-ignore - Suppress error for currentWindowGlobal access
+      // @ts-expect-error - Suppress error for currentWindowGlobal access
       const actor = context.currentWindowGlobal.getActor(
         "NRWebContentModifier",
       );
@@ -358,7 +363,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
   }
 
   // Opens Gmail compose in a new tab and tells it to fill/send
-  async openGmailCompose(
+  openGmailCompose(
     to: string,
     subject: string,
     body: string,
@@ -372,6 +377,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
 
       const window = Services.wm.getMostRecentWindow(
         "navigator:browser",
+      // deno-lint-ignore no-explicit-any
       ) as any;
       if (!window) {
         console.error("NRWebContentModifierParent: No browser window found");
@@ -410,10 +416,10 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           const browserContext = newtab.linkedBrowser?.browsingContext;
           if (browserContext) {
             // Assign to variable and use type assertion
-            // @ts-ignore - Suppress error for currentWindowGlobal access
+            // @ts-expect-error - Suppress error for currentWindowGlobal access
             const global = browserContext.currentWindowGlobal;
             if (global) {
-              // @ts-ignore - Suppress error for getActor access
+              // @ts-expect-error - Suppress error for getActor access
               const actor = global.getActor("NRWebContentModifier");
 
               if (actor) {
@@ -475,11 +481,11 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
       // Check if context and global exist
       if (tabInfo.browsingContext) {
         // Assign to variable and use type assertion
-        // @ts-ignore - Suppress error for currentWindowGlobal access
+        // @ts-expect-error - Suppress error for currentWindowGlobal access
         const global = tabInfo.browsingContext.currentWindowGlobal;
         if (global) {
           try {
-            // @ts-ignore - Suppress error for getActor access
+            // @ts-expect-error - Suppress error for getActor access
             const actor = global.getActor("NRWebContentModifier");
             // Send the result, the child actor will check if the callbackId matches its stored ones
             actor.sendAsyncMessage("WebContentModifier:GmailResult", {

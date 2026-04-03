@@ -4,7 +4,7 @@ import { parse } from "@std/toml";
 import { createRootHMR } from "@nora/solid-xul";
 import i18next from "i18next";
 import { createEffect, createSignal } from "solid-js";
-import { Resources } from "./default.d.ts";
+import type { Resources } from "./default.d.ts";
 
 const { I18nUtils } = ChromeUtils.importESModule(
   "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
@@ -20,6 +20,7 @@ for (const [idx, m] of Object.entries(_modules)) {
   if (!Object.hasOwn(modules, lng)) {
     modules[lng] = {};
   }
+  // deno-lint-ignore no-explicit-any
   modules[lng][ns] = (m as any).default as object;
 }
 
@@ -34,6 +35,7 @@ for (const path in _meta) {
   )["fallback-language"] as string;
 }
 
+// deno-lint-ignore no-explicit-any
 let i18nInitializedPromise: Promise<any> | null = null;
 let pendingLocale: string | null = null;
 
@@ -44,7 +46,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
     resources: modules,
     defaultNS: defaultNamespace,
     ns: namespace,
-    fallbackLng: fallbackLng as unknown as i18next.FallbackLng,
+    fallbackLng: fallbackLng as unknown as import("i18next").FallbackLng,
     interpolation: {
       escapeValue: false,
       defaultVariables: {
@@ -82,6 +84,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
             // callers can still handle the rejection if they expect it.
             try {
               console.error("Failed to change language", e);
+            // deno-lint-ignore no-empty
             } catch {}
             throw e;
           }
@@ -95,6 +98,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
           "Failed to register translation provider on I18nUtils",
           e,
         );
+      // deno-lint-ignore no-empty
       } catch {}
     }
   });

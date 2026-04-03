@@ -32,6 +32,7 @@ export class NRPanelSidebarParent extends JSWindowActorParent {
     super();
   }
 
+  // deno-lint-ignore no-explicit-any
   receiveMessage(message: { name: string; data?: any }) {
     switch (message.name) {
       case "NRPanelSidebar:GetContainerContexts": {

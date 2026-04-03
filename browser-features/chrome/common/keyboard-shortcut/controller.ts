@@ -5,7 +5,7 @@
 
 import { getConfig, isEnabled } from "./config.ts";
 import { actions } from "../mouse-gesture/utils/actions.ts";
-import { type ShortcutConfig } from "./type.ts";
+import type { ShortcutConfig } from "./type.ts";
 
 export class KeyboardShortcutController {
   private eventListenersAttached = false;

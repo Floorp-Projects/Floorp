@@ -18,6 +18,7 @@ const MOBILE_UA =
 const httpRequestObserver = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
+  // deno-lint-ignore no-explicit-any
   observe: (channel: any, topic: string) => {
     const topLevelWindow = getBrowserById(channel.browserId);
 

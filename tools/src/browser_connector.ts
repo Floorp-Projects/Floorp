@@ -89,9 +89,10 @@ export class MarionetteClient {
     return client;
   }
 
-  async send(
+  send(
     command: string,
     params: Record<string, unknown> = {},
+  // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     return this.sendWithTimeout(command, params, 30_000);
   }
@@ -100,6 +101,7 @@ export class MarionetteClient {
     command: string,
     params: Record<string, unknown>,
     timeoutMs: number,
+  // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     const id = this.#msgId++;
     const msg = JSON.stringify([0, id, command, params]);
@@ -129,6 +131,7 @@ export class MarionetteClient {
     await this.send("Marionette:SetContext", { value: context });
   }
 
+  // deno-lint-ignore no-explicit-any
   async executeScript(script: string, args: unknown[] = []): Promise<any> {
     const result = await this.send("WebDriver:ExecuteScript", {
       script,
@@ -213,6 +216,7 @@ export class MarionetteClient {
     }
   }
 
+  // deno-lint-ignore no-explicit-any
   async #readPacketWithTimeout(timeoutMs: number): Promise<any> {
     const result = await Promise.race([
       this.#readPacket(),
@@ -223,6 +227,7 @@ export class MarionetteClient {
     return result;
   }
 
+  // deno-lint-ignore no-explicit-any
   async #readPacket(): Promise<any> {
     // Marionette protocol: length-prefixed by BYTE count, not character count.
     while (true) {

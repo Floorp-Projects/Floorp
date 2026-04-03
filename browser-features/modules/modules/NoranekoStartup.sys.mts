@@ -388,7 +388,7 @@ async function registerCustomAboutPages(): Promise<void> {
           cm as unknown as { QueryInterface?: (iid: nsIID) => unknown }
         ).QueryInterface;
         if (typeof maybeQI === "function") {
-          // @ts-ignore: Gecko Components.manager supports QueryInterface at runtime
+          // @ts-expect-error: Gecko Components.manager supports QueryInterface at runtime
           registrar = cm.QueryInterface(Ci.nsIComponentRegistrar);
         }
       } catch (e) {

@@ -6,6 +6,7 @@
 import type { CPanelSidebar } from "./components/panel-sidebar.tsx";
 import { WebsitePanel } from "./website-panel-window-parent.ts";
 
+// deno-lint-ignore no-namespace
 export namespace PanelNavigator {
   export const gPanelSidebar: CPanelSidebar | null = null;
   const gWebsitePanel = WebsitePanel.getInstance();

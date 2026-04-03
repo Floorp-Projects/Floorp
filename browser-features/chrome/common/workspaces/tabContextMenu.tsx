@@ -100,7 +100,7 @@ export class WorkspacesTabContextMenu {
 
     //create context menu
     const tabWorkspaceId = this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(
-      window.TabContextMenu.contextTab,
+      globalThis.TabContextMenu.contextTab,
     );
 
     const excludeHasTabWorkspaceIdWorkspaces = workspacesDataStore.order.filter(

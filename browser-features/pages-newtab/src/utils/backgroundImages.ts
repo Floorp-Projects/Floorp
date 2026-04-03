@@ -34,7 +34,6 @@ const imageUrls = allUrls.filter((u) => imagePattern.test(u));
 
 export function getRandomBackgroundImage(): string | null {
   if (!imageUrls || imageUrls.length === 0) {
-    // eslint-disable-next-line no-console
     console.debug("[backgroundImages] no background images found");
     return null;
   }

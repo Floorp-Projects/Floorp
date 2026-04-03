@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Button, ButtonProps } from "./button";
+import { Button, type ButtonProps } from "./button";
 
 interface ConfirmModalProps {
   isOpen: boolean;

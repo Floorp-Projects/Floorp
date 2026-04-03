@@ -15,10 +15,6 @@ const { BrowserWindowTracker } = ChromeUtils.importESModule(
 const { setTimeout, setInterval, clearInterval } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 const PROGRESS_WINDOW_URL = "http://localhost:5192/";
 
 interface WorkflowProgressStep {

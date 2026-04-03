@@ -28,8 +28,10 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     }
   }
   NRGetInstalledApps(
+    // deno-lint-ignore no-explicit-any
     callback: (installedApps: Record<string, any>) => void = () => {},
   ) {
+    // deno-lint-ignore no-explicit-any
     const promise = new Promise<Record<string, any>>((resolve, _reject) => {
       this.resolveGetInstalledApps = resolve;
     });
@@ -46,10 +48,12 @@ export class NRPwaManagerChild extends JSWindowActorChild {
   }
 
   resolveGetInstalledApps:
+    // deno-lint-ignore no-explicit-any
     | ((installedApps: Record<string, any>) => void)
     | null = null;
   resolveRenameSsb: ((id: string, newName: string) => void) | null = null;
   resolveUninstallSsb: ((id: string) => void) | null = null;
+  // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "PwaManager:GetInstalledApps": {
