@@ -116,8 +116,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         "TabOpen",
         this.boundHandleTabOpen,
       );
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+      if (typeof globalThis.SessionStore.persistTabAttribute === "function") {
+        globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+        globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+      }
     });
 
     onCleanup(() => {

@@ -37,7 +37,7 @@ function readFileAsDataURL(file: File): Promise<string> {
 /**
  * Calculates the original binary size of a base64 encoded data URL string.
  */
-function estimateBytesFromDataURL(dataUrl: string): number {
+export function estimateBytesFromDataURL(dataUrl: string): number {
   const parts = dataUrl.split(",", 2);
   if (parts.length <= BASE64_DATA_INDEX) {
     return 0;

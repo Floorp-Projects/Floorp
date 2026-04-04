@@ -24,6 +24,7 @@ Process management:
   restart                   Restart dev processes
   rebuild                   Rebuild assets without restarting browser
   smoke [options]           Run smoke test suite
+  os-verify [args...]       Run OS API verification wrapper
 
 Browser commands:
   status                    Check browser connection
@@ -42,11 +43,26 @@ Options:
   --filter, -f <pattern>    Console: filter by text pattern
   --level <level>           Console: filter by level (error/warn/info/debug/all, default: all)
   --mode <all|unit|runtime> Smoke: choose smoke subset (default: all)
+  --base-url <url>          OS API verify: server base URL
+  --timeout <sec>           OS API verify: health wait timeout seconds
+  --interval <sec>          OS API verify: health poll interval seconds
+  --skip-start              OS API verify: do not start Floorp process
   --help, -h                Show this help
 `.trim();
 
 const args = parseArgs(Deno.args, {
-  string: ["context", "selector", "output", "limit", "filter", "level", "mode"],
+  string: [
+    "context",
+    "selector",
+    "output",
+    "limit",
+    "filter",
+    "level",
+    "mode",
+    "base-url",
+    "timeout",
+    "interval",
+  ],
   alias: {
     c: "context",
     s: "selector",
@@ -55,7 +71,7 @@ const args = parseArgs(Deno.args, {
     l: "limit",
     f: "filter",
   },
-  boolean: ["help"],
+  boolean: ["help", "skip-start"],
   default: { context: "chrome" },
 });
 
@@ -93,6 +109,9 @@ async function main() {
       break;
     case "smoke":
       await cmdSmoke();
+      break;
+    case "os-verify":
+      await cmdOsVerify();
       break;
     case "status":
       await cmdStatus();
@@ -371,6 +390,50 @@ async function cmdSmoke() {
 
   const child = new Deno.Command(denoPath, {
     args: ["run", "-A", "tools/src/smoke_runner.ts", "--mode", mode],
+    cwd: PROJECT_ROOT,
+    stdout: "inherit",
+    stderr: "inherit",
+  }).spawn();
+
+  const status = await child.status;
+  if (!status.success) {
+    Deno.exit(status.code);
+  }
+}
+
+async function cmdOsVerify() {
+  const wrapperArgs = [
+    "run",
+    "-A",
+    "tools/os-test/run_verify_os_server_full_wrapper.ts",
+  ];
+
+  const baseUrl = args["base-url"];
+  if (typeof baseUrl === "string" && baseUrl.length > 0) {
+    wrapperArgs.push("--base-url", baseUrl);
+  }
+
+  const timeout = args.timeout;
+  if (typeof timeout === "string" && timeout.length > 0) {
+    wrapperArgs.push("--timeout", timeout);
+  }
+
+  const interval = args.interval;
+  if (typeof interval === "string" && interval.length > 0) {
+    wrapperArgs.push("--interval", interval);
+  }
+
+  if (args["skip-start"] === true) {
+    wrapperArgs.push("--skip-start");
+  }
+
+  const passthrough = args._.slice(1).map(String);
+  if (passthrough.length > 0) {
+    wrapperArgs.push("--", ...passthrough);
+  }
+
+  const child = new Deno.Command(Deno.execPath(), {
+    args: wrapperArgs,
     cwd: PROJECT_ROOT,
     stdout: "inherit",
     stderr: "inherit",

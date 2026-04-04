@@ -92,7 +92,7 @@ type NewSidebar = {
   data: NewSidebarItem[];
 };
 
-function convertSidebar(oldSidebar: OldSidebar): NewSidebar {
+export function convertSidebar(oldSidebar: OldSidebar): NewSidebar {
   const newSidebar: NewSidebar = { data: [] };
 
   oldSidebar.index.forEach((key) => {

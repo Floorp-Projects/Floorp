@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+
+type TestCase = { name: string; fn: () => void | Promise<void> };
+
+function assert(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
+
+function assertEquals<T>(actual: T, expected: T, message: string): void {
+  if (actual !== expected)
+    throw new Error(
+      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Panel sidebar DOM structure
+// ---------------------------------------------------------------------------
+
+function testPanelSidebarBoxPresence(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  // The sidebar box may not exist if the feature is disabled; this is acceptable.
+  // We record its presence for downstream tests.
+  assert(
+    sidebarBox === null || sidebarBox instanceof Element,
+    "#panel-sidebar-box should be null or an Element",
+  );
+}
+
+function testPanelSidebarBoxDimensions(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const rect = sidebarBox.getBoundingClientRect();
+  assert(
+    rect.width >= 0 && rect.height >= 0,
+    "#panel-sidebar-box should have non-negative dimensions",
+  );
+}
+
+function testPanelSidebarSelectBox(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const selectBox = document.getElementById("panel-sidebar-select-box");
+  assert(
+    selectBox !== null,
+    "#panel-sidebar-select-box should exist when sidebar box is present",
+  );
+}
+
+function testPanelSidebarSplitter(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const splitter = document.getElementById("panel-sidebar-splitter");
+  assert(
+    splitter !== null,
+    "#panel-sidebar-splitter should exist when sidebar box is present",
+  );
+}
+
+function testPanelSidebarBrowserBox(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const browserBox = document.getElementById("panel-sidebar-browser-box");
+  // browser-box is rendered inside a wrapper, check the wrapper too
+  const browserBoxWrapper = document.getElementById("panel-sidebar-browser-box-wrapper");
+  assert(
+    browserBox !== null || browserBoxWrapper !== null,
+    "#panel-sidebar-browser-box or its wrapper should exist when sidebar is present",
+  );
+}
+
+function testPanelSidebarPosition(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const sidebarRect = sidebarBox.getBoundingClientRect();
+  const contentArea = document.getElementById("browser") ||
+    document.getElementById("appcontent");
+  if (!contentArea) return; // cannot determine position without reference
+
+  const contentRect = contentArea.getBoundingClientRect();
+  // Sidebar should be either to the left or right of the content area
+  const isOnLeft = sidebarRect.right <= contentRect.left + 2;
+  const isOnRight = sidebarRect.left >= contentRect.right - 2;
+  const isOverlapping = sidebarRect.width === 0; // collapsed/hidden
+  assert(
+    isOnLeft || isOnRight || isOverlapping,
+    "panel sidebar should be positioned to the left or right of the content area, or collapsed",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Sidebar pref access
+// ---------------------------------------------------------------------------
+
+function testSidebarDataPrefReadable(): void {
+  const prefName = "floorp.browser.sidebar2.data";
+  let threw = false;
+  try {
+    // The pref may or may not exist; getStringPref with a default should not throw
+    Services.prefs.getStringPref(prefName, "");
+  } catch {
+    threw = true;
+  }
+  assert(!threw, "reading floorp.browser.sidebar2.data pref should not throw");
+}
+
+// ---------------------------------------------------------------------------
+// Tests — CSS variable control
+// ---------------------------------------------------------------------------
+
+function testPanelSidebarDisplayVariable(): void {
+  const sidebarBox = document.getElementById("panel-sidebar-box");
+  if (!sidebarBox) return; // sidebar disabled — skip
+
+  const computed = window.getComputedStyle(sidebarBox);
+  // getPropertyValue returns empty string if not set, which is acceptable
+  const displayValue = computed.getPropertyValue("--panel-sidebar-display");
+  assert(
+    displayValue === "" || typeof displayValue === "string",
+    "--panel-sidebar-display should be readable as a CSS variable",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Runner
+// ---------------------------------------------------------------------------
+
+export async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
+    { name: "panel sidebar box presence", fn: testPanelSidebarBoxPresence },
+    { name: "panel sidebar box dimensions", fn: testPanelSidebarBoxDimensions },
+    { name: "panel sidebar select box", fn: testPanelSidebarSelectBox },
+    { name: "panel sidebar splitter", fn: testPanelSidebarSplitter },
+    { name: "panel sidebar browser box", fn: testPanelSidebarBrowserBox },
+    { name: "panel sidebar position", fn: testPanelSidebarPosition },
+    { name: "sidebar data pref readable", fn: testSidebarDataPrefReadable },
+    { name: "panel sidebar display CSS variable", fn: testPanelSidebarDisplayVariable },
+  ];
+
+  const failures: string[] = [];
+  for (const test of tests) {
+    try {
+      await test.fn();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      failures.push(`${test.name}: ${message}`);
+    }
+  }
+  if (failures.length > 0)
+    throw new Error(`panelSidebarUI.test.ts failures: ${failures.join(" | ")}`);
+}

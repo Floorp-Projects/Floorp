@@ -268,7 +268,7 @@ function rasterizeVectorIcon(
   }
 }
 
-function isSvgMimeType(contentType?: string | null): boolean {
+export function isSvgMimeType(contentType?: string | null): boolean {
   if (!contentType) {
     return false;
   }

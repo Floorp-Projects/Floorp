@@ -43,7 +43,7 @@ function getContainerColor(userContextId: number): number | string | null {
  * @param color The container color (number or string)
  * @returns The CSS variable name (e.g., "blue", "green"), or null if not found
  */
-function mapColorToCSSVariable(color: number | string | null): string | null {
+export function mapColorToCSSVariable(color: number | string | null): string | null {
   if (color === null) {
     return null;
   }

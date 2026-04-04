@@ -8,7 +8,7 @@ type SmokeStep = {
   args: string[];
 };
 
-type SmokeMode = "all" | "unit" | "runtime";
+export type SmokeMode = "all" | "unit" | "runtime";
 
 const HELP = `
 Usage: deno run -A tools/src/smoke_runner.ts [options]
@@ -18,7 +18,7 @@ Options:
   --help, -h                  Show this help
 `.trim();
 
-function resolveMode(value: string | undefined): SmokeMode {
+export function resolveMode(value: string | undefined): SmokeMode {
   if (!value) {
     return "all";
   }
@@ -42,7 +42,7 @@ function resolveMode(value: string | undefined): SmokeMode {
   );
 }
 
-function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
+export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
   const unitSteps: SmokeStep[] = [
     {
       name: "colocated runner unit tests",

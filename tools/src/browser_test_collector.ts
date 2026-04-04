@@ -55,6 +55,24 @@ export async function collectBrowserTestResults(
 ): Promise<BrowserTestCollection> {
   await client.setContext("chrome");
 
+  // Wait for browser window to be ready — the browsing context may be
+  // briefly unavailable during startup (window reload, HMR init, etc.)
+  const WINDOW_READY_RETRIES = 10;
+  const WINDOW_READY_DELAY_MS = 3_000;
+  for (let i = 0; i < WINDOW_READY_RETRIES; i++) {
+    try {
+      await client.executeScript("return typeof Services !== 'undefined';");
+      break; // window is ready
+    } catch {
+      if (i === WINDOW_READY_RETRIES - 1) {
+        throw new Error(
+          "Browser window not available after startup — browsing context was discarded",
+        );
+      }
+      await sleep(WINDOW_READY_DELAY_MS);
+    }
+  }
+
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -64,8 +82,12 @@ export async function collectBrowserTestResults(
         READ_TEST_STATE_SCRIPT,
       )) as TestState | null;
     } catch (e: unknown) {
-      // Connection may be lost if browser crashed
+      // Connection may be lost if browser window reloaded — retry a few times
       const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("no such window") || msg.includes("discarded")) {
+        await sleep(WINDOW_READY_DELAY_MS);
+        continue;
+      }
       throw new Error(
         `Lost connection to browser during test collection: ${msg}`,
       );
