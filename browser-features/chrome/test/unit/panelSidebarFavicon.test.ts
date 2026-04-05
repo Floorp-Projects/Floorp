@@ -2,25 +2,7 @@
 // @colocated-env browser
 
 import { getFaviconURLForPanel } from "../../common/panel-sidebar/utils/favicon-getter.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => Promise<void>;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { assert, assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -52,10 +34,7 @@ async function testWebPanelWithHttpReturnsString(): Promise<void> {
     zoomLevel: null,
   };
   const result = await getFaviconURLForPanel(panel);
-  assert(
-    typeof result === "string",
-    "web panel should return a string",
-  );
+  assert(typeof result === "string", "web panel should return a string");
 }
 
 async function testExtensionPanelReturnsString(): Promise<void> {
@@ -100,7 +79,10 @@ export async function runAllTests(): Promise<void> {
     { name: "static panel favicon", fn: testStaticPanelReturnsFavicon },
     { name: "web panel HTTP favicon", fn: testWebPanelWithHttpReturnsString },
     { name: "extension panel favicon", fn: testExtensionPanelReturnsString },
-    { name: "web panel no URL fallback", fn: testWebPanelWithNoUrlReturnsFallback },
+    {
+      name: "web panel no URL fallback",
+      fn: testWebPanelWithNoUrlReturnsFallback,
+    },
   ];
 
   const failures: string[] = [];

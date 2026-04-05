@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — Panel sidebar DOM structure
@@ -67,7 +56,9 @@ function testPanelSidebarBrowserBox(): void {
 
   const browserBox = document.getElementById("panel-sidebar-browser-box");
   // browser-box is rendered inside a wrapper, check the wrapper too
-  const browserBoxWrapper = document.getElementById("panel-sidebar-browser-box-wrapper");
+  const browserBoxWrapper = document.getElementById(
+    "panel-sidebar-browser-box-wrapper",
+  );
   assert(
     browserBox !== null || browserBoxWrapper !== null,
     "#panel-sidebar-browser-box or its wrapper should exist when sidebar is present",
@@ -79,8 +70,8 @@ function testPanelSidebarPosition(): void {
   if (!sidebarBox) return; // sidebar disabled — skip
 
   const sidebarRect = sidebarBox.getBoundingClientRect();
-  const contentArea = document.getElementById("browser") ||
-    document.getElementById("appcontent");
+  const contentArea =
+    document.getElementById("browser") || document.getElementById("appcontent");
   if (!contentArea) return; // cannot determine position without reference
 
   const contentRect = contentArea.getBoundingClientRect();
@@ -132,7 +123,7 @@ function testPanelSidebarDisplayVariable(): void {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("panelSidebarUI.test.ts", [
     { name: "panel sidebar box presence", fn: testPanelSidebarBoxPresence },
     { name: "panel sidebar box dimensions", fn: testPanelSidebarBoxDimensions },
     { name: "panel sidebar select box", fn: testPanelSidebarSelectBox },
@@ -140,18 +131,9 @@ export async function runAllTests(): Promise<void> {
     { name: "panel sidebar browser box", fn: testPanelSidebarBrowserBox },
     { name: "panel sidebar position", fn: testPanelSidebarPosition },
     { name: "sidebar data pref readable", fn: testSidebarDataPrefReadable },
-    { name: "panel sidebar display CSS variable", fn: testPanelSidebarDisplayVariable },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`panelSidebarUI.test.ts failures: ${failures.join(" | ")}`);
+    {
+      name: "panel sidebar display CSS variable",
+      fn: testPanelSidebarDisplayVariable,
+    },
+  ]);
 }

@@ -2,19 +2,11 @@
 // @colocated-env browser
 
 import { extractPlainText } from "./extractText.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — TipTap format
@@ -123,11 +115,7 @@ function testPlainTextFallback(): void {
 }
 
 function testEmptyString(): void {
-  assertEquals(
-    extractPlainText(""),
-    "",
-    "empty string should return empty",
-  );
+  assertEquals(extractPlainText(""), "", "empty string should return empty");
 }
 
 function testJsonPrimitive(): void {
@@ -154,20 +142,5 @@ export async function runAllTests(): Promise<void> {
     { name: "JSON primitive", fn: testJsonPrimitive },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `extractText.test.ts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("extractText.test.ts", tests);
 }

@@ -35,9 +35,7 @@ type RequestResult = {
   body: unknown;
 };
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "../src/async_utils.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -46,7 +44,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function makeRequest(
   baseUrl: string,
   path: string,
-  options: { method?: "GET" | "POST" | "DELETE"; data?: unknown; timeoutMs?: number } = {},
+  options: {
+    method?: "GET" | "POST" | "DELETE";
+    data?: unknown;
+    timeoutMs?: number;
+  } = {},
 ): Promise<RequestResult> {
   const url = `${baseUrl}${path}`;
   const timeoutMs = options.timeoutMs ?? 15_000;
@@ -54,8 +56,12 @@ async function makeRequest(
   try {
     const response = await fetch(url, {
       method: options.method ?? "GET",
-      headers: options.data !== undefined ? { "content-type": "application/json" } : undefined,
-      body: options.data !== undefined ? JSON.stringify(options.data) : undefined,
+      headers:
+        options.data !== undefined
+          ? { "content-type": "application/json" }
+          : undefined,
+      body:
+        options.data !== undefined ? JSON.stringify(options.data) : undefined,
       signal: AbortSignal.timeout(timeoutMs),
     });
 
@@ -76,57 +82,58 @@ async function makeRequest(
   }
 }
 
-function startSlowServer(port: number): { url: string; close: () => Promise<void> } {
-  const server = Deno.serve({ hostname: "127.0.0.1", port }, async (request) => {
-    const url = new URL(request.url);
+function startSlowServer(port: number): {
+  url: string;
+  close: () => Promise<void>;
+} {
+  const server = Deno.serve(
+    { hostname: "127.0.0.1", port },
+    async (request) => {
+      const url = new URL(request.url);
 
-    if (url.pathname === "/") {
-      return new Response(TEST_PAGE_HTML, {
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+      if (url.pathname === "/") {
+        return new Response(TEST_PAGE_HTML, {
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
 
-    if (url.pathname === "/slow-css") {
-      await sleep(600);
-      return new Response("body { color: #222; }", {
-        headers: { "content-type": "text/css" },
-      });
-    }
+      if (url.pathname === "/slow-css") {
+        await sleep(600);
+        return new Response("body { color: #222; }", {
+          headers: { "content-type": "text/css" },
+        });
+      }
 
-    if (url.pathname === "/slow-image") {
-      await sleep(900);
-      const png = Uint8Array.from([
-        137, 80, 78, 71, 13, 10, 26, 10,
-        0, 0, 0, 13, 73, 72, 68, 82,
-        0, 0, 0, 1, 0, 0, 0, 1,
-        8, 6, 0, 0, 0, 31, 21, 196,
-        137, 0, 0, 0, 10, 73, 68, 65,
-        84, 120, 156, 99, 0, 1, 0, 0,
-        5, 0, 1, 13, 10, 46, 174,
-        0, 0, 0, 0, 73, 69, 78, 68,
-        174, 66, 96, 130,
-      ]);
-      return new Response(png, {
-        headers: { "content-type": "image/png" },
-      });
-    }
+      if (url.pathname === "/slow-image") {
+        await sleep(900);
+        const png = Uint8Array.from([
+          137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0,
+          1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 10, 73, 68,
+          65, 84, 120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 46, 174, 0, 0, 0,
+          0, 73, 69, 78, 68, 174, 66, 96, 130,
+        ]);
+        return new Response(png, {
+          headers: { "content-type": "image/png" },
+        });
+      }
 
-    if (url.pathname === "/slow-resource-1") {
-      await sleep(1200);
-      return new Response("Slow resource 1", {
-        headers: { "content-type": "text/plain" },
-      });
-    }
+      if (url.pathname === "/slow-resource-1") {
+        await sleep(1200);
+        return new Response("Slow resource 1", {
+          headers: { "content-type": "text/plain" },
+        });
+      }
 
-    if (url.pathname === "/slow-resource-2") {
-      await sleep(700);
-      return new Response("Slow resource 2", {
-        headers: { "content-type": "text/plain" },
-      });
-    }
+      if (url.pathname === "/slow-resource-2") {
+        await sleep(700);
+        return new Response("Slow resource 2", {
+          headers: { "content-type": "text/plain" },
+        });
+      }
 
-    return new Response("Not Found", { status: 404 });
-  });
+      return new Response("Not Found", { status: 404 });
+    },
+  );
 
   const addr = server.addr as Deno.NetAddr;
   return {
@@ -173,48 +180,79 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
     });
     assertCase(
       "Create scraper instance",
-      created.status === 200 && isRecord(created.body) && typeof created.body.instanceId === "string",
+      created.status === 200 &&
+        isRecord(created.body) &&
+        typeof created.body.instanceId === "string",
       String(created.body),
     );
 
-    if (!(created.status === 200 && isRecord(created.body) && typeof created.body.instanceId === "string")) {
+    if (
+      !(
+        created.status === 200 &&
+        isRecord(created.body) &&
+        typeof created.body.instanceId === "string"
+      )
+    ) {
       return 1;
     }
 
     instanceId = created.body.instanceId;
 
-    const navigated = await makeRequest(baseUrl, `/scraper/instances/${instanceId}/navigate`, {
-      method: "POST",
-      data: { url: testUrl },
-    });
-    assertCase("Navigate scraper", navigated.status === 200, String(navigated.body));
+    const navigated = await makeRequest(
+      baseUrl,
+      `/scraper/instances/${instanceId}/navigate`,
+      {
+        method: "POST",
+        data: { url: testUrl },
+      },
+    );
+    assertCase(
+      "Navigate scraper",
+      navigated.status === 200,
+      String(navigated.body),
+    );
     if (navigated.status !== 200) {
       return 1;
     }
 
-    const waitDone = await makeRequest(baseUrl, `/scraper/instances/${instanceId}/waitForElement`, {
-      method: "POST",
-      data: { selector: "#done", timeout: 10000 },
-      timeoutMs: 20_000,
-    });
+    const waitDone = await makeRequest(
+      baseUrl,
+      `/scraper/instances/${instanceId}/waitForElement`,
+      {
+        method: "POST",
+        data: { selector: "#done", timeout: 10000 },
+        timeoutMs: 20_000,
+      },
+    );
     assertCase(
       "waitForElement(#done) contract",
-      waitDone.status === 200 && isRecord(waitDone.body) && waitDone.body.ok === true && waitDone.body.found === true,
+      waitDone.status === 200 &&
+        isRecord(waitDone.body) &&
+        waitDone.body.ok === true &&
+        waitDone.body.found === true,
       String(waitDone.body),
     );
 
     const firstStart = performance.now();
-    const firstIdle = await makeRequest(baseUrl, `/scraper/instances/${instanceId}/waitForNetworkIdle`, {
-      method: "POST",
-      data: { timeout: networkIdleTimeout },
-      timeoutMs: 20_000,
-    });
+    const firstIdle = await makeRequest(
+      baseUrl,
+      `/scraper/instances/${instanceId}/waitForNetworkIdle`,
+      {
+        method: "POST",
+        data: { timeout: networkIdleTimeout },
+        timeoutMs: 20_000,
+      },
+    );
     const firstDuration = (performance.now() - firstStart) / 1000;
-    console.log(`First waitForNetworkIdle duration: ${firstDuration.toFixed(2)}s`);
+    console.log(
+      `First waitForNetworkIdle duration: ${firstDuration.toFixed(2)}s`,
+    );
 
     assertCase(
       "waitForNetworkIdle contract (first)",
-      firstIdle.status === 200 && isRecord(firstIdle.body) && typeof firstIdle.body.ok === "boolean",
+      firstIdle.status === 200 &&
+        isRecord(firstIdle.body) &&
+        typeof firstIdle.body.ok === "boolean",
       String(firstIdle.body),
     );
 
@@ -225,36 +263,54 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
     );
 
     const secondStart = performance.now();
-    const secondIdle = await makeRequest(baseUrl, `/scraper/instances/${instanceId}/waitForNetworkIdle`, {
-      method: "POST",
-      data: { timeout: networkIdleTimeout },
-      timeoutMs: 20_000,
-    });
+    const secondIdle = await makeRequest(
+      baseUrl,
+      `/scraper/instances/${instanceId}/waitForNetworkIdle`,
+      {
+        method: "POST",
+        data: { timeout: networkIdleTimeout },
+        timeoutMs: 20_000,
+      },
+    );
     const secondDuration = (performance.now() - secondStart) / 1000;
-    console.log(`Second waitForNetworkIdle duration: ${secondDuration.toFixed(2)}s`);
+    console.log(
+      `Second waitForNetworkIdle duration: ${secondDuration.toFixed(2)}s`,
+    );
 
     assertCase(
       "waitForNetworkIdle contract (second)",
-      secondIdle.status === 200 && isRecord(secondIdle.body) && typeof secondIdle.body.ok === "boolean",
+      secondIdle.status === 200 &&
+        isRecord(secondIdle.body) &&
+        typeof secondIdle.body.ok === "boolean",
       String(secondIdle.body),
     );
 
-    const secondCeiling = Math.max(firstDuration + 6.0, networkIdleTimeout / 1000 + 2.0, 12.0);
+    const secondCeiling = Math.max(
+      firstDuration + 6.0,
+      networkIdleTimeout / 1000 + 2.0,
+      12.0,
+    );
     assertCase(
       "Second wait should not be dramatically slower",
       secondDuration <= secondCeiling,
       `first=${firstDuration.toFixed(2)}s second=${secondDuration.toFixed(2)}s`,
     );
 
-    const shortIdle = await makeRequest(baseUrl, `/scraper/instances/${instanceId}/waitForNetworkIdle`, {
-      method: "POST",
-      data: { timeout: 10 },
-      timeoutMs: 20_000,
-    });
+    const shortIdle = await makeRequest(
+      baseUrl,
+      `/scraper/instances/${instanceId}/waitForNetworkIdle`,
+      {
+        method: "POST",
+        data: { timeout: 10 },
+        timeoutMs: 20_000,
+      },
+    );
 
     assertCase(
       "waitForNetworkIdle short-timeout contract",
-      shortIdle.status === 200 && isRecord(shortIdle.body) && typeof shortIdle.body.ok === "boolean",
+      shortIdle.status === 200 &&
+        isRecord(shortIdle.body) &&
+        typeof shortIdle.body.ok === "boolean",
       String(shortIdle.body),
     );
   } finally {

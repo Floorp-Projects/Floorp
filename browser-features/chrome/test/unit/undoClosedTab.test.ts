@@ -3,18 +3,7 @@
 
 import UndoClosedTab from "../../common/undo-closed-tab/index.ts";
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 function testUndoClosedTabClassExists(): void {
   assert(
@@ -46,30 +35,31 @@ function testWindowUndoCloseTabDeclaration(): void {
 function testServicesWmGetMostRecentWindow(): void {
   // The module uses Services.wm.getMostRecentWindow to find the browser window
   const win = Services.wm.getMostRecentWindow("navigator:browser");
-  assert(win !== null, "Services.wm.getMostRecentWindow should return a window");
   assert(
-    typeof (win as any).undoCloseTab === "function" || typeof SessionWindowUI.undoCloseTab === "function",
+    win !== null,
+    "Services.wm.getMostRecentWindow should return a window",
+  );
+  assert(
+    typeof (win as any).undoCloseTab === "function" ||
+      typeof SessionWindowUI.undoCloseTab === "function",
     "undoCloseTab should be accessible either on window or SessionWindowUI",
   );
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("undoClosedTab.test.ts", [
     { name: "UndoClosedTab class exists", fn: testUndoClosedTabClassExists },
-    { name: "UndoClosedTab has init method", fn: testUndoClosedTabHasInitMethod },
-    { name: "SessionWindowUI.undoCloseTab available", fn: testWindowUndoCloseTabDeclaration },
-    { name: "Services.wm.getMostRecentWindow works", fn: testServicesWmGetMostRecentWindow },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`undoClosedTab.test.ts failures: ${failures.join(" | ")}`);
+    {
+      name: "UndoClosedTab has init method",
+      fn: testUndoClosedTabHasInitMethod,
+    },
+    {
+      name: "SessionWindowUI.undoCloseTab available",
+      fn: testWindowUndoCloseTabDeclaration,
+    },
+    {
+      name: "Services.wm.getMostRecentWindow works",
+      fn: testServicesWmGetMostRecentWindow,
+    },
+  ]);
 }

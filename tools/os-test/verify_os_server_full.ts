@@ -3,7 +3,8 @@
 
 import { parseArgs } from "@std/cli/parse-args";
 
-const DEFAULT_BASE_URL = Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
+const DEFAULT_BASE_URL =
+  Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
 const FINGERPRINT_COMMENT_RE = /<!--fp:([a-z0-9]{8}(?:[a-z0-9]{8})?)-->/g;
 
 const TEST_PAGE_HTML = `<!doctype html>
@@ -125,7 +126,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function normalizeExpectedStatus(expectedStatus: number | number[] | undefined): number[] {
+function normalizeExpectedStatus(
+  expectedStatus: number | number[] | undefined,
+): number[] {
   if (expectedStatus === undefined) {
     return [200];
   }
@@ -149,9 +152,7 @@ function short(value: unknown): string {
   }
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "../src/async_utils.ts";
 
 async function waitUntil(
   condition: () => boolean | Promise<boolean>,
@@ -216,7 +217,8 @@ async function makeRequest(
       };
 
       if (options.data !== undefined) {
-        (init.headers as Record<string, string>)["content-type"] = "application/json";
+        (init.headers as Record<string, string>)["content-type"] =
+          "application/json";
         init.body = JSON.stringify(options.data);
       }
 
@@ -289,7 +291,11 @@ async function runTest(
   if (!allowed.includes(status)) {
     console.log(`FAILED (status=${status}, expected=${allowed.join(",")})`);
     console.log(`  Response: ${short(body)}`);
-    recordResult(name, "FAILED", `status ${status}, expected ${allowed.join(",")}`);
+    recordResult(
+      name,
+      "FAILED",
+      `status ${status}, expected ${allowed.join(",")}`,
+    );
     return null;
   }
 
@@ -358,7 +364,11 @@ async function runValueTest(
   if (!allowed.includes(status)) {
     console.log(`FAILED (status=${status}, expected=${allowed.join(",")})`);
     console.log(`  Response: ${short(body)}`);
-    recordResult(name, "FAILED", `status ${status}, expected ${allowed.join(",")}`);
+    recordResult(
+      name,
+      "FAILED",
+      `status ${status}, expected ${allowed.join(",")}`,
+    );
     return null;
   }
 
@@ -383,12 +393,16 @@ async function runValueTest(
   }
 
   if (ok) {
-    const detail = options.expectDescription ??
-      (options.expected !== undefined ? `== ${short(options.expected)}` : "matches");
+    const detail =
+      options.expectDescription ??
+      (options.expected !== undefined
+        ? `== ${short(options.expected)}`
+        : "matches");
     console.log(`OK (value=${short(actual)}; ${detail})`);
     recordResult(name, "OK", detail);
   } else {
-    const detail = options.expectDescription ?? `expected ${short(options.expected)}`;
+    const detail =
+      options.expectDescription ?? `expected ${short(options.expected)}`;
     console.log(`FAILED (value=${short(actual)}; ${detail})`);
     recordResult(name, "FAILED", detail);
   }
@@ -396,7 +410,12 @@ async function runValueTest(
   return actual;
 }
 
-function printSummary(): { total: number; passed: number; failed: number; skipped: number } {
+function printSummary(): {
+  total: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+} {
   if (TEST_RESULTS.length === 0) {
     console.log("Test summary: no tests were recorded.");
     return { total: 0, passed: 0, failed: 0, skipped: 0 };
@@ -416,7 +435,9 @@ function printSummary(): { total: number; passed: number; failed: number; skippe
   if (failed > 0) {
     console.log("  Failed tests:");
     for (const result of TEST_RESULTS.filter((r) => r.status === "FAILED")) {
-      console.log(`    - ${result.name}${result.detail ? ` (${result.detail})` : ""}`);
+      console.log(
+        `    - ${result.name}${result.detail ? ` (${result.detail})` : ""}`,
+      );
     }
   }
 
@@ -424,7 +445,10 @@ function printSummary(): { total: number; passed: number; failed: number; skippe
 }
 
 async function createTempUploadFile(): Promise<string> {
-  const path = await Deno.makeTempFile({ prefix: "floorp-os-test-", suffix: ".txt" });
+  const path = await Deno.makeTempFile({
+    prefix: "floorp-os-test-",
+    suffix: ".txt",
+  });
   await Deno.writeTextFile(path, "Floorp OS server upload test\n");
   return path;
 }
@@ -478,7 +502,12 @@ async function findResolvableFingerprint(
   let firstMatch: { fingerprint: string; selector: string } | null = null;
 
   for (const fp of fingerprints.slice(0, 120)) {
-    const { status, body } = await resolveFingerprint(runtime, prefix, instanceId, fp);
+    const { status, body } = await resolveFingerprint(
+      runtime,
+      prefix,
+      instanceId,
+      fp,
+    );
     if (status !== 200 || !isRecord(body)) {
       continue;
     }
@@ -513,7 +542,12 @@ async function findNonexistentFingerprint(
   ];
 
   for (const candidate of fixedCandidates) {
-    const { status } = await resolveFingerprint(runtime, prefix, instanceId, candidate);
+    const { status } = await resolveFingerprint(
+      runtime,
+      prefix,
+      instanceId,
+      candidate,
+    );
     if (status === 404) {
       return candidate;
     }
@@ -521,7 +555,12 @@ async function findNonexistentFingerprint(
 
   for (let i = 1; i <= 64; i++) {
     const candidate = i.toString(16).padStart(8, "0");
-    const { status } = await resolveFingerprint(runtime, prefix, instanceId, candidate);
+    const { status } = await resolveFingerprint(
+      runtime,
+      prefix,
+      instanceId,
+      candidate,
+    );
     if (status === 404) {
       return candidate;
     }
@@ -530,50 +569,79 @@ async function findNonexistentFingerprint(
   return null;
 }
 
-async function testWaitContract(runtime: RuntimeOptions, prefix: string, instanceId: string): Promise<void> {
+async function testWaitContract(
+  runtime: RuntimeOptions,
+  prefix: string,
+  instanceId: string,
+): Promise<void> {
   const base = `${prefix}/instances/${instanceId}`;
 
-  await runTest(runtime, "WaitForElement existing returns ok=true/found=true", `${base}/waitForElement`, {
-    method: "POST",
-    data: { selector: "#title", timeout: 2000 },
-    predicate: (body) =>
-      isRecord(body) &&
-      body.ok === true &&
-      body.found === true,
-    expectDescription: "ok=true and found=true",
-  });
+  await runTest(
+    runtime,
+    "WaitForElement existing returns ok=true/found=true",
+    `${base}/waitForElement`,
+    {
+      method: "POST",
+      data: { selector: "#title", timeout: 2000 },
+      predicate: (body) =>
+        isRecord(body) && body.ok === true && body.found === true,
+      expectDescription: "ok=true and found=true",
+    },
+  );
 
-  await runTest(runtime, "WaitForElement timeout returns ok=false/found=false", `${base}/waitForElement`, {
-    method: "POST",
-    data: { selector: "#does-not-exist", timeout: 100 },
-    predicate: (body) =>
-      isRecord(body) &&
-      body.ok === false &&
-      body.found === false,
-    expectDescription: "ok=false and found=false",
-  });
+  await runTest(
+    runtime,
+    "WaitForElement timeout returns ok=false/found=false",
+    `${base}/waitForElement`,
+    {
+      method: "POST",
+      data: { selector: "#does-not-exist", timeout: 100 },
+      predicate: (body) =>
+        isRecord(body) && body.ok === false && body.found === false,
+      expectDescription: "ok=false and found=false",
+    },
+  );
 }
 
-async function testNegativeValidationMatrix(runtime: RuntimeOptions, prefix: string, instanceId: string): Promise<void> {
+async function testNegativeValidationMatrix(
+  runtime: RuntimeOptions,
+  prefix: string,
+  instanceId: string,
+): Promise<void> {
   const base = `${prefix}/instances/${instanceId}`;
 
-  await runTest(runtime, "Click missing selector/fingerprint -> 400", `${base}/click`, {
-    method: "POST",
-    data: {},
-    expectedStatus: 400,
-  });
+  await runTest(
+    runtime,
+    "Click missing selector/fingerprint -> 400",
+    `${base}/click`,
+    {
+      method: "POST",
+      data: {},
+      expectedStatus: 400,
+    },
+  );
 
-  await runTest(runtime, "Click invalid fingerprint format -> 400", `${base}/click`, {
-    method: "POST",
-    data: { fingerprint: "bad!" },
-    expectedStatus: 400,
-  });
+  await runTest(
+    runtime,
+    "Click invalid fingerprint format -> 400",
+    `${base}/click`,
+    {
+      method: "POST",
+      data: { fingerprint: "bad!" },
+      expectedStatus: 400,
+    },
+  );
 
-  await runTest(runtime, "WaitForElement missing selector/fingerprint -> 400", `${base}/waitForElement`, {
-    method: "POST",
-    data: { timeout: 100 },
-    expectedStatus: 400,
-  });
+  await runTest(
+    runtime,
+    "WaitForElement missing selector/fingerprint -> 400",
+    `${base}/waitForElement`,
+    {
+      method: "POST",
+      data: { timeout: 100 },
+      expectedStatus: 400,
+    },
+  );
 
   await runTest(runtime, "Input missing value -> 400", `${base}/input`, {
     method: "POST",
@@ -581,11 +649,16 @@ async function testNegativeValidationMatrix(runtime: RuntimeOptions, prefix: str
     expectedStatus: 400,
   });
 
-  await runTest(runtime, "UploadFile missing filePath -> 400", `${base}/uploadFile`, {
-    method: "POST",
-    data: { selector: "#fileInput" },
-    expectedStatus: 400,
-  });
+  await runTest(
+    runtime,
+    "UploadFile missing filePath -> 400",
+    `${base}/uploadFile`,
+    {
+      method: "POST",
+      data: { selector: "#fileInput" },
+      expectedStatus: 400,
+    },
+  );
 
   await runTest(runtime, "PressKey missing key -> 400", `${base}/pressKey`, {
     method: "POST",
@@ -608,9 +681,21 @@ async function testFingerprintSelectorCompatibility(
 ): Promise<void> {
   const base = `${prefix}/instances/${instanceId}`;
 
-  const textBody = await runTest(runtime, "Extract markdown for fingerprints", `${base}/text`);
-  if (!isRecord(textBody) || typeof textBody.text !== "string" || textBody.text.length === 0) {
-    recordResult("Fingerprint extraction", "SKIPPED", "text response not available");
+  const textBody = await runTest(
+    runtime,
+    "Extract markdown for fingerprints",
+    `${base}/text`,
+  );
+  if (
+    !isRecord(textBody) ||
+    typeof textBody.text !== "string" ||
+    textBody.text.length === 0
+  ) {
+    recordResult(
+      "Fingerprint extraction",
+      "SKIPPED",
+      "text response not available",
+    );
     return;
   }
 
@@ -622,22 +707,36 @@ async function testFingerprintSelectorCompatibility(
     "#title",
   );
   if (!resolved) {
-    recordResult("Fingerprint extraction", "SKIPPED", "no resolvable fingerprint found");
+    recordResult(
+      "Fingerprint extraction",
+      "SKIPPED",
+      "no resolvable fingerprint found",
+    );
     return;
   }
 
-  await runValueTest(runtime, "Resolve fingerprint returns selector", `${base}/resolveFingerprint?fingerprint=${q(resolved.fingerprint)}`, {
-    key: "selector",
-    predicate: (value) => typeof value === "string" && value.length > 0,
-    expectDescription: "non-empty selector",
-  });
+  await runValueTest(
+    runtime,
+    "Resolve fingerprint returns selector",
+    `${base}/resolveFingerprint?fingerprint=${q(resolved.fingerprint)}`,
+    {
+      key: "selector",
+      predicate: (value) => typeof value === "string" && value.length > 0,
+      expectDescription: "non-empty selector",
+    },
+  );
 
   if (includeGetElement) {
-    await runValueTest(runtime, "Get element via fingerprint", `${base}/element?fingerprint=${q(resolved.fingerprint)}`, {
-      key: "element",
-      predicate: (value) => typeof value === "string" && value.includes("<"),
-      expectDescription: "returns element HTML",
-    });
+    await runValueTest(
+      runtime,
+      "Get element via fingerprint",
+      `${base}/element?fingerprint=${q(resolved.fingerprint)}`,
+      {
+        key: "element",
+        predicate: (value) => typeof value === "string" && value.includes("<"),
+        expectDescription: "returns element HTML",
+      },
+    );
   }
 
   await runTest(runtime, "Click via fingerprint", `${base}/click`, {
@@ -647,20 +746,34 @@ async function testFingerprintSelectorCompatibility(
     expectDescription: "response has boolean ok",
   });
 
-  await runTest(runtime, "Click with selector priority over invalid fingerprint", `${base}/click`, {
-    method: "POST",
-    data: { selector: "#link", fingerprint: "bad!" },
-    predicate: (body) => isRecord(body) && typeof body.ok === "boolean",
-    expectDescription: "selector path works with bad fingerprint",
-  });
-
-  const missingFp = await findNonexistentFingerprint(runtime, prefix, instanceId);
-  if (missingFp) {
-    await runTest(runtime, "Click with non-existent fingerprint -> 404", `${base}/click`, {
+  await runTest(
+    runtime,
+    "Click with selector priority over invalid fingerprint",
+    `${base}/click`,
+    {
       method: "POST",
-      data: { fingerprint: missingFp },
-      expectedStatus: 404,
-    });
+      data: { selector: "#link", fingerprint: "bad!" },
+      predicate: (body) => isRecord(body) && typeof body.ok === "boolean",
+      expectDescription: "selector path works with bad fingerprint",
+    },
+  );
+
+  const missingFp = await findNonexistentFingerprint(
+    runtime,
+    prefix,
+    instanceId,
+  );
+  if (missingFp) {
+    await runTest(
+      runtime,
+      "Click with non-existent fingerprint -> 404",
+      `${base}/click`,
+      {
+        method: "POST",
+        data: { fingerprint: missingFp },
+        expectedStatus: 404,
+      },
+    );
   }
 }
 
@@ -677,16 +790,31 @@ async function testSharedAutomation(
   const prefix = `${basePath}/instances/${instanceId}`;
   const testPageHost = new URL(options.testPageUrl).hostname;
 
-  const waitForSelector = async (selector: string, timeoutMs = 8_000): Promise<boolean> => {
-    return await waitUntil(async () => {
-      const { status, body } = await makeRequest(runtime, `${prefix}/waitForElement`, {
-        method: "POST",
-        data: { selector, timeout: 400 },
-        timeoutMs: 4_000,
-        retries: 1,
-      });
-      return status === 200 && isRecord(body) && body.ok === true && body.found === true;
-    }, { timeoutMs, intervalMs: 300 });
+  const waitForSelector = async (
+    selector: string,
+    timeoutMs = 8_000,
+  ): Promise<boolean> => {
+    return await waitUntil(
+      async () => {
+        const { status, body } = await makeRequest(
+          runtime,
+          `${prefix}/waitForElement`,
+          {
+            method: "POST",
+            data: { selector, timeout: 400 },
+            timeoutMs: 4_000,
+            retries: 1,
+          },
+        );
+        return (
+          status === 200 &&
+          isRecord(body) &&
+          body.ok === true &&
+          body.found === true
+        );
+      },
+      { timeoutMs, intervalMs: 300 },
+    );
   };
 
   await runTest(runtime, "Navigate to test page", `${prefix}/navigate`, {
@@ -695,7 +823,11 @@ async function testSharedAutomation(
   });
 
   if (!(await waitForSelector("#title", 10_000))) {
-    recordResult("Wait after navigate (#title)", "FAILED", "page did not become ready in time");
+    recordResult(
+      "Wait after navigate (#title)",
+      "FAILED",
+      "page did not become ready in time",
+    );
   }
 
   await runValueTest(runtime, "Get URI", `${prefix}/uri`, {
@@ -705,7 +837,8 @@ async function testSharedAutomation(
 
   await runValueTest(runtime, "Get HTML", `${prefix}/html`, {
     key: "html",
-    predicate: (value) => typeof value === "string" && value.includes("Floorp OS Test"),
+    predicate: (value) =>
+      typeof value === "string" && value.includes("Floorp OS Test"),
     expectDescription: "contains Floorp OS Test",
   });
 
@@ -716,22 +849,45 @@ async function testSharedAutomation(
   });
 
   await testWaitContract(runtime, basePath, instanceId);
-  await testFingerprintSelectorCompatibility(runtime, basePath, instanceId, options.includeGetElement);
+  await testFingerprintSelectorCompatibility(
+    runtime,
+    basePath,
+    instanceId,
+    options.includeGetElement,
+  );
   await testNegativeValidationMatrix(runtime, basePath, instanceId);
 
-  await runValueTest(runtime, "Get element text (#title)", `${prefix}/elementText?selector=${q("#title")}`, {
-    key: "text",
-    expected: "Floorp OS Test",
-  });
+  await runValueTest(
+    runtime,
+    "Get element text (#title)",
+    `${prefix}/elementText?selector=${q("#title")}`,
+    {
+      key: "text",
+      expected: "Floorp OS Test",
+    },
+  );
 
-  await runValueTest(runtime, "Get element textContent (#message)", `${prefix}/elementTextContent?selector=${q("#message")}`, {
-    key: "text",
-    expected: "Hello",
-  });
+  await runValueTest(
+    runtime,
+    "Get element textContent (#message)",
+    `${prefix}/elementTextContent?selector=${q("#message")}`,
+    {
+      key: "text",
+      expected: "Hello",
+    },
+  );
 
   await runTest(runtime, "Viewport screenshot", `${prefix}/screenshot`);
-  await runTest(runtime, "Element screenshot (#title)", `${prefix}/elementScreenshot?selector=${q("#title")}`);
-  await runTest(runtime, "Full page screenshot", `${prefix}/fullPageScreenshot`);
+  await runTest(
+    runtime,
+    "Element screenshot (#title)",
+    `${prefix}/elementScreenshot?selector=${q("#title")}`,
+  );
+  await runTest(
+    runtime,
+    "Full page screenshot",
+    `${prefix}/fullPageScreenshot`,
+  );
   await runTest(runtime, "Region screenshot", `${prefix}/regionScreenshot`, {
     method: "POST",
     data: { rect: { x: 0, y: 0, width: 200, height: 200 } },
@@ -750,10 +906,15 @@ async function testSharedAutomation(
     timeoutMs: 30_000,
   });
 
-  await runValueTest(runtime, "Get value (#name)", `${prefix}/value?selector=${q("#name")}`, {
-    key: "value",
-    expected: "Taro Yamada",
-  });
+  await runValueTest(
+    runtime,
+    "Get value (#name)",
+    `${prefix}/value?selector=${q("#name")}`,
+    {
+      key: "value",
+      expected: "Taro Yamada",
+    },
+  );
 
   await runTest(runtime, "Submit form", `${prefix}/submit`, {
     method: "POST",
@@ -765,35 +926,65 @@ async function testSharedAutomation(
     data: { selector: "#name" },
   });
 
-  await runValueTest(runtime, "Get value (#name after clear)", `${prefix}/value?selector=${q("#name")}`, {
-    key: "value",
-    expected: "",
-  });
+  await runValueTest(
+    runtime,
+    "Get value (#name after clear)",
+    `${prefix}/value?selector=${q("#name")}`,
+    {
+      key: "value",
+      expected: "",
+    },
+  );
 
-  await runValueTest(runtime, "Get attribute (#title data-test)", `${prefix}/attribute?selector=${q("#title")}&name=data-test`, {
-    key: "value",
-    expected: "title",
-  });
+  await runValueTest(
+    runtime,
+    "Get attribute (#title data-test)",
+    `${prefix}/attribute?selector=${q("#title")}&name=data-test`,
+    {
+      key: "value",
+      expected: "title",
+    },
+  );
 
-  await runValueTest(runtime, "Is visible (#title)", `${prefix}/isVisible?selector=${q("#title")}`, {
-    key: "visible",
-    expected: true,
-  });
+  await runValueTest(
+    runtime,
+    "Is visible (#title)",
+    `${prefix}/isVisible?selector=${q("#title")}`,
+    {
+      key: "visible",
+      expected: true,
+    },
+  );
 
-  await runValueTest(runtime, "Is enabled (#name)", `${prefix}/isEnabled?selector=${q("#name")}`, {
-    key: "enabled",
-    expected: true,
-  });
+  await runValueTest(
+    runtime,
+    "Is enabled (#name)",
+    `${prefix}/isEnabled?selector=${q("#name")}`,
+    {
+      key: "enabled",
+      expected: true,
+    },
+  );
 
-  await runTest(runtime, "Select option (#color=red)", `${prefix}/selectOption`, {
-    method: "POST",
-    data: { selector: "#color", value: "red" },
-  });
+  await runTest(
+    runtime,
+    "Select option (#color=red)",
+    `${prefix}/selectOption`,
+    {
+      method: "POST",
+      data: { selector: "#color", value: "red" },
+    },
+  );
 
-  await runValueTest(runtime, "Get value (#color)", `${prefix}/value?selector=${q("#color")}`, {
-    key: "value",
-    expected: "red",
-  });
+  await runValueTest(
+    runtime,
+    "Get value (#color)",
+    `${prefix}/value?selector=${q("#color")}`,
+    {
+      key: "value",
+      expected: "red",
+    },
+  );
 
   await runTest(runtime, "Set checked (#agree)", `${prefix}/setChecked`, {
     method: "POST",
@@ -820,10 +1011,15 @@ async function testSharedAutomation(
     data: { selector: "#dblTarget" },
   });
 
-  await runTest(runtime, "Right click (#contextTarget)", `${prefix}/rightClick`, {
-    method: "POST",
-    data: { selector: "#contextTarget" },
-  });
+  await runTest(
+    runtime,
+    "Right click (#contextTarget)",
+    `${prefix}/rightClick`,
+    {
+      method: "POST",
+      data: { selector: "#contextTarget" },
+    },
+  );
 
   await runTest(runtime, "Focus (#name)", `${prefix}/focus`, {
     method: "POST",
@@ -835,25 +1031,45 @@ async function testSharedAutomation(
     data: { sourceSelector: "#dragSource", targetSelector: "#dragTarget" },
   });
 
-  await runTest(runtime, "Set innerHTML (#editable)", `${prefix}/setInnerHTML`, {
-    method: "POST",
-    data: { selector: "#editable", html: "<b>Bold</b>" },
-  });
+  await runTest(
+    runtime,
+    "Set innerHTML (#editable)",
+    `${prefix}/setInnerHTML`,
+    {
+      method: "POST",
+      data: { selector: "#editable", html: "<b>Bold</b>" },
+    },
+  );
 
-  await runValueTest(runtime, "Text content after innerHTML", `${prefix}/elementTextContent?selector=${q("#editable")}`, {
-    key: "text",
-    expected: "Bold",
-  });
+  await runValueTest(
+    runtime,
+    "Text content after innerHTML",
+    `${prefix}/elementTextContent?selector=${q("#editable")}`,
+    {
+      key: "text",
+      expected: "Bold",
+    },
+  );
 
-  await runTest(runtime, "Set textContent (#editable)", `${prefix}/setTextContent`, {
-    method: "POST",
-    data: { selector: "#editable", text: "Plain text" },
-  });
+  await runTest(
+    runtime,
+    "Set textContent (#editable)",
+    `${prefix}/setTextContent`,
+    {
+      method: "POST",
+      data: { selector: "#editable", text: "Plain text" },
+    },
+  );
 
-  await runValueTest(runtime, "Text content after textContent", `${prefix}/elementTextContent?selector=${q("#editable")}`, {
-    key: "text",
-    expected: "Plain text",
-  });
+  await runValueTest(
+    runtime,
+    "Text content after textContent",
+    `${prefix}/elementTextContent?selector=${q("#editable")}`,
+    {
+      key: "text",
+      expected: "Plain text",
+    },
+  );
 
   await runTest(runtime, "Dispatch event", `${prefix}/dispatchEvent`, {
     method: "POST",
@@ -874,10 +1090,15 @@ async function testSharedAutomation(
     },
   });
 
-  await runValueTest(runtime, "Get value (#name after typing)", `${prefix}/value?selector=${q("#name")}`, {
-    key: "value",
-    expected: "Typed Text",
-  });
+  await runValueTest(
+    runtime,
+    "Get value (#name after typing)",
+    `${prefix}/value?selector=${q("#name")}`,
+    {
+      key: "value",
+      expected: "Typed Text",
+    },
+  );
 
   await runTest(runtime, "Upload file", `${prefix}/uploadFile`, {
     method: "POST",
@@ -886,22 +1107,35 @@ async function testSharedAutomation(
     skipStatuses: [501],
   });
 
-  await runValueTest(runtime, "Get value (#fileInput)", `${prefix}/value?selector=${q("#fileInput")}`, {
-    key: "value",
-    predicate: (value) => {
-      if (typeof value !== "string") {
-        return false;
-      }
-      return value.length === 0 || value.includes(options.uploadFilePath.split(/[\\/]/).pop() ?? "");
+  await runValueTest(
+    runtime,
+    "Get value (#fileInput)",
+    `${prefix}/value?selector=${q("#fileInput")}`,
+    {
+      key: "value",
+      predicate: (value) => {
+        if (typeof value !== "string") {
+          return false;
+        }
+        return (
+          value.length === 0 ||
+          value.includes(options.uploadFilePath.split(/[\\/]/).pop() ?? "")
+        );
+      },
+      expectDescription: "empty or contains uploaded filename",
     },
-    expectDescription: "empty or contains uploaded filename",
-  });
+  );
 
-  await runTest(runtime, "Wait for network idle", `${prefix}/waitForNetworkIdle`, {
-    method: "POST",
-    data: { timeout: 2000 },
-    skipStatuses: [501],
-  });
+  await runTest(
+    runtime,
+    "Wait for network idle",
+    `${prefix}/waitForNetworkIdle`,
+    {
+      method: "POST",
+      data: { timeout: 2000 },
+      skipStatuses: [501],
+    },
+  );
 
   await runTest(runtime, "Accept alert", `${prefix}/acceptAlert`, {
     method: "POST",
@@ -913,13 +1147,22 @@ async function testSharedAutomation(
     skipStatuses: [501],
   });
 
-  await runTest(runtime, "Navigate to test page (cookie host)", `${prefix}/navigate`, {
-    method: "POST",
-    data: { url: options.testPageUrl },
-  });
+  await runTest(
+    runtime,
+    "Navigate to test page (cookie host)",
+    `${prefix}/navigate`,
+    {
+      method: "POST",
+      data: { url: options.testPageUrl },
+    },
+  );
 
   if (!(await waitForSelector("#title", 10_000))) {
-    recordResult("Wait before cookie tests (#title)", "FAILED", "page did not become ready in time");
+    recordResult(
+      "Wait before cookie tests (#title)",
+      "FAILED",
+      "page did not become ready in time",
+    );
   }
 
   await runTest(runtime, "Get cookies", `${prefix}/cookies`);
@@ -940,8 +1183,11 @@ async function testSharedAutomation(
     key: "cookies",
     predicate: (value) =>
       Array.isArray(value) &&
-      value.some((cookie) =>
-        isRecord(cookie) && cookie.name === "floorp-test" && cookie.value === "123"
+      value.some(
+        (cookie) =>
+          isRecord(cookie) &&
+          cookie.name === "floorp-test" &&
+          cookie.value === "123",
       ),
     expectDescription: "contains floorp-test=123",
   });
@@ -953,71 +1199,130 @@ async function testBrowserInfo(runtime: RuntimeOptions): Promise<void> {
   await runTest(runtime, "Get history", "/browser/history");
   await runTest(runtime, "Get downloads", "/browser/downloads");
   await runTest(runtime, "Get context", "/browser/context");
-  await runTest(runtime, "Browser events stream", "/browser/events", { stream: true });
+  await runTest(runtime, "Browser events stream", "/browser/events", {
+    stream: true,
+  });
 }
 
 async function testWorkspaces(runtime: RuntimeOptions): Promise<void> {
   console.log("\n[Workspaces]");
-  const workspaces = await runTest(runtime, "List workspaces", "/workspaces", { extractKey: "workspaces" });
+  const workspaces = await runTest(runtime, "List workspaces", "/workspaces", {
+    extractKey: "workspaces",
+  });
 
   await runTest(runtime, "Current workspace", "/workspaces/current");
-  await runTest(runtime, "Next workspace", "/workspaces/next", { method: "POST" });
-  await runTest(runtime, "Previous workspace", "/workspaces/previous", { method: "POST" });
+  await runTest(runtime, "Next workspace", "/workspaces/next", {
+    method: "POST",
+  });
+  await runTest(runtime, "Previous workspace", "/workspaces/previous", {
+    method: "POST",
+  });
 
-  if (Array.isArray(workspaces) && workspaces.length > 0 && isRecord(workspaces[0])) {
+  if (
+    Array.isArray(workspaces) &&
+    workspaces.length > 0 &&
+    isRecord(workspaces[0])
+  ) {
     const firstId = workspaces[0].id;
     if (typeof firstId === "string" && firstId.length > 0) {
-      await runTest(runtime, `Switch workspace ${firstId}`, `/workspaces/${firstId}/switch`, {
-        method: "POST",
-      });
+      await runTest(
+        runtime,
+        `Switch workspace ${firstId}`,
+        `/workspaces/${firstId}/switch`,
+        {
+          method: "POST",
+        },
+      );
     }
   }
 }
 
-async function testTabManager(runtime: RuntimeOptions, uploadFilePath: string, testPageUrl: string): Promise<void> {
+async function testTabManager(
+  runtime: RuntimeOptions,
+  uploadFilePath: string,
+  testPageUrl: string,
+): Promise<void> {
   console.log("\n[Tab Manager]");
 
   await runTest(runtime, "List managed tabs", "/tabs/list");
 
-  const browserTabs = await runTest(runtime, "Get browser tabs for attach", "/browser/tabs");
-  if (Array.isArray(browserTabs) && browserTabs.length > 0 && isRecord(browserTabs[0])) {
+  const browserTabs = await runTest(
+    runtime,
+    "Get browser tabs for attach",
+    "/browser/tabs",
+  );
+  if (
+    Array.isArray(browserTabs) &&
+    browserTabs.length > 0 &&
+    isRecord(browserTabs[0])
+  ) {
     const browserId = browserTabs[0].id;
     if (typeof browserId === "number") {
-      const attachedId = await runTest(runtime, "Attach to tab", "/tabs/attach", {
-        method: "POST",
-        data: { browserId },
-        extractKey: "instanceId",
-      });
+      const attachedId = await runTest(
+        runtime,
+        "Attach to tab",
+        "/tabs/attach",
+        {
+          method: "POST",
+          data: { browserId },
+          extractKey: "instanceId",
+        },
+      );
       if (typeof attachedId === "string" && attachedId.length > 0) {
-        await runTest(runtime, "Destroy attached instance", `/tabs/instances/${attachedId}`, {
-          method: "DELETE",
-        });
+        await runTest(
+          runtime,
+          "Destroy attached instance",
+          `/tabs/instances/${attachedId}`,
+          {
+            method: "DELETE",
+          },
+        );
       }
     }
   }
 
-  const tabId = await runTest(runtime, "Create tab instance", "/tabs/instances", {
-    method: "POST",
-    data: { url: testPageUrl, inBackground: true },
-    extractKey: "instanceId",
-  });
+  const tabId = await runTest(
+    runtime,
+    "Create tab instance",
+    "/tabs/instances",
+    {
+      method: "POST",
+      data: { url: testPageUrl, inBackground: true },
+      extractKey: "instanceId",
+    },
+  );
 
   if (typeof tabId !== "string" || tabId.length === 0) {
-    console.log("Skipping remaining tab manager tests due to creation failure.");
+    console.log(
+      "Skipping remaining tab manager tests due to creation failure.",
+    );
     return;
   }
 
   try {
-    await runTest(runtime, "Check tab instance exists", `/tabs/instances/${tabId}/exists`);
+    await runTest(
+      runtime,
+      "Check tab instance exists",
+      `/tabs/instances/${tabId}/exists`,
+    );
     await runTest(runtime, "Get tab instance info", `/tabs/instances/${tabId}`);
 
-    await runTest(runtime, "Navigate tab instance", `/tabs/instances/${tabId}/navigate`, {
-      method: "POST",
-      data: { url: testPageUrl },
-    });
+    await runTest(
+      runtime,
+      "Navigate tab instance",
+      `/tabs/instances/${tabId}/navigate`,
+      {
+        method: "POST",
+        data: { url: testPageUrl },
+      },
+    );
 
     await sleep(2000);
-    await runTest(runtime, "Get tab instance URI", `/tabs/instances/${tabId}/uri`);
+    await runTest(
+      runtime,
+      "Get tab instance URI",
+      `/tabs/instances/${tabId}/uri`,
+    );
 
     await testSharedAutomation(runtime, "/tabs", tabId, {
       includeGetElement: true,
@@ -1031,13 +1336,22 @@ async function testTabManager(runtime: RuntimeOptions, uploadFilePath: string, t
   }
 }
 
-async function testScraper(runtime: RuntimeOptions, uploadFilePath: string, testPageUrl: string): Promise<void> {
+async function testScraper(
+  runtime: RuntimeOptions,
+  uploadFilePath: string,
+  testPageUrl: string,
+): Promise<void> {
   console.log("\n[Scraper]");
 
-  const scraperId = await runTest(runtime, "Create scraper instance", "/scraper/instances", {
-    method: "POST",
-    extractKey: "instanceId",
-  });
+  const scraperId = await runTest(
+    runtime,
+    "Create scraper instance",
+    "/scraper/instances",
+    {
+      method: "POST",
+      extractKey: "instanceId",
+    },
+  );
 
   if (typeof scraperId !== "string" || scraperId.length === 0) {
     console.log("Skipping remaining scraper tests due to creation failure.");
@@ -1045,7 +1359,11 @@ async function testScraper(runtime: RuntimeOptions, uploadFilePath: string, test
   }
 
   try {
-    await runTest(runtime, "Check scraper instance exists", `/scraper/instances/${scraperId}/exists`);
+    await runTest(
+      runtime,
+      "Check scraper instance exists",
+      `/scraper/instances/${scraperId}/exists`,
+    );
 
     await testSharedAutomation(runtime, "/scraper", scraperId, {
       includeGetElement: false,
@@ -1053,9 +1371,14 @@ async function testScraper(runtime: RuntimeOptions, uploadFilePath: string, test
       testPageUrl,
     });
   } finally {
-    await runTest(runtime, "Destroy scraper instance", `/scraper/instances/${scraperId}`, {
-      method: "DELETE",
-    });
+    await runTest(
+      runtime,
+      "Destroy scraper instance",
+      `/scraper/instances/${scraperId}`,
+      {
+        method: "DELETE",
+      },
+    );
   }
 }
 
@@ -1083,33 +1406,55 @@ async function testParallelTabStability(
         retries: 2,
       });
 
-      if (created.status !== 200 || !isRecord(created.body) || typeof created.body.instanceId !== "string") {
-        errors.push(`worker=${workerIndex} loop=${loopIndex} create failed status=${created.status}`);
+      if (
+        created.status !== 200 ||
+        !isRecord(created.body) ||
+        typeof created.body.instanceId !== "string"
+      ) {
+        errors.push(
+          `worker=${workerIndex} loop=${loopIndex} create failed status=${created.status}`,
+        );
         continue;
       }
 
       const tabId = created.body.instanceId;
 
       try {
-        const waited = await makeRequest(runtime, `/tabs/instances/${tabId}/waitForElement`, {
-          method: "POST",
-          data: { selector: "#title", timeout: 3000 },
-          timeoutMs: 20_000,
-          retries: 2,
-        });
+        const waited = await makeRequest(
+          runtime,
+          `/tabs/instances/${tabId}/waitForElement`,
+          {
+            method: "POST",
+            data: { selector: "#title", timeout: 3000 },
+            timeoutMs: 20_000,
+            retries: 2,
+          },
+        );
 
-        if (waited.status !== 200 || !isRecord(waited.body) || waited.body.ok !== true) {
+        if (
+          waited.status !== 200 ||
+          !isRecord(waited.body) ||
+          waited.body.ok !== true
+        ) {
           errors.push(
             `worker=${workerIndex} loop=${loopIndex} wait failed status=${waited.status} body=${short(waited.body)}`,
           );
         }
 
-        const valued = await makeRequest(runtime, `/tabs/instances/${tabId}/value?selector=${q("#name")}`, {
-          timeoutMs: 20_000,
-          retries: 2,
-        });
+        const valued = await makeRequest(
+          runtime,
+          `/tabs/instances/${tabId}/value?selector=${q("#name")}`,
+          {
+            timeoutMs: 20_000,
+            retries: 2,
+          },
+        );
 
-        if (valued.status !== 200 || !isRecord(valued.body) || !("value" in valued.body)) {
+        if (
+          valued.status !== 200 ||
+          !isRecord(valued.body) ||
+          !("value" in valued.body)
+        ) {
           errors.push(
             `worker=${workerIndex} loop=${loopIndex} value failed status=${valued.status} body=${short(valued.body)}`,
           );
@@ -1126,9 +1471,11 @@ async function testParallelTabStability(
     return errors;
   };
 
-  const allErrors = (await Promise.all(
-    Array.from({ length: workers }, (_, index) => workerTask(index)),
-  )).flat();
+  const allErrors = (
+    await Promise.all(
+      Array.from({ length: workers }, (_, index) => workerTask(index)),
+    )
+  ).flat();
 
   if (allErrors.length > 0) {
     recordResult(
@@ -1138,7 +1485,11 @@ async function testParallelTabStability(
     );
     console.log(`FAILED (${allErrors.length} issues)`);
   } else {
-    recordResult("Parallel tab stability", "OK", `workers=${workers}, loops=${loops}`);
+    recordResult(
+      "Parallel tab stability",
+      "OK",
+      `workers=${workers}, loops=${loops}`,
+    );
     console.log(`OK (workers=${workers}, loops=${loops})`);
   }
 }

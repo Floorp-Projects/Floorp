@@ -2,25 +2,12 @@
 // @colocated-env browser
 
 import { migrateLexicalContent } from "./migrateLexicalToTiptap.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 function assertDeepEquals(
   actual: unknown,
@@ -117,9 +104,7 @@ function testLexicalBoldText(): void {
   const textNode = result!.content![0].content![0];
   assert(textNode.marks !== undefined, "should have marks");
   assert(
-    textNode.marks!.some(
-      (m: { type: string }) => m.type === "bold",
-    ),
+    textNode.marks!.some((m: { type: string }) => m.type === "bold"),
     "should have bold mark",
   );
 }
@@ -138,9 +123,7 @@ function testLexicalItalicText(): void {
   const result = migrateLexicalContent(JSON.stringify(lexical));
   const textNode = result!.content![0].content![0];
   assert(
-    textNode.marks!.some(
-      (m: { type: string }) => m.type === "italic",
-    ),
+    textNode.marks!.some((m: { type: string }) => m.type === "italic"),
     "should have italic mark",
   );
 }
@@ -197,11 +180,7 @@ function testLexicalBulletList(): void {
     },
   };
   const result = migrateLexicalContent(JSON.stringify(lexical));
-  assertEquals(
-    result!.content![0].type,
-    "bulletList",
-    "should be bulletList",
-  );
+  assertEquals(result!.content![0].type, "bulletList", "should be bulletList");
 }
 
 function testLexicalOrderedList(): void {
@@ -241,11 +220,7 @@ function testLexicalBlockquote(): void {
     },
   };
   const result = migrateLexicalContent(JSON.stringify(lexical));
-  assertEquals(
-    result!.content![0].type,
-    "blockquote",
-    "should be blockquote",
-  );
+  assertEquals(result!.content![0].type, "blockquote", "should be blockquote");
 }
 
 function testLexicalLinebreak(): void {
@@ -273,7 +248,11 @@ function testLexicalEmptyRoot(): void {
   const lexical = { root: { children: [] } };
   const result = migrateLexicalContent(JSON.stringify(lexical));
   assert(result !== undefined, "should produce result");
-  assertEquals(result.content![0].type, "paragraph", "should have empty paragraph fallback");
+  assertEquals(
+    result.content![0].type,
+    "paragraph",
+    "should have empty paragraph fallback",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -326,20 +305,5 @@ export async function runAllTests(): Promise<void> {
     { name: "plain text multiline", fn: testPlainTextMultiline },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `migrateLexicalToTiptap.test.ts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("migrateLexicalToTiptap.test.ts", tests);
 }

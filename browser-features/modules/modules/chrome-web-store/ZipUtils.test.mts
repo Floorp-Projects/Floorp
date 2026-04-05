@@ -6,17 +6,11 @@ import {
   isJavaScriptEntry,
   isJSONEntry,
 } from "./ZipUtils.sys.mts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 const tests: TestCase[] = [
   // --- getEntryExtension ---
@@ -155,13 +149,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("ZipUtils.test.mts", tests);
 }

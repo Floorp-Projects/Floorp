@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — TabsToolbar existence and dimensions
@@ -124,7 +113,7 @@ function testPinnedTabsDomOrder(): void {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("multirowTabbarUI.test.ts", [
     { name: "TabsToolbar exists", fn: testTabsToolbarExists },
     { name: "TabsToolbar has dimensions", fn: testTabsToolbarHasDimensions },
     { name: "multibar attribute readable", fn: testMultibarAttributeReadable },
@@ -132,17 +121,5 @@ export async function runAllTests(): Promise<void> {
     { name: "tab elements exist", fn: testTabElementsExist },
     { name: "tab element dimensions", fn: testTabElementDimensions },
     { name: "pinned tabs DOM order", fn: testPinnedTabsDomOrder },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`multirowTabbarUI.test.ts failures: ${failures.join(" | ")}`);
+  ]);
 }

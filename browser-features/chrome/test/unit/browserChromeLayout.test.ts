@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 function testToolboxAboveBrowser(): void {
   const toolbox = document.getElementById("navigator-toolbox");
@@ -53,8 +42,14 @@ function testTabsToolbarHasPositiveDimensions(): void {
   assert(tabsToolbar !== null, "#TabsToolbar should exist");
 
   const rect = tabsToolbar.getBoundingClientRect();
-  assert(rect.width > 0, `#TabsToolbar width should be positive (got ${rect.width})`);
-  assert(rect.height > 0, `#TabsToolbar height should be positive (got ${rect.height})`);
+  assert(
+    rect.width > 0,
+    `#TabsToolbar width should be positive (got ${rect.width})`,
+  );
+  assert(
+    rect.height > 0,
+    `#TabsToolbar height should be positive (got ${rect.height})`,
+  );
 }
 
 function testUrlbarHasPositiveWidth(): void {
@@ -62,7 +57,10 @@ function testUrlbarHasPositiveWidth(): void {
   assert(urlbar !== null, "#urlbar should exist");
 
   const rect = urlbar.getBoundingClientRect();
-  assert(rect.width > 0, `#urlbar width should be positive (got ${rect.width})`);
+  assert(
+    rect.width > 0,
+    `#urlbar width should be positive (got ${rect.width})`,
+  );
 }
 
 function testTabboxFillsWindowWidth(): void {
@@ -104,12 +102,27 @@ function testToolboxWidthMatchesWindow(): void {
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "navigator-toolbox is above browser", fn: testToolboxAboveBrowser },
-    { name: "nav-bar is inside navigator-toolbox", fn: testNavBarInsideToolbox },
-    { name: "TabsToolbar has positive dimensions", fn: testTabsToolbarHasPositiveDimensions },
+    {
+      name: "nav-bar is inside navigator-toolbox",
+      fn: testNavBarInsideToolbox,
+    },
+    {
+      name: "TabsToolbar has positive dimensions",
+      fn: testTabsToolbarHasPositiveDimensions,
+    },
     { name: "urlbar has positive width", fn: testUrlbarHasPositiveWidth },
-    { name: "tabbrowser-tabbox fills most of window width", fn: testTabboxFillsWindowWidth },
-    { name: "window dimensions are positive", fn: testWindowDimensionsPositive },
-    { name: "navigator-toolbox width matches window width", fn: testToolboxWidthMatchesWindow },
+    {
+      name: "tabbrowser-tabbox fills most of window width",
+      fn: testTabboxFillsWindowWidth,
+    },
+    {
+      name: "window dimensions are positive",
+      fn: testWindowDimensionsPositive,
+    },
+    {
+      name: "navigator-toolbox width matches window width",
+      fn: testToolboxWidthMatchesWindow,
+    },
   ];
 
   const failures: string[] = [];

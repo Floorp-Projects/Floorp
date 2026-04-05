@@ -9,18 +9,12 @@ import {
   unwrapElement,
   unwrapWindow,
 } from "./utils.ts";
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals(actual: unknown, expected: unknown, message: string): void {
-  if (!Object.is(actual, expected)) {
-    throw new Error(`${message}: expected=${String(expected)} actual=${String(actual)}`);
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 function requireDocument(): Document {
   if (!document) {
@@ -64,7 +58,10 @@ function buildLineRect(width: number, height: number): DOMRect {
   } as DOMRect;
 }
 
-function buildNestedShadowChain(root: HTMLDivElement, depth: number): ShadowRoot {
+function buildNestedShadowChain(
+  root: HTMLDivElement,
+  depth: number,
+): ShadowRoot {
   const doc = requireDocument();
   let currentRoot: ShadowRoot | HTMLDivElement = root;
   for (let i = 0; i < depth; i++) {
@@ -99,12 +96,26 @@ function testDeepQuerySelectorAcrossShadowDom(): void {
     secondShadow.appendChild(deepTarget);
 
     const found = deepQuerySelector(root, "#shadow-target");
-    assertEquals(found, deepTarget, "deepQuerySelector should pierce nested open shadow roots");
+    assertEquals(
+      found,
+      deepTarget,
+      "deepQuerySelector should pierce nested open shadow roots",
+    );
 
     const all = deepQuerySelectorAll(root, ".probe");
-    assertEquals(all.length, 2, "deepQuerySelectorAll should return light DOM and shadow DOM matches");
-    assert(all.includes(lightTarget), "querySelectorAll result should include light DOM target");
-    assert(all.includes(deepTarget), "querySelectorAll result should include deep shadow target");
+    assertEquals(
+      all.length,
+      2,
+      "deepQuerySelectorAll should return light DOM and shadow DOM matches",
+    );
+    assert(
+      all.includes(lightTarget),
+      "querySelectorAll result should include light DOM target",
+    );
+    assert(
+      all.includes(deepTarget),
+      "querySelectorAll result should include deep shadow target",
+    );
   });
 }
 
@@ -117,7 +128,11 @@ function testDeepQuerySelectorDepthLimit(): void {
     reachableRoot.appendChild(reachable);
 
     const foundReachable = deepQuerySelector(root, "#reachable-depth-target");
-    assertEquals(foundReachable, reachable, "depth below limit should still be discoverable");
+    assertEquals(
+      foundReachable,
+      reachable,
+      "depth below limit should still be discoverable",
+    );
 
     const tooDeepRoot = buildNestedShadowChain(root, 6);
     const tooDeep = doc.createElement("button");
@@ -125,26 +140,48 @@ function testDeepQuerySelectorDepthLimit(): void {
     tooDeepRoot.appendChild(tooDeep);
 
     const foundTooDeep = deepQuerySelector(root, "#too-deep-target");
-    assertEquals(foundTooDeep, null, "elements beyond MAX_SHADOW_DEPTH should not be discovered");
+    assertEquals(
+      foundTooDeep,
+      null,
+      "elements beyond MAX_SHADOW_DEPTH should not be discovered",
+    );
   });
 }
 
 function testXrayUnwrapHelpers(): void {
   const doc = requireDocument();
   const rawWindow = window;
-  const wrappedWindow = ({ wrappedJSObject: rawWindow } as unknown) as Window & typeof globalThis;
-  assertEquals(unwrapWindow(wrappedWindow), rawWindow, "unwrapWindow should prefer wrappedJSObject");
-  assertEquals(unwrapWindow(null), null, "unwrapWindow should return null when input is null");
+  const wrappedWindow = { wrappedJSObject: rawWindow } as unknown as Window &
+    typeof globalThis;
+  assertEquals(
+    unwrapWindow(wrappedWindow),
+    rawWindow,
+    "unwrapWindow should prefer wrappedJSObject",
+  );
+  assertEquals(
+    unwrapWindow(null),
+    null,
+    "unwrapWindow should return null when input is null",
+  );
 
   const rawElement = doc.createElement("div");
   const wrappedElement = Object.assign(doc.createElement("div"), {
     wrappedJSObject: rawElement,
   });
-  assertEquals(unwrapElement(wrappedElement), rawElement, "unwrapElement should return raw wrapped object");
+  assertEquals(
+    unwrapElement(wrappedElement),
+    rawElement,
+    "unwrapElement should return raw wrapped object",
+  );
 
-  const wrappedDocument = (doc as Document & Partial<{ wrappedJSObject: Document }>);
+  const wrappedDocument = doc as Document &
+    Partial<{ wrappedJSObject: Document }>;
   wrappedDocument.wrappedJSObject = doc;
-  assertEquals(unwrapDocument(wrappedDocument), doc, "unwrapDocument should return wrapped document");
+  assertEquals(
+    unwrapDocument(wrappedDocument),
+    doc,
+    "unwrapDocument should return wrapped document",
+  );
 }
 
 function testIsElementVisible(): void {
@@ -165,35 +202,68 @@ function testIsElementVisible(): void {
     element.style.setProperty("display", "block");
     element.style.setProperty("visibility", "visible");
     element.style.setProperty("opacity", "1");
-    assertEquals(isElementVisible(element, runtimeWindow), true, "visible element should return true");
+    assertEquals(
+      isElementVisible(element, runtimeWindow),
+      true,
+      "visible element should return true",
+    );
 
     element.style.setProperty("display", "none");
-    assertEquals(isElementVisible(element, runtimeWindow), false, "display:none should be treated as invisible");
+    assertEquals(
+      isElementVisible(element, runtimeWindow),
+      false,
+      "display:none should be treated as invisible",
+    );
 
     element.style.setProperty("display", "block");
     element.style.setProperty("visibility", "hidden");
-    assertEquals(isElementVisible(element, runtimeWindow), false, "visibility:hidden should be treated as invisible");
+    assertEquals(
+      isElementVisible(element, runtimeWindow),
+      false,
+      "visibility:hidden should be treated as invisible",
+    );
 
     element.style.setProperty("visibility", "visible");
     element.style.setProperty("opacity", "0");
-    assertEquals(isElementVisible(element, runtimeWindow), false, "opacity:0 should be treated as invisible");
+    assertEquals(
+      isElementVisible(element, runtimeWindow),
+      false,
+      "opacity:0 should be treated as invisible",
+    );
 
     element.style.setProperty("opacity", "1");
     setRect(0, 20);
-    assertEquals(isElementVisible(element, runtimeWindow), false, "zero-width element should be treated as invisible");
+    assertEquals(
+      isElementVisible(element, runtimeWindow),
+      false,
+      "zero-width element should be treated as invisible",
+    );
 
     const throwingWindow = {
       getComputedStyle(): CSSStyleDeclaration {
         throw new Error("boom");
       },
     } as unknown as Window & typeof globalThis;
-    assertEquals(isElementVisible(element, throwingWindow), false, "style access errors should be handled safely");
+    assertEquals(
+      isElementVisible(element, throwingWindow),
+      false,
+      "style access errors should be handled safely",
+    );
   });
 }
 
-export function runAllTests(): void {
-  testDeepQuerySelectorAcrossShadowDom();
-  testDeepQuerySelectorDepthLimit();
-  testXrayUnwrapHelpers();
-  testIsElementVisible();
+export async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
+    {
+      name: "deep query selector across shadow DOM",
+      fn: testDeepQuerySelectorAcrossShadowDom,
+    },
+    {
+      name: "deep query selector depth limit",
+      fn: testDeepQuerySelectorDepthLimit,
+    },
+    { name: "xray unwrap helpers", fn: testXrayUnwrapHelpers },
+    { name: "is element visible", fn: testIsElementVisible },
+  ];
+  await runTests("utils.test.ts", tests);
 }

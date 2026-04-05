@@ -7,37 +7,36 @@ import {
   initZenModeState,
 } from "../../common/zen-mode/zen-mode.tsx";
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 const ZENMODE_PREF = "floorp.zenmode.enabled";
 
 function testZenModeSignalReadable(): void {
   const value = zenModeEnabled();
-  assert(
-    typeof value === "boolean",
-    "zenModeEnabled should return a boolean",
-  );
+  assert(typeof value === "boolean", "zenModeEnabled should return a boolean");
 }
 
 function testSetZenModeEnabledToggles(): void {
   const original = zenModeEnabled();
   try {
     setZenModeEnabled(true);
-    assertEquals(zenModeEnabled(), true, "zenModeEnabled should be true after setting true");
+    assertEquals(
+      zenModeEnabled(),
+      true,
+      "zenModeEnabled should be true after setting true",
+    );
 
     setZenModeEnabled(false);
-    assertEquals(zenModeEnabled(), false, "zenModeEnabled should be false after setting false");
+    assertEquals(
+      zenModeEnabled(),
+      false,
+      "zenModeEnabled should be false after setting false",
+    );
   } finally {
     setZenModeEnabled(original);
   }
@@ -105,10 +104,18 @@ function testZenModePrefObserverUpdatesSignal(): void {
     initZenModeState();
 
     Services.prefs.setBoolPref(ZENMODE_PREF, true);
-    assertEquals(zenModeEnabled(), true, "Signal should be true after pref set to true externally");
+    assertEquals(
+      zenModeEnabled(),
+      true,
+      "Signal should be true after pref set to true externally",
+    );
 
     Services.prefs.setBoolPref(ZENMODE_PREF, false);
-    assertEquals(zenModeEnabled(), false, "Signal should be false after pref set to false externally");
+    assertEquals(
+      zenModeEnabled(),
+      false,
+      "Signal should be false after pref set to false externally",
+    );
   } finally {
     setZenModeEnabled(originalSignal);
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
@@ -116,23 +123,23 @@ function testZenModePrefObserverUpdatesSignal(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
-    { name: "zenModeEnabled signal is readable", fn: testZenModeSignalReadable },
-    { name: "setZenModeEnabled toggles value", fn: testSetZenModeEnabledToggles },
+  await runTests("zenMode.test.ts", [
+    {
+      name: "zenModeEnabled signal is readable",
+      fn: testZenModeSignalReadable,
+    },
+    {
+      name: "setZenModeEnabled toggles value",
+      fn: testSetZenModeEnabledToggles,
+    },
     { name: "zen mode pref sync", fn: testZenModePrefSync },
-    { name: "zen mode attribute on documentElement", fn: testZenModeAttributeOnDocumentElement },
-    { name: "pref observer updates signal", fn: testZenModePrefObserverUpdatesSignal },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`zenMode.test.ts failures: ${failures.join(" | ")}`);
+    {
+      name: "zen mode attribute on documentElement",
+      fn: testZenModeAttributeOnDocumentElement,
+    },
+    {
+      name: "pref observer updates signal",
+      fn: testZenModePrefObserverUpdatesSignal,
+    },
+  ]);
 }

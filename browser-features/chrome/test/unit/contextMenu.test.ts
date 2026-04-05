@@ -3,18 +3,12 @@
 
 import { ContextMenuUtils } from "../../utils/context-menu.tsx";
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 function testContentAreaContextMenuReturnsElement(): void {
   const elem = ContextMenuUtils.contentAreaContextMenu();
@@ -27,7 +21,11 @@ function testContentAreaContextMenuReturnsElement(): void {
     );
   } else {
     // Element may not exist in minimal test harness; just verify it returns null gracefully
-    assertEquals(elem, null, "contentAreaContextMenu should return null when element is absent");
+    assertEquals(
+      elem,
+      null,
+      "contentAreaContextMenu should return null when element is absent",
+    );
   }
 }
 
@@ -77,7 +75,10 @@ function testAddContextBoxCreatesMenuitem(): void {
       },
     );
     // Verify the checked function was called during setup (contextMenuObserverFunc runs)
-    assert(checkedCalled, "checkedFunction should be called during addContextBox setup");
+    assert(
+      checkedCalled,
+      "checkedFunction should be called during addContextBox setup",
+    );
   } finally {
     checkTarget.remove();
     renderMarker.remove();
@@ -96,22 +97,22 @@ function testAddToolbarContentMenuPopupSetDoesNotThrow(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
-    { name: "contentAreaContextMenu returns element or null", fn: testContentAreaContextMenuReturnsElement },
-    { name: "onPopupShowing does not throw", fn: testOnPopupShowingDoesNotThrow },
-    { name: "addContextBox creates menuitem", fn: testAddContextBoxCreatesMenuitem },
-    { name: "addToolbarContentMenuPopupSet does not throw", fn: testAddToolbarContentMenuPopupSetDoesNotThrow },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`contextMenu.test.ts failures: ${failures.join(" | ")}`);
+  await runTests("contextMenu.test.ts", [
+    {
+      name: "contentAreaContextMenu returns element or null",
+      fn: testContentAreaContextMenuReturnsElement,
+    },
+    {
+      name: "onPopupShowing does not throw",
+      fn: testOnPopupShowingDoesNotThrow,
+    },
+    {
+      name: "addContextBox creates menuitem",
+      fn: testAddContextBoxCreatesMenuitem,
+    },
+    {
+      name: "addToolbarContentMenuPopupSet does not throw",
+      fn: testAddToolbarContentMenuPopupSetDoesNotThrow,
+    },
+  ]);
 }

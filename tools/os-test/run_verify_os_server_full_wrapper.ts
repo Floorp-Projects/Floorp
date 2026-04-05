@@ -3,20 +3,25 @@
 
 import { parseArgs } from "@std/cli/parse-args";
 
-const DEFAULT_BASE_URL = Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
+const DEFAULT_BASE_URL =
+  Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
 const DEFAULT_START_CMD = ["deno", "task", "feles-build", "dev"];
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "../src/async_utils.ts";
 
-async function waitForHealth(baseUrl: string, timeoutMs: number, intervalMs: number): Promise<boolean> {
+async function waitForHealth(
+  baseUrl: string,
+  timeoutMs: number,
+  intervalMs: number,
+): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   const url = `${baseUrl.replace(/\/$/, "")}/health`;
 
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(Math.max(intervalMs, 2_000)) });
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(Math.max(intervalMs, 2_000)),
+      });
       if (response.status === 200) {
         return true;
       }
@@ -39,7 +44,9 @@ async function stopProcess(process: Deno.ChildProcess): Promise<void> {
       args: ["/PID", String(process.pid), "/T", "/F"],
       stdout: "null",
       stderr: "null",
-    }).output().catch(() => undefined);
+    })
+      .output()
+      .catch(() => undefined);
     return;
   }
 
@@ -49,10 +56,7 @@ async function stopProcess(process: Deno.ChildProcess): Promise<void> {
     // ignore
   }
 
-  await Promise.race([
-    process.status,
-    sleep(10_000),
-  ]);
+  await Promise.race([process.status, sleep(10_000)]);
 
   try {
     process.kill("SIGKILL");
@@ -61,7 +65,10 @@ async function stopProcess(process: Deno.ChildProcess): Promise<void> {
   }
 }
 
-function splitVerifierArgs(args: string[]): { wrapperArgs: string[]; verifierArgs: string[] } {
+function splitVerifierArgs(args: string[]): {
+  wrapperArgs: string[];
+  verifierArgs: string[];
+} {
   const separatorIndex = args.indexOf("--");
   if (separatorIndex < 0) {
     return { wrapperArgs: args, verifierArgs: [] };
@@ -93,9 +100,10 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
 
   Deno.env.set("FLOORP_OS_BASE_URL", baseUrl);
 
-  const startCommand = typeof parsed.cmd === "string" && parsed.cmd.trim().length > 0
-    ? parsed.cmd.trim().split(/\s+/)
-    : DEFAULT_START_CMD;
+  const startCommand =
+    typeof parsed.cmd === "string" && parsed.cmd.trim().length > 0
+      ? parsed.cmd.trim().split(/\s+/)
+      : DEFAULT_START_CMD;
 
   let floorpProcess: Deno.ChildProcess | null = null;
 

@@ -18,8 +18,10 @@ import {
 import {
   assert,
   assertEquals,
-  assertRejects,
-} from "../test-helpers/assertions.mts";
+  runTests,
+  type TestCase,
+} from "../../../../../chrome/test/utils/test_harness.ts";
+import { assertRejects } from "../test-helpers/assertions.mts";
 
 function createPolyfill(): DocumentIdPolyfill {
   return new DocumentIdPolyfill({ debug: true });
@@ -319,10 +321,8 @@ async function testPassThroughWithoutDocumentId() {
 /**
  * Run all tests
  */
-async function runAllTests() {
-  console.log("Running DocumentId API Polyfill Tests...\n");
-
-  const tests: Array<{ name: string; fn: () => void | Promise<void> }> = [
+async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
     // Generation and Parsing
     {
       name: "Generate and parse documentId",
@@ -351,30 +351,7 @@ async function runAllTests() {
     },
   ];
 
-  let passed = 0;
-  let failed = 0;
-  const failureDetails: string[] = [];
-
-  for (const test of tests) {
-    try {
-      console.log(`Running: ${test.name}`);
-      await test.fn();
-      passed++;
-    } catch (error) {
-      console.error(`✗ ${test.name} failed:`, error);
-      failed++;
-      const message = error instanceof Error ? error.message : String(error);
-      failureDetails.push(`${test.name}: ${message}`);
-    }
-  }
-
-  console.log(`\nTest Results: ${passed} passed, ${failed} failed`);
-
-  if (failed > 0) {
-    throw new Error(`DocumentId test failures: ${failureDetails.join(" | ")}`);
-  }
-
-  return true;
+  await runTests("DocumentIdPolyfill.test.mts", tests);
 }
 
 // =============================================================================

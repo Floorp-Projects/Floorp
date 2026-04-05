@@ -13,24 +13,12 @@ import {
 import { EXTENSION_ID_SUFFIX, GECKO_MIN_VERSION } from "./Constants.sys.mts";
 import type { ChromeManifest } from "./types.ts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 function assertDeepEquals(
   actual: unknown,
@@ -110,10 +98,7 @@ function testValidateManifestBadMV(): void {
 function testTransformAddsGeckoSettings(): void {
   const manifest = makeMinimalManifest();
   const result = transformManifest(manifest, TEST_ID);
-  assert(
-    result.browser_specific_settings?.gecko,
-    "should add gecko settings",
-  );
+  assert(result.browser_specific_settings?.gecko, "should add gecko settings");
   assertEquals(
     result.browser_specific_settings!.gecko!.id,
     `${TEST_ID}${EXTENSION_ID_SUFFIX}`,
@@ -162,10 +147,7 @@ function testTransformRemovesUnsupportedPermissions(): void {
     !result.manifest.permissions?.includes("tabCapture"),
     "tabCapture should be removed",
   );
-  assert(
-    result.manifest.permissions?.includes("tabs"),
-    "tabs should remain",
-  );
+  assert(result.manifest.permissions?.includes("tabs"), "tabs should remain");
   assert(
     result.removedPermissions.includes("tabCapture"),
     "tabCapture should be in removedPermissions",
@@ -177,11 +159,7 @@ function testTransformRemovesUpdateUrl(): void {
   (manifest as Record<string, unknown>).update_url =
     "https://example.com/update";
   const result = transformManifest(manifest, TEST_ID);
-  assertEquals(
-    "update_url" in result,
-    false,
-    "update_url should be removed",
-  );
+  assertEquals("update_url" in result, false, "update_url should be removed");
 }
 
 function testTransformRemovesKey(): void {
@@ -278,11 +256,7 @@ function testExtractHostPermissions(): void {
 function testExtractApiPermissions(): void {
   const perms = ["tabs", "https://example.com/*", "<all_urls>", "storage"];
   const apis = extractApiPermissions(perms);
-  assertDeepEquals(
-    apis,
-    ["tabs", "storage"],
-    "should extract API permissions",
-  );
+  assertDeepEquals(apis, ["tabs", "storage"], "should extract API permissions");
 }
 
 // ---------------------------------------------------------------------------
@@ -294,39 +268,54 @@ export async function runAllTests(): Promise<void> {
     { name: "validateManifest valid", fn: testValidateManifestValid },
     { name: "validateManifest MV2", fn: testValidateManifestMV2 },
     { name: "validateManifest null", fn: testValidateManifestNull },
-    { name: "validateManifest missing name", fn: testValidateManifestMissingName },
-    { name: "validateManifest missing version", fn: testValidateManifestMissingVersion },
+    {
+      name: "validateManifest missing name",
+      fn: testValidateManifestMissingName,
+    },
+    {
+      name: "validateManifest missing version",
+      fn: testValidateManifestMissingVersion,
+    },
     { name: "validateManifest bad MV", fn: testValidateManifestBadMV },
-    { name: "transform adds gecko settings", fn: testTransformAddsGeckoSettings },
-    { name: "transform does not mutate original", fn: testTransformDoesNotMutateOriginal },
-    { name: "transform MV3 service_worker", fn: testTransformMV3ServiceWorkerConverted },
-    { name: "transform removes unsupported perms", fn: testTransformRemovesUnsupportedPermissions },
+    {
+      name: "transform adds gecko settings",
+      fn: testTransformAddsGeckoSettings,
+    },
+    {
+      name: "transform does not mutate original",
+      fn: testTransformDoesNotMutateOriginal,
+    },
+    {
+      name: "transform MV3 service_worker",
+      fn: testTransformMV3ServiceWorkerConverted,
+    },
+    {
+      name: "transform removes unsupported perms",
+      fn: testTransformRemovesUnsupportedPermissions,
+    },
     { name: "transform removes update_url", fn: testTransformRemovesUpdateUrl },
     { name: "transform removes key", fn: testTransformRemovesKey },
-    { name: "transform offscreen polyfill", fn: testTransformOffscreenPolyfillInjected },
-    { name: "transform documentId polyfill", fn: testTransformScriptingDocumentIdPolyfill },
+    {
+      name: "transform offscreen polyfill",
+      fn: testTransformOffscreenPolyfillInjected,
+    },
+    {
+      name: "transform documentId polyfill",
+      fn: testTransformScriptingDocumentIdPolyfill,
+    },
     { name: "compatibility clean", fn: testCompatibilityClean },
-    { name: "compatibility unsupported perms", fn: testCompatibilityUnsupportedPerms },
-    { name: "compatibility MV2 service worker", fn: testCompatibilityMV2ServiceWorker },
+    {
+      name: "compatibility unsupported perms",
+      fn: testCompatibilityUnsupportedPerms,
+    },
+    {
+      name: "compatibility MV2 service worker",
+      fn: testCompatibilityMV2ServiceWorker,
+    },
     { name: "getFirefoxExtensionId", fn: testGetFirefoxExtensionId },
     { name: "extractHostPermissions", fn: testExtractHostPermissions },
     { name: "extractApiPermissions", fn: testExtractApiPermissions },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `ManifestTransformer.test.mts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("ManifestTransformer.test.mts", tests);
 }

@@ -1,13 +1,31 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
+import {
+  assert,
+  runTests,
+  type TestCase,
+} from "../../chrome/test/utils/test_harness.ts";
 
-export function runAllTests(): void {
-  assert(typeof document !== "undefined", "Document should exist in browser test context");
-  assert(typeof window !== "undefined", "Window should exist in browser test context");
+const tests: TestCase[] = [
+  {
+    name: "Document should exist in browser test context",
+    fn: () =>
+      assert(
+        typeof document !== "undefined",
+        "Document should exist in browser test context",
+      ),
+  },
+  {
+    name: "Window should exist in browser test context",
+    fn: () =>
+      assert(
+        typeof window !== "undefined",
+        "Window should exist in browser test context",
+      ),
+  },
+];
+
+export async function runAllTests(): Promise<void> {
+  await runTests("AboutDialog.test.ts", tests);
 }

@@ -216,8 +216,12 @@ export default async function runBrowserTests(): Promise<void> {
     // collect results from prefs.js. Without this, the browser may shut
     // down immediately after test completion, before the runner reads the
     // final state. The test runner stops the browser after collecting results.
+    // The interval is cleared after 10 minutes as a safety net to prevent
+    // the browser from running indefinitely if the host runner fails to
+    // shut it down.
     console.log("[nora@test] Keeping browser alive for result collection...");
-    setInterval(() => {}, 60_000);
+    const keepaliveId = setInterval(() => {}, 60_000);
+    setTimeout(() => clearInterval(keepaliveId), 600_000);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[nora@test] Fatal error: ${msg}`);

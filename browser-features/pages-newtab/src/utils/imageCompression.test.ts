@@ -2,25 +2,12 @@
 // @colocated-env browser
 
 import { estimateBytesFromDataURL } from "./imageCompression.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
+import {
+  assertEquals,
+  assert,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — estimateBytesFromDataURL
@@ -89,20 +76,5 @@ export async function runAllTests(): Promise<void> {
     { name: "positive result for real PNG", fn: testPositiveResult },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `imageCompression.test.ts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("imageCompression.test.ts", tests);
 }

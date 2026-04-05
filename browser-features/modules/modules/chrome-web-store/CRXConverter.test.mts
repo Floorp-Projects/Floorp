@@ -2,17 +2,12 @@
 // @colocated-env browser
 
 import { CRXConverterClass } from "./CRXConverter.sys.mts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 const tests: TestCase[] = [
   // --- Constructor / options ---
@@ -74,7 +69,9 @@ const tests: TestCase[] = [
     async fn() {
       const converter = new CRXConverterClass();
       // CRX3 magic: Cr24 = 0x43723234
-      const header = new Uint8Array([0x43, 0x72, 0x32, 0x34, 0x03, 0x00, 0x00, 0x00]);
+      const header = new Uint8Array([
+        0x43, 0x72, 0x32, 0x34, 0x03, 0x00, 0x00, 0x00,
+      ]);
       const result = await converter.convert(header.buffer, "test-id", {
         name: "Test",
         version: "1.0",
@@ -100,13 +97,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("CRXConverter.test.mts", tests);
 }

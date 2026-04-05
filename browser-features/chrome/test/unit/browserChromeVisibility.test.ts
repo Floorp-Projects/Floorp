@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 function isVisible(el: Element): boolean {
   const style = window.getComputedStyle(el);
@@ -24,7 +13,10 @@ function isVisible(el: Element): boolean {
 function testNavBarVisible(): void {
   const navBar = document.getElementById("nav-bar");
   assert(navBar !== null, "#nav-bar should exist");
-  assert(isVisible(navBar), "#nav-bar should be visible (display !== none, height > 0)");
+  assert(
+    isVisible(navBar),
+    "#nav-bar should be visible (display !== none, height > 0)",
+  );
 }
 
 function testTabsToolbarVisible(): void {
@@ -47,7 +39,10 @@ function testTabboxVisible(): void {
 
 function testMainPopupSetExists(): void {
   const popupSet = document.getElementById("mainPopupSet");
-  assert(popupSet !== null, "#mainPopupSet should exist (popups are hidden by default)");
+  assert(
+    popupSet !== null,
+    "#mainPopupSet should exist (popups are hidden by default)",
+  );
 }
 
 function testZenModeAttributeToggle(): void {

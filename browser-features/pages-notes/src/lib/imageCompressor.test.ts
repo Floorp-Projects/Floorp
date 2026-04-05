@@ -2,19 +2,21 @@
 // @colocated-env browser
 
 import { compressImage } from "./imageCompressor.ts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
+import {
+  assert,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
       name: "compressImage is a function",
       fn: () => {
-        assert(typeof compressImage === "function", "compressImage should be exported as a function");
+        assert(
+          typeof compressImage === "function",
+          "compressImage should be exported as a function",
+        );
       },
     },
     {
@@ -28,7 +30,9 @@ export async function runAllTests(): Promise<void> {
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           assert(
-            msg.includes("Failed to load image") || msg.includes("too large") || msg.includes("Canvas"),
+            msg.includes("Failed to load image") ||
+              msg.includes("too large") ||
+              msg.includes("Canvas"),
             `Expected image load error, got: ${msg}`,
           );
         }
@@ -53,18 +57,13 @@ export async function runAllTests(): Promise<void> {
 
         const result = await compressImage(blob);
         assert(typeof result === "string", "result should be a string");
-        assert(result.startsWith("data:image/jpeg"), "result should be a JPEG data URL");
+        assert(
+          result.startsWith("data:image/jpeg"),
+          "result should be a JPEG data URL",
+        );
       },
     },
   ];
 
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`  PASS: ${t.name}`);
-    } catch (e) {
-      console.error(`  FAIL: ${t.name}`);
-      throw e;
-    }
-  }
+  await runTests("imageCompressor.test.ts", tests);
 }

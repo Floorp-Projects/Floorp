@@ -3,11 +3,7 @@
 
 import { init } from "../../common/reverse-sidebar-position/index.ts";
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 function testInitFunctionExists(): void {
   assert(typeof init === "function", "init should be an exported function");
@@ -31,21 +27,9 @@ function testInitReturnsUndefined(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("reverseSidebarPosition.test.ts", [
     { name: "init function exists", fn: testInitFunctionExists },
     { name: "init does not throw", fn: testInitDoesNotThrow },
     { name: "init returns undefined", fn: testInitReturnsUndefined },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`reverseSidebarPosition.test.ts failures: ${failures.join(" | ")}`);
+  ]);
 }

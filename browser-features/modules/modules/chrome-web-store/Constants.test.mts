@@ -10,24 +10,12 @@ import {
   EXTENSION_ID_SUFFIX,
 } from "./Constants.sys.mts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — isChromeWebStoreUrl
@@ -56,11 +44,7 @@ function testIsCWSUrlUnrelated(): void {
 }
 
 function testIsCWSUrlEmpty(): void {
-  assertEquals(
-    isChromeWebStoreUrl(""),
-    false,
-    "empty string should not match",
-  );
+  assertEquals(isChromeWebStoreUrl(""), false, "empty string should not match");
 }
 
 // ---------------------------------------------------------------------------
@@ -89,9 +73,7 @@ function testExtractIdInvalidUrl(): void {
 
 function testExtractIdTooShort(): void {
   assertEquals(
-    extractExtensionId(
-      "https://chromewebstore.google.com/detail/ext/abc",
-    ),
+    extractExtensionId("https://chromewebstore.google.com/detail/ext/abc"),
     null,
     "ID shorter than 32 chars should return null",
   );
@@ -128,10 +110,7 @@ function testGenerateFirefoxId(): void {
 // ---------------------------------------------------------------------------
 
 function testSupportedPermission(): void {
-  assert(
-    isPermissionSupported("tabs"),
-    '"tabs" should be supported',
-  );
+  assert(isPermissionSupported("tabs"), '"tabs" should be supported');
 }
 
 function testUnsupportedPermission(): void {
@@ -210,20 +189,5 @@ export async function runAllTests(): Promise<void> {
     },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `Constants.test.mts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("Constants.test.mts", tests);
 }

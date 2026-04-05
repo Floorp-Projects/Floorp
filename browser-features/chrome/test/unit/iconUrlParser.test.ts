@@ -2,22 +2,27 @@
 // @colocated-env browser
 
 import { iconUrlParser } from "../../utils/iconUrlParser.ts";
+import { assert, type TestCase, runTests } from "../utils/test_harness.ts";
 
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals(actual: unknown, expected: unknown, message: string): void {
+function assertEquals(
+  actual: unknown,
+  expected: unknown,
+  message: string,
+): void {
   if (!Object.is(actual, expected)) {
-    throw new Error(`${message}: expected=${String(expected)} actual=${String(actual)}`);
+    throw new Error(
+      `${message}: expected=${String(expected)} actual=${String(actual)}`,
+    );
   }
 }
 
-export function runAllTests(): void {
+function testIconUrlParser(): void {
   const dataUrl = "data:text/plain;base64,SGVsbG8=";
-  assertEquals(iconUrlParser(dataUrl), dataUrl, "data URL should be passed through unchanged");
+  assertEquals(
+    iconUrlParser(dataUrl),
+    dataUrl,
+    "data URL should be passed through unchanged",
+  );
 
   const pathOnly = "/browser-features/chrome/static/test.png";
   const parsed = iconUrlParser(pathOnly);
@@ -32,5 +37,14 @@ export function runAllTests(): void {
     assertEquals(parsed, pathOnly, "non-DEV mode should keep original URL");
   }
 
-  assert(typeof parsed === "string" && parsed.length > 0, "parsed URL should be non-empty string");
+  assert(
+    typeof parsed === "string" && parsed.length > 0,
+    "parsed URL should be non-empty string",
+  );
+}
+
+export async function runAllTests(): Promise<void> {
+  await runTests("iconUrlParser.test.ts", [
+    { name: "icon URL parser", fn: testIconUrlParser },
+  ]);
 }

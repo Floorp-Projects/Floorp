@@ -2,15 +2,37 @@
 // @colocated-env browser
 
 import { cn } from "./utils.ts";
+import {
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
-function assertEquals(actual: unknown, expected: unknown, message: string): void {
-  if (!Object.is(actual, expected)) {
-    throw new Error(`${message}: expected=${String(expected)} actual=${String(actual)}`);
-  }
-}
+const tests: TestCase[] = [
+  {
+    name: "grid classes",
+    fn: () => assertEquals(cn("grid", "gap-2"), "grid gap-2", "grid classes"),
+  },
+  {
+    name: "text size conflict should resolve",
+    fn: () =>
+      assertEquals(
+        cn("text-xs", "text-sm"),
+        "text-sm",
+        "text size conflict should resolve",
+      ),
+  },
+  {
+    name: "false object entries ignored",
+    fn: () =>
+      assertEquals(
+        cn("bg-white", { "bg-slate-900": false }),
+        "bg-white",
+        "false object entries ignored",
+      ),
+  },
+];
 
-export function runAllTests(): void {
-  assertEquals(cn("grid", "gap-2"), "grid gap-2", "grid classes");
-  assertEquals(cn("text-xs", "text-sm"), "text-sm", "text size conflict should resolve");
-  assertEquals(cn("bg-white", { "bg-slate-900": false }), "bg-white", "false object entries ignored");
+export async function runAllTests(): Promise<void> {
+  await runTests("utils.test.ts", tests);
 }

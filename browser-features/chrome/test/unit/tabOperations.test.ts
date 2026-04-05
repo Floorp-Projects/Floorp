@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 function testGBrowserDefined(): void {
   assert(
@@ -22,8 +16,14 @@ function testGBrowserDefined(): void {
 }
 
 function testTabsArrayLikeWithAtLeastOne(): void {
-  assert(gBrowser.tabs !== null && gBrowser.tabs !== undefined, "gBrowser.tabs should exist");
-  assert(gBrowser.tabs.length >= 1, `gBrowser.tabs should have at least 1 tab (got ${gBrowser.tabs.length})`);
+  assert(
+    gBrowser.tabs !== null && gBrowser.tabs !== undefined,
+    "gBrowser.tabs should exist",
+  );
+  assert(
+    gBrowser.tabs.length >= 1,
+    `gBrowser.tabs should have at least 1 tab (got ${gBrowser.tabs.length})`,
+  );
 }
 
 function testSelectedTabNotNull(): void {
@@ -35,7 +35,10 @@ function testSelectedTabNotNull(): void {
 
 function testSelectedBrowserHasCurrentURI(): void {
   const browser = gBrowser.selectedBrowser;
-  assert(browser !== null && browser !== undefined, "gBrowser.selectedBrowser should exist");
+  assert(
+    browser !== null && browser !== undefined,
+    "gBrowser.selectedBrowser should exist",
+  );
   assert(
     "currentURI" in browser,
     "gBrowser.selectedBrowser should have a currentURI property",
@@ -88,27 +91,19 @@ function testSelectedTabIsVisible(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("tabOperations.test.ts", [
     { name: "gBrowser is defined", fn: testGBrowserDefined },
-    { name: "gBrowser.tabs has at least 1 tab", fn: testTabsArrayLikeWithAtLeastOne },
+    {
+      name: "gBrowser.tabs has at least 1 tab",
+      fn: testTabsArrayLikeWithAtLeastOne,
+    },
     { name: "selectedTab is not null", fn: testSelectedTabNotNull },
-    { name: "selectedBrowser has currentURI", fn: testSelectedBrowserHasCurrentURI },
+    {
+      name: "selectedBrowser has currentURI",
+      fn: testSelectedBrowserHasCurrentURI,
+    },
     { name: "open and close tab", fn: testOpenAndCloseTab },
     { name: "tab has linkedBrowser", fn: testTabHasLinkedBrowser },
     { name: "selected tab is visible", fn: testSelectedTabIsVisible },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(
-      `tabOperations.test.ts failures: ${failures.join(" | ")}`,
-    );
+  ]);
 }

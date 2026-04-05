@@ -12,20 +12,12 @@ import {
   setDefaultProfile,
   restart,
 } from "./profileDataManager.ts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
@@ -40,8 +32,14 @@ export async function runAllTests(): Promise<void> {
           "should return profile object or null",
         );
         if (result !== null) {
-          assert(typeof result.profileName === "string", "profileName should be string");
-          assert(typeof result.profilePath === "string", "profilePath should be string");
+          assert(
+            typeof result.profileName === "string",
+            "profileName should be string",
+          );
+          assert(
+            typeof result.profilePath === "string",
+            "profilePath should be string",
+          );
         }
       },
     },
@@ -52,10 +50,22 @@ export async function runAllTests(): Promise<void> {
         // and ignores NRGetCurrentProfile callbacks, so we just verify the shape
         const result = await getCurrentProfile();
         if (result !== null) {
-          assert(typeof result.profileName === "string", "profileName should be string");
-          assert(result.profileName.length > 0, "profileName should not be empty");
-          assert(typeof result.profilePath === "string", "profilePath should be string");
-          assert(result.profilePath.length > 0, "profilePath should not be empty");
+          assert(
+            typeof result.profileName === "string",
+            "profileName should be string",
+          );
+          assert(
+            result.profileName.length > 0,
+            "profileName should not be empty",
+          );
+          assert(
+            typeof result.profilePath === "string",
+            "profilePath should be string",
+          );
+          assert(
+            result.profilePath.length > 0,
+            "profilePath should not be empty",
+          );
         }
       },
     },
@@ -93,7 +103,11 @@ export async function runAllTests(): Promise<void> {
           calledWith = url;
         };
         openUrl("https://floorp.app");
-        assertEquals(calledWith, "https://floorp.app", "should pass url to NROpenUrl");
+        assertEquals(
+          calledWith,
+          "https://floorp.app",
+          "should pass url to NROpenUrl",
+        );
         (globalThis as Record<string, unknown>).NROpenUrl = undefined;
       },
     },
@@ -138,13 +152,5 @@ export async function runAllTests(): Promise<void> {
     },
   ];
 
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`  PASS: ${t.name}`);
-    } catch (e) {
-      console.error(`  FAIL: ${t.name}`);
-      throw e;
-    }
-  }
+  await runTests("profileDataManager.test.ts", tests);
 }

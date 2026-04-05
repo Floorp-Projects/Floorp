@@ -7,24 +7,12 @@ import {
   countInvalidDomains,
 } from "./DNRTransformer.sys.mts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 function makeRule(
   id: number,
@@ -129,8 +117,10 @@ function testSanitizeRemovesInvalidDomains(): void {
     }),
   ];
   const result = sanitizeDNRRules(rules);
-  const condition = (result[0] as Record<string, unknown>)
-    .condition as Record<string, unknown>;
+  const condition = (result[0] as Record<string, unknown>).condition as Record<
+    string,
+    unknown
+  >;
   const domains = condition.domains as string[];
   assert(!domains.includes("185.164.59.38.12"), "invalid IP should be removed");
   assert(domains.includes("example.com"), "valid domain should remain");
@@ -165,11 +155,7 @@ function testCountInvalidDomainsMultiple(): void {
       excludedDomains: ["bad..domain", "ok.com"],
     }),
   ];
-  assertEquals(
-    countInvalidDomains(rules),
-    2,
-    "should count 2 invalid domains",
-  );
+  assertEquals(countInvalidDomains(rules), 2, "should count 2 invalid domains");
 }
 
 function testCountInvalidDomainsEmptyString(): void {
@@ -242,33 +228,39 @@ export async function runAllTests(): Promise<void> {
     { name: "validate valid domains", fn: testValidateValidDomains },
     { name: "sanitize empty array", fn: testSanitizeEmptyArray },
     { name: "sanitize non-array", fn: testSanitizeNonArray },
-    { name: "sanitize removes invalid domains", fn: testSanitizeRemovesInvalidDomains },
-    { name: "sanitize preserves valid rules", fn: testSanitizePreservesValidRules },
-    { name: "sanitize handles non-DNR objects", fn: testSanitizeHandlesNonDNRObjects },
+    {
+      name: "sanitize removes invalid domains",
+      fn: testSanitizeRemovesInvalidDomains,
+    },
+    {
+      name: "sanitize preserves valid rules",
+      fn: testSanitizePreservesValidRules,
+    },
+    {
+      name: "sanitize handles non-DNR objects",
+      fn: testSanitizeHandlesNonDNRObjects,
+    },
     { name: "count invalid domains zero", fn: testCountInvalidDomainsZero },
-    { name: "count invalid domains multiple", fn: testCountInvalidDomainsMultiple },
-    { name: "count invalid domains empty string", fn: testCountInvalidDomainsEmptyString },
+    {
+      name: "count invalid domains multiple",
+      fn: testCountInvalidDomainsMultiple,
+    },
+    {
+      name: "count invalid domains empty string",
+      fn: testCountInvalidDomainsEmptyString,
+    },
     { name: "IPv4 valid", fn: testDomainValidationIPv4Valid },
     { name: "IPv4 leading zero", fn: testDomainValidationIPv4LeadingZero },
-    { name: "hostname with hyphen", fn: testDomainValidationHostnameWithHyphen },
+    {
+      name: "hostname with hyphen",
+      fn: testDomainValidationHostnameWithHyphen,
+    },
     { name: "domain starts with dot", fn: testDomainValidationStartsWithDot },
-    { name: "domain consecutive dots", fn: testDomainValidationConsecutiveDots },
+    {
+      name: "domain consecutive dots",
+      fn: testDomainValidationConsecutiveDots,
+    },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `DNRTransformer.test.mts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("DNRTransformer.test.mts", tests);
 }

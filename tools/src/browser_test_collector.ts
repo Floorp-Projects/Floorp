@@ -39,8 +39,10 @@ interface TestState {
 // Regex to extract the "nora.tests.state" pref value from prefs.js.
 // Firefox writes string prefs as: user_pref("name", "value") where
 // value may contain \" for quotes and \\ for backslashes.
-// Note: this assumes the pref value fits on a single line (Firefox norm).
-const PREF_REGEX = /user_pref\("nora\.tests\.state",\s*"((?:[^"\\]|\\.)*)"\)/;
+// Uses [\s\S] instead of . so the match spans multiple lines in case
+// Firefox wraps a long pref value.
+const PREF_REGEX =
+  /user_pref\("nora\.tests\.state",\s*"((?:[^"\\]|\\[\s\S])*)"\)/;
 
 /**
  * Collect browser test results by reading the `nora.tests.state` pref
@@ -68,18 +70,24 @@ export async function collectBrowserTestResultsFromPrefs(
         // unescapes the \".  Then we parse the resulting string as JSON to
         // get the TestState object.
         //
-        // Firefox may also hex-encode certain characters (\xNN notation).
+        // Firefox may hex-encode certain characters (\xNN notation).
         // We convert those back before the double JSON.parse.
-        // \x5c (backslash) is replaced with \\ (escaped) so JSON.parse
+        //
+        // Strategy: first replace \x5c (backslash) with a temporary
+        // sentinel so that the generic hex decoder does not produce
+        // premature escape sequences. Then apply the generic decoder
+        // and restore the backslash as \\ (JSON-escaped) so JSON.parse
         // correctly produces a single literal backslash.
+        const BACKSLASH_SENTINEL = "\x00BS";
         const raw = match[1]
-          .replace(/\\x5c/g, "\\\\")
-          .replace(/\\x2f/g, "/")
-          .replace(/\\x5b/g, "[")
-          .replace(/\\x5d/g, "]")
+          .replace(/\\x5c/g, BACKSLASH_SENTINEL)
+          .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
+            String.fromCharCode(parseInt(hex, 16)),
+          )
           .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
             String.fromCharCode(parseInt(hex, 16)),
-          );
+          )
+          .replaceAll(BACKSLASH_SENTINEL, "\\\\");
         const jsonString: string = JSON.parse(`"${raw}"`);
         const state: TestState = JSON.parse(jsonString);
         lastStatus = state.status;

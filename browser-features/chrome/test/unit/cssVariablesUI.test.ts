@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -158,27 +147,33 @@ function testAtLeastOneThemeVariableIsSet(): void {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("cssVariablesUI.test.ts", [
     { name: "--toolbar-bgcolor variable", fn: testToolbarBgColorVariable },
     { name: "--toolbar-color variable", fn: testToolbarColorVariable },
-    { name: "--tab-selected-bgcolor variable", fn: testTabSelectedBgColorVariable },
-    { name: "--arrowpanel-background variable", fn: testArrowpanelBgColorVariable },
-    { name: "--zenmode-toolbox-height (conditional)", fn: testZenModeToolboxHeightVariable },
-    { name: "--panel-sidebar-display (conditional)", fn: testPanelSidebarDisplayVariable },
+    {
+      name: "--tab-selected-bgcolor variable",
+      fn: testTabSelectedBgColorVariable,
+    },
+    {
+      name: "--arrowpanel-background variable",
+      fn: testArrowpanelBgColorVariable,
+    },
+    {
+      name: "--zenmode-toolbox-height (conditional)",
+      fn: testZenModeToolboxHeightVariable,
+    },
+    {
+      name: "--panel-sidebar-display (conditional)",
+      fn: testPanelSidebarDisplayVariable,
+    },
     { name: "getComputedStyle on nav-bar", fn: testComputedStyleOnNavBar },
-    { name: "getComputedStyle on TabsToolbar", fn: testComputedStyleOnTabsToolbar },
-    { name: "at least one theme variable is set", fn: testAtLeastOneThemeVariableIsSet },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`cssVariablesUI.test.ts failures: ${failures.join(" | ")}`);
+    {
+      name: "getComputedStyle on TabsToolbar",
+      fn: testComputedStyleOnTabsToolbar,
+    },
+    {
+      name: "at least one theme variable is set",
+      fn: testAtLeastOneThemeVariableIsSet,
+    },
+  ]);
 }

@@ -5,19 +5,7 @@ import {
   toNumber,
   extractUrlFromState,
 } from "../../common/workspaces/utils/workspace-snapshot.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — toNumber
@@ -40,7 +28,7 @@ function testToNumberCustomFallback(): void {
 }
 
 function testToNumberEmptyString(): void {
-  assertEquals(toNumber(""), 0, 'empty string should return fallback 0');
+  assertEquals(toNumber(""), 0, "empty string should return fallback 0");
 }
 
 function testToNumberZero(): void {
@@ -57,10 +45,7 @@ function testToNumberNegative(): void {
 
 function testExtractUrlWithIndex(): void {
   const state = {
-    entries: [
-      { url: "https://first.com" },
-      { url: "https://second.com" },
-    ],
+    entries: [{ url: "https://first.com" }, { url: "https://second.com" }],
     index: 2,
   };
   assertEquals(
@@ -72,10 +57,7 @@ function testExtractUrlWithIndex(): void {
 
 function testExtractUrlNoIndex(): void {
   const state = {
-    entries: [
-      { url: "https://first.com" },
-      { url: "https://last.com" },
-    ],
+    entries: [{ url: "https://first.com" }, { url: "https://last.com" }],
   };
   assertEquals(
     extractUrlFromState(state),

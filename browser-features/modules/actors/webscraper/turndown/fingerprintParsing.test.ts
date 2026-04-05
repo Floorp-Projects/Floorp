@@ -7,18 +7,12 @@ import {
   parseFingerprintsFromMarkdown,
   parseSelectorMap,
 } from "./fingerprint.ts";
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals(actual: unknown, expected: unknown, message: string): void {
-  if (!Object.is(actual, expected)) {
-    throw new Error(`${message}: expected=${String(expected)} actual=${String(actual)}`);
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../../chrome/test/utils/test_harness.ts";
 
 function testFingerprintCommentRoundTrip(): void {
   const comment = formatFingerprintComment({
@@ -32,7 +26,10 @@ function testFingerprintCommentRoundTrip(): void {
   const parsed = parseFingerprintsFromMarkdown(`before ${comment} after`);
   assertEquals(parsed.length, 1, "single fingerprint should be parsed");
   assertEquals(parsed[0].fingerprint, "abc12345", "fingerprint value");
-  assert(parsed[0].endIndex > parsed[0].startIndex, "fingerprint index range should be valid");
+  assert(
+    parsed[0].endIndex > parsed[0].startIndex,
+    "fingerprint index range should be valid",
+  );
 }
 
 function testSelectorMapRoundTrip(): void {
@@ -43,13 +40,13 @@ function testSelectorMapRoundTrip(): void {
       path: "html/body/div",
     },
     "div",
-    "line1\nline2 | quoted \"text\"",
+    'line1\nline2 | quoted "text"',
   );
 
   const markdown = [
     "# Selector Map",
     entry,
-    "fp:ffffffffffffffff | span | \"another entry\"",
+    'fp:ffffffffffffffff | span | "another entry"',
   ].join("\n");
 
   const parsed = parseSelectorMap(markdown);
@@ -62,7 +59,13 @@ function testSelectorMapRoundTrip(): void {
   );
 }
 
-export function runAllTests(): void {
-  testFingerprintCommentRoundTrip();
-  testSelectorMapRoundTrip();
+export async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
+    {
+      name: "fingerprint comment round trip",
+      fn: testFingerprintCommentRoundTrip,
+    },
+    { name: "selector map round trip", fn: testSelectorMapRoundTrip },
+  ];
+  await runTests("fingerprintParsing.test.ts", tests);
 }

@@ -18,17 +18,12 @@ import {
   readInputStream,
   readInputStreamToBuffer,
 } from "./FileUtils.sys.mts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 const tests: TestCase[] = [
   // --- createTempFile ---
@@ -37,7 +32,11 @@ const tests: TestCase[] = [
     fn() {
       const file = createTempFile("floorp-test-temp.dat");
       assert(file !== null, "should return a file object");
-      assertEquals(file.leafName, "floorp-test-temp.dat", "leaf name should match");
+      assertEquals(
+        file.leafName,
+        "floorp-test-temp.dat",
+        "leaf name should match",
+      );
     },
   },
   {
@@ -58,7 +57,10 @@ const tests: TestCase[] = [
     fn() {
       const a = createUniqueTempFile("test", "xpi");
       const b = createUniqueTempFile("test", "xpi");
-      assert(a.leafName !== b.leafName, "two calls should produce different names");
+      assert(
+        a.leafName !== b.leafName,
+        "two calls should produce different names",
+      );
       assert(a.leafName.startsWith("test-"), "should start with prefix");
       assert(a.leafName.endsWith(".xpi"), "should end with extension");
     },
@@ -113,7 +115,11 @@ const tests: TestCase[] = [
     name: "fileExists returns false for non-existent file",
     fn() {
       const file = createTempFile("floorp-nonexistent-xyz.dat");
-      assertEquals(fileExists(file), false, "non-existent file should return false");
+      assertEquals(
+        fileExists(file),
+        false,
+        "non-existent file should return false",
+      );
     },
   },
   {
@@ -235,13 +241,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("FileUtils.test.mts", tests);
 }

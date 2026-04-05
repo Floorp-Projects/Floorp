@@ -6,29 +6,13 @@ import {
   getOldTabbarStyleConfig,
   getOldTabbarPositionConfig,
 } from "../../common/designs/utils/old-config-migrator.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers — set/clear prefs safely
 // ---------------------------------------------------------------------------
 
-function withIntPref(
-  prefName: string,
-  value: number,
-  fn: () => void,
-): void {
+function withIntPref(prefName: string, value: number, fn: () => void): void {
   Services.prefs.setIntPref(prefName, value);
   try {
     fn();
@@ -37,10 +21,7 @@ function withIntPref(
   }
 }
 
-function withIntPrefs(
-  prefs: [string, number][],
-  fn: () => void,
-): void {
+function withIntPrefs(prefs: [string, number][], fn: () => void): void {
   for (const [name, value] of prefs) {
     Services.prefs.setIntPref(name, value);
   }

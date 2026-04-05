@@ -9,17 +9,12 @@ import {
   getActionDescription,
 } from "../../common/mouse-gesture/utils/gestures.ts";
 import type { GestureActionRegistration } from "../../common/mouse-gesture/utils/gestures.ts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 const tests: TestCase[] = [
   // --- getAllGestureActions ---
@@ -77,7 +72,10 @@ const tests: TestCase[] = [
       const actions = getAllGestureActions();
       const firstName = actions[0].name;
       const fn = gestureActions.getAction(firstName);
-      assert(typeof fn === "function", "should return a function for known action");
+      assert(
+        typeof fn === "function",
+        "should return a function for known action",
+      );
     },
   },
   {
@@ -109,10 +107,7 @@ const tests: TestCase[] = [
   {
     name: "executeGestureAction returns false for unknown action",
     fn() {
-      const result = executeGestureAction(
-        "__nonexistent__",
-        window,
-      );
+      const result = executeGestureAction("__nonexistent__", window);
       assertEquals(result, false, "should return false for unknown action");
     },
   },
@@ -165,13 +160,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("mouseGestureActions.test.ts", tests);
 }

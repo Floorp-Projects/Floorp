@@ -2,17 +2,12 @@
 // @colocated-env browser
 
 import { ManifestProcesser } from "../../common/pwa/manifestProcesser.ts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 // Access private scopeIncludes via a test helper.
 // Since scopeIncludes is private, we call it through the prototype with
@@ -42,7 +37,11 @@ const tests: TestCase[] = [
     fn() {
       const scope = makeURI("https://example.com/app/");
       const uri = makeURI("https://example.com/app/page.html");
-      assertEquals(scopeIncludes(scope, uri), true, "page within scope should match");
+      assertEquals(
+        scopeIncludes(scope, uri),
+        true,
+        "page within scope should match",
+      );
     },
   },
   {
@@ -142,13 +141,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("manifestProcesser.test.ts", tests);
 }

@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — Navigation bar existence and visibility
@@ -112,7 +101,8 @@ function testNavBarWidthApproximatesWindow(): void {
 
 function testHorizontalElementOrdering(): void {
   const backBtn = document.getElementById("back-button");
-  const urlbar = document.getElementById("urlbar-container") ||
+  const urlbar =
+    document.getElementById("urlbar-container") ||
     document.getElementById("urlbar");
   const menuBtn = document.getElementById("PanelUI-menu-button");
 
@@ -138,10 +128,7 @@ function testHorizontalElementOrdering(): void {
 
 function testPersonalToolbarExists(): void {
   const toolbar = document.getElementById("PersonalToolbar");
-  assert(
-    toolbar !== null,
-    "#PersonalToolbar should exist (may be collapsed)",
-  );
+  assert(toolbar !== null, "#PersonalToolbar should exist (may be collapsed)");
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +136,7 @@ function testPersonalToolbarExists(): void {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("navigationBarUI.test.ts", [
     { name: "nav-bar exists", fn: testNavBarExists },
     { name: "nav-bar visible", fn: testNavBarVisible },
     { name: "URL bar exists", fn: testUrlBarExists },
@@ -158,20 +145,11 @@ export async function runAllTests(): Promise<void> {
     { name: "forward button exists", fn: testForwardButtonExists },
     { name: "PanelUI menu button exists", fn: testPanelUIMenuButtonExists },
     { name: "PanelUI menu button visible", fn: testPanelUIMenuButtonVisible },
-    { name: "nav-bar width approximates window", fn: testNavBarWidthApproximatesWindow },
+    {
+      name: "nav-bar width approximates window",
+      fn: testNavBarWidthApproximatesWindow,
+    },
     { name: "horizontal element ordering", fn: testHorizontalElementOrdering },
     { name: "PersonalToolbar exists", fn: testPersonalToolbarExists },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`navigationBarUI.test.ts failures: ${failures.join(" | ")}`);
+  ]);
 }

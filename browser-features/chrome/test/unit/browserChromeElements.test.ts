@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
+import { assert, type TestCase } from "../utils/test_harness.ts";
 
 const ESSENTIAL_ELEMENTS: { id: string; description: string }[] = [
   { id: "main-window", description: "root window" },
@@ -22,10 +18,7 @@ const ESSENTIAL_ELEMENTS: { id: string; description: string }[] = [
   { id: "PanelUI-menu-button", description: "hamburger menu" },
 ];
 
-function buildElementExistsTest(
-  id: string,
-  description: string,
-): TestCase {
+function buildElementExistsTest(id: string, description: string): TestCase {
   return {
     name: `#${id} (${description}) exists in DOM`,
     fn: () => {
@@ -41,7 +34,7 @@ function buildElementExistsTest(
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = ESSENTIAL_ELEMENTS.map((e) =>
-    buildElementExistsTest(e.id, e.description)
+    buildElementExistsTest(e.id, e.description),
   );
 
   const failures: string[] = [];

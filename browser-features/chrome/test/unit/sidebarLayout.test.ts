@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
+import { assert, type TestCase } from "../utils/test_harness.ts";
 
 function testSidebarBoxExists(): void {
   const sidebarBox = document.getElementById("sidebar-box");
@@ -96,9 +92,15 @@ export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "sidebar-box exists", fn: testSidebarBoxExists },
     { name: "sidebar position respects pref", fn: testSidebarPositionStart },
-    { name: "panel-sidebar-box handled gracefully", fn: testPanelSidebarBoxGraceful },
+    {
+      name: "panel-sidebar-box handled gracefully",
+      fn: testPanelSidebarBoxGraceful,
+    },
     { name: "sidebar-splitter exists", fn: testSidebarSplitterExists },
-    { name: "sidebar and content do not overlap", fn: testSidebarAndContentNoOverlap },
+    {
+      name: "sidebar and content do not overlap",
+      fn: testSidebarAndContentNoOverlap,
+    },
   ];
 
   const failures: string[] = [];
@@ -111,7 +113,5 @@ export async function runAllTests(): Promise<void> {
     }
   }
   if (failures.length > 0)
-    throw new Error(
-      `sidebarLayout.test.ts failures: ${failures.join(" | ")}`,
-    );
+    throw new Error(`sidebarLayout.test.ts failures: ${failures.join(" | ")}`);
 }

@@ -2,25 +2,12 @@
 // @colocated-env browser
 
 import { externalBrowserService } from "../../common/external-browser/external-browser-service.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void | Promise<void>;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -89,32 +76,20 @@ async function testGetBrowserNonExistent(): Promise<void> {
 // Runner
 // ---------------------------------------------------------------------------
 
+const tests: TestCase[] = [
+  { name: "service is singleton", fn: testServiceIsSingleton },
+  { name: "has getInstalledBrowsers", fn: testServiceHasGetInstalledBrowsers },
+  { name: "has openUrl", fn: testServiceHasOpenUrl },
+  { name: "has openInDefaultBrowser", fn: testServiceHasOpenInDefaultBrowser },
+  { name: "has getBrowser", fn: testServiceHasGetBrowser },
+  { name: "has clearCache", fn: testServiceHasClearCache },
+  {
+    name: "getInstalledBrowsers returns array",
+    fn: testGetInstalledBrowsersReturnsArray,
+  },
+  { name: "getBrowser non-existent", fn: testGetBrowserNonExistent },
+];
+
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
-    { name: "service is singleton", fn: testServiceIsSingleton },
-    { name: "has getInstalledBrowsers", fn: testServiceHasGetInstalledBrowsers },
-    { name: "has openUrl", fn: testServiceHasOpenUrl },
-    { name: "has openInDefaultBrowser", fn: testServiceHasOpenInDefaultBrowser },
-    { name: "has getBrowser", fn: testServiceHasGetBrowser },
-    { name: "has clearCache", fn: testServiceHasClearCache },
-    { name: "getInstalledBrowsers returns array", fn: testGetInstalledBrowsersReturnsArray },
-    { name: "getBrowser non-existent", fn: testGetBrowserNonExistent },
-  ];
-
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `externalBrowserService.test.ts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("externalBrowserService.test.ts", tests);
 }

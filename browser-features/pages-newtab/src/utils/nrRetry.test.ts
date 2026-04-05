@@ -2,25 +2,7 @@
 // @colocated-env browser
 
 import { callNRWithRetry } from "./nrRetry.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => Promise<void>;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { assert, assertEquals, runTests, type TestCase } from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -134,18 +116,6 @@ export async function runAllTests(): Promise<void> {
     { name: "invoker throws", fn: testInvokerThrows },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(`nrRetry.test.ts failures: ${failures.join(" | ")}`);
-  }
+  await runTests("nrRetry.test.ts", tests);
+}
 }

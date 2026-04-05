@@ -13,24 +13,12 @@ import {
   ZIP_SIGNATURE,
 } from "./Constants.sys.mts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers — construct CRX buffers
@@ -236,20 +224,5 @@ export async function runAllTests(): Promise<void> {
     { name: "CRX3 zip offset calculation", fn: testCRX3ZipOffsetCalculation },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `CRXParser.test.mts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("CRXParser.test.mts", tests);
 }

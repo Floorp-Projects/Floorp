@@ -15,29 +15,14 @@ import {
   clampInt,
 } from "./utils.sys.mts";
 import type { HttpRequest } from "./types.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../../chrome/test/utils/test_harness.ts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
-
-function makeRequest(
-  overrides: Partial<HttpRequest> = {},
-): HttpRequest {
+function makeRequest(overrides: Partial<HttpRequest> = {}): HttpRequest {
   return {
     method: "GET",
     path: "/",
@@ -295,7 +280,10 @@ export async function runAllTests(): Promise<void> {
     { name: "getBodyText UTF-8", fn: testGetBodyTextUtf8 },
     { name: "getBodyText empty", fn: testGetBodyTextEmpty },
     { name: "binaryStringToByteArray", fn: testBinaryStringToByteArray },
-    { name: "binaryStringToByteArray empty", fn: testBinaryStringToByteArrayEmpty },
+    {
+      name: "binaryStringToByteArray empty",
+      fn: testBinaryStringToByteArrayEmpty,
+    },
     { name: "getJSON valid", fn: testGetJSONValid },
     { name: "getJSON wrong content-type", fn: testGetJSONWrongContentType },
     { name: "getJSON invalid body", fn: testGetJSONInvalidBody },
@@ -304,7 +292,10 @@ export async function runAllTests(): Promise<void> {
     { name: "statusText 404", fn: testStatusText404 },
     { name: "statusText 500", fn: testStatusText500 },
     { name: "statusText unknown", fn: testStatusTextUnknown },
-    { name: "jsonResponse status line", fn: testJsonResponseContainsStatusLine },
+    {
+      name: "jsonResponse status line",
+      fn: testJsonResponseContainsStatusLine,
+    },
     { name: "jsonResponse body", fn: testJsonResponseContainsBody },
     { name: "jsonResponse content-type", fn: testJsonResponseContentType },
     { name: "badRequest default", fn: testBadRequestDefault },
@@ -319,18 +310,5 @@ export async function runAllTests(): Promise<void> {
     { name: "clampInt floored", fn: testClampIntFloored },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(`utils.test.mts failures: ${failures.join(" | ")}`);
-  }
+  await runTests("utils.test.mts", tests);
 }

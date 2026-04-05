@@ -21,8 +21,10 @@ import {
 import {
   assert,
   assertEquals,
-  assertRejects,
-} from "../test-helpers/assertions.mts";
+  runTests,
+  type TestCase,
+} from "../../../../../chrome/test/utils/test_harness.ts";
+import { assertRejects } from "../test-helpers/assertions.mts";
 
 declare global {
   // Extend global Window interface
@@ -95,7 +97,9 @@ function createDeterministicPolyfill(): OffscreenPolyfill {
   });
 }
 
-async function withMockExtensionGlobals<T>(fn: () => T | Promise<T>): Promise<T> {
+async function withMockExtensionGlobals<T>(
+  fn: () => T | Promise<T>,
+): Promise<T> {
   const g = globalThis as unknown as Record<string, unknown>;
   const hadChrome = Object.prototype.hasOwnProperty.call(g, "chrome");
   const hadBrowser = Object.prototype.hasOwnProperty.call(g, "browser");
@@ -433,10 +437,8 @@ async function testMultipleReasons() {
 /**
  * Run all tests
  */
-async function runAllTests() {
-  console.log("Running Offscreen API Polyfill Tests...\n");
-
-  const tests: Array<{ name: string; fn: () => Promise<void> }> = [
+async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
     // Basic functionality
     { name: "Create document", fn: testCreateDocument },
     { name: "Single document constraint", fn: testSingleDocumentConstraint },
@@ -459,34 +461,7 @@ async function runAllTests() {
     { name: "Multiple reasons", fn: testMultipleReasons },
   ];
 
-  let passed = 0;
-  let failed = 0;
-  const failureDetails: string[] = [];
-
-  for (const test of tests) {
-    try {
-      await resetEnvironment();
-      console.log(`Running: ${test.name}`);
-      await test.fn();
-      console.log(`✓ ${test.name} passed\n`);
-      passed++;
-    } catch (error) {
-      console.error(`✗ ${test.name} failed:`, error, "\n");
-      failed++;
-      const message = error instanceof Error ? error.message : String(error);
-      failureDetails.push(`${test.name}: ${message}`);
-    } finally {
-      await resetEnvironment();
-    }
-  }
-
-  console.log(`\nTest Results: ${passed} passed, ${failed} failed`);
-
-  if (failed > 0) {
-    throw new Error(`Offscreen test failures: ${failureDetails.join(" | ")}`);
-  }
-
-  return true;
+  await runTests("OffscreenPolyfill.test.mts", tests);
 }
 
 // =============================================================================

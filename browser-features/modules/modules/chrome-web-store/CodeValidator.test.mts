@@ -10,24 +10,12 @@ import {
   getValidationSummary,
 } from "./CodeValidator.sys.mts";
 
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — isJavaScriptFile
@@ -124,7 +112,7 @@ function testValidateFullWithWarning(): void {
 }
 
 function testValidateFullErrorHasLineInfo(): void {
-  const code = 'const x = 1;\nconst y = 2;\nchrome.tabCapture.start();';
+  const code = "const x = 1;\nconst y = 2;\nchrome.tabCapture.start();";
   const result = validateSourceCodeFull("bg.js", code);
   assert(result.errors.length > 0, "should have error");
   assertEquals(result.errors[0].line, 3, "error should be on line 3");
@@ -136,7 +124,7 @@ function testValidateFullErrorHasLineInfo(): void {
 
 function testValidateMultipleFilesSkipsNonJS(): void {
   const files = new Map([
-    ["manifest.json", 'chrome.tabCapture.start();'],
+    ["manifest.json", "chrome.tabCapture.start();"],
     ["bg.js", "console.log('ok');"],
   ]);
   const result = validateMultipleFiles(files);
@@ -168,9 +156,7 @@ function testSummaryNoIssues(): void {
 function testSummaryWithErrors(): void {
   const summary = getValidationSummary({
     valid: false,
-    errors: [
-      { file: "a.js", line: 1, column: 1, message: "err", code: "X" },
-    ],
+    errors: [{ file: "a.js", line: 1, column: 1, message: "err", code: "X" }],
     warnings: [],
   });
   assert(summary.includes("1 error"), "should mention 1 error");
@@ -179,9 +165,7 @@ function testSummaryWithErrors(): void {
 function testSummaryWithBoth(): void {
   const summary = getValidationSummary({
     valid: false,
-    errors: [
-      { file: "a.js", line: 1, column: 1, message: "err", code: "X" },
-    ],
+    errors: [{ file: "a.js", line: 1, column: 1, message: "err", code: "X" }],
     warnings: [{ file: "b.js", message: "warn" }],
   });
   assert(summary.includes("1 error"), "should mention errors");
@@ -208,27 +192,18 @@ export async function runAllTests(): Promise<void> {
     { name: "validateFull clean", fn: testValidateFullClean },
     { name: "validateFull warning", fn: testValidateFullWithWarning },
     { name: "validateFull line info", fn: testValidateFullErrorHasLineInfo },
-    { name: "validateMultiple skips non-JS", fn: testValidateMultipleFilesSkipsNonJS },
-    { name: "validateMultiple aggregates", fn: testValidateMultipleFilesAggregatesErrors },
+    {
+      name: "validateMultiple skips non-JS",
+      fn: testValidateMultipleFilesSkipsNonJS,
+    },
+    {
+      name: "validateMultiple aggregates",
+      fn: testValidateMultipleFilesAggregatesErrors,
+    },
     { name: "summary no issues", fn: testSummaryNoIssues },
     { name: "summary with errors", fn: testSummaryWithErrors },
     { name: "summary with both", fn: testSummaryWithBoth },
   ];
 
-  const failures: string[] = [];
-
-  for (const test of tests) {
-    try {
-      test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `CodeValidator.test.mts failures: ${failures.join(" | ")}`,
-    );
-  }
+  await runTests("CodeValidator.test.mts", tests);
 }

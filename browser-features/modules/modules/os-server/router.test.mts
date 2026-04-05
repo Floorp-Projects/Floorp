@@ -3,17 +3,12 @@
 
 import { Router, NamespaceBuilder, createApi } from "./router.sys.mts";
 import type { Context, Handler, HttpResult } from "./router.sys.mts";
-
-type TestCase = { name: string; fn: () => void | Promise<void> };
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
 
 function makeHandler(label: string): Handler<unknown, unknown> {
   return (_ctx: Context) => ({ status: 200, body: label });
@@ -38,7 +33,11 @@ const tests: TestCase[] = [
 
       const result = router.match("GET", "/hello");
       assert(result !== null, "should match /hello");
-      assertEquals(result.handler, handler, "handler should be the registered one");
+      assertEquals(
+        result.handler,
+        handler,
+        "handler should be the registered one",
+      );
       assertEquals(
         Object.keys(result.params).length,
         0,
@@ -71,7 +70,11 @@ const tests: TestCase[] = [
     name: "Router#match extracts multiple path parameters",
     fn() {
       const router = new Router();
-      router.register("GET", "/users/:userId/posts/:postId", makeHandler("post"));
+      router.register(
+        "GET",
+        "/users/:userId/posts/:postId",
+        makeHandler("post"),
+      );
 
       const result = router.match("GET", "/users/abc/posts/xyz");
       assert(result !== null, "should match nested params");
@@ -103,7 +106,11 @@ const tests: TestCase[] = [
 
       const result = router.match("GET", "/dup");
       assert(result !== null, "should match");
-      assertEquals(result.handler, first, "should return first registered handler");
+      assertEquals(
+        result.handler,
+        first,
+        "should return first registered handler",
+      );
     },
   },
   {
@@ -184,7 +191,10 @@ const tests: TestCase[] = [
       });
 
       const result = router.match("GET", "/api/v1/users");
-      assert(result !== null, "should match nested namespace route /api/v1/users");
+      assert(
+        result !== null,
+        "should match nested namespace route /api/v1/users",
+      );
     },
   },
   {
@@ -198,7 +208,11 @@ const tests: TestCase[] = [
 
       const result = router.match("GET", "/api/items/hello");
       assert(result !== null, "should match namespaced param route");
-      assertEquals(result.params.id, "hello", "should extract id from namespaced route");
+      assertEquals(
+        result.params.id,
+        "hello",
+        "should extract id from namespaced route",
+      );
     },
   },
   {
@@ -211,7 +225,10 @@ const tests: TestCase[] = [
         .post("/b", makeHandler("b"))
         .delete("/c", makeHandler("c"));
 
-      assert(returned instanceof NamespaceBuilder, "methods should return NamespaceBuilder");
+      assert(
+        returned instanceof NamespaceBuilder,
+        "methods should return NamespaceBuilder",
+      );
       assert(router.match("GET", "/a") !== null, "/a should be registered");
       assert(router.match("POST", "/b") !== null, "/b should be registered");
       assert(router.match("DELETE", "/c") !== null, "/c should be registered");
@@ -248,13 +265,5 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  for (const t of tests) {
-    try {
-      await t.fn();
-      console.log(`[PASS] ${t.name}`);
-    } catch (e) {
-      console.error(`[FAIL] ${t.name}:`, e);
-      throw e;
-    }
-  }
+  await runTests("router.test.mts", tests);
 }

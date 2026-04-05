@@ -3,26 +3,32 @@
 
 import { QRCodeManager } from "../../common/qr-code-generator/qr-code-manager.tsx";
 
-type TestCase = { name: string; fn: () => void | Promise<void> };
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new Error(message);
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected)
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-}
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../utils/test_harness.ts";
 
 function testQRCodeManagerConstruction(): void {
   const manager = new QRCodeManager();
   assert(manager !== null, "QRCodeManager should be constructable");
-  assert(typeof manager.showPanel === "function", "showPanel should be a signal accessor");
-  assert(typeof manager.setShowPanel === "function", "setShowPanel should be a signal setter");
-  assert(typeof manager.currentUrl === "function", "currentUrl should be a signal accessor");
-  assert(typeof manager.setCurrentUrl === "function", "setCurrentUrl should be a signal setter");
+  assert(
+    typeof manager.showPanel === "function",
+    "showPanel should be a signal accessor",
+  );
+  assert(
+    typeof manager.setShowPanel === "function",
+    "setShowPanel should be a signal setter",
+  );
+  assert(
+    typeof manager.currentUrl === "function",
+    "currentUrl should be a signal accessor",
+  );
+  assert(
+    typeof manager.setCurrentUrl === "function",
+    "setCurrentUrl should be a signal setter",
+  );
 }
 
 function testShowPanelDefaultIsFalse(): void {
@@ -32,20 +38,32 @@ function testShowPanelDefaultIsFalse(): void {
 
 function testCurrentUrlDefaultIsEmpty(): void {
   const manager = new QRCodeManager();
-  assertEquals(manager.currentUrl(), "", "currentUrl should default to empty string");
+  assertEquals(
+    manager.currentUrl(),
+    "",
+    "currentUrl should default to empty string",
+  );
 }
 
 function testShowQRPanel(): void {
   const manager = new QRCodeManager();
   manager.showQRPanel();
-  assertEquals(manager.showPanel(), true, "showPanel should be true after showQRPanel()");
+  assertEquals(
+    manager.showPanel(),
+    true,
+    "showPanel should be true after showQRPanel()",
+  );
 }
 
 function testHideQRPanel(): void {
   const manager = new QRCodeManager();
   manager.showQRPanel();
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "showPanel should be false after hideQRPanel()");
+  assertEquals(
+    manager.showPanel(),
+    false,
+    "showPanel should be false after hideQRPanel()",
+  );
 }
 
 function testSetCurrentUrlManually(): void {
@@ -104,7 +122,10 @@ function testUpdateCurrentTabUrl(): void {
   // If gBrowser is available and has a selected tab, currentUrl should be populated
   if (globalThis.gBrowser?.selectedTab?.linkedBrowser?.currentURI?.spec) {
     const url = manager.currentUrl();
-    assert(url.length > 0, "currentUrl should be non-empty when a tab is selected");
+    assert(
+      url.length > 0,
+      "currentUrl should be non-empty when a tab is selected",
+    );
   }
 }
 
@@ -117,7 +138,10 @@ function testDownloadQRCodeWithoutGenerating(): void {
   } catch {
     threw = true;
   }
-  assert(!threw, "downloadQRCode should not throw when no QR code is generated");
+  assert(
+    !threw,
+    "downloadQRCode should not throw when no QR code is generated",
+  );
 }
 
 function testInitDoesNotThrow(): void {
@@ -132,7 +156,7 @@ function testInitDoesNotThrow(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
+  await runTests("qrCodeGenerator.test.ts", [
     { name: "QRCodeManager construction", fn: testQRCodeManagerConstruction },
     { name: "showPanel default is false", fn: testShowPanelDefaultIsFalse },
     { name: "currentUrl default is empty", fn: testCurrentUrlDefaultIsEmpty },
@@ -140,21 +164,15 @@ export async function runAllTests(): Promise<void> {
     { name: "hideQRPanel sets showPanel false", fn: testHideQRPanel },
     { name: "setCurrentUrl works manually", fn: testSetCurrentUrlManually },
     { name: "gFloorp.qrCode binding", fn: testGlobalFloorpQrCodeBinding },
-    { name: "gFloorpPageAction.qrCode binding", fn: testGlobalFloorpPageActionBinding },
+    {
+      name: "gFloorpPageAction.qrCode binding",
+      fn: testGlobalFloorpPageActionBinding,
+    },
     { name: "updateCurrentTabUrl does not throw", fn: testUpdateCurrentTabUrl },
-    { name: "downloadQRCode without generating", fn: testDownloadQRCodeWithoutGenerating },
+    {
+      name: "downloadQRCode without generating",
+      fn: testDownloadQRCodeWithoutGenerating,
+    },
     { name: "init does not throw", fn: testInitDoesNotThrow },
-  ];
-
-  const failures: string[] = [];
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
-    }
-  }
-  if (failures.length > 0)
-    throw new Error(`qrCodeGenerator.test.ts failures: ${failures.join(" | ")}`);
+  ]);
 }
