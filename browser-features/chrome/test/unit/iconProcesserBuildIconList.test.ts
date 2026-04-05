@@ -3,25 +3,7 @@
 
 import { IconProcesser } from "../../common/pwa/iconProcesser.ts";
 import type { Icon } from "../../common/pwa/type.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { type TestCase, assert, assertEquals } from "../utils/test_harness.ts";
 
 function makeIcon(sizes: string[]): Icon {
   return { src: "https://example.com/icon.png", sizes };

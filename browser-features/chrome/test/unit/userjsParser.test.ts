@@ -2,25 +2,7 @@
 // @colocated-env browser
 
 import { applyUserJS } from "../../common/designs/utils/userjs-parser.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { type TestCase, assert, assertEquals } from "../utils/test_harness.ts";
 
 // Prefix all test prefs to avoid collisions
 const P = "test.userjsparser.";

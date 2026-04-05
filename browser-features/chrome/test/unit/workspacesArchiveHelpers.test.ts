@@ -7,25 +7,7 @@ import {
   isRecord,
 } from "../../common/workspaces/utils/workspaces-archive-service.ts";
 import type { TWorkspaceSnapshot } from "../../common/workspaces/utils/type.ts";
-
-type TestCase = {
-  name: string;
-  fn: () => void;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assertEquals<T>(actual: T, expected: T, message: string): void {
-  if (actual !== expected) {
-    throw new Error(
-      `${message} (expected: ${String(expected)}, actual: ${String(actual)})`,
-    );
-  }
-}
+import { type TestCase, assert, assertEquals } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — isRecord
