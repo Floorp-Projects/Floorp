@@ -6,8 +6,8 @@
  * Loaded by chrome_root.ts when MODE === "test".
  * Discovers all @colocated-env browser test files via import.meta.glob,
  * runs them sequentially, and writes structured results to
- * globalThis.__TEST_RESULTS__ for the host-side collector to read
- * via Marionette.
+ * globalThis.__TEST_RESULTS__ and the Firefox pref "nora.tests.state".
+ * The host-side collector reads results from the profile's prefs.js file.
  */
 
 interface TestResult {
@@ -49,7 +49,10 @@ function setSharedStatePref(state: TestState): void {
       | {
           importESModule: (specifier: string) => {
             Services?: {
-              prefs?: { setStringPref: (name: string, value: string) => void };
+              prefs?: {
+                setStringPref: (name: string, value: string) => void;
+                savePrefFile?: (prefFile: string | null) => void;
+              };
             };
           };
         }
@@ -59,6 +62,10 @@ function setSharedStatePref(state: TestState): void {
       "resource://gre/modules/Services.sys.mjs",
     ).Services;
     servicesFromModule?.prefs?.setStringPref(TEST_STATE_PREF, payload);
+    // Force immediate flush to disk so the host-side runner can read
+    // results from prefs.js even if the browser shuts down soon after.
+    // null = flush to the default prefs.js file immediately.
+    servicesFromModule?.prefs?.savePrefFile?.(null);
   } catch {
     // Keep browser-side tests running even if prefs are unavailable.
   }
@@ -204,6 +211,13 @@ export default async function runBrowserTests(): Promise<void> {
     console.log(`[nora@test] Done: ${passed} passed, ${failed} failed`);
 
     publishState({ status: "done", results, discoveredFiles });
+
+    // Keep the browser alive so the host-side test runner has time to
+    // collect results from prefs.js. Without this, the browser may shut
+    // down immediately after test completion, before the runner reads the
+    // final state. The test runner stops the browser after collecting results.
+    console.log("[nora@test] Keeping browser alive for result collection...");
+    setInterval(() => {}, 60_000);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[nora@test] Fatal error: ${msg}`);

@@ -1,33 +1,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * Host-side module that collects browser test results via Marionette.
+ * Host-side module that collects browser test results from disk.
  *
  * The browser-side entry point (loader/test/index.ts) writes structured
- * results to globalThis.__TEST_RESULTS__. This module polls that global
- * using MarionetteClient.executeScript() until the status is "done" or
- * a timeout is reached.
+ * results to the Firefox pref "nora.tests.state" and flushes it to
+ * the profile's prefs.js file. This module polls that file until the
+ * test status is "done" or a timeout is reached.
  */
 
-import { MarionetteClient } from "./browser_connector.ts";
 import { sleep } from "./async_utils.ts";
+import { PATHS } from "./defines.ts";
 
-const POLL_INTERVAL_MS = 500;
-const DEFAULT_TIMEOUT_MS = 120_000;
-
-const READ_TEST_STATE_SCRIPT = `
-return (() => {
-  if (globalThis.__TEST_RESULTS__) {
-    return globalThis.__TEST_RESULTS__;
-  }
-  try {
-    const raw = globalThis.Services?.prefs?.getStringPref("nora.tests.state", "") ?? "";
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-})();
-`;
+// Polling intervals for file-based collection.
+const PREFS_FILE_POLL_INTERVAL_MS = 1_000;
+const PREFS_FILE_DEFAULT_TIMEOUT_MS = 300_000;
 
 export interface BrowserTestResult {
   file: string;
@@ -49,85 +36,82 @@ interface TestState {
   error?: string;
 }
 
-export async function collectBrowserTestResults(
-  client: MarionetteClient,
-  timeoutMs = DEFAULT_TIMEOUT_MS,
+// Regex to extract the "nora.tests.state" pref value from prefs.js.
+// Firefox writes string prefs as: user_pref("name", "value") where
+// value may contain \" for quotes and \\ for backslashes.
+// Note: this assumes the pref value fits on a single line (Firefox norm).
+const PREF_REGEX = /user_pref\("nora\.tests\.state",\s*"((?:[^"\\]|\\.)*)"\)/;
+
+/**
+ * Collect browser test results by reading the `nora.tests.state` pref
+ * from the profile's `prefs.js` file on disk.
+ *
+ * This does **not** require a Marionette connection and works even if
+ * the browser shuts down before or during collection.
+ */
+export async function collectBrowserTestResultsFromPrefs(
+  timeoutMs = PREFS_FILE_DEFAULT_TIMEOUT_MS,
 ): Promise<BrowserTestCollection> {
-  await client.setContext("chrome");
-
-  // Wait for browser window to be ready — the browsing context may be
-  // briefly unavailable during startup (window reload, HMR init, etc.)
-  const WINDOW_READY_RETRIES = 10;
-  const WINDOW_READY_DELAY_MS = 3_000;
-  for (let i = 0; i < WINDOW_READY_RETRIES; i++) {
-    try {
-      await client.executeScript("return typeof Services !== 'undefined';");
-      break; // window is ready
-    } catch {
-      if (i === WINDOW_READY_RETRIES - 1) {
-        throw new Error(
-          "Browser window not available after startup — browsing context was discarded",
-        );
-      }
-      await sleep(WINDOW_READY_DELAY_MS);
-    }
-  }
-
+  const prefsPath = PATHS.profile_test + "/prefs.js";
   const deadline = Date.now() + timeoutMs;
+  let lastStatus = "(none)";
 
   while (Date.now() < deadline) {
-    let state: TestState | null = null;
     try {
-      state = (await client.executeScript(
-        READ_TEST_STATE_SCRIPT,
-      )) as TestState | null;
-    } catch (e: unknown) {
-      // Connection may be lost if browser window reloaded — retry a few times
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("no such window") || msg.includes("discarded")) {
-        await sleep(WINDOW_READY_DELAY_MS);
-        continue;
+      const content = await Deno.readTextFile(prefsPath);
+      const match = content.match(PREF_REGEX);
+      if (match?.[1]) {
+        // Firefox stores pref string values with escaped quotes (\").
+        // The captured group contains the raw pref value where \" represents
+        // a literal quote character.  To recover the original JSON string we
+        // wrap it in double-quotes and parse it as a JSON string, which
+        // unescapes the \".  Then we parse the resulting string as JSON to
+        // get the TestState object.
+        //
+        // Firefox may also hex-encode certain characters (\xNN notation).
+        // We convert those back before the double JSON.parse.
+        // \x5c (backslash) is replaced with \\ (escaped) so JSON.parse
+        // correctly produces a single literal backslash.
+        const raw = match[1]
+          .replace(/\\x5c/g, "\\\\")
+          .replace(/\\x2f/g, "/")
+          .replace(/\\x5b/g, "[")
+          .replace(/\\x5d/g, "]")
+          .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
+            String.fromCharCode(parseInt(hex, 16)),
+          );
+        const jsonString: string = JSON.parse(`"${raw}"`);
+        const state: TestState = JSON.parse(jsonString);
+        lastStatus = state.status;
+
+        if (state.status === "done") {
+          return {
+            results: state.results,
+            discoveredFiles: state.discoveredFiles ?? [],
+          };
+        }
+
+        if (state.status === "error") {
+          throw new Error(
+            `Browser test runner encountered a fatal error: ${state.error ?? "unknown"}`,
+          );
+        }
+        // status === "running" — keep polling
       }
-      throw new Error(
-        `Lost connection to browser during test collection: ${msg}`,
-      );
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes("fatal error")) {
+        throw e;
+      }
+      // File might not exist yet, or Firefox may be mid-write (prefs.js
+      // is written atomically on most platforms but the read can race with
+      // a partial flush on Windows). The next poll iteration will retry.
     }
 
-    if (!state) {
-      // Tests haven't started yet — browser may still be loading
-      await sleep(POLL_INTERVAL_MS);
-      continue;
-    }
-
-    if (state.status === "done") {
-      return {
-        results: state.results,
-        discoveredFiles: state.discoveredFiles ?? [],
-      };
-    }
-
-    if (state.status === "error") {
-      throw new Error(
-        `Browser test runner encountered a fatal error: ${state.error ?? "unknown"}`,
-      );
-    }
-
-    // status === "running" — keep polling
-    await sleep(POLL_INTERVAL_MS);
+    await sleep(PREFS_FILE_POLL_INTERVAL_MS);
   }
 
-  // Timeout — try to get partial results
-  let partial: TestState | null = null;
-  try {
-    partial = (await client.executeScript(
-      READ_TEST_STATE_SCRIPT,
-    )) as TestState | null;
-  } catch {
-    // ignore — browser may have crashed
-  }
-
-  const completed = partial?.results?.length ?? 0;
   throw new Error(
-    `Browser tests timed out after ${timeoutMs}ms. Completed: ${completed} test(s).`,
+    `Browser tests timed out after ${timeoutMs}ms (last status: ${lastStatus}). ` +
+      `Check ${prefsPath} for partial results.`,
   );
 }

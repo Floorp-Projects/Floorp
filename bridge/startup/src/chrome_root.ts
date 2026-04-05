@@ -83,6 +83,13 @@ if (import.meta.env.MODE === "dev") {
     // @ts-expect-error TS cannot find the module from http
     await testModule.default();
     setStartupMarker("nora.startup.test", "loaded");
+
+    // Keep the browser alive after test completion so the host-side
+    // test runner has time to collect results from prefs.js.
+    // Without this the browser may shut down before the runner reads
+    // the final state. Use setInterval (not an unresolved Promise) to
+    // avoid blocking the event loop.
+    setInterval(() => {}, 60_000);
   } catch (error) {
     setStartupMarker("nora.startup.error", String(error).slice(0, 300));
     throw error;
