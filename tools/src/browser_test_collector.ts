@@ -50,6 +50,12 @@ const PREF_REGEX =
  *
  * This does **not** require a Marionette connection and works even if
  * the browser shuts down before or during collection.
+ *
+ * To avoid returning stale results from a previous test run, the
+ * collector first waits until the pref transitions away from "done"
+ * (i.e. the browser-side runner has started a new run and set status
+ * to "running").  Once the fresh "running" status is observed, it
+ * then waits for the final "done" or "error" status.
  */
 export async function collectBrowserTestResultsFromPrefs(
   timeoutMs = PREFS_FILE_DEFAULT_TIMEOUT_MS,
@@ -57,6 +63,7 @@ export async function collectBrowserTestResultsFromPrefs(
   const prefsPath = PATHS.profile_test + "/prefs.js";
   const deadline = Date.now() + timeoutMs;
   let lastStatus = "(none)";
+  let sawRunning = false;
 
   while (Date.now() < deadline) {
     try {
@@ -92,6 +99,21 @@ export async function collectBrowserTestResultsFromPrefs(
         const state: TestState = JSON.parse(jsonString);
         lastStatus = state.status;
 
+        // Phase 1: Wait for the browser-side runner to start a fresh run.
+        // If the pref already contains "done" from a previous run we must
+        // NOT return immediately — keep polling until the runner resets
+        // the status to "running" for the current invocation.
+        if (!sawRunning) {
+          if (state.status === "running") {
+            sawRunning = true;
+          }
+          // Whether the old status was "done", "error", or anything else,
+          // we keep polling until we see "running" from the fresh run.
+          await sleep(PREFS_FILE_POLL_INTERVAL_MS);
+          continue;
+        }
+
+        // Phase 2: We have seen "running" — now wait for completion.
         if (state.status === "done") {
           return {
             results: state.results,
