@@ -9,11 +9,17 @@ import {
 
 // --- filterRuntimeEntries ---
 
-Deno.test("filterRuntimeEntries returns empty array for null/undefined data", () => {
-  assertEquals(filterRuntimeEntries({}), []);
-  assertEquals(filterRuntimeEntries({ data: undefined }), []);
-  assertEquals(filterRuntimeEntries({ data: null as unknown as undefined }), []);
-});
+Deno.test(
+  "filterRuntimeEntries returns empty array for null/undefined data",
+  () => {
+    assertEquals(filterRuntimeEntries({}), []);
+    assertEquals(filterRuntimeEntries({ data: undefined }), []);
+    assertEquals(
+      filterRuntimeEntries({ data: null as unknown as undefined }),
+      [],
+    );
+  },
+);
 
 Deno.test("filterRuntimeEntries filters out non-file entries", () => {
   const index = {
@@ -79,14 +85,14 @@ Deno.test("scoreRuntimeEntry gives zero for unmatched entry", () => {
 });
 
 Deno.test("scoreRuntimeEntry adds bonus for .zip extension", () => {
-  const withZip = scoreRuntimeEntry("linux-x86_64.zip", {
-    platform: "linux",
+  const withZip = scoreRuntimeEntry("windows-x86_64.zip", {
+    platform: "windows",
     architecture: "x86_64",
     filename: "test.zip",
     format: "zip",
   });
-  const withoutZip = scoreRuntimeEntry("linux-x86_64.tar", {
-    platform: "linux",
+  const withoutZip = scoreRuntimeEntry("windows-x86_64.tar", {
+    platform: "windows",
     architecture: "x86_64",
     filename: "test.zip",
     format: "zip",

@@ -22,13 +22,22 @@ Deno.test("generateUpdateXml produces valid XML with correct metadata", () => {
     generateUpdateXml(metaPath, outputPath);
 
     const xml = Deno.readTextFileSync(outputPath);
-    assert(xml.includes('displayVersion="11.0.0-beta.1"'), "should contain displayVersion");
+    assert(
+      xml.includes('displayVersion="11.0.0-beta.1"'),
+      "should contain displayVersion",
+    );
     assert(xml.includes('appVersion="11.0.0"'), "should contain appVersion");
     assert(xml.includes('buildID="20260401120000"'), "should contain buildID");
     assert(xml.includes('appVersion2="2.0.0"'), "should contain appVersion2");
     assert(xml.includes('size="12345678"'), "should contain size");
-    assert(xml.includes('hashValue="abcdef1234567890"'), "should contain hashValue");
-    assert(xml.includes('hashFunction="sha512"'), "should contain hashFunction");
+    assert(
+      xml.includes('hashValue="abcdef1234567890"'),
+      "should contain hashValue",
+    );
+    assert(
+      xml.includes('hashFunction="sha512"'),
+      "should contain hashFunction",
+    );
     assert(xml.includes("<?xml"), "should start with XML declaration");
     assert(xml.includes("<updates>"), "should contain updates element");
   } finally {

@@ -55,6 +55,7 @@
     "act": "deno run -A tools/act/run-package-workflow.ts",
     "dev-tool": "deno run -A tools/dev-tool.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
+    "test:host": "deno test --allow-read --allow-write tools/src/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",
     "test:os-api": "deno run -A tools/os-test/verify_os_server_full.ts",
     "test:os-api:wrapper": "deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts",

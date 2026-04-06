@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, assertEquals, type TestCase } from "../utils/test_harness.ts";
+import { assert, type assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 function testToolboxAboveBrowser(): void {
   const toolbox = document.getElementById("navigator-toolbox");

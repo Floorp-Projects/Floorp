@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { callNRWithRetry } from "./nrRetry.ts";
+import { callNRWithRetry } from "../../src/utils/nrRetry.ts";
 import {
   assert,
   assertEquals,

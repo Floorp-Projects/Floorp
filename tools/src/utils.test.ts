@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals, assert } from "@std/assert";
-import { resolveFromRoot, platform, arch, exists, PROJECT_ROOT } from "./utils.ts";
+import {
+  resolveFromRoot,
+  platform,
+  arch,
+  exists,
+  PROJECT_ROOT,
+} from "./utils.ts";
 import * as path from "@std/path";
 
 Deno.test("resolveFromRoot returns absolute path under PROJECT_ROOT", () => {

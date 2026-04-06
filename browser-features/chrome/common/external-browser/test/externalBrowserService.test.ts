@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+
+import { externalBrowserService } from "../external-browser-service.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../test/utils/test_harness.ts";
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+function testServiceIsSingleton(): void {
+  assert(
+    externalBrowserService !== null && externalBrowserService !== undefined,
+    "externalBrowserService should be defined",
+  );
+}
+
+function testServiceHasGetInstalledBrowsers(): void {
+  assertEquals(
+    typeof externalBrowserService.getInstalledBrowsers,
+    "function",
+    "should have getInstalledBrowsers method",
+  );
+}
+
+function testServiceHasOpenUrl(): void {
+  assertEquals(
+    typeof externalBrowserService.openUrl,
+    "function",
+    "should have openUrl method",
+  );
+}
+
+function testServiceHasOpenInDefaultBrowser(): void {
+  assertEquals(
+    typeof externalBrowserService.openInDefaultBrowser,
+    "function",
+    "should have openInDefaultBrowser method",
+  );
+}
+
+function testServiceHasGetBrowser(): void {
+  assertEquals(
+    typeof externalBrowserService.getBrowser,
+    "function",
+    "should have getBrowser method",
+  );
+}
+
+function testServiceHasClearCache(): void {
+  assertEquals(
+    typeof externalBrowserService.clearCache,
+    "function",
+    "should have clearCache method",
+  );
+}
+
+async function testGetInstalledBrowsersReturnsArray(): Promise<void> {
+  const browsers = await externalBrowserService.getInstalledBrowsers();
+  assert(Array.isArray(browsers), "should return an array");
+}
+
+async function testGetBrowserNonExistent(): Promise<void> {
+  const browser = await externalBrowserService.getBrowser(
+    "nonexistent-browser-id-12345",
+  );
+  assertEquals(browser, null, "non-existent browser should return null");
+}
+
+// ---------------------------------------------------------------------------
+// Runner
+// ---------------------------------------------------------------------------
+
+const tests: TestCase[] = [
+  { name: "service is singleton", fn: testServiceIsSingleton },
+  { name: "has getInstalledBrowsers", fn: testServiceHasGetInstalledBrowsers },
+  { name: "has openUrl", fn: testServiceHasOpenUrl },
+  { name: "has openInDefaultBrowser", fn: testServiceHasOpenInDefaultBrowser },
+  { name: "has getBrowser", fn: testServiceHasGetBrowser },
+  { name: "has clearCache", fn: testServiceHasClearCache },
+  {
+    name: "getInstalledBrowsers returns array",
+    fn: testGetInstalledBrowsersReturnsArray,
+  },
+  { name: "getBrowser non-existent", fn: testGetBrowserNonExistent },
+];
+
+export async function runAllTests(): Promise<void> {
+  await runTests("externalBrowserService.test.ts", tests);
+}
