@@ -10,10 +10,10 @@ import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 @noraComponent(import.meta.hot)
 export default class BrowserShareMode extends NoraComponentBase {
   init() {
-    this.logger.info("Initializing browser share mode menu injection");
+    this.logger!.info("Initializing browser share mode menu injection");
 
     if (typeof document === "undefined") {
-      this.logger.warn(
+      this.logger!.warn(
         "Document is unavailable; skip initializing browser share mode.",
       );
       return;
@@ -21,9 +21,9 @@ export default class BrowserShareMode extends NoraComponentBase {
 
     // Wait for DOM to be ready if needed
     const tryInit = () => {
-      const menuPopup = document.getElementById("menu_ToolsPopup");
+      const menuPopup = document!.getElementById("menu_ToolsPopup");
       if (!menuPopup) {
-        this.logger.warn(
+        this.logger!.warn(
           "Failed to locate #menu_ToolsPopup; browser share mode menu item will not be injected.",
         );
         return;
@@ -31,8 +31,8 @@ export default class BrowserShareMode extends NoraComponentBase {
       this.injectMenu(menuPopup);
     };
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", tryInit, { once: true });
+    if (document!.readyState === "loading") {
+      document!.addEventListener("DOMContentLoaded", tryInit, { once: true });
     } else {
       tryInit();
     }
@@ -41,18 +41,18 @@ export default class BrowserShareMode extends NoraComponentBase {
   private injectMenu(menuPopup: Element) {
     const existingMenuitem = menuPopup.querySelector("#toggle_sharemode");
     if (existingMenuitem) {
-      this.logger.info(
+      this.logger!.info(
         "Share mode menu item already exists; reusing existing node for render update.",
       );
     }
 
-    const marker = document.getElementById("menu_openFirefoxView");
+    const marker = document!.getElementById("menu_openFirefoxView");
     if (!marker) {
-      this.logger.warn(
+      this.logger!.warn(
         "Marker element #menu_openFirefoxView not found; menu item will be appended without marker.",
       );
     } else if (marker.parentElement !== menuPopup) {
-      this.logger.warn(
+      this.logger!.warn(
         "Marker element #menu_openFirefoxView is not a child of #menu_ToolsPopup; menu item will be appended at the end.",
       );
     }
@@ -62,10 +62,10 @@ export default class BrowserShareMode extends NoraComponentBase {
         marker: marker?.parentElement === menuPopup ? marker : undefined,
         hotCtx: import.meta.hot,
       });
-      this.logger.info("Browser share mode menu item rendered successfully.");
+      this.logger!.info("Browser share mode menu item rendered successfully.");
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
-      this.logger.error("Failed to render share mode menu item", reason);
+      this.logger!.error("Failed to render share mode menu item", reason);
     }
   }
 }
