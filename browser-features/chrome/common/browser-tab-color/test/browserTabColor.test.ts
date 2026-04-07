@@ -21,13 +21,8 @@ import {
 /** Set up globalThis.gFloorp so TabColorManager constructor does not throw */
 function setupGlobals(): void {
   if (!globalThis.gFloorp) {
-    (globalThis as Record<string, unknown>).gFloorp = {};
+    globalThis.gFloorp = {} as typeof globalThis.gFloorp;
   }
-}
-
-/** Remove any style element injected by previous tests */
-function cleanupInjectedStyles(): void {
-  document?.getElementById("floorp-toolbar-bgcolor")?.remove();
 }
 
 // ---------------------------------------------------------------------------
@@ -37,7 +32,8 @@ function cleanupInjectedStyles(): void {
 async function testConstructorCreatesGlobalGFloorp(): Promise<void> {
   delete (globalThis as Record<string, unknown>).gFloorp;
   assertEquals(
-    (globalThis as Record<string, unknown>).gFloorp,
+    (globalThis as Record<string, unknown>).gFloorp as
+      typeof globalThis.gFloorp | undefined,
     undefined,
     "gFloorp should not exist before construction",
   );
@@ -47,7 +43,7 @@ async function testConstructorCreatesGlobalGFloorp(): Promise<void> {
   const mgr = new TabColorManager();
 
   assertNotEquals(
-    (globalThis as Record<string, unknown>).gFloorp,
+    globalThis.gFloorp as typeof globalThis.gFloorp | undefined,
     undefined,
     "gFloorp should be created by constructor",
   );
@@ -74,8 +70,8 @@ async function testConstructorSetsTabColorSetEnable(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
-  const gFloorp = globalThis.gFloorp as Record<string, unknown>;
-  const tabColor = gFloorp.tabColor as Record<string, unknown>;
+  const gFloorp = globalThis.gFloorp;
+  const tabColor = gFloorp.tabColor!;
 
   assertEquals(
     typeof tabColor,
@@ -245,7 +241,7 @@ async function testMultipleInstancesShareGlobalGFloorp(): Promise<void> {
   const mgr2 = new TabColorManager();
 
   // Both should reference the same globalThis.gFloorp
-  const gFloorp = globalThis.gFloorp as Record<string, unknown>;
+  const gFloorp = globalThis.gFloorp;
   assertNotEquals(gFloorp, undefined, "gFloorp should exist");
 
   // The last constructed manager's setEnable should be the active one

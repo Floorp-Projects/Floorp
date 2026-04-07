@@ -45,11 +45,21 @@ interface PanelUI {
   showSubView(id: string, anchor?: Element | null): Promise<void>;
 }
 
+interface GFloorpTabColor {
+  setEnable(enabled: boolean): void;
+}
+
+interface GFloorp {
+  tabColor?: GFloorpTabColor;
+  [key: string]: unknown;
+}
+
 declare global {
   // Gecko globals
   var gBrowser: GBrowser;
   var TabContextMenu: TabContextMenu;
   var PanelUI: PanelUI;
+  var gFloorp: GFloorp;
 
   // Ensure globalThis is augmented for property access like globalThis.gBrowser
   namespace globalThis {
@@ -58,6 +68,7 @@ declare global {
     var gBrowser: GBrowser;
     var TabContextMenu: TabContextMenu;
     var PanelUI: PanelUI;
+    var gFloorp: GFloorp;
   }
 
   // Add custom XUL events we listen to
