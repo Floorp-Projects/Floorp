@@ -104,13 +104,21 @@ async function testCSSEntryUserSheetForUcCss(): Promise<void> {
 async function testCSSEntryProperties(): Promise<void> {
   const { CSSEntry } = await import("../cssEntry.ts");
   const entry = new CSSEntry("test-file.css", TEST_CSS_FOLDER);
-  assertEquals(entry.leafName, "test-file.css", "leafName should match filename");
+  assertEquals(
+    entry.leafName,
+    "test-file.css",
+    "leafName should match filename",
+  );
   assertEquals(
     entry.path,
     PathUtils.join(TEST_CSS_FOLDER, "test-file.css"),
     "path should be joined with folder",
   );
-  assertEquals(entry.lastModifiedTime, 1, "lastModifiedTime should default to 1");
+  assertEquals(
+    entry.lastModifiedTime,
+    1,
+    "lastModifiedTime should default to 1",
+  );
   assertEquals(entry.enabled, false, "enabled should default to false");
 }
 
@@ -141,12 +149,32 @@ async function testCSSEntryMultipleSheetTypes(): Promise<void> {
   const entry3 = new CSSEntry(names[3], TEST_CSS_FOLDER);
   const entry4 = new CSSEntry(names[4], TEST_CSS_FOLDER);
 
-  assertEquals(entry0.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, `${names[0]} → AGENT`);
-  assertEquals(entry1.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, `${names[1]} → AGENT`);
-  assertEquals(entry2.SHEET, Ci.nsIStyleSheetService.AUTHOR_SHEET, `${names[2]} → AUTHOR`);
-  assertEquals(entry3.SHEET, Ci.nsIStyleSheetService.USER_SHEET, `${names[3]} → USER`);
+  assertEquals(
+    entry0.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    `${names[0]} → AGENT`,
+  );
+  assertEquals(
+    entry1.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    `${names[1]} → AGENT`,
+  );
+  assertEquals(
+    entry2.SHEET,
+    Ci.nsIStyleSheetService.AUTHOR_SHEET,
+    `${names[2]} → AUTHOR`,
+  );
+  assertEquals(
+    entry3.SHEET,
+    Ci.nsIStyleSheetService.USER_SHEET,
+    `${names[3]} → USER`,
+  );
   // .AS.CSS is case-insensitive due to /i flag on regex
-  assertEquals(entry4.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, `${names[4]} → AGENT (case insensitive)`);
+  assertEquals(
+    entry4.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    `${names[4]} → AGENT (case insensitive)`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +201,11 @@ async function testServiceNotInitializedByDefault(): Promise<void> {
   const svc = ChromeCSSService.getInstance();
   // Service may or may not be initialized depending on test order,
   // but after reset it should not be
-  assertEquals(svc.initialized, false, "service should not be initialized after reset");
+  assertEquals(
+    svc.initialized,
+    false,
+    "service should not be initialized after reset",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +294,11 @@ async function testLoadCSSCreatesEntry(): Promise<void> {
   const entry = svc.loadCSS("test-load.css", TEST_CSS_FOLDER);
 
   assert(entry !== null, "loadCSS should return an entry");
-  assertEquals(entry.leafName, "test-load.css", "entry should have correct leafName");
+  assertEquals(
+    entry.leafName,
+    "test-load.css",
+    "entry should have correct leafName",
+  );
   assert("test-load.css" in svc.readCSS, "entry should be stored in readCSS");
 }
 
@@ -339,7 +375,11 @@ async function testUpdateCssFilesListEntryReference(): Promise<void> {
   const files = svc.getCssFiles();
 
   assertEquals(files.length, 1, "should have 1 file");
-  assertEquals(files[0].entry, entry, "entry reference should match readCSS entry");
+  assertEquals(
+    files[0].entry,
+    entry,
+    "entry reference should match readCSS entry",
+  );
   assertEquals(files[0].name, "ref-test.css", "name should match");
 }
 
@@ -369,7 +409,11 @@ async function testUninitResetsInitialized(): Promise<void> {
 
   // Even without full init, uninit should set initialized to false
   svc.uninit();
-  assertEquals(svc.initialized, false, "uninit should set initialized to false");
+  assertEquals(
+    svc.initialized,
+    false,
+    "uninit should set initialized to false",
+  );
 }
 
 async function testUninitClearsCssFilesButPreservesReadCSS(): Promise<void> {
@@ -384,7 +428,11 @@ async function testUninitClearsCssFilesButPreservesReadCSS(): Promise<void> {
   svc.initialized = true;
   svc.uninit();
   // uninit clears cssFiles signal but does NOT clear readCSS — entries persist
-  assertEquals(svc.getCssFiles().length, 0, "cssFiles should be empty after uninit");
+  assertEquals(
+    svc.getCssFiles().length,
+    0,
+    "cssFiles should be empty after uninit",
+  );
   assert(
     "cleanup-test.css" in svc.readCSS,
     "readCSS entries persist across uninit (rebuild reuses them)",
@@ -407,10 +455,7 @@ async function testChromeCSSComponentHasInitMethod(): Promise<void> {
 async function testChromeCSSComponentHasStaticCtx(): Promise<void> {
   const mod = await import("../index.ts");
   const ChromeCSS = mod.default;
-  assert(
-    "ctx" in ChromeCSS,
-    "ChromeCSS should have static ctx property",
-  );
+  assert("ctx" in ChromeCSS, "ChromeCSS should have static ctx property");
 }
 
 // ---------------------------------------------------------------------------
@@ -421,18 +466,42 @@ async function testSheetTypeConstants(): Promise<void> {
   const { ChromeCSSService } = await import("../service.tsx");
   const svc = ChromeCSSService.getInstance();
 
-  assertEquals(svc.AGENT_SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, "AGENT_SHEET constant");
-  assertEquals(svc.USER_SHEET, Ci.nsIStyleSheetService.USER_SHEET, "USER_SHEET constant");
-  assertEquals(svc.AUTHOR_SHEET, Ci.nsIStyleSheetService.AUTHOR_SHEET, "AUTHOR_SHEET constant");
+  assertEquals(
+    svc.AGENT_SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    "AGENT_SHEET constant",
+  );
+  assertEquals(
+    svc.USER_SHEET,
+    Ci.nsIStyleSheetService.USER_SHEET,
+    "USER_SHEET constant",
+  );
+  assertEquals(
+    svc.AUTHOR_SHEET,
+    Ci.nsIStyleSheetService.AUTHOR_SHEET,
+    "AUTHOR_SHEET constant",
+  );
 }
 
 async function testSheetTypeConstantsAreDistinct(): Promise<void> {
   const { ChromeCSSService } = await import("../service.tsx");
   const svc = ChromeCSSService.getInstance();
 
-  assertNotEquals(svc.AGENT_SHEET, svc.USER_SHEET, "AGENT and USER should differ");
-  assertNotEquals(svc.AGENT_SHEET, svc.AUTHOR_SHEET, "AGENT and AUTHOR should differ");
-  assertNotEquals(svc.USER_SHEET, svc.AUTHOR_SHEET, "USER and AUTHOR should differ");
+  assertNotEquals(
+    svc.AGENT_SHEET,
+    svc.USER_SHEET,
+    "AGENT and USER should differ",
+  );
+  assertNotEquals(
+    svc.AGENT_SHEET,
+    svc.AUTHOR_SHEET,
+    "AGENT and AUTHOR should differ",
+  );
+  assertNotEquals(
+    svc.USER_SHEET,
+    svc.AUTHOR_SHEET,
+    "USER and AUTHOR should differ",
+  );
 }
 
 // ---------------------------------------------------------------------------
