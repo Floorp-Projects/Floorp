@@ -208,6 +208,7 @@ function testInitNoToolsPopupDoesNotThrow(): void {
 }
 
 function testInitWithToolsPopupCreatesMenu(): void {
+  createMockToolsPopup();
   try {
     // Verify mock DOM structure
     const menuPopup = document!.getElementById("menu_ToolsPopup");

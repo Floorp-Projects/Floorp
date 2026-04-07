@@ -33,7 +33,8 @@ async function testConstructorCreatesGlobalGFloorp(): Promise<void> {
   delete (globalThis as Record<string, unknown>).gFloorp;
   assertEquals(
     (globalThis as Record<string, unknown>).gFloorp as
-      typeof globalThis.gFloorp | undefined,
+      | typeof globalThis.gFloorp
+      | undefined,
     undefined,
     "gFloorp should not exist before construction",
   );
@@ -246,18 +247,10 @@ async function testMultipleInstancesShareGlobalGFloorp(): Promise<void> {
 
   // The last constructed manager's setEnable should be the active one
   mgr1.setEnableTabColor(true);
-  assertEquals(
-    mgr1.enableTabColor(),
-    true,
-    "mgr1 should be true",
-  );
+  assertEquals(mgr1.enableTabColor(), true, "mgr1 should be true");
 
   mgr2.setEnableTabColor(false);
-  assertEquals(
-    mgr2.enableTabColor(),
-    false,
-    "mgr2 should be false",
-  );
+  assertEquals(mgr2.enableTabColor(), false, "mgr2 should be false");
 
   // mgr1's signal is independent
   assertEquals(
@@ -293,11 +286,7 @@ async function testInitDoesNotThrow(): Promise<void> {
   } catch {
     threw = true;
   }
-  assertEquals(
-    threw,
-    false,
-    "init() should not throw",
-  );
+  assertEquals(threw, false, "init() should not throw");
 }
 
 // ---------------------------------------------------------------------------

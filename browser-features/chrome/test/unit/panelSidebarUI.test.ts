@@ -123,7 +123,7 @@ function testPanelSidebarDisplayVariable(): void {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  await runTests("panelSidebarUI.test.ts", [
+  const tests: TestCase[] = [
     { name: "panel sidebar box presence", fn: testPanelSidebarBoxPresence },
     { name: "panel sidebar box dimensions", fn: testPanelSidebarBoxDimensions },
     { name: "panel sidebar select box", fn: testPanelSidebarSelectBox },
@@ -135,5 +135,8 @@ export async function runAllTests(): Promise<void> {
       name: "panel sidebar display CSS variable",
       fn: testPanelSidebarDisplayVariable,
     },
-  ]);
+  ];
+
+  const { runTests } = await import("../utils/test_harness.ts");
+  await runTests("panelSidebarUI.test.ts", tests);
 }
