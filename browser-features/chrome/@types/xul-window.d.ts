@@ -26,6 +26,15 @@ interface GBrowser {
   pinTab(tab: XULElement): void;
   tabGroups: Array<{ tabs: XULElement[]; style: { display: string } }>;
   tabContainer: EventTarget;
+  selectedBrowser: {
+    currentURI?: { spec: string };
+  };
+  addTabsProgressListener(
+    listener: Pick<nsIWebProgressListener, "onLocationChange">,
+  ): void;
+  removeTabsProgressListener(
+    listener: Pick<nsIWebProgressListener, "onLocationChange">,
+  ): void;
 }
 
 interface TabContextMenu {

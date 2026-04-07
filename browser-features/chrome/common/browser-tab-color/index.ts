@@ -18,12 +18,9 @@ export let manager: TabColorManager;
 export default class BrowserTabColor extends NoraComponentBase {
   init() {
     // Check if gBrowser is available
-    const gBrowser =
-      globalThis.gBrowser ??
-      (window as typeof window & { gBrowser?: typeof globalThis.gBrowser })
-        .gBrowser;
+    const gBrowser = globalThis.gBrowser;
     if (!gBrowser) {
-      this.logger.warn(
+      this.logger!.warn(
         "gBrowser is not available; browser tab color feature will not be initialized.",
       );
       return;
@@ -31,7 +28,12 @@ export default class BrowserTabColor extends NoraComponentBase {
 
     const _changeTabColor = this.changeTabColor.bind(this);
     const listener = {
-      onLocationChange: (_webProgress, _request, _location, _flags) => {
+      onLocationChange(
+        _webProgress: nsIWebProgress,
+        _request: nsIRequest,
+        _location: nsIURI,
+        _flags?: u32,
+      ) {
         _changeTabColor();
       },
     } satisfies Pick<nsIWebProgressListener, "onLocationChange">;
@@ -65,7 +67,7 @@ export default class BrowserTabColor extends NoraComponentBase {
     getManifest().then((res) => {
       document?.getElementById("floorp-toolbar-bgcolor")?.remove();
       if (res != null) {
-        const elem = document.createElement("style");
+        const elem = document!.createElement("style");
         const styleSheet = `
           :root {
               --floorp-tab-panel-bg-color: ${res.theme_color};
@@ -98,10 +100,7 @@ export default class BrowserTabColor extends NoraComponentBase {
 }
 
 async function getManifest() {
-  const gBrowser =
-    globalThis.gBrowser ??
-    (window as typeof window & { gBrowser?: typeof globalThis.gBrowser })
-      .gBrowser;
+  const gBrowser = globalThis.gBrowser;
   if (!gBrowser?.selectedBrowser) {
     return null;
   }
