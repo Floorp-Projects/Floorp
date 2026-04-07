@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, type TestCase } from "../utils/test_harness.ts";
+import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — Panel sidebar DOM structure

@@ -177,11 +177,25 @@ export default async function runBrowserTests(): Promise<void> {
     );
 
     // Pages layer tests (via #features-pages alias)
+    // Use eager loading to avoid @fs dynamic import issues in Firefox
     const pagesTests = import.meta.glob(
       "#features-pages/pages-*/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
+      { eager: true },
     );
 
-    const allTests = { ...chromeTests, ...esmTests, ...pagesTests };
+    // Merge eager pages tests into lazy-format for uniform processing
+    type EagerModule = Record<string, unknown>;
+    const allTests: Record<string, LazyModule> = {
+      ...chromeTests,
+      ...esmTests,
+    };
+    // Wrap eager pages modules as lazy loaders for uniform handling
+    for (const [path, mod] of Object.entries(
+      pagesTests as Record<string, EagerModule>,
+    )) {
+      allTests[path] = () => Promise.resolve(mod);
+    }
+
     const entries = Object.entries(allTests) as Array<[string, LazyModule]>;
     discoveredFiles.push(
       ...entries.map(([file]) => file).sort((a, b) => a.localeCompare(b)),
