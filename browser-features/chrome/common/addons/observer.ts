@@ -108,7 +108,7 @@ export function clearChromeWebStoreInstallInfo(): void {
   // Also clear window install info from all windows
   const win = window as ChromeWebStoreWindow;
   delete win.__chromeWebStoreInstallInfo;
-  
+
   // Also try to clear from the global scope
   const global = getGlobalScope() as ChromeWebStoreWindow;
   delete global.__chromeWebStoreInstallInfo;
@@ -125,7 +125,7 @@ export function saveOriginalDescriptionChildren(): void {
     return;
   }
 
-  const notification = document.getElementById(
+  const notification = document!.getElementById(
     "addon-webext-permissions-notification",
   );
   if (!notification) {
@@ -136,9 +136,9 @@ export function saveOriginalDescriptionChildren(): void {
     ".popup-notification-description",
   );
   if (descriptionContainer) {
-    ctx.savedDescriptionChildren = Array.from(descriptionContainer.childNodes).map(
-      (node) => node.cloneNode(true),
-    );
+    ctx.savedDescriptionChildren = Array.from(
+      descriptionContainer.childNodes,
+    ).map((node) => node!.cloneNode(true));
   }
 }
 
@@ -150,7 +150,7 @@ export function saveOriginalDescriptionChildren(): void {
  */
 function cleanupCWSCustomization(): void {
   const ctx = getGlobalContext();
-  const notification = document.getElementById(
+  const notification = document!.getElementById(
     "addon-webext-permissions-notification",
   );
   if (!notification) {
@@ -161,12 +161,14 @@ function cleanupCWSCustomization(): void {
   const descriptionContainer = notification.querySelector(
     ".popup-notification-description",
   );
-  const cwsMessage = descriptionContainer?.querySelector(".chrome-web-store-message");
-  
+  const cwsMessage = descriptionContainer?.querySelector(
+    ".chrome-web-store-message",
+  );
+
   if (cwsMessage && descriptionContainer) {
     // Remove all current children
     descriptionContainer.textContent = "";
-    
+
     // Restore saved original children if available
     if (ctx.savedDescriptionChildren !== null) {
       for (const child of ctx.savedDescriptionChildren) {
@@ -229,7 +231,6 @@ export function createCWSObserver(
         const cwsInfo = getChromeWebStoreInstallInfo();
 
         if (cwsInfo) {
-
           // Create a new customizer for this window context if needed
           const getOrCreateCustomizer = (): NotificationCustomizer => {
             const ctx = getGlobalContext();
@@ -254,7 +255,7 @@ export function createCWSObserver(
               // Clean up CWS-specific elements from DOM directly
               // Firefox has already populated the dialog with the correct addon info
               cleanupCWSCustomization();
-              
+
               // Also ensure install info is cleared
               clearChromeWebStoreInstallInfo();
             });

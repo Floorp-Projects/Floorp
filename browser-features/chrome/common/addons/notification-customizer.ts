@@ -103,7 +103,7 @@ export class NotificationCustomizer {
    * Customize the notification content for Chrome extensions
    */
   customizeNotificationContent(cwsInfo: ChromeWebStoreInstallInfo): void {
-    const notification = document.getElementById(
+    const notification = document!.getElementById(
       "addon-install-confirmation-notification",
     );
     if (!notification) {
@@ -128,7 +128,7 @@ export class NotificationCustomizer {
         ".chrome-web-store-message",
       ) as HTMLElement | null;
       if (!messageElement) {
-        messageElement = document.createElement("span");
+        messageElement = document!.createElement("span");
         messageElement.className = "chrome-web-store-message";
         descriptionContainer.textContent = "";
         descriptionContainer.appendChild(messageElement);
@@ -144,7 +144,7 @@ export class NotificationCustomizer {
    * Customize the webextension permission prompt for Chrome extensions
    */
   customizeWebExtPermissionPrompt(cwsInfo: ChromeWebStoreInstallInfo): void {
-    const notification = document.getElementById(
+    const notification = document!.getElementById(
       "addon-webext-permissions-notification",
     );
 
@@ -171,14 +171,14 @@ export class NotificationCustomizer {
       if (this.originalDescriptionChildren === null) {
         this.originalDescriptionChildren = Array.from(
           descriptionContainer.childNodes,
-        ).map((node) => node.cloneNode(true));
+        ).map((node) => node!.cloneNode(true));
       }
 
       let messageElement = descriptionContainer.querySelector(
         ".chrome-web-store-message",
       ) as HTMLElement | null;
       if (!messageElement) {
-        messageElement = document.createElement("span");
+        messageElement = document!.createElement("span");
         messageElement.className = "chrome-web-store-message";
         descriptionContainer.textContent = "";
         descriptionContainer.appendChild(messageElement);
@@ -206,7 +206,7 @@ export class NotificationCustomizer {
    * Restore the original content of the permission prompt
    */
   restoreOriginalContent(): void {
-    const notification = document.getElementById(
+    const notification = document!.getElementById(
       "addon-webext-permissions-notification",
     );
     if (!notification) {
@@ -252,7 +252,7 @@ export class NotificationCustomizer {
       return;
     }
 
-    const addonList = document.getElementById(
+    const addonList = document!.getElementById(
       "addon-install-confirmation-content",
     );
     if (!addonList) {
@@ -264,7 +264,7 @@ export class NotificationCustomizer {
       ".addon-install-confirmation-name",
     );
     for (const nameElement of nameElements) {
-      const badge = document.createXULElement("label") as XULElement;
+      const badge = document!.createXULElement("label") as XULElement;
       badge.setAttribute("value", texts.chromeBadge);
       badge.setAttribute("class", "chrome-extension-badge");
       (badge as XULElement & { style: CSSStyleDeclaration }).style.cssText =
@@ -282,7 +282,7 @@ export class NotificationCustomizer {
     }
 
     const texts = this.texts();
-    const warning = document.createXULElement("description") as XULElement;
+    const warning = document!.createXULElement("description") as XULElement;
     warning.setAttribute("class", "chrome-extension-warning");
     (warning as XULElement & { style: CSSStyleDeclaration }).style.cssText =
       "color: #f9ab00; font-size: 1.0em; margin-top: 8px; padding: 4px 8px; background: rgba(249, 171, 0, 0.1); border-radius: 4px;";
