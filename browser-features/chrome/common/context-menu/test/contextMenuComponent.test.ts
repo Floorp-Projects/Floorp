@@ -4,7 +4,6 @@
 import {
   assert,
   assertEquals,
-  assertNotEquals,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
@@ -34,11 +33,11 @@ function cleanupDOM(): void {
 
 /** Track popupshowing listener additions/removals */
 let popupListenerAdded = false;
-let popupListenerRemoved = false;
+let _popupListenerRemoved = false;
 
 function resetListenerTracking(): void {
   popupListenerAdded = false;
-  popupListenerRemoved = false;
+  _popupListenerRemoved = false;
 }
 
 /**
@@ -53,14 +52,20 @@ function wrapContextMenuForTracking(): void {
   const origRemove = menu.removeEventListener.bind(menu);
 
   // deno-lint-ignore no-explicit-any
-  (menu as any).addEventListener = (type: string, _listener: EventListenerOrEventListenerObject) => {
+  (menu as any).addEventListener = (
+    type: string,
+    _listener: EventListenerOrEventListenerObject,
+  ) => {
     if (type === "popupshowing") popupListenerAdded = true;
     return origAdd(type, _listener);
   };
 
   // deno-lint-ignore no-explicit-any
-  (menu as any).removeEventListener = (type: string, _listener: EventListenerOrEventListenerObject) => {
-    if (type === "popupshowing") popupListenerRemoved = true;
+  (menu as any).removeEventListener = (
+    type: string,
+    _listener: EventListenerOrEventListenerObject,
+  ) => {
+    if (type === "popupshowing") _popupListenerRemoved = true;
     return origRemove(type, _listener);
   };
 }
@@ -144,11 +149,10 @@ async function testInitDoesNotThrowWithoutContextMenu(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function testContentAreaContextMenuReturnsCorrectElement(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
-  const mock = createMockContentAreaContextMenu();
+  createMockContentAreaContextMenu();
 
   const result = ContextMenuUtils.contentAreaContextMenu();
   assert(result !== null, "contentAreaContextMenu should return non-null");
@@ -161,9 +165,8 @@ async function testContentAreaContextMenuReturnsCorrectElement(): Promise<void> 
 }
 
 async function testContentAreaContextMenuReturnsNullWhenAbsent(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
 
   const result = ContextMenuUtils.contentAreaContextMenu();
@@ -179,9 +182,8 @@ async function testContentAreaContextMenuReturnsNullWhenAbsent(): Promise<void> 
 // ---------------------------------------------------------------------------
 
 async function testOnPopupShowingDoesNotThrow(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -196,9 +198,8 @@ async function testOnPopupShowingDoesNotThrow(): Promise<void> {
 }
 
 async function testOnPopupShowingDoesNotThrowWithoutMenu(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
 
   let threw = false;
@@ -207,16 +208,12 @@ async function testOnPopupShowingDoesNotThrowWithoutMenu(): Promise<void> {
   } catch {
     threw = true;
   }
-  assert(
-    !threw,
-    "onPopupShowing should not throw when context menu is absent",
-  );
+  assert(!threw, "onPopupShowing should not throw when context menu is absent");
 }
 
 async function testOnPopupShowingHidesAdjacentSeparators(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -242,9 +239,8 @@ async function testOnPopupShowingHidesAdjacentSeparators(): Promise<void> {
 }
 
 async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -269,9 +265,8 @@ async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
 }
 
 async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -296,9 +291,8 @@ async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
 }
 
 async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -326,9 +320,8 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
 // ---------------------------------------------------------------------------
 
 async function testAddContextBoxRequiresCheckElement(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -360,9 +353,8 @@ async function testAddContextBoxRequiresCheckElement(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function testAddToolbarContentMenuPopupSetDoesNotThrow(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
+  const { ContextMenuUtils } =
+    await import("#features-chrome/utils/context-menu.tsx");
 
   let threw = false;
   try {
