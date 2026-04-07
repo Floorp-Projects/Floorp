@@ -218,7 +218,7 @@ async function testOnPopupShowingHidesAdjacentSeparators(): Promise<void> {
   const menu = createMockContentAreaContextMenu();
 
   // Add a separator followed by a hidden element
-  const sep = document!.createElement("div");
+  const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-test";
   menu.appendChild(sep);
 
@@ -245,7 +245,7 @@ async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
   const menu = createMockContentAreaContextMenu();
 
   // context-sep-navigation should NOT be hidden
-  const sep = document!.createElement("div");
+  const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-navigation";
   sep.hidden = false;
   menu.appendChild(sep);
@@ -271,7 +271,7 @@ async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
   const menu = createMockContentAreaContextMenu();
 
   // context-sep-pdfjs-selectall should NOT be hidden
-  const sep = document!.createElement("div");
+  const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-pdfjs-selectall";
   sep.hidden = false;
   menu.appendChild(sep);
@@ -296,7 +296,7 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
-  const sep = document!.createElement("div");
+  const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-visible-test";
   sep.hidden = false;
   menu.appendChild(sep);
