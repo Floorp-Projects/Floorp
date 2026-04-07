@@ -198,6 +198,56 @@ function testTabbarPositionBottomWindow(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tests — edge cases (invalid / unknown values)
+// ---------------------------------------------------------------------------
+
+function testInterfaceInvalidValueReturnsLepton(): void {
+  withIntPref("floorp.browser.user.interface", 99, () => {
+    assertEquals(
+      getOldInterfaceConfig(),
+      "lepton",
+      "invalid interface value should default to lepton",
+    );
+  });
+}
+
+function testInterfaceCase3InvalidLeptonReturnsLepton(): void {
+  withIntPrefs(
+    [
+      ["floorp.browser.user.interface", 3],
+      ["floorp.lepton.interface", 99],
+    ],
+    () => {
+      assertEquals(
+        getOldInterfaceConfig(),
+        "lepton",
+        "interface=3, lepton=99 should default to lepton",
+      );
+    },
+  );
+}
+
+function testTabbarStyleInvalidValueReturnsHorizontal(): void {
+  withIntPref("floorp.tabbar.style", 99, () => {
+    assertEquals(
+      getOldTabbarStyleConfig(),
+      "horizontal",
+      "invalid style value should default to horizontal",
+    );
+  });
+}
+
+function testTabbarPositionInvalidValueReturnsDefault(): void {
+  withIntPref("floorp.browser.tabbar.settings", 99, () => {
+    assertEquals(
+      getOldTabbarPositionConfig(),
+      "default",
+      "invalid position value should default to 'default'",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -224,6 +274,23 @@ export async function runAllTests(): Promise<void> {
     {
       name: "tabbar position 4 → bottom-window",
       fn: testTabbarPositionBottomWindow,
+    },
+    // Edge cases
+    {
+      name: "interface invalid → lepton",
+      fn: testInterfaceInvalidValueReturnsLepton,
+    },
+    {
+      name: "interface 3+invalid → lepton",
+      fn: testInterfaceCase3InvalidLeptonReturnsLepton,
+    },
+    {
+      name: "tabbar style invalid → horizontal",
+      fn: testTabbarStyleInvalidValueReturnsHorizontal,
+    },
+    {
+      name: "tabbar position invalid → default",
+      fn: testTabbarPositionInvalidValueReturnsDefault,
     },
   ];
 

@@ -3,8 +3,8 @@
 
 import { applyUserJS } from "../utils/userjs-parser.ts";
 import {
+  assert,
   type TestCase,
-  type assert,
   assertEquals,
 } from "../../../test/utils/test_harness.ts";
 
@@ -13,26 +13,12 @@ const P = "test.userjsparser.";
 
 function clearTestPrefs(): void {
   const branch = Services.prefs.getDefaultBranch("");
-  for (const suffix of [
-    "bool",
-    "string",
-    "int",
-    "multiline",
-    "a",
-    "b",
-    "c",
-    "comma",
-  ]) {
-    try {
-      branch.clearUserPref(`${P}${suffix}`);
-    } catch {
-      // pref may not exist — ignore
-    }
-    try {
-      Services.prefs.clearUserPref(`${P}${suffix}`);
-    } catch {
-      // ignore
-    }
+  // Use deleteBranch on the default branch to clear prefs set by applyUserJS,
+  // because applyUserJS writes to the default branch (not user branch).
+  try {
+    branch.deleteBranch(P);
+  } catch {
+    // branch may not exist — ignore
   }
 }
 
@@ -148,6 +134,83 @@ function testEmptyInput(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tests — edge cases
+// ---------------------------------------------------------------------------
+
+function testNegativeIntValue(): void {
+  clearTestPrefs();
+  applyUserJS(`user_pref("${P}int", -1);`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getIntPref(`${P}int`, 0),
+    -1,
+    "negative int value should be applied",
+  );
+}
+
+function testEscapedQuotesInString(): void {
+  clearTestPrefs();
+  applyUserJS(`user_pref("${P}string", "hello \\"world\\"");`);
+  // The parser strips surrounding quotes, inner \" becomes hello \"world\"
+  const result = Services.prefs
+    .getDefaultBranch("")
+    .getStringPref(`${P}string`, "");
+  assert(
+    result.includes("hello"),
+    "escaped quotes string should contain 'hello'",
+  );
+}
+
+function testWhitespaceBetweenUserPrefAndParen(): void {
+  clearTestPrefs();
+  applyUserJS(`user_pref  ("${P}bool", true);`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getBoolPref(`${P}bool`, false),
+    true,
+    "whitespace between user_pref and ( should still parse",
+  );
+}
+
+function testStarCommentLine(): void {
+  clearTestPrefs();
+  applyUserJS(`* user_pref("${P}bool", true);`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getBoolPref(`${P}bool`, false),
+    false,
+    "star-commented line should not be applied",
+  );
+}
+
+function testIgnoreNonUserPrefLines(): void {
+  clearTestPrefs();
+  applyUserJS(`lockPref("${P}bool", true);`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getBoolPref(`${P}bool`, false),
+    false,
+    "lockPref should be ignored",
+  );
+}
+
+function testUnicodeStringValue(): void {
+  clearTestPrefs();
+  applyUserJS(`user_pref("${P}string", "こんにちは世界");`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getStringPref(`${P}string`, ""),
+    "こんにちは世界",
+    "unicode string value should be applied",
+  );
+}
+
+function testSemicolonInStringValue(): void {
+  clearTestPrefs();
+  applyUserJS(`user_pref("${P}string", "a;b;c");`);
+  assertEquals(
+    Services.prefs.getDefaultBranch("").getStringPref(`${P}string`, ""),
+    "a;b;c",
+    "semicolon inside string value should be preserved",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -163,6 +226,17 @@ export async function runAllTests(): Promise<void> {
     { name: "multiple prefs", fn: testMultiplePrefs },
     { name: "comma in string value", fn: testCommaInString },
     { name: "empty input", fn: testEmptyInput },
+    // Edge cases
+    { name: "negative int value", fn: testNegativeIntValue },
+    { name: "escaped quotes in string", fn: testEscapedQuotesInString },
+    {
+      name: "whitespace between user_pref and paren",
+      fn: testWhitespaceBetweenUserPrefAndParen,
+    },
+    { name: "star comment line", fn: testStarCommentLine },
+    { name: "ignore non-user_pref lines", fn: testIgnoreNonUserPrefLines },
+    { name: "unicode string value", fn: testUnicodeStringValue },
+    { name: "semicolon in string value", fn: testSemicolonInStringValue },
   ];
 
   const failures: string[] = [];
