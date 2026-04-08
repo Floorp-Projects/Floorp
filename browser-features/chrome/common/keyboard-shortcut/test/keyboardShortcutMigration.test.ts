@@ -149,7 +149,7 @@ function testClearLegacyConfigNoOp(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "no pref → null", fn: testNoPrefReturnsNull },
     {
