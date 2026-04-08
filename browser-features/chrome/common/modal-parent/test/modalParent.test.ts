@@ -159,7 +159,10 @@ const tests: TestCase[] = [
   { name: "hideNoraModal does not crash", fn: testHideNoraModalDoesNotCrash },
   { name: "setModalSize does not crash", fn: testSetModalSizeDoesNotCrash },
   { name: "minimal TForm is valid", fn: testMinimalTFormIsValid },
-  { name: "TForm with submit/cancel labels", fn: testTFormWithSubmitCancelLabels },
+  {
+    name: "TForm with submit/cancel labels",
+    fn: testTFormWithSubmitCancelLabels,
+  },
   { name: "TFormItem supports 8 types", fn: testTFormItemAllTypes },
   { name: "TFormResult key-value", fn: testTFormResultKeyValue },
 ];

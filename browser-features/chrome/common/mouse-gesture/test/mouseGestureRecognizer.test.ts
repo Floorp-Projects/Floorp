@@ -108,12 +108,12 @@ function testAngleToDirectionDiagonals(): void {
     "PI/4 should be downRight",
   );
   assertEquals(
-    angleToDirection(3 * Math.PI / 4),
+    angleToDirection((3 * Math.PI) / 4),
     "downLeft",
     "3PI/4 should be downLeft",
   );
   assertEquals(
-    angleToDirection(-3 * Math.PI / 4),
+    angleToDirection((-3 * Math.PI) / 4),
     "upLeft",
     "-3PI/4 should be upLeft",
   );
@@ -179,7 +179,11 @@ function testPointConversion(): void {
 
 function testConvertPatternSingleDirection(): void {
   const points = convertPatternToPoints(["left"], 50, 5);
-  assertEquals(points.length, 6, "single direction should produce pointsPerSegment+1");
+  assertEquals(
+    points.length,
+    6,
+    "single direction should produce pointsPerSegment+1",
+  );
   assertApprox(points[0].X, 0, 0.001, "start X");
   assertApprox(points[0].Y, 0, 0.001, "start Y");
   assertApprox(points[5].X, -50, 0.1, "end X should be -50");
@@ -341,14 +345,25 @@ function testExtractDirectionSequenceSingleLine(): void {
 function testExtractDirectionSequenceVertical(): void {
   const trail = buildLineTrail(0, 200, 0, 0);
   const sequence = extractDirectionSequence(trail, 20);
-  assertEquals(sequence.length, 1, "vertical line should produce one direction");
+  assertEquals(
+    sequence.length,
+    1,
+    "vertical line should produce one direction",
+  );
   assertEquals(sequence[0], "up", "upward line should be up");
 }
 
 function testExtractDirectionSequenceTooShort(): void {
-  const trail = [{ x: 0, y: 0 }, { x: 5, y: 5 }];
+  const trail = [
+    { x: 0, y: 0 },
+    { x: 5, y: 5 },
+  ];
   const sequence = extractDirectionSequence(trail, 20);
-  assertEquals(sequence.length, 0, "trail shorter than minSegmentLength should be empty");
+  assertEquals(
+    sequence.length,
+    0,
+    "trail shorter than minSegmentLength should be empty",
+  );
 }
 
 function testExtractDirectionSequenceEmptyTrail(): void {
@@ -358,12 +373,16 @@ function testExtractDirectionSequenceEmptyTrail(): void {
 
 function testExtractDirectionSequenceSinglePoint(): void {
   const sequence = extractDirectionSequence([{ x: 0, y: 0 }], 20);
-  assertEquals(sequence.length, 0, "single point should produce empty sequence");
+  assertEquals(
+    sequence.length,
+    0,
+    "single point should produce empty sequence",
+  );
 }
 
 function testExtractDirectionSequenceZigzag(): void {
   const zigzagTrail = joinTrails(
-    buildLineTrail(0, 0, 150, 0),    // right
+    buildLineTrail(0, 0, 150, 0), // right
     buildLineTrail(150, 0, 150, 150), // down
     buildLineTrail(150, 150, 0, 150), // left
   );
@@ -451,9 +470,7 @@ function testRecognizeWithGeometricPaths(): void {
 }
 
 function testRecognizeLeftStraightLine(): void {
-  const actions: GestureAction[] = [
-    { pattern: ["left"], action: "go-back" },
-  ];
+  const actions: GestureAction[] = [{ pattern: ["left"], action: "go-back" }];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const leftTrail = buildLineTrail(200, 0, 0, 0);
   const result = recognize(recognizer, leftTrail, 0.7, shapeDb);
@@ -463,9 +480,7 @@ function testRecognizeLeftStraightLine(): void {
 }
 
 function testRecognizeUpStraightLine(): void {
-  const actions: GestureAction[] = [
-    { pattern: ["up"], action: "scroll-top" },
-  ];
+  const actions: GestureAction[] = [{ pattern: ["up"], action: "scroll-top" }];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const upTrail = buildLineTrail(0, 200, 0, 0);
   const result = recognize(recognizer, upTrail, 0.7, shapeDb);
@@ -555,27 +570,21 @@ function testSimplePatternsStayOutOfDollarRecognizer(): void {
 }
 
 function testRecognizeShortTrailReturnsNull(): void {
-  const actions: GestureAction[] = [
-    { pattern: ["left"], action: "go-back" },
-  ];
+  const actions: GestureAction[] = [{ pattern: ["left"], action: "go-back" }];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const result = recognize(recognizer, [{ x: 0, y: 0 }], 0.7, shapeDb);
   assertEquals(result, null, "single-point trail should return null");
 }
 
 function testRecognizeEmptyTrailReturnsNull(): void {
-  const actions: GestureAction[] = [
-    { pattern: ["left"], action: "go-back" },
-  ];
+  const actions: GestureAction[] = [{ pattern: ["left"], action: "go-back" }];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const result = recognize(recognizer, [], 0.7, shapeDb);
   assertEquals(result, null, "empty trail should return null");
 }
 
 function testRecognizeUnconfiguredOscillationReturnsNull(): void {
-  const actions: GestureAction[] = [
-    { pattern: ["left"], action: "go-back" },
-  ];
+  const actions: GestureAction[] = [{ pattern: ["left"], action: "go-back" }];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const oscillationTrail = joinTrails(
     buildLineTrail(0, 120, 0, 0),
@@ -609,13 +618,17 @@ function testRecognizeMultiSegmentSequence(): void {
   ];
   const { recognizer, shapeDb } = createRecognizer(actions);
   const trail = joinTrails(
-    buildLineTrail(0, 0, 0, 160),     // down
-    buildLineTrail(0, 160, 160, 160),  // right
-    buildLineTrail(160, 160, 160, 0),  // up
+    buildLineTrail(0, 0, 0, 160), // down
+    buildLineTrail(0, 160, 160, 160), // right
+    buildLineTrail(160, 160, 160, 0), // up
   );
   const result = recognize(recognizer, trail, 0.7, shapeDb);
   assert(result !== null, "down-right-up should be recognized");
-  assertEquals(result.patternName, "down-right-up", "should match down-right-up");
+  assertEquals(
+    result.patternName,
+    "down-right-up",
+    "should match down-right-up",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -630,42 +643,102 @@ export async function runAllTests(): Promise<void> {
     { name: "angleToDirection boundary", fn: testAngleToDirectionBoundary },
     { name: "deltaToDirection cardinal", fn: testDeltaToDirectionCardinal },
     { name: "deltaToDirection diagonal", fn: testDeltaToDirectionDiagonal },
-    { name: "deltaToDirection small values", fn: testDeltaToDirectionSmallValues },
+    {
+      name: "deltaToDirection small values",
+      fn: testDeltaToDirectionSmallValues,
+    },
     // convertPatternToPoints / convertTrailToPoints
     { name: "point conversion", fn: testPointConversion },
-    { name: "convertPattern single direction", fn: testConvertPatternSingleDirection },
+    {
+      name: "convertPattern single direction",
+      fn: testConvertPatternSingleDirection,
+    },
     { name: "convertPattern diagonal", fn: testConvertPatternDiagonal },
-    { name: "convertPattern three directions", fn: testConvertPatternThreeDirections },
+    {
+      name: "convertPattern three directions",
+      fn: testConvertPatternThreeDirections,
+    },
     { name: "convertTrailToPoints", fn: testConvertTrailToPoints },
     { name: "convertTrailToPoints empty", fn: testConvertTrailToPointsEmpty },
     { name: "convertTrailToPoints single", fn: testConvertTrailToPointsSingle },
     // createRecognizer
     { name: "recognizer creation", fn: testRecognizerCreation },
-    { name: "simple patterns only", fn: testCreateRecognizerSimplePatternsOnly },
-    { name: "complex patterns register templates", fn: testCreateRecognizerComplexPatternRegistersTemplates },
+    {
+      name: "simple patterns only",
+      fn: testCreateRecognizerSimplePatternsOnly,
+    },
+    {
+      name: "complex patterns register templates",
+      fn: testCreateRecognizerComplexPatternRegistersTemplates,
+    },
     { name: "empty actions", fn: testCreateRecognizerEmptyActions },
-    { name: "empty pattern skipped", fn: testCreateRecognizerEmptyPatternSkipped },
+    {
+      name: "empty pattern skipped",
+      fn: testCreateRecognizerEmptyPatternSkipped,
+    },
     // extractDirectionSequence
     { name: "extract direction sequence", fn: testExtractDirectionSequence },
-    { name: "extract sequence single line", fn: testExtractDirectionSequenceSingleLine },
-    { name: "extract sequence vertical", fn: testExtractDirectionSequenceVertical },
-    { name: "extract sequence too short", fn: testExtractDirectionSequenceTooShort },
-    { name: "extract sequence empty trail", fn: testExtractDirectionSequenceEmptyTrail },
-    { name: "extract sequence single point", fn: testExtractDirectionSequenceSinglePoint },
+    {
+      name: "extract sequence single line",
+      fn: testExtractDirectionSequenceSingleLine,
+    },
+    {
+      name: "extract sequence vertical",
+      fn: testExtractDirectionSequenceVertical,
+    },
+    {
+      name: "extract sequence too short",
+      fn: testExtractDirectionSequenceTooShort,
+    },
+    {
+      name: "extract sequence empty trail",
+      fn: testExtractDirectionSequenceEmptyTrail,
+    },
+    {
+      name: "extract sequence single point",
+      fn: testExtractDirectionSequenceSinglePoint,
+    },
     { name: "extract sequence zigzag", fn: testExtractDirectionSequenceZigzag },
     // recognize
-    { name: "recognize with geometric paths", fn: testRecognizeWithGeometricPaths },
+    {
+      name: "recognize with geometric paths",
+      fn: testRecognizeWithGeometricPaths,
+    },
     { name: "recognize left straight line", fn: testRecognizeLeftStraightLine },
     { name: "recognize up straight line", fn: testRecognizeUpStraightLine },
     { name: "recognize down straight line", fn: testRecognizeDownStraightLine },
-    { name: "recognize oscillating horizontal", fn: testRecognizeOscillatingHorizontal },
-    { name: "recognize right-left oscillation", fn: testRecognizeRightLeftOscillation },
-    { name: "unconfigured simple pattern returns null", fn: testUnconfiguredSimplePatternReturnsNull },
-    { name: "simple patterns stay out of $1 recognizer", fn: testSimplePatternsStayOutOfDollarRecognizer },
-    { name: "recognize short trail returns null", fn: testRecognizeShortTrailReturnsNull },
-    { name: "recognize empty trail returns null", fn: testRecognizeEmptyTrailReturnsNull },
-    { name: "recognize unconfigured oscillation returns null", fn: testRecognizeUnconfiguredOscillationReturnsNull },
+    {
+      name: "recognize oscillating horizontal",
+      fn: testRecognizeOscillatingHorizontal,
+    },
+    {
+      name: "recognize right-left oscillation",
+      fn: testRecognizeRightLeftOscillation,
+    },
+    {
+      name: "unconfigured simple pattern returns null",
+      fn: testUnconfiguredSimplePatternReturnsNull,
+    },
+    {
+      name: "simple patterns stay out of $1 recognizer",
+      fn: testSimplePatternsStayOutOfDollarRecognizer,
+    },
+    {
+      name: "recognize short trail returns null",
+      fn: testRecognizeShortTrailReturnsNull,
+    },
+    {
+      name: "recognize empty trail returns null",
+      fn: testRecognizeEmptyTrailReturnsNull,
+    },
+    {
+      name: "recognize unconfigured oscillation returns null",
+      fn: testRecognizeUnconfiguredOscillationReturnsNull,
+    },
     { name: "recognize L-shape sequence", fn: testRecognizeLShapeSequence },
-    { name: "recognize multi-segment sequence", fn: testRecognizeMultiSegmentSequence },
+    {
+      name: "recognize multi-segment sequence",
+      fn: testRecognizeMultiSegmentSequence,
+    },
   ]);
 }

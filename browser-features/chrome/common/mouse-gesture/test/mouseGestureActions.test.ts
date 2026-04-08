@@ -62,8 +62,14 @@ const tests: TestCase[] = [
     fn() {
       const actions = getAllGestureActions();
       const names = actions.map((a) => a.name);
-      assert(names.includes("gecko-open-new-tab"), "should include gecko-open-new-tab action");
-      assert(names.includes("gecko-close-tab"), "should include gecko-close-tab action");
+      assert(
+        names.includes("gecko-open-new-tab"),
+        "should include gecko-open-new-tab action",
+      );
+      assert(
+        names.includes("gecko-close-tab"),
+        "should include gecko-close-tab action",
+      );
     },
   },
 
@@ -113,7 +119,11 @@ const tests: TestCase[] = [
     fn() {
       const map = gestureActions.getAllActions();
       const list = gestureActions.getActionsList();
-      assertEquals(map.size, list.length, "map size and list length should match");
+      assertEquals(
+        map.size,
+        list.length,
+        "map size and list length should match",
+      );
       for (const item of list) {
         assert(map.has(item.name), `map should contain key: ${item.name}`);
       }
@@ -142,16 +152,27 @@ const tests: TestCase[] = [
       let callCount = 0;
       gestureActions.registerAction({
         name: "__test_overwrite_action__",
-        fn: () => { callCount = 1; },
+        fn: () => {
+          callCount = 1;
+        },
       });
       gestureActions.registerAction({
         name: "__test_overwrite_action__",
-        fn: () => { callCount = 2; },
+        fn: () => {
+          callCount = 2;
+        },
       });
       const fn = gestureActions.getAction("__test_overwrite_action__");
-      assert(typeof fn === "function", "overwritten action should be retrievable");
+      assert(
+        typeof fn === "function",
+        "overwritten action should be retrievable",
+      );
       fn();
-      assertEquals(callCount, 2, "should call the overwritten function, not the original");
+      assertEquals(
+        callCount,
+        2,
+        "should call the overwritten function, not the original",
+      );
     },
   },
   {
@@ -163,7 +184,11 @@ const tests: TestCase[] = [
         fn: () => {},
       });
       const sizeAfter = gestureActions.getAllActions().size;
-      assertEquals(sizeAfter, sizeBefore + 1, "new action should increase size by 1");
+      assertEquals(
+        sizeAfter,
+        sizeBefore + 1,
+        "new action should increase size by 1",
+      );
     },
   },
 
@@ -203,7 +228,9 @@ const tests: TestCase[] = [
       let wasCalled = false;
       gestureActions.registerAction({
         name: "__test_exec_action__",
-        fn: () => { wasCalled = true; },
+        fn: () => {
+          wasCalled = true;
+        },
       });
       const result = executeGestureAction("__test_exec_action__", window);
       assertEquals(result, true, "should return true when action executes");
@@ -214,7 +241,11 @@ const tests: TestCase[] = [
     name: "executeGestureAction returns false for empty string action name",
     fn() {
       const result = executeGestureAction("", window);
-      assertEquals(result, false, "empty string action name should return false");
+      assertEquals(
+        result,
+        false,
+        "empty string action name should return false",
+      );
     },
   },
 

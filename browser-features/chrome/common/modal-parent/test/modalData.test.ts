@@ -147,7 +147,10 @@ const tests: TestCase[] = [
   { name: "setModalSize height only", fn: testSetModalSizeHeightOnly },
   { name: "setModalSize zero dimensions", fn: testSetModalSizeZero },
   { name: "setModalSize large dimensions", fn: testSetModalSizeLarge },
-  { name: "setModalSize sequential updates", fn: testSetModalSizeUpdatesSequentially },
+  {
+    name: "setModalSize sequential updates",
+    fn: testSetModalSizeUpdatesSequentially,
+  },
 ];
 
 export async function runAllTests(): Promise<void> {
