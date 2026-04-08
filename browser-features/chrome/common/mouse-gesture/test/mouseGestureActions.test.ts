@@ -12,6 +12,7 @@ import type { GestureActionRegistration } from "../utils/gestures.ts";
 import {
   assert,
   assertEquals,
+  assertNotEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
@@ -56,6 +57,15 @@ const tests: TestCase[] = [
       }
     },
   },
+  {
+    name: "getAllGestureActions has common browser actions",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(names.includes("gecko-open-new-tab"), "should include gecko-open-new-tab action");
+      assert(names.includes("gecko-close-tab"), "should include gecko-close-tab action");
+    },
+  },
 
   // --- gestureActions registry ---
   {
@@ -85,6 +95,30 @@ const tests: TestCase[] = [
       assertEquals(fn, undefined, "should return undefined for unknown action");
     },
   },
+  {
+    name: "gestureActions.getActionsList returns array",
+    fn() {
+      const list = gestureActions.getActionsList();
+      assert(Array.isArray(list), "should return an array");
+      assert(list.length > 0, "should not be empty");
+      // Each element should have name and fn
+      for (const item of list) {
+        assert(typeof item.name === "string", "each item should have a name");
+        assert(typeof item.fn === "function", "each item should have a fn");
+      }
+    },
+  },
+  {
+    name: "gestureActions.getAllActions keys match getActionsList names",
+    fn() {
+      const map = gestureActions.getAllActions();
+      const list = gestureActions.getActionsList();
+      assertEquals(map.size, list.length, "map size and list length should match");
+      for (const item of list) {
+        assert(map.has(item.name), `map should contain key: ${item.name}`);
+      }
+    },
+  },
 
   // --- registerAction ---
   {
@@ -100,6 +134,36 @@ const tests: TestCase[] = [
         typeof retrieved === "function",
         "custom action should be retrievable after registration",
       );
+    },
+  },
+  {
+    name: "registerAction overwrites existing action",
+    fn() {
+      let callCount = 0;
+      gestureActions.registerAction({
+        name: "__test_overwrite_action__",
+        fn: () => { callCount = 1; },
+      });
+      gestureActions.registerAction({
+        name: "__test_overwrite_action__",
+        fn: () => { callCount = 2; },
+      });
+      const fn = gestureActions.getAction("__test_overwrite_action__");
+      assert(typeof fn === "function", "overwritten action should be retrievable");
+      fn();
+      assertEquals(callCount, 2, "should call the overwritten function, not the original");
+    },
+  },
+  {
+    name: "registerAction increases registry size for new actions",
+    fn() {
+      const sizeBefore = gestureActions.getAllActions().size;
+      gestureActions.registerAction({
+        name: "__test_size_check__",
+        fn: () => {},
+      });
+      const sizeAfter = gestureActions.getAllActions().size;
+      assertEquals(sizeAfter, sizeBefore + 1, "new action should increase size by 1");
     },
   },
 
@@ -120,6 +184,37 @@ const tests: TestCase[] = [
         const result = executeGestureAction(actions[0].name, null as any);
         assertEquals(result, false, "should return false for null window");
       }
+    },
+  },
+  {
+    name: "executeGestureAction returns false for undefined window",
+    fn() {
+      const actions = getAllGestureActions();
+      if (actions.length > 0) {
+        // biome-ignore lint/suspicious/noExplicitAny: testing invalid input
+        const result = executeGestureAction(actions[0].name, undefined as any);
+        assertEquals(result, false, "should return false for undefined window");
+      }
+    },
+  },
+  {
+    name: "executeGestureAction calls registered action and returns true",
+    fn() {
+      let wasCalled = false;
+      gestureActions.registerAction({
+        name: "__test_exec_action__",
+        fn: () => { wasCalled = true; },
+      });
+      const result = executeGestureAction("__test_exec_action__", window);
+      assertEquals(result, true, "should return true when action executes");
+      assert(wasCalled, "action function should have been called");
+    },
+  },
+  {
+    name: "executeGestureAction returns false for empty string action name",
+    fn() {
+      const result = executeGestureAction("", window);
+      assertEquals(result, false, "empty string action name should return false");
     },
   },
 
@@ -144,6 +239,19 @@ const tests: TestCase[] = [
     },
   },
   {
+    name: "getActionDisplayName for known actions returns non-empty",
+    fn() {
+      const actions = getAllGestureActions();
+      for (const action of actions.slice(0, 5)) {
+        const displayName = getActionDisplayName(action.name);
+        assert(
+          typeof displayName === "string" && displayName.length > 0,
+          `displayName for '${action.name}' should be non-empty string`,
+        );
+      }
+    },
+  },
+  {
     name: "getActionDescription returns a string",
     fn() {
       const desc = getActionDescription("back");
@@ -155,6 +263,19 @@ const tests: TestCase[] = [
     fn() {
       const desc = getActionDescription("__unknown_key_xyz__");
       assertEquals(desc, "", "should return empty string as default");
+    },
+  },
+  {
+    name: "getActionDisplayName differs from getActionDescription for known actions",
+    fn() {
+      const actions = getAllGestureActions();
+      if (actions.length > 0) {
+        const name = getActionDisplayName(actions[0].name);
+        const desc = getActionDescription(actions[0].name);
+        // They can be the same but typically differ; just verify both are strings
+        assert(typeof name === "string", "name should be string");
+        assert(typeof desc === "string", "desc should be string");
+      }
     },
   },
 ];

@@ -146,6 +146,200 @@ function testClearLegacyConfigNoOp(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Additional edge-case tests
+// ---------------------------------------------------------------------------
+
+function testNullEntrySkipped(): void {
+  const legacy = {
+    validAction: {
+      key: "z",
+      modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+    },
+    nullAction: null as unknown as {
+      key: string;
+      modifiers: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean };
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    assertEquals(
+      Object.keys(result.shortcuts).length,
+      1,
+      "null entries should be skipped, only valid one remains",
+    );
+    assert(
+      result.shortcuts["validAction"] !== undefined,
+      "validAction should exist",
+    );
+  });
+}
+
+function testAllModifiersEnabled(): void {
+  const legacy = {
+    superAction: {
+      key: "s",
+      modifiers: { alt: true, ctrl: true, meta: true, shift: true },
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    const shortcut = result.shortcuts["superAction"];
+    assert(shortcut !== undefined, "superAction should exist");
+    assertEquals(shortcut.modifiers.alt, true, "alt should be true");
+    assertEquals(shortcut.modifiers.ctrl, true, "ctrl should be true");
+    assertEquals(shortcut.modifiers.meta, true, "meta should be true");
+    assertEquals(shortcut.modifiers.shift, true, "shift should be true");
+    assertEquals(shortcut.key, "s", "key should be s");
+  });
+}
+
+function testDigitKeyMigration(): void {
+  const legacy = {
+    tabSwitch1: {
+      key: "1",
+      modifiers: { alt: true, ctrl: true, meta: false, shift: false },
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    const shortcut = result.shortcuts["tabSwitch1"];
+    assert(shortcut !== undefined, "tabSwitch1 should exist");
+    assertEquals(shortcut.key, "1", "digit key should be preserved");
+  });
+}
+
+function testEmptyKeyMigration(): void {
+  const legacy = {
+    emptyKey: {
+      key: "",
+      modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    const shortcut = result.shortcuts["emptyKey"];
+    assert(shortcut !== undefined, "emptyKey should exist");
+    assertEquals(shortcut.key, "", "empty key should be preserved");
+  });
+}
+
+function testNumericEntrySkipped(): void {
+  const legacy = {
+    numericAction: 42 as unknown as {
+      key: string;
+      modifiers: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean };
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    assertEquals(
+      Object.keys(result.shortcuts).length,
+      0,
+      "numeric entries should be skipped",
+    );
+  });
+}
+
+function testBooleanEntrySkipped(): void {
+  const legacy = {
+    boolAction: true as unknown as {
+      key: string;
+      modifiers: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean };
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    assertEquals(
+      Object.keys(result.shortcuts).length,
+      0,
+      "boolean entries should be skipped",
+    );
+  });
+}
+
+function testActionFieldIsSetCorrectly(): void {
+  const legacy = {
+    "my-custom-action": {
+      key: "m",
+      modifiers: { alt: true, ctrl: false, meta: false, shift: false },
+    },
+  };
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    const shortcut = result.shortcuts["my-custom-action"];
+    assert(shortcut !== undefined, "my-custom-action should exist");
+    assertEquals(
+      shortcut.action,
+      "my-custom-action",
+      "action field should match the key name from legacy config",
+    );
+  });
+}
+
+function testEmptyObjectProducesEnabledTrue(): void {
+  withStringPref("{}", () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    assertEquals(
+      result.enabled,
+      true,
+      "enabled should always be true in migrated config",
+    );
+  });
+}
+
+function testLargeNumberOfShortcuts(): void {
+  const legacy: Record<
+    string,
+    {
+      key: string;
+      modifiers: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean };
+    }
+  > = {};
+  for (let i = 0; i < 50; i++) {
+    legacy[`action-${i}`] = {
+      key: String.fromCharCode(97 + (i % 26)),
+      modifiers: {
+        alt: i % 2 === 0,
+        ctrl: i % 3 === 0,
+        meta: false,
+        shift: i % 5 === 0,
+      },
+    };
+  }
+  withStringPref(JSON.stringify(legacy), () => {
+    const result = migrateLegacyConfig();
+    assert(result !== null, "should not be null");
+    assertEquals(
+      Object.keys(result.shortcuts).length,
+      50,
+      "should migrate all 50 shortcuts",
+    );
+  });
+}
+
+function testDeeplyNestedInvalidJson(): void {
+  withStringPref("[1,2,3]", () => {
+    // Array is valid JSON but not an object — should result in no shortcuts
+    const result = migrateLegacyConfig();
+    // An array won't have Object.entries yielding action entries, so shortcuts should be empty
+    assert(result !== null, "should not be null for array JSON");
+    assertEquals(
+      Object.keys(result.shortcuts).length,
+      0,
+      "array JSON should produce empty shortcuts",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -162,6 +356,23 @@ export function runAllTests(): void {
     { name: "non-object entry skipped", fn: testNonObjectEntrySkipped },
     { name: "clearLegacyConfig", fn: testClearLegacyConfig },
     { name: "clearLegacyConfig no-op", fn: testClearLegacyConfigNoOp },
+    // Edge cases
+    { name: "null entry skipped", fn: testNullEntrySkipped },
+    { name: "all modifiers enabled", fn: testAllModifiersEnabled },
+    { name: "digit key migration", fn: testDigitKeyMigration },
+    { name: "empty key migration", fn: testEmptyKeyMigration },
+    { name: "numeric entry skipped", fn: testNumericEntrySkipped },
+    { name: "boolean entry skipped", fn: testBooleanEntrySkipped },
+    { name: "action field set correctly", fn: testActionFieldIsSetCorrectly },
+    {
+      name: "empty object produces enabled true",
+      fn: testEmptyObjectProducesEnabledTrue,
+    },
+    { name: "large number of shortcuts", fn: testLargeNumberOfShortcuts },
+    {
+      name: "deeply nested invalid JSON (array)",
+      fn: testDeeplyNestedInvalidJson,
+    },
   ];
 
   const failures: string[] = [];

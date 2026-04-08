@@ -3,6 +3,7 @@
 
 import {
   assert,
+  runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
