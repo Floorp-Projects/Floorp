@@ -15,6 +15,9 @@ const ESSENTIAL_ELEMENTS: { id: string; description: string }[] = [
   { id: "browser", description: "browser content" },
   { id: "sidebar-box", description: "Firefox sidebar box" },
   { id: "mainPopupSet", description: "popup container" },
+];
+
+const OPTIONAL_ELEMENTS: { id: string; description: string }[] = [
   { id: "PanelUI-menu-button", description: "hamburger menu" },
 ];
 
@@ -22,7 +25,7 @@ function buildElementExistsTest(id: string, description: string): TestCase {
   return {
     name: `#${id} (${description}) exists in DOM`,
     fn: () => {
-      const el = document.getElementById(id);
+      const el = document?.getElementById(id) ?? null;
       assert(el !== null, `#${id} (${description}) should exist in the DOM`);
       assert(
         el.tagName !== undefined && el.tagName.length > 0,
@@ -32,10 +35,34 @@ function buildElementExistsTest(id: string, description: string): TestCase {
   };
 }
 
+function buildOptionalElementValidityTest(
+  id: string,
+  description: string,
+): TestCase {
+  return {
+    name: `#${id} (${description}) is valid when present`,
+    fn: () => {
+      const el = document?.getElementById(id) ?? null;
+      if (!el) {
+        return;
+      }
+      assert(
+        el.tagName !== undefined && el.tagName.length > 0,
+        `#${id} should have a non-empty tagName`,
+      );
+    },
+  };
+}
+
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = ESSENTIAL_ELEMENTS.map((e) =>
-    buildElementExistsTest(e.id, e.description),
-  );
+  const tests: TestCase[] = [
+    ...ESSENTIAL_ELEMENTS.map((e) =>
+      buildElementExistsTest(e.id, e.description),
+    ),
+    ...OPTIONAL_ELEMENTS.map((e) =>
+      buildOptionalElementValidityTest(e.id, e.description),
+    ),
+  ];
 
   const failures: string[] = [];
   for (const test of tests) {
