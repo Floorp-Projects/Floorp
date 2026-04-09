@@ -59,7 +59,7 @@ import { registerWorkspaceRoutes } from "./workspaces/routes.sys.mts";
 
 // -- Timer import -------------------------------------------------------------
 
-const { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
@@ -91,14 +91,76 @@ class LocalHttpServer implements nsIServerSocketListener {
   private _server: nsIServerSocket | null = null;
   private _token = "";
   private _router: _Router | null = null;
+  private _activeConnections = 0;
   private static readonly READ_HEAD_TIMEOUT_MS = 5000;
   private static readonly READ_BODY_TIMEOUT_MS = 8000;
   private static readonly MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
+  private static readonly MAX_CONCURRENT_CONNECTIONS = 50;
 
   QueryInterface = ChromeUtils.generateQI([
     "nsIServerSocketListener",
     "nsIObserver",
   ]);
+
+  /**
+   * Wait for data to become available on an nsIInputStream using the
+   * native asyncWait() notification instead of setTimeout-based polling.
+   *
+   * On Windows, each setTimeout creates an IOCP (I/O Completion Port) packet
+   * in the kernel.  Busy-polling at short intervals (e.g. 5ms) accumulates
+   * millions of unreaped IOCP packets, each consuming ~80 bytes of kernel
+   * nonpaged pool memory — leading to multi-gigabyte kernel memory leaks
+   * (Floorp issue #2379).
+   *
+   * asyncWait() uses the platform's native I/O event notification and
+   * produces zero polling overhead.
+   *
+   * @returns `true` if data became available, `false` on timeout.
+   */
+  private static waitForInput(
+    inputStream: nsIInputStream,
+    timeoutMs: number,
+  ): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      let settled = false;
+
+      const listener = {
+        QueryInterface: ChromeUtils.generateQI(["nsIInputStreamCallback"]),
+        onInputStreamReady(_stream: nsIAsyncInputStream) {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(true);
+          }
+        },
+      };
+
+      // Cast to nsIAsyncInputStream — the stream returned by
+      // nsISocketTransport.openInputStream() always implements it.
+      const asyncStream = inputStream as unknown as nsIAsyncInputStream;
+      asyncStream.asyncWait(listener, 0, 0, Services.tm.mainThread);
+
+      // Safety timeout — ensures we don't hang forever if the native
+      // notification never fires (e.g. socket closed mid-read)
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          // Cancel the asyncWait listener so it doesn't fire on a stale stream
+          try {
+            asyncStream.asyncWait(
+              null as unknown as nsIInputStreamCallback,
+              0,
+              0,
+              Services.tm.mainThread,
+            );
+          } catch {
+            /* ignore */
+          }
+          resolve(false);
+        }
+      }, timeoutMs);
+    });
+  }
 
   start(port: number, token: string) {
     if (this._server) return; // already started
@@ -125,10 +187,12 @@ class LocalHttpServer implements nsIServerSocketListener {
           e.result === Cr.NS_ERROR_SOCKET_ADDRESS_IN_USE ||
           e.result === Cr.NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED ||
           e.result === Cr.NS_ERROR_NET_RESET ||
-          e.result === 0x804B000D; // NS_ERROR_CONNECTION_REFUSED raw value
+          e.result === 0x804b000d; // NS_ERROR_CONNECTION_REFUSED raw value
 
         if (isPortError) {
-          err(`Please try: 1) Change 'floorp.os.server.port' in about:config to another port (e.g., 58262), 2) Restart Floorp, or 3) Check your firewall settings`);
+          err(
+            `Please try: 1) Change 'floorp.os.server.port' in about:config to another port (e.g., 58262), 2) Restart Floorp, or 3) Check your firewall settings`,
+          );
           return;
         }
       }
@@ -228,13 +292,30 @@ class LocalHttpServer implements nsIServerSocketListener {
 
   // nsIServerSocketListener
   onSocketAccepted(_serv: nsIServerSocket, transport: nsISocketTransport) {
-    const handle = async () => {
-      // Open streams as non-null consts; keep nullable handles for finally cleanup
-      const input = transport.openInputStream(0, 0, 0);
-      const output = transport.openOutputStream(0, 0, 0);
-      let cleanupInput: nsIInputStream | null = input;
-      let cleanupOutput: nsIOutputStream | null = output;
+    // Connection limit check to prevent resource exhaustion
+    if (this._activeConnections >= LocalHttpServer.MAX_CONCURRENT_CONNECTIONS) {
       try {
+        transport.close(Cr.NS_OK);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    this._activeConnections++;
+
+    const handle = async () => {
+      // Keep nullable handles for finally cleanup — streams are opened inside
+      // try so that any openInputStream/openOutputStream failure still runs
+      // finally and correctly decrements _activeConnections.
+      let cleanupInput: nsIInputStream | null = null;
+      let cleanupOutput: nsIOutputStream | null = null;
+      let cleanupTransport: nsISocketTransport | null = transport;
+      try {
+        const input = transport.openInputStream(0, 0, 0);
+        const output = transport.openOutputStream(0, 0, 0);
+        cleanupInput = input;
+        cleanupOutput = output;
+
         const sis = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
           Ci.nsIScriptableInputStream,
         );
@@ -251,13 +332,24 @@ class LocalHttpServer implements nsIServerSocketListener {
             head += sis.read(avail);
             if (head.includes("\r\n\r\n")) break;
           } else {
-            if (Date.now() > headDeadline) {
+            const remaining = headDeadline - Date.now();
+            if (remaining <= 0) {
               writeUtf8(output, requestTimeout());
               return;
             }
-            await new Promise<void>((resolve) =>
-              setTimeout(() => resolve(), 5),
+            // Use nsIInputStream.asyncWait() instead of setTimeout polling.
+            // On Windows, each setTimeout creates an IOCP packet in the kernel;
+            // busy-polling at 5ms intervals generates massive IOCP packet
+            // accumulation that causes kernel nonpaged pool memory leaks.
+            // asyncWait uses native socket event notification — zero polling.
+            const dataReady = await LocalHttpServer.waitForInput(
+              input,
+              remaining,
             );
+            if (!dataReady) {
+              writeUtf8(output, requestTimeout());
+              return;
+            }
           }
         }
         const split = head.indexOf("\r\n\r\n");
@@ -291,13 +383,20 @@ class LocalHttpServer implements nsIServerSocketListener {
             bodyParts.push(piece);
             bodyLen += piece.length;
           } else {
-            if (Date.now() > bodyDeadline) {
+            const remaining = bodyDeadline - Date.now();
+            if (remaining <= 0) {
               writeUtf8(output, badRequest("incomplete body"));
               return;
             }
-            await new Promise<void>((resolve) =>
-              setTimeout(() => resolve(), 5),
+            // Use asyncWait instead of setTimeout — same rationale as header loop
+            const dataReady = await LocalHttpServer.waitForInput(
+              input,
+              remaining,
             );
+            if (!dataReady) {
+              writeUtf8(output, badRequest("incomplete body"));
+              return;
+            }
           }
         }
         const fullBody = bodyParts.join("");
@@ -320,18 +419,33 @@ class LocalHttpServer implements nsIServerSocketListener {
         // Prevent finally from double-closing
         cleanupInput = null;
         cleanupOutput = null;
+        cleanupTransport = null;
       } catch (e) {
         try {
-          if (output) {
-            writeUtf8(output, serverError(String(e)));
+          if (cleanupOutput) {
+            writeUtf8(cleanupOutput, serverError(String(e)));
           }
         } catch {
           // ignore write failure on already-closed stream
         }
         err("socket error: ", e);
       } finally {
-        try { cleanupOutput?.close(); } catch { /* ignore */ }
-        try { cleanupInput?.close(); } catch { /* ignore */ }
+        this._activeConnections--;
+        try {
+          cleanupOutput?.close();
+        } catch {
+          /* ignore */
+        }
+        try {
+          cleanupInput?.close();
+        } catch {
+          /* ignore */
+        }
+        try {
+          cleanupTransport?.close(Cr.NS_OK);
+        } catch {
+          /* ignore */
+        }
       }
     };
     // Fire and forget
