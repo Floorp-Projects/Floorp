@@ -4,7 +4,6 @@
 import {
   assertEquals,
   assert,
-  assertNotEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
@@ -22,7 +21,6 @@ import {
 import type {
   GestureDirection,
   GesturePattern,
-  MouseGestureConfig,
 } from "../config.ts";
 
 // ---------------------------------------------------------------------------

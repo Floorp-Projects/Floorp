@@ -3,11 +3,7 @@
 
 import { init } from "../index.ts";
 
-import {
-  assert,
-  runTests,
-  type TestCase,
-} from "../../../test/utils/test_harness.ts";
+import { assert, runTests } from "../../../test/utils/test_harness.ts";
 
 function testInitFunctionExists(): void {
   assert(typeof init === "function", "init should be an exported function");
@@ -30,10 +26,26 @@ function testInitReturnsUndefined(): void {
   assert(result === undefined, "init() should return undefined");
 }
 
+function testInitIsIdempotentAcrossRepeatedCalls(): void {
+  let threw = false;
+  try {
+    for (let i = 0; i < 5; i++) {
+      init();
+    }
+  } catch {
+    threw = true;
+  }
+  assert(!threw, "calling init() repeatedly should remain safe");
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("reverseSidebarPosition.test.ts", [
     { name: "init function exists", fn: testInitFunctionExists },
     { name: "init does not throw", fn: testInitDoesNotThrow },
     { name: "init returns undefined", fn: testInitReturnsUndefined },
+    {
+      name: "init is idempotent across repeated calls",
+      fn: testInitIsIdempotentAcrossRepeatedCalls,
+    },
   ]);
 }

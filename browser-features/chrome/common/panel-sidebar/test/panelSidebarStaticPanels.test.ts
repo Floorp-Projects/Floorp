@@ -5,7 +5,6 @@ import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import {
   type TestCase,
   assert,
-  type assertEquals,
 } from "../../../test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
@@ -76,7 +75,7 @@ function testPanelKeysStartWithFloorp(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "STATIC_PANEL_DATA exists", fn: testStaticPanelDataExists },
     { name: "bookmarks panel", fn: testBookmarksPanelExists },

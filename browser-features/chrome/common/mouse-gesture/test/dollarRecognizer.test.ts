@@ -2,7 +2,7 @@
 // @colocated-env browser
 
 import { Point, DollarRecognizer } from "../utils/dollar.ts";
-import type { DollarPoint, IDollarRecognizer } from "../utils/dollar.ts";
+import type { DollarPoint } from "../utils/dollar.ts";
 import {
   type TestCase,
   assert,
@@ -22,6 +22,7 @@ function generateCirclePoints(
   const points: DollarPoint[] = [];
   for (let i = 0; i < n; i++) {
     const angle = (2 * Math.PI * i) / n;
+    // @ts-expect-error - Point is a legacy JS function constructor
     points.push(new Point(cx + r * Math.cos(angle), cy + r * Math.sin(angle)));
   }
   return points;
@@ -37,6 +38,7 @@ function generateLinePoints(
   const points: DollarPoint[] = [];
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1);
+    // @ts-expect-error - Point is a legacy JS function constructor
     points.push(new Point(x1 + t * (x2 - x1), y1 + t * (y2 - y1)));
   }
   return points;
@@ -54,6 +56,7 @@ function generateVPoints(): DollarPoint[] {
 // ---------------------------------------------------------------------------
 
 function testPointConstructor(): void {
+  // @ts-expect-error - Point is a legacy JS function constructor
   const p = new Point(3, 7);
   assertEquals(p.X, 3, "X should be 3");
   assertEquals(p.Y, 7, "Y should be 7");
@@ -64,13 +67,15 @@ function testPointConstructor(): void {
 // ---------------------------------------------------------------------------
 
 function testRecognizerHas16Unistrokes(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   assertEquals(r.Unistrokes.length, 16, "should have 16 built-in unistrokes");
 }
 
 function testRecognizerUnistrokeNames(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
-  const names = r.Unistrokes.map((u) => u.Name);
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
+  const names = r.Unistrokes.map((u: { Name: string }) => u.Name);
   assert(names.includes("triangle"), "should include triangle");
   assert(names.includes("circle"), "should include circle");
   assert(names.includes("x"), "should include x");
@@ -86,7 +91,8 @@ function testRecognizerUnistrokeNames(): void {
 // ---------------------------------------------------------------------------
 
 function testRecognizeCircle(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateCirclePoints(150, 150, 80, 40);
   const result = r.Recognize(points, false);
   assert(
@@ -97,14 +103,16 @@ function testRecognizeCircle(): void {
 }
 
 function testRecognizeV(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateVPoints();
   const result = r.Recognize(points, false);
   assertEquals(result.Name, "v", "V points should match v or check");
 }
 
 function testRecognizeProtractorMode(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateCirclePoints(150, 150, 80, 40);
   const result = r.Recognize(points, true);
   assert(
@@ -115,7 +123,8 @@ function testRecognizeProtractorMode(): void {
 }
 
 function testRecognizeTimeMeasured(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateCirclePoints(150, 150, 80, 40);
   const result = r.Recognize(points, false);
   assert(
@@ -129,7 +138,8 @@ function testRecognizeTimeMeasured(): void {
 // ---------------------------------------------------------------------------
 
 function testAddGesture(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateLinePoints(0, 0, 200, 200, 30);
   const count = r.AddGesture("diagonal", points);
   assertEquals(count, 1, "first diagonal should return count 1");
@@ -141,7 +151,8 @@ function testAddGesture(): void {
 }
 
 function testAddGestureDuplicate(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   const points = generateLinePoints(0, 0, 200, 200, 30);
   r.AddGesture("custom", points);
   const count = r.AddGesture("custom", points);
@@ -149,7 +160,8 @@ function testAddGestureDuplicate(): void {
 }
 
 function testDeleteUserGestures(): void {
-  const r = new DollarRecognizer() as IDollarRecognizer;
+  // @ts-expect-error - DollarRecognizer is a legacy JS function constructor
+  const r = new DollarRecognizer();
   r.AddGesture("custom1", generateLinePoints(0, 0, 100, 100, 20));
   r.AddGesture("custom2", generateLinePoints(0, 100, 100, 0, 20));
   assertEquals(r.Unistrokes.length, 18, "should have 18 before delete");
@@ -162,7 +174,7 @@ function testDeleteUserGestures(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "Point constructor", fn: testPointConstructor },
     { name: "recognizer has 16 unistrokes", fn: testRecognizerHas16Unistrokes },

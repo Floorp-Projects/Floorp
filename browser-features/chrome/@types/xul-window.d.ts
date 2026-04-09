@@ -49,9 +49,24 @@ interface GFloorpTabColor {
   setEnable(enabled: boolean): void;
 }
 
+interface GFloorpStatusBar {
+  setShow: (value: boolean) => void;
+}
+
 interface GFloorp {
   tabColor?: GFloorpTabColor;
+  statusBar?: GFloorpStatusBar;
   [key: string]: unknown;
+}
+
+interface CustomizableUI {
+  TYPE_TOOLBAR: string;
+  registerArea(
+    name: string,
+    config: { type: string; defaultPlacements: string[] },
+  ): void;
+  unregisterArea(name: string, arg2?: boolean): void;
+  registerToolbarNode(node: Element): void;
 }
 
 declare global {
@@ -60,6 +75,7 @@ declare global {
   var TabContextMenu: TabContextMenu;
   var PanelUI: PanelUI;
   var gFloorp: GFloorp;
+  var CustomizableUI: CustomizableUI;
 
   // Ensure globalThis is augmented for property access like globalThis.gBrowser
   namespace globalThis {
@@ -69,6 +85,7 @@ declare global {
     var TabContextMenu: TabContextMenu;
     var PanelUI: PanelUI;
     var gFloorp: GFloorp;
+    var CustomizableUI: CustomizableUI;
   }
 
   // Add custom XUL events we listen to

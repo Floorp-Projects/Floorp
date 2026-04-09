@@ -50,7 +50,7 @@ function testReturnTypeConsistency(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "userContextId 0 → null", fn: testUserContextIdZeroReturnsNull },
     { name: "non-existent → null", fn: testNonExistentUserContextReturnsNull },

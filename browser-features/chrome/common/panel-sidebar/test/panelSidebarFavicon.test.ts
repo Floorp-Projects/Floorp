@@ -2,11 +2,7 @@
 // @colocated-env browser
 
 import { getFaviconURLForPanel } from "../utils/favicon-getter.ts";
-import {
-  assert,
-  type assertEquals,
-  type TestCase,
-} from "../../../test/utils/test_harness.ts";
+import { assert, type TestCase } from "../../../test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -18,8 +14,11 @@ async function testStaticPanelReturnsFavicon(): Promise<void> {
     type: "static" as const,
     url: "floorp//bookmarks",
     width: 300,
+    icon: null,
     userContextId: null,
     zoomLevel: null,
+    userAgent: null,
+    extensionId: null,
   };
   const result = await getFaviconURLForPanel(panel);
   assert(
@@ -34,8 +33,11 @@ async function testWebPanelWithHttpReturnsString(): Promise<void> {
     type: "web" as const,
     url: "https://example.com",
     width: 400,
+    icon: null,
     userContextId: null,
     zoomLevel: null,
+    userAgent: null,
+    extensionId: null,
   };
   const result = await getFaviconURLForPanel(panel);
   assert(typeof result === "string", "web panel should return a string");
@@ -47,8 +49,10 @@ async function testExtensionPanelReturnsString(): Promise<void> {
     type: "extension" as const,
     url: "extension://fake/sidebar.html",
     width: 450,
+    icon: null,
     userContextId: null,
     zoomLevel: null,
+    userAgent: null,
     extensionId: "fake-extension-id",
   };
   const result = await getFaviconURLForPanel(panel);
@@ -64,8 +68,11 @@ async function testWebPanelWithNoUrlReturnsFallback(): Promise<void> {
     type: "web" as const,
     url: "",
     width: 300,
+    icon: null,
     userContextId: null,
     zoomLevel: null,
+    userAgent: null,
+    extensionId: null,
   };
   const result = await getFaviconURLForPanel(panel);
   assert(

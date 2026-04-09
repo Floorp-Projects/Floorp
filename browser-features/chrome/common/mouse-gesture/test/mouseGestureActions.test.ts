@@ -12,7 +12,6 @@ import type { GestureActionRegistration } from "../utils/gestures.ts";
 import {
   assert,
   assertEquals,
-  assertNotEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
@@ -167,7 +166,10 @@ const tests: TestCase[] = [
         typeof fn === "function",
         "overwritten action should be retrievable",
       );
-      fn();
+      if (fn) {
+        // Provide minimal mock window for test function
+        fn({} as Window);
+      }
       assertEquals(
         callCount,
         2,
@@ -205,8 +207,8 @@ const tests: TestCase[] = [
     fn() {
       const actions = getAllGestureActions();
       if (actions.length > 0) {
-        // biome-ignore lint/suspicious/noExplicitAny: testing invalid input
-        const result = executeGestureAction(actions[0].name, null as any);
+        // @ts-expect-error - Testing invalid input (null)
+        const result = executeGestureAction(actions[0].name, null);
         assertEquals(result, false, "should return false for null window");
       }
     },
@@ -216,8 +218,8 @@ const tests: TestCase[] = [
     fn() {
       const actions = getAllGestureActions();
       if (actions.length > 0) {
-        // biome-ignore lint/suspicious/noExplicitAny: testing invalid input
-        const result = executeGestureAction(actions[0].name, undefined as any);
+        // @ts-expect-error - Testing invalid input (undefined)
+        const result = executeGestureAction(actions[0].name, undefined);
         assertEquals(result, false, "should return false for undefined window");
       }
     },

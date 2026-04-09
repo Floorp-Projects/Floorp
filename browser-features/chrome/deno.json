@@ -4,7 +4,6 @@
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.6",
     "@jsr/std__assert": "npm:@jsr/std__assert@^1.0.16",
     "@types/uuid": "npm:@types/uuid@^11.0.0",
-
     "es-toolkit": "npm:es-toolkit@^1.43.0",
     "fp-ts": "npm:fp-ts@^2.16.11",
     "i18next": "npm:i18next@^25.7.3",
@@ -23,14 +22,25 @@
     "#features-chrome/": "./"
   },
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
-    "types": ["npm:vite/client", "jsr:@types/gecko"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "npm:vite/client",
+      "jsr:@types/gecko",
+      "./@types/xul-window.d.ts"
+    ],
     "jsx": "react-jsx",
     "jsxImportSource": "jsr:@nora/solid-xul"
   },
   "lint": {
     "rules": {
-      "exclude": ["no-sloppy-imports", "no-window", "no-slow-types"]
+      "exclude": [
+        "no-sloppy-imports",
+        "no-window",
+        "no-slow-types"
+      ]
     }
   },
   "exports": {

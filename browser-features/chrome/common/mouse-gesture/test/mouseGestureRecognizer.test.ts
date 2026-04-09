@@ -10,11 +10,10 @@ import {
   extractDirectionSequence,
   recognize,
 } from "../utils/recognizer.ts";
-import type { GestureAction } from "../config.ts";
+import type { GestureAction, GestureDirection } from "../config.ts";
 import {
   assert,
   assertApprox,
-  type TestCase,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
@@ -291,7 +290,7 @@ function testCreateRecognizerComplexPatternRegistersTemplates(): void {
     { pattern: ["down", "right"], action: "close-tab" },
     { pattern: ["right", "down", "left", "up", "right"], action: "square" },
   ];
-  const { recognizer, shapeDb } = createRecognizer(actions);
+  const { recognizer, shapeDb: _shapeDb } = createRecognizer(actions);
   assert(
     recognizer.Unistrokes.length > 0,
     "complex patterns should register $1 templates",
@@ -312,7 +311,7 @@ function testCreateRecognizerEmptyActions(): void {
 function testCreateRecognizerEmptyPatternSkipped(): void {
   const actions: GestureAction[] = [
     { pattern: ["left"], action: "go-back" },
-    { pattern: [] as string[], action: "empty-pattern" },
+    { pattern: [] as GestureDirection[], action: "empty-pattern" },
   ];
   const { shapeDb } = createRecognizer(actions);
   assertEquals(shapeDb.size, 1, "empty pattern should be skipped");

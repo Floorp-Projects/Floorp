@@ -4,7 +4,6 @@
 import { convertSidebar } from "../data/migration.ts";
 import {
   type TestCase,
-  type assert,
   assertEquals,
 } from "../../../test/utils/test_harness.ts";
 
@@ -131,7 +130,7 @@ function testIndexOrdering(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "empty sidebar", fn: testEmptySidebar },
     { name: "web panel", fn: testWebPanel },
