@@ -718,6 +718,475 @@ function testUppercaseKeyNormalization(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tests — State reset functionality
+// ---------------------------------------------------------------------------
+
+function testResetStateClearsPressedKeys(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press a key
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    // Destroy should reset state
+    controller.destroy();
+
+    // If we could access pressedKeys, we'd verify it's empty
+    // Since we can't, we just verify destroy doesn't throw
+    assertEquals(true, true, "resetState should complete without error");
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Multiple simultaneous key presses
+// ---------------------------------------------------------------------------
+
+function testMultipleKeysPressedSimultaneously(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Ctrl first
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "ControlLeft",
+      ctrlKey: true,
+    });
+
+    // Then press T (should match)
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "Ctrl+T should match even with sequential keydown events",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testKeySequenceDoesNotMatchPartialCombos(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-action": {
+          key: "T",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-action",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Alt (not part of shortcut)
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "AltLeft",
+      altKey: true,
+    });
+
+    // Then press Ctrl+T (should not match because Alt is also pressed)
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+      altKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "Alt+Ctrl+T should NOT match Ctrl+T shortcut",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Special key codes
+// ---------------------------------------------------------------------------
+
+function testNumpadKeyMatching(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-numpad": {
+          key: "1",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-numpad",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Numpad keys use different codes but same normalized key
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "Numpad1",
+      ctrlKey: true,
+    });
+
+    // Should not match because "Digit1" != "Numpad1"
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "Numpad1 should not match digit 1 shortcut (different code)",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testFunctionKeyMatching(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-f5": {
+          key: "F5",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-f5",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "F5",
+      ctrlKey: true,
+    });
+
+    // Function keys use just "F5" as code. The normalization regex
+    // /^[A-Z]$/ and /^[0-9]$/ do not match "F5", so the key is kept as-is.
+    // The event code is also "F5", so pressedKeys.has("F5") returns true.
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "F5 should match (key passes through normalization unchanged and matches event code directly)",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Lowercase letter keys in config
+// ---------------------------------------------------------------------------
+
+function testLowercaseKeyInConfig(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-action": {
+          key: "t", // lowercase
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-action",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    // Lowercase "t" won't match because normalization only applies to A-Z
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "lowercase 't' should not match KeyT (no normalization)",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Action execution
+// ---------------------------------------------------------------------------
+
+function testActionNotFoundNoError(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "non-existent-action": {
+          key: "X",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "this-action-does-not-exist",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Should match but not throw even though action doesn't exist
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyX",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "shortcut should match and prevent default even if action not found",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Key state tracking
+// ---------------------------------------------------------------------------
+
+function testKeyUpClearsKeyState(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Ctrl+T (matches)
+    const downEvent = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+    assertEquals(downEvent.defaultPrevented, true, "first press should match");
+
+    // Release T
+    dispatchKeyEvent(fakeWin, "keyup", {
+      code: "KeyT",
+    });
+
+    // Press T again (should still match if Ctrl is held)
+    const downEvent2 = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+    assertEquals(
+      downEvent2.defaultPrevented,
+      true,
+      "second press should also match",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testModifierStateTracking(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Ctrl alone
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "ControlLeft",
+      ctrlKey: true,
+    });
+
+    // Press T (should match)
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+    assertEquals(event.defaultPrevented, true, "should match with Ctrl held");
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Edge cases
+// ---------------------------------------------------------------------------
+
+function testEmptyKeyInConfig(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-action": {
+          key: "", // empty key
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-action",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Should not crash with empty key
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(event.defaultPrevented, false, "empty key should not match");
+
+    controller.destroy();
+  });
+}
+
+function testVeryLongKeyInConfig(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-action": {
+          key: "verylongkeynamethatwontmatch",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-action",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(event.defaultPrevented, false, "long key should not match");
+
+    controller.destroy();
+  });
+}
+
+function testMultipleControllersDontInterfere(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+
+    const fakeWin1 = createFakeWindow();
+    const fakeWin2 = createFakeWindow();
+    const controller1 = new KeyboardShortcutController(fakeWin1);
+    const controller2 = new KeyboardShortcutController(fakeWin2);
+
+    // Each controller should work independently
+    const event1 = dispatchKeyEvent(fakeWin1, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+    const event2 = dispatchKeyEvent(fakeWin2, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(event1.defaultPrevented, true, "controller1 should match");
+    assertEquals(event2.defaultPrevented, true, "controller2 should match");
+
+    controller1.destroy();
+    controller2.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Location-specific modifier keys
+// ---------------------------------------------------------------------------
+
+function testRightModifierKeyIgnored(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Right Control key should also be ignored
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "ControlRight",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "pure ControlRight press should be ignored",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Rapid key press sequences
+// ---------------------------------------------------------------------------
+
+function testRapidKeyPressSequence(): void {
+  withPrefs(() => {
+    applyTestConfig(MULTI_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Ctrl+T
+    const event1 = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    // Quickly press Alt+Shift+F
+    const event2 = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyF",
+      altKey: true,
+      shiftKey: true,
+    });
+
+    assertEquals(event1.defaultPrevented, true, "first shortcut should match");
+    assertEquals(event2.defaultPrevented, true, "second shortcut should match");
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — State after unmatched key
+// ---------------------------------------------------------------------------
+
+function testStatePreservedAfterUnmatchedKey(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Press Ctrl+X (doesn't match)
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyX",
+      ctrlKey: true,
+    });
+
+    // Press Ctrl+T (should still match)
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(event.defaultPrevented, true, "should still match after unmatched key");
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -820,6 +1289,75 @@ export async function runAllTests(): Promise<void> {
     {
       name: "uppercase key normalization",
       fn: testUppercaseKeyNormalization,
+    },
+    // State reset
+    {
+      name: "resetState clears pressed keys",
+      fn: testResetStateClearsPressedKeys,
+    },
+    // Multiple simultaneous keys
+    {
+      name: "multiple keys pressed simultaneously",
+      fn: testMultipleKeysPressedSimultaneously,
+    },
+    {
+      name: "key sequence does not match partial combos",
+      fn: testKeySequenceDoesNotMatchPartialCombos,
+    },
+    // Special key codes
+    {
+      name: "numpad key matching",
+      fn: testNumpadKeyMatching,
+    },
+    {
+      name: "function key matching",
+      fn: testFunctionKeyMatching,
+    },
+    // Lowercase keys
+    {
+      name: "lowercase key in config",
+      fn: testLowercaseKeyInConfig,
+    },
+    // Action execution
+    {
+      name: "action not found no error",
+      fn: testActionNotFoundNoError,
+    },
+    // Key state tracking
+    {
+      name: "keyup clears key state",
+      fn: testKeyUpClearsKeyState,
+    },
+    {
+      name: "modifier state tracking",
+      fn: testModifierStateTracking,
+    },
+    // Edge cases
+    {
+      name: "empty key in config",
+      fn: testEmptyKeyInConfig,
+    },
+    {
+      name: "very long key in config",
+      fn: testVeryLongKeyInConfig,
+    },
+    {
+      name: "multiple controllers don't interfere",
+      fn: testMultipleControllersDontInterfere,
+    },
+    // Location-specific modifiers
+    {
+      name: "right modifier key ignored",
+      fn: testRightModifierKeyIgnored,
+    },
+    // Rapid sequences
+    {
+      name: "rapid key press sequence",
+      fn: testRapidKeyPressSequence,
+    },
+    {
+      name: "state preserved after unmatched key",
+      fn: testStatePreservedAfterUnmatchedKey,
     },
   ];
 

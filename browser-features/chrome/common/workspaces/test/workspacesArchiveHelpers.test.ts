@@ -6,7 +6,7 @@ import {
   filterJsonFiles,
   isRecord,
 } from "../utils/workspaces-archive-service.ts";
-import type { TWorkspaceSnapshot } from "../utils/type.ts";
+import type { TWorkspaceSnapshot, TWorkspaceID } from "../utils/type.ts";
 import {
   type TestCase,
   assert,
@@ -84,7 +84,7 @@ function testBuildSummaryBasic(): void {
   const snapshot: TWorkspaceSnapshot = {
     capturedAt: 1700000000000,
     workspace: {
-      workspaceId: "ws-1",
+      workspaceId: "ws-1" as unknown as TWorkspaceID,
       name: "Work",
       icon: "briefcase",
       userContextId: 0,
@@ -126,7 +126,7 @@ function testBuildSummaryNullIcon(): void {
   const snapshot: TWorkspaceSnapshot = {
     capturedAt: 0,
     workspace: {
-      workspaceId: "ws-2",
+      workspaceId: "ws-2" as unknown as TWorkspaceID,
       name: "Empty",
       icon: null,
       userContextId: 1,
@@ -137,6 +137,92 @@ function testBuildSummaryNullIcon(): void {
   const summary = buildSummary("id", snapshot, "/p");
   assertEquals(summary.icon, null, "null icon should pass through");
   assertEquals(summary.tabCount, 0, "zero tabs");
+}
+
+function testFilterJsonFilesMixedExtensions(): void {
+  const input = [
+    "data.json",
+    "photo.JPG",
+    "script.js",
+    "backup.JSON",
+    "config.json",
+    "readme.md",
+  ];
+  const result = filterJsonFiles(input);
+  assertEquals(result.length, 3, "should filter to 3 JSON files");
+  assert(result.includes("data.json"), "should include data.json");
+  assert(result.includes("config.json"), "should include config.json");
+  assert(result.includes("backup.JSON"), "should include backup.JSON");
+}
+
+function testFilterJsonFilesWithMultipleDots(): void {
+  const input = [
+    "data.backup.json",
+    "config.json.bak",
+    "archive.v2.json",
+    "not.json.file.txt",
+  ];
+  const result = filterJsonFiles(input);
+  assertEquals(result.length, 2, "should filter to 2 JSON files");
+  assert(result.includes("data.backup.json"), "should include data.backup.json");
+  assert(result.includes("archive.v2.json"), "should include archive.v2.json");
+}
+
+function testIsRecordWithDate(): void {
+  const date = new Date();
+  // isRecord uses typeof === "object" && !== null, which is true for Date
+  assertEquals(isRecord(date), true, "Date is technically an object record");
+}
+
+function testIsRecordWithFunction(): void {
+  const func = () => {};
+  assertEquals(isRecord(func), false, "function should not be a record");
+}
+
+function testBuildSummaryWithMultipleTabs(): void {
+  const snapshot: TWorkspaceSnapshot = {
+    capturedAt: 1700000000000,
+    workspace: {
+      workspaceId: "ws-multi" as unknown as TWorkspaceID,
+      name: "Multi Tab",
+      icon: "folder",
+      userContextId: 0,
+    },
+    tabs: [
+      {
+        state: null,
+        title: "Tab 1",
+        url: "https://one.com",
+        pinned: false,
+        isSelected: false,
+        userContextId: 0,
+        lastShownWorkspaceId: null,
+      },
+      {
+        state: null,
+        title: "Tab 2",
+        url: "https://two.com",
+        pinned: true,
+        isSelected: false,
+        userContextId: 0,
+        lastShownWorkspaceId: null,
+      },
+      {
+        state: null,
+        title: "Tab 3",
+        url: "https://three.com",
+        pinned: false,
+        isSelected: true,
+        userContextId: 0,
+        lastShownWorkspaceId: null,
+      },
+    ],
+  };
+
+  const summary = buildSummary("archive-multi", snapshot, "/multi.json");
+  assertEquals(summary.tabCount, 3, "should count all tabs");
+  assertEquals(summary.name, "Multi Tab", "should preserve workspace name");
+  assertEquals(summary.icon, "folder", "should preserve workspace icon");
 }
 
 // ---------------------------------------------------------------------------
@@ -152,12 +238,17 @@ export async function runAllTests(): Promise<void> {
     { name: "isRecord array", fn: testIsRecordArray },
     { name: "isRecord string", fn: testIsRecordString },
     { name: "isRecord number", fn: testIsRecordNumber },
+    { name: "isRecord with Date", fn: testIsRecordWithDate },
+    { name: "isRecord with function", fn: testIsRecordWithFunction },
     { name: "filterJsonFiles basic", fn: testFilterJsonFilesBasic },
     { name: "filterJsonFiles empty", fn: testFilterJsonFilesEmpty },
     { name: "filterJsonFiles none", fn: testFilterJsonFilesNone },
     { name: "filterJsonFiles case", fn: testFilterJsonFilesCaseInsensitive },
+    { name: "filterJsonFiles mixed extensions", fn: testFilterJsonFilesMixedExtensions },
+    { name: "filterJsonFiles multiple dots", fn: testFilterJsonFilesWithMultipleDots },
     { name: "buildSummary basic", fn: testBuildSummaryBasic },
     { name: "buildSummary null icon", fn: testBuildSummaryNullIcon },
+    { name: "buildSummary with multiple tabs", fn: testBuildSummaryWithMultipleTabs },
   ];
 
   const failures: string[] = [];

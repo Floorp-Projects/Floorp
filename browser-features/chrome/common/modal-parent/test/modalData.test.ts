@@ -134,6 +134,78 @@ function testSetModalSizeUpdatesSequentially(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Additional edge case tests
+// ---------------------------------------------------------------------------
+
+function testSetModalSizeNegativeValues(): void {
+  // Test that negative values are accepted (validation may happen elsewhere)
+  setModalSize({ width: -100, height: -200 });
+  const s = modalSize();
+  assertEquals(s.width, -100, "width should accept negative values");
+  assertEquals(s.height, -200, "height should accept negative values");
+}
+
+function testSetModalSizeFractionalValues(): void {
+  // Test fractional/decimal values
+  setModalSize({ width: 100.5, height: 200.75 });
+  const s = modalSize();
+  assertEquals(s.width, 100.5, "width should accept fractional values");
+  assertEquals(s.height, 200.75, "height should accept fractional values");
+}
+
+function testSetModalSizeVeryLarge(): void {
+  // Test extremely large values (4K+ resolutions)
+  setModalSize({ width: 7680, height: 4320 });
+  const s = modalSize();
+  assertEquals(s.width, 7680, "width should accept 8K width");
+  assertEquals(s.height, 4320, "height should accept 8K height");
+}
+
+function testSetModalSizeWithUndefined(): void {
+  // Test setting explicit undefined values
+  setModalSize({ width: undefined, height: undefined });
+  const s = modalSize();
+  assertEquals(s.width, undefined, "width can be undefined");
+  assertEquals(s.height, undefined, "height can be undefined");
+}
+
+function testSetModalSizeMixedUndefined(): void {
+  // Test mixed defined and undefined values
+  setModalSize({ width: 500, height: undefined });
+  let s = modalSize();
+  assertEquals(s.width, 500, "width should be 500");
+  assertEquals(s.height, undefined, "height should be undefined");
+
+  setModalSize({ width: undefined, height: 600 });
+  s = modalSize();
+  assertEquals(s.width, undefined, "width should be undefined");
+  assertEquals(s.height, 600, "height should be 600");
+}
+
+function testSetModalVisibleToggle(): void {
+  // Test toggling visibility multiple times
+  setModalVisible(false);
+  assertEquals(isModalVisible(), false, "initial state false");
+
+  setModalVisible(true);
+  assertEquals(isModalVisible(), true, "first toggle to true");
+
+  setModalVisible(false);
+  assertEquals(isModalVisible(), false, "toggle to false");
+
+  setModalVisible(true);
+  assertEquals(isModalVisible(), true, "toggle to true again");
+}
+
+function testSetModalSizeSmallValues(): void {
+  // Test very small positive values
+  setModalSize({ width: 1, height: 1 });
+  const s = modalSize();
+  assertEquals(s.width, 1, "width should be 1");
+  assertEquals(s.height, 1, "height should be 1");
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -151,6 +223,19 @@ const tests: TestCase[] = [
     name: "setModalSize sequential updates",
     fn: testSetModalSizeUpdatesSequentially,
   },
+  { name: "setModalSize negative values", fn: testSetModalSizeNegativeValues },
+  {
+    name: "setModalSize fractional values",
+    fn: testSetModalSizeFractionalValues,
+  },
+  { name: "setModalSize very large values", fn: testSetModalSizeVeryLarge },
+  { name: "setModalSize with undefined", fn: testSetModalSizeWithUndefined },
+  {
+    name: "setModalSize mixed undefined",
+    fn: testSetModalSizeMixedUndefined,
+  },
+  { name: "setModalVisible toggle", fn: testSetModalVisibleToggle },
+  { name: "setModalSize small values", fn: testSetModalSizeSmallValues },
 ];
 
 export async function runAllTests(): Promise<void> {

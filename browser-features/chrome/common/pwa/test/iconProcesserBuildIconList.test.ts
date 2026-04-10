@@ -97,6 +97,39 @@ function testStableSortSameSize(): void {
   assertEquals(result[1].icon.src, "b.png", "second icon should be b.png");
 }
 
+function testMultipleAnysPreserveOrder(): void {
+  const iconA = makeIcon(["any"]);
+  iconA.src = "a.png";
+  const iconB = makeIcon(["any"]);
+  iconB.src = "b.png";
+  const result = IconProcesser.getInstance().buildIconList([iconA, iconB]);
+  assertEquals(result.length, 2, "should return two entries");
+  assertEquals(result[0].icon.src, "a.png", "first 'any' should be a.png");
+  assertEquals(result[1].icon.src, "b.png", "second 'any' should be b.png");
+}
+
+function testSizeOverflowHandling(): void {
+  const result = IconProcesser.getInstance().buildIconList([
+    makeIcon(["999999999999999999x999999999999999999"]),
+  ]);
+  assertEquals(result.length, 1, "should handle overflow gracefully");
+  // The parsed size may be NaN or Infinity due to overflow
+  // The sort should handle this without crashing
+  assertEquals(typeof result[0].size, "number", "size should be number");
+}
+
+function testMixedValidAndInvalidSizes(): void {
+  const result = IconProcesser.getInstance().buildIconList([
+    makeIcon(["64x64"]),
+    makeIcon(["invalid"]),
+    makeIcon(["128x128"]),
+  ]);
+  assertEquals(result.length, 3, "should return three entries");
+  assertEquals(result[0].size, 64, "first valid should be 64");
+  assertEquals(result[2].size, 128, "second valid should be 128");
+  // Invalid size will be NaN, which should sort to the end
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -114,6 +147,9 @@ export async function runAllTests(): Promise<void> {
     },
     { name: "icon reference preserved", fn: testIconReferencePreserved },
     { name: "stable sort same size", fn: testStableSortSameSize },
+    { name: "multiple 'any's preserve order", fn: testMultipleAnysPreserveOrder },
+    { name: "size overflow handling", fn: testSizeOverflowHandling },
+    { name: "mixed valid and invalid sizes", fn: testMixedValidAndInvalidSizes },
   ];
 
   const failures: string[] = [];

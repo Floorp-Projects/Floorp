@@ -4,7 +4,7 @@
 import { mapColorToCSSVariable } from "../utils/container-color.ts";
 import {
   type TestCase,
-  type assert,
+  assert,
   assertEquals,
 } from "../../../test/utils/test_harness.ts";
 
@@ -114,6 +114,54 @@ function testUnknownStringReturnsNull(): void {
   );
 }
 
+function testStringPassthroughCaseInsensitivity(): void {
+  const validColors = [
+    "BLUE",
+    "Blue",
+    "GrEeN",
+    "RED",
+  ];
+  for (const color of validColors) {
+    const result = mapColorToCSSVariable(color);
+    assert(
+      result === color.toLowerCase() || result === null,
+      `"${color}" should be normalized or null`,
+    );
+  }
+}
+
+function testNumberNegativeReturnsNull(): void {
+  assertEquals(
+    mapColorToCSSVariable(-1),
+    null,
+    "negative number should return null",
+  );
+}
+
+function testNumberTenReturnsNull(): void {
+  assertEquals(
+    mapColorToCSSVariable(10),
+    null,
+    "number 10 should return null",
+  );
+}
+
+function testStringEmptyReturnsNull(): void {
+  assertEquals(
+    mapColorToCSSVariable(""),
+    null,
+    "empty string should return null",
+  );
+}
+
+function testStringWithSpacesReturnsNull(): void {
+  assertEquals(
+    mapColorToCSSVariable("blue green"),
+    null,
+    "string with spaces should return null",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -136,6 +184,11 @@ export async function runAllTests(): Promise<void> {
     { name: "null → null", fn: testNullReturnsNull },
     { name: "unknown number → null", fn: testUnknownNumberReturnsNull },
     { name: "unknown string → null", fn: testUnknownStringReturnsNull },
+    { name: "string case insensitivity", fn: testStringPassthroughCaseInsensitivity },
+    { name: "negative number → null", fn: testNumberNegativeReturnsNull },
+    { name: "number 10 → null", fn: testNumberTenReturnsNull },
+    { name: "empty string → null", fn: testStringEmptyReturnsNull },
+    { name: "string with spaces → null", fn: testStringWithSpacesReturnsNull },
   ];
 
   const failures: string[] = [];

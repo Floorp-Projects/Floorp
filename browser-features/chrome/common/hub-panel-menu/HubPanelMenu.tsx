@@ -78,7 +78,7 @@ export class HubPanelMenu {
       relatedToCurrent: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-    win.PanelUI.hide();
+    win.PanelUI?.hide();
   }
 
   public static Render(): JSX.Element {

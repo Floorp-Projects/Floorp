@@ -463,6 +463,429 @@ function testMultipleCustomizeCallsPreserveOriginalChildren(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tests: customizeNotificationContent - Edge Cases
+// ---------------------------------------------------------------------------
+
+function testCustomizeNotificationContentWithNullName(): void {
+  cleanupDOM();
+  createMockInstallConfirmationDOM();
+  const customizer = new NotificationCustomizer();
+
+  // CWS info with null name
+  const cwsInfoWithNullName: ChromeWebStoreInstallInfo = {
+    name: null as unknown as string,
+    id: "test-id",
+  };
+
+  customizer.customizeNotificationContent(cwsInfoWithNullName);
+
+  const message = document!.querySelector(".chrome-web-store-message");
+  assert(
+    message !== null,
+    "should create message even with null name",
+  );
+  assert(
+    (message as HTMLElement).textContent !== "",
+    "should use default name when null",
+  );
+
+  cleanupDOM();
+}
+
+function testCustomizeNotificationContentWithUndefinedName(): void {
+  cleanupDOM();
+  createMockInstallConfirmationDOM();
+  const customizer = new NotificationCustomizer();
+
+  // CWS info with undefined name
+  const cwsInfoWithUndefinedName: ChromeWebStoreInstallInfo = {
+    name: undefined as unknown as string,
+    id: "test-id",
+  };
+
+  customizer.customizeNotificationContent(cwsInfoWithUndefinedName);
+
+  const message = document!.querySelector(".chrome-web-store-message");
+  assert(
+    message !== null,
+    "should create message even with undefined name",
+  );
+
+  cleanupDOM();
+}
+
+function testCustomizeNotificationContentMissingPopupContent(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without popupnotificationcontent
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-install-confirmation-notification";
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
+
+  cleanupDOM();
+}
+
+function testCustomizeNotificationContentMissingDescriptionContainer(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without description container
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-install-confirmation-notification";
+
+  const popupContent = document!.createXULElement("popupnotificationcontent");
+  notification.appendChild(popupContent);
+
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
+
+  cleanupDOM();
+}
+
+function testCustomizeNotificationContentReusesExistingMessage(): void {
+  cleanupDOM();
+  createMockInstallConfirmationDOM();
+  const customizer = new NotificationCustomizer();
+
+  // First customization
+  customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
+  const _firstMessage = document!.querySelector(".chrome-web-store-message");
+
+  // Second customization
+  customizer.customizeNotificationContent(ALT_CWS_INFO);
+  const _secondMessage = document!.querySelector(".chrome-web-store-message");
+
+  // Should reuse the same element, not create a duplicate
+  const allMessages = document!.querySelectorAll(".chrome-web-store-message");
+  assertEquals(
+    allMessages.length,
+    1,
+    "should reuse existing message element",
+  );
+
+  cleanupDOM();
+}
+
+// ---------------------------------------------------------------------------
+// Tests: customizeWebExtPermissionPrompt - Edge Cases
+// ---------------------------------------------------------------------------
+
+function testCustomizeWebExtPermissionPromptWithNullName(): void {
+  cleanupDOM();
+  createMockWebExtPermissionDOM();
+  const customizer = new NotificationCustomizer();
+
+  const cwsInfoWithNullName: ChromeWebStoreInstallInfo = {
+    name: null as unknown as string,
+    id: "test-id",
+  };
+
+  customizer.customizeWebExtPermissionPrompt(cwsInfoWithNullName);
+
+  const message = document!.querySelector(".chrome-web-store-message");
+  assert(
+    message !== null,
+    "should create message even with null name",
+  );
+  assert(
+    (message as HTMLElement).textContent !== "",
+    "should use default name when null",
+  );
+
+  cleanupDOM();
+}
+
+function testCustomizeWebExtPermissionPromptWithUndefinedName(): void {
+  cleanupDOM();
+  createMockWebExtPermissionDOM();
+  const customizer = new NotificationCustomizer();
+
+  const cwsInfoWithUndefinedName: ChromeWebStoreInstallInfo = {
+    name: undefined as unknown as string,
+    id: "test-id",
+  };
+
+  customizer.customizeWebExtPermissionPrompt(cwsInfoWithUndefinedName);
+
+  const message = document!.querySelector(".chrome-web-store-message");
+  assert(
+    message !== null,
+    "should create message even with undefined name",
+  );
+
+  cleanupDOM();
+}
+
+function testCustomizeWebExtPermissionPromptMissingPopupContent(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without popupnotificationcontent
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-webext-permissions-notification";
+
+  const descContainer = document!.createXULElement("vbox") as XULElement & {
+    className: string;
+  };
+  descContainer.className = "popup-notification-description";
+  notification.appendChild(descContainer);
+
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
+
+  cleanupDOM();
+}
+
+function testCustomizeWebExtPermissionPromptMissingDescriptionContainer(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without description container
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-webext-permissions-notification";
+
+  const popupContent = document!.createXULElement("popupnotificationcontent");
+  notification.appendChild(popupContent);
+
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
+
+  cleanupDOM();
+}
+
+function testCustomizeWebExtPermissionPromptMissingIntro(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without intro element
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-webext-permissions-notification";
+
+  const popupContent = document!.createXULElement("popupnotificationcontent");
+  notification.appendChild(popupContent);
+
+  const descContainer = document!.createXULElement("vbox") as XULElement & {
+    className: string;
+  };
+  descContainer.className = "popup-notification-description";
+  notification.appendChild(descContainer);
+
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
+
+  cleanupDOM();
+}
+
+function testCustomizeWebExtPermissionPromptReusesExistingMessage(): void {
+  cleanupDOM();
+  createMockWebExtPermissionDOM();
+  const customizer = new NotificationCustomizer();
+
+  // First customization
+  customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
+  const _firstMessage = document!.querySelector(".chrome-web-store-message");
+
+  // Second customization
+  customizer.customizeWebExtPermissionPrompt(ALT_CWS_INFO);
+  const _secondMessage = document!.querySelector(".chrome-web-store-message");
+
+  // Should reuse the same element, not create a duplicate
+  const allMessages = document!.querySelectorAll(".chrome-web-store-message");
+  assertEquals(
+    allMessages.length,
+    1,
+    "should reuse existing message element",
+  );
+
+  cleanupDOM();
+}
+
+// ---------------------------------------------------------------------------
+// Tests: restoreOriginalContent - Edge Cases
+// ---------------------------------------------------------------------------
+
+function testRestoreOriginalContentMissingNotification(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Should not throw when notification doesn't exist
+  customizer.restoreOriginalContent();
+}
+
+function testRestoreOriginalContentMissingDescriptionContainer(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without description container
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-webext-permissions-notification";
+  notification.setAttribute("data-cws-customized", "true");
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.restoreOriginalContent();
+
+  cleanupDOM();
+}
+
+function testRestoreOriginalContentMissingIntro(): void {
+  cleanupDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Create notification without intro element
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-webext-permissions-notification";
+  notification.setAttribute("data-cws-customized", "true");
+
+  const popupContent = document!.createXULElement("popupnotificationcontent");
+  notification.appendChild(popupContent);
+
+  const descContainer = document!.createXULElement("vbox") as XULElement & {
+    className: string;
+  };
+  descContainer.className = "popup-notification-description";
+  notification.appendChild(descContainer);
+
+  document!.body!.appendChild(notification as unknown as Node);
+
+  // Should not throw
+  customizer.restoreOriginalContent();
+
+  cleanupDOM();
+}
+
+function testRestoreOriginalContentIdempotent(): void {
+  cleanupDOM();
+  createMockWebExtPermissionDOM();
+  const customizer = new NotificationCustomizer();
+
+  // Customize
+  customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
+
+  // Restore multiple times
+  customizer.restoreOriginalContent();
+  customizer.restoreOriginalContent();
+  customizer.restoreOriginalContent();
+
+  // Should not throw and state should be consistent
+  const notification = document!.getElementById(
+    "addon-webext-permissions-notification",
+  );
+  assertEquals(
+    notification?.hasAttribute("data-cws-customized"),
+    false,
+    "should not have customization attribute",
+  );
+
+  cleanupDOM();
+}
+
+// ---------------------------------------------------------------------------
+// Tests: addChromeExtensionBadge - Multiple Name Elements
+// ---------------------------------------------------------------------------
+
+function testAddChromeExtensionBadgeMultipleNameElements(): void {
+  cleanupDOM();
+  const notification = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  notification.id = "addon-install-confirmation-notification";
+
+  const popupContent = document!.createXULElement("popupnotificationcontent");
+  notification.appendChild(popupContent);
+
+  const content = document!.createXULElement("vbox") as XULElement & {
+    id: string;
+  };
+  content.id = "addon-install-confirmation-content";
+
+  // Add multiple name elements
+  const nameEl1 = document!.createXULElement("label") as XULElement & {
+    className: string;
+  };
+  nameEl1.className = "addon-install-confirmation-name";
+  const parent1 = document!.createElement("div");
+  parent1.appendChild(nameEl1);
+  content.appendChild(parent1);
+
+  const nameEl2 = document!.createXULElement("label") as XULElement & {
+    className: string;
+  };
+  nameEl2.className = "addon-install-confirmation-name";
+  const parent2 = document!.createElement("div");
+  parent2.appendChild(nameEl2);
+  content.appendChild(parent2);
+
+  notification.appendChild(content);
+  document!.body!.appendChild(notification as unknown as Node);
+
+  const customizer = new NotificationCustomizer();
+  customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
+
+  // Should add badge to all name elements
+  const badges = content.querySelectorAll(".chrome-extension-badge");
+  assertEquals(
+    badges.length,
+    2,
+    "should add badge to all name elements",
+  );
+
+  cleanupDOM();
+}
+
+// ---------------------------------------------------------------------------
+// Tests: addCompatibilityWarning - Idempotent
+// ---------------------------------------------------------------------------
+
+function testAddCompatibilityWarningIdempotent(): void {
+  cleanupDOM();
+  createMockInstallConfirmationDOM();
+  const customizer = new NotificationCustomizer();
+
+  // First call adds warning
+  customizer.customizeNotificationContent(SAMPLE_CWS_INFO);
+  const _firstWarning = document!.querySelector(".chrome-extension-warning");
+
+  // Second call should not duplicate
+  customizer.customizeNotificationContent(ALT_CWS_INFO);
+  const allWarnings = document!.querySelectorAll(".chrome-extension-warning");
+
+  assertEquals(
+    allWarnings.length,
+    1,
+    "should not duplicate warning element",
+  );
+
+  cleanupDOM();
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -501,6 +924,28 @@ export async function runAllTests(): Promise<void> {
       fn: testCustomizeNotificationContentIdempotent,
     },
 
+    // customizeNotificationContent - Edge Cases
+    {
+      name: "customizeNotificationContent - null name",
+      fn: testCustomizeNotificationContentWithNullName,
+    },
+    {
+      name: "customizeNotificationContent - undefined name",
+      fn: testCustomizeNotificationContentWithUndefinedName,
+    },
+    {
+      name: "customizeNotificationContent - missing popup content",
+      fn: testCustomizeNotificationContentMissingPopupContent,
+    },
+    {
+      name: "customizeNotificationContent - missing description container",
+      fn: testCustomizeNotificationContentMissingDescriptionContainer,
+    },
+    {
+      name: "customizeNotificationContent - reuses existing message",
+      fn: testCustomizeNotificationContentReusesExistingMessage,
+    },
+
     // customizeWebExtPermissionPrompt
     {
       name: "customizeWebExtPermissionPrompt - no DOM",
@@ -523,6 +968,32 @@ export async function runAllTests(): Promise<void> {
       fn: testCustomizeWebExtPermissionPromptCompatibilityWarning,
     },
 
+    // customizeWebExtPermissionPrompt - Edge Cases
+    {
+      name: "customizeWebExtPermissionPrompt - null name",
+      fn: testCustomizeWebExtPermissionPromptWithNullName,
+    },
+    {
+      name: "customizeWebExtPermissionPrompt - undefined name",
+      fn: testCustomizeWebExtPermissionPromptWithUndefinedName,
+    },
+    {
+      name: "customizeWebExtPermissionPrompt - missing popup content",
+      fn: testCustomizeWebExtPermissionPromptMissingPopupContent,
+    },
+    {
+      name: "customizeWebExtPermissionPrompt - missing description container",
+      fn: testCustomizeWebExtPermissionPromptMissingDescriptionContainer,
+    },
+    {
+      name: "customizeWebExtPermissionPrompt - missing intro",
+      fn: testCustomizeWebExtPermissionPromptMissingIntro,
+    },
+    {
+      name: "customizeWebExtPermissionPrompt - reuses existing message",
+      fn: testCustomizeWebExtPermissionPromptReusesExistingMessage,
+    },
+
     // restoreOriginalContent
     {
       name: "restoreOriginalContent - no DOM",
@@ -541,6 +1012,24 @@ export async function runAllTests(): Promise<void> {
       fn: testRestoreOriginalContentRestoresIntro,
     },
 
+    // restoreOriginalContent - Edge Cases
+    {
+      name: "restoreOriginalContent - missing notification",
+      fn: testRestoreOriginalContentMissingNotification,
+    },
+    {
+      name: "restoreOriginalContent - missing description container",
+      fn: testRestoreOriginalContentMissingDescriptionContainer,
+    },
+    {
+      name: "restoreOriginalContent - missing intro",
+      fn: testRestoreOriginalContentMissingIntro,
+    },
+    {
+      name: "restoreOriginalContent - idempotent",
+      fn: testRestoreOriginalContentIdempotent,
+    },
+
     // Round-trip
     {
       name: "round-trip customize → restore → customize",
@@ -549,6 +1038,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "multiple customizes preserve original children",
       fn: testMultipleCustomizeCallsPreserveOriginalChildren,
+    },
+
+    // addChromeExtensionBadge - Multiple Elements
+    {
+      name: "addChromeExtensionBadge - multiple name elements",
+      fn: testAddChromeExtensionBadgeMultipleNameElements,
+    },
+
+    // addCompatibilityWarning - Idempotent
+    {
+      name: "addCompatibilityWarning - idempotent",
+      fn: testAddCompatibilityWarningIdempotent,
     },
   ];
 

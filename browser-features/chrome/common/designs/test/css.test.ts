@@ -272,5 +272,123 @@ export async function runAllTests(): Promise<void> {
       name: "production paths use chrome:// protocol",
       fn: testProductionPathsUseChromeProtocol,
     },
+    // Additional tests
+    {
+      name: "fluerial has iconBasePath in dev",
+      fn: testFluerialHasIconBasePathInDev,
+    },
+    {
+      name: "lepton has iconBasePath in dev",
+      fn: testLeptonHasIconBasePathInDev,
+    },
+    {
+      name: "photon has both chrome and content styles",
+      fn: testPhotonHasBothStyleTypes,
+    },
+    {
+      name: "protonfix has both chrome and content styles",
+      fn: testProtonfixHasBothStyleTypes,
+    },
+    {
+      name: "userjs content is non-empty for themes that have it",
+      fn: testUserjsContentNonEmpty,
+    },
+    {
+      name: "chromeStylesRaw and chromeStyles are mutually exclusive",
+      fn: testChromeStylesMutuallyExclusive,
+    },
   ]);
+}
+
+// ---------------------------------------------------------------------------
+// Additional Tests — FCSS edge cases and invariants
+// ---------------------------------------------------------------------------
+
+function testFluerialHasIconBasePathInDev(): void {
+  const result = getCSSFromConfig(makeConfig("fluerial"));
+  // In dev mode, iconBasePath should be present
+  // In production, it's undefined (chrome:// URLs don't need it)
+  const hasIconPath = result.iconBasePath !== undefined;
+  assert(
+    hasIconPath || result.chromeStyles !== undefined,
+    "fluerial should have iconBasePath in dev or chromeStyles in prod",
+  );
+}
+
+function testLeptonHasIconBasePathInDev(): void {
+  const result = getCSSFromConfig(makeConfig("lepton"));
+  const hasIconPath = result.iconBasePath !== undefined;
+  assert(
+    hasIconPath || result.chromeStyles !== undefined,
+    "lepton should have iconBasePath in dev or chromeStyles in prod",
+  );
+}
+
+function testPhotonHasBothStyleTypes(): void {
+  const result = getCSSFromConfig(makeConfig("photon"));
+  // Photon has both chrome styles (chromeStyles/chromeStylesRaw)
+  // and content styles (styles/stylesRaw)
+  const hasChromeStyles =
+    (result.chromeStyles?.length ?? 0) > 0 ||
+    (result.chromeStylesRaw?.length ?? 0) > 0;
+  const hasContentStyles =
+    (result.styles?.length ?? 0) > 0 ||
+    (result.stylesRaw?.length ?? 0) > 0;
+
+  assertEquals(
+    hasChromeStyles && hasContentStyles,
+    true,
+    "photon should have both chrome and content styles",
+  );
+}
+
+function testProtonfixHasBothStyleTypes(): void {
+  const result = getCSSFromConfig(makeConfig("protonfix"));
+  // Protonfix also has both chrome and content styles
+  const hasChromeStyles =
+    (result.chromeStyles?.length ?? 0) > 0 ||
+    (result.chromeStylesRaw?.length ?? 0) > 0;
+  const hasContentStyles =
+    (result.styles?.length ?? 0) > 0 ||
+    (result.stylesRaw?.length ?? 0) > 0;
+
+  assertEquals(
+    hasChromeStyles && hasContentStyles,
+    true,
+    "protonfix should have both chrome and content styles",
+  );
+}
+
+function testUserjsContentNonEmpty(): void {
+  const themesWithUserjs: Array<
+    TFloorpDesignConfigs["globalConfigs"]["userInterface"]
+  > = ["lepton", "photon", "protonfix"];
+
+  for (const theme of themesWithUserjs) {
+    const result = getCSSFromConfig(makeConfig(theme));
+    assertEquals(
+      result.userjs !== null && result.userjs!.length > 0,
+      true,
+      `${theme} should have non-empty userjs`,
+    );
+  }
+}
+
+function testChromeStylesMutuallyExclusive(): void {
+  // A theme should not have both chromeStyles and chromeStylesRaw
+  const themes: Array<
+    TFloorpDesignConfigs["globalConfigs"]["userInterface"]
+  > = ["fluerial", "lepton", "photon", "protonfix"];
+
+  for (const theme of themes) {
+    const result = getCSSFromConfig(makeConfig(theme));
+    const hasChromeStyles = (result.chromeStyles?.length ?? 0) > 0;
+    const hasChromeStylesRaw = (result.chromeStylesRaw?.length ?? 0) > 0;
+
+    assertEquals(
+      hasChromeStyles && hasChromeStylesRaw,
+      false,
+      `${theme} should not have both chromeStyles and chromeStylesRaw`,
+    );
+  }
 }

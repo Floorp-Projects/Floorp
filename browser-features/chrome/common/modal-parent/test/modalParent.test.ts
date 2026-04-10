@@ -149,6 +149,228 @@ function testTFormResultKeyValue(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Extended TForm/TFormItem type tests
+// ---------------------------------------------------------------------------
+
+function testTFormItemAllOptionalFields(): void {
+  // Test that all optional fields can be included
+  const item = {
+    type: "text" as const,
+    id: "test-id",
+    label: "Test Label",
+    value: "test value",
+    required: true,
+    classList: "class1 class2",
+    placeholder: "Enter text",
+    rows: 5,
+    maxLength: 100,
+    options: [
+      { label: "Option 1", value: "opt1", icon: "icon1" },
+      { label: "Option 2", value: "opt2" },
+    ],
+    when: { id: "other-field", value: "trigger" },
+    onInput: (val: string) => val.toUpperCase(),
+  };
+  assertEquals(item.id, "test-id", "id preserved");
+  assertEquals(item.label, "Test Label", "label preserved");
+  assertEquals(item.required, true, "required preserved");
+  assertEquals(item.classList, "class1 class2", "classList preserved");
+  assertEquals(item.placeholder, "Enter text", "placeholder preserved");
+  assertEquals(item.rows, 5, "rows preserved");
+  assertEquals(item.maxLength, 100, "maxLength preserved");
+  assertEquals(item.options?.length, 2, "options length");
+}
+
+function testTFormItemWhenStringArray(): void {
+  // Test when clause with string array value
+  const item = {
+    type: "checkbox" as const,
+    id: "chk",
+    when: { id: "select-field", value: ["opt1", "opt2"] },
+  };
+  assertEquals(item.when.value.length, 2, "array value length");
+  assertEquals(item.when.value[0], "opt1", "first array value");
+}
+
+function testTFormItemAllTypesWithStructure(): void {
+  // Test each type with appropriate fields
+  const types: Array<{ type: string; appropriateFields: string[] }> = [
+    { type: "text", appropriateFields: ["placeholder", "maxLength"] },
+    { type: "number", appropriateFields: ["placeholder", "value"] },
+    { type: "textarea", appropriateFields: ["rows", "maxLength"] },
+    { type: "select", appropriateFields: ["options"] },
+    { type: "dropdown", appropriateFields: ["options"] },
+    { type: "checkbox", appropriateFields: ["value"] },
+    { type: "radio", appropriateFields: ["options"] },
+    { type: "url", appropriateFields: ["placeholder"] },
+  ];
+
+  assertEquals(types.length, 8, "all 8 types covered");
+}
+
+function testTFormResultEmpty(): void {
+  const result: Record<string, string | number> = {};
+  assertEquals(Object.keys(result).length, 0, "empty result");
+}
+
+function testTFormResultMultipleFields(): void {
+  const result: Record<string, string | number> = {
+    username: "testuser",
+    age: 25,
+    email: "test@example.com",
+    score: 100,
+  };
+  assertEquals(result.username, "testuser", "username field");
+  assertEquals(result.age, 25, "age field");
+  assertEquals(result.email, "test@example.com", "email field");
+  assertEquals(result.score, 100, "score field");
+}
+
+// ---------------------------------------------------------------------------
+// ModalParent initialization and error handling tests
+// ---------------------------------------------------------------------------
+
+function testModalParentInit(): void {
+  const inst = ModalParent.getInstance();
+  // init() should not throw even if called multiple times
+  try {
+    inst.init();
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Some errors are acceptable in test environment
+    assert(
+      msg.includes("browsingContext") ||
+        msg.includes("modal-parent-container") ||
+        msg.includes("NRChromeModal") ||
+        msg.includes("undefined"),
+      "Unexpected init error: " + msg,
+    );
+  }
+}
+
+function testShowNoraModalBeforeInit(): void {
+  // Create fresh instance to test uninitialized state
+  const inst = ModalParent.getInstance();
+  // If init wasn't called, showNoraModal should throw specific error
+  // Note: In test environment, singleton may already be partially initialized
+  try {
+    inst.showNoraModal(
+      { forms: [], title: "test" },
+      { width: 100, height: 100 },
+      () => {},
+    );
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Should get initialization error or actor error
+    assert(
+      msg.includes("ModalManager not initialized") ||
+        msg.includes("NRChromeModal") ||
+        msg.includes("browsingContext"),
+      "Expected initialization or actor error, got: " + msg,
+    );
+  }
+}
+
+function testHideNoraModalBeforeInit(): void {
+  const inst = ModalParent.getInstance();
+  try {
+    inst.hideNoraModal();
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    assert(
+      msg.includes("ModalManager not initialized") ||
+        msg.includes("modal-parent-container"),
+      "Expected initialization error, got: " + msg,
+    );
+  }
+}
+
+function testSetModalSizeBeforeInit(): void {
+  const inst = ModalParent.getInstance();
+  try {
+    inst.setModalSize({ width: 300, height: 400 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    assert(
+      msg.includes("ModalManager not initialized"),
+      "Expected initialization error, got: " + msg,
+    );
+  }
+}
+
+function testShowNoraModalWithComplexForm(): void {
+  const inst = ModalParent.getInstance();
+  const complexForm = {
+    forms: [
+      {
+        type: "text" as const,
+        id: "name",
+        label: "Name",
+        required: true,
+        placeholder: "Enter name",
+      },
+      {
+        type: "number" as const,
+        id: "age",
+        label: "Age",
+        value: 0,
+      },
+      {
+        type: "select" as const,
+        id: "country",
+        options: [
+          { label: "USA", value: "us" },
+          { label: "Japan", value: "jp" },
+        ],
+      },
+    ],
+    title: "Complex Form Test",
+    submitLabel: "Submit",
+    cancelLabel: "Cancel",
+  };
+
+  try {
+    inst.showNoraModal(
+      complexForm,
+      { width: 500, height: 600 },
+      (result) => {
+        // Callback should be called with result
+        assert(typeof result === "object", "result should be object");
+      },
+    );
+  } catch (e: unknown) {
+    // Actor errors are acceptable in test environment
+    const msg = e instanceof Error ? e.message : String(e);
+    assert(
+      msg.includes("NRChromeModal") ||
+        msg.includes("browsingContext") ||
+        msg.includes("modal-parent-container"),
+      "Unexpected error: " + msg,
+    );
+  }
+}
+
+function testModalParentMethodChaining(): void {
+  // Test that multiple operations can be called on same instance
+  const inst = ModalParent.getInstance();
+  try {
+    inst.init();
+    inst.setModalSize({ width: 400, height: 500 });
+    inst.hideNoraModal();
+  } catch (e: unknown) {
+    // Errors are acceptable, we're testing that methods exist
+    const msg = e instanceof Error ? e.message : String(e);
+    assert(
+      msg.includes("ModalManager not initialized") ||
+        msg.includes("NRChromeModal") ||
+        msg.includes("browsingContext") ||
+        msg.includes("modal-parent-container"),
+      "Unexpected error in method chaining: " + msg,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -165,6 +387,38 @@ const tests: TestCase[] = [
   },
   { name: "TFormItem supports 8 types", fn: testTFormItemAllTypes },
   { name: "TFormResult key-value", fn: testTFormResultKeyValue },
+  {
+    name: "TFormItem all optional fields",
+    fn: testTFormItemAllOptionalFields,
+  },
+  { name: "TFormItem when string array", fn: testTFormItemWhenStringArray },
+  {
+    name: "TFormItem all types with structure",
+    fn: testTFormItemAllTypesWithStructure,
+  },
+  { name: "TFormResult empty", fn: testTFormResultEmpty },
+  { name: "TFormResult multiple fields", fn: testTFormResultMultipleFields },
+  { name: "ModalParent init", fn: testModalParentInit },
+  {
+    name: "showNoraModal before init",
+    fn: testShowNoraModalBeforeInit,
+  },
+  {
+    name: "hideNoraModal before init",
+    fn: testHideNoraModalBeforeInit,
+  },
+  {
+    name: "setModalSize before init",
+    fn: testSetModalSizeBeforeInit,
+  },
+  {
+    name: "showNoraModal with complex form",
+    fn: testShowNoraModalWithComplexForm,
+  },
+  {
+    name: "ModalParent method chaining",
+    fn: testModalParentMethodChaining,
+  },
 ];
 
 export async function runAllTests(): Promise<void> {

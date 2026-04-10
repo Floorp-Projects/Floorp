@@ -311,6 +311,140 @@ const tests: TestCase[] = [
       }
     },
   },
+
+  // --- Additional edge case tests ---
+  {
+    name: "getActionDisplayName with empty string",
+    fn() {
+      const name = getActionDisplayName("");
+      assertEquals(name, "", "should handle empty actionId");
+    },
+  },
+  {
+    name: "getActionDisplayName with special characters",
+    fn() {
+      const name = getActionDisplayName("action-with-special-chars_123");
+      assert(
+        typeof name === "string",
+        "should handle special characters in actionId",
+      );
+    },
+  },
+  {
+    name: "getActionDescription with empty string",
+    fn() {
+      const desc = getActionDescription("");
+      assertEquals(desc, "", "should return empty string for empty actionId");
+    },
+  },
+  {
+    name: "getActionDescription with very long actionId",
+    fn() {
+      const longId = "a".repeat(1000);
+      const desc = getActionDescription(longId);
+      assertEquals(desc, "", "should handle very long actionId");
+    },
+  },
+  {
+    name: "getAllGestureActions returns consistent order",
+    fn() {
+      const actions1 = getAllGestureActions();
+      const actions2 = getAllGestureActions();
+      assertEquals(
+        actions1.length,
+        actions2.length,
+        "should return same number of actions",
+      );
+      // Check that order is consistent
+      for (let i = 0; i < actions1.length; i++) {
+        assertEquals(
+          actions1[i].name,
+          actions2[i].name,
+          `action ${i} should be in same order`,
+        );
+      }
+    },
+  },
+  {
+    name: "gestureActions registry persists across calls",
+    fn() {
+      const size1 = gestureActions.getAllActions().size;
+      const size2 = gestureActions.getAllActions().size;
+      assertEquals(
+        size1,
+        size2,
+        "registry size should be consistent",
+      );
+    },
+  },
+  {
+    name: "executeGestureAction with action that throws",
+    fn() {
+      let _errorThrown = false;
+      gestureActions.registerAction({
+        name: "__test_throwing_action__",
+        fn: () => {
+          throw new Error("Test error");
+        },
+      });
+      const result = executeGestureAction("__test_throwing_action__", window);
+      assertEquals(result, false, "should return false when action throws");
+    },
+  },
+  {
+    name: "executeGestureAction with action that returns false",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_returns_false__",
+        fn: () => false,
+      });
+      const result = executeGestureAction("__test_returns_false__", window);
+      assertEquals(result, true, "should return true even if action returns false");
+    },
+  },
+  {
+    name: "executeGestureAction with action that returns value",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_returns_value__",
+        fn: () => "custom return value",
+      });
+      const result = executeGestureAction("__test_returns_value__", window);
+      assertEquals(result, true, "should return true for successful execution");
+    },
+  },
+  {
+    name: "gestureActions.getAction returns same function reference",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_same_ref__",
+        fn: () => {},
+      });
+      const fn1 = gestureActions.getAction("__test_same_ref__");
+      const fn2 = gestureActions.getAction("__test_same_ref__");
+      assertEquals(
+        fn1,
+        fn2,
+        "should return same function reference",
+      );
+    },
+  },
+  {
+    name: "getAllGestureActions includes all registered actions",
+    fn() {
+      const beforeSize = getAllGestureActions().length;
+      gestureActions.registerAction({
+        name: "__test_included__",
+        fn: () => {},
+      });
+      const afterSize = getAllGestureActions().length;
+      assertEquals(
+        afterSize,
+        beforeSize + 1,
+        "should include newly registered action",
+      );
+    },
+  },
 ];
 
 export async function runAllTests(): Promise<void> {

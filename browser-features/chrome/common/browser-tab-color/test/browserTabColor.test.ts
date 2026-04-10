@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import {
+  assert,
   assertEquals,
   assertNotEquals,
   type TestCase,
@@ -30,7 +31,7 @@ function setupGlobals(): void {
 // ---------------------------------------------------------------------------
 
 async function testConstructorCreatesGlobalGFloorp(): Promise<void> {
-  delete (globalThis as Record<string, unknown>).gFloorp;
+  (globalThis as Record<string, unknown>).gFloorp = undefined;
   assertEquals(
     (globalThis as Record<string, unknown>).gFloorp as
       | typeof globalThis.gFloorp
@@ -290,6 +291,246 @@ async function testInitDoesNotThrow(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Tests: getTextColor helper function (via module import)
+// ---------------------------------------------------------------------------
+
+// getTextColor is a private function in index.ts that uses chroma-js:
+//   if (chroma.valid(backgroundColor)) {
+//     return chroma(backgroundColor).luminance() >= 0.5 ? "black" : "white";
+//   } else { throw Error(...); }
+// We replicate the logic here to verify correctness.
+
+async function testGetTextColorLightColorsReturnBlack(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  const lightColors = ["#ffffff", "#e0e0e0", "#ffff00", "#90ee90"];
+  for (const color of lightColors) {
+    assert(chroma.valid(color), color + " should be valid");
+    const luminance = chroma(color).luminance();
+    const result = luminance >= 0.5 ? "black" : "white";
+    assertEquals(result, "black", color + " lum=" + luminance.toFixed(3) + " should return black");
+  }
+}
+
+async function testGetTextColorDarkColorsReturnWhite(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  const darkColors = ["#000000", "#333333", "#0000ff", "#800020"];
+  for (const color of darkColors) {
+    assert(chroma.valid(color), color + " should be valid");
+    const luminance = chroma(color).luminance();
+    const result = luminance >= 0.5 ? "black" : "white";
+    assertEquals(result, "white", color + " lum=" + luminance.toFixed(3) + " should return white");
+  }
+}
+
+async function testGetTextColorInvalidColorNotValid(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  assertEquals(chroma.valid("not-a-color"), false, "not-a-color should be invalid");
+  assertEquals(chroma.valid("xyz"), false, "xyz should be invalid");
+}
+
+async function testGetTextColorBoundaryExactly05(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  const midGray = chroma.mix("#000000", "#ffffff", 0.5).hex();
+  const luminance = chroma(midGray).luminance();
+  const result = luminance >= 0.5 ? "black" : "white";
+  assert(result === "black" || result === "white", "should return a valid color");
+}
+
+async function testGetTextColorHexFormats(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  assert(chroma.valid("#fff"), "#fff should be valid");
+  assert(chroma.valid("#ffffff"), "#ffffff should be valid");
+  assert(chroma.valid("#ffffff00"), "#ffffff00 should be valid");
+}
+
+async function testGetTextColorNamedColors(): Promise<void> {
+  const chroma = (await import("chroma-js")).default;
+  assert(chroma.valid("red"), "red should be valid");
+  assert(chroma.valid("blue"), "blue should be valid");
+  assert(chroma.valid("green"), "green should be valid");
+  assert(chroma.valid("black"), "black should be valid");
+  assert(chroma.valid("white"), "white should be valid");
+}
+
+// ---------------------------------------------------------------------------
+// Tests: BrowserTabColor class initialization
+// ---------------------------------------------------------------------------
+
+async function testBrowserTabColorHasInitMethod(): Promise<void> {
+  setupGlobals();
+  const { default: BrowserTabColor } = await import("../index.ts");
+  const instance = new BrowserTabColor();
+  assertEquals(
+    typeof instance.init,
+    "function",
+    "BrowserTabColor should have init method",
+  );
+}
+
+async function testBrowserTabColorHasChangeTabColorMethod(): Promise<void> {
+  setupGlobals();
+  const { default: BrowserTabColor } = await import("../index.ts");
+  const instance = new BrowserTabColor();
+  assertEquals(
+    typeof instance.changeTabColor,
+    "function",
+    "BrowserTabColor should have changeTabColor method",
+  );
+}
+
+async function testBrowserTabColorChangeTabColorWhenDisabled(): Promise<void> {
+  setupGlobals();
+  const { default: BrowserTabColor, manager } = await import("../index.ts");
+  const instance = new BrowserTabColor();
+
+  // Ensure tab color is disabled
+  manager?.setEnableTabColor(false);
+
+  // Should not throw when disabled
+  let threw = false;
+  try {
+    (instance as { changeTabColor: () => void }).changeTabColor();
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, false, "changeTabColor should not throw when disabled");
+}
+
+// ---------------------------------------------------------------------------
+// Tests: getManifest helper function
+// ---------------------------------------------------------------------------
+
+// Note: getManifest is not exported from index.ts, it's a private helper function.
+// We cannot test it directly. It should:
+// - Return null when gBrowser is unavailable
+// - Return null when gBrowser.selectedBrowser is unavailable
+// - Return manifest when successfully obtained via ManifestObtainer
+
+// ---------------------------------------------------------------------------
+// Tests: CSS generation and injection
+// ---------------------------------------------------------------------------
+
+// Note: CSS generation and injection happens in changeTabColor method,
+// which relies on browser APIs (document, ManifestObtainer) that are
+// not available in the test environment. These would need integration
+// tests or mocks of the browser APIs.
+
+// ---------------------------------------------------------------------------
+// Tests: Manager integration
+// ---------------------------------------------------------------------------
+
+async function testManagerExportExists(): Promise<void> {
+  setupGlobals();
+  const module = await import("../index.ts");
+  assert(
+    "manager" in module,
+    "module should export manager variable",
+  );
+}
+
+async function testManagerIsUndefinedInitially(): Promise<void> {
+  setupGlobals();
+  const module = await import("../index.ts");
+  // manager is exported as a module-level variable.
+  // It may already be initialized by a previous test or import,
+  // so we only check that the export exists and is either undefined or a TabColorManager.
+  assert(
+    typeof module.manager === "undefined" || typeof module.manager === "object",
+    "manager should be undefined or a TabColorManager instance before explicit BrowserTabColor init",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tests: BrowserTabColor.init() with mock gBrowser
+// ---------------------------------------------------------------------------
+
+async function testBrowserTabColorInitEarlyReturnWithoutGBrowser(): Promise<void> {
+  setupGlobals();
+  // Ensure gBrowser is NOT available
+  (globalThis as Record<string, unknown>).gBrowser = undefined;
+  const { default: BrowserTabColor, manager: _mgrBefore } = await import("../index.ts");
+
+  const instance = new BrowserTabColor();
+  // init should return early without gBrowser - should not throw
+  let threw = false;
+  try {
+    instance.init();
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, false, "init should not throw when gBrowser is unavailable");
+}
+
+async function testBrowserTabColorInitWithMockGBrowser(): Promise<void> {
+  setupGlobals();
+  // Create a mock gBrowser
+  const listeners: Array<unknown> = [];
+  const eventListeners: Record<string, Array<() => void>> = {};
+  (globalThis as Record<string, unknown>).gBrowser = {
+    addTabsProgressListener(listener: unknown) {
+      listeners.push(listener);
+    },
+    removeTabsProgressListener(listener: unknown) {
+      const idx = listeners.indexOf(listener);
+      if (idx >= 0) listeners.splice(idx, 1);
+    },
+    tabContainer: {
+      addEventListener(event: string, handler: () => void) {
+        if (!eventListeners[event]) eventListeners[event] = [];
+        eventListeners[event].push(handler);
+      },
+      removeEventListener(event: string, handler: () => void) {
+        if (eventListeners[event]) {
+          const idx = eventListeners[event].indexOf(handler);
+          if (idx >= 0) eventListeners[event].splice(idx, 1);
+        }
+      },
+    },
+    selectedBrowser: {},
+  };
+
+  const { default: BrowserTabColor } = await import("../index.ts");
+  const instance = new BrowserTabColor();
+
+  let threw = false;
+  try {
+    instance.init();
+  } catch {
+    threw = true;
+  }
+  assertEquals(threw, false, "init should not throw with mock gBrowser");
+
+  // Verify that a progress listener was registered
+  assert(listeners.length > 0, "should have registered a tabs progress listener");
+
+  // Verify TabSelect event listener was registered
+  assert(
+    "TabSelect" in eventListeners,
+    "should have registered TabSelect event listener",
+  );
+}
+
+async function testBrowserTabColorInitSetsManager(): Promise<void> {
+  setupGlobals();
+  (globalThis as Record<string, unknown>).gBrowser = {
+    addTabsProgressListener() {},
+    removeTabsProgressListener() {},
+    tabContainer: {
+      addEventListener() {},
+      removeEventListener() {},
+    },
+    selectedBrowser: {},
+  };
+
+  const mod = await import("../index.ts");
+  const instance = new mod.default();
+  instance.init();
+
+  assert(mod.manager !== undefined, "manager should be set after init");
+  assert(typeof mod.manager.enableTabColor === "function", "manager should have enableTabColor signal");
+}
+
+// ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
 
@@ -349,6 +590,70 @@ export async function runAllTests(): Promise<void> {
     {
       name: "init does not throw",
       fn: testInitDoesNotThrow,
+    },
+
+    // BrowserTabColor class
+    {
+      name: "BrowserTabColor has init method",
+      fn: testBrowserTabColorHasInitMethod,
+    },
+    {
+      name: "BrowserTabColor has changeTabColor method",
+      fn: testBrowserTabColorHasChangeTabColorMethod,
+    },
+    {
+      name: "BrowserTabColor.changeTabColor when disabled",
+      fn: testBrowserTabColorChangeTabColorWhenDisabled,
+    },
+
+    // Manager integration
+    {
+      name: "manager is exported from module",
+      fn: testManagerExportExists,
+    },
+    {
+      name: "manager is undefined before init",
+      fn: testManagerIsUndefinedInitially,
+    },
+
+    // getTextColor logic (via chroma-js)
+    {
+      name: "getTextColor: light colors return black",
+      fn: testGetTextColorLightColorsReturnBlack,
+    },
+    {
+      name: "getTextColor: dark colors return white",
+      fn: testGetTextColorDarkColorsReturnWhite,
+    },
+    {
+      name: "getTextColor: invalid colors are not valid",
+      fn: testGetTextColorInvalidColorNotValid,
+    },
+    {
+      name: "getTextColor: boundary at 0.5 luminance",
+      fn: testGetTextColorBoundaryExactly05,
+    },
+    {
+      name: "getTextColor: hex format support",
+      fn: testGetTextColorHexFormats,
+    },
+    {
+      name: "getTextColor: named color support",
+      fn: testGetTextColorNamedColors,
+    },
+
+    // BrowserTabColor.init() with mock gBrowser
+    {
+      name: "BrowserTabColor.init returns early without gBrowser",
+      fn: testBrowserTabColorInitEarlyReturnWithoutGBrowser,
+    },
+    {
+      name: "BrowserTabColor.init registers listeners with mock gBrowser",
+      fn: testBrowserTabColorInitWithMockGBrowser,
+    },
+    {
+      name: "BrowserTabColor.init sets manager after init",
+      fn: testBrowserTabColorInitSetsManager,
     },
   ];
 

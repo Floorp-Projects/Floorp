@@ -109,6 +109,69 @@ function testExtractUrlIndexOne(): void {
   );
 }
 
+function testExtractUrlEntryWithoutUrl(): void {
+  const state = {
+    entries: [{ title: "No URL" }, { url: "https://second.com" }],
+    index: 2,
+  };
+  assertEquals(
+    extractUrlFromState(state),
+    "https://second.com",
+    "should skip entries without URL",
+  );
+}
+
+function testExtractUrlZeroIndex(): void {
+  const state = {
+    entries: [{ url: "https://first.com" }, { url: "https://second.com" }],
+    index: 0,
+  };
+  // Falls back to last entry when index is 0
+  assertEquals(
+    extractUrlFromState(state),
+    "https://second.com",
+    "index=0 should fall back to last entry",
+  );
+}
+
+function testExtractUrlNullEntries(): void {
+  const state = {
+    entries: null,
+  };
+  assertEquals(
+    extractUrlFromState(state),
+    null,
+    "null entries should return null",
+  );
+}
+
+function testExtractUrlEntryWithNullUrl(): void {
+  const state = {
+    entries: [{ url: null }, { url: "https://valid.com" }],
+  };
+  assertEquals(
+    extractUrlFromState(state),
+    "https://valid.com",
+    "should skip entries with null URL",
+  );
+}
+
+function testExtractUrlComplexEntries(): void {
+  const state = {
+    entries: [
+      { url: "https://first.com", title: "First" },
+      { url: "https://second.com", title: "Second" },
+      { url: "https://third.com", title: "Third" },
+    ],
+    index: 2,
+  };
+  assertEquals(
+    extractUrlFromState(state),
+    "https://second.com",
+    "should handle complex entry objects",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -131,6 +194,11 @@ export async function runAllTests(): Promise<void> {
       fn: testExtractUrlIndexOutOfBounds,
     },
     { name: "extractUrl index=1", fn: testExtractUrlIndexOne },
+    { name: "extractUrl entry without URL", fn: testExtractUrlEntryWithoutUrl },
+    { name: "extractUrl zero index", fn: testExtractUrlZeroIndex },
+    { name: "extractUrl null entries", fn: testExtractUrlNullEntries },
+    { name: "extractUrl entry with null URL", fn: testExtractUrlEntryWithNullUrl },
+    { name: "extractUrl complex entries", fn: testExtractUrlComplexEntries },
   ];
 
   const failures: string[] = [];

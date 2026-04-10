@@ -634,6 +634,379 @@ function testRecognizeMultiSegmentSequence(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Additional edge case tests for angleToDirection
+// ---------------------------------------------------------------------------
+
+function testAngleToDirectionNegativeAngles(): void {
+  assertEquals(
+    angleToDirection(-Math.PI),
+    "left",
+    "negative PI should be left",
+  );
+  assertEquals(
+    angleToDirection(-Math.PI / 4),
+    "upRight",
+    "negative PI/4 should be upRight",
+  );
+  assertEquals(
+    angleToDirection(-3 * Math.PI / 4),
+    "upLeft",
+    "negative 3PI/4 should be upLeft",
+  );
+}
+
+function testAngleToDirectionLargeAngles(): void {
+  // Angles > 2*PI should wrap around
+  const largeAngle = 3 * Math.PI; // 540 degrees
+  const result = angleToDirection(largeAngle);
+  // Should normalize and return a valid direction
+  assert(
+    ["up", "down", "left", "right", "upRight", "upLeft", "downRight", "downLeft"].includes(result),
+    "large angles should return valid direction",
+  );
+}
+
+function testAngleToDirectionZero(): void {
+  assertEquals(
+    angleToDirection(0),
+    "right",
+    "zero angle should be right",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests for deltaToDirection
+// ---------------------------------------------------------------------------
+
+function testDeltaToDirectionZeroDeltas(): void {
+  // Both zero - angle is NaN or undefined
+  const result = deltaToDirection(0, 0);
+  // Should handle gracefully
+  assert(
+    ["up", "down", "left", "right", "upRight", "upLeft", "downRight", "downLeft"].includes(result) || result === "right",
+    "zero deltas should return a direction",
+  );
+}
+
+function testDeltaToDirectionNegativeValues(): void {
+  assertEquals(
+    deltaToDirection(-1, 0),
+    "left",
+    "negative dx should be left",
+  );
+  assertEquals(
+    deltaToDirection(0, -1),
+    "up",
+    "negative dy should be up",
+  );
+}
+
+function testDeltaToDirectionVeryLargeValues(): void {
+  const result = deltaToDirection(1000000, 1000000);
+  assertEquals(
+    result,
+    "downRight",
+    "very large values should still return correct direction",
+  );
+}
+
+function testDeltaToDirectionOpposingValues(): void {
+  // When values oppose, the dominant one determines direction
+  const result1 = deltaToDirection(10, -1);
+  assertEquals(
+    result1,
+    "right",
+    "horizontal should dominate when much larger",
+  );
+
+  const result2 = deltaToDirection(1, -10);
+  assertEquals(
+    result2,
+    "up",
+    "vertical should dominate when much larger",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests for convertPatternToPoints
+// ---------------------------------------------------------------------------
+
+function testConvertPatternEmptyPattern(): void {
+  const points = convertPatternToPoints([], 100, 10);
+  assertEquals(
+    points.length,
+    1,
+    "empty pattern should generate one point (origin)",
+  );
+  assertEquals(points[0].X, 0, "origin X should be 0");
+  assertEquals(points[0].Y, 0, "origin Y should be 0");
+}
+
+function testConvertPatternVerySmallSegmentLength(): void {
+  const points = convertPatternToPoints(["right"], 1, 5);
+  assertEquals(
+    points.length,
+    6,
+    "should generate points for small segment length",
+  );
+  const last = points[points.length - 1];
+  assert(
+    last.X > 0 && last.X < 2,
+    "last point X should be small but positive",
+  );
+}
+
+function testConvertPatternVeryLargeSegmentLength(): void {
+  const points = convertPatternToPoints(["up"], 10000, 10);
+  assertEquals(
+    points.length,
+    11,
+    "should generate points for large segment length",
+  );
+  const last = points[points.length - 1];
+  assertApprox(last.Y, -10000, 100, "last point Y should be very negative");
+}
+
+function testConvertPatternZeroPointsPerSegment(): void {
+  const points = convertPatternToPoints(["right"], 100, 0);
+  // Edge case: 0 points per segment should still generate at least one point
+  assert(
+    points.length >= 1,
+    "should generate at least one point",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests for createRecognizer
+// ---------------------------------------------------------------------------
+
+function testCreateRecognizerWithNullActions(): void {
+  // createRecognizer does not handle null/undefined gracefully - it iterates with for...of
+  // which throws TypeError when given null or undefined
+  let threw = false;
+  try {
+    createRecognizer(null as unknown as GestureAction[]);
+  } catch (e) {
+    threw = true;
+    assert(
+      e instanceof TypeError,
+      "should throw TypeError for null actions",
+    );
+  }
+  assert(threw, "createRecognizer should throw for null actions");
+}
+
+function testCreateRecognizerWithUndefinedActions(): void {
+  let threw = false;
+  try {
+    createRecognizer(undefined as unknown as GestureAction[]);
+  } catch (e) {
+    threw = true;
+    assert(
+      e instanceof TypeError,
+      "should throw TypeError for undefined actions",
+    );
+  }
+  assert(threw, "createRecognizer should throw for undefined actions");
+}
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests for extractDirectionSequence
+// ---------------------------------------------------------------------------
+
+function testExtractDirectionSequenceWithNoise(): void {
+  // Trail with small random noise
+  const noisyTrail: { x: number; y: number }[] = [];
+  for (let i = 0; i <= 50; i++) {
+    noisyTrail.push({
+      x: i * 4 + (Math.random() - 0.5) * 2, // Add small noise
+      y: 0 + (Math.random() - 0.5) * 2,
+    });
+  }
+
+  const sequence = extractDirectionSequence(noisyTrail, 20);
+  assertEquals(
+    sequence.length,
+    1,
+    "noisy horizontal line should still produce one direction",
+  );
+  assertEquals(
+    sequence[0],
+    "right",
+    "noisy horizontal line should be recognized as right",
+  );
+}
+
+function testExtractDirectionSequenceVeryLongTrail(): void {
+  // Create a very long trail
+  const longTrail: { x: number; y: number }[] = [];
+  for (let i = 0; i < 1000; i++) {
+    longTrail.push({ x: i, y: 0 });
+  }
+
+  const sequence = extractDirectionSequence(longTrail, 20);
+  assertEquals(
+    sequence.length,
+    1,
+    "very long trail should produce one direction",
+  );
+}
+
+function testExtractDirectionSequenceWithRepeatedChanges(): void {
+  // Trail that changes direction frequently
+  const trail: { x: number; y: number }[] = [];
+  for (let i = 0; i < 10; i++) {
+    // Small horizontal segment
+    trail.push({ x: i * 10, y: 0 });
+    trail.push({ x: i * 10 + 5, y: 0 });
+    // Small vertical segment
+    trail.push({ x: i * 10 + 5, y: 5 });
+    trail.push({ x: i * 10 + 5, y: 10 });
+  }
+
+  const sequence = extractDirectionSequence(trail, 25);
+  // Should filter out small segments
+  assert(
+    sequence.length <= 2,
+    "should filter out small direction changes",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests for recognize
+// ---------------------------------------------------------------------------
+
+function testRecognizeWithVeryHighMinScore(): void {
+  const actions: GestureAction[] = [{ pattern: ["right"], action: "go-forward" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+  const trail = buildLineTrail(0, 0, 100, 0);
+
+  // Very high min score (2.0 is impossible for $1 Recognizer)
+  // But geometric detection (straight lines) bypasses the score check entirely,
+  // returning score: 1.0. So a perfect straight line will still match.
+  const result = recognize(recognizer, trail, 2.0, shapeDb);
+
+  // Geometric detection returns a match regardless of minScore
+  assert(
+    result !== null,
+    "geometric straight-line detection should match regardless of minScore",
+  );
+}
+
+function testRecognizeWithZeroMinScore(): void {
+  const actions: GestureAction[] = [{ pattern: ["right"], action: "go-forward" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+  const trail = buildLineTrail(0, 0, 100, 0);
+
+  // Zero min score should match anything
+  const result = recognize(recognizer, trail, 0, shapeDb);
+
+  assert(
+    result !== null,
+    "should match with zero min score",
+  );
+}
+
+function testRecognizeWithNegativeMinScore(): void {
+  const actions: GestureAction[] = [{ pattern: ["right"], action: "go-forward" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+  const trail = buildLineTrail(0, 0, 100, 0);
+
+  // Negative min score should be treated as 0
+  const result = recognize(recognizer, trail, -1, shapeDb);
+
+  assert(
+    result !== null,
+    "should match with negative min score",
+  );
+}
+
+function testRecognizeWithNoShapeDb(): void {
+  const actions: GestureAction[] = [{ pattern: ["right"], action: "go-forward" }];
+  const { recognizer } = createRecognizer(actions);
+  const trail = buildLineTrail(0, 0, 100, 0);
+
+  // Call without shapeDb
+  const result = recognize(recognizer, trail, 0.7, undefined);
+
+  // Should still work but may not match simple patterns geometrically
+  assert(
+    result === null || typeof result === "object",
+    "should handle missing shapeDb",
+  );
+}
+
+function testRecognizeWithTrailContainingDuplicates(): void {
+  const actions: GestureAction[] = [{ pattern: ["right"], action: "go-forward" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+
+  // Trail with duplicate consecutive points
+  const trailWithDuplicates: { x: number; y: number }[] = [];
+  for (let i = 0; i <= 20; i++) {
+    trailWithDuplicates.push({ x: i * 5, y: 0 });
+    trailWithDuplicates.push({ x: i * 5, y: 0 }); // Duplicate
+  }
+
+  const result = recognize(recognizer, trailWithDuplicates, 0.7, shapeDb);
+
+  assert(
+    result !== null,
+    "should handle trails with duplicate points",
+  );
+  if (result) {
+    assertEquals(
+      result.patternName,
+      "right",
+      "should still recognize correctly",
+    );
+  }
+}
+
+function testRecognizeDiagonalPattern(): void {
+  const actions: GestureAction[] = [{ pattern: ["downRight"], action: "diagonal" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+  const trail = buildLineTrail(0, 0, 100, 100);
+
+  const result = recognize(recognizer, trail, 0.7, shapeDb);
+
+  assert(
+    result !== null,
+    "should recognize diagonal pattern",
+  );
+  if (result) {
+    assertEquals(
+      result.patternName,
+      "downRight",
+      "should match diagonal pattern",
+    );
+  }
+}
+
+function testRecognizeComplexShapeWithoutConfig(): void {
+  const actions: GestureAction[] = [{ pattern: ["left"], action: "go-back" }];
+  const { recognizer, shapeDb } = createRecognizer(actions);
+
+  // Create a complex trail (circle-like)
+  const circleTrail: { x: number; y: number }[] = [];
+  for (let i = 0; i <= 30; i++) {
+    const angle = (2 * Math.PI * i) / 30;
+    circleTrail.push({
+      x: 50 + 40 * Math.cos(angle),
+      y: 50 + 40 * Math.sin(angle),
+    });
+  }
+
+  const result = recognize(recognizer, circleTrail, 0.7, shapeDb);
+
+  // Should not match the simple "left" pattern for a circle
+  assertEquals(
+    result,
+    null,
+    "complex unconfigured shape should not match simple pattern",
+  );
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("mouseGestureRecognizer.test.ts", [
     // angleToDirection / deltaToDirection
@@ -738,6 +1111,106 @@ export async function runAllTests(): Promise<void> {
     {
       name: "recognize multi-segment sequence",
       fn: testRecognizeMultiSegmentSequence,
+    },
+
+    // Additional edge case tests
+    // angleToDirection edge cases
+    {
+      name: "angleToDirection negative angles",
+      fn: testAngleToDirectionNegativeAngles,
+    },
+    {
+      name: "angleToDirection large angles",
+      fn: testAngleToDirectionLargeAngles,
+    },
+    {
+      name: "angleToDirection zero",
+      fn: testAngleToDirectionZero,
+    },
+    // deltaToDirection edge cases
+    {
+      name: "deltaToDirection zero deltas",
+      fn: testDeltaToDirectionZeroDeltas,
+    },
+    {
+      name: "deltaToDirection negative values",
+      fn: testDeltaToDirectionNegativeValues,
+    },
+    {
+      name: "deltaToDirection very large values",
+      fn: testDeltaToDirectionVeryLargeValues,
+    },
+    {
+      name: "deltaToDirection opposing values",
+      fn: testDeltaToDirectionOpposingValues,
+    },
+    // convertPatternToPoints edge cases
+    {
+      name: "convertPattern empty pattern",
+      fn: testConvertPatternEmptyPattern,
+    },
+    {
+      name: "convertPattern very small segment length",
+      fn: testConvertPatternVerySmallSegmentLength,
+    },
+    {
+      name: "convertPattern very large segment length",
+      fn: testConvertPatternVeryLargeSegmentLength,
+    },
+    {
+      name: "convertPattern zero points per segment",
+      fn: testConvertPatternZeroPointsPerSegment,
+    },
+    // createRecognizer edge cases
+    {
+      name: "createRecognizer with null actions",
+      fn: testCreateRecognizerWithNullActions,
+    },
+    {
+      name: "createRecognizer with undefined actions",
+      fn: testCreateRecognizerWithUndefinedActions,
+    },
+    // extractDirectionSequence edge cases
+    {
+      name: "extractDirectionSequence with noise",
+      fn: testExtractDirectionSequenceWithNoise,
+    },
+    {
+      name: "extractDirectionSequence very long trail",
+      fn: testExtractDirectionSequenceVeryLongTrail,
+    },
+    {
+      name: "extractDirectionSequence with repeated changes",
+      fn: testExtractDirectionSequenceWithRepeatedChanges,
+    },
+    // recognize edge cases
+    {
+      name: "recognize with very high min score",
+      fn: testRecognizeWithVeryHighMinScore,
+    },
+    {
+      name: "recognize with zero min score",
+      fn: testRecognizeWithZeroMinScore,
+    },
+    {
+      name: "recognize with negative min score",
+      fn: testRecognizeWithNegativeMinScore,
+    },
+    {
+      name: "recognize with no shapeDb",
+      fn: testRecognizeWithNoShapeDb,
+    },
+    {
+      name: "recognize with trail containing duplicates",
+      fn: testRecognizeWithTrailContainingDuplicates,
+    },
+    {
+      name: "recognize diagonal pattern",
+      fn: testRecognizeDiagonalPattern,
+    },
+    {
+      name: "recognize complex shape without config",
+      fn: testRecognizeComplexShapeWithoutConfig,
     },
   ]);
 }

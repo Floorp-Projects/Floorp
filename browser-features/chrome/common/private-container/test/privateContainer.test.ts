@@ -6,7 +6,6 @@ import {
   type TestCase,
   assert,
   assertEquals,
-  assertThrows,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
@@ -384,6 +383,379 @@ function testRemovePrivateContainerDataReturnsEarlyWhenNoUserContextId(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Tests – removePrivateContainerData (extended)
+// ---------------------------------------------------------------------------
+
+function testRemovePrivateContainerDataWithZeroUserContextId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    // Edge case: container with userContextId of 0
+    ContextualIdentityService._identities.push({
+      userContextId: 0,
+      floorpPrivateContainer: true,
+    });
+
+    let threw = false;
+    try {
+      PrivateContainer.removePrivateContainerData();
+    } catch {
+      threw = true;
+    }
+    assert(
+      !threw,
+      "should handle container with userContextId of 0 without throwing",
+    );
+  });
+}
+
+function testRemovePrivateContainerDataWithNegativeUserContextId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    // Edge case: container with negative userContextId
+    ContextualIdentityService._identities.push({
+      userContextId: -1,
+      floorpPrivateContainer: true,
+    });
+
+    let threw = false;
+    try {
+      PrivateContainer.removePrivateContainerData();
+    } catch {
+      threw = true;
+    }
+    assert(
+      !threw,
+      "should handle container with negative userContextId without throwing",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests – StartupCreatePrivateContainer (extended)
+// ---------------------------------------------------------------------------
+
+function testStartupCreatePrivateContainerIconValue(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+    PrivateContainer.StartupCreatePrivateContainer();
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "container should exist");
+    assertEquals(
+      container.icon,
+      "chill",
+      "icon should be set to 'chill'",
+    );
+  });
+}
+
+function testStartupCreatePrivateContainerColorValue(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+    PrivateContainer.StartupCreatePrivateContainer();
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "container should exist");
+    assertEquals(
+      container.color,
+      "purple",
+      "color should be set to 'purple'",
+    );
+  });
+}
+
+function testStartupCreatePrivateContainerWithLargeUserContextId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    removePrivateContainers();
+
+    // Set _lastUserContextId to a large value
+    ContextualIdentityService._lastUserContextId = 99999;
+    PrivateContainer.StartupCreatePrivateContainer();
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "container should exist");
+    assertEquals(
+      container.userContextId,
+      100000,
+      "should increment from large value correctly",
+    );
+  });
+}
+
+function testStartupCreatePrivateContainerCallsEnsureDataReady(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+    const ContextualIdentityService = getContextualIdentityService();
+
+    let ensureDataReadyCalled = false;
+    const originalEnsureDataReady = ContextualIdentityService.ensureDataReady;
+    ContextualIdentityService.ensureDataReady = () => {
+      ensureDataReadyCalled = true;
+    };
+
+    try {
+      PrivateContainer.StartupCreatePrivateContainer();
+      assert(
+        ensureDataReadyCalled,
+        "ensureDataReady should be called during startup",
+      );
+    } finally {
+      ContextualIdentityService.ensureDataReady = originalEnsureDataReady;
+    }
+  });
+}
+
+function testStartupCreatePrivateContainerCallsSaveSoon(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+    const ContextualIdentityService = getContextualIdentityService();
+
+    let saveSoonCalled = false;
+    const originalSaveSoon = ContextualIdentityService.saveSoon;
+    ContextualIdentityService.saveSoon = () => {
+      saveSoonCalled = true;
+    };
+
+    try {
+      PrivateContainer.StartupCreatePrivateContainer();
+      assert(
+        saveSoonCalled,
+        "saveSoon should be called during startup",
+      );
+    } finally {
+      ContextualIdentityService.saveSoon = originalSaveSoon;
+    }
+  });
+}
+
+function testStartupCreatePrivateContainerNotifiesObserver(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+
+    let observerNotified = false;
+    let notifiedIdentity: unknown = null;
+
+    const observer = {
+      observe: (subject: unknown, topic: string) => {
+        if (topic === "contextual-identity-created") {
+          observerNotified = true;
+          notifiedIdentity = subject;
+        }
+      },
+    };
+
+    Services.obs.addObserver(observer, "contextual-identity-created");
+
+    try {
+      PrivateContainer.StartupCreatePrivateContainer();
+      assert(
+        observerNotified,
+        "should notify observer on container creation",
+      );
+      assert(
+        notifiedIdentity !== null,
+        "observer should receive identity data",
+      );
+    } finally {
+      Services.obs.removeObserver(observer, "contextual-identity-created");
+    }
+  });
+}
+
+function testStartupCreatePrivateContainerWithEmptyNameFromI18n(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+
+    // Import i18next from the module (it's imported at module level in PrivateContainer.ts)
+    // We need to mock the i18next.t function
+    // The source imports i18next at the top of PrivateContainer.ts
+    // In test env, i18next may or may not be available on globalThis
+    // We try to access it via the imported module
+    let mockApplied = false;
+    try {
+      const i18nextModule = (globalThis as Record<string, unknown>)["i18next"];
+      if (i18nextModule && typeof (i18nextModule as { t: unknown }).t === "function") {
+        const originalT = (i18nextModule as { t: (key: string) => string }).t;
+        (i18nextModule as { t: (key: string) => string }).t = () => "";
+        mockApplied = true;
+
+        try {
+          PrivateContainer.StartupCreatePrivateContainer();
+          const container = PrivateContainer.getPrivateContainer();
+          assert(container !== undefined, "container should exist");
+          assertEquals(
+            container.name,
+            "",
+            "should use empty string when i18next returns empty",
+          );
+        } finally {
+          (i18nextModule as { t: (key: string) => string }).t = originalT;
+        }
+      }
+    } catch {
+      // i18next not available in test environment
+    }
+
+    if (!mockApplied) {
+      // If i18next is not available, the startup should still work with whatever name is provided
+      PrivateContainer.StartupCreatePrivateContainer();
+      const container = PrivateContainer.getPrivateContainer();
+      assert(container !== undefined, "container should exist even without i18next mock");
+      assert(
+        typeof container.name === "string",
+        "name should be a string",
+      );
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests – getPrivateContainer (extended)
+// ---------------------------------------------------------------------------
+
+function testGetPrivateContainerWithFalsyUserContextId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    ContextualIdentityService._identities = [
+      { userContextId: 0, floorpPrivateContainer: true },
+    ];
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "should find container with userContextId 0");
+    assertEquals(
+      container.userContextId,
+      0,
+      "should return container with userContextId of 0",
+    );
+  });
+}
+
+function testGetPrivateContainerWithUndefinedUserContextId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    ContextualIdentityService._identities = [
+      { floorpPrivateContainer: true },
+    ];
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "should find container even without userContextId");
+    assertEquals(
+      container.userContextId,
+      undefined,
+      "should return container with undefined userContextId",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests – getPrivateContainerUserContextId (extended)
+// ---------------------------------------------------------------------------
+
+function testGetPrivateContainerUserContextIdWithZeroId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    ContextualIdentityService._identities = [
+      { userContextId: 0, floorpPrivateContainer: true },
+    ];
+
+    const id = PrivateContainer.getPrivateContainerUserContextId();
+    assertEquals(
+      id,
+      0,
+      "should return 0 when private container has userContextId of 0",
+    );
+  });
+}
+
+function testGetPrivateContainerUserContextIdWithUndefinedId(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    ContextualIdentityService._identities = [
+      { floorpPrivateContainer: true },
+    ];
+
+    const id = PrivateContainer.getPrivateContainerUserContextId();
+    // The source returns: privateContainer ? privateContainer.userContextId : null
+    // When the container exists but userContextId is undefined, it returns undefined (not null)
+    assertEquals(
+      id,
+      undefined,
+      "should return undefined when private container has undefined userContextId",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests – Integration scenarios
+// ---------------------------------------------------------------------------
+
+function testCreateThenRemoveThenCreate(): void {
+  withContextualIdentitySnapshot(() => {
+    removePrivateContainers();
+
+    // First creation
+    PrivateContainer.StartupCreatePrivateContainer();
+    const firstContainer = PrivateContainer.getPrivateContainer();
+    assert(firstContainer !== undefined, "first container should exist");
+
+    // Remove data
+    PrivateContainer.removePrivateContainerData();
+
+    // Second creation should still work
+    PrivateContainer.StartupCreatePrivateContainer();
+    const secondContainer = PrivateContainer.getPrivateContainer();
+    assert(secondContainer !== undefined, "second container should exist");
+
+    // Should be the same container (idempotent)
+    assertEquals(
+      firstContainer.userContextId,
+      secondContainer.userContextId,
+      "should reuse same container",
+    );
+  });
+}
+
+function testMultipleContainersWithSameFlag(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    removePrivateContainers();
+
+    // Manually add multiple flagged containers (edge case)
+    ContextualIdentityService._identities.push(
+      { userContextId: 100, floorpPrivateContainer: true },
+      { userContextId: 200, floorpPrivateContainer: true },
+    );
+
+    const container = PrivateContainer.getPrivateContainer();
+    assert(container !== undefined, "should find a container");
+    assertEquals(
+      container.userContextId,
+      100,
+      "should return first flagged container",
+    );
+  });
+}
+
+function testGetPrivateContainerDoesNotModifyIdentities(): void {
+  withContextualIdentitySnapshot(() => {
+    const ContextualIdentityService = getContextualIdentityService();
+    const originalLength = ContextualIdentityService._identities.length;
+
+    // Call getPrivateContainer multiple times
+    PrivateContainer.getPrivateContainer();
+    PrivateContainer.getPrivateContainer();
+    PrivateContainer.getPrivateContainer();
+
+    assertEquals(
+      ContextualIdentityService._identities.length,
+      originalLength,
+      "should not modify identities array",
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -411,6 +783,18 @@ export async function runAllTests(): Promise<void> {
       name: "getPrivateContainer with empty identities",
       fn: testGetPrivateContainerWithEmptyIdentities,
     },
+    {
+      name: "getPrivateContainer with falsy userContextId",
+      fn: testGetPrivateContainerWithFalsyUserContextId,
+    },
+    {
+      name: "getPrivateContainer with undefined userContextId",
+      fn: testGetPrivateContainerWithUndefinedUserContextId,
+    },
+    {
+      name: "getPrivateContainer does not modify identities",
+      fn: testGetPrivateContainerDoesNotModifyIdentities,
+    },
 
     // getPrivateContainerUserContextId
     {
@@ -420,6 +804,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "getPrivateContainerUserContextId returns null with no flagged",
       fn: testGetPrivateContainerUserContextIdReturnsNullWithNoFlagged,
+    },
+    {
+      name: "getPrivateContainerUserContextId with zero id",
+      fn: testGetPrivateContainerUserContextIdWithZeroId,
+    },
+    {
+      name: "getPrivateContainerUserContextId with undefined id",
+      fn: testGetPrivateContainerUserContextIdWithUndefinedId,
     },
     { name: "consistency check", fn: testPrivateContainerConsistency },
 
@@ -441,6 +833,34 @@ export async function runAllTests(): Promise<void> {
       name: "startup idempotent does not increment _lastUserContextId",
       fn: testStartupIdempotentDoesNotIncrementUserContextId,
     },
+    {
+      name: "startup creates container with correct icon",
+      fn: testStartupCreatePrivateContainerIconValue,
+    },
+    {
+      name: "startup creates container with correct color",
+      fn: testStartupCreatePrivateContainerColorValue,
+    },
+    {
+      name: "startup with large userContextId",
+      fn: testStartupCreatePrivateContainerWithLargeUserContextId,
+    },
+    {
+      name: "startup calls ensureDataReady",
+      fn: testStartupCreatePrivateContainerCallsEnsureDataReady,
+    },
+    {
+      name: "startup calls saveSoon",
+      fn: testStartupCreatePrivateContainerCallsSaveSoon,
+    },
+    {
+      name: "startup notifies observer",
+      fn: testStartupCreatePrivateContainerNotifiesObserver,
+    },
+    {
+      name: "startup with empty name from i18n",
+      fn: testStartupCreatePrivateContainerWithEmptyNameFromI18n,
+    },
 
     // removePrivateContainerData
     {
@@ -454,6 +874,24 @@ export async function runAllTests(): Promise<void> {
     {
       name: "remove data returns early when no userContextId",
       fn: testRemovePrivateContainerDataReturnsEarlyWhenNoUserContextId,
+    },
+    {
+      name: "remove data with zero userContextId",
+      fn: testRemovePrivateContainerDataWithZeroUserContextId,
+    },
+    {
+      name: "remove data with negative userContextId",
+      fn: testRemovePrivateContainerDataWithNegativeUserContextId,
+    },
+
+    // Integration scenarios
+    {
+      name: "create then remove then create",
+      fn: testCreateThenRemoveThenCreate,
+    },
+    {
+      name: "multiple containers with same flag",
+      fn: testMultipleContainersWithSameFlag,
     },
   ];
 

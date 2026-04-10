@@ -368,6 +368,202 @@ async function testSequentialOperations(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Lazy loading and service initialization
+// ---------------------------------------------------------------------------
+
+async function testServiceIsLazyLoaded(): Promise<void> {
+  // The service should be loaded on first call, not at import time
+  // We verify this by checking that calling a method works (which triggers lazy load)
+  const browsers = await externalBrowserService.getInstalledBrowsers();
+  assert(Array.isArray(browsers), "lazy loading should work on first call");
+}
+
+async function testServiceCachesInstance(): Promise<void> {
+  // Multiple calls to getService() should return the same instance
+  // This is tested implicitly by the singleton test, but we can verify behavior
+  const first = await externalBrowserService.getInstalledBrowsers();
+  const second = await externalBrowserService.getInstalledBrowsers();
+
+  assertEquals(
+    first.length,
+    second.length,
+    "cached service instance should return consistent results",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// openUrl edge cases
+// ---------------------------------------------------------------------------
+
+async function testOpenUrlWithInvalidUrl(): Promise<void> {
+  const result = await externalBrowserService.openUrl("not-a-valid-url");
+
+  assert(
+    result !== null && result !== undefined,
+    "openUrl should return a result object even for invalid URL",
+  );
+  assertEquals(
+    typeof result.success,
+    "boolean",
+    "result.success should be boolean for invalid URL",
+  );
+}
+
+async function testOpenUrlWithEmptyString(): Promise<void> {
+  const result = await externalBrowserService.openUrl("");
+
+  assert(
+    result !== null && result !== undefined,
+    "openUrl should return a result object for empty string",
+  );
+  assertEquals(
+    typeof result.success,
+    "boolean",
+    "result.success should be boolean for empty string",
+  );
+}
+
+async function testOpenUrlWithNonExistentBrowserId(): Promise<void> {
+  const result = await externalBrowserService.openUrl(
+    "https://example.com",
+    "non-existent-browser-id",
+  );
+
+  assert(
+    result !== null && result !== undefined,
+    "openUrl should return a result object for non-existent browser",
+  );
+  // Should likely fail but not throw
+  assertEquals(
+    typeof result.success,
+    "boolean",
+    "result.success should be boolean",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// getBrowser edge cases
+// ---------------------------------------------------------------------------
+
+async function testGetBrowserWithSpecialCharacters(): Promise<void> {
+  const result = await externalBrowserService.getBrowser("browser/../with/../paths");
+
+  assertEquals(
+    result,
+    null,
+    "browser ID with path traversal should return null",
+  );
+}
+
+async function testGetBrowserWithVeryLongId(): Promise<void> {
+  const longId = "a".repeat(10000);
+  const result = await externalBrowserService.getBrowser(longId);
+
+  assertEquals(
+    result,
+    null,
+    "very long browser ID should return null",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// clearCache edge cases
+// ---------------------------------------------------------------------------
+
+function testClearCacheMultipleCalls(): void {
+  // Calling clearCache multiple times should not throw
+  externalBrowserService.clearCache();
+  externalBrowserService.clearCache();
+  externalBrowserService.clearCache();
+}
+
+async function testClearCacheThenGetBrowser(): Promise<void> {
+  // Clear cache and try to get a browser - should still work
+  externalBrowserService.clearCache();
+
+  const browsers = await externalBrowserService.getInstalledBrowsers();
+  if (browsers.length > 0) {
+    const result = await externalBrowserService.getBrowser(browsers[0].id);
+    assert(
+      result !== null,
+      "getBrowser should work after clearCache",
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// openInDefaultBrowser edge cases
+// ---------------------------------------------------------------------------
+
+async function testOpenInDefaultBrowserWithInvalidUrl(): Promise<void> {
+  const result = await externalBrowserService.openInDefaultBrowser("not-a-url");
+
+  assert(
+    result !== null && result !== undefined,
+    "openInDefaultBrowser should return result for invalid URL",
+  );
+  assertEquals(
+    typeof result.success,
+    "boolean",
+    "result.success should be boolean",
+  );
+}
+
+async function testOpenInDefaultBrowserWithEmptyString(): Promise<void> {
+  const result = await externalBrowserService.openInDefaultBrowser("");
+
+  assert(
+    result !== null && result !== undefined,
+    "openInDefaultBrowser should return result for empty string",
+  );
+  assertEquals(
+    typeof result.success,
+    "boolean",
+    "result.success should be boolean",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Error handling and resilience
+// ---------------------------------------------------------------------------
+
+async function testConcurrentGetInstalledBrowsersCalls(): Promise<void> {
+  // Multiple concurrent calls should all succeed
+  const promises = [
+    externalBrowserService.getInstalledBrowsers(),
+    externalBrowserService.getInstalledBrowsers(),
+    externalBrowserService.getInstalledBrowsers(),
+  ];
+
+  const results = await Promise.all(promises);
+
+  for (const result of results) {
+    assert(Array.isArray(result), "concurrent calls should return arrays");
+    assertEquals(
+      results[0].length,
+      result.length,
+      "concurrent calls should return consistent lengths",
+    );
+  }
+}
+
+async function testGetInstalledBrowsersAfterClear(): Promise<void> {
+  const before = await externalBrowserService.getInstalledBrowsers();
+  externalBrowserService.clearCache();
+  const after = await externalBrowserService.getInstalledBrowsers();
+
+  assert(
+    Array.isArray(before) && Array.isArray(after),
+    "both calls should return arrays",
+  );
+  assertEquals(
+    before.length,
+    after.length,
+    "browser count should be consistent",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -453,6 +649,70 @@ const tests: TestCase[] = [
   {
     name: "sequential operations",
     fn: testSequentialOperations,
+  },
+
+  // Lazy loading
+  {
+    name: "service is lazy loaded",
+    fn: testServiceIsLazyLoaded,
+  },
+  {
+    name: "service caches instance",
+    fn: testServiceCachesInstance,
+  },
+
+  // openUrl edge cases
+  {
+    name: "openUrl with invalid URL",
+    fn: testOpenUrlWithInvalidUrl,
+  },
+  {
+    name: "openUrl with empty string",
+    fn: testOpenUrlWithEmptyString,
+  },
+  {
+    name: "openUrl with non-existent browser ID",
+    fn: testOpenUrlWithNonExistentBrowserId,
+  },
+
+  // getBrowser edge cases
+  {
+    name: "getBrowser with special characters",
+    fn: testGetBrowserWithSpecialCharacters,
+  },
+  {
+    name: "getBrowser with very long ID",
+    fn: testGetBrowserWithVeryLongId,
+  },
+
+  // clearCache edge cases
+  {
+    name: "clearCache multiple calls",
+    fn: testClearCacheMultipleCalls,
+  },
+  {
+    name: "clearCache then getBrowser",
+    fn: testClearCacheThenGetBrowser,
+  },
+
+  // openInDefaultBrowser edge cases
+  {
+    name: "openInDefaultBrowser with invalid URL",
+    fn: testOpenInDefaultBrowserWithInvalidUrl,
+  },
+  {
+    name: "openInDefaultBrowser with empty string",
+    fn: testOpenInDefaultBrowserWithEmptyString,
+  },
+
+  // Error handling
+  {
+    name: "concurrent getInstalledBrowsers calls",
+    fn: testConcurrentGetInstalledBrowsersCalls,
+  },
+  {
+    name: "getInstalledBrowsers after clear",
+    fn: testGetInstalledBrowsersAfterClear,
   },
 ];
 
