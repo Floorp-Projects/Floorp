@@ -60,7 +60,10 @@ function testDomTabCountMatchesGBrowser(): void {
   const domTabs = document.querySelectorAll(".tabbrowser-tab");
   if (domTabs.length === 0) {
     // Some harness contexts expose gBrowser tabs without mirrored DOM tab nodes.
-    assert(true, "no .tabbrowser-tab nodes in this runtime; skipping strict count check");
+    assert(
+      true,
+      "no .tabbrowser-tab nodes in this runtime; skipping strict count check",
+    );
     return;
   }
   assertEquals(

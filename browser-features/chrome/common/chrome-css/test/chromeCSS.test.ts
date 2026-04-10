@@ -579,7 +579,11 @@ async function testCSSEntryEnabledSetterHandlesNonExistentFile(): Promise<void> 
   } catch {
     threw = true;
   }
-  assertEquals(threw, false, "enabled setter should not throw for non-existent file");
+  assertEquals(
+    threw,
+    false,
+    "enabled setter should not throw for non-existent file",
+  );
 }
 
 async function testCSSEntryEnabledSetterUpdatesInternalState(): Promise<void> {
@@ -608,20 +612,40 @@ async function testCSSEntryCaseInsensitiveMatching(): Promise<void> {
   const asEntry2 = new CSSEntry("test.As.Css", TEST_CSS_FOLDER);
   const asEntry3 = new CSSEntry("test.aS.cSs", TEST_CSS_FOLDER);
 
-  assertEquals(asEntry1.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, "uppercase AS.CSS");
-  assertEquals(asEntry2.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, "mixed case As.Css");
-  assertEquals(asEntry3.SHEET, Ci.nsIStyleSheetService.AGENT_SHEET, "mixed case aS.cSs");
+  assertEquals(
+    asEntry1.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    "uppercase AS.CSS",
+  );
+  assertEquals(
+    asEntry2.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    "mixed case As.Css",
+  );
+  assertEquals(
+    asEntry3.SHEET,
+    Ci.nsIStyleSheetService.AGENT_SHEET,
+    "mixed case aS.cSs",
+  );
 
   // Test case variations for .author.css
   const authorEntry = new CSSEntry("test.AUTHOR.CSS", TEST_CSS_FOLDER);
-  assertEquals(authorEntry.SHEET, Ci.nsIStyleSheetService.AUTHOR_SHEET, "uppercase AUTHOR.CSS");
+  assertEquals(
+    authorEntry.SHEET,
+    Ci.nsIStyleSheetService.AUTHOR_SHEET,
+    "uppercase AUTHOR.CSS",
+  );
 }
 
 async function testCSSEntrySpecialCharactersInFilename(): Promise<void> {
   const { CSSEntry } = await import("../cssEntry.ts");
   const entry = new CSSEntry("test-file_123.css", TEST_CSS_FOLDER);
 
-  assertEquals(entry.leafName, "test-file_123.css", "should handle special characters");
+  assertEquals(
+    entry.leafName,
+    "test-file_123.css",
+    "should handle special characters",
+  );
   assertEquals(
     entry.path,
     PathUtils.join(TEST_CSS_FOLDER, "test-file_123.css"),
@@ -645,7 +669,11 @@ async function testChromeCSSComponentInitCreatesService(): Promise<void> {
   instance.init();
 
   assert(ChromeCSS.ctx !== null, "ctx should be non-null after init");
-  assertEquals(ChromeCSS.ctx.initialized, true, "service should be initialized after init");
+  assertEquals(
+    ChromeCSS.ctx.initialized,
+    true,
+    "service should be initialized after init",
+  );
 }
 
 async function testChromeCSSComponentInitOnlyOnce(): Promise<void> {
@@ -661,7 +689,11 @@ async function testChromeCSSComponentInitOnlyOnce(): Promise<void> {
 
   // Second init should not create new instance
   instance.init();
-  assertEquals(ChromeCSS.ctx, firstCtx, "ctx should remain the same after second init");
+  assertEquals(
+    ChromeCSS.ctx,
+    firstCtx,
+    "ctx should remain the same after second init",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -690,7 +722,11 @@ async function testRebuildCreatesDirectoryIfNotExists(): Promise<void> {
   } catch {
     threw = true;
   }
-  assertEquals(threw, false, "rebuild should not throw when folder doesn't exist");
+  assertEquals(
+    threw,
+    false,
+    "rebuild should not throw when folder doesn't exist",
+  );
 
   // Restore original method
   svc.getCSSFolder = originalGetCSSFolder;
@@ -728,8 +764,14 @@ async function testRebuildExcludesUcCssFiles(): Promise<void> {
 
     // regular.css should be loaded, .uc.css files should not
     assert("regular.css" in svc.readCSS, "regular.css should be loaded");
-    assert(!("script.uc.css" in svc.readCSS), "script.uc.css should be excluded");
-    assert(!("another.uc.css" in svc.readCSS), "another.uc.css should be excluded");
+    assert(
+      !("script.uc.css" in svc.readCSS),
+      "script.uc.css should be excluded",
+    );
+    assert(
+      !("another.uc.css" in svc.readCSS),
+      "another.uc.css should be excluded",
+    );
   } finally {
     // Restore and cleanup
     svc.getCSSFolder = originalGetCSSFolder;
@@ -769,7 +811,10 @@ async function testRebuildHandlesDeletedFiles(): Promise<void> {
 
     // Second rebuild - should remove the file from readCSS
     await svc.rebuild();
-    assert(!("temp.css" in svc.readCSS), "temp.css should be removed after deletion");
+    assert(
+      !("temp.css" in svc.readCSS),
+      "temp.css should be removed after deletion",
+    );
   } finally {
     // Restore and cleanup
     svc.getCSSFolder = originalGetCSSFolder;
@@ -791,7 +836,9 @@ async function testLoadCSSRespectsDisabledListPref(): Promise<void> {
   const svc = ChromeCSSService.getInstance();
 
   // Set a disabled list preference
-  const disabledList = encodeURIComponent("test-disabled.css|another-disabled.css");
+  const disabledList = encodeURIComponent(
+    "test-disabled.css|another-disabled.css",
+  );
   Services.prefs.setStringPref("UserCSSLoader.disabled_list", disabledList);
 
   try {
@@ -800,7 +847,11 @@ async function testLoadCSSRespectsDisabledListPref(): Promise<void> {
     const entry3 = svc.loadCSS("enabled.css", TEST_CSS_FOLDER);
 
     assertEquals(entry1.enabled, false, "test-disabled.css should be disabled");
-    assertEquals(entry2.enabled, false, "another-disabled.css should be disabled");
+    assertEquals(
+      entry2.enabled,
+      false,
+      "another-disabled.css should be disabled",
+    );
     assertEquals(entry3.enabled, true, "enabled.css should be enabled");
   } finally {
     // Cleanup
@@ -954,7 +1005,10 @@ async function testUninitSavesDisabledListPref(): Promise<void> {
   svc.uninit();
 
   // Verify the pref was saved with correct disabled file names
-  const savedPref = Services.prefs.getStringPref("UserCSSLoader.disabled_list", "");
+  const savedPref = Services.prefs.getStringPref(
+    "UserCSSLoader.disabled_list",
+    "",
+  );
   const decodedPref = decodeURIComponent(savedPref);
 
   // The pref should contain the disabled files separated by |
@@ -1005,7 +1059,10 @@ async function testUninitSavesEmptyDisabledListWhenAllEnabled(): Promise<void> {
   svc.uninit();
 
   // Verify the pref exists but is empty (or contains only the separator)
-  const savedPref = Services.prefs.getStringPref("UserCSSLoader.disabled_list", "");
+  const savedPref = Services.prefs.getStringPref(
+    "UserCSSLoader.disabled_list",
+    "",
+  );
   const decodedPref = decodeURIComponent(savedPref);
 
   assertEquals(
@@ -1044,7 +1101,10 @@ async function testUninitSavesAllFilesWhenAllDisabled(): Promise<void> {
   svc.uninit();
 
   // Verify the pref contains both disabled files
-  const savedPref = Services.prefs.getStringPref("UserCSSLoader.disabled_list", "");
+  const savedPref = Services.prefs.getStringPref(
+    "UserCSSLoader.disabled_list",
+    "",
+  );
   const decodedPref = decodeURIComponent(savedPref);
 
   assert(
@@ -1075,11 +1135,19 @@ async function testLoadCSSReEnablesExistingEntry(): Promise<void> {
 
   // Load a CSS file for the first time (should be enabled by default)
   const firstLoad = svc.loadCSS("reenable-test.css", TEST_CSS_FOLDER);
-  assertEquals(firstLoad.enabled, true, "first load should be enabled by default");
+  assertEquals(
+    firstLoad.enabled,
+    true,
+    "first load should be enabled by default",
+  );
 
   // Manually disable it
   firstLoad.enabled = false;
-  assertEquals(firstLoad.enabled, false, "entry should be disabled after manual change");
+  assertEquals(
+    firstLoad.enabled,
+    false,
+    "entry should be disabled after manual change",
+  );
 
   // LoadCSS again - this should NOT re-enable it when already disabled
   // (the re-enable branch only runs when cssFile.enabled is true)
@@ -1089,11 +1157,7 @@ async function testLoadCSSReEnablesExistingEntry(): Promise<void> {
     false,
     "loadCSS should not re-enable a disabled entry",
   );
-  assertEquals(
-    firstLoad,
-    secondLoad,
-    "should return the same entry instance",
-  );
+  assertEquals(firstLoad, secondLoad, "should return the same entry instance");
 }
 
 async function testLoadCSSKeepsEnabledEntryEnabled(): Promise<void> {
@@ -1103,7 +1167,11 @@ async function testLoadCSSKeepsEnabledEntryEnabled(): Promise<void> {
 
   // Load a CSS file for the first time
   const firstLoad = svc.loadCSS("keep-enabled-test.css", TEST_CSS_FOLDER);
-  assertEquals(firstLoad.enabled, true, "first load should be enabled by default");
+  assertEquals(
+    firstLoad.enabled,
+    true,
+    "first load should be enabled by default",
+  );
 
   // LoadCSS again on an already-enabled entry
   // This tests the else if branch at line 235-237
@@ -1113,11 +1181,7 @@ async function testLoadCSSKeepsEnabledEntryEnabled(): Promise<void> {
     true,
     "loadCSS should keep an enabled entry enabled",
   );
-  assertEquals(
-    firstLoad,
-    secondLoad,
-    "should return the same entry instance",
-  );
+  assertEquals(firstLoad, secondLoad, "should return the same entry instance");
 }
 
 async function testLoadCSSRespectsDisabledListPrefOnReload(): Promise<void> {
@@ -1217,7 +1281,11 @@ async function testCreatePreventsConcurrentCreation(): Promise<void> {
     // Start a create operation (without filename, which would prompt)
     // Since we can't test prompts, we'll test the isCreating flag indirectly
     // by verifying the service state doesn't get corrupted
-    assertEquals((svc as unknown as { isCreating: boolean }).isCreating, false, "should not be creating initially");
+    assertEquals(
+      (svc as unknown as { isCreating: boolean }).isCreating,
+      false,
+      "should not be creating initially",
+    );
 
     // Manually set isCreating to simulate a concurrent create operation
     (svc as unknown as { isCreating: boolean }).isCreating = true;
@@ -1226,12 +1294,20 @@ async function testCreatePreventsConcurrentCreation(): Promise<void> {
     await svc.create("test-concurrent.css");
 
     // Verify isCreating is still true (the early return happened)
-    assertEquals((svc as unknown as { isCreating: boolean }).isCreating, true, "isCreating should remain true when guarded");
+    assertEquals(
+      (svc as unknown as { isCreating: boolean }).isCreating,
+      true,
+      "isCreating should remain true when guarded",
+    );
 
     // The file should NOT have been created because of the concurrent guard
     const filePath = PathUtils.join(testFolder, "test-concurrent.css");
     const fileExists = await IOUtils.exists(filePath);
-    assertEquals(fileExists, false, "file should not be created when isCreating is true");
+    assertEquals(
+      fileExists,
+      false,
+      "file should not be created when isCreating is true",
+    );
 
     // Reset isCreating for cleanup
     (svc as unknown as { isCreating: boolean }).isCreating = false;
@@ -1266,25 +1342,33 @@ async function testCreateNormalizesWhitespace(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Create a file with multiple spaces - these should be normalized to single spaces
-    // Line 579: fileName.replace(/\s+/g, " ")
-    const testFileName = "test   multiple    spaces";
-    await svc.create(testFileName);
+      // Create a file with multiple spaces - these should be normalized to single spaces
+      // Line 579: fileName.replace(/\s+/g, " ")
+      const testFileName = "test   multiple    spaces";
+      await svc.create(testFileName);
 
-    // The file should be created with normalized whitespace: "test multiple spaces.css"
-    const expectedFileName = "test multiple spaces.css";
-    const filePath = PathUtils.join(testFolder, expectedFileName);
-    const fileExists = await IOUtils.exists(filePath);
+      // The file should be created with normalized whitespace: "test multiple spaces.css"
+      const expectedFileName = "test multiple spaces.css";
+      const filePath = PathUtils.join(testFolder, expectedFileName);
+      const fileExists = await IOUtils.exists(filePath);
 
-    assertEquals(fileExists, true, "file should be created with normalized whitespace");
+      assertEquals(
+        fileExists,
+        true,
+        "file should be created with normalized whitespace",
+      );
 
-    // Verify the file was NOT created with the original un-normalized name
-    const originalPath = PathUtils.join(testFolder, testFileName + ".css");
-    const originalExists = await IOUtils.exists(originalPath);
-    assertEquals(originalExists, false, "file should not be created with original whitespace");
+      // Verify the file was NOT created with the original un-normalized name
+      const originalPath = PathUtils.join(testFolder, testFileName + ".css");
+      const originalExists = await IOUtils.exists(originalPath);
+      assertEquals(
+        originalExists,
+        false,
+        "file should not be created with original whitespace",
+      );
 
-    // Cleanup
-    await IOUtils.remove(filePath);
+      // Cleanup
+      await IOUtils.remove(filePath);
     } finally {
       restorePrompts();
     }
@@ -1319,20 +1403,24 @@ async function testCreateSanitizesInvalidCharacters(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Test with invalid filename characters: \ / : * ? " < > |
-    // Line 580: fileName.replace(/[\\/:*?"<>|]/g, "")
-    const testFileName = 'test:file/with\\invalid*chars?"<|>name';
-    await svc.create(testFileName);
+      // Test with invalid filename characters: \ / : * ? " < > |
+      // Line 580: fileName.replace(/[\\/:*?"<>|]/g, "")
+      const testFileName = 'test:file/with\\invalid*chars?"<|>name';
+      await svc.create(testFileName);
 
-    // The file should be created with invalid chars removed: "testfilewithinvalidcharsname.css"
-    const expectedFileName = "testfilewithinvalidcharsname.css";
-    const filePath = PathUtils.join(testFolder, expectedFileName);
-    const fileExists = await IOUtils.exists(filePath);
+      // The file should be created with invalid chars removed: "testfilewithinvalidcharsname.css"
+      const expectedFileName = "testfilewithinvalidcharsname.css";
+      const filePath = PathUtils.join(testFolder, expectedFileName);
+      const fileExists = await IOUtils.exists(filePath);
 
-    assertEquals(fileExists, true, "file should be created with invalid characters removed");
+      assertEquals(
+        fileExists,
+        true,
+        "file should be created with invalid characters removed",
+      );
 
-    // Cleanup
-    await IOUtils.remove(filePath);
+      // Cleanup
+      await IOUtils.remove(filePath);
     } finally {
       restorePrompts();
     }
@@ -1367,25 +1455,33 @@ async function testCreateAppendsCssExtension(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Create a file without .css extension - it should be appended
-    // Line 587-589: if (!fileName.endsWith(".css")) { fileName += ".css"; }
-    const testFileName = "test-file-without-extension";
-    await svc.create(testFileName);
+      // Create a file without .css extension - it should be appended
+      // Line 587-589: if (!fileName.endsWith(".css")) { fileName += ".css"; }
+      const testFileName = "test-file-without-extension";
+      await svc.create(testFileName);
 
-    // The file should be created with .css appended: "test-file-without-extension.css"
-    const expectedFileName = "test-file-without-extension.css";
-    const filePath = PathUtils.join(testFolder, expectedFileName);
-    const fileExists = await IOUtils.exists(filePath);
+      // The file should be created with .css appended: "test-file-without-extension.css"
+      const expectedFileName = "test-file-without-extension.css";
+      const filePath = PathUtils.join(testFolder, expectedFileName);
+      const fileExists = await IOUtils.exists(filePath);
 
-    assertEquals(fileExists, true, "file should be created with .css extension appended");
+      assertEquals(
+        fileExists,
+        true,
+        "file should be created with .css extension appended",
+      );
 
-    // Verify the file was NOT created without the extension
-    const noExtPath = PathUtils.join(testFolder, testFileName);
-    const noExtExists = await IOUtils.exists(noExtPath);
-    assertEquals(noExtExists, false, "file should not be created without .css extension");
+      // Verify the file was NOT created without the extension
+      const noExtPath = PathUtils.join(testFolder, testFileName);
+      const noExtExists = await IOUtils.exists(noExtPath);
+      assertEquals(
+        noExtExists,
+        false,
+        "file should not be created without .css extension",
+      );
 
-    // Cleanup
-    await IOUtils.remove(filePath);
+      // Cleanup
+      await IOUtils.remove(filePath);
     } finally {
       restorePrompts();
     }
@@ -1420,17 +1516,25 @@ async function testCreateRejectsEmptyFilename(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Try to create with empty filename - should return early
-    // Line 582-585: if (!fileName || !/\S/.test(fileName)) { this.isCreating = false; return; }
-    // Note: empty string is falsy, so prompt() is called first; mock returns null → early return
-    await svc.create("");
+      // Try to create with empty filename - should return early
+      // Line 582-585: if (!fileName || !/\S/.test(fileName)) { this.isCreating = false; return; }
+      // Note: empty string is falsy, so prompt() is called first; mock returns null → early return
+      await svc.create("");
 
-    // isCreating should be reset to false
-    assertEquals((svc as unknown as { isCreating: boolean }).isCreating, false, "isCreating should be reset after empty filename");
+      // isCreating should be reset to false
+      assertEquals(
+        (svc as unknown as { isCreating: boolean }).isCreating,
+        false,
+        "isCreating should be reset after empty filename",
+      );
 
-    // No file should be created
-    const files = await IOUtils.getChildren(testFolder);
-    assertEquals(files.length, 0, "no files should be created for empty filename");
+      // No file should be created
+      const files = await IOUtils.getChildren(testFolder);
+      assertEquals(
+        files.length,
+        0,
+        "no files should be created for empty filename",
+      );
     } finally {
       restorePrompts();
     }
@@ -1468,11 +1572,19 @@ async function testCreateRejectsWhitespaceOnlyFilename(): Promise<void> {
     await svc.create("   \t  \n  ");
 
     // isCreating should be reset to false
-    assertEquals((svc as unknown as { isCreating: boolean }).isCreating, false, "isCreating should be reset after whitespace-only filename");
+    assertEquals(
+      (svc as unknown as { isCreating: boolean }).isCreating,
+      false,
+      "isCreating should be reset after whitespace-only filename",
+    );
 
     // No file should be created
     const files = await IOUtils.getChildren(testFolder);
-    assertEquals(files.length, 0, "no files should be created for whitespace-only filename");
+    assertEquals(
+      files.length,
+      0,
+      "no files should be created for whitespace-only filename",
+    );
   } finally {
     // Restore and cleanup
     svc.getCSSFolder = originalGetCSSFolder;
@@ -1504,23 +1616,31 @@ async function testCreateWithAlreadyHasCssExtension(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Create a file that already has .css extension - should NOT append another
-    const testFileName = "test-already-has.css";
-    await svc.create(testFileName);
+      // Create a file that already has .css extension - should NOT append another
+      const testFileName = "test-already-has.css";
+      await svc.create(testFileName);
 
-    // The file should be created with the exact name provided (no double extension)
-    const filePath = PathUtils.join(testFolder, testFileName);
-    const fileExists = await IOUtils.exists(filePath);
+      // The file should be created with the exact name provided (no double extension)
+      const filePath = PathUtils.join(testFolder, testFileName);
+      const fileExists = await IOUtils.exists(filePath);
 
-    assertEquals(fileExists, true, "file should be created with original .css extension");
+      assertEquals(
+        fileExists,
+        true,
+        "file should be created with original .css extension",
+      );
 
-    // Verify the file was NOT created with a double extension
-    const doubleExtPath = PathUtils.join(testFolder, testFileName + ".css");
-    const doubleExtExists = await IOUtils.exists(doubleExtPath);
-    assertEquals(doubleExtExists, false, "file should not be created with double .css extension");
+      // Verify the file was NOT created with a double extension
+      const doubleExtPath = PathUtils.join(testFolder, testFileName + ".css");
+      const doubleExtExists = await IOUtils.exists(doubleExtPath);
+      assertEquals(
+        doubleExtExists,
+        false,
+        "file should not be created with double .css extension",
+      );
 
-    // Cleanup
-    await IOUtils.remove(filePath);
+      // Cleanup
+      await IOUtils.remove(filePath);
     } finally {
       restorePrompts();
     }
@@ -1555,22 +1675,26 @@ async function testCreateNormalizesAndSanitizesCombined(): Promise<void> {
   try {
     const restorePrompts = mockPromptDialogs();
     try {
-    // Test combined: whitespace normalization + invalid char removal + extension append
-    const testFileName = "  test:   file/  name  ";
-    await svc.create(testFileName);
+      // Test combined: whitespace normalization + invalid char removal + extension append
+      const testFileName = "  test:   file/  name  ";
+      await svc.create(testFileName);
 
-    // Expected: "  test:   file/  name  "
-    //   .replace(/\s+/g, " ") → " test: file/ name "
-    //   .replace(/[\\/:*?"<>|]/g, "") → " test file name "
-    //   + ".css" → " test file name .css"
-    const expectedFileName = " test file name .css";
-    const filePath = PathUtils.join(testFolder, expectedFileName);
-    const fileExists = await IOUtils.exists(filePath);
+      // Expected: "  test:   file/  name  "
+      //   .replace(/\s+/g, " ") → " test: file/ name "
+      //   .replace(/[\\/:*?"<>|]/g, "") → " test file name "
+      //   + ".css" → " test file name .css"
+      const expectedFileName = " test file name .css";
+      const filePath = PathUtils.join(testFolder, expectedFileName);
+      const fileExists = await IOUtils.exists(filePath);
 
-    assertEquals(fileExists, true, "file should be created with all normalizations applied");
+      assertEquals(
+        fileExists,
+        true,
+        "file should be created with all normalizations applied",
+      );
 
-    // Cleanup
-    await IOUtils.remove(filePath);
+      // Cleanup
+      await IOUtils.remove(filePath);
     } finally {
       restorePrompts();
     }
@@ -1624,7 +1748,7 @@ async function testToggleUpdatesCssFilesList(): Promise<void> {
   svc.toggle("toggle-update-test.css");
 
   // Wait for the timeout
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   // The list should still exist (may or may not have changed length)
   const filesAfter = svc.getCssFiles().length;
@@ -1644,7 +1768,10 @@ async function testMultipleServicesShareState(): Promise<void> {
 
   svc1.loadCSS("shared-state.css", TEST_CSS_FOLDER);
 
-  assert("shared-state.css" in svc2.readCSS, "both instances should share readCSS");
+  assert(
+    "shared-state.css" in svc2.readCSS,
+    "both instances should share readCSS",
+  );
   assertEquals(svc1, svc2, "getInstance should return the same instance");
 }
 

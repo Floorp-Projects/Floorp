@@ -16,7 +16,8 @@ function renderAndGetCss(): { css: string; cleanup: () => void } {
   document.head.appendChild(container);
   render(() => StyleElement(), container);
   // SolidJS renders <style> inside the container
-  const styleEl = container.querySelector("style") ?? container.querySelector("div");
+  const styleEl =
+    container.querySelector("style") ?? container.querySelector("div");
   const css = styleEl?.textContent ?? "";
   return { css, cleanup: () => container.remove() };
 }
@@ -246,8 +247,8 @@ function testStyleElementIconUrlCorrectness(): void {
     );
     assert(
       css.includes(`url("${expectedUrl}")`) ||
-      css.includes(`url('${expectedUrl}')`) ||
-      css.includes(`url(${expectedUrl})`),
+        css.includes(`url('${expectedUrl}')`) ||
+        css.includes(`url(${expectedUrl})`),
       "URL should be properly wrapped in url() function",
     );
   } finally {
@@ -258,13 +259,7 @@ function testStyleElementIconUrlCorrectness(): void {
 function testStyleElementNoInvalidCss(): void {
   const { css, cleanup } = renderAndGetCss();
   try {
-    const invalidPatterns = [
-      ";;",
-      "::",
-      "{{",
-      "}}",
-      "url()",
-    ];
+    const invalidPatterns = [";;", "::", "{{", "}}", "url()"];
 
     for (const pattern of invalidPatterns) {
       if (css.includes(pattern)) {

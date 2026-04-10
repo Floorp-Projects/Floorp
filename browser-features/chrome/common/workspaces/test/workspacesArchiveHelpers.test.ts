@@ -164,7 +164,10 @@ function testFilterJsonFilesWithMultipleDots(): void {
   ];
   const result = filterJsonFiles(input);
   assertEquals(result.length, 2, "should filter to 2 JSON files");
-  assert(result.includes("data.backup.json"), "should include data.backup.json");
+  assert(
+    result.includes("data.backup.json"),
+    "should include data.backup.json",
+  );
   assert(result.includes("archive.v2.json"), "should include archive.v2.json");
 }
 
@@ -244,11 +247,20 @@ export async function runAllTests(): Promise<void> {
     { name: "filterJsonFiles empty", fn: testFilterJsonFilesEmpty },
     { name: "filterJsonFiles none", fn: testFilterJsonFilesNone },
     { name: "filterJsonFiles case", fn: testFilterJsonFilesCaseInsensitive },
-    { name: "filterJsonFiles mixed extensions", fn: testFilterJsonFilesMixedExtensions },
-    { name: "filterJsonFiles multiple dots", fn: testFilterJsonFilesWithMultipleDots },
+    {
+      name: "filterJsonFiles mixed extensions",
+      fn: testFilterJsonFilesMixedExtensions,
+    },
+    {
+      name: "filterJsonFiles multiple dots",
+      fn: testFilterJsonFilesWithMultipleDots,
+    },
     { name: "buildSummary basic", fn: testBuildSummaryBasic },
     { name: "buildSummary null icon", fn: testBuildSummaryNullIcon },
-    { name: "buildSummary with multiple tabs", fn: testBuildSummaryWithMultipleTabs },
+    {
+      name: "buildSummary with multiple tabs",
+      fn: testBuildSummaryWithMultipleTabs,
+    },
   ];
 
   const failures: string[] = [];

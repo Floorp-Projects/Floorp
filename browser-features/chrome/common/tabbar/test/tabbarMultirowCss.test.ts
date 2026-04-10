@@ -324,7 +324,7 @@ function testContainsDisplayNone(): void {
   assert(
     MULTIROW_TABBAR_BASE_CSS.includes("display") &&
       (MULTIROW_TABBAR_BASE_CSS.includes("none") ||
-       MULTIROW_TABBAR_BASE_CSS.includes(":none")),
+        MULTIROW_TABBAR_BASE_CSS.includes(":none")),
     "should include display: none for hiding elements",
   );
 }
@@ -409,8 +409,9 @@ function testHasCombinators(): void {
 }
 
 function testContainsMediaQueries(): void {
-  const hasMediaQuery = MULTIROW_TABBAR_BASE_CSS.includes("@media") ||
-                        MULTIROW_TABBAR_BASE_CSS.includes("@supports");
+  const hasMediaQuery =
+    MULTIROW_TABBAR_BASE_CSS.includes("@media") ||
+    MULTIROW_TABBAR_BASE_CSS.includes("@supports");
   // Media queries are optional, but we check if they exist
   // If they don't exist, we still pass the test (just a note)
   if (hasMediaQuery) {
@@ -569,7 +570,10 @@ export async function runAllTests(): Promise<void> {
     { name: "has transition properties", fn: testHasTransitionProperties },
     { name: "has opacity property", fn: testHasOpacityProperty },
     { name: "contains pseudo-selectors", fn: testContainsPseudoSelectors },
-    { name: "contains attribute selectors", fn: testContainsAttributeSelectors },
+    {
+      name: "contains attribute selectors",
+      fn: testContainsAttributeSelectors,
+    },
     { name: "has combinators", fn: testHasCombinators },
     { name: "contains media queries", fn: testContainsMediaQueries },
     { name: "has no duplicate selectors", fn: testHasNoDuplicateSelectors },

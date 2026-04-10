@@ -176,22 +176,28 @@ function testTabScrollHandlesReverseConfiguration(): void {
 
   try {
     // Test with reverse enabled
-    withTabConfigPatch({ tabScrollEnabled: true, tabScrollReverse: true }, () => {
-      constructInSolidRoot(() => {
-        new TabScroll();
-        // The reverse setting is used in the wheel handler, not a pref
-        // but we verify the instance is created successfully
-        assert(true, "Instance should be created with reverse enabled");
-      });
-    });
+    withTabConfigPatch(
+      { tabScrollEnabled: true, tabScrollReverse: true },
+      () => {
+        constructInSolidRoot(() => {
+          new TabScroll();
+          // The reverse setting is used in the wheel handler, not a pref
+          // but we verify the instance is created successfully
+          assert(true, "Instance should be created with reverse enabled");
+        });
+      },
+    );
 
     // Test with reverse disabled
-    withTabConfigPatch({ tabScrollEnabled: true, tabScrollReverse: false }, () => {
-      constructInSolidRoot(() => {
-        new TabScroll();
-        assert(true, "Instance should be created with reverse disabled");
-      });
-    });
+    withTabConfigPatch(
+      { tabScrollEnabled: true, tabScrollReverse: false },
+      () => {
+        constructInSolidRoot(() => {
+          new TabScroll();
+          assert(true, "Instance should be created with reverse disabled");
+        });
+      },
+    );
   } finally {
     Services.prefs.setBoolPref(prefName, originalPref);
   }
@@ -226,15 +232,18 @@ function testTabScrollHandlesWrapConfiguration(): void {
 
 function testTabScrollHandleOnWheelMethod(): void {
   // Verify the handleOnWheel method exists and is a function
-  withTabConfigPatch({ tabScrollEnabled: true, tabScrollReverse: false, tabScrollWrap: true }, () => {
-    constructInSolidRoot(() => {
-      const instance = new TabScroll();
-      assert(
-        typeof (instance as TabScroll)["handleOnWheel"] === "function",
-        "handleOnWheel should be a function"
-      );
-    });
-  });
+  withTabConfigPatch(
+    { tabScrollEnabled: true, tabScrollReverse: false, tabScrollWrap: true },
+    () => {
+      constructInSolidRoot(() => {
+        const instance = new TabScroll();
+        assert(
+          typeof (instance as TabScroll)["handleOnWheel"] === "function",
+          "handleOnWheel should be a function",
+        );
+      });
+    },
+  );
 }
 
 function testTabScrollHandlesMultipleInstances(): void {
@@ -250,7 +259,7 @@ function testTabScrollHandlesMultipleInstances(): void {
 
         assert(
           instance1 !== undefined && instance2 !== undefined,
-          "Multiple instances should be created successfully"
+          "Multiple instances should be created successfully",
         );
 
         assertEquals(
@@ -279,19 +288,22 @@ function testTabScrollHandlesAllConfigCombinations(): void {
     ];
 
     for (const combo of combinations) {
-      withTabConfigPatch({
-        tabScrollEnabled: true,
-        tabScrollReverse: combo.reverse,
-        tabScrollWrap: combo.wrap,
-      }, () => {
-        constructInSolidRoot(() => {
-          new TabScroll();
-          assert(
-            true,
-            `Instance should be created with reverse=${combo.reverse}, wrap=${combo.wrap}`
-          );
-        });
-      });
+      withTabConfigPatch(
+        {
+          tabScrollEnabled: true,
+          tabScrollReverse: combo.reverse,
+          tabScrollWrap: combo.wrap,
+        },
+        () => {
+          constructInSolidRoot(() => {
+            new TabScroll();
+            assert(
+              true,
+              `Instance should be created with reverse=${combo.reverse}, wrap=${combo.wrap}`,
+            );
+          });
+        },
+      );
     }
   } finally {
     Services.prefs.setBoolPref(prefName, originalPref);

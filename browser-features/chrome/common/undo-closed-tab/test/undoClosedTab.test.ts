@@ -3,11 +3,7 @@
 
 import UndoClosedTab from "../index.ts";
 
-import {
-  assert,
-  runTests,
-
-} from "../../../test/utils/test_harness.ts";
+import { assert, runTests } from "../../../test/utils/test_harness.ts";
 
 function testUndoClosedTabClassExists(): void {
   assert(
@@ -26,13 +22,15 @@ function testUndoClosedTabHasInitMethod(): void {
 function testWindowUndoCloseTabDeclaration(): void {
   // The module declares window.undoCloseTab on the global Window interface.
   // Verify that the global undoCloseTab function or SessionWindowUI is available.
-  const SessionWindowUI = (globalThis as Record<string, unknown>).SessionWindowUI;
+  const SessionWindowUI = (globalThis as Record<string, unknown>)
+    .SessionWindowUI;
   assert(
     typeof SessionWindowUI !== "undefined",
     "SessionWindowUI should be available in the browser environment",
   );
   assert(
-    typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab === "function",
+    typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab ===
+      "function",
     "SessionWindowUI.undoCloseTab should be a function",
   );
 }
@@ -40,14 +38,16 @@ function testWindowUndoCloseTabDeclaration(): void {
 function testServicesWmGetMostRecentWindow(): void {
   // The module uses Services.wm.getMostRecentWindow to find the browser window
   const win = Services.wm.getMostRecentWindow("navigator:browser");
-  const SessionWindowUI = (globalThis as Record<string, unknown>).SessionWindowUI;
+  const SessionWindowUI = (globalThis as Record<string, unknown>)
+    .SessionWindowUI;
   assert(
     win !== null,
     "Services.wm.getMostRecentWindow should return a window",
   );
   assert(
     typeof (win as any).undoCloseTab === "function" ||
-      typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab === "function",
+      typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab ===
+        "function",
     "undoCloseTab should be accessible either on window or SessionWindowUI",
   );
 }
@@ -112,18 +112,22 @@ function testBrowserWindowTypeConstant(): void {
 function testSessionWindowUIIntegration(): void {
   // Test SessionWindowUI.undoCloseTab is callable
   const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  const SessionWindowUI = (globalThis as Record<string, unknown>).SessionWindowUI;
+  const SessionWindowUI = (globalThis as Record<string, unknown>)
+    .SessionWindowUI;
 
   if (browserWindow) {
     assert(
-      typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab === "function",
+      typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab ===
+        "function",
       "SessionWindowUI.undoCloseTab should be a function",
     );
 
     // Test that it accepts a window parameter
     try {
       // We don't actually call it to avoid side effects, just verify it's callable
-      const fn = (SessionWindowUI as Record<string, unknown>).undoCloseTab as (...args: unknown[]) => unknown;
+      const fn = (SessionWindowUI as Record<string, unknown>).undoCloseTab as (
+        ...args: unknown[]
+      ) => unknown;
       assert(
         fn.length >= 1,
         "undoCloseTab should accept at least one parameter (window)",
@@ -136,7 +140,8 @@ function testSessionWindowUIIntegration(): void {
 
 function testCustomizableUIAvailability(): void {
   // Test that CustomizableUI is available and has expected methods
-  const CustomizableUI = (globalThis as Record<string, unknown>).CustomizableUI as Record<string, unknown>;
+  const CustomizableUI = (globalThis as Record<string, unknown>)
+    .CustomizableUI as Record<string, unknown>;
   assert(
     typeof CustomizableUI !== "undefined",
     "CustomizableUI should be available",
@@ -160,7 +165,10 @@ function testI18nIntegration(): void {
 
 function testCreateSignalAvailability(): void {
   // createSignal is not on globalThis — it's imported from solid-js in module scope
-  assert(true, "createSignal is imported from solid-js in module scope, not globalThis");
+  assert(
+    true,
+    "createSignal is imported from solid-js in module scope, not globalThis",
+  );
 }
 
 function testErrorHandlingInWindowRetrieval(): void {
@@ -179,7 +187,8 @@ function testWindowInterfaceDeclaration(): void {
 
   if (browserWindow) {
     // Check if the window has undoCloseTab method (either native or from SessionWindowUI)
-    const SessionWindowUI = (globalThis as Record<string, unknown>).SessionWindowUI as Record<string, unknown>;
+    const SessionWindowUI = (globalThis as Record<string, unknown>)
+      .SessionWindowUI as Record<string, unknown>;
     const hasUndoCloseTab =
       typeof (browserWindow as any).undoCloseTab === "function" ||
       typeof SessionWindowUI.undoCloseTab === "function";
@@ -196,10 +205,7 @@ function testStyleElementImport(): void {
   try {
     // This test verifies the import works
     const styleModule = import("../styleElem.tsx");
-    assert(
-      styleModule !== null,
-      "StyleElement module should be importable",
-    );
+    assert(styleModule !== null, "StyleElement module should be importable");
   } catch (error) {
     assert(false, `StyleElement import failed: ${error}`);
   }

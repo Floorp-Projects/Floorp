@@ -3,15 +3,23 @@
 
 import { init } from "../index.ts";
 
-import { assert, runTests, type TestCase } from "../../../test/utils/test_harness.ts";
+import {
+  assert,
+  runTests,
+  type TestCase,
+} from "../../../test/utils/test_harness.ts";
 
 type ReverseSidebarPositionConstructor = new () => {
   StyleElement: () => unknown;
 };
 
-async function loadModule(): Promise<{ ReverseSidebarPosition: ReverseSidebarPositionConstructor } | null> {
+async function loadModule(): Promise<{
+  ReverseSidebarPosition: ReverseSidebarPositionConstructor;
+} | null> {
   try {
-    return await import("../reverse-sidebar-position.tsx") as unknown as { ReverseSidebarPosition: ReverseSidebarPositionConstructor };
+    return (await import("../reverse-sidebar-position.tsx")) as unknown as {
+      ReverseSidebarPosition: ReverseSidebarPositionConstructor;
+    };
   } catch {
     // Module requires ChromeUtils.importESModule which is not available in test environment
     return null;
@@ -19,9 +27,14 @@ async function loadModule(): Promise<{ ReverseSidebarPosition: ReverseSidebarPos
 }
 
 // Cached result - loaded once since the module is always the same
-let _cachedModule: { ReverseSidebarPosition: ReverseSidebarPositionConstructor } | null | undefined = undefined;
+let _cachedModule:
+  | { ReverseSidebarPosition: ReverseSidebarPositionConstructor }
+  | null
+  | undefined = undefined;
 
-function getModuleSync(): { ReverseSidebarPosition: ReverseSidebarPositionConstructor } | null {
+function getModuleSync(): {
+  ReverseSidebarPosition: ReverseSidebarPositionConstructor;
+} | null {
   if (_cachedModule === undefined) {
     // Module not yet loaded synchronously - return null since async loadModule can't be awaited here
     return null;
@@ -68,7 +81,10 @@ function testReverseSidebarPositionClassExists(): void {
   try {
     // Dynamic import to avoid module initialization issues in test environment
     const module = import("../reverse-sidebar-position.tsx");
-    assert(module !== null, "ReverseSidebarPosition module should be importable");
+    assert(
+      module !== null,
+      "ReverseSidebarPosition module should be importable",
+    );
   } catch {
     threw = true;
   }
@@ -78,12 +94,18 @@ function testReverseSidebarPositionClassExists(): void {
 function testReverseSidebarPositionCanBeInstantiated(): void {
   // Module requires ChromeUtils.importESModule which is unavailable in test environment.
   // Verifying the test infrastructure itself works correctly.
-  assert(true, "ReverseSidebarPosition should be constructable or fail gracefully");
+  assert(
+    true,
+    "ReverseSidebarPosition should be constructable or fail gracefully",
+  );
 }
 
 function testStyleElementMethodExists(): void {
   // Module requires ChromeUtils.importESModule which is unavailable in test environment.
-  assert(true, "ReverseSidebarPosition should have StyleElement method when constructable");
+  assert(
+    true,
+    "ReverseSidebarPosition should have StyleElement method when constructable",
+  );
 }
 
 function testStyleElementReturnsJSXElement(): void {
@@ -93,7 +115,10 @@ function testStyleElementReturnsJSXElement(): void {
 
 function testConstructorHandlesMissingSidebarController(): void {
   // Module requires ChromeUtils.importESModule which is unavailable in test environment.
-  assert(true, "constructor should handle missing SidebarController gracefully");
+  assert(
+    true,
+    "constructor should handle missing SidebarController gracefully",
+  );
 }
 
 function testConstructorHandlesMissingCustomizableUI(): void {
@@ -103,12 +128,18 @@ function testConstructorHandlesMissingCustomizableUI(): void {
 
 function testToolbarButtonCreationWithCorrectParameters(): void {
   // Module requires ChromeUtils.importESModule which is unavailable in test environment.
-  assert(true, "constructor should create toolbar button or fail with expected error");
+  assert(
+    true,
+    "constructor should create toolbar button or fail with expected error",
+  );
 }
 
 function testSidebarButtonPositionInNavbar(): void {
   // Module requires ChromeUtils.importESModule which is unavailable in test environment.
-  assert(true, "constructor should position sidebar button correctly or fail gracefully");
+  assert(
+    true,
+    "constructor should position sidebar button correctly or fail gracefully",
+  );
 }
 
 function testClickCallbackCallsReversePosition(): void {
@@ -136,8 +167,8 @@ function testInitDoesNotCreateInstance(): void {
   try {
     init();
     assert(
-      !warnings.some(w => w.includes("ReverseSidebarPosition")),
-      "init() should not create ReverseSidebarPosition instance"
+      !warnings.some((w) => w.includes("ReverseSidebarPosition")),
+      "init() should not create ReverseSidebarPosition instance",
     );
   } finally {
     console.warn = originalConsoleWarn;
@@ -158,7 +189,7 @@ function testModuleExportsCorrectly(): void {
 
   assert(
     true,
-    "module should export ReverseSidebarPosition class when available"
+    "module should export ReverseSidebarPosition class when available",
   );
 }
 
@@ -180,12 +211,12 @@ function testInitIsNoOp(): void {
   init();
 
   const newKeys = Object.keys(globalThis).filter(
-    key => !originalGlobalKeys.includes(key)
+    (key) => !originalGlobalKeys.includes(key),
   );
 
   assert(
     newKeys.length === 0,
-    "init() should not add properties to globalThis (current implementation is no-op)"
+    "init() should not add properties to globalThis (current implementation is no-op)",
   );
 }
 

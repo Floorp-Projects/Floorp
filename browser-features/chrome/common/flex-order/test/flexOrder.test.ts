@@ -147,30 +147,12 @@ function testApplyFlexOrderFxAtStartFloorpAtEnd(): void {
     "style should be rendered when Fx sidebar at start, Floorp at end",
   );
 
-  assert(
-    styleText!.includes("order: 0"),
-    "style should include order 0",
-  );
-  assert(
-    styleText!.includes("order: 1"),
-    "style should include order 1",
-  );
-  assert(
-    styleText!.includes("order: 2"),
-    "style should include order 2",
-  );
-  assert(
-    styleText!.includes("order: 3"),
-    "style should include order 3",
-  );
-  assert(
-    styleText!.includes("order: 4"),
-    "style should include order 4",
-  );
-  assert(
-    styleText!.includes("order: 5"),
-    "style should include order 5",
-  );
+  assert(styleText!.includes("order: 0"), "style should include order 0");
+  assert(styleText!.includes("order: 1"), "style should include order 1");
+  assert(styleText!.includes("order: 2"), "style should include order 2");
+  assert(styleText!.includes("order: 3"), "style should include order 3");
+  assert(styleText!.includes("order: 4"), "style should include order 4");
+  assert(styleText!.includes("order: 5"), "style should include order 5");
   cleanupFlexOrderStyles();
 }
 

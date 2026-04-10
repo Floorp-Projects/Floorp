@@ -131,14 +131,21 @@ function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
     // Create a mock toolbox element
     const mockToolbox = document!.createElement("div") as unknown as XULElement;
     mockToolbox.id = "navigator-toolbox";
-    ((mockToolbox as unknown as HTMLElement).style as unknown as Record<string, string>).height = "100px";
+    (
+      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
+        string,
+        string
+      >
+    ).height = "100px";
     document!.body?.appendChild(mockToolbox as unknown as Node);
 
     // Enable zen mode and measure
     setZenModeEnabled(true);
 
     const root = document!.documentElement as HTMLElement;
-    const toolboxHeight = root.style.getPropertyValue("--zenmode-toolbox-height");
+    const toolboxHeight = root.style.getPropertyValue(
+      "--zenmode-toolbox-height",
+    );
 
     assert(
       toolboxHeight === "100px" || toolboxHeight !== "",
@@ -167,7 +174,9 @@ function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
     setZenModeEnabled(true);
 
     const root = document!.documentElement as HTMLElement;
-    const toolboxHeight = root.style.getPropertyValue("--zenmode-toolbox-height");
+    const toolboxHeight = root.style.getPropertyValue(
+      "--zenmode-toolbox-height",
+    );
 
     // Environment may already have a toolbox or preexisting value; main contract is no throw.
     assert(
@@ -190,9 +199,24 @@ function testTopEdgeHoverRevealSetsAttribute(): void {
     // Create a mock toolbox
     const mockToolbox = document!.createElement("div") as unknown as XULElement;
     mockToolbox.id = "navigator-toolbox";
-    ((mockToolbox as unknown as HTMLElement).style as unknown as Record<string, string>).height = "100px";
-    ((mockToolbox as unknown as HTMLElement).style as unknown as Record<string, string>).position = "absolute";
-    ((mockToolbox as unknown as HTMLElement).style as unknown as Record<string, string>).top = "0px";
+    (
+      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
+        string,
+        string
+      >
+    ).height = "100px";
+    (
+      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
+        string,
+        string
+      >
+    ).position = "absolute";
+    (
+      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
+        string,
+        string
+      >
+    ).top = "0px";
     document!.body?.appendChild(mockToolbox as unknown as Node);
 
     // Simulate mouse move to top edge
@@ -369,11 +393,7 @@ function testZenModeMenuElementHasCorrectAccesskey(): void {
   const menuitem = container.querySelector("#toggle_zenmode");
   const accesskey = menuitem?.getAttribute("accesskey");
 
-  assertEquals(
-    accesskey,
-    "Z",
-    "menuitem should have accesskey 'Z'",
-  );
+  assertEquals(accesskey, "Z", "menuitem should have accesskey 'Z'");
 
   menuitem?.remove();
 }

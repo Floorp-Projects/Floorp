@@ -9,7 +9,8 @@ function requireGBrowser(): boolean {
     return false;
   }
 
-  const candidate = gBrowser as Partial<typeof gBrowser> & Record<string, unknown>;
+  const candidate = gBrowser as Partial<typeof gBrowser> &
+    Record<string, unknown>;
   return (
     Array.isArray(candidate.tabs) &&
     candidate.selectedTab !== null &&

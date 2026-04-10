@@ -577,11 +577,7 @@ function testMenuPopupHasCorrectStructure(): void {
 
   try {
     // Verify popup structure
-    assertEquals(
-      popup.id,
-      "menu_ToolsPopup",
-      "popup should have correct id",
-    );
+    assertEquals(popup.id, "menu_ToolsPopup", "popup should have correct id");
     assertEquals(
       popup.children.length,
       1,
@@ -683,18 +679,10 @@ const testSetShareModeEnabledWithUndefinedCallback = withStateRestored(() => {
 const testShareModeSignalBooleanValues = withStateRestored(() => {
   // Test explicit boolean values
   setShareModeEnabled(true);
-  assertEquals(
-    shareModeEnabled(),
-    true,
-    "signal should be explicitly true",
-  );
+  assertEquals(shareModeEnabled(), true, "signal should be explicitly true");
 
   setShareModeEnabled(false);
-  assertEquals(
-    shareModeEnabled(),
-    false,
-    "signal should be explicitly false",
-  );
+  assertEquals(shareModeEnabled(), false, "signal should be explicitly false");
 });
 
 // ---------------------------------------------------------------------------
@@ -831,11 +819,7 @@ function testMarkerValidationLogic(): void {
     const foundMarker2 = document!.getElementById("menu_openFirefoxView");
     assert(foundMarker2 !== null, "marker should be found");
     const isChildOfPopup2 = foundMarker2?.parentElement === popup2;
-    assertEquals(
-      isChildOfPopup2,
-      false,
-      "marker should not be child of popup",
-    );
+    assertEquals(isChildOfPopup2, false, "marker should not be child of popup");
 
     cleanupDOM();
 

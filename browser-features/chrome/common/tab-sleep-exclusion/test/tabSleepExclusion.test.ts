@@ -23,9 +23,13 @@ type FakeTab = {
 };
 
 function createSubject(): TabSleepExclusion {
-  const subject = Object.create(TabSleepExclusion.prototype) as TabSleepExclusion;
+  const subject = Object.create(
+    TabSleepExclusion.prototype,
+  ) as TabSleepExclusion;
   // Initialize settings to match the class field initializer
-  (subject as unknown as { settings: { enabled: boolean; patterns: string[] } }).settings = {
+  (
+    subject as unknown as { settings: { enabled: boolean; patterns: string[] } }
+  ).settings = {
     enabled: DEFAULT_SETTINGS.enabled,
     patterns: [...DEFAULT_SETTINGS.patterns],
   };
@@ -192,11 +196,17 @@ function testMatchPatternWithSpecialRegexCharacters(): void {
 
   // Test that special regex characters are properly escaped
   assert(
-    subject.matchPattern("https://example.com/test+more", "example.com/test+more"),
+    subject.matchPattern(
+      "https://example.com/test+more",
+      "example.com/test+more",
+    ),
     "should match URL with + character in pattern",
   );
   assert(
-    subject.matchPattern("https://example.com/path?query=1", "example.com/path?"),
+    subject.matchPattern(
+      "https://example.com/path?query=1",
+      "example.com/path?",
+    ),
     "should match URL with ? character in pattern",
   );
   assert(
@@ -812,12 +822,14 @@ function testSetupPrefObserverCreatesObserverWithCorrectInterface(): void {
     "should create prefObserver",
   );
   assertEquals(
-    typeof (subject.prefObserver as unknown as Record<string, unknown>).observe === "function",
+    typeof (subject.prefObserver as unknown as Record<string, unknown>)
+      .observe === "function",
     true,
     "observer should have observe method",
   );
   assertEquals(
-    typeof (subject.prefObserver as unknown as Record<string, unknown>).QueryInterface === "function",
+    typeof (subject.prefObserver as unknown as Record<string, unknown>)
+      .QueryInterface === "function",
     true,
     "observer should have QueryInterface method",
   );
@@ -825,7 +837,9 @@ function testSetupPrefObserverCreatesObserverWithCorrectInterface(): void {
 
 function testSetupPrefObserverObserverTriggersReloadOnChange(): void {
   const subject = createSubject() as unknown as {
-    prefObserver: null | { observe: (_subject: unknown, topic: string, data: string) => void };
+    prefObserver: null | {
+      observe: (_subject: unknown, topic: string, data: string) => void;
+    };
     setupPrefObserver: () => void;
     settings: { enabled: boolean; patterns: string[] };
     loadSettings: () => void;
@@ -848,7 +862,11 @@ function testSetupPrefObserverObserverTriggersReloadOnChange(): void {
 
     // Trigger observer callback manually
     if (subject.prefObserver) {
-      subject.prefObserver.observe(null, "nsPref:changed", TAB_SLEEP_EXCLUSION_PREF);
+      subject.prefObserver.observe(
+        null,
+        "nsPref:changed",
+        TAB_SLEEP_EXCLUSION_PREF,
+      );
     }
 
     assertEquals(
@@ -863,7 +881,9 @@ function testSetupPrefObserverObserverTriggersReloadOnChange(): void {
 
 function testSetupPrefObserverObserverIgnoresOtherTopics(): void {
   const subject = createSubject() as unknown as {
-    prefObserver: null | { observe: (_subject: unknown, topic: string, data: string) => void };
+    prefObserver: null | {
+      observe: (_subject: unknown, topic: string, data: string) => void;
+    };
     setupPrefObserver: () => void;
     settings: { enabled: boolean; patterns: string[] };
     loadSettings: () => void;
@@ -892,7 +912,9 @@ function testSetupPrefObserverObserverIgnoresOtherTopics(): void {
 
 function testSetupPrefObserverObserverIgnoresOtherPrefs(): void {
   const subject = createSubject() as unknown as {
-    prefObserver: null | { observe: (_subject: unknown, topic: string, data: string) => void };
+    prefObserver: null | {
+      observe: (_subject: unknown, topic: string, data: string) => void;
+    };
     setupPrefObserver: () => void;
     settings: { enabled: boolean; patterns: string[] };
     loadSettings: () => void;
@@ -974,11 +996,7 @@ function testSetupTabListenersAddsTabsProgressListener(): void {
     };
 
     subject.setupTabListeners();
-    assertEquals(
-      listenerAdded,
-      true,
-      "should add tabs progress listener",
-    );
+    assertEquals(listenerAdded, true, "should add tabs progress listener");
   } finally {
     globalThis.gBrowser = originalGBrowser;
   }
@@ -1098,7 +1116,10 @@ function testMatchPatternWithBracketsAndBraces(): void {
     "should match URL with square brackets in pattern",
   );
   assert(
-    subject.matchPattern("https://example.com/path{test}", "example.com/path{test}"),
+    subject.matchPattern(
+      "https://example.com/path{test}",
+      "example.com/path{test}",
+    ),
     "should match URL with curly braces in pattern",
   );
 }
@@ -1109,11 +1130,17 @@ function testMatchPatternWithPipeAndDollar(): void {
   };
 
   assert(
-    subject.matchPattern("https://example.com/path|other", "example.com/path|other"),
+    subject.matchPattern(
+      "https://example.com/path|other",
+      "example.com/path|other",
+    ),
     "should match URL with pipe character in pattern",
   );
   assert(
-    subject.matchPattern("https://example.com/path$value", "example.com/path$value"),
+    subject.matchPattern(
+      "https://example.com/path$value",
+      "example.com/path$value",
+    ),
     "should match URL with dollar sign in pattern",
   );
 }
@@ -1128,7 +1155,9 @@ function testUpdateTabDiscardabilityWithNullSettings(): void {
   };
 
   const tab = createFakeTab("https://example.com");
-  (subject as unknown as { settings: { enabled: boolean; patterns: string[] } }).settings = null as unknown as { enabled: boolean; patterns: string[] };
+  (
+    subject as unknown as { settings: { enabled: boolean; patterns: string[] } }
+  ).settings = null as unknown as { enabled: boolean; patterns: string[] };
 
   // Should not throw, just handle gracefully
   subject.updateTabDiscardability(tab);
@@ -1209,7 +1238,11 @@ function testUpdateTabDiscardabilityWithEnabledToggle(): void {
   // Re-enable
   subject.settings = { enabled: true, patterns: ["*.example.com"] };
   subject.updateTabDiscardability(tab);
-  assertEquals(tab.undiscardable, true, "should be undiscardable when re-enabled");
+  assertEquals(
+    tab.undiscardable,
+    true,
+    "should be undiscardable when re-enabled",
+  );
 }
 
 function testUpdateTabDiscardabilityPreservesOtherExclusions(): void {
@@ -1250,11 +1283,17 @@ function testMatchPatternWithFragmentIdentifiers(): void {
   };
 
   assert(
-    subject.matchPattern("https://example.com/page#section", "example.com/page"),
+    subject.matchPattern(
+      "https://example.com/page#section",
+      "example.com/page",
+    ),
     "should match URL with fragment",
   );
   assert(
-    subject.matchPattern("https://example.com/page#section", "example.com/page#*"),
+    subject.matchPattern(
+      "https://example.com/page#section",
+      "example.com/page#*",
+    ),
     "should match URL with wildcard fragment",
   );
 }
@@ -1295,7 +1334,10 @@ function testMatchPatternWithSpecialSchemes(): void {
     "should match about: scheme",
   );
   assert(
-    subject.matchPattern("chrome://browser/content/browser.xul", "chrome://browser"),
+    subject.matchPattern(
+      "chrome://browser/content/browser.xul",
+      "chrome://browser",
+    ),
     "should match chrome:// scheme",
   );
   assert(

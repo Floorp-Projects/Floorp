@@ -569,9 +569,8 @@ function testOverrideInstallConfirmationWithoutCWSInfo(): void {
   createMockInstallConfirmationDOM();
 
   let customizeCalled = false;
-  const _originalCustomize = customizer.customizeNotificationContent.bind(
-    customizer,
-  );
+  const _originalCustomize =
+    customizer.customizeNotificationContent.bind(customizer);
   customizer.customizeNotificationContent = () => {
     customizeCalled = true;
   };
@@ -586,11 +585,7 @@ function testOverrideInstallConfirmationWithoutCWSInfo(): void {
 
   mockXPInstallObserver.showInstallConfirmation(null, { installs: [] });
 
-  assertEquals(
-    customizeCalled,
-    false,
-    "should not customize when no CWS info",
-  );
+  assertEquals(customizeCalled, false, "should not customize when no CWS info");
 
   cleanupWindowGlobals();
   cleanupDOM();
@@ -625,7 +620,9 @@ async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
         const notification = document!.getElementById(
           "addon-webext-permissions-notification",
         );
-        const message = notification?.querySelector(".chrome-web-store-message");
+        const message = notification?.querySelector(
+          ".chrome-web-store-message",
+        );
         // The observer may or may not customize the prompt depending on
         // whether the CWS info is available and the DOM structure matches.
         // We just verify the observer didn't throw.
@@ -708,7 +705,9 @@ function testGlobalContextPreservesPendingInstall(): void {
 
   // Create second observer with new state object
   const state2 = createMockState();
-  (state2 as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }).pendingChromeWebStoreInstall = null; // Initially null
+  (
+    state2 as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }
+  ).pendingChromeWebStoreInstall = null; // Initially null
   const customizer2 = new NotificationCustomizer();
   const logger2 = createMockLogger();
 
@@ -716,7 +715,11 @@ function testGlobalContextPreservesPendingInstall(): void {
 
   // Verify state2 was merged with existing pending install
   assertEquals(
-    (state2 as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }).pendingChromeWebStoreInstall?.name,
+    (
+      state2 as {
+        pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
+      }
+    ).pendingChromeWebStoreInstall?.name,
     SAMPLE_CWS_INFO.name,
     "should preserve pending install info across context updates",
   );
@@ -732,7 +735,9 @@ function testObserverStateUpdateWithNullPendingInstall(): void {
   const logger = createMockLogger();
 
   // Initially null
-  (state as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }).pendingChromeWebStoreInstall = null;
+  (
+    state as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }
+  ).pendingChromeWebStoreInstall = null;
 
   const observer = createCWSObserver(state, customizer, logger);
 
@@ -744,7 +749,11 @@ function testObserverStateUpdateWithNullPendingInstall(): void {
   );
 
   assertEquals(
-    (state as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }).pendingChromeWebStoreInstall?.id,
+    (
+      state as {
+        pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
+      }
+    ).pendingChromeWebStoreInstall?.id,
     SAMPLE_CWS_INFO.id,
     "should update state from null",
   );
@@ -792,16 +801,16 @@ async function testAddonsClassStructure(): Promise<void> {
     addonsInstance !== null && typeof addonsInstance === "object",
     "should create instance",
   );
+  assert(typeof addonsInstance.init === "function", "should have init method");
   assert(
-    typeof addonsInstance.init === "function",
-    "should have init method",
-  );
-  assert(
-    typeof (addonsInstance as unknown as { cleanup: unknown }).cleanup === "function",
+    typeof (addonsInstance as unknown as { cleanup: unknown }).cleanup ===
+      "function",
     "should have cleanup method",
   );
   assert(
-    (addonsInstance as unknown as { logger: unknown }).logger !== null && typeof (addonsInstance as unknown as { logger: unknown }).logger === "object",
+    (addonsInstance as unknown as { logger: unknown }).logger !== null &&
+      typeof (addonsInstance as unknown as { logger: unknown }).logger ===
+        "object",
     "should have logger from NoraComponentBase",
   );
 }
@@ -821,7 +830,11 @@ async function testAddonsInitDocumentReadyComplete(): Promise<void> {
 
   // Spy on initCustomization by checking state after init
   // Since initCustomization is private, we verify its effects
-  const state = (addonsInstance as unknown as { state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null } }).state;
+  const state = (
+    addonsInstance as unknown as {
+      state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+    }
+  ).state;
 
   assert(
     state !== null && typeof state === "object",
@@ -878,14 +891,13 @@ async function testAddonsInitCreatesCWSObserver(): Promise<void> {
   const addonsInstance = new Addons();
 
   // Access private cwsObserver property
-  const cwsObserver = (addonsInstance as unknown as { cwsObserver: CWSObserver | null }).cwsObserver;
+  const cwsObserver = (
+    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+  ).cwsObserver;
 
   // The cwsObserver may be null if SolidJS onCleanup already ran in test context.
   // Verify the class can be instantiated without error.
-  assert(
-    addonsInstance instanceof Addons,
-    "should instantiate Addons class",
-  );
+  assert(addonsInstance instanceof Addons, "should instantiate Addons class");
   // If observer exists, verify it has the expected shape
   if (cwsObserver !== null) {
     assert(
@@ -914,7 +926,9 @@ async function testAddonsCleanupRemovesObserver(): Promise<void> {
   (addonsInstance as unknown as { cleanup: () => void }).cleanup();
 
   // Verify observer was removed
-  const cwsObserver = (addonsInstance as unknown as { cwsObserver: CWSObserver | null }).cwsObserver;
+  const cwsObserver = (
+    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+  ).cwsObserver;
   assertEquals(cwsObserver, null, "observer should be null after cleanup");
 
   cleanupDOM();
@@ -944,9 +958,14 @@ async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
   // Note: cleanupInstallConfirmation is only set when readyState is "complete"
   // AND initCustomization runs, which requires gXPInstallObserver.
   // It may remain null if conditions are not met.
-  const cleanupInstallConfirmation = (addonsInstance as unknown as { cleanupInstallConfirmation: (() => void) | null }).cleanupInstallConfirmation;
+  const cleanupInstallConfirmation = (
+    addonsInstance as unknown as {
+      cleanupInstallConfirmation: (() => void) | null;
+    }
+  ).cleanupInstallConfirmation;
   assert(
-    typeof cleanupInstallConfirmation === "function" || cleanupInstallConfirmation === null,
+    typeof cleanupInstallConfirmation === "function" ||
+      cleanupInstallConfirmation === null,
     "should have cleanupInstallConfirmation function or null if not initialized",
   );
 
@@ -954,7 +973,11 @@ async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
   (addonsInstance as unknown as { cleanup: () => void }).cleanup();
 
   // Verify cleanup function was cleared
-  const cleanupAfter = (addonsInstance as unknown as { cleanupInstallConfirmation: (() => void) | null }).cleanupInstallConfirmation;
+  const cleanupAfter = (
+    addonsInstance as unknown as {
+      cleanupInstallConfirmation: (() => void) | null;
+    }
+  ).cleanupInstallConfirmation;
   assertEquals(
     cleanupAfter,
     null,
@@ -978,18 +1001,19 @@ async function testAddonsMultipleInitCalls(): Promise<void> {
   const addonsInstance = new Addons();
 
   // Get first observer
-  const _firstObserver = (addonsInstance as unknown as { cwsObserver: CWSObserver | null }).cwsObserver;
+  const _firstObserver = (
+    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+  ).cwsObserver;
 
   // Call init again (should create new observer)
   addonsInstance.init();
 
-  const secondObserver = (addonsInstance as unknown as { cwsObserver: CWSObserver | null }).cwsObserver;
+  const secondObserver = (
+    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+  ).cwsObserver;
 
   // Should create a new observer instance
-  assert(
-    secondObserver !== null,
-    "should have observer after second init",
-  );
+  assert(secondObserver !== null, "should have observer after second init");
 
   cleanupDOM();
   cleanupWindowGlobals();
@@ -1008,7 +1032,11 @@ async function testAddonsStateInitialization(): Promise<void> {
   const addonsInstance = new Addons();
 
   // Verify state structure
-  const state = (addonsInstance as unknown as { state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null } }).state;
+  const state = (
+    addonsInstance as unknown as {
+      state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+    }
+  ).state;
 
   assert(
     state !== null && typeof state === "object",
@@ -1044,18 +1072,9 @@ async function testAddonsHasLogger(): Promise<void> {
     logger !== null && typeof logger === "object",
     "should have logger object",
   );
-  assert(
-    typeof logger.debug === "function",
-    "logger should have debug method",
-  );
-  assert(
-    typeof logger.warn === "function",
-    "logger should have warn method",
-  );
-  assert(
-    typeof logger.info === "function",
-    "logger should have info method",
-  );
+  assert(typeof logger.debug === "function", "logger should have debug method");
+  assert(typeof logger.warn === "function", "logger should have warn method");
+  assert(typeof logger.info === "function", "logger should have info method");
 
   cleanupDOM();
   cleanupWindowGlobals();
