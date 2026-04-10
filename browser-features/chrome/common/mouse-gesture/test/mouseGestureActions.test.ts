@@ -16,7 +16,21 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-const tests: TestCase[] = [
+const INITIAL_REGISTRY_ACTIONS: GestureActionRegistration[] =
+  getAllGestureActions().map((action) => ({
+    name: action.name,
+    fn: action.fn,
+  }));
+
+function restoreGestureRegistry(): void {
+  const registry = gestureActions.getAllActions();
+  registry.clear();
+  for (const action of INITIAL_REGISTRY_ACTIONS) {
+    gestureActions.registerAction(action);
+  }
+}
+
+const rawTests: TestCase[] = [
   // --- getAllGestureActions ---
   {
     name: "getAllGestureActions returns a non-empty array",
@@ -446,6 +460,18 @@ const tests: TestCase[] = [
     },
   },
 ];
+
+const tests: TestCase[] = rawTests.map((testCase) => ({
+  name: testCase.name,
+  async fn() {
+    restoreGestureRegistry();
+    try {
+      await testCase.fn();
+    } finally {
+      restoreGestureRegistry();
+    }
+  },
+}));
 
 export async function runAllTests(): Promise<void> {
   await runTests("mouseGestureActions.test.ts", tests);

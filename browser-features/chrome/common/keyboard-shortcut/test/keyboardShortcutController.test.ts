@@ -602,6 +602,65 @@ function testKeyUpAfterKeyDown(): void {
   });
 }
 
+function testMatchedShortcutStopsPropagation(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const originalStopPropagation = Event.prototype.stopPropagation;
+    let stopPropagationCalled = false;
+
+    Event.prototype.stopPropagation = function (...args: []): void {
+      stopPropagationCalled = true;
+      return originalStopPropagation.apply(this, args);
+    };
+
+    try {
+      dispatchKeyEvent(fakeWin, "keydown", {
+        code: "KeyT",
+        ctrlKey: true,
+      });
+
+      assertEquals(
+        stopPropagationCalled,
+        true,
+        "matched shortcut should call stopPropagation",
+      );
+    } finally {
+      Event.prototype.stopPropagation = originalStopPropagation;
+    }
+
+    controller.destroy();
+  });
+}
+
+function testMatchedShortcutResetsModifierState(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const first = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+    assertEquals(first.defaultPrevented, true, "first Ctrl+T should match");
+
+    const second = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: false,
+    });
+    assertEquals(
+      second.defaultPrevented,
+      false,
+      "second T without Ctrl should not match after state reset",
+    );
+
+    controller.destroy();
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests — Empty shortcuts config
 // ---------------------------------------------------------------------------
@@ -1270,6 +1329,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "keyup after keydown",
       fn: testKeyUpAfterKeyDown,
+    },
+    {
+      name: "matched shortcut stops propagation",
+      fn: testMatchedShortcutStopsPropagation,
+    },
+    {
+      name: "matched shortcut resets modifier state",
+      fn: testMatchedShortcutResetsModifierState,
     },
     // Empty shortcuts
     {

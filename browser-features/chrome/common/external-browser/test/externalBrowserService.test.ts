@@ -2,6 +2,10 @@
 // @colocated-env browser
 
 import { externalBrowserService } from "../external-browser-service.ts";
+import type {
+  ExternalBrowser,
+  ExternalBrowserServiceInterface,
+} from "../types.ts";
 import {
   assert,
   assertEquals,
@@ -9,6 +13,84 @@ import {
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
+
+type MutableExternalBrowserServiceWrapper = {
+  _service: ExternalBrowserServiceInterface | null;
+};
+
+type MockExternalServiceCalls = {
+  getInstalledBrowsers: boolean[];
+  openUrl: Array<{
+    url: string;
+    browserId: string | undefined;
+    privateMode: boolean;
+  }>;
+  openInDefaultBrowser: string[];
+  getBrowser: string[];
+  clearCache: number;
+};
+
+const MOCK_BROWSERS: ExternalBrowser[] = [
+  {
+    id: "mock-browser",
+    name: "Mock Browser",
+    path: "/mock/browser",
+    available: true,
+  },
+];
+
+function createMockExternalService(): {
+  service: ExternalBrowserServiceInterface;
+  calls: MockExternalServiceCalls;
+} {
+  const calls: MockExternalServiceCalls = {
+    getInstalledBrowsers: [],
+    openUrl: [],
+    openInDefaultBrowser: [],
+    getBrowser: [],
+    clearCache: 0,
+  };
+
+  const service: ExternalBrowserServiceInterface = {
+    async getInstalledBrowsers(forceRefresh = false) {
+      calls.getInstalledBrowsers.push(forceRefresh);
+      return MOCK_BROWSERS;
+    },
+    async openUrl(url, browserId, privateMode = false) {
+      calls.openUrl.push({ url, browserId, privateMode });
+      return { success: true };
+    },
+    async openInDefaultBrowser(url) {
+      calls.openInDefaultBrowser.push(url);
+      return { success: true };
+    },
+    async getBrowser(id) {
+      calls.getBrowser.push(id);
+      return MOCK_BROWSERS.find((browser) => browser.id === id) ?? null;
+    },
+    clearCache() {
+      calls.clearCache += 1;
+    },
+  };
+
+  return { service, calls };
+}
+
+async function withMockExternalService(
+  service: ExternalBrowserServiceInterface,
+  fn: () => void | Promise<void>,
+): Promise<void> {
+  const wrapper =
+    externalBrowserService as unknown as MutableExternalBrowserServiceWrapper;
+  const previousService = wrapper._service;
+  wrapper._service = service;
+
+  try {
+    await fn();
+  } finally {
+    wrapper._service = previousService;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Basic existence & method checks
@@ -564,6 +646,93 @@ async function testGetInstalledBrowsersAfterClear(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Wrapped service delegation behavior (deterministic)
+// ---------------------------------------------------------------------------
+
+async function testGetInstalledBrowsersDelegatesForceRefresh(): Promise<void> {
+  const { service, calls } = createMockExternalService();
+
+  await withMockExternalService(service, async () => {
+    await externalBrowserService.getInstalledBrowsers(true);
+    await externalBrowserService.getInstalledBrowsers();
+  });
+
+  assertEquals(calls.getInstalledBrowsers.length, 2, "should call twice");
+  assertEquals(
+    calls.getInstalledBrowsers[0],
+    true,
+    "first call should forward forceRefresh=true",
+  );
+  assertEquals(
+    calls.getInstalledBrowsers[1],
+    false,
+    "second call should use wrapper default forceRefresh=false",
+  );
+}
+
+async function testOpenUrlDelegatesAllArguments(): Promise<void> {
+  const { service, calls } = createMockExternalService();
+
+  await withMockExternalService(service, async () => {
+    await externalBrowserService.openUrl("https://example.com", "mock-browser", true);
+  });
+
+  assertEquals(calls.openUrl.length, 1, "openUrl should be called once");
+  assertEquals(calls.openUrl[0].url, "https://example.com", "url should match");
+  assertEquals(
+    calls.openUrl[0].browserId,
+    "mock-browser",
+    "browserId should be forwarded",
+  );
+  assertEquals(
+    calls.openUrl[0].privateMode,
+    true,
+    "privateMode should be forwarded",
+  );
+}
+
+async function testGetBrowserDelegatesId(): Promise<void> {
+  const { service, calls } = createMockExternalService();
+
+  await withMockExternalService(service, async () => {
+    const browser = await externalBrowserService.getBrowser("mock-browser");
+    assert(browser !== null, "mock browser should be returned");
+  });
+
+  assertEquals(calls.getBrowser.length, 1, "getBrowser should be called once");
+  assertEquals(calls.getBrowser[0], "mock-browser", "id should be forwarded");
+}
+
+async function testOpenInDefaultBrowserDelegatesUrl(): Promise<void> {
+  const { service, calls } = createMockExternalService();
+
+  await withMockExternalService(service, async () => {
+    await externalBrowserService.openInDefaultBrowser("https://floorp.app");
+  });
+
+  assertEquals(
+    calls.openInDefaultBrowser.length,
+    1,
+    "openInDefaultBrowser should be called once",
+  );
+  assertEquals(
+    calls.openInDefaultBrowser[0],
+    "https://floorp.app",
+    "url should be forwarded",
+  );
+}
+
+async function testClearCacheDelegatesToWrappedService(): Promise<void> {
+  const { service, calls } = createMockExternalService();
+
+  await withMockExternalService(service, () => {
+    externalBrowserService.clearCache();
+  });
+
+  assertEquals(calls.clearCache, 1, "clearCache should be delegated once");
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -713,6 +882,28 @@ const tests: TestCase[] = [
   {
     name: "getInstalledBrowsers after clear",
     fn: testGetInstalledBrowsersAfterClear,
+  },
+
+  // Wrapped service delegation
+  {
+    name: "delegates getInstalledBrowsers forceRefresh",
+    fn: testGetInstalledBrowsersDelegatesForceRefresh,
+  },
+  {
+    name: "delegates openUrl arguments",
+    fn: testOpenUrlDelegatesAllArguments,
+  },
+  {
+    name: "delegates getBrowser id",
+    fn: testGetBrowserDelegatesId,
+  },
+  {
+    name: "delegates openInDefaultBrowser url",
+    fn: testOpenInDefaultBrowserDelegatesUrl,
+  },
+  {
+    name: "delegates clearCache",
+    fn: testClearCacheDelegatesToWrappedService,
   },
 ];
 
