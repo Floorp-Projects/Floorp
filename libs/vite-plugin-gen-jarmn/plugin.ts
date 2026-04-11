@@ -8,6 +8,7 @@ export function genJarmnPlugin(
   prefix: string,
   namespace: string,
   register_type: "content" | "skin" | "resource",
+  pluginOptions?: { overrides?: string[] },
 ) {
   let rootPath = "";
   return {
@@ -29,6 +30,7 @@ export function genJarmnPlugin(
           prefix,
           namespace,
           register_type,
+          overrides: pluginOptions?.overrides,
         }),
       });
       this.emitFile({

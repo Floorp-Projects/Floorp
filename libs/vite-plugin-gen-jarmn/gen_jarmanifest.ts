@@ -6,6 +6,7 @@ export async function generateJarManifest(
     prefix: string;
     namespace: string;
     register_type: "content" | "skin" | "resource";
+    overrides?: string[];
   },
 ) {
   console.log("generate jar.mn");
@@ -17,9 +18,13 @@ export async function generateJarManifest(
   }
   console.log("generate end jar.mn");
 
-  return `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes\n ${Array.from(
-    new Set(arr),
-  )
+  const header = `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes`;
+  const overrideLines = (options.overrides ?? [])
+    .map((o) => `\n% override ${o}`)
+    .join("");
+  const fileEntries = Array.from(new Set(arr))
     .map((v) => `nora-${options.prefix}/${v} (${v})`)
-    .join("\n ")}`;
+    .join("\n ");
+
+  return `${header}${overrideLines}\n ${fileEntries}`;
 }

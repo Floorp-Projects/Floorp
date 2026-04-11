@@ -23,7 +23,10 @@ function includePublicInJarmn() {
     configResolved(config: { publicDir: string }) {
       publicDir = config.publicDir;
     },
-    generateBundle(_options: unknown, bundle: Record<string, { fileName: string }>) {
+    generateBundle(
+      _options: unknown,
+      bundle: Record<string, { fileName: string }>,
+    ) {
       if (!publicDir || !fs.existsSync(publicDir)) return;
       for (const entry of fs.readdirSync(publicDir)) {
         const filePath = path.join(publicDir, entry);
@@ -52,8 +55,17 @@ export default defineConfig({
     }),
     // deno-lint-ignore no-explicit-any
     includePublicInJarmn() as any,
-    // deno-lint-ignore no-explicit-any
-    genJarmnPlugin("pages-aboutdialog", "noraneko-pages-aboutdialog", "content") as any,
+    genJarmnPlugin(
+      "pages-aboutdialog",
+      "noraneko-pages-aboutdialog",
+      "content",
+      {
+        overrides: [
+          "chrome://browser/content/aboutDialog.xhtml chrome://noraneko-pages-aboutdialog/content/aboutDialog.html",
+        ],
+      },
+      // deno-lint-ignore no-explicit-any
+    ) as any,
   ],
   resolve: {
     alias: {
