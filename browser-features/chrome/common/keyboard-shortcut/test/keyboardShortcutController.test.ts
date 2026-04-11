@@ -1239,7 +1239,11 @@ function testStatePreservedAfterUnmatchedKey(): void {
       ctrlKey: true,
     });
 
-    assertEquals(event.defaultPrevented, true, "should still match after unmatched key");
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "should still match after unmatched key",
+    );
 
     controller.destroy();
   });

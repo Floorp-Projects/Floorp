@@ -384,11 +384,7 @@ const rawTests: TestCase[] = [
     fn() {
       const size1 = gestureActions.getAllActions().size;
       const size2 = gestureActions.getAllActions().size;
-      assertEquals(
-        size1,
-        size2,
-        "registry size should be consistent",
-      );
+      assertEquals(size1, size2, "registry size should be consistent");
     },
   },
   {
@@ -413,7 +409,11 @@ const rawTests: TestCase[] = [
         fn: () => false,
       });
       const result = executeGestureAction("__test_returns_false__", window);
-      assertEquals(result, true, "should return true even if action returns false");
+      assertEquals(
+        result,
+        true,
+        "should return true even if action returns false",
+      );
     },
   },
   {
@@ -436,11 +436,7 @@ const rawTests: TestCase[] = [
       });
       const fn1 = gestureActions.getAction("__test_same_ref__");
       const fn2 = gestureActions.getAction("__test_same_ref__");
-      assertEquals(
-        fn1,
-        fn2,
-        "should return same function reference",
-      );
+      assertEquals(fn1, fn2, "should return same function reference");
     },
   },
   {

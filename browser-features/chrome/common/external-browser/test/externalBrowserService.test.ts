@@ -528,7 +528,9 @@ async function testOpenUrlWithNonExistentBrowserId(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function testGetBrowserWithSpecialCharacters(): Promise<void> {
-  const result = await externalBrowserService.getBrowser("browser/../with/../paths");
+  const result = await externalBrowserService.getBrowser(
+    "browser/../with/../paths",
+  );
 
   assertEquals(
     result,
@@ -541,11 +543,7 @@ async function testGetBrowserWithVeryLongId(): Promise<void> {
   const longId = "a".repeat(10000);
   const result = await externalBrowserService.getBrowser(longId);
 
-  assertEquals(
-    result,
-    null,
-    "very long browser ID should return null",
-  );
+  assertEquals(result, null, "very long browser ID should return null");
 }
 
 // ---------------------------------------------------------------------------
@@ -566,10 +564,7 @@ async function testClearCacheThenGetBrowser(): Promise<void> {
   const browsers = await externalBrowserService.getInstalledBrowsers();
   if (browsers.length > 0) {
     const result = await externalBrowserService.getBrowser(browsers[0].id);
-    assert(
-      result !== null,
-      "getBrowser should work after clearCache",
-    );
+    assert(result !== null, "getBrowser should work after clearCache");
   }
 }
 
@@ -674,7 +669,11 @@ async function testOpenUrlDelegatesAllArguments(): Promise<void> {
   const { service, calls } = createMockExternalService();
 
   await withMockExternalService(service, async () => {
-    await externalBrowserService.openUrl("https://example.com", "mock-browser", true);
+    await externalBrowserService.openUrl(
+      "https://example.com",
+      "mock-browser",
+      true,
+    );
   });
 
   assertEquals(calls.openUrl.length, 1, "openUrl should be called once");
