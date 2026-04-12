@@ -322,6 +322,18 @@ function setupHoverReveal() {
 export function initZenModeState() {
   setupPrefSync();
   setupHoverReveal();
+
+  // Disable zen mode when entering toolbar customization
+  const customizeObserver = new MutationObserver(() => {
+    if (document!.documentElement!.hasAttribute("customizing")) {
+      setZenModeEnabled(false);
+    }
+  });
+  customizeObserver.observe(document!.documentElement!, {
+    attributes: true,
+    attributeFilter: ["customizing"],
+  });
+  onCleanup(() => customizeObserver.disconnect());
 }
 
 export function ZenModeMenuElement() {
