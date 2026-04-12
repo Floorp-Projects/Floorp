@@ -112,6 +112,7 @@ function setupHoverReveal() {
   let topHideTimer: ReturnType<typeof setTimeout> | null = null;
   let bottomHideTimer: ReturnType<typeof setTimeout> | null = null;
   let sideHideTimer: ReturnType<typeof setTimeout> | null = null;
+  let urlbarObserver: MutationObserver | null = null;
 
   const clearTopTimer = () => {
     if (topHideTimer !== null) {
@@ -134,15 +135,21 @@ function setupHoverReveal() {
     }
   };
 
-  /** Attempt to hide the top chrome; reschedule while a menupopup is open. */
+  /** Whether the urlbar is currently open (showing the urlbarView dropdown). */
+  const isUrlbarOpen = (): boolean => {
+    const urlbar = document!.getElementById("urlbar");
+    return urlbar !== null && urlbar.hasAttribute("open");
+  };
+
+  /** Attempt to hide the top chrome; reschedule while a menupopup or urlbar is open. */
   const tryHideTop = () => {
     if (!zenModeEnabled()) {
       topHideTimer = null;
       return;
     }
-    if (isToolbarPopupOpen()) {
-      // A menu-bar dropdown is still open — keep the toolbox visible and
-      // re-check after another delay so we don't produce ghost graphics.
+    if (isToolbarPopupOpen() || isUrlbarOpen()) {
+      // A menupopup or urlbarView is still open — keep the toolbox visible
+      // and re-check after another delay.
       topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
       return;
     }
@@ -228,10 +235,80 @@ function setupHoverReveal() {
     }
   };
 
+  // ===== URL bar focus / open handling =====
+  // Reveal the toolbox when the URL bar gains focus (e.g. Ctrl+L) and keep
+  // it visible while the urlbarView dropdown is open.
+  // Use focusin/focusout (bubbling) on the document so we also catch focus on
+  // the inner <input> element inside html:moz-urlbar.
+
+  const isOrContainsUrlbar = (target: EventTarget | null): boolean => {
+    if (!(target instanceof Element)) return false;
+    const urlbar = document!.getElementById("urlbar");
+    return urlbar !== null && (urlbar === target || urlbar.contains(target));
+  };
+
+  const handleUrlbarFocusIn = (event: FocusEvent) => {
+    if (!zenModeEnabled()) return;
+    if (!isOrContainsUrlbar(event.target)) return;
+    clearTopTimer();
+    document!.documentElement!.setAttribute("zenmode-reveal-top", "");
+  };
+
+  const handleUrlbarFocusOut = (event: FocusEvent) => {
+    if (!zenModeEnabled()) return;
+    if (!isOrContainsUrlbar(event.target)) return;
+    // Don't hide immediately — the urlbarView may still be open.  Schedule
+    // a delayed hide; tryHideTop will keep rescheduling while [open] is set.
+    clearTopTimer();
+    topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
+  };
+
+  const setupUrlbarListeners = () => {
+    const urlbar = document!.getElementById("urlbar");
+    if (!urlbar) return;
+
+    // Listen on document so bubbling focusin/focusout from the inner <input>
+    // are captured even when focus lands on a descendant of #urlbar.
+    document!.addEventListener("focusin", handleUrlbarFocusIn);
+    document!.addEventListener("focusout", handleUrlbarFocusOut);
+
+    // Watch for the [open] attribute so we can schedule a hide when the
+    // urlbarView dropdown closes while the input itself stays focused.
+    urlbarObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "open"
+        ) {
+          // [open] was removed → urlbarView closed
+          if (!urlbar.hasAttribute("open") && zenModeEnabled()) {
+            clearTopTimer();
+            topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
+          }
+        }
+      }
+    });
+    urlbarObserver.observe(urlbar, {
+      attributes: true,
+      attributeFilter: ["open"],
+    });
+  };
+
+  setupUrlbarListeners();
+
   addEventListener("mousemove", handleMouseMove);
 
   onCleanup(() => {
     removeEventListener("mousemove", handleMouseMove);
+
+    // Clean up urlbar listeners
+    document!.removeEventListener("focusin", handleUrlbarFocusIn);
+    document!.removeEventListener("focusout", handleUrlbarFocusOut);
+    if (urlbarObserver) {
+      urlbarObserver.disconnect();
+      urlbarObserver = null;
+    }
+
     clearTopTimer();
     clearBottomTimer();
     clearSideTimer();

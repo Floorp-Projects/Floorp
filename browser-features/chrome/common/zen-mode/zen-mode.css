@@ -4,15 +4,31 @@
 
 /* ===== Zen Mode: Hide all browser chrome ===== */
 
-/* Navigator toolbox (tab bar + navigation bar) — slide up via negative margin */
+/* Navigator toolbox (tab bar + navigation bar)
+   transform visually slides the toolbox up WITHOUT changing its layout position
+   → Firefox still calculates urlbarView / popup positions against the correct origin.
+   margin-bottom collapses the space so the browser content fills the gap. */
 :root[zenmode] #navigator-toolbox {
-  margin-top: calc(-1 * var(--zenmode-toolbox-height, 80px)) !important;
+  position: relative !important;
+  transform: translateY(
+    calc(-1 * var(--zenmode-toolbox-height, 80px))
+  ) !important;
+  margin-bottom: calc(-1 * var(--zenmode-toolbox-height, 80px)) !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease !important;
-  position: relative !important;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease !important;
   z-index: 1 !important;
+}
+
+/* URL bar is rendered in the top layer via the Popover API (popover="manual"),
+   so ancestor opacity/transform do NOT affect it. Hide it directly. */
+:root[zenmode] #urlbar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.15s ease !important;
 }
 
 /* Firefox sidebar */
@@ -24,19 +40,25 @@
 
 /* Floorp panel sidebar — slide out via negative margin */
 :root[zenmode] #panel-sidebar-box {
-  margin-inline-start: calc(-1 * var(--zenmode-sidebar-width, 250px)) !important;
+  margin-inline-start: calc(
+    -1 * var(--zenmode-sidebar-width, 250px)
+  ) !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: margin-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease !important;
+  transition:
+    margin-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease !important;
 }
 
 :root[zenmode] #panel-sidebar-select-box {
-  margin-inline-start: calc(-1 * var(--zenmode-selectbox-width, 40px)) !important;
+  margin-inline-start: calc(
+    -1 * var(--zenmode-selectbox-width, 40px)
+  ) !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: margin-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease !important;
+  transition:
+    margin-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease !important;
 }
 
 /* Status bar — slide down via negative margin */
@@ -44,8 +66,9 @@
   margin-bottom: calc(-1 * var(--zenmode-statusbar-height, 30px)) !important;
   opacity: 0 !important;
   pointer-events: none !important;
-  transition: margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease !important;
+  transition:
+    margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease !important;
 }
 
 /* ===== Window drag region ===== */
@@ -68,11 +91,20 @@
 
 /* ===== Hover Reveal ===== */
 
-/* Reveal top chrome on hover — slide back in */
+/* Reveal top chrome — slide back in via transform and restore spacing */
 :root[zenmode][zenmode-reveal-top] #navigator-toolbox {
-  margin-top: 0 !important;
+  transform: translateY(0) !important;
+  margin-bottom: 0 !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  z-index: 101 !important;
+}
+
+/* Reveal urlbar (top-layer element is not affected by ancestor styles) */
+:root[zenmode][zenmode-reveal-top] #urlbar {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition-delay: 0.15s !important;
 }
 
 /* Reveal panel sidebar on edge hover — slide back in */
