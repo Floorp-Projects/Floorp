@@ -9,7 +9,6 @@ import {
   type SplitViewGBrowser,
   type SplitViewTab,
 } from "../data/types.js";
-import { logTabpanelsSplitDiagnostics } from "./split-view-diagnostics.js";
 import { ensureSplitPaneTabBrowsersAreWarmed } from "./activate-split-pane-browsers.js";
 import { hasLiveSplitPanelsState } from "../utils/live-split-ui.js";
 
@@ -276,13 +275,11 @@ export function refreshActiveSplitPaneIndicator(): void {
       "[refreshIndicator] selectedTab not in split tab list → skip split selection sync",
     );
     clearActivePaneIndicator();
-    logTabpanelsSplitDiagnostics("refreshIndicator:activeIndex=-1");
     return;
   }
 
   clearActivePaneIndicator();
   syncSplitViewDeckSelectedClass(gBrowser);
-  logTabpanelsSplitDiagnostics("refreshIndicator:afterSync");
 }
 
 /**
@@ -302,14 +299,12 @@ export function initActivePaneTracker(
         ensureSplitPanelsActiveClassFromState();
       }
       refreshActiveSplitPaneIndicator();
-      logTabpanelsSplitDiagnostics("TabSelect+rAF1");
       requestAnimationFrame(() => {
         const gb2 = getGBrowser();
         if (gb2 && isMultiPaneSplitUiActive(gb2)) {
           syncSplitViewDeckSelectedClass(gb2);
           ensureSplitPaneTabBrowsersAreWarmed(log);
         }
-        logTabpanelsSplitDiagnostics("TabSelect+rAF2-deckResync");
       });
     });
   };
@@ -324,14 +319,12 @@ export function initActivePaneTracker(
       if (gb) {
         syncSplitViewDeckSelectedClass(gb);
       }
-      logTabpanelsSplitDiagnostics("TabSplitViewActivate+rAF");
     });
   };
 
   const onDeactivate = (): void => {
     clearActivePaneIndicator();
     log.debug("[TabSplitViewDeactivate] cleared stale split pane attrs");
-    logTabpanelsSplitDiagnostics("TabSplitViewDeactivate");
   };
 
   tabContainer.addEventListener("TabSelect", scheduleAfterTabSelect);
