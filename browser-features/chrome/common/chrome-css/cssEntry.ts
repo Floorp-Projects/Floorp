@@ -29,11 +29,11 @@ export class CSSEntry {
     this.lastModifiedTime = 1;
 
     if (/^xul-|\.as\.css$/i.test(this.leafName)) {
-      this.SHEET = Ci.nsIStyleSheetService.AGENT_SHEET;
+      this.SHEET = Ci.nsIStyleSheetService.AGENT_SHEET!;
     } else if (/\.author\.css$/i.test(this.leafName)) {
-      this.SHEET = Ci.nsIStyleSheetService.AUTHOR_SHEET;
+      this.SHEET = Ci.nsIStyleSheetService.AUTHOR_SHEET!;
     } else {
-      this.SHEET = Ci.nsIStyleSheetService.USER_SHEET;
+      this.SHEET = Ci.nsIStyleSheetService.USER_SHEET!;
     }
   }
 

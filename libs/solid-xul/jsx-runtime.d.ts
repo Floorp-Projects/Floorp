@@ -199,8 +199,20 @@ export namespace JSX {
     "xul:description": XULElementBase;
     "xul:checkbox": XULElementBase;
     "xul:richlistitem": XULRichListItem;
+    "xul:richlistbox": XULElementBase;
     "xul:image": XULImageElement;
     "xul:label": XULElementBase;
+    "xul:stack": XULElementBase;
+
+    // Short aliases (without xul: prefix) used in some components
+    vbox: XULBoxElement;
+    hbox: XULBoxElement;
+    box: XULElementBase;
+    description: XULElementBase;
+    stack: XULElementBase;
+    linkset: XULElementBase;
+    toolbarseparator: XULElementBase;
+    richlistbox: XULElementBase;
   }
 
   interface Directives {

@@ -27,9 +27,10 @@
       "DOM"
     ],
     "types": [
+      "./@types/xul-window.d.ts",
       "npm:vite/client",
       "jsr:@types/gecko",
-      "./@types/xul-window.d.ts"
+      "./@types/css.d.ts"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "jsr:@nora/solid-xul"

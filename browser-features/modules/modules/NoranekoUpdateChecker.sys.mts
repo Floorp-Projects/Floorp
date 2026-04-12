@@ -157,7 +157,6 @@ export async function fetchRemoteUpdateInfo(): Promise<RemoteUpdateInfo | null> 
  */
 function parseUpdateXml(xmlText: string): RemoteUpdateInfo | null {
   try {
-    // @ts-expect-error - DOMParser is available in privileged contexts
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, "application/xml");
 

@@ -321,7 +321,6 @@ async function testRequireJustification() {
  */
 async function testInstallation() {
   await withMockExtensionGlobals(() => {
-    // @ts-expect-error test reset
     delete chrome.offscreen;
 
     const installed = installOffscreenPolyfill({ debug: true });

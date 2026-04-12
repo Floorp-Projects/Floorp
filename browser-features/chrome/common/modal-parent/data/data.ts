@@ -9,6 +9,8 @@ import { createRootHMR } from "@nora/solid-xul";
 export type ModalSize = {
   width?: number;
   height?: number;
+  maxWidth?: number;
+  maxHeight?: number;
 };
 
 const defaultModalSize: ModalSize = {

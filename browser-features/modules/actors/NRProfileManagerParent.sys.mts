@@ -1,4 +1,3 @@
-//@ts-expect-error: decorator
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,12 +38,10 @@ export class NRProfileManagerParent extends JSWindowActorParent {
           if (win) {
             // prefer opening in a new tab. Use any cast because this is chrome window API.
             try {
-              // @ts-expect-error: openUILinkIn exists on chrome browser windows
               // deno-lint-ignore no-explicit-any
               (win as any).openUILinkIn(url, "tab");
             } catch {
               // fallback to creating a tab
-              // @ts-expect-error: gBrowser exists on chrome browser windows
               // deno-lint-ignore no-explicit-any
               (win as any).gBrowser.addTab(url);
             }
@@ -203,7 +200,6 @@ export class NRProfileManagerParent extends JSWindowActorParent {
               },
             };
 
-            // @ts-expect-error: openDialog is available on chrome windows
             // deno-lint-ignore no-explicit-any
             (win as any).openDialog(
               "chrome://mozapps/content/profile/createProfileWizard.xhtml",
