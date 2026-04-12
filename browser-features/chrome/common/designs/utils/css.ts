@@ -7,14 +7,14 @@ import type { zFloorpDesignConfigs } from "../../designs/type.ts";
 import type * as t from "io-ts";
 
 // UserJS imports
-import leptonUserJs from "../../../../skin/lepton/userjs/lepton.js?raw";
-import photonUserJs from "../../../../skin/lepton/userjs/photon.js?raw";
-import protonfixUserJs from "../../../../skin/lepton/userjs/protonfix.js?raw";
+import leptonUserJs from "@nora/skin/lepton/userjs/lepton.js?raw";
+import photonUserJs from "@nora/skin/lepton/userjs/photon.js?raw";
+import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 
 // CSS raw imports for development
-import leptonChromeStylesRaw from "../../../../skin/lepton/css/leptonChrome.css?raw";
-import leptonContentStylesRaw from "../../../../skin/lepton/css/leptonContent.css?raw";
-import fluerialStylesRaw from "../../../../skin/fluerial/css/fluerial.css?raw";
+import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
+import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
 
 interface FCSS {
   styles?: string[]; // chrome:// URLs for production (AGENT_SHEET - applies to all documents)
