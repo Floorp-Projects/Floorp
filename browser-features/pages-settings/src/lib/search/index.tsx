@@ -27,7 +27,6 @@ import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
-import Debug from "@/app/debug/page.tsx";
 import About from "@/app/about/noraneko.tsx";
 
 const PREVIEW_LENGTH = 180;
@@ -141,14 +140,6 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: BadgeInfo,
     priority: 50,
     Component: About,
-  },
-  {
-    id: "debug",
-    route: "/debug",
-    titleKey: "pages.debug",
-    icon: List,
-    priority: 10,
-    Component: Debug,
   },
 ];
 
