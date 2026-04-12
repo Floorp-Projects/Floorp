@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, createEffect, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import { Show } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -90,6 +90,24 @@ function setupPrefSync() {
   });
 }
 
+/**
+ * Check whether a menupopup inside the navigator-toolbox (e.g. a menu-bar
+ * dropdown) is currently open.  These popups are rendered as native OS-level
+ * overlays, so they stay visible even after the toolbox is hidden with
+ * opacity/pointer-events — producing the "ghost dropdown" artifact described
+ * in issue #2374.
+ */
+function isToolbarPopupOpen(): boolean {
+  const toolbox = document!.getElementById("navigator-toolbox");
+  if (!toolbox) return false;
+  // menupopup: menu-bar dropdowns (File, Edit, View…)
+  // panel: toolbar button popups (appMenu, hamburger menu, etc.)
+  return (
+    toolbox.querySelector("menupopup[open]") !== null ||
+    toolbox.querySelector("panel[open]") !== null
+  );
+}
+
 function setupHoverReveal() {
   let topHideTimer: ReturnType<typeof setTimeout> | null = null;
   let bottomHideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -116,6 +134,22 @@ function setupHoverReveal() {
     }
   };
 
+  /** Attempt to hide the top chrome; reschedule while a menupopup is open. */
+  const tryHideTop = () => {
+    if (!zenModeEnabled()) {
+      topHideTimer = null;
+      return;
+    }
+    if (isToolbarPopupOpen()) {
+      // A menu-bar dropdown is still open — keep the toolbox visible and
+      // re-check after another delay so we don't produce ghost graphics.
+      topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
+      return;
+    }
+    document!.documentElement!.removeAttribute("zenmode-reveal-top");
+    topHideTimer = null;
+  };
+
   const handleMouseMove = (event: MouseEvent) => {
     if (!zenModeEnabled()) return;
 
@@ -135,10 +169,7 @@ function setupHoverReveal() {
         const rect = navigatorToolbox.getBoundingClientRect();
         if (clientY > rect.bottom) {
           clearTopTimer();
-          topHideTimer = setTimeout(() => {
-            document!.documentElement!.removeAttribute("zenmode-reveal-top");
-            topHideTimer = null;
-          }, HIDE_DELAY_MS);
+          topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
         } else {
           clearTopTimer();
         }
@@ -178,10 +209,9 @@ function setupHoverReveal() {
       const panelSelectBox = document!.getElementById(
         "panel-sidebar-select-box",
       );
-      const insideSidebar =
-        (panelSidebar &&
-          clientX >= panelSidebar.getBoundingClientRect().left &&
-          clientX <= panelSidebar.getBoundingClientRect().right) ||
+      const insideSidebar = (panelSidebar &&
+        clientX >= panelSidebar.getBoundingClientRect().left &&
+        clientX <= panelSidebar.getBoundingClientRect().right) ||
         (panelSelectBox &&
           clientX >= panelSelectBox.getBoundingClientRect().left &&
           clientX <= panelSelectBox.getBoundingClientRect().right);

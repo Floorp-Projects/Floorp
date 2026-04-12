@@ -291,7 +291,14 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-toggle-sidebar",
-    fn: (win) => win.SidebarController.toggle(),
+    fn: (_win) => {
+      // Toggle Floorp's Panel Sidebar, not Firefox's built-in SidebarController.
+      // SidebarController.toggle() opens Firefox's native sidebar (History, etc.)
+      // which is not what Floorp users expect for "Toggle Sidebar".
+      const prefName = "floorp.panelSidebar.enabled";
+      const current = Services.prefs.getBoolPref(prefName, true);
+      Services.prefs.setBoolPref(prefName, !current);
+    },
   },
   {
     name: "gecko-scroll-up",

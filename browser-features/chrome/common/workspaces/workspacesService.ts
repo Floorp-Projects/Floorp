@@ -59,7 +59,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return 0;
   }
 
-  private findFallbackWorkspaceID(excludeId: TWorkspaceID): TWorkspaceID | null {
+  private findFallbackWorkspaceID(
+    excludeId: TWorkspaceID,
+  ): TWorkspaceID | null {
     const fromOrder = workspacesDataStore.order.find((id) => id !== excludeId);
     if (fromOrder && this.isWorkspaceID(fromOrder)) {
       return fromOrder;
@@ -106,18 +108,29 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       this.setCurrentWorkspaceID(id);
     }
 
-    globalThis.gBrowser.addProgressListener(this.listener);
-
-    // Listen for TabOpen events to apply workspace container to new tabs
-    // This handles tabs opened from bookmarks, external links, etc.
-    this.boundHandleTabOpen = this.handleTabOpen.bind(this);
+    // Register persistTabAttribute early (after promiseInitialized) so
+    // SessionStore knows to save/restore our custom tab attributes.
+    // IMPORTANT: This must happen before restoration completes so that
+    // SessionStore includes floorpWorkspaceId in the restored tab data.
     globalThis.SessionStore.promiseInitialized.then(() => {
+      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+    });
+
+    // Delay TabOpen handler and ProgressListener registration until AFTER
+    // session restore completes. During restore (between promiseInitialized
+    // and promiseAllWindowsRestored), SessionStore recreates tabs whose
+    // floorpWorkspaceId attribute may not yet be set when TabOpen fires.
+    // If we handle TabOpen during that window, we incorrectly assign restored
+    // tabs to the default/current workspace, corrupting the workspace→tab
+    // mapping. See https://github.com/Floorp-Projects/Floorp/issues/2343
+    this.boundHandleTabOpen = this.handleTabOpen.bind(this);
+    globalThis.SessionStore.promiseAllWindowsRestored.then(() => {
+      globalThis.gBrowser.addProgressListener(this.listener);
       globalThis.gBrowser.tabContainer.addEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
       );
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
     });
 
     onCleanup(() => {
