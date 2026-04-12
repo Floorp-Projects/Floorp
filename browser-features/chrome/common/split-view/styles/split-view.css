@@ -403,6 +403,15 @@
   max-height: unset !important;
 }
 
+/* When split view is active, remove Floorp's custom tab min-width override
+ * so that Firefox's native tab sizing can shrink tabs to fit in the strip.
+ * Without this, large tabMinWidth values (e.g. 200px) cause tabs to overlap.
+ * The splitview-multibar attribute is set only while split view is active
+ * and removed on deactivation, so user's tab width preference is restored. */
+#TabsToolbar[splitview-multibar] .tabbrowser-tab:not([pinned]) {
+  min-width: unset !important;
+}
+
 /* Prevent user text selection during splitter drag */
 #tabbrowser-tabpanels[data-floorp-dragging] {
   user-select: none !important;
