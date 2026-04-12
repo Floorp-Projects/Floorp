@@ -251,7 +251,7 @@ function testTabbarPositionInvalidValueReturnsDefault(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "interface default → lepton", fn: testInterfaceDefaultLepton },
     {

@@ -52,19 +52,19 @@ function createMockExternalService(): {
   };
 
   const service: ExternalBrowserServiceInterface = {
-    async getInstalledBrowsers(forceRefresh = false) {
+    getInstalledBrowsers(forceRefresh = false) {
       calls.getInstalledBrowsers.push(forceRefresh);
       return MOCK_BROWSERS;
     },
-    async openUrl(url, browserId, privateMode = false) {
+    openUrl(url, browserId, privateMode = false) {
       calls.openUrl.push({ url, browserId, privateMode });
       return { success: true };
     },
-    async openInDefaultBrowser(url) {
+    openInDefaultBrowser(url) {
       calls.openInDefaultBrowser.push(url);
       return { success: true };
     },
-    async getBrowser(id) {
+    getBrowser(id) {
       calls.getBrowser.push(id);
       return MOCK_BROWSERS.find((browser) => browser.id === id) ?? null;
     },

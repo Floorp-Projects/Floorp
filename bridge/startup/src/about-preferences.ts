@@ -2,43 +2,6 @@ declare global {
   interface Window {
     MozXULElement: MozXULElement;
   }
-
-  namespace Services {
-    const wm: {
-      getMostRecentWindow(windowType: string): FirefoxWindow;
-    };
-    const prefs: {
-      getStringPref(prefName: string): string;
-      setStringPref(prefName: string, value: string): void;
-      getBoolPref(prefName: string, defaultValue?: boolean): boolean;
-      setBoolPref(prefName: string, value: boolean): void;
-    };
-    const scriptSecurityManager: {
-      getSystemPrincipal(): unknown;
-    };
-    const obs: {
-      addObserver(
-        callback: (...args: Array<unknown>) => void,
-        topic: string,
-      ): void;
-    };
-  }
-
-  const ChromeUtils: {
-    importESModule<T = unknown>(url: string): T;
-  };
-
-  interface Document {
-    createXULElement(tagName: string): XULElement;
-  }
-
-  interface XULElement extends Element {}
-
-  interface ImportMeta {
-    env: {
-      MODE: string;
-    };
-  }
 }
 
 interface FirefoxWindow extends Window {
@@ -51,6 +14,12 @@ interface FirefoxWindow extends Window {
 type MozXULElement = {
   parseXULToFragment(str: string, entities?: Array<string>): DocumentFragment;
 };
+
+interface XULElement extends Element {}
+
+// In Firefox browser chrome context, document is always available.
+// Gecko types declare it as `Document | null`, but it is never null here.
+const doc = document!;
 
 const FLOORP_HUB_WARNING_IDS = {
   container: "floorp-hub-warning",
@@ -85,9 +54,9 @@ function getI18nextInstance(): I18NextLike | null {
   }
 
   try {
-    const module = ChromeUtils.importESModule<Record<string, unknown>>(
+    const module = ChromeUtils.importESModule(
       "chrome://noraneko/content/assets/js/external/i18next.js",
-    );
+    ) as Record<string, unknown>;
 
     // Try common export shapes used across bundles
     // prefer: module.i, module.i18next, module.default?.i, module.default, module
@@ -245,8 +214,8 @@ function openFloorpHub(): void {
  * Add Floorp Hub category element
  */
 function addFloorpHubCategory(): void {
-  const nav_root = document.querySelector("#categories");
-  const before_fragment = document.querySelector("#category-sync");
+  const nav_root = doc.querySelector("#categories");
+  const before_fragment = doc.querySelector("#category-sync");
 
   if (!nav_root || !before_fragment) {
     console.error("Category elements not found");
@@ -270,7 +239,7 @@ function addFloorpHubCategory(): void {
 
   nav_root.insertBefore(fragment, before_fragment);
 
-  const hubLink = document.querySelector("#category-nora-link");
+  const hubLink = doc.querySelector("#category-nora-link");
   if (!hubLink) {
     console.error("Failed to create Floorp Hub element");
     return;
@@ -287,9 +256,9 @@ function ensureFloorpHubWarning(): void {
 
   logFloorpHub("Scheduling warning creation.");
 
-  if (document.readyState === "loading") {
+  if (doc.readyState === "loading") {
     logFloorpHub("Document loading; deferring until DOMContentLoaded.");
-    document.addEventListener("DOMContentLoaded", initializeWarning, {
+    doc.addEventListener("DOMContentLoaded", initializeWarning, {
       once: true,
     });
     return;
@@ -301,7 +270,7 @@ function ensureFloorpHubWarning(): void {
 function createFloorpHubWarning(): void {
   logFloorpHub("Creating warning banner if necessary.");
 
-  const stickyContainer = document.querySelector(
+  const stickyContainer = doc.querySelector(
     ".sticky-container",
   ) as XULElement | null;
   if (!stickyContainer) {
@@ -311,7 +280,7 @@ function createFloorpHubWarning(): void {
     );
   }
 
-  const existingContainer = document.getElementById(
+  const existingContainer = doc.getElementById(
     FLOORP_HUB_WARNING_IDS.container,
   ) as XULElement | null;
   if (existingContainer) {
@@ -340,7 +309,7 @@ function createFloorpHubWarning(): void {
 
   injectFloorpHubWarningStyles();
 
-  const container = document.createXULElement("hbox") as XULElement;
+  const container = doc.createXULElement("hbox") as XULElement;
   container.id = FLOORP_HUB_WARNING_IDS.container;
   container.setAttribute("align", "center");
   container.setAttribute("pack", "start");
@@ -348,13 +317,13 @@ function createFloorpHubWarning(): void {
   container.setAttribute("aria-live", "polite");
   container.classList.add("floorp-hub-warning");
 
-  const message = document.createXULElement("description") as XULElement;
+  const message = doc.createXULElement("description") as XULElement;
   message.id = FLOORP_HUB_WARNING_IDS.message;
   message.classList.add("floorp-hub-warning__message");
   message.setAttribute("flex", "1");
   message.textContent = defaultWarningTexts.message;
 
-  const button = document.createXULElement("button") as XULElement;
+  const button = doc.createXULElement("button") as XULElement;
   button.id = FLOORP_HUB_WARNING_IDS.button;
   button.classList.add("floorp-hub-warning__button");
   button.setAttribute("label", defaultWarningTexts.buttonLabel);
@@ -422,13 +391,13 @@ function logI18nextDiagnostics(instance: I18NextLike | null): void {
 }
 
 function injectFloorpHubWarningStyles(): void {
-  if (document.getElementById(FLOORP_HUB_WARNING_IDS.style)) {
+  if (doc.getElementById(FLOORP_HUB_WARNING_IDS.style)) {
     logFloorpHub("Warning styles already present; skipping injection.");
     return;
   }
 
   logFloorpHub("Injecting warning styles.");
-  const style = document.createElementNS(
+  const style = doc.createElementNS(
     "http://www.w3.org/1999/xhtml",
     "style",
   );
@@ -493,9 +462,9 @@ function injectFloorpHubWarningStyles(): void {
   `;
 
   const parent =
-    document.head ??
-    (document.querySelector("head") as HTMLElement | null) ??
-    document.documentElement;
+    doc.head ??
+    (doc.querySelector("head") as HTMLElement | null) ??
+    doc.documentElement;
   parent?.appendChild(style);
 }
 function bindI18nHandlersForWarning(): void {
@@ -743,8 +712,8 @@ function getFloorpStartWarningTexts(): FloorpHubWarningTexts {
 function ensureFloorpStartWarning(): void {
   const initialize = () => createFloorpStartWarning();
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize, { once: true });
+  if (doc.readyState === "loading") {
+    doc.addEventListener("DOMContentLoaded", initialize, { once: true });
     return;
   }
 
@@ -752,12 +721,12 @@ function ensureFloorpStartWarning(): void {
 }
 
 function createFloorpStartWarning(): void {
-  const existing = document.getElementById(
+  const existing = doc.getElementById(
     FLOORP_START_WARNING_IDS.container,
   ) as XULElement | null;
   if (existing) return;
 
-  const container = document.createXULElement("hbox") as XULElement;
+  const container = doc.createXULElement("hbox") as XULElement;
   container.id = FLOORP_START_WARNING_IDS.container;
   container.setAttribute("align", "center");
   container.setAttribute("pack", "start");
@@ -765,13 +734,13 @@ function createFloorpStartWarning(): void {
   container.setAttribute("aria-live", "polite");
   container.classList.add("floorp-hub-warning");
 
-  const message = document.createXULElement("description") as XULElement;
+  const message = doc.createXULElement("description") as XULElement;
   message.id = FLOORP_START_WARNING_IDS.message;
   message.classList.add("floorp-hub-warning__message");
   message.setAttribute("flex", "1");
   message.textContent = defaultStartWarningTexts.message;
 
-  const button = document.createXULElement("button") as XULElement;
+  const button = doc.createXULElement("button") as XULElement;
   button.id = FLOORP_START_WARNING_IDS.button;
   button.classList.add("floorp-hub-warning__button");
   button.setAttribute("label", defaultStartWarningTexts.buttonLabel);
@@ -797,7 +766,7 @@ function createFloorpStartWarning(): void {
   container.appendChild(message);
   container.appendChild(button);
 
-  const sticky = document.querySelector(
+  const sticky = doc.querySelector(
     ".sticky-container",
   ) as XULElement | null;
   if (sticky?.parentElement) {
@@ -807,8 +776,8 @@ function createFloorpStartWarning(): void {
     );
   } else {
     // fallback: insert near top of document body
-    const parent = document.body ?? document.documentElement;
-    parent.insertBefore(container, parent.firstChild);
+    const parent = doc.body ?? doc.documentElement;
+    parent!.insertBefore(container, parent!.firstChild);
   }
 
   floorpStartWarningElements = { container, message, button };
@@ -847,12 +816,14 @@ function getI18nUtils(): {
   }
 
   try {
-    const module = ChromeUtils.importESModule<{
+    const module = ChromeUtils.importESModule(
+      "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
+    ) as {
       I18nUtils: {
         getPrimaryBrowserLocaleMapped(): string;
         addLocaleChangeListener(callback: (locale: string) => void): void;
       };
-    }>("resource://noraneko/modules/i18n/I18n-Utils.sys.mjs");
+    };
     i18nUtilsInstance = module.I18nUtils;
     logFloorpHub("Retrieved I18nUtils instance.");
   } catch (error) {
@@ -869,9 +840,9 @@ function hideNewTabPage(): void {
 
   if (!config) {
     logFloorpHub("Disabling Floorp start categories as per configuration.");
-    document
+    doc
       .querySelectorAll('#category-home, [data-category="paneHome"]')
-      .forEach((el) => {
+      .forEach((el: Element) => {
         el.remove();
       });
   }

@@ -352,7 +352,7 @@ async function testLinkContextMenuConstructorWithUndefinedDocument(): Promise<vo
 
   try {
     // Save original document
-    const originalDocument = (globalThis as any).document;
+    const originalDocument = (globalThis as Record<string, unknown>).document;
 
     // Temporarily set document to undefined
     // In Firefox, document is a getter-only property, so use Object.defineProperty
@@ -384,7 +384,7 @@ async function testLinkContextMenuConstructorWithUndefinedDocument(): Promise<vo
         configurable: true,
       });
     } catch {
-      (globalThis as any).document = originalDocument;
+      (globalThis as Record<string, unknown>).document = originalDocument;
     }
   } finally {
     cleanupDOM();
@@ -587,8 +587,8 @@ async function testLinkContextMenuHandlesRenderError(): Promise<void> {
 
   try {
     // Mock document.createXULElement to throw error
-    const originalCreateXULElement = (document as any).createXULElement;
-    (document as any).createXULElement = () => {
+    const originalCreateXULElement = (document as Record<string, unknown>).createXULElement;
+    (document as Record<string, unknown>).createXULElement = () => {
       throw new Error("Test error");
     };
 
@@ -604,7 +604,7 @@ async function testLinkContextMenuHandlesRenderError(): Promise<void> {
     assert(!threw, "constructor should handle render error gracefully");
 
     // Restore original
-    (document as any).createXULElement = originalCreateXULElement;
+    (document as Record<string, unknown>).createXULElement = originalCreateXULElement;
   } finally {
     cleanupDOM();
   }
@@ -761,10 +761,10 @@ async function testLinkContextMenuHandlesMissingGContextMenu(): Promise<void> {
 
   try {
     // Save original gContextMenu
-    const originalGContextMenu = (globalThis as any).gContextMenu;
+    const originalGContextMenu = (globalThis as Record<string, unknown>).gContextMenu;
 
     // Remove gContextMenu temporarily (non-configurable in Firefox, so set to undefined)
-    (globalThis as any).gContextMenu = undefined;
+    (globalThis as Record<string, unknown>).gContextMenu = undefined;
 
     const mod = await import("../link-context-menu.tsx");
     new mod.ExternalBrowserLinkContextMenu();
@@ -774,7 +774,7 @@ async function testLinkContextMenuHandlesMissingGContextMenu(): Promise<void> {
     assert(menu !== null, "menu should be created even without gContextMenu");
 
     // Restore gContextMenu
-    (globalThis as any).gContextMenu = originalGContextMenu;
+    (globalThis as Record<string, unknown>).gContextMenu = originalGContextMenu;
   } finally {
     cleanupDOM();
   }

@@ -224,7 +224,7 @@ function testTopEdgeHoverRevealSetsAttribute(): void {
       clientX: 100,
       clientY: 5, // Within EDGE_THRESHOLD (10)
     });
-    window.dispatchEvent(mouseEvent);
+    globalThis.dispatchEvent(mouseEvent);
 
     assert(
       document!.documentElement?.hasAttribute("zenmode-reveal-top"),
@@ -249,9 +249,9 @@ function testBottomEdgeHoverRevealSetsAttribute(): void {
     // Simulate mouse move to bottom edge
     const mouseEvent = new MouseEvent("mousemove", {
       clientX: 100,
-      clientY: window.innerHeight - 5, // Within EDGE_THRESHOLD of bottom
+      clientY: globalThis.innerHeight - 5, // Within EDGE_THRESHOLD of bottom
     });
-    window.dispatchEvent(mouseEvent);
+    globalThis.dispatchEvent(mouseEvent);
 
     assert(
       document!.documentElement?.hasAttribute("zenmode-reveal-bottom"),
@@ -277,7 +277,7 @@ function testSideEdgeHoverRevealSetsAttribute(): void {
       clientX: 5, // Within EDGE_THRESHOLD
       clientY: 100,
     });
-    window.dispatchEvent(mouseEvent);
+    globalThis.dispatchEvent(mouseEvent);
 
     assert(
       document!.documentElement?.hasAttribute("zenmode-reveal-side"),
@@ -303,7 +303,7 @@ function testHoverRevealDoesNotTriggerWhenDisabled(): void {
       clientX: 100,
       clientY: 5,
     });
-    window.dispatchEvent(mouseEvent);
+    globalThis.dispatchEvent(mouseEvent);
 
     assert(
       !document!.documentElement?.hasAttribute("zenmode-reveal-top"),

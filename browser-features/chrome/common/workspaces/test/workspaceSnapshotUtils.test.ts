@@ -176,7 +176,7 @@ function testExtractUrlComplexEntries(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "toNumber valid string", fn: testToNumberValidString },
     { name: "toNumber null", fn: testToNumberNull },

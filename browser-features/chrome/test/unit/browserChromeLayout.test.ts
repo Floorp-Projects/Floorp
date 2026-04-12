@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, type assertEquals, type TestCase } from "../utils/test_harness.ts";
+import { assert } from "../utils/test_harness.ts";
 
 /** Skip test if the browser chrome DOM is not available (e.g., in unit test environment) */
 function requireBrowserChrome(): boolean {
@@ -78,7 +78,7 @@ function testTabboxFillsWindowWidth(): void {
   assert(tabbox !== null, "#tabbrowser-tabbox should exist");
 
   const rect = tabbox.getBoundingClientRect();
-  const windowWidth = window.innerWidth;
+  const windowWidth = globalThis.innerWidth;
   assert(
     rect.width >= windowWidth * 0.5,
     `#tabbrowser-tabbox width (${rect.width}) should fill at least 50% of window width (${windowWidth})`,
@@ -87,12 +87,12 @@ function testTabboxFillsWindowWidth(): void {
 
 function testWindowDimensionsPositive(): void {
   assert(
-    window.innerWidth > 0,
-    `window.innerWidth should be positive (got ${window.innerWidth})`,
+    globalThis.innerWidth > 0,
+    `window.innerWidth should be positive (got ${globalThis.innerWidth})`,
   );
   assert(
-    window.innerHeight > 0,
-    `window.innerHeight should be positive (got ${window.innerHeight})`,
+    globalThis.innerHeight > 0,
+    `window.innerHeight should be positive (got ${globalThis.innerHeight})`,
   );
 }
 
@@ -102,7 +102,7 @@ function testToolboxWidthMatchesWindow(): void {
   assert(toolbox !== null, "#navigator-toolbox should exist");
 
   const rect = toolbox.getBoundingClientRect();
-  const windowWidth = window.innerWidth;
+  const windowWidth = globalThis.innerWidth;
   const tolerance = 2;
   assert(
     Math.abs(rect.width - windowWidth) <= tolerance,

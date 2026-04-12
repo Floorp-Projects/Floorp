@@ -288,7 +288,7 @@ export async function runAllTests(): Promise<void> {
 // These tests would require mocking fetch or having actual test files available
 // For now, we'll add placeholder tests that document the expected behavior
 
-async function testResetPreferencesClearsUserPrefs(): Promise<void> {
+function testResetPreferencesClearsUserPrefs(): void {
   // This test would require a mock fetch implementation
   // Expected behavior: resetPreferencesWithUserJsContents should clear user prefs
   // that were set by the user.js file
@@ -311,7 +311,7 @@ async function testResetPreferencesClearsUserPrefs(): Promise<void> {
   }
 }
 
-async function testResetPreferencesSkipsToolkitStylesheetsPref(): Promise<void> {
+function testResetPreferencesSkipsToolkitStylesheetsPref(): void {
   // Expected behavior: toolkit.legacyUserProfileCustomizations.stylesheets
   // should NOT be cleared to avoid unloading userChrome.css
 

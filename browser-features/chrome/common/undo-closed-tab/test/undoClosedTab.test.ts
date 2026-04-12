@@ -45,7 +45,7 @@ function testServicesWmGetMostRecentWindow(): void {
     "Services.wm.getMostRecentWindow should return a window",
   );
   assert(
-    typeof (win as any).undoCloseTab === "function" ||
+    typeof (win as Record<string, unknown>).undoCloseTab === "function" ||
       typeof (SessionWindowUI as Record<string, unknown>).undoCloseTab ===
         "function",
     "undoCloseTab should be accessible either on window or SessionWindowUI",
@@ -190,7 +190,7 @@ function testWindowInterfaceDeclaration(): void {
     const SessionWindowUI = (globalThis as Record<string, unknown>)
       .SessionWindowUI as Record<string, unknown>;
     const hasUndoCloseTab =
-      typeof (browserWindow as any).undoCloseTab === "function" ||
+      typeof (browserWindow as Record<string, unknown>).undoCloseTab === "function" ||
       typeof SessionWindowUI.undoCloseTab === "function";
 
     assert(

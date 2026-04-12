@@ -91,7 +91,7 @@ function testAllIconsResolveToDataUrls(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "icon set not empty", fn: testWorkspaceIconsSetNotEmpty },
     { name: "array length matches set", fn: testWorkspaceIconsArrayLength },

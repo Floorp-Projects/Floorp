@@ -7,10 +7,8 @@ import { TabScroll } from "../scroll/index.ts";
 import { config, setConfig } from "../../designs/configs.ts";
 import { createRoot } from "solid-js";
 import {
-  assert,
   assertEquals,
   runTests,
-  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 function constructInSolidRoot(construct: () => void): void {

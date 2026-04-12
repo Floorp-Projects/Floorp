@@ -7,7 +7,6 @@ import {
   assert,
   assertEquals,
   runTests,
-  type TestCase,
 } from "../../test/utils/test_harness.ts";
 
 function testContentAreaContextMenuReturnsElement(): void {
@@ -58,7 +57,7 @@ function testAddContextBoxCreatesMenuitem(): void {
   renderMarker.id = "test-context-render-marker";
   contextMenu.appendChild(renderMarker);
 
-  let functionCalled = false;
+  let _functionCalled = false;
   let checkedCalled = false;
 
   try {
@@ -67,7 +66,7 @@ function testAddContextBoxCreatesMenuitem(): void {
       "test.label",
       "test-context-render-marker",
       () => {
-        functionCalled = true;
+        _functionCalled = true;
       },
       "test-context-check-target",
       () => {
@@ -89,7 +88,7 @@ function testAddContextBoxCreatesMenuitem(): void {
 function testAddToolbarContentMenuPopupSetDoesNotThrow(): void {
   let threw = false;
   try {
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() => null as any);
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() => null as unknown as Element);
   } catch {
     threw = true;
   }

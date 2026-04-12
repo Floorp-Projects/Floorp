@@ -14,8 +14,8 @@ import {
 // bracket notation to avoid TS access errors.
 function scopeIncludes(scope: nsIURI, uri: nsIURI): boolean {
   const instance = new ManifestProcesser();
-  // biome-ignore lint/suspicious/noExplicitAny: accessing private method for testing
-  return (instance as any).scopeIncludes(scope, uri);
+    return (instance as unknown as { scopeIncludes: (scope: nsIURI, uri: nsIURI) => boolean })
+    .scopeIncludes(scope, uri);
 }
 
 function makeURI(spec: string): nsIURI {

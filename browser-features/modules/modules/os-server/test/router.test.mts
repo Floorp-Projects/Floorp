@@ -2,7 +2,7 @@
 // @colocated-env browser
 
 import { Router, NamespaceBuilder, createApi } from "../router.sys.mts";
-import type { Context, Handler, HttpResult } from "../router.sys.mts";
+import type { Context, Handler } from "../router.sys.mts";
 import {
   assert,
   assertEquals,

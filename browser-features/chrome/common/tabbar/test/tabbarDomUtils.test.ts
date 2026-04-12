@@ -135,7 +135,7 @@ function testResolveTabsContainer(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "findChildIndex first", fn: testFindChildIndexFirst },
     { name: "findChildIndex second", fn: testFindChildIndexSecond },

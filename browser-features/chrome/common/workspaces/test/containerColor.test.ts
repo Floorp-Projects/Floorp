@@ -166,7 +166,7 @@ function testStringWithSpacesReturnsNull(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "number 0 → blue", fn: testNumberZeroReturnsBlue },
     { name: "number 1 → turquoise", fn: testNumberOneReturnsTurquoise },

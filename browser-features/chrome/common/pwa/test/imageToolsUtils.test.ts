@@ -56,7 +56,7 @@ function testEmptyString(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "image/svg+xml", fn: testSvgXml },
     { name: "image/SVG+xml (case)", fn: testSvgXmlUppercase },

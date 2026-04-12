@@ -134,7 +134,7 @@ function testMixedValidAndInvalidSizes(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "empty array", fn: testEmptyArray },
     { name: "single icon single size", fn: testSingleIconSingleSize },

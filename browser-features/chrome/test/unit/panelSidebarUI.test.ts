@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
+import { assert } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — Panel sidebar DOM structure
@@ -112,7 +112,7 @@ function testPanelSidebarDisplayVariable(): void {
   const sidebarBox = document.getElementById("panel-sidebar-box");
   if (!sidebarBox) return; // sidebar disabled — skip
 
-  const computed = window.getComputedStyle(sidebarBox);
+  const computed = globalThis.getComputedStyle(sidebarBox);
   // getPropertyValue returns empty string if not set, which is acceptable
   const displayValue = computed.getPropertyValue("--panel-sidebar-display");
   assert(

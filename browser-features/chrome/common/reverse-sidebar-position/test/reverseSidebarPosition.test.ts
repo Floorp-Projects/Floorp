@@ -6,14 +6,13 @@ import { init } from "../index.ts";
 import {
   assert,
   runTests,
-  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 type ReverseSidebarPositionConstructor = new () => {
   StyleElement: () => unknown;
 };
 
-async function loadModule(): Promise<{
+async function _loadModule(): Promise<{
   ReverseSidebarPosition: ReverseSidebarPositionConstructor;
 } | null> {
   try {
@@ -27,12 +26,12 @@ async function loadModule(): Promise<{
 }
 
 // Cached result - loaded once since the module is always the same
-let _cachedModule:
+const _cachedModule:
   | { ReverseSidebarPosition: ReverseSidebarPositionConstructor }
   | null
   | undefined = undefined;
 
-function getModuleSync(): {
+function _getModuleSync(): {
   ReverseSidebarPosition: ReverseSidebarPositionConstructor;
 } | null {
   if (_cachedModule === undefined) {

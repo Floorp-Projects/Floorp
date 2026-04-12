@@ -10,7 +10,6 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-// deno-lint-ignore no-explicit-any
 let solidXulRender: ((fn: () => JSX.Element, container: HTMLElement) => void) | null = null;
 
 async function getSolidXulRender(): Promise<(fn: () => JSX.Element, container: HTMLElement) => void> {
@@ -474,7 +473,7 @@ function testHandleRestartInSafeModeNotifiesObservers(): void {
   // deno-lint-ignore no-explicit-any
   (globalThis as any).Services = {
     obs: {
-      notifyObservers: (subject: unknown, topic: string, data: unknown) => {
+      notifyObservers: (_subject: unknown, topic: string, data: unknown) => {
         notified = true;
         notifiedTopic = topic;
         _notifiedData = data;
@@ -573,7 +572,6 @@ function testShowRebootPanelSubViewCallsPanelUI(): void {
         // Ignore if PanelUI cannot be restored.
       }
     } else {
-      // deno-lint-ignore no-explicit-any
       try {
         Object.defineProperty(globalThis, "PanelUI", {
           value: undefined,
@@ -637,7 +635,6 @@ function testShowRebootPanelSubViewHandlesMissingAnchor(): void {
         // Ignore if PanelUI cannot be restored.
       }
     } else {
-      // deno-lint-ignore no-explicit-any
       try {
         Object.defineProperty(globalThis, "PanelUI", {
           value: undefined,

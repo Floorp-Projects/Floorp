@@ -4,7 +4,6 @@
 import { iconUrlParser } from "../iconUrlParser.ts";
 import {
   assert,
-  type TestCase,
   runTests,
 } from "../../test/utils/test_harness.ts";
 

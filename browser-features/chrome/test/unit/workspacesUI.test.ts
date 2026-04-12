@@ -5,7 +5,6 @@ import {
   assert,
   assertEquals,
   runTests,
-  type TestCase,
 } from "../utils/test_harness.ts";
 
 /** Skip test if gBrowser is not available (e.g., in unit test environment) */

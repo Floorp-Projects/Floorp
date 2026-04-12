@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
+import { assert, runTests } from "../utils/test_harness.ts";
 
 /** Skip test if the browser chrome DOM is not available (e.g., in unit test environment) */
 function requireBrowserChrome(): boolean {

@@ -376,7 +376,7 @@ function readMarionettePortFromFile(): number | null {
   }
 }
 
-async function isTcpPortReachable(
+async function _isTcpPortReachable(
   port: number,
   timeoutMs = 1_500,
 ): Promise<boolean> {

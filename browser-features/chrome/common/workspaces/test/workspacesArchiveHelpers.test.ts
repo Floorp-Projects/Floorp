@@ -232,7 +232,7 @@ function testBuildSummaryWithMultipleTabs(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "isRecord object", fn: testIsRecordObject },
     { name: "isRecord empty", fn: testIsRecordEmpty },

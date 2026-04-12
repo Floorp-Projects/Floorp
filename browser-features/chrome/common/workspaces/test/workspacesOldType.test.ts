@@ -9,7 +9,6 @@ import {
 } from "../data/migrate/old_type.ts";
 import {
   type TestCase,
-  type assert,
   assertEquals,
 } from "../../../test/utils/test_harness.ts";
 
@@ -154,7 +153,7 @@ function testFullSchemaEmptyWindows(): void {
 // Runner
 // ---------------------------------------------------------------------------
 
-export async function runAllTests(): Promise<void> {
+export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "workspace detail valid", fn: testWorkspaceDetailValid },
     {

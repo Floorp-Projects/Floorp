@@ -760,8 +760,8 @@ function testInitThrowsOnRenderError(): void {
 
   try {
     // Mock render to throw an error
-    const originalRender = (globalThis as any).render;
-    (globalThis as any).render = () => {
+    const originalRender = (globalThis as Record<string, unknown>).render;
+    (globalThis as Record<string, unknown>).render = () => {
       throw new Error("Mock render error");
     };
 
@@ -779,9 +779,9 @@ function testInitThrowsOnRenderError(): void {
 
     // Restore original render
     if (originalRender) {
-      (globalThis as any).render = originalRender;
+      (globalThis as Record<string, unknown>).render = originalRender;
     } else {
-      (globalThis as any).render = undefined;
+      (globalThis as Record<string, unknown>).render = undefined;
     }
   } finally {
     cleanupDOM();

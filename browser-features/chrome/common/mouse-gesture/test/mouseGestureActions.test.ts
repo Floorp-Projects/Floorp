@@ -390,7 +390,7 @@ const rawTests: TestCase[] = [
   {
     name: "executeGestureAction with action that throws",
     fn() {
-      let _errorThrown = false;
+      const _errorThrown = false;
       gestureActions.registerAction({
         name: "__test_throwing_action__",
         fn: () => {

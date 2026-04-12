@@ -100,7 +100,7 @@ function testNavBarWidthApproximatesWindow(): void {
   if (!navBar) return;
 
   const rect = navBar.getBoundingClientRect();
-  const windowWidth = window.innerWidth;
+  const windowWidth = globalThis.innerWidth;
   // Allow some margin for borders, scrollbars, etc.
   const tolerance = 50;
   assert(

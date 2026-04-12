@@ -314,8 +314,8 @@ async function testTabContextMenuHandlesRenderError(): Promise<void> {
 
   try {
     // Mock document.createXULElement to throw error
-    const originalCreateXULElement = (document as any).createXULElement;
-    (document as any).createXULElement = () => {
+    const originalCreateXULElement = (document as Record<string, unknown>).createXULElement;
+    (document as Record<string, unknown>).createXULElement = () => {
       throw new Error("Test error");
     };
 
@@ -331,7 +331,7 @@ async function testTabContextMenuHandlesRenderError(): Promise<void> {
     assert(!threw, "constructor should handle render error gracefully");
 
     // Restore original
-    (document as any).createXULElement = originalCreateXULElement;
+    (document as Record<string, unknown>).createXULElement = originalCreateXULElement;
   } finally {
     cleanupDOM();
   }
@@ -347,10 +347,10 @@ async function testTabContextMenuHandlesMissingGBrowser(): Promise<void> {
 
   try {
     // Save original gBrowser
-    const originalGBrowser = (globalThis as any).gBrowser;
+    const originalGBrowser = (globalThis as Record<string, unknown>).gBrowser;
 
     // Remove gBrowser temporarily (non-configurable in Firefox, so set to undefined)
-    (globalThis as any).gBrowser = undefined;
+    (globalThis as Record<string, unknown>).gBrowser = undefined;
 
     const mod = await import("../tab-context-menu.tsx");
     new mod.ExternalBrowserTabContextMenu();
@@ -360,7 +360,7 @@ async function testTabContextMenuHandlesMissingGBrowser(): Promise<void> {
     assert(menu !== null, "menu should be created even without gBrowser");
 
     // Restore gBrowser
-    (globalThis as any).gBrowser = originalGBrowser;
+    (globalThis as Record<string, unknown>).gBrowser = originalGBrowser;
   } finally {
     cleanupDOM();
   }

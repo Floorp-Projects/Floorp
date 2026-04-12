@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { assert, runTests, type TestCase } from "../utils/test_harness.ts";
+import { assert, runTests } from "../utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function getRootComputedStyle(): CSSStyleDeclaration {
-  return window.getComputedStyle(document.documentElement);
+  return globalThis.getComputedStyle(document.documentElement);
 }
 
 // ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ function testPanelSidebarDisplayVariable(): void {
   const sidebarBox = document.getElementById("panel-sidebar-box");
   if (!sidebarBox) return; // sidebar not present — skip
 
-  const style = window.getComputedStyle(sidebarBox);
+  const style = globalThis.getComputedStyle(sidebarBox);
   const value = style.getPropertyValue("--panel-sidebar-display");
   // The variable controls sidebar visibility; it should be readable
   assert(
@@ -96,7 +96,7 @@ function testComputedStyleOnNavBar(): void {
 
   let threw = false;
   try {
-    const style = window.getComputedStyle(navBar);
+    const style = globalThis.getComputedStyle(navBar);
     // Access a known property to ensure style resolution works
     style.getPropertyValue("background-color");
   } catch {
@@ -111,7 +111,7 @@ function testComputedStyleOnTabsToolbar(): void {
 
   let threw = false;
   try {
-    const style = window.getComputedStyle(toolbar);
+    const style = globalThis.getComputedStyle(toolbar);
     style.getPropertyValue("height");
   } catch {
     threw = true;

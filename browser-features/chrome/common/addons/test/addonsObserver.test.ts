@@ -511,7 +511,7 @@ function testOverrideInstallConfirmationWithCWSInfo(): void {
   // Verify customization happened (message added)
   // Note: customizeNotificationContent is called inside requestAnimationFrame,
   // so the message may not be immediately present in synchronous test context.
-  const message = notification.querySelector(".chrome-web-store-message");
+  const _message = notification.querySelector(".chrome-web-store-message");
   // The original showInstallConfirmation was called, which is the core behavior
   assert(
     originalCalled,
@@ -620,7 +620,7 @@ async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
         const notification = document!.getElementById(
           "addon-webext-permissions-notification",
         );
-        const message = notification?.querySelector(
+        const _message = notification?.querySelector(
           ".chrome-web-store-message",
         );
         // The observer may or may not customize the prompt depending on

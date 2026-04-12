@@ -14,7 +14,7 @@ import { hasLiveSplitPanelsState } from "../utils/live-split-ui.ts";
 import { orderSplitGroupTabsForRestore } from "../utils/order-split-group-tabs.ts";
 import { reorderSplitTabsForDesiredOrderImpl } from "../utils/reorder-strip-impl.ts";
 import { resetSplitPanelPresentationState } from "../utils/reset-split-panel-presentation.ts";
-import { type TestCase, runTests } from "../../../test/utils/test_harness.ts";
+import { runTests } from "../../../test/utils/test_harness.ts";
 
 function assertEquals(
   actual: unknown,

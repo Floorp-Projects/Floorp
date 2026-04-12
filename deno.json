@@ -40,14 +40,14 @@
     "**/_dist/**/*",
     "**/*.timestamp-*.mjs",
     "libs/@types/gecko/**/*",
-    "libs/user-js-runner/**/*",
     "libs/vite-plugin-gen-jarmn/**/*",
     "libs/vite-plugin-disable-csp/**/*",
     "tools/build/tasks/inject/mixins/**/*",
+    "bridge/loader-features/vite.config.ts",
+    "bridge/loader-modules/tsdown.config.ts",
+    "bridge/startup/tsdown.config.ts",
+    "static/installers/**/*",
     "logs/**/*",
-    "chrome/**/*",
-    "modules/**/*",
-    "src/**/*",
     "node_modules/**/*"
   ],
   "tasks": {
