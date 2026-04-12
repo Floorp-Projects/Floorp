@@ -341,7 +341,7 @@ export function ZenModeMenuElement() {
         label={label()}
         type="checkbox"
         id="toggle_zenmode"
-        checked={zenModeEnabled()}
+        checked={zenModeEnabled() || undefined}
         onCommand={() => setZenModeEnabled((prev) => !prev)}
         accesskey="Z"
       />
