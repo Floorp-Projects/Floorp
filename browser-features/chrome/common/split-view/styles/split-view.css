@@ -550,7 +550,9 @@
  * The splitview-multibar attribute is set only while split view is active
  * and removed on deactivation, so user's tab width preference is restored.
  * Scoped to horizontal tab strips only — vertical tabs have their own layout. */
-#TabsToolbar[splitview-multibar] #tabbrowser-tabs:not([orient="vertical"]) .tabbrowser-tab:not([pinned]) {
+#TabsToolbar[splitview-multibar]
+  #tabbrowser-tabs:not([orient="vertical"])
+  .tabbrowser-tab:not([pinned]) {
   min-width: unset !important;
 }
 
