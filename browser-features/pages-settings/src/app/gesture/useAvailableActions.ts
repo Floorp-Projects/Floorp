@@ -86,6 +86,7 @@ export const GESTURE_ACTIONS = [
   "gecko-scroll-to-bottom",
   "gecko-workspace-next",
   "gecko-workspace-previous",
+  "floorp-toggle-zen-mode",
 ] as const;
 
 export const useAvailableActions = () => {
