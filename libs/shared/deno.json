@@ -3,6 +3,10 @@
     "lib": ["ESNext", "DOM"],
     "types": ["jsr:@types/gecko"]
   },
+  "imports": {
+    "fp-ts": "npm:fp-ts@^2.16.11",
+    "io-ts": "npm:io-ts@^2.2.22"
+  },
   "lint": {
     "exclude": ["custom-shortcut-key/**/*"]
   }
