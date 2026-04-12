@@ -46,15 +46,15 @@ export function patchTabpanels(
   const tabpanels = gBrowser.tabpanels;
   const proto = Object.getPrototypeOf(tabpanels);
 
+  let lastMarkerFingerprint = "";
+
   const syncSplitTabMarkerAttrs = (): number => {
     const tabs = document?.querySelectorAll<HTMLElement>(
       "#tabbrowser-tabs .tabbrowser-tab",
     );
-    if (!tabs) {
-      return 0;
-    }
 
     let splitTabCount = 0;
+    const ids: string[] = [];
     for (const tab of tabs) {
       const hasSplit = Boolean(
         (tab as unknown as { splitview?: unknown }).splitview,
@@ -62,10 +62,19 @@ export function patchTabpanels(
       if (hasSplit) {
         splitTabCount++;
         tab.setAttribute("data-floorp-split-tab", "true");
+        ids.push(tab.id);
       } else {
         tab.removeAttribute("data-floorp-split-tab");
       }
     }
+
+    // Early return if the split-tab set has not changed
+    const fp = `${splitTabCount}:${ids.join(",")}`;
+    if (fp === lastMarkerFingerprint) {
+      return splitTabCount;
+    }
+    lastMarkerFingerprint = fp;
+
     return splitTabCount;
   };
 

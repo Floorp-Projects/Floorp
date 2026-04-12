@@ -476,162 +476,71 @@
   height: unset !important;
 }
 
-/* Fallback for cases where Lepton's not([multibar]) rules re-apply.
- * Use both active split-view panel state and persisted split-tab markers so
- * this still works when a split tab is not currently selected.
+/* Fallback for cases where Lepton's not([multibar]) rules re-apply during
+ * split-view state transitions. Covers both active split-view panels and
+ * persisted split-tab markers so this works even when a non-split tab is selected.
  */
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
+:root:is(
+    :has(
+      #tabbrowser-tabpanels[data-floorp-split],
+      #tabbrowser-tabpanels[splitview],
+      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
+      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
+    ),
+    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
   )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container,
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
+  :is(
+    #TabsToolbar:not([multibar]) #pinned-tabs-container,
+    #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox,
+    #TabsToolbar:not([multibar])
+      #pinned-tabs-container[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"],
+    #TabsToolbar:not([multibar])
+      #pinned-tabs-container[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"]
+      .tab-stack,
+    #TabsToolbar:not([multibar])
+      #pinned-tabs-container[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"]
+      .tab-content,
+    #TabsToolbar:not([multibar])
+      #tabbrowser-arrowscrollbox[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"],
+    #TabsToolbar:not([multibar])
+      #tabbrowser-arrowscrollbox[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"]
+      .tab-stack,
+    #TabsToolbar:not([multibar])
+      #tabbrowser-arrowscrollbox[overflowing="true"]
+      > .tabbrowser-tab[pinned="true"]
+      .tab-content
+  ),
+:root:not([uidensity="compact"]):is(
+    :has(
+      #tabbrowser-tabpanels[data-floorp-split],
+      #tabbrowser-tabpanels[splitview],
+      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
+      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
+    ),
+    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
   )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox,
-:root:not([uidensity="compact"]):has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container,
-:root:not([uidensity="compact"]):has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox,
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content,
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-:root:has(
-    #tabbrowser-tabpanels[data-floorp-split],
-    #tabbrowser-tabpanels[splitview],
-    #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-    #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-  )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content {
+  :is(
+    #TabsToolbar:not([multibar]) #pinned-tabs-container,
+    #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox
+  ) {
   max-height: unset !important;
   height: unset !important;
 }
 
-/* Marker-only fallback: when split tabs exist but split-view panel attributes
- * are temporarily absent (e.g. selected tab is outside the split group), keep
- * Lepton's not([multibar]) max-height clamps disabled.
- */
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container,
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox,
-:root:not([uidensity="compact"]):has(
-    #tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]
-  )
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container,
-:root:not([uidensity="compact"]):has(
-    #tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]
-  )
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox,
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content,
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-:root:has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  #TabsToolbar:not([multibar])
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content {
-  max-height: unset !important;
-  height: unset !important;
-}
-
-/* When split view is active, remove Floorp's custom tab min-width override
- * so that Firefox's native tab sizing can shrink tabs to fit in the strip.
+/* When split tabs exist, remove Floorp's custom tab min-width override so that
+ * Firefox's native tab sizing can shrink tabs to fit in the strip.
  * Without this, large tabMinWidth values (e.g. 200px) cause tabs to overlap.
- * The splitview-multibar attribute is set only while split view is active
- * and removed on deactivation, so user's tab width preference is restored. */
-#TabsToolbar[splitview-multibar] .tabbrowser-tab:not([pinned]) {
+ * The splitview-multibar attribute persists while any split tab remains (even
+ * when a non-split tab is selected), so the override stays active until all
+ * split tabs are gone. Scoped to horizontal tab strips only. */
+#TabsToolbar[splitview-multibar]
+  #tabbrowser-tabs:not([orient="vertical"])
+  .tabbrowser-tab:not([pinned]) {
   min-width: unset !important;
 }
 
