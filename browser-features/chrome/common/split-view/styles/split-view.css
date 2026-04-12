@@ -407,8 +407,9 @@
  * so that Firefox's native tab sizing can shrink tabs to fit in the strip.
  * Without this, large tabMinWidth values (e.g. 200px) cause tabs to overlap.
  * The splitview-multibar attribute is set only while split view is active
- * and removed on deactivation, so user's tab width preference is restored. */
-#TabsToolbar[splitview-multibar] .tabbrowser-tab:not([pinned]) {
+ * and removed on deactivation, so user's tab width preference is restored.
+ * Scoped to horizontal tab strips only — vertical tabs have their own layout. */
+#TabsToolbar[splitview-multibar] #tabbrowser-tabs:not([orient="vertical"]) .tabbrowser-tab:not([pinned]) {
   min-width: unset !important;
 }
 
