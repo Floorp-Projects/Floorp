@@ -97,13 +97,17 @@ export function insertFlexHandles(
   const orderedIds = orderFlexPanelIdsToLayout(tabpanels, panelIds);
   if (orderedIds.join(",") !== upstreamIds.join(",")) {
     log.debug(
-      `[insertFlexHandles] reordered for DOM/visual layout: upstream=[${upstreamIds.join(", ")}] ` +
+      `[insertFlexHandles] reordered for DOM/visual layout: upstream=[${
+        upstreamIds.join(", ")
+      }] ` +
         `ordered=[${orderedIds.join(", ")}]`,
     );
   }
 
   log.debug(
-    `[insertFlexHandles] orientation=${orientation}, panels=${orderedIds.length}, ids=[${orderedIds.join(", ")}]`,
+    `[insertFlexHandles] orientation=${orientation}, panels=${orderedIds.length}, ids=[${
+      orderedIds.join(", ")
+    }]`,
   );
 
   const sizes = resolvePaneSizesForPanelIds(upstreamIds);
@@ -113,7 +117,9 @@ export function insertFlexHandles(
     orderedIds.length,
   );
   log.debug(
-    `[insertFlexHandles] ratios=[${ratios.map((r) => r.toFixed(3)).join(", ")}]`,
+    `[insertFlexHandles] ratios=[${
+      ratios.map((r) => r.toFixed(3)).join(", ")
+    }]`,
   );
 
   for (let i = 0; i < orderedIds.length; i++) {
@@ -274,12 +280,17 @@ export function updateHandles(
   layout: SplitViewLayout,
 ): void {
   log.debug(
-    `[updateHandles] layout=${layout}, panels=${panelIds.length}, ids=[${panelIds.join(", ")}]`,
+    `[updateHandles] layout=${layout}, panels=${panelIds.length}, ids=[${
+      panelIds.join(", ")
+    }]`,
   );
   if (layout === "grid-2x2" && panelIds.length === 4) {
     insertGridHandles(panelIds);
   } else if (
-    layout === "grid-3pane-left-main" &&
+    (layout === "grid-3pane-left-main" ||
+      layout === "grid-3pane-right-main" ||
+      layout === "grid-3pane-top-main" ||
+      layout === "grid-3pane-bottom-main") &&
     panelIds.length === 3
   ) {
     insertThreePaneGridHandles(panelIds);

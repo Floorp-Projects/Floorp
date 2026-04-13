@@ -5,7 +5,7 @@
 
 import i18next from "i18next";
 import { applyLayout } from "../layout.js";
-import { splitViewConfig, setSplitViewConfig } from "../data/config.js";
+import { setSplitViewConfig, splitViewConfig } from "../data/config.js";
 import type { SplitViewLayout, SplitViewTab } from "../data/types.js";
 import { getGBrowser } from "../data/types.js";
 import {
@@ -16,8 +16,7 @@ import {
 
 const log = console.createInstance({ prefix: "nora@split-view-picker" });
 
-const t = (key: string): string =>
-  (i18next.t as (k: string) => string)(key);
+const t = (key: string): string => (i18next.t as (k: string) => string)(key);
 
 interface LayoutOption {
   layout: SplitViewLayout;
@@ -27,15 +26,45 @@ interface LayoutOption {
 }
 
 const LAYOUT_OPTIONS: LayoutOption[] = [
-  { layout: "horizontal", i18nKey: "splitView.layoutPicker.horizontal", minPanes: 2 },
-  { layout: "vertical", i18nKey: "splitView.layoutPicker.vertical", minPanes: 2 },
+  {
+    layout: "horizontal",
+    i18nKey: "splitView.layoutPicker.horizontal",
+    minPanes: 2,
+  },
+  {
+    layout: "vertical",
+    i18nKey: "splitView.layoutPicker.vertical",
+    minPanes: 2,
+  },
   {
     layout: "grid-3pane-left-main",
     i18nKey: "splitView.layoutPicker.grid3paneLeftMain",
     minPanes: 3,
     maxPanes: 3,
   },
-  { layout: "grid-2x2", i18nKey: "splitView.layoutPicker.grid2x2", minPanes: 4 },
+  {
+    layout: "grid-3pane-right-main",
+    i18nKey: "splitView.layoutPicker.grid3paneRightMain",
+    minPanes: 3,
+    maxPanes: 3,
+  },
+  {
+    layout: "grid-3pane-top-main",
+    i18nKey: "splitView.layoutPicker.grid3paneTopMain",
+    minPanes: 3,
+    maxPanes: 3,
+  },
+  {
+    layout: "grid-3pane-bottom-main",
+    i18nKey: "splitView.layoutPicker.grid3paneBottomMain",
+    minPanes: 3,
+    maxPanes: 3,
+  },
+  {
+    layout: "grid-2x2",
+    i18nKey: "splitView.layoutPicker.grid2x2",
+    minPanes: 4,
+  },
 ];
 
 export function initLayoutPicker(): void {
@@ -87,7 +116,9 @@ function onPopupShowing(): void {
     ? resolveLayoutForSplitTabs(activeSplitView.tabs)
     : splitViewConfig().layout;
 
-  log.debug(`[popupShowing] panes=${currentPaneCount}, currentLayout=${currentLayout}, activeSplitView=${!!activeSplitView}`);
+  log.debug(
+    `[popupShowing] panes=${currentPaneCount}, currentLayout=${currentLayout}, activeSplitView=${!!activeSplitView}`,
+  );
 
   for (const opt of LAYOUT_OPTIONS) {
     if (currentPaneCount < opt.minPanes) continue;
@@ -101,7 +132,12 @@ function onPopupShowing(): void {
     item.className = "floorp-split-view-menu-item";
     item.setAttribute("label", t(opt.i18nKey));
     item.setAttribute("type", "radio");
-    item.setAttribute("checked", String(currentLayout === opt.layout));
+
+    if (opt.layout === currentLayout) {
+      item.setAttribute("checked", "true");
+    } else {
+      item.removeAttribute("checked");
+    }
 
     item.addEventListener("command", () => {
       log.debug(`[command] switching layout to ${opt.layout}`);
@@ -168,7 +204,10 @@ function addPaneToActiveSplitView(): void {
   // of gBrowser.selectedTab, so it correctly replaces the opentabs pane
   // even in N-pane split view.
   const newTab = gBrowser.addTrustedTab("about:opentabs");
-  log.debug(`[addPane] created new tab: linkedBrowser=${!!newTab.linkedBrowser}, linkedPanel=${newTab.linkedPanel}`);
+  log.debug(
+    `[addPane] created new tab: linkedBrowser=${!!newTab
+      .linkedBrowser}, linkedPanel=${newTab.linkedPanel}`,
+  );
   activeSplitView.addTabs([newTab]);
   log.debug(`[addPane] after addTabs: tabs=${activeSplitView.tabs.length}`);
 }
@@ -178,13 +217,18 @@ function removePaneFromActiveSplitView(): void {
   if (!gBrowser) return;
   const activeSplitView = gBrowser.activeSplitView;
   if (!activeSplitView || activeSplitView.tabs.length <= 2) {
-    log.warn(`[removePane] cannot remove: tabs=${activeSplitView?.tabs?.length ?? 0}`);
+    log.warn(
+      `[removePane] cannot remove: tabs=${activeSplitView?.tabs?.length ?? 0}`,
+    );
     return;
   }
 
   const tabs = activeSplitView.tabs;
   const lastTab = tabs[tabs.length - 1];
-  log.debug(`[removePane] removing tab: linkedPanel=${lastTab.linkedPanel}, linkedBrowser=${!!lastTab.linkedBrowser}`);
+  log.debug(
+    `[removePane] removing tab: linkedPanel=${lastTab.linkedPanel}, linkedBrowser=${!!lastTab
+      .linkedBrowser}`,
+  );
 
   gBrowser.moveTabToSplitView(lastTab, null);
 

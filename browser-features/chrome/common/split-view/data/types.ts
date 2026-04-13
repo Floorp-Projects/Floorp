@@ -7,7 +7,10 @@ export type SplitViewLayout =
   | "horizontal"
   | "vertical"
   | "grid-2x2"
-  | "grid-3pane-left-main";
+  | "grid-3pane-left-main"
+  | "grid-3pane-right-main"
+  | "grid-3pane-top-main"
+  | "grid-3pane-bottom-main";
 
 // ===== Firefox/Gecko API types for split-view =====
 
@@ -45,10 +48,7 @@ export interface SplitViewGBrowser {
   activeSplitView: SplitViewWrapper | null;
   showSplitViewPanels(tabs: SplitViewTab[]): void;
   moveTabBefore(tab: SplitViewTab, beforeTab: SplitViewTab | null): void;
-  moveTabToSplitView(
-    tab: SplitViewTab,
-    wrapper: SplitViewWrapper | null,
-  ): void;
+  moveTabToSplitView(tab: SplitViewTab, wrapper: SplitViewWrapper | null): void;
   addTrustedTab(url: string): SplitViewTab;
   /** Create a split view wrapper, move tabs into it, and activate. */
   addTabSplitView(

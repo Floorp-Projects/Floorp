@@ -12,7 +12,13 @@ export function getEffectiveSplitViewLayout(
   if (layout === "grid-2x2" && paneCount !== 4) {
     return "horizontal";
   }
-  if (layout === "grid-3pane-left-main" && paneCount !== 3) {
+  if (
+    (layout === "grid-3pane-left-main" ||
+      layout === "grid-3pane-right-main" ||
+      layout === "grid-3pane-top-main" ||
+      layout === "grid-3pane-bottom-main") &&
+    paneCount !== 3
+  ) {
     return "horizontal";
   }
   return layout;

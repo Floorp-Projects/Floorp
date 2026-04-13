@@ -23,6 +23,9 @@ const VALID_LAYOUTS = new Set<SplitViewLayout>([
   "vertical",
   "grid-2x2",
   "grid-3pane-left-main",
+  "grid-3pane-right-main",
+  "grid-3pane-top-main",
+  "grid-3pane-bottom-main",
 ]);
 
 function isValidPaneSizes(
