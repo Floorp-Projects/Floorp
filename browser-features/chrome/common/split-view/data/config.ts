@@ -29,6 +29,9 @@ const VALID_LAYOUTS = new Set([
   "vertical",
   "grid-2x2",
   "grid-3pane-left-main",
+  "grid-3pane-right-main",
+  "grid-3pane-top-main",
+  "grid-3pane-bottom-main",
 ]);
 
 function clampRatio(n: unknown): number {
@@ -129,9 +132,7 @@ function createSplitViewPaneSizes(): [
   });
 
   const observer = () => {
-    setPaneSizes(
-      parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES),
-    );
+    setPaneSizes(parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES));
   };
 
   Services.prefs.addObserver(PREF_SPLIT_VIEW_PANE_SIZES, observer);
