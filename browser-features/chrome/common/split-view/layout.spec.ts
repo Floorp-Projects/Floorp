@@ -19,4 +19,30 @@ assert.equal(
 assert.equal(getEffectiveSplitViewLayout("grid-2x2", 4), "grid-2x2");
 assert.equal(getEffectiveSplitViewLayout("grid-2x2", 3), "horizontal");
 
+// New 3-pane grid layouts: should match when paneCount=3, fallback otherwise
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-right-main", 3),
+  "grid-3pane-right-main",
+);
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-right-main", 4),
+  "horizontal",
+);
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-top-main", 3),
+  "grid-3pane-top-main",
+);
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-top-main", 2),
+  "horizontal",
+);
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-bottom-main", 3),
+  "grid-3pane-bottom-main",
+);
+assert.equal(
+  getEffectiveSplitViewLayout("grid-3pane-bottom-main", 4),
+  "horizontal",
+);
+
 console.log("layout.spec: ok");

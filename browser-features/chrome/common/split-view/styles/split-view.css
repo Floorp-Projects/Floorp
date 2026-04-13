@@ -66,9 +66,7 @@
  * participate in the layout.
  */
 #tabbrowser-tabpanels[data-floorp-split]
-  > :not(.split-view-panel):not(.split-view-splitter):not(
-    .floorp-split-handle
-  ):not(.floorp-grid-handle) {
+  > :not(.split-view-panel, .split-view-splitter, .floorp-split-handle, .floorp-grid-handle) {
   display: none !important;
 }
 
@@ -334,25 +332,25 @@
 
 /* Collapse non-split-view children so they don't participate in grid layout */
 #tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle),
+  > :not(.split-view-panel, .floorp-grid-handle),
 #tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > :not(.split-view-panel):not(.floorp-grid-handle) {
+  > :not(.split-view-panel, .floorp-grid-handle) {
   display: none !important;
 }
 
