@@ -65,11 +65,28 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
     },
     {
       name: "runtime check: floorp source directories",
-      args: ["check", "--sloppy-imports", "tools", "i18n", "libs", "bridge", "static/gecko"],
+      args: [
+        "check",
+        "--sloppy-imports",
+        "tools",
+        "i18n",
+        "libs",
+        "bridge",
+        "browser-features/chrome",
+        "static/gecko",
+      ],
     },
     {
       name: "runtime lint: floorp source directories",
-      args: ["lint", "tools", "bridge", "browser-features", "i18n", "libs", "static/gecko"],
+      args: [
+        "lint",
+        "tools",
+        "bridge",
+        "browser-features",
+        "i18n",
+        "libs",
+        "static/gecko",
+      ],
     },
   ];
 

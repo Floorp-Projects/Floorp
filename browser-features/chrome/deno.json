@@ -30,7 +30,8 @@
       "./@types/xul-window.d.ts",
       "npm:vite/client",
       "jsr:@types/gecko",
-      "./@types/css.d.ts"
+      "./@types/css.d.ts",
+      "./@types/nora-skin.d.ts"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "jsr:@nora/solid-xul"

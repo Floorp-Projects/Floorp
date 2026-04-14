@@ -126,7 +126,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // mapping. See https://github.com/Floorp-Projects/Floorp/issues/2343
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
     globalThis.SessionStore.promiseAllWindowsRestored.then(() => {
-      globalThis.gBrowser.addProgressListener(this.listener);
+      globalThis.gBrowser.addTabsProgressListener(this.listener);
       globalThis.gBrowser.tabContainer.addEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
@@ -134,7 +134,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     });
 
     onCleanup(() => {
-      globalThis.gBrowser.removeProgressListener(this.listener);
+      globalThis.gBrowser.removeTabsProgressListener(this.listener);
       globalThis.gBrowser.tabContainer.removeEventListener(
         "TabOpen",
         this.boundHandleTabOpen,

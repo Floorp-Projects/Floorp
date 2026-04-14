@@ -90,8 +90,8 @@ export class MultirowTabbarClass {
         const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
           Ci.nsIStyleSheetService,
         );
-        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET)) {
-          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET);
+        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET!)) {
+          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET!);
         }
         this.agentSheetUri = null;
       } catch (e) {
@@ -112,8 +112,8 @@ export class MultirowTabbarClass {
         const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
           Ci.nsIStyleSheetService,
         );
-        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET)) {
-          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET);
+        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET!)) {
+          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET!);
         }
       } catch (e) {
         console.error("Failed to unregister sheet:", e);
@@ -127,7 +127,7 @@ export class MultirowTabbarClass {
     this.agentSheetUri = makeURI(
       "data:text/css;charset=UTF=8," + encodeURIComponent(css),
     );
-    sss.loadAndRegisterSheet(this.agentSheetUri, sss.AGENT_SHEET);
+    sss.loadAndRegisterSheet(this.agentSheetUri, sss.AGENT_SHEET!);
   }
 
   private generateMaxRowsCSS(maxRowEnabled: boolean, maxRows: number): string {
@@ -162,8 +162,8 @@ export class MultirowTabbarClass {
         const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
           Ci.nsIStyleSheetService,
         );
-        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET)) {
-          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET);
+        if (sss.sheetRegistered(this.agentSheetUri, sss.AGENT_SHEET!)) {
+          sss.unregisterSheet(this.agentSheetUri, sss.AGENT_SHEET!);
         }
       } catch (e) {
         console.error("Failed to cleanup sheet:", e);

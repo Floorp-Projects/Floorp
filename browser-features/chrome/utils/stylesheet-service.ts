@@ -16,7 +16,7 @@ export namespace StyleSheetServiceUtils {
    */
   export function loadStyleSheetWith(styleSheetURL: string) {
     const uri = ios.newURI(styleSheetURL);
-    sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
+    sss.loadAndRegisterSheet(uri, sss.USER_SHEET!);
   }
 
   /**
@@ -25,7 +25,7 @@ export namespace StyleSheetServiceUtils {
    */
   export function checkStyleSheetLoaded(styleSheetURL: string): boolean {
     const uri = ios.newURI(styleSheetURL);
-    return sss.sheetRegistered(uri, sss.USER_SHEET);
+    return sss.sheetRegistered(uri, sss.USER_SHEET!);
   }
 
   /**
@@ -34,6 +34,6 @@ export namespace StyleSheetServiceUtils {
    */
   export function unloadStyleSheet(styleSheetURL: string) {
     const uri = ios.newURI(styleSheetURL);
-    sss.unregisterSheet(uri, sss.USER_SHEET);
+    sss.unregisterSheet(uri, sss.USER_SHEET!);
   }
 }

@@ -59,15 +59,18 @@ export function logTabpanelsSplitDeepInvestigation(phase: string): void {
       const bcEl = bc as HTMLElement;
       const br = bcEl.getBoundingClientRect();
       const cs = getComputedStyle(bc);
-      bcSnippet =
-        `browserContainer ${Math.round(br.width)}x${Math.round(br.height)} ` +
-        `disp=${cs.display} op=${cs.opacity} vis=${cs.visibility} ` +
-        `mozSub=${cs.getPropertyValue("-moz-subtree-hidden-only-visually")}`;
+      if (cs) {
+        bcSnippet =
+          `browserContainer ${Math.round(br.width)}x${Math.round(br.height)} ` +
+          `disp=${cs.display} op=${cs.opacity} vis=${cs.visibility} ` +
+          `mozSub=${cs.getPropertyValue("-moz-subtree-hidden-only-visually")}`;
+      }
     }
     const browsers = child.querySelectorAll("browser");
     const bits: string[] = [];
     browsers.forEach((b, i) => {
       const cs = getComputedStyle(b);
+      if (!cs) return;
       const br = (b as HTMLElement).getBoundingClientRect();
       const remote = (b as XULElement).getAttribute?.("remote") ?? "";
       bits.push(
@@ -94,7 +97,7 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
     `[${phase}] tabpanels attrs: splitview=${tp.hasAttribute("splitview")} ` +
       `data-floorp-split=${tp.getAttribute("data-floorp-split") ?? "null"} ` +
       `split-view-layout=${tp.getAttribute("split-view-layout") ?? "null"} ` +
-      `display=${tpStyle.display}`,
+      `display=${tpStyle?.display ?? "unknown"}`,
   );
 
   for (const child of tp.children) {
@@ -106,8 +109,9 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
     let browserSnippet = "no <browser>";
     if (browser) {
       const bs = getComputedStyle(browser);
-      browserSnippet =
-        `<browser> opacity=${bs.opacity} vis=${bs.visibility} mozSub=${bs.getPropertyValue("-moz-subtree-hidden-only-visually")}`;
+      if (bs) {
+        browserSnippet = `<browser> opacity=${bs.opacity} vis=${bs.visibility} mozSub=${bs.getPropertyValue("-moz-subtree-hidden-only-visually")}`;
+      }
     }
     diag.debug(
       `[${phase}] panel id=${child.id} column=${child.getAttribute("column") ?? "—"} ` +
@@ -115,8 +119,8 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
         `classes=[${[...child.classList].filter((c) => c.includes("split") || c === "deck-selected").join(", ") || "—"}] ` +
         `paneActive=${child.classList.contains("split-view-panel-active")} ` +
         `deck-selected=${child.classList.contains("deck-selected")} ` +
-        `mozSub=${st.getPropertyValue("-moz-subtree-hidden-only-visually")} ` +
-        `vis=${st.visibility} op=${st.opacity} | ${browserSnippet}`,
+        `mozSub=${st?.getPropertyValue("-moz-subtree-hidden-only-visually") ?? "unknown"} ` +
+        `vis=${st?.visibility ?? "unknown"} op=${st?.opacity ?? "unknown"} | ${browserSnippet}`,
     );
   }
 

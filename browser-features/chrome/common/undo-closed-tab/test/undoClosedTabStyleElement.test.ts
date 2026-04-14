@@ -13,7 +13,7 @@ import {
 /** Render StyleElement into a container and return the rendered CSS text content */
 function renderAndGetCss(): { css: string; cleanup: () => void } {
   const container = document.createElement("div");
-  document.head.appendChild(container);
+  document.head!.appendChild(container);
   render(() => StyleElement(), container);
   // SolidJS renders <style> inside the container
   const styleEl =

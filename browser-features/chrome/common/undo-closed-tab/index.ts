@@ -39,7 +39,11 @@ function triggerUndoClosedTabForActiveWindow(): void {
       BROWSER_WINDOW_TYPE,
     ) as Window | null;
 
-    SessionWindowUI.undoCloseTab(browserWindow);
+    (
+      globalThis as unknown as {
+        SessionWindowUI: { undoCloseTab: (w: Window | null) => void };
+      }
+    ).SessionWindowUI.undoCloseTab(browserWindow);
   } catch (error) {
     console.error("[undo-closed-tab] Failed to trigger undoCloseTab:", error);
   }

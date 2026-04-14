@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { BrowserActionUtils } from "@core/utils/browser-action";
+import { BrowserActionUtils } from "#features-chrome/utils/browser-action";
 import iconStyle from "./icon.css?inline";
 
 import type { TCustomizableUI } from "@types-gecko/CustomizableUI";

@@ -7,7 +7,10 @@ import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
 import type { TWorkspace, TWorkspaceID } from "./utils/type.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import ModalParent from "../modal-parent/index.ts";
-import type { TForm, TFormResult } from "@core/common/modal-parent/utils/type.ts";
+import type {
+  TForm,
+  TFormResult,
+} from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";

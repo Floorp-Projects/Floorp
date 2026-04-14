@@ -52,6 +52,7 @@ export class WorkspaceIcons {
   }
 
   constructor() {
+    // @ts-expect-error Vite-specific import.meta.glob with ?raw
     this.moduleStrings = import.meta.glob("../icons/*.svg", {
       query: "?raw",
       import: "default",

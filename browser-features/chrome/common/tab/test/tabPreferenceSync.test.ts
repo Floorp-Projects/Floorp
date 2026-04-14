@@ -9,6 +9,7 @@ import { createRoot } from "solid-js";
 import {
   assertEquals,
   runTests,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 function constructInSolidRoot(construct: () => void): void {

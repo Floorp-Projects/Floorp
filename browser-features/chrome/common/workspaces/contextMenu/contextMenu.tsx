@@ -20,7 +20,7 @@ const translationKeys = {
 const translate = (
   key: string,
   options?: Record<string, unknown>,
-): string => i18next.t(key, undefined, options) as string;
+): string => i18next.t(key, options) as string;
 
 const getTranslations = () => ({
   moveUp: translate(translationKeys.moveUp),

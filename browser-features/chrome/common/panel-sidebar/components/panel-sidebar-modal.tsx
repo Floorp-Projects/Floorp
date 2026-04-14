@@ -14,7 +14,7 @@ import type {
   TForm,
   TFormItem,
   TFormResult,
-} from "@core/common/modal-parent/utils/type.ts";
+} from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
