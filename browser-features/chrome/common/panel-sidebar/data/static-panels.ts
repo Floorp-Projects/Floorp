@@ -12,7 +12,6 @@ function svgToDataUrl(svgContent: string): string {
   return `data:image/svg+xml;base64,${btoa(binString)}`;
 }
 
-// @ts-expect-error Vite-specific import.meta.glob with ?raw
 const osIconRaw = import.meta.glob("../icons/os.svg", {
   query: "?raw",
   import: "default",
