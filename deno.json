@@ -5,9 +5,7 @@
   ],
   "workspace": [
     "./libs/*",
-    "./browser-features/chrome",
-    "./browser-features/modules",
-    "./browser-features/pages-*",
+    "./browser-features/*",
     "./bridge/*",
     "./i18n"
   ],
