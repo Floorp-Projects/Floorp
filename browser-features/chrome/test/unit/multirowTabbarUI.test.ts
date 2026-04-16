@@ -103,7 +103,7 @@ function testPinnedTabsDomOrder(): void {
   let firstUnpinnedIndex = -1;
 
   for (let i = 0; i < allTabs.length; i++) {
-    const isPinned = allTabs[i].hasAttribute("pinned");
+    const isPinned = (allTabs[i] as Element).hasAttribute("pinned");
     if (isPinned) {
       lastPinnedIndex = i;
     } else if (firstUnpinnedIndex === -1) {

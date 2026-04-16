@@ -64,7 +64,7 @@ export class SiteSpecificBrowserManager {
 
   onCommand() {
     this.installOrRunCurrentPageAsSsb(
-      globalThis.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser as Browser,
       true,
     );
   }
@@ -105,7 +105,7 @@ export class SiteSpecificBrowserManager {
 
       const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
 
-      if (ssbObj) {
+      if (ssbObj && globalThis.gBrowser.selectedBrowser.currentURI) {
         await this.runSsbByUrl(
           globalThis.gBrowser.selectedBrowser.currentURI.spec,
         );
@@ -252,7 +252,7 @@ export class SiteSpecificBrowserManager {
   }
 
   private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser;
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );

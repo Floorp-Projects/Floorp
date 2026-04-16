@@ -587,8 +587,10 @@ async function testLinkContextMenuHandlesRenderError(): Promise<void> {
 
   try {
     // Mock document.createXULElement to throw error
-    const originalCreateXULElement = (document as Record<string, unknown>).createXULElement;
-    (document as Record<string, unknown>).createXULElement = () => {
+    const originalCreateXULElement = (
+      document as unknown as Record<string, unknown>
+    ).createXULElement;
+    (document as unknown as Record<string, unknown>).createXULElement = () => {
       throw new Error("Test error");
     };
 
@@ -604,7 +606,8 @@ async function testLinkContextMenuHandlesRenderError(): Promise<void> {
     assert(!threw, "constructor should handle render error gracefully");
 
     // Restore original
-    (document as Record<string, unknown>).createXULElement = originalCreateXULElement;
+    (document as unknown as Record<string, unknown>).createXULElement =
+      originalCreateXULElement;
   } finally {
     cleanupDOM();
   }
@@ -761,7 +764,8 @@ async function testLinkContextMenuHandlesMissingGContextMenu(): Promise<void> {
 
   try {
     // Save original gContextMenu
-    const originalGContextMenu = (globalThis as Record<string, unknown>).gContextMenu;
+    const originalGContextMenu = (globalThis as Record<string, unknown>)
+      .gContextMenu;
 
     // Remove gContextMenu temporarily (non-configurable in Firefox, so set to undefined)
     (globalThis as Record<string, unknown>).gContextMenu = undefined;

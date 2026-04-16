@@ -31,6 +31,7 @@ export interface SplitViewWrapper {
 export interface MozTabpanels extends XULElement {
   splitViewPanels: string[];
   isSplitViewActive: XULElement | null;
+  setSplitViewActive(value: boolean): void;
 }
 
 /** gBrowser subset used by split-view code. */
@@ -45,10 +46,7 @@ export interface SplitViewGBrowser {
   activeSplitView: SplitViewWrapper | null;
   showSplitViewPanels(tabs: SplitViewTab[]): void;
   moveTabBefore(tab: SplitViewTab, beforeTab: SplitViewTab | null): void;
-  moveTabToSplitView(
-    tab: SplitViewTab,
-    wrapper: SplitViewWrapper | null,
-  ): void;
+  moveTabToSplitView(tab: SplitViewTab, wrapper: SplitViewWrapper | null): void;
   addTrustedTab(url: string): SplitViewTab;
   /** Create a split view wrapper, move tabs into it, and activate. */
   addTabSplitView(

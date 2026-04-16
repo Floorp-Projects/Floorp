@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import {
-  assert,
-  assertEquals,
-  runTests,
-} from "../utils/test_harness.ts";
+import { assert, assertEquals, runTests } from "../utils/test_harness.ts";
 
 /** Skip test if gBrowser is not available (e.g., in unit test environment) */
 function requireGBrowser(): boolean {
@@ -19,12 +15,13 @@ function requireGBrowser(): boolean {
 function testGBrowserTabsExists(): void {
   if (!requireGBrowser()) return;
   assert(gBrowser !== undefined, "gBrowser should be defined");
+  const tabs = gBrowser.tabs;
   assert(
-    Array.isArray(gBrowser.tabs) || gBrowser.tabs?.length !== undefined,
+    Array.isArray(tabs) || (tabs as XULElement[])?.length !== undefined,
     "gBrowser.tabs should be array-like",
   );
   assert(
-    gBrowser.tabs.length > 0,
+    (tabs as XULElement[]).length > 0,
     "gBrowser.tabs should have at least one tab",
   );
 }

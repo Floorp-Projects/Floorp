@@ -225,7 +225,9 @@ export class WorkspacesTabManager {
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const isCurrentWorkspace = workspaceId === currentWorkspaceId;
     const allTabs = globalThis.gBrowser.tabs as XULElement[];
-    const resolveWorkspaceIdForClose = (targetTab: XULElement): TWorkspaceID => {
+    const resolveWorkspaceIdForClose = (
+      targetTab: XULElement,
+    ): TWorkspaceID => {
       return this.getWorkspaceIdFromAttribute(targetTab) ?? currentWorkspaceId;
     };
     const workspaceTabs = allTabs.filter((t) => {
@@ -744,7 +746,10 @@ export class WorkspacesTabManager {
    * @returns The target toolbar item.
    */
   private get targetToolbarItem(): XULElement | undefined | null {
-    return document?.querySelector("#workspaces-toolbar-button");
+    return document?.querySelector("#workspaces-toolbar-button") as
+      | XULElement
+      | null
+      | undefined;
   }
 
   /**
@@ -755,7 +760,10 @@ export class WorkspacesTabManager {
     | PanelMultiViewParentElement
     | undefined
     | null {
-    return document?.querySelector("#customizationui-widget-panel");
+    return document?.querySelector("#customizationui-widget-panel") as
+      | PanelMultiViewParentElement
+      | null
+      | undefined;
   }
 
   private getMaybeSelectedWorkspacebyVisibleTabs(): TWorkspaceID | null {

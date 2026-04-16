@@ -35,12 +35,12 @@ function splitTabsForActiveIndicator(
     return wrapper.tabs;
   }
   const hasFloorpSplitAttr = Boolean(
-    document?.getElementById("tabbrowser-tabpanels")?.hasAttribute(
-      "data-floorp-split",
-    ),
+    document
+      ?.getElementById("tabbrowser-tabpanels")
+      ?.hasAttribute("data-floorp-split"),
   );
   const ids = gBrowser.tabpanels?.splitViewPanels;
-  if (!hasLiveSplitPanelsState(ids?.length ?? 0, hasFloorpSplitAttr)) {
+  if (!hasLiveSplitPanelsState(ids?.length ?? 0, hasFloorpSplitAttr) || !ids) {
     return null;
   }
   const tabs: SplitViewTab[] = [];
@@ -61,9 +61,9 @@ function splitTabsForActiveIndicator(
 
 function isMultiPaneSplitUiActive(gBrowser: SplitViewGBrowser): boolean {
   const hasFloorpSplitAttr = Boolean(
-    document?.getElementById("tabbrowser-tabpanels")?.hasAttribute(
-      "data-floorp-split",
-    ),
+    document
+      ?.getElementById("tabbrowser-tabpanels")
+      ?.hasAttribute("data-floorp-split"),
   );
   return (
     !!gBrowser.activeSplitView ||
@@ -186,14 +186,10 @@ function detachSplitPanelClassObserver(): void {
 }
 
 function clearActivePaneIndicator(): void {
-  const tabpanels = document?.getElementById(
-    "tabbrowser-tabpanels",
-  );
+  const tabpanels = document?.getElementById("tabbrowser-tabpanels");
   if (!tabpanels) return;
 
-  for (const el of tabpanels.querySelectorAll(
-    "[data-floorp-active-pane]",
-  )) {
+  for (const el of tabpanels.querySelectorAll("[data-floorp-active-pane]")) {
     el.removeAttribute("data-floorp-active-pane");
   }
 }
@@ -223,9 +219,7 @@ export function ensureSplitPanelsActiveClassFromState(): void {
     const child = root.querySelector(`#${CSS.escape(id)}`);
     if (!child) {
       missingEl++;
-      log.debug(
-        `[ensureActiveClass] no DOM node for splitViewPanels id=${id}`,
-      );
+      log.debug(`[ensureActiveClass] no DOM node for splitViewPanels id=${id}`);
       continue;
     }
     if (!child.classList.contains("split-view-panel")) {
@@ -288,9 +282,7 @@ export function refreshActiveSplitPaneIndicator(): void {
 /**
  * Tracks split view selection changes and keeps pane presentation state in sync.
  */
-export function initActivePaneTracker(
-  logger: ConsoleInstance,
-): void {
+export function initActivePaneTracker(logger: ConsoleInstance): void {
   const tabContainer = getGBrowser()?.tabContainer;
   if (!tabContainer) return;
 
@@ -339,10 +331,7 @@ export function initActivePaneTracker(
     "TabSplitViewActivate",
     scheduleAfterSplitActivate,
   );
-  tabContainer.addEventListener(
-    "TabSplitViewDeactivate",
-    onDeactivate,
-  );
+  tabContainer.addEventListener("TabSplitViewDeactivate", onDeactivate);
 
   const tp = getGBrowser()?.tabpanels as HTMLElement | null | undefined;
   if (tp) {
@@ -356,13 +345,8 @@ export function initActivePaneTracker(
       "TabSplitViewActivate",
       scheduleAfterSplitActivate,
     );
-    tabContainer.removeEventListener(
-      "TabSplitViewDeactivate",
-      onDeactivate,
-    );
+    tabContainer.removeEventListener("TabSplitViewDeactivate", onDeactivate);
   });
 
-  logger.debug(
-    "[active-pane-tracker] listeners attached",
-  );
+  logger.debug("[active-pane-tracker] listeners attached");
 }

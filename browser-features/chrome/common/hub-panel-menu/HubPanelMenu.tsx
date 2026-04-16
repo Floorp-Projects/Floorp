@@ -67,8 +67,8 @@ export class HubPanelMenu {
     if (!this.parentElement) return;
 
     this.isRendered = true;
-    render(() => <HubPanelMenu.Render />, this.parentElement, {
-      marker: this.beforeElement,
+    render(() => <HubPanelMenu.Render />, this.parentElement ?? undefined, {
+      marker: this.beforeElement ?? undefined,
     });
   }
 

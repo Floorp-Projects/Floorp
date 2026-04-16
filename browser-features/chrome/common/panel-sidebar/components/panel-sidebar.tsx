@@ -48,7 +48,7 @@ export class CPanelSidebar {
         // Only clear selection marker from sidebar panels (not workspaces).
         const currentCheckedPanels = Array.from(
           document?.querySelectorAll(
-            '.panel-sidebar-panel[data-checked][data-panel-id]',
+            ".panel-sidebar-panel[data-checked][data-panel-id]",
           ) ?? [],
         );
         // Use forEach instead of map to avoid type error
@@ -236,12 +236,13 @@ export class CPanelSidebar {
   }
 
   public openInMainWindow(panelId: string) {
-    const url = this.getPanelData(panelId)?.url;
-    const userContextId = this.getPanelData(panelId)?.userContextId;
+    const url = this.getPanelData(panelId)?.url ?? "";
+    const userContextId = this.getPanelData(panelId)?.userContextId ??
+      undefined;
     globalThis.gBrowser.addTab(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       inBackground: false,
-      userContextId: userContextId
+      userContextId: userContextId,
     });
   }
 

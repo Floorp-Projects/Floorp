@@ -5,9 +5,7 @@
 
 import type { SplitViewLayout, SplitViewTab } from "../data/types.js";
 import { getGBrowser } from "../data/types.js";
-import {
-  clearSplitHandles,
-} from "../components/split-view-splitters.js";
+import { clearSplitHandles } from "../components/split-view-splitters.js";
 import { clearGridStyles } from "../layout.js";
 import type { PatchState } from "./patch-state.js";
 import {
@@ -42,9 +40,7 @@ export function patchTabpanels(
 ): TabpanelsPatchResult | null {
   const gBrowser = getGBrowser();
   if (!gBrowser?.tabpanels) {
-    logger.warn(
-      "[patch] gBrowser.tabpanels not available, skipping patch",
-    );
+    logger.warn("[patch] gBrowser.tabpanels not available, skipping patch");
     return null;
   }
 
@@ -54,9 +50,7 @@ export function patchTabpanels(
   // --- Track originals for unpatch ---
   let patchedSplitViewPanels = false;
   let patchedIsSplitViewActive = false;
-  let origShowSplitViewPanels:
-    | ((tabs: SplitViewTab[]) => void)
-    | null = null;
+  let origShowSplitViewPanels: ((tabs: SplitViewTab[]) => void) | null = null;
 
   // --- Patch splitViewPanels setter ---
   const origPanelsDesc = Object.getOwnPropertyDescriptor(
@@ -104,9 +98,7 @@ export function patchTabpanels(
         for (const child of tabpanelsEl.children) {
           const childId = child.id;
           if (currentPanelSet.has(childId)) {
-            if (
-              !child.classList.contains("split-view-panel-active")
-            ) {
+            if (!child.classList.contains("split-view-panel-active")) {
               child.classList.add("split-view-panel-active");
             }
           } else {
@@ -117,9 +109,7 @@ export function patchTabpanels(
                 `[patch:splitViewPanels.set] cleaned stale .split-view-panel from ${childId}`,
               );
             }
-            if (
-              child.classList.contains("split-view-panel-active")
-            ) {
+            if (child.classList.contains("split-view-panel-active")) {
               child.classList.remove("split-view-panel-active");
             }
           }
@@ -152,8 +142,7 @@ export function patchTabpanels(
         if (newPanels.length >= 2) {
           this.setAttribute("data-floorp-split", "true");
           // Ensure multibar is set for Lepton theme compatibility
-          const tabsToolbar =
-            document?.getElementById("TabsToolbar");
+          const tabsToolbar = document?.getElementById("TabsToolbar");
           if (tabsToolbar) {
             if (!tabsToolbar.hasAttribute("multibar")) {
               tabsToolbar.setAttribute("multibar", "true");
@@ -165,8 +154,7 @@ export function patchTabpanels(
           onPanelsChanged(newPanels, layout);
         } else {
           // Split view panels cleared — clean up splitview-multibar
-          const tabsToolbar =
-            document?.getElementById("TabsToolbar");
+          const tabsToolbar = document?.getElementById("TabsToolbar");
           if (tabsToolbar) {
             tabsToolbar.removeAttribute("splitview-multibar");
             if (state.multibarSetBySplitView) {
@@ -184,9 +172,7 @@ export function patchTabpanels(
     });
     logger.debug("[patch] splitViewPanels setter/getter patched");
   } else {
-    logger.warn(
-      "[patch] splitViewPanels descriptor not found on prototype",
-    );
+    logger.warn("[patch] splitViewPanels descriptor not found on prototype");
   }
 
   // --- Patch setSplitViewActive method ---
@@ -218,9 +204,7 @@ export function patchTabpanels(
       try {
         origSetSplitViewActive.call(this, updatedValue);
       } catch (e) {
-        logger.error(
-          `[patch:setSplitViewActive] original threw: ${e}`,
-        );
+        logger.error(`[patch:setSplitViewActive] original threw: ${e}`);
       }
 
       const tabsToolbar = document?.getElementById("TabsToolbar");
@@ -276,15 +260,12 @@ export function patchTabpanels(
     };
     logger.debug("[patch] setSplitViewActive method patched");
   } else {
-    logger.warn(
-      "[patch] setSplitViewActive method not found on prototype",
-    );
+    logger.warn("[patch] setSplitViewActive method not found on prototype");
   }
 
   // --- Patch showSplitViewPanels ---
   if (typeof gBrowser.showSplitViewPanels === "function") {
-    origShowSplitViewPanels =
-      gBrowser.showSplitViewPanels.bind(gBrowser);
+    origShowSplitViewPanels = gBrowser.showSplitViewPanels.bind(gBrowser);
     gBrowser.showSplitViewPanels = (tabs: SplitViewTab[]) => {
       if (state.inShowSplitViewPanels) {
         logger.warn(
@@ -306,11 +287,7 @@ export function patchTabpanels(
         if (domTabs.length === tabs.length && domTabs.length >= 2) {
           const passedSet = new Set(tabs);
           if (domTabs.every((t: SplitViewTab) => passedSet.has(t))) {
-            if (
-              domTabs.some(
-                (t: SplitViewTab, i: number) => t !== tabs[i],
-              )
-            ) {
+            if (domTabs.some((t: SplitViewTab, i: number) => t !== tabs[i])) {
               logger.debug(
                 `[patch:showSplitViewPanels] corrected stale tab order to DOM order: ` +
                   `passed=[${tabs.map((t) => t.linkedPanel).join(", ")}] ` +
@@ -332,7 +309,10 @@ export function patchTabpanels(
         );
       }
       const inputDetail = tabs
-        .map((t, i) => `[${i}]=${t?.linkedPanel ?? "null"}:${t?.label?.slice(0, 24) ?? ""}`)
+        .map(
+          (t, i) =>
+            `[${i}]=${t?.linkedPanel ?? "null"}:${t?.label?.slice(0, 24) ?? ""}`,
+        )
         .join(" ");
       logger.debug(
         `[patch:showSplitViewPanels] validTabs=${validTabs.length}/${tabs.length} input: ${inputDetail}`,
@@ -382,9 +362,7 @@ export function patchTabpanels(
           requestAnimationFrame(() => bumpSplitViewUi("rAF2"));
         });
       } catch (e) {
-        logger.error(
-          `[patch:showSplitViewPanels] original threw: ${e}`,
-        );
+        logger.error(`[patch:showSplitViewPanels] original threw: ${e}`);
       } finally {
         state.inShowSplitViewPanels = false;
       }
@@ -404,15 +382,13 @@ export function patchTabpanels(
       const tabpanels = gBrowser.tabpanels;
 
       if (patchedSplitViewPanels) {
-        delete (
-          tabpanels as unknown as Record<string, unknown>
-        ).splitViewPanels;
+        delete (tabpanels as unknown as Record<string, unknown>)
+          .splitViewPanels;
       }
       if (patchedIsSplitViewActive) {
         // Restore the original prototype method by removing the instance override
-        delete (
-          tabpanels as unknown as Record<string, unknown>
-        ).setSplitViewActive;
+        delete (tabpanels as unknown as Record<string, unknown>)
+          .setSplitViewActive;
       }
       if (origShowSplitViewPanels) {
         gBrowser.showSplitViewPanels = origShowSplitViewPanels;

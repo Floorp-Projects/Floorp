@@ -68,7 +68,7 @@ export function logTabpanelsSplitDeepInvestigation(phase: string): void {
     }
     const browsers = child.querySelectorAll("browser");
     const bits: string[] = [];
-    browsers.forEach((b, i) => {
+    browsers.forEach((b: Element, i: number) => {
       const cs = getComputedStyle(b);
       if (!cs) return;
       const br = (b as HTMLElement).getBoundingClientRect();
@@ -116,7 +116,7 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
     diag.debug(
       `[${phase}] panel id=${child.id} column=${child.getAttribute("column") ?? "—"} ` +
         `floorpActive=${child.hasAttribute("data-floorp-active-pane")} ` +
-        `classes=[${[...child.classList].filter((c) => c.includes("split") || c === "deck-selected").join(", ") || "—"}] ` +
+        `classes=[${[...child.classList].filter((c: string | null) => c?.includes("split") || c === "deck-selected").join(", ") || "—"}]` +
         `paneActive=${child.classList.contains("split-view-panel-active")} ` +
         `deck-selected=${child.classList.contains("deck-selected")} ` +
         `mozSub=${st?.getPropertyValue("-moz-subtree-hidden-only-visually") ?? "unknown"} ` +

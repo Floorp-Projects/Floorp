@@ -40,7 +40,7 @@ function getDefaultStore() {
       : ("00000000-0000-0000-0000-000000000000" as TWorkspaceID);
     return {
       defaultID: stubID,
-      data: new Map(),
+      data: new Map() as unknown as TWorkspacesStoreData["data"],
       order: [],
     } satisfies TWorkspacesStoreData;
   }
@@ -72,7 +72,10 @@ function createWorkspacesData(): [
     );
     if (isRight(result)) {
       const _storedData = result.right;
-      setWorkspacesDataStore("data", _storedData.data);
+      setWorkspacesDataStore(
+        "data",
+        _storedData.data as unknown as TWorkspacesStoreData["data"],
+      );
       setWorkspacesDataStore("defaultID", _storedData.defaultID);
       setWorkspacesDataStore("order", _storedData.order);
     }

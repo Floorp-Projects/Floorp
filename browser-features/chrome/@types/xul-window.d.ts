@@ -24,6 +24,8 @@ interface GBrowser {
       inBackground?: boolean;
       userContextId?: number;
       triggeringPrincipal?: unknown;
+      pinned?: boolean;
+      index?: number;
     },
   ): XULElement;
   addTrustedTab(
@@ -35,6 +37,7 @@ interface GBrowser {
       triggeringPrincipal?: unknown;
       noInitialLabel?: boolean;
       nextTo?: XULElement;
+      relatedToCurrent?: boolean;
     },
   ): XULElement;
   removeTab(tab: XULElement): void;
@@ -43,13 +46,16 @@ interface GBrowser {
   getBrowserForTab(tab: XULElement): {
     currentURI?: { spec: string; scheme?: string; host?: string };
     contentPrincipal?: unknown;
-    loadURI: (url: string, options?: { triggeringPrincipal?: unknown }) => void;
+    loadURI: (
+      url: string,
+      options?: { triggeringPrincipal?: unknown; loadFlags?: number },
+    ) => void;
   };
   pinTab(tab: XULElement): void;
   tabGroups: Array<{ tabs: XULElement[]; style: { display: string } }>;
   tabContainer: EventTarget;
   selectedBrowser: {
-    currentURI?: { spec: string };
+    currentURI?: nsIURI;
     contentPrincipal?: unknown;
   };
   currentURI?: { spec: string };
@@ -85,7 +91,11 @@ interface GFloorp {
 }
 
 interface CustomizableUI {
-  TYPE_TOOLBAR: string;
+  TYPE_TOOLBAR: "toolbar";
+  AREA_NAVBAR: "nav-bar";
+  AREA_BOOKMARKS: "PersonalToolbar";
+  AREA_TABSTRIP: "TabsToolbar";
+  AREA_MENUBAR: "toolbar-menubar";
   registerArea(
     name: string,
     config: { type: string; defaultPlacements: string[] },
@@ -93,6 +103,14 @@ interface CustomizableUI {
   unregisterArea(name: string, arg2?: boolean): void;
   registerToolbarNode(node: Element): void;
 }
+
+/** Known CustomizableUI area identifiers. Extensible via `string & {}` for custom areas. */
+type TCustomizableUIArea =
+  | "nav-bar"
+  | "PersonalToolbar"
+  | "TabsToolbar"
+  | "toolbar-menubar"
+  | (string & Record<PropertyKey, never>);
 
 // Gecko globals
 declare var gBrowser: GBrowser;
@@ -169,7 +187,7 @@ declare namespace globalThis {
   };
 
   // Floorp-specific chrome globals
-  var gFloorpPageAction: unknown;
+  var gFloorpPageAction: Record<string, unknown>;
   var gFloorpPrivateContainer: unknown;
   var gFloorpPanelSidebarCurrentPanel: unknown;
   var gFloorpPanelSidebar: unknown;
@@ -180,12 +198,12 @@ declare namespace globalThis {
 
   // Gecko utility globals
   var openUILinkIn: (
-    url: string,
+    url: string | nsIURI,
     where: string,
     params?: Record<string, unknown>,
   ) => void;
   var openTrustedLinkIn: (
-    url: string,
+    url: string | nsIURI,
     where: string,
     params?: Record<string, unknown>,
   ) => void;

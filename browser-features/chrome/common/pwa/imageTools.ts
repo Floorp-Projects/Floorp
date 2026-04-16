@@ -108,7 +108,7 @@ export const ImageTools = {
             "",
           );
         }
-      } catch (_e) {
+      } catch {
         // スケール時に失敗した場合はフォールバック（サイズそのまま）
         try {
           stream = ImgTools.encodeImage(container, "image/png", "");
@@ -126,7 +126,7 @@ export const ImageTools = {
         reject(
           Components.Exception(
             "imgIEncoder must implement nsIAsyncInputStream",
-            e,
+            e as number,
           ),
         );
       }
@@ -169,8 +169,8 @@ export const ImageTools = {
           0,
           Services.tm.mainThread,
         );
-      } catch (_e) {
-        reject(_e);
+      } catch (e) {
+        reject(e);
       }
     });
   },
@@ -207,7 +207,7 @@ export const ImageTools = {
             "",
           );
         }
-      } catch (_e) {
+      } catch {
         try {
           stream = ImgTools.encodeImage(workingContainer, format, "");
         } catch (e2) {

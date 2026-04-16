@@ -4,7 +4,7 @@
 import { assert, assertEquals, type TestCase } from "../utils/test_harness.ts";
 
 function isVisible(el: Element): boolean {
-  const style = globalThis.getComputedStyle(el);
+  const style = globalThis.getComputedStyle(el)!;
   if (style.display === "none") return false;
   const rect = el.getBoundingClientRect();
   return rect.height > 0;

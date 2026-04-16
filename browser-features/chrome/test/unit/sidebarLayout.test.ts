@@ -45,7 +45,7 @@ function testPanelSidebarBoxGraceful(): void {
   // This element may or may not exist depending on Floorp configuration
   if (panelSidebarBox !== null) {
     const rect = panelSidebarBox.getBoundingClientRect();
-    const style = globalThis.getComputedStyle(panelSidebarBox);
+    const style = globalThis.getComputedStyle(panelSidebarBox)!;
     // Either has width or has a display value set
     assert(
       rect.width > 0 || style.display !== "",

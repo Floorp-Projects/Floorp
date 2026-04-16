@@ -314,8 +314,10 @@ async function testTabContextMenuHandlesRenderError(): Promise<void> {
 
   try {
     // Mock document.createXULElement to throw error
-    const originalCreateXULElement = (document as Record<string, unknown>).createXULElement;
-    (document as Record<string, unknown>).createXULElement = () => {
+    const originalCreateXULElement = (
+      document as unknown as Record<string, unknown>
+    ).createXULElement;
+    (document as unknown as Record<string, unknown>).createXULElement = () => {
       throw new Error("Test error");
     };
 
@@ -331,7 +333,8 @@ async function testTabContextMenuHandlesRenderError(): Promise<void> {
     assert(!threw, "constructor should handle render error gracefully");
 
     // Restore original
-    (document as Record<string, unknown>).createXULElement = originalCreateXULElement;
+    (document as unknown as Record<string, unknown>).createXULElement =
+      originalCreateXULElement;
   } finally {
     cleanupDOM();
   }

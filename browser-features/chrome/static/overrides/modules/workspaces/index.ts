@@ -42,13 +42,18 @@ export const overrides = [
         const opentabsTab = gBrowser.tabs.find((t: any) => {
           try {
             return t.linkedBrowser?.currentURI?.spec === "about:opentabs";
-          } catch { return false; }
+          } catch {
+            return false;
+          }
         });
         if (opentabsTab && opentabsTab !== gBrowser.selectedTab) {
           // Navigate the opentabs tab itself to about:newtab
-          console.debug("Workspaces: redirecting about:opentabs pane to about:newtab");
+          console.debug(
+            "Workspaces: redirecting about:opentabs pane to about:newtab",
+          );
           opentabsTab.linkedBrowser.fixupAndLoadURIString("about:newtab", {
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
           return;
         }
@@ -58,7 +63,9 @@ export const overrides = [
           return originalOpenTrustedLinkIn.call(this, url, where, options);
         }
         // Fallback: block redirect to protect the selected tab
-        console.debug("Workspaces: blocked about:newtab redirect in split view context");
+        console.debug(
+          "Workspaces: blocked about:newtab redirect in split view context",
+        );
         return;
       }
 
@@ -261,13 +268,15 @@ export const overrides = [
             if (!werePassedURL && searchClipboard) {
               let clipboard = globalThis.readFromClipboard();
               clipboard =
-                globalThis.UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
+                globalThis.UrlbarUtils.stripUnsafeProtocolOnPaste(
+                  clipboard,
+                ).trim();
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;
               }
             }
-            globalThis.openTrustedLinkIn(url, where, options);
+            globalThis.openTrustedLinkIn(url!, where, options);
           }),
         },
         "browser-open-newtab-start",

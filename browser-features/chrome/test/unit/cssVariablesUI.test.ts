@@ -8,7 +8,7 @@ import { assert, runTests } from "../utils/test_harness.ts";
 // ---------------------------------------------------------------------------
 
 function getRootComputedStyle(): CSSStyleDeclaration {
-  return globalThis.getComputedStyle(document.documentElement);
+  return globalThis.getComputedStyle(document.documentElement!)!;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ function testArrowpanelBgColorVariable(): void {
 // ---------------------------------------------------------------------------
 
 function testZenModeToolboxHeightVariable(): void {
-  const isZenMode = document.documentElement.hasAttribute("zenmode");
+  const isZenMode = document.documentElement!.hasAttribute("zenmode");
   if (!isZenMode) return; // zen mode not active — skip
 
   const style = getRootComputedStyle();
@@ -78,6 +78,7 @@ function testPanelSidebarDisplayVariable(): void {
   if (!sidebarBox) return; // sidebar not present — skip
 
   const style = globalThis.getComputedStyle(sidebarBox);
+  if (!style) return;
   const value = style.getPropertyValue("--panel-sidebar-display");
   // The variable controls sidebar visibility; it should be readable
   assert(
@@ -96,7 +97,7 @@ function testComputedStyleOnNavBar(): void {
 
   let threw = false;
   try {
-    const style = globalThis.getComputedStyle(navBar);
+    const style = globalThis.getComputedStyle(navBar)!;
     // Access a known property to ensure style resolution works
     style.getPropertyValue("background-color");
   } catch {
@@ -111,7 +112,7 @@ function testComputedStyleOnTabsToolbar(): void {
 
   let threw = false;
   try {
-    const style = globalThis.getComputedStyle(toolbar);
+    const style = globalThis.getComputedStyle(toolbar)!;
     style.getPropertyValue("height");
   } catch {
     threw = true;

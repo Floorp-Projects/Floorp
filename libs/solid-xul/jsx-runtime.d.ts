@@ -2,11 +2,37 @@
 
 import type { JSX as SolidJSX } from "solid-js";
 
+declare module "solid-js" {
+  namespace JSX {
+    interface StyleHTMLAttributes<T> {
+      jsx?: boolean;
+      global?: boolean;
+    }
+  }
+}
+
 export namespace JSX {
-  type XULElementBase = SolidJSX.HTMLAttributes<HTMLElement> & {
+  type XULElementBase = Omit<
+    SolidJSX.HTMLAttributes<HTMLElement>,
+    | "onmouseover"
+    | "onmouseout"
+    | "oncontextmenu"
+    | "ondragstart"
+    | "onkeydown"
+    | "onclick"
+  > & {
     flex?: `${number}`;
     "data-l10n-id"?: string;
     align?: "center";
+    crop?: string;
+    context?: string;
+    // XUL string event handlers (XUL evaluates string attributes as JS)
+    onmouseover?: string | ((e: Event) => void);
+    onmouseout?: string | ((e: Event) => void);
+    oncontextmenu?: string | ((e: Event) => void);
+    ondragstart?: string | ((e: DragEvent) => void);
+    onkeydown?: string | ((e: KeyboardEvent) => void);
+    onclick?: string | ((e: MouseEvent) => void);
   };
   interface XULBrowserElement extends XULElementBase {
     contextmenu?: string;
@@ -46,6 +72,7 @@ export namespace JSX {
     type?: "checkbox";
     checked?: boolean;
     disabled?: boolean;
+    command?: string;
     oncommand?: string;
     onCommand?: () => void;
     value?: string;
@@ -97,11 +124,15 @@ export namespace JSX {
     orient?: "horizontal" | "vertical";
     popup?: string;
     clicktoscroll?: boolean;
+    disablekeynav?: string;
+    type?: string;
+    mainViewId?: string;
   }
 
   interface XULToolbarButtonElement extends XULElementBase {
     label?: string;
     accesskey?: string;
+    command?: string;
     oncommand?: string;
     onCommand?: () => void;
     context?: string;
@@ -126,8 +157,7 @@ export namespace JSX {
   }
 
   interface XULTabElement
-    extends XULElementBase,
-      SolidJSX.HTMLAttributes<HTMLElement> {
+    extends XULElementBase, SolidJSX.HTMLAttributes<HTMLElement> {
     onwheel?: SolidJSX.EventHandlerUnion<HTMLElement, WheelEvent>;
   }
 
@@ -165,7 +195,7 @@ export namespace JSX {
       mode?: string;
       context?: string;
       accesskey?: string;
-      style?: string;
+      style?: string | Record<string, string>;
       class?: string;
       children: Element;
     };
@@ -213,6 +243,15 @@ export namespace JSX {
     linkset: XULElementBase;
     toolbarseparator: XULElementBase;
     richlistbox: XULElementBase;
+    // HTML elements used in XUL context with XUL-specific attributes
+    button: Omit<
+      SolidJSX.ButtonHTMLAttributes<HTMLButtonElement>,
+      "oncommand"
+    > & {
+      oncommand?: string;
+      pack?: string;
+      flex?: `${number}`;
+    };
   }
 
   interface Directives {
