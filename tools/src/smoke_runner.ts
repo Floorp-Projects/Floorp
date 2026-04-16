@@ -68,6 +68,7 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
       args: [
         "check",
         "--sloppy-imports",
+        "--reload",
         "tools",
         "i18n",
         "libs",
