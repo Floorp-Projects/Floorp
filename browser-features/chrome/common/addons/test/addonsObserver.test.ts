@@ -118,6 +118,27 @@ function cleanupWindowGlobals(): void {
   delete (window as Record<string, unknown>).gXPInstallObserver;
 }
 
+/** Clean up the global addons context to prevent state leakage between tests */
+function cleanupGlobalContext(): void {
+  try {
+    const global = Cu.getGlobalForObject(Services) as Record<string, unknown>;
+    delete global.__floorpAddonsContext;
+  } catch {
+    // Cu may not be available in all contexts
+  }
+}
+
+/**
+ * Reliable async wait helper for tests.
+ * Uses setTimeout instead of requestAnimationFrame because rAF may not fire
+ * in CI environments (background tabs, Xvfb, etc.).
+ */
+function waitForAsync(ms = 50): Promise<void> {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests: getChromeWebStoreInstallInfo / clearChromeWebStoreInstallInfo
 // ---------------------------------------------------------------------------
@@ -613,30 +634,26 @@ async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
   observer.observe(null, "webextension-permission-prompt", null);
 
   // Wait for any async updates to complete
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Verify customization happened
-        const notification = document!.getElementById(
-          "addon-webext-permissions-notification",
-        );
-        const _message = notification?.querySelector(
-          ".chrome-web-store-message",
-        );
-        // The observer may or may not customize the prompt depending on
-        // whether the CWS info is available and the DOM structure matches.
-        // We just verify the observer didn't throw.
-        assert(
-          notification !== null,
-          "permission notification should exist in DOM",
-        );
+  // Use setTimeout instead of rAF for CI reliability
+  await waitForAsync(100);
 
-        removeCWSObserver(observer);
-        cleanupDOM();
-        resolve();
-      });
-    });
-  });
+  // Verify customization happened
+  const notification = document!.getElementById(
+    "addon-webext-permissions-notification",
+  );
+  const _message = notification?.querySelector(
+    ".chrome-web-store-message",
+  );
+  // The observer may or may not customize the prompt depending on
+  // whether the CWS info is available and the DOM structure matches.
+  // We just verify the observer didn't throw.
+  assert(
+    notification !== null,
+    "permission notification should exist in DOM",
+  );
+
+  removeCWSObserver(observer);
+  cleanupDOM();
 }
 
 async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void> {
@@ -666,25 +683,22 @@ async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void>
   // Trigger the permission prompt topic
   observer.observe(null, "webextension-permission-prompt", null);
 
-  // Wait for requestAnimationFrame to complete
-  await new Promise<void>((resolve) => {
-    setTimeout(() => {
-      // Verify cleanup happened (CWS message removed)
-      const notification = document!.getElementById(
-        "addon-webext-permissions-notification",
-      );
-      const message = notification?.querySelector(".chrome-web-store-message");
-      assertEquals(
-        message,
-        null,
-        "should clean up CWS elements when no CWS info",
-      );
+  // Wait for async cleanup to complete
+  await waitForAsync(150);
 
-      removeCWSObserver(observer);
-      cleanupDOM();
-      resolve();
-    }, 100);
-  });
+  // Verify cleanup happened (CWS message removed)
+  const notificationEl = document!.getElementById(
+    "addon-webext-permissions-notification",
+  );
+  const message = notificationEl?.querySelector(".chrome-web-store-message");
+  assertEquals(
+    message,
+    null,
+    "should clean up CWS elements when no CWS info",
+  );
+
+  removeCWSObserver(observer);
+  cleanupDOM();
 }
 
 // ---------------------------------------------------------------------------
@@ -792,32 +806,46 @@ function testMultipleObserverCreationReturnsSameInstance(): void {
 // ---------------------------------------------------------------------------
 
 async function testAddonsClassStructure(): Promise<void> {
-  const { default: Addons } = await import("../index.ts");
+  cleanupDOM();
+  cleanupWindowGlobals();
+  cleanupGlobalContext();
 
-  // Test that Addons extends NoraComponentBase by checking it has the required structure
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
 
-  assert(
-    addonsInstance !== null && typeof addonsInstance === "object",
-    "should create instance",
-  );
-  assert(typeof addonsInstance.init === "function", "should have init method");
-  assert(
-    typeof (addonsInstance as unknown as { cleanup: unknown }).cleanup ===
-      "function",
-    "should have cleanup method",
-  );
-  assert(
-    (addonsInstance as unknown as { logger: unknown }).logger !== null &&
-      typeof (addonsInstance as unknown as { logger: unknown }).logger ===
-        "object",
-    "should have logger from NoraComponentBase",
-  );
+    // Test that Addons extends NoraComponentBase by checking it has the required structure
+    const addonsInstance = new Addons();
+
+    assert(
+      addonsInstance !== null && typeof addonsInstance === "object",
+      "should create instance",
+    );
+    assert(typeof addonsInstance.init === "function", "should have init method");
+    assert(
+      typeof (addonsInstance as unknown as { cleanup: unknown }).cleanup ===
+        "function",
+      "should have cleanup method",
+    );
+    assert(
+      (addonsInstance as unknown as { logger: unknown }).logger !== null &&
+        typeof (addonsInstance as unknown as { logger: unknown }).logger ===
+          "object",
+      "should have logger from NoraComponentBase",
+    );
+
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+  }
 }
 
 async function testAddonsInitDocumentReadyComplete(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   // Set document readyState to 'complete'
   Object.defineProperty(document, "readyState", {
@@ -825,34 +853,46 @@ async function testAddonsInitDocumentReadyComplete(): Promise<void> {
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Spy on initCustomization by checking state after init
-  // Since initCustomization is private, we verify its effects
-  const state = (
-    addonsInstance as unknown as {
-      state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
-    }
-  ).state;
+    // Spy on initCustomization by checking state after init
+    // Since initCustomization is private, we verify its effects
+    const state = (
+      addonsInstance as unknown as {
+        state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+      }
+    ).state;
 
-  assert(
-    state !== null && typeof state === "object",
-    "should have state object",
-  );
-  assertEquals(
-    state.pendingChromeWebStoreInstall,
-    null,
-    "initial state should have null pending install",
-  );
+    assert(
+      state !== null && typeof state === "object",
+      "should have state object",
+    );
+    assertEquals(
+      state.pendingChromeWebStoreInstall,
+      null,
+      "initial state should have null pending install",
+    );
 
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    // Restore document.readyState
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsInitDocumentNotComplete(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   // Set document readyState to something other than 'complete'
   Object.defineProperty(document, "readyState", {
@@ -860,224 +900,295 @@ async function testAddonsInitDocumentNotComplete(): Promise<void> {
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
+  try {
+    const { default: Addons } = await import("../index.ts");
 
-  // Create instance - init should add event listener
-  const addonsInstance = new Addons();
+    // Create instance - init should add event listener
+    const addonsInstance = new Addons();
 
-  // Verify instance was created successfully
-  assert(
-    addonsInstance !== null && typeof addonsInstance === "object",
-    "should create instance with loading readyState",
-  );
+    // Verify instance was created successfully
+    assert(
+      addonsInstance !== null && typeof addonsInstance === "object",
+      "should create instance with loading readyState",
+    );
 
-  // The load event listener should have been added
-  // We can't easily test the async callback, but we can verify no errors thrown
+    // The load event listener should have been added
+    // We can't easily test the async callback, but we can verify no errors thrown
 
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    // Restore document.readyState to complete
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsInitCreatesCWSObserver(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Access private cwsObserver property
-  const cwsObserver = (
-    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
-  ).cwsObserver;
+    // Access private cwsObserver property
+    const cwsObserver = (
+      addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+    ).cwsObserver;
 
-  // The cwsObserver may be null if SolidJS onCleanup already ran in test context.
-  // Verify the class can be instantiated without error.
-  assert(addonsInstance instanceof Addons, "should instantiate Addons class");
-  // If observer exists, verify it has the expected shape
-  if (cwsObserver !== null) {
-    assert(
-      typeof cwsObserver.observe === "function",
-      "observer should have observe method",
-    );
+    // The cwsObserver may be null if SolidJS onCleanup already ran in test context.
+    // Verify the class can be instantiated without error.
+    assert(addonsInstance instanceof Addons, "should instantiate Addons class");
+    // If observer exists, verify it has the expected shape
+    if (cwsObserver !== null) {
+      assert(
+        typeof cwsObserver.observe === "function",
+        "observer should have observe method",
+      );
+    }
+
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
   }
-
-  cleanupDOM();
-  cleanupWindowGlobals();
 }
 
 async function testAddonsCleanupRemovesObserver(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Call cleanup — should not throw
-  (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+    // Call cleanup — should not throw
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
 
-  // Verify observer was removed
-  const cwsObserver = (
-    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
-  ).cwsObserver;
-  assertEquals(cwsObserver, null, "observer should be null after cleanup");
-
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Verify observer was removed
+    const cwsObserver = (
+      addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+    ).cwsObserver;
+    assertEquals(cwsObserver, null, "observer should be null after cleanup");
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  // Set up gXPInstallObserver
-  const mockXPInstallObserver: XPInstallObserver = {
-    showInstallConfirmation: () => {},
-  };
-  (window as Record<string, unknown>).gXPInstallObserver =
-    mockXPInstallObserver;
+  try {
+    // Set up gXPInstallObserver
+    const mockXPInstallObserver: XPInstallObserver = {
+      showInstallConfirmation: () => {},
+    };
+    (window as Record<string, unknown>).gXPInstallObserver =
+      mockXPInstallObserver;
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Verify cleanup function was created
-  // Note: cleanupInstallConfirmation is only set when readyState is "complete"
-  // AND initCustomization runs, which requires gXPInstallObserver.
-  // It may remain null if conditions are not met.
-  const cleanupInstallConfirmation = (
-    addonsInstance as unknown as {
-      cleanupInstallConfirmation: (() => void) | null;
-    }
-  ).cleanupInstallConfirmation;
-  assert(
-    typeof cleanupInstallConfirmation === "function" ||
-      cleanupInstallConfirmation === null,
-    "should have cleanupInstallConfirmation function or null if not initialized",
-  );
+    // Verify cleanup function was created
+    // Note: cleanupInstallConfirmation is only set when readyState is "complete"
+    // AND initCustomization runs, which requires gXPInstallObserver.
+    // It may remain null if conditions are not met.
+    const cleanupInstallConfirmation = (
+      addonsInstance as unknown as {
+        cleanupInstallConfirmation: (() => void) | null;
+      }
+    ).cleanupInstallConfirmation;
+    assert(
+      typeof cleanupInstallConfirmation === "function" ||
+        cleanupInstallConfirmation === null,
+      "should have cleanupInstallConfirmation function or null if not initialized",
+    );
 
-  // Call cleanup
-  (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+    // Call cleanup
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
 
-  // Verify cleanup function was cleared
-  const cleanupAfter = (
-    addonsInstance as unknown as {
-      cleanupInstallConfirmation: (() => void) | null;
-    }
-  ).cleanupInstallConfirmation;
-  assertEquals(
-    cleanupAfter,
-    null,
-    "cleanupInstallConfirmation should be null after cleanup",
-  );
-
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Verify cleanup function was cleared
+    const cleanupAfter = (
+      addonsInstance as unknown as {
+        cleanupInstallConfirmation: (() => void) | null;
+      }
+    ).cleanupInstallConfirmation;
+    assertEquals(
+      cleanupAfter,
+      null,
+      "cleanupInstallConfirmation should be null after cleanup",
+    );
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsMultipleInitCalls(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Get first observer
-  const _firstObserver = (
-    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
-  ).cwsObserver;
+    // Get first observer
+    const _firstObserver = (
+      addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+    ).cwsObserver;
 
-  // Call init again (should create new observer)
-  addonsInstance.init();
+    // Call init again (should create new observer)
+    addonsInstance.init();
 
-  const secondObserver = (
-    addonsInstance as unknown as { cwsObserver: CWSObserver | null }
-  ).cwsObserver;
+    const secondObserver = (
+      addonsInstance as unknown as { cwsObserver: CWSObserver | null }
+    ).cwsObserver;
 
-  // Should create a new observer instance
-  assert(secondObserver !== null, "should have observer after second init");
+    // Should create a new observer instance
+    assert(secondObserver !== null, "should have observer after second init");
 
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsStateInitialization(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Verify state structure
-  const state = (
-    addonsInstance as unknown as {
-      state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
-    }
-  ).state;
+    // Verify state structure
+    const state = (
+      addonsInstance as unknown as {
+        state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+      }
+    ).state;
 
-  assert(
-    state !== null && typeof state === "object",
-    "should have state object",
-  );
-  assertEquals(
-    state.pendingChromeWebStoreInstall,
-    null,
-    "pendingChromeWebStoreInstall should be null initially",
-  );
+    assert(
+      state !== null && typeof state === "object",
+      "should have state object",
+    );
+    assertEquals(
+      state.pendingChromeWebStoreInstall,
+      null,
+      "pendingChromeWebStoreInstall should be null initially",
+    );
 
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 async function testAddonsHasLogger(): Promise<void> {
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   Object.defineProperty(document, "readyState", {
     value: "complete",
     writable: true,
   });
 
-  const { default: Addons } = await import("../index.ts");
-  const addonsInstance = new Addons();
+  try {
+    const { default: Addons } = await import("../index.ts");
+    const addonsInstance = new Addons();
 
-  // Verify logger exists and has expected methods
-  // deno-lint-ignore no-explicit-any
-  const logger: any = (addonsInstance as unknown as { logger: unknown }).logger;
+    // Verify logger exists and has expected methods
+    // deno-lint-ignore no-explicit-any
+    const logger: any = (addonsInstance as unknown as { logger: unknown }).logger;
 
-  assert(
-    logger !== null && typeof logger === "object",
-    "should have logger object",
-  );
-  assert(typeof logger.debug === "function", "logger should have debug method");
-  assert(typeof logger.warn === "function", "logger should have warn method");
-  assert(typeof logger.info === "function", "logger should have info method");
+    assert(
+      logger !== null && typeof logger === "object",
+      "should have logger object",
+    );
+    assert(typeof logger.debug === "function", "logger should have debug method");
+    assert(typeof logger.warn === "function", "logger should have warn method");
+    assert(typeof logger.info === "function", "logger should have info method");
 
-  cleanupDOM();
-  cleanupWindowGlobals();
+    // Explicitly cleanup the Addons instance
+    (addonsInstance as unknown as { cleanup: () => void }).cleanup();
+  } finally {
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
+    Object.defineProperty(document, "readyState", {
+      value: "complete",
+      writable: true,
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1246,9 +1357,10 @@ export async function runAllTests(): Promise<void> {
     }
   }
 
-  // Clean up any leftover DOM / observers
+  // Clean up any leftover DOM / observers / global context
   cleanupDOM();
   cleanupWindowGlobals();
+  cleanupGlobalContext();
 
   if (failures.length > 0) {
     throw new Error(`addonsObserver.test.ts failures: ${failures.join(" | ")}`);
