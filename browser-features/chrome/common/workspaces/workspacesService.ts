@@ -511,10 +511,12 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         }
       } else if (tabSnapshot.url) {
         try {
-          globalThis.gBrowser.getBrowserForTab(tab).loadURI(tabSnapshot.url, {
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
-          });
+          globalThis.gBrowser
+            .getBrowserForTab(tab)
+            .loadURI(Services.io.newURI(tabSnapshot.url), {
+              triggeringPrincipal:
+                Services.scriptSecurityManager.getSystemPrincipal(),
+            });
         } catch (error) {
           console.error("WorkspacesService: failed to load tab URL", error);
         }

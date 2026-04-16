@@ -244,10 +244,13 @@ export class WorkspacesLinkContextMenu {
     }
 
     try {
-      globalThis.gBrowser.getBrowserForTab(newTab).loadURI(url, {
-        triggeringPrincipal,
-        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-      });
+      globalThis.gBrowser.getBrowserForTab(newTab).loadURI(
+        Services.io.newURI(url),
+        {
+          triggeringPrincipal,
+          loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+        },
+      );
     } catch (error) {
       console.error(
         "[WorkspacesLinkContextMenu] Failed to open link in workspace",
