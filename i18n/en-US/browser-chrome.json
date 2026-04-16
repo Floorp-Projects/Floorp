@@ -384,6 +384,9 @@
       "horizontal": "Horizontal Split",
       "vertical": "Vertical Split",
       "grid3paneLeftMain": "Grid (Large Left)",
+      "grid3paneRightMain": "Grid (Large Right)",
+      "grid3paneTopMain": "Grid (Large Top)",
+      "grid3paneBottomMain": "Grid (Large Bottom)",
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"

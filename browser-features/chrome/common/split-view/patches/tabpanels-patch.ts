@@ -16,7 +16,6 @@ import {
   ensureSplitPanelsActiveClassFromState,
   refreshActiveSplitPaneIndicator,
 } from "./active-pane-tracker.js";
-import { logTabpanelsSplitDiagnostics } from "./split-view-diagnostics.js";
 import { resetSplitPanelPresentationState } from "../utils/reset-split-panel-presentation.js";
 import {
   ensureSplitPaneTabBrowsersAreWarmed,
@@ -47,6 +46,38 @@ export function patchTabpanels(
   const tabpanels = gBrowser.tabpanels;
   const proto = Object.getPrototypeOf(tabpanels);
 
+  let lastMarkerFingerprint = "";
+
+  const syncSplitTabMarkerAttrs = (): number => {
+    const tabs = document?.querySelectorAll<HTMLElement>(
+      "#tabbrowser-tabs .tabbrowser-tab",
+    );
+
+    let splitTabCount = 0;
+    const ids: string[] = [];
+    for (const tab of tabs) {
+      const hasSplit = Boolean(
+        (tab as unknown as { splitview?: unknown }).splitview,
+      );
+      if (hasSplit) {
+        splitTabCount++;
+        tab.setAttribute("data-floorp-split-tab", "true");
+        ids.push(tab.id);
+      } else {
+        tab.removeAttribute("data-floorp-split-tab");
+      }
+    }
+
+    // Early return if the split-tab set has not changed
+    const fp = `${splitTabCount}:${ids.join(",")}`;
+    if (fp === lastMarkerFingerprint) {
+      return splitTabCount;
+    }
+    lastMarkerFingerprint = fp;
+
+    return splitTabCount;
+  };
+
   // --- Track originals for unpatch ---
   let patchedSplitViewPanels = false;
   let patchedIsSplitViewActive = false;
@@ -74,6 +105,8 @@ export function patchTabpanels(
             `[patch:splitViewPanels.set] original setter threw: ${e}`,
           );
         }
+
+        const splitTabCount = syncSplitTabMarkerAttrs();
 
         // Grid cell placement follows `column="0"`…`"3"`. After tab reorder,
         // keep attributes aligned with splitViewPanels order.
@@ -156,10 +189,19 @@ export function patchTabpanels(
           // Split view panels cleared — clean up splitview-multibar
           const tabsToolbar = document?.getElementById("TabsToolbar");
           if (tabsToolbar) {
-            tabsToolbar.removeAttribute("splitview-multibar");
-            if (state.multibarSetBySplitView) {
-              tabsToolbar.removeAttribute("multibar");
-              state.multibarSetBySplitView = false;
+            const hasSplitTabs = splitTabCount > 0;
+            if (hasSplitTabs) {
+              if (!tabsToolbar.hasAttribute("multibar")) {
+                tabsToolbar.setAttribute("multibar", "true");
+                state.multibarSetBySplitView = true;
+              }
+              tabsToolbar.setAttribute("splitview-multibar", "true");
+            } else {
+              tabsToolbar.removeAttribute("splitview-multibar");
+              if (state.multibarSetBySplitView) {
+                tabsToolbar.removeAttribute("multibar");
+                state.multibarSetBySplitView = false;
+              }
             }
           }
         }
@@ -185,10 +227,11 @@ export function patchTabpanels(
   if (typeof origSetSplitViewActive === "function") {
     patchedIsSplitViewActive = true;
 
-    tabpanels.setSplitViewActive = function (
-      this: HTMLElement,
-      updatedValue: boolean,
-    ) {
+    (
+      tabpanels as unknown as {
+        setSplitViewActive: (updatedValue: boolean) => void;
+      }
+    ).setSplitViewActive = function (this: HTMLElement, updatedValue: boolean) {
       // Reproduce the native logic: isActive is true only when the
       // selected tab actually belongs to a split view AND the caller
       // requested activation.
@@ -206,6 +249,8 @@ export function patchTabpanels(
       } catch (e) {
         logger.error(`[patch:setSplitViewActive] original threw: ${e}`);
       }
+
+      const splitTabCount = syncSplitTabMarkerAttrs();
 
       const tabsToolbar = document?.getElementById("TabsToolbar");
 
@@ -249,7 +294,14 @@ export function patchTabpanels(
         const panels = (this as unknown as { splitViewPanels?: string[] })
           .splitViewPanels;
         const hasPanels = panels && panels.length >= 2;
-        if (!hasPanels && tabsToolbar) {
+        const hasSplitTabs = splitTabCount > 0;
+        if (hasSplitTabs && tabsToolbar) {
+          if (!tabsToolbar.hasAttribute("multibar")) {
+            tabsToolbar.setAttribute("multibar", "true");
+            state.multibarSetBySplitView = true;
+          }
+          tabsToolbar.setAttribute("splitview-multibar", "true");
+        } else if (!hasPanels && tabsToolbar) {
           tabsToolbar.removeAttribute("splitview-multibar");
           if (state.multibarSetBySplitView) {
             tabsToolbar.removeAttribute("multibar");
@@ -330,9 +382,22 @@ export function patchTabpanels(
         return;
       }
 
+      // Ensure tabbar attributes are present whenever split view panels are
+      // shown. This prevents theme CSS races where Lepton's not([multibar])
+      // height clamps can re-apply and hide non-selected split tabs.
+      const tabsToolbar = document?.getElementById("TabsToolbar");
+      if (tabsToolbar) {
+        if (!tabsToolbar.hasAttribute("multibar")) {
+          tabsToolbar.setAttribute("multibar", "true");
+          state.multibarSetBySplitView = true;
+        }
+        tabsToolbar.setAttribute("splitview-multibar", "true");
+      }
+
       state.inShowSplitViewPanels = true;
       try {
         origShowSplitViewPanels!(validTabs);
+        syncSplitTabMarkerAttrs();
         applySplitViewSessionMarkersForTabs(
           logger,
           validTabs,
@@ -348,18 +413,16 @@ export function patchTabpanels(
             `[patch:showSplitViewPanels:afterNative] could not read splitViewPanels: ${readErr}`,
           );
         }
-        logTabpanelsSplitDiagnostics("showSplitViewPanels:afterNative");
         scheduleSplitPaneWarmRetries(logger);
-        const bumpSplitViewUi = (phase: string): void => {
+        const bumpSplitViewUi = (): void => {
           ensureSplitPaneTabBrowsersAreWarmed(logger);
           ensureSplitPanelsActiveClassFromState();
           refreshActiveSplitPaneIndicator();
-          logTabpanelsSplitDiagnostics(`showSplitViewPanels:bump:${phase}`);
         };
-        bumpSplitViewUi("sync");
+        bumpSplitViewUi();
         requestAnimationFrame(() => {
-          bumpSplitViewUi("rAF1");
-          requestAnimationFrame(() => bumpSplitViewUi("rAF2"));
+          bumpSplitViewUi();
+          requestAnimationFrame(() => bumpSplitViewUi());
         });
       } catch (e) {
         logger.error(`[patch:showSplitViewPanels] original threw: ${e}`);
@@ -399,6 +462,14 @@ export function patchTabpanels(
       const tabsToolbar = document?.getElementById("TabsToolbar");
       if (tabsToolbar) {
         tabsToolbar.removeAttribute("splitview-multibar");
+      }
+      const splitMarkerTabs = document?.querySelectorAll<HTMLElement>(
+        "#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]",
+      );
+      if (splitMarkerTabs) {
+        for (const tab of splitMarkerTabs) {
+          tab.removeAttribute("data-floorp-split-tab");
+        }
       }
       logger.debug("[unpatch] MozTabpanels restored");
     },

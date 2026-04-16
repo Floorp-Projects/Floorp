@@ -7,7 +7,10 @@ export type SplitViewLayout =
   | "horizontal"
   | "vertical"
   | "grid-2x2"
-  | "grid-3pane-left-main";
+  | "grid-3pane-left-main"
+  | "grid-3pane-right-main"
+  | "grid-3pane-top-main"
+  | "grid-3pane-bottom-main";
 
 // ===== Firefox/Gecko API types for split-view =====
 

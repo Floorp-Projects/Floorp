@@ -55,6 +55,32 @@ import {
   assert.equal(getGroupLayoutFromStore(next, "beta"), "grid-3pane-left-main");
 }
 
+// Verify new 3-pane layouts survive round-trip through parseGroupLayoutStore
+{
+  for (const layout of [
+    "grid-3pane-right-main",
+    "grid-3pane-top-main",
+    "grid-3pane-bottom-main",
+  ] as const) {
+    const raw = JSON.stringify({
+      groups: [{ groupId: "g", layout }],
+    });
+    const store = parseGroupLayoutStore(raw);
+    assert.equal(getGroupLayoutFromStore(store, "g"), layout);
+  }
+}
+
+// Verify upsert works for new 3-pane layouts
+{
+  const start = parseGroupLayoutStore(
+    JSON.stringify({
+      groups: [{ groupId: "a", layout: "horizontal" }],
+    }),
+  );
+  const next = upsertGroupLayoutInStore(start, "a", "grid-3pane-right-main");
+  assert.equal(getGroupLayoutFromStore(next, "a"), "grid-3pane-right-main");
+}
+
 {
   const start = parseGroupLayoutStore(
     JSON.stringify({

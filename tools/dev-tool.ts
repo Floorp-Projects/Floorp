@@ -141,6 +141,21 @@ async function main() {
   }
 }
 
+function parsePidFromOutput(output: string): string {
+  const lines = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (/^\d+$/.test(lines[i])) {
+      return lines[i];
+    }
+  }
+
+  return "";
+}
+
 async function cmdStart() {
   // Check if already running
   try {
@@ -190,21 +205,47 @@ async function cmdStart() {
   // Spawn a fully detached process that survives parent exit
   const denoPath = Deno.execPath();
 
-  // Use bash to spawn a background process (works on all platforms with bash)
-  const setsid = PLATFORM !== "windows" ? "setsid " : "";
-  const cmd = new Deno.Command("bash", {
-    args: [
-      "-c",
-      `${setsid}"${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
-    ],
-    cwd: PROJECT_ROOT,
-    stdout: "piped",
-    stderr: "null",
-  });
-  const out = await cmd.output();
-  const pid = new TextDecoder().decode(out.stdout).trim();
+  let out: Deno.CommandOutput;
+  if (PLATFORM === "windows") {
+    // On Windows, `bash` often resolves to the WSL launcher and cannot start
+    // processes from non-WSL paths like F:\\. Use Start-Process instead.
+    const denoPathPs = denoPath.replaceAll("'", "''");
+    const logFilePs = logFile.replaceAll("'", "''");
+    const projectRootPs = PROJECT_ROOT.replaceAll("'", "''");
+    const psScript = [
+      `$deno = '${denoPathPs}'`,
+      `$log = '${logFilePs}'`,
+      `$arg = '/d /s /c ""' + $deno + '" task feles-build dev > "' + $log + '" 2>&1"'`,
+      `$proc = Start-Process -FilePath 'cmd.exe' -ArgumentList $arg -WorkingDirectory '${projectRootPs}' -WindowStyle Hidden -PassThru`,
+      "Write-Output $proc.Id",
+    ].join("; ");
+
+    out = await new Deno.Command("powershell", {
+      args: ["-NoProfile", "-NonInteractive", "-Command", psScript],
+      cwd: PROJECT_ROOT,
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+  } else {
+    const cmd = new Deno.Command("bash", {
+      args: [
+        "-c",
+        `setsid "${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
+      ],
+      cwd: PROJECT_ROOT,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    out = await cmd.output();
+  }
+
+  const pid = parsePidFromOutput(new TextDecoder().decode(out.stdout));
+  const stderrText = new TextDecoder().decode(out.stderr).trim();
 
   if (!pid || isNaN(Number(pid))) {
+    if (stderrText) {
+      console.error(stderrText);
+    }
     console.error("Failed to start. Check log:", logFile);
     Deno.exit(1);
   }
