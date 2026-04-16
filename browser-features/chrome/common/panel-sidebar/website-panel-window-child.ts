@@ -151,7 +151,8 @@ export class WebsitePanelWindowChild {
     mainWindow.setAttribute("windowtype", "navigator:webpanel");
 
     // Tab modifications
-    globalThis.gBrowser.loadURI?.(loadURL as string, {
+    const uri = Services.io.newURI(loadURL);
+    globalThis.gBrowser.loadURI?.(uri, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 
