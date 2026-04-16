@@ -6,6 +6,8 @@
     "@types/uuid": "npm:@types/uuid@^11.0.0",
     "es-toolkit": "npm:es-toolkit@^1.43.0",
     "fp-ts": "npm:fp-ts@^2.16.11",
+    "fp-ts/Either": "npm:fp-ts@^2.16.11/lib/Either.js",
+    "fp-ts/function": "npm:fp-ts@^2.16.11/lib/function.js",
     "i18next": "npm:i18next@^25.7.3",
     "io-ts": "npm:io-ts@^2.2.22",
     "solid-js": "npm:solid-js@^1.9.10",
