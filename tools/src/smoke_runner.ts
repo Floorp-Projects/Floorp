@@ -64,6 +64,12 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
       args: ["task", "test", "--list", "--layer", "pages"],
     },
     {
+      // TODO: expand check to full browser-features (modules, pages-*) — 166 type errors remain.
+      //       Tracked separately; add them here once fixed:
+      //         browser-features/modules  (50 errors)
+      //         browser-features/pages-settings (38), pages-welcome (17),
+      //         pages-profile-manager (17), pages-newtab (13), pages-notes (11),
+      //         pages-workflow-progress (9), pages-modal-child (7), pages-aboutDialog (4)
       name: "runtime check: floorp source directories",
       args: [
         "check",
