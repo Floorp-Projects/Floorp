@@ -15,6 +15,10 @@ This directory documents the colocated test style only.
 
 - `deno task test`
 - `deno task test:smoke`
+- `deno task test:os-api`
+- `deno task test:os-api:wrapper`
+- `deno task test:os-api:network-idle`
+- `deno task test:integration`
 
 ## How to run
 
@@ -82,6 +86,30 @@ deno task dev-tool smoke --mode runtime
 deno task dev-tool smoke --mode unit
 ```
 
+1. Run OS API verifier (TypeScript):
+
+```bash
+deno task test:os-api --quick
+```
+
+1. Run OS API verifier with auto startup wrapper:
+
+```bash
+deno task test:os-api:wrapper -- --quick
+```
+
+1. Run strict network-idle contract verification:
+
+```bash
+deno task test:os-api:network-idle
+```
+
+1. Run browser + OS API integration sequence:
+
+```bash
+deno task test:integration
+```
+
 Smoke runner policy:
 
 - Smoke checks run only on Deno runtime commands (`deno test`, `deno check`, `deno lint`).
@@ -96,6 +124,13 @@ Runner timeout policy:
 - `--startup-timeout-ms` controls how long auto-start waits for a test browser (default/max: `1800000`).
 - Runner enforces an overall execution cap of `1800000`ms (`30` minutes) across startup and collection stages.
 - Invalid timeout values (non-integer, <= `0`, or > `1800000`) fail fast with an input error.
+
+OS API verifier policy:
+
+- `test:os-api` is implemented in TypeScript (`tools/os-test/verify_os_server_full.ts`) and no longer depends on Python.
+- `test:os-api:wrapper` starts Floorp (`deno task feles-build dev`) unless `--skip-start` is passed.
+- Wrapper-specific options (`--base-url`, `--timeout`, `--interval`, `--skip-start`) are consumed before `--`.
+- Arguments after `--` are forwarded to the verifier (for example `--quick`, `--skip-tabs`).
 
 ## Conventions
 

@@ -79,14 +79,14 @@ export class RebootPanelMenu {
 
   private static handleRestart() {
     Services.startup.quit(
-      Services.startup.eForceQuit | Services.startup.eRestart,
+      Services.startup.eForceQuit! | Services.startup.eRestart!,
     );
   }
 
   private static handleRestartWithCacheClear() {
     Services.appinfo.invalidateCachesOnRestart();
     Services.startup.quit(
-      Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit,
+      Ci.nsIAppStartup.eRestart! | Ci.nsIAppStartup.eAttemptQuit!,
     );
   }
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-
 import { render } from "@nora/solid-xul";
 import { DonwloadBar } from "./downloadbar";
 import { DownloadBarManager } from "./downloadbar-manager";
@@ -29,20 +28,20 @@ export function init() {
     delete globalThis.DownloadsView.contextMenu;
     delete globalThis.DownloadsPanel.panel;
     delete globalThis.DownloadsPanel.richListBox;
-    globalThis.DownloadsPanel.panel = document.getElementById("downloadsPanel");
+    globalThis.DownloadsPanel.panel =
+      document.getElementById("downloadsPanel") ?? undefined;
     globalThis.DownloadsPanel.richListBox =
-      document.getElementById("downloadsListBox");
-    globalThis.DownloadsView.contextMenu = document.getElementById(
-      "downloadsContextMenu",
-    );
+      document.getElementById("downloadsListBox") ?? undefined;
+    globalThis.DownloadsView.contextMenu =
+      document.getElementById("downloadsContextMenu") ?? undefined;
     globalThis.DownloadsPanel._initialized = false;
-    globalThis.DownloadsPanel.initialize();
+    globalThis.DownloadsPanel.initialize?.();
     globalThis.DownloadsView.onDownloadAdded = (download) => {
-      document.getElementById("downloadsListBox").scrollLeft = 0;
-      DownloadsView.onDownloadAdded_hook(download);
+      document.getElementById("downloadsListBox")!.scrollLeft = 0;
+      DownloadsView.onDownloadAdded_hook?.(download);
     };
     const scrollElem = document.getElementById("downloadsListBox");
-    scrollElem?.addEventListener("wheel", (e) => {
+    scrollElem?.addEventListener("wheel", (e: WheelEvent) => {
       if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) {
         return;
       }

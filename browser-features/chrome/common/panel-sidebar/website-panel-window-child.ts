@@ -89,18 +89,19 @@ export class WebsitePanelWindowChild {
     let triggeringPrincipal: Principal | null = null;
 
     const tab = globalThis.gBrowser.selectedTab;
-    if (tab.getAttribute("usercontextid") === this.userContextId) {
+    if (tab.getAttribute("usercontextid") === String(this.userContextId)) {
       return;
     }
 
     if (tab.linkedPanel) {
-      triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
+      triggeringPrincipal =
+        (tab.linkedBrowser?.contentPrincipal as Principal | null) ?? null;
     } else {
       const tabState = JSON.parse(globalThis.SessionStore.getTabState(tab));
       try {
         triggeringPrincipal = globalThis.E10SUtils.deserializePrincipal(
           tabState.triggeringPrincipal_base64,
-        );
+        ) as Principal | null;
       } catch (ex) {
         console.error(
           "Failed to deserialize triggeringPrincipal for lazy tab browser",
@@ -150,7 +151,7 @@ export class WebsitePanelWindowChild {
     mainWindow.setAttribute("windowtype", "navigator:webpanel");
 
     // Tab modifications
-    globalThis.gBrowser.loadURI(Services.io.newURI(loadURL as string), {
+    globalThis.gBrowser.loadURI?.(loadURL as string, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 
@@ -172,7 +173,9 @@ export class WebsitePanelWindowChild {
       "toolbar menubar directories extrachrome",
     );
 
-    document?.getElementById("nav-bar")?.style.setProperty("display", "none");
+    (
+      document?.getElementById("nav-bar") as HTMLElement | null
+    )?.style.setProperty("display", "none");
 
     // Set zoom level
     Services.prefs.addObserver(PANEL_SIDEBAR_DATA_PREF_NAME, () => {

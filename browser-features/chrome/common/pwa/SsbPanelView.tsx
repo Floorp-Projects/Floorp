@@ -6,7 +6,7 @@
 import { createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
-import type { Manifest } from "./type";
+import type { Browser, Manifest } from "./type";
 import type { PwaService } from "./pwaService";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -94,7 +94,7 @@ export class SsbPanelView {
 
   private static handleInstallOrRunCurrentPageAsSsb() {
     SsbPanelView.pwaService.installOrRunCurrentPageAsSsb(
-      globalThis.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser as Browser,
       false,
     );
   }

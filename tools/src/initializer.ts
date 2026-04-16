@@ -48,7 +48,7 @@ const ARCH_KEYWORDS: Record<BinArchive["architecture"], string[]> = {
 
 const normalizeName = (value: string): string => value.toLowerCase();
 
-const filterRuntimeEntries = (
+export const filterRuntimeEntries = (
   index: RuntimeDeployIndex,
 ): RuntimeDeployEntry[] => {
   if (!index?.data || !Array.isArray(index.data)) return [];
@@ -61,7 +61,7 @@ const filterRuntimeEntries = (
   );
 };
 
-const scoreRuntimeEntry = (
+export const scoreRuntimeEntry = (
   entryName: string,
   binArchive: BinArchive,
 ): number => {
@@ -81,7 +81,7 @@ const scoreRuntimeEntry = (
   return score;
 };
 
-const pickRuntimeEntry = (
+export const pickRuntimeEntry = (
   entries: RuntimeDeployEntry[],
   binArchive: BinArchive,
 ): RuntimeDeployEntry => {

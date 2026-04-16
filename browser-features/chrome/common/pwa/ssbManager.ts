@@ -40,7 +40,7 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    globalThis.gBrowser.addProgressListener(this.listener);
+    globalThis.gBrowser.addTabsProgressListener(this.listener);
 
     // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
@@ -63,7 +63,10 @@ export class SiteSpecificBrowserManager {
   };
 
   onCommand() {
-    this.installOrRunCurrentPageAsSsb(globalThis.gBrowser.selectedBrowser, true);
+    this.installOrRunCurrentPageAsSsb(
+      globalThis.gBrowser.selectedBrowser as Browser,
+      true,
+    );
   }
 
   closePopup() {
@@ -102,8 +105,10 @@ export class SiteSpecificBrowserManager {
 
       const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
 
-      if (ssbObj) {
-        await this.runSsbByUrl(globalThis.gBrowser.selectedBrowser.currentURI.spec);
+      if (ssbObj && globalThis.gBrowser.selectedBrowser.currentURI) {
+        await this.runSsbByUrl(
+          globalThis.gBrowser.selectedBrowser.currentURI.spec,
+        );
       }
     } else {
       const manifest = await this.createFromBrowser(browser, {
@@ -247,7 +252,7 @@ export class SiteSpecificBrowserManager {
   }
 
   private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser;
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );

@@ -47,13 +47,13 @@ function App() {
     let interval: number | undefined;
 
     if (installing && !completed) {
-      interval = window.setInterval(() => {
+      interval = globalThis.setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
       }, 8000);
     }
 
     return () => {
-      if (interval) window.clearInterval(interval);
+      if (interval) globalThis.clearInterval(interval);
     };
   }, [installing, completed, slides.length]);
 
@@ -169,7 +169,7 @@ function App() {
             </p>
             <button
               className="btn btn-error"
-              onClick={() => window.close()}
+              onClick={() => globalThis.close()}
             >
               終了
             </button>

@@ -67,7 +67,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       return fromOrder;
     }
 
-    for (const id of workspacesDataStore.data.keys()) {
+    for (const id of (
+      workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>
+    ).keys()) {
       if (id !== excludeId) {
         return id;
       }
@@ -125,8 +127,16 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // tabs to the default/current workspace, corrupting the workspace→tab
     // mapping. See https://github.com/Floorp-Projects/Floorp/issues/2343
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
-    globalThis.SessionStore.promiseAllWindowsRestored.then(() => {
-      globalThis.gBrowser.addProgressListener(this.listener);
+    (
+      globalThis as unknown as {
+        SessionStore: {
+          promiseInitialized: Promise<void>;
+          promiseAllWindowsRestored: Promise<void>;
+          persistTabAttribute: (attr: string) => void;
+        };
+      }
+    ).SessionStore.promiseAllWindowsRestored.then(() => {
+      globalThis.gBrowser.addTabsProgressListener(this.listener);
       globalThis.gBrowser.tabContainer.addEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
@@ -134,7 +144,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     });
 
     onCleanup(() => {
-      globalThis.gBrowser.removeProgressListener(this.listener);
+      globalThis.gBrowser.removeTabsProgressListener(this.listener);
       globalThis.gBrowser.tabContainer.removeEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
@@ -194,11 +204,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   public createNoNameWorkspace(): TWorkspaceID {
     const count = this.getWorkspaceCount();
-    const workspaceName = i18next.t(
-      "workspaces.service.new-workspace",
-      undefined,
-      { count } as Record<string, unknown>,
-    ) as string;
+    const workspaceName = i18next.t("workspaces.service.new-workspace", {
+      count,
+    } as Record<string, unknown>) as string;
 
     const id = this.dataManagerCtx.createWorkspace(workspaceName);
     setWorkspacesDataStore("order", (prev) => [...prev, id]);

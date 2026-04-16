@@ -34,6 +34,7 @@ export interface SplitViewWrapper {
 export interface MozTabpanels extends XULElement {
   splitViewPanels: string[];
   isSplitViewActive: XULElement | null;
+  setSplitViewActive(value: boolean): void;
 }
 
 /** gBrowser subset used by split-view code. */

@@ -40,14 +40,18 @@
     "**/_dist/**/*",
     "**/*.timestamp-*.mjs",
     "libs/@types/gecko/**/*",
-    "libs/user-js-runner/**/*",
     "libs/vite-plugin-gen-jarmn/**/*",
     "libs/vite-plugin-disable-csp/**/*",
     "tools/build/tasks/inject/mixins/**/*",
+    "browser-features/skin/lepton/userjs/**/*",
+    "browser-features/modules/modules/os-server/_os-plugin/**/*",
+    "browser-features/chrome/experiment/csk/**/*",
+    "browser-features/chrome/common/reverse-sidebar-position/**/*",
+    "bridge/loader-features/vite.config.ts",
+    "bridge/loader-modules/tsdown.config.ts",
+    "bridge/startup/tsdown.config.ts",
+    "static/installers/**/*",
     "logs/**/*",
-    "chrome/**/*",
-    "modules/**/*",
-    "src/**/*",
     "node_modules/**/*"
   ],
   "tasks": {
@@ -55,7 +59,14 @@
     "act": "deno run -A tools/act/run-package-workflow.ts",
     "dev-tool": "deno run -A tools/dev-tool.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
-    "test:smoke": "deno run -A tools/src/smoke_runner.ts"
+    "test:host": "deno test --allow-read --allow-write tools/src/",
+    "test:smoke": "deno run -A tools/src/smoke_runner.ts",
+    "test:os-api": "deno run -A tools/os-test/verify_os_server_full.ts",
+    "test:os-api:wrapper": "deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts",
+    "test:os-api:network-idle": "deno run -A tools/os-test/verify_network_idle_rigorous.ts",
+    "test:os-api:local-page": "deno run -A tools/os-test/test-with-local-page.ts",
+    "test:os-api:effects": "deno run -A tools/os-test/test-enhanced-effects.ts",
+    "test:integration": "deno task test && deno task test:os-api --quick"
   },
   "nodeModulesDir": "manual"
 }

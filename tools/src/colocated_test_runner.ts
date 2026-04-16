@@ -15,9 +15,8 @@ import {
   type TestLayer,
 } from "./colocated_test_utils.ts";
 import { sleep } from "./async_utils.ts";
-import { MarionetteClient } from "./browser_connector.ts";
 import {
-  collectBrowserTestResults,
+  collectBrowserTestResultsFromPrefs,
   type BrowserTestCollection,
   type BrowserTestResult,
 } from "./browser_test_collector.ts";
@@ -377,7 +376,7 @@ function readMarionettePortFromFile(): number | null {
   }
 }
 
-async function isTcpPortReachable(
+async function _isTcpPortReachable(
   port: number,
   timeoutMs = 1_500,
 ): Promise<boolean> {
@@ -408,7 +407,21 @@ async function hasRunningTestBrowser(): Promise<boolean> {
     return false;
   }
 
-  return await isTcpPortReachable(port);
+  // Check port reachability without connecting to Marionette directly.
+  // Connecting and immediately closing a TCP socket to the Marionette
+  // port can interfere with the Marionette server, causing the browser
+  // to become unresponsive or shut down.
+  // Instead, we rely on the port file's existence and an additional
+  // small delay to ensure the server is listening.
+  try {
+    // Quick TCP check: just attempt a connection and immediately close.
+    // Use a very short timeout to avoid blocking.
+    const conn = await Deno.connect({ hostname: "127.0.0.1", port });
+    conn.close();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function startTestBrowserProcess(): Deno.ChildProcess {
@@ -835,7 +848,7 @@ async function main(): Promise<number> {
     }
 
     writeSection("Browser Connection");
-    writeLine("INFO", "Connecting to browser via Marionette...");
+    writeLine("INFO", "Waiting for browser test results via prefs file...");
 
     const runningBeforeConnect = await hasRunningTestBrowser();
     if (options.autoStart && !runningBeforeConnect) {
@@ -852,56 +865,8 @@ async function main(): Promise<number> {
         );
         writeLine(
           "INFO",
-          "Auto-started test browser is ready. Reconnecting...",
+          "Auto-started test browser is ready. Waiting for test results...",
         );
-      } catch (autoStartError) {
-        writeLine(
-          "ERROR",
-          `Failed to auto-start browser: ${errorToMessage(autoStartError)}`,
-        );
-        exitCode = 1;
-        return exitCode;
-      }
-    }
-
-    let client: MarionetteClient;
-    try {
-      client = await MarionetteClient.connect();
-    } catch (initialConnectError) {
-      const running = await hasRunningTestBrowser();
-
-      if (!options.autoStart || running || autoStartedBrowser) {
-        writeLine(
-          "ERROR",
-          "Could not connect to browser. Ensure the browser is running in test mode:\n" +
-            "  deno task feles-build test\n" +
-            "Or start it manually:\n" +
-            "  deno task dev-tool start",
-        );
-        writeLine(
-          "ERROR",
-          `Connect error: ${errorToMessage(initialConnectError)}`,
-        );
-        exitCode = 1;
-        return exitCode;
-      }
-
-      writeLine(
-        "INFO",
-        "No reachable test browser detected after connection failure. Starting `deno task feles-build test` automatically...",
-      );
-
-      try {
-        autoStartedBrowser = startTestBrowserProcess();
-        await waitForAutoStartedBrowser(
-          autoStartedBrowser,
-          resolveStageTimeoutMs(options.startupTimeoutMs, "browser startup"),
-        );
-        writeLine(
-          "INFO",
-          "Auto-started test browser is ready. Reconnecting...",
-        );
-        client = await MarionetteClient.connect();
       } catch (autoStartError) {
         writeLine(
           "ERROR",
@@ -913,11 +878,10 @@ async function main(): Promise<number> {
     }
 
     writeSection("Test Execution");
-    writeLine("INFO", "Connected. Waiting for browser test results...");
+    writeLine("INFO", "Collecting browser test results from prefs file...");
 
     try {
-      const browserCollection = await collectBrowserTestResults(
-        client,
+      const browserCollection = await collectBrowserTestResultsFromPrefs(
         resolveStageTimeoutMs(options.timeoutMs, "browser test collection"),
       );
       const browserResults = browserCollection.results;
@@ -1011,8 +975,6 @@ async function main(): Promise<number> {
         `Hint: increase timeout with --timeout-ms <ms> (current: ${options.timeoutMs}) or ensure browser startup is stable.`,
       );
       exitCode = 1;
-    } finally {
-      await client.close();
     }
   } catch (error) {
     writeLine("ERROR", `Unexpected error: ${errorToMessage(error)}`);

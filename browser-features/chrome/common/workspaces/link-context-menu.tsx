@@ -233,7 +233,6 @@ export class WorkspacesLinkContextMenu {
       .getSystemPrincipal();
 
     const newTab = globalThis.gBrowser.addTrustedTab("about:blank", {
-      relatedToCurrent: false,
       inBackground: true,
       userContextId,
       triggeringPrincipal,
@@ -245,8 +244,7 @@ export class WorkspacesLinkContextMenu {
     }
 
     try {
-      const uri = Services.io.newURI(url);
-      globalThis.gBrowser.getBrowserForTab(newTab).loadURI(uri, {
+      globalThis.gBrowser.getBrowserForTab(newTab).loadURI(url, {
         triggeringPrincipal,
         loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
       });

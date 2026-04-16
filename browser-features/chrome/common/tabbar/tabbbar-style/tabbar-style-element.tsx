@@ -7,10 +7,12 @@ import hideHorizontalTabbar from "./styles/hide-horizontal-tabbar.css?inline";
 import optimiseToVerticalTabbar from "./styles/optimise-vertical-tabbar.css?inline";
 import bottomOfNavigationToolbar from "./styles/bottom-of-navigation-toolbar.css?inline";
 import bottomOfWindow from "./styles/bottom-of-window.css?inline";
-import type { zFloorpDesignConfigsType } from "../../../../../../apps/common/scripts/global-types/type";
+import type { TFloorpDesignConfigs } from "#features-chrome/common/designs/type.ts";
+
+type TabbarPosition = TFloorpDesignConfigs["tabbar"]["tabbarPosition"];
 
 export function TabbarStyleModifyCSSElement(props: {
-  style: zFloorpDesignConfigsType["tabbar"]["tabbarPosition"];
+  style: TabbarPosition;
 }) {
   const styleSheet = () => {
     switch (props.style) {

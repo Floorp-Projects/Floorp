@@ -30,7 +30,7 @@ const normalizeUUID = (uuid: string): string => uuid.replace(/[{}]/g, "");
 const createArchiveId = () =>
   normalizeUUID(Services.uuid.generateUUID().toString());
 
-const buildSummary = (
+export const buildSummary = (
   archiveId: string,
   snapshot: TWorkspaceSnapshot,
   filePath: string,
@@ -45,7 +45,7 @@ const buildSummary = (
   tabCount: snapshot.tabs.length,
 });
 
-const filterJsonFiles = (paths: string[]) =>
+export const filterJsonFiles = (paths: string[]) =>
   paths.filter((path) => path.toLowerCase().endsWith(SNAPSHOT_FILE_EXTENSION));
 
 const getArchiveDirectory = () =>
@@ -108,7 +108,7 @@ const parseArchiveIdFromPath = (path: string): string => {
   return archiveId;
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
 const isWorkspaceArchiveFile = (

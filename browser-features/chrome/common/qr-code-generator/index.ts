@@ -19,7 +19,7 @@ export default class QRCodeGenerator extends NoraComponentBase {
     const styleEl = document?.createElement("style");
     if (styleEl) {
       styleEl.textContent = style;
-      document?.head.appendChild(styleEl);
+      document?.head?.appendChild(styleEl);
     }
     const mainPopupSet = document?.getElementById("mainPopupSet");
     if (mainPopupSet) {

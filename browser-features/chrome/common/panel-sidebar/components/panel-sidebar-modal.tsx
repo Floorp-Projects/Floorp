@@ -14,7 +14,7 @@ import type {
   TForm,
   TFormItem,
   TFormResult,
-} from "@core/common/modal-parent/utils/type.ts";
+} from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
@@ -195,7 +195,7 @@ export class PanelSidebarAddModal {
         id: "url",
         type: "url",
         label: texts.url,
-        value: globalThis.gBrowser.currentURI.spec,
+        value: globalThis.gBrowser.currentURI?.spec ?? "",
         required: true,
         placeholder: "https://floorp.app",
         when: { id: "type", value: "web" },
@@ -282,20 +282,34 @@ export class PanelSidebarAddModal {
               type,
               id: crypto.randomUUID(),
               width: Number(result.width) || 450,
+              url: undefined,
+              icon: undefined,
+              userContextId: undefined,
+              zoomLevel: undefined,
+              userAgent: undefined,
+              extensionId: undefined,
             };
 
             if (type === "web") {
               panel = {
                 ...panel,
                 url: completeUrl(result.url as string),
+                icon: undefined,
                 userContextId: Number(result.userContextId),
+                zoomLevel: undefined,
                 userAgent: result.userAgent === "true",
+                extensionId: undefined,
               };
             }
 
             if (type === "extension") {
               panel = {
                 ...panel,
+                url: undefined,
+                icon: undefined,
+                userContextId: undefined,
+                zoomLevel: undefined,
+                userAgent: undefined,
                 extensionId: result.extension as string,
               };
             }
@@ -306,6 +320,11 @@ export class PanelSidebarAddModal {
               panel = {
                 ...panel,
                 url: sideBarToolKey,
+                icon: undefined,
+                userContextId: undefined,
+                zoomLevel: undefined,
+                userAgent: undefined,
+                extensionId: undefined,
               };
             }
 

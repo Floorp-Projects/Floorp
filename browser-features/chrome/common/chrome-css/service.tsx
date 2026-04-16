@@ -211,7 +211,8 @@ export class ChromeCSSService {
           if (typeof globalThis.StatusPanel !== "undefined") {
             globalThis.StatusPanel._label = rebuildCompleteMsg;
           } else if (typeof globalThis.XULBrowserWindow !== "undefined") {
-            globalThis.XULBrowserWindow.statusTextField.label = rebuildCompleteMsg;
+            globalThis.XULBrowserWindow.statusTextField.label =
+              rebuildCompleteMsg;
           }
         } catch (error) {
           console.debug("Status display not available:", error);
@@ -704,9 +705,9 @@ class PanelMenu {
       // Render the main Chrome CSS menu into the panel parent
       render(
         () => <ChromeCSSMenuWrapper service={this.service} />,
-        this.parentElement,
+        this.parentElement ?? undefined,
         {
-          marker: this.beforeElement,
+          marker: this.beforeElement ?? undefined,
         },
       );
 

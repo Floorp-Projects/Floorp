@@ -1,0 +1,474 @@
+// SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+
+import {
+  getAllGestureActions,
+  gestureActions,
+  executeGestureAction,
+  getActionDisplayName,
+  getActionDescription,
+} from "../utils/gestures.ts";
+import type { GestureActionRegistration } from "../utils/gestures.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../test/utils/test_harness.ts";
+
+const INITIAL_REGISTRY_ACTIONS: GestureActionRegistration[] =
+  getAllGestureActions().map((action) => ({
+    name: action.name,
+    fn: action.fn,
+  }));
+
+function restoreGestureRegistry(): void {
+  const registry = gestureActions.getAllActions();
+  registry.clear();
+  for (const action of INITIAL_REGISTRY_ACTIONS) {
+    gestureActions.registerAction(action);
+  }
+}
+
+const rawTests: TestCase[] = [
+  // --- getAllGestureActions ---
+  {
+    name: "getAllGestureActions returns a non-empty array",
+    fn() {
+      const actions = getAllGestureActions();
+      assert(Array.isArray(actions), "should return an array");
+      assert(actions.length > 0, "should have at least one registered action");
+    },
+  },
+  {
+    name: "each action has name and fn properties",
+    fn() {
+      const actions = getAllGestureActions();
+      for (const action of actions) {
+        assert(
+          typeof action.name === "string" && action.name.length > 0,
+          `action should have a non-empty name, got: ${action.name}`,
+        );
+        assert(
+          typeof action.fn === "function",
+          `action '${action.name}' should have a function 'fn'`,
+        );
+      }
+    },
+  },
+  {
+    name: "action names are unique",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = new Set<string>();
+      for (const action of actions) {
+        assert(
+          !names.has(action.name),
+          `duplicate action name found: ${action.name}`,
+        );
+        names.add(action.name);
+      }
+    },
+  },
+  {
+    name: "getAllGestureActions has common browser actions",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("gecko-open-new-tab"),
+        "should include gecko-open-new-tab action",
+      );
+      assert(
+        names.includes("gecko-close-tab"),
+        "should include gecko-close-tab action",
+      );
+    },
+  },
+
+  // --- gestureActions registry ---
+  {
+    name: "gestureActions.getAllActions returns a Map",
+    fn() {
+      const all = gestureActions.getAllActions();
+      assert(all instanceof Map, "should return a Map");
+      assert(all.size > 0, "map should not be empty");
+    },
+  },
+  {
+    name: "gestureActions.getAction returns a function for known action",
+    fn() {
+      const actions = getAllGestureActions();
+      const firstName = actions[0].name;
+      const fn = gestureActions.getAction(firstName);
+      assert(
+        typeof fn === "function",
+        "should return a function for known action",
+      );
+    },
+  },
+  {
+    name: "gestureActions.getAction returns undefined for unknown action",
+    fn() {
+      const fn = gestureActions.getAction("__nonexistent_action_xyz__");
+      assertEquals(fn, undefined, "should return undefined for unknown action");
+    },
+  },
+  {
+    name: "gestureActions.getActionsList returns array",
+    fn() {
+      const list = gestureActions.getActionsList();
+      assert(Array.isArray(list), "should return an array");
+      assert(list.length > 0, "should not be empty");
+      // Each element should have name and fn
+      for (const item of list) {
+        assert(typeof item.name === "string", "each item should have a name");
+        assert(typeof item.fn === "function", "each item should have a fn");
+      }
+    },
+  },
+  {
+    name: "gestureActions.getAllActions keys match getActionsList names",
+    fn() {
+      const map = gestureActions.getAllActions();
+      const list = gestureActions.getActionsList();
+      assertEquals(
+        map.size,
+        list.length,
+        "map size and list length should match",
+      );
+      for (const item of list) {
+        assert(map.has(item.name), `map should contain key: ${item.name}`);
+      }
+    },
+  },
+
+  // --- registerAction ---
+  {
+    name: "registerAction adds a new action to the registry",
+    fn() {
+      const testAction: GestureActionRegistration = {
+        name: "__test_custom_action__",
+        fn: () => {},
+      };
+      gestureActions.registerAction(testAction);
+      const retrieved = gestureActions.getAction("__test_custom_action__");
+      assert(
+        typeof retrieved === "function",
+        "custom action should be retrievable after registration",
+      );
+    },
+  },
+  {
+    name: "registerAction overwrites existing action",
+    fn() {
+      let callCount = 0;
+      gestureActions.registerAction({
+        name: "__test_overwrite_action__",
+        fn: () => {
+          callCount = 1;
+        },
+      });
+      gestureActions.registerAction({
+        name: "__test_overwrite_action__",
+        fn: () => {
+          callCount = 2;
+        },
+      });
+      const fn = gestureActions.getAction("__test_overwrite_action__");
+      assert(
+        typeof fn === "function",
+        "overwritten action should be retrievable",
+      );
+      if (fn) {
+        // Provide minimal mock window for test function
+        fn({} as Window);
+      }
+      assertEquals(
+        callCount,
+        2,
+        "should call the overwritten function, not the original",
+      );
+    },
+  },
+  {
+    name: "registerAction increases registry size for new actions",
+    fn() {
+      const sizeBefore = gestureActions.getAllActions().size;
+      gestureActions.registerAction({
+        name: "__test_size_check__",
+        fn: () => {},
+      });
+      const sizeAfter = gestureActions.getAllActions().size;
+      assertEquals(
+        sizeAfter,
+        sizeBefore + 1,
+        "new action should increase size by 1",
+      );
+    },
+  },
+
+  // --- executeGestureAction ---
+  {
+    name: "executeGestureAction returns false for unknown action",
+    fn() {
+      const result = executeGestureAction("__nonexistent__", window);
+      assertEquals(result, false, "should return false for unknown action");
+    },
+  },
+  {
+    name: "executeGestureAction returns false for null window",
+    fn() {
+      const actions = getAllGestureActions();
+      if (actions.length > 0) {
+        // @ts-expect-error - Testing invalid input (null)
+        const result = executeGestureAction(actions[0].name, null);
+        assertEquals(result, false, "should return false for null window");
+      }
+    },
+  },
+  {
+    name: "executeGestureAction returns false for undefined window",
+    fn() {
+      const actions = getAllGestureActions();
+      if (actions.length > 0) {
+        // @ts-expect-error - Testing invalid input (undefined)
+        const result = executeGestureAction(actions[0].name, undefined);
+        assertEquals(result, false, "should return false for undefined window");
+      }
+    },
+  },
+  {
+    name: "executeGestureAction calls registered action and returns true",
+    fn() {
+      let wasCalled = false;
+      gestureActions.registerAction({
+        name: "__test_exec_action__",
+        fn: () => {
+          wasCalled = true;
+        },
+      });
+      const result = executeGestureAction("__test_exec_action__", window);
+      assertEquals(result, true, "should return true when action executes");
+      assert(wasCalled, "action function should have been called");
+    },
+  },
+  {
+    name: "executeGestureAction returns false for empty string action name",
+    fn() {
+      const result = executeGestureAction("", window);
+      assertEquals(
+        result,
+        false,
+        "empty string action name should return false",
+      );
+    },
+  },
+
+  // --- getActionDisplayName / getActionDescription ---
+  {
+    name: "getActionDisplayName returns a string",
+    fn() {
+      const name = getActionDisplayName("back");
+      assert(typeof name === "string", "should return a string");
+      assert(name.length > 0, "display name should not be empty");
+    },
+  },
+  {
+    name: "getActionDisplayName falls back to actionId for unknown key",
+    fn() {
+      const name = getActionDisplayName("__unknown_key_xyz__");
+      assertEquals(
+        name,
+        "__unknown_key_xyz__",
+        "should fall back to the actionId itself",
+      );
+    },
+  },
+  {
+    name: "getActionDisplayName for known actions returns non-empty",
+    fn() {
+      const actions = getAllGestureActions();
+      for (const action of actions.slice(0, 5)) {
+        const displayName = getActionDisplayName(action.name);
+        assert(
+          typeof displayName === "string" && displayName.length > 0,
+          `displayName for '${action.name}' should be non-empty string`,
+        );
+      }
+    },
+  },
+  {
+    name: "getActionDescription returns a string",
+    fn() {
+      const desc = getActionDescription("back");
+      assert(typeof desc === "string", "should return a string");
+    },
+  },
+  {
+    name: "getActionDescription returns empty string for unknown key",
+    fn() {
+      const desc = getActionDescription("__unknown_key_xyz__");
+      assertEquals(desc, "", "should return empty string as default");
+    },
+  },
+  {
+    name: "getActionDisplayName differs from getActionDescription for known actions",
+    fn() {
+      const actions = getAllGestureActions();
+      if (actions.length > 0) {
+        const name = getActionDisplayName(actions[0].name);
+        const desc = getActionDescription(actions[0].name);
+        // They can be the same but typically differ; just verify both are strings
+        assert(typeof name === "string", "name should be string");
+        assert(typeof desc === "string", "desc should be string");
+      }
+    },
+  },
+
+  // --- Additional edge case tests ---
+  {
+    name: "getActionDisplayName with empty string",
+    fn() {
+      const name = getActionDisplayName("");
+      assertEquals(name, "", "should handle empty actionId");
+    },
+  },
+  {
+    name: "getActionDisplayName with special characters",
+    fn() {
+      const name = getActionDisplayName("action-with-special-chars_123");
+      assert(
+        typeof name === "string",
+        "should handle special characters in actionId",
+      );
+    },
+  },
+  {
+    name: "getActionDescription with empty string",
+    fn() {
+      const desc = getActionDescription("");
+      assertEquals(desc, "", "should return empty string for empty actionId");
+    },
+  },
+  {
+    name: "getActionDescription with very long actionId",
+    fn() {
+      const longId = "a".repeat(1000);
+      const desc = getActionDescription(longId);
+      assertEquals(desc, "", "should handle very long actionId");
+    },
+  },
+  {
+    name: "getAllGestureActions returns consistent order",
+    fn() {
+      const actions1 = getAllGestureActions();
+      const actions2 = getAllGestureActions();
+      assertEquals(
+        actions1.length,
+        actions2.length,
+        "should return same number of actions",
+      );
+      // Check that order is consistent
+      for (let i = 0; i < actions1.length; i++) {
+        assertEquals(
+          actions1[i].name,
+          actions2[i].name,
+          `action ${i} should be in same order`,
+        );
+      }
+    },
+  },
+  {
+    name: "gestureActions registry persists across calls",
+    fn() {
+      const size1 = gestureActions.getAllActions().size;
+      const size2 = gestureActions.getAllActions().size;
+      assertEquals(size1, size2, "registry size should be consistent");
+    },
+  },
+  {
+    name: "executeGestureAction with action that throws",
+    fn() {
+      const _errorThrown = false;
+      gestureActions.registerAction({
+        name: "__test_throwing_action__",
+        fn: () => {
+          throw new Error("Test error");
+        },
+      });
+      const result = executeGestureAction("__test_throwing_action__", window);
+      assertEquals(result, false, "should return false when action throws");
+    },
+  },
+  {
+    name: "executeGestureAction with action that returns false",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_returns_false__",
+        fn: () => false,
+      });
+      const result = executeGestureAction("__test_returns_false__", window);
+      assertEquals(
+        result,
+        true,
+        "should return true even if action returns false",
+      );
+    },
+  },
+  {
+    name: "executeGestureAction with action that returns value",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_returns_value__",
+        fn: () => "custom return value",
+      });
+      const result = executeGestureAction("__test_returns_value__", window);
+      assertEquals(result, true, "should return true for successful execution");
+    },
+  },
+  {
+    name: "gestureActions.getAction returns same function reference",
+    fn() {
+      gestureActions.registerAction({
+        name: "__test_same_ref__",
+        fn: () => {},
+      });
+      const fn1 = gestureActions.getAction("__test_same_ref__");
+      const fn2 = gestureActions.getAction("__test_same_ref__");
+      assertEquals(fn1, fn2, "should return same function reference");
+    },
+  },
+  {
+    name: "getAllGestureActions includes all registered actions",
+    fn() {
+      const beforeSize = getAllGestureActions().length;
+      gestureActions.registerAction({
+        name: "__test_included__",
+        fn: () => {},
+      });
+      const afterSize = getAllGestureActions().length;
+      assertEquals(
+        afterSize,
+        beforeSize + 1,
+        "should include newly registered action",
+      );
+    },
+  },
+];
+
+const tests: TestCase[] = rawTests.map((testCase) => ({
+  name: testCase.name,
+  async fn() {
+    restoreGestureRegistry();
+    try {
+      await testCase.fn();
+    } finally {
+      restoreGestureRegistry();
+    }
+  },
+}));
+
+export async function runAllTests(): Promise<void> {
+  await runTests("mouseGestureActions.test.ts", tests);
+}

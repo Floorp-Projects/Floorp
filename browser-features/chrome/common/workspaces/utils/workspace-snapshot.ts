@@ -52,7 +52,7 @@ export const ensureSessionStore = async (): Promise<SessionStoreModule> => {
   return sessionStore;
 };
 
-const toNumber = (value: string | null, fallback = 0): number => {
+export const toNumber = (value: string | null, fallback = 0): number => {
   if (value === null) {
     return fallback;
   }
@@ -60,7 +60,7 @@ const toNumber = (value: string | null, fallback = 0): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-const extractUrlFromState = (state: Record<string, unknown>): string | null => {
+export const extractUrlFromState = (state: Record<string, unknown>): string | null => {
   const entries = state.entries;
   if (!Array.isArray(entries)) {
     return null;

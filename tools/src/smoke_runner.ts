@@ -8,7 +8,7 @@ type SmokeStep = {
   args: string[];
 };
 
-type SmokeMode = "all" | "unit" | "runtime";
+export type SmokeMode = "all" | "unit" | "runtime";
 
 const HELP = `
 Usage: deno run -A tools/src/smoke_runner.ts [options]
@@ -18,7 +18,7 @@ Options:
   --help, -h                  Show this help
 `.trim();
 
-function resolveMode(value: string | undefined): SmokeMode {
+export function resolveMode(value: string | undefined): SmokeMode {
   if (!value) {
     return "all";
   }
@@ -42,7 +42,7 @@ function resolveMode(value: string | undefined): SmokeMode {
   );
 }
 
-function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
+export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
   const unitSteps: SmokeStep[] = [
     {
       name: "colocated runner unit tests",
@@ -64,12 +64,36 @@ function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
       args: ["task", "test", "--list", "--layer", "pages"],
     },
     {
+      // TODO: expand check to full browser-features (modules, pages-*) — 166 type errors remain.
+      //       Tracked separately; add them here once fixed:
+      //         browser-features/modules  (50 errors)
+      //         browser-features/pages-settings (38), pages-welcome (17),
+      //         pages-profile-manager (17), pages-newtab (13), pages-notes (11),
+      //         pages-workflow-progress (9), pages-modal-child (7), pages-aboutDialog (4)
       name: "runtime check: floorp source directories",
-      args: ["check", "--sloppy-imports", "tools", "i18n", "libs"],
+      args: [
+        "check",
+        "--sloppy-imports",
+        "--reload",
+        "tools",
+        "i18n",
+        "libs",
+        "bridge",
+        "browser-features/chrome",
+        "static/gecko",
+      ],
     },
     {
       name: "runtime lint: floorp source directories",
-      args: ["lint", "tools", "bridge", "browser-features", "i18n", "libs"],
+      args: [
+        "lint",
+        "tools",
+        "bridge",
+        "browser-features",
+        "i18n",
+        "libs",
+        "static/gecko",
+      ],
     },
   ];
 

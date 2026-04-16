@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 import { type TWorkspace, zWorkspaceID } from "./utils/type";
+import type { TWorkspacesStoreData } from "./utils/type";
 import {
   selectedWorkspaceID,
   setSelectedWorkspaceID,
@@ -25,8 +26,16 @@ export interface WorkspacesDataManagerBase {
 }
 
 export class WorkspacesDataManager implements WorkspacesDataManagerBase {
-  private findFallbackWorkspaceID(excludeId: TWorkspaceID): TWorkspaceID | null {
-    for (const id of workspacesDataStore.data.keys()) {
+  private findFallbackWorkspaceID(
+    excludeId: TWorkspaceID,
+  ): TWorkspaceID | null {
+    for (
+      const id
+        of (workspacesDataStore.data as unknown as Map<
+          TWorkspaceID,
+          TWorkspace
+        >).keys()
+    ) {
       if (id !== excludeId) {
         return id;
       }
@@ -53,12 +62,16 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
       name,
       icon: null,
       userContextId: 0,
+      isSelected: null,
+      isDefault: null,
     };
     //TODO: If the id is duplicated, regenerate with limit to try
     setWorkspacesDataStore("data", (prev) => {
-      const temp = new Map(prev);
+      const temp = new Map(
+        prev as unknown as Iterable<[TWorkspaceID, TWorkspace]>,
+      );
       temp.set(id, workspace);
-      return temp;
+      return temp as unknown as TWorkspacesStoreData["data"];
     });
     return id;
   }
@@ -86,8 +99,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     }
 
     setWorkspacesDataStore("data", (prev) => {
-      prev.delete(id);
-      return new Map(prev);
+      const map = prev as unknown as Map<TWorkspaceID, TWorkspace>;
+      map.delete(id);
+      return new Map(map) as unknown as TWorkspacesStoreData["data"];
     });
   }
 
@@ -107,7 +121,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
       return false;
     }
     const parsedId = parseResult.right;
-    const exists = workspacesDataStore.data.has(parsedId);
+    const exists =
+      (workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>)
+        .has(parsedId);
     if (!exists) {
       console.warn("WorkspacesDataManager: WorkspaceID not found:", parsedId);
     }
@@ -115,7 +131,10 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
   }
 
   public getRawWorkspace(id: TWorkspaceID): TWorkspace | undefined {
-    return workspacesDataStore.data.get(id);
+    return (workspacesDataStore.data as unknown as Map<
+      TWorkspaceID,
+      TWorkspace
+    >).get(id);
   }
 
   public getSelectedWorkspaceID(): TWorkspaceID {
@@ -143,7 +162,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     }
 
     // 2) Try to pick any existing workspace from the data map
-    const firstEntry = workspacesDataStore.data.keys().next();
+    const firstEntry =
+      (workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>)
+        .keys().next();
     if (!firstEntry.done) {
       const anyID = firstEntry.value as TWorkspaceID;
       console.info(
@@ -184,7 +205,9 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     );
 
     // Try to pick any existing workspace
-    const firstEntry = workspacesDataStore.data.keys().next();
+    const firstEntry =
+      (workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>)
+        .keys().next();
     if (!firstEntry.done) {
       const anyID = firstEntry.value as TWorkspaceID;
       console.info(

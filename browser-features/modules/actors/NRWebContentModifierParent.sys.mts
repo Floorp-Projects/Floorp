@@ -183,7 +183,6 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
       );
 
       try {
-        // @ts-expect-error - Suppress error for currentWindowGlobal access
         if (!tabInfo.browsingContext.currentWindowGlobal) {
           console.error(
             `NRWebContentModifierParent: Tab ${tabId} has no currentWindowGlobal`,
@@ -191,7 +190,6 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           return;
         }
 
-        // @ts-expect-error - Suppress error for currentWindowGlobal access
         const actor = tabInfo.browsingContext.currentWindowGlobal.getActor(
           "NRWebContentModifier",
         );
@@ -239,9 +237,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
         setTimeout(() => {
           try {
             const browserContext = newTab.linkedBrowser?.browsingContext;
-            // @ts-expect-error - Suppress error for currentWindowGlobal access
             if (browserContext && browserContext.currentWindowGlobal) {
-              // @ts-expect-error - Suppress error for currentWindowGlobal access
               const actor = browserContext.currentWindowGlobal.getActor(
                 "NRWebContentModifier",
               );
@@ -264,9 +260,7 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           setTimeout(() => {
             try {
               const browserContext = newTab.linkedBrowser?.browsingContext;
-              // @ts-expect-error - Suppress error for currentWindowGlobal access
               if (browserContext && browserContext.currentWindowGlobal) {
-                // @ts-expect-error - Suppress error for currentWindowGlobal access
                 const actor = browserContext.currentWindowGlobal.getActor(
                   "NRWebContentModifier",
                 );
@@ -322,7 +316,6 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
   checkAndModifyFloorpWebsite(browser: any) {
     try {
       const context = browser.browsingContext;
-      // @ts-expect-error - Suppress error for currentWindowGlobal access
       if (!context || !context.currentWindowGlobal) {
         console.log(
           "NRWebContentModifierParent: Browser context not available",
@@ -330,7 +323,6 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
         return null;
       }
 
-      // @ts-expect-error - Suppress error for currentWindowGlobal access
       const actor = context.currentWindowGlobal.getActor(
         "NRWebContentModifier",
       );
@@ -416,10 +408,8 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
           const browserContext = newtab.linkedBrowser?.browsingContext;
           if (browserContext) {
             // Assign to variable and use type assertion
-            // @ts-expect-error - Suppress error for currentWindowGlobal access
             const global = browserContext.currentWindowGlobal;
             if (global) {
-              // @ts-expect-error - Suppress error for getActor access
               const actor = global.getActor("NRWebContentModifier");
 
               if (actor) {
@@ -481,11 +471,9 @@ export class NRWebContentModifierParent extends JSWindowActorParent {
       // Check if context and global exist
       if (tabInfo.browsingContext) {
         // Assign to variable and use type assertion
-        // @ts-expect-error - Suppress error for currentWindowGlobal access
         const global = tabInfo.browsingContext.currentWindowGlobal;
         if (global) {
           try {
-            // @ts-expect-error - Suppress error for getActor access
             const actor = global.getActor("NRWebContentModifier");
             // Send the result, the child actor will check if the callbackId matches its stored ones
             actor.sendAsyncMessage("WebContentModifier:GmailResult", {

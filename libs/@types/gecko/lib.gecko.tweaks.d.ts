@@ -120,6 +120,20 @@ interface WindowGlobalParent extends WindowContext {
 }
 
 // Hand-crafted artisanal types.
+// Tab-specific properties on XULElement (Firefox tabs are XULElement at runtime
+// but carry extra state not captured by generated Gecko types).
+interface XULElement {
+  linkedBrowser?: XULBrowserElement;
+  muted?: boolean;
+  muteReason?: unknown;
+  pinned?: boolean;
+  _tPos?: number;
+  linkedPanel?: string;
+  multiselected?: boolean;
+  userContextId?: number;
+  toggleMuteAudio?(reason: string): void;
+}
+
 interface XULBrowserElement extends XULFrameElement, FrameLoader {
   currentURI: nsIURI;
   docShellIsActive: boolean;
@@ -127,6 +141,7 @@ interface XULBrowserElement extends XULFrameElement, FrameLoader {
   remoteType: string;
   webProgress: nsIWebProgress;
   loadURI(uri: nsIURI, loadURIOptions?: object): void;
+  contentPrincipal?: unknown;
 }
 
 // Extended BrowsingContext for accessing current window global and URI

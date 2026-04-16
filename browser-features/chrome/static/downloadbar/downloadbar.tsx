@@ -87,7 +87,7 @@ export function DonwloadBar() {
           />
           <xul:menuitem
             command="downloadsCmd_clearDownloads"
-            hidden="true"
+            hidden
             data-l10n-id="downloads-cmd-clear-downloads"
           />
         </xul:menupopup>

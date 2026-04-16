@@ -20,11 +20,13 @@ import {} from "#features-chrome/utils/base";
 import { createRootHMR } from "@nora/solid-xul";
 import { isRight } from "fp-ts/Either";
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+export function isPlainObject(
+  value: unknown,
+): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function deepMerge<T extends Record<string, unknown>>(
+export function deepMerge<T extends Record<string, unknown>>(
   base: T,
   override: unknown,
 ): T {
@@ -51,7 +53,7 @@ function deepMerge<T extends Record<string, unknown>>(
   return result;
 }
 
-function getOldUICustomizationConfig() {
+export function getOldUICustomizationConfig() {
   try {
     const navbarBottom = Services.prefs.getBoolPref(
       "floorp.navbar.bottom",
@@ -137,7 +139,7 @@ function getOldUICustomizationConfig() {
   }
 }
 
-function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
+export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
   try {
     return {
       globalConfigs: {

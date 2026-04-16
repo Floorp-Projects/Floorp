@@ -54,7 +54,9 @@ export class GestureDisplay {
     ) return;
 
     // Check if styles already exist in this window's document
-    if (this.targetWindow.document.getElementById("mouse-gesture-global-styles")) {
+    if (
+      this.targetWindow.document.getElementById("mouse-gesture-global-styles")
+    ) {
       return;
     }
 
@@ -158,7 +160,9 @@ export class GestureDisplay {
     this.canvasEl.height = Math.max(1, Math.floor(height * dpr));
     this.canvasEl.style.width = `${width}px`;
     this.canvasEl.style.height = `${height}px`;
-    this.ctx = this.canvasEl.getContext("2d");
+    this.ctx = this.canvasEl.getContext("2d") as
+      | CanvasRenderingContext2D
+      | null;
     if (this.ctx) {
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }

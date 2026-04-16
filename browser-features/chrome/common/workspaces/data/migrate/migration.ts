@@ -118,7 +118,10 @@ export function migrateWorkspacesData(): Promise<void> {
                       const privateValue =
                         record["isPrivateContainerWorkspace"];
                       if (typeof privateValue === "string") {
-                        if (privateValue === "true" || privateValue === "false") {
+                        if (
+                          privateValue === "true" ||
+                          privateValue === "false"
+                        ) {
                           record["isPrivateContainerWorkspace"] =
                             privateValue === "true";
                         }
@@ -257,6 +260,7 @@ export function migrateWorkspacesData(): Promise<void> {
                           typeof detail.userContextId === "number"
                             ? detail.userContextId
                             : 0,
+                        isSelected: null,
                         isDefault: detail.defaultWorkspace,
                       });
                       orderList.push(idParsed);
@@ -294,7 +298,12 @@ export function migrateWorkspacesData(): Promise<void> {
                 if (defaultID) {
                   setWorkspacesDataStore("defaultID", defaultID);
                 }
-                setWorkspacesDataStore("data", new Map(dataMap));
+                setWorkspacesDataStore(
+                  "data",
+                  new Map(dataMap) as unknown as Parameters<
+                    typeof setWorkspacesDataStore
+                  >[1],
+                );
                 setWorkspacesDataStore("order", orderList);
                 console.debug(
                   "Workspaces migration: store updated (default from detail=",

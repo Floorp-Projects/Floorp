@@ -83,7 +83,9 @@ export class MarionetteClient {
       console.error(`[marionette] Session: ${client.#sessionId}`);
     } catch {
       client.#conn.close();
-      throw new Error("NewSession timed out — browser may be busy or BiDi conflict");
+      throw new Error(
+        "NewSession timed out — browser may be busy or BiDi conflict",
+      );
     }
 
     return client;
@@ -92,7 +94,7 @@ export class MarionetteClient {
   send(
     command: string,
     params: Record<string, unknown> = {},
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     return this.sendWithTimeout(command, params, 30_000);
   }
@@ -101,7 +103,7 @@ export class MarionetteClient {
     command: string,
     params: Record<string, unknown>,
     timeoutMs: number,
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     const id = this.#msgId++;
     const msg = JSON.stringify([0, id, command, params]);
@@ -221,7 +223,10 @@ export class MarionetteClient {
     const result = await Promise.race([
       this.#readPacket(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Read timeout (${timeoutMs}ms)`)), timeoutMs)
+        setTimeout(
+          () => reject(new Error(`Read timeout (${timeoutMs}ms)`)),
+          timeoutMs,
+        ),
       ),
     ]);
     return result;

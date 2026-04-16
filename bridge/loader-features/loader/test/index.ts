@@ -6,8 +6,8 @@
  * Loaded by chrome_root.ts when MODE === "test".
  * Discovers all @colocated-env browser test files via import.meta.glob,
  * runs them sequentially, and writes structured results to
- * globalThis.__TEST_RESULTS__ for the host-side collector to read
- * via Marionette.
+ * globalThis.__TEST_RESULTS__ and the Firefox pref "nora.tests.state".
+ * The host-side collector reads results from the profile's prefs.js file.
  */
 
 interface TestResult {
@@ -49,7 +49,10 @@ function setSharedStatePref(state: TestState): void {
       | {
           importESModule: (specifier: string) => {
             Services?: {
-              prefs?: { setStringPref: (name: string, value: string) => void };
+              prefs?: {
+                setStringPref: (name: string, value: string) => void;
+                savePrefFile?: (prefFile: string | null) => void;
+              };
             };
           };
         }
@@ -59,6 +62,10 @@ function setSharedStatePref(state: TestState): void {
       "resource://gre/modules/Services.sys.mjs",
     ).Services;
     servicesFromModule?.prefs?.setStringPref(TEST_STATE_PREF, payload);
+    // Force immediate flush to disk so the host-side runner can read
+    // results from prefs.js even if the browser shuts down soon after.
+    // null = flush to the default prefs.js file immediately.
+    servicesFromModule?.prefs?.savePrefFile?.(null);
   } catch {
     // Keep browser-side tests running even if prefs are unavailable.
   }
@@ -170,11 +177,25 @@ export default async function runBrowserTests(): Promise<void> {
     );
 
     // Pages layer tests (via #features-pages alias)
+    // Use eager loading to avoid @fs dynamic import issues in Firefox
     const pagesTests = import.meta.glob(
       "#features-pages/pages-*/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
+      { eager: true },
     );
 
-    const allTests = { ...chromeTests, ...esmTests, ...pagesTests };
+    // Merge eager pages tests into lazy-format for uniform processing
+    type EagerModule = Record<string, unknown>;
+    const allTests: Record<string, LazyModule> = {
+      ...chromeTests,
+      ...esmTests,
+    };
+    // Wrap eager pages modules as lazy loaders for uniform handling
+    for (const [path, mod] of Object.entries(
+      pagesTests as Record<string, EagerModule>,
+    )) {
+      allTests[path] = () => Promise.resolve(mod);
+    }
+
     const entries = Object.entries(allTests) as Array<[string, LazyModule]>;
     discoveredFiles.push(
       ...entries.map(([file]) => file).sort((a, b) => a.localeCompare(b)),
@@ -204,6 +225,17 @@ export default async function runBrowserTests(): Promise<void> {
     console.log(`[nora@test] Done: ${passed} passed, ${failed} failed`);
 
     publishState({ status: "done", results, discoveredFiles });
+
+    // Keep the browser alive so the host-side test runner has time to
+    // collect results from prefs.js. Without this, the browser may shut
+    // down immediately after test completion, before the runner reads the
+    // final state. The test runner stops the browser after collecting results.
+    // The interval is cleared after 10 minutes as a safety net to prevent
+    // the browser from running indefinitely if the host runner fails to
+    // shut it down.
+    console.log("[nora@test] Keeping browser alive for result collection...");
+    const keepaliveId = setInterval(() => {}, 60_000);
+    setTimeout(() => clearInterval(keepaliveId), 600_000);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[nora@test] Fatal error: ${msg}`);

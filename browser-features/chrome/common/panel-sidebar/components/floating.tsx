@@ -435,7 +435,8 @@ export class PanelSidebarFloating {
 
     if (currentPanelId) {
       try {
-        const panelSidebarInstance = globalThis.gFloorpPanelSidebar;
+        const panelSidebarInstance = globalThis
+          .gFloorpPanelSidebar as Window["gFloorpPanelSidebar"];
         if (panelSidebarInstance) {
           setSelectedPanelId(null);
 

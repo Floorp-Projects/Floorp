@@ -7,6 +7,7 @@ import { createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService.ts";
+import type { Browser } from "./type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { iconUrlParser } from "#features-chrome/utils/iconUrlParser.ts";
@@ -65,7 +66,7 @@ export class SsbPageAction {
   }
 
   private async onCheckPageHasManifest() {
-    const browser = globalThis.gBrowser.selectedBrowser;
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
 
     const canBeInstallAsPwa = await this.pwaService
       .checkBrowserCanBeInstallAsPwa(browser);
@@ -81,23 +82,24 @@ export class SsbPageAction {
 
   private onCommand = () => {
     this.pwaService.installOrRunCurrentPageAsSsb(
-      globalThis.gBrowser.selectedBrowser,
+      globalThis.gBrowser.selectedBrowser as Browser,
       true,
     );
     this.isInstalling[1](true);
   };
 
   private onPopupShowing = async () => {
-    const icon = await this.pwaService.getIcon(globalThis.gBrowser.selectedBrowser);
+    const selectedBrowser = globalThis.gBrowser.selectedBrowser;
+    const icon = await this.pwaService.getIcon(selectedBrowser as Browser);
     this.icon[1](icon);
 
     const manifest = await this.pwaService.getManifest(
-      globalThis.gBrowser.selectedBrowser,
+      selectedBrowser as Browser,
     );
     this.title[1](
-      manifest?.name ?? globalThis.gBrowser.selectedBrowser.currentURI.spec,
+      manifest?.name ?? selectedBrowser.currentURI?.spec ?? "",
     );
-    this.description[1](globalThis.gBrowser.selectedBrowser.currentURI.host);
+    this.description[1](selectedBrowser.currentURI?.host ?? "");
   };
 
   private onPopupHiding = () => {

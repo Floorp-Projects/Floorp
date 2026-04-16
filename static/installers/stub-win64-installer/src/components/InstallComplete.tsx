@@ -56,7 +56,7 @@ export default function InstallComplete(
 
     const handleLegacyDownload = () => {
         // Open Floorp.app legacy installer page
-        window.open("https://floorp.app/download/", "_blank");
+        globalThis.open("https://floorp.app/download/", "_blank");
     };
 
     return (

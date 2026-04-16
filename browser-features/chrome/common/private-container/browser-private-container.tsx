@@ -54,10 +54,13 @@ export class FloorpPrivateContainer {
         "open_in_private_container",
         "privateContainer.openInPrivateContainer",
         "context-openlink",
-        () =>
+        () => {
+          const linkURL = globalThis.gContextMenu?.linkURL;
+          if (linkURL == null) return;
           FloorpPrivateContainer.openWithPrivateContainer(
-            globalThis.gContextMenu.linkURL,
-          ),
+            Services.io.newURI(linkURL),
+          );
+        },
         "context-openlink",
         () => {
           this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
@@ -72,8 +75,9 @@ export class FloorpPrivateContainer {
       return false;
     }
     return globalThis.gBrowser.tabs.some(
-      (tab: { userContextId: number }) =>
-        tab.userContextId === privateContainer.userContextId,
+      (tab: XULElement) =>
+        (tab as unknown as { userContextId: number }).userContextId ===
+          privateContainer.userContextId,
     );
   }
 
@@ -86,8 +90,9 @@ export class FloorpPrivateContainer {
       }
 
       return globalThis.gBrowser.tabs.filter(
-        (tab: { userContextId: number }) =>
-          tab.userContextId === privateContainerUserContextID,
+        (tab: XULElement) =>
+          (tab as unknown as { userContextId: number }).userContextId ===
+            privateContainerUserContextID,
       );
     }, 400);
   }
@@ -132,10 +137,21 @@ export class FloorpPrivateContainer {
     const tabs = globalThis.gBrowser.tabs;
     for (const tab of tabs) {
       if (
-        FloorpPrivateContainer.checkTabIsPrivateContainer(tab) &&
-        !FloorpPrivateContainer.tabIsSaveHistory(tab)
+        FloorpPrivateContainer.checkTabIsPrivateContainer(
+          tab as unknown as { userContextId: number },
+        ) &&
+        !FloorpPrivateContainer.tabIsSaveHistory(
+          tab as unknown as { getAttribute: (arg0: string) => string },
+        )
       ) {
-        FloorpPrivateContainer.applyDoNotSaveHistoryToTab(tab);
+        FloorpPrivateContainer.applyDoNotSaveHistoryToTab(
+          tab as unknown as {
+            linkedBrowser: {
+              setAttribute: (arg0: string, arg1: string) => void;
+            };
+            setAttribute: (arg0: string, arg1: string) => void;
+          },
+        );
       }
     }
   }
@@ -175,7 +191,7 @@ export class FloorpPrivateContainer {
     const triggeringPrincipal = Services.scriptSecurityManager
       .createNullPrincipal({
         userContextId: privateContainerUserContextID,
-      });
+      }) as nsIPrincipal;
 
     const newTab = globalThis.gBrowser.addTrustedTab("about:blank", {
       relatedToCurrent,
@@ -193,7 +209,12 @@ export class FloorpPrivateContainer {
     const uri = typeof url === "string" ? Services.io.newURI(url) : url;
 
     try {
-      FloorpPrivateContainer.applyDoNotSaveHistoryToTab(newTab);
+      FloorpPrivateContainer.applyDoNotSaveHistoryToTab(
+        newTab as unknown as {
+          linkedBrowser: { setAttribute: (arg0: string, arg1: string) => void };
+          setAttribute: (arg0: string, arg1: string) => void;
+        },
+      );
 
       Services.obs.notifyObservers(
         {
@@ -202,9 +223,15 @@ export class FloorpPrivateContainer {
         "browser-open-newtab-start",
       );
 
-      newTab.linkedBrowser.loadURI(uri, {
+      (newTab.linkedBrowser as unknown as {
+        loadURI: (
+          uri: nsIURI,
+          opts: { triggeringPrincipal: nsIPrincipal; loadFlags: number },
+        ) => void;
+      }).loadURI(uri, {
         triggeringPrincipal,
-        loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
+        loadFlags: Ci.nsIWebNavigation
+          .LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP as number,
       });
     } catch (error) {
       console.error(
@@ -227,16 +254,20 @@ export class FloorpPrivateContainer {
         */
       let triggeringPrincipal: nsIPrincipal;
 
-      if (tab.linkedPanel) {
-        triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
+      if ((tab as unknown as { linkedPanel?: unknown }).linkedPanel) {
+        triggeringPrincipal =
+          (tab.linkedBrowser as unknown as { contentPrincipal: nsIPrincipal })
+            .contentPrincipal;
       } else {
         // For lazy tab browsers, get the original principal
         // from SessionStore
-        const tabState = JSON.parse(globalThis.SessionStore.getTabState(tab));
+        const tabState = JSON.parse(
+          globalThis.SessionStore.getTabState(tab),
+        ) as Record<string, unknown>;
         try {
           triggeringPrincipal = globalThis.E10SUtils.deserializePrincipal(
             tabState.triggeringPrincipal_base64,
-          );
+          ) as nsIPrincipal;
         } catch (error) {
           console.error(
             "[FloorpPrivateContainer] Failed to deserialize tab principal",
@@ -253,7 +284,7 @@ export class FloorpPrivateContainer {
         triggeringPrincipal = Services.scriptSecurityManager
           .createNullPrincipal({
             userContextId,
-          });
+          }) as nsIPrincipal;
       } else if (triggeringPrincipal.isContentPrincipal) {
         triggeringPrincipal = Services.scriptSecurityManager.principalWithOA(
           triggeringPrincipal,
@@ -264,25 +295,40 @@ export class FloorpPrivateContainer {
       }
 
       const currentTabUserContextId = Number.parseInt(
-        tab.getAttribute("usercontextid"),
+        tab.getAttribute("usercontextid") ?? "",
       );
 
       if (currentTabUserContextId === userContextId) {
         userContextId = 0;
       }
 
-      const newTab = globalThis.gBrowser.addTab(tab.linkedBrowser.currentURI.spec, {
-        userContextId,
-        pinned: tab.pinned,
-        index: tab._tPos + 1,
-        triggeringPrincipal,
-      });
+      const tabLinkedBrowser = tab.linkedBrowser as unknown as {
+        currentURI?: { spec: string };
+      };
+      const tabPinned = (tab as unknown as { pinned?: boolean }).pinned;
+      const tabTpos = (tab as unknown as { _tPos?: number })._tPos;
+      const newTab = globalThis.gBrowser.addTab(
+        tabLinkedBrowser.currentURI?.spec ?? "about:blank",
+        {
+          userContextId,
+          pinned: tabPinned,
+          index: (tabTpos ?? 0) + 1,
+          triggeringPrincipal,
+        },
+      );
 
       if (globalThis.gBrowser.selectedTab === tab) {
         globalThis.gBrowser.selectedTab = newTab;
       }
-      if (tab.muted && !newTab.muted) {
-        newTab.toggleMuteAudio(tab.muteReason);
+      const tabMuted = (tab as unknown as { muted?: boolean }).muted;
+      const newTabMuted = (newTab as unknown as { muted?: boolean }).muted;
+      const toggleFn =
+        (newTab as unknown as { toggleMuteAudio?: (reason?: unknown) => void })
+          .toggleMuteAudio;
+      if (tabMuted && !newTabMuted && toggleFn) {
+        toggleFn(
+          (tab as unknown as { muteReason?: unknown }).muteReason as string,
+        );
       }
 
       globalThis.gBrowser.removeTab(tab);

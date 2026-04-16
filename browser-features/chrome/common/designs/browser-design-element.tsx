@@ -17,7 +17,7 @@ const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
 /**
  * Replace relative icon paths with absolute URLs in CSS content
  */
-function replaceIconPaths(
+export function replaceIconPaths(
   css: string,
   iconBasePath: string | undefined,
 ): string {

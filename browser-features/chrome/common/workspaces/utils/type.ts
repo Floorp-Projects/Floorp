@@ -25,7 +25,7 @@ export const zWorkspaceID = t.brand(
 
 export const zWorkspacesServicesStoreData = t.type({
   defaultID: zWorkspaceID,
-  data: t.UnknownRecord, // Map is not directly supported, using record
+  data: t.record(t.string, t.unknown), // Map is stored as record in JSON
   order: t.array(zWorkspaceID),
 });
 

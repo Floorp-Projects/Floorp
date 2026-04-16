@@ -1,16 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-type TestCase = {
-  name: string;
-  fn: () => void | Promise<void>;
-};
-
-function assert(condition: unknown, message: string): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
+import { assert, type TestCase } from "../utils/test_harness.ts";
 
 function testServicesGlobalAvailable(): void {
   assert(
