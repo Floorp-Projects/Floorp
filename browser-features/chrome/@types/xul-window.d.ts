@@ -47,7 +47,7 @@ interface GBrowser {
     currentURI?: { spec: string; scheme?: string; host?: string };
     contentPrincipal?: unknown;
     loadURI: (
-      url: string,
+      uri: nsIURI,
       options?: { triggeringPrincipal?: unknown; loadFlags?: number },
     ) => void;
   };
@@ -59,7 +59,7 @@ interface GBrowser {
     contentPrincipal?: unknown;
   };
   currentURI?: { spec: string };
-  loadURI?(url: string, options?: Record<string, unknown>): void;
+  loadURI?(uri: nsIURI, options?: Record<string, unknown>): void;
   addTabsProgressListener(
     listener: Pick<nsIWebProgressListener, "onLocationChange">,
   ): void;
