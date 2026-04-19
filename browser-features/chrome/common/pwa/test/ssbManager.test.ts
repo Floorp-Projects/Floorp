@@ -85,6 +85,7 @@ const tests: TestCase[] = [
         "data:text/plain,hello",
         "blob:https://example.com/00000000-0000-0000-0000-000000000000",
         "moz-extension://00000000-0000-0000-0000-000000000000/popup.html",
+        "javascript:void(0)",
       ];
       for (const spec of specs) {
         let result: boolean | undefined;
