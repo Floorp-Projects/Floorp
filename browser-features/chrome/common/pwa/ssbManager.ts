@@ -151,6 +151,18 @@ export class SiteSpecificBrowserManager {
     return false;
   }
 
+  /**
+   * Returns whether `uri` is eligible to be installed as a site-specific
+   * browser. Reads `uri.host` only inside the `http` branch — `nsIURI.host`
+   * is not `[infallible]` per `netwerk/base/nsIURI.idl` and throws
+   * `NS_ERROR_FAILURE` for the `nsSimpleURI` family of schemes (`data:`,
+   * `blob:`, `moz-extension:`, `javascript:`, `about:`), so guarding the
+   * `.host` access behind the scheme check keeps the throw unreachable.
+   *
+   * Returns `true` for any `https` URI, and for `http` URIs targeting
+   * loopback hosts (`localhost`, `127.0.0.1`). Every other scheme returns
+   * `false`.
+   */
   private checkSiteCanBeInstall(uri: nsIURI): boolean {
     if (uri.scheme === "https") {
       return true;
