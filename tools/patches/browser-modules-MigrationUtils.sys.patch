@@ -41,11 +41,11 @@ index 3a08fea..a258343 100644
      let isRefresh =
        migrator &&
        skipSourceSelection &&
--      migratorKey == AppConstants.MOZ_APP_NAME;
+-      FIREFOX_REFRESH_MIGRATOR_KEYS.has(migratorKey);
 +      ((requestedMigratorKey &&
 +        requestedMigratorKey == AppConstants.MOZ_APP_NAME) ||
 +        (!requestedMigratorKey &&
-+          migratorKey == AppConstants.MOZ_APP_NAME));
++          FIREFOX_REFRESH_MIGRATOR_KEYS.has(migratorKey)));
  
      let entrypoint = this.MIGRATION_ENTRYPOINTS.FIRSTRUN;
      if (isRefresh) {
