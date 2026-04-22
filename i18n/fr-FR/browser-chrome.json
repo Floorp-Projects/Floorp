@@ -4,12 +4,12 @@
     "tooltiptext": "Rouvrir le dernier onglet fermé {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Les régalges sspécifiques à Floorp comme la barre latérale, les espaces de travails, et les gestes de souris sont gérrés dans le Hub de Floorp.",
-    "openButton": "Ouvrir le Hub de Floorp"
+    "message": "Les réglages spécifiques à Floorp comme la barre latérale, les espaces de travail, et les gestes de souris sont gérés dans la Plateforme de Floorp.",
+    "openButton": "Ouvrir la Plateforme de Floorp"
   },
   "floorpStartWarning": {
-    "message": "Pour changer les réglages d'\"Accueil\", désactivez le démarrage de Floorp depuis le Hub de Floorp (about:hub#/features/design).",
-    "openButton": "Ouvrir le Hub de Floorp - Design"
+    "message": "Pour changer les réglages d'\"Accueil\", désactivez le démarrage de Floorp depuis la Plateforme de Floorp (about:hub#/features/design).",
+    "openButton": "Ouvrir la Plateforme de Floorp - Design"
   },
   "workspaces": {
     "modal": {
@@ -71,13 +71,13 @@
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",
       "manage": "Gérer les espaces de travail",
-      "restore": "Afficher les espaces de travails archivés",
+      "restore": "Afficher les espaces de travail archivés",
       "restore-cancel": "Quitter le mode de restauration",
-      "restore-title": "Espaces de travails archivés",
-      "restore-loading": "Charger les espaces de travails archivés…",
-      "restore-empty": "Aucun espaces de travails archivés",
-      "restore-error": "Échec du chargement des espaces de travails archivés",
-      "restore-tooltip": "Permutter le mode de restauration",
+      "restore-title": "Espaces de travail archivés",
+      "restore-loading": "Charger les espaces de travail archivés…",
+      "restore-empty": "Aucun espaces de travail archivés",
+      "restore-error": "Échec du chargement des espaces de travail archivés",
+      "restore-tooltip": "Permuter le mode de restauration",
       "restore-item": "Restaurer \"{{name}}\"",
       "restore-delete-tooltip": "Supprimer cette archive",
       "restore-tab-count": "{{count}} onglet",
@@ -201,7 +201,7 @@
       "gecko-scroll-to-bottom": "Défilement vers le bas",
       "gecko-workspace-next": "Commuter vers l'espace de travail suivant",
       "gecko-workspace-previous": "Commuter vers l'espace de travail précédent",
-      "floorp-toggle-zen-mode": "Permutter le mode Zen"
+      "floorp-toggle-zen-mode": "Permuter le mode Zen"
     },
     "descriptions": {
       "gecko-back": "Retourner à la page précédente",
@@ -212,7 +212,7 @@
       "gecko-duplicate-tab": "Dupliquer l'onglet actuel",
       "gecko-reload-all-tabs": "Recharger tous les onglets",
       "gecko-restore-last-tab": "Rouvrir le dernier onglet fermé",
-      "floorp-toggle-zen-mode": "Permutter le mode Zen masque tous les éléments de l'interface pour une navigation sans distraction"
+      "floorp-toggle-zen-mode": "Permuter le mode Zen masque tous les éléments de l'interface pour une navigation sans distraction"
     }
   },
   "qrCode": {
@@ -292,7 +292,7 @@
     "panelProgressSummary": "Affecte {{count}} élément(s)",
     "formSummary": "Remplissage du formulaire: {{count}} champ(s)",
     "formFieldProgress": "Champ {{current}}/{{total}}: \"{{value}}\"",
-    "inputValueSet": "Définir la valeure d'entrée: \"{{value}}\"",
+    "inputValueSet": "Définir la valeur d'entrée: \"{{value}}\"",
     "clickElementWithText": "Cliquez sur le {{tag}}: \"{{text}}\"",
     "clickElementNoText": "Cliquez sur l'element {{tag}}",
     "inspectPageHtml": "Page HTML complète récupérée",
@@ -300,7 +300,7 @@
     "inspectGetElements": "{{count}} élément(s) correspondants: {{selector}}",
     "inspectGetElementByText": "Élément récupéré correspondant au texte: \"{{text}}\"",
     "inspectGetElementText": "Texte retrouvé depuis: {{selector}}",
-    "inspectGetValue": "Valeure retrouvée: {{selector}}",
+    "inspectGetValue": "Valeur retrouvée: {{selector}}",
     "submitForm": "Envoi du formulaire: {{name}}",
     "actionLabelHighlight": "Surligner",
     "actionLabelInspect": "Inspecter",
@@ -311,10 +311,10 @@
   },
   "externalBrowser": {
     "menu": {
-      "openTabIn": "Ouvrir l'onglet dans un naviguateur externe",
-      "openLinkIn": "Ouvrir le lien dans un naviguateur externe",
-      "defaultBrowser": "Naviguateur par défaut du système",
-      "noBrowsers": "Aucun naviguateur externe détecté",
+      "openTabIn": "Ouvrir l'onglet dans un navigateur externe",
+      "openLinkIn": "Ouvrir le lien dans un navigateur externe",
+      "defaultBrowser": "Navigateur par défaut du système",
+      "noBrowsers": "Aucun navigateur externe détecté",
       "noValidUrl": "Aucune URL valide à ouvrir"
     }
   },
@@ -327,18 +327,18 @@
       "installed": "Installé"
     },
     "error": {
-      "title": "Erreure d'installation",
+      "title": "Erreur d'installation",
       "compatibilityNote": "Cette extension peut ne pas être compatible avec Firefox/Floorp.",
       "alreadyInstalled": "Cette extension est déjà installée ({{name}})",
-      "downloadFailed": "Echec du téléchargement du fichier CRX",
-      "conversionFailed": "Echec de conversion de l'extension: {{error}}",
-      "conversionFailedGeneric": "Echec de la convertion CRX vers XPI",
+      "downloadFailed": "Échec du téléchargement du fichier CRX",
+      "conversionFailed": "Échec de conversion de l'extension: {{error}}",
+      "conversionFailedGeneric": "Échec de la convertion CRX vers XPI",
       "installError": "Erreur d'installation: {{error}}",
-      "installFailed": "Echec de l'installation",
+      "installFailed": "Échec de l'installation",
       "noData": "Aucune donnée d'installation fournie",
       "addonManagerUnavailable": "AddonManager n'est pas disponible",
-      "noBrowserWindow": "Aucune fenêtre de naviguateur n'a pue être trouvée pour l'installation",
-      "createInstallFailed": "Echec de la création d'un objet d'installation",
+      "noBrowserWindow": "Aucune fenêtre de navigateur n'a pue être trouvée pour l'installation",
+      "createInstallFailed": "Échec de la création d'un objet d'installation",
       "cancelledByUser": "Installation annulée par l'utilisateur",
       "downloadCancelled": "Telechargement annulé",
       "timeout": "Délai d'installation dépassé",
@@ -347,13 +347,13 @@
       "experimentDisabled": "Cette fonctionnalité n'est actuellement pas disponible"
     },
     "installErrors": {
-      "downloadFailed": "Echec du téléchargement",
-      "signatureVerifyFailed": "Echec de vérification de la signature de l'extension",
+      "downloadFailed": "Échec du téléchargement",
+      "signatureVerifyFailed": "Échec de vérification de la signature de l'extension",
       "corruptOrIncompatible": "L'extension est corrompue ou incompatible",
       "incompatible": "Cette extension n'est pas compatible avec Floorp",
       "blocked": "Cette extension est bloquée",
       "timeout": "Délai d'installation de l'extension dépassé",
-      "installFailed": "Echec d'installation de l'extension",
+      "installFailed": "Échec d'installation de l'extension",
       "parseFailed": "Échec de l'analyse de l'extension",
       "invalidFile": "Fichier d'extension invalide",
       "networkError": "Une erreur du réseau est survenue"
@@ -365,7 +365,7 @@
       "chromeExtensionPrompt": "Voulez-vous ajouter l'extension Chrome \"{{name}}\"?",
       "defaultExtensionName": "cette extension",
       "chromeBadge": "[Chrome]",
-      "compatibilityWarning": "Cette extension Chrome a été concertie au format compatible Firefox. Certaines fonctionnalités pourraient ne pas fonctionner proprement."
+      "compatibilityWarning": "Cette extension Chrome a été convertie au format compatible Firefox. Certaines fonctionnalités pourraient ne pas fonctionner proprement."
     }
   },
   "hub": {
@@ -391,7 +391,7 @@
   },
   "zen-mode": {
     "label": "Mode Calme",
-    "tooltiptext": "Permutter le mode Calme",
-    "menu-label": "Permutter le mode Calme"
+    "tooltiptext": "Permuter le mode Calme",
+    "menu-label": "Permuter le mode Calme"
   }
 }
