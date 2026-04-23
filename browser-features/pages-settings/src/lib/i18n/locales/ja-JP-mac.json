@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "プロファイルの保存先を開く",
         "mozillaAccountSyncSettings": "Mozilla アカウントの同期設定",
         "syncedTo": "{{email}} に同期中",
-        "syncNotesToMozillaAccount": "{{productName}} Notes を Mozilla アカウントと同期 (実験的)",
-        "featureSyncSettings": "{{productName}} 機能の同期設定",
         "manageMozillaAccount": "Mozilla アカウントを管理",
         "manageFirefoxFeatureSync": "Firefox 機能の同期を管理",
         "aboutMozillaAccount": "Mozilla アカウントについて",

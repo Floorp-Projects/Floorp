@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Öppna profil spara plats",
         "mozillaAccountSyncSettings": "Inställningar för Mozilla-konto synkronisering",
         "syncedTo": "Synkroniserad till {{email}}",
-        "syncNotesToMozillaAccount": "Synkronisera {{productName}} anteckningar till Mozilla-konto (experimentellt)",
-        "featureSyncSettings": "{{productName}} Inställningar för funktionssynkronisering",
         "manageMozillaAccount": "Hantera Mozilla-konto",
         "manageFirefoxFeatureSync": "Hantera synkronisering av Firefox-funktioner",
         "aboutMozillaAccount": "Om Mozilla-konto",

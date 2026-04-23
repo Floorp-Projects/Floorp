@@ -4,12 +4,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Switch } from "@/components/common/switch.tsx";
 import { Avatar, AvatarImage } from "@/components/common/avatar.tsx";
 import { useTranslation } from "react-i18next";
 import type { AccountsFormData } from "@/types/pref.ts";
 import { ExternalLink, Settings } from "lucide-react";
-import { useFormContext } from "react-hook-form";
 
 type AccountsProps = {
   accountAndProfileData: AccountsFormData | null;
@@ -17,7 +15,6 @@ type AccountsProps = {
 
 export function Accounts({ accountAndProfileData }: AccountsProps) {
   const { t } = useTranslation();
-  const { getValues, setValue } = useFormContext();
 
   return (
     <Card>
@@ -61,23 +58,6 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
           {t("accounts.manageMozillaAccount")}
           <ExternalLink className="size-4" />
         </a>
-
-        <div>
-          <h3 className="text-base font-medium mb-4">
-            {t("accounts.featureSyncSettings")}
-          </h3>
-          <div className="flex items-center justify-between gap-2">
-            <label htmlFor="sync-notes">
-              {t("accounts.syncNotesToMozillaAccount")}
-            </label>
-            <Switch
-              id="sync-notes"
-              checked={!!getValues("asyncNoesViaMozillaAccount")}
-              onChange={(e) =>
-                setValue("asyncNoesViaMozillaAccount", e.target.checked)}
-            />
-          </div>
-        </div>
 
         <a
           href="#"

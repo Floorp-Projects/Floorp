@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Profil kayıt yerini aç",
         "mozillaAccountSyncSettings": "Mozilla Hesap Senkronizasyon Ayarları",
         "syncedTo": "{{email}} ile senkronize edildi",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Mozilla Hesabını Yönet",
         "manageFirefoxFeatureSync": "Firefox Özellik Senkronizasyonunu Yönet",
         "aboutMozillaAccount": "Mozilla Hesabı Hakkında",

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Accounts } from "./components/Accounts.tsx";
 import { Profile } from "./components/Profile.tsx";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { useAccountAndProfileData } from "./dataManager.ts";
 import type { AccountsFormData } from "@/types/pref.ts";
 
@@ -10,11 +10,6 @@ export default function Page() {
   const { t } = useTranslation();
   const methods = useForm<AccountsFormData>({
     defaultValues: {},
-  });
-
-  const { setValue } = methods;
-  const _watchAll = useWatch({
-    control: methods.control,
   });
 
   const [accountAndProfileData, setAccountAndProfileData] = useState<
@@ -28,15 +23,6 @@ export default function Page() {
     }
     fetchAccountAndProfileData();
   }, []);
-
-  useEffect(() => {
-    if (accountAndProfileData?.asyncNoesViaMozillaAccount) {
-      setValue(
-        "asyncNoesViaMozillaAccount",
-        accountAndProfileData.asyncNoesViaMozillaAccount,
-      );
-    }
-  }, [accountAndProfileData, setValue]);
 
   return (
     <div className="p-6 space-y-3">

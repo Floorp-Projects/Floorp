@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Buka Lokasi Penyimpanan Profil",
         "mozillaAccountSyncSettings": "Pengaturan Sinkronisasi Akun Mozilla",
         "syncedTo": "Disinkronkan ke {{email}}",
-        "syncNotesToMozillaAccount": "Sinkronisasikan Catatan {{productName}} ke Akun Mozilla (Eksperimental)",
-        "featureSyncSettings": "Pengaturan Sinkronisasi Fitur {{productName}}",
         "manageMozillaAccount": "Kelola Akun Mozilla",
         "manageFirefoxFeatureSync": "Kelola Sinkronisasi Fitur Firefox",
         "aboutMozillaAccount": "Tentang Akun Mozilla",

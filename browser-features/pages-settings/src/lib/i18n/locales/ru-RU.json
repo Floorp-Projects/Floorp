@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Открыть место сохранения профиля",
         "mozillaAccountSyncSettings": "Настройки синхронизации учетной записи Mozilla",
         "syncedTo": "Синхронизировано с {{email}}",
-        "syncNotesToMozillaAccount": "Синхронизировать заметки {{productName}} с учетной записью Mozilla (Экспериментально)",
-        "featureSyncSettings": "Настройки синхронизации {{productName}}",
         "manageMozillaAccount": "Управление учетной записью Mozilla",
         "manageFirefoxFeatureSync": "Управление синхронизацией функций Firefox",
         "aboutMozillaAccount": "Об учетной записи Mozilla",

@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "打开配置文件 保存位置",
         "mozillaAccountSyncSettings": "Mozilla 账户同步设置",
         "syncedTo": "同步至 {{email}}",
-        "syncNotesToMozillaAccount": "将 {{productName}} 笔记同步到 Mozilla 账户（实验性）",
-        "featureSyncSettings": "{{productName}} 同步设置",
         "manageMozillaAccount": "管理 Mozilla 账户",
         "manageFirefoxFeatureSync": "管理火狐功能同步",
         "aboutMozillaAccount": "管理 Mozilla 账户",

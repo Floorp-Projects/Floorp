@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Відкрити місце збереження профілю",
         "mozillaAccountSyncSettings": "Налаштування синхронізації облікових записів Mozilla",
         "syncedTo": "Синхронізовано з {{email}}",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Керування обліковим записом Mozilla",
         "manageFirefoxFeatureSync": "Керування синхронізацією функцій Firefox",
         "aboutMozillaAccount": "Про обліковий запис Mozilla",

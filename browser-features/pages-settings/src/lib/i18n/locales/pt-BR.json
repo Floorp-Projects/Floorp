@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Abrir Local para Salvar Perfil",
         "mozillaAccountSyncSettings": "Configurações de sincronização da conta Mozilla",
         "syncedTo": "Sincronizado com {{email}}",
-        "syncNotesToMozillaAccount": "Sincronizar Notas {{productName}} com a conta Mozilla (experimental)",
-        "featureSyncSettings": "Configurações de sincronização de recursos {{productName}}",
         "manageMozillaAccount": "Gerenciar conta Mozilla",
         "manageFirefoxFeatureSync": "Gerenciar sincronização de recursos do Firefox",
         "aboutMozillaAccount": "Sobre a conta Mozilla",

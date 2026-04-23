@@ -107,7 +107,6 @@ export const zAccountsFormData = t.type({
   accountImage: t.string,
   profileDir: t.string,
   profileName: t.string,
-  asyncNoesViaMozillaAccount: t.boolean,
 });
 
 export type AccountsFormData = t.TypeOf<typeof zAccountsFormData>;

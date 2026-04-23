@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Ouvrir l’emplacement d’enregistrement du profil",
         "mozillaAccountSyncSettings": "Paramètres de synchronisation du compte Mozilla",
         "syncedTo": "Synchronisé vers {{email}}",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Gérer le compte Mozilla",
         "manageFirefoxFeatureSync": "Gestion de la fonctionnalité de synchronisation de Firefox",
         "aboutMozillaAccount": "À propos du compte Mozilla",

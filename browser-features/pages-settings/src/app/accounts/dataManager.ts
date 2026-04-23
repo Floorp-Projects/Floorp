@@ -52,6 +52,5 @@ export async function useAccountAndProfileData(): Promise<AccountsFormData> {
     accountImage: accountImage,
     profileDir: profileInfo.profilePath,
     profileName: profileInfo.profileName,
-    asyncNoesViaMozillaAccount: true,
   };
 }

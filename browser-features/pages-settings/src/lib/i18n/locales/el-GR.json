@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Άνοιγμα τοποθεσίας αποθήκευσης προφίλ",
         "mozillaAccountSyncSettings": "Ρυθμίσεις συγχρονισμού λογαριασμού Mozilla",
         "syncedTo": "Συγχρονισμός με το {{email}}",
-        "syncNotesToMozillaAccount": "Συγχρονισμός {{productName}} Σημειώσεων με λογαριασμό Mozilla (Πειραματικό)",
-        "featureSyncSettings": "Ρυθμίσεις συγχρονισμού λειτουργιών {{productName}}",
         "manageMozillaAccount": "Διαχείριση λογαριασμού Mozilla",
         "manageFirefoxFeatureSync": "Διαχείριση συγχρονισμού λειτουργιών του Firefox",
         "aboutMozillaAccount": "Σχετικά με το λογαριασμό Mozilla",
