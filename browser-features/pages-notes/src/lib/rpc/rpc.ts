@@ -18,15 +18,22 @@ const isLocalhost5188 = import.meta.url?.includes("localhost:5188");
 // Pref Observer Types
 // ──────────────────────────────────────────────────────────
 
-/** Callback invoked when a observed preference changes. */
+/** Callback invoked when an observed preference changes. */
 export type PrefChangeCallback = (prefName: string) => void;
 
-/** Handle returned by addPrefObserver; pass to removePrefObserver to clean up. */
+/**
+ * Internal bookkeeping object returned by direct-mode observer registration.
+ *
+ * Observer removal is callback-based; the handle stores the underlying observer
+ * instance associated with that callback so the implementation can unregister it.
+ */
 export interface PrefObserverHandle {
   readonly prefName: string;
   readonly callback: PrefChangeCallback;
   /** Internal: the raw observer object (nsIObserver) for removal. */
-  _observer: { observe: (subject: unknown, topic: string, data: string) => void };
+  _observer: {
+    observe: (subject: unknown, topic: string, data: string) => void;
+  };
 }
 
 // ──────────────────────────────────────────────────────────
@@ -35,7 +42,10 @@ export interface PrefObserverHandle {
 
 const observerRegistry = new Map<PrefChangeCallback, PrefObserverHandle>();
 
-function addDirectPrefObserver(prefName: string, callback: PrefChangeCallback): PrefObserverHandle {
+function addDirectPrefObserver(
+  prefName: string,
+  callback: PrefChangeCallback,
+): PrefObserverHandle {
   const observer = {
     observe(_subject: unknown, topic: string, data: string) {
       if (topic === "nsPref:changed" && data === prefName) {
@@ -44,7 +54,11 @@ function addDirectPrefObserver(prefName: string, callback: PrefChangeCallback): 
     },
   };
   Services.prefs.addObserver(prefName, observer);
-  const handle: PrefObserverHandle = { prefName, callback, _observer: observer };
+  const handle: PrefObserverHandle = {
+    prefName,
+    callback,
+    _observer: observer,
+  };
   observerRegistry.set(callback, handle);
   return handle;
 }
@@ -96,18 +110,18 @@ const directServicesFunctions: NRSettingsParentFunctions = {
 
 export const rpc = isLocalhost5188
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
-    {},
-    {
-      post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
-      on: (callback) => {
-        (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
-          callback,
-        );
+      {},
+      {
+        post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
+        on: (callback) => {
+          (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
+            callback,
+          );
+        },
+        serialize: (v) => JSON.stringify(v),
+        deserialize: (v) => JSON.parse(v),
       },
-      serialize: (v) => JSON.stringify(v),
-      deserialize: (v) => JSON.parse(v),
-    },
-  )
+    )
   : directServicesFunctions;
 
 // ──────────────────────────────────────────────────────────
@@ -115,7 +129,10 @@ export const rpc = isLocalhost5188
 // ──────────────────────────────────────────────────────────
 
 // Registry for dev-mode polling handles
-const devModePollers = new Map<PrefChangeCallback, ReturnType<typeof setInterval>>();
+const devModePollers = new Map<
+  PrefChangeCallback,
+  ReturnType<typeof setInterval>
+>();
 
 /**
  * Register a callback that fires when the given string preference changes.
@@ -126,12 +143,20 @@ const devModePollers = new Map<PrefChangeCallback, ReturnType<typeof setInterval
  *
  * **Important**: Call `removePrefObserver` on cleanup to avoid leaks.
  */
-export function addPrefObserver(prefName: string, callback: PrefChangeCallback): PrefObserverHandle | null {
+export function addPrefObserver(
+  prefName: string,
+  callback: PrefChangeCallback,
+): PrefObserverHandle | null {
   if (isLocalhost5188) {
     // Dev mode: poll every 2 seconds as a fallback
     let lastValue: string | null = null;
     // Initial read
-    rpc.getStringPref(prefName).then((v) => { lastValue = v; }).catch(() => {});
+    rpc
+      .getStringPref(prefName)
+      .then((v) => {
+        lastValue = v;
+      })
+      .catch(() => {});
     const pollId = setInterval(async () => {
       try {
         const current = await rpc.getStringPref(prefName);

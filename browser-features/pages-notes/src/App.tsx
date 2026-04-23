@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NoteList } from "./components/notes/NoteList.tsx";
 import { RichTextEditor } from "./components/editor/RichTextEditor.tsx";
 import type { JSONContent } from "@tiptap/react";
 import {
   getNotes,
-  type NotesData,
-  saveNotes,
   loadSyncState,
-  saveSyncState,
   mergeNotesThreeWay,
-  syncStateFromNotes,
+  NOTES_PREF_NAME,
+  type NotesData,
   notesDataToNotes,
   notesToNotesData,
-  NOTES_PREF_NAME,
+  saveNotes,
+  saveSyncState,
+  syncStateFromNotes,
 } from "./lib/dataManager.ts";
-import { rpc, addPrefObserver, removePrefObserver } from "./lib/rpc/rpc.ts";
+import { addPrefObserver, removePrefObserver, rpc } from "./lib/rpc/rpc.ts";
 import { useTranslation } from "react-i18next";
 import { ConfirmModal } from "./components/common/ConfirmModal.tsx";
 import { SaveStatus } from "./components/common/SaveStatus.tsx";
@@ -35,7 +35,9 @@ function App() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const titleSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const notesRef = useRef<Note[]>([]);
   const isSavingRef = useRef(false);
   const pendingSaveRef = useRef<Note[] | null>(null);
@@ -65,7 +67,10 @@ function App() {
         setIsLoading(true);
         const notesData = await getNotes(t);
 
-        const convertedNotes: Note[] = notesData.titles.map((noteTitle, index) => ({
+        const convertedNotes: Note[] = notesData.titles.map((
+          noteTitle,
+          index,
+        ) => ({
           id: notesData.ids?.[index] ?? crypto.randomUUID(),
           title: noteTitle || "",
           content: notesData.contents[index] || "",
@@ -102,13 +107,17 @@ function App() {
         return;
       }
 
-      console.info(`[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`);
+      console.info(
+        `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
+      );
 
       try {
         // 1. Read remote notes from the pref (what sync just wrote)
         const remoteStr = await rpc.getStringPref(NOTES_PREF_NAME);
         if (!remoteStr) return; // Empty or null — nothing to merge
-        const remoteNotes = notesDataToNotes(JSON.parse(remoteStr) as NotesData);
+        const remoteNotes = notesDataToNotes(
+          JSON.parse(remoteStr) as NotesData,
+        );
 
         // 2. Local notes = current React state
         const localNotes = notesRef.current;
@@ -117,7 +126,11 @@ function App() {
         const syncState = await loadSyncState();
 
         // 4. Apply three-way merge
-        const result = mergeNotesThreeWay(localNotes, remoteNotes, syncState.lastSyncedSnapshots);
+        const result = mergeNotesThreeWay(
+          localNotes,
+          remoteNotes,
+          syncState.lastSyncedSnapshots,
+        );
 
         // 5. Save merged result back to pref
         isWritingFromSyncRef.current = true;
@@ -142,7 +155,9 @@ function App() {
         setTitle(newSelected?.title ?? result.merged[0]?.title ?? "");
 
         if (result.hadConflicts) {
-          console.warn(`[Floorp Notes] Sync merge completed with ${result.conflictCount} conflict(s). Conflict copies created.`);
+          console.warn(
+            `[Floorp Notes] Sync merge completed with ${result.conflictCount} conflict(s). Conflict copies created.`,
+          );
         } else {
           console.info("[Floorp Notes] Sync merge completed — no conflicts.");
         }
@@ -150,9 +165,6 @@ function App() {
         console.error("[Floorp Notes] Failed to apply sync merge:", err);
       }
     };
-
-    // We need to import rpc for getStringPref inside the callback
-    // rpc is already available via the dataManager import chain
 
     console.debug("[Floorp Notes] Registering sync pref observer…");
     addPrefObserver(NOTES_PREF_NAME, onPrefChanged);
@@ -183,17 +195,31 @@ function App() {
       setSaveStatus("saving");
       await saveNotes(buildNotesData(notesToSave));
 
-      // Update sync state after successful local save so next sync has correct base
+      // Update sync base after local save.
+      // NOTE: We advance lastSyncedSnapshots on local save so that the next
+      // incoming sync can diff against what we just wrote. This means a true
+      // conflict (local edit + remote edit to the same note between syncs)
+      // will be detected and a conflict copy created, which is the desired
+      // behaviour. The trade-off is that if the remote side never receives
+      // our change (e.g. sync is disabled), a subsequent remote change to the
+      // same note would appear as a unilateral remote edit rather than a
+      // conflict. This is acceptable because Firefox Sync is expected to
+      // deliver the local change before the remote one arrives.
       try {
         const syncState = await loadSyncState();
-        // Merge current snapshots with existing ones (preserves snapshots of notes we didn't just save)
         const updatedState = syncStateFromNotes(notesToSave);
-        Object.assign(syncState.lastSyncedSnapshots, updatedState.lastSyncedSnapshots);
+        Object.assign(
+          syncState.lastSyncedSnapshots,
+          updatedState.lastSyncedSnapshots,
+        );
         syncState.lastSyncTime = updatedState.lastSyncTime;
         await saveSyncState(syncState);
       } catch (syncErr) {
         // Non-critical: sync state update failure shouldn't block the UI
-        console.warn("[Floorp Notes] Failed to update sync state after save:", syncErr);
+        console.warn(
+          "[Floorp Notes] Failed to update sync state after save:",
+          syncErr,
+        );
       }
 
       setSaveStatus("saved");
@@ -260,8 +286,8 @@ function App() {
         prevNotes.map((note) =>
           note.id === selectedNote.id
             ? { ...note, title, updatedAt: Date.now() }
-            : note,
-        ),
+            : note
+        )
       );
     }, 300);
 
@@ -311,7 +337,7 @@ function App() {
     const updatedNote = { ...current, content, updatedAt: Date.now() };
     setSelectedNote(updatedNote);
     setNotes((prevNotes) =>
-      prevNotes.map((note) => note.id === current.id ? updatedNote : note),
+      prevNotes.map((note) => note.id === current.id ? updatedNote : note)
     );
   }, []);
 
@@ -356,8 +382,8 @@ function App() {
       if (prev && title !== prev.title) {
         setNotes((prevNotes) =>
           prevNotes.map((n) =>
-            n.id === prev.id ? { ...n, title, updatedAt: Date.now() } : n,
-          ),
+            n.id === prev.id ? { ...n, title, updatedAt: Date.now() } : n
+          )
         );
       }
       return note;
@@ -372,7 +398,10 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-base-100 text-base-content">
       {/* Prevent any element outside the editor from stealing focus on mousedown */}
-      <header className="bg-base-200 px-2 py-1.5 flex justify-between items-center" onMouseDown={(e) => e.preventDefault()}>
+      <header
+        className="bg-base-200 px-2 py-1.5 flex justify-between items-center"
+        onMouseDown={(e) => e.preventDefault()}
+      >
         <div className="flex items-center gap-1.5">
           <h1 className="text-sm font-bold text-base-content">
             {t("title.default")}
@@ -403,7 +432,11 @@ function App() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {isLoading
           ? (
-            <div className="flex flex-col items-center justify-center h-full" role="status" aria-live="polite">
+            <div
+              className="flex flex-col items-center justify-center h-full"
+              role="status"
+              aria-live="polite"
+            >
               <span className="loading loading-spinner loading-lg text-primary">
               </span>
               <p className="mt-4">{t("notes.loading")}</p>
@@ -420,11 +453,17 @@ function App() {
                 onReorderNotes={(reorderedSubset) => {
                   setNotes((prevNotes) => {
                     // Build an id→index map from the reordered subset
-                    const orderMap = new Map(reorderedSubset.map((n, i) => [n.id, i]));
+                    const orderMap = new Map(
+                      reorderedSubset.map((n, i) => [n.id, i]),
+                    );
                     // Separate notes into those in the subset and those not
-                    const inSubset = prevNotes.filter((n) => orderMap.has(n.id));
+                    const inSubset = prevNotes.filter((n) =>
+                      orderMap.has(n.id)
+                    );
                     // Sort the subset according to the new order
-                    inSubset.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
+                    inSubset.sort((a, b) =>
+                      (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+                    );
                     // Rebuild: place reordered items back at their original positions
                     const result: Note[] = [];
                     let subIdx = 0;
@@ -439,7 +478,9 @@ function App() {
                   });
                 }}
                 isReorderMode={isReorderMode}
-                emptyMessage={searchQuery ? t("notes.noSearchResults") : undefined}
+                emptyMessage={searchQuery
+                  ? t("notes.noSearchResults")
+                  : undefined}
               />
 
               <div className="flex-1 flex flex-col p-2 overflow-hidden border-t border-base-content/20">
@@ -461,9 +502,17 @@ function App() {
                                 clearTimeout(titleSyncTimeoutRef.current);
                                 titleSyncTimeoutRef.current = null;
                               }
-                              const updatedNote = { ...selectedNote, title, updatedAt: Date.now() };
+                              const updatedNote = {
+                                ...selectedNote,
+                                title,
+                                updatedAt: Date.now(),
+                              };
                               setNotes((prevNotes) =>
-                                prevNotes.map((note) => note.id === selectedNote.id ? updatedNote : note),
+                                prevNotes.map((note) =>
+                                  note.id === selectedNote.id
+                                    ? updatedNote
+                                    : note
+                                )
                               );
                               setSelectedNote(updatedNote);
                             }

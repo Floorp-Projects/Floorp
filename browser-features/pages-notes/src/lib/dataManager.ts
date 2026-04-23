@@ -112,8 +112,20 @@ export async function loadSyncState(): Promise<SyncState> {
   try {
     const raw = await rpc.getStringPref(SYNC_STATE_PREF);
     if (!raw) return emptySyncState();
-    return JSON.parse(raw) as SyncState;
-  } catch {
+    const parsed = JSON.parse(raw) as unknown;
+    // Validate shape before trusting it
+    if (
+      typeof parsed === "object" && parsed !== null &&
+      "lastSyncedSnapshots" in parsed && "lastSyncTime" in parsed
+    ) {
+      return parsed as SyncState;
+    }
+    console.warn(
+      "[Floorp Notes] Sync state pref has unexpected shape, resetting to empty.",
+    );
+    return emptySyncState();
+  } catch (e) {
+    console.warn("[Floorp Notes] Failed to parse sync state, resetting:", e);
     return emptySyncState();
   }
 }
@@ -122,7 +134,9 @@ export async function loadSyncState(): Promise<SyncState> {
 export async function saveSyncState(state: SyncState): Promise<void> {
   try {
     await rpc.setStringPref(SYNC_STATE_PREF, JSON.stringify(state));
-    console.debug(`[Floorp Notes] Saved sync state with ${Object.keys(state.lastSyncedSnapshots).length} snapshots`);
+    console.debug(
+      `[Floorp Notes] Saved sync state with ${Object.keys(state.lastSyncedSnapshots).length} snapshots`,
+    );
   } catch (e) {
     console.error("[Floorp Notes] Failed to save sync state:", e);
   }
@@ -154,7 +168,9 @@ export function mergeNotesThreeWay(
   remote: Note[],
   base: Record<string, NoteSnapshot>,
 ): MergeResult {
-  console.debug(`[Floorp Notes] Three-way merge: ${local.length} local, ${remote.length} remote, ${Object.keys(base).length} base snapshots`);
+  console.debug(
+    `[Floorp Notes] Three-way merge: ${local.length} local, ${remote.length} remote, ${Object.keys(base).length} base snapshots`,
+  );
 
   // Build lookup maps
   const localMap = new Map<string, Note>();
@@ -194,21 +210,27 @@ export function mergeNotesThreeWay(
         // No change on either side — take remote (canonical)
         merged.push(remoteN);
       } else if (localChanged && !remoteChanged) {
-        console.debug(`[Floorp Notes] note ${noteId}: local changed, keeping local`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: local changed, keeping local`,
+        );
         merged.push(localN);
       } else if (!localChanged && remoteChanged) {
-        console.debug(`[Floorp Notes] note ${noteId}: remote changed, taking remote`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: remote changed, taking remote`,
+        );
         merged.push(remoteN);
       } else {
         // ── BOTH changed → CONFLICT ──
         hadConflicts = true;
-        const newerNote = localN.updatedAt >= remoteN.updatedAt ? localN : remoteN;
-        const olderNote = localN.updatedAt >= remoteN.updatedAt ? remoteN : localN;
+        const newerNote =
+          localN.updatedAt >= remoteN.updatedAt ? localN : remoteN;
+        const olderNote =
+          localN.updatedAt >= remoteN.updatedAt ? remoteN : localN;
 
         console.warn(
           `[Floorp Notes] CONFLICT on note ${noteId} '${newerNote.title.slice(0, 30)}' — ` +
-          `both sides changed, keeping newer (${new Date(newerNote.updatedAt).toISOString()}), ` +
-          `creating conflict copy of older (${new Date(olderNote.updatedAt).toISOString()})`,
+            `both sides changed, keeping newer (${new Date(newerNote.updatedAt).toISOString()}), ` +
+            `creating conflict copy of older (${new Date(olderNote.updatedAt).toISOString()})`,
         );
 
         merged.push(newerNote);
@@ -229,18 +251,26 @@ export function mergeNotesThreeWay(
     } else if (!localN && remoteN && baseS) {
       // ── Deleted locally, still exists remotely ──
       if (hasChanged(remoteN, baseS)) {
-        console.debug(`[Floorp Notes] note ${noteId}: deleted locally but remote changed, keeping remote`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: deleted locally but remote changed, keeping remote`,
+        );
         merged.push(remoteN);
       } else {
-        console.debug(`[Floorp Notes] note ${noteId}: deleted locally, remote unchanged, respecting deletion`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: deleted locally, remote unchanged, respecting deletion`,
+        );
       }
     } else if (localN && !remoteN && baseS) {
       // ── Deleted remotely, still exists locally ──
       if (hasChanged(localN, baseS)) {
-        console.debug(`[Floorp Notes] note ${noteId}: deleted remotely but local changed, keeping local`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: deleted remotely but local changed, keeping local`,
+        );
         merged.push(localN);
       } else {
-        console.debug(`[Floorp Notes] note ${noteId}: deleted remotely, local unchanged, respecting deletion`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: deleted remotely, local unchanged, respecting deletion`,
+        );
       }
     } else if (localN && !remoteN && !baseS) {
       // ── New note: only on local (never synced before) ──
@@ -253,10 +283,14 @@ export function mergeNotesThreeWay(
     } else if (localN && remoteN && !baseS) {
       // ── Both exist but no base snapshot (first sync with existing notes) ──
       if (localN.updatedAt >= remoteN.updatedAt) {
-        console.debug(`[Floorp Notes] note ${noteId}: no base, local is newer, keeping local`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: no base, local is newer, keeping local`,
+        );
         merged.push(localN);
       } else {
-        console.debug(`[Floorp Notes] note ${noteId}: no base, remote is newer, taking remote`);
+        console.debug(
+          `[Floorp Notes] note ${noteId}: no base, remote is newer, taking remote`,
+        );
         merged.push(remoteN);
       }
     }
@@ -266,7 +300,9 @@ export function mergeNotesThreeWay(
   // Append conflict copies at the end
   if (conflictCopies.length > 0) {
     merged.push(...conflictCopies);
-    console.warn(`[Floorp Notes] Created ${conflictCopies.length} conflict copy note(s)`);
+    console.warn(
+      `[Floorp Notes] Created ${conflictCopies.length} conflict copy note(s)`,
+    );
   }
 
   // Sort by updatedAt descending (newest first)
@@ -274,7 +310,7 @@ export function mergeNotesThreeWay(
 
   console.info(
     `[Floorp Notes] Three-way merge result: ${result.length} notes ` +
-    `(${conflictCopies.length} conflict copies), hadConflicts=${hadConflicts}`,
+      `(${conflictCopies.length} conflict copies), hadConflicts=${hadConflicts}`,
   );
 
   return { merged: result, hadConflicts, conflictCount: conflictCopies.length };
@@ -305,4 +341,3 @@ export function notesToNotesData(notes: Note[]): NotesData {
     updatedAts: notes.map((n) => n.updatedAt),
   };
 }
-
