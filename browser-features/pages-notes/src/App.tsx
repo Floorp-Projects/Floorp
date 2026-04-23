@@ -2,7 +2,18 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { NoteList } from "./components/notes/NoteList.tsx";
 import { RichTextEditor } from "./components/editor/RichTextEditor.tsx";
 import type { JSONContent } from "@tiptap/react";
-import { getNotes, type NotesData, saveNotes } from "./lib/dataManager.ts";
+import {
+  getNotes,
+  type NotesData,
+  saveNotes,
+  loadSyncState,
+  saveSyncState,
+  mergeNotesThreeWay,
+  notesDataToNotes,
+  notesToNotesData,
+  NOTES_PREF_NAME,
+} from "./lib/dataManager.ts";
+import { rpc, addPrefObserver, removePrefObserver } from "./lib/rpc/rpc.ts";
 import { useTranslation } from "react-i18next";
 import { ConfirmModal } from "./components/common/ConfirmModal.tsx";
 import { SaveStatus } from "./components/common/SaveStatus.tsx";
@@ -29,6 +40,10 @@ function App() {
   const pendingSaveRef = useRef<Note[] | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
+  /** Flag: when true, the current pref write originates from our sync merge — skip observer reaction. */
+  const isWritingFromSyncRef = useRef(false);
+  /** Flag: when true, the current pref write is a user-initiated save — observer should skip. */
+  const isWritingFromLocalRef = useRef(false);
 
   // Keep notesRef in sync
   useEffect(() => {
@@ -73,6 +88,86 @@ function App() {
     loadNotes();
   }, []);
 
+  // ──────────────────────────────────────────────────────────
+  // Sync observer: detect external pref changes (Firefox Sync)
+  // and apply three-way merge to resolve conflicts.
+  // ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isLoading) return;
+
+    const onPrefChanged = async (prefName: string) => {
+      // Skip if this change was triggered by our own save or merge
+      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
+        return;
+      }
+
+      console.info(`[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`);
+
+      try {
+        // 1. Read remote notes from the pref (what sync just wrote)
+        const remoteStr = await rpc.getStringPref(NOTES_PREF_NAME);
+        if (!remoteStr) return; // Empty or null — nothing to merge
+        const remoteNotes = notesDataToNotes(JSON.parse(remoteStr) as NotesData);
+
+        // 2. Local notes = current React state
+        const localNotes = notesRef.current;
+
+        // 3. Load base (last-synced snapshots)
+        const syncState = await loadSyncState();
+
+        // 4. Apply three-way merge
+        const result = mergeNotesThreeWay(localNotes, remoteNotes, syncState.lastSyncedSnapshots);
+
+        // 5. Save merged result back to pref
+        isWritingFromSyncRef.current = true;
+        try {
+          await saveNotes(notesToNotesData(result.merged));
+        } finally {
+          isWritingFromSyncRef.current = false;
+        }
+
+        // 6. Save updated sync state
+        const newSyncState = {
+          lastSyncedSnapshots: Object.fromEntries(
+            result.merged.map((n) => [n.id, { id: n.id, title: n.title, content: n.content, updatedAt: n.updatedAt }]),
+          ),
+          lastSyncTime: Date.now(),
+        };
+        await saveSyncState(newSyncState);
+
+        // 7. Update React state with merged notes
+        setNotes(result.merged);
+
+        // 8. Preserve selected note if it still exists, otherwise select first
+        const currentSelectedId = selectedNoteRef.current?.id;
+        const newSelected = currentSelectedId
+          ? result.merged.find((n) => n.id === currentSelectedId)
+          : result.merged[0];
+        setSelectedNote(newSelected ?? result.merged[0] ?? null);
+        setTitle(newSelected?.title ?? result.merged[0]?.title ?? "");
+
+        if (result.hadConflicts) {
+          console.warn(`[Floorp Notes] Sync merge completed with ${result.conflictCount} conflict(s). Conflict copies created.`);
+        } else {
+          console.info("[Floorp Notes] Sync merge completed — no conflicts.");
+        }
+      } catch (err) {
+        console.error("[Floorp Notes] Failed to apply sync merge:", err);
+      }
+    };
+
+    // We need to import rpc for getStringPref inside the callback
+    // rpc is already available via the dataManager import chain
+
+    console.debug("[Floorp Notes] Registering sync pref observer…");
+    addPrefObserver(NOTES_PREF_NAME, onPrefChanged);
+
+    return () => {
+      console.debug("[Floorp Notes] Removing sync pref observer.");
+      removePrefObserver(onPrefChanged);
+    };
+  }, [isLoading]);
+
   const buildNotesData = useCallback((notesToSave: Note[]): NotesData => ({
     ids: notesToSave.map((note) => note.id),
     titles: notesToSave.map((note) => note.title),
@@ -88,15 +183,36 @@ function App() {
       return;
     }
     isSavingRef.current = true;
+    isWritingFromLocalRef.current = true;
     try {
       setSaveStatus("saving");
       await saveNotes(buildNotesData(notesToSave));
+
+      // Update sync state after successful local save so next sync has correct base
+      try {
+        const syncState = await loadSyncState();
+        for (const note of notesToSave) {
+          syncState.lastSyncedSnapshots[note.id] = {
+            id: note.id,
+            title: note.title,
+            content: note.content,
+            updatedAt: note.updatedAt,
+          };
+        }
+        syncState.lastSyncTime = Date.now();
+        await saveSyncState(syncState);
+      } catch (syncErr) {
+        // Non-critical: sync state update failure shouldn't block the UI
+        console.warn("[Floorp Notes] Failed to update sync state after save:", syncErr);
+      }
+
       setSaveStatus("saved");
     } catch (error) {
       console.error("Failed to save note data:", error);
       setSaveStatus("error");
     } finally {
       isSavingRef.current = false;
+      isWritingFromLocalRef.current = false;
       // Flush any queued save
       const pending = pendingSaveRef.current;
       if (pending) {
