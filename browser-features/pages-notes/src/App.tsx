@@ -9,6 +9,7 @@ import {
   loadSyncState,
   saveSyncState,
   mergeNotesThreeWay,
+  syncStateFromNotes,
   notesDataToNotes,
   notesToNotesData,
   NOTES_PREF_NAME,
@@ -127,13 +128,7 @@ function App() {
         }
 
         // 6. Save updated sync state
-        const newSyncState = {
-          lastSyncedSnapshots: Object.fromEntries(
-            result.merged.map((n) => [n.id, { id: n.id, title: n.title, content: n.content, updatedAt: n.updatedAt }]),
-          ),
-          lastSyncTime: Date.now(),
-        };
-        await saveSyncState(newSyncState);
+        await saveSyncState(syncStateFromNotes(result.merged));
 
         // 7. Update React state with merged notes
         setNotes(result.merged);
@@ -191,15 +186,10 @@ function App() {
       // Update sync state after successful local save so next sync has correct base
       try {
         const syncState = await loadSyncState();
-        for (const note of notesToSave) {
-          syncState.lastSyncedSnapshots[note.id] = {
-            id: note.id,
-            title: note.title,
-            content: note.content,
-            updatedAt: note.updatedAt,
-          };
-        }
-        syncState.lastSyncTime = Date.now();
+        // Merge current snapshots with existing ones (preserves snapshots of notes we didn't just save)
+        const updatedState = syncStateFromNotes(notesToSave);
+        Object.assign(syncState.lastSyncedSnapshots, updatedState.lastSyncedSnapshots);
+        syncState.lastSyncTime = updatedState.lastSyncTime;
         await saveSyncState(syncState);
       } catch (syncErr) {
         // Non-critical: sync state update failure shouldn't block the UI

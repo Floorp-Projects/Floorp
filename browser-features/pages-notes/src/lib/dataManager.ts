@@ -94,7 +94,7 @@ function emptySyncState(): SyncState {
 }
 
 /** Creates a SyncState from an array of merged notes. */
-function syncStateFromNotes(notes: Note[]): SyncState {
+export function syncStateFromNotes(notes: Note[]): SyncState {
   const snapshots: Record<string, NoteSnapshot> = {};
   for (const note of notes) {
     snapshots[note.id] = {
