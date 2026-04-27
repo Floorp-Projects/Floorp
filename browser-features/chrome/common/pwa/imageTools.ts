@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs",
+const { ShellService } = ChromeUtils.importESModule(
+  "resource:///modules/ShellService.sys.mjs",
 );
 
 const { FileUtils } = ChromeUtils.importESModule(
@@ -181,27 +181,27 @@ export const ImageTools = {
     height: number,
     target: nsIFile,
   ) {
-    let format: string;
-    if (AppConstants.platform === "win") {
-      format = "image/vnd.microsoft.icon";
-    }
-    if (AppConstants.platform === "linux") {
-      format = "image/png";
-    }
+    // Use ShellService.shortcutIconType for platform-appropriate format
+    // (replaces hardcoded platform checks, Bug 1985098, Firefox 150)
+    const iconType = ShellService.shortcutIconType;
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
       let workingContainer = container;
-      if (format === "image/vnd.microsoft.icon") {
+      if (iconType.extension === "ico") {
         workingContainer = rasterizeVectorIcon(workingContainer, width, height);
       }
       let stream: nsIInputStream;
       try {
         if (workingContainer.type === Ci.imgIContainer.TYPE_VECTOR) {
-          stream = ImgTools.encodeImage(workingContainer, format, "");
+          stream = ImgTools.encodeImage(
+            workingContainer,
+            iconType.mimeType,
+            "",
+          );
         } else {
           stream = ImgTools.encodeScaledImage(
             workingContainer,
-            format,
+            iconType.mimeType,
             width,
             height,
             "",
@@ -209,7 +209,11 @@ export const ImageTools = {
         }
       } catch {
         try {
-          stream = ImgTools.encodeImage(workingContainer, format, "");
+          stream = ImgTools.encodeImage(
+            workingContainer,
+            iconType.mimeType,
+            "",
+          );
         } catch (e2) {
           reject(e2);
           return;

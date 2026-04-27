@@ -53,7 +53,8 @@ declare global {
   }
 
   interface nsIWindowsAlertNotification
-    extends nsIAlertNotification,
+    extends
+      nsIAlertNotification,
       Enums<typeof nsIWindowsAlertNotification_ImagePlacement> {
     imagePlacement: nsIWindowsAlertNotification.ImagePlacement;
   }
@@ -138,7 +139,8 @@ declare global {
   }
 
   interface nsIWindowsShellService
-    extends nsIShellService,
+    extends
+      nsIShellService,
       Enums<typeof nsIWindowsShellService_LaunchOnLoginEnabledEnumerator> {
     createShortcut(
       aBinary: nsIFile,
@@ -161,11 +163,17 @@ declare global {
     isCurrentAppPinnedToTaskbarAsync(aumid: string): Promise<any>;
     pinShortcutToTaskbar(
       aAppUserModelId: string,
-      aShortcutPath: string,
+      aShortcutFolder: string,
+      aShortcutRelativePath: string,
     ): Promise<any>;
-    createWindowsIcon(aFile: nsIFile, aContainer: imgIContainer): Promise<any>;
-    unpinShortcutFromTaskbar(aShortcutPath: string): void;
-    getTaskbarTabShortcutPath(aShortcutName: string): string;
+    deleteShortcut(
+      aShortcutFolder: string,
+      aShortcutRelativePath: string,
+    ): Promise<any>;
+    unpinShortcutFromTaskbar(
+      aShortcutFolder: string,
+      aShortcutRelativePath: string,
+    ): void;
     getTaskbarTabPins(): string[];
     classifyShortcut(aPath: string): string;
     hasPinnableShortcut(
@@ -178,6 +186,8 @@ declare global {
     checkCurrentProcessAUMIDForTesting(): string;
     isDefaultHandlerFor(aFileExtensionOrProtocol: string): boolean;
     queryCurrentDefaultHandlerFor(aFileExtensionOrProtocol: string): string;
+    launchOpenWithDefaultPickerForFileType(aFileType: string): void;
+    launchModernSettingsDialogDefaultApps(): void;
   }
 
   // https://searchfox.org/mozilla-central/source/toolkit/components/taskscheduler/nsIWinTaskSchedulerService.idl
