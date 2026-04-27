@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ShellService } = ChromeUtils.importESModule(
-  "resource:///modules/ShellService.sys.mjs",
-);
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
+
+function getShellService() {
+  return ChromeUtils.importESModule("resource:///modules/ShellService.sys.mjs")
+    .ShellService;
+}
 
 const { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs",
@@ -189,7 +190,7 @@ export const ImageTools = {
   ) {
     // Use ShellService.shortcutIconType for platform-appropriate format
     // (replaces hardcoded platform checks, Bug 1985098, Firefox 150)
-    const iconType = ShellService.shortcutIconType;
+    const iconType = getShellService().shortcutIconType;
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
       let workingContainer = container;
@@ -279,7 +280,7 @@ export const ImageTools = {
     const { container, type } = await ImageTools.loadImage(sourceURI);
     try {
       if (
-        ShellService.shortcutIconType.extension === "png" &&
+        getShellService().shortcutIconType.extension === "png" &&
         type?.includes("svg") &&
         container.type === Ci.imgIContainer.TYPE_VECTOR
       ) {
@@ -378,8 +379,9 @@ function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
   }
 
   const semicolonIndex = metadata.indexOf(";");
-  const mime =
-    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
+  const mime = semicolonIndex === -1
+    ? metadata
+    : metadata.substring(0, semicolonIndex);
 
   if (!mime) {
     return null;
