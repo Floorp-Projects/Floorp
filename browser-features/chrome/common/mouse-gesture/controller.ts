@@ -206,13 +206,13 @@ export class MouseGestureController {
       const RIGHT = 2;
       let action: string | null = null;
 
-      // Right button held, then left button pressed -> back
+      // Right button held, then left button pressed -> use configured action
       if (this.isGestureActive && event.button === LEFT) {
-        action = "gecko-back";
+        action = config.rockerActions.rightLeft;
       }
-      // Left button held, then right button pressed -> forward
+      // Left button held, then right button pressed -> use configured action
       else if (this.pressedButtons.has(LEFT) && event.button === RIGHT) {
-        action = "gecko-forward";
+        action = config.rockerActions.leftRight;
       }
 
       if (action) {
