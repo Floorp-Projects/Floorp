@@ -230,7 +230,7 @@ async function cmdStart() {
     const cmd = new Deno.Command("bash", {
       args: [
         "-c",
-        `setsid "${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
+        `nohup "${denoPath}" task feles-build dev > "${logFile}" 2>&1 & echo $!`,
       ],
       cwd: PROJECT_ROOT,
       stdout: "piped",
@@ -354,9 +354,72 @@ async function cmdStop() {
     await new Promise((r) => setTimeout(r, 1000));
   } else {
     if (pid) {
-      await runSilent("kill", ["-TERM", `-${pid}`]);
-      await new Promise((r) => setTimeout(r, 1000));
-      await runSilent("kill", ["-9", `-${pid}`]);
+      // Collect all descendant PIDs via BFS (pgrep -P only finds direct children)
+      const allDescendants: string[] = [];
+      const queue = [pid];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        const pgrep = new Deno.Command("pgrep", {
+          args: ["-P", current],
+          stdout: "piped",
+          stderr: "null",
+        });
+        const pgrepOut = await pgrep.output();
+        const children = new TextDecoder()
+          .decode(pgrepOut.stdout)
+          .trim()
+          .split(/\n/)
+          .filter(Boolean);
+        for (const child of children) {
+          if (!allDescendants.includes(child)) {
+            allDescendants.push(child);
+            queue.push(child);
+          }
+        }
+      }
+
+      // SIGTERM: descendants first (deepest first), then parent
+      for (const p of [...allDescendants.reverse(), pid]) {
+        await runSilent("kill", ["-TERM", p]);
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+
+      // SIGKILL: anything still alive
+      for (const p of [...allDescendants, pid]) {
+        await runSilent("kill", ["-9", p]);
+      }
+    }
+
+    // Kill floorp browser processes using the test profile
+    const findFloorp = new Deno.Command("pgrep", {
+      args: ["-f", "_dist/profile/test"],
+      stdout: "piped",
+      stderr: "null",
+    });
+    const floorpOut = await findFloorp.output();
+    const floorpPids = new TextDecoder()
+      .decode(floorpOut.stdout)
+      .trim()
+      .split(/\n/)
+      .filter(Boolean);
+    for (const p of floorpPids) {
+      await runSilent("kill", ["-9", p]);
+    }
+
+    // Fallback: kill any orphaned deno processes running feles-build or vite dev servers
+    const findOrphans = new Deno.Command("pgrep", {
+      args: ["-f", "feles-build"],
+      stdout: "piped",
+      stderr: "null",
+    });
+    const orphanOut = await findOrphans.output();
+    const orphanPids = new TextDecoder()
+      .decode(orphanOut.stdout)
+      .trim()
+      .split(/\n/)
+      .filter(Boolean);
+    for (const p of orphanPids) {
+      await runSilent("kill", ["-9", p]);
     }
   }
 
