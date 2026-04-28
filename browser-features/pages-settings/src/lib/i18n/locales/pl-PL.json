@@ -526,10 +526,6 @@
         "actionDescription": "Description of the gesture",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
-        "rockerLeftRight": "Lewy → Prawy",
-        "rockerLeftRightDescription": "Przytrzymaj lewy przycisk, następnie kliknij prawym",
-        "rockerRightLeft": "Prawy → Lewy",
-        "rockerRightLeftDescription": "Przytrzymaj prawy przycisk, następnie kliknij lewym",
         "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Go Back",
