@@ -47,6 +47,12 @@ const ContextMenuCodec = t.type({
   preventionTimeout: t.number,
 });
 
+const RockerActionsCodec = t.type({
+  leftRight: t.string,
+  rightLeft: t.string,
+});
+export type RockerActions = t.TypeOf<typeof RockerActionsCodec>;
+
 const MouseGestureConfigRequired = t.type({
   rockerGesturesEnabled: t.boolean,
   wheelGesturesEnabled: t.boolean,
@@ -57,6 +63,7 @@ const MouseGestureConfigRequired = t.type({
   trailWidth: t.number,
   contextMenu: ContextMenuCodec,
   actions: t.array(GestureActionCodec),
+  rockerActions: RockerActionsCodec,
 });
 
 const MouseGestureConfigOptional = t.partial({
@@ -98,6 +105,10 @@ const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
     { pattern: ["left", "down"], action: "gecko-scroll-up" },
     { pattern: ["right", "down"], action: "gecko-scroll-down" },
   ],
+  rockerActions: {
+    leftRight: "gecko-forward",
+    rightLeft: "gecko-back",
+  },
 };
 
 const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig => {
@@ -119,6 +130,11 @@ const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig =>
     ),
   };
 
+  const rockerActions = {
+    ...BASE_DEFAULT_CONFIG.rockerActions,
+    ...(config?.rockerActions as Record<string, unknown> | undefined),
+  };
+
   return {
     ...BASE_DEFAULT_CONFIG,
     ...config,
@@ -127,6 +143,7 @@ const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig =>
     actions: Array.isArray(config?.actions)
       ? (config.actions as GestureAction[])
       : BASE_DEFAULT_CONFIG.actions,
+    rockerActions,
   } as MouseGestureConfig;
 };
 

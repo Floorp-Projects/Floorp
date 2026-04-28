@@ -18,6 +18,7 @@ export default function Page() {
         addAction,
         updateAction,
         deleteAction,
+        updateRockerAction,
     } = useMouseGestureConfig();
 
     if (loading) {
@@ -40,6 +41,7 @@ export default function Page() {
                     config={config}
                     toggleEnabled={toggleEnabled}
                     updateConfig={updateConfig}
+                    updateRockerAction={updateRockerAction}
                 />
 
                 <ActionsSettings

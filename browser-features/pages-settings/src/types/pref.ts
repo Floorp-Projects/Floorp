@@ -176,6 +176,11 @@ export const zMouseGestureContextMenu = t.type({
   preventionTimeout: t.number,
 });
 
+export const zRockerActions = t.type({
+  leftRight: t.string,
+  rightLeft: t.string,
+});
+
 export const zMouseGestureConfig = t.type({
   enabled: t.boolean,
   rockerGesturesEnabled: t.boolean,
@@ -187,6 +192,7 @@ export const zMouseGestureConfig = t.type({
   trailWidth: t.number,
   contextMenu: zMouseGestureContextMenu,
   actions: t.array(zGestureAction),
+  rockerActions: zRockerActions,
 });
 
 export type GestureAction = t.TypeOf<typeof zGestureAction>;
