@@ -18,10 +18,7 @@ import {
   GestureDirectionCodec,
   GestureActionCodec,
 } from "../config.ts";
-import type {
-  GestureDirection,
-  GesturePattern,
-} from "../config.ts";
+import type { GestureDirection, GesturePattern } from "../config.ts";
 
 // ---------------------------------------------------------------------------
 // patternToString / stringToPattern tests
@@ -420,6 +417,7 @@ function testDefaultConfigHasAllBaseFields(): void {
   assert(config.trailWidth !== undefined, "trailWidth should exist");
   assert(config.contextMenu !== undefined, "contextMenu should exist");
   assert(config.actions !== undefined, "actions should exist");
+  assert(config.rockerActions !== undefined, "rockerActions should exist");
 }
 
 // ---------------------------------------------------------------------------
@@ -437,6 +435,7 @@ function testConfigCodecValidMinimal(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["left"], action: "back" }],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(result._tag === "Right", "valid config should pass validation");
@@ -454,6 +453,7 @@ function testConfigCodecValidWithOptionalEnabled(): void {
     trailWidth: 10,
     contextMenu: { minDistance: 10, preventionTimeout: 500 },
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(
@@ -473,6 +473,7 @@ function testConfigCodecValidEmptyActions(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(result._tag === "Right", "empty actions array should be valid");
@@ -501,6 +502,7 @@ function testConfigCodecInvalidSensitivityType(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -520,6 +522,7 @@ function testConfigCodecInvalidActionPattern(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["invalid-direction"], action: "test" }],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -539,6 +542,7 @@ function testConfigCodecInvalidTrailWidthType(): void {
     trailWidth: "thick", // Should be number
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -558,6 +562,7 @@ function testConfigCodecInvalidShowTrailType(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(result._tag === "Left", "wrong showTrail type should fail validation");
@@ -574,6 +579,7 @@ function testConfigCodecInvalidContextMenuStructure(): void {
     trailWidth: 3,
     contextMenu: { minDistance: "five" }, // Should be number, missing preventionTimeout
     actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -593,6 +599,7 @@ function testConfigCodecInvalidActionMissingAction(): void {
     trailWidth: 3,
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["left"] }], // Missing "action" field
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
