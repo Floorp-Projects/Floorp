@@ -208,10 +208,7 @@ function App() {
       try {
         const syncState = await loadSyncState();
         const updatedState = syncStateFromNotes(notesToSave);
-        Object.assign(
-          syncState.lastSyncedSnapshots,
-          updatedState.lastSyncedSnapshots,
-        );
+        syncState.lastSyncedSnapshots = updatedState.lastSyncedSnapshots;
         syncState.lastSyncTime = updatedState.lastSyncTime;
         await saveSyncState(syncState);
       } catch (syncErr) {
@@ -247,8 +244,9 @@ function App() {
     }, 500);
   }, [saveNotesToStorage]);
 
+  // Auto-save: skip when update originates from sync merge to prevent re-entry
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isWritingFromSyncRef.current) {
       debouncedSave(notes);
     }
   }, [notes, isLoading, debouncedSave]);

@@ -116,7 +116,8 @@ export async function loadSyncState(): Promise<SyncState> {
     // Validate shape before trusting it
     if (
       typeof parsed === "object" && parsed !== null &&
-      "lastSyncedSnapshots" in parsed && "lastSyncTime" in parsed
+      "lastSyncedSnapshots" in parsed && "lastSyncTime" in parsed &&
+      typeof parsed.lastSyncTime === "number"
     ) {
       return parsed as SyncState;
     }
@@ -305,8 +306,9 @@ export function mergeNotesThreeWay(
     );
   }
 
-  // Sort by updatedAt descending (newest first)
-  const result = merged.sort((a, b) => b.updatedAt - a.updatedAt);
+  // Preserve local order; append new-remote and conflict copies at the end.
+  // Do NOT sort by updatedAt — that would destroy user's drag-and-drop reorder.
+  const result: Note[] = merged;
 
   console.info(
     `[Floorp Notes] Three-way merge result: ${result.length} notes ` +
