@@ -396,5 +396,27 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "commandPalette": {
+    "placeholder": "Type a command...",
+    "categories": {
+      "recent": "Recently Used",
+      "navigation": "Navigation",
+      "tabs": "Tabs",
+      "zoom": "Zoom",
+      "bookmarks": "Bookmarks",
+      "page": "Page",
+      "search": "Search",
+      "sidebar": "Sidebar",
+      "scrolling": "Scrolling",
+      "history": "History",
+      "window": "Window",
+      "tools": "Tools",
+      "downloads": "Downloads",
+      "workspace": "Workspaces",
+      "floorp": "Floorp",
+      "media": "Media"
+    },
+    "noResults": "No commands found"
   }
 }

@@ -1,0 +1,173 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import {
+  getAllGestureActions,
+  getActionDescription,
+  getActionDisplayName,
+} from "../mouse-gesture/utils/gestures.ts";
+import { fuzzySearch } from "./fuzzy.ts";
+
+export interface PaletteCommand {
+  id: string;
+  label: string;
+  description: string;
+  category: string;
+  keywords: string[];
+  fn: (win: Window) => void;
+}
+
+const ACTION_CATEGORY_MAP: Record<string, string> = {
+  "gecko-back": "navigation",
+  "gecko-forward": "navigation",
+  "gecko-reload": "navigation",
+  "gecko-force-reload": "navigation",
+  "gecko-stop": "navigation",
+  "gecko-open-home-page": "navigation",
+
+  "gecko-close-tab": "tabs",
+  "gecko-open-new-tab": "tabs",
+  "gecko-duplicate-tab": "tabs",
+  "gecko-reload-all-tabs": "tabs",
+  "gecko-restore-last-tab": "tabs",
+  "gecko-show-next-tab": "tabs",
+  "gecko-show-previous-tab": "tabs",
+  "gecko-show-previously-selected-tab": "tabs",
+  "gecko-show-all-tabs-panel": "tabs",
+  "gecko-mute-current-tab": "tabs",
+
+  "gecko-zoom-in": "zoom",
+  "gecko-zoom-out": "zoom",
+  "gecko-reset-zoom": "zoom",
+
+  "gecko-bookmark-this-page": "bookmarks",
+
+  "gecko-save-page": "page",
+  "gecko-print-page": "page",
+  "gecko-show-source-of-page": "page",
+  "gecko-show-page-info": "page",
+  "gecko-open-screen-capture": "page",
+
+  "gecko-search-in-this-page": "search",
+  "gecko-show-next-search-result": "search",
+  "gecko-show-previous-search-result": "search",
+  "gecko-search-the-web": "search",
+
+  "gecko-show-bookmark-sidebar": "sidebar",
+  "gecko-show-history-sidebar": "sidebar",
+  "gecko-show-synced-tabs-sidebar": "sidebar",
+  "gecko-reverse-sidebar": "sidebar",
+  "gecko-hide-sidebar": "sidebar",
+  "gecko-toggle-sidebar": "sidebar",
+
+  "gecko-scroll-up": "scrolling",
+  "gecko-scroll-down": "scrolling",
+  "gecko-scroll-right": "scrolling",
+  "gecko-scroll-left": "scrolling",
+  "gecko-scroll-to-top": "scrolling",
+  "gecko-scroll-to-bottom": "scrolling",
+
+  "gecko-restore-last-session": "history",
+  "gecko-search-history": "history",
+  "gecko-manage-history": "history",
+  "gecko-forget-history": "history",
+  "gecko-quick-forget-history": "history",
+
+  "gecko-open-new-window": "window",
+  "gecko-open-new-private-window": "window",
+  "gecko-close-window": "window",
+  "gecko-restore-last-window": "window",
+  "gecko-quit-from-application": "window",
+
+  "gecko-open-addons-manager": "tools",
+  "gecko-open-migration-wizard": "tools",
+  "gecko-enter-into-customize-mode": "tools",
+  "gecko-open-task-manager": "tools",
+  "gecko-send-with-mail": "tools",
+  "gecko-enter-into-offline-mode": "tools",
+  "gecko-open-sync-preferences": "tools",
+
+  "gecko-open-downloads": "downloads",
+
+  "gecko-workspace-next": "workspace",
+  "gecko-workspace-previous": "workspace",
+
+  "floorp-rest-mode": "floorp",
+  "floorp-hide-user-interface": "floorp",
+  "floorp-toggle-navigation-panel": "floorp",
+  "floorp-toggle-zen-mode": "floorp",
+
+  "floorp-show-pip": "media",
+};
+
+const ACTION_KEYWORDS: Record<string, string[]> = {
+  "gecko-back": ["back", "previous"],
+  "gecko-forward": ["forward", "next"],
+  "gecko-reload": ["refresh", "reload"],
+  "gecko-force-reload": ["hard refresh", "hard reload", "skip cache"],
+  "gecko-close-tab": ["close", "remove tab"],
+  "gecko-open-new-tab": ["new", "open tab", "create tab"],
+  "gecko-duplicate-tab": ["clone", "copy tab"],
+  "gecko-show-next-tab": ["next tab", "switch right"],
+  "gecko-show-previous-tab": ["previous tab", "switch left"],
+  "gecko-show-all-tabs-panel": ["list tabs", "tab list"],
+  "gecko-mute-current-tab": ["mute", "silence", "audio"],
+  "gecko-bookmark-this-page": ["bookmark", "favorite", "star"],
+  "gecko-save-page": ["save", "download page"],
+  "gecko-print-page": ["print"],
+  "gecko-show-source-of-page": ["source", "view source", "html"],
+  "gecko-show-page-info": ["page info", "info"],
+  "gecko-open-screen-capture": ["screenshot", "capture", "screen"],
+  "gecko-search-in-this-page": ["find", "search page"],
+  "gecko-search-the-web": ["web search", "search"],
+  "gecko-toggle-sidebar": ["sidebar", "panel"],
+  "gecko-scroll-to-top": ["top", "beginning"],
+  "gecko-scroll-to-bottom": ["bottom", "end"],
+  "gecko-open-addons-manager": ["addons", "extensions", "plugins"],
+  "gecko-open-task-manager": ["task manager", "processes"],
+  "gecko-forget-history": ["clear history", "delete history"],
+  "gecko-restore-last-session": ["restore session", "recover"],
+  "gecko-open-downloads": ["downloads"],
+  "gecko-workspace-next": ["next workspace"],
+  "gecko-workspace-previous": ["previous workspace"],
+  "floorp-rest-mode": ["rest", "break"],
+  "floorp-hide-user-interface": ["hide ui", "hide interface"],
+  "floorp-toggle-zen-mode": ["zen", "focus", "distraction free"],
+  "floorp-show-pip": ["pip", "picture in picture", "mini player"],
+  "gecko-enter-into-customize-mode": ["customize", "toolbar"],
+  "gecko-quit-from-application": ["quit", "exit"],
+};
+
+let cachedCommands: PaletteCommand[] | null = null;
+
+function buildCommands(): PaletteCommand[] {
+  const gestureActions = getAllGestureActions();
+  return gestureActions.map((action) => ({
+    id: action.name,
+    label: getActionDisplayName(action.name),
+    description: getActionDescription(action.name),
+    category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
+    keywords: ACTION_KEYWORDS[action.name] ?? [],
+    fn: action.fn,
+  }));
+}
+
+export function getPaletteCommands(): PaletteCommand[] {
+  if (!cachedCommands) {
+    cachedCommands = buildCommands();
+  }
+  return cachedCommands;
+}
+
+export function searchCommands(query: string): PaletteCommand[] {
+  const commands = getPaletteCommands();
+  if (!query.trim()) return commands;
+  return fuzzySearch(query, commands);
+}
+
+export function getCommand(id: string): PaletteCommand | undefined {
+  return getPaletteCommands().find((cmd) => cmd.id === id);
+}
+
+export function invalidateCache() {
+  cachedCommands = null;
+}
