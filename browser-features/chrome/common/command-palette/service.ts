@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { isEnabled, setEnabled as setEnabledPref } from "./config.ts";
+import { isEnabled } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";

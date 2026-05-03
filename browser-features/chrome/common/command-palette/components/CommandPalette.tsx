@@ -46,7 +46,7 @@ export function CommandPaletteUI() {
   );
 
   return (
-    <Portal mount={document.getElementById("main-window")}>
+    <Portal mount={document.getElementById("main-window") ?? undefined}>
       <Show when={state.isVisible()}>
         <div
           id="command-palette-overlay"

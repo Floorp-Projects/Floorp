@@ -149,7 +149,7 @@ export class CommandPaletteController {
 
     // Focus the search input after render
     this.targetWindow.setTimeout(() => {
-      const input = this.targetWindow.document.getElementById(
+      const input = this.targetWindow.document?.getElementById(
         "command-palette-search",
       );
       if (input) (input as HTMLInputElement).focus();
