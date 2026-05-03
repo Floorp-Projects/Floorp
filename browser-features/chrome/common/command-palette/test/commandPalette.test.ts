@@ -43,7 +43,7 @@ const rawTests: TestCase[] = [
     fn() {
       const target = makeTarget("Reload");
       const score = fuzzyScore("xyz", target);
-      assertEquals(score, 0);
+      assertEquals(score, 0, "no match should return 0");
     },
   },
   {
@@ -78,7 +78,7 @@ const rawTests: TestCase[] = [
         makeTarget("C"),
       ];
       const results = fuzzySearch("", items);
-      assertEquals(results.length, 3);
+      assertEquals(results.length, 3, "empty query should return all items");
     },
   },
   {
@@ -86,7 +86,7 @@ const rawTests: TestCase[] = [
     fn() {
       const items = Array.from({ length: 100 }, (_, i) => makeTarget(`Item ${i}`));
       const results = fuzzySearch("item", items, 5);
-      assertEquals(results.length, 5);
+      assertEquals(results.length, 5, "should respect limit parameter");
     },
   },
 
@@ -126,14 +126,14 @@ const rawTests: TestCase[] = [
     fn() {
       const cmd = getCommand("gecko-open-new-tab");
       assert(cmd !== undefined, "should find gecko-open-new-tab");
-      assertEquals(cmd.id, "gecko-open-new-tab");
+      assertEquals(cmd.id, "gecko-open-new-tab", "should return correct command id");
     },
   },
   {
     name: "getCommand returns undefined for unknown id",
     fn() {
       const cmd = getCommand("nonexistent-action");
-      assertEquals(cmd, undefined);
+      assertEquals(cmd, undefined, "should return undefined for unknown id");
     },
   },
   {
@@ -162,5 +162,5 @@ const rawTests: TestCase[] = [
 ];
 
 export function runAllTests() {
-  runTests(rawTests);
+  runTests("commandPalette.test.ts", rawTests);
 }
