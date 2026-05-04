@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getConfig, isEnabled } from "./config.ts";
+import { getConfig, isEnabled, isSafeErrorHandling } from "./config.ts";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 import type { ShortcutConfig } from "./type.ts";
 
@@ -131,16 +131,34 @@ export class KeyboardShortcutController {
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {
-    try {
+    if (isSafeErrorHandling()) {
+      // Experiment: ks_safe_error_handling (treatment)
+      // Expanded try-catch covers both getAction() resolution and fn()
+      // invocation so callers can always run cleanup.
+      try {
+        const fn = gestureActions.getAction(shortcut.action);
+        if (fn) {
+          fn(this.targetWindow);
+        }
+      } catch (e) {
+        console.error(
+          `[keyboard-shortcut] Action "${shortcut.action}" failed:`,
+          e,
+        );
+      }
+    } else {
+      // Control: original behaviour (try-catch only around fn call)
       const fn = gestureActions.getAction(shortcut.action);
       if (fn) {
-        fn(this.targetWindow);
+        try {
+          fn(this.targetWindow);
+        } catch (e) {
+          console.error(
+            `[keyboard-shortcut] Action "${shortcut.action}" failed:`,
+            e,
+          );
+        }
       }
-    } catch (e) {
-      console.error(
-        `[keyboard-shortcut] Action "${shortcut.action}" failed:`,
-        e,
-      );
     }
   }
 }
