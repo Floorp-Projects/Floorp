@@ -131,16 +131,16 @@ export class KeyboardShortcutController {
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {
-    const fn = gestureActions.getAction(shortcut.action);
-    if (fn) {
-      try {
+    try {
+      const fn = gestureActions.getAction(shortcut.action);
+      if (fn) {
         fn(this.targetWindow);
-      } catch (e) {
-        console.error(
-          `[keyboard-shortcut] Action "${shortcut.action}" failed:`,
-          e,
-        );
       }
+    } catch (e) {
+      console.error(
+        `[keyboard-shortcut] Action "${shortcut.action}" failed:`,
+        e,
+      );
     }
   }
 }
