@@ -4,11 +4,13 @@ import { isEnabled } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
+import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 
 export class CommandPaletteService {
   private controllers: Map<Window, CommandPaletteController> = new Map();
 
   constructor() {
+    this.registerAction();
     this.initialize();
 
     createEffect(() => {
@@ -18,6 +20,18 @@ export class CommandPaletteService {
       } else {
         this.destroyAllControllers();
       }
+    });
+  }
+
+  private registerAction(): void {
+    gestureActions.registerAction({
+      name: "floorp-toggle-command-palette",
+      fn: (win) => {
+        const controller = this.controllers.get(win);
+        if (controller) {
+          controller.togglePalette();
+        }
+      },
     });
   }
 

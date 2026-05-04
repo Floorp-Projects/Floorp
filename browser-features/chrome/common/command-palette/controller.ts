@@ -5,14 +5,6 @@ import { isEnabled, addRecentCommand, getRecentCommands } from "./config.ts";
 import { getPaletteCommands, searchCommands } from "./command-registry.ts";
 import type { PaletteCommand } from "./command-registry.ts";
 
-const TRIGGER_MODIFIERS = {
-  alt: false,
-  ctrl: true,
-  meta: false,
-  shift: true,
-};
-const TRIGGER_KEY = "KeyP";
-
 export class CommandPaletteController {
   private eventListenersAttached = false;
   private targetWindow: Window;
@@ -27,7 +19,7 @@ export class CommandPaletteController {
 
     this.targetWindow.addEventListener(
       "keydown",
-      this.handleTriggerKeyDown,
+      this.handlePaletteKeyDown,
       true, // capture phase
     );
     this.eventListenersAttached = true;
@@ -37,7 +29,7 @@ export class CommandPaletteController {
     if (this.eventListenersAttached) {
       this.targetWindow.removeEventListener(
         "keydown",
-        this.handleTriggerKeyDown,
+        this.handlePaletteKeyDown,
         true,
       );
       this.eventListenersAttached = false;
@@ -47,41 +39,18 @@ export class CommandPaletteController {
     }
   }
 
-  private handleTriggerKeyDown = (event: KeyboardEvent): void => {
+  public togglePalette(): void {
     if (!isEnabled()) return;
 
-    // Toggle close with the same shortcut
     if (state.isVisible()) {
-      if (this.isTriggerShortcut(event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.hidePalette();
-        return;
-      }
-      this.handlePaletteKeyDown(event);
-      return;
-    }
-
-    if (this.isTriggerShortcut(event)) {
-      event.preventDefault();
-      event.stopPropagation();
+      this.hidePalette();
+    } else {
       this.showPalette();
     }
-  };
-
-  private isTriggerShortcut(event: KeyboardEvent): boolean {
-    return (
-      event.altKey === TRIGGER_MODIFIERS.alt &&
-      event.ctrlKey === TRIGGER_MODIFIERS.ctrl &&
-      event.metaKey === TRIGGER_MODIFIERS.meta &&
-      event.shiftKey === TRIGGER_MODIFIERS.shift &&
-      event.code === TRIGGER_KEY
-    );
   }
 
-  private handlePaletteKeyDown(event: KeyboardEvent): void {
-    const commands = state.filteredCommands();
-    const idx = state.selectedIndex();
+  private handlePaletteKeyDown = (event: KeyboardEvent): void => {
+    if (!state.isVisible()) return;
 
     switch (event.key) {
       case "Escape":
@@ -93,42 +62,56 @@ export class CommandPaletteController {
       case "ArrowDown":
         event.preventDefault();
         event.stopPropagation();
-        if (commands.length > 0) {
-          state.setSelectedIndex((idx + 1) % commands.length);
-        }
+        this.handleArrowDown();
         break;
 
       case "ArrowUp":
         event.preventDefault();
         event.stopPropagation();
-        if (commands.length > 0) {
-          state.setSelectedIndex(
-            (idx - 1 + commands.length) % commands.length,
-          );
-        }
+        this.handleArrowUp();
         break;
 
       case "Enter":
         event.preventDefault();
         event.stopPropagation();
-        if (commands[idx]) {
-          this.executeCommand(commands[idx]);
-        }
+        this.handleEnter();
         break;
 
       case "Tab":
         event.preventDefault();
         event.stopPropagation();
-        if (commands.length > 0) {
-          if (event.shiftKey) {
-            state.setSelectedIndex(
-              (idx - 1 + commands.length) % commands.length,
-            );
-          } else {
-            state.setSelectedIndex((idx + 1) % commands.length);
-          }
+        if (event.shiftKey) {
+          this.handleArrowUp();
+        } else {
+          this.handleArrowDown();
         }
         break;
+    }
+  };
+
+  private handleArrowDown(): void {
+    const commands = state.filteredCommands();
+    const idx = state.selectedIndex();
+    if (commands.length > 0) {
+      state.setSelectedIndex((idx + 1) % commands.length);
+    }
+  }
+
+  private handleArrowUp(): void {
+    const commands = state.filteredCommands();
+    const idx = state.selectedIndex();
+    if (commands.length > 0) {
+      state.setSelectedIndex(
+        (idx - 1 + commands.length) % commands.length,
+      );
+    }
+  }
+
+  private handleEnter(): void {
+    const commands = state.filteredCommands();
+    const idx = state.selectedIndex();
+    if (commands[idx]) {
+      this.executeCommand(commands[idx]);
     }
   }
 

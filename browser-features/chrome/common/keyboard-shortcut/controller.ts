@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { getConfig, isEnabled } from "./config.ts";
-import { actions } from "../mouse-gesture/utils/actions.ts";
+import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 import type { ShortcutConfig } from "./type.ts";
 
 export class KeyboardShortcutController {
@@ -131,9 +131,9 @@ export class KeyboardShortcutController {
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {
-    const action = actions.find((a) => a.name === shortcut.action);
-    if (action) {
-      action.fn(this.targetWindow);
+    const fn = gestureActions.getAction(shortcut.action);
+    if (fn) {
+      fn(this.targetWindow);
     }
   }
 }

@@ -95,6 +95,7 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "floorp-hide-user-interface": "floorp",
   "floorp-toggle-navigation-panel": "floorp",
   "floorp-toggle-zen-mode": "floorp",
+  "floorp-toggle-command-palette": "floorp",
 
   "floorp-show-pip": "media",
 };
@@ -132,6 +133,7 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "floorp-rest-mode": ["rest", "break"],
   "floorp-hide-user-interface": ["hide ui", "hide interface"],
   "floorp-toggle-zen-mode": ["zen", "focus", "distraction free"],
+  "floorp-toggle-command-palette": ["command palette", "palette", "command"],
   "floorp-show-pip": ["pip", "picture in picture", "mini player"],
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],

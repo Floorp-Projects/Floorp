@@ -87,6 +87,7 @@ export const GESTURE_ACTIONS = [
   "gecko-workspace-next",
   "gecko-workspace-previous",
   "floorp-toggle-zen-mode",
+  "floorp-toggle-command-palette",
 ] as const;
 
 export const useAvailableActions = () => {
