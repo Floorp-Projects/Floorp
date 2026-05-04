@@ -53,11 +53,12 @@ export function fuzzySearch<T extends FuzzyTarget>(
   items: T[],
   limit = 50,
 ): T[] {
-  if (!query.trim()) return items;
+  const normalizedQuery = query.trim();
+  if (!normalizedQuery) return items;
 
   const results: ScoredResult<T>[] = [];
   for (const item of items) {
-    const score = fuzzyScore(query, item);
+    const score = fuzzyScore(normalizedQuery, item);
     if (score > 0) {
       results.push({ item, score });
     }

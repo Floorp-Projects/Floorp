@@ -6,6 +6,7 @@ import {
   getActionDisplayName,
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
+import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 export interface PaletteCommand {
   id: string;
@@ -173,3 +174,7 @@ export function getCommand(id: string): PaletteCommand | undefined {
 export function invalidateCache() {
   cachedCommands = null;
 }
+
+addI18nObserver(() => {
+  invalidateCache();
+});

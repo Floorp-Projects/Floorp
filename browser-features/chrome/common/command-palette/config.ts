@@ -48,7 +48,11 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   );
 
   createEffect(() => {
-    Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, enabled());
+    try {
+      Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, enabled());
+    } catch (e) {
+      console.error("[command-palette] Failed to persist enabled pref", e);
+    }
   });
 
   const enabledObserver = () => {
@@ -85,10 +89,14 @@ function createRecentCommands(): [
   );
 
   createEffect(() => {
-    Services.prefs.setStringPref(
-      COMMAND_PALETTE_RECENT_PREF,
-      JSON.stringify(recent()),
-    );
+    try {
+      Services.prefs.setStringPref(
+        COMMAND_PALETTE_RECENT_PREF,
+        JSON.stringify(recent()),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist recent commands", e);
+    }
   });
 
   const recentObserver = () => {

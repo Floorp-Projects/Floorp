@@ -2,7 +2,6 @@
 
 import { Show, createEffect, on } from "solid-js";
 import { Portal } from "solid-js/web";
-import { state } from "../data/state.ts";
 import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
@@ -13,6 +12,11 @@ function getController() {
 }
 
 export function CommandPaletteUI() {
+  const controller = getController();
+  if (!controller) return;
+
+  const state = controller.state;
+
   const handleBackdropClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget) {
       state.setIsVisible(false);
@@ -21,7 +25,7 @@ export function CommandPaletteUI() {
 
   const handleInput = (value: string) => {
     state.setQuery(value);
-    getController()?.updateSearch(value);
+    controller.updateSearch(value);
   };
 
   const handleCommandSelect = (index: number) => {
@@ -29,7 +33,7 @@ export function CommandPaletteUI() {
   };
 
   const handleCommandExecute = (cmd: PaletteCommand) => {
-    getController()?.executeCommand(cmd);
+    controller.executeCommand(cmd);
   };
 
   // Scroll selected item into view

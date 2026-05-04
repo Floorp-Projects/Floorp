@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { state, resetPaletteState } from "./data/state.ts";
+import { createPaletteState, type PaletteState } from "./data/state.ts";
 import { isEnabled, addRecentCommand, getRecentCommands } from "./config.ts";
 import { getPaletteCommands, searchCommands } from "./command-registry.ts";
 import type { PaletteCommand } from "./command-registry.ts";
@@ -8,6 +8,7 @@ import type { PaletteCommand } from "./command-registry.ts";
 export class CommandPaletteController {
   private eventListenersAttached = false;
   private targetWindow: Window;
+  readonly state: PaletteState = createPaletteState();
 
   constructor(win: Window = globalThis as unknown as Window) {
     this.targetWindow = win;
@@ -34,7 +35,7 @@ export class CommandPaletteController {
       );
       this.eventListenersAttached = false;
     }
-    if (state.isVisible()) {
+    if (this.state.isVisible()) {
       this.hidePalette();
     }
   }
@@ -42,7 +43,7 @@ export class CommandPaletteController {
   public togglePalette(): void {
     if (!isEnabled()) return;
 
-    if (state.isVisible()) {
+    if (this.state.isVisible()) {
       this.hidePalette();
     } else {
       this.showPalette();
@@ -50,7 +51,7 @@ export class CommandPaletteController {
   }
 
   private handlePaletteKeyDown = (event: KeyboardEvent): void => {
-    if (!state.isVisible()) return;
+    if (!this.state.isVisible()) return;
 
     switch (event.key) {
       case "Escape":
@@ -90,45 +91,35 @@ export class CommandPaletteController {
   };
 
   private handleArrowDown(): void {
-    const commands = state.filteredCommands();
-    const idx = state.selectedIndex();
+    const commands = this.state.filteredCommands();
+    const idx = this.state.selectedIndex();
     if (commands.length > 0) {
-      state.setSelectedIndex((idx + 1) % commands.length);
+      this.state.setSelectedIndex((idx + 1) % commands.length);
     }
   }
 
   private handleArrowUp(): void {
-    const commands = state.filteredCommands();
-    const idx = state.selectedIndex();
+    const commands = this.state.filteredCommands();
+    const idx = this.state.selectedIndex();
     if (commands.length > 0) {
-      state.setSelectedIndex(
+      this.state.setSelectedIndex(
         (idx - 1 + commands.length) % commands.length,
       );
     }
   }
 
   private handleEnter(): void {
-    const commands = state.filteredCommands();
-    const idx = state.selectedIndex();
+    const commands = this.state.filteredCommands();
+    const idx = this.state.selectedIndex();
     if (commands[idx]) {
       this.executeCommand(commands[idx]);
     }
   }
 
   private showPalette(): void {
-    resetPaletteState();
-
-    // Show recent commands first, then all others
-    const recentIds = getRecentCommands();
-    const allCommands = getPaletteCommands();
-    const recentSet = new Set(recentIds);
-    const recentCommands = recentIds
-      .map((id) => allCommands.find((c) => c.id === id))
-      .filter((c): c is PaletteCommand => c !== undefined);
-    const otherCommands = allCommands.filter((c) => !recentSet.has(c.id));
-
-    state.setFilteredCommands([...recentCommands, ...otherCommands]);
-    state.setIsVisible(true);
+    this.state.reset();
+    this.state.setFilteredCommands(this.buildInitialCommandList());
+    this.state.setIsVisible(true);
 
     // Focus the search input after render
     this.targetWindow.setTimeout(() => {
@@ -140,8 +131,8 @@ export class CommandPaletteController {
   }
 
   private hidePalette(): void {
-    state.setIsVisible(false);
-    resetPaletteState();
+    this.state.setIsVisible(false);
+    this.state.reset();
   }
 
   public executeCommand(cmd: PaletteCommand): void {
@@ -155,8 +146,21 @@ export class CommandPaletteController {
   }
 
   public updateSearch(query: string): void {
-    const filtered = searchCommands(query);
-    state.setFilteredCommands(filtered);
-    state.setSelectedIndex(0);
+    const filtered = query.trim()
+      ? searchCommands(query)
+      : this.buildInitialCommandList();
+    this.state.setFilteredCommands(filtered);
+    this.state.setSelectedIndex(0);
+  }
+
+  private buildInitialCommandList(): PaletteCommand[] {
+    const recentIds = getRecentCommands();
+    const allCommands = getPaletteCommands();
+    const recentSet = new Set(recentIds);
+    const recentCommands = recentIds
+      .map((id) => allCommands.find((c) => c.id === id))
+      .filter((c): c is PaletteCommand => c !== undefined);
+    const otherCommands = allCommands.filter((c) => !recentSet.has(c.id));
+    return [...recentCommands, ...otherCommands];
   }
 }

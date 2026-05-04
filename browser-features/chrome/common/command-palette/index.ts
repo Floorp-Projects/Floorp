@@ -12,10 +12,13 @@ import style from "./style.css?inline";
 @noraComponent(import.meta.hot)
 export default class CommandPalette extends NoraComponentBase {
   init(): void {
-    // Inject styles
-    const styleEl = document.createElement("style");
-    styleEl.textContent = style;
-    document.head?.appendChild(styleEl);
+    // Inject styles (idempotent)
+    if (!document.getElementById("command-palette-style")) {
+      const styleEl = document.createElement("style");
+      styleEl.id = "command-palette-style";
+      styleEl.textContent = style;
+      document.head?.appendChild(styleEl);
+    }
 
     // Render the palette overlay
     const mainWindow = document.getElementById("main-window");

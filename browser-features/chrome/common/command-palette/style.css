@@ -71,11 +71,11 @@
 }
 
 .command-palette-item:hover {
-  background: color-mix(in srgb, currentColor 8%, transparent);
+  background: color-mix(in srgb, currentcolor 8%, transparent);
 }
 
 .command-palette-item[data-selected="true"] {
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, currentcolor 12%, transparent);
 }
 
 .command-palette-item-label {

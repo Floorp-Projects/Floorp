@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { createSignal } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
 import type { PaletteCommand } from "../command-registry.ts";
 
-function createPaletteState() {
+export function createPaletteState() {
   const [isVisible, setIsVisible] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const [selectedIndex, setSelectedIndex] = createSignal(0);
@@ -21,13 +20,12 @@ function createPaletteState() {
     setSelectedIndex,
     filteredCommands,
     setFilteredCommands,
+    reset() {
+      setQuery("");
+      setSelectedIndex(0);
+      setFilteredCommands([]);
+    },
   };
 }
 
-export const state = createRootHMR(createPaletteState, import.meta.hot);
-
-export function resetPaletteState() {
-  state.setQuery("");
-  state.setSelectedIndex(0);
-  state.setFilteredCommands([]);
-}
+export type PaletteState = ReturnType<typeof createPaletteState>;
