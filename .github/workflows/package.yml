@@ -1045,6 +1045,57 @@ jobs:
                 echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
                 APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
                 echo "Found app file: $APP_FILE"
+
+                # Patch Firefox production entitlements for Floorp passkey (WebAuthn) support
+                # Replace Firefox's application-identifier with Floorp's team ID + bundle ID
+                # The com.apple.developer.web-browser.public-key-credential entitlement is already
+                # present in Firefox's production browser entitlements; we only need to correct
+                # the application-identifier to match Floorp's Apple Developer account.
+                #
+                # Determine the correct flag for unencrypted PKCS12 output (OpenSSL 3.x vs 1.x)
+                OPENSSL_NOENC="-noenc"
+                if ! openssl pkcs12 -help 2>&1 | grep -q -- '-noenc'; then
+                  OPENSSL_NOENC="-nodes"
+                fi
+
+                # Extract the team ID (OU field) from the P12 certificate
+                FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys $OPENSSL_NOENC 2>/dev/null | openssl x509 -noout -subject -nameopt oneline,-esc_msb | grep -oE 'OU = [A-Za-z0-9]+' | head -1 | awk '{print $NF}')
+                if [ -z "$FLOORP_TEAM_ID" ]; then
+                  # Fallback: try alternative extraction method
+                  FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys $OPENSSL_NOENC 2>/dev/null | openssl x509 -noout -subject | sed -n 's/.*OU=\([^/]*\).*/\1/p' | head -1)
+                fi
+
+                # Validate Team ID format (Apple Team IDs are alphanumeric, e.g. 43AQ936H96)
+                if [[ ! "$FLOORP_TEAM_ID" =~ ^[A-Za-z0-9]+$ ]]; then
+                  echo "Warning: Invalid or missing Team ID format: '${FLOORP_TEAM_ID:-empty}'"
+                  FLOORP_TEAM_ID=""
+                fi
+                echo "Extracted Floorp Team ID: ${FLOORP_TEAM_ID:-not found}"
+
+                # Extract the bundle identifier from the app's Info.plist (Linux-compatible)
+                # Pass path via environment variable to avoid shell injection in Python string
+                export FLOORP_PLIST_PATH="$APP_FILE/Contents/Info.plist"
+                FLOORP_BUNDLE_ID=$(python3 -c "import plistlib,os; f=open(os.environ['FLOORP_PLIST_PATH'],'rb'); plist=plistlib.load(f); f.close(); print(plist.get('CFBundleIdentifier',''))" 2>/dev/null || echo "")
+
+                # Validate Bundle ID format (reverse domain notation, e.g. app.floorp.Floorp)
+                if [[ ! "$FLOORP_BUNDLE_ID" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+                  echo "Warning: Invalid or missing Bundle ID format: '${FLOORP_BUNDLE_ID:-empty}'"
+                  FLOORP_BUNDLE_ID=""
+                fi
+                echo "Extracted Floorp Bundle ID: ${FLOORP_BUNDLE_ID:-not found}"
+
+                # Patch the production browser entitlements if we have the team ID
+                ENTITLEMENTS_FILE="security/mac/hardenedruntime/production/firefox.browser.xml"
+                if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
+                  echo "Patching entitlements: replacing 43AQ936H96.org.mozilla.firefox with ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
+                  sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
+                  echo "Entitlements patched successfully."
+                  grep -A1 "application-identifier" "$ENTITLEMENTS_FILE" || true
+                else
+                  echo "Warning: Could not extract team ID or bundle ID. Entitlements not patched."
+                  echo "Passkey (WebAuthn) support may not work correctly without the correct application-identifier."
+                fi
+
                 ./mach macos-sign -v -r -c "release" \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
