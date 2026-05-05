@@ -1059,10 +1059,20 @@ jobs:
                 fi
 
                 # Extract the team ID (OU field) from the P12 certificate
-                FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys $OPENSSL_NOENC 2>/dev/null | openssl x509 -noout -subject -nameopt oneline,-esc_msb | grep -oE 'OU = [A-Za-z0-9]+' | head -1 | awk '{print $NF}')
+                # Use -clcerts to extract only the client (leaf) certificate, avoiding
+                # intermediate CA certificates that have different OU values.
+                # Append || true so failures don't abort the step (set -euo pipefail is active).
+                FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
+                  | openssl x509 -noout -subject -nameopt oneline,-esc_msb 2>/dev/null \
+                  | grep -oE 'OU = [A-Za-z0-9]+' \
+                  | head -1 \
+                  | awk '{print $NF}' || true)
                 if [ -z "$FLOORP_TEAM_ID" ]; then
                   # Fallback: try alternative extraction method
-                  FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys $OPENSSL_NOENC 2>/dev/null | openssl x509 -noout -subject | sed -n 's/.*OU=\([^/]*\).*/\1/p' | head -1)
+                  FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
+                    | openssl x509 -noout -subject 2>/dev/null \
+                    | sed -n 's/.*OU=\([^/]*\).*/\1/p' \
+                    | head -1 || true)
                 fi
 
                 # Validate Team ID format (Apple Team IDs are alphanumeric, e.g. 43AQ936H96)
@@ -1088,8 +1098,17 @@ jobs:
                 ENTITLEMENTS_FILE="security/mac/hardenedruntime/production/firefox.browser.xml"
                 if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
                   echo "Patching entitlements: replacing 43AQ936H96.org.mozilla.firefox with ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
-                  sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
-                  echo "Entitlements patched successfully."
+                  if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
+                    sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
+                    # Verify the substitution actually occurred
+                    if grep -q "${FLOORP_TEAM_ID}\.${FLOORP_BUNDLE_ID}" "$ENTITLEMENTS_FILE"; then
+                      echo "Entitlements patched successfully."
+                    else
+                      echo "Warning: sed completed but the new application-identifier was not found in $ENTITLEMENTS_FILE" >&2
+                    fi
+                  else
+                    echo "Warning: expected literal '43AQ936H96.org.mozilla.firefox' not found in $ENTITLEMENTS_FILE; passkey entitlement may be missing." >&2
+                  fi
                   grep -A1 "application-identifier" "$ENTITLEMENTS_FILE" || true
                 else
                   echo "Warning: Could not extract team ID or bundle ID. Entitlements not patched."
