@@ -3,13 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal } from "solid-js";
-import { Show } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import shareModeStyle from "./share-mode.css?inline";
 
-export const [shareModeEnabled, setShareModeEnabled] = createRootHMR(
-  () => createSignal(false),
+export const shareModeEnabled = createRootHMR(
+  () => signal(false),
   import.meta.hot,
 );
 export function ShareModeElement() {
@@ -19,14 +18,12 @@ export function ShareModeElement() {
         label="Toggle Share Mode"
         type="checkbox"
         id="toggle_sharemode"
-        checked={shareModeEnabled() || undefined}
-        onCommand={() => setShareModeEnabled((prev) => !prev)}
+        checked={shareModeEnabled.value || undefined}
+        onCommand={() => (shareModeEnabled.value = !shareModeEnabled.value)}
         accesskey="S"
       />
 
-      <Show when={shareModeEnabled()}>
-        <style>{shareModeStyle}</style>
-      </Show>
+      {shareModeEnabled.value && <style>{shareModeStyle}</style>}
     </>
   );
 }

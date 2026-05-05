@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
 import { ShareModeElement } from "./browser-share-mode";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
-@noraComponent(import.meta.hot)
+@noraComponent("BrowserShareMode", import.meta.hot)
 export default class BrowserShareMode extends NoraComponentBase {
   init() {
     this.logger!.info("Initializing browser share mode menu injection");
@@ -58,10 +58,7 @@ export default class BrowserShareMode extends NoraComponentBase {
     }
 
     try {
-      render(ShareModeElement, menuPopup, {
-        marker: marker?.parentElement === menuPopup ? marker : undefined,
-        hotCtx: import.meta.hot,
-      });
+      render(h(ShareModeElement, null), menuPopup);
       this.logger!.info("Browser share mode menu item rendered successfully.");
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));

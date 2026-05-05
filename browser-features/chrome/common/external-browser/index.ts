@@ -5,11 +5,11 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { ExternalBrowserTabContextMenu } from "./tab-context-menu.tsx";
 import { ExternalBrowserLinkContextMenu } from "./link-context-menu.tsx";
 
-@noraComponent(import.meta.hot)
+@noraComponent("ExternalBrowser", import.meta.hot)
 export default class ExternalBrowser extends NoraComponentBase {
   init() {
     this.logger.info("Initializing ExternalBrowser component");

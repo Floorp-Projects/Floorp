@@ -6,19 +6,13 @@
 import { BrowserActionUtils } from "#features-chrome/utils/browser-action.tsx";
 import { PopupElement } from "./popup-element.tsx";
 import workspacesStyles from "./styles.css?inline";
-import {
-  createEffect,
-  createRoot,
-  getOwner,
-  type JSX,
-  onCleanup,
-  runWithOwner,
-} from "solid-js";
+import { effect } from "@preact/signals";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import { getContainerColorName } from "../utils/container-color.ts";
+import type { JSX } from "preact";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -32,7 +26,6 @@ export class WorkspacesToolbarButton {
   };
 
   constructor(ctx: WorkspacesService) {
-    const owner = getOwner();
     BrowserActionUtils.createMenuToolbarButton(
       "workspaces-toolbar-button",
       "workspaces-toolbar-button",
@@ -40,41 +33,34 @@ export class WorkspacesToolbarButton {
       <PopupElement ctx={ctx} />,
       null,
       () => {
-        const exec = () => {
-          setTimeout(() => this.updateButtonIfNeeded(true), 500);
+        setTimeout(() => this.updateButtonIfNeeded(true), 500);
 
-          createEffect(() => {
-            const _ = configStore.showWorkspaceNameOnToolbar;
-            const __ = enabled();
-            this.updateButtonIfNeeded();
-          });
+        effect(() => {
+          const _ = configStore.showWorkspaceNameOnToolbar;
+          const __ = enabled.value;
+          this.updateButtonIfNeeded();
+        });
 
-          createEffect(() => {
-            const _ = selectedWorkspaceID();
-            this.updateButtonIfNeeded();
-          });
+        effect(() => {
+          const _ = selectedWorkspaceID.value;
+          this.updateButtonIfNeeded();
+        });
 
-          // Watch for workspace data changes to update button when name changes
-          createEffect(() => {
-            const _ = workspacesDataStore.data;
-            // Force update when workspace data changes
-            this.updateButtonIfNeeded(true);
-          });
-        };
-        if (owner) runWithOwner(owner, exec);
-        else createRoot(exec);
+        // Watch for workspace data changes to update button when name changes
+        effect(() => {
+          const _ = workspacesDataStore.data;
+          this.updateButtonIfNeeded(true);
+        });
       },
       CustomizableUI.AREA_TABSTRIP,
       this.StyleElement() as JSX.Element,
       0,
     );
 
-    const setupInterval = () => {
-      const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
-      onCleanup(() => clearInterval(intervalId));
-    };
-    if (owner) runWithOwner(owner, setupInterval);
-    else createRoot(setupInterval);
+    const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
+    // Note: no HMR cleanup registered — interval persists for the lifetime of the window.
+    // This matches prior behavior where onCleanup was in a createRoot that wasn't properly torn down.
+    import.meta.hot?.dispose(() => clearInterval(intervalId));
   }
 
   private getButtonNode(): Element | null {
@@ -112,7 +98,7 @@ export class WorkspacesToolbarButton {
       } else {
         xulElement.removeAttribute("label");
       }
-      if (!enabled()) {
+      if (!enabled.value) {
         xulElement.setAttribute("hidden", "true");
       } else {
         xulElement.removeAttribute("hidden");

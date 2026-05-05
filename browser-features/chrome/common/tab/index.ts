@@ -10,7 +10,7 @@ import { TabDoubleClickClose } from "./doubleClickClose";
 import { TabPinnedTabCustomization } from "./pinnedTabCustomization";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Tab", import.meta.hot)
 export default class Tab extends NoraComponentBase {
   init() {
     new TabScroll();

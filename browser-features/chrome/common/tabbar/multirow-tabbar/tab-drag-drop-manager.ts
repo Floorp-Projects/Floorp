@@ -163,7 +163,7 @@ export class TabDragDropManager {
       return selectedTab;
     }
 
-    return tab as XULElement;
+    return tab as unknown as XULElement;
   }
 
   private performTabDragOver = (event: DragEvent): void => {
@@ -217,7 +217,7 @@ export class TabDragDropManager {
       this.positionInGroup = groupEnd - groupStart;
       dropIndex = groupEnd;
     } else if (tab.parentElement?.nodeName === "tab-group") {
-      this.groupToInsertTo = tab.parentElement as XULElement;
+      this.groupToInsertTo = tab.parentElement as unknown as XULElement;
       const groupStart = tab.parentElement.querySelector("tab:first-of-type");
       this.positionInGroup = dropIndex -
         Array.prototype.indexOf.call(tabs, groupStart);
@@ -292,15 +292,15 @@ export class TabDragDropManager {
       draggedTab.parentNode?.parentNode?.parentNode?.nodeName === "tab-group"
     ) {
       const tabGroup = draggedTab.parentNode.parentNode
-        .parentNode as XULElement;
+        .parentNode as unknown as XULElement;
       const tabToMoveTo = allTabs[this.lastKnownIndex!];
       if (this.groupToInsertTo && "querySelectorAll" in tabGroup) {
         const tabs = Array.from(tabGroup.querySelectorAll("tab")) as XULTab[];
         this.moveTabsToGroup(tabs);
       } else if (this.lastKnownIndex !== allTabs.length - 1) {
-        gBrowser.moveTabBefore(tabGroup, tabToMoveTo);
+        gBrowser.moveTabBefore(tabGroup, tabToMoveTo as unknown as XULTab);
       } else {
-        gBrowser.moveTabAfter(tabGroup, tabToMoveTo);
+        gBrowser.moveTabAfter(tabGroup, tabToMoveTo as unknown as XULTab);
       }
     } else if (
       draggedTab &&
@@ -376,9 +376,9 @@ export class TabDragDropManager {
           }
 
           if (!shouldMoveAfter) {
-            gBrowser.moveTabBefore(t, tabToMoveTo);
+            gBrowser.moveTabBefore(t, tabToMoveTo as unknown as XULTab);
           } else {
-            gBrowser.moveTabAfter(t, tabToMoveTo);
+            gBrowser.moveTabAfter(t, tabToMoveTo as unknown as XULTab);
           }
         });
       }
@@ -456,13 +456,13 @@ export class TabDragDropManager {
         gBrowser.moveTabToGroup(t, this.groupToInsertTo);
 
         if (tabInGroupToMoveTo) {
-          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as XULElement);
+          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as unknown as XULElement);
         } else {
           const lastTab = this.groupToInsertTo.querySelector(
             "tab:last-of-type",
           );
           if (lastTab) {
-            gBrowser.moveTabAfter(t, lastTab as XULElement);
+            gBrowser.moveTabAfter(t, lastTab as unknown as XULElement);
           }
         }
       }

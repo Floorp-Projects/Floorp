@@ -6,13 +6,13 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { ModalManager } from "./modalManager.tsx";
 import { ModalElement } from "./modalElement.tsx";
 import type { ModalSize } from "./data/data.ts";
 import type { TForm, TFormResult } from "./utils/type.ts";
 
-@noraComponent(import.meta.hot)
+@noraComponent("ModalParent", import.meta.hot)
 export default class ModalParent extends NoraComponentBase {
   private static instance: ModalParent;
   private modalManager: ModalManager | null = null;

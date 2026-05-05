@@ -1,4 +1,5 @@
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
+import { safeRender } from "@nora/preact-xul";
 import { QRCodePageActionButton } from "./qr-code-button.tsx";
 import { QRCodePanel } from "./qr-code-panel.tsx";
 import style from "./style.css?inline";
@@ -6,12 +7,11 @@ import { QRCodeManager } from "./qr-code-manager.tsx";
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
-import { createRoot, getOwner, runWithOwner } from "solid-js";
+} from "#features-chrome/utils/base";
 
 export let manager: QRCodeManager;
 
-@noraComponent(import.meta.hot)
+@noraComponent("QRCodeGenerator", import.meta.hot)
 export default class QRCodeGenerator extends NoraComponentBase {
   init() {
     manager = new QRCodeManager();
@@ -23,24 +23,14 @@ export default class QRCodeGenerator extends NoraComponentBase {
     }
     const mainPopupSet = document?.getElementById("mainPopupSet");
     if (mainPopupSet) {
-      render(QRCodePanel, mainPopupSet, {
-        hotCtx: import.meta.hot,
-      });
+      safeRender(h(QRCodePanel, null), mainPopupSet);
     }
 
-    const owner = getOwner();
     globalThis.SessionStore.promiseInitialized.then(() => {
-      const exec = () => {
-        const starButtonBox = document?.getElementById("star-button-box");
-        if (starButtonBox && starButtonBox.parentElement) {
-          render(QRCodePageActionButton, starButtonBox.parentElement, {
-            marker: starButtonBox,
-            hotCtx: import.meta.hot,
-          });
-        }
-      };
-      if (owner) runWithOwner(owner, exec);
-      else createRoot(exec);
+      const starButtonBox = document?.getElementById("star-button-box");
+      if (starButtonBox && starButtonBox.parentElement) {
+        safeRender(h(QRCodePageActionButton, null), starButtonBox.parentElement);
+      }
     });
 
     manager.init();

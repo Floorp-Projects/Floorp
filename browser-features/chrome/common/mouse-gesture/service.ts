@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
-  _setConfig,
+  _config,
   type GesturePattern,
   getConfig,
   isEnabled,
@@ -12,8 +12,8 @@ import {
   setEnabled,
 } from "./config.ts";
 import { MouseGestureController } from "./controller.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { createRootHMR } from "#features-chrome/utils/base";
+import { effect } from "@preact/signals";
 
 interface nsIObserver {
   observe(subject: unknown, topic: string, data: string): void;
@@ -31,7 +31,7 @@ export class MouseGestureService {
     this.initialize();
 
     // React to config changes
-    createEffect(() => {
+    effect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
       const enabled = isEnabled();
@@ -49,7 +49,7 @@ export class MouseGestureService {
     });
 
     // React to enabled state changes
-    createEffect(() => {
+    effect(() => {
       const enabled = isEnabled();
       if (enabled) {
         this.attachToAllWindows();
@@ -221,7 +221,7 @@ export class MouseGestureService {
 }
 
 function setConfig(config: MouseGestureConfig) {
-  _setConfig(config);
+  _config.value = config;
 }
 
 function createMouseGestureService() {

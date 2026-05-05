@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { h } from "preact";
+import { safeRender } from "@nora/preact-xul";
 import { FloorpPrivateContainer } from "./browser-private-container";
 import { ContextMenu } from "./context-menu";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
-@noraComponent(import.meta.hot)
+@noraComponent("PrivateContainer", import.meta.hot)
 export default class PrivateContainer extends NoraComponentBase {
   init(): void {
     if (typeof document === "undefined") {
@@ -46,9 +47,7 @@ export default class PrivateContainer extends NoraComponentBase {
       }
 
       try {
-        render(ContextMenu, tabContextMenu, {
-          marker: marker?.parentElement === tabContextMenu ? marker : undefined,
-        });
+        safeRender(h(ContextMenu, null), tabContextMenu, marker ?? null);
         this.logger.info("Private container menu item rendered successfully.");
       } catch (error) {
         const reason =

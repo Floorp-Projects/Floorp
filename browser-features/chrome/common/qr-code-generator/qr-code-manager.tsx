@@ -3,16 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal } from "solid-js";
+import { signal } from "@preact/signals";
 
 export class QRCodeManager {
-  _showPanel = createSignal(false);
-  showPanel = this._showPanel[0];
-  setShowPanel = this._showPanel[1];
-
-  _currentUrl = createSignal("");
-  currentUrl = this._currentUrl[0];
-  setCurrentUrl = this._currentUrl[1];
+  showPanel = signal(false);
+  currentUrl = signal("");
 
   // deno-lint-ignore no-explicit-any
   private qrCode: any = null;
@@ -39,7 +34,7 @@ export class QRCodeManager {
 
   handlePopupShowing() {
     this.updateCurrentTabUrl();
-    const url = this.currentUrl();
+    const url = this.currentUrl.value;
     if (url) {
       setTimeout(async () => {
         const container = document?.getElementById(
@@ -62,11 +57,11 @@ export class QRCodeManager {
 
   showQRPanel() {
     this.updateCurrentTabUrl();
-    this.setShowPanel(true);
+    this.showPanel.value = true;
   }
 
   hideQRPanel() {
-    this.setShowPanel(false);
+    this.showPanel.value = false;
   }
 
   updateCurrentTabUrl() {
@@ -75,7 +70,7 @@ export class QRCodeManager {
       if (currentTab) {
         const currentTabURL = currentTab.linkedBrowser?.currentURI?.spec;
         if (currentTabURL) {
-          this.setCurrentUrl(currentTabURL);
+          this.currentUrl.value = currentTabURL;
         }
       }
     } catch (error) {

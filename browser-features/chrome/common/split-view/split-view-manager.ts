@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, onCleanup } from "solid-js";
+import { effect } from "@preact/signals";
 import { splitViewConfig } from "./data/config.js";
 import {
   clearSplitHandles,
@@ -45,6 +45,10 @@ export class SplitViewManager {
   private patchState = createPatchState();
   private tabpanelsPatch: { unpatch(): void } | null = null;
   private wrapperPatch: { unpatch(): void } | null = null;
+  private contextMenuCleanup: (() => void) | null = null;
+  private eventsCleanup: (() => void) | null = null;
+  private activePaneCleanup: (() => void) | null = null;
+  private sessionRestoreCleanup: (() => void) | null = null;
   private logger: ConsoleInstance;
 
   constructor(logger: ConsoleInstance) {
@@ -68,24 +72,25 @@ export class SplitViewManager {
 
     this.wrapperPatch = patchSplitViewWrapper(this.logger);
 
-    initContextMenu(this.logger);
+    this.contextMenuCleanup = initContextMenu(this.logger);
     initLayoutPicker();
     initToolbarButtonEnhancement();
-    initSplitViewEvents(this.logger);
-    initActivePaneTracker(this.logger);
-    initSessionRestore(this.logger);
+    this.eventsCleanup = initSplitViewEvents(this.logger);
+    this.activePaneCleanup = initActivePaneTracker(this.logger);
+    const srCleanup = initSessionRestore(this.logger);
+    this.sessionRestoreCleanup = srCleanup ?? null;
     initPaneDrag(this.logger);
 
     // React to layout config changes
-    createEffect(() => {
-      const config = splitViewConfig();
+    effect(() => {
+      const config = splitViewConfig.value;
       this.logger.debug(
         `[effect] layout config changed: ${config.layout}, maxPanes=${config.maxPanes}`,
       );
       applyLayout(this.logger);
-    });
 
-    onCleanup(() => this.destroy());
+      return () => this.destroy();
+    });
   }
 
   private destroy(): void {
@@ -93,6 +98,10 @@ export class SplitViewManager {
     this.removeStyles();
     this.tabpanelsPatch?.unpatch();
     this.wrapperPatch?.unpatch();
+    this.contextMenuCleanup?.();
+    this.eventsCleanup?.();
+    this.activePaneCleanup?.();
+    this.sessionRestoreCleanup?.();
     destroyPaneDrag();
     clearSplitHandles();
     destroyLayoutPicker();

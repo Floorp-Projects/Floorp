@@ -3,19 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
-import { createEffect, createSignal } from "solid-js";
+import { createRootHMR } from "#features-chrome/utils/base";
+import { render } from "preact";
+import { signal, effect } from "@preact/signals";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
 import type { FloorpChromeWindow } from "./type.ts";
 
 export class PwaWindowSupport {
-  private ssbId = createSignal<string | null>(null);
+  private ssbId = signal<string | null>(null);
 
   private async getSsb() {
-    const [ssbId] = this.ssbId;
-    return ssbId ? await this.pwaService.getSsbObj(ssbId() as string) : null;
+    const id = this.ssbId.value;
+    return id ? await this.pwaService.getSsbObj(id) : null;
   }
 
   constructor(private pwaService: PwaService) {
@@ -47,11 +48,8 @@ export class PwaWindowSupport {
   }
 
   private setupSignals(): void {
-    const [, setSsbId] = this.ssbId;
     // Read SSB ID from documentElement attribute (using taskbartab as set by browser-init.js)
-    const ssbIdAttr = document?.documentElement?.getAttribute("taskbartab") ??
-      null;
-    setSsbId(ssbIdAttr);
+    this.ssbId.value = document?.documentElement?.getAttribute("taskbartab") ?? null;
   }
 
   private setupPageActions(): void {
@@ -70,7 +68,17 @@ export class PwaWindowSupport {
 
   private renderStyles(): void {
     createRootHMR(() => {
-      render(() => this.createStyleElement(), document?.head);
+      let styleRoot = document?.getElementById("floorp-pwa-window-style-root") as HTMLElement | null;
+      if (!styleRoot) {
+        styleRoot = document!.createElement("div");
+        styleRoot.id = "floorp-pwa-window-style-root";
+        document!.head.appendChild(styleRoot);
+      }
+      render(this.createStyleElement(), styleRoot);
+      return () => {
+        render(null, styleRoot!);
+        styleRoot?.remove();
+      };
     }, import.meta.hot);
   }
 
@@ -98,7 +106,7 @@ export class PwaWindowSupport {
       }
 
       createRootHMR(() => {
-        createEffect(() => {
+        effect(() => {
           const showToolbar = this.shouldShowToolbar();
           // When the toolbar is hidden we want the window to use the native titlebar.
           customTitlebar.allowedBy("non-popup", this.shouldUseCustomTitlebar());
@@ -114,7 +122,7 @@ export class PwaWindowSupport {
   }
 
   private shouldShowToolbar(): boolean {
-    return config().showToolbar !== false;
+    return config.value.showToolbar !== false;
   }
 
   private shouldUseCustomTitlebar(): boolean {
@@ -197,8 +205,7 @@ export class PwaWindowSupport {
   }
 
   public get ssbWindowId(): string | null {
-    const [ssbId] = this.ssbId;
-    return ssbId();
+    return this.ssbId.value;
   }
 
   public async getSsbObj(id: string) {

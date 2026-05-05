@@ -83,6 +83,14 @@ function getI18nextInstance(): I18NextLike | null {
         const def = m["default"] as Record<string, unknown>;
         if ("i" in def && def["i"]) resolved = def["i"];
         else resolved = def;
+      } else if (
+        "t" in m &&
+        m["t"] &&
+        typeof (m["t"] as { t?: unknown }).t === "function"
+      ) {
+        // vite v8 / rolldown bundle: `export { instance as t }`
+        // module.t holds the i18next instance which has its own .t method.
+        resolved = m["t"];
       } else {
         resolved = m;
       }

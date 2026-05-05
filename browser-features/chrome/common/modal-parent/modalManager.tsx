@@ -3,12 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import {
   isModalVisible,
+  modalSize,
   type ModalSize,
-  setModalSize,
-  setModalVisible,
 } from "./data/data.ts";
 import type { TForm, TFormResult } from "./utils/type";
 
@@ -19,12 +18,12 @@ export class ModalManager {
 
   constructor() {
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isModalVisible()) {
+      if (e.key === "Escape" && isModalVisible.value) {
         this.hide();
       }
     };
     globalThis.addEventListener("keydown", handleKeydown);
-    onCleanup(() => globalThis.removeEventListener("keydown", handleKeydown));
+    addDisposer(() => globalThis.removeEventListener("keydown", handleKeydown));
   }
 
   public show(
@@ -33,19 +32,19 @@ export class ModalManager {
   ): Promise<TFormResult | null> | undefined {
     const container = document?.getElementById(
       "modal-parent-container",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (container) {
-      setModalVisible(true);
-      setModalSize({
+      isModalVisible.value = true;
+      modalSize.value = {
         width: options.width,
         height: options.height,
-      });
+      };
       container.focus();
 
       const browser = document?.getElementById(
         "modal-child-browser",
       // deno-lint-ignore no-explicit-any
-      ) as XULElement & { browsingContext: any };
+      ) as unknown as XULElement & { browsingContext: any };
 
       const actor = browser.browsingContext.currentWindowGlobal.getActor(
         "NRChromeModal",
@@ -66,17 +65,17 @@ export class ModalManager {
   public hide(): void {
     const browser = document?.getElementById(
       "modal-parent-container",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (browser) {
-      setModalVisible(false);
-      setModalSize({ width: 600, height: 800 });
+      isModalVisible.value = false;
+      modalSize.value = { width: 600, height: 800 };
       globalThis.focus();
       Services.obs.notifyObservers({}, "nora:modal:hide", "");
     }
   }
 
   public setModalSize(newSize: ModalSize): void {
-    setModalSize((current) => ({ ...current, ...newSize }));
+    modalSize.value = { ...modalSize.value, ...newSize };
   }
 
   public handleBackdropClick(_event: MouseEvent): void {

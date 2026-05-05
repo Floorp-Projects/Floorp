@@ -114,7 +114,7 @@ function onPopupShowing(): void {
   const currentPaneCount = activeSplitView?.tabs?.length ?? 2;
   const currentLayout = activeSplitView
     ? resolveLayoutForSplitTabs(activeSplitView.tabs)
-    : splitViewConfig().layout;
+    : splitViewConfig.value.layout;
 
   log.debug(
     `[popupShowing] panes=${currentPaneCount}, currentLayout=${currentLayout}, activeSplitView=${!!activeSplitView}`,
@@ -145,7 +145,7 @@ function onPopupShowing(): void {
       if (activeGroupId) {
         setPersistedGroupLayout(activeGroupId, opt.layout);
       }
-      setSplitViewConfig((prev) => ({ ...prev, layout: opt.layout }));
+      setSplitViewConfig({ ...splitViewConfig.value, layout: opt.layout });
       applyLayout(log);
     });
 
@@ -154,7 +154,7 @@ function onPopupShowing(): void {
     }
   }
 
-  const maxPanes = splitViewConfig().maxPanes;
+  const maxPanes = splitViewConfig.value.maxPanes;
   if (activeSplitView && currentPaneCount < maxPanes) {
     const addItem = document?.createXULElement("menuitem");
     if (addItem) {

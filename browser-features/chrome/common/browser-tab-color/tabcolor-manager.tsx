@@ -3,29 +3,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
-import type {} from "solid-styled-jsx";
+import { signal } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import { config } from "#features-chrome/common/designs/configs.ts";
 
 export class TabColorManager {
-  _enableTabColor = createSignal(config().globalConfigs.faviconColor);
-  enableTabColor = this._enableTabColor[0];
-  setEnableTabColor = this._enableTabColor[1];
+  enableTabColor = signal(config.value.globalConfigs.faviconColor);
 
   constructor() {
     if (!globalThis.gFloorp) {
       globalThis.gFloorp = {};
     }
     globalThis.gFloorp.tabColor = {
-      setEnable: this.setEnableTabColor,
+      setEnable: (v: boolean) => {
+        this.enableTabColor.value = v;
+      },
     };
   }
 
   init() {
-    createEffect(() => {
-      const currentConfig = config();
-      if (currentConfig.globalConfigs.faviconColor !== this.enableTabColor()) {
-        this.setEnableTabColor(currentConfig.globalConfigs.faviconColor);
+    rootEffect(() => {
+      const currentConfig = config.value;
+      if (currentConfig.globalConfigs.faviconColor !== this.enableTabColor.value) {
+        this.enableTabColor.value = currentConfig.globalConfigs.faviconColor;
       }
     });
   }

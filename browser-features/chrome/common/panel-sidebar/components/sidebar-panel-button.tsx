@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createResource, Suspense } from "solid-js";
+import { useState, useEffect } from "preact/hooks";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
@@ -21,10 +21,11 @@ export function PanelSidebarButton(props: {
   ctx: CPanelSidebar;
 }) {
   const gPanelSidebar = props.ctx;
-  const [faviconURL] = createResource(
-    () => props.panel,
-    async () => await getFaviconURLForPanel(props.panel),
-  );
+  const [faviconURL, setFaviconURL] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    getFaviconURLForPanel(props.panel).then(setFaviconURL);
+  }, [props.panel]);
 
   const handleDragStart = (e: DragEvent) => {
     e.dataTransfer?.setData("text/floorp-panel-id", props.panel.id);
@@ -57,7 +58,7 @@ export function PanelSidebarButton(props: {
 
     if (sourceId === targetId) return;
 
-    const panels = [...panelSidebarData()];
+    const panels = [...panelSidebarData.value];
     const sourceIndex = panels.findIndex((p) => p.id === sourceId);
     const targetIndex = panels.findIndex((p) => p.id === targetId);
 
@@ -75,7 +76,7 @@ export function PanelSidebarButton(props: {
 
     const contextMenu = document?.getElementById(
       "webpanel-context",
-    ) as XULPopupElement;
+    ) as unknown as XULPopupElement;
     if (contextMenu) {
       contextMenu.openPopupAtScreen(e.screenX, e.screenY, true);
     }
@@ -102,7 +103,7 @@ export function PanelSidebarButton(props: {
       <div
         id={props.panel.id}
         class={`${props.panel.type} panel-sidebar-panel`}
-        data-checked={selectedPanelId() === props.panel.id}
+        data-checked={selectedPanelId.value === props.panel.id}
         data-panel-id={props.panel.id}
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
@@ -115,9 +116,7 @@ export function PanelSidebarButton(props: {
             : "none",
         }}
       >
-        <Suspense fallback={<div>I</div>}>
-          <img src={faviconURL()} width="16" height="16" />
-        </Suspense>
+        {faviconURL && <img src={faviconURL} width="16" height="16" />}
       </div>
     </div>
   );

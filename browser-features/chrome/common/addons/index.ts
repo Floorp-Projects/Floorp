@@ -12,7 +12,7 @@
  */
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import type { ChromeWebStoreInstallInfo, CWSObserver } from "./types";
 import { NotificationCustomizer } from "./notification-customizer";
 import {
@@ -21,7 +21,7 @@ import {
   removeCWSObserver,
 } from "./observer";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Addons", import.meta.hot)
 export default class Addons extends NoraComponentBase {
   private state: {
     pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
@@ -49,7 +49,7 @@ export default class Addons extends NoraComponentBase {
       });
     }
 
-    onCleanup(() => {
+    addDisposer(() => {
       this.cleanup();
     });
   }

@@ -80,7 +80,7 @@ function onGripMouseDown(e: MouseEvent, logger: ConsoleInstance): void {
     activeDragCleanup = null;
   }
 
-  const grip = e.currentTarget as XULElement;
+  const grip = e.currentTarget as unknown as XULElement;
   const panel = grip.parentElement as HTMLElement | null;
   if (!panel?.id) {
     return;

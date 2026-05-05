@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal } from "solid-js";
-import type { JSX } from "solid-js";
-import { render } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { render } from "preact";
 import type { PwaService } from "./pwaService.ts";
 import type { Browser } from "./type.ts";
 import i18next from "i18next";
@@ -16,15 +16,23 @@ import PWAINSTALL_SVG from "./icons/pwa-install.svg?inline";
 import PWALAUNCH_SVG from "./icons/pwa-launch.svg?inline";
 import INSTALLING_GIF from "./icons/installing.gif?inline";
 
+type Translations = {
+  title: string;
+  install: string;
+  open: string;
+  cancel: string;
+  siteIcon: string;
+};
+
 export class SsbPageAction {
-  private isInstalling = createSignal(false);
-  private icon = createSignal("");
-  private title = createSignal("");
-  private description = createSignal("");
-  private canBeInstallAsPwa = createSignal(false);
-  private isInstalled = createSignal(false);
-  private shouldShowPageAction = createSignal(false);
-  private translations = createSignal({
+  private isInstalling: Signal<boolean> = signal(false);
+  private icon: Signal<string> = signal("");
+  private title: Signal<string> = signal("");
+  private description: Signal<string> = signal("");
+  private canBeInstallAsPwa: Signal<boolean> = signal(false);
+  private isInstalled: Signal<boolean> = signal(false);
+  private shouldShowPageAction: Signal<boolean> = signal(false);
+  private translations: Signal<Translations> = signal({
     title: i18next.t("ssb.page-action.title"),
     install: i18next.t("ssb.page-action.install"),
     open: i18next.t("ssb.page-action.open"),
@@ -37,11 +45,17 @@ export class SsbPageAction {
     const ssbPageAction = document?.getElementById("page-action-buttons");
     if (!starButtonBox || !ssbPageAction) return;
 
-    render(() => this.Render(), ssbPageAction, {
-      marker: starButtonBox,
-    });
+    // Render before the marker (starButtonBox) — insert a container before it
+    const renderContainer = document?.createElement("span") as HTMLElement;
+    ssbPageAction.insertBefore(renderContainer, starButtonBox);
+    const RenderWrapper = () => this.Render();
+    render(<RenderWrapper />, renderContainer);
 
-    render(() => this.Style(), document?.head);
+    // Render style into head
+    const styleContainer = document?.createElement("span") as HTMLElement;
+    document?.head?.appendChild(styleContainer);
+    const StyleWrapper = () => this.Style();
+    render(<StyleWrapper />, styleContainer);
 
     Services.obs.addObserver(
       () => this.onCheckPageHasManifest(),
@@ -53,13 +67,13 @@ export class SsbPageAction {
     );
 
     addI18nObserver(() => {
-      this.translations[1]({
+      this.translations.value = {
         title: i18next.t("ssb.page-action.title"),
         install: i18next.t("ssb.page-action.install"),
         open: i18next.t("ssb.page-action.open"),
         cancel: i18next.t("ssb.page-action.cancel"),
         siteIcon: i18next.t("ssb.page-action.site-icon"),
-      });
+      };
     });
 
     this.onCheckPageHasManifest();
@@ -70,13 +84,13 @@ export class SsbPageAction {
 
     const canBeInstallAsPwa = await this.pwaService
       .checkBrowserCanBeInstallAsPwa(browser);
-    this.canBeInstallAsPwa[1](canBeInstallAsPwa);
+    this.canBeInstallAsPwa.value = canBeInstallAsPwa;
 
     const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
       browser,
     );
-    this.isInstalled[1](isInstalled);
-    this.shouldShowPageAction[1](canBeInstallAsPwa || isInstalled);
+    this.isInstalled.value = isInstalled;
+    this.shouldShowPageAction.value = canBeInstallAsPwa || isInstalled;
     this.pwaService.updateUIElements(isInstalled);
   }
 
@@ -85,52 +99,51 @@ export class SsbPageAction {
       globalThis.gBrowser.selectedBrowser as Browser,
       true,
     );
-    this.isInstalling[1](true);
+    this.isInstalling.value = true;
   };
 
   private onPopupShowing = async () => {
     const selectedBrowser = globalThis.gBrowser.selectedBrowser;
     const icon = await this.pwaService.getIcon(selectedBrowser as Browser);
-    this.icon[1](icon);
+    this.icon.value = icon;
 
     const manifest = await this.pwaService.getManifest(
       selectedBrowser as Browser,
     );
-    this.title[1](
-      manifest?.name ?? selectedBrowser.currentURI?.spec ?? "",
-    );
-    this.description[1](selectedBrowser.currentURI?.host ?? "");
+    this.title.value =
+      manifest?.name ?? selectedBrowser.currentURI?.spec ?? "";
+    this.description.value = selectedBrowser.currentURI?.host ?? "";
   };
 
   private onPopupHiding = () => {
-    this.isInstalling[1](false);
-    this.icon[1]("");
-    this.title[1]("");
-    this.description[1]("");
+    this.isInstalling.value = false;
+    this.icon.value = "";
+    this.title.value = "";
+    this.description.value = "";
   };
 
   private closePopup = () => {
-    const panel = document?.getElementById("ssb-panel") as XULElement & {
+    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
       hidePopup: () => void;
     };
     if (panel) {
       panel.hidePopup();
     }
-    this.isInstalling[1](false);
+    this.isInstalling.value = false;
   };
 
-  private Render(): JSX.Element {
-    const [isInstalling] = this.isInstalling;
-    const [icon] = this.icon;
-    const [title] = this.title;
-    const [description] = this.description;
-    const [isInstalled] = this.isInstalled;
-    const [shouldShowPageAction] = this.shouldShowPageAction;
-    const [translations] = this.translations;
+  private Render() {
+    const isInstalling = this.isInstalling.value;
+    const icon = this.icon.value;
+    const title = this.title.value;
+    const description = this.description.value;
+    const isInstalled = this.isInstalled.value;
+    const shouldShowPageAction = this.shouldShowPageAction.value;
+    const translations = this.translations.value;
 
     return (
       <>
-        {shouldShowPageAction() && (
+        {shouldShowPageAction && (
           <xul:hbox
             id="ssbPageAction"
             class="urlbar-page-action"
@@ -138,7 +151,7 @@ export class SsbPageAction {
           >
             <xul:image
               id="ssbPageAction-image"
-              class={`urlbar-icon${isInstalled() ? " open-ssb" : ""}`}
+              class={`urlbar-icon${isInstalled ? " open-ssb" : ""}`}
             />
             <xul:panel
               id="ssb-panel"
@@ -150,9 +163,9 @@ export class SsbPageAction {
               <xul:vbox id="ssb-box">
                 <xul:vbox class="panel-header">
                   <h1>
-                    {isInstalled()
-                      ? translations().open
-                      : translations().install}
+                    {isInstalled
+                      ? translations.open
+                      : translations.install}
                   </h1>
                 </xul:vbox>
                 <xul:toolbarseparator />
@@ -162,21 +175,21 @@ export class SsbPageAction {
                       id="ssb-content-icon"
                       width="48"
                       height="48"
-                      alt={translations().siteIcon}
-                      src={icon()}
+                      alt={translations.siteIcon}
+                      src={icon}
                     />
                   </xul:vbox>
                   <xul:vbox id="ssb-content-label-vbox">
                     <xul:label id="ssb-content-label">
-                      {title()}
+                      {title}
                     </xul:label>
                     <xul:description id="ssb-content-description">
-                      {description()}
+                      {description}
                     </xul:description>
                   </xul:vbox>
                 </xul:hbox>
                 <xul:hbox id="ssb-button-hbox">
-                  {isInstalling() && (
+                  {isInstalling && (
                     <xul:vbox id="ssb-installing-vbox">
                       <img
                         id="ssb-installing-icon"
@@ -186,21 +199,21 @@ export class SsbPageAction {
                       />
                     </xul:vbox>
                   )}
-                  {!isInstalling() && (
+                  {!isInstalling && (
                     <>
                       <xul:button
                         id="ssb-app-install-button"
                         class="panel-button ssb-install-buttons footer-button primary"
                         onClick={this.onCommand}
-                        label={isInstalled()
-                          ? translations().open
-                          : translations().install}
+                        label={isInstalled
+                          ? translations.open
+                          : translations.install}
                       />
                       <xul:button
                         id="ssb-app-cancel-button"
                         class="panel-button ssb-install-buttons footer-button"
                         onClick={this.closePopup}
-                        label={translations().cancel}
+                        label={translations.cancel}
                       />
                     </>
                   )}
@@ -213,7 +226,7 @@ export class SsbPageAction {
     );
   }
 
-  private Style(): JSX.Element {
+  private Style() {
     return (
       <>
         <style>{style}</style>

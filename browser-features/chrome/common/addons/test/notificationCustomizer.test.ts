@@ -31,7 +31,7 @@ const ALT_CWS_INFO: ChromeWebStoreInstallInfo = {
  * queries by tag name (e.g. querySelector("popupnotificationcontent")).
  */
 function createMockInstallConfirmationDOM(): XULElement {
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-install-confirmation-notification";
@@ -40,17 +40,17 @@ function createMockInstallConfirmationDOM(): XULElement {
   const popupContent = document!.createXULElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
-  const descContainer = document!.createXULElement("vbox") as XULElement & {
+  const descContainer = document!.createXULElement("vbox") as unknown as XULElement & {
     className: string;
   };
   descContainer.className = "popup-notification-description";
   notification.appendChild(descContainer);
 
-  const content = document!.createXULElement("vbox") as XULElement & {
+  const content = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   content.id = "addon-install-confirmation-content";
-  const nameEl = document!.createXULElement("label") as XULElement & {
+  const nameEl = document!.createXULElement("label") as unknown as XULElement & {
     className: string;
     setAttribute(name: string, value: string): void;
   };
@@ -68,7 +68,7 @@ function createMockInstallConfirmationDOM(): XULElement {
  * the Firefox addon-webext-permissions-notification XUL structure.
  */
 function createMockWebExtPermissionDOM(): XULElement {
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
@@ -77,7 +77,7 @@ function createMockWebExtPermissionDOM(): XULElement {
   const popupContent = document!.createXULElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
-  const descContainer = document!.createXULElement("vbox") as XULElement & {
+  const descContainer = document!.createXULElement("vbox") as unknown as XULElement & {
     className: string;
   };
   descContainer.className = "popup-notification-description";
@@ -85,7 +85,7 @@ function createMockWebExtPermissionDOM(): XULElement {
   descContainer.appendChild(originalText);
   notification.appendChild(descContainer);
 
-  const intro = document!.createXULElement("vbox") as XULElement & {
+  const intro = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   intro.id = "addon-webext-perm-intro";
@@ -391,7 +391,7 @@ function testRestoreOriginalContentRestoresIntro(): void {
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
   const intro = document!.getElementById(
     "addon-webext-perm-intro",
-  ) as XULElement & { style: { display: string } };
+  ) as unknown as XULElement & { style: { display: string } };
   assertEquals(intro.style.display, "none", "intro should be hidden");
 
   // Restore should un-hide it
@@ -519,7 +519,7 @@ function testCustomizeNotificationContentMissingPopupContent(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without popupnotificationcontent
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-install-confirmation-notification";
@@ -536,7 +536,7 @@ function testCustomizeNotificationContentMissingDescriptionContainer(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without description container
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-install-confirmation-notification";
@@ -631,12 +631,12 @@ function testCustomizeWebExtPermissionPromptMissingPopupContent(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without popupnotificationcontent
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
 
-  const descContainer = document!.createXULElement("vbox") as XULElement & {
+  const descContainer = document!.createXULElement("vbox") as unknown as XULElement & {
     className: string;
   };
   descContainer.className = "popup-notification-description";
@@ -655,7 +655,7 @@ function testCustomizeWebExtPermissionPromptMissingDescriptionContainer(): void 
   const customizer = new NotificationCustomizer();
 
   // Create notification without description container
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
@@ -676,7 +676,7 @@ function testCustomizeWebExtPermissionPromptMissingIntro(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without intro element
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
@@ -684,7 +684,7 @@ function testCustomizeWebExtPermissionPromptMissingIntro(): void {
   const popupContent = document!.createXULElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
-  const descContainer = document!.createXULElement("vbox") as XULElement & {
+  const descContainer = document!.createXULElement("vbox") as unknown as XULElement & {
     className: string;
   };
   descContainer.className = "popup-notification-description";
@@ -739,7 +739,7 @@ function testRestoreOriginalContentMissingDescriptionContainer(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without description container
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
@@ -757,7 +757,7 @@ function testRestoreOriginalContentMissingIntro(): void {
   const customizer = new NotificationCustomizer();
 
   // Create notification without intro element
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-webext-permissions-notification";
@@ -766,7 +766,7 @@ function testRestoreOriginalContentMissingIntro(): void {
   const popupContent = document!.createXULElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
-  const descContainer = document!.createXULElement("vbox") as XULElement & {
+  const descContainer = document!.createXULElement("vbox") as unknown as XULElement & {
     className: string;
   };
   descContainer.className = "popup-notification-description";
@@ -812,7 +812,7 @@ function testRestoreOriginalContentIdempotent(): void {
 
 function testAddChromeExtensionBadgeMultipleNameElements(): void {
   cleanupDOM();
-  const notification = document!.createXULElement("vbox") as XULElement & {
+  const notification = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   notification.id = "addon-install-confirmation-notification";
@@ -820,13 +820,13 @@ function testAddChromeExtensionBadgeMultipleNameElements(): void {
   const popupContent = document!.createXULElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
-  const content = document!.createXULElement("vbox") as XULElement & {
+  const content = document!.createXULElement("vbox") as unknown as XULElement & {
     id: string;
   };
   content.id = "addon-install-confirmation-content";
 
   // Add multiple name elements
-  const nameEl1 = document!.createXULElement("label") as XULElement & {
+  const nameEl1 = document!.createXULElement("label") as unknown as XULElement & {
     className: string;
   };
   nameEl1.className = "addon-install-confirmation-name";
@@ -834,7 +834,7 @@ function testAddChromeExtensionBadgeMultipleNameElements(): void {
   parent1.appendChild(nameEl1);
   content.appendChild(parent1);
 
-  const nameEl2 = document!.createXULElement("label") as XULElement & {
+  const nameEl2 = document!.createXULElement("label") as unknown as XULElement & {
     className: string;
   };
   nameEl2.className = "addon-install-confirmation-name";

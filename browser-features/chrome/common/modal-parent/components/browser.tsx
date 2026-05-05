@@ -18,13 +18,13 @@ export function ModalBrowser() {
         : "chrome://noraneko-modal-child/content/index.html"}
       flex="1"
       style={{
-        "width": modalSize().width ? `${modalSize().width}px` : "800px",
-        "height": modalSize().height ? `${modalSize().height}px` : "600px",
-        "max-width": modalSize().maxWidth
-          ? `${modalSize().maxWidth}px`
+        "width": modalSize.value.width ? `${modalSize.value.width}px` : "800px",
+        "height": modalSize.value.height ? `${modalSize.value.height}px` : "600px",
+        "max-width": modalSize.value.maxWidth
+          ? `${modalSize.value.maxWidth}px`
           : "none",
-        "max-height": modalSize().maxHeight
-          ? `${modalSize().maxHeight}px`
+        "max-height": modalSize.value.maxHeight
+          ? `${modalSize.value.maxHeight}px`
           : "none",
         "position": "fixed",
         "top": "125px",
