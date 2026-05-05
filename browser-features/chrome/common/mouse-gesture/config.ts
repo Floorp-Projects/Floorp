@@ -3,14 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { effect } from "@preact/signals";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";
 
@@ -150,30 +146,31 @@ const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig =>
 export const defaultConfig = normalizeConfig(BASE_DEFAULT_CONFIG);
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
-function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [enabled, setEnabled] = createSignal(
-    Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
+function createEnabled(): Signal<boolean> {
+  const enabled = signal(
+    Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled ?? false),
   );
 
-  createEffect(() => {
-    Services.prefs.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, enabled());
-  });
+  addDisposer(effect(() => {
+    Services.prefs.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, enabled.value);
+  }));
 
   const enabledObserver = () => {
-    setEnabled(
-      Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
+    enabled.value = Services.prefs.getBoolPref(
+      MOUSE_GESTURE_ENABLED_PREF,
+      defaultConfig.enabled ?? false,
     );
   };
 
   Services.prefs.addObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(MOUSE_GESTURE_ENABLED_PREF, enabledObserver);
   });
 
-  return [enabled, setEnabled];
+  return enabled;
 }
 
-function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfig>] {
+function createConfig(): Signal<MouseGestureConfig> {
   const parseConfig = (jsonStr: string): MouseGestureConfig => {
     try {
       const parsed = JSON.parse(jsonStr);
@@ -189,45 +186,50 @@ function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfi
     }
   };
 
-  const [config, setConfig] = createSignal<MouseGestureConfig>(
+  const config = signal<MouseGestureConfig>(
     parseConfig(
       Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
     ),
   );
 
-  createEffect(() => {
-    Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, JSON.stringify(config()));
-  });
+  addDisposer(effect(() => {
+    Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, JSON.stringify(config.value));
+  }));
 
   const configObserver = () => {
     try {
-      setConfig(
-        parseConfig(
-          Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
-        ),
+      config.value = parseConfig(
+        Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
       );
     } catch (e) {
       console.error("Failed to parse mouse gesture config:", e);
-      setConfig(defaultConfig);
+      config.value = defaultConfig;
       Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig);
     }
   };
 
   Services.prefs.addObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(MOUSE_GESTURE_CONFIG_PREF, configObserver);
   });
 
-  return [config, setConfig];
+  return config;
 }
 
-export const [_enabled, _setEnabled] = createRootHMR(createEnabled, import.meta.hot);
-export const [_config, _setConfig] = createRootHMR(createConfig, import.meta.hot);
+export const _enabled: Signal<boolean> = createRootHMR(createEnabled, import.meta.hot);
+export const _setEnabled = (v: boolean): void => {
+  _enabled.value = v;
+};
 
-export const isEnabled = () => _enabled();
-export const setEnabled = (value: boolean) => _setEnabled(value);
-export const getConfig = () => _config();
-export const setConfig = (value: MouseGestureConfig) => _setConfig(normalizeConfig(value));
+export const _config: Signal<MouseGestureConfig> = createRootHMR(createConfig, import.meta.hot);
+export const _setConfig = (v: MouseGestureConfig): void => {
+  _config.value = v;
+};
+
+export const isEnabled = () => _enabled.value;
+export const setEnabled = (value: boolean) => { _enabled.value = value; };
+export const getConfig = () => _config.value;
+export const setConfig = (value: MouseGestureConfig) => { _config.value = normalizeConfig(value); };
 
 export function patternToString(pattern: GesturePattern): string {
   return pattern.join("-");

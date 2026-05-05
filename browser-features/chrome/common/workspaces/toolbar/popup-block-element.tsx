@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createMemo, Show } from "solid-js";
+import { computed } from "@preact/signals";
 import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
@@ -15,12 +15,12 @@ export function PopupToolbarElement(props: {
   bmsMode: boolean;
   ctx: WorkspacesService;
 }) {
-  const workspace = createMemo(() =>
+  const workspace = computed(() =>
     props.ctx.getRawWorkspace(props.workspaceId)
   );
 
   const handleDragStart = (event: DragEvent) => {
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", props.workspaceId);
@@ -29,7 +29,7 @@ export function PopupToolbarElement(props: {
   };
 
   const handleDragEnd = (event: DragEvent) => {
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     target.removeAttribute("dragging");
   };
 
@@ -38,18 +38,18 @@ export function PopupToolbarElement(props: {
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = "move";
     }
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     target.setAttribute("drag-over", "true");
   };
 
   const handleDragLeave = (event: DragEvent) => {
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     target.removeAttribute("drag-over");
   };
 
   const handleDrop = (event: DragEvent) => {
     event.preventDefault();
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     target.removeAttribute("drag-over");
 
     if (!event.dataTransfer) {
@@ -76,39 +76,37 @@ export function PopupToolbarElement(props: {
     props.ctx.reorderWorkspaceTo(draggedWorkspaceId, targetIndex);
   };
 
+  const ws = workspace.value;
+  if (!ws) return null;
+
+  const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(ws.icon);
+  const userContextId = ws.userContextId ?? 0;
+  const hasContainer = userContextId > 0;
+  const containerColorName = getContainerColorName(userContextId);
+
   return (
-    <Show when={workspace()}>
-      {(ws) => {
-        const icon = () => props.ctx.iconCtx.getWorkspaceIconUrl(ws().icon);
-        const userContextId = () => ws().userContextId ?? 0;
-        const hasContainer = () => userContextId() > 0;
-        const containerColorName = () => getContainerColorName(userContextId());
-        return (
-          <xul:toolbarbutton
-            id={`workspace-${props.workspaceId}`}
-            label={ws().name}
-            context="workspaces-toolbar-item-context-menu"
-            class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
-            style={{
-              "list-style-image": `url(${icon()})`,
-            }}
-            closemenu="none"
-            data-selected={props.isSelected}
-            data-workspaceId={props.workspaceId}
-            data-has-container={hasContainer() ? "true" : "false"}
-            data-container-color={containerColorName() ?? ""}
-            draggable="true"
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onCommand={() => {
-              props.ctx.changeWorkspace(props.workspaceId);
-            }}
-          />
-        );
+    <xul:toolbarbutton
+      id={`workspace-${props.workspaceId}`}
+      label={ws.name}
+      context="workspaces-toolbar-item-context-menu"
+      class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
+      style={{
+        "list-style-image": `url(${icon()})`,
       }}
-    </Show>
+      closemenu="none"
+      data-selected={props.isSelected}
+      data-workspaceId={props.workspaceId}
+      data-has-container={hasContainer ? "true" : "false"}
+      data-container-color={containerColorName ?? ""}
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onCommand={() => {
+        props.ctx.changeWorkspace(props.workspaceId);
+      }}
+    />
   );
 }

@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type Accessor, createSignal } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { createRootHMR } from "#features-chrome/utils/base";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { workspaceIconTranslationKeys } from "./icon-translations.ts";
@@ -20,9 +21,7 @@ const getDefaultTranslations = (): IconTranslationsMap =>
 export class IconTranslationsHandler {
   private static instance: IconTranslationsHandler | null = null;
 
-  private iconTranslations: Accessor<IconTranslationsMap> = () =>
-    getDefaultTranslations();
-  private setIconTranslations: (value: IconTranslationsMap) => void = () => {};
+  private iconTranslations: Signal<IconTranslationsMap>;
 
   public static getInstance(): IconTranslationsHandler {
     if (!IconTranslationsHandler.instance) {
@@ -32,40 +31,34 @@ export class IconTranslationsHandler {
   }
 
   private constructor() {
-    createRootHMR(
+    this.iconTranslations = createRootHMR(
       () => {
-        const [translations, setTranslations] =
-          createSignal<IconTranslationsMap>(getDefaultTranslations());
-        this.iconTranslations = translations;
-        this.setIconTranslations = setTranslations;
-        this.updateTranslations();
-
+        const sig = signal<IconTranslationsMap>(getDefaultTranslations());
+        this.updateTranslations(sig);
         addI18nObserver(() => {
-          this.updateTranslations();
+          this.updateTranslations(sig);
         });
+        return sig;
       },
       import.meta.hot,
     );
   }
 
-  private updateTranslations(): void {
+  private updateTranslations(sig: Signal<IconTranslationsMap>): void {
     const translations: IconTranslationsMap = {};
-
     Object.entries(workspaceIconTranslationKeys).forEach(
       ([iconName, translationKey]) => {
         translations[iconName] = i18next.t(translationKey);
       },
     );
-
-    this.setIconTranslations(translations);
+    sig.value = translations;
   }
 
   public getTranslatedIconName(iconName: string): string {
-    const translations = this.iconTranslations();
-    return translations[iconName] || iconName;
+    return this.iconTranslations.value[iconName] || iconName;
   }
 
   public getAllTranslations(): IconTranslationsMap {
-    return this.iconTranslations();
+    return this.iconTranslations.value;
   }
 }

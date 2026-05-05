@@ -6,7 +6,7 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { gFlexOrder } from "./flex-order";
 
-@noraComponent(import.meta.hot)
+@noraComponent("FlexOrder", import.meta.hot)
 export default class FlexOrder extends NoraComponentBase {
   init(): void {
     gFlexOrder.init();

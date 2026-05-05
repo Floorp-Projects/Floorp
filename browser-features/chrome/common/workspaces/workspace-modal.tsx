@@ -12,8 +12,9 @@ import type {
   TFormResult,
 } from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
-import { type Accessor, createSignal } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { createRootHMR } from "#features-chrome/utils/base";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
 
@@ -68,8 +69,7 @@ export class WorkspaceManageModal {
   private modalParent: ModalParent;
   private iconTranslationsHandler: IconTranslationsHandler;
 
-  private texts: Accessor<I18nTextValues> = () => getTranslatedTexts();
-  private setTexts: (value: I18nTextValues) => void = () => {};
+  private textsSignal: Signal<I18nTextValues>;
 
   constructor(ctx: WorkspacesService, iconCtx: WorkspaceIcons) {
     this.ctx = ctx;
@@ -78,16 +78,12 @@ export class WorkspaceManageModal {
     this.modalParent.init();
     this.iconTranslationsHandler = IconTranslationsHandler.getInstance();
 
-    createRootHMR(() => {
-      const [texts, setTexts] = createSignal<I18nTextValues>(
-        getTranslatedTexts(),
-      );
-      this.texts = texts;
-      this.setTexts = setTexts;
-
+    this.textsSignal = createRootHMR(() => {
+      const sig = signal<I18nTextValues>(getTranslatedTexts());
       addI18nObserver(() => {
-        setTexts(getTranslatedTexts());
+        sig.value = getTranslatedTexts();
       });
+      return sig;
     }, import.meta.hot);
   }
 
@@ -105,7 +101,7 @@ export class WorkspaceManageModal {
   }
 
   private createFormConfig(workspace: TWorkspace): TForm {
-    const texts = this.texts();
+    const texts = this.textsSignal.value;
 
     return {
       forms: [

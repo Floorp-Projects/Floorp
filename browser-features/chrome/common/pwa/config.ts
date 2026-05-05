@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, createSignal, onCleanup } from "solid-js";
+import { signal, effect } from "@preact/signals";
+import { type Signal } from "@preact/signals";
 import { type TPwaConfig, zPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
 import { isRight } from "fp-ts/Either";
@@ -19,92 +20,73 @@ if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.config")) {
 
 class PwaConfig {
   private static instance: PwaConfig;
-  public enabled!: ReturnType<typeof createSignal<boolean>>;
-  public config!: ReturnType<typeof createSignal<TPwaConfig>>;
+  public enabled!: Signal<boolean>;
+  public config!: Signal<TPwaConfig>;
   private constructor() {
-    createRoot(() => {
-      this.enabled = createSignal(
-        Services.prefs.getBoolPref(
-          "floorp.browser.ssb.enabled",
-          defaultEnabled,
-        ),
-      );
+    this.enabled = signal(
+      Services.prefs.getBoolPref(
+        "floorp.browser.ssb.enabled",
+        defaultEnabled,
+      ),
+    );
 
-      const loadConfig = (jsonStr: string): TPwaConfig => {
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const result = zPwaConfig.decode(parsed);
-          if (isRight(result)) {
-            return result.right;
-          }
-          console.warn(
-            "PWA configuration validation failed, attempting to recover partial data",
-          );
-          const defaultConfig = JSON.parse(strDefaultConfig);
-          return { ...defaultConfig, ...parsed };
-        } catch (e) {
-          console.error(
-            "Failed to parse PWA configuration JSON, using default",
-            e,
-          );
-          return JSON.parse(strDefaultConfig);
+    const loadConfig = (jsonStr: string): TPwaConfig => {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const result = zPwaConfig.decode(parsed);
+        if (isRight(result)) {
+          return result.right;
         }
-      };
+        console.warn(
+          "PWA configuration validation failed, attempting to recover partial data",
+        );
+        const defaultConfig = JSON.parse(strDefaultConfig);
+        return { ...defaultConfig, ...parsed };
+      } catch (e) {
+        console.error(
+          "Failed to parse PWA configuration JSON, using default",
+          e,
+        );
+        return JSON.parse(strDefaultConfig);
+      }
+    };
 
-      const initialConfig = loadConfig(
+    const initialConfig = loadConfig(
+      Services.prefs.getStringPref(
+        "floorp.browser.ssb.config",
+        strDefaultConfig,
+      ),
+    );
+
+    this.config = signal<TPwaConfig>(initialConfig);
+
+    effect(() => {
+      const v = this.enabled.value;
+      Services.prefs.setBoolPref("floorp.browser.ssb.enabled", v);
+    });
+
+    effect(() => {
+      const v = this.config.value;
+      Services.prefs.setStringPref(
+        "floorp.browser.ssb.config",
+        JSON.stringify(v),
+      );
+    });
+
+    const enabledObserver = () => {
+      this.enabled.value = Services.prefs.getBoolPref("floorp.browser.ssb.enabled");
+    };
+    Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
+
+    const configObserver = () => {
+      this.config.value = loadConfig(
         Services.prefs.getStringPref(
           "floorp.browser.ssb.config",
           strDefaultConfig,
         ),
       );
-
-      this.config = createSignal<TPwaConfig>(initialConfig);
-
-      const [enabled] = this.enabled;
-      const [config] = this.config;
-
-      createEffect(() => {
-        Services.prefs.setBoolPref("floorp.browser.ssb.enabled", enabled());
-      });
-
-      createEffect(() => {
-        Services.prefs.setStringPref(
-          "floorp.browser.ssb.config",
-          JSON.stringify(config()),
-        );
-      });
-
-      const enabledObserver = () =>
-        this.enabled[1](
-          Services.prefs.getBoolPref("floorp.browser.ssb.enabled"),
-        );
-      Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          "floorp.browser.ssb.enabled",
-          enabledObserver,
-        );
-      });
-
-      const configObserver = () => {
-        this.config[1](
-          loadConfig(
-            Services.prefs.getStringPref(
-              "floorp.browser.ssb.config",
-              strDefaultConfig,
-            ),
-          ),
-        );
-      };
-
-      Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          "floorp.browser.ssb.config",
-          configObserver,
-        );
-      });
-    });
+    };
+    Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
   }
 
   public static getInstance(): PwaConfig {
@@ -116,7 +98,7 @@ class PwaConfig {
 }
 
 const pwaConfig = PwaConfig.getInstance();
-export const enabled = () => pwaConfig.enabled[0]();
-export const setEnabled = (value: boolean) => pwaConfig.enabled[1](value);
-export const config = () => pwaConfig.config[0]();
-export const setConfig = (value: TPwaConfig) => pwaConfig.config[1](value);
+export const enabled = pwaConfig.enabled;
+export const setEnabled = (value: boolean) => { pwaConfig.enabled.value = value; };
+export const config = pwaConfig.config;
+export const setConfig = (value: TPwaConfig) => { pwaConfig.config.value = value; }

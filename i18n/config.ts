@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { parse } from "@std/toml";
-import { createRootHMR } from "@nora/solid-xul";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
-import { createEffect, createSignal } from "solid-js";
+import { effect, signal } from "@preact/signals";
 import type { Resources } from "./default.d.ts";
 
 const { I18nUtils } = ChromeUtils.importESModule(
@@ -60,10 +60,10 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
       i18next.changeLanguage(pendingLocale).then(async () => {
         if (!isSupportedLocale(pendingLocale!)) {
           await i18next.changeLanguage(fallbackLng["default"] || "en-US");
-          setLang(i18next.language);
+          lang.value = i18next.language;
           return;
         }
-        setLang(pendingLocale!);
+        lang.value = pendingLocale!;
         pendingLocale = null;
       });
     }
@@ -103,8 +103,8 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
     }
   });
 }
-const [lang, setLang] = createRootHMR(
-  () => createSignal("ja-JP"),
+const lang = createRootHMR(
+  () => signal("ja-JP"),
   import.meta.hot,
 );
 
@@ -117,12 +117,12 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
   await i18nInitializedPromise;
   if (!isSupportedLocale(newLocale)) {
     await i18next.changeLanguage(fallbackLng["default"] || "en-US");
-    setLang(i18next.language);
+    lang.value = i18next.language;
     return;
   }
 
   await i18next.changeLanguage(newLocale);
-  setLang(newLocale);
+  lang.value = newLocale;
 });
 
 /**
@@ -130,7 +130,7 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
  * @description For HMR, please run this function in `createRootHMR`
  * @example
  * ```ts
- * import { createRootHMR } from "@nora/solid-xul";
+ * import { createRootHMR } from "@nora/preact-xul/lifetime";
  *
  * createRootHMR(
  *   () => {
@@ -141,13 +141,13 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
  * ```
  */
 export function addI18nObserver(observer: (locale: string) => void) {
-  createEffect(() => {
-    observer(lang());
+  effect(() => {
+    observer(lang.value);
   });
 }
 
-export function setLanguage(lang: string) {
-  setLang(lang);
+export function setLanguage(newLang: string) {
+  lang.value = newLang;
 }
 
 export function isSupportedLocale(locale: string) {

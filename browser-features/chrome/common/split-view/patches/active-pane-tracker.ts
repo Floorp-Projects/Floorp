@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
 import {
   getGBrowser,
   type SplitViewGBrowser,
@@ -279,9 +278,9 @@ export function refreshActiveSplitPaneIndicator(): void {
 /**
  * Tracks split view selection changes and keeps pane presentation state in sync.
  */
-export function initActivePaneTracker(logger: ConsoleInstance): void {
+export function initActivePaneTracker(logger: ConsoleInstance): () => void {
   const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  if (!tabContainer) return () => {};
 
   const scheduleAfterTabSelect = (): void => {
     requestAnimationFrame(() => {
@@ -331,7 +330,9 @@ export function initActivePaneTracker(logger: ConsoleInstance): void {
     attachSplitPanelClassObserver(tp);
   }
 
-  onCleanup(() => {
+  logger.debug("[active-pane-tracker] listeners attached");
+
+  return () => {
     detachSplitPanelClassObserver();
     tabContainer.removeEventListener("TabSelect", scheduleAfterTabSelect);
     tabContainer.removeEventListener(
@@ -339,7 +340,5 @@ export function initActivePaneTracker(logger: ConsoleInstance): void {
       scheduleAfterSplitActivate,
     );
     tabContainer.removeEventListener("TabSplitViewDeactivate", onDeactivate);
-  });
-
-  logger.debug("[active-pane-tracker] listeners attached");
+  };
 }

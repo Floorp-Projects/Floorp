@@ -4,12 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 import style from "./style.css?inline";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { render } from "preact";
 
 export class TabPinnedTabCustomization {
   private dispose: (() => void) | null = null;
+  private styleContainer: HTMLElement | null = null;
 
   private StyleElement() {
     return <style>{style}</style>;
@@ -24,30 +25,38 @@ export class TabPinnedTabCustomization {
         );
         return;
       }
-      createRootHMR((dispose) => {
-        try {
-          render(() => this.StyleElement(), head);
-        } catch (error) {
-          const reason = error instanceof Error
-            ? error
-            : new Error(String(error));
-          console.error(
-            "[TabPinnedTabCustomization] Failed to render style element.",
-            reason,
-          );
-          return;
-        }
 
-        this.dispose = dispose;
-      }, import.meta.hot);
+      if (!this.styleContainer) {
+        const container = document.createElement("span");
+        head.appendChild(container);
+        this.styleContainer = container;
+      }
+
+      try {
+        render(this.StyleElement(), this.styleContainer);
+        this.dispose = () => {
+          render(null, this.styleContainer!);
+          this.styleContainer?.remove();
+          this.styleContainer = null;
+        };
+      } catch (error) {
+        const reason = error instanceof Error
+          ? error
+          : new Error(String(error));
+        console.error(
+          "[TabPinnedTabCustomization] Failed to render style element.",
+          reason,
+        );
+      }
     } else {
       this.dispose?.();
+      this.dispose = null;
     }
   }
 
   constructor() {
-    createEffect(() => {
-      const showTitleEnabled = config().tab.tabPinTitle;
+    effect(() => {
+      const showTitleEnabled = config.value.tab.tabPinTitle;
       this.toggleTitleVisibility(showTitleEnabled);
     });
   }

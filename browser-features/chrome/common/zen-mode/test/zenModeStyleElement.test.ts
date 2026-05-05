@@ -2,13 +2,25 @@
 // @colocated-env browser
 
 import { StyleElement } from "../styleElem.tsx";
-import { render } from "@nora/solid-xul";
+import { render } from "@nora/preact-xul";
+import type { VNode } from "preact";
 import {
   assert,
   assertEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
+
+// Each call creates a dedicated wrapper div inside head and renders the vnode
+// into it. Preact replaces the wrapper's children on each render, so using a
+// fresh wrapper per call preserves all previous style elements in the DOM —
+// matching the test's expectation of additive rendering.
+function renderToHead(vnode: VNode): void {
+  const w = document.createElement("div");
+  w.style.display = "contents";
+  document.head.appendChild(w);
+  render(vnode, w);
+}
 
 function testStyleElementReturnsNode(): void {
   const node = StyleElement();
@@ -32,7 +44,7 @@ function testRenderedStyleContainsZenModeSelector(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  render(() => StyleElement(), head);
+  renderToHead(StyleElement());
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -51,7 +63,7 @@ function testStyleElementContainsValidSVGIcon(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  render(() => StyleElement(), head);
+  renderToHead(StyleElement());
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -78,7 +90,7 @@ function testStyleElementTargetsCorrectButtonId(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  render(() => StyleElement(), head);
+  renderToHead(StyleElement());
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -103,10 +115,10 @@ function testStyleElementCanBeRenderedMultipleTimes(): void {
 
   const initialCount = head.querySelectorAll("style").length;
 
-  // Render multiple times
-  render(() => StyleElement(), head);
-  render(() => StyleElement(), head);
-  render(() => StyleElement(), head);
+  // Each renderToHead uses a fresh container so previous style elements persist
+  renderToHead(StyleElement());
+  renderToHead(StyleElement());
+  renderToHead(StyleElement());
 
   const styleNodes = head.querySelectorAll("style");
 
@@ -136,7 +148,7 @@ function testStyleElementSVGContainsZenModeIcon(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  render(() => StyleElement(), head);
+  renderToHead(StyleElement());
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 

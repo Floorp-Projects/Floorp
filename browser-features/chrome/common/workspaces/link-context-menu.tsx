@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
 import i18next from "i18next";
 import type { TWorkspaceID } from "./utils/type.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
@@ -38,9 +37,25 @@ export class WorkspacesLinkContextMenu {
     const marker = document?.getElementById(LINK_OPEN_MENU_ID) ?? undefined;
 
     try {
-      render(() => this.menu(), this.contentContextMenu, {
-        marker,
-      });
+      // Build XUL elements directly to support marker-based insertion.
+      const menuEl = document?.createXULElement("menu") as unknown as XULElement;
+      menuEl.id = WORKSPACE_MENU_ID;
+      menuEl.setAttribute(
+        "label",
+        i18next.t("workspaces.menu.openLinkInWorkspace"),
+      );
+
+      const popupEl = document?.createXULElement("menupopup") as unknown as XULElement;
+      popupEl.id = WORKSPACE_MENU_POPUP_ID;
+      popupEl.addEventListener("popupshowing", () => this.populateMenu());
+      menuEl.appendChild(popupEl);
+
+      const ctxMenu = this.contentContextMenu as unknown as Element;
+      if (marker?.parentElement === ctxMenu) {
+        ctxMenu.insertBefore(menuEl as unknown as Node, marker ?? null);
+      } else {
+        ctxMenu.appendChild(menuEl as unknown as Node);
+      }
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -86,22 +101,6 @@ export class WorkspacesLinkContextMenu {
     this.contentContextMenu?.removeEventListener(
       "popupshowing",
       this.boundUpdateVisibility,
-    );
-  }
-
-  private menu() {
-    return (
-      <xul:menu
-        id={WORKSPACE_MENU_ID}
-        label={i18next.t("workspaces.menu.openLinkInWorkspace")}
-      >
-        <xul:menupopup
-          id={WORKSPACE_MENU_POPUP_ID}
-          onPopupShowing={() => {
-            this.populateMenu();
-          }}
-        />
-      </xul:menu>
     );
   }
 
@@ -159,7 +158,7 @@ export class WorkspacesLinkContextMenu {
   private populateMenu() {
     const popup = document?.getElementById(
       WORKSPACE_MENU_POPUP_ID,
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
     if (!popup) {
       return;
     }
@@ -168,7 +167,7 @@ export class WorkspacesLinkContextMenu {
       popup.removeChild(popup.firstChild);
     }
 
-    const currentTab = globalThis.gBrowser?.selectedTab as XULElement | null;
+    const currentTab = globalThis.gBrowser?.selectedTab as unknown as XULElement | null;
     const currentWorkspaceId = (currentTab &&
       this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(currentTab)) ||
       this.ctx.getSelectedWorkspaceID();

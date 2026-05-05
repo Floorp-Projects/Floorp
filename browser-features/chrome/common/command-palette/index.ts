@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { render } from "@nora/solid-xul";
+import { h } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import {
   noraComponent,
   NoraComponentBase,
@@ -9,7 +11,7 @@ import { commandPaletteService } from "./service.ts";
 import { CommandPaletteUI } from "./components/CommandPalette.tsx";
 import style from "./style.css?inline";
 
-@noraComponent(import.meta.hot)
+@noraComponent("CommandPalette", import.meta.hot)
 export default class CommandPalette extends NoraComponentBase {
   init(): void {
     // Inject styles (idempotent)
@@ -20,12 +22,12 @@ export default class CommandPalette extends NoraComponentBase {
       document.head?.appendChild(styleEl);
     }
 
-    // Render the palette overlay
+    // Render the palette overlay via safeRender — appends a display:contents
+    // wrapper so existing main-window children are not disturbed.
     const mainWindow = document.getElementById("main-window");
     if (mainWindow) {
-      render(CommandPaletteUI, mainWindow, {
-        hotCtx: import.meta.hot,
-      });
+      const dispose = safeRender(h(CommandPaletteUI, {}), mainWindow);
+      addDisposer(dispose);
     }
 
     // Attach service — creates controller and manages lifecycle

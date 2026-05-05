@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 import style from "./style.css?inline";
-import { render } from "@nora/solid-xul";
+import { safeRender } from "@nora/preact-xul";
 
 export class TabSizeSpecification {
   private StyleElement() {
@@ -63,7 +63,7 @@ export class TabSizeSpecification {
     }
 
     try {
-      render(() => styleElement, head);
+      safeRender(styleElement, head);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -83,7 +83,7 @@ export class TabSizeSpecification {
     }
 
     try {
-      render(() => this.StyleElement(), head);
+      safeRender(this.StyleElement(), head);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -93,9 +93,9 @@ export class TabSizeSpecification {
       return;
     }
 
-    createEffect(() => {
-      const minH = config().tab.tabMinHeight;
-      const minW = config().tab.tabMinWidth;
+    effect(() => {
+      const minH = config.value.tab.tabMinHeight;
+      const minW = config.value.tab.tabMinWidth;
       this.setTabSizeSpecification(minH, minW);
     });
   }

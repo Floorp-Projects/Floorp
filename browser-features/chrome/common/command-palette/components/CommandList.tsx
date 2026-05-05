@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { createMemo, For, Show } from "solid-js";
 import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { CommandItem } from "./CommandItem.tsx";
@@ -22,79 +21,70 @@ interface CategorizedCommands {
 const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "search-suggestion"]);
 
 export function CommandList(props: CommandListProps) {
-  const grouped = createMemo(() => {
-    const groups: CategorizedCommands[] = [];
-    const categoryMap = new Map<string, PaletteCommand[]>();
+  // Build category groups from props — recomputes on every render (props change
+  // triggers parent re-render which passes new commands array).
+  const grouped: CategorizedCommands[] = [];
+  const categoryMap = new Map<string, PaletteCommand[]>();
 
-    for (const cmd of props.commands) {
-      const list = categoryMap.get(cmd.category);
-      if (list) {
-        list.push(cmd);
-      } else {
-        categoryMap.set(cmd.category, [cmd]);
-      }
+  for (const cmd of props.commands) {
+    const list = categoryMap.get(cmd.category);
+    if (list) {
+      list.push(cmd);
+    } else {
+      categoryMap.set(cmd.category, [cmd]);
     }
+  }
 
-    for (const [category, commands] of categoryMap) {
-      groups.push({ category, commands });
-    }
-
-    return groups;
-  });
+  for (const [category, commands] of categoryMap) {
+    grouped.push({ category, commands });
+  }
 
   const getGlobalIndex = (groupIdx: number, itemIdx: number): number => {
     let idx = 0;
-    const groups = grouped();
     for (let g = 0; g < groupIdx; g++) {
-      idx += groups[g].commands.length;
+      idx += grouped[g].commands.length;
     }
     return idx + itemIdx;
   };
 
-  return (
-    <Show
-      when={props.commands.length > 0}
-      fallback={
-        <div class="command-palette-empty">
-          <div class="command-palette-empty-title">
-            {i18next.t("commandPalette.noResults", {
-              defaultValue: "No commands found",
-            })}
-          </div>
-          <div class="command-palette-empty-hint">
-            {i18next.t("commandPalette.noResultsHint", {
-              defaultValue: "Try a different search term",
-            })}
-          </div>
+  if (props.commands.length === 0) {
+    return (
+      <div class="command-palette-empty">
+        <div class="command-palette-empty-title">
+          {i18next.t("commandPalette.noResults", {
+            defaultValue: "No commands found",
+          })}
         </div>
-      }
-    >
-      <div class="command-palette-list" role="listbox">
-        <For each={grouped()}>
-          {(group, groupIdx) => (
-            <>
-              <Show when={!HIDDEN_CATEGORIES.has(group.category)}>
-                <CategoryHeader category={group.category} />
-              </Show>
-              <For each={group.commands}>
-                {(cmd, itemIdx) => {
-                  const globalIdx = () =>
-                    getGlobalIndex(groupIdx(), itemIdx());
-                  return (
-                    <CommandItem
-                      command={cmd}
-                      isSelected={props.selectedIndex === globalIdx()}
-                      query={props.query}
-                      onSelect={() => props.onCommandSelect(globalIdx())}
-                      onExecute={() => props.onCommandExecute(cmd)}
-                    />
-                  );
-                }}
-              </For>
-            </>
-          )}
-        </For>
+        <div class="command-palette-empty-hint">
+          {i18next.t("commandPalette.noResultsHint", {
+            defaultValue: "Try a different search term",
+          })}
+        </div>
       </div>
-    </Show>
+    );
+  }
+
+  return (
+    <div class="command-palette-list" role="listbox">
+      {grouped.map((group, groupIdx) => (
+        <>
+          {!HIDDEN_CATEGORIES.has(group.category) && (
+            <CategoryHeader category={group.category} />
+          )}
+          {group.commands.map((cmd, itemIdx) => {
+            const globalIdx = getGlobalIndex(groupIdx, itemIdx);
+            return (
+              <CommandItem
+                command={cmd}
+                isSelected={props.selectedIndex === globalIdx}
+                query={props.query}
+                onSelect={() => props.onCommandSelect(globalIdx)}
+                onExecute={() => props.onCommandExecute(cmd)}
+              />
+            );
+          })}
+        </>
+      ))}
+    </div>
   );
 }

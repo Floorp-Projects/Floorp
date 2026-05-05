@@ -5,27 +5,28 @@
 
 import { manager } from "./index.ts";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { signal } from "@preact/signals";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const TRANSLATION_KEY = "statusbar.toggle";
 
 export function ContextMenu() {
-  const [label, setLabel] = createSignal(i18next.t(TRANSLATION_KEY));
+  const label = signal(i18next.t(TRANSLATION_KEY));
 
   addI18nObserver(() => {
-    setLabel(i18next.t(TRANSLATION_KEY, { mark: "(S)" }));
+    label.value = i18next.t(TRANSLATION_KEY, { mark: "(S)" });
   });
 
   return (
     <xul:menuitem
-      label={label()}
+      label={label.value}
       type="checkbox"
       id="toggle_statusBar"
       data-toolbar-id="nora-statusbar"
-      checked={manager.showStatusBar()}
-      onCommand={() =>
-        manager.setShowStatusBar((prevValue: boolean) => !prevValue)}
+      checked={manager.showStatusBar.value}
+      onCommand={() => {
+        manager.showStatusBar.value = !manager.showStatusBar.value;
+      }}
     />
   );
 }

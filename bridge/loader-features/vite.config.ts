@@ -2,7 +2,7 @@
 
 import { defineConfig } from "vite";
 import path from "node:path";
-import solidPlugin from "vite-plugin-solid";
+
 import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
@@ -11,8 +11,17 @@ const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
 
+
 export default defineConfig({
   publicDir: r("public"),
+
+  oxc: {
+    jsx: {
+      runtime: "automatic",
+      importSource: "preact",
+      throwIfNamespace: false,
+    },
+  },
   server: {
     port: 5181,
     strictPort: true,
@@ -97,7 +106,7 @@ export default defineConfig({
     // deno(),
 
     swc.vite({
-      exclude: ["*solid-xul*", "*solid-js*"],
+      exclude: ["*preact-xul*", "*preact*", "**/*.tsx"],
       jsc: {
         target: "esnext",
         parser: {
@@ -109,16 +118,6 @@ export default defineConfig({
           decoratorVersion: "2022-03",
         },
       },
-    }),
-
-    solidPlugin({
-      solid: {
-        generate: "universal",
-        moduleName: "@nora/solid-xul",
-        contextToCustomElements: false,
-        hydratable: true,
-      },
-      hot: false,
     }),
 
     // HMR支援プラグイン
@@ -154,28 +153,32 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       "./node_modules/@nora",
-      "solid-js",
-      "solid-js/web",
-      "solid-js/store",
-      "solid-js/html",
-      "solid-js/h",
+      "preact",
+      "preact/hooks",
+      "preact/compat",
+      "@preact/signals",
+      "@preact/signals-core",
     ],
   },
 
   resolve: {
     dedupe: [
-      "solid-js",
-      "solid-js/web",
-      "solid-js/store",
-      "solid-js/html",
-      "solid-js/h",
+      "preact",
+      "preact/hooks",
+      "preact/compat",
+      "@preact/signals",
+      "@preact/signals-core",
     ],
     preserveSymlinks: true,
     alias: [
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
       {
-        find: "@nora/solid-xul",
-        replacement: r("../../libs/solid-xul/index.ts"),
+        find: "@nora/preact-xul/lifetime",
+        replacement: r("../../libs/preact-xul/lifetime.ts"),
+      },
+      {
+        find: "@nora/preact-xul",
+        replacement: r("../../libs/preact-xul/index.ts"),
       },
       { find: "@std/toml", replacement: "@jsr/std__toml" },
       {

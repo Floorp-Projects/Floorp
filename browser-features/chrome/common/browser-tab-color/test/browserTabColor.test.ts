@@ -13,7 +13,7 @@ import {
 // ---------------------------------------------------------------------------
 
 // TabColorManager will be imported inside createManager() to ensure globals
-// are set up before the module-level createSignal call in TabColorManager
+// are set up before the module-level signal initialisation in TabColorManager
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -89,14 +89,14 @@ async function testConstructorSetsTabColorSetEnable(): Promise<void> {
   // setEnable should be bound to the manager's setEnableTabColor signal
   tabColor.setEnable(true);
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "setEnable(true) should enable tab color",
   );
 
   tabColor.setEnable(false);
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "setEnable(false) should disable tab color",
   );
@@ -111,7 +111,7 @@ async function testEnableTabColorDefaultReflectsConfig(): Promise<void> {
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
   // The default value comes from config().globalConfigs.faviconColor
-  const value = mgr.enableTabColor();
+  const value = mgr.enableTabColor.value;
   assertEquals(
     typeof value,
     "boolean",
@@ -124,16 +124,16 @@ async function testSetEnableTabColorToggles(): Promise<void> {
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
 
-  mgr.setEnableTabColor(true);
+  mgr.enableTabColor.value = true;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "enableTabColor should be true after setEnableTabColor(true)",
   );
 
-  mgr.setEnableTabColor(false);
+  mgr.enableTabColor.value = false;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "enableTabColor should be false after setEnableTabColor(false)",
   );
@@ -143,18 +143,18 @@ async function testSetEnableTabColorWithCallback(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
-  mgr.setEnableTabColor(false);
+  mgr.enableTabColor.value = false;
 
-  mgr.setEnableTabColor((prev) => !prev);
+  mgr.enableTabColor.value = !mgr.enableTabColor.value;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "should toggle from false to true via callback",
   );
 
-  mgr.setEnableTabColor((prev) => !prev);
+  mgr.enableTabColor.value = !mgr.enableTabColor.value;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "should toggle from true to false via callback",
   );
@@ -165,18 +165,18 @@ async function testSetEnableTabColorIdempotent(): Promise<void> {
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
 
-  mgr.setEnableTabColor(true);
-  mgr.setEnableTabColor(true);
+  mgr.enableTabColor.value = true;
+  mgr.enableTabColor.value = true;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "setting same value twice should be idempotent (true)",
   );
 
-  mgr.setEnableTabColor(false);
-  mgr.setEnableTabColor(false);
+  mgr.enableTabColor.value = false;
+  mgr.enableTabColor.value = false;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "setting same value twice should be idempotent (false)",
   );
@@ -186,20 +186,20 @@ async function testMultipleToggleCycles(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
-  mgr.setEnableTabColor(false);
+  mgr.enableTabColor.value = false;
 
   for (let i = 0; i < 10; i++) {
-    mgr.setEnableTabColor((prev) => !prev);
+    mgr.enableTabColor.value = !mgr.enableTabColor.value;
   }
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "after even number of toggles, should return to original state",
   );
 
-  mgr.setEnableTabColor((prev) => !prev);
+  mgr.enableTabColor.value = !mgr.enableTabColor.value;
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "one more toggle should make it true",
   );
@@ -209,24 +209,26 @@ async function testCallbackReceivesCorrectPreviousValue(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
   const mgr = new TabColorManager();
-  mgr.setEnableTabColor(false);
+  mgr.enableTabColor.value = false;
 
-  mgr.setEnableTabColor((prev) => {
+  {
+    const prev = mgr.enableTabColor.value;
     assertEquals(prev, false, "callback should receive current false value");
-    return !prev;
-  });
+    mgr.enableTabColor.value = !prev;
+  }
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     true,
     "should be true after toggling from false",
   );
 
-  mgr.setEnableTabColor((prev) => {
+  {
+    const prev = mgr.enableTabColor.value;
     assertEquals(prev, true, "callback should receive current true value");
-    return !prev;
-  });
+    mgr.enableTabColor.value = !prev;
+  }
   assertEquals(
-    mgr.enableTabColor(),
+    mgr.enableTabColor.value,
     false,
     "should be false after toggling from true",
   );
@@ -247,15 +249,15 @@ async function testMultipleInstancesShareGlobalGFloorp(): Promise<void> {
   assertNotEquals(gFloorp, undefined, "gFloorp should exist");
 
   // The last constructed manager's setEnable should be the active one
-  mgr1.setEnableTabColor(true);
-  assertEquals(mgr1.enableTabColor(), true, "mgr1 should be true");
+  mgr1.enableTabColor.value = true;
+  assertEquals(mgr1.enableTabColor.value, true, "mgr1 should be true");
 
-  mgr2.setEnableTabColor(false);
-  assertEquals(mgr2.enableTabColor(), false, "mgr2 should be false");
+  mgr2.enableTabColor.value = false;
+  assertEquals(mgr2.enableTabColor.value, false, "mgr2 should be false");
 
   // mgr1's signal is independent
   assertEquals(
-    mgr1.enableTabColor(),
+    mgr1.enableTabColor.value,
     true,
     "mgr1 signal should still be true (independent signal)",
   );
@@ -384,7 +386,7 @@ async function testBrowserTabColorChangeTabColorWhenDisabled(): Promise<void> {
   const instance = new BrowserTabColor();
 
   // Ensure tab color is disabled
-  manager?.setEnableTabColor(false);
+  if (manager) manager.enableTabColor.value = false;
 
   // Should not throw when disabled
   let threw = false;
@@ -527,7 +529,7 @@ async function testBrowserTabColorInitSetsManager(): Promise<void> {
   instance.init();
 
   assert(mod.manager !== undefined, "manager should be set after init");
-  assert(typeof mod.manager.enableTabColor === "function", "manager should have enableTabColor signal");
+  assert("value" in mod.manager.enableTabColor, "manager should have enableTabColor signal");
 }
 
 // ---------------------------------------------------------------------------

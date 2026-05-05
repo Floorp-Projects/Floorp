@@ -2,8 +2,7 @@
 // @colocated-env browser
 
 import { TabOpenPosition } from "../openPosition/index.ts";
-import { config, setConfig } from "../../designs/configs.ts";
-import { createRoot } from "solid-js";
+import { config } from "../../designs/configs.ts";
 import {
   assert,
   assertEquals,
@@ -11,13 +10,9 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInSolidRoot(construct: () => void): (() => void) | undefined {
-  let dispose: (() => void) | undefined;
-  createRoot((cleanup) => {
-    dispose = cleanup;
-    construct();
-  });
-  return dispose;
+function constructInPreactEffect(construct: () => void): (() => void) | undefined {
+  construct();
+  return undefined;
 }
 
 function withTabConfigPatch(
@@ -26,20 +21,21 @@ function withTabConfigPatch(
   },
   run: () => void,
 ): void {
-  const original = JSON.parse(JSON.stringify(config()));
+  const original = JSON.parse(JSON.stringify(config.value));
 
   try {
-    setConfig((prev) => ({
+    const prev = config.value;
+    config.value = {
       ...prev,
       tab: {
         ...prev.tab,
         tabOpenPosition: patch.tabOpenPosition ?? prev.tab.tabOpenPosition,
       },
-    }));
+    };
 
     run();
   } finally {
-    setConfig(original);
+    config.value = original;
   }
 }
 
@@ -54,13 +50,12 @@ function testTabOpenPositionConstructorHandlesMissingReactiveContext(): void {
   try {
     new TabOpenPosition();
   } catch (e) {
-    // createEffect from solid-js may not be available in all test contexts
+    // preact effects are self-contained and don't require an owner context;
+    // unexpected errors from the constructor should be investigated
     const msg = e instanceof Error ? e.message : String(e);
     assert(
-      msg.includes("solid") ||
-        msg.includes("effect") ||
-        msg.includes("owner") ||
-        msg.includes("createEffect"),
+      msg.includes("effect") ||
+        msg.includes("signal"),
       `Unexpected error: ${msg}`,
     );
   }
@@ -72,7 +67,7 @@ function testTabOpenPositionSyncsPrefWithDefault(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: -1 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -92,7 +87,7 @@ function testTabOpenPositionSyncsPrefWithAtEnd(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 3 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -112,7 +107,7 @@ function testTabOpenPositionSyncsPrefWithAtStart(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 2 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -132,7 +127,7 @@ function testTabOpenPositionSyncsPrefWithAfterCurrent(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 1 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -152,18 +147,18 @@ function testTabOpenPositionReactsToConfigChanges(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: -1 }, () => {
-      const dispose = constructInSolidRoot(() => {
+      const dispose = constructInPreactEffect(() => {
         new TabOpenPosition();
       });
 
       // Change to at end
-      setConfig((prev) => ({
-        ...prev,
+      config.value = {
+        ...config.value,
         tab: {
-          ...prev.tab,
+          ...config.value.tab,
           tabOpenPosition: 3,
         },
-      }));
+      };
 
       assertEquals(
         Services.prefs.getIntPref(prefName, -1),
@@ -172,13 +167,13 @@ function testTabOpenPositionReactsToConfigChanges(): void {
       );
 
       // Change to after current
-      setConfig((prev) => ({
-        ...prev,
+      config.value = {
+        ...config.value,
         tab: {
-          ...prev.tab,
+          ...config.value.tab,
           tabOpenPosition: 1,
         },
-      }));
+      };
 
       assertEquals(
         Services.prefs.getIntPref(prefName, -1),
@@ -200,7 +195,7 @@ function testTabOpenPositionHandlesBoundaryValues(): void {
   try {
     // Test with 0 (should be accepted as valid int)
     withTabConfigPatch({ tabOpenPosition: 0 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -212,7 +207,7 @@ function testTabOpenPositionHandlesBoundaryValues(): void {
 
     // Test with large positive value
     withTabConfigPatch({ tabOpenPosition: 999 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -224,7 +219,7 @@ function testTabOpenPositionHandlesBoundaryValues(): void {
 
     // Test with negative value
     withTabConfigPatch({ tabOpenPosition: -5 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -244,7 +239,7 @@ function testTabOpenPositionHandlesMultipleInstances(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 2 }, () => {
-      const dispose = constructInSolidRoot(() => {
+      const dispose = constructInPreactEffect(() => {
         // Create multiple instances - they should all sync the same pref
         const instance1 = new TabOpenPosition();
         const instance2 = new TabOpenPosition();

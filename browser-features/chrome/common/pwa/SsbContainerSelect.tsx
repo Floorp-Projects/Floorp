@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type Accessor, createMemo, createSignal, For } from "solid-js";
-import type { JSX } from "solid-js";
+import { useSignal } from "@preact/signals";
+import type { ComponentChild } from "preact";
+import { useEffect } from "preact/hooks";
 import { getPublicContainerOptions } from "./containerUtils.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 export interface SsbContainerSelectProps {
-  selectedId: Accessor<number>;
+  selectedId: () => number;
   onSelect: (userContextId: number) => void;
-  disabled?: Accessor<boolean>;
+  disabled?: () => boolean;
   labelKey?: string;
   /** Use "top" for app-menu panelviews; omit for nested urlbar panels. */
   menuPopupLevel?: "top" | "parent";
@@ -27,26 +28,24 @@ function hideMenuPopup(menuitem: XULElement): void {
 
 export function SsbContainerSelect(
   props: SsbContainerSelectProps,
-): JSX.Element {
-  const [containerLabel, setContainerLabel] = createSignal(
+): ComponentChild {
+  const containerLabel = useSignal(
     i18next.t(props.labelKey ?? "ssb.page-action.container"),
   );
 
-  addI18nObserver(() => {
-    setContainerLabel(i18next.t(props.labelKey ?? "ssb.page-action.container"));
-  });
+  useEffect(() => {
+    addI18nObserver(() => {
+      containerLabel.value = i18next.t(
+        props.labelKey ?? "ssb.page-action.container",
+      );
+    });
+  }, []);
 
-  const options = createMemo(() => getPublicContainerOptions());
-
-  const selectedLabel = createMemo(() => {
-    const selectedId = props.selectedId();
-    const match = options().find((option) =>
-      option.userContextId === selectedId
-    );
-    return match?.label ?? options()[0]?.label ?? "";
-  });
-
-  const isDisabled = () => props.disabled?.() === true;
+  const options = getPublicContainerOptions();
+  const selectedId = props.selectedId();
+  const match = options.find((option) => option.userContextId === selectedId);
+  const selectedLabel = match?.label ?? options[0]?.label ?? "";
+  const isDisabled = props.disabled?.() === true;
 
   const handleItemCommand = (userContextId: number) => (event?: Event) => {
     event?.stopPropagation();
@@ -69,33 +68,30 @@ export function SsbContainerSelect(
         id="ssb-container-label"
         class="ssb-container-label"
       >
-        {containerLabel()}
+        {containerLabel.value}
       </xul:label>
       <xul:button
         id="ssb-container-menu-button"
         class="ssb-container-menu-button"
         type="menu"
-        label={selectedLabel()}
-        disabled={isDisabled() ? true : undefined}
+        label={selectedLabel}
+        disabled={isDisabled ? true : undefined}
       >
         <xul:menupopup
           id="ssb-container-menupopup"
           class="in-menulist"
           {...(props.menuPopupLevel ? { level: props.menuPopupLevel } : {})}
         >
-          <For each={options()}>
-            {(option) => (
-              <xul:menuitem
-                label={option.label}
-                value={String(option.userContextId)}
-                closemenu="none"
-                checked={option.userContextId === props.selectedId()
-                  ? true
-                  : undefined}
-                onCommand={handleItemCommand(option.userContextId)}
-              />
-            )}
-          </For>
+          {options.map((option) => (
+            <xul:menuitem
+              key={option.userContextId}
+              label={option.label}
+              value={String(option.userContextId)}
+              closemenu="none"
+              checked={option.userContextId === selectedId ? true : undefined}
+              onCommand={handleItemCommand(option.userContextId)}
+            />
+          ))}
         </xul:menupopup>
       </xul:button>
     </xul:hbox>

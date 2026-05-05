@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 
 type XULTabElement = XULElement & {
   onwheel?: EventHandler;
@@ -18,10 +18,10 @@ export class TabScroll {
     tabBrowserTabs: XULTabElement,
   ) => {
     if (Services.prefs.getBoolPref("toolkit.tabbox.switchByScrolling")) {
-      if (event.deltaY > 0 !== config().tab.tabScroll.reverse) {
-        tabBrowserTabs?.advanceSelectedTab(1, config().tab.tabScroll.wrap);
+      if (event.deltaY > 0 !== config.value.tab.tabScroll.reverse) {
+        tabBrowserTabs?.advanceSelectedTab(1, config.value.tab.tabScroll.wrap);
       } else {
-        tabBrowserTabs?.advanceSelectedTab(-1, config().tab.tabScroll.wrap);
+        tabBrowserTabs?.advanceSelectedTab(-1, config.value.tab.tabScroll.wrap);
       }
       event.preventDefault();
       event.stopPropagation();
@@ -38,8 +38,8 @@ export class TabScroll {
       };
     }
 
-    createEffect(() => {
-      const isEnable = config().tab.tabScroll.enabled;
+    effect(() => {
+      const isEnable = config.value.tab.tabScroll.enabled;
       Services.prefs.setBoolPref("toolkit.tabbox.switchByScrolling", isEnable);
     });
   }

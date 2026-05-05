@@ -13,32 +13,24 @@ function testQRCodeManagerConstruction(): void {
   const manager = new QRCodeManager();
   assert(manager !== null, "QRCodeManager should be constructable");
   assert(
-    typeof manager.showPanel === "function",
-    "showPanel should be a signal accessor",
+    "value" in manager.showPanel,
+    "showPanel should be a preact signal",
   );
   assert(
-    typeof manager.setShowPanel === "function",
-    "setShowPanel should be a signal setter",
-  );
-  assert(
-    typeof manager.currentUrl === "function",
-    "currentUrl should be a signal accessor",
-  );
-  assert(
-    typeof manager.setCurrentUrl === "function",
-    "setCurrentUrl should be a signal setter",
+    "value" in manager.currentUrl,
+    "currentUrl should be a preact signal",
   );
 }
 
 function testShowPanelDefaultIsFalse(): void {
   const manager = new QRCodeManager();
-  assertEquals(manager.showPanel(), false, "showPanel should default to false");
+  assertEquals(manager.showPanel.value, false, "showPanel should default to false");
 }
 
 function testCurrentUrlDefaultIsEmpty(): void {
   const manager = new QRCodeManager();
   assertEquals(
-    manager.currentUrl(),
+    manager.currentUrl.value,
     "",
     "currentUrl should default to empty string",
   );
@@ -48,7 +40,7 @@ function testShowQRPanel(): void {
   const manager = new QRCodeManager();
   manager.showQRPanel();
   assertEquals(
-    manager.showPanel(),
+    manager.showPanel.value,
     true,
     "showPanel should be true after showQRPanel()",
   );
@@ -59,7 +51,7 @@ function testHideQRPanel(): void {
   manager.showQRPanel();
   manager.hideQRPanel();
   assertEquals(
-    manager.showPanel(),
+    manager.showPanel.value,
     false,
     "showPanel should be false after hideQRPanel()",
   );
@@ -67,9 +59,9 @@ function testHideQRPanel(): void {
 
 function testSetCurrentUrlManually(): void {
   const manager = new QRCodeManager();
-  manager.setCurrentUrl("https://example.com");
+  manager.currentUrl.value = ("https://example.com");
   assertEquals(
-    manager.currentUrl(),
+    manager.currentUrl.value,
     "https://example.com",
     "currentUrl should reflect manual set",
   );
@@ -128,7 +120,7 @@ function testUpdateCurrentTabUrl(): void {
   if ((globalThis as Record<string, unknown>).gBrowser && ((globalThis as Record<string, unknown>).gBrowser as Record<string, unknown>)?.selectedTab) {
     const selectedTab = ((globalThis as Record<string, unknown>).gBrowser as Record<string, unknown>).selectedTab as unknown as { linkedBrowser?: { currentURI?: { spec?: string } } };
     if (selectedTab?.linkedBrowser?.currentURI?.spec) {
-      const url = manager.currentUrl();
+      const url = manager.currentUrl.value;
       assert(
         url.length > 0,
         "currentUrl should be non-empty when a tab is selected",
@@ -165,11 +157,11 @@ function testInitDoesNotThrow(): void {
 
 function testSetShowPanelDirectly(): void {
   const manager = new QRCodeManager();
-  manager.setShowPanel(true);
-  assertEquals(manager.showPanel(), true, "setShowPanel(true) should work");
+  manager.showPanel.value = true;
+  assertEquals(manager.showPanel.value, true, "setShowPanel(true) should work");
 
-  manager.setShowPanel(false);
-  assertEquals(manager.showPanel(), false, "setShowPanel(false) should work");
+  manager.showPanel.value = false;
+  assertEquals(manager.showPanel.value, false, "setShowPanel(false) should work");
 }
 
 function testGenerateForUrlWithInvalidUrl(): void {
@@ -214,8 +206,8 @@ function testManagerWithSpecialCharactersInUrl(): void {
   let threw = false;
   try {
     specialUrls.forEach((url) => {
-      manager.setCurrentUrl(url);
-      assertEquals(manager.currentUrl(), url, `URL ${url} should be set correctly`);
+      manager.currentUrl.value = (url);
+      assertEquals(manager.currentUrl.value, url, `URL ${url} should be set correctly`);
     });
   } catch {
     threw = true;
@@ -230,17 +222,17 @@ function testSignalReactivity(): void {
   const url1 = "https://example.com/1";
   const url2 = "https://example.com/2";
 
-  manager.setCurrentUrl(url1);
-  assertEquals(manager.currentUrl(), url1, "currentUrl should update to url1");
+  manager.currentUrl.value = (url1);
+  assertEquals(manager.currentUrl.value, url1, "currentUrl should update to url1");
 
-  manager.setCurrentUrl(url2);
-  assertEquals(manager.currentUrl(), url2, "currentUrl should update to url2");
+  manager.currentUrl.value = (url2);
+  assertEquals(manager.currentUrl.value, url2, "currentUrl should update to url2");
 
-  manager.setShowPanel(true);
-  assertEquals(manager.showPanel(), true, "showPanel should be true");
+  manager.showPanel.value = true;
+  assertEquals(manager.showPanel.value, true, "showPanel should be true");
 
-  manager.setShowPanel(false);
-  assertEquals(manager.showPanel(), false, "showPanel should be false");
+  manager.showPanel.value = false;
+  assertEquals(manager.showPanel.value, false, "showPanel should be false");
 }
 
 function testGlobalBindingsAfterMultipleInstances(): void {
@@ -277,22 +269,20 @@ function testManagerInitialState(): void {
   const manager = new QRCodeManager();
 
   // Verify all initial states
-  assertEquals(manager.showPanel(), false, "showPanel should be false initially");
-  assertEquals(manager.currentUrl(), "", "currentUrl should be empty initially");
-  assertEquals(typeof manager.showPanel, "function", "showPanel should be a function");
-  assertEquals(typeof manager.setShowPanel, "function", "setShowPanel should be a function");
-  assertEquals(typeof manager.currentUrl, "function", "currentUrl should be a function");
-  assertEquals(typeof manager.setCurrentUrl, "function", "setCurrentUrl should be a function");
+  assertEquals(manager.showPanel.value, false, "showPanel should be false initially");
+  assertEquals(manager.currentUrl.value, "", "currentUrl should be empty initially");
+  assertEquals(typeof manager.showPanel, "object", "showPanel should be a preact signal");
+  assertEquals(typeof manager.currentUrl, "object", "currentUrl should be a preact signal");
 }
 
 function testUrlWithEmptyString(): void {
   const manager = new QRCodeManager();
 
-  manager.setCurrentUrl("https://example.com");
-  assertEquals(manager.currentUrl(), "https://example.com", "URL should be set");
+  manager.currentUrl.value = ("https://example.com");
+  assertEquals(manager.currentUrl.value, "https://example.com", "URL should be set");
 
-  manager.setCurrentUrl("");
-  assertEquals(manager.currentUrl(), "", "URL should be cleared");
+  manager.currentUrl.value = ("");
+  assertEquals(manager.currentUrl.value, "", "URL should be cleared");
 }
 
 function testShowPanelMultipleTimes(): void {
@@ -300,13 +290,13 @@ function testShowPanelMultipleTimes(): void {
 
   // Calling showQRPanel multiple times should not cause issues
   manager.showQRPanel();
-  assertEquals(manager.showPanel(), true, "showPanel should be true");
+  assertEquals(manager.showPanel.value, true, "showPanel should be true");
 
   manager.showQRPanel();
-  assertEquals(manager.showPanel(), true, "showPanel should remain true");
+  assertEquals(manager.showPanel.value, true, "showPanel should remain true");
 
   manager.showQRPanel();
-  assertEquals(manager.showPanel(), true, "showPanel should still be true");
+  assertEquals(manager.showPanel.value, true, "showPanel should still be true");
 }
 
 function testHidePanelMultipleTimes(): void {
@@ -314,13 +304,13 @@ function testHidePanelMultipleTimes(): void {
 
   manager.showQRPanel();
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "showPanel should be false");
+  assertEquals(manager.showPanel.value, false, "showPanel should be false");
 
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "showPanel should remain false");
+  assertEquals(manager.showPanel.value, false, "showPanel should remain false");
 
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "showPanel should still be false");
+  assertEquals(manager.showPanel.value, false, "showPanel should still be false");
 }
 
 function testUpdateCurrentTabUrlWithMissingBrowserProperties(): void {

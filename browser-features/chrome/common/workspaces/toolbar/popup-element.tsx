@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, For, Show } from "solid-js";
+import { useState, useEffect } from "preact/hooks";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { PopupToolbarElement } from "./popup-block-element.tsx";
 import { configStore } from "../data/config.ts";
@@ -61,13 +61,19 @@ const getTranslations = () => ({
 });
 
 export function PopupElement(props: { ctx: WorkspacesService }) {
-  const [texts, setTexts] = createSignal(getTranslations());
-  const [isRestoreMode, setIsRestoreMode] = createSignal(false);
-  const [archivedWorkspaces, setArchivedWorkspaces] = createSignal<
+  const [texts, setTexts] = useState(getTranslations());
+  const [isRestoreMode, setIsRestoreMode] = useState(false);
+  const [archivedWorkspaces, setArchivedWorkspaces] = useState<
     WorkspaceArchiveSummary[]
   >([]);
-  const [isLoadingRestore, setIsLoadingRestore] = createSignal(false);
-  const [restoreError, setRestoreError] = createSignal<string | null>(null);
+  const [isLoadingRestore, setIsLoadingRestore] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+
+  useEffect(() => {
+    addI18nObserver(() => {
+      setTexts(getTranslations());
+    });
+  }, []);
 
   const resetRestoreState = () => {
     setIsRestoreMode(false);
@@ -89,26 +95,15 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
       const days = Math.floor(hours / 24);
 
       if (seconds < 60) {
-        return texts().restoreTimeJustNow;
+        return texts.restoreTimeJustNow;
       }
       if (minutes < 60) {
-        return texts().restoreTimeMinutes(minutes);
+        return texts.restoreTimeMinutes(minutes);
       }
       if (hours < 24) {
-        return texts().restoreTimeHours(hours);
+        return texts.restoreTimeHours(hours);
       }
-      return texts().restoreTimeDays(days);
-    } catch {
-      return String(timestamp);
-    }
-  };
-
-  /**
-   * Format timestamp as full date/time (currently unused)
-   */
-  const _formatCapturedAt = (timestamp: number) => {
-    try {
-      return new Date(timestamp).toLocaleString();
+      return texts.restoreTimeDays(days);
     } catch {
       return String(timestamp);
     }
@@ -122,14 +117,14 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
       setArchivedWorkspaces(list);
     } catch (error) {
       console.error("WorkspacesPopup: failed to load archives", error);
-      setRestoreError(texts().restoreError);
+      setRestoreError(texts.restoreError);
     } finally {
       setIsLoadingRestore(false);
     }
   };
 
   const toggleRestoreMode = async () => {
-    if (isRestoreMode()) {
+    if (isRestoreMode) {
       resetRestoreState();
       return;
     }
@@ -152,7 +147,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
     } catch (error) {
       console.error("WorkspacesPopup: failed to restore workspace", error);
       await loadArchivedWorkspaces();
-      setRestoreError(texts().restoreError);
+      setRestoreError(texts.restoreError);
     }
   };
 
@@ -168,19 +163,15 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
       if (success) {
         await loadArchivedWorkspaces();
       } else {
-        setRestoreError(texts().restoreError);
+        setRestoreError(texts.restoreError);
       }
     } catch (error) {
       console.error("WorkspacesPopup: failed to delete archive", error);
-      setRestoreError(texts().restoreError);
+      setRestoreError(texts.restoreError);
     } finally {
       setIsLoadingRestore(false);
     }
   };
-
-  addI18nObserver(() => {
-    setTexts(getTranslations());
-  });
 
   return (
     <xul:panelview
@@ -197,105 +188,88 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
             orient="vertical"
             class="statusbar-padding"
             clicktoscroll
-            data-restore-mode={isRestoreMode() ? "true" : "false"}
+            data-restore-mode={isRestoreMode ? "true" : "false"}
           >
-            <Show
-              when={!isRestoreMode()}
-              fallback={
-                <xul:vbox class="workspaceRestoreContainer">
-                  <xul:label class="workspaceRestoreTitle">
-                    {texts().restoreTitle}
-                  </xul:label>
-                  <Show when={restoreError()}>
-                    {(message) => (
-                      <xul:label class="workspaceRestoreStatus">
-                        {message() ?? ""}
-                      </xul:label>
-                    )}
-                  </Show>
-                  <Show
-                    when={!restoreError() && !isLoadingRestore()}
-                    fallback={
-                      <xul:label class="workspaceRestoreStatus">
-                        {texts().restoreLoading}
-                      </xul:label>
-                    }
-                  >
-                    <Show
-                      when={archivedWorkspaces().length > 0}
-                      fallback={
-                        <xul:label class="workspaceRestoreStatus">
-                          {texts().restoreEmpty}
-                        </xul:label>
-                      }
-                    >
-                      <For each={archivedWorkspaces()}>
-                        {(item) => {
-                          const iconUrl = () =>
-                            props.ctx.iconCtx.getWorkspaceIconUrl(item.icon);
-                          return (
-                            <xul:hbox
-                              class="workspaceRestoreItem"
-                              align="center"
-                            >
-                              <xul:hbox
-                                class="workspaceRestoreItemButton"
-                                align="center"
-                                flex="1"
-                                onClick={() => handleRestore(item.archiveId)}
-                              >
-                                <xul:image
-                                  class="workspaceRestoreItemIcon"
-                                  src={iconUrl()}
-                                />
-                                <xul:vbox
-                                  class="workspaceRestoreItemContent"
-                                  flex="1"
-                                >
-                                  <xul:label class="workspaceRestoreItemName">
-                                    {item.name}
-                                  </xul:label>
-                                  <xul:hbox class="workspaceRestoreItemMeta">
-                                    <xul:label class="workspaceRestoreItemMetaText">
-                                      {texts().restoreTabCount(item.tabCount)}
-                                    </xul:label>
-                                    <xul:label class="workspaceRestoreItemMetaSeparator">
-                                      /
-                                    </xul:label>
-                                    <xul:label class="workspaceRestoreItemMetaText">
-                                      {formatRelativeTime(item.capturedAt)}
-                                    </xul:label>
-                                  </xul:hbox>
-                                </xul:vbox>
-                              </xul:hbox>
-                              <xul:toolbarbutton
-                                class="toolbarbutton-1 workspaceRestoreDeleteButton"
-                                title={texts().restoreDeleteTooltip}
-                                closemenu="none"
-                                onClick={(event: MouseEvent) => {
-                                  void handleDelete(item.archiveId, event);
-                                }}
-                              />
-                            </xul:hbox>
-                          );
-                        }}
-                      </For>
-                    </Show>
-                  </Show>
-                </xul:vbox>
-              }
-            >
-              <For each={workspacesDataStore.order}>
-                {(id) => (
+            {!isRestoreMode
+              ? (
+                workspacesDataStore.order.map((id) => (
                   <PopupToolbarElement
                     workspaceId={id}
-                    isSelected={id === selectedWorkspaceID()}
+                    isSelected={id === selectedWorkspaceID.value}
                     bmsMode={configStore.manageOnBms}
                     ctx={props.ctx}
                   />
-                )}
-              </For>
-            </Show>
+                ))
+              )
+              : (
+                <xul:vbox class="workspaceRestoreContainer">
+                  <xul:label class="workspaceRestoreTitle">
+                    {texts.restoreTitle}
+                  </xul:label>
+                  {restoreError && (
+                    <xul:label class="workspaceRestoreStatus">
+                      {restoreError}
+                    </xul:label>
+                  )}
+                  {!restoreError && isLoadingRestore
+                    ? (
+                      <xul:label class="workspaceRestoreStatus">
+                        {texts.restoreLoading}
+                      </xul:label>
+                    )
+                    : !restoreError && archivedWorkspaces.length > 0
+                    ? archivedWorkspaces.map((item) => (
+                      <xul:hbox
+                        class="workspaceRestoreItem"
+                        align="center"
+                      >
+                        <xul:hbox
+                          class="workspaceRestoreItemButton"
+                          align="center"
+                          flex="1"
+                          onClick={() => handleRestore(item.archiveId)}
+                        >
+                          <xul:image
+                            class="workspaceRestoreItemIcon"
+                            src={props.ctx.iconCtx.getWorkspaceIconUrl(item.icon)}
+                          />
+                          <xul:vbox
+                            class="workspaceRestoreItemContent"
+                            flex="1"
+                          >
+                            <xul:label class="workspaceRestoreItemName">
+                              {item.name}
+                            </xul:label>
+                            <xul:hbox class="workspaceRestoreItemMeta">
+                              <xul:label class="workspaceRestoreItemMetaText">
+                                {texts.restoreTabCount(item.tabCount)}
+                              </xul:label>
+                              <xul:label class="workspaceRestoreItemMetaSeparator">
+                                /
+                              </xul:label>
+                              <xul:label class="workspaceRestoreItemMetaText">
+                                {formatRelativeTime(item.capturedAt)}
+                              </xul:label>
+                            </xul:hbox>
+                          </xul:vbox>
+                        </xul:hbox>
+                        <xul:toolbarbutton
+                          class="toolbarbutton-1 workspaceRestoreDeleteButton"
+                          title={texts.restoreDeleteTooltip}
+                          closemenu="none"
+                          onClick={(event: MouseEvent) => {
+                            void handleDelete(item.archiveId, event);
+                          }}
+                        />
+                      </xul:hbox>
+                    ))
+                    : !restoreError && (
+                      <xul:label class="workspaceRestoreStatus">
+                        {texts.restoreEmpty}
+                      </xul:label>
+                    )}
+                </xul:vbox>
+              )}
           </xul:vbox>
         </xul:arrowscrollbox>
         <xul:toolbarseparator id="workspacesPopupSeparator" />
@@ -303,7 +277,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
           <xul:toolbarbutton
             id="workspacesCreateNewWorkspaceButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
-            label={texts().createNew}
+            label={texts.createNew}
             context="tab-stacks-toolbar-item-context-menu"
             onCommand={() => props.ctx.createNoNameWorkspace()}
             flex="1"
@@ -312,11 +286,11 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
             <xul:toolbarbutton
               id="workspacesRestoreWorkspaceButton"
               class={`toolbarbutton-1 chromeclass-toolbar-additional workspaceRestoreToggle${
-                isRestoreMode() ? " workspaceRestoreToggle-active" : ""
+                isRestoreMode ? " workspaceRestoreToggle-active" : ""
               }`}
-              title={isRestoreMode()
-                ? texts().restoreCancel
-                : texts().restoreTooltip}
+              title={isRestoreMode
+                ? texts.restoreCancel
+                : texts.restoreTooltip}
               closemenu="none"
               onCommand={() => {
                 void toggleRestoreMode();
@@ -325,7 +299,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
             <xul:toolbarbutton
               id="workspacesManageworkspacesServicesButton"
               class="toolbarbutton-1 chromeclass-toolbar-additional"
-              label={texts().manage}
+              label={texts.manage}
               context="tab-stacks-toolbar-item-context-menu"
               onCommand={() => props.ctx.manageWorkspaceFromDialog()}
             />

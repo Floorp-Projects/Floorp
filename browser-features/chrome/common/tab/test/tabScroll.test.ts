@@ -2,8 +2,7 @@
 // @colocated-env browser
 
 import { TabScroll } from "../scroll/index.ts";
-import { config, setConfig } from "../../designs/configs.ts";
-import { createRoot } from "solid-js";
+import { config } from "../../designs/configs.ts";
 import {
   assert,
   assertEquals,
@@ -11,14 +10,10 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInSolidRoot(construct: () => void): () => void {
-  let dispose: (() => void) | undefined;
-  createRoot((cleanup) => {
-    dispose = cleanup;
-    construct();
-  });
-  // Return dispose so callers can control when the reactive root is cleaned up
-  return dispose ?? (() => {});
+function constructInPreactEffect(construct: () => void): () => void {
+  construct();
+  // preact effects are self-contained; return a no-op for call-site compatibility
+  return () => {};
 }
 
 function withTabConfigPatch(
@@ -29,10 +24,11 @@ function withTabConfigPatch(
   },
   run: () => void,
 ): void {
-  const original = JSON.parse(JSON.stringify(config()));
+  const original = JSON.parse(JSON.stringify(config.value));
 
   try {
-    setConfig((prev) => ({
+    const prev = config.value;
+    config.value = {
       ...prev,
       tab: {
         ...prev.tab,
@@ -43,11 +39,11 @@ function withTabConfigPatch(
           wrap: patch.tabScrollWrap ?? prev.tab.tabScroll.wrap,
         },
       },
-    }));
+    };
 
     run();
   } finally {
-    setConfig(original);
+    config.value = original;
   }
 }
 
@@ -64,15 +60,13 @@ function testTabScrollConstructorDoesNotThrowWhenTabBrowserTabsAbsent(): void {
   try {
     new TabScroll();
   } catch (e) {
-    // createEffect from solid-js may not be available in all test contexts,
+    // preact effects are self-contained and don't require an owner context,
     // so we only check that the class itself is importable and defined.
     const msg = e instanceof Error ? e.message : String(e);
-    // If it fails due to missing solid-js reactivity context, that is acceptable
+    // If it fails due to missing signal/effect, that is acceptable
     assert(
-      msg.includes("solid") ||
-        msg.includes("effect") ||
-        msg.includes("owner") ||
-        msg.includes("createEffect"),
+      msg.includes("effect") ||
+        msg.includes("signal"),
       `Unexpected error: ${msg}`,
     );
   }
@@ -84,7 +78,7 @@ function testTabScrollSyncsSwitchByScrollingPrefWhenEnabled(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabScroll();
       });
       assertEquals(
@@ -104,7 +98,7 @@ function testTabScrollSyncsSwitchByScrollingPrefWhenDisabled(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: false }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabScroll();
       });
       assertEquals(
@@ -124,41 +118,41 @@ function testTabScrollReactsToConfigChanges(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: false }, () => {
-      const dispose = constructInSolidRoot(() => {
+      const dispose = constructInPreactEffect(() => {
         new TabScroll();
 
         // Toggle from false to true
-        setConfig((prev) => ({
-          ...prev,
+        config.value = {
+          ...config.value,
           tab: {
-            ...prev.tab,
+            ...config.value.tab,
             tabScroll: {
-              ...prev.tab.tabScroll,
+              ...config.value.tab.tabScroll,
               enabled: true,
             },
           },
-        }));
+        };
 
         assertEquals(
-          config().tab.tabScroll.enabled,
+          config.value.tab.tabScroll.enabled,
           true,
           "config should update to true",
         );
 
         // Toggle from true to false
-        setConfig((prev) => ({
-          ...prev,
+        config.value = {
+          ...config.value,
           tab: {
-            ...prev.tab,
+            ...config.value.tab,
             tabScroll: {
-              ...prev.tab.tabScroll,
+              ...config.value.tab.tabScroll,
               enabled: false,
             },
           },
-        }));
+        };
 
         assertEquals(
-          config().tab.tabScroll.enabled,
+          config.value.tab.tabScroll.enabled,
           false,
           "config should update to false",
         );
@@ -179,7 +173,7 @@ function testTabScrollHandlesReverseConfiguration(): void {
     withTabConfigPatch(
       { tabScrollEnabled: true, tabScrollReverse: true },
       () => {
-        constructInSolidRoot(() => {
+        constructInPreactEffect(() => {
           new TabScroll();
           // The reverse setting is used in the wheel handler, not a pref
           // but we verify the instance is created successfully
@@ -192,7 +186,7 @@ function testTabScrollHandlesReverseConfiguration(): void {
     withTabConfigPatch(
       { tabScrollEnabled: true, tabScrollReverse: false },
       () => {
-        constructInSolidRoot(() => {
+        constructInPreactEffect(() => {
           new TabScroll();
           assert(true, "Instance should be created with reverse disabled");
         });
@@ -210,7 +204,7 @@ function testTabScrollHandlesWrapConfiguration(): void {
   try {
     // Test with wrap enabled
     withTabConfigPatch({ tabScrollEnabled: true, tabScrollWrap: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabScroll();
         // The wrap setting is used in the wheel handler, not a pref
         // but we verify the instance is created successfully
@@ -220,7 +214,7 @@ function testTabScrollHandlesWrapConfiguration(): void {
 
     // Test with wrap disabled
     withTabConfigPatch({ tabScrollEnabled: true, tabScrollWrap: false }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabScroll();
         assert(true, "Instance should be created with wrap disabled");
       });
@@ -235,7 +229,7 @@ function testTabScrollHandleOnWheelMethod(): void {
   withTabConfigPatch(
     { tabScrollEnabled: true, tabScrollReverse: false, tabScrollWrap: true },
     () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         const instance = new TabScroll();
         assert(
           typeof (instance as TabScroll)["handleOnWheel"] === "function",
@@ -252,7 +246,7 @@ function testTabScrollHandlesMultipleInstances(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         // Create multiple instances
         const instance1 = new TabScroll();
         const instance2 = new TabScroll();
@@ -295,7 +289,7 @@ function testTabScrollHandlesAllConfigCombinations(): void {
           tabScrollWrap: combo.wrap,
         },
         () => {
-          constructInSolidRoot(() => {
+          constructInPreactEffect(() => {
             new TabScroll();
             assert(
               true,

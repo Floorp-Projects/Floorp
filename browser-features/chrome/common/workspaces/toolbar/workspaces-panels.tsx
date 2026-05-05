@@ -3,14 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  Show,
-} from "solid-js";
+import { useState, useEffect } from "preact/hooks";
 import Workspaces from "../index.ts";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
@@ -40,25 +33,17 @@ type WorkspacePanelButtonProps = {
 };
 
 const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
-  const workspace = createMemo(() => {
-    const data = workspacesDataStore.data;
-    if (data instanceof Map) {
-      return data.get(props.workspaceId);
-    }
-    return undefined;
-  });
-  const iconUrl = createMemo(() =>
+  const data = workspacesDataStore.data;
+  const workspace = data instanceof Map ? data.get(props.workspaceId) : undefined;
+  const iconUrl =
     props.ctx.iconCtx.getWorkspaceIconUrl(
-      (workspace() as { icon?: string } | undefined)?.icon,
-    ) ?? DEFAULT_ICON
-  );
-  const workspaceName = createMemo(() =>
-    (workspace() as { name?: string } | undefined)?.name ?? ""
-  );
-  const isSelected = () => selectedWorkspaceID() === props.workspaceId;
+      (workspace as { icon?: string } | undefined)?.icon,
+    ) ?? DEFAULT_ICON;
+  const workspaceName = (workspace as { name?: string } | undefined)?.name ?? "";
+  const isSelected = selectedWorkspaceID.value === props.workspaceId;
 
   const handleActivate = () => {
-    if (!isSelected()) {
+    if (!isSelected) {
       props.ctx.changeWorkspace(props.workspaceId);
     }
   };
@@ -67,7 +52,7 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const target = event.currentTarget as XULElement;
+    const target = event.currentTarget as unknown as XULElement;
     (document as ChromeDocument).popupNode = target;
 
     const menu = document?.getElementById(CONTEXT_MENU_ID) as
@@ -146,13 +131,13 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
       <div
         id={`workspace-${props.workspaceId}`}
         class="workspace-panel panel-sidebar-panel"
-        data-checked={isSelected() ? "true" : undefined}
+        data-checked={isSelected ? "true" : undefined}
         data-workspace-id={props.workspaceId}
         role="button"
         tabIndex={0}
-        title={workspaceName()}
-        aria-label={workspaceName()}
-        draggable="true"
+        title={workspaceName}
+        aria-label={workspaceName}
+        draggable={true}
         onClick={handleActivate}
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
@@ -162,7 +147,7 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <img src={iconUrl()} width="16" height="16" alt="" />
+        <img src={iconUrl} width="16" height="16" alt="" />
       </div>
     </div>
   );
@@ -202,34 +187,31 @@ const ControlButton = (props: ControlButtonProps) => {
 };
 
 export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
-  const [texts, setTexts] = createSignal(getTranslations());
-  const [ctx, setCtx] = createSignal<WorkspacesService | null>(
+  const [texts, setTexts] = useState(getTranslations());
+  const [ctx, setCtx] = useState<WorkspacesService | null>(
     props.ctx ?? Workspaces.getCtx(),
   );
 
-  addI18nObserver(() => {
-    setTexts(getTranslations());
-  });
+  useEffect(() => {
+    addI18nObserver(() => setTexts(getTranslations()));
+  }, []);
 
-  const shouldShow = () => enabled() && Boolean(configStore.manageOnBms);
-
-  createEffect(() => {
+  // Resolve ctx: provided prop → live lookup → poll until available
+  useEffect(() => {
     if (props.ctx) {
       setCtx(props.ctx);
       return;
     }
-
-    if (!shouldShow()) {
+    const shouldShow = enabled.value && Boolean(configStore.manageOnBms);
+    if (!shouldShow) {
       setCtx(null);
       return;
     }
-
     const current = Workspaces.getCtx();
     if (current) {
       setCtx(current);
       return;
     }
-
     const intervalId = globalThis.setInterval(() => {
       const service = Workspaces.getCtx();
       if (service) {
@@ -237,35 +219,34 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
         globalThis.clearInterval(intervalId);
       }
     }, 500);
+    return () => globalThis.clearInterval(intervalId);
+  }, [props.ctx]);
 
-    onCleanup(() => globalThis.clearInterval(intervalId));
-  });
+  // shouldShow reads signals → component auto-subscribes and re-renders
+  const shouldShow = enabled.value && Boolean(configStore.manageOnBms);
 
-  const handleCreateWorkspace = () => ctx()?.createNoNameWorkspace();
+  const handleCreateWorkspace = () => ctx?.createNoNameWorkspace();
+
+  if (!shouldShow || !ctx) return null;
+
   return (
-    <Show when={shouldShow() ? ctx() : null} keyed>
-      {(service) => (
-        <>
-          <xul:vbox
-            id="workspaces-panel-sidebar-section"
-            class="panel-sidebar-workspaces"
-            flex="0"
-          >
-            <For each={workspacesDataStore.order}>
-              {(workspaceId) => (
-                <WorkspacePanelButton workspaceId={workspaceId} ctx={service} />
-              )}
-            </For>
-            <ControlButton
-              id="workspaces-panel-create"
-              icon="chrome://global/skin/icons/plus.svg"
-              label={texts().createNew}
-              onActivate={handleCreateWorkspace}
-            />
-          </xul:vbox>
-          <xul:spacer flex="1" />
-        </>
-      )}
-    </Show>
+    <>
+      <xul:vbox
+        id="workspaces-panel-sidebar-section"
+        class="panel-sidebar-workspaces"
+        flex="0"
+      >
+        {workspacesDataStore.order.map((workspaceId) => (
+          <WorkspacePanelButton workspaceId={workspaceId} ctx={ctx} />
+        ))}
+        <ControlButton
+          id="workspaces-panel-create"
+          icon="chrome://global/skin/icons/plus.svg"
+          label={texts.createNew}
+          onActivate={handleCreateWorkspace}
+        />
+      </xul:vbox>
+      <xul:spacer flex="1" />
+    </>
   );
 }

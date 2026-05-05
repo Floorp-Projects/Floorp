@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { Show, createEffect, on } from "solid-js";
-import { Portal } from "solid-js/web";
+import { effect } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import i18next from "i18next";
 import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
@@ -16,7 +16,7 @@ function getController() {
 
 export function CommandPaletteUI() {
   const controller = getController();
-  if (!controller) return;
+  if (!controller) return null;
 
   const state = controller.state;
 
@@ -57,9 +57,12 @@ export function CommandPaletteUI() {
     }
   };
 
-  // Scroll selected item into view (command mode only)
-  createEffect(
-    on(state.selectedIndex, () => {
+  // Scroll selected item into view (command mode only).
+  // effect() tracks all signal reads inside; useEffect scopes it to component
+  // lifetime so the subscription is disposed when the component unmounts.
+  useEffect(() => {
+    return effect(() => {
+      state.selectedIndex(); // subscribe to index changes
       if (!state.isVisible()) return;
       if (state.mode() !== "command") return;
       requestAnimationFrame(() => {
@@ -68,12 +71,13 @@ export function CommandPaletteUI() {
         );
         selected?.scrollIntoView({ block: "nearest" });
       });
-    }),
-  );
+    });
+  }, []);
 
-  // Scroll selected step choice into view (input mode with choices)
-  createEffect(
-    on(state.selectedChoiceIndex, () => {
+  // Scroll selected step choice into view (input mode with choices).
+  useEffect(() => {
+    return effect(() => {
+      state.selectedChoiceIndex(); // subscribe to index changes
       if (!state.isVisible()) return;
       if (state.mode() !== "input") return;
       requestAnimationFrame(() => {
@@ -82,12 +86,12 @@ export function CommandPaletteUI() {
         );
         selected?.scrollIntoView({ block: "nearest" });
       });
-    }),
-  );
+    });
+  }, []);
 
   return (
-    <Portal mount={document.getElementById("main-window") ?? undefined}>
-      <Show when={state.isVisible() || state.isAnimatingOut()}>
+    <>
+      {(state.isVisible() || state.isAnimatingOut()) && (
         <div
           id="command-palette-overlay"
           role="dialog"
@@ -107,19 +111,19 @@ export function CommandPaletteUI() {
               onBack={handleBack}
               state={state}
             />
-            <Show when={state.mode() === "input"}>
-              <StepIndicator state={state} />
-              <Show when={state.stepError()}>
-                {(error) => (
-                  <div class="command-palette-step-error">{error()}</div>
+            {state.mode() === "input" && (
+              <>
+                <StepIndicator state={state} />
+                {state.stepError() && (
+                  <div class="command-palette-step-error">{state.stepError()}</div>
                 )}
-              </Show>
-              <StepChoices
-                state={state}
-                onSelect={handleChoiceSelect}
-              />
-            </Show>
-            <Show when={state.mode() === "command"}>
+                <StepChoices
+                  state={state}
+                  onSelect={handleChoiceSelect}
+                />
+              </>
+            )}
+            {state.mode() === "command" && (
               <CommandList
                 commands={state.filteredCommands()}
                 selectedIndex={state.selectedIndex()}
@@ -127,10 +131,10 @@ export function CommandPaletteUI() {
                 onCommandSelect={handleCommandSelect}
                 onCommandExecute={handleCommandExecute}
               />
-            </Show>
+            )}
           </div>
         </div>
-      </Show>
-    </Portal>
+      )}
+    </>
   );
 }

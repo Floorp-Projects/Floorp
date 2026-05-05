@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { SplitViewTab } from "../data/types.js";
@@ -18,9 +17,9 @@ const t = (key: string, opts?: Record<string, string>): string =>
  * Adds "Open in Split View", "Add Pane to Split View" and "Move to Pane"
  * items to the tab context menu.
  */
-export function initContextMenu(logger: ConsoleInstance): void {
+export function initContextMenu(logger: ConsoleInstance): () => void {
   const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  if (!tabContainer) return () => {};
 
   const updateLabels = (): void => {
     const openInSplitItem = document?.getElementById("floorp_openInSplitView");
@@ -74,11 +73,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
 
     let openInSplitItem = document?.getElementById(
       "floorp_openInSplitView",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
 
     if (shouldShowOpenInSplit) {
       if (!openInSplitItem) {
-        openInSplitItem = document?.createXULElement("menuitem") as XULElement;
+        openInSplitItem = document?.createXULElement("menuitem") as unknown as XULElement;
         if (openInSplitItem) {
           openInSplitItem.id = "floorp_openInSplitView";
           openInSplitItem.setAttribute(
@@ -89,7 +88,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
             const currentGBrowser = getGBrowser();
             if (!currentGBrowser) return;
             const currentSelectedTabs = currentGBrowser.selectedTabs;
-            const maxPanes = splitViewConfig().maxPanes;
+            const maxPanes = splitViewConfig.value.maxPanes;
             const tabsToSplit = currentSelectedTabs.slice(0, maxPanes);
             logger.debug(
               `[contextMenu:command] opening ${tabsToSplit.length} tab(s) in new split view`,
@@ -112,15 +111,15 @@ export function initContextMenu(logger: ConsoleInstance): void {
     const shouldShowAddPane =
       hasSplitViewTab &&
       activeSplitView &&
-      activeSplitView.tabs.length < splitViewConfig().maxPanes;
+      activeSplitView.tabs.length < splitViewConfig.value.maxPanes;
 
     let addPaneItem = document?.getElementById(
       "floorp_addPaneToSplitView",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
 
     if (shouldShowAddPane) {
       if (!addPaneItem) {
-        addPaneItem = document?.createXULElement("menuitem") as XULElement;
+        addPaneItem = document?.createXULElement("menuitem") as unknown as XULElement;
         if (addPaneItem) {
           addPaneItem.id = "floorp_addPaneToSplitView";
           addPaneItem.setAttribute(
@@ -164,11 +163,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
 
     let moveMenu = document?.getElementById(
       "floorp_moveTabToPane",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
 
     if (shouldShowMoveToPane) {
       if (!moveMenu) {
-        moveMenu = document?.createXULElement("menu") as XULElement;
+        moveMenu = document?.createXULElement("menu") as unknown as XULElement;
         if (moveMenu) {
           moveMenu.id = "floorp_moveTabToPane";
           moveMenu.setAttribute(
@@ -178,7 +177,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
 
           const popup = document?.createXULElement(
             "menupopup",
-          ) as XULElement;
+          ) as unknown as XULElement;
           if (popup) {
             popup.id = "floorp_moveTabToPanePopup";
             popup.addEventListener("popupshowing", () => {
@@ -209,10 +208,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
   };
 
   tabContainer.addEventListener("contextmenu", onTabContextMenu);
-  onCleanup(() => {
-    tabContainer.removeEventListener("contextmenu", onTabContextMenu);
-  });
   logger.debug("[patch] context menu listener attached");
+
+  return () => {
+    tabContainer.removeEventListener("contextmenu", onTabContextMenu);
+  };
 }
 
 // ===== Move to Pane helpers =====
@@ -250,7 +250,7 @@ function onMoveToPanePopupShowing(logger: ConsoleInstance): void {
       30,
     );
 
-    const item = document?.createXULElement("menuitem") as XULElement;
+    const item = document?.createXULElement("menuitem") as unknown as XULElement;
     if (!item) continue;
 
     item.setAttribute(

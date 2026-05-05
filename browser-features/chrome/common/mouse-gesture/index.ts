@@ -23,7 +23,7 @@ export {
 } from "./config.ts";
 export { GestureDisplay } from "./components/GestureDisplay.tsx";
 
-@noraComponent(import.meta.hot)
+@noraComponent("MouseGesture", import.meta.hot)
 export default class MouseGesture extends NoraComponentBase {
   static ctx: typeof mouseGestureService | null = null;
 

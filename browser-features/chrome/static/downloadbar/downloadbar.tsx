@@ -5,7 +5,7 @@ import downloadbarStyle from "./downloadbar.css?inline";
 export function DonwloadBar() {
   return (
     <>
-      <vbox
+      <xul:vbox
         id="downloadsPanel"
         data-l10n-id="downloads-panel"
         class="cui-widget-panel panel-no-padding"
@@ -13,9 +13,9 @@ export function DonwloadBar() {
         type="arrow"
         orient="horizontal"
       >
-        <linkset>
+        <xul:linkset>
           <link rel="localization" href="browser/downloads.ftl" />
-        </linkset>
+        </xul:linkset>
 
         <xul:menupopup id="downloadsContextMenu" class="download-state">
           <xul:menuitem
@@ -91,13 +91,13 @@ export function DonwloadBar() {
             data-l10n-id="downloads-cmd-clear-downloads"
           />
         </xul:menupopup>
-        <vbox
+        <xul:vbox
           id="downloadsPanel-multiView"
           mainViewId="downloadsPanel-mainView"
           disablekeynav="true"
         >
-          <hbox id="downloadsPanel-mainView">
-            <vbox class="panel-view-body-unscrollable">
+          <xul:hbox id="downloadsPanel-mainView">
+            <xul:vbox class="panel-view-body-unscrollable">
               <div id="downloadsPanel-list">
                 <xul:richlistbox
                   id="downloadsListBox"
@@ -109,7 +109,7 @@ export function DonwloadBar() {
                   oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
                   ondragstart="DownloadsView.onDownloadDragStart(event);"
                 />
-                <description
+                <xul:description
                   id="emptyDownloads"
                   data-l10n-id="downloads-panel-empty"
                 />
@@ -126,30 +126,30 @@ export function DonwloadBar() {
                   />
                 </div>
               </div>
-            </vbox>
-            <vbox id="downloadsFooter">
-              <stack>
-                <hbox
+            </xul:vbox>
+            <xul:vbox id="downloadsFooter">
+              <xul:stack>
+                <xul:hbox
                   id="downloadsSummary"
                   align="center"
                   orient="horizontal"
                   onkeydown="DownloadsSummary.onKeyDown(event);"
                   onclick="DownloadsSummary.onClick(event);"
                 >
-                  <image class="downloadTypeIcon" />
-                  <vbox pack="center" flex="1" class="downloadContainer">
-                    <description id="downloadsSummaryDescription" />
+                  <xul:image class="downloadTypeIcon" />
+                  <xul:vbox pack="center" flex="1" class="downloadContainer">
+                    <xul:description id="downloadsSummaryDescription" />
                     <progress
                       id="downloadsSummaryProgress"
                       class="downloadProgress"
                       max="100"
                     />
-                    <description id="downloadsSummaryDetails" crop="end" />
-                  </vbox>
-                </hbox>
-                <vbox id="downloadsFooterButtons">
-                  <toolbarseparator />
-                  <button
+                    <xul:description id="downloadsSummaryDetails" crop="end" />
+                  </xul:vbox>
+                </xul:hbox>
+                <xul:vbox id="downloadsFooterButtons">
+                  <xul:toolbarseparator />
+                  <xul:button
                     type="button"
                     id="downloadsHistory"
                     data-l10n-id="downloads-history"
@@ -158,13 +158,13 @@ export function DonwloadBar() {
                     oncommand="DownloadsPanel.showDownloadsHistory();"
                     pack="start"
                   />
-                </vbox>
-              </stack>
-            </vbox>
-          </hbox>
-        </vbox>
-      </vbox>
-      <style class="nora-statusbar" jsx>
+                </xul:vbox>
+              </xul:stack>
+            </xul:vbox>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:vbox>
+      <style class="nora-statusbar">
         {downloadbarStyle}
       </style>
     </>

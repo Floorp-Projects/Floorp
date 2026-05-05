@@ -33,12 +33,8 @@ function testStatusBarManagerConstruction(): void {
     const manager = new StatusBarManager();
     assert(manager !== null, "StatusBarManager should be constructable");
     assert(
-      typeof manager.showStatusBar === "function",
-      "showStatusBar should be a signal accessor function",
-    );
-    assert(
-      typeof manager.setShowStatusBar === "function",
-      "setShowStatusBar should be a signal setter function",
+      "value" in manager.showStatusBar,
+      "showStatusBar should be a preact signal",
     );
   });
 }
@@ -48,7 +44,7 @@ function testInitialSignalMatchesPref(): void {
     Services.prefs.setBoolPref(PREF_KEY, false);
     const managerOff = new StatusBarManager();
     assertEquals(
-      managerOff.showStatusBar(),
+      managerOff.showStatusBar.value,
       false,
       "signal should be false when pref is false",
     );
@@ -56,7 +52,7 @@ function testInitialSignalMatchesPref(): void {
     Services.prefs.setBoolPref(PREF_KEY, true);
     const managerOn = new StatusBarManager();
     assertEquals(
-      managerOn.showStatusBar(),
+      managerOn.showStatusBar.value,
       true,
       "signal should be true when pref is true",
     );
@@ -72,7 +68,7 @@ function testShowStatusBarReflectsPref(): void {
     Services.prefs.setBoolPref(PREF_KEY, false);
     const manager = new StatusBarManager();
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       false,
       "showStatusBar should reflect pref value (false)",
     );
@@ -80,7 +76,7 @@ function testShowStatusBarReflectsPref(): void {
     Services.prefs.setBoolPref(PREF_KEY, true);
     // The manager observes the pref, so the signal should update
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       true,
       "showStatusBar should reflect pref value (true) after change",
     );
@@ -91,7 +87,7 @@ function testSetShowStatusBarUpdatesPref(): void {
   withPrefRestore(() => {
     Services.prefs.setBoolPref(PREF_KEY, false);
     const manager = new StatusBarManager();
-    manager.setShowStatusBar(true);
+    manager.showStatusBar.value = true;
     // The createEffect in the constructor should sync the signal to the pref
     const prefValue = Services.prefs.getBoolPref(PREF_KEY, false);
     assertEquals(
@@ -106,7 +102,7 @@ function testSetShowStatusBarFalseUpdatesPref(): void {
   withPrefRestore(() => {
     Services.prefs.setBoolPref(PREF_KEY, true);
     const manager = new StatusBarManager();
-    manager.setShowStatusBar(false);
+    manager.showStatusBar.value = false;
     assertEquals(
       Services.prefs.getBoolPref(PREF_KEY, true),
       false,
@@ -121,24 +117,24 @@ function testSignalRoundTrip(): void {
     const manager = new StatusBarManager();
 
     // true → false → true round trip
-    manager.setShowStatusBar(true);
-    assertEquals(manager.showStatusBar(), true, "signal should be true");
+    manager.showStatusBar.value = true;
+    assertEquals(manager.showStatusBar.value, true, "signal should be true");
     assertEquals(
       Services.prefs.getBoolPref(PREF_KEY, false),
       true,
       "pref should be true",
     );
 
-    manager.setShowStatusBar(false);
-    assertEquals(manager.showStatusBar(), false, "signal should be false");
+    manager.showStatusBar.value = false;
+    assertEquals(manager.showStatusBar.value, false, "signal should be false");
     assertEquals(
       Services.prefs.getBoolPref(PREF_KEY, true),
       false,
       "pref should be false",
     );
 
-    manager.setShowStatusBar(true);
-    assertEquals(manager.showStatusBar(), true, "signal should be true again");
+    manager.showStatusBar.value = true;
+    assertEquals(manager.showStatusBar.value, true, "signal should be true again");
     assertEquals(
       Services.prefs.getBoolPref(PREF_KEY, false),
       true,
@@ -172,14 +168,14 @@ function testGlobalSetShowUpdatesSignal(): void {
 
     globalThis.gFloorp?.statusBar?.setShow(true);
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       true,
       "gFloorp.statusBar.setShow(true) should update signal",
     );
 
     globalThis.gFloorp?.statusBar?.setShow(false);
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       false,
       "gFloorp.statusBar.setShow(false) should update signal",
     );
@@ -195,7 +191,7 @@ function testLatestManagerWinsGlobalBinding(): void {
     // The global binding should point to the latest manager
     globalThis.gFloorp?.statusBar?.setShow(true);
     assertEquals(
-      manager2.showStatusBar(),
+      manager2.showStatusBar.value,
       true,
       "latest manager should respond to global setShow",
     );
@@ -466,11 +462,11 @@ function testMultipleStatusBarInstances(): void {
   withPrefRestore(() => {
     // Create first manager
     const manager1 = new StatusBarManager();
-    const firstShow = manager1.showStatusBar();
+    const firstShow = manager1.showStatusBar.value;
 
     // Create second manager
     const manager2 = new StatusBarManager();
-    const secondShow = manager2.showStatusBar();
+    const secondShow = manager2.showStatusBar.value;
 
     // Both should read from the same pref
     assertEquals(
@@ -623,7 +619,7 @@ function testStatuspanelAttributeChangeHandling(): void {
 
       try {
         const manager = new StatusBarManager();
-        manager.setShowStatusBar(true);
+        manager.showStatusBar.value = true;
         manager.init();
 
         // Simulate attribute change
@@ -671,15 +667,15 @@ function testContextMenuCheckboxSyncsSignal(): void {
 
     // Signal should be false initially
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       false,
       "signal should be false initially",
     );
 
     // After toggling via checkbox (simulated via setShowStatusBar)
-    manager.setShowStatusBar(true);
+    manager.showStatusBar.value = true;
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       true,
       "signal should be true after toggle",
     );
@@ -706,16 +702,16 @@ function testShowStatusBarControlsVisibility(): void {
           manager.init();
 
           // When showStatusBar is true, element should be visible
-          manager.setShowStatusBar(true);
+          manager.showStatusBar.value = true;
           const _displayTrue = (mockStatusbar as unknown as { style: { display: string } }).style.display;
 
-          manager.setShowStatusBar(false);
+          manager.showStatusBar.value = false;
           const _displayFalse = (mockStatusbar as unknown as { style: { display: string } }).style.display;
 
           // The style is controlled by the component, not directly by manager
           // but the signal should be updated
           assertEquals(
-            manager.showStatusBar(),
+            manager.showStatusBar.value,
             false,
             "signal should be false",
           );
@@ -737,12 +733,12 @@ function testPrefObserverHandlesSameValueUpdate(): void {
     const manager = new StatusBarManager();
 
     // Set to same value
-    const beforeSet = manager.showStatusBar();
+    const beforeSet = manager.showStatusBar.value;
     Services.prefs.setBoolPref(PREF_KEY, true);
 
     // Signal should remain the same
     assertEquals(
-      manager.showStatusBar(),
+      manager.showStatusBar.value,
       beforeSet,
       "signal should remain unchanged when pref is set to same value",
     );
