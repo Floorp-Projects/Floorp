@@ -30,6 +30,7 @@ import {
   initPaneDrag,
   updatePaneDragGrips,
 } from "./components/split-view-pane-drag.js";
+import { initTabDrop, destroyTabDrop } from "./components/split-view-tab-drop.js";
 import {
   applyLayout,
   applyLayoutAttribute,
@@ -75,6 +76,7 @@ export class SplitViewManager {
     initActivePaneTracker(this.logger);
     initSessionRestore(this.logger);
     initPaneDrag(this.logger);
+    initTabDrop(this.logger);
 
     // React to layout config changes
     createEffect(() => {
@@ -94,6 +96,7 @@ export class SplitViewManager {
     this.tabpanelsPatch?.unpatch();
     this.wrapperPatch?.unpatch();
     destroyPaneDrag();
+    destroyTabDrop();
     clearSplitHandles();
     destroyLayoutPicker();
     destroyToolbarButtonEnhancement();

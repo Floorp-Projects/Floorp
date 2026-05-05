@@ -390,6 +390,9 @@
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
+    },
+    "dropZone": {
+      "newWindow": "Drop here to open in new window"
     }
   },
   "zen-mode": {
