@@ -1164,8 +1164,19 @@ jobs:
                 ./mach macos-sign -v -r -c "release" \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
-                  --rcodesign-p12-password-file floorpCertPassword.passwd \
-                  --provisioning-profile Floorp.provisionprofile
+                  --rcodesign-p12-password-file floorpCertPassword.passwd
+
+                # Embed provisioning profile for passkey (WebAuthn) support.
+                # The provisioning profile must be placed at the standard location
+                # inside the app bundle. This is normally done by rcodesign's
+                # --provisioning-profile flag, but mach macos-sign does not expose
+                # that flag, so we embed it manually after signing.
+                if [ -f "Floorp.provisionprofile" ]; then
+                  cp Floorp.provisionprofile "$APP_FILE/Contents/embedded.provisionprofile"
+                  echo "Embedded provisioning profile into app bundle"
+                else
+                  echo "Warning: Floorp.provisionprofile not found, skipping embedding" >&2
+                fi
 
                 # Verify signed entitlements to confirm passkey entitlement is embedded
                 echo "=== Verifying signed bundle entitlements ==="
