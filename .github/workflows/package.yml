@@ -1046,6 +1046,10 @@ jobs:
                 APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
                 echo "Found app file: $APP_FILE"
 
+                # Show rcodesign version for diagnostics
+                echo "=== rcodesign version ==="
+                rcodesign --version || true
+
                 # Patch Firefox production entitlements for Floorp passkey (WebAuthn) support
                 # Replace Firefox's application-identifier with Floorp's team ID + bundle ID
                 # The com.apple.developer.web-browser.public-key-credential entitlement is already
@@ -1097,6 +1101,9 @@ jobs:
                 # Patch the production browser entitlements if we have the team ID
                 ENTITLEMENTS_FILE="security/mac/hardenedruntime/production/firefox.browser.xml"
                 if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
+                  echo "=== Pre-patch entitlements ==="
+                  cat "$ENTITLEMENTS_FILE" || true
+                  echo "=== End pre-patch entitlements ==="
                   echo "Patching entitlements: replacing 43AQ936H96.org.mozilla.firefox with ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
                   if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
                     sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
@@ -1109,7 +1116,9 @@ jobs:
                   else
                     echo "Warning: expected literal '43AQ936H96.org.mozilla.firefox' not found in $ENTITLEMENTS_FILE; passkey entitlement may be missing." >&2
                   fi
-                  grep -A1 "application-identifier" "$ENTITLEMENTS_FILE" || true
+                  echo "=== Post-patch entitlements ==="
+                  cat "$ENTITLEMENTS_FILE" || true
+                  echo "=== End post-patch entitlements ==="
                 else
                   echo "Warning: Could not extract team ID or bundle ID. Entitlements not patched."
                   echo "Passkey (WebAuthn) support may not work correctly without the correct application-identifier."
@@ -1119,6 +1128,12 @@ jobs:
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
+
+                # Verify signed entitlements to confirm passkey entitlement is embedded
+                echo "=== Verifying signed bundle entitlements ==="
+                rcodesign analyze-bundle "$APP_FILE" 2>&1 | head -80 || true
+                echo "=== End entitlement verification ==="
+
                 if [ "${{inputs.beta}}" == "true" ]; then
                   DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
                   BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
