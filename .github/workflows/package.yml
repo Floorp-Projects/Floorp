@@ -1108,55 +1108,52 @@ jobs:
 
                 # Patch the browser entitlements for Floorp passkey (WebAuthn) support.
                 #
-                # IMPORTANT: We use developer entitlements (no -e flag) because production
-                # entitlements lack com.apple.security.cs.allow-dyld-environment-variables,
-                # which is required for the app to launch successfully with rcodesign on Linux.
-                # The developer/browser.xml already has all the entitlements needed for a
-                # working build; we only need to add the passkey entitlement.
+                # IMPORTANT: We use PRODUCTION entitlements for the main app signing.
+                # Developer entitlements contain com.apple.security.get-task-allow which
+                # causes macOS to block the app from launching on end-user machines with
+                # "Launchd job spawn failed" (POSIX error 163).
                 #
-                # Step 1: Add com.apple.developer.web-browser.public-key-credential to
-                #         developer/browser.xml if it's not already present.
-                # Step 2: Patch application-identifier in production/firefox.browser.xml
-                #         (used by nested frameworks/plugins if mach resolves them).
-                DEV_ENTITLEMENTS="security/mac/hardenedruntime/developer/browser.xml"
+                # The production/firefox.browser.xml already has
+                # com.apple.developer.web-browser.public-key-credential, but is missing
+                # com.apple.security.cs.allow-dyld-environment-variables which some
+                # browser components need for proper dylib loading.
+                #
+                # Steps:
+                #   1. Add allow-dyld-environment-variables to production/firefox.browser.xml
+                #   2. Patch application-identifier in production/firefox.browser.xml
+                #   3. Use production/firefox.browser.xml for main app signing (-e flag)
+                PROD_ENTITLEMENTS="security/mac/hardenedruntime/production/firefox.browser.xml"
 
-                # Add passkey entitlement to developer/browser.xml
-                if [ -f "$DEV_ENTITLEMENTS" ]; then
-                  echo "=== Patching $DEV_ENTITLEMENTS for passkey support ==="
-                  if ! grep -q 'com.apple.developer.web-browser.public-key-credential' "$DEV_ENTITLEMENTS"; then
-                    # Insert before closing </dict> tag
-                    sed -i 's|</dict>|<key>com.apple.developer.web-browser.public-key-credential</key>\n\t\t<true/>\n\t</dict>|' "$DEV_ENTITLEMENTS"
-                    if grep -q 'com.apple.developer.web-browser.public-key-credential' "$DEV_ENTITLEMENTS"; then
-                      echo "Added public-key-credential entitlement to $DEV_ENTITLEMENTS"
-                    else
-                      echo "Warning: Failed to add public-key-credential to $DEV_ENTITLEMENTS" >&2
-                    fi
+                # Patch production/firefox.browser.xml for Floorp
+                if [ -f "$PROD_ENTITLEMENTS" ]; then
+                  echo "=== Patching $PROD_ENTITLEMENTS for Floorp ==="
+
+                  # Add allow-dyld-environment-variables if not present
+                  if ! grep -q 'com.apple.security.cs.allow-dyld-environment-variables' "$PROD_ENTITLEMENTS"; then
+                    sed -i 's|</dict>|<key>com.apple.security.cs.allow-dyld-environment-variables</key>\n\t<true/>\n</dict>|' "$PROD_ENTITLEMENTS"
+                    echo "Added allow-dyld-environment-variables to $PROD_ENTITLEMENTS"
                   else
-                    echo "Info: public-key-credential already present in $DEV_ENTITLEMENTS"
+                    echo "Info: allow-dyld-environment-variables already present in $PROD_ENTITLEMENTS"
                   fi
-                else
-                  echo "Warning: $DEV_ENTITLEMENTS not found" >&2
-                fi
 
-                # Patch application-identifier in production entitlements (for nested signing)
-                for ENTITLEMENTS_FILE in \
-                  security/mac/hardenedruntime/production/firefox.browser.xml; do
-                  if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
-                    echo "=== Patching $ENTITLEMENTS_FILE ==="
-                    if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
-                      sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
-                      if grep -q "${FLOORP_TEAM_ID}\.${FLOORP_BUNDLE_ID}" "$ENTITLEMENTS_FILE"; then
-                        echo "Patched successfully: 43AQ936H96.org.mozilla.firefox -> ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
+                  # Patch application-identifier for Floorp's Apple Developer account
+                  if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ]; then
+                    if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$PROD_ENTITLEMENTS"; then
+                      sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$PROD_ENTITLEMENTS"
+                      if grep -q "${FLOORP_TEAM_ID}\.${FLOORP_BUNDLE_ID}" "$PROD_ENTITLEMENTS"; then
+                        echo "Patched application-identifier: 43AQ936H96.org.mozilla.firefox -> ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
                       else
-                        echo "Warning: sed completed but substitution not confirmed in $ENTITLEMENTS_FILE" >&2
+                        echo "Warning: application-identifier patch not confirmed in $PROD_ENTITLEMENTS" >&2
                       fi
                     else
-                      echo "Info: '43AQ936H96.org.mozilla.firefox' not found in $ENTITLEMENTS_FILE (may already be patched or not present)"
+                      echo "Info: '43AQ936H96.org.mozilla.firefox' not found in $PROD_ENTITLEMENTS (may already be patched)"
                     fi
                   else
-                    echo "Skipping $ENTITLEMENTS_FILE (missing team ID, bundle ID, or file)"
+                    echo "Warning: Skipping application-identifier patch (missing team ID or bundle ID)" >&2
                   fi
-                done
+                else
+                  echo "Warning: $PROD_ENTITLEMENTS not found" >&2
+                fi
 
                 # Embed provisioning profile for passkey (WebAuthn) support BEFORE signing.
                 # The provisioning profile must be placed at Contents/embedded.provisionprofile
@@ -1169,10 +1166,11 @@ jobs:
                   echo "Warning: Floorp.provisionprofile not found, skipping embedding" >&2
                 fi
 
-                # Use developer entitlements (no -e flag) for the main app signing.
-                # Developer entitlements include allow-dyld-environment-variables which is
-                # required for proper dylib loading with rcodesign-signed builds.
+                # Use production entitlements (-e flag) for the main app signing.
+                # Production entitlements do NOT include get-task-allow (which would
+                # cause macOS to block the app from launching with error 163).
                 ./mach macos-sign -v -r -c "release" \
+                  -e security/mac/hardenedruntime/production/firefox.browser.xml \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
