@@ -1072,13 +1072,16 @@ jobs:
                 if [ -z "$FLOORP_TEAM_ID" ]; then
                   echo "APPLE_DEVELOPER_TEAM_ID secret not set; falling back to P12 certificate extraction."
                   # Use -clcerts to extract only the client (leaf) certificate
-                  FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
+                  # -legacy loads the legacy provider on OpenSSL 3.x for P12s
+                  # that use RC2/3DES (common with Apple Developer certs).
+                  # Harmless on OpenSSL 1.x or when the P12 uses modern AES.
+                  FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts -legacy $OPENSSL_NOENC 2>/dev/null \
                     | openssl x509 -noout -subject -nameopt oneline,-esc_msb 2>/dev/null \
                     | grep -oE 'OU = [A-Za-z0-9]+' \
                     | head -1 \
                     | awk '{print $NF}' || true)
                   if [ -z "$FLOORP_TEAM_ID" ]; then
-                    FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
+                    FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts -legacy $OPENSSL_NOENC 2>/dev/null \
                       | openssl x509 -noout -subject 2>/dev/null \
                       | sed -n 's/.*OU=\([^/]*\).*/\1/p' \
                       | head -1 || true)
@@ -1175,10 +1178,19 @@ jobs:
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
 
-                # Verify signed entitlements to confirm passkey entitlement is embedded
+                # Verify signed entitlements — fail CI if passkey entitlement is missing.
                 echo "=== Verifying signed bundle entitlements ==="
-                rcodesign print-signature-info "$APP_FILE" 2>&1 | head -100 || true
+                ENTITLEMENT_INFO=$(rcodesign print-signature-info "$APP_FILE" 2>&1 || true)
+                echo "$ENTITLEMENT_INFO" | head -100
                 echo "=== End entitlement verification ==="
+
+                # Assert: passkey entitlement must be present in the signed binary
+                if ! echo "$ENTITLEMENT_INFO" | grep -q 'public-key-credential'; then
+                  echo "ERROR: com.apple.developer.web-browser.public-key-credential not found in signed entitlements!" >&2
+                  echo "The passkey (WebAuthn) entitlement was not embedded during signing." >&2
+                  exit 1
+                fi
+                echo "✓ Passkey (public-key-credential) entitlement verified in signed bundle"
 
                 if [ "${{inputs.beta}}" == "true" ]; then
                   DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
