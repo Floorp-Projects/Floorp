@@ -1043,6 +1043,8 @@ jobs:
                 echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
                 base64 --decode floorp-cert.txt > floorpCert.p12
                 echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
+                echo ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }} > provisioning-profile.txt
+                base64 --decode provisioning-profile.txt > Floorp.provisionprofile
                 APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
                 echo "Found app file: $APP_FILE"
 
@@ -1162,7 +1164,8 @@ jobs:
                 ./mach macos-sign -v -r -c "release" \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
-                  --rcodesign-p12-password-file floorpCertPassword.passwd
+                  --rcodesign-p12-password-file floorpCertPassword.passwd \
+                  --provisioning-profile Floorp.provisionprofile
 
                 # Verify signed entitlements to confirm passkey entitlement is embedded
                 echo "=== Verifying signed bundle entitlements ==="
