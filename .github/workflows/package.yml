@@ -1062,29 +1062,35 @@ jobs:
                   OPENSSL_NOENC="-nodes"
                 fi
 
-                # Extract the team ID (OU field) from the P12 certificate
-                # Use -clcerts to extract only the client (leaf) certificate, avoiding
-                # intermediate CA certificates that have different OU values.
-                # Append || true so failures don't abort the step (set -euo pipefail is active).
-                FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
-                  | openssl x509 -noout -subject -nameopt oneline,-esc_msb 2>/dev/null \
-                  | grep -oE 'OU = [A-Za-z0-9]+' \
-                  | head -1 \
-                  | awk '{print $NF}' || true)
+                # Obtain the Apple Team ID.
+                # Priority: 1) APPLE_DEVELOPER_TEAM_ID GitHub Secret (most reliable)
+                #           2) Extract from P12 certificate OU field (fallback)
+                # Apple Team IDs are alphanumeric (e.g. 43AQ936H96).
+                FLOORP_TEAM_ID="${{ secrets.APPLE_DEVELOPER_TEAM_ID }}"
                 if [ -z "$FLOORP_TEAM_ID" ]; then
-                  # Fallback: try alternative extraction method
+                  echo "APPLE_DEVELOPER_TEAM_ID secret not set; falling back to P12 certificate extraction."
+                  # Use -clcerts to extract only the client (leaf) certificate
                   FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
-                    | openssl x509 -noout -subject 2>/dev/null \
-                    | sed -n 's/.*OU=\([^/]*\).*/\1/p' \
-                    | head -1 || true)
+                    | openssl x509 -noout -subject -nameopt oneline,-esc_msb 2>/dev/null \
+                    | grep -oE 'OU = [A-Za-z0-9]+' \
+                    | head -1 \
+                    | awk '{print $NF}' || true)
+                  if [ -z "$FLOORP_TEAM_ID" ]; then
+                    FLOORP_TEAM_ID=$(openssl pkcs12 -in floorpCert.p12 -passin file:floorpCertPassword.passwd -nokeys -clcerts $OPENSSL_NOENC 2>/dev/null \
+                      | openssl x509 -noout -subject 2>/dev/null \
+                      | sed -n 's/.*OU=\([^/]*\).*/\1/p' \
+                      | head -1 || true)
+                  fi
+                else
+                  echo "Using APPLE_TEAM_ID from GitHub Secrets."
                 fi
 
-                # Validate Team ID format (Apple Team IDs are alphanumeric, e.g. 43AQ936H96)
+                # Validate Team ID format
                 if [[ ! "$FLOORP_TEAM_ID" =~ ^[A-Za-z0-9]+$ ]]; then
                   echo "Warning: Invalid or missing Team ID format: '${FLOORP_TEAM_ID:-empty}'"
                   FLOORP_TEAM_ID=""
                 fi
-                echo "Extracted Floorp Team ID: ${FLOORP_TEAM_ID:-not found}"
+                echo "Floorp Team ID: ${FLOORP_TEAM_ID:-not found}"
 
                 # Extract the bundle identifier from the app's Info.plist (Linux-compatible)
                 # Pass path via environment variable to avoid shell injection in Python string
@@ -1098,40 +1104,40 @@ jobs:
                 fi
                 echo "Extracted Floorp Bundle ID: ${FLOORP_BUNDLE_ID:-not found}"
 
-                # Patch the production browser entitlements if we have the team ID
-                ENTITLEMENTS_FILE="security/mac/hardenedruntime/production/firefox.browser.xml"
-                if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
-                  echo "=== Pre-patch entitlements ==="
-                  cat "$ENTITLEMENTS_FILE" || true
-                  echo "=== End pre-patch entitlements ==="
-                  echo "Patching entitlements: replacing 43AQ936H96.org.mozilla.firefox with ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
-                  if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
-                    sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
-                    # Verify the substitution actually occurred
-                    if grep -q "${FLOORP_TEAM_ID}\.${FLOORP_BUNDLE_ID}" "$ENTITLEMENTS_FILE"; then
-                      echo "Entitlements patched successfully."
+                # Patch the browser entitlements with Floorp's application-identifier.
+                # The ./mach macos-sign -e production flag selects production/firefox.browser.xml.
+                # Patch BOTH developer and production files to ensure coverage regardless of flags.
+                for ENTITLEMENTS_FILE in \
+                  security/mac/hardenedruntime/production/firefox.browser.xml \
+                  security/mac/hardenedruntime/developer/browser.xml; do
+                  if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
+                    echo "=== Patching $ENTITLEMENTS_FILE ==="
+                    if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
+                      sed -i "s|43AQ936H96\.org\.mozilla\.firefox|${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}|g" "$ENTITLEMENTS_FILE"
+                      if grep -q "${FLOORP_TEAM_ID}\.${FLOORP_BUNDLE_ID}" "$ENTITLEMENTS_FILE"; then
+                        echo "Patched successfully: 43AQ936H96.org.mozilla.firefox -> ${FLOORP_TEAM_ID}.${FLOORP_BUNDLE_ID}"
+                      else
+                        echo "Warning: sed completed but substitution not confirmed in $ENTITLEMENTS_FILE" >&2
+                      fi
                     else
-                      echo "Warning: sed completed but the new application-identifier was not found in $ENTITLEMENTS_FILE" >&2
+                      echo "Info: '43AQ936H96.org.mozilla.firefox' not found in $ENTITLEMENTS_FILE (may already be patched or not present)"
                     fi
                   else
-                    echo "Warning: expected literal '43AQ936H96.org.mozilla.firefox' not found in $ENTITLEMENTS_FILE; passkey entitlement may be missing." >&2
+                    echo "Skipping $ENTITLEMENTS_FILE (missing team ID, bundle ID, or file)"
                   fi
-                  echo "=== Post-patch entitlements ==="
-                  cat "$ENTITLEMENTS_FILE" || true
-                  echo "=== End post-patch entitlements ==="
-                else
-                  echo "Warning: Could not extract team ID or bundle ID. Entitlements not patched."
-                  echo "Passkey (WebAuthn) support may not work correctly without the correct application-identifier."
-                fi
+                done
 
-                ./mach macos-sign -v -r -c "release" \
+                # Use production entitlements (-e production) for passkey (WebAuthn) support.
+                # Without this flag, mach_commands.py defaults to developer entitlements
+                # which resolves to developer/browser.xml instead of production/firefox.browser.xml.
+                ./mach macos-sign -v -r -c "release" -e production \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
 
                 # Verify signed entitlements to confirm passkey entitlement is embedded
                 echo "=== Verifying signed bundle entitlements ==="
-                rcodesign analyze-bundle "$APP_FILE" 2>&1 | head -80 || true
+                rcodesign print-signature-info "$APP_FILE" 2>&1 | head -100 || true
                 echo "=== End entitlement verification ==="
 
                 if [ "${{inputs.beta}}" == "true" ]; then
