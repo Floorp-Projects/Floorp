@@ -1170,7 +1170,7 @@ jobs:
                 # Production entitlements do NOT include get-task-allow (which would
                 # cause macOS to block the app from launching with error 163).
                 ./mach macos-sign -v -r -c "release" \
-                  -e security/mac/hardenedruntime/production/firefox.browser.xml \
+                  -e production \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
