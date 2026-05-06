@@ -1104,12 +1104,41 @@ jobs:
                 fi
                 echo "Extracted Floorp Bundle ID: ${FLOORP_BUNDLE_ID:-not found}"
 
-                # Patch the browser entitlements with Floorp's application-identifier.
-                # The ./mach macos-sign -e production flag selects production/firefox.browser.xml.
-                # Patch BOTH developer and production files to ensure coverage regardless of flags.
+                # Patch the browser entitlements for Floorp passkey (WebAuthn) support.
+                #
+                # IMPORTANT: We use developer entitlements (no -e flag) because production
+                # entitlements lack com.apple.security.cs.allow-dyld-environment-variables,
+                # which is required for the app to launch successfully with rcodesign on Linux.
+                # The developer/browser.xml already has all the entitlements needed for a
+                # working build; we only need to add the passkey entitlement.
+                #
+                # Step 1: Add com.apple.developer.web-browser.public-key-credential to
+                #         developer/browser.xml if it's not already present.
+                # Step 2: Patch application-identifier in production/firefox.browser.xml
+                #         (used by nested frameworks/plugins if mach resolves them).
+                DEV_ENTITLEMENTS="security/mac/hardenedruntime/developer/browser.xml"
+
+                # Add passkey entitlement to developer/browser.xml
+                if [ -f "$DEV_ENTITLEMENTS" ]; then
+                  echo "=== Patching $DEV_ENTITLEMENTS for passkey support ==="
+                  if ! grep -q 'com.apple.developer.web-browser.public-key-credential' "$DEV_ENTITLEMENTS"; then
+                    # Insert before closing </dict> tag
+                    sed -i 's|</dict>|<key>com.apple.developer.web-browser.public-key-credential</key>\n\t\t<true/>\n\t</dict>|' "$DEV_ENTITLEMENTS"
+                    if grep -q 'com.apple.developer.web-browser.public-key-credential' "$DEV_ENTITLEMENTS"; then
+                      echo "Added public-key-credential entitlement to $DEV_ENTITLEMENTS"
+                    else
+                      echo "Warning: Failed to add public-key-credential to $DEV_ENTITLEMENTS" >&2
+                    fi
+                  else
+                    echo "Info: public-key-credential already present in $DEV_ENTITLEMENTS"
+                  fi
+                else
+                  echo "Warning: $DEV_ENTITLEMENTS not found" >&2
+                fi
+
+                # Patch application-identifier in production entitlements (for nested signing)
                 for ENTITLEMENTS_FILE in \
-                  security/mac/hardenedruntime/production/firefox.browser.xml \
-                  security/mac/hardenedruntime/developer/browser.xml; do
+                  security/mac/hardenedruntime/production/firefox.browser.xml; do
                   if [ -n "$FLOORP_TEAM_ID" ] && [ -n "$FLOORP_BUNDLE_ID" ] && [ -f "$ENTITLEMENTS_FILE" ]; then
                     echo "=== Patching $ENTITLEMENTS_FILE ==="
                     if grep -q '43AQ936H96\.org\.mozilla\.firefox' "$ENTITLEMENTS_FILE"; then
@@ -1127,10 +1156,10 @@ jobs:
                   fi
                 done
 
-                # Use production entitlements (-e production) for passkey (WebAuthn) support.
-                # Without this flag, mach_commands.py defaults to developer entitlements
-                # which resolves to developer/browser.xml instead of production/firefox.browser.xml.
-                ./mach macos-sign -v -r -c "release" -e production \
+                # Use developer entitlements (no -e flag) for the main app signing.
+                # Developer entitlements include allow-dyld-environment-variables which is
+                # required for proper dylib loading with rcodesign-signed builds.
+                ./mach macos-sign -v -r -c "release" \
                   -a "$APP_FILE" \
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
