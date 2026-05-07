@@ -7,6 +7,8 @@ import {
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { getTabCommands, isTabCommand } from "./tab-provider.ts";
+import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
 
 export interface PaletteCommand {
   id: string;
@@ -142,7 +144,7 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
 
 let cachedCommands: PaletteCommand[] | null = null;
 
-function buildCommands(): PaletteCommand[] {
+function buildGestureCommands(): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
   return gestureActions.map((action) => ({
     id: action.name,
@@ -154,25 +156,42 @@ function buildCommands(): PaletteCommand[] {
   }));
 }
 
-export function getPaletteCommands(): PaletteCommand[] {
+export function getPaletteCommands(win?: Window): PaletteCommand[] {
   if (!cachedCommands) {
-    cachedCommands = buildCommands();
+    cachedCommands = buildGestureCommands();
   }
-  return cachedCommands;
+  const gestureCommands = cachedCommands;
+  const tabCommands = win ? getTabCommands(win) : [];
+  return [...tabCommands, ...gestureCommands];
 }
 
-export function searchCommands(query: string): PaletteCommand[] {
-  const commands = getPaletteCommands();
+export function searchCommands(query: string, win?: Window): PaletteCommand[] {
+  const commands = getPaletteCommands(win);
   if (!query.trim()) return commands;
   return fuzzySearch(query, commands);
 }
 
-export function getCommand(id: string): PaletteCommand | undefined {
-  return getPaletteCommands().find((cmd) => cmd.id === id);
+export function getCommand(id: string, win?: Window): PaletteCommand | undefined {
+  return getPaletteCommands(win).find((cmd) => cmd.id === id);
 }
 
 export function invalidateCache() {
   cachedCommands = null;
+}
+
+export function getShortcutForAction(actionId: string): string | null {
+  if (isTabCommand(actionId)) return null;
+  try {
+    const config = getConfig();
+    for (const shortcut of Object.values(config.shortcuts)) {
+      if (shortcut.action === actionId) {
+        return shortcutToString(shortcut);
+      }
+    }
+  } catch {
+    // keyboard-shortcut module may not be available
+  }
+  return null;
 }
 
 addI18nObserver(() => {

@@ -19,14 +19,22 @@ export function SearchInput(props: SearchInputProps) {
   };
 
   return (
-    <input
-      id="command-palette-search"
-      type="text"
-      value={props.query}
-      onInput={handleInput}
-      placeholder={placeholder()}
-      autocomplete="off"
-      spellcheck={false}
-    />
+    <div class="command-palette-search-wrapper">
+      <img
+        class="command-palette-search-icon"
+        src="chrome://global/skin/icons/search-glass.svg"
+        alt=""
+      />
+      <input
+        id="command-palette-search"
+        type="text"
+        value={props.query}
+        onInput={handleInput}
+        placeholder={placeholder()}
+        aria-label={placeholder()}
+        autocomplete="off"
+        spellcheck={false}
+      />
+    </div>
   );
 }

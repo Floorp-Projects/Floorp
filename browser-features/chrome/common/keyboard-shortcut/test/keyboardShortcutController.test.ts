@@ -1323,6 +1323,52 @@ function testStatePreservedAfterUnmatchedKey(): void {
   });
 }
 
+function testCapturePhaseBlocksBubbleListener(): void {
+  withPrefs(() => {
+    const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-shift-p": {
+          key: "P",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: true },
+          action: "test-ctrl-shift-p",
+        },
+      },
+    };
+    applyTestConfig(CTRL_SHIFT_P_CONFIG);
+    const fakeWin = createFakeWindow();
+
+    // Simulate a XUL-style bubble-phase handler
+    let bubbleHandlerCalled = false;
+    const bubbleHandler = () => {
+      bubbleHandlerCalled = true;
+    };
+    fakeWin.addEventListener("keydown", bubbleHandler);
+
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyP",
+      ctrlKey: true,
+      shiftKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "Ctrl+Shift+P should match in capture phase",
+    );
+    assertEquals(
+      bubbleHandlerCalled,
+      false,
+      "bubble-phase handler should NOT fire when capture handler stops propagation",
+    );
+
+    controller.destroy();
+    fakeWin.removeEventListener("keydown", bubbleHandler);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -1512,6 +1558,11 @@ export async function runAllTests(): Promise<void> {
     {
       name: "state preserved after unmatched key",
       fn: testStatePreservedAfterUnmatchedKey,
+    },
+    // Capture phase priority
+    {
+      name: "capture phase blocks bubble listener",
+      fn: testCapturePhaseBlocksBubbleListener,
     },
   ];
 

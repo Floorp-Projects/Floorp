@@ -2,6 +2,7 @@
 
 import { Show, createEffect, on } from "solid-js";
 import { Portal } from "solid-js/web";
+import i18next from "i18next";
 import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
@@ -19,7 +20,7 @@ export function CommandPaletteUI() {
 
   const handleBackdropClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget) {
-      state.setIsVisible(false);
+      controller.hidePalette();
     }
   };
 
@@ -34,6 +35,12 @@ export function CommandPaletteUI() {
 
   const handleCommandExecute = (cmd: PaletteCommand) => {
     controller.executeCommand(cmd);
+  };
+
+  const handleTransitionEnd = (e: TransitionEvent) => {
+    if (e.target === e.currentTarget && !state.isVisible()) {
+      state.setIsAnimatingOut(false);
+    }
   };
 
   // Scroll selected item into view
@@ -51,10 +58,17 @@ export function CommandPaletteUI() {
 
   return (
     <Portal mount={document.getElementById("main-window") ?? undefined}>
-      <Show when={state.isVisible()}>
+      <Show when={state.isVisible() || state.isAnimatingOut()}>
         <div
           id="command-palette-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={i18next.t("commandPalette.dialogLabel", {
+            defaultValue: "Command Palette",
+          })}
+          data-visible={state.isVisible() ? "true" : undefined}
           onClick={handleBackdropClick}
+          onTransitionEnd={handleTransitionEnd}
         >
           <div id="command-palette-container">
             <SearchInput
@@ -64,6 +78,7 @@ export function CommandPaletteUI() {
             <CommandList
               commands={state.filteredCommands()}
               selectedIndex={state.selectedIndex()}
+              query={state.query()}
               onCommandSelect={handleCommandSelect}
               onCommandExecute={handleCommandExecute}
             />

@@ -10,6 +10,7 @@ import {
 import { fuzzyScore, fuzzySearch } from "../fuzzy.ts";
 import type { FuzzyTarget } from "../fuzzy.ts";
 import { getPaletteCommands, searchCommands, getCommand } from "../command-registry.ts";
+import { getHighlightSegments } from "../utils/highlight.ts";
 
 const makeTarget = (label: string, desc = "", category = "test", keywords: string[] = []): FuzzyTarget => ({
   id: label.toLowerCase().replace(/\s+/g, "-"),
@@ -55,6 +56,22 @@ const rawTests: TestCase[] = [
     },
   },
   {
+    name: "fuzzyScore: multi-word search requires all words to match",
+    fn() {
+      const target = makeTarget("Open New Tab");
+      const score = fuzzyScore("open tab", target);
+      assert(score > 0, "multi-word 'open tab' should match 'Open New Tab'");
+    },
+  },
+  {
+    name: "fuzzyScore: multi-word search returns 0 if any word misses",
+    fn() {
+      const target = makeTarget("Open New Tab");
+      const score = fuzzyScore("open xyz", target);
+      assertEquals(score, 0, "multi-word with non-matching word should return 0");
+    },
+  },
+  {
     name: "fuzzySearch: returns filtered and sorted results",
     fn() {
       const items = [
@@ -65,7 +82,6 @@ const rawTests: TestCase[] = [
       ];
       const results = fuzzySearch("new", items);
       assert(results.length > 0, "should have results");
-      // "New Window" has prefix match, "Open New Tab" has substring
       assert(results.length <= 3, "should have at most 3 matches");
     },
   },
@@ -87,6 +103,27 @@ const rawTests: TestCase[] = [
       const items = Array.from({ length: 100 }, (_, i) => makeTarget(`Item ${i}`));
       const results = fuzzySearch("item", items, 5);
       assertEquals(results.length, 5, "should respect limit parameter");
+    },
+  },
+
+  // --- Highlight ---
+  {
+    name: "getHighlightSegments: prefix match",
+    fn() {
+      const segments = getHighlightSegments("new", "New Tab");
+      assertEquals(segments.length, 2, "should have 2 segments");
+      assert(segments[0].matched, "first segment should be matched");
+      assertEquals(segments[0].text, "New", "first segment text should be 'New'");
+      assert(!segments[1].matched, "second segment should not be matched");
+      assertEquals(segments[1].text, " Tab", "second segment text should be ' Tab'");
+    },
+  },
+  {
+    name: "getHighlightSegments: empty query returns no match",
+    fn() {
+      const segments = getHighlightSegments("", "Hello");
+      assertEquals(segments.length, 1, "should have 1 segment");
+      assert(!segments[0].matched, "should not be matched");
     },
   },
 
@@ -151,7 +188,7 @@ const rawTests: TestCase[] = [
       const validCategories = new Set([
         "navigation", "tabs", "zoom", "bookmarks", "page", "search",
         "sidebar", "scrolling", "history", "window", "tools", "downloads",
-        "workspace", "floorp", "media",
+        "workspace", "floorp", "media", "open-tabs",
       ]);
       const commands = getPaletteCommands();
       for (const cmd of commands) {

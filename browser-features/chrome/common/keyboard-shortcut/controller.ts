@@ -27,15 +27,15 @@ export class KeyboardShortcutController {
   private init(): void {
     if (this.eventListenersAttached) return;
 
-    this.targetWindow.addEventListener("keydown", this.handleKeyDown);
-    this.targetWindow.addEventListener("keyup", this.handleKeyUp);
+    this.targetWindow.addEventListener("keydown", this.handleKeyDown, true);
+    this.targetWindow.addEventListener("keyup", this.handleKeyUp, true);
     this.eventListenersAttached = true;
   }
 
   public destroy(): void {
     if (this.eventListenersAttached) {
-      this.targetWindow.removeEventListener("keydown", this.handleKeyDown);
-      this.targetWindow.removeEventListener("keyup", this.handleKeyUp);
+      this.targetWindow.removeEventListener("keydown", this.handleKeyDown, true);
+      this.targetWindow.removeEventListener("keyup", this.handleKeyUp, true);
       this.eventListenersAttached = false;
     }
     this.resetState();

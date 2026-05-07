@@ -13,28 +13,22 @@ export interface ScoredResult<T extends FuzzyTarget> {
   score: number;
 }
 
-export function fuzzyScore(query: string, target: FuzzyTarget): number {
+function singleWordScore(query: string, target: FuzzyTarget): number {
   const q = query.toLowerCase();
   const label = target.label.toLowerCase();
   const desc = target.description.toLowerCase();
 
-  // Exact prefix match on label — highest priority
   if (label.startsWith(q)) return 100 + q.length;
 
-  // Word boundary match on label
   const words = label.split(/\s+/);
   if (words.some((w) => w.startsWith(q))) return 80 + q.length;
 
-  // Substring match on label
   if (label.includes(q)) return 60 + q.length;
 
-  // Keyword match
   if (target.keywords.some((kw) => kw.toLowerCase().includes(q))) return 50 + q.length;
 
-  // Substring match on description
   if (desc.includes(q)) return 30 + q.length;
 
-  // Fuzzy character sequence match on label
   let score = 0;
   let qi = 0;
   for (let i = 0; i < label.length && qi < q.length; i++) {
@@ -46,6 +40,22 @@ export function fuzzyScore(query: string, target: FuzzyTarget): number {
   if (qi === q.length) return score;
 
   return 0;
+}
+
+export function fuzzyScore(query: string, target: FuzzyTarget): number {
+  const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+
+  if (words.length <= 1) {
+    return singleWordScore(query.trim(), target);
+  }
+
+  let totalScore = 0;
+  for (const word of words) {
+    const wordScore = singleWordScore(word, target);
+    if (wordScore === 0) return 0;
+    totalScore += wordScore;
+  }
+  return totalScore;
 }
 
 export function fuzzySearch<T extends FuzzyTarget>(

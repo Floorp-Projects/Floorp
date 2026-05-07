@@ -9,6 +9,7 @@ import { CategoryHeader } from "./CategoryHeader.tsx";
 interface CommandListProps {
   commands: PaletteCommand[];
   selectedIndex: number;
+  query: string;
   onCommandSelect: (index: number) => void;
   onCommandExecute: (command: PaletteCommand) => void;
 }
@@ -17,6 +18,8 @@ interface CategorizedCommands {
   category: string;
   commands: PaletteCommand[];
 }
+
+const HIDDEN_CATEGORIES = new Set(["navigation-suggestion"]);
 
 export function CommandList(props: CommandListProps) {
   const grouped = createMemo(() => {
@@ -53,7 +56,16 @@ export function CommandList(props: CommandListProps) {
       when={props.commands.length > 0}
       fallback={
         <div class="command-palette-empty">
-          {i18next.t("commandPalette.noResults", { defaultValue: "No commands found" })}
+          <div class="command-palette-empty-title">
+            {i18next.t("commandPalette.noResults", {
+              defaultValue: "No commands found",
+            })}
+          </div>
+          <div class="command-palette-empty-hint">
+            {i18next.t("commandPalette.noResultsHint", {
+              defaultValue: "Try a different search term",
+            })}
+          </div>
         </div>
       }
     >
@@ -61,7 +73,9 @@ export function CommandList(props: CommandListProps) {
         <For each={grouped()}>
           {(group, groupIdx) => (
             <>
-              <CategoryHeader category={group.category} />
+              <Show when={!HIDDEN_CATEGORIES.has(group.category)}>
+                <CategoryHeader category={group.category} />
+              </Show>
               <For each={group.commands}>
                 {(cmd, itemIdx) => {
                   const globalIdx = () =>
@@ -70,6 +84,7 @@ export function CommandList(props: CommandListProps) {
                     <CommandItem
                       command={cmd}
                       isSelected={props.selectedIndex === globalIdx()}
+                      query={props.query}
                       onSelect={() => props.onCommandSelect(globalIdx())}
                       onExecute={() => props.onCommandExecute(cmd)}
                     />
