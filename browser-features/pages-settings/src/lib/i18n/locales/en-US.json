@@ -523,7 +523,7 @@
         "action": "Action",
         "actionDescription": "Description of the gesture",
         "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesDescription": "By default, hold the left button and click the right button to go forward, and hold the right button and click the left button to go back. (Experimental)",
         "rockerLeftRight": "Left → Right",
         "rockerLeftRightDescription": "Hold left button, then click right button",
         "rockerRightLeft": "Right → Left",
