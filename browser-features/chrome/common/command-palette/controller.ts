@@ -204,10 +204,10 @@ export class CommandPaletteController {
         description: url,
         category: "navigation-suggestion",
         keywords: [],
-        fn: (win) => {
+        fn: (_win) => {
           try {
             const navUrl = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
-            (win as any).gBrowser.loadURI(
+            globalThis.gBrowser.loadURI?.(
               Services.io.newURI(navUrl),
             );
           } catch (e) {
