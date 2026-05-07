@@ -21,6 +21,8 @@ import { isRight } from "fp-ts/Either";
 
 export const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
+export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
+  "floorp.keyboardshortcut.safeErrorHandling";
 
 const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
   return {};
@@ -161,6 +163,17 @@ export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
 export const setConfig = (value: KeyboardShortcutConfig) => _setConfig(value);
+
+/**
+ * Experiment "ks_safe_error_handling" — wraps getAction + fn invocation
+ * in a single try-catch so callers can always run their cleanup.
+ */
+export function isSafeErrorHandling(): boolean {
+  return Services.prefs.getBoolPref(
+    KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF,
+    true, // default: enabled (safe behavior)
+  );
+}
 
 export function shortcutToString(shortcut: ShortcutConfig): string {
   const modifiers = [];

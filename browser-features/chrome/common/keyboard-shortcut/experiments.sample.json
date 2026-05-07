@@ -1,0 +1,28 @@
+{
+  "experiments": [
+    {
+      "id": "ks_safe_error_handling",
+      "name": "Keyboard Shortcut Safe Error Handling",
+      "description": "Wraps both getAction() and fn() in a single try-catch so that exceptions never prevent callers from running their cleanup (e.g. event.preventDefault / stopPropagation).",
+      "salt": "ks_safe_error_handling_v1_2025",
+      "rollout": 100,
+      "start": "2025-01-01",
+      "end": "2026-12-31",
+      "variants": [
+        {
+          "id": "control",
+          "weight": 0,
+          "name": "Control",
+          "description": "Original behaviour — try-catch only around fn() call."
+        },
+        {
+          "id": "safe",
+          "weight": 100,
+          "name": "Safe error handling",
+          "description": "Expanded try-catch covers both getAction() and fn() so callers always continue.",
+          "configUrl": "configs/ks_safe_error_handling_safe.json"
+        }
+      ]
+    }
+  ]
+}

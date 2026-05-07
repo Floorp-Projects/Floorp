@@ -1,0 +1,172 @@
+/* Command Palette styles */
+
+#command-palette-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.48);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+  z-index: 1400;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+#command-palette-overlay[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#command-palette-container {
+  width: min(560px, calc(100vw - 48px));
+  max-height: 400px;
+  background: var(--arrowpanel-background, -moz-dialog);
+  color: var(--arrowpanel-color, -moz-dialogtext);
+  border: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.2),
+    0 15px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96) translateY(-8px);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.15s ease;
+  opacity: 0;
+}
+
+#command-palette-overlay[data-visible="true"] #command-palette-container {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.command-palette-search-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
+}
+
+.command-palette-search-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: inherit;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--toolbarbutton-icon-fill);
+}
+
+#command-palette-search {
+  width: 100%;
+  padding: 12px 4px 12px 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+#command-palette-search::placeholder {
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.4));
+}
+
+.command-palette-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.command-palette-category-header {
+  padding: 8px 16px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+  user-select: none;
+}
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  gap: 12px;
+  user-select: none;
+  border-left: 2px solid transparent;
+}
+
+.command-palette-item:hover {
+  background: color-mix(in srgb, currentcolor 8%, transparent);
+}
+
+.command-palette-item[data-selected="true"] {
+  background: color-mix(in srgb, currentcolor 12%, transparent);
+  border-left-color: var(--arrowpanel-color, -moz-dialogtext);
+}
+
+.command-palette-item:focus {
+  outline: none;
+}
+
+.command-palette-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.command-palette-item-label {
+  font-size: 13px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette-item-description {
+  font-size: 11px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette-match {
+  font-weight: 700;
+  color: inherit;
+}
+
+.command-palette-shortcut-badge {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentcolor 8%, transparent);
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.6));
+  flex-shrink: 0;
+}
+
+.command-palette-empty {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.command-palette-empty-title {
+  color: var(--arrowpanel-color, -moz-dialogtext);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.command-palette-empty-hint {
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+  font-size: 12px;
+}
