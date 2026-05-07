@@ -604,7 +604,8 @@
             "gecko-scroll-to-bottom": "Scroll to Bottom",
             "gecko-workspace-next": "Switch to Next Workspace",
             "gecko-workspace-previous": "Switch to Previous Workspace",
-            "floorp-toggle-zen-mode": "Toggle Zen Mode"
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",
