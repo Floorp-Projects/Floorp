@@ -1185,7 +1185,7 @@ jobs:
                 echo "=== End entitlement verification ==="
 
                 # Assert: passkey entitlement must be present in the signed binary
-                if ! echo "$ENTITLEMENT_INFO" | grep -q 'public-key-credential'; then
+                if [[ "$ENTITLEMENT_INFO" != *"public-key-credential"* ]]; then
                   echo "ERROR: com.apple.developer.web-browser.public-key-credential not found in signed entitlements!" >&2
                   echo "The passkey (WebAuthn) entitlement was not embedded during signing." >&2
                   exit 1
