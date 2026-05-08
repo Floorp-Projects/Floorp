@@ -7,7 +7,7 @@
         "featureIntroduction": "Feature Introduction",
         "hub": "Floorp Hub",
         "hubIntro": "About Floorp Hub",
-        "customize": "Customize",
+        "customize": "Customise",
         "initialSettings": "Initial Settings",
         "complete": "Complete",
         "previous": "Previous",
@@ -28,11 +28,11 @@
         }
     },
     "customize": {
-        "title": "Customize Floorp",
-        "description": "Customize to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
+        "title": "Customise Floorp",
+        "description": "Customise to your preferred settings. You can always change them later from the Floorp Hub or settings page.",
         "appearance": {
             "title": "Appearance Settings",
-            "description": "You can customize Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
+            "description": "You can customise Floorp's appearance to your preference. Choose a light or dark theme, or have it automatically switch based on your system settings."
         },
         "themes": {
             "light": "Light",
@@ -51,7 +51,7 @@
             "noEnginesFound": "No search engines found."
         },
         "floorpHub": {
-            "title": "Cutomise the Floorp Hub title",
+            "title": "Floorp Hub",
             "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
             "openHub": "Open about:hub",
             "openPreferences": "Open Settings (about:preferences)"
@@ -145,7 +145,7 @@
         "support": "Support",
         "documentation": "Documentation",
         "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
+        "hint": "For more detailed settings, you can customise via the Settings option in the menu button at the top right.",
         "resourcesLabel": "Resources",
         "defaultBrowserSuccess": "Floorp has been set as your default browser!"
     },

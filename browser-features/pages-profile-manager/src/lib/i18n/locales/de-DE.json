@@ -2,7 +2,7 @@
     "profileManager": {
         "title": "Profile",
         "buttons": {
-            "refresh": "Refresh",
+            "refresh": "Aktualisieren",
             "create": "Erstellen"
         },
         "loading": "Laden…",
@@ -10,14 +10,14 @@
         "current": "Aktuell",
         "default": "Standard",
         "actions": {
-            "open": "Open",
+            "open": "Starten",
             "new": "Neu",
             "rename": "Umbenennen",
             "remove": "Entfernen",
             "setDefault": "Standard"
         },
         "prompts": {
-            "confirmRemove": "Möchten Sie dieses Profil wirklich löschen?",
+            "confirmRemove": "Möchtest du dieses Profil wirklich entfernen?",
             "newName": "Neuer Profilname:"
         }
     }

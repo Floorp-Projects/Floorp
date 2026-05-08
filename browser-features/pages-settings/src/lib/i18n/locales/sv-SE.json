@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Öppna profil spara plats",
         "mozillaAccountSyncSettings": "Inställningar för Mozilla-konto synkronisering",
         "syncedTo": "Synkroniserad till {{email}}",
-        "syncNotesToMozillaAccount": "Synkronisera {{productName}} anteckningar till Mozilla-konto (experimentellt)",
-        "featureSyncSettings": "{{productName}} Inställningar för funktionssynkronisering",
         "manageMozillaAccount": "Hantera Mozilla-konto",
         "manageFirefoxFeatureSync": "Hantera synkronisering av Firefox-funktioner",
         "aboutMozillaAccount": "Om Mozilla-konto",
@@ -526,6 +524,10 @@
         "actionDescription": "Beskrivning av gest",
         "rockerGesturesEnabled": "Aktivera rocker gester",
         "rockerGesturesDescription": "Högerklicka och flytta till vänster för att gå tillbaka, högerklicka och flytta till höger för att gå framåt. (Experimentell)",
+        "rockerLeftRight": "Vänster → Höger",
+        "rockerLeftRightDescription": "Håll in vänster knapp och klicka sedan på höger knapp",
+        "rockerRightLeft": "Höger → Vänster",
+        "rockerRightLeftDescription": "Håll in höger knapp och klicka sedan på vänster knapp",
         "wheelGesturesEnabled": "Aktivera scrollhjuls gester",
         "actions": {
             "gecko-back": "Gå tillbaka",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Scrolla till toppen",
             "gecko-scroll-to-bottom": "Scrolla till botten",
             "gecko-workspace-next": "Växla till nästa arbetsyta",
-            "gecko-workspace-previous": "Växla till föregående arbetsyta"
+            "gecko-workspace-previous": "Växla till föregående arbetsyta",
+            "floorp-toggle-zen-mode": "Växla Zenläge",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Redigera",
         "duplicate": "Duplicera",

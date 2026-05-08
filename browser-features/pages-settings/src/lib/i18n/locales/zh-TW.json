@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "開啟設定檔儲存位置",
         "mozillaAccountSyncSettings": "Mozilla 帳戶同步設定",
         "syncedTo": "已同步至 {{email}}",
-        "syncNotesToMozillaAccount": "同步 {{productName}} 筆記 至 Mozilla 帳戶 (實驗性質)",
-        "featureSyncSettings": "{{productName}} 功能同步設定",
         "manageMozillaAccount": "管理 Mozilla 帳戶",
         "manageFirefoxFeatureSync": "管理 Firefox 功能同步",
         "aboutMozillaAccount": "關於 Mozilla 帳戶",
@@ -327,7 +325,7 @@
         },
         "activeFlascos": {
             "title": "{{productName}} Flasco 活躍",
-            "description": "檢視並管理您目前啟用的 Flasco。",
+            "description": "檢視並管理您目前活躍的 Flasco。",
             "refresh": "重新整理",
             "noFlascos": "您目前未參與任何 Flasco。",
             "assignedAt": "在 {{date}}上註冊",
@@ -526,6 +524,10 @@
         "actionDescription": "手勢說明",
         "rockerGesturesEnabled": "啟用搖桿手勢",
         "rockerGesturesDescription": "按一下滑鼠右鍵並向左移動可返回，按一下滑鼠右鍵並向右移動可向前。(實驗性質)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "啟用滾輪手勢",
         "actions": {
             "gecko-back": "返回",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "捲動至頂端",
             "gecko-scroll-to-bottom": "捲動至底端",
             "gecko-workspace-next": "切換到下一個工作空間",
-            "gecko-workspace-previous": "切換到上一個工作空間"
+            "gecko-workspace-previous": "切換到上一個工作空間",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "編輯",
         "duplicate": "複製",

@@ -201,7 +201,8 @@
       "gecko-scroll-to-bottom": "捲動至底端",
       "gecko-workspace-next": "切換到下一個工作空間",
       "gecko-workspace-previous": "切換到上一個工作空間",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode"
+      "floorp-toggle-zen-mode": "Toggle Zen Mode",
+      "floorp-toggle-command-palette": "Toggle Command Palette"
     },
     "descriptions": {
       "gecko-back": "返回上一頁",
@@ -212,7 +213,8 @@
       "gecko-duplicate-tab": "複製目前的分頁",
       "gecko-reload-all-tabs": "重新載入所有的分頁",
       "gecko-restore-last-tab": "重新開啟上次關閉的分頁",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing"
+      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
     }
   },
   "qrCode": {
@@ -384,6 +386,9 @@
       "horizontal": "Horizontal Split",
       "vertical": "Vertical Split",
       "grid3paneLeftMain": "Grid (Large Left)",
+      "grid3paneRightMain": "Grid (Large Right)",
+      "grid3paneTopMain": "Grid (Large Top)",
+      "grid3paneBottomMain": "Grid (Large Bottom)",
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
@@ -393,5 +398,31 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "commandPalette": {
+    "dialogLabel": "Command Palette",
+    "placeholder": "Type a command...",
+    "navigateTo": "Go to {{url}}",
+    "categories": {
+      "recent": "Recently Used",
+      "navigation": "Navigation",
+      "tabs": "分頁列",
+      "zoom": "Zoom",
+      "bookmarks": "書籤",
+      "page": "Page",
+      "search": "搜尋",
+      "sidebar": "側邊欄",
+      "scrolling": "Scrolling",
+      "history": "歷史",
+      "window": "Window",
+      "tools": "Tools",
+      "downloads": "下載",
+      "workspace": "工作空間",
+      "floorp": "Floorp",
+      "media": "Media",
+      "open-tabs": "Open Tabs"
+    },
+    "noResults": "No commands found",
+    "noResultsHint": "Try a different search term"
   }
 }

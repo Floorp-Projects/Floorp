@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Buka Lokasi Penyimpanan Profil",
         "mozillaAccountSyncSettings": "Pengaturan Sinkronisasi Akun Mozilla",
         "syncedTo": "Disinkronkan ke {{email}}",
-        "syncNotesToMozillaAccount": "Sinkronisasikan Catatan {{productName}} ke Akun Mozilla (Eksperimental)",
-        "featureSyncSettings": "Pengaturan Sinkronisasi Fitur {{productName}}",
         "manageMozillaAccount": "Kelola Akun Mozilla",
         "manageFirefoxFeatureSync": "Kelola Sinkronisasi Fitur Firefox",
         "aboutMozillaAccount": "Tentang Akun Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Deskripsi gestur",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Aktifkan gestur roda tetikus",
         "actions": {
             "gecko-back": "Go Back",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Scroll to Top",
             "gecko-scroll-to-bottom": "Scroll to Bottom",
             "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-previous": "Switch to Previous Workspace",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Sunting",
         "duplicate": "Gandakan",

@@ -4,12 +4,12 @@
     "tooltiptext": "Rouvrir le dernier onglet fermé {{shortcut}}"
   },
   "floorpHubWarning": {
-    "message": "Floorp-specific settings such as the panel sidebar, Workspaces, and mouse gestures are managed in Floorp Hub.",
-    "openButton": "Open Floorp Hub"
+    "message": "Les réglages spécifiques à Floorp comme la barre latérale, les espaces de travail, et les gestes de souris sont gérés dans la Plateforme de Floorp.",
+    "openButton": "Ouvrir la Plateforme de Floorp"
   },
   "floorpStartWarning": {
-    "message": "To change the \"Home\" setting, disable Floorp Start from Floorp Hub (about:hub#/features/design).",
-    "openButton": "Open Floorp Hub — Design"
+    "message": "Pour changer les réglages d'\"Accueil\", désactivez le démarrage de Floorp depuis la Plateforme de Floorp (about:hub#/features/design).",
+    "openButton": "Ouvrir la Plateforme de Floorp - Design"
   },
   "workspaces": {
     "modal": {
@@ -66,41 +66,41 @@
       "move-down": "Déplacer cet espace de travail vers le bas",
       "delete": "Supprimer l’espace de travail",
       "manage": "Gérer l'espace de travail",
-      "archive": "Archive Workspace"
+      "archive": "Archiver l'espace de travail"
     },
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",
       "manage": "Gérer les espaces de travail",
-      "restore": "Show Archived Workspaces",
-      "restore-cancel": "Exit Restore Mode",
-      "restore-title": "Archived Workspaces",
-      "restore-loading": "Loading archived workspaces…",
-      "restore-empty": "No archived workspaces",
-      "restore-error": "Failed to load archived workspaces",
-      "restore-tooltip": "Toggle restore mode",
-      "restore-item": "Restore \"{{name}}\"",
-      "restore-delete-tooltip": "Delete this archive",
-      "restore-tab-count": "{{count}} tab",
-      "restore-tab-count_plural": "{{count}} tabs",
-      "restore-time-just-now": "Just now",
-      "restore-time-minutes": "{{minutes}} minute ago",
-      "restore-time-minutes_plural": "{{minutes}} minutes ago",
-      "restore-time-hours": "{{hours}} hour ago",
-      "restore-time-hours_plural": "{{hours}} hours ago",
-      "restore-time-days": "{{days}} day ago",
-      "restore-time-days_plural": "{{days}} days ago"
+      "restore": "Afficher les espaces de travail archivés",
+      "restore-cancel": "Quitter le mode de restauration",
+      "restore-title": "Espaces de travail archivés",
+      "restore-loading": "Chargement des espaces de travail archivés…",
+      "restore-empty": "Pas d'espaces de travail archivés",
+      "restore-error": "Échec du chargement des espaces de travail archivés",
+      "restore-tooltip": "Permuter le mode de restauration",
+      "restore-item": "Restaurer \"{{name}}\"",
+      "restore-delete-tooltip": "Supprimer cette archive",
+      "restore-tab-count": "{{count}} onglet",
+      "restore-tab-count_plural": "{{count}} onglets",
+      "restore-time-just-now": "À l'instant",
+      "restore-time-minutes": "Il y a {{minutes}} minute",
+      "restore-time-minutes_plural": "Il y a {{minutes}} minutes",
+      "restore-time-hours": "Il y a {{hours}} heures",
+      "restore-time-hours_plural": "Il y a {{hours}} heures",
+      "restore-time-days": "Il y a {{days}} jour",
+      "restore-time-days_plural": "Il y a {{days}} jours"
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail",
-      "openLinkInWorkspace": "Open Link in Another Workspace",
-      "noOtherWorkspace": "No other workspaces available"
+      "openLinkInWorkspace": "Ouvrir le lien dans un autre espace de travail",
+      "noOtherWorkspace": "Aucun autre espace de travail disponible"
     },
     "error": {
       "invalidWorkspaceID": "ID invalide pour les espaces de travail (peut-être que l'ordre n'est pas mise à jour)"
     }
   },
   "profile-manager-button": {
-    "label": "Profile Manager",
+    "label": "Gestionnaire de profil",
     "tooltiptext": "Ouvrir le gestionnaire de profil"
   },
   "statusbar": {
@@ -122,7 +122,7 @@
   },
   "privateContainer": {
     "openInPrivateContainer": "Ouvrir dans un conteneur privé",
-    "reopenInPrivateContainer": "Reopen in Private Container",
+    "reopenInPrivateContainer": "Réouvrir dans un conteneur privé",
     "name": "Conteneur privé"
   },
   "mouseGesture": {
@@ -141,7 +141,7 @@
       "gecko-restore-last-window": "Restaurer la dernière fenêtre",
       "gecko-show-next-tab": "Afficher l'onglet suivant",
       "gecko-show-previous-tab": "Afficher l'onglet précédent",
-      "gecko-show-previously-selected-tab": "Show Previously Selected Tab",
+      "gecko-show-previously-selected-tab": "Afficher l'onglet précédemment sélectionné",
       "gecko-show-all-tabs-panel": "Afficher le panneau de tous les onglets",
       "gecko-force-reload": "Forcer le rechargement",
       "gecko-zoom-in": "Zoom avant",
@@ -199,9 +199,10 @@
       "gecko-scroll-left": "Défiler vers la gauche",
       "gecko-scroll-to-top": "Défiler vers le haut",
       "gecko-scroll-to-bottom": "Défilement vers le bas",
-      "gecko-workspace-next": "Switch to Next Workspace",
-      "gecko-workspace-previous": "Switch to Previous Workspace",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode"
+      "gecko-workspace-next": "Basculer vers l'espace de travail suivant",
+      "gecko-workspace-previous": "Basculer vers l'espace de travail précédent",
+      "floorp-toggle-zen-mode": "Permuter le mode Zen",
+      "floorp-toggle-command-palette": "Activer/désactiver la palette de commandes"
     },
     "descriptions": {
       "gecko-back": "Retourner à la page précédente",
@@ -212,7 +213,8 @@
       "gecko-duplicate-tab": "Dupliquer l'onglet actuel",
       "gecko-reload-all-tabs": "Recharger tous les onglets",
       "gecko-restore-last-tab": "Rouvrir le dernier onglet fermé",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing"
+      "floorp-toggle-zen-mode": "Permuter le mode Zen masque tous les éléments de l'interface pour une navigation sans distraction",
+      "floorp-toggle-command-palette": "Ouvrir ou fermer la palette de commandes pour rechercher et exécuter des commandes"
     }
   },
   "qrCode": {
@@ -235,7 +237,7 @@
         "web": "Page Web",
         "sidebar-tool": "Outil barre latérale",
         "extension": "Extension barre latérale",
-        "builtin": "Built-in Pages (Downloads, Bookmarks, History)"
+        "builtin": "Pages intégrées (Téléchargements, Marques-pages, Historique)"
       },
       "width": "Largeur du panneau",
       "url": "URL de la page Web",
@@ -287,85 +289,85 @@
     }
   },
   "nr-webscraper": {
-    "panelTitle": "{{productName}} is operating",
-    "panelDefaultMessage": "{{action}} in progress...",
-    "panelProgressSummary": "Affects {{count}} element(s)",
-    "formSummary": "Filling form: {{count}} field(s)",
-    "formFieldProgress": "Field {{current}}/{{total}}: \"{{value}}\"",
-    "inputValueSet": "Set input value: \"{{value}}\"",
-    "clickElementWithText": "Click {{tag}}: \"{{text}}\"",
-    "clickElementNoText": "Clicking {{tag}} element",
-    "inspectPageHtml": "Retrieved full page HTML",
-    "inspectGetElement": "Retrieved element: {{selector}}",
-    "inspectGetElements": "{{count}} element(s) matched: {{selector}}",
-    "inspectGetElementByText": "Retrieved element matching text: \"{{text}}\"",
-    "inspectGetElementText": "Retrieved text from: {{selector}}",
-    "inspectGetValue": "Retrieved value: {{selector}}",
-    "submitForm": "Submitting form: {{name}}",
-    "actionLabelHighlight": "Highlight",
-    "actionLabelInspect": "Inspect",
-    "actionLabelFill": "Fill",
-    "actionLabelInput": "Input",
-    "actionLabelClick": "Click",
-    "actionLabelSubmit": "Submit"
+    "panelTitle": "{{productName}} fonctionne",
+    "panelDefaultMessage": "{{action}} en cours...",
+    "panelProgressSummary": "Affecte {{count}} élément(s)",
+    "formSummary": "Remplissage du formulaire : {{count}} champ(s)",
+    "formFieldProgress": "Champ {{current}}/{{total}}: \"{{value}}\"",
+    "inputValueSet": "Définir la valeur d'entrée : \"{{value}}\"",
+    "clickElementWithText": "Cliquez sur le {{tag}} : \"{{text}}\"",
+    "clickElementNoText": "Cliquez sur l'element {{tag}}",
+    "inspectPageHtml": "Page HTML complète récupérée",
+    "inspectGetElement": "Élément récupéré : {{selector}}",
+    "inspectGetElements": "{{count}} élément(s) correspondant(s) : {{selector}}",
+    "inspectGetElementByText": "Élément récupéré correspondant au texte : \"{{text}}\"",
+    "inspectGetElementText": "Texte retrouvé depuis : {{selector}}",
+    "inspectGetValue": "Valeur retrouvée : {{selector}}",
+    "submitForm": "Envoi du formulaire : {{name}}",
+    "actionLabelHighlight": "Surligner",
+    "actionLabelInspect": "Inspecter",
+    "actionLabelFill": "Remplir",
+    "actionLabelInput": "Saisir",
+    "actionLabelClick": "Cliquer",
+    "actionLabelSubmit": "Envoyer"
   },
   "externalBrowser": {
     "menu": {
-      "openTabIn": "Open Tab in External Browser",
-      "openLinkIn": "Open Link in External Browser",
-      "defaultBrowser": "System Default Browser",
-      "noBrowsers": "No external browsers detected",
-      "noValidUrl": "No valid URL to open"
+      "openTabIn": "Ouvrir l'onglet dans un navigateur externe",
+      "openLinkIn": "Ouvrir le lien dans un navigateur externe",
+      "defaultBrowser": "Navigateur par défaut du système",
+      "noBrowsers": "Aucun navigateur externe détecté",
+      "noValidUrl": "Aucune URL valide à ouvrir"
     }
   },
   "chromeWebStore": {
     "button": {
-      "addToFloorp": "Add to Floorp",
+      "addToFloorp": "Ajouter à Floorp",
       "installing": "Installation...",
-      "success": "Added!",
-      "error": "Error occurred",
-      "installed": "Installed"
+      "success": "Ajouté !",
+      "error": "Une erreur s'est produite",
+      "installed": "Installé"
     },
     "error": {
-      "title": "Installation Error",
-      "compatibilityNote": "This extension may not be compatible with Firefox/Floorp.",
-      "alreadyInstalled": "This extension is already installed ({{name}})",
-      "downloadFailed": "Failed to download CRX file",
-      "conversionFailed": "Failed to convert extension: {{error}}",
-      "conversionFailedGeneric": "Failed to convert CRX to XPI",
-      "installError": "Installation error: {{error}}",
-      "installFailed": "Installation failed",
-      "noData": "No installation data provided",
-      "addonManagerUnavailable": "AddonManager is not available",
-      "noBrowserWindow": "Could not find browser window for installation",
-      "createInstallFailed": "Failed to create installation object",
-      "cancelledByUser": "Installation cancelled by user",
-      "downloadCancelled": "Download cancelled",
-      "timeout": "Installation timed out",
-      "xpiInstallError": "XPI installation error: {{error}}",
-      "errorWithCode": "Installation error (code: {{code}})",
-      "experimentDisabled": "This feature is not currently available"
+      "title": "Erreur d'installation",
+      "compatibilityNote": "Cette extension peut ne pas être compatible avec Firefox/Floorp.",
+      "alreadyInstalled": "Cette extension est déjà installée ({{name}})",
+      "downloadFailed": "Échec du téléchargement du fichier CRX",
+      "conversionFailed": "Échec de conversion de l'extension : {{error}}",
+      "conversionFailedGeneric": "Échec de la convertion CRX vers XPI",
+      "installError": "Erreur d'installation : {{error}}",
+      "installFailed": "Échec de l'installation",
+      "noData": "Aucune donnée d'installation fournie",
+      "addonManagerUnavailable": "AddonManager n'est pas disponible",
+      "noBrowserWindow": "Aucune fenêtre de navigateur n'a pue être trouvée pour l'installation",
+      "createInstallFailed": "Échec de la création d'un objet d'installation",
+      "cancelledByUser": "Installation annulée par l'utilisateur",
+      "downloadCancelled": "Téléchargement annulé",
+      "timeout": "Délai d'installation dépassé",
+      "xpiInstallError": "Erreur d'installation XPI : {{error}}",
+      "errorWithCode": "Erreur d'installation (code d'erreur : {{code}})",
+      "experimentDisabled": "Cette fonctionnalité n'est actuellement pas disponible"
     },
     "installErrors": {
-      "downloadFailed": "Download failed",
-      "signatureVerifyFailed": "Failed to verify extension signature",
-      "corruptOrIncompatible": "Extension is corrupted or incompatible",
-      "incompatible": "This extension is not compatible with Floorp",
-      "blocked": "This extension is blocked",
-      "timeout": "Extension installation timed out",
-      "installFailed": "Extension installation failed",
-      "parseFailed": "Failed to parse extension",
-      "invalidFile": "Invalid extension file",
-      "networkError": "A network error occurred"
+      "downloadFailed": "Échec du téléchargement",
+      "signatureVerifyFailed": "Échec de vérification de la signature de l'extension",
+      "corruptOrIncompatible": "L'extension est corrompue ou incompatible",
+      "incompatible": "Cette extension n'est pas compatible avec Floorp",
+      "blocked": "Cette extension est bloquée",
+      "timeout": "Délai d'installation de l'extension dépassé",
+      "installFailed": "Échec d'installation de l'extension",
+      "parseFailed": "Échec de l'analyse de l'extension",
+      "invalidFile": "Fichier d'extension invalide",
+      "networkError": "Une erreur du réseau est survenue"
     }
   },
   "addons": {
     "notification": {
-      "chromeExtensionMessage": "Do you want to add Chrome extension \"{{name}}\"? This extension has been converted from Chrome Web Store.",
-      "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
-      "defaultExtensionName": "this extension",
+      "chromeExtensionMessage": "Voulez-vous ajouter l'extension Chrome \"{{name}}\" ? Cette extension a été convertie depuis le Chrome Web Store.",
+      "chromeExtensionPrompt": "Voulez-vous ajouter l'extension Chrome \"{{name}}\" ?",
+      "defaultExtensionName": "cette extension",
       "chromeBadge": "[Chrome]",
-      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+      "compatibilityWarning": "Cette extension Chrome a été convertie au format compatible Firefox. Certaines fonctionnalités pourraient ne pas fonctionner proprement."
     }
   },
   "hub": {
@@ -376,22 +378,51 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Ouvrir en vue partagée",
-      "addPane": "Add Pane to Split View",
-      "moveToPane": "Move to Pane",
-      "moveToPaneN": "Pane {{n}} ({{title}})"
+      "addPane": "Ajouter le volet à la vue fractionnée",
+      "moveToPane": "Déplacer dans le volet",
+      "moveToPaneN": "Volet {{n}} ({{title}})"
     },
     "layoutPicker": {
-      "horizontal": "Horizontal Split",
-      "vertical": "Vertical Split",
-      "grid3paneLeftMain": "Grid (Large Left)",
-      "grid2x2": "Grid (2×2)",
-      "addPane": "Add Pane",
-      "removePane": "Remove Last Pane"
+      "horizontal": "Division horizontale",
+      "vertical": "Séparation verticale",
+      "grid3paneLeftMain": "Grille (Gauche large)",
+      "grid3paneRightMain": "Grille (Droite large)",
+      "grid3paneTopMain": "Grille (Hauteur large)",
+      "grid3paneBottomMain": "Grille (Bas large)",
+      "grid2x2": "Grille (2×2)",
+      "addPane": "Ajouter un volet",
+      "removePane": "Supprimer le dernier volet"
     }
   },
   "zen-mode": {
-    "label": "Zen Mode",
-    "tooltiptext": "Toggle Zen Mode",
-    "menu-label": "Toggle Zen Mode"
+    "label": "Mode Calme",
+    "tooltiptext": "Permuter le mode Zen",
+    "menu-label": "Permuter le mode Zen"
+  },
+  "commandPalette": {
+    "dialogLabel": "Palette de commandes",
+    "placeholder": "Écrivez une commande...",
+    "navigateTo": "Aller sur {{url}}",
+    "categories": {
+      "recent": "Utilisées récemment",
+      "navigation": "Navigation",
+      "tabs": "Onglets",
+      "zoom": "Zoomer",
+      "bookmarks": "Marque-pages",
+      "page": "Page",
+      "search": "Recherche",
+      "sidebar": "Barre latérale",
+      "scrolling": "Défilement",
+      "history": "Historique",
+      "window": "Fenêtre",
+      "tools": "Outils",
+      "downloads": "Téléchargements",
+      "workspace": "Espaces de travail",
+      "floorp": "Floorp",
+      "media": "Média",
+      "open-tabs": "Onglets ouverts"
+    },
+    "noResults": "Aucune commande trouvée",
+    "noResultsHint": "Essayez un autre terme de recherche"
   }
 }
