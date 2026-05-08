@@ -1181,7 +1181,7 @@ jobs:
                 # Verify signed entitlements — fail CI if passkey entitlement is missing.
                 echo "=== Verifying signed bundle entitlements ==="
                 ENTITLEMENT_INFO=$(rcodesign print-signature-info "$APP_FILE" 2>&1 || true)
-                echo "$ENTITLEMENT_INFO" | head -100
+                echo "$ENTITLEMENT_INFO" | head -100 || true
                 echo "=== End entitlement verification ==="
 
                 # Assert: passkey entitlement must be present in the signed binary
