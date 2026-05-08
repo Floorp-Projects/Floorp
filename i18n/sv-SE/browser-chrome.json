@@ -201,7 +201,8 @@
       "gecko-scroll-to-bottom": "Scrolla till botten",
       "gecko-workspace-next": "Växla till nästa arbetsyta",
       "gecko-workspace-previous": "Växla till föregående arbetsyta",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode"
+      "floorp-toggle-zen-mode": "Växla Zenläge",
+      "floorp-toggle-command-palette": "Toggle Command Palette"
     },
     "descriptions": {
       "gecko-back": "Navigera tillbaka till föregående sida",
@@ -212,7 +213,8 @@
       "gecko-duplicate-tab": "Duplicera den aktuella fliken",
       "gecko-reload-all-tabs": "Ladda om alla flikar",
       "gecko-restore-last-tab": "Öppna den senaste stängda fliken",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing"
+      "floorp-toggle-zen-mode": "Växla till Zenläge för att dölja alla UI-element för distraktionslös surfning",
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
     }
   },
   "qrCode": {
@@ -375,23 +377,52 @@
   },
   "splitView": {
     "contextMenu": {
-      "openInSplitView": "Open in Split View",
-      "addPane": "Add Pane to Split View",
-      "moveToPane": "Move to Pane",
-      "moveToPaneN": "Pane {{n}} ({{title}})"
+      "openInSplitView": "Öppna i delad vy",
+      "addPane": "Lägg till panel till delad vy",
+      "moveToPane": "Flytta till panel",
+      "moveToPaneN": "Panel {{n}} ({{title}})"
     },
     "layoutPicker": {
-      "horizontal": "Horizontal Split",
-      "vertical": "Vertical Split",
-      "grid3paneLeftMain": "Grid (Large Left)",
-      "grid2x2": "Grid (2×2)",
-      "addPane": "Add Pane",
-      "removePane": "Remove Last Pane"
+      "horizontal": "Horisontell delning",
+      "vertical": "Vertikal delning",
+      "grid3paneLeftMain": "Rutnät (stort vänster)",
+      "grid3paneRightMain": "Rutnät (stort höger)",
+      "grid3paneTopMain": "Rutnät (stort överst)",
+      "grid3paneBottomMain": "Rutnät (stor nederst)",
+      "grid2x2": "Rutnät (2×2)",
+      "addPane": "Lägg till panel",
+      "removePane": "Ta bort sista panel"
     }
   },
   "zen-mode": {
-    "label": "Zen Mode",
-    "tooltiptext": "Toggle Zen Mode",
-    "menu-label": "Toggle Zen Mode"
+    "label": "Zen läge",
+    "tooltiptext": "Växla zenläge",
+    "menu-label": "Växla zenläge"
+  },
+  "commandPalette": {
+    "dialogLabel": "Command Palette",
+    "placeholder": "Type a command...",
+    "navigateTo": "Go to {{url}}",
+    "categories": {
+      "recent": "Recently Used",
+      "navigation": "Navigation",
+      "tabs": "Flikar",
+      "zoom": "Zoom",
+      "bookmarks": "Bokmärken",
+      "page": "Page",
+      "search": "Sök",
+      "sidebar": "Sidebar",
+      "scrolling": "Scrolling",
+      "history": "Historik",
+      "window": "Window",
+      "tools": "Tools",
+      "downloads": "Hämtningar",
+      "workspace": "Arbetsytor",
+      "floorp": "Floorp",
+      "media": "Media",
+      "open-tabs": "Open Tabs"
+    },
+    "noResults": "No commands found",
+    "noResultsHint": "Try a different search term"
   }
 }

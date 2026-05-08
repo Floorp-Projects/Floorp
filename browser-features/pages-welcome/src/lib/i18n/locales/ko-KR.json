@@ -6,7 +6,7 @@
         "features": "기능",
         "featureIntroduction": "기능 소개",
         "hub": "Floorp Hub",
-        "hubIntro": "About Floorp Hub",
+        "hubIntro": "Floorp Hub에 대해",
         "customize": "맞춤 설정",
         "initialSettings": "초기 설정",
         "complete": "완료",
@@ -14,17 +14,17 @@
         "next": "다음"
     },
     "hubPage": {
-        "title": "About Floorp Hub",
-        "subtitle": "A central place for Floorp-specific settings.",
+        "title": "Floorp Hub에 대해",
+        "subtitle": "Floorp별 설정을 위한 집중 공간입니다.",
         "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-        "openHub": "Open about:hub",
-        "openPreferences": "Open Settings (about:preferences)",
-        "tip": "Tip: You can also access Floorp Hub from the Firefox settings sidebar.",
+        "description": "Floorp Hub는 플로어별 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:환경설정'에서도 액세스할 수 있습니다.",
+        "openHub": "about:hub 열기",
+        "openPreferences": "설정(about:preferences)을 열기",
+        "tip": "팁: Firefox 설정 사이드바에서 Floorp Hub에 액세스할 수도 있습니다.",
         "features": {
-            "dedicated": "Dedicated Floorp settings center",
-            "accessible": "Accessible from about:hub or Firefox settings",
-            "centralized": "All Floorp-specific options in one place"
+            "dedicated": "Floorp 전용 설정 센터",
+            "accessible": "about:hub 또는 Firefox 설정에서 사용가능",
+            "centralized": "모든 Floorp 옵션을 한 곳에서 확인하세요"
         }
     },
     "customize": {
@@ -52,9 +52,9 @@
         },
         "floorpHub": {
             "title": "Floorp Hub",
-            "description": "Floorp Hub is a dedicated settings center for Floorp-specific options. You can open it by navigating to 'about:hub'. It can also be accessed from the left sidebar of Firefox's settings page at 'about:preferences'.",
-            "openHub": "Open about:hub",
-            "openPreferences": "Open Settings (about:preferences)"
+            "description": "Floorp Hub는 Floorp 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:preferences'에서도 액세스할 수 있습니다.",
+            "openHub": "about:hub 열기",
+            "openPreferences": "설정(about:preferences)을 열기"
         }
     },
     "finish": {
@@ -63,22 +63,22 @@
         "nextSteps": {
             "title": "다음 단계 (선택적)",
             "setDefault": "기본 브라우저로 설정",
-            "documentation": "Documentation"
+            "documentation": "문서"
         },
         "getStarted": "Floorp 시작하기",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
+        "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다."
     },
     "welcomePage": {
         "welcome": "Floorp에 오신 것을 환영합니다!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "When you're ready, click the below button to proceed.",
-        "features": "Floorp Features",
-        "privacy": "Privacy",
-        "privacyDesc": "Protects your data",
-        "speed": "Speed",
-        "speedDesc": "Optimized performance",
-        "customization": "Customization",
-        "customizationDesc": "Arrange to your preference",
+        "description": "Floorp는 개인 정보 보호와 보안을 강조하는 빠르고 사용자 친화적인 웹 브라우저입니다. 이 가이드에서는 Floorp의 주요 기능과 설정에 대해 소개합니다.",
+        "readyToStart": "준비가 완료되면 아래 버튼을 클릭하여 계속 진행하세요.",
+        "features": "Floorp 기능",
+        "privacy": "개인 정보 보호 정책",
+        "privacyDesc": "데이터 보호",
+        "speed": "속도",
+        "speedDesc": "성능 최적화",
+        "customization": "사용자 정의",
+        "customizationDesc": "직접 설정해서 정렬",
         "start": "시작하기"
     },
     "localizationPage": {
@@ -93,48 +93,48 @@
         "useSystemLanguage": "시스템 언어 사용",
         "multilingual": "다국어 지원",
         "chooseLanguage": "다양한 언어 중에서 선택하세요",
-        "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
+        "languageChangeNotice": "언어를 변경하면 Floorp를 다시 시작하지 않고도 새 언어가 적용됩니다. 일부 애드온은 언어 변경을 지원하지 않을 수 있습니다."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Floorp 기능",
+        "subtitle": "Floorp에는 유용한 기능이 많이 있습니다. 기능 개요를 확인하세요!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+            "title": "패널 사이드바",
+            "description": "탐색하는 동안 오른쪽 사이드바에서 편리한 기능에 액세스하세요. 사이드바에 웹 패널, 메모 기능, 애드온, 북마크 등을 배치할 수 있습니다.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
-                "Supports containers"
+                "사이드바에 웹사이트 고정",
+                "탐색하는 동안 Floorp 노트로 빠르게 메모하기",
+                "컨테이너 지원"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+            "title": "워크스페이스",
+            "description": "여러 개의 탭 세트를 구성하여 작업을 간소화하세요. 고유한 아이콘과 이름으로 작업 공간 사이를 빠르게 전환하세요. 왼쪽 상단의 작업 공간 버튼을 통해 액세스하세요.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
-                "Visually identify with custom icons",
-                "Easily manage tabs"
+                "업무, 개인 등 목적별로 분류합니다.",
+                "사용자 지정 아이콘으로 시각적으로 식별",
+                "간편한 탭 관리"
             ]
         },
         "pwa": {
-            "title": "Progressive Web Applications Support",
-            "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
+            "title": "프로그레시브 웹 애플리케이션 지원",
+            "description": "Windows에서는 PWA 호환 사이트를 방문할 때 데스크톱 애플리케이션으로 추가할 수 있습니다. 일반 웹사이트도 설치할 수 있습니다.",
             "features": [
-                "Run independently as desktop apps",
-                "Can be pinned to the taskbar",
-                "Firefox add-ons work too"
+                "데스크톱 앱으로 독립적으로 실행",
+                "작업 표시줄에 고정 가능",
+                "Firefox 애드온도 작동합니다"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
-            "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
+            "title": "마우스 제스처",
+            "description": "기본적으로 구현된 마우스 제스처 기능으로 브라우저를 더욱 직관적으로 제어하세요. 마우스 오른쪽 클릭 버튼을 누른 채 마우스를 움직여 제스처를 실행할 수 있습니다.",
             "features": [
-                "Operate without keyboard shortcuts",
-                "Fully customizable gestures",
-                "Quickly navigate pages and history"
+                "키보드 단축키 없이 작동",
+                "완전히 사용자 지정 가능한 제스처",
+                "페이지와 기록을 빠르게 탐색"
             ]
         },
-        "notebook": "Notebook",
+        "notebook": "메모장",
         "nextTab": "다음 탭으로"
     },
     "finishPage": {
@@ -143,27 +143,27 @@
         "nextSteps": "다음 단계 (선택적)",
         "defaultBrowser": "기본 브라우저로 설정",
         "support": "지원",
-        "documentation": "Documentation",
-        "getStarted": "Get Started with Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "documentation": "문서",
+        "getStarted": "Floorp 시작하기",
+        "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다.",
+        "resourcesLabel": "리소스",
+        "defaultBrowserSuccess": "Floorp가 기본 브라우저로 설정되었습니다!"
     },
     "whatsNew": {
-        "title": "Welcome to Floorp {{version}}!",
-        "subtitle": "Check out what's new in Floorp!",
+        "title": "Floorp {{version}} 에 오신 것을 환영합니다!",
+        "subtitle": "Floorp의 새로운 기능을 확인하세요!",
         "tags": {
             "settings": "설정",
-            "productivity": "Productivity",
+            "productivity": "편의 기능",
             "workspaces": "워크스페이스",
             "pwa": "PWA",
-            "gestures": "Gestures"
+            "gestures": "제스처"
         },
         "footer": {
-            "follow": "Follow",
-            "privacy": "Privacy & Terms",
-            "about": "About Floorp",
-            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+            "follow": "팔로우",
+            "privacy": "개인 정보 보호 및 약관",
+            "about": "Floorp Hub에 대해",
+            "copyright": "© {{year}} Floorp Projects. All Rights Reserved."
         }
     }
 }

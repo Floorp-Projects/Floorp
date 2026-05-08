@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Відкрити місце збереження профілю",
         "mozillaAccountSyncSettings": "Налаштування синхронізації облікових записів Mozilla",
         "syncedTo": "Синхронізовано з {{email}}",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Керування обліковим записом Mozilla",
         "manageFirefoxFeatureSync": "Керування синхронізацією функцій Firefox",
         "aboutMozillaAccount": "Про обліковий запис Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Опис жесту",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Увімкнути жести коліщатком",
         "actions": {
             "gecko-back": "Повернутися",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Scroll to Top",
             "gecko-scroll-to-bottom": "Scroll to Bottom",
             "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-previous": "Switch to Previous Workspace",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Редагувати",
         "duplicate": "Дублювати",

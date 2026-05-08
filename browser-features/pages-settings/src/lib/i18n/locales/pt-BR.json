@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Abrir Local para Salvar Perfil",
         "mozillaAccountSyncSettings": "Configurações de sincronização da conta Mozilla",
         "syncedTo": "Sincronizado com {{email}}",
-        "syncNotesToMozillaAccount": "Sincronizar Notas {{productName}} com a conta Mozilla (experimental)",
-        "featureSyncSettings": "Configurações de sincronização de recursos {{productName}}",
         "manageMozillaAccount": "Gerenciar conta Mozilla",
         "manageFirefoxFeatureSync": "Gerenciar sincronização de recursos do Firefox",
         "aboutMozillaAccount": "Sobre a conta Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar gestos de balanço",
         "rockerGesturesDescription": "Clique com o botão direito do mouse e mova para a esquerda para voltar, clique com o botão direito do mouse e mova para a direita para avançar. (experimental)",
+        "rockerLeftRight": "Esquerda → Direita",
+        "rockerLeftRightDescription": "Mantenha o botão esquerdo pressionado e clique no botão direito",
+        "rockerRightLeft": "Direita → Esquerda",
+        "rockerRightLeftDescription": "Mantenha pressionado o botão direito e clique no botão esquerdo",
         "wheelGesturesEnabled": "Ativar gestos com a roda do mouse",
         "actions": {
             "gecko-back": "Voltar",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Voltar ao topo",
             "gecko-scroll-to-bottom": "Rolar para o final",
             "gecko-workspace-next": "Mudar para o próximo espaço de trabalho",
-            "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior"
+            "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior",
+            "floorp-toggle-zen-mode": "Ativar/Desativar Modo Zen",
+            "floorp-toggle-command-palette": "Alternar a paleta de comandos"
         },
         "edit": "Editar",
         "duplicate": "Duplicar",

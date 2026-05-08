@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "打开配置文件 保存位置",
         "mozillaAccountSyncSettings": "Mozilla 账户同步设置",
         "syncedTo": "同步至 {{email}}",
-        "syncNotesToMozillaAccount": "将 {{productName}} 笔记同步到 Mozilla 账户（实验性）",
-        "featureSyncSettings": "{{productName}} 同步设置",
         "manageMozillaAccount": "管理 Mozilla 账户",
         "manageFirefoxFeatureSync": "管理火狐功能同步",
         "aboutMozillaAccount": "管理 Mozilla 账户",
@@ -526,6 +524,10 @@
         "actionDescription": "手势说明",
         "rockerGesturesEnabled": "启用摇杆手势",
         "rockerGesturesDescription": "右键单击并向左移动以返回，右键单击并向右移动以前进。(实验性)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "转到上一页",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "滚动到顶部",
             "gecko-scroll-to-bottom": "滚动到底部",
             "gecko-workspace-next": "切换到下个工作区",
-            "gecko-workspace-previous": "切换到上个工作区"
+            "gecko-workspace-previous": "切换到上个工作区",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "编辑",
         "duplicate": "复制",

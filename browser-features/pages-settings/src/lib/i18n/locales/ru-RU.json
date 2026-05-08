@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Открыть место сохранения профиля",
         "mozillaAccountSyncSettings": "Настройки синхронизации учетной записи Mozilla",
         "syncedTo": "Синхронизировано с {{email}}",
-        "syncNotesToMozillaAccount": "Синхронизировать заметки {{productName}} с учетной записью Mozilla (Экспериментально)",
-        "featureSyncSettings": "Настройки синхронизации {{productName}}",
         "manageMozillaAccount": "Управление учетной записью Mozilla",
         "manageFirefoxFeatureSync": "Управление синхронизацией функций Firefox",
         "aboutMozillaAccount": "Об учетной записи Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Описание жеста",
         "rockerGesturesEnabled": "Включить жесты рокера",
         "rockerGesturesDescription": "Щёлкните правой кнопкой мыши и переместитесь влево, чтобы вернуться назад, щёлкните правой кнопкой мыши и переместитесь вправо, чтобы перейти вперёд. (Экспериментально)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Включить жесты колёсиком",
         "actions": {
             "gecko-back": "Вернуться назад",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "На самый верх",
             "gecko-scroll-to-bottom": "В самый низ",
             "gecko-workspace-next": "Перейти на следующее рабочее пространство",
-            "gecko-workspace-previous": "Перейти на предыдущее рабочее пространство"
+            "gecko-workspace-previous": "Перейти на предыдущее рабочее пространство",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Редактировать",
         "duplicate": "Дублировать",

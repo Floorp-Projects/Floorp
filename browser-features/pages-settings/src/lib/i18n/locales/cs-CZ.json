@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Open Profile Save Location",
         "mozillaAccountSyncSettings": "Mozilla Account Sync Settings",
         "syncedTo": "Synced to {{email}}",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Manage Mozilla Account",
         "manageFirefoxFeatureSync": "Manage Firefox Feature Sync",
         "aboutMozillaAccount": "About Mozilla Account",
@@ -526,6 +524,10 @@
         "actionDescription": "Description of the gesture",
         "rockerGesturesEnabled": "Enable rocker gestures",
         "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Enable wheel gestures",
         "actions": {
             "gecko-back": "Go Back",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Scroll to Top",
             "gecko-scroll-to-bottom": "Scroll to Bottom",
             "gecko-workspace-next": "Switch to Next Workspace",
-            "gecko-workspace-previous": "Switch to Previous Workspace"
+            "gecko-workspace-previous": "Switch to Previous Workspace",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",
