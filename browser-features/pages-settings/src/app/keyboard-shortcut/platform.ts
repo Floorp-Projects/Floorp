@@ -3,7 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const isMac = navigator.platform.toUpperCase().includes("MAC");
+let _isMac: boolean | undefined;
+
+function isMac(): boolean {
+  if (_isMac === undefined) {
+    _isMac =
+      typeof navigator !== "undefined" &&
+      navigator?.platform?.toUpperCase().includes("MAC") === true;
+  }
+  return _isMac;
+}
 
 /**
  * Format a modifier key name for display.
@@ -12,7 +21,7 @@ const isMac = navigator.platform.toUpperCase().includes("MAC");
 export function formatModifierLabel(
   modifier: "alt" | "ctrl" | "meta" | "shift",
 ): string {
-  if (isMac) {
+  if (isMac()) {
     switch (modifier) {
       case "alt":
         return "⌥ Option";
@@ -43,7 +52,7 @@ export function formatModifierLabel(
 export function formatModifierSymbol(
   modifier: "alt" | "ctrl" | "meta" | "shift",
 ): string {
-  if (isMac) {
+  if (isMac()) {
     switch (modifier) {
       case "alt":
         return "⌥";
