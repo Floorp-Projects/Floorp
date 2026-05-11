@@ -115,7 +115,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-force-reload",
-    fn: (win) => win.BrowserReloadSkipCache(),
+    fn: (win) => win.BrowserCommands.reloadSkipCache(),
   },
   {
     name: "gecko-zoom-in",
