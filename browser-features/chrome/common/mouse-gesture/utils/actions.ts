@@ -172,7 +172,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-show-page-info",
-    fn: (win) => win.BrowserPageInfo(),
+    fn: (win) => win.BrowserCommands.pageInfo(),
   },
   {
     name: "floorp-rest-mode",
