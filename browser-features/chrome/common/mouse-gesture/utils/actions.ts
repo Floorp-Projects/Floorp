@@ -143,7 +143,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-addons-manager",
-    fn: (win) => win.BrowserOpenAddonsMgr(),
+    fn: (win) => win.BrowserAddonUI.openAddonsMgr(),
   },
   {
     name: "gecko-send-with-mail",
