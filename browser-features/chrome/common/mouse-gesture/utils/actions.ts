@@ -67,7 +67,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-reload-all-tabs",
-    fn: (win) => win.gBrowser.reloadAllTabs(),
+    fn: (win) => win.gBrowser.reloadTabs(win.gBrowser.tabs),
   },
   {
     name: "gecko-open-new-window",
