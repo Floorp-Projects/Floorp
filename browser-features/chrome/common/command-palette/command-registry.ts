@@ -9,7 +9,11 @@ import { fuzzySearch } from "./fuzzy.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
-import { openUrlCommand, searchWebCommand } from "./multiInputCommand/index.ts";
+import {
+  openUrlCommand,
+  searchWebCommand,
+  reopenInContainerCommand,
+} from "./multiInputCommand/index.ts";
 
 export interface CommandStepChoice {
   /** Display label shown to the user */
@@ -191,7 +195,7 @@ function buildGestureCommands(): PaletteCommand[] {
 }
 
 function buildStepCommands(): PaletteCommand[] {
-  return [openUrlCommand, searchWebCommand];
+  return [openUrlCommand, searchWebCommand, reopenInContainerCommand];
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
