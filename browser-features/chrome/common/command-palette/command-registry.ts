@@ -247,6 +247,10 @@ function buildStepCommands(): PaletteCommand[] {
         console.log("Search query:", query);
         if (!query) return;
 
+        const { SearchService } = ChromeUtils.importESModule(
+          "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+        );
+
         try {
           // 1. タイムアウト用のPromiseを作成（2000ミリ秒でエラーを投げる）
           const timeoutPromise = new Promise((_, reject) => {
@@ -256,10 +260,7 @@ function buildStepCommands(): PaletteCommand[] {
           });
 
           // 2. Promise.race で「エンジンの取得」と「タイムアウト」の早い方を取る
-          Promise.race([
-            globalThis.Services.search.getDefault(),
-            timeoutPromise,
-          ])
+          Promise.race([SearchService.getDefault(), timeoutPromise])
             .then((engine) => {
               console.log("Search engine:", engine?.name);
 
