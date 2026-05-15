@@ -11,6 +11,15 @@ import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
 import { openUrlCommand, searchWebCommand } from "./multiInputCommand/index.ts";
 
+export interface CommandStepChoice {
+  /** Display label shown to the user */
+  label: string;
+  /** Actual value passed to the command function */
+  value: string;
+  /** Optional description shown below the label */
+  description?: string;
+}
+
 export interface CommandStep {
   id: string;
   label: string;
@@ -21,6 +30,12 @@ export interface CommandStep {
    * Omit to skip validation.
    */
   validate?: (input: string) => boolean | string;
+  /**
+   * Predefined choices for this step. When provided, the palette will
+   * show a selectable list. The user can still type to filter choices
+   * or enter a custom value.
+   */
+  choices?: CommandStepChoice[];
 }
 
 export interface PaletteCommand {

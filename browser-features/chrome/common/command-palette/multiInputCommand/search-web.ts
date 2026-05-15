@@ -27,49 +27,108 @@ export const searchWebCommand: PaletteCommand = {
         return true;
       },
     },
+    {
+      id: "where",
+      label: i18next.t("commandPalette.searchWebWhereLabel", {
+        defaultValue: "Where to open results",
+      }),
+      placeholder: i18next.t("commandPalette.searchWebWherePlaceholder", {
+        defaultValue: "Select where to open...",
+      }),
+      choices: [
+        {
+          label: i18next.t("commandPalette.searchWebWhereNewTab", {
+            defaultValue: "New Tab",
+          }),
+          value: "new-tab",
+          description: i18next.t("commandPalette.searchWebWhereNewTabDesc", {
+            defaultValue: "Open in a new foreground tab",
+          }),
+        },
+        {
+          label: i18next.t("commandPalette.searchWebWhereBackgroundTab", {
+            defaultValue: "Background Tab",
+          }),
+          value: "background-tab",
+          description: i18next.t(
+            "commandPalette.searchWebWhereBackgroundTabDesc",
+            {
+              defaultValue: "Open in a new background tab",
+            },
+          ),
+        },
+        {
+          label: i18next.t("commandPalette.searchWebWhereCurrentTab", {
+            defaultValue: "Current Tab",
+          }),
+          value: "current-tab",
+          description: i18next.t(
+            "commandPalette.searchWebWhereCurrentTabDesc",
+            {
+              defaultValue: "Navigate the current tab",
+            },
+          ),
+        },
+      ],
+    },
   ],
   fn: (_win: Window, args?: Record<string, string>) => {
     const query = args?.query?.trim();
-    console.log("Search query:", query);
     if (!query) return;
+
+    const where = args?.where ?? "new-tab";
 
     const { SearchService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/search/SearchService.sys.mjs",
     );
 
     try {
-      // 1. create a timeout promise that rejects after 2000 milliseconds
       const timeoutPromise = new Promise((_, reject) => {
         globalThis.setTimeout(() => {
           reject(new Error("Search engine timeout"));
         }, 2000);
       });
 
-      // 2. Use Promise.race to get either the search engine or a timeout, whichever comes first
       Promise.race([SearchService.getDefault(), timeoutPromise])
         .then((engine) => {
-          console.log("Search engine:", engine?.name);
+          if (!engine) return;
 
-          if (engine) {
-            console.log("Submitting search query to engine:", engine.name);
+          const sysPrincipal =
+            globalThis.Services.scriptSecurityManager.getSystemPrincipal();
+          const submission = engine.getSubmission(query);
 
-            let sysPrincipal =
-              globalThis.Services.scriptSecurityManager.getSystemPrincipal();
-            const submission = engine.getSubmission(query);
+          switch (where) {
+            case "current-tab":
+              globalThis.gBrowser?.loadURI(submission.uri, {
+                triggeringPrincipal: sysPrincipal,
+                postData: submission.postData,
+              });
+              break;
 
-            let tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
-              triggeringPrincipal: sysPrincipal,
-              inBackground: false,
-              postData: submission.postData,
-            });
+            case "background-tab": {
+              const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+                triggeringPrincipal: sysPrincipal,
+                inBackground: true,
+                postData: submission.postData,
+              });
+              break;
+            }
 
-            if (globalThis.gBrowser && tab) {
-              globalThis.gBrowser.selectedTab = tab;
+            case "new-tab":
+            default: {
+              const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+                triggeringPrincipal: sysPrincipal,
+                inBackground: false,
+                postData: submission.postData,
+              });
+              if (globalThis.gBrowser && tab) {
+                globalThis.gBrowser.selectedTab = tab;
+              }
+              break;
             }
           }
         })
         .catch((e) => {
-          // Error handling for both timeout or engine retrieval failure
           console.error(
             "[command-palette] Search failed or timed out:",
             e.message,

@@ -7,7 +7,8 @@ import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
 import { StepIndicator } from "./StepIndicator.tsx";
-import type { PaletteCommand } from "../command-registry.ts";
+import { StepChoices } from "./StepChoices.tsx";
+import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
 
 function getController() {
   return commandPaletteService.getController(window);
@@ -34,6 +35,14 @@ export function CommandPaletteUI() {
     controller.goBackStep();
   };
 
+  const handleChoiceSelect = (choice: CommandStepChoice) => {
+    // Ensure selectedChoiceIndex is set to the clicked choice's index
+    const idx = state.filteredStepChoices().findIndex((c) => c.value === choice.value);
+    if (idx >= 0) state.setSelectedChoiceIndex(idx);
+    state.setQuery(choice.label);
+    controller.advanceStep();
+  };
+
   const handleCommandSelect = (index: number) => {
     state.setSelectedIndex(index);
   };
@@ -56,6 +65,20 @@ export function CommandPaletteUI() {
       requestAnimationFrame(() => {
         const selected = document.querySelector(
           '.command-palette-item[data-selected="true"]',
+        );
+        selected?.scrollIntoView({ block: "nearest" });
+      });
+    }),
+  );
+
+  // Scroll selected step choice into view (input mode with choices)
+  createEffect(
+    on(state.selectedChoiceIndex, () => {
+      if (!state.isVisible()) return;
+      if (state.mode() !== "input") return;
+      requestAnimationFrame(() => {
+        const selected = document.querySelector(
+          '.command-palette-step-choice-item[data-selected="true"]',
         );
         selected?.scrollIntoView({ block: "nearest" });
       });
@@ -91,6 +114,10 @@ export function CommandPaletteUI() {
                   <div class="command-palette-step-error">{error()}</div>
                 )}
               </Show>
+              <StepChoices
+                state={state}
+                onSelect={handleChoiceSelect}
+              />
             </Show>
             <Show when={state.mode() === "command"}>
               <CommandList

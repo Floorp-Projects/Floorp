@@ -115,7 +115,40 @@ export class CommandPaletteController {
     }
   };
 
+  private currentStepHasChoices(): boolean {
+    const cmd = this.state.activeCommand();
+    const stepIndex = this.state.currentStepIndex();
+    const step = cmd?.steps?.[stepIndex];
+    return !!step?.choices && step.choices.length > 0;
+  }
+
+  private updateStepChoices(query: string): void {
+    const cmd = this.state.activeCommand();
+    const stepIndex = this.state.currentStepIndex();
+    const step = cmd?.steps?.[stepIndex];
+    if (!step?.choices) {
+      this.state.setFilteredStepChoices([]);
+      return;
+    }
+
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      this.state.setFilteredStepChoices(step.choices);
+    } else {
+      const filtered = step.choices.filter(
+        (c) =>
+          c.label.toLowerCase().includes(q) ||
+          c.value.toLowerCase().includes(q) ||
+          (c.description?.toLowerCase().includes(q) ?? false),
+      );
+      this.state.setFilteredStepChoices(filtered);
+    }
+    this.state.setSelectedChoiceIndex(0);
+  }
+
   private handleInputModeKeyDown(event: KeyboardEvent): void {
+    const hasChoices = this.currentStepHasChoices();
+
     switch (event.key) {
       case "Escape":
         event.preventDefault();
@@ -127,6 +160,50 @@ export class CommandPaletteController {
         event.preventDefault();
         event.stopPropagation();
         this.advanceStep();
+        break;
+
+      case "ArrowDown":
+        if (hasChoices) {
+          event.preventDefault();
+          event.stopPropagation();
+          const choices = this.state.filteredStepChoices();
+          if (choices.length > 0) {
+            const idx = this.state.selectedChoiceIndex();
+            this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+          }
+        }
+        break;
+
+      case "ArrowUp":
+        if (hasChoices) {
+          event.preventDefault();
+          event.stopPropagation();
+          const choices = this.state.filteredStepChoices();
+          if (choices.length > 0) {
+            const idx = this.state.selectedChoiceIndex();
+            this.state.setSelectedChoiceIndex(
+              (idx - 1 + choices.length) % choices.length,
+            );
+          }
+        }
+        break;
+
+      case "Tab":
+        if (hasChoices) {
+          event.preventDefault();
+          event.stopPropagation();
+          const choices = this.state.filteredStepChoices();
+          if (choices.length > 0) {
+            const idx = this.state.selectedChoiceIndex();
+            if (event.shiftKey) {
+              this.state.setSelectedChoiceIndex(
+                (idx - 1 + choices.length) % choices.length,
+              );
+            } else {
+              this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+            }
+          }
+        }
         break;
 
       case "Backspace": {
@@ -273,6 +350,15 @@ export class CommandPaletteController {
     this.state.setStepError(null);
     this.state.setQuery("");
 
+    // Initialize choices for the first step if available
+    const firstStep = cmd.steps?.[0];
+    if (firstStep?.choices) {
+      this.state.setFilteredStepChoices(firstStep.choices);
+      this.state.setSelectedChoiceIndex(0);
+    } else {
+      this.state.setFilteredStepChoices([]);
+    }
+
     this.focusSearchInput();
   }
 
@@ -284,7 +370,20 @@ export class CommandPaletteController {
     const step = cmd.steps[stepIndex];
     if (!step) return;
 
-    const value = this.state.query().trim();
+    // Determine the value: use selected choice if available, otherwise use typed query
+    let value: string;
+    if (step.choices && step.choices.length > 0) {
+      const filteredChoices = this.state.filteredStepChoices();
+      const choiceIdx = this.state.selectedChoiceIndex();
+      if (filteredChoices[choiceIdx]) {
+        value = filteredChoices[choiceIdx].value;
+      } else {
+        // No choice selected, fall back to typed text
+        value = this.state.query().trim();
+      }
+    } else {
+      value = this.state.query().trim();
+    }
 
     // Run validation if defined
     if (step.validate) {
@@ -309,6 +408,16 @@ export class CommandPaletteController {
     if (nextIndex < cmd.steps.length) {
       this.state.setCurrentStepIndex(nextIndex);
       this.state.setQuery("");
+
+      // Initialize choices for the next step if available
+      const nextStep = cmd.steps[nextIndex];
+      if (nextStep?.choices) {
+        this.state.setFilteredStepChoices(nextStep.choices);
+        this.state.setSelectedChoiceIndex(0);
+      } else {
+        this.state.setFilteredStepChoices([]);
+      }
+
       this.focusSearchInput();
     } else {
       // All steps completed — execute the command with collected args
@@ -326,8 +435,23 @@ export class CommandPaletteController {
       const inputs = this.state.stepInputs();
 
       this.state.setCurrentStepIndex(prevIndex);
-      this.state.setQuery(stepId ? (inputs[stepId] ?? "") : "");
+      // Restore the display label (not the internal value) for steps with choices
+      const prevValue = stepId ? (inputs[stepId] ?? "") : "";
+      const prevStep = cmd?.steps?.[prevIndex];
+      const choiceLabel = prevStep?.choices?.find(
+        (c) => c.value === prevValue,
+      )?.label;
+      this.state.setQuery(choiceLabel ?? prevValue);
       this.state.setStepError(null);
+
+      // Restore choices for the previous step
+      if (prevStep?.choices) {
+        this.state.setFilteredStepChoices(prevStep.choices);
+        this.state.setSelectedChoiceIndex(0);
+      } else {
+        this.state.setFilteredStepChoices([]);
+      }
+
       this.focusSearchInput();
     } else {
       // At first step — go back to command selection
@@ -369,6 +493,8 @@ export class CommandPaletteController {
     if (this.state.mode() === "input") {
       this.state.setQuery(query);
       this.state.setStepError(null);
+      // Update filtered choices if the current step has choices
+      this.updateStepChoices(query);
       return;
     }
 

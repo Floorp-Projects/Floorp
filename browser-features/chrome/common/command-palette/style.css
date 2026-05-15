@@ -227,3 +227,53 @@
   background: color-mix(in srgb, #e22850 8%, transparent);
   border-bottom: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
 }
+
+/* Step choices list */
+
+.command-palette-step-choices {
+  overflow-y: auto;
+  max-height: 240px;
+  padding: 4px 0;
+}
+
+.command-palette-step-choice-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  gap: 12px;
+  user-select: none;
+  border-left: 2px solid transparent;
+}
+
+.command-palette-step-choice-item:hover {
+  background: color-mix(in srgb, currentcolor 8%, transparent);
+}
+
+.command-palette-step-choice-item[data-selected="true"] {
+  background: color-mix(in srgb, currentcolor 12%, transparent);
+  border-left-color: var(--arrowpanel-color, -moz-dialogtext);
+}
+
+.command-palette-step-choice-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.command-palette-step-choice-label {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette-step-choice-description {
+  font-size: 11px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
