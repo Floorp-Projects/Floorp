@@ -157,8 +157,14 @@ export class CommandPaletteController {
     this.targetWindow.setTimeout(() => {
       const input = this.targetWindow.document?.getElementById(
         "command-palette-search",
-      );
-      if (input) (input as HTMLInputElement).focus();
+      ) as HTMLInputElement | null;
+      if (!input) return;
+      // Clear input value directly on the DOM element when in input mode
+      // (SolidJS reactive value binding may not reliably update in Firefox/XUL)
+      if (this.state.mode() === "input") {
+        input.value = "";
+      }
+      input.focus();
     }, 0);
   }
 
