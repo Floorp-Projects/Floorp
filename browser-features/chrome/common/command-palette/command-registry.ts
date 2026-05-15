@@ -205,7 +205,13 @@ function buildStepCommands(): PaletteCommand[] {
         if (!url) return;
         const navUrl = url.includes("://") ? url : `https://${url}`;
         try {
-          globalThis.gBrowser?.loadURI?.(Services.io.newURI(navUrl));
+          let principal =
+            globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
+          let tab = globalThis.gBrowser?.addTab(navUrl, {
+            triggeringPrincipal: principal,
+            inBackground: false,
+          });
+          if (globalThis.gBrowser) globalThis.gBrowser.selectedTab = tab;
         } catch (e) {
           console.error("[command-palette] Open URL failed", e);
         }
@@ -238,15 +244,52 @@ function buildStepCommands(): PaletteCommand[] {
       ],
       fn: (_win: Window, args?: Record<string, string>) => {
         const query = args?.query?.trim();
+        console.log("Search query:", query);
         if (!query) return;
+
         try {
-          const engine = Services.search?.defaultEngine;
-          if (engine) {
-            const submission = engine.getSubmission(query);
-            globalThis.gBrowser?.loadURI?.(submission.uri);
-          }
+          // 1. タイムアウト用のPromiseを作成（2000ミリ秒でエラーを投げる）
+          const timeoutPromise = new Promise((_, reject) => {
+            globalThis.setTimeout(() => {
+              reject(new Error("Search engine timeout"));
+            }, 2000);
+          });
+
+          // 2. Promise.race で「エンジンの取得」と「タイムアウト」の早い方を取る
+          Promise.race([
+            globalThis.Services.search.getDefault(),
+            timeoutPromise,
+          ])
+            .then((engine) => {
+              console.log("Search engine:", engine?.name);
+
+              if (engine) {
+                console.log("Submitting search query to engine:", engine.name);
+
+                let sysPrincipal =
+                  globalThis.Services.scriptSecurityManager.getSystemPrincipal();
+                const submission = engine.getSubmission(query);
+
+                let tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+                  triggeringPrincipal: sysPrincipal,
+                  inBackground: false,
+                  postData: submission.postData,
+                });
+
+                if (globalThis.gBrowser && tab) {
+                  globalThis.gBrowser.selectedTab = tab;
+                }
+              }
+            })
+            .catch((e) => {
+              // タイムアウトしたか、エンジン取得自体がエラーになった場合の処理
+              console.error(
+                "[command-palette] Search failed or timed out:",
+                e.message,
+              );
+            });
         } catch (e) {
-          console.error("[command-palette] Search failed", e);
+          console.error("[command-palette] Synchronous error:", e);
         }
       },
     },
