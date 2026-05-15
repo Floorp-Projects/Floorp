@@ -38,14 +38,14 @@ export const searchWebCommand: PaletteCommand = {
     );
 
     try {
-      // 1. タイムアウト用のPromiseを作成（2000ミリ秒でエラーを投げる）
+      // 1. create a timeout promise that rejects after 2000 milliseconds
       const timeoutPromise = new Promise((_, reject) => {
         globalThis.setTimeout(() => {
           reject(new Error("Search engine timeout"));
         }, 2000);
       });
 
-      // 2. Promise.race で「エンジンの取得」と「タイムアウト」の早い方を取る
+      // 2. Use Promise.race to get either the search engine or a timeout, whichever comes first
       Promise.race([SearchService.getDefault(), timeoutPromise])
         .then((engine) => {
           console.log("Search engine:", engine?.name);
@@ -69,7 +69,7 @@ export const searchWebCommand: PaletteCommand = {
           }
         })
         .catch((e) => {
-          // タイムアウトしたか、エンジン取得自体がエラーになった場合の処理
+          // Error handling for both timeout or engine retrieval failure
           console.error(
             "[command-palette] Search failed or timed out:",
             e.message,
