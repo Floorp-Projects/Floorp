@@ -32,11 +32,18 @@ async function loadContainers(): Promise<CommandStepChoice[]> {
           !(identity as { floorpPrivateContainer?: boolean })
             .floorpPrivateContainer,
       )
-      .map((container) => ({
-        label: (container as { name: string }).name,
-        value: String((container as { userContextId: number }).userContextId),
-        description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
-      }));
+      .map((container) => {
+        const userContextId = (container as { userContextId: number })
+          .userContextId;
+        // getUserContextLabel handles both l10nId (built-in) and name (user-created)
+        const label =
+          ContextualIdentityService.getUserContextLabel(userContextId);
+        return {
+          label: label || "Unknown",
+          value: String(userContextId),
+          description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
+        };
+      });
 
     return [noContainer, ...containerChoices];
   } catch {
