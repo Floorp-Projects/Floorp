@@ -641,7 +641,7 @@ jobs:
               done
             done
           else
-            git apply --reject ./tools/patches/*.patch --directory ../obj-artifact-build-output/dist/bin --unsafe-paths --check --apply
+            git apply --reject ./tools/patches/*.patch --directory "$(realpath ../obj-artifact-build-output/dist/bin)" --unsafe-paths --check --apply
           fi
 
           cd ..
