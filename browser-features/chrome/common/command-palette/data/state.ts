@@ -26,6 +26,10 @@ export function createPaletteState() {
     CommandStepChoice[]
   >([]);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = createSignal(0);
+  const [stepChoicesLoading, setStepChoicesLoading] = createSignal(false);
+  const [stepChoicesBase, setStepChoicesBase] = createSignal<
+    CommandStepChoice[]
+  >([]);
 
   return {
     isVisible,
@@ -52,6 +56,10 @@ export function createPaletteState() {
     setFilteredStepChoices,
     selectedChoiceIndex,
     setSelectedChoiceIndex,
+    stepChoicesLoading,
+    setStepChoicesLoading,
+    stepChoicesBase,
+    setStepChoicesBase,
     reset() {
       setQuery("");
       setSelectedIndex(0);
@@ -63,6 +71,8 @@ export function createPaletteState() {
       setStepError(null);
       setFilteredStepChoices([]);
       setSelectedChoiceIndex(0);
+      setStepChoicesLoading(false);
+      setStepChoicesBase([]);
     },
   };
 }

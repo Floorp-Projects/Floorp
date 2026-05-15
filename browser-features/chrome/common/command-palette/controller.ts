@@ -119,23 +119,23 @@ export class CommandPaletteController {
     const cmd = this.state.activeCommand();
     const stepIndex = this.state.currentStepIndex();
     const step = cmd?.steps?.[stepIndex];
-    return !!step?.choices && step.choices.length > 0;
+    return (
+      (!!step?.choices && step.choices.length > 0) || !!step?.choicesLoader
+    );
   }
 
   private updateStepChoices(query: string): void {
-    const cmd = this.state.activeCommand();
-    const stepIndex = this.state.currentStepIndex();
-    const step = cmd?.steps?.[stepIndex];
-    if (!step?.choices) {
+    const baseChoices = this.state.stepChoicesBase();
+    if (baseChoices.length === 0) {
       this.state.setFilteredStepChoices([]);
       return;
     }
 
     const q = query.trim().toLowerCase();
     if (!q) {
-      this.state.setFilteredStepChoices(step.choices);
+      this.state.setFilteredStepChoices(baseChoices);
     } else {
-      const filtered = step.choices.filter(
+      const filtered = baseChoices.filter(
         (c) =>
           c.label.toLowerCase().includes(q) ||
           c.value.toLowerCase().includes(q) ||
@@ -342,6 +342,53 @@ export class CommandPaletteController {
 
   // --- Multi-step input mode ---
 
+  private loadStepChoices(stepIndex: number): void {
+    const cmd = this.state.activeCommand();
+    const step = cmd?.steps?.[stepIndex];
+    if (!step) return;
+
+    // Static choices take priority
+    if (step.choices && step.choices.length > 0) {
+      this.state.setStepChoicesBase(step.choices);
+      this.state.setFilteredStepChoices(step.choices);
+      this.state.setSelectedChoiceIndex(0);
+      this.state.setStepChoicesLoading(false);
+      return;
+    }
+
+    // Try dynamic choices loader
+    if (step.choicesLoader) {
+      this.state.setStepChoicesBase([]);
+      this.state.setFilteredStepChoices([]);
+      this.state.setStepChoicesLoading(true);
+      step
+        .choicesLoader()
+        .then((loadedChoices) => {
+          // Only update if we're still on the same step
+          if (this.state.currentStepIndex() === stepIndex) {
+            this.state.setStepChoicesBase(loadedChoices);
+            this.state.setFilteredStepChoices(loadedChoices);
+            this.state.setSelectedChoiceIndex(0);
+            this.state.setStepChoicesLoading(false);
+          }
+        })
+        .catch((e) => {
+          console.error("[command-palette] Failed to load step choices:", e);
+          if (this.state.currentStepIndex() === stepIndex) {
+            this.state.setStepChoicesBase([]);
+            this.state.setFilteredStepChoices([]);
+            this.state.setStepChoicesLoading(false);
+          }
+        });
+      return;
+    }
+
+    // No choices at all
+    this.state.setStepChoicesBase([]);
+    this.state.setFilteredStepChoices([]);
+    this.state.setStepChoicesLoading(false);
+  }
+
   private enterInputMode(cmd: PaletteCommand): void {
     this.state.setMode("input");
     this.state.setActiveCommand(cmd);
@@ -351,13 +398,7 @@ export class CommandPaletteController {
     this.state.setQuery("");
 
     // Initialize choices for the first step if available
-    const firstStep = cmd.steps?.[0];
-    if (firstStep?.choices) {
-      this.state.setFilteredStepChoices(firstStep.choices);
-      this.state.setSelectedChoiceIndex(0);
-    } else {
-      this.state.setFilteredStepChoices([]);
-    }
+    this.loadStepChoices(0);
 
     this.focusSearchInput();
   }
@@ -372,7 +413,9 @@ export class CommandPaletteController {
 
     // Determine the value: use selected choice if available, otherwise use typed query
     let value: string;
-    if (step.choices && step.choices.length > 0) {
+    const stepHasChoices =
+      (!!step.choices && step.choices.length > 0) || !!step.choicesLoader;
+    if (stepHasChoices) {
       const filteredChoices = this.state.filteredStepChoices();
       const choiceIdx = this.state.selectedChoiceIndex();
       if (filteredChoices[choiceIdx]) {
@@ -410,13 +453,7 @@ export class CommandPaletteController {
       this.state.setQuery("");
 
       // Initialize choices for the next step if available
-      const nextStep = cmd.steps[nextIndex];
-      if (nextStep?.choices) {
-        this.state.setFilteredStepChoices(nextStep.choices);
-        this.state.setSelectedChoiceIndex(0);
-      } else {
-        this.state.setFilteredStepChoices([]);
-      }
+      this.loadStepChoices(nextIndex);
 
       this.focusSearchInput();
     } else {
@@ -445,12 +482,7 @@ export class CommandPaletteController {
       this.state.setStepError(null);
 
       // Restore choices for the previous step
-      if (prevStep?.choices) {
-        this.state.setFilteredStepChoices(prevStep.choices);
-        this.state.setSelectedChoiceIndex(0);
-      } else {
-        this.state.setFilteredStepChoices([]);
-      }
+      this.loadStepChoices(prevIndex);
 
       this.focusSearchInput();
     } else {

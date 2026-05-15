@@ -1,7 +1,51 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+
+async function loadSearchEngines(): Promise<CommandStepChoice[]> {
+  try {
+    const { SearchService } = ChromeUtils.importESModule(
+      "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+    );
+
+    const timeoutPromise = new Promise((_, reject) => {
+      globalThis.setTimeout(
+        () => reject(new Error("Search engine list timeout")),
+        2000,
+      );
+    });
+
+    const engines = (await Promise.race([
+      SearchService.getEngines(),
+      timeoutPromise,
+    ])) as any[];
+
+    let defaultEngine: any = null;
+    try {
+      defaultEngine = await SearchService.getDefault();
+    } catch {
+      // ignore
+    }
+
+    const defaultName = defaultEngine?.name ?? "";
+
+    return (engines ?? []).map((engine: any) => ({
+      label:
+        engine.name +
+        (engine.name === defaultName
+          ? i18next.t("commandPalette.searchEngineDefault", {
+              defaultValue: " (default)",
+            })
+          : ""),
+      value: engine.name,
+      description: engine.description ?? "",
+    }));
+  } catch (e) {
+    console.error("[command-palette] Failed to load search engines:", e);
+    return [];
+  }
+}
 
 export const searchWebCommand: PaletteCommand = {
   id: "floorp-search-web",
@@ -26,6 +70,16 @@ export const searchWebCommand: PaletteCommand = {
         if (!input.trim()) return "Please enter a search query";
         return true;
       },
+    },
+    {
+      id: "engine",
+      label: i18next.t("commandPalette.searchWebEngineLabel", {
+        defaultValue: "Select search engine",
+      }),
+      placeholder: i18next.t("commandPalette.searchWebEnginePlaceholder", {
+        defaultValue: "Select a search engine...",
+      }),
+      choicesLoader: loadSearchEngines,
     },
     {
       id: "where",
@@ -76,6 +130,7 @@ export const searchWebCommand: PaletteCommand = {
     const query = args?.query?.trim();
     if (!query) return;
 
+    const engineName = args?.engine;
     const where = args?.where ?? "new-tab";
 
     const { SearchService } = ChromeUtils.importESModule(
@@ -89,7 +144,15 @@ export const searchWebCommand: PaletteCommand = {
         }, 2000);
       });
 
-      Promise.race([SearchService.getDefault(), timeoutPromise])
+      // getEngineByName is synchronous, getDefault is async
+      const enginePromise = engineName
+        ? Promise.resolve(
+            SearchService.getEngineByName(engineName) ??
+              SearchService.getDefault(),
+          )
+        : SearchService.getDefault();
+
+      Promise.race([enginePromise, timeoutPromise])
         .then((engine) => {
           if (!engine) return;
 
@@ -106,7 +169,7 @@ export const searchWebCommand: PaletteCommand = {
               break;
 
             case "background-tab": {
-              const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+              globalThis.gBrowser?.addTab(submission.uri.spec, {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: true,
                 postData: submission.postData,

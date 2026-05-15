@@ -277,3 +277,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.command-palette-step-choices-loading {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+}

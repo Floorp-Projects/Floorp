@@ -31,11 +31,15 @@ export interface CommandStep {
    */
   validate?: (input: string) => boolean | string;
   /**
-   * Predefined choices for this step. When provided, the palette will
-   * show a selectable list. The user can still type to filter choices
-   * or enter a custom value.
+   * Static predefined choices for this step.
    */
   choices?: CommandStepChoice[];
+  /**
+   * Dynamic choices loader. Called when entering this step.
+   * If both `choices` and `choicesLoader` are defined, `choices` takes priority.
+   * Use this for choices that need to be fetched asynchronously (e.g., search engines).
+   */
+  choicesLoader?: () => Promise<CommandStepChoice[]>;
 }
 
 export interface PaletteCommand {
