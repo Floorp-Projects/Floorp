@@ -200,9 +200,28 @@ export class CommandPaletteController {
     this.state.setIsVisible(true);
 
     this.focusSearchInput();
+    this.fetchDefaultEngineName();
+  }
+
+  private fetchDefaultEngineName(): void {
+    try {
+      const { SearchService } = ChromeUtils.importESModule(
+        "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+      );
+      SearchService.getDefault()
+        .then((engine: any) => {
+          this.defaultEngineName = engine?.name ?? null;
+        })
+        .catch(() => {
+          this.defaultEngineName = null;
+        });
+    } catch {
+      this.defaultEngineName = null;
+    }
   }
 
   private animOutTimer: ReturnType<typeof setTimeout> | null = null;
+  private defaultEngineName: string | null = null;
 
   public hidePalette(): void {
     this.state.setIsAnimatingOut(true);
@@ -373,7 +392,11 @@ export class CommandPaletteController {
             const navUrl = trimmed.includes("://")
               ? trimmed
               : `https://${trimmed}`;
-            globalThis.gBrowser.loadURI?.(Services.io.newURI(navUrl));
+            let principal =
+              globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
+            globalThis.gBrowser.loadURI?.(Services.io.newURI(navUrl), {
+              triggeringPrincipal: principal,
+            });
           } catch (e) {
             console.error("[command-palette] Navigation failed", e);
           }
@@ -386,17 +409,25 @@ export class CommandPaletteController {
       : this.buildInitialCommandList();
     results.push(...commandResults);
 
-    // If no commands matched, offer to search with the default search engine
-    if (trimmed && results.length === 0) {
-      results.push({
+    // Always show search engine suggestion at the top when there's a query
+    if (trimmed) {
+      const engineName = this.defaultEngineName;
+      const descriptionText = engineName
+        ? i18next.t("commandPalette.searchWithEngineNamed", {
+            defaultValue: "Search with {{engine}}",
+            engine: engineName,
+          })
+        : i18next.t("commandPalette.searchWithEngineDescription", {
+            defaultValue: "Search with your default search engine",
+          });
+
+      results.unshift({
         id: "__search-engine-fallback",
         label: i18next.t("commandPalette.searchWithEngine", {
           defaultValue: `Search for "${trimmed}"`,
           query: trimmed,
         }),
-        description: i18next.t("commandPalette.searchWithEngineDescription", {
-          defaultValue: "Search with your default search engine",
-        }),
+        description: descriptionText,
         category: "search-suggestion",
         keywords: [],
         fn: (_win) => {
@@ -440,7 +471,9 @@ export class CommandPaletteController {
     }
 
     this.state.setFilteredCommands(results);
-    this.state.setSelectedIndex(0);
+    // Default to the second item when search suggestion is at top and other results exist,
+    // so the first real command is selected instead of the always-present search suggestion.
+    this.state.setSelectedIndex(trimmed && results.length > 1 ? 1 : 0);
   }
 
   private debouncedUpdateSearch = debounce((query: string) => {

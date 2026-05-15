@@ -436,6 +436,7 @@
     "searchWebStepLabel": "Enter search query",
     "searchWebStepPlaceholder": "Search terms...",
     "searchWithEngine": "Search for \"{{query}}\"",
-    "searchWithEngineDescription": "Search with your default search engine"
+    "searchWithEngineDescription": "Search with your default search engine",
+    "searchWithEngineNamed": "Search with {{engine}}"
   }
 }
