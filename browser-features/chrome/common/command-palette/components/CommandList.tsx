@@ -19,7 +19,7 @@ interface CategorizedCommands {
   commands: PaletteCommand[];
 }
 
-const HIDDEN_CATEGORIES = new Set(["navigation-suggestion"]);
+const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "search-suggestion"]);
 
 export function CommandList(props: CommandListProps) {
   const grouped = createMemo(() => {

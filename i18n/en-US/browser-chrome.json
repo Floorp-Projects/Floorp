@@ -434,6 +434,8 @@
     "searchWeb": "Search the Web",
     "searchWebDescription": "Search with your default search engine",
     "searchWebStepLabel": "Enter search query",
-    "searchWebStepPlaceholder": "Search terms..."
+    "searchWebStepPlaceholder": "Search terms...",
+    "searchWithEngine": "Search for \"{{query}}\"",
+    "searchWithEngineDescription": "Search with your default search engine"
   }
 }

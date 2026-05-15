@@ -386,6 +386,59 @@ export class CommandPaletteController {
       : this.buildInitialCommandList();
     results.push(...commandResults);
 
+    // If no commands matched, offer to search with the default search engine
+    if (trimmed && results.length === 0) {
+      results.push({
+        id: "__search-engine-fallback",
+        label: i18next.t("commandPalette.searchWithEngine", {
+          defaultValue: `Search for "${trimmed}"`,
+          query: trimmed,
+        }),
+        description: i18next.t("commandPalette.searchWithEngineDescription", {
+          defaultValue: "Search with your default search engine",
+        }),
+        category: "search-suggestion",
+        keywords: [],
+        fn: (_win) => {
+          try {
+            const { SearchService } = ChromeUtils.importESModule(
+              "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+            );
+            const timeoutPromise = new Promise((_, reject) => {
+              globalThis.setTimeout(
+                () => reject(new Error("Search engine timeout")),
+                2000,
+              );
+            });
+            Promise.race([SearchService.getDefault(), timeoutPromise])
+              .then((engine) => {
+                if (engine) {
+                  const sysPrincipal =
+                    globalThis.Services.scriptSecurityManager.getSystemPrincipal();
+                  const submission = engine.getSubmission(trimmed);
+                  const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+                    triggeringPrincipal: sysPrincipal,
+                    inBackground: false,
+                    postData: submission.postData,
+                  });
+                  if (globalThis.gBrowser && tab) {
+                    globalThis.gBrowser.selectedTab = tab;
+                  }
+                }
+              })
+              .catch((e) => {
+                console.error(
+                  "[command-palette] Search fallback failed:",
+                  e.message,
+                );
+              });
+          } catch (e) {
+            console.error("[command-palette] Search fallback sync error:", e);
+          }
+        },
+      });
+    }
+
     this.state.setFilteredCommands(results);
     this.state.setSelectedIndex(0);
   }
