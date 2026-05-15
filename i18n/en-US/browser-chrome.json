@@ -423,6 +423,17 @@
       "open-tabs": "Open Tabs"
     },
     "noResults": "No commands found",
-    "noResultsHint": "Try a different search term"
+    "noResultsHint": "Try a different search term",
+    "stepIndicator": "Step {{current}} of {{total}}",
+    "backToCommands": "Back to commands",
+    "openUrl": "Open URL",
+    "openUrlDescription": "Open a URL in a new tab",
+    "openUrlStepLabel": "Enter URL to open",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "Please enter a valid URL",
+    "searchWeb": "Search the Web",
+    "searchWebDescription": "Search with your default search engine",
+    "searchWebStepLabel": "Enter search query",
+    "searchWebStepPlaceholder": "Search terms..."
   }
 }

@@ -6,6 +6,7 @@ import i18next from "i18next";
 import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
+import { StepIndicator } from "./StepIndicator.tsx";
 import type { PaletteCommand } from "../command-registry.ts";
 
 function getController() {
@@ -29,6 +30,10 @@ export function CommandPaletteUI() {
     controller.updateSearch(value);
   };
 
+  const handleBack = () => {
+    controller.goBackStep();
+  };
+
   const handleCommandSelect = (index: number) => {
     state.setSelectedIndex(index);
   };
@@ -43,10 +48,11 @@ export function CommandPaletteUI() {
     }
   };
 
-  // Scroll selected item into view
+  // Scroll selected item into view (command mode only)
   createEffect(
     on(state.selectedIndex, () => {
       if (!state.isVisible()) return;
+      if (state.mode() !== "command") return;
       requestAnimationFrame(() => {
         const selected = document.querySelector(
           '.command-palette-item[data-selected="true"]',
@@ -67,6 +73,7 @@ export function CommandPaletteUI() {
             defaultValue: "Command Palette",
           })}
           data-visible={state.isVisible() ? "true" : undefined}
+          data-mode={state.mode()}
           onClick={handleBackdropClick}
           onTransitionEnd={handleTransitionEnd}
         >
@@ -74,14 +81,26 @@ export function CommandPaletteUI() {
             <SearchInput
               query={state.query()}
               onInput={handleInput}
+              onBack={handleBack}
+              state={state}
             />
-            <CommandList
-              commands={state.filteredCommands()}
-              selectedIndex={state.selectedIndex()}
-              query={state.query()}
-              onCommandSelect={handleCommandSelect}
-              onCommandExecute={handleCommandExecute}
-            />
+            <Show when={state.mode() === "input"}>
+              <StepIndicator state={state} />
+              <Show when={state.stepError()}>
+                {(error) => (
+                  <div class="command-palette-step-error">{error()}</div>
+                )}
+              </Show>
+            </Show>
+            <Show when={state.mode() === "command"}>
+              <CommandList
+                commands={state.filteredCommands()}
+                selectedIndex={state.selectedIndex()}
+                query={state.query()}
+                onCommandSelect={handleCommandSelect}
+                onCommandExecute={handleCommandExecute}
+              />
+            </Show>
           </div>
         </div>
       </Show>

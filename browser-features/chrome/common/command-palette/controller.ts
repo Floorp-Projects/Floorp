@@ -3,7 +3,13 @@
 import i18next from "i18next";
 import { debounce } from "@solid-primitives/scheduled";
 import { createPaletteState, type PaletteState } from "./data/state.ts";
-import { isEnabled, addRecentCommand, getRecentCommands, incrementFrequency, getFrequencies } from "./config.ts";
+import {
+  isEnabled,
+  addRecentCommand,
+  getRecentCommands,
+  incrementFrequency,
+  getFrequencies,
+} from "./config.ts";
 import { getPaletteCommands, searchCommands } from "./command-registry.ts";
 import type { PaletteCommand } from "./command-registry.ts";
 
@@ -65,6 +71,12 @@ export class CommandPaletteController {
   private handlePaletteKeyDown = (event: KeyboardEvent): void => {
     if (!this.state.isVisible()) return;
 
+    // In input mode, handle step-specific keys
+    if (this.state.mode() === "input") {
+      this.handleInputModeKeyDown(event);
+      return;
+    }
+
     switch (event.key) {
       case "Escape":
         event.preventDefault();
@@ -103,12 +115,50 @@ export class CommandPaletteController {
     }
   };
 
+  private handleInputModeKeyDown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case "Escape":
+        event.preventDefault();
+        event.stopPropagation();
+        this.hidePalette();
+        break;
+
+      case "Enter":
+        event.preventDefault();
+        event.stopPropagation();
+        this.advanceStep();
+        break;
+
+      case "Backspace": {
+        const input = this.targetWindow.document?.getElementById(
+          "command-palette-search",
+        ) as HTMLInputElement | null;
+        // Only go back if the input is empty
+        if (input && input.value === "") {
+          event.preventDefault();
+          event.stopPropagation();
+          this.goBackStep();
+        }
+        break;
+      }
+    }
+  }
+
   private focusSelectedItem(): void {
     this.targetWindow.setTimeout(() => {
       const selected = this.targetWindow.document?.querySelector(
         '.command-palette-item[data-selected="true"]',
       );
       if (selected) (selected as HTMLElement).focus();
+    }, 0);
+  }
+
+  private focusSearchInput(): void {
+    this.targetWindow.setTimeout(() => {
+      const input = this.targetWindow.document?.getElementById(
+        "command-palette-search",
+      );
+      if (input) (input as HTMLInputElement).focus();
     }, 0);
   }
 
@@ -143,13 +193,7 @@ export class CommandPaletteController {
     this.state.setFilteredCommands(this.buildInitialCommandList());
     this.state.setIsVisible(true);
 
-    // Focus the search input after render
-    this.targetWindow.setTimeout(() => {
-      const input = this.targetWindow.document?.getElementById(
-        "command-palette-search",
-      );
-      if (input) (input as HTMLInputElement).focus();
-    }, 0);
+    this.focusSearchInput();
   }
 
   private animOutTimer: ReturnType<typeof setTimeout> | null = null;
@@ -178,6 +222,12 @@ export class CommandPaletteController {
   }
 
   public executeCommand(cmd: PaletteCommand): void {
+    // If the command has steps, enter input mode instead of executing immediately
+    if (cmd.steps && cmd.steps.length > 0) {
+      this.enterInputMode(cmd);
+      return;
+    }
+
     addRecentCommand(cmd.id);
     incrementFrequency(cmd.id);
     this.hidePalette();
@@ -188,7 +238,115 @@ export class CommandPaletteController {
     }
   }
 
+  // --- Multi-step input mode ---
+
+  private enterInputMode(cmd: PaletteCommand): void {
+    this.state.setMode("input");
+    this.state.setActiveCommand(cmd);
+    this.state.setCurrentStepIndex(0);
+    this.state.setStepInputs({});
+    this.state.setStepError(null);
+    this.state.setQuery("");
+
+    this.focusSearchInput();
+  }
+
+  public advanceStep(): void {
+    const cmd = this.state.activeCommand();
+    if (!cmd?.steps) return;
+
+    const stepIndex = this.state.currentStepIndex();
+    const step = cmd.steps[stepIndex];
+    if (!step) return;
+
+    const value = this.state.query().trim();
+
+    // Run validation if defined
+    if (step.validate) {
+      const result = step.validate(value);
+      if (result !== true) {
+        this.state.setStepError(
+          typeof result === "string" ? result : "Invalid input",
+        );
+        return;
+      }
+    }
+
+    // Clear any previous error
+    this.state.setStepError(null);
+
+    // Save the input for this step
+    const inputs = { ...this.state.stepInputs(), [step.id]: value };
+    this.state.setStepInputs(inputs);
+
+    // Check if there are more steps
+    const nextIndex = stepIndex + 1;
+    if (nextIndex < cmd.steps.length) {
+      this.state.setCurrentStepIndex(nextIndex);
+      this.state.setQuery("");
+      this.focusSearchInput();
+    } else {
+      // All steps completed — execute the command with collected args
+      this.executeWithArgs(cmd, inputs);
+    }
+  }
+
+  public goBackStep(): void {
+    const stepIndex = this.state.currentStepIndex();
+    if (stepIndex > 0) {
+      // Go to previous step and restore its input
+      const prevIndex = stepIndex - 1;
+      const cmd = this.state.activeCommand();
+      const stepId = cmd?.steps?.[prevIndex]?.id;
+      const inputs = this.state.stepInputs();
+
+      this.state.setCurrentStepIndex(prevIndex);
+      this.state.setQuery(stepId ? (inputs[stepId] ?? "") : "");
+      this.state.setStepError(null);
+      this.focusSearchInput();
+    } else {
+      // At first step — go back to command selection
+      this.exitInputMode();
+    }
+  }
+
+  private exitInputMode(): void {
+    this.state.setMode("command");
+    this.state.setActiveCommand(null);
+    this.state.setCurrentStepIndex(0);
+    this.state.setStepInputs({});
+    this.state.setStepError(null);
+    this.state.setQuery("");
+
+    // Restore the command list
+    this.state.setFilteredCommands(this.buildInitialCommandList());
+    this.focusSearchInput();
+  }
+
+  private executeWithArgs(
+    cmd: PaletteCommand,
+    args: Record<string, string>,
+  ): void {
+    addRecentCommand(cmd.id);
+    incrementFrequency(cmd.id);
+    this.hidePalette();
+    try {
+      cmd.fn(this.targetWindow, args);
+    } catch (e) {
+      console.error(`[command-palette] Action failed: ${cmd.id}`, e);
+    }
+  }
+
+  // --- Search ---
+
   private doUpdateSearch(query: string): void {
+    // In input mode, don't search — just update query state
+    if (this.state.mode() === "input") {
+      this.state.setQuery(query);
+      this.state.setStepError(null);
+      return;
+    }
+
     const trimmed = query.trim();
     const results: PaletteCommand[] = [];
 
@@ -206,10 +364,10 @@ export class CommandPaletteController {
         keywords: [],
         fn: (_win) => {
           try {
-            const navUrl = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
-            globalThis.gBrowser.loadURI?.(
-              Services.io.newURI(navUrl),
-            );
+            const navUrl = trimmed.includes("://")
+              ? trimmed
+              : `https://${trimmed}`;
+            globalThis.gBrowser.loadURI?.(Services.io.newURI(navUrl));
           } catch (e) {
             console.error("[command-palette] Navigation failed", e);
           }

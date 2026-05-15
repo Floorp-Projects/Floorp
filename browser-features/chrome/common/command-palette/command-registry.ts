@@ -5,10 +5,23 @@ import {
   getActionDescription,
   getActionDisplayName,
 } from "../mouse-gesture/utils/gestures.ts";
+import i18next from "i18next";
 import { fuzzySearch } from "./fuzzy.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
+
+export interface CommandStep {
+  id: string;
+  label: string;
+  placeholder: string;
+  /**
+   * Validate user input for this step.
+   * Return `true` to pass, or a string error message to display.
+   * Omit to skip validation.
+   */
+  validate?: (input: string) => boolean | string;
+}
 
 export interface PaletteCommand {
   id: string;
@@ -16,7 +29,9 @@ export interface PaletteCommand {
   description: string;
   category: string;
   keywords: string[];
-  fn: (win: Window) => void;
+  fn: (win: Window, args?: Record<string, string>) => void;
+  /** If defined, the palette will prompt the user for each step before executing fn. */
+  steps?: CommandStep[];
 }
 
 const ACTION_CATEGORY_MAP: Record<string, string> = {
@@ -156,13 +171,96 @@ function buildGestureCommands(): PaletteCommand[] {
   }));
 }
 
+function buildStepCommands(): PaletteCommand[] {
+  return [
+    {
+      id: "floorp-open-url",
+      label: i18next.t("commandPalette.openUrl", { defaultValue: "Open URL" }),
+      description: i18next.t("commandPalette.openUrlDescription", {
+        defaultValue: "Open a URL in a new tab",
+      }),
+      category: "navigation",
+      keywords: ["open url", "navigate", "go to", "open page", "url"],
+      steps: [
+        {
+          id: "url",
+          label: i18next.t("commandPalette.openUrlStepLabel", {
+            defaultValue: "Enter URL to open",
+          }),
+          placeholder: i18next.t("commandPalette.openUrlStepPlaceholder", {
+            defaultValue: "https://example.com",
+          }),
+          validate: (input: string): boolean | string => {
+            const trimmed = input.trim();
+            if (!trimmed)
+              return i18next.t("commandPalette.openUrlValidationError", {
+                defaultValue: "Please enter a valid URL",
+              });
+            return true;
+          },
+        },
+      ],
+      fn: (_win: Window, args?: Record<string, string>) => {
+        const url = args?.url?.trim();
+        if (!url) return;
+        const navUrl = url.includes("://") ? url : `https://${url}`;
+        try {
+          globalThis.gBrowser?.loadURI?.(Services.io.newURI(navUrl));
+        } catch (e) {
+          console.error("[command-palette] Open URL failed", e);
+        }
+      },
+    },
+    {
+      id: "floorp-search-web",
+      label: i18next.t("commandPalette.searchWeb", {
+        defaultValue: "Search the Web",
+      }),
+      description: i18next.t("commandPalette.searchWebDescription", {
+        defaultValue: "Search with your default search engine",
+      }),
+      category: "search",
+      keywords: ["search", "web search", "find", "lookup", "google"],
+      steps: [
+        {
+          id: "query",
+          label: i18next.t("commandPalette.searchWebStepLabel", {
+            defaultValue: "Enter search query",
+          }),
+          placeholder: i18next.t("commandPalette.searchWebStepPlaceholder", {
+            defaultValue: "Search terms...",
+          }),
+          validate: (input: string): boolean | string => {
+            if (!input.trim()) return "Please enter a search query";
+            return true;
+          },
+        },
+      ],
+      fn: (_win: Window, args?: Record<string, string>) => {
+        const query = args?.query?.trim();
+        if (!query) return;
+        try {
+          const engine = Services.search?.defaultEngine;
+          if (engine) {
+            const submission = engine.getSubmission(query);
+            globalThis.gBrowser?.loadURI?.(submission.uri);
+          }
+        } catch (e) {
+          console.error("[command-palette] Search failed", e);
+        }
+      },
+    },
+  ];
+}
+
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
   if (!cachedCommands) {
     cachedCommands = buildGestureCommands();
   }
   const gestureCommands = cachedCommands;
   const tabCommands = win ? getTabCommands(win) : [];
-  return [...tabCommands, ...gestureCommands];
+  const stepCommands = buildStepCommands();
+  return [...tabCommands, ...gestureCommands, ...stepCommands];
 }
 
 export function searchCommands(query: string, win?: Window): PaletteCommand[] {
@@ -171,7 +269,10 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export function getCommand(id: string, win?: Window): PaletteCommand | undefined {
+export function getCommand(
+  id: string,
+  win?: Window,
+): PaletteCommand | undefined {
   return getPaletteCommands(win).find((cmd) => cmd.id === id);
 }
 

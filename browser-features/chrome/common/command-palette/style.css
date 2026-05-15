@@ -36,8 +36,9 @@
   flex-direction: column;
   overflow: hidden;
   transform: scale(0.96) translateY(-8px);
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.15s ease;
+  transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s ease;
   opacity: 0;
 }
 
@@ -169,4 +170,60 @@
 .command-palette-empty-hint {
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
   font-size: 12px;
+}
+
+/* Multi-step input mode */
+
+.command-palette-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  font-weight: 300;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.command-palette-back-button:hover {
+  background: color-mix(in srgb, currentcolor 10%, transparent);
+}
+
+.command-palette-step-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
+}
+
+.command-palette-step-command-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.command-palette-step-breadcrumb {
+  font-size: 11px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
+}
+
+.command-palette-step-label {
+  font-size: 12px;
+  color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.7));
+  margin-top: 2px;
+}
+
+.command-palette-step-error {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: #e22850;
+  background: color-mix(in srgb, #e22850 8%, transparent);
+  border-bottom: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
 }
