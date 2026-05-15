@@ -12,7 +12,7 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
    }
 
    &[splitview] {
-@@ -213,22 +213,46 @@
+@@ -213,29 +213,53 @@
        }
      }
 
@@ -22,8 +22,12 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
 -      order: 0;
 -      margin-inline-end: 0;
 +      order: var(--panel-order, 0);
-+    }
-+
+
+       @media not (-moz-platform: macos) {
+         z-index: 1;
+       }
+     }
+
 +    /* Last panel - no end margin (detected via :last-child in flex) */
 +    .split-view-panel:last-child {
 +      margin-inline-end: 0;
@@ -32,14 +36,15 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
 +    /* All panels use order from attribute or CSS variable */
 +    .split-view-panel {
 +      order: var(--panel-order);
-     }
-
++    }
++
 +    /* Splitters position between panels */
      .split-view-splitter {
 -      order: 1;
        flex: none;
 +      order: var(--splitter-order);
        -moz-user-focus: normal;
+       border-color: transparent;
 
        &:focus-visible {
          outline: auto;
