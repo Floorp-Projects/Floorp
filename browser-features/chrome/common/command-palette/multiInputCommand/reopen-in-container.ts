@@ -128,7 +128,7 @@ export const reopenInContainerCommand: PaletteCommand = {
     const newTab = globalThis.gBrowser.addTab(url, {
       userContextId: containerId,
       pinned: tabPinned,
-      index: tabPos + 1,
+      tabIndex: tabPos + 1,
       triggeringPrincipal,
     });
 
