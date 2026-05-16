@@ -74,14 +74,14 @@ export function SidebarFooter({ children, className }: SidebarProps) {
 }
 
 export function SidebarGroup({ children, className }: SidebarProps) {
-  return <div className={cn("px-2 py-2", className)}>{children}</div>;
+  return <div className={cn("px-2 pt-2 pb-4", className)}>{children}</div>;
 }
 
 export function SidebarGroupLabel({ children, className }: SidebarProps) {
   return (
     <h3
       className={cn(
-        "mb-2 px-4 text-sm font-medium text-base-content/60",
+        "mb-4 px-4 text-sm font-medium text-base-content/60",
         className,
       )}
     >
@@ -91,7 +91,7 @@ export function SidebarGroupLabel({ children, className }: SidebarProps) {
 }
 
 export function SidebarMenu({ children, className }: SidebarProps) {
-  return <div className={cn("space-y-1", className)}>{children}</div>;
+  return <div className={cn(className)}>{children}</div>;
 }
 
 export function SidebarMenuItem(
