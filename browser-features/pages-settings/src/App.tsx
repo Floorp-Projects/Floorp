@@ -60,6 +60,7 @@ export default function App() {
                 path="/features/splitview"
                 element={<SplitView />}
               />
+              <Route
                 path="/features/shortcuts"
                 element={<KeyboardShortcut />}
               />

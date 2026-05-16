@@ -659,12 +659,20 @@
         "description": "Hold the right mouse button and move your mouse in a direction to perform an action. For example, move left to go back, or move right to go forward."
       },
       "step2": {
-        "title": "Customizing Gestures",
-        "description": "You can customize gesture actions in the Actions section below. Add new gestures by clicking the add button and drawing your desired pattern."
+        "title": "Try a Basic Gesture",
+        "description": "Try drawing ↓ then ↑ (down then up). This gesture closes the current tab. Click and drag in the canvas below."
       },
       "step3": {
-        "title": "Rocker and Wheel Gestures",
-        "description": "In addition to drag gestures, you can use rocker gestures (hold left + click right to go forward) and wheel gestures (hold right + scroll to switch tabs)."
+        "title": "Back and Forward Gesture",
+        "description": "Try drawing ← then → (left then right). This gesture goes back in history. Click and drag in the canvas below."
+      },
+      "step4": {
+        "title": "Free Gesture Practice",
+        "description": "Try drawing any gesture freely. The detected directions will be shown below the canvas."
+      },
+      "step5": {
+        "title": "Customize Your Gestures",
+        "description": "You can add, edit, or remove gestures in the Actions section on this page. Create your own gestures for the actions you use most."
       }
     },
     "helpDefaultGestures": "What are the default gestures?",
@@ -754,12 +762,16 @@
         "description": "Split View lets you view multiple tabs simultaneously in a single window. To start, right-click on any tab and select \"Open in Split View\" from the context menu."
       },
       "step2": {
-        "title": "Choosing a Layout",
-        "description": "Choose from horizontal, vertical, or grid layouts. You can split your window into 2, 3, or 4 panes. Use the layout picker in the split view toolbar to switch layouts."
+        "title": "Try Different Layouts",
+        "description": "Choose from horizontal, vertical, or grid layouts. Click the layout buttons below the preview to see how each arrangement looks. You can also add or remove panes."
       },
       "step3": {
+        "title": "How to Use Split View",
+        "description": "Right-click any tab and select \"Open in Split View\". The tab will open alongside your current view. You can switch layouts from the split view toolbar."
+      },
+      "step4": {
         "title": "Resizing Panes",
-        "description": "Drag the divider between panes to resize them. You can also set default pane sizes in the settings on this page."
+        "description": "Drag the divider between panes to resize them. Try dragging the divider in the preview below to adjust pane sizes."
       }
     }
   },
@@ -768,6 +780,18 @@
     "stepOf": "Step {{current}} of {{total}}",
     "previous": "Previous",
     "next": "Next",
-    "finish": "Got it"
+    "finish": "Got it",
+    "gestureCanvas": {
+      "placeholder": "Click and drag here to draw a gesture",
+      "detected": "Detected: {{pattern}}",
+      "matched": "Matched: {{action}}",
+      "success": "Correct! Well done!",
+      "tryAgain": "Try Again"
+    },
+    "splitviewSandbox": {
+      "changeLayout": "Change Layout",
+      "addPane": "Add Pane",
+      "removePane": "Remove Pane"
+    }
   }
 }

@@ -6,75 +6,112 @@ import {
   CardDescription,
 } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
-import { useFormContext } from "react-hook-form";
-import { Columns2, Rows2, LayoutGrid } from "lucide-react";
+import { useFormContext, useWatch } from "react-hook-form";
 import type { SplitViewFormData } from "@/types/pref.ts";
 
 type LayoutOption = {
   value: string;
   labelKey: string;
-  icon: React.ReactNode;
+  preview: React.ReactNode;
 };
 
 const layouts: LayoutOption[] = [
   {
     value: "horizontal",
     labelKey: "splitView.layoutHorizontal",
-    icon: <Columns2 className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="18" height="26" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="26" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "vertical",
     labelKey: "splitView.layoutVertical",
-    icon: <Rows2 className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="38" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="38" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "grid-2x2",
     labelKey: "splitView.layoutGrid2x2",
-    icon: <LayoutGrid className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="15" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "grid-3pane-left-main",
     labelKey: "splitView.layout3PaneLeft",
-    icon: <LayoutGrid className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="22" height="26" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="25" y="1" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="25" y="15" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "grid-3pane-right-main",
     labelKey: "splitView.layout3PaneRight",
-    icon: <LayoutGrid className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="17" y="1" width="22" height="26" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "grid-3pane-top-main",
     labelKey: "splitView.layout3PaneTop",
-    icon: <LayoutGrid className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="38" height="14" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="17" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="17" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
   {
     value: "grid-3pane-bottom-main",
     labelKey: "splitView.layout3PaneBottom",
-    icon: <LayoutGrid className="size-5" />,
+    preview: (
+      <svg viewBox="0 0 40 28" className="size-8">
+        <rect x="1" y="1" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="13" width="38" height="14" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+      </svg>
+    ),
   },
 ];
 
 export function LayoutSettings() {
   const { t } = useTranslation();
-  const { getValues, setValue } = useFormContext<SplitViewFormData>();
-  const currentLayout = getValues("layout");
+  const { setValue } = useFormContext<SplitViewFormData>();
+  const currentLayout = useWatch<SplitViewFormData>({ name: "layout" });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <LayoutGrid className="size-5" />
-          {t("splitView.layoutSettings")}
-        </CardTitle>
+        <CardTitle>{t("splitView.layoutSettings")}</CardTitle>
         <CardDescription>{t("splitView.layoutSettingsDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {layouts.map((layout) => (
             <button
               key={layout.value}
               type="button"
-              className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${
+              className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                 currentLayout === layout.value
                   ? "border-primary bg-primary/10"
                   : "border-base-300 hover:border-base-content/30"
@@ -82,9 +119,9 @@ export function LayoutSettings() {
               onClick={() => setValue("layout", layout.value as SplitViewFormData["layout"])}
             >
               <div className={currentLayout === layout.value ? "text-primary" : "text-base-content/60"}>
-                {layout.icon}
+                {layout.preview}
               </div>
-              <span className="text-sm font-medium">{t(layout.labelKey)}</span>
+              <span className="text-xs font-medium">{t(layout.labelKey)}</span>
             </button>
           ))}
         </div>
