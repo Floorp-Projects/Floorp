@@ -35,7 +35,7 @@ export function TopSiteTile(
     <a
       key={site.url}
       href={site.url}
-      className={`group flex flex-col items-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-900/50 ${
+      className={`group flex flex-col items-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-100/20 ${
         isFirefoxMode ? "w-20 md:w-24" : "w-16"
       }`}
       onContextMenu={(e) => onContextMenu(e, site)}

@@ -364,7 +364,7 @@ export function TopSites({ isFirefoxMode = false }: { isFirefoxMode?: boolean })
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className={`group flex flex-col items-center p-2 rounded-lg border border-dashed border-gray-400/50 text-gray-300 hover:text-white hover:bg-gray-900/50 transition-all ${
+            className={`group flex flex-col items-center p-2 rounded-lg border border-dashed border-gray-400/50 text-gray-300 hover:text-white hover:bg-gray-100/20 transition-all ${
               isFirefoxMode ? "w-20 md:w-24" : "w-16"
             }`}
             title={t("topSites.addSite")}
