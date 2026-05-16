@@ -12,6 +12,7 @@ import FloorpOS from "@/app/floorp-os/page.tsx";
 import About from "./app/about/noraneko.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
+import SplitView from "@/app/splitview/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
 import Updates from "@/app/updates/page.tsx";
 import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
@@ -56,6 +57,9 @@ export default function App() {
               />
               <Route path="features/gesture" element={<MouseGesture />} />
               <Route
+                path="/features/splitview"
+                element={<SplitView />}
+              />
                 path="/features/shortcuts"
                 element={<KeyboardShortcut />}
               />

@@ -23,6 +23,7 @@ type ExternalFeature = BaseFeature & {
 type InternalFeature = BaseFeature & {
   isExternal?: false;
   onClick?: never;
+  badge?: string;
 };
 
 export type Feature = InternalFeature | ExternalFeature;
@@ -47,6 +48,9 @@ function InternalItem({
       >
         <feature.icon className="size-4" />
         <span>{feature.title}</span>
+        {feature.badge && (
+          <span className="badge badge-xs badge-primary badge-outline ml-auto">{feature.badge}</span>
+        )}
       </Link>
     </div>
   );

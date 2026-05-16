@@ -3,6 +3,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { PanelList } from "./components/PanelList.tsx";
+import { HelpSection } from "@/components/common/help-section.tsx";
 import {
   getPanelSidebarSettings,
   savePanelSidebarSettings,
@@ -44,7 +45,12 @@ export default function Page() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col items-start pl-6">
         <h1 className="text-3xl font-bold mb-2">{t("panelSidebar.title")}</h1>
-        <p className="text-sm mb-8">{t("panelSidebar.description")}</p>
+        <p className="text-sm mb-4">{t("panelSidebar.description")}</p>
+        <div className="mb-6 w-full max-w-2xl">
+          <HelpSection summary={t("panelSidebar.helpSidebarVsFirefox")}>
+            <p>{t("panelSidebar.helpSidebarVsFirefoxDescription")}</p>
+          </HelpSection>
+        </div>
       </div>
 
       <div className="space-y-8 pl-6" />

@@ -1,0 +1,150 @@
+import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { Lightbulb, X, ExternalLink } from "lucide-react";
+import { rpc } from "../../lib/rpc/rpc.ts";
+
+interface Tip {
+  id: string;
+  titleKey: string;
+  descriptionKey: string;
+  hubUrl: string;
+}
+
+const tips: Tip[] = [
+  {
+    id: "split-view",
+    titleKey: "tipBanner.tips.splitView.title",
+    descriptionKey: "tipBanner.tips.splitView.description",
+    hubUrl: "about:hub#/features/splitview",
+  },
+  {
+    id: "panel-sidebar",
+    titleKey: "tipBanner.tips.panelSidebar.title",
+    descriptionKey: "tipBanner.tips.panelSidebar.description",
+    hubUrl: "about:hub#/features/sidebar",
+  },
+  {
+    id: "workspaces",
+    titleKey: "tipBanner.tips.workspaces.title",
+    descriptionKey: "tipBanner.tips.workspaces.description",
+    hubUrl: "about:hub#/features/workspaces",
+  },
+  {
+    id: "mouse-gesture",
+    titleKey: "tipBanner.tips.mouseGesture.title",
+    descriptionKey: "tipBanner.tips.mouseGesture.description",
+    hubUrl: "about:hub#/features/gesture",
+  },
+  {
+    id: "keyboard-shortcuts",
+    titleKey: "tipBanner.tips.shortcuts.title",
+    descriptionKey: "tipBanner.tips.shortcuts.description",
+    hubUrl: "about:hub#/features/shortcuts",
+  },
+];
+
+const PREF_SEEN_TIPS = "floorp.newtab.tips.seen";
+const PREF_DISMISSED_SESSION = "floorp.newtab.tips.sessionDismissed";
+
+async function getSeenTips(): Promise<string[]> {
+  try {
+    const raw = await rpc.getStringPref(PREF_SEEN_TIPS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function markTipSeen(id: string): Promise<void> {
+  const seen = await getSeenTips();
+  if (!seen.includes(id)) {
+    seen.push(id);
+    await rpc.setStringPref(PREF_SEEN_TIPS, JSON.stringify(seen));
+  }
+}
+
+function getSessionDismissed(): boolean {
+  try {
+    return sessionStorage.getItem(PREF_DISMISSED_SESSION) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setSessionDismissed(): void {
+  try {
+    sessionStorage.setItem(PREF_DISMISSED_SESSION, "true");
+  } catch {
+    // ignore
+  }
+}
+
+export function TipBanner() {
+  const { t } = useTranslation();
+  const [currentTip, setCurrentTip] = useState<Tip | null>(null);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (getSessionDismissed()) return;
+
+    const pickTip = async () => {
+      const seen = await getSeenTips();
+      const unseen = tips.filter((tip) => !seen.includes(tip.id));
+      const pool = unseen.length > 0 ? unseen : tips;
+      const tip = pool[Math.floor(Math.random() * pool.length)];
+      setCurrentTip(tip);
+      await markTipSeen(tip.id);
+    };
+
+    pickTip();
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    setVisible(false);
+    setSessionDismissed();
+  }, []);
+
+  const handleOpenHub = useCallback(() => {
+    if (currentTip) {
+      globalThis.NRAddTab?.(currentTip.hubUrl);
+    }
+  }, [currentTip]);
+
+  if (!currentTip || !visible || getSessionDismissed()) {
+    return null;
+  }
+
+  return (
+    <div className="fixed bottom-4 left-4 right-16 z-40 flex justify-center pointer-events-none">
+      <div className="pointer-events-auto max-w-lg w-full bg-base-100/90 backdrop-blur-sm border border-base-300 rounded-xl shadow-lg p-3 flex items-start gap-3">
+        <div className="text-warning flex-shrink-0 mt-0.5">
+          <Lightbulb size={20} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm">{t(currentTip.titleKey)}</p>
+          <p className="text-xs text-base-content/70 mt-0.5">
+            {t(currentTip.descriptionKey)}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleOpenHub}
+            className="btn btn-xs btn-ghost text-primary gap-1"
+          >
+            {t("tipBanner.learnMore")}
+            <ExternalLink size={12} />
+          </button>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="btn btn-xs btn-ghost btn-circle"
+            aria-label={t("tipBanner.dismiss")}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

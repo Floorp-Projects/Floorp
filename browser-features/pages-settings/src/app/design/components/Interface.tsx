@@ -51,6 +51,9 @@ export function Interface() {
                     className="w-40 h-24 mb-2 object-contain drop-shadow-sm"
                   />
                   <span className="text-sm font-medium">{option.title}</span>
+                  <span className="text-xs text-base-content/50 mt-0.5">
+                    {t(`design.themeDescription.${option.value}`)}
+                  </span>
                   <input
                     type="radio"
                     name="design"
