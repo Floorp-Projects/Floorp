@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -6,6 +6,7 @@ export interface TutorialStep {
   titleKey: string;
   descriptionKey: string;
   image?: React.ReactNode;
+  content?: React.ReactNode;
 }
 
 interface TutorialModalProps {
@@ -18,6 +19,25 @@ interface TutorialModalProps {
 export function TutorialModal({ isOpen, onClose, steps, title }: TutorialModalProps) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [render, setRender] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setRender(true);
+      requestAnimationFrame(() => setMounted(true));
+    } else {
+      setMounted(false);
+      closeTimerRef.current = setTimeout(() => {
+        setRender(false);
+        setCurrentStep(0);
+      }, 200);
+    }
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, [isOpen]);
 
   const handleNext = useCallback(() => {
     if (currentStep < steps.length - 1) {
@@ -32,17 +52,16 @@ export function TutorialModal({ isOpen, onClose, steps, title }: TutorialModalPr
   }, [currentStep]);
 
   const handleClose = useCallback(() => {
-    setCurrentStep(0);
     onClose();
   }, [onClose]);
 
-  if (!isOpen) return null;
+  if (!render) return null;
 
   const step = steps[currentStep];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-base-100 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div className={`bg-base-100 rounded-2xl shadow-2xl ${step.content ? "max-w-2xl" : "max-w-lg"} w-full mx-4 overflow-hidden transition-all duration-200 ${mounted ? "scale-100 translate-y-0" : "scale-95 translate-y-2"}`}>
         <div className="flex items-center justify-between p-4 border-b border-base-300">
           <div>
             <h2 className="text-lg font-bold">{title}</h2>
@@ -63,6 +82,11 @@ export function TutorialModal({ isOpen, onClose, steps, title }: TutorialModalPr
           {step.image && (
             <div className="mb-4 flex justify-center">
               {step.image}
+            </div>
+          )}
+          {step.content && (
+            <div className="mb-4">
+              {step.content}
             </div>
           )}
           <h3 className="text-xl font-bold mb-2">{t(step.titleKey)}</h3>

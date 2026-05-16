@@ -7,6 +7,7 @@ import type { WorkspacesFormData } from "@/types/pref.ts";
 import { LearnButton } from "@/components/common/learn-button.tsx";
 import { HelpSection } from "@/components/common/help-section.tsx";
 import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
+import { WorkspaceGuide } from "@/components/common/workspace-guide.tsx";
 
 export default function Page() {
   const { t } = useTranslation();
@@ -16,10 +17,12 @@ export default function Page() {
     {
       titleKey: "workspaces.tutorial.step1.title",
       descriptionKey: "workspaces.tutorial.step1.description",
+      content: <WorkspaceGuide />,
     },
     {
       titleKey: "workspaces.tutorial.step2.title",
       descriptionKey: "workspaces.tutorial.step2.description",
+      content: <WorkspaceGuide step={1} />,
     },
     {
       titleKey: "workspaces.tutorial.step3.title",
@@ -65,8 +68,8 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-2">
           {t("workspaces.workspaces")}
         </h1>
-        <p className="text-sm mb-3">{t("workspaces.workspacesDescription")}</p>
-        <div className="flex items-center gap-2 mb-4">
+        <p className="text-sm mb-4">{t("workspaces.workspacesDescription")}</p>
+        <div className="flex items-center gap-2">
           <LearnButton steps={workspaceTutorialSteps} title={t("workspaces.workspaces")} />
         </div>
         <div className="w-full max-w-2xl mb-6">

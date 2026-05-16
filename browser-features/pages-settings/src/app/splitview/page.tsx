@@ -5,6 +5,7 @@ import { BasicSettings } from "./components/BasicSettings.tsx";
 import { LayoutSettings } from "./components/LayoutSettings.tsx";
 import { LearnButton } from "@/components/common/learn-button.tsx";
 import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
+import { SplitViewSandbox } from "@/components/common/splitview-sandbox.tsx";
 import {
   getSplitViewSettings,
   saveSplitViewSettings,
@@ -23,10 +24,16 @@ export default function Page() {
     {
       titleKey: "splitView.tutorial.step2.title",
       descriptionKey: "splitView.tutorial.step2.description",
+      content: <SplitViewSandbox />,
     },
     {
       titleKey: "splitView.tutorial.step3.title",
       descriptionKey: "splitView.tutorial.step3.description",
+    },
+    {
+      titleKey: "splitView.tutorial.step4.title",
+      descriptionKey: "splitView.tutorial.step4.description",
+      content: <SplitViewSandbox resizable />,
     },
   ];
   const { control, setValue } = methods;
@@ -64,7 +71,7 @@ export default function Page() {
           <h1 className="text-3xl font-bold mb-2">
             {t("splitView.title")}
           </h1>
-          <p className="text-sm mb-3">
+          <p className="text-sm mb-4">
             {t("splitView.description")}
           </p>
           <LearnButton steps={splitViewTutorialSteps} title={t("splitView.title")} />

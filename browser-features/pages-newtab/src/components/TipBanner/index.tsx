@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Lightbulb, X, ExternalLink } from "lucide-react";
 import { rpc } from "../../lib/rpc/rpc.ts";
@@ -82,7 +82,9 @@ function setSessionDismissed(): void {
 export function TipBanner() {
   const { t } = useTranslation();
   const [currentTip, setCurrentTip] = useState<Tip | null>(null);
-  const [visible, setVisible] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     if (getSessionDismissed()) return;
@@ -93,30 +95,50 @@ export function TipBanner() {
       const pool = unseen.length > 0 ? unseen : tips;
       const tip = pool[Math.floor(Math.random() * pool.length)];
       setCurrentTip(tip);
-      await markTipSeen(tip.id);
+      requestAnimationFrame(() => setMounted(true));
     };
 
     pickTip();
   }, []);
 
   const handleDismiss = useCallback(() => {
-    setVisible(false);
+    if (currentTip) {
+      void markTipSeen(currentTip.id);
+    }
+    setMounted(false);
+    setDismissed(true);
     setSessionDismissed();
-  }, []);
+    dismissTimerRef.current = setTimeout(() => setCurrentTip(null), 300);
+  }, [currentTip]);
 
   const handleOpenHub = useCallback(() => {
     if (currentTip) {
+      void markTipSeen(currentTip.id);
       globalThis.NRAddTab?.(currentTip.hubUrl);
     }
   }, [currentTip]);
 
-  if (!currentTip || !visible || getSessionDismissed()) {
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, []);
+
+  if (!currentTip || getSessionDismissed()) {
     return null;
   }
 
+  const translateClass = dismissed
+    ? "translate-y-4 lg:translate-y-0 lg:-translate-x-4 opacity-0"
+    : mounted
+      ? "translate-y-0 lg:translate-x-0 opacity-100"
+      : "translate-y-4 lg:translate-y-0 lg:-translate-x-4 opacity-0";
+
   return (
-    <div className="fixed bottom-4 left-4 right-16 z-40 flex justify-center pointer-events-none">
-      <div className="pointer-events-auto max-w-lg w-full bg-base-100/90 backdrop-blur-sm border border-base-300 rounded-xl shadow-lg p-3 flex items-start gap-3">
+    <div className="fixed bottom-4 left-4 right-4 lg:top-4 lg:bottom-auto z-40 flex justify-center lg:justify-start pointer-events-none">
+      <div
+        className={`pointer-events-auto max-w-lg w-full bg-base-100/90 backdrop-blur-sm border border-base-300 rounded-xl shadow-lg p-3 flex items-start gap-3 transition-all duration-300 ease-out ${translateClass}`}
+      >
         <div className="text-warning flex-shrink-0 mt-0.5">
           <Lightbulb size={20} />
         </div>

@@ -10,6 +10,8 @@ import { ActionsSettings } from "./components/ActionsSettings.tsx";
 import { HelpSection } from "@/components/common/help-section.tsx";
 import { LearnButton } from "@/components/common/learn-button.tsx";
 import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
+import { GestureCanvas } from "@/components/common/gesture-canvas.tsx";
+import type { GestureDirection } from "@/types/pref.ts";
 
 export default function Page() {
     const { t } = useTranslation();
@@ -32,10 +34,41 @@ export default function Page() {
         {
             titleKey: "mouseGesture.tutorial.step2.title",
             descriptionKey: "mouseGesture.tutorial.step2.description",
+            content: (
+                <GestureCanvas
+                    targetPattern={["down", "up"] as GestureDirection[]}
+                    trailColor={config.trailColor}
+                    trailWidth={config.trailWidth}
+                    onGestureComplete={() => {}}
+                />
+            ),
         },
         {
             titleKey: "mouseGesture.tutorial.step3.title",
             descriptionKey: "mouseGesture.tutorial.step3.description",
+            content: (
+                <GestureCanvas
+                    targetPattern={["left", "right"] as GestureDirection[]}
+                    trailColor={config.trailColor}
+                    trailWidth={config.trailWidth}
+                    onGestureComplete={() => {}}
+                />
+            ),
+        },
+        {
+            titleKey: "mouseGesture.tutorial.step4.title",
+            descriptionKey: "mouseGesture.tutorial.step4.description",
+            content: (
+                <GestureCanvas
+                    trailColor={config.trailColor}
+                    trailWidth={config.trailWidth}
+                    onGestureComplete={() => {}}
+                />
+            ),
+        },
+        {
+            titleKey: "mouseGesture.tutorial.step5.title",
+            descriptionKey: "mouseGesture.tutorial.step5.description",
         },
     ];
 
@@ -49,13 +82,13 @@ export default function Page() {
                 <h1 className="text-3xl font-bold mb-2">
                     {t("pages.mouseGesture")}
                 </h1>
-                <p className="text-sm mb-3">
+                <p className="text-sm mb-4">
                     {t("mouseGesture.description")}
                 </p>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2">
                     <LearnButton steps={gestureTutorialSteps} title={t("pages.mouseGesture")} />
                 </div>
-                <div className="w-full max-w-2xl mb-4">
+                <div className="w-full max-w-2xl mb-6">
                     <HelpSection summary={t("mouseGesture.helpDefaultGestures")}>
                         <p>{t("mouseGesture.helpDefaultGesturesDescription")}</p>
                     </HelpSection>
