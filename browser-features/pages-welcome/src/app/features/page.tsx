@@ -4,7 +4,8 @@ import panelSidebarSvg from "./assets/panelsidebar.svg";
 import workspacesSvg from "./assets/workspaces.svg";
 import pwaSvg from "./assets/pwa.svg";
 import mouseGestureSvg from "./assets/mousegesture.svg";
-import { PanelLeft, LayoutGrid, Globe, MousePointer } from "lucide-react";
+import splitviewSvg from "./assets/splitview.svg";
+import { PanelLeft, LayoutGrid, Globe, MousePointer, Columns2 } from "lucide-react";
 
 export default function FeaturesPage() {
     const { t } = useTranslation();
@@ -35,9 +36,73 @@ export default function FeaturesPage() {
 
     const mouseGestureImage = (
         <div className="w-full h-full flex items-center justify-center">
-            <div className="w-full max-w-[200px] aspect-[4/3] bg-base-300 rounded-lg p-2 overflow-hidden">
-                <img src={mouseGestureSvg} alt="Mouse Gesture" className="w-full h-full object-contain" />
+            <div className="w-full max-w-[200px] aspect-[4/3] bg-base-300 rounded-lg p-2 overflow-hidden relative flex items-center justify-center">
+                <svg viewBox="0 0 80 60" className="w-full h-full" fill="none">
+                    <path
+                        d="M 20 30 L 20 10 L 50 10 L 50 30"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-primary"
+                        style={{
+                            strokeDasharray: 80,
+                            strokeDashoffset: 80,
+                            animation: "gesture-draw 2s ease-in-out infinite",
+                        }}
+                    />
+                    <circle cx="20" cy="30" r="3" className="fill-primary" style={{ animation: "gesture-dot 2s ease-in-out infinite" }} />
+                </svg>
+                <style>{`
+                    @keyframes gesture-draw {
+                        0% { stroke-dashoffset: 80; }
+                        50% { stroke-dashoffset: 0; }
+                        100% { stroke-dashoffset: -80; }
+                    }
+                    @keyframes gesture-dot {
+                        0%, 10% { opacity: 1; }
+                        50%, 60% { opacity: 0; }
+                        100% { opacity: 1; }
+                    }
+                `}</style>
             </div>
+        </div>
+    );
+
+    const splitviewImage = (
+        <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full max-w-[200px] aspect-[4/3] bg-base-300 rounded-lg p-2 overflow-hidden relative">
+                <div className="flex w-full h-full gap-[2px] rounded overflow-hidden">
+                    <div className="bg-base-100 rounded-l flex-1 flex flex-col p-1.5 gap-1 animate-splitview-left">
+                        <div className="h-2 w-3/4 bg-base-300 rounded" />
+                        <div className="h-1 w-full bg-base-200 rounded" />
+                        <div className="h-1 w-5/6 bg-base-200 rounded" />
+                        <div className="h-1 w-full bg-base-200 rounded" />
+                    </div>
+                    <div className="bg-base-100 rounded-r flex-1 flex flex-col p-1.5 gap-1 animate-splitview-right">
+                        <div className="h-2 w-2/3 bg-base-300 rounded" />
+                        <div className="h-1 w-full bg-base-200 rounded" />
+                        <div className="h-1 w-4/5 bg-base-200 rounded" />
+                        <div className="h-1 w-full bg-base-200 rounded" />
+                    </div>
+                </div>
+            </div>
+            <style>{`
+                @keyframes splitview-left {
+                    0%, 100% { flex: 1; }
+                    50% { flex: 1.5; }
+                }
+                @keyframes splitview-right {
+                    0%, 100% { flex: 1; }
+                    50% { flex: 0.6; }
+                }
+                .animate-splitview-left {
+                    animation: splitview-left 3s ease-in-out infinite;
+                }
+                .animate-splitview-right {
+                    animation: splitview-right 3s ease-in-out infinite;
+                }
+            `}</style>
         </div>
     );
 
@@ -50,6 +115,7 @@ export default function FeaturesPage() {
     const workspacesFeatures = getTranslatedFeatures('featuresPage.workspaces.features');
     const pwaFeatures = getTranslatedFeatures('featuresPage.pwa.features');
     const mouseGestureFeatures = getTranslatedFeatures('featuresPage.mouseGesture.features');
+    const splitviewFeatures = getTranslatedFeatures('featuresPage.splitView.features');
 
     return (
         <div className="flex flex-col gap-8">
@@ -157,6 +223,32 @@ export default function FeaturesPage() {
                             </div>
                             <div className="md:w-1/2">
                                 {mouseGestureImage}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card bg-base-200 shadow-xl h-full">
+                    <div className="card-body">
+                        <div className="flex items-center mb-4">
+                            <div className="text-primary mr-3">
+                                <Columns2 size={28} />
+                            </div>
+                            <h2 className="text-2xl font-bold">{t('featuresPage.splitView.title')}</h2>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-4 items-center">
+                            <div className="md:w-1/2">
+                                <p className="mb-3">
+                                    {t('featuresPage.splitView.description')}
+                                </p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {splitviewFeatures.map((feature, index) => (
+                                        <li key={index}>{feature}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="md:w-1/2">
+                                {splitviewImage}
                             </div>
                         </div>
                     </div>

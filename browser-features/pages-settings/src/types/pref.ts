@@ -229,3 +229,22 @@ export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
 export type KeyboardShortcutFormData = t.TypeOf<
   typeof zKeyboardShortcutFormData
 >;
+
+/* Split View */
+export type SplitViewLayout =
+  | "horizontal"
+  | "vertical"
+  | "grid-2x2"
+  | "grid-3pane-left-main"
+  | "grid-3pane-right-main"
+  | "grid-3pane-top-main"
+  | "grid-3pane-bottom-main";
+
+export interface SplitViewFormData {
+  enabled: boolean;
+  layout: SplitViewLayout;
+  maxPanes: number;
+  flexRatios: number[];
+  gridColRatio: number;
+  gridRowRatio: number;
+}

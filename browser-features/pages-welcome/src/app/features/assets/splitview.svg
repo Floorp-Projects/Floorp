@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" fill="none">
+  <!-- Browser window frame -->
+  <rect x="5" y="5" width="190" height="140" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+  <!-- Title bar -->
+  <rect x="5" y="5" width="190" height="20" rx="8" fill="#cbd5e1"/>
+  <rect x="5" y="17" width="190" height="8" fill="#cbd5e1"/>
+  <!-- Window dots -->
+  <circle cx="18" cy="15" r="3" fill="#f87171"/>
+  <circle cx="28" cy="15" r="3" fill="#fbbf24"/>
+  <circle cx="38" cy="15" r="3" fill="#34d399"/>
+  <!-- Left pane -->
+  <rect x="10" y="30" width="88" height="110" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="18" y="40" width="60" height="6" rx="2" fill="#cbd5e1"/>
+  <rect x="18" y="52" width="72" height="4" rx="1" fill="#e2e8f0"/>
+  <rect x="18" y="60" width="65" height="4" rx="1" fill="#e2e8f0"/>
+  <rect x="18" y="68" width="70" height="4" rx="1" fill="#e2e8f0"/>
+  <!-- Divider -->
+  <rect x="98" y="30" width="4" height="110" fill="#94a3b8"/>
+  <!-- Right pane -->
+  <rect x="102" y="30" width="88" height="110" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="110" y="40" width="55" height="6" rx="2" fill="#cbd5e1"/>
+  <rect x="110" y="52" width="70" height="4" rx="1" fill="#e2e8f0"/>
+  <rect x="110" y="60" width="60" height="4" rx="1" fill="#e2e8f0"/>
+  <rect x="110" y="68" width="68" height="4" rx="1" fill="#e2e8f0"/>
+</svg>

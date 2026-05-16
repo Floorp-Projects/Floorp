@@ -4,6 +4,7 @@ import { BackgroundProvider } from "./contexts/BackgroundContext.tsx";
 import { ComponentsProvider } from "./contexts/ComponentsContext.tsx";
 import { Settings } from "./components/Settings/index.tsx";
 import { SettingsButton } from "./components/SettingsButton/index.tsx";
+import { TipBanner } from "./components/TipBanner/index.tsx";
 import { DefaultLayout } from "./components/DefaultLayout.tsx";
 import { FirefoxNewTabLayout } from "./components/FirefoxNewTabLayout.tsx";
 import "./globals.css";
@@ -25,6 +26,7 @@ function NewTabContent() {
             onClose={() => setIsSettingsOpen(false)}
           />
         </div>
+        {components.tipBanner && <TipBanner />}
       </div>
     </>
   );
