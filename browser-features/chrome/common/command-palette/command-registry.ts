@@ -66,6 +66,7 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-open-home-page": "navigation",
 
   "gecko-close-tab": "tabs",
+  "gecko-close-other-tabs": "tabs",
   "gecko-open-new-tab": "tabs",
   "gecko-duplicate-tab": "tabs",
   "gecko-reload-all-tabs": "tabs",
@@ -147,6 +148,11 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-reload": ["refresh", "reload"],
   "gecko-force-reload": ["hard refresh", "hard reload", "skip cache"],
   "gecko-close-tab": ["close", "remove tab"],
+  "gecko-close-other-tabs": [
+    "close other",
+    "close all other tabs",
+    "close others",
+  ],
   "gecko-open-new-tab": ["new", "open tab", "create tab"],
   "gecko-duplicate-tab": ["clone", "copy tab"],
   "gecko-show-next-tab": ["next tab", "switch right"],

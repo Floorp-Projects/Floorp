@@ -58,6 +58,16 @@ export const actions: GestureActionRegistration[] = [
       }),
   },
   {
+    name: "gecko-close-other-tabs",
+    fn: (win) => {
+      const currentTab = win.gBrowser.selectedTab;
+      const tabsToClose = win.gBrowser.visibleTabs.filter(
+        (tab: any) => tab !== currentTab,
+      );
+      win.gBrowser.removeTabs(tabsToClose);
+    },
+  },
+  {
     name: "gecko-open-new-tab",
     fn: (win) => win.BrowserCommands.openTab(),
   },
