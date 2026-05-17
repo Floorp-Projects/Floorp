@@ -204,14 +204,44 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-quit-from-application": ["quit", "exit"],
 };
 
-let cachedCommands: PaletteCommand[] | null = null;
+const cachedCommands: Record<string, PaletteCommand[]> = {};
 
-function buildGestureCommands(): PaletteCommand[] {
+function getActionDisplayNameByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = !!(win as any)?.gBrowser?.tabContainer?.verticalMode;
+  if (!isVertical) {
+    return getActionDisplayName(actionId);
+  }
+
+  const verticalLabel = getActionDisplayName(`${actionId}-vertical`);
+  return verticalLabel !== `${actionId}-vertical`
+    ? verticalLabel
+    : getActionDisplayName(actionId);
+}
+
+function getActionDescriptionByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = !!(win as any)?.gBrowser?.tabContainer?.verticalMode;
+  if (!isVertical) {
+    return getActionDescription(actionId);
+  }
+
+  const verticalDescription = getActionDescription(`${actionId}-vertical`);
+  return verticalDescription !== `${actionId}-vertical`
+    ? verticalDescription
+    : getActionDescription(actionId);
+}
+
+function buildGestureCommands(win?: Window): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
   return gestureActions.map((action) => ({
     id: action.name,
-    label: getActionDisplayName(action.name),
-    description: getActionDescription(action.name),
+    label: getActionDisplayNameByOrientation(action.name, win),
+    description: getActionDescriptionByOrientation(action.name, win),
     category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
     keywords: ACTION_KEYWORDS[action.name] ?? [],
     fn: action.fn,
@@ -223,10 +253,13 @@ function buildStepCommands(): PaletteCommand[] {
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
-  if (!cachedCommands) {
-    cachedCommands = buildGestureCommands();
+  const orientationKey = !!(win as any)?.gBrowser?.tabContainer?.verticalMode
+    ? "vertical"
+    : "horizontal";
+  if (!cachedCommands[orientationKey]) {
+    cachedCommands[orientationKey] = buildGestureCommands(win);
   }
-  const gestureCommands = cachedCommands;
+  const gestureCommands = cachedCommands[orientationKey];
   const tabCommands = win ? getTabCommands(win) : [];
   const stepCommands = buildStepCommands();
   return [...tabCommands, ...gestureCommands, ...stepCommands];
@@ -246,7 +279,9 @@ export function getCommand(
 }
 
 export function invalidateCache() {
-  cachedCommands = null;
+  for (const key of Object.keys(cachedCommands)) {
+    delete cachedCommands[key];
+  }
 }
 
 export function getShortcutForAction(actionId: string): string | null {
