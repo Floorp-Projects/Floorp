@@ -17,7 +17,9 @@ export function SearchInput(props: SearchInputProps) {
       const cmd = props.state.activeCommand();
       const stepIndex = props.state.currentStepIndex();
       const step = cmd?.steps?.[stepIndex];
-      return step?.placeholder ?? step?.label ?? "";
+      return step?.placeholder ?? step?.label ?? i18next.t("commandPalette.placeholder", {
+        defaultValue: "Type a command...",
+      });
     }
     return i18next.t("commandPalette.placeholder", {
       defaultValue: "Type a command...",
@@ -29,7 +31,9 @@ export function SearchInput(props: SearchInputProps) {
       const cmd = props.state.activeCommand();
       const stepIndex = props.state.currentStepIndex();
       const step = cmd?.steps?.[stepIndex];
-      return step?.label ?? "";
+      return step?.label ?? i18next.t("commandPalette.placeholder", {
+        defaultValue: "Type a command...",
+      });
     }
     return i18next.t("commandPalette.placeholder", {
       defaultValue: "Type a command...",

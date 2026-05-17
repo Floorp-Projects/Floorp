@@ -444,6 +444,9 @@
     "searchWeb": "ウェブを検索",
     "searchWebDescription": "デフォルトの検索エンジンで検索します",
     "searchWebStepLabel": "検索キーワードを入力",
-    "searchWebStepPlaceholder": "検索キーワード..."
+    "searchWebStepPlaceholder": "検索キーワード...",
+    "searchWithEngine": "\"{{query}}\" を検索",
+    "searchWithEngineDescription": "デフォルトの検索エンジンで検索します",
+    "searchWithEngineNamed": "{{engine}} で検索"
   }
 }

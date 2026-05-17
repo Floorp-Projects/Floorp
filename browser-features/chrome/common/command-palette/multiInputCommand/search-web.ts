@@ -69,7 +69,10 @@ export const searchWebCommand: PaletteCommand = {
         defaultValue: "Search terms...",
       }),
       validate: (input: string): boolean | string => {
-        if (!input.trim()) return "Please enter a search query";
+        if (!input.trim())
+          return i18next.t("commandPalette.searchWebValidationError", {
+            defaultValue: "Please enter a search query",
+          });
         return true;
       },
     },

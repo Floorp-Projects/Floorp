@@ -230,7 +230,7 @@ export class CommandPaletteController {
     }, 0);
   }
 
-  private focusSearchInput(): void {
+  private focusSearchInput(clear: boolean = true): void {
     this.targetWindow.setTimeout(() => {
       const input = this.targetWindow.document?.getElementById(
         "command-palette-search",
@@ -238,7 +238,7 @@ export class CommandPaletteController {
       if (!input) return;
       // Clear input value directly on the DOM element when in input mode
       // (SolidJS reactive value binding may not reliably update in Firefox/XUL)
-      if (this.state.mode() === "input") {
+      if (clear && this.state.mode() === "input") {
         input.value = "";
       }
       input.focus();
@@ -342,7 +342,7 @@ export class CommandPaletteController {
 
   // --- Multi-step input mode ---
 
-  private loadStepChoices(stepIndex: number): void {
+  private loadStepChoices(stepIndex: number, restoreValue?: string): void {
     const cmd = this.state.activeCommand();
     const step = cmd?.steps?.[stepIndex];
     if (!step) return;
@@ -352,6 +352,10 @@ export class CommandPaletteController {
       this.state.setStepChoicesBase(step.choices);
       this.state.setFilteredStepChoices(step.choices);
       this.state.setSelectedChoiceIndex(0);
+      if (restoreValue) {
+        const idx = step.choices.findIndex((c) => c.value === restoreValue);
+        if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
+      }
       this.state.setStepChoicesLoading(false);
       return;
     }
@@ -369,6 +373,12 @@ export class CommandPaletteController {
             this.state.setStepChoicesBase(loadedChoices);
             this.state.setFilteredStepChoices(loadedChoices);
             this.state.setSelectedChoiceIndex(0);
+            if (restoreValue) {
+              const idx = loadedChoices.findIndex(
+                (c) => c.value === restoreValue,
+              );
+              if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
+            }
             this.state.setStepChoicesLoading(false);
           }
         })
@@ -482,9 +492,9 @@ export class CommandPaletteController {
       this.state.setStepError(null);
 
       // Restore choices for the previous step
-      this.loadStepChoices(prevIndex);
+      this.loadStepChoices(prevIndex, prevValue);
 
-      this.focusSearchInput();
+      this.focusSearchInput(false);
     } else {
       // At first step — go back to command selection
       this.exitInputMode();

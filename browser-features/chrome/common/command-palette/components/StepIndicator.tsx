@@ -19,12 +19,15 @@ export function StepIndicator(props: StepIndicatorProps) {
         return step?.label ?? "";
     };
 
-    const breadcrumb = () =>
-        i18next.t("commandPalette.stepIndicator", {
+    const breadcrumb = () => {
+        const total = totalSteps();
+        const current = total === 0 ? 0 : stepIndex() + 1;
+        return i18next.t("commandPalette.stepIndicator", {
             defaultValue: "Step {{current}} of {{total}}",
-            current: stepIndex() + 1,
-            total: totalSteps(),
+            current,
+            total,
         });
+    };
 
     return (
         <div class="command-palette-step-indicator">

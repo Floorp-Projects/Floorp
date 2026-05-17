@@ -208,13 +208,17 @@ const cachedCommands: Record<string, PaletteCommand[]> = {};
 
 type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
 
+function isVerticalMode(win?: Window): boolean {
+  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
+    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
+  return !!tabContainer?.verticalMode;
+}
+
 function getActionDisplayNameByOrientation(
   actionId: string,
   win?: Window,
 ): string {
-  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
-    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
-  const isVertical = !!tabContainer?.verticalMode;
+  const isVertical = isVerticalMode(win);
   if (!isVertical) {
     return getActionDisplayName(actionId);
   }
@@ -229,9 +233,7 @@ function getActionDescriptionByOrientation(
   actionId: string,
   win?: Window,
 ): string {
-  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
-    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
-  const isVertical = !!tabContainer?.verticalMode;
+  const isVertical = isVerticalMode(win);
   if (!isVertical) {
     return getActionDescription(actionId);
   }
@@ -259,9 +261,7 @@ function buildStepCommands(): PaletteCommand[] {
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
-  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
-    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
-  const orientationKey = tabContainer?.verticalMode ? "vertical" : "horizontal";
+  const orientationKey = isVerticalMode(win) ? "vertical" : "horizontal";
   if (!cachedCommands[orientationKey]) {
     cachedCommands[orientationKey] = buildGestureCommands(win);
   }
