@@ -62,7 +62,7 @@ export const actions: GestureActionRegistration[] = [
     fn: (win) => {
       const currentTab = win.gBrowser.selectedTab;
       const tabsToClose = win.gBrowser.visibleTabs.filter(
-        (tab: any) => tab !== currentTab,
+        (tab: XULElement) => tab !== currentTab,
       );
       win.gBrowser.removeTabs(tabsToClose);
     },

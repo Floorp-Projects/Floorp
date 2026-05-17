@@ -206,11 +206,15 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
 
 const cachedCommands: Record<string, PaletteCommand[]> = {};
 
+type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
+
 function getActionDisplayNameByOrientation(
   actionId: string,
   win?: Window,
 ): string {
-  const isVertical = !!(win as any)?.gBrowser?.tabContainer?.verticalMode;
+  const isVertical = Boolean(
+    (win as ChromeWindow | undefined)?.gBrowser?.tabContainer?.verticalMode,
+  );
   if (!isVertical) {
     return getActionDisplayName(actionId);
   }
@@ -225,7 +229,9 @@ function getActionDescriptionByOrientation(
   actionId: string,
   win?: Window,
 ): string {
-  const isVertical = !!(win as any)?.gBrowser?.tabContainer?.verticalMode;
+  const isVertical = Boolean(
+    (win as ChromeWindow | undefined)?.gBrowser?.tabContainer?.verticalMode,
+  );
   if (!isVertical) {
     return getActionDescription(actionId);
   }
@@ -253,7 +259,9 @@ function buildStepCommands(): PaletteCommand[] {
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
-  const orientationKey = !!(win as any)?.gBrowser?.tabContainer?.verticalMode
+  const orientationKey = Boolean(
+    (win as ChromeWindow | undefined)?.gBrowser?.tabContainer?.verticalMode,
+  )
     ? "vertical"
     : "horizontal";
   if (!cachedCommands[orientationKey]) {

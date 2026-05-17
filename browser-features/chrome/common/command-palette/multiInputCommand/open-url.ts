@@ -84,7 +84,7 @@ export const openUrlCommand: PaletteCommand = {
 
       switch (where) {
         case "current-tab":
-          globalThis.gBrowser?.loadURI(Services.io.newURI(navUrl), {
+          globalThis.gBrowser?.loadURI?.(Services.io.newURI(navUrl), {
             triggeringPrincipal: principal,
           });
           break;

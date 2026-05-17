@@ -28,11 +28,11 @@ async function loadContainers(): Promise<CommandStepChoice[]> {
 
     const containerChoices: CommandStepChoice[] = identities
       .filter(
-        (identity) =>
+        (identity: unknown) =>
           !(identity as { floorpPrivateContainer?: boolean })
             .floorpPrivateContainer,
       )
-      .map((container) => {
+      .map((container: unknown) => {
         const userContextId = (container as { userContextId: number })
           .userContextId;
         // getUserContextLabel handles both l10nId (built-in) and name (user-created)

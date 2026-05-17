@@ -286,7 +286,7 @@ export class CommandPaletteController {
         "moz-src:///toolkit/components/search/SearchService.sys.mjs",
       );
       SearchService.getDefault()
-        .then((engine: any) => {
+        .then((engine: { name?: string }) => {
           this.defaultEngineName = engine?.name ?? null;
         })
         .catch(() => {
@@ -550,7 +550,7 @@ export class CommandPaletteController {
             const navUrl = trimmed.includes("://")
               ? trimmed
               : `https://${trimmed}`;
-            let principal =
+            const principal =
               globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
             globalThis.gBrowser.loadURI?.(Services.io.newURI(navUrl), {
               triggeringPrincipal: principal,

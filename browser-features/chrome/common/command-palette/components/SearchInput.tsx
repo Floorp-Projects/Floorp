@@ -51,6 +51,7 @@ export function SearchInput(props: SearchInputProps) {
     <div class="command-palette-search-wrapper">
       <Show when={isInputMode()}>
         <button
+          type="button"
           class="command-palette-back-button"
           onClick={handleBackClick}
           title={i18next.t("commandPalette.backToCommands", {

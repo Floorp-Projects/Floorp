@@ -19,9 +19,9 @@ async function loadSearchEngines(): Promise<CommandStepChoice[]> {
     const engines = (await Promise.race([
       SearchService.getEngines(),
       timeoutPromise,
-    ])) as any[];
+    ])) as { name: string; description?: string }[];
 
-    let defaultEngine: any = null;
+    let defaultEngine: { name?: string } | null = null;
     try {
       defaultEngine = await SearchService.getDefault();
     } catch {
@@ -30,17 +30,19 @@ async function loadSearchEngines(): Promise<CommandStepChoice[]> {
 
     const defaultName = defaultEngine?.name ?? "";
 
-    return (engines ?? []).map((engine: any) => ({
-      label:
-        engine.name +
-        (engine.name === defaultName
-          ? i18next.t("commandPalette.searchEngineDefault", {
-              defaultValue: " (default)",
-            })
-          : ""),
-      value: engine.name,
-      description: engine.description ?? "",
-    }));
+    return (engines ?? []).map(
+      (engine: { name: string; description?: string }) => ({
+        label:
+          engine.name +
+          (engine.name === defaultName
+            ? i18next.t("commandPalette.searchEngineDefault", {
+                defaultValue: " (default)",
+              })
+            : ""),
+        value: engine.name,
+        description: engine.description ?? "",
+      }),
+    );
   } catch (e) {
     console.error("[command-palette] Failed to load search engines:", e);
     return [];
@@ -162,7 +164,7 @@ export const searchWebCommand: PaletteCommand = {
 
           switch (where) {
             case "current-tab":
-              globalThis.gBrowser?.loadURI(submission.uri, {
+              globalThis.gBrowser?.loadURI?.(submission.uri, {
                 triggeringPrincipal: sysPrincipal,
                 postData: submission.postData,
               });
