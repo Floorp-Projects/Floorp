@@ -130,6 +130,14 @@ export const reopenInContainerCommand: PaletteCommand = {
       pinned: tabPinned,
       tabIndex: tabPos + 1,
       triggeringPrincipal,
+    } as {
+      skipAnimation?: boolean;
+      inBackground?: boolean;
+      userContextId?: number;
+      triggeringPrincipal?: unknown;
+      pinned?: boolean;
+      index?: number;
+      tabIndex?: number;
     });
 
     if (globalThis.gBrowser.selectedTab === tab) {

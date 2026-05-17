@@ -602,13 +602,28 @@ export class CommandPaletteController {
             Promise.race([SearchService.getDefault(), timeoutPromise])
               .then((engine) => {
                 if (engine) {
-                  const sysPrincipal =
-                    globalThis.Services.scriptSecurityManager.getSystemPrincipal();
+                  const sysPrincipal = (
+                    globalThis as typeof globalThis & {
+                      Services: {
+                        scriptSecurityManager: {
+                          getSystemPrincipal(): unknown;
+                        };
+                      };
+                    }
+                  ).Services.scriptSecurityManager.getSystemPrincipal();
                   const submission = engine.getSubmission(trimmed);
                   const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
                     triggeringPrincipal: sysPrincipal,
                     inBackground: false,
                     postData: submission.postData,
+                  } as {
+                    skipAnimation?: boolean;
+                    inBackground?: boolean;
+                    userContextId?: number;
+                    triggeringPrincipal?: unknown;
+                    pinned?: boolean;
+                    index?: number;
+                    postData?: unknown;
                   });
                   if (globalThis.gBrowser && tab) {
                     globalThis.gBrowser.selectedTab = tab;

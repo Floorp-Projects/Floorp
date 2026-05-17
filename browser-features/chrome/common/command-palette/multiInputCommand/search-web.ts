@@ -158,8 +158,13 @@ export const searchWebCommand: PaletteCommand = {
         .then((engine) => {
           if (!engine) return;
 
-          const sysPrincipal =
-            globalThis.Services.scriptSecurityManager.getSystemPrincipal();
+          const sysPrincipal = (
+            globalThis as typeof globalThis & {
+              Services: {
+                scriptSecurityManager: { getSystemPrincipal(): unknown };
+              };
+            }
+          ).Services.scriptSecurityManager.getSystemPrincipal();
           const submission = engine.getSubmission(query);
 
           switch (where) {
@@ -167,6 +172,10 @@ export const searchWebCommand: PaletteCommand = {
               globalThis.gBrowser?.loadURI?.(submission.uri, {
                 triggeringPrincipal: sysPrincipal,
                 postData: submission.postData,
+              } as {
+                triggeringPrincipal?: unknown;
+                loadFlags?: number;
+                postData?: unknown;
               });
               break;
 
@@ -175,6 +184,14 @@ export const searchWebCommand: PaletteCommand = {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: true,
                 postData: submission.postData,
+              } as {
+                skipAnimation?: boolean;
+                inBackground?: boolean;
+                userContextId?: number;
+                triggeringPrincipal?: unknown;
+                pinned?: boolean;
+                index?: number;
+                postData?: unknown;
               });
               break;
             }
@@ -185,6 +202,14 @@ export const searchWebCommand: PaletteCommand = {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: false,
                 postData: submission.postData,
+              } as {
+                skipAnimation?: boolean;
+                inBackground?: boolean;
+                userContextId?: number;
+                triggeringPrincipal?: unknown;
+                pinned?: boolean;
+                index?: number;
+                postData?: unknown;
               });
               if (globalThis.gBrowser && tab) {
                 globalThis.gBrowser.selectedTab = tab;
