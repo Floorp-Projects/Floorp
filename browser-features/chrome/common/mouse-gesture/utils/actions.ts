@@ -68,6 +68,24 @@ export const actions: GestureActionRegistration[] = [
     },
   },
   {
+    name: "gecko-close-tabs-to-start",
+    fn: (win) => {
+      win.gBrowser.removeTabsToTheStartFrom(
+        win.gBrowser.selectedTab,
+        win.gBrowser.TabMetrics.userTriggeredContext(),
+      );
+    },
+  },
+  {
+    name: "gecko-close-tabs-to-end",
+    fn: (win) => {
+      win.gBrowser.removeTabsToTheEndFrom(
+        win.gBrowser.selectedTab,
+        win.gBrowser.TabMetrics.userTriggeredContext(),
+      );
+    },
+  },
+  {
     name: "gecko-open-new-tab",
     fn: (win) => win.BrowserCommands.openTab(),
   },
