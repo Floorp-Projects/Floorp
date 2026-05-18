@@ -67,7 +67,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-reload-all-tabs",
-    fn: (win) => win.gBrowser.reloadTabs(win.gBrowser.tabs),
+    fn: (win) => {
+      if (typeof win.gBrowser?.reloadTabs === "function") {
+        win.gBrowser.reloadTabs(win.gBrowser.tabs);
+      } else if (typeof win.BrowserReload === "function") {
+        for (const _tab of win.gBrowser.tabs) {
+          win.BrowserReload();
+        }
+      }
+    },
   },
   {
     name: "gecko-open-new-window",
@@ -115,7 +123,13 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-force-reload",
-    fn: (win) => win.BrowserCommands.reloadSkipCache(),
+    fn: (win) => {
+      if (typeof win.BrowserCommands?.reloadSkipCache === "function") {
+        win.BrowserCommands.reloadSkipCache();
+      } else if (typeof win.BrowserReloadSkipCache === "function") {
+        win.BrowserReloadSkipCache();
+      }
+    },
   },
   {
     name: "gecko-zoom-in",
@@ -143,7 +157,13 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-open-addons-manager",
-    fn: (win) => win.BrowserAddonUI.openAddonsMgr(),
+    fn: (win) => {
+      if (typeof win.BrowserAddonUI?.openAddonsMgr === "function") {
+        win.BrowserAddonUI.openAddonsMgr();
+      } else if (typeof win.BrowserOpenAddonsMgr === "function") {
+        win.BrowserOpenAddonsMgr();
+      }
+    },
   },
   {
     name: "gecko-send-with-mail",
@@ -172,7 +192,13 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "gecko-show-page-info",
-    fn: (win) => win.BrowserCommands.pageInfo(),
+    fn: (win) => {
+      if (typeof win.BrowserCommands?.pageInfo === "function") {
+        win.BrowserCommands.pageInfo();
+      } else if (typeof win.BrowserPageInfo === "function") {
+        win.BrowserPageInfo();
+      }
+    },
   },
   {
     name: "floorp-rest-mode",
