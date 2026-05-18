@@ -61,8 +61,8 @@ export function TutorialModal({ isOpen, onClose, steps, title }: TutorialModalPr
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${mounted ? "opacity-100" : "opacity-0"}`}>
-      <div className={`bg-base-100 rounded-2xl shadow-2xl ${step.content ? "max-w-2xl" : "max-w-lg"} w-full mx-4 overflow-hidden transition-all duration-200 ${mounted ? "scale-100 translate-y-0" : "scale-95 translate-y-2"}`}>
-        <div className="flex items-center justify-between p-4 border-b border-base-300">
+      <div className={`bg-base-100 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden flex flex-col h-[560px] max-h-[85vh] transition-all duration-200 ${mounted ? "scale-100 translate-y-0" : "scale-95 translate-y-2"}`}>
+        <div className="flex-none flex items-center justify-between p-4 border-b border-base-300">
           <div>
             <h2 className="text-lg font-bold">{title}</h2>
             <p className="text-sm text-base-content/60">
@@ -78,22 +78,22 @@ export function TutorialModal({ isOpen, onClose, steps, title }: TutorialModalPr
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="flex-1 min-h-0 overflow-y-auto p-6">
+          <h3 className="text-xl font-bold mb-2">{t(step.titleKey)}</h3>
+          <p className="text-base-content/80 leading-relaxed mb-4">{t(step.descriptionKey)}</p>
           {step.image && (
             <div className="mb-4 flex justify-center">
               {step.image}
             </div>
           )}
           {step.content && (
-            <div className="mb-4">
+            <div>
               {step.content}
             </div>
           )}
-          <h3 className="text-xl font-bold mb-2">{t(step.titleKey)}</h3>
-          <p className="text-base-content/80 leading-relaxed">{t(step.descriptionKey)}</p>
         </div>
 
-        <div className="flex items-center justify-between p-4 border-t border-base-300">
+        <div className="flex-none flex items-center justify-between p-4 border-t border-base-300">
           <button
             type="button"
             onClick={handlePrev}

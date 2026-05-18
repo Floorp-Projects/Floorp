@@ -22,32 +22,84 @@ const directionArrows: Record<GestureDirection, string> = {
   downLeft: "↙",
 };
 
-function detectDirection(dx: number, dy: number, threshold: number): GestureDirection | null {
-  const absDx = Math.abs(dx);
-  const absDy = Math.abs(dy);
+// ---- Ported from chrome/common/mouse-gesture/utils/recognizer.ts ----
 
-  if (absDx < threshold && absDy < threshold) return null;
+const TWO_PI = 2 * Math.PI;
+const ANGLE_SECTOR_HALF_WIDTH = Math.PI / 8;
 
-  const isDiagonal = absDx >= threshold * 0.6 && absDy >= threshold * 0.6;
-
-  if (isDiagonal) {
-    if (dx > 0 && dy < 0) return "upRight";
-    if (dx < 0 && dy < 0) return "upLeft";
-    if (dx > 0 && dy > 0) return "downRight";
-    if (dx < 0 && dy > 0) return "downLeft";
-  }
-
-  if (absDx > absDy) {
-    return dx > 0 ? "right" : "left";
-  }
-  return dy > 0 ? "down" : "up";
+function angleToDirection(angle: number): GestureDirection {
+  const a = angle < 0 ? angle + TWO_PI : angle;
+  if (a < ANGLE_SECTOR_HALF_WIDTH || a >= TWO_PI - ANGLE_SECTOR_HALF_WIDTH) return "right";
+  if (a < 3 * ANGLE_SECTOR_HALF_WIDTH) return "downRight";
+  if (a < 5 * ANGLE_SECTOR_HALF_WIDTH) return "down";
+  if (a < 7 * ANGLE_SECTOR_HALF_WIDTH) return "downLeft";
+  if (a < 9 * ANGLE_SECTOR_HALF_WIDTH) return "left";
+  if (a < 11 * ANGLE_SECTOR_HALF_WIDTH) return "upLeft";
+  if (a < 13 * ANGLE_SECTOR_HALF_WIDTH) return "up";
+  return "upRight";
 }
+
+function deltaToDirection(dx: number, dy: number): GestureDirection {
+  return angleToDirection(Math.atan2(dy, dx));
+}
+
+const MIN_SEGMENT_LENGTH = 25;
+const MIN_POINTS_FOR_DIR_CHANGE = 3;
+
+function extractDirectionSequence(trail: { x: number; y: number }[]): GestureDirection[] {
+  if (trail.length < 2) return [];
+
+  const directions: GestureDirection[] = [];
+  let segStart = 0;
+  let curDir: GestureDirection | null = null;
+  let ptsInDir = 0;
+
+  for (let i = 1; i < trail.length; i++) {
+    const dx = trail[i].x - trail[segStart].x;
+    const dy = trail[i].y - trail[segStart].y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+
+    if (len >= MIN_SEGMENT_LENGTH) {
+      const dir = deltaToDirection(dx, dy);
+
+      if (curDir === null) {
+        curDir = dir;
+        ptsInDir = 1;
+      } else if (dir === curDir) {
+        ptsInDir++;
+      } else {
+        if (ptsInDir >= MIN_POINTS_FOR_DIR_CHANGE) {
+          if (directions.length === 0 || directions[directions.length - 1] !== curDir) {
+            directions.push(curDir);
+          }
+        }
+        curDir = dir;
+        ptsInDir = 1;
+        segStart = i - 1;
+      }
+    }
+  }
+
+  if (curDir !== null && ptsInDir >= MIN_POINTS_FOR_DIR_CHANGE) {
+    if (directions.length === 0 || directions[directions.length - 1] !== curDir) {
+      directions.push(curDir);
+    }
+  }
+
+  if (directions.length === 0 && curDir !== null) {
+    directions.push(curDir);
+  }
+
+  return directions;
+}
+
+// ---- Component ----
 
 export function GestureCanvas({
   onGestureComplete,
   targetPattern,
-  trailColor = "#4F46E5",
-  trailWidth = 3,
+  trailColor = "#37ff00",
+  trailWidth = 6,
   className = "",
   actionMap,
 }: GestureCanvasProps) {
@@ -56,10 +108,11 @@ export function GestureCanvas({
   const [directions, setDirections] = useState<GestureDirection[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [matched, setMatched] = useState(false);
-  const lastDirRef = useRef<GestureDirection | null>(null);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const [actionPopup, setActionPopup] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pointerIdRef = useRef<number | null>(null);
+  const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trailRef = useRef<{ x: number; y: number }[]>([]);
 
   const completeGesture = useCallback(
     (dirs: GestureDirection[]) => {
@@ -69,9 +122,18 @@ export function GestureCanvas({
           const isMatch = dirs.every((d, i) => d === targetPattern[i]);
           if (isMatch) setMatched(true);
         }
+        if (actionMap) {
+          const key = dirs.join(",");
+          const actionName = actionMap[key];
+          if (actionName) {
+            setActionPopup(actionName);
+            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+            popupTimerRef.current = setTimeout(() => setActionPopup(null), 1500);
+          }
+        }
       }
     },
-    [onGestureComplete, targetPattern],
+    [onGestureComplete, targetPattern, actionMap],
   );
 
   useEffect(() => {
@@ -83,23 +145,21 @@ export function GestureCanvas({
       const rect = el.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      setPoints((prev) => [...prev, { x, y }]);
-      if (!lastPointRef.current) return;
-      const dx = x - lastPointRef.current.x;
-      const dy = y - lastPointRef.current.y;
-      const dir = detectDirection(dx, dy, 30);
-      if (dir && dir !== lastDirRef.current) {
-        lastDirRef.current = dir;
-        lastPointRef.current = { x, y };
-        setDirections((prev) => [...prev, dir]);
-      }
+
+      // Skip negligible movement
+      const last = trailRef.current[trailRef.current.length - 1];
+      if (last && Math.hypot(x - last.x, y - last.y) < 1.5) return;
+
+      trailRef.current.push({ x, y });
+      setPoints([...trailRef.current]);
+      setDirections(extractDirectionSequence(trailRef.current));
     };
+
     const onUp = () => {
+      const dirs = extractDirectionSequence(trailRef.current);
+      setDirections(dirs);
+      completeGesture(dirs);
       setIsDrawing(false);
-      setDirections((prev) => {
-        completeGesture(prev);
-        return prev;
-      });
     };
 
     try { el.setPointerCapture(pointerIdRef.current!); } catch { /* ignore */ }
@@ -113,26 +173,31 @@ export function GestureCanvas({
   }, [isDrawing, completeGesture]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 2) return;
     e.preventDefault();
     pointerIdRef.current = e.pointerId;
     const rect = containerRef.current!.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    trailRef.current = [{ x, y }];
     setPoints([{ x, y }]);
     setDirections([]);
     setIsDrawing(true);
     setMatched(false);
-    lastDirRef.current = null;
-    lastPointRef.current = { x, y };
+    setActionPopup(null);
+  }, []);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
   }, []);
 
   const handleReset = useCallback(() => {
+    trailRef.current = [];
     setPoints([]);
     setDirections([]);
     setIsDrawing(false);
     setMatched(false);
-    lastDirRef.current = null;
-    lastPointRef.current = null;
+    setActionPopup(null);
   }, []);
 
   const pointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
@@ -148,8 +213,9 @@ export function GestureCanvas({
       <div
         ref={containerRef}
         className="relative bg-base-200 rounded-lg border-2 border-dashed border-base-300 cursor-crosshair select-none overflow-hidden"
-        style={{ height: 200 }}
+        style={{ height: 140 }}
         onPointerDown={handlePointerDown}
+        onContextMenu={handleContextMenu}
       >
         {points.length === 0 && !isDrawing && (
           <div className="absolute inset-0 flex items-center justify-center text-base-content/40 text-sm pointer-events-none">
@@ -165,10 +231,21 @@ export function GestureCanvas({
               strokeWidth={trailWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
+              opacity={0.9}
             />
           </svg>
         )}
-        {matched && (
+        {actionPopup && !isDrawing && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="px-4 py-2 text-white font-bold"
+              style={{ backgroundColor: "rgba(0,0,0,0.7)", fontSize: 20 }}
+            >
+              {actionPopup}
+            </div>
+          </div>
+        )}
+        {matched && !actionPopup && (
           <div className="absolute inset-0 flex items-center justify-center bg-success/20">
             <span className="text-success font-bold text-lg">
               {t("tutorial.gestureCanvas.success")}

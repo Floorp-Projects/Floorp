@@ -11,7 +11,6 @@ import { Tabbar } from "@/app/design/components/Tabbar.tsx";
 import { Tab } from "@/app/design/components/Tab.tsx";
 import { UICustomization } from "@/app/design/components/UICustomization.tsx";
 import { TabSleepExclusion } from "@/app/design/components/TabSleepExclusion.tsx";
-import { HelpSection } from "@/components/common/help-section.tsx";
 import type { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
@@ -121,11 +120,6 @@ export default function Page() {
         <p className="text-sm mb-4">
           {t("design.customizePositionOfToolbars")}
         </p>
-        <div className="mb-6 w-full max-w-2xl">
-          <HelpSection summary={t("design.helpThemeComparison")}>
-            <p>{t("design.helpThemeComparisonDescription")}</p>
-          </HelpSection>
-        </div>
       </div>
 
       <FormProvider {...methods}>

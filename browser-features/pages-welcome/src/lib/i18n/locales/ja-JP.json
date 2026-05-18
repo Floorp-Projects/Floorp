@@ -137,7 +137,7 @@
     "notebook": "ノートブック",
     "nextTab": "次のタブに移動",
     "splitView": {
-      "title": "Split View",
+      "title": "分割ビュー",
       "description": "1つのウィンドウで複数のタブを並べて表示。2〜4ペインに分割し、柔軟なレイアウトで効率的にマルチタスク。",
       "features": [
         "2〜4つのタブを同時表示",

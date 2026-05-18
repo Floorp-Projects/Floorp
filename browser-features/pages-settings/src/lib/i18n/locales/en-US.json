@@ -287,15 +287,27 @@
       },
       "step2": {
         "title": "Creating and Switching Workspaces",
-        "description": "Click the workspace button in the toolbar (usually top-left) to see your workspaces. Click + to create a new one, and click any workspace to switch to it."
+        "description": "Click the workspace button on the tab strip to open the workspace panel. Click + to create a new workspace, click any workspace to switch to it, or use the manage and restore buttons in the footer."
       },
       "step3": {
         "title": "Customizing Workspaces",
-        "description": "Each workspace can have its own icon and name. Right-click a workspace to edit its settings or archive it when you no longer need it."
+        "description": "Right-click a workspace to open the context menu: reorder (Move Up/Down), Delete, Manage (edit name, icon, and container), or Archive. You can also drag and drop to reorder."
+      },
+      "step4": {
+        "title": "Containers and Workspaces",
+        "description": "Each workspace can be assigned a Firefox Container. Tabs in a container-isolated workspace are separated from other containers — cookies, logins, and browsing data stay independent. This lets you use different accounts in the same browser window."
+      },
+      "step5": {
+        "title": "Archiving and Restoring",
+        "description": "When you archive a workspace, its tabs are closed and the workspace is hidden from the switcher, but all data is preserved. To restore, click the restore button (folder icon) in the popup footer to view and restore archived workspaces."
+      },
+      "step6": {
+        "title": "Managing from the Sidebar",
+        "description": "Enable \"Manage workspaces on sidebar\" in settings to switch and manage workspaces directly from the browser sidebar. In this mode, the toolbar popup is disabled and all workspace operations move to the sidebar panel."
       }
     },
     "helpArchiveWorkspaces": "What happens when I archive a workspace?",
-    "helpArchiveWorkspacesDescription": "Archived workspaces are hidden from the workspace switcher but their data is preserved. You can restore them later from the workspace management menu. Tabs in archived workspaces are closed but the workspace configuration is saved."
+    "helpArchiveWorkspacesDescription": "Archived workspaces are hidden from the workspace switcher but their data is preserved. You can restore them later using the restore button (folder icon) in the workspace popup footer. Tabs in archived workspaces are closed but the workspace configuration is saved."
   },
   "accounts": {
     "profileAndAccount": "Profile and Account",
@@ -660,15 +672,15 @@
       },
       "step2": {
         "title": "Try a Basic Gesture",
-        "description": "Try drawing ↓ then ↑ (down then up). This gesture closes the current tab. Click and drag in the canvas below."
+        "description": "Try drawing ↓ then ↑ (down then up). This gesture opens a new tab. Right-click and drag in the canvas below."
       },
       "step3": {
         "title": "Back and Forward Gesture",
-        "description": "Try drawing ← then → (left then right). This gesture goes back in history. Click and drag in the canvas below."
+        "description": "Try drawing ← (left). This gesture goes back in history. Right-click and drag in the canvas below."
       },
       "step4": {
         "title": "Free Gesture Practice",
-        "description": "Try drawing any gesture freely. The detected directions will be shown below the canvas."
+        "description": "Try drawing any gesture freely. Right-click and drag in the canvas below. The detected directions will be shown."
       },
       "step5": {
         "title": "Customize Your Gestures",
@@ -676,7 +688,7 @@
       }
     },
     "helpDefaultGestures": "What are the default gestures?",
-    "helpDefaultGesturesDescription": "Default gestures include: Left → Go Back, Right → Go Forward, Down then Left → Close Tab, Up → Scroll to Top, Down → Scroll to Bottom. You can customize all gestures in the Actions section."
+    "helpDefaultGesturesDescription": "Default gestures include: Left → Go Back, Right → Go Forward, Down then Right → Close Tab, Down then Up → New Tab, Up → Scroll to Top, Down → Scroll to Bottom. You can customize all gestures in the Actions section."
   },
   "keyboardShortcut": {
     "description": "Customize keyboard shortcuts for various browser actions.",
@@ -782,7 +794,7 @@
     "next": "Next",
     "finish": "Got it",
     "gestureCanvas": {
-      "placeholder": "Click and drag here to draw a gesture",
+      "placeholder": "Right-click and drag here to draw a gesture",
       "detected": "Detected: {{pattern}}",
       "matched": "Matched: {{action}}",
       "success": "Correct! Well done!",

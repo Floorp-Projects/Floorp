@@ -21,8 +21,8 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layoutHorizontal",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="18" height="26" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="21" y="1" width="18" height="26" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="18" height="26" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="26" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -31,8 +31,8 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layoutVertical",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="38" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="1" y="15" width="38" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="38" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="38" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -41,10 +41,10 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layoutGrid2x2",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="21" y="1" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="1" y="15" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="21" y="15" width="18" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="18" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="18" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="15" width="18" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -53,9 +53,9 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layout3PaneLeft",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="22" height="26" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="25" y="1" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="25" y="15" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="22" height="26" rx="2" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="25" y="1" width="14" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="25" y="15" width="14" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -64,9 +64,9 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layout3PaneRight",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="1" y="15" width="14" height="12" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="17" y="1" width="22" height="26" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="14" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="15" width="14" height="12" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="17" y="1" width="22" height="26" rx="2" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -75,9 +75,9 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layout3PaneTop",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="38" height="14" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="1" y="17" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="21" y="17" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="38" height="14" rx="2" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="17" width="18" height="10" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="17" width="18" height="10" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },
@@ -86,9 +86,9 @@ const layouts: LayoutOption[] = [
     labelKey: "splitView.layout3PaneBottom",
     preview: (
       <svg viewBox="0 0 40 28" className="size-8">
-        <rect x="1" y="1" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="21" y="1" width="18" height="10" rx="2" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-        <rect x="1" y="13" width="38" height="14" rx="2" fill="currentColor" opacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="1" width="18" height="10" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="21" y="1" width="18" height="10" rx="2" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
+        <rect x="1" y="13" width="38" height="14" rx="2" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       </svg>
     ),
   },

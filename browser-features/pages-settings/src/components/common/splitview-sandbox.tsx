@@ -8,12 +8,6 @@ interface SplitViewSandboxProps {
   className?: string;
 }
 
-const paneColors = [
-  "bg-primary/20 border-primary/30",
-  "bg-secondary/20 border-secondary/30",
-  "bg-accent/20 border-accent/30",
-  "bg-info/20 border-info/30",
-];
 
 const layouts: { value: SplitViewLayout; paneCount: number }[] = [
   { value: "horizontal", paneCount: 2 },
@@ -178,15 +172,37 @@ export function SplitViewSandbox({ onLayoutChange, resizable = false, className 
         {/* Content area with split */}
         <div
           ref={containerBoxRef}
-          className="flex-1 bg-base-100 p-1.5 gap-1"
+          className="relative flex-1 bg-base-100 p-1.5 gap-1"
           style={{ ...effectiveStyle, height: "calc(100% - 52px)" }}
         >
           {panes.map((pane, i) => (
             <div
               key={i}
-              className={`rounded border ${paneColors[pane.idx % paneColors.length]} p-2 flex flex-col gap-1 overflow-hidden`}
+              className="rounded bg-base-200/30 p-2 flex flex-col gap-1 overflow-hidden relative"
               style={pane.style}
             >
+              {/* Drag grip — capsule shape with dot pattern */}
+              <div
+                className="absolute top-1 left-1/2 -translate-x-1/2 pointer-events-none"
+                style={{
+                  width: 28,
+                  height: 8,
+                  borderRadius: 999,
+                  border: "1px solid rgba(0,0,0,0.08)",
+                  background: "rgba(255,255,255,0.6)",
+                  opacity: 0.5,
+                }}
+              >
+                <div
+                  style={{
+                    backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.25) 1px, transparent 1px)",
+                    backgroundSize: "4px 3px",
+                    width: 12,
+                    height: 3,
+                    margin: "2px auto 0",
+                  }}
+                />
+              </div>
               <div className="w-3/4 h-2 bg-base-content/10 rounded" />
               <div className="w-1/2 h-2 bg-base-content/10 rounded" />
               <div className="w-2/3 h-2 bg-base-content/10 rounded" />
@@ -194,18 +210,34 @@ export function SplitViewSandbox({ onLayoutChange, resizable = false, className 
           ))}
           {resizable && paneCount === 2 && (layout === "horizontal" || layout === "vertical") && (
             <div
-              className="bg-base-content/10 hover:bg-primary/30 cursor-col-resize z-10 flex items-center justify-center"
+              className="group z-10 flex items-center justify-center"
               style={{
+                background: "transparent",
+                cursor: layout === "horizontal" ? "col-resize" : "row-resize",
                 ...(layout === "horizontal"
-                  ? { width: 4, gridColumn: "2", gridRow: "1" }
-                  : { height: 4, gridRow: "2", gridColumn: "1" }),
+                  ? { width: 8, gridColumn: "2", gridRow: "1" }
+                  : { height: 8, gridRow: "2", gridColumn: "1" }),
               }}
               onPointerDown={handleDividerDown}
             >
               <div
-                className={`bg-base-content/20 rounded ${layout === "horizontal" ? "w-0.5 h-4" : "h-0.5 w-4"}`}
+                className={`bg-transparent group-hover:bg-primary/60 rounded transition-colors ${
+                  layout === "horizontal" ? "w-1 h-[40px]" : "h-1 w-[40px]"
+                }`}
               />
             </div>
+          )}
+          {/* Center handle for 2×2 grid */}
+          {layout === "grid-2x2" && paneCount >= 4 && (
+            <div
+              className="absolute z-20 rounded-full cursor-move opacity-0 hover:opacity-100 transition-opacity bg-primary/60"
+              style={{
+                width: 12,
+                height: 12,
+                top: "calc(50% - 6px)",
+                left: "calc(50% - 6px)",
+              }}
+            />
           )}
         </div>
       </div>
