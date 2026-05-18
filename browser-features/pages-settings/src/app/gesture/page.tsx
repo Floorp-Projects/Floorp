@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { useMouseGestureConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/Preferences.tsx";
 import { ActionsSettings } from "./components/ActionsSettings.tsx";
-import { HelpSection } from "@/components/common/help-section.tsx";
 import { LearnButton } from "@/components/common/learn-button.tsx";
 import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
 import { GestureCanvas } from "@/components/common/gesture-canvas.tsx";
@@ -39,6 +38,7 @@ export default function Page() {
                     targetPattern={["down", "up"] as GestureDirection[]}
                     trailColor={config.trailColor}
                     trailWidth={config.trailWidth}
+                    actionMap={{ "down,up": t("mouseGesture.actions.gecko-open-new-tab") }}
                     onGestureComplete={() => {}}
                 />
             ),
@@ -48,9 +48,10 @@ export default function Page() {
             descriptionKey: "mouseGesture.tutorial.step3.description",
             content: (
                 <GestureCanvas
-                    targetPattern={["left", "right"] as GestureDirection[]}
+                    targetPattern={["left"] as GestureDirection[]}
                     trailColor={config.trailColor}
                     trailWidth={config.trailWidth}
+                    actionMap={{ left: t("mouseGesture.actions.gecko-back") }}
                     onGestureComplete={() => {}}
                 />
             ),
@@ -62,6 +63,12 @@ export default function Page() {
                 <GestureCanvas
                     trailColor={config.trailColor}
                     trailWidth={config.trailWidth}
+                    actionMap={{
+                        left: t("mouseGesture.actions.gecko-back"),
+                        right: t("mouseGesture.actions.gecko-forward"),
+                        "down,up": t("mouseGesture.actions.gecko-open-new-tab"),
+                        "down,right": t("mouseGesture.actions.gecko-close-tab"),
+                    }}
                     onGestureComplete={() => {}}
                 />
             ),
@@ -87,11 +94,6 @@ export default function Page() {
                 </p>
                 <div className="flex items-center gap-2">
                     <LearnButton steps={gestureTutorialSteps} title={t("pages.mouseGesture")} />
-                </div>
-                <div className="w-full max-w-2xl mb-6">
-                    <HelpSection summary={t("mouseGesture.helpDefaultGestures")}>
-                        <p>{t("mouseGesture.helpDefaultGesturesDescription")}</p>
-                    </HelpSection>
                 </div>
             </div>
 

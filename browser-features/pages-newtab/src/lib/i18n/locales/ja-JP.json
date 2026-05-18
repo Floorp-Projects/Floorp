@@ -57,8 +57,8 @@
     "dismiss": "閉じる",
     "tips": {
       "splitView": {
-        "title": "Split Viewでマルチタスク",
-        "description": "複数のタブを並べて表示。タブを右クリックして「Split Viewで開く」を選択してください。"
+        "title": "分割ビューでマルチタスク",
+        "description": "複数のタブを並べて表示。タブを右クリックして「分割ビューで開く」を選択してください。"
       },
       "panelSidebar": {
         "title": "パネルサイドバーにサイトをピン留め",
