@@ -25,7 +25,13 @@ export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
   "floorp.keyboardshortcut.safeErrorHandling";
 
 const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
-  return {};
+  return {
+    "floorp-toggle-command-palette": {
+      key: "F2",
+      modifiers: { alt: false, ctrl: false, meta: false, shift: false },
+      action: "floorp-toggle-command-palette",
+    },
+  };
 };
 
 export const defaultConfig: KeyboardShortcutConfig = {
