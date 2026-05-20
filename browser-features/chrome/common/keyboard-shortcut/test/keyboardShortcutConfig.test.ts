@@ -7,6 +7,7 @@ import {
   assert,
   runTests,
 } from "../../../test/utils/test_harness.ts";
+import type { ShortcutConfig } from "../type.ts";
 import {
   shortcutToString,
   stringToShortcut,
@@ -343,6 +344,13 @@ function testDefaultConfigStructure(): void {
     1,
     "default config should have one shortcut",
   );
+  const shortcut = Object.values(defaultConfig.shortcuts)[0];
+  assertEquals(
+    shortcut.action,
+    "floorp-toggle-command-palette",
+    "default shortcut action should be floorp-toggle-command-palette",
+  );
+  assertEquals(shortcut.key, "F2", "default shortcut key should be F2");
 }
 
 function testStrDefaultConfigIsParseable(): void {
@@ -357,6 +365,13 @@ function testStrDefaultConfigIsParseable(): void {
     1,
     "parsed default config should have one shortcut (command palette)",
   );
+  const parsedShortcut = Object.values(parsed.shortcuts)[0] as ShortcutConfig;
+  assertEquals(
+    parsedShortcut.action,
+    "floorp-toggle-command-palette",
+    "parsed shortcut action should be floorp-toggle-command-palette",
+  );
+  assertEquals(parsedShortcut.key, "F2", "parsed shortcut key should be F2");
 }
 
 function testPrefConstantsAreStrings(): void {
