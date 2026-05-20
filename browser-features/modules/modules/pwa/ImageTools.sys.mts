@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs",
-);
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
+
+function getShellService() {
+  return ChromeUtils.importESModule("resource:///modules/ShellService.sys.mjs")
+    .ShellService;
+}
 
 const { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs",
@@ -187,24 +188,27 @@ export const ImageTools = {
     height: number,
     target: nsIFile,
   ) {
-    let format = "image/png";
-    if (AppConstants.platform === "win") {
-      format = "image/vnd.microsoft.icon";
-    }
+    // Use ShellService.shortcutIconType for platform-appropriate format
+    // (replaces hardcoded platform checks, Bug 1985098, Firefox 150)
+    const iconType = getShellService().shortcutIconType;
     return new Promise<void>((resolve, reject) => {
       const output = FileUtils.openFileOutputStream(target);
       let workingContainer = container;
-      if (format === "image/vnd.microsoft.icon") {
+      if (iconType.extension === "ico") {
         workingContainer = rasterizeVectorIcon(workingContainer, width, height);
       }
       let stream: nsIInputStream;
       try {
         if (workingContainer.type === Ci.imgIContainer.TYPE_VECTOR) {
-          stream = ImgTools.encodeImage(workingContainer, format, "");
+          stream = ImgTools.encodeImage(
+            workingContainer,
+            iconType.mimeType,
+            "",
+          );
         } else {
           stream = ImgTools.encodeScaledImage(
             workingContainer,
-            format,
+            iconType.mimeType,
             width,
             height,
             "",
@@ -213,7 +217,11 @@ export const ImageTools = {
       } catch (vectorErr) {
         console.warn("ImageTools: failed initial encode, retrying", vectorErr);
         try {
-          stream = ImgTools.encodeImage(workingContainer, format, "");
+          stream = ImgTools.encodeImage(
+            workingContainer,
+            iconType.mimeType,
+            "",
+          );
         } catch (e2) {
           console.error("ImageTools: failed fallback encode", e2);
           reject(e2);
@@ -271,9 +279,8 @@ export const ImageTools = {
   ): Promise<string | null> {
     const { container, type } = await ImageTools.loadImage(sourceURI);
     try {
-      // For Linux, try to save as SVG if available for better scaling
       if (
-        AppConstants.platform === "linux" &&
+        getShellService().shortcutIconType.extension === "png" &&
         type?.includes("svg") &&
         container.type === Ci.imgIContainer.TYPE_VECTOR
       ) {
@@ -372,8 +379,9 @@ function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
   }
 
   const semicolonIndex = metadata.indexOf(";");
-  const mime =
-    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
+  const mime = semicolonIndex === -1
+    ? metadata
+    : metadata.substring(0, semicolonIndex);
 
   if (!mime) {
     return null;

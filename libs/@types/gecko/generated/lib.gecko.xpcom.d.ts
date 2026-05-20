@@ -411,8 +411,7 @@ declare global {
 
   // https://searchfox.org/mozilla-central/source/accessible/interfaces/nsIAccessibleObjectAttributeChangedEvent.idl
 
-  interface nsIAccessibleObjectAttributeChangedEvent
-    extends nsIAccessibleEvent {
+  interface nsIAccessibleObjectAttributeChangedEvent extends nsIAccessibleEvent {
     readonly changedAttribute: string;
   }
 
@@ -1146,8 +1145,7 @@ declare global {
   }
 
   interface nsIAppStartup
-    extends nsISupports,
-      Enums<typeof nsIAppStartup_IDLShutdownPhase> {
+    extends nsISupports, Enums<typeof nsIAppStartup_IDLShutdownPhase> {
     readonly eConsiderQuit?: 1;
     readonly eAttemptQuit?: 2;
     readonly eForceQuit?: 3;
@@ -1893,7 +1891,8 @@ declare global {
   }
 
   interface nsIDocShell
-    extends nsIDocShellTreeItem,
+    extends
+      nsIDocShellTreeItem,
       Enums<
         typeof nsIDocShell_DocShellEnumeratorDirection &
           typeof nsIDocShell_AppType &
@@ -2087,7 +2086,8 @@ declare global {
   }
 
   interface nsIDocumentViewer
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIDocumentViewer_PermitUnloadAction &
           typeof nsIDocumentViewer_PermitUnloadResult
@@ -2402,8 +2402,7 @@ declare global {
   }
 
   interface nsIContentPolicy
-    extends nsISupports,
-      Enums<typeof nsIContentPolicy_nsContentPolicyType> {
+    extends nsISupports, Enums<typeof nsIContentPolicy_nsContentPolicyType> {
     readonly REJECT_REQUEST?: -1;
     readonly REJECT_TYPE?: -2;
     readonly REJECT_SERVER?: -3;
@@ -2508,7 +2507,8 @@ declare global {
   }
 
   interface nsIScriptableContentIterator
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsIScriptableContentIterator_IteratorType> {
     initWithRootNode(
       aType: nsIScriptableContentIterator.IteratorType,
@@ -2557,7 +2557,8 @@ declare global {
   }
 
   interface nsISelectionController
-    extends nsISelectionDisplay,
+    extends
+      nsISelectionDisplay,
       Enums<typeof nsISelectionController_ControllerScrollFlags> {
     readonly SELECTION_NONE?: 0;
     readonly SELECTION_NORMAL?: 1;
@@ -3792,8 +3793,7 @@ declare global {
   }
 
   interface nsIRemoteTab
-    extends nsISupports,
-      Enums<typeof nsIRemoteTab_NavigationType> {
+    extends nsISupports, Enums<typeof nsIRemoteTab_NavigationType> {
     renderLayers: boolean;
     readonly hasLayers: boolean;
     priorityHint: boolean;
@@ -4772,8 +4772,7 @@ declare global {
   }
 
   interface nsIQuotaArtificialFailure
-    extends nsISupports,
-      Enums<typeof nsIQuotaArtificialFailure_Category> {}
+    extends nsISupports, Enums<typeof nsIQuotaArtificialFailure_Category> {}
 
   // https://searchfox.org/mozilla-central/source/dom/quota/nsIQuotaCallbacks.idl
 
@@ -4986,7 +4985,8 @@ declare global {
   }
 
   interface nsIContentSecurityPolicy
-    extends nsISerializable,
+    extends
+      nsISerializable,
       Enums<
         typeof nsIContentSecurityPolicy_CSPDirective &
           typeof nsIContentSecurityPolicy_RequireTrustedTypesForDirectiveState
@@ -5086,8 +5086,7 @@ declare global {
   }
 
   interface nsIReferrerInfo
-    extends nsISerializable,
-      Enums<typeof nsIReferrerInfo_ReferrerPolicyIDL> {
+    extends nsISerializable, Enums<typeof nsIReferrerInfo_ReferrerPolicyIDL> {
     readonly originalReferrer: nsIURI;
     readonly referrerPolicy: nsIReferrerInfo.ReferrerPolicyIDL;
     getReferrerPolicyString(): string;
@@ -5525,8 +5524,7 @@ declare global {
 
   // https://searchfox.org/mozilla-central/source/dom/interfaces/xul/nsIDOMXULMultSelectCntrlEl.idl
 
-  interface nsIDOMXULMultiSelectControlElement
-    extends nsIDOMXULSelectControlElement {
+  interface nsIDOMXULMultiSelectControlElement extends nsIDOMXULSelectControlElement {
     selType: string;
     currentItem: Element;
     currentIndex: i32;
@@ -6443,8 +6441,7 @@ declare global {
   }
 
   interface imgIContainer
-    extends nsISupports,
-      Enums<typeof imgIContainer_DecodeResult> {
+    extends nsISupports, Enums<typeof imgIContainer_DecodeResult> {
     readonly TYPE_RASTER?: 0;
     readonly TYPE_VECTOR?: 1;
     readonly TYPE_REQUEST?: 2;
@@ -6800,8 +6797,7 @@ declare global {
   }
 
   interface nsIKeyValueService
-    extends nsISupports,
-      Enums<typeof nsIKeyValueService_RecoveryStrategy> {
+    extends nsISupports, Enums<typeof nsIKeyValueService_RecoveryStrategy> {
     getOrCreate(
       callback: nsIKeyValueDatabaseCallback,
       path: string,
@@ -6841,7 +6837,8 @@ declare global {
   }
 
   interface nsIKeyValueImporter
-    extends nsIKeyValueImportSourceSpec,
+    extends
+      nsIKeyValueImportSourceSpec,
       Enums<
         typeof nsIKeyValueImporter_ConflictPolicy &
           typeof nsIKeyValueImporter_CleanupPolicy
@@ -7671,7 +7668,8 @@ declare global {
   }
 
   interface nsICacheInfoChannel
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsICacheInfoChannel_PreferredAlternativeDataDeliveryType> {
     readonly cacheTokenFetchCount: u32;
     readonly cacheTokenExpirationTime: u32;
@@ -7814,8 +7812,7 @@ declare global {
   }
 
   interface nsIClassOfService
-    extends nsISupports,
-      Enums<typeof nsIClassOfService_FetchPriority> {
+    extends nsISupports, Enums<typeof nsIClassOfService_FetchPriority> {
     readonly Leader?: 1;
     readonly Follower?: 2;
     readonly Speculative?: 4;
@@ -7867,7 +7864,8 @@ declare global {
   }
 
   interface nsIClassifiedChannel
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsIClassifiedChannel_ClassificationFlags> {
     setMatchedInfo(aList: string, aProvider: string, aFullHash: string): void;
     readonly matchedList: string;
@@ -8125,8 +8123,7 @@ declare global {
     ): void;
   }
 
-  interface nsIIncrementalStreamLoader
-    extends nsIThreadRetargetableStreamListener {
+  interface nsIIncrementalStreamLoader extends nsIThreadRetargetableStreamListener {
     init(aObserver: nsIIncrementalStreamLoaderObserver): void;
     readonly numBytesRead: u32;
     readonly request: nsIRequest;
@@ -8273,7 +8270,8 @@ declare global {
   }
 
   interface nsILoadInfo
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsILoadInfo_StoragePermissionState &
           typeof nsILoadInfo_IPAddressSpace &
@@ -8580,7 +8578,8 @@ declare global {
   }
 
   interface nsINetworkConnectivityService
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsINetworkConnectivityService_ConnectivityState> {
     DNSv4: nsINetworkConnectivityService.ConnectivityState;
     DNSv6: nsINetworkConnectivityService.ConnectivityState;
@@ -9544,8 +9543,7 @@ declare global {
   }
 
   interface nsITimedChannel
-    extends nsISupports,
-      Enums<typeof nsITimedChannel_BodyInfoAccess> {
+    extends nsISupports, Enums<typeof nsITimedChannel_BodyInfoAccess> {
     redirectCount: u8;
     internalRedirectCount: u8;
     initiatorType: string;
@@ -10195,8 +10193,7 @@ declare global {
   }
 
   interface nsICookieNotification
-    extends nsISupports,
-      Enums<typeof nsICookieNotification_Action> {
+    extends nsISupports, Enums<typeof nsICookieNotification_Action> {
     readonly action: nsICookieNotification.Action;
     readonly cookie: nsICookie;
     readonly baseDomain: string;
@@ -10268,16 +10265,14 @@ declare global {
   }
 
   interface nsICookieValidation
-    extends nsISupports,
-      Enums<typeof nsICookieValidation_ValidationError> {
+    extends nsISupports, Enums<typeof nsICookieValidation_ValidationError> {
     readonly result: nsICookieValidation.ValidationError;
     readonly errorString: string;
   }
 
   // https://searchfox.org/mozilla-central/source/netwerk/cookie/nsIThirdPartyCookieBlockingExceptionListService.idl
 
-  interface nsIThirdPartyCookieBlockingExceptionListService
-    extends nsISupports {
+  interface nsIThirdPartyCookieBlockingExceptionListService extends nsISupports {
     init(): Promise<any>;
     shutdown(): void;
   }
@@ -10460,7 +10455,8 @@ declare global {
   }
 
   interface nsIDNSService
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIDNSService_ResolveType &
           typeof nsIDNSService_ResolverMode &
@@ -10608,8 +10604,7 @@ declare global {
   }
 
   interface nsITRRSkipReason
-    extends nsISupports,
-      Enums<typeof nsITRRSkipReason_value> {}
+    extends nsISupports, Enums<typeof nsITRRSkipReason_value> {}
 
   // https://searchfox.org/mozilla-central/source/netwerk/dns/nsPIDNSService.idl
 
@@ -11331,7 +11326,8 @@ declare global {
   }
 
   interface nsIWebTransport
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIWebTransport_WebTransportError &
           typeof nsIWebTransport_HTTPVersion
@@ -11370,7 +11366,8 @@ declare global {
   }
 
   interface WebTransportSessionEventListener
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof WebTransportSessionEventListener_DatagramOutcome> {
     onSessionReady(aSessionId: u64): void;
     onSessionClosed(aCleanly: boolean, aErrorCode: u32, aReason: string): void;
@@ -11740,8 +11737,7 @@ declare global {
   }
 
   interface nsIClientAuthRememberService
-    extends nsISupports,
-      Enums<typeof nsIClientAuthRememberService_Duration> {
+    extends nsISupports, Enums<typeof nsIClientAuthRememberService_Duration> {
     forgetRememberedDecision(key: string): void;
     getDecisions(): nsIClientAuthRememberRecord[];
     rememberDecisionScriptable(
@@ -11807,8 +11803,7 @@ declare global {
   }
 
   interface nsIDataStorageManager
-    extends nsISupports,
-      Enums<typeof nsIDataStorageManager_DataStorage> {
+    extends nsISupports, Enums<typeof nsIDataStorageManager_DataStorage> {
     get(dataStorage: nsIDataStorageManager.DataStorage): nsIDataStorage;
   }
 } // global
@@ -11825,8 +11820,7 @@ declare global {
   }
 
   interface nsIDataStorage
-    extends nsISupports,
-      Enums<typeof nsIDataStorage_DataType> {
+    extends nsISupports, Enums<typeof nsIDataStorage_DataType> {
     get(key: string, type: nsIDataStorage.DataType): string;
     put(key: string, value: string, type: nsIDataStorage.DataType): void;
     remove(key: string, type: nsIDataStorage.DataType): void;
@@ -12025,8 +12019,7 @@ declare global {
   }
 
   interface nsISiteSecurityService
-    extends nsISupports,
-      Enums<typeof nsISiteSecurityService_ResetStateBy> {
+    extends nsISupports, Enums<typeof nsISiteSecurityService_ResetStateBy> {
     readonly Success?: 0;
     readonly ERROR_UNKNOWN?: 1;
     readonly ERROR_COULD_NOT_PARSE_HEADER?: 3;
@@ -12125,7 +12118,8 @@ declare global {
   }
 
   interface nsITransportSecurityInfo
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsITransportSecurityInfo_OverridableErrorCategory> {
     readonly SSL_VERSION_3?: 0;
     readonly TLS_VERSION_1?: 1;
@@ -12212,8 +12206,7 @@ declare global {
   }
 
   interface nsIAppSignatureInfo
-    extends nsISupports,
-      Enums<typeof nsIAppSignatureInfo_SignatureAlgorithm> {
+    extends nsISupports, Enums<typeof nsIAppSignatureInfo_SignatureAlgorithm> {
     readonly signerCert: nsIX509Cert;
     readonly signatureAlgorithm: nsIAppSignatureInfo.SignatureAlgorithm;
   }
@@ -12255,8 +12248,7 @@ declare global {
   }
 
   interface nsIX509CertDB
-    extends nsISupports,
-      Enums<typeof nsIX509CertDB_VerifyUsage> {
+    extends nsISupports, Enums<typeof nsIX509CertDB_VerifyUsage> {
     readonly UNTRUSTED?: 0;
     readonly TRUSTED_SSL?: 1;
     readonly TRUSTED_EMAIL?: 2;
@@ -12458,7 +12450,8 @@ declare global {
   }
 
   interface mozISyncedBookmarksMerger
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof mozISyncedBookmarksMerger_SyncedItemKinds &
           typeof mozISyncedBookmarksMerger_SyncedItemValidity
@@ -12528,8 +12521,7 @@ declare global {
   }
 
   interface nsINavBookmarksService
-    extends nsISupports,
-      Enums<typeof nsINavBookmarksService_ChangeSource> {
+    extends nsISupports, Enums<typeof nsINavBookmarksService_ChangeSource> {
     readonly DEFAULT_INDEX?: -1;
     readonly TYPE_BOOKMARK?: 1;
     readonly TYPE_FOLDER?: 2;
@@ -12583,8 +12575,7 @@ declare global {
   }
 
   interface nsINavHistoryResultNode
-    extends nsISupports,
-      Enums<typeof nsINavHistoryResultNode_ResultType> {
+    extends nsISupports, Enums<typeof nsINavHistoryResultNode_ResultType> {
     readonly parent: nsINavHistoryContainerResultNode;
     readonly parentResult: nsINavHistoryResult;
     readonly uri: string;
@@ -12618,8 +12609,7 @@ declare global {
     getChildIndex(aNode: nsINavHistoryResultNode): u32;
   }
 
-  interface nsINavHistoryQueryResultNode
-    extends nsINavHistoryContainerResultNode {
+  interface nsINavHistoryQueryResultNode extends nsINavHistoryContainerResultNode {
     readonly query: nsINavHistoryQuery;
     readonly queryOptions: nsINavHistoryQueryOptions;
     readonly folderItemId: i64;
@@ -12784,8 +12774,7 @@ declare global {
   }
 
   interface nsINavHistoryService
-    extends nsISupports,
-      Enums<typeof nsINavHistoryService_TransitionType> {
+    extends nsISupports, Enums<typeof nsINavHistoryService_TransitionType> {
     readonly DATABASE_SCHEMA_VERSION?: 82;
     readonly DATABASE_STATUS_OK?: 0;
     readonly DATABASE_STATUS_CREATE?: 1;
@@ -13251,6 +13240,23 @@ declare global {
       aImageName: string,
     ): void;
     desktopBackgroundColor: u32;
+
+    /**
+     * Returns the platform-appropriate icon type for shortcuts.
+     * Windows: { extension: "ico", mimeType: "image/vnd.microsoft.icon" }
+     * Linux:   { extension: "png", mimeType: "image/png" }
+     * Replaces the Windows-specific createWindowsIcon API (Bug 1985098, Firefox 150).
+     */
+    readonly shortcutIconType: { extension: string; mimeType: string };
+
+    /**
+     * Writes a shortcut icon in the platform-appropriate format.
+     * Replaces the Windows-specific createWindowsIcon API (Bug 1985098, Firefox 150).
+     */
+    writeShortcutIcon(
+      aFile: nsIFile,
+      aImgContainer: imgIContainer,
+    ): Promise<void>;
   }
 
   // https://searchfox.org/mozilla-central/source/docshell/shistory/nsIBFCacheEntry.idl
@@ -13933,8 +13939,7 @@ declare global {
   }
 
   interface nsIBounceTrackingProtection
-    extends nsISupports,
-      Enums<typeof nsIBounceTrackingProtection_Modes> {
+    extends nsISupports, Enums<typeof nsIBounceTrackingProtection_Modes> {
     clearAll(): void;
     clearBySiteHostAndOriginAttributes(
       aSiteHost: string,
@@ -14271,7 +14276,8 @@ declare global {
   }
 
   interface nsIContentAnalysisAcknowledgement
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIContentAnalysisAcknowledgement_Result &
           typeof nsIContentAnalysisAcknowledgement_FinalAction
@@ -14311,7 +14317,8 @@ declare global {
   }
 
   interface nsIContentAnalysisResponse
-    extends nsIContentAnalysisResult,
+    extends
+      nsIContentAnalysisResult,
       Enums<
         typeof nsIContentAnalysisResponse_Action &
           typeof nsIContentAnalysisResponse_CancelError
@@ -14374,7 +14381,8 @@ declare global {
   }
 
   interface nsIContentAnalysisRequest
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIContentAnalysisRequest_AnalysisType &
           typeof nsIContentAnalysisRequest_Reason &
@@ -14482,8 +14490,7 @@ declare global {
   }
 
   interface nsIClickRule
-    extends nsISupports,
-      Enums<typeof nsIClickRule_RunContext> {
+    extends nsISupports, Enums<typeof nsIClickRule_RunContext> {
     readonly presence: string;
     readonly skipPresenceVisibilityCheck: boolean;
     readonly runContext: nsIClickRule.RunContext;
@@ -14551,8 +14558,7 @@ declare global {
   }
 
   interface nsICookieBannerService
-    extends nsISupports,
-      Enums<typeof nsICookieBannerService_Modes> {
+    extends nsISupports, Enums<typeof nsICookieBannerService_Modes> {
     readonly isEnabled: boolean;
     readonly rules: nsICookieBannerRule[];
     resetRules(doImport?: boolean): void;
@@ -14791,7 +14797,8 @@ declare global {
   }
 
   interface nsISearchService
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsISearchService_OpenSearchInstallErrors &
           typeof nsISearchService_DefaultEngineChangeReason
@@ -14929,7 +14936,8 @@ declare global {
   }
 
   interface nsIToolkitProfileService
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIToolkitProfileService_downgradeUIFlags &
           typeof nsIToolkitProfileService_downgradeUIChoice &
@@ -15571,7 +15579,8 @@ declare global {
   }
 
   interface nsIUrlClassifierExceptionListEntry
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsIUrlClassifierExceptionListEntry_Category> {
     init(
       aCategory: nsIUrlClassifierExceptionListEntry.Category,
@@ -15634,7 +15643,8 @@ declare global {
   }
 
   interface nsIUrlClassifierFeature
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIUrlClassifierFeature_listType &
           typeof nsIUrlClassifierFeature_URIType
@@ -16145,7 +16155,8 @@ declare global {
   }
 
   interface mozIExtensionListenerCallOptions
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof mozIExtensionListenerCallOptions_APIObjectType &
           typeof mozIExtensionListenerCallOptions_CallbackType
@@ -16179,8 +16190,7 @@ declare global {
   }
 
   interface mozIExtensionAPIRequest
-    extends nsISupports,
-      Enums<typeof mozIExtensionAPIRequest_RequestType> {
+    extends nsISupports, Enums<typeof mozIExtensionAPIRequest_RequestType> {
     toString(): string;
     readonly requestType: string;
     readonly apiNamespace: string;
@@ -16206,7 +16216,8 @@ declare global {
   }
 
   interface mozIExtensionAPIRequestResult
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof mozIExtensionAPIRequestResult_ResultType> {
     readonly type: mozIExtensionAPIRequestResult.ResultType;
     readonly value: any;
@@ -16366,8 +16377,7 @@ declare global {
   }
 
   interface nsIClipboard
-    extends nsISupports,
-      Enums<typeof nsIClipboard_ClipboardType> {
+    extends nsISupports, Enums<typeof nsIClipboard_ClipboardType> {
     setData(
       aTransferable: nsITransferable,
       anOwner: nsIClipboardOwner,
@@ -16420,8 +16430,7 @@ declare global {
   }
 
   interface nsIClipboardHelper
-    extends nsISupports,
-      Enums<typeof nsIClipboardHelper_SensitiveData> {
+    extends nsISupports, Enums<typeof nsIClipboardHelper_SensitiveData> {
     copyStringToClipboard(
       aString: string,
       aClipboardID: nsIClipboard.ClipboardType,
@@ -16546,7 +16555,8 @@ declare global {
   }
 
   interface nsIFilePicker
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIFilePicker_Mode &
           typeof nsIFilePicker_ResultCode &
@@ -16644,7 +16654,8 @@ declare global {
   }
 
   interface nsIGfxInfo
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<typeof nsIGfxInfo_FontVisibilityDeviceDetermination> {
     readonly D2DEnabled: boolean;
     readonly DWriteEnabled: boolean;
@@ -16743,8 +16754,7 @@ declare global {
   }
 
   interface nsIMockDragServiceController
-    extends nsISupports,
-      Enums<typeof nsIMockDragServiceController_EventType> {
+    extends nsISupports, Enums<typeof nsIMockDragServiceController_EventType> {
     readonly mockDragService: nsIDragService;
     sendEvent(
       aBC: BrowsingContext,
@@ -16805,8 +16815,7 @@ declare global {
   }
 
   interface nsIPrintSettings
-    extends nsISupports,
-      Enums<typeof nsIPrintSettings_OutputDestinationType> {
+    extends nsISupports, Enums<typeof nsIPrintSettings_OutputDestinationType> {
     readonly kInitSaveHeaderLeft?: 2;
     readonly kInitSaveHeaderCenter?: 4;
     readonly kInitSaveHeaderRight?: 8;
@@ -17467,8 +17476,7 @@ declare global {
   }
 
   interface nsIConsoleService
-    extends nsISupports,
-      Enums<typeof nsIConsoleService_OutputMode> {
+    extends nsISupports, Enums<typeof nsIConsoleService_OutputMode> {
     logMessage(message: nsIConsoleMessage): void;
     logMessageWithMode(
       message: nsIConsoleMessage,
@@ -18782,7 +18790,8 @@ declare global {
   }
 
   interface nsIXULRuntime
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIXULRuntime_ExperimentStatus &
           typeof nsIXULRuntime_ContentWin32kLockdownState &
@@ -18951,8 +18960,7 @@ declare global {
   }
 
   interface nsIThread
-    extends nsISerialEventTarget,
-      Enums<typeof nsIThread_QoSPriority> {
+    extends nsISerialEventTarget, Enums<typeof nsIThread_QoSPriority> {
     shutdown(): void;
     hasPendingEvents(): boolean;
     hasPendingHighPriorityEvents(): boolean;
@@ -19250,7 +19258,8 @@ declare global {
   }
 
   interface nsIXPCTestCEnums
-    extends nsISupports,
+    extends
+      nsISupports,
       Enums<
         typeof nsIXPCTestCEnums_testFlagsExplicit &
           typeof nsIXPCTestCEnums_testFlagsImplicit
