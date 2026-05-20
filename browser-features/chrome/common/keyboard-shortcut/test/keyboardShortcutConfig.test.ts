@@ -354,8 +354,8 @@ function testStrDefaultConfigIsParseable(): void {
   );
   assertEquals(
     Object.keys(parsed.shortcuts).length,
-    0,
-    "parsed default config should have empty shortcuts",
+    1,
+    "parsed default config should have one shortcut (command palette)",
   );
 }
 
