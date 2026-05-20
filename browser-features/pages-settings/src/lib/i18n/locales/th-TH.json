@@ -392,8 +392,8 @@
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
+        "container": "ตู้คอนเทนเนอร์",
+        "noContainer": "ไม่มีตู้คอนเทนเนอร์",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
+        "save": "บันทึก",
         "cancel": "Cancel"
     },
     "progressiveWebApp": {
@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "ตู้คอนเทนเนอร์",
+        "noContainer": "ไม่มีตู้คอนเทนเนอร์",
+        "setContainer": "ตั้งค่าตู้คอนเทนเนอร์",
+        "containerDescription": "เลือกตู้คอนเทนเนอร์ Firefox ที่แอปนี้จะเปิด ตู้คอนเทนเนอร์จะแยกคุกกี้และข้อมูลเว็บไซต์",
+        "containerDeleted": "ลบตู้คอนเทนเนอร์แล้ว",
+        "save": "บันทึก",
+        "errorSettingContainer": "ตั้งค่าตู้คอนเทนเนอร์ไม่สำเร็จ"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

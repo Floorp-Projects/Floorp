@@ -57,9 +57,16 @@ export class SiteSpecificBrowserManager {
 
     // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
-      const id = subject?.wrappedJSObject?.id as string;
-      const userContextId = subject?.wrappedJSObject?.userContextId as number;
-      await this.setContainerForSsb(id, userContextId);
+      try {
+        const id = subject?.wrappedJSObject?.id as string;
+        const userContextId = subject?.wrappedJSObject?.userContextId as number;
+        await this.setContainerForSsb(id, userContextId);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] Failed to set SSB container",
+          error,
+        );
+      }
     }, "nora-ssb-set-container");
   }
 

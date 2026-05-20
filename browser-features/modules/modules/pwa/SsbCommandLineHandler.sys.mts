@@ -112,7 +112,7 @@ export class SsbRunnerUtils {
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
 
     if (ssb.userContextId && ssb.userContextId > 0) {
-      extraOptions.setPropertyAsACString(
+      extraOptions.setPropertyAsAString(
         "userContextId",
         String(ssb.userContextId),
       );

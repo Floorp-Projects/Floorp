@@ -450,13 +450,13 @@
         "cancel": "Annuller",
         "rename": "Omdøb",
         "uninstall": "Afinstaller",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Beholder",
+        "noContainer": "Ingen beholder",
+        "setContainer": "Indstil beholder",
+        "containerDescription": "Vælg hvilken Firefox-beholder denne app åbnes i. Beholdere isolerer cookies og webstedsdata.",
+        "containerDeleted": "Beholder slettet",
+        "save": "Gem",
+        "errorSettingContainer": "Kunne ikke indstille beholder"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -450,13 +450,13 @@
         "cancel": "Скасувати",
         "rename": "Перейменувати",
         "uninstall": "Видалити",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Контейнер",
+        "noContainer": "Без контейнера",
+        "setContainer": "Встановити контейнер",
+        "containerDescription": "Виберіть контейнер Firefox, у якому відкриватиметься цей додаток. Контейнери ізолюють файли cookie та дані сайтів.",
+        "containerDeleted": "Контейнер видалено",
+        "save": "Зберегти",
+        "errorSettingContainer": "Не вдалося встановити контейнер"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

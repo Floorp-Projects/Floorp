@@ -393,7 +393,7 @@
         "width": "Width",
         "zoomLevel": "Zoom Level",
         "container": "Contenedor",
-        "noContainer": "Ningún contenedor",
+        "noContainer": "Sin contenedor",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
+        "save": "Guardar",
         "cancel": "Cancelar"
     },
     "progressiveWebApp": {
@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Contenedor",
+        "noContainer": "Sin contenedor",
+        "setContainer": "Establecer contenedor",
+        "containerDescription": "Elija en qué contenedor de Firefox se abre esta aplicación. Los contenedores aíslan las cookies y los datos del sitio.",
+        "containerDeleted": "Contenedor eliminado",
+        "save": "Guardar",
+        "errorSettingContainer": "Error al establecer el contenedor"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -95,8 +95,7 @@ export class PwaWindowSupport {
     );
     const containers = ContextualIdentityService.getPublicIdentities();
     const exists = containers.some(
-      // deno-lint-ignore no-explicit-any
-      (c: any) => c.userContextId === userContextId,
+      (c: { userContextId: number }) => c.userContextId === userContextId,
     );
 
     if (!exists) {

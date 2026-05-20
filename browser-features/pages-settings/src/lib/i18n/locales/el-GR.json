@@ -450,13 +450,13 @@
         "cancel": "Ακύρωση",
         "rename": "Μετονομασία",
         "uninstall": "Απεγκατάσταση",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Περιέκτης",
+        "noContainer": "Χωρίς περιέκτη",
+        "setContainer": "Ορισμός περιέκτη",
+        "containerDescription": "Επιλέξτε τον περιέκτη Firefox στον οποίο θα ανοίγει αυτή η εφαρμογή. Οι περιέκτες απομονώνουν τα cookies και τα δεδομένα ιστοτόπου.",
+        "containerDeleted": "Ο περιέκτης διαγράφηκε",
+        "save": "Αποθήκευση",
+        "errorSettingContainer": "Αποτυχία ορισμού περιέκτη"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

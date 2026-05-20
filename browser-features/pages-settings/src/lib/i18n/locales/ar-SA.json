@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "حاوية",
+        "noContainer": "بدون حاوية",
+        "setContainer": "تعيين حاوية",
+        "containerDescription": "اختر حاوية Firefox التي يفتح فيها هذا التطبيق. الحاويات تعزل ملفات تعريف الارتباط وبيانات الموقع.",
+        "containerDeleted": "تم حذف الحاوية",
+        "save": "حفظ",
+        "errorSettingContainer": "فشل تعيين الحاوية"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

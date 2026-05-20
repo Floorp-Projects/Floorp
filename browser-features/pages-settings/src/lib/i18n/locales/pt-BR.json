@@ -450,13 +450,13 @@
         "cancel": "Cancelar",
         "rename": "Renomear",
         "uninstall": "Desinstalar",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Contêiner",
+        "noContainer": "Sem contêiner",
+        "setContainer": "Definir contêiner",
+        "containerDescription": "Escolha em qual contêiner do Firefox este aplicativo será aberto. Contêineres isolam cookies e dados do site.",
+        "containerDeleted": "Contêiner excluído",
+        "save": "Salvar",
+        "errorSettingContainer": "Falha ao definir contêiner"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -450,13 +450,13 @@
         "cancel": "Batal",
         "rename": "Ganti nama",
         "uninstall": "Copot",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Kontainer",
+        "noContainer": "Tanpa Kontainer",
+        "setContainer": "Atur Kontainer",
+        "containerDescription": "Pilih Kontainer Firefox tempat aplikasi ini dibuka. Kontainer memisahkan cookie dan data situs.",
+        "containerDeleted": "Kontainer dihapus",
+        "save": "Simpan",
+        "errorSettingContainer": "Gagal mengatur kontainer"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

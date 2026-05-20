@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
+        "save": "Išsaugoti",
         "cancel": "Atšaukti"
     },
     "progressiveWebApp": {
@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Konteineris",
+        "noContainer": "Nėra konteinerio",
+        "setContainer": "Nustatyti konteinerį",
+        "containerDescription": "Pasirinkite, kuriame Firefox konteineryje atidaryti šią programą. Konteineriai izoliuoja slapukus ir svetainės duomenis.",
+        "containerDeleted": "Konteineris ištrintas",
+        "save": "Išsaugoti",
+        "errorSettingContainer": "Nepavyko nustatyti konteinerio"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

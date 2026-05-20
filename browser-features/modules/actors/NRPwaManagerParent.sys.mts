@@ -36,10 +36,8 @@ export class NRPwaManagerParent extends JSWindowActorParent {
         const { ContextualIdentityService } = ChromeUtils.importESModule(
           "resource://gre/modules/ContextualIdentityService.sys.mjs",
         );
-        // deno-lint-ignore no-explicit-any
         const containers = ContextualIdentityService.getPublicIdentities().map(
-          // deno-lint-ignore no-explicit-any
-          (c: any) => ({
+          (c: { userContextId: number; l10nId?: string; name: string }) => ({
             userContextId: c.userContextId,
             name: c.l10nId
               ? ContextualIdentityService.getUserContextLabel(c.userContextId)

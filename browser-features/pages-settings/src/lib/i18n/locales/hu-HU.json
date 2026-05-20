@@ -392,8 +392,8 @@
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "No Container",
+        "container": "Konténer",
+        "noContainer": "Nincs konténer",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
+        "save": "Mentés",
         "cancel": "Cancel"
     },
     "progressiveWebApp": {
@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Konténer",
+        "noContainer": "Nincs konténer",
+        "setContainer": "Konténer beállítása",
+        "containerDescription": "Válassza ki, melyik Firefox-konténerben nyíljon meg ez az alkalmazás. A konténerek elkülönítik a sütiket és az oldaladatokat.",
+        "containerDeleted": "Konténer törölve",
+        "save": "Mentés",
+        "errorSettingContainer": "Nem sikerült beállítani a konténert"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

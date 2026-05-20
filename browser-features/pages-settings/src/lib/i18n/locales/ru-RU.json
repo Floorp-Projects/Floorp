@@ -450,13 +450,13 @@
         "cancel": "Отменить",
         "rename": "Переименовать",
         "uninstall": "Удалить",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Контейнер",
+        "noContainer": "Без контейнера",
+        "setContainer": "Назначить контейнер",
+        "containerDescription": "Выберите контейнер Firefox, в котором будет открываться это приложение. Контейнеры изолируют файлы cookie и данные сайтов.",
+        "containerDeleted": "Контейнер удалён",
+        "save": "Сохранить",
+        "errorSettingContainer": "Не удалось назначить контейнер"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

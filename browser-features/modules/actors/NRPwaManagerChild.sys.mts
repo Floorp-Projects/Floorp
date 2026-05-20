@@ -55,11 +55,15 @@ export class NRPwaManagerChild extends JSWindowActorChild {
   }
 
   NRGetContainers(
-    // deno-lint-ignore no-explicit-any
-    callback: (containers: any[]) => void = () => {},
+    callback: (containers: { userContextId: number; name: string }[]) => void =
+      () => {},
   ) {
-    // deno-lint-ignore no-explicit-any
-    const promise = new Promise<any[]>((resolve, _reject) => {
+    if (this.resolveGetContainers) {
+      this.resolveGetContainers([]);
+    }
+    const promise = new Promise<
+      { userContextId: number; name: string }[]
+    >((resolve, _reject) => {
       this.resolveGetContainers = resolve;
     });
     this.sendAsyncMessage("PwaManager:GetContainers");
@@ -76,8 +80,9 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     | null = null;
   resolveRenameSsb: ((id: string, newName: string) => void) | null = null;
   resolveUninstallSsb: ((id: string) => void) | null = null;
-  // deno-lint-ignore no-explicit-any
-  resolveGetContainers: ((containers: any[]) => void) | null = null;
+  resolveGetContainers:
+    | ((containers: { userContextId: number; name: string }[]) => void)
+    | null = null;
   // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {

@@ -60,9 +60,9 @@ export function InstalledApps() {
   useEffect(() => {
     fetchApps();
     fetchContainers();
-    document.documentElement.addEventListener("onfocus", fetchApps);
+    document.documentElement.addEventListener("focus", fetchApps);
     return () => {
-      document.documentElement.removeEventListener("onfocus", fetchApps);
+      document.documentElement.removeEventListener("focus", fetchApps);
     };
   }, []);
 
@@ -184,15 +184,17 @@ export function InstalledApps() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{app.name}</p>
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded ${
-                            isContainerDeleted(app.userContextId)
-                              ? "bg-warning/20 text-warning"
-                              : "bg-base-200 text-base-content/70"
-                          }`}
-                        >
-                          {getContainerName(app.userContextId)}
-                        </span>
+                        {app.userContextId && app.userContextId > 0 && (
+                          <span
+                            className={`text-xs px-1.5 py-0.5 rounded ${
+                              isContainerDeleted(app.userContextId)
+                                ? "bg-warning/20 text-warning"
+                                : "bg-base-200 text-base-content/70"
+                            }`}
+                          >
+                            {getContainerName(app.userContextId)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-base-content/70 truncate">
                         {app.start_url}

@@ -392,8 +392,8 @@
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "Ingen beholder",
+        "container": "Behaldar",
+        "noContainer": "Ingen behaldar",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Lagre",
+        "save": "Lagra",
         "cancel": "Avbryt"
     },
     "progressiveWebApp": {
@@ -450,13 +450,13 @@
         "cancel": "Cancel",
         "rename": "Rename",
         "uninstall": "Uninstall",
-        "container": "Container",
-        "noContainer": "No Container",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
-        "save": "Save",
-        "errorSettingContainer": "Failed to set container"
+        "container": "Behaldar",
+        "noContainer": "Ingen behaldar",
+        "setContainer": "Set behaldar",
+        "containerDescription": "Vel kva Firefox-behaldar denne appen opnast i. Behaldarar isolerer informasjonskapslar og nettstedsdata.",
+        "containerDeleted": "Behaldar sletta",
+        "save": "Lagra",
+        "errorSettingContainer": "Klarte ikkje å setja behaldar"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
