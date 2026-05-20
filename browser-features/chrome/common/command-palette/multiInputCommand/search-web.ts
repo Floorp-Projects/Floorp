@@ -3,7 +3,7 @@
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
 
-async function loadSearchEngines(): Promise<CommandStepChoice[]> {
+export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {
     const { SearchService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/search/SearchService.sys.mjs",

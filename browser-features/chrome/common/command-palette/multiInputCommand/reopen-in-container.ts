@@ -3,7 +3,7 @@
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
 
-async function loadContainers(): Promise<CommandStepChoice[]> {
+export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "resource://gre/modules/ContextualIdentityService.sys.mjs",
