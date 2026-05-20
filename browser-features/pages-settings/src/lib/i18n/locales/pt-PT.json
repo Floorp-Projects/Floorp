@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Abrir localização do perfil guardado",
         "mozillaAccountSyncSettings": "Definições de sincronização da conta Mozilla",
         "syncedTo": "Sincronizado com {{email}}",
-        "syncNotesToMozillaAccount": "Sincronizar {{productName}} Notas com a conta Mozilla (Experimental)",
-        "featureSyncSettings": "{{productName}} Definições de sincronização de funcionalidades",
         "manageMozillaAccount": "Gerir a conta Mozilla",
         "manageFirefoxFeatureSync": "Gerir a sincronização de funcionalidades do Firefox",
         "aboutMozillaAccount": "Sobre a conta Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Descrição do gesto",
         "rockerGesturesEnabled": "Ativar os gestos de baloiço",
         "rockerGesturesDescription": "Clique com o botão direito do rato e mova para a esquerda para voltar atrás, clique com o botão direito do rato e mova para a direita para avançar. (Experimental)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Ativar os gestos da roda",
         "actions": {
             "gecko-back": "Voltar atrás",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Deslocar para o topo",
             "gecko-scroll-to-bottom": "Deslocação para o fundo",
             "gecko-workspace-next": "Mudar para o espaço de trabalho seguinte",
-            "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior"
+            "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Editar",
         "duplicate": "Duplicado",

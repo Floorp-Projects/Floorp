@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Άνοιγμα τοποθεσίας αποθήκευσης προφίλ",
         "mozillaAccountSyncSettings": "Ρυθμίσεις συγχρονισμού λογαριασμού Mozilla",
         "syncedTo": "Συγχρονισμός με το {{email}}",
-        "syncNotesToMozillaAccount": "Συγχρονισμός {{productName}} Σημειώσεων με λογαριασμό Mozilla (Πειραματικό)",
-        "featureSyncSettings": "Ρυθμίσεις συγχρονισμού λειτουργιών {{productName}}",
         "manageMozillaAccount": "Διαχείριση λογαριασμού Mozilla",
         "manageFirefoxFeatureSync": "Διαχείριση συγχρονισμού λειτουργιών του Firefox",
         "aboutMozillaAccount": "Σχετικά με το λογαριασμό Mozilla",
@@ -526,6 +524,10 @@
         "actionDescription": "Περιγραφή της χειρονομίας",
         "rockerGesturesEnabled": "Ενεργοποίηση χειρονομιών ποντικιού",
         "rockerGesturesDescription": "Κάντε δεξί κλικ και μετακινηθείτε αριστερά για να πάτε πίσω, δεξί κλικ και μετακινηθείτε δεξιά για να πάτε μπροστά. (Πειραματικό)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Ενεργοποίηση χειρονομιών τροχού ποντικιού",
         "actions": {
             "gecko-back": "Μετάβαση πίσω",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Κύλιση στην κορυφή",
             "gecko-scroll-to-bottom": "Κύλιση στη βάση",
             "gecko-workspace-next": "Εναλλαγή στον επόμενο χώρο εργασίας",
-            "gecko-workspace-previous": "Εναλλαγή στον προηγούμενο χώρο εργασίας"
+            "gecko-workspace-previous": "Εναλλαγή στον προηγούμενο χώρο εργασίας",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Επεξεργασία",
         "duplicate": "Αντίγραφο",

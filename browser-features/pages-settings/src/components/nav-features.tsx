@@ -36,7 +36,7 @@ function InternalItem({
   isActive: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors">
+    <div className="flex items-center gap-2 rounded-lg px-3 transition-colors">
       <Link
         to={feature.url}
         className={`${
@@ -55,7 +55,7 @@ function InternalItem({
 // External item renderer without SidebarMenuItem wrapper
 function ExternalItem({ feature }: { feature: ExternalFeature }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors">
+    <div className="flex items-center gap-2 rounded-lg px-3 transition-colors">
       <button
         type="button"
         onClick={feature.onClick}

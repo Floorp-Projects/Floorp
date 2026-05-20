@@ -131,6 +131,11 @@
       "gecko-forward": "進む",
       "gecko-reload": "再読み込み",
       "gecko-close-tab": "タブを閉じる",
+      "gecko-close-other-tabs": "他のタブを閉じる",
+      "gecko-close-tabs-to-start": "左のタブをすべて閉じる",
+      "gecko-close-tabs-to-start-vertical": "上のタブをすべて閉じる",
+      "gecko-close-tabs-to-end": "右のタブをすべて閉じる",
+      "gecko-close-tabs-to-end-vertical": "下のタブをすべて閉じる",
       "gecko-open-new-tab": "新しいタブ",
       "gecko-duplicate-tab": "タブを複製",
       "gecko-reload-all-tabs": "すべてのタブを再読み込み",
@@ -201,18 +206,25 @@
       "gecko-scroll-to-bottom": "最下部までスクロール",
       "gecko-workspace-next": "次のワークスペースに切り替える",
       "gecko-workspace-previous": "前のワークスペースに切り替える",
-      "floorp-toggle-zen-mode": "禅モードの表示を切り替える"
+      "floorp-toggle-zen-mode": "禅モードの表示を切り替える",
+      "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",
       "gecko-forward": "次のページに進む",
       "gecko-reload": "現在のページを再読み込み",
       "gecko-close-tab": "現在のタブを閉じる",
+      "gecko-close-other-tabs": "現在のタブ以外をすべて閉じます",
+      "gecko-close-tabs-to-start": "現在のタブより左にあるタブをすべて閉じます",
+      "gecko-close-tabs-to-start-vertical": "現在のタブより上にあるタブをすべて閉じます",
+      "gecko-close-tabs-to-end": "現在のタブより右にあるタブをすべて閉じます",
+      "gecko-close-tabs-to-end-vertical": "現在のタブより下にあるタブをすべて閉じます",
       "gecko-open-new-tab": "新しいタブを開く",
       "gecko-duplicate-tab": "現在のタブを複製",
       "gecko-reload-all-tabs": "すべてのタブを再読み込み",
       "gecko-restore-last-tab": "最後に閉じたタブを開きなおす",
-      "floorp-toggle-zen-mode": "禅モードではすべての UI 要素が非表示になるので、現在のページに集中できます"
+      "floorp-toggle-zen-mode": "禅モードではすべての UI 要素が非表示になるので、現在のページに集中できます",
+      "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します"
     }
   },
   "qrCode": {
@@ -384,6 +396,9 @@
       "horizontal": "左右に分割",
       "vertical": "上下に分割",
       "grid3paneLeftMain": "グリッド (左側を広く)",
+      "grid3paneRightMain": "グリッド (右側を広く)",
+      "grid3paneTopMain": "グリッド (上部を広く)",
+      "grid3paneBottomMain": "グリッド (下部を広く)",
       "grid2x2": "グリッド (2×2)",
       "addPane": "区分けを追加",
       "removePane": "最後の区分けを削除"
@@ -393,5 +408,45 @@
     "label": "禅モード",
     "tooltiptext": "禅モードの表示を切り替える",
     "menu-label": "禅モードの表示を切り替える"
+  },
+  "commandPalette": {
+    "dialogLabel": "コマンドパレット",
+    "placeholder": "コマンドを入力...",
+    "navigateTo": "{{url}} に移動",
+    "categories": {
+      "recent": "最近使ったもの",
+      "navigation": "ナビゲーション",
+      "tabs": "タブ",
+      "zoom": "ズーム",
+      "bookmarks": "ブックマーク",
+      "page": "ページ",
+      "search": "検索",
+      "sidebar": "サイドバーのカスタマイズ",
+      "scrolling": "スクロール",
+      "history": "履歴",
+      "window": "ウィンドウ",
+      "tools": "ツール",
+      "downloads": "ダウンロード",
+      "workspace": "ワークスペース",
+      "floorp": "Floorp",
+      "media": "メディア",
+      "open-tabs": "タブを開く"
+    },
+    "noResults": "コマンドが見つかりません",
+    "noResultsHint": "別の検索語をお試しください",
+    "stepIndicator": "ステップ {{current}} / {{total}}",
+    "backToCommands": "コマンド選択に戻る",
+    "openUrl": "URL を開く",
+    "openUrlDescription": "URL を新しいタブで開きます",
+    "openUrlStepLabel": "開く URL を入力",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "有効な URL を入力してください",
+    "searchWeb": "ウェブを検索",
+    "searchWebDescription": "デフォルトの検索エンジンで検索します",
+    "searchWebStepLabel": "検索キーワードを入力",
+    "searchWebStepPlaceholder": "検索キーワード...",
+    "searchWithEngine": "\"{{query}}\" を検索",
+    "searchWithEngineDescription": "デフォルトの検索エンジンで検索します",
+    "searchWithEngineNamed": "{{engine}} で検索"
   }
 }

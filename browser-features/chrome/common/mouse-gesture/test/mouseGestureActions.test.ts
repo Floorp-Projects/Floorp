@@ -85,6 +85,16 @@ const rawTests: TestCase[] = [
       );
     },
   },
+  {
+    name: "getAllGestureActions includes close-other-tabs actions",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(names.includes("gecko-close-other-tabs"), "should include gecko-close-other-tabs");
+      assert(names.includes("gecko-close-tabs-to-start"), "should include gecko-close-tabs-to-start");
+      assert(names.includes("gecko-close-tabs-to-end"), "should include gecko-close-tabs-to-end");
+    },
+  },
 
   // --- gestureActions registry ---
   {

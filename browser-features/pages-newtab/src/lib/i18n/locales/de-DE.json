@@ -10,14 +10,14 @@
         "close": "Schließen",
         "labelPlaceholder": "Webseitenname",
         "pin": "Anheften",
-        "unpin": "Ablösen",
+        "unpin": "Lösen",
         "block": "Blockieren",
         "blockTitle": "\"{{title}}\" blockieren?",
-        "blockConfirm": "Diese Webseite wird von Ihren Verknüpfungen entfernt und wird nicht mehr vorgeschlagen. Sie können blockierte Webseiten in den Einstellungen verwalten.",
+        "blockConfirm": "Diese Webseite wird von deinen Verknüpfungen entfernt und nicht mehr vorgeschlagen. Du kannst blockierte Webseiten in den Einstellungen verwalten.",
         "invalidUrl": "Ungültige URL"
     },
     "settings": {
-        "newTabSettings": "Neue Tab Einstellungen",
+        "newTabSettings": "Neuer-Tab-Einstellungen",
         "displayComponents": "Komponenten anzeigen",
         "topSites": "Verknüpfungen",
         "clock": "Uhr",
@@ -36,14 +36,14 @@
         "enableSlideshow": "Diashow aktivieren",
         "slideshowInterval": "Intervall (Sekunden)",
         "floorpStart": "Floorp-Start",
-        "disableFloorpStart": "Floorp-Start deaktivieren (Klassisches about:newtab verwenden)",
-        "disableFloorpStartDescription": "Wenn aktiviert, Floorp-Start wird durch den klassischen Firefox neuen Tab ersetzt.",
-        "restartRequired": "Erfordert einen Neustart des Browsers, um angewendet zu werden.",
+        "disableFloorpStart": "Floorp-Start deaktivieren (klassisches about:newtab verwenden)",
+        "disableFloorpStartDescription": "Wenn aktiviert, wird Floorp-Start durch den klassischen neuen Firefox-Tab ersetzt.",
+        "restartRequired": "Erfordert einen Neustart des Browsers, um vollständig wirksam zu werden.",
         "firefoxLayout": "Legacy-Layout verwenden (wie Firefox Home)"
     },
     "searchBar": {
         "searchOrEnterUrl": "Suchen oder URL eingeben",
-        "loadingSearchEngines": "Suchmaschinen werden geladen..."
+        "loadingSearchEngines": "Suchmaschinen werden geladen…"
     },
     "settingsButton": {
         "settings": "Einstellungen"

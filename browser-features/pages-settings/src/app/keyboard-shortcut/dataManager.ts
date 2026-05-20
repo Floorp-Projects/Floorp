@@ -35,7 +35,13 @@ export const useKeyboardShortcutConfig = () => {
 
         const defaultConfig: KeyboardShortcutConfig = {
           enabled,
-          shortcuts: {},
+          shortcuts: {
+            "floorp-toggle-command-palette": {
+              key: "F2",
+              modifiers: { alt: false, ctrl: false, meta: false, shift: false },
+              action: "floorp-toggle-command-palette",
+            },
+          },
         };
 
         try {

@@ -7,6 +7,7 @@ import {
   assert,
   runTests,
 } from "../../../test/utils/test_harness.ts";
+import type { ShortcutConfig } from "../type.ts";
 import {
   shortcutToString,
   stringToShortcut,
@@ -340,9 +341,16 @@ function testDefaultConfigStructure(): void {
   assertEquals(defaultConfig.enabled, true, "default config should be enabled");
   assertEquals(
     Object.keys(defaultConfig.shortcuts).length,
-    0,
-    "default config should have no shortcuts",
+    1,
+    "default config should have one shortcut",
   );
+  const shortcut = Object.values(defaultConfig.shortcuts)[0];
+  assertEquals(
+    shortcut.action,
+    "floorp-toggle-command-palette",
+    "default shortcut action should be floorp-toggle-command-palette",
+  );
+  assertEquals(shortcut.key, "F2", "default shortcut key should be F2");
 }
 
 function testStrDefaultConfigIsParseable(): void {
@@ -354,9 +362,16 @@ function testStrDefaultConfigIsParseable(): void {
   );
   assertEquals(
     Object.keys(parsed.shortcuts).length,
-    0,
-    "parsed default config should have empty shortcuts",
+    1,
+    "parsed default config should have one shortcut (command palette)",
   );
+  const parsedShortcut = Object.values(parsed.shortcuts)[0] as ShortcutConfig;
+  assertEquals(
+    parsedShortcut.action,
+    "floorp-toggle-command-palette",
+    "parsed shortcut action should be floorp-toggle-command-palette",
+  );
+  assertEquals(parsedShortcut.key, "F2", "parsed shortcut key should be F2");
 }
 
 function testPrefConstantsAreStrings(): void {
@@ -431,7 +446,10 @@ function testParseConfigHandlesInvalidJson(): void {
     // Set invalid JSON and apply it via setConfig.
     // parseConfig catches JSON.parse errors and returns defaultConfig,
     // then the SolidJS effect writes the normalized default back to the pref.
-    Services.prefs.setStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF, "invalid-json{{{");
+    Services.prefs.setStringPref(
+      KEYBOARD_SHORTCUT_CONFIG_PREF,
+      "invalid-json{{{",
+    );
     setConfig({
       enabled: true,
       shortcuts: {},
@@ -598,7 +616,11 @@ function testStringToShortcutWithSpecialCharacters(): void {
   // "+" is the delimiter in the shortcut string format, so "Ctrl++" splits
   // into ["ctrl", "", ""] and the last element (the key) is empty.
   const result = stringToShortcut("Ctrl++");
-  assertEquals(result.key, "", "+ as delimiter produces empty key after splitting");
+  assertEquals(
+    result.key,
+    "",
+    "+ as delimiter produces empty key after splitting",
+  );
   assertEquals(result.modifiers.ctrl, true, "ctrl should be true");
 }
 
