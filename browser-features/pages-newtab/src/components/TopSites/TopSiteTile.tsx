@@ -35,7 +35,7 @@ export function TopSiteTile(
     <a
       key={site.url}
       href={site.url}
-      className={`group flex flex-col items-center p-2 rounded-lg transition-all duration-200 hover:backdrop-blur-sm hover:bg-gray-700/50 ${
+      className={`group flex flex-col items-center p-2 rounded-lg transition-all duration-200 hover:bg-gray-100/20 ${
         isFirefoxMode ? "w-20 md:w-24" : "w-16"
       }`}
       onContextMenu={(e) => onContextMenu(e, site)}
@@ -68,7 +68,7 @@ export function TopSiteTile(
         </div>
         {isPinnedSite && (
           <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center shadow-sm">
+            <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
               <PinIcon className="w-3 h-3 text-white" />
             </div>
           </div>
