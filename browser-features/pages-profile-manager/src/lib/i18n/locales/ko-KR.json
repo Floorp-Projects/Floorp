@@ -1,24 +1,24 @@
 {
     "profileManager": {
-        "title": "Profiles",
+        "title": "프로필",
         "buttons": {
-            "refresh": "Refresh",
-            "create": "Create"
+            "refresh": "목록 새로 고침",
+            "create": "생성"
         },
-        "loading": "Loading…",
-        "noProfiles": "No profiles found.",
-        "current": "Current",
+        "loading": "로딩중...",
+        "noProfiles": "프로필 없음",
+        "current": "현재",
         "default": "기본",
         "actions": {
-            "open": "Open",
-            "new": "New",
-            "rename": "Rename",
-            "remove": "Remove",
+            "open": "실행",
+            "new": "신규",
+            "rename": "이름 변경",
+            "remove": "제거",
             "setDefault": "기본"
         },
         "prompts": {
-            "confirmRemove": "Are you sure you want to remove this profile?",
-            "newName": "New profile name:"
+            "confirmRemove": "정말로 이 프로필을 제거하시겠습니까?",
+            "newName": "새로운 프로필 이름:"
         }
     }
 }

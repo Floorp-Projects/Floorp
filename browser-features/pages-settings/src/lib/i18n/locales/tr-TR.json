@@ -282,8 +282,6 @@
         "openProfileSaveLocation": "Profil kayıt yerini aç",
         "mozillaAccountSyncSettings": "Mozilla Hesap Senkronizasyon Ayarları",
         "syncedTo": "{{email}} ile senkronize edildi",
-        "syncNotesToMozillaAccount": "Sync {{productName}} Notes to Mozilla Account (Experimental)",
-        "featureSyncSettings": "{{productName}} Feature Sync Settings",
         "manageMozillaAccount": "Mozilla Hesabını Yönet",
         "manageFirefoxFeatureSync": "Firefox Özellik Senkronizasyonunu Yönet",
         "aboutMozillaAccount": "Mozilla Hesabı Hakkında",
@@ -526,6 +524,10 @@
         "actionDescription": "Hareketin açıklaması",
         "rockerGesturesEnabled": "Rocker hareketlerini etkinleştirin",
         "rockerGesturesDescription": "Geri gitmek için sağ tıklayın ve sola hareket edin, ileri gitmek için sağ tıklayın ve sağa hareket edin. (Deneysel)",
+        "rockerLeftRight": "Left → Right",
+        "rockerLeftRightDescription": "Hold left button, then click right button",
+        "rockerRightLeft": "Right → Left",
+        "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Tekerlek hareketlerini etkinleştir",
         "actions": {
             "gecko-back": "Geri",
@@ -601,7 +603,9 @@
             "gecko-scroll-to-top": "Başa Kaydır",
             "gecko-scroll-to-bottom": "Sona Kaydır",
             "gecko-workspace-next": "Sonraki Çalışma Alanına Geç",
-            "gecko-workspace-previous": "Önceki Çalışma Alanına Geç"
+            "gecko-workspace-previous": "Önceki Çalışma Alanına Geç",
+            "floorp-toggle-zen-mode": "Toggle Zen Mode",
+            "floorp-toggle-command-palette": "Toggle Command Palette"
         },
         "edit": "Düzenle",
         "duplicate": "Çoğalt",

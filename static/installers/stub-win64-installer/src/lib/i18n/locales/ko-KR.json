@@ -1,7 +1,7 @@
 {
     "app": {
         "status": {
-            "installing": "백그라운드에서 설치 중입니다...",
+            "installing": "백그라운드에서 설치 중...",
             "installComplete": "설치가 완료되었습니다"
         },
         "installer": {
@@ -41,30 +41,30 @@
             "launchCheckbox": "설치 후 Floorp 브라우저 실행",
             "closeButton": "설치 관리자 닫기",
             "countdownMessage": "{{count}}초 후 설치 프로그램이 닫힙니다",
-            "legacyDownloadMessage": "You can also try the legacy installer.",
+            "legacyDownloadMessage": "레거시 설치 관리자를 사용해 볼 수도 있습니다.",
             "legacyDownloadButton": "다운로드"
         }
     },
     "slides": {
         "slide1": {
             "title": "Floorp에 오신 것을 환영합니다",
-            "description": "Welcome to the latest version of Floorp, a web browser developed with a focus on development and research in Japan. The content introduced next is only a part of the project."
+            "description": "일본에서 개발과 연구에 중점을 두고 개발된 웹 브라우저인 Floorp의 최신 버전에 오신 것을 환영합니다. 다음에 소개하는 내용은 프로젝트의 일부에 불과합니다."
         },
         "slide2": {
-            "title": "Regular Updates",
-            "description": "Floorp is maintained and updated continuously, even as a community-based project. We deliver safe browsing aligned with the principle that the web should be accessible freely to everyone."
+            "title": "정기 업데이트",
+            "description": "Floorp는 커뮤니티 기반 프로젝트로서 지속적으로 유지 관리 및 업데이트됩니다. 누구나 웹에 자유롭게 액세스할 수 있어야 한다는 원칙에 따라 안전한 브라우징을 제공합니다."
         },
         "slide3": {
-            "title": "Latest Features",
-            "description": "The latest version of Floorp leverages cutting-edge web features developed by Mozilla's Firefox. It has also been redesigned to make tools everyone desires easily accessible."
+            "title": "최신 기능",
+            "description": "최신 버전의 Floorp는 Mozilla의 Firefox에서 개발한 최첨단 웹 기능을 활용합니다. 또한 누구나 원하는 도구에 쉽게 액세스할 수 있도록 새롭게 디자인되었습니다."
         },
         "slide4": {
-            "title": "Advanced Customization",
-            "description": "Equipped with numerous customization options to maintain privacy better than your default browser. Floorp allows you to realize your preferred configuration."
+            "title": "고급 사용자 지정",
+            "description": "기본 브라우저보다 더 나은 개인 정보 보호를 위한 다양한 사용자 지정 옵션을 갖추고 있습니다. Floorp를 사용하면 원하는 구성을 구현할 수 있습니다."
         },
         "slide5": {
-            "title": "Fighting for You",
-            "description": "Floorp blocks harmful tracking. We balance website operation and user rights, working to improve the web both in functionality and privacy."
+            "title": "당신을 위해 싸우다",
+            "description": "Floorp는 유해한 추적을 차단합니다. 웹사이트 운영과 사용자 권한의 균형을 유지하며 웹의 기능과 개인정보 보호 모두를 개선하기 위해 노력합니다."
         }
     },
     "rust": {
@@ -90,8 +90,8 @@
             "admin_install_failed": "관리자 권한으로 설치하지 못했습니다. 종료 코드: {{0}}",
             "user_installer_launch": "사용자 권한으로 인해 설치 관리자 프로세스를 시작하지 못했습니다: {{0}}",
             "user_installer_execution": "사용자 권한으로 설치 프로그램을 실행하는 동안 문제가 발생했습니다: {{0}}",
-            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
-            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+            "cpu_not_supported": "이 장치의 CPU는 SSE4.1을 지원하지 않습니다. Floorp를 사용하려면 SSE4.1을 지원하는 프로세서가 필요합니다.",
+            "cpu_check_failed": "CPU 요구 사항을 확인하지 못했습니다. 시스템 요구 사항을 확인해 주세요."
         }
     }
 }

@@ -201,7 +201,8 @@
       "gecko-scroll-to-bottom": "Scroll to Bottom",
       "gecko-workspace-next": "Beralih ke Ruang Kerja Berikutnya",
       "gecko-workspace-previous": "Beralih ke Ruang Kerja Sebelumnya",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode"
+      "floorp-toggle-zen-mode": "Toggle Zen Mode",
+      "floorp-toggle-command-palette": "Toggle Command Palette"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
@@ -212,7 +213,8 @@
       "gecko-duplicate-tab": "Duplicate the current tab",
       "gecko-reload-all-tabs": "Reload all tabs",
       "gecko-restore-last-tab": "Reopen the last closed tab",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing"
+      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
     }
   },
   "qrCode": {
@@ -384,6 +386,9 @@
       "horizontal": "Horizontal Split",
       "vertical": "Vertical Split",
       "grid3paneLeftMain": "Grid (Large Left)",
+      "grid3paneRightMain": "Grid (Large Right)",
+      "grid3paneTopMain": "Grid (Large Top)",
+      "grid3paneBottomMain": "Grid (Large Bottom)",
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
@@ -393,5 +398,31 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "commandPalette": {
+    "dialogLabel": "Command Palette",
+    "placeholder": "Type a command...",
+    "navigateTo": "Go to {{url}}",
+    "categories": {
+      "recent": "Recently Used",
+      "navigation": "Navigation",
+      "tabs": "Tab",
+      "zoom": "Zoom",
+      "bookmarks": "Markah",
+      "page": "Page",
+      "search": "Cari",
+      "sidebar": "Sidebar",
+      "scrolling": "Scrolling",
+      "history": "Riwayat",
+      "window": "Window",
+      "tools": "Tools",
+      "downloads": "Unduhan",
+      "workspace": "Ruang Kerja",
+      "floorp": "Floorp",
+      "media": "Media",
+      "open-tabs": "Open Tabs"
+    },
+    "noResults": "No commands found",
+    "noResultsHint": "Try a different search term"
   }
 }

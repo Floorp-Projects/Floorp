@@ -12,6 +12,7 @@ import {
   setConfig,
   KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_CONFIG_PREF,
+  KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF,
 } from "../config.ts";
 import type { KeyboardShortcutConfig } from "../type.ts";
 
@@ -21,16 +22,21 @@ import type { KeyboardShortcutConfig } from "../type.ts";
 
 const TEST_ENABLED_PREF = KEYBOARD_SHORTCUT_ENABLED_PREF;
 const TEST_CONFIG_PREF = KEYBOARD_SHORTCUT_CONFIG_PREF;
+const TEST_SAFE_ERR_PREF = KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF;
 
 /** Save current pref state and restore after fn runs. */
 function withPrefs(fn: () => void): void {
   const hadEnabled = Services.prefs.prefHasUserValue(TEST_ENABLED_PREF);
   const hadConfig = Services.prefs.prefHasUserValue(TEST_CONFIG_PREF);
+  const hadSafeErr = Services.prefs.prefHasUserValue(TEST_SAFE_ERR_PREF);
   const savedEnabled = hadEnabled
     ? Services.prefs.getBoolPref(TEST_ENABLED_PREF)
     : null;
   const savedConfig = hadConfig
     ? Services.prefs.getStringPref(TEST_CONFIG_PREF)
+    : null;
+  const savedSafeErr = hadSafeErr
+    ? Services.prefs.getBoolPref(TEST_SAFE_ERR_PREF)
     : null;
 
   try {
@@ -45,6 +51,11 @@ function withPrefs(fn: () => void): void {
       Services.prefs.setStringPref(TEST_CONFIG_PREF, savedConfig);
     } else {
       Services.prefs.clearUserPref(TEST_CONFIG_PREF);
+    }
+    if (hadSafeErr && savedSafeErr !== null) {
+      Services.prefs.setBoolPref(TEST_SAFE_ERR_PREF, savedSafeErr);
+    } else {
+      Services.prefs.clearUserPref(TEST_SAFE_ERR_PREF);
     }
   }
 }
@@ -1015,9 +1026,72 @@ function testActionNotFoundNoError(): void {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Tests — Key state tracking
-// ---------------------------------------------------------------------------
+function testSafeErrorHandlingExperimentEnabled(): void {
+  withPrefs(() => {
+    Services.prefs.setBoolPref(TEST_SAFE_ERR_PREF, true);
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "throwing-action": {
+          key: "Z",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "__nonexistent_throwing__",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // getAction returns undefined for unknown action → no throw.
+    // Even if it did throw, the expanded try-catch would swallow it.
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyZ",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "event should be prevented even when safeErrorHandling is enabled",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testSafeErrorHandlingExperimentDisabled(): void {
+  withPrefs(() => {
+    Services.prefs.setBoolPref(TEST_SAFE_ERR_PREF, false);
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "safe-action": {
+          key: "Y",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "non-existent-safe-action",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Control branch: getAction returns undefined, no fn call, no throw.
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyY",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "event should be prevented in control branch too",
+    );
+
+    controller.destroy();
+  });
+}
 
 function testKeyUpClearsKeyState(): void {
   withPrefs(() => {
@@ -1249,6 +1323,52 @@ function testStatePreservedAfterUnmatchedKey(): void {
   });
 }
 
+function testCapturePhaseBlocksBubbleListener(): void {
+  withPrefs(() => {
+    const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-shift-p": {
+          key: "P",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: true },
+          action: "test-ctrl-shift-p",
+        },
+      },
+    };
+    applyTestConfig(CTRL_SHIFT_P_CONFIG);
+    const fakeWin = createFakeWindow();
+
+    // Simulate a XUL-style bubble-phase handler
+    let bubbleHandlerCalled = false;
+    const bubbleHandler = () => {
+      bubbleHandlerCalled = true;
+    };
+    fakeWin.addEventListener("keydown", bubbleHandler);
+
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyP",
+      ctrlKey: true,
+      shiftKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "Ctrl+Shift+P should match in capture phase",
+    );
+    assertEquals(
+      bubbleHandlerCalled,
+      false,
+      "bubble-phase handler should NOT fire when capture handler stops propagation",
+    );
+
+    controller.destroy();
+    fakeWin.removeEventListener("keydown", bubbleHandler);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -1394,6 +1514,15 @@ export async function runAllTests(): Promise<void> {
       name: "action not found no error",
       fn: testActionNotFoundNoError,
     },
+    // Experiment: safe error handling
+    {
+      name: "safe error handling experiment enabled",
+      fn: testSafeErrorHandlingExperimentEnabled,
+    },
+    {
+      name: "safe error handling experiment disabled",
+      fn: testSafeErrorHandlingExperimentDisabled,
+    },
     // Key state tracking
     {
       name: "keyup clears key state",
@@ -1429,6 +1558,11 @@ export async function runAllTests(): Promise<void> {
     {
       name: "state preserved after unmatched key",
       fn: testStatePreservedAfterUnmatchedKey,
+    },
+    // Capture phase priority
+    {
+      name: "capture phase blocks bubble listener",
+      fn: testCapturePhaseBlocksBubbleListener,
     },
   ];
 

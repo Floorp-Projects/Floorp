@@ -201,7 +201,8 @@
       "gecko-scroll-to-bottom": "Rolar para o final",
       "gecko-workspace-next": "Mudar para a próximo espaço de trabalho",
       "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode"
+      "floorp-toggle-zen-mode": "Ativar/Desativar Modo Zen",
+      "floorp-toggle-command-palette": "Alternar a paleta de comandos"
     },
     "descriptions": {
       "gecko-back": "Voltar para a página anterior",
@@ -212,7 +213,8 @@
       "gecko-duplicate-tab": "Duplicar a aba atual",
       "gecko-reload-all-tabs": "Recarregar todas as abas",
       "gecko-restore-last-tab": "Reabra a última aba fechada",
-      "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing"
+      "floorp-toggle-zen-mode": "Ativar/desativar o Modo Zen para ocultar todos os elementos de interface do usuário para uma navegação livre de distrações",
+      "floorp-toggle-command-palette": "Abrir ou fechar a paleta de comandos para pesquisar e executar comandos"
     }
   },
   "qrCode": {
@@ -376,22 +378,51 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Abrir na Visualização Dividida",
-      "addPane": "Add Pane to Split View",
-      "moveToPane": "Move to Pane",
-      "moveToPaneN": "Pane {{n}} ({{title}})"
+      "addPane": "Adicionar painel à visualização dividida",
+      "moveToPane": "Mover para o painel",
+      "moveToPaneN": "Painel {{n}} ({{title}})"
     },
     "layoutPicker": {
-      "horizontal": "Horizontal Split",
-      "vertical": "Vertical Split",
-      "grid3paneLeftMain": "Grid (Large Left)",
-      "grid2x2": "Grid (2×2)",
-      "addPane": "Add Pane",
-      "removePane": "Remove Last Pane"
+      "horizontal": "Divisão horizontal",
+      "vertical": "Divisão vertical",
+      "grid3paneLeftMain": "Grade (maior parte à esquerda)",
+      "grid3paneRightMain": "Grade (maior parte à direita)",
+      "grid3paneTopMain": "Grade (maior parte no topo)",
+      "grid3paneBottomMain": "Grade (parte inferior maior)",
+      "grid2x2": "Grade (2×2)",
+      "addPane": "Adicionar painel",
+      "removePane": "Remover o último painel"
     }
   },
   "zen-mode": {
-    "label": "Zen Mode",
-    "tooltiptext": "Toggle Zen Mode",
-    "menu-label": "Toggle Zen Mode"
+    "label": "Modo Zen",
+    "tooltiptext": "Ativar/Desativar Modo Zen",
+    "menu-label": "Ativar/Desativar Modo Zen"
+  },
+  "commandPalette": {
+    "dialogLabel": "Paleta de comandos",
+    "placeholder": "Digite um comando...",
+    "navigateTo": "Ir para {{url}}",
+    "categories": {
+      "recent": "Usado Recentemente",
+      "navigation": "Navegação",
+      "tabs": "Abas",
+      "zoom": "Ampliar/Reduzir",
+      "bookmarks": "Marcadores",
+      "page": "Página",
+      "search": "Pesquisar",
+      "sidebar": "Painel Lateral",
+      "scrolling": "Rolagem",
+      "history": "Histórico",
+      "window": "Janela",
+      "tools": "Ferramentas",
+      "downloads": "Downloads",
+      "workspace": "Espaços de trabalho",
+      "floorp": "Floorp",
+      "media": "Mídia",
+      "open-tabs": "Abrir abas"
+    },
+    "noResults": "Nenhum comando encontrado",
+    "noResultsHint": "Experimente um termo de pesquisa diferente."
   }
 }
