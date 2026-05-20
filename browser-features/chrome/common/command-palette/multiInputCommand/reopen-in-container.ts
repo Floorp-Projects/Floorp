@@ -79,6 +79,13 @@ export const reopenInContainerCommand: PaletteCommand = {
   ],
   fn: (_win: Window, args?: Record<string, string>) => {
     const containerId = Number.parseInt(args?.container ?? "0");
+    if (Number.isNaN(containerId)) {
+      console.error(
+        "[ReopenInContainer] Invalid container ID:",
+        args?.container,
+      );
+      return;
+    }
     const tab = globalThis.gBrowser.selectedTab;
 
     if (!tab) return;
@@ -90,16 +97,24 @@ export const reopenInContainerCommand: PaletteCommand = {
         tab.linkedBrowser as unknown as { contentPrincipal: nsIPrincipal }
       ).contentPrincipal;
     } else {
-      const tabState = JSON.parse(
-        globalThis.SessionStore.getTabState(tab),
-      ) as Record<string, unknown>;
+      const getTabState = globalThis.SessionStore?.getTabState;
+      if (!getTabState) {
+        console.error(
+          "[ReopenInContainer] SessionStore.getTabState is not available",
+        );
+        return;
+      }
       try {
+        const tabState = JSON.parse(getTabState(tab)) as Record<
+          string,
+          unknown
+        >;
         triggeringPrincipal = globalThis.E10SUtils.deserializePrincipal(
           tabState.triggeringPrincipal_base64,
         ) as nsIPrincipal;
       } catch (error) {
         console.error(
-          "[ReopenInContainer] Failed to deserialize tab principal",
+          "[ReopenInContainer] Failed to deserialize tab state/principal",
           error,
         );
         return;
@@ -126,36 +141,43 @@ export const reopenInContainerCommand: PaletteCommand = {
     const tabPos = (tab as unknown as { _tPos?: number })._tPos ?? 0;
     const tabPinned = (tab as unknown as { pinned?: boolean }).pinned;
 
-    const newTab = globalThis.gBrowser.addTab(url, {
-      userContextId: containerId,
-      pinned: tabPinned,
-      tabIndex: tabPos + 1,
-      triggeringPrincipal,
-    } as {
-      skipAnimation?: boolean;
-      inBackground?: boolean;
-      userContextId?: number;
-      triggeringPrincipal?: unknown;
-      pinned?: boolean;
-      index?: number;
-      tabIndex?: number;
-    });
+    try {
+      const newTab = globalThis.gBrowser.addTab(url, {
+        userContextId: containerId,
+        pinned: tabPinned,
+        tabIndex: tabPos + 1,
+        triggeringPrincipal,
+      } as {
+        skipAnimation?: boolean;
+        inBackground?: boolean;
+        userContextId?: number;
+        triggeringPrincipal?: unknown;
+        pinned?: boolean;
+        index?: number;
+        tabIndex?: number;
+      });
 
-    if (globalThis.gBrowser.selectedTab === tab) {
-      globalThis.gBrowser.selectedTab = newTab;
-    }
+      if (globalThis.gBrowser.selectedTab === tab) {
+        globalThis.gBrowser.selectedTab = newTab;
+      }
 
-    const tabMuted = (tab as unknown as { muted?: boolean }).muted;
-    const newTabMuted = (newTab as unknown as { muted?: boolean }).muted;
-    const toggleFn = (
-      newTab as unknown as { toggleMuteAudio?: (reason?: unknown) => void }
-    ).toggleMuteAudio;
-    if (tabMuted && !newTabMuted && toggleFn) {
-      toggleFn(
-        (tab as unknown as { muteReason?: unknown }).muteReason as string,
+      const tabMuted = (tab as unknown as { muted?: boolean }).muted;
+      const newTabMuted = (newTab as unknown as { muted?: boolean }).muted;
+      const toggleFn = (
+        newTab as unknown as { toggleMuteAudio?: (reason?: unknown) => void }
+      ).toggleMuteAudio;
+      if (tabMuted && !newTabMuted && toggleFn) {
+        toggleFn(
+          (tab as unknown as { muteReason?: unknown }).muteReason as string,
+        );
+      }
+
+      globalThis.gBrowser.removeTab(tab);
+    } catch (error) {
+      console.error(
+        "[ReopenInContainer] Failed to reopen tab in container",
+        error,
       );
     }
-
-    globalThis.gBrowser.removeTab(tab);
   },
 };
