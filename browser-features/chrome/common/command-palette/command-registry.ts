@@ -9,6 +9,42 @@ import { fuzzySearch } from "./fuzzy.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
+import {
+  openUrlCommand,
+  searchWebCommand,
+  reopenInContainerCommand,
+} from "./multiInputCommand/index.ts";
+
+export interface CommandStepChoice {
+  /** Display label shown to the user */
+  label: string;
+  /** Actual value passed to the command function */
+  value: string;
+  /** Optional description shown below the label */
+  description?: string;
+}
+
+export interface CommandStep {
+  id: string;
+  label: string;
+  placeholder: string;
+  /**
+   * Validate user input for this step.
+   * Return `true` to pass, or a string error message to display.
+   * Omit to skip validation.
+   */
+  validate?: (input: string) => boolean | string;
+  /**
+   * Static predefined choices for this step.
+   */
+  choices?: CommandStepChoice[];
+  /**
+   * Dynamic choices loader. Called when entering this step.
+   * If both `choices` and `choicesLoader` are defined, `choices` takes priority.
+   * Use this for choices that need to be fetched asynchronously (e.g., search engines).
+   */
+  choicesLoader?: () => Promise<CommandStepChoice[]>;
+}
 
 export interface PaletteCommand {
   id: string;
@@ -16,7 +52,9 @@ export interface PaletteCommand {
   description: string;
   category: string;
   keywords: string[];
-  fn: (win: Window) => void;
+  fn: (win: Window, args?: Record<string, string>) => void;
+  /** If defined, the palette will prompt the user for each step before executing fn. */
+  steps?: CommandStep[];
 }
 
 const ACTION_CATEGORY_MAP: Record<string, string> = {
@@ -28,6 +66,9 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-open-home-page": "navigation",
 
   "gecko-close-tab": "tabs",
+  "gecko-close-other-tabs": "tabs",
+  "gecko-close-tabs-to-start": "tabs",
+  "gecko-close-tabs-to-end": "tabs",
   "gecko-open-new-tab": "tabs",
   "gecko-duplicate-tab": "tabs",
   "gecko-reload-all-tabs": "tabs",
@@ -109,6 +150,27 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-reload": ["refresh", "reload"],
   "gecko-force-reload": ["hard refresh", "hard reload", "skip cache"],
   "gecko-close-tab": ["close", "remove tab"],
+  "gecko-close-other-tabs": [
+    "close other",
+    "close all other tabs",
+    "close others",
+  ],
+  "gecko-close-tabs-to-start": [
+    "close",
+    "up",
+    "close left",
+    "close above",
+    "close tabs to left",
+    "close previous tabs",
+  ],
+  "gecko-close-tabs-to-end": [
+    "close",
+    "down",
+    "close right",
+    "close below",
+    "close tabs to right",
+    "close following tabs",
+  ],
   "gecko-open-new-tab": ["new", "open tab", "create tab"],
   "gecko-duplicate-tab": ["clone", "copy tab"],
   "gecko-show-next-tab": ["next tab", "switch right"],
@@ -142,27 +204,71 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-quit-from-application": ["quit", "exit"],
 };
 
-let cachedCommands: PaletteCommand[] | null = null;
+const cachedCommands: Record<string, PaletteCommand[]> = {};
 
-function buildGestureCommands(): PaletteCommand[] {
+type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
+
+function isVerticalMode(win?: Window): boolean {
+  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
+    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
+  return !!tabContainer?.verticalMode;
+}
+
+function getActionDisplayNameByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = isVerticalMode(win);
+  if (!isVertical) {
+    return getActionDisplayName(actionId);
+  }
+
+  const verticalLabel = getActionDisplayName(`${actionId}-vertical`);
+  return verticalLabel !== `${actionId}-vertical`
+    ? verticalLabel
+    : getActionDisplayName(actionId);
+}
+
+function getActionDescriptionByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = isVerticalMode(win);
+  if (!isVertical) {
+    return getActionDescription(actionId);
+  }
+
+  const verticalDescription = getActionDescription(`${actionId}-vertical`);
+  return verticalDescription !== `${actionId}-vertical`
+    ? verticalDescription
+    : getActionDescription(actionId);
+}
+
+function buildGestureCommands(win?: Window): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
   return gestureActions.map((action) => ({
     id: action.name,
-    label: getActionDisplayName(action.name),
-    description: getActionDescription(action.name),
+    label: getActionDisplayNameByOrientation(action.name, win),
+    description: getActionDescriptionByOrientation(action.name, win),
     category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
     keywords: ACTION_KEYWORDS[action.name] ?? [],
     fn: action.fn,
   }));
 }
 
+function buildStepCommands(): PaletteCommand[] {
+  return [openUrlCommand, searchWebCommand, reopenInContainerCommand];
+}
+
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
-  if (!cachedCommands) {
-    cachedCommands = buildGestureCommands();
+  const orientationKey = isVerticalMode(win) ? "vertical" : "horizontal";
+  if (!cachedCommands[orientationKey]) {
+    cachedCommands[orientationKey] = buildGestureCommands(win);
   }
-  const gestureCommands = cachedCommands;
+  const gestureCommands = cachedCommands[orientationKey];
   const tabCommands = win ? getTabCommands(win) : [];
-  return [...tabCommands, ...gestureCommands];
+  const stepCommands = buildStepCommands();
+  return [...tabCommands, ...gestureCommands, ...stepCommands];
 }
 
 export function searchCommands(query: string, win?: Window): PaletteCommand[] {
@@ -171,12 +277,17 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export function getCommand(id: string, win?: Window): PaletteCommand | undefined {
+export function getCommand(
+  id: string,
+  win?: Window,
+): PaletteCommand | undefined {
   return getPaletteCommands(win).find((cmd) => cmd.id === id);
 }
 
 export function invalidateCache() {
-  cachedCommands = null;
+  for (const key of Object.keys(cachedCommands)) {
+    delete cachedCommands[key];
+  }
 }
 
 export function getShortcutForAction(actionId: string): string | null {

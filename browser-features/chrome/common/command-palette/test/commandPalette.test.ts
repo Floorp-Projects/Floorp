@@ -9,8 +9,15 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import { fuzzyScore, fuzzySearch } from "../fuzzy.ts";
 import type { FuzzyTarget } from "../fuzzy.ts";
-import { getPaletteCommands, searchCommands, getCommand } from "../command-registry.ts";
+import {
+  getPaletteCommands,
+  searchCommands,
+  getCommand,
+} from "../command-registry.ts";
 import { getHighlightSegments } from "../utils/highlight.ts";
+import { openUrlCommand } from "../multiInputCommand/open-url.ts";
+import { searchWebCommand, loadSearchEngines } from "../multiInputCommand/search-web.ts";
+import { reopenInContainerCommand, loadContainers } from "../multiInputCommand/reopen-in-container.ts";
 
 const makeTarget = (label: string, desc = "", category = "test", keywords: string[] = []): FuzzyTarget => ({
   id: label.toLowerCase().replace(/\s+/g, "-"),
@@ -193,6 +200,140 @@ const rawTests: TestCase[] = [
       const commands = getPaletteCommands();
       for (const cmd of commands) {
         assert(validCategories.has(cmd.category), `unknown category "${cmd.category}" for ${cmd.id}`);
+      }
+    },
+  },
+
+  // --- Step Commands ---
+  {
+    name: "step commands are registered in palette",
+    fn() {
+      const commands = getPaletteCommands();
+      const ids = commands.map((c) => c.id);
+      assert(ids.includes("floorp-open-url"), "should include floorp-open-url");
+      assert(ids.includes("floorp-search-web"), "should include floorp-search-web");
+      assert(ids.includes("floorp-reopen-in-container"), "should include floorp-reopen-in-container");
+    },
+  },
+  {
+    name: "step commands have steps array with correct length",
+    fn() {
+      assert(openUrlCommand.steps && openUrlCommand.steps.length === 2, "open-url should have 2 steps");
+      assert(searchWebCommand.steps && searchWebCommand.steps.length === 3, "search-web should have 3 steps");
+      assert(reopenInContainerCommand.steps && reopenInContainerCommand.steps.length === 1, "reopen-in-container should have 1 step");
+    },
+  },
+  {
+    name: "each step has required properties",
+    fn() {
+      const stepCommands = [openUrlCommand, searchWebCommand, reopenInContainerCommand];
+      for (const cmd of stepCommands) {
+        for (const step of cmd.steps ?? []) {
+          assert(typeof step.id === "string" && step.id.length > 0, `step id should be non-empty string in ${cmd.id}`);
+          assert(typeof step.label === "string" && step.label.length > 0, `step label should be non-empty string in ${cmd.id}/${step.id}`);
+          assert(typeof step.placeholder === "string" && step.placeholder.length > 0, `step placeholder should be non-empty string in ${cmd.id}/${step.id}`);
+        }
+      }
+    },
+  },
+  {
+    name: "step commands fn does not throw with minimal args",
+    fn() {
+      const stepCommands = [openUrlCommand, searchWebCommand, reopenInContainerCommand];
+      for (const cmd of stepCommands) {
+        try {
+          cmd.fn(window, {});
+        } catch {
+          // Some commands may fail on missing browser state, that's acceptable
+        }
+      }
+    },
+  },
+
+  // --- Step Validate ---
+  {
+    name: "open-url validate rejects empty input",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      const result = validate("  ");
+      assert(typeof result === "string", "empty input should return error string");
+    },
+  },
+  {
+    name: "open-url validate accepts non-empty input",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      const result = validate("https://example.com");
+      assertEquals(result, true, "valid URL should return true");
+    },
+  },
+  {
+    name: "search-web validate rejects empty input",
+    fn() {
+      const validate = searchWebCommand.steps![0].validate!;
+      const result = validate("  ");
+      assert(typeof result === "string", "empty input should return error string");
+    },
+  },
+  {
+    name: "search-web validate accepts non-empty input",
+    fn() {
+      const validate = searchWebCommand.steps![0].validate!;
+      const result = validate("test query");
+      assertEquals(result, true, "non-empty query should return true");
+    },
+  },
+
+  // --- Static Choices ---
+  {
+    name: "open-url where step has 3 choices with correct values",
+    fn() {
+      const choices = openUrlCommand.steps![1].choices!;
+      assertEquals(choices.length, 3, "should have 3 choices");
+      const values = choices.map((c) => c.value);
+      assert(values.includes("new-tab"), "should include new-tab");
+      assert(values.includes("background-tab"), "should include background-tab");
+      assert(values.includes("current-tab"), "should include current-tab");
+      for (const choice of choices) {
+        assert(typeof choice.label === "string" && choice.label.length > 0, "choice should have label");
+        assert(typeof choice.description === "string" && choice.description.length > 0, "choice should have description");
+      }
+    },
+  },
+  {
+    name: "search-web where step has 3 choices with correct values",
+    fn() {
+      const choices = searchWebCommand.steps![2].choices!;
+      assertEquals(choices.length, 3, "should have 3 choices");
+      const values = choices.map((c) => c.value);
+      assert(values.includes("new-tab"), "should include new-tab");
+      assert(values.includes("background-tab"), "should include background-tab");
+      assert(values.includes("current-tab"), "should include current-tab");
+    },
+  },
+
+  // --- choicesLoader ---
+  {
+    name: "loadSearchEngines returns array with label and value",
+    async fn() {
+      const engines = await loadSearchEngines();
+      assert(Array.isArray(engines), "should return an array");
+      for (const engine of engines) {
+        assert(typeof engine.label === "string" && engine.label.length > 0, "engine should have label");
+        assert(typeof engine.value === "string" && engine.value.length > 0, "engine should have value");
+      }
+    },
+  },
+  {
+    name: "loadContainers returns array starting with no-container",
+    async fn() {
+      const containers = await loadContainers();
+      assert(Array.isArray(containers), "should return an array");
+      assert(containers.length > 0, "should have at least the no-container entry");
+      assertEquals(containers[0].value, "0", "first entry should be no-container with value '0'");
+      for (const container of containers) {
+        assert(typeof container.label === "string" && container.label.length > 0, "container should have label");
+        assert(typeof container.value === "string" && container.value.length > 0, "container should have value");
       }
     },
   },

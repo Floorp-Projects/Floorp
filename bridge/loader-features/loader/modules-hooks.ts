@@ -56,8 +56,12 @@ class ModuleLib implements TModuleLib {
   }
   async _rejectOtherLoadStates() {
     for (const [_, pms] of _mapPromiseModuleState) {
-      const t = {};
-      if (t === (await Promise.race([pms[0], t]))) {
+      // Sentinel pattern: Promise.race returns the sentinel object immediately
+      // if pms[0] is still pending (not yet settled). A settled promise would
+      // win the race instead. This is how we detect "never resolved" states
+      // without blocking on them.
+      const sentinel = {};
+      if (sentinel === (await Promise.race([pms[0], sentinel]))) {
         pms[2](new Error("Module Not Found"));
       }
     }
@@ -69,6 +73,10 @@ class ModuleLib implements TModuleLib {
 export function onModuleLoaded(module: string): Promise<void> {
   return ModuleLib.getInstance().onModuleLoaded(module);
 }
+
+// Functions below are prefixed with `_` to indicate they are internal to the
+// loader subsystem. Exported only because index.ts calls them directly;
+// treat them as implementation details, not public API.
 
 export function _registerModuleLoadState(module: string, isLoaded: boolean) {
   return ModuleLib.getInstance()._registerModuleLoadState(module, isLoaded);
