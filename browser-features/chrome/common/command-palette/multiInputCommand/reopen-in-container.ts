@@ -46,7 +46,8 @@ async function loadContainers(): Promise<CommandStepChoice[]> {
       });
 
     return [noContainer, ...containerChoices];
-  } catch {
+  } catch (err) {
+    console.error("reopenInContainer loader failed", err);
     return [];
   }
 }
