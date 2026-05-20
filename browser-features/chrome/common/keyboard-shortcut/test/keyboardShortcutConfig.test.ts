@@ -340,8 +340,8 @@ function testDefaultConfigStructure(): void {
   assertEquals(defaultConfig.enabled, true, "default config should be enabled");
   assertEquals(
     Object.keys(defaultConfig.shortcuts).length,
-    0,
-    "default config should have no shortcuts",
+    1,
+    "default config should have one shortcut",
   );
 }
 
@@ -431,7 +431,10 @@ function testParseConfigHandlesInvalidJson(): void {
     // Set invalid JSON and apply it via setConfig.
     // parseConfig catches JSON.parse errors and returns defaultConfig,
     // then the SolidJS effect writes the normalized default back to the pref.
-    Services.prefs.setStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF, "invalid-json{{{");
+    Services.prefs.setStringPref(
+      KEYBOARD_SHORTCUT_CONFIG_PREF,
+      "invalid-json{{{",
+    );
     setConfig({
       enabled: true,
       shortcuts: {},
@@ -598,7 +601,11 @@ function testStringToShortcutWithSpecialCharacters(): void {
   // "+" is the delimiter in the shortcut string format, so "Ctrl++" splits
   // into ["ctrl", "", ""] and the last element (the key) is empty.
   const result = stringToShortcut("Ctrl++");
-  assertEquals(result.key, "", "+ as delimiter produces empty key after splitting");
+  assertEquals(
+    result.key,
+    "",
+    "+ as delimiter produces empty key after splitting",
+  );
   assertEquals(result.modifiers.ctrl, true, "ctrl should be true");
 }
 
