@@ -24,8 +24,23 @@ export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
 export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
   "floorp.keyboardshortcut.safeErrorHandling";
 
+/**
+ * Returns the default keyboard shortcut map used by the extension.
+ *
+ * Shape: `Record<string, ShortcutConfig>` where each entry contains
+ * `key`, `modifiers`, and `action`.
+ *
+ * The sole default mapping is the **F2** key for
+ * "floorp-toggle-command-palette", with all modifiers set to `false`.
+ */
 const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
-  return {};
+  return {
+    "floorp-toggle-command-palette": {
+      key: "F2",
+      modifiers: { alt: false, ctrl: false, meta: false, shift: false },
+      action: "floorp-toggle-command-palette",
+    },
+  };
 };
 
 export const defaultConfig: KeyboardShortcutConfig = {
