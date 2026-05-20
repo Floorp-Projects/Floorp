@@ -17,6 +17,7 @@ import {
 } from "@/components/common/card.tsx";
 import { Keyboard } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
+import { formatModifierSymbol } from "../platform.ts";
 
 interface ShortcutsSettingsProps {
     config: KeyboardShortcutConfig;
@@ -84,10 +85,10 @@ export const ShortcutsSettings = ({
                                         <td>
                                             {shortcut ? (
                                                 <div className="flex items-center space-x-2">
-                                                    {shortcut.modifiers.alt && <span>Alt</span>}
-                                                    {shortcut.modifiers.ctrl && <span>Ctrl</span>}
-                                                    {shortcut.modifiers.meta && <span>Meta</span>}
-                                                    {shortcut.modifiers.shift && <span>Shift</span>}
+                                                    {shortcut.modifiers.alt && <span>{formatModifierSymbol("alt")}</span>}
+                                                    {shortcut.modifiers.ctrl && <span>{formatModifierSymbol("ctrl")}</span>}
+                                                    {shortcut.modifiers.meta && <span>{formatModifierSymbol("meta")}</span>}
+                                                    {shortcut.modifiers.shift && <span>{formatModifierSymbol("shift")}</span>}
                                                     <span>{shortcut.key.toUpperCase()}</span>
                                                 </div>
                                             ) : (

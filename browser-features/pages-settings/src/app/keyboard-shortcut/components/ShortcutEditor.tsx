@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ShortcutConfig } from "../../../types/pref.ts";
 import { Input } from "@/components/common/input.tsx";
+import { formatModifierLabel, formatModifierSymbol } from "../platform.ts";
 
 interface ShortcutEditorProps {
     isOpen: boolean;
@@ -117,10 +118,10 @@ export const ShortcutEditor = ({
 
     const previewShortcut = () => {
         const modifiers = [];
-        if (shortcut.modifiers.alt) modifiers.push("Alt");
-        if (shortcut.modifiers.ctrl) modifiers.push("Ctrl");
-        if (shortcut.modifiers.meta) modifiers.push("Meta");
-        if (shortcut.modifiers.shift) modifiers.push("Shift");
+        if (shortcut.modifiers.alt) modifiers.push(formatModifierSymbol("alt"));
+        if (shortcut.modifiers.ctrl) modifiers.push(formatModifierSymbol("ctrl"));
+        if (shortcut.modifiers.meta) modifiers.push(formatModifierSymbol("meta"));
+        if (shortcut.modifiers.shift) modifiers.push(formatModifierSymbol("shift"));
         if (shortcut.key) modifiers.push(formatKeyCode(shortcut.key).toUpperCase());
         return modifiers.join(" + ");
     };
@@ -161,7 +162,7 @@ export const ShortcutEditor = ({
                                     }))
                                 }
                             />
-                            <span>Alt</span>
+                            <span>{formatModifierLabel("alt")}</span>
                         </div>
                         <div className="flex items-center space-x-2 p-3 bg-base-200 rounded-lg">
                             <input
@@ -175,7 +176,7 @@ export const ShortcutEditor = ({
                                     }))
                                 }
                             />
-                            <span>Ctrl</span>
+                            <span>{formatModifierLabel("ctrl")}</span>
                         </div>
                         <div className="flex items-center space-x-2 p-3 bg-base-200 rounded-lg">
                             <input
@@ -189,7 +190,7 @@ export const ShortcutEditor = ({
                                     }))
                                 }
                             />
-                            <span>Meta</span>
+                            <span>{formatModifierLabel("meta")}</span>
                         </div>
                         <div className="flex items-center space-x-2 p-3 bg-base-200 rounded-lg">
                             <input
@@ -203,7 +204,7 @@ export const ShortcutEditor = ({
                                     }))
                                 }
                             />
-                            <span>Shift</span>
+                            <span>{formatModifierLabel("shift")}</span>
                         </div>
                     </div>
 
