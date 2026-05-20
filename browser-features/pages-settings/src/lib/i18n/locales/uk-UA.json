@@ -449,7 +449,14 @@
         "uninstallWarning": "Ви дійсно хочете видалити \"{{name}}\"?",
         "cancel": "Скасувати",
         "rename": "Перейменувати",
-        "uninstall": "Видалити"
+        "uninstall": "Видалити",
+        "container": "Контейнер",
+        "noContainer": "Без контейнера",
+        "setContainer": "Встановити контейнер",
+        "containerDescription": "Виберіть контейнер Firefox, у якому відкриватиметься цей додаток. Контейнери ізолюють файли cookie та дані сайтів.",
+        "containerDeleted": "Контейнер видалено",
+        "save": "Зберегти",
+        "errorSettingContainer": "Не вдалося встановити контейнер"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -449,7 +449,14 @@
         "uninstallWarning": "您確定要移除 \"{{name}}\" 嗎？",
         "cancel": "取消",
         "rename": "重新命名",
-        "uninstall": "移除"
+        "uninstall": "移除",
+        "container": "容器",
+        "noContainer": "無容器",
+        "setContainer": "設定容器",
+        "containerDescription": "選擇此應用程式啟動時使用的 Firefox 容器。容器會隔離 Cookie 和網站資料。",
+        "containerDeleted": "容器已刪除",
+        "save": "儲存",
+        "errorSettingContainer": "設定容器失敗"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

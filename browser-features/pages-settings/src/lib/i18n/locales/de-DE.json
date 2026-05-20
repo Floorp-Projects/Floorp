@@ -449,7 +449,14 @@
         "uninstallWarning": "Möchtest du „{{name}}“ wirklich deinstallieren?",
         "cancel": "Abbrechen",
         "rename": "Umbenennen",
-        "uninstall": "Deinstallieren"
+        "uninstall": "Deinstallieren",
+        "container": "Container",
+        "noContainer": "Kein Container",
+        "setContainer": "Container festlegen",
+        "containerDescription": "Wählen Sie den Firefox-Container, in dem diese App geöffnet wird. Container isolieren Cookies und Website-Daten.",
+        "containerDeleted": "Container gelöscht",
+        "save": "Speichern",
+        "errorSettingContainer": "Container konnte nicht festgelegt werden"
     },
     "floorpOS": {
         "title": "Floorp OS",

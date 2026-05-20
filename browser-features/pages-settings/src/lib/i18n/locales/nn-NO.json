@@ -392,8 +392,8 @@
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
-        "noContainer": "Ingen beholder",
+        "container": "Behaldar",
+        "noContainer": "Ingen behaldar",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
         "panelList": "Panel List",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Lagre",
+        "save": "Lagra",
         "cancel": "Avbryt"
     },
     "progressiveWebApp": {
@@ -449,7 +449,14 @@
         "uninstallWarning": "Are you sure you want to uninstall \"{{name}}\"?",
         "cancel": "Cancel",
         "rename": "Rename",
-        "uninstall": "Uninstall"
+        "uninstall": "Uninstall",
+        "container": "Behaldar",
+        "noContainer": "Ingen behaldar",
+        "setContainer": "Set behaldar",
+        "containerDescription": "Vel kva Firefox-behaldar denne appen opnast i. Behaldarar isolerer informasjonskapslar og nettstedsdata.",
+        "containerDeleted": "Behaldar sletta",
+        "save": "Lagra",
+        "errorSettingContainer": "Klarte ikkje å setja behaldar"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

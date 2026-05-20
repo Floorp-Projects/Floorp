@@ -141,6 +141,7 @@ export const zProgressiveWebAppObject = t.record(
     t.partial({
       short_name: t.string,
       scope: t.string,
+      userContextId: t.number,
     }),
   ]),
 );

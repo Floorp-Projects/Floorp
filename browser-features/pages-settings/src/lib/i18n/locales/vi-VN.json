@@ -449,7 +449,14 @@
         "uninstallWarning": "Are you sure you want to uninstall \"{{name}}\"?",
         "cancel": "Cancel",
         "rename": "Rename",
-        "uninstall": "Uninstall"
+        "uninstall": "Uninstall",
+        "container": "Ngăn chứa",
+        "noContainer": "Không ngăn chứa",
+        "setContainer": "Đặt ngăn chứa",
+        "containerDescription": "Chọn ngăn chứa Firefox mà ứng dụng này sẽ mở trong đó. Các ngăn chứa cách ly cookie và dữ liệu trang web.",
+        "containerDeleted": "Ngăn chứa đã xóa",
+        "save": "Lưu",
+        "errorSettingContainer": "Không thể đặt ngăn chứa"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

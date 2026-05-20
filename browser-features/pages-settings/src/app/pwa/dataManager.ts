@@ -79,3 +79,36 @@ export function uninstallPwaApp(id: string): Promise<void> {
     }
   });
 }
+
+export type Container = {
+  userContextId: number;
+  name: string;
+};
+
+export function getContainers(): Promise<Container[]> {
+  return new Promise((resolve, _reject) => {
+    try {
+      globalThis.NRGetContainers((containers: Container[]) => {
+        resolve(containers ?? []);
+      });
+    } catch (e) {
+      console.error("Failed to get containers:", e);
+      resolve([]);
+    }
+  });
+}
+
+export function setSsbContainer(
+  id: string,
+  userContextId: number,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      globalThis.NRSetSsbContainer(id, userContextId);
+      resolve();
+    } catch (e) {
+      console.error("Failed to set PWA container:", e);
+      reject(e);
+    }
+  });
+}

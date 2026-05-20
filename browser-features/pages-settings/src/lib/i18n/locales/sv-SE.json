@@ -393,7 +393,7 @@
         "width": "Bredd",
         "zoomLevel": "Zoomnivå",
         "container": "Behållare",
-        "noContainer": "Inga behållare",
+        "noContainer": "Ingen behållare",
         "useUserAgent": "Använd mobil användaragent",
         "panelType": "Paneltyp",
         "panelList": "Panellista",
@@ -449,7 +449,14 @@
         "uninstallWarning": "Är du säker att du vill avinstallera \"{{name}}\"?",
         "cancel": "Avbryt",
         "rename": "Byt namn",
-        "uninstall": "Avinstallera"
+        "uninstall": "Avinstallera",
+        "container": "Behållare",
+        "noContainer": "Ingen behållare",
+        "setContainer": "Ställ in behållare",
+        "containerDescription": "Välj vilken Firefox-behållare den här appen öppnas i. Behållare isolerar kakor och webbplatsdata.",
+        "containerDeleted": "Behållare borttagen",
+        "save": "Spara",
+        "errorSettingContainer": "Kunde inte ställa in behållare"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
