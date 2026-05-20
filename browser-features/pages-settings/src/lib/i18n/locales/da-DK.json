@@ -449,7 +449,14 @@
         "uninstallWarning": "Er du sikker på, at du vil afinstallere \"{{name}}\"?",
         "cancel": "Annuller",
         "rename": "Omdøb",
-        "uninstall": "Afinstaller"
+        "uninstall": "Afinstaller",
+        "container": "Container",
+        "noContainer": "No Container",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "save": "Save",
+        "errorSettingContainer": "Failed to set container"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

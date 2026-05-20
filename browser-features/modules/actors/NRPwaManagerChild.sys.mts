@@ -25,6 +25,13 @@ export class NRPwaManagerChild extends JSWindowActorChild {
         defineAs: "NRUninstallSsb",
         asAsync: true,
       });
+      Cu.exportFunction(this.NRGetContainers.bind(this), window, {
+        defineAs: "NRGetContainers",
+      });
+      Cu.exportFunction(this.NRSetSsbContainer.bind(this), window, {
+        defineAs: "NRSetSsbContainer",
+        asAsync: true,
+      });
     }
   }
   NRGetInstalledApps(
@@ -47,12 +54,30 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     this.sendAsyncMessage("PwaManager:UninstallSsb", { id });
   }
 
+  NRGetContainers(
+    // deno-lint-ignore no-explicit-any
+    callback: (containers: any[]) => void = () => {},
+  ) {
+    // deno-lint-ignore no-explicit-any
+    const promise = new Promise<any[]>((resolve, _reject) => {
+      this.resolveGetContainers = resolve;
+    });
+    this.sendAsyncMessage("PwaManager:GetContainers");
+    promise.then((containers) => callback(containers));
+  }
+
+  NRSetSsbContainer(id: string, userContextId: number) {
+    this.sendAsyncMessage("PwaManager:SetContainer", { id, userContextId });
+  }
+
   resolveGetInstalledApps:
     // deno-lint-ignore no-explicit-any
     | ((installedApps: Record<string, any>) => void)
     | null = null;
   resolveRenameSsb: ((id: string, newName: string) => void) | null = null;
   resolveUninstallSsb: ((id: string) => void) | null = null;
+  // deno-lint-ignore no-explicit-any
+  resolveGetContainers: ((containers: any[]) => void) | null = null;
   // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -72,6 +97,11 @@ export class NRPwaManagerChild extends JSWindowActorChild {
       case "PwaManager:UninstallSsb": {
         this.resolveUninstallSsb?.(message.data.wrappedJSObject.id);
         this.resolveUninstallSsb = null;
+        break;
+      }
+      case "PwaManager:GetContainers": {
+        this.resolveGetContainers?.(message.data);
+        this.resolveGetContainers = null;
         break;
       }
     }

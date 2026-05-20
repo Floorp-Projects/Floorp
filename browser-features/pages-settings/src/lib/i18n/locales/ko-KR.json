@@ -449,7 +449,14 @@
         "uninstallWarning": "\"{{name}} \"를 제거하시겠습니까?",
         "cancel": "취소",
         "rename": "이름 변경",
-        "uninstall": "삭제"
+        "uninstall": "삭제",
+        "container": "컨테이너",
+        "noContainer": "컨테이너 없음",
+        "setContainer": "컨테이너 설정",
+        "containerDescription": "이 앱을 열 때 사용할 Firefox 컨테이너를 선택합니다. 컨테이너는 쿠키와 사이트 데이터를 격리합니다.",
+        "containerDeleted": "컨테이너 삭제됨",
+        "save": "저장",
+        "errorSettingContainer": "컨테이너 설정 실패"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

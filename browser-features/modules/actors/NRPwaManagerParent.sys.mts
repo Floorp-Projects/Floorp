@@ -32,6 +32,35 @@ export class NRPwaManagerParent extends JSWindowActorParent {
         );
         break;
       }
+      case "PwaManager:GetContainers": {
+        const { ContextualIdentityService } = ChromeUtils.importESModule(
+          "resource://gre/modules/ContextualIdentityService.sys.mjs",
+        );
+        // deno-lint-ignore no-explicit-any
+        const containers = ContextualIdentityService.getPublicIdentities().map(
+          // deno-lint-ignore no-explicit-any
+          (c: any) => ({
+            userContextId: c.userContextId,
+            name: c.l10nId
+              ? ContextualIdentityService.getUserContextLabel(c.userContextId)
+              : c.name,
+          }),
+        );
+        this.sendAsyncMessage("PwaManager:GetContainers", containers);
+        break;
+      }
+      case "PwaManager:SetContainer": {
+        Services.obs.notifyObservers(
+          {
+            wrappedJSObject: {
+              id: message.data.id,
+              userContextId: message.data.userContextId,
+            },
+          },
+          "nora-ssb-set-container",
+        );
+        break;
+      }
     }
   }
 

@@ -449,7 +449,14 @@
         "uninstallWarning": "Är du säker att du vill avinstallera \"{{name}}\"?",
         "cancel": "Avbryt",
         "rename": "Byt namn",
-        "uninstall": "Avinstallera"
+        "uninstall": "Avinstallera",
+        "container": "Container",
+        "noContainer": "No Container",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "save": "Save",
+        "errorSettingContainer": "Failed to set container"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

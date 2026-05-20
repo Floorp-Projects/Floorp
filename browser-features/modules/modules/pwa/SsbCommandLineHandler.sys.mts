@@ -111,6 +111,13 @@ export class SsbRunnerUtils {
     // This excludes PWA windows from session restore and treats them like TaskBarTabs
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
 
+    if (ssb.userContextId && ssb.userContextId > 0) {
+      extraOptions.setPropertyAsACString(
+        "userContextId",
+        String(ssb.userContextId),
+      );
+    }
+
     // Create URL argument
     const url = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString,

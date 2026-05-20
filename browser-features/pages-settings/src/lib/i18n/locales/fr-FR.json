@@ -449,7 +449,14 @@
         "uninstallWarning": "Êtes-vous sûr de vouloir désinstaller {name}?",
         "cancel": "Annuler",
         "rename": "Renommer",
-        "uninstall": "Désinstaller"
+        "uninstall": "Désinstaller",
+        "container": "Container",
+        "noContainer": "No Container",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "save": "Save",
+        "errorSettingContainer": "Failed to set container"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

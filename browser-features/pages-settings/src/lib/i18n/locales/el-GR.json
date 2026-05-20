@@ -449,7 +449,14 @@
         "uninstallWarning": "Είστε σίγουροι ότι θέλετε να απεγκαταστήσετε το \"{{name}}\";",
         "cancel": "Ακύρωση",
         "rename": "Μετονομασία",
-        "uninstall": "Απεγκατάσταση"
+        "uninstall": "Απεγκατάσταση",
+        "container": "Container",
+        "noContainer": "No Container",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "save": "Save",
+        "errorSettingContainer": "Failed to set container"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

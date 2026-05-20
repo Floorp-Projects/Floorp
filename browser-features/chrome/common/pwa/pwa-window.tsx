@@ -66,6 +66,66 @@ export class PwaWindowSupport {
     globalThis.gBrowser.tabs.forEach((tab: XULElement) => {
       tab.setAttribute("floorpSSB", "true");
     });
+
+    const userContextId = this.getUserContextIdFromArgs();
+    if (userContextId > 0) {
+      this.applyUserContext(userContextId);
+    }
+  }
+
+  private getUserContextIdFromArgs(): number {
+    try {
+      const args = (window as { arguments?: [unknown, nsIPropertyBag2] }).arguments;
+      if (args?.[1]) {
+        const extraOptions = args[1];
+        if (extraOptions.hasKey("userContextId")) {
+          const val = extraOptions.getPropertyAsAString("userContextId");
+          return parseInt(val, 10) || 0;
+        }
+      }
+    } catch {
+      // If we can't read the args, default to no container
+    }
+    return 0;
+  }
+
+  private applyUserContext(userContextId: number): void {
+    const { ContextualIdentityService } = ChromeUtils.importESModule(
+      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+    );
+    const containers = ContextualIdentityService.getPublicIdentities();
+    const exists = containers.some(
+      // deno-lint-ignore no-explicit-any
+      (c: any) => c.userContextId === userContextId,
+    );
+
+    if (!exists) {
+      console.warn(
+        `[PwaWindowSupport] Container ${userContextId} no longer exists, falling back to no container`,
+      );
+      return;
+    }
+
+    const tab = globalThis.gBrowser.selectedTab;
+    if (tab.getAttribute("usercontextid") === String(userContextId)) {
+      return;
+    }
+
+    const url = globalThis.gBrowser.selectedBrowser?.currentURI?.spec ??
+      "about:blank";
+
+    const triggeringPrincipal = Services.scriptSecurityManager
+      .createNullPrincipal({
+        userContextId,
+      }) as nsIPrincipal;
+
+    const newTab = globalThis.gBrowser.addTrustedTab(url, {
+      userContextId,
+      triggeringPrincipal,
+    });
+
+    globalThis.gBrowser.selectedTab = newTab;
+    globalThis.gBrowser.removeTab(tab);
   }
 
   private renderStyles(): void {

@@ -449,7 +449,14 @@
         "uninstallWarning": "\"{{name}}\" web uygulamasını kaldırmak istediğinizden emin misiniz?",
         "cancel": "Vazgeç",
         "rename": "Yeniden adlandır",
-        "uninstall": "Kaldır"
+        "uninstall": "Kaldır",
+        "container": "Container",
+        "noContainer": "No Container",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "save": "Save",
+        "errorSettingContainer": "Failed to set container"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
