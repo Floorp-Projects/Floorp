@@ -4,10 +4,46 @@ import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { getWorkspaceSettings, saveWorkspaceSettings } from "./dataManager.ts";
 import type { WorkspacesFormData } from "@/types/pref.ts";
+import { LearnButton } from "@/components/common/learn-button.tsx";
+import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
+import { WorkspaceGuide } from "@/components/common/workspace-guide.tsx";
 
 export default function Page() {
   const { t } = useTranslation();
   const methods = useForm<WorkspacesFormData>({});
+
+  const workspaceTutorialSteps: TutorialStep[] = [
+    {
+      titleKey: "workspaces.tutorial.step1.title",
+      descriptionKey: "workspaces.tutorial.step1.description",
+      content: <WorkspaceGuide />,
+    },
+    {
+      titleKey: "workspaces.tutorial.step2.title",
+      descriptionKey: "workspaces.tutorial.step2.description",
+      content: <WorkspaceGuide step={1} />,
+    },
+    {
+      titleKey: "workspaces.tutorial.step3.title",
+      descriptionKey: "workspaces.tutorial.step3.description",
+      content: <WorkspaceGuide step={2} />,
+    },
+    {
+      titleKey: "workspaces.tutorial.step4.title",
+      descriptionKey: "workspaces.tutorial.step4.description",
+      content: <WorkspaceGuide step={3} />,
+    },
+    {
+      titleKey: "workspaces.tutorial.step5.title",
+      descriptionKey: "workspaces.tutorial.step5.description",
+      content: <WorkspaceGuide step={4} />,
+    },
+    {
+      titleKey: "workspaces.tutorial.step6.title",
+      descriptionKey: "workspaces.tutorial.step6.description",
+      content: <WorkspaceGuide step={5} />,
+    },
+  ];
 
   const { control, setValue } = methods;
   const watchAll = useWatch({ control });
@@ -47,7 +83,10 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-2">
           {t("workspaces.workspaces")}
         </h1>
-        <p className="text-sm mb-8">{t("workspaces.workspacesDescription")}</p>
+        <p className="text-sm mb-4">{t("workspaces.workspacesDescription")}</p>
+        <div className="flex items-center gap-2">
+          <LearnButton steps={workspaceTutorialSteps} title={t("workspaces.workspaces")} />
+        </div>
       </div>
 
       <FormProvider {...methods}>

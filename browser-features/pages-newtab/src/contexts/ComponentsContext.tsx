@@ -12,6 +12,7 @@ interface ComponentsState {
   clock: boolean;
   searchBar: boolean;
   firefoxLayout: boolean;
+  tipBanner: boolean;
 }
 
 interface ComponentsContextType {
@@ -29,6 +30,7 @@ export function ComponentsProvider(
     clock: true,
     searchBar: true,
     firefoxLayout: false,
+    tipBanner: true,
   });
   const [isInitialized, setIsInitialized] = useState(false);
 

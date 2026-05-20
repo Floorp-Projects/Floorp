@@ -117,7 +117,7 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-2">
           {t("design.tabAndAppearance")}
         </h1>
-        <p className="text-sm mb-8">
+        <p className="text-sm mb-4">
           {t("design.customizePositionOfToolbars")}
         </p>
       </div>
