@@ -27,6 +27,17 @@ const commit = <T>(ref: Ref<T> | undefined, val: T | null) =>
 const liftRef = (tag: string, orig?: Ref<any>) => (el: Element | null) => {
   if (!el) return commit(orig, el); // Handle null case
   if ((el as any).__isXUL) return commit(orig, el); // Already XUL
+  if (!el.parentNode) {
+    // Preact may invoke the ref before the element is attached to the DOM.
+    // materialize() swaps the node via replaceChild(), which silently no-ops
+    // while the element is detached. Defer to a microtask: by then the
+    // synchronous render/commit has finished and the element is attached.
+    queueMicrotask(() => {
+      if ((el as any).__isXUL) return; // already materialized
+      commit(orig, materialize(el, tag));
+    });
+    return;
+  }
   return commit(orig, materialize(el, tag)); // Transform to XUL
 };
 
