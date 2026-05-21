@@ -14,13 +14,17 @@ export async function generateJarManifest(
 
   const arr = [];
   for (const i of Object.values(viteManifest)) {
-    arr.push((i as { fileName: string })["fileName"].replaceAll("\\", "/"));
+    const name = (i as { fileName?: string }).fileName;
+    if (name) arr.push(name.replaceAll("\\", "/"));
   }
   console.log("generate end jar.mn");
 
   const header = `noraneko.jar:\n% ${options.register_type} ${options.namespace} %nora-${options.prefix}/ contentaccessible=yes`;
   const overrideLines = (options.overrides ?? [])
-    .map((o) => `\n% override ${o}`)
+    .map((o) => {
+      if (o.includes('\n') || o.includes('%')) throw new Error(`Invalid override: ${o}`);
+      return `\n% override ${o}`;
+    })
     .join("");
   const fileEntries = Array.from(new Set(arr))
     .map((v) => `nora-${options.prefix}/${v} (${v})`)

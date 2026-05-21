@@ -32,6 +32,7 @@ export class TabDragDropManager {
   private originalOnDragOver: ((event: DragEvent) => void) | undefined | null =
     null;
   private dropEventListener: ((e: Event) => void) | null = null;
+  private dragStartListener: ((e: Event) => void) | null = null;
 
   constructor(
     private readonly resolveTabsContainer: () => XULElement | null,
@@ -63,7 +64,7 @@ export class TabDragDropManager {
       return event.clientX > rect.x + rect.width / 2 ? tabPos : tabPos + 1;
     };
 
-    tabContainer.addEventListener("dragstart", (event: Event) => {
+    this.dragStartListener = (event: Event) => {
       const dragEvent = event as DragEvent;
       const tab = this.getTabFromEventTarget(dragEvent);
       if (!tab || !this.arrowScrollbox) return;
@@ -97,7 +98,8 @@ export class TabDragDropManager {
           this.listenersActive = true;
         }
       }
-    });
+    };
+    tabContainer.addEventListener("dragstart", this.dragStartListener);
   }
 
   uninstall(): void {
@@ -120,7 +122,11 @@ export class TabDragDropManager {
       tabContainer._onDragOver = this.originalOnDragOver;
     }
 
-    // Remove drop event listener
+    // Remove drag/drop event listeners
+    if (this.dragStartListener) {
+      tabContainer.removeEventListener("dragstart", this.dragStartListener);
+      this.dragStartListener = null;
+    }
     if (this.dropEventListener) {
       tabContainer.removeEventListener("drop", this.dropEventListener);
       this.dropEventListener = null;
@@ -240,7 +246,7 @@ export class TabDragDropManager {
       if (CSS.supports("offset-anchor", "left bottom")) {
         newMarginY += rect.height / 2 - tabRect.height / 2;
       }
-    } else if (dropIndex != null || dropIndex !== 0) {
+    } else if (dropIndex != null && dropIndex !== 0) {
       const tabRect = tabs[dropIndex].getBoundingClientRect();
       newMarginX = ltr ? tabRect.left - rect.left : rect.right - tabRect.right;
       newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
@@ -336,7 +342,7 @@ export class TabDragDropManager {
           if (pinned) {
             this.pinnedTabs.migratePinnedTabs(tabsContainer, pinned);
           }
-          setTimeout(() => {
+          queueMicrotask(() => {
             const tab = tabsContainer.querySelector(
               `.tabbrowser-tab[newPin]:nth-child(${
                 tabsContainer.querySelectorAll("tab[newPin]").length
@@ -355,7 +361,7 @@ export class TabDragDropManager {
                 tabsContainer.insertBefore(tab, tabToMoveAt);
               }
             }
-          }, 10);
+          });
         });
       } else if (this.groupToInsertTo) {
         this.moveTabsToGroup(selectedTabs);

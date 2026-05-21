@@ -7,6 +7,7 @@ import { checkIsSystemShortcut } from "./utils.ts";
 export class CustomShortcutKey {
   private static instance: CustomShortcutKey;
   private static windows: Window[] = [];
+  private static windowHandlers: Map<Window, (ev: KeyboardEvent) => void> = new Map();
 
   //? this boolean disable shortcut of csk
   //? useful for registering
@@ -14,13 +15,13 @@ export class CustomShortcutKey {
   static getInstance() {
     if (!CustomShortcutKey.instance) {
       CustomShortcutKey.instance = new CustomShortcutKey();
+      Services.obs.addObserver(CustomShortcutKey.instance, "nora-csk");
     }
     if (!CustomShortcutKey.windows.includes(window)) {
       CustomShortcutKey.instance.startHandleShortcut(window);
       CustomShortcutKey.windows.push(window);
       console.log("add window");
     }
-    Services.obs.addObserver(CustomShortcutKey.instance, "nora-csk");
     return CustomShortcutKey.instance;
   }
 
@@ -61,7 +62,7 @@ export class CustomShortcutKey {
     }
   }
   private startHandleShortcut(_window: Window) {
-    _window.addEventListener("keydown", (ev: KeyboardEvent) => {
+    const handler = (ev: KeyboardEvent) => {
       if (this.disable_csk) {
         console.log("disable-csk");
         return;
@@ -83,12 +84,24 @@ export class CustomShortcutKey {
             ev.ctrlKey === ctrl &&
             ev.metaKey === meta &&
             ev.shiftKey === shift &&
-            ev.key === shortcutDatum!.key
+            ev.key.toUpperCase() === shortcutDatum!.key.toUpperCase()
           ) {
             commands[key].command(ev);
           }
         }
       }
-    });
+    };
+    _window.addEventListener("keydown", handler);
+    CustomShortcutKey.windowHandlers.set(_window, handler);
+  }
+
+  uninstall(_window: Window) {
+    const handler = CustomShortcutKey.windowHandlers.get(_window);
+    if (handler) {
+      _window.removeEventListener("keydown", handler);
+      CustomShortcutKey.windowHandlers.delete(_window);
+    }
+    const idx = CustomShortcutKey.windows.indexOf(_window);
+    if (idx !== -1) CustomShortcutKey.windows.splice(idx, 1);
   }
 }

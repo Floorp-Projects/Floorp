@@ -15,8 +15,13 @@ export namespace StyleSheetServiceUtils {
    * @param styleSheetURL
    */
   export function loadStyleSheetWith(styleSheetURL: string) {
+    const sheetType = sss.USER_SHEET;
+    if (sheetType == null) {
+      console.error("[StyleSheetService] USER_SHEET is not available");
+      return;
+    }
     const uri = ios.newURI(styleSheetURL);
-    sss.loadAndRegisterSheet(uri, sss.USER_SHEET!);
+    sss.loadAndRegisterSheet(uri, sheetType);
   }
 
   /**
@@ -24,8 +29,13 @@ export namespace StyleSheetServiceUtils {
    * @param styleSheetURL
    */
   export function checkStyleSheetLoaded(styleSheetURL: string): boolean {
+    const sheetType = sss.USER_SHEET;
+    if (sheetType == null) {
+      console.error("[StyleSheetService] USER_SHEET is not available");
+      return false;
+    }
     const uri = ios.newURI(styleSheetURL);
-    return sss.sheetRegistered(uri, sss.USER_SHEET!);
+    return sss.sheetRegistered(uri, sheetType);
   }
 
   /**
@@ -33,7 +43,12 @@ export namespace StyleSheetServiceUtils {
    * @param styleSheetURL
    */
   export function unloadStyleSheet(styleSheetURL: string) {
+    const sheetType = sss.USER_SHEET;
+    if (sheetType == null) {
+      console.error("[StyleSheetService] USER_SHEET is not available");
+      return;
+    }
     const uri = ios.newURI(styleSheetURL);
-    sss.unregisterSheet(uri, sss.USER_SHEET!);
+    sss.unregisterSheet(uri, sheetType);
   }
 }

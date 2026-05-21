@@ -17,6 +17,7 @@ export function genJarmnPlugin(
       rootPath = config.root;
     },
     async generateBundle(options, bundle, isWrite) {
+      if (!isWrite) return;
       const _bundle = fs.existsSync(rootPath + "/index.html")
         ? Object.assign(
             { "__index.html__": { fileName: "index.html" } },

@@ -27,6 +27,10 @@ const commit = <T>(ref: Ref<T> | undefined, val: T | null) =>
 const liftRef = (tag: string, orig?: Ref<any>) => (el: Element | null) => {
   if (!el) return commit(orig, el); // Handle null case
   if ((el as any).__isXUL) return commit(orig, el); // Already XUL
+  if (!el.parentNode) {
+    console.warn("preact-xul: liftRef called with detached element, skipping materialize");
+    return;
+  }
   return commit(orig, materialize(el, tag)); // Transform to XUL
 };
 
@@ -36,6 +40,10 @@ const patch = (vnode: VNode) => {
   }
 };
 
+// NOTE: This module monkey-patches options.vnode globally and affects all Preact
+// instances in the same JS context. It must be imported exactly once per JS
+// context. Multiple imports will chain patches correctly via prev?.(v), but
+// importing this module in multiple contexts will cause duplicate patching.
 const prev = options.vnode;
 options.vnode = (v) => (patch(v), prev?.(v));
 

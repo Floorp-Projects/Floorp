@@ -15,17 +15,12 @@ import { MouseGestureController } from "./controller.ts";
 import { createRootHMR } from "#features-chrome/utils/base";
 import { effect } from "@preact/signals";
 
-interface nsIObserver {
-  observe(subject: unknown, topic: string, data: string): void;
-}
-
 /**
  * MouseGestureService manages the lifecycle of gesture controllers across windows.
  */
 export class MouseGestureService {
   private controllers: Map<Window, MouseGestureController> = new Map();
   private lastConfigString = "";
-  private configObserver: nsIObserver | null = null;
 
   constructor() {
     this.initialize();
@@ -59,7 +54,6 @@ export class MouseGestureService {
       handleContextMenuAfterMouseUp(enabled);
     });
 
-    this.setupEnabledObserver();
   }
 
   private attachToAllWindows(): void {
@@ -123,46 +117,6 @@ export class MouseGestureService {
       }
     }
     this.controllers.clear();
-  }
-
-  private setupEnabledObserver(): void {
-    if (this.configObserver) {
-      try {
-        Services.prefs.removeObserver(
-          "floorp.mousegesture.enabled",
-          this.configObserver,
-        );
-      } catch (e) {
-        console.error("[MouseGestureService] Error removing observer:", e);
-      }
-    }
-
-    this.configObserver = {
-      observe: (_subject: unknown, topic: string, data: string) => {
-        if (
-          topic === "nsPref:changed" &&
-          data === "floorp.mousegesture.enabled"
-        ) {
-          const enabled = Services.prefs.getBoolPref(
-            "floorp.mousegesture.enabled",
-            false,
-          );
-
-          if (enabled) {
-            this.attachToAllWindows();
-          } else {
-            this.destroyAllControllers();
-          }
-
-          handleContextMenuAfterMouseUp(enabled);
-        }
-      },
-    };
-
-    Services.prefs.addObserver(
-      "floorp.mousegesture.enabled",
-      this.configObserver,
-    );
   }
 
   private initialize(): void {

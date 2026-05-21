@@ -85,7 +85,7 @@ export const getModuleEventBus = (name: string): Record<string, (...args: any[])
       return async (...args: any[]) => {
         const module = _registry.get(name);
         if (!module || !(prop in module)) {
-          return ok({} as never);
+          return err(`Module "${name}" or method "${prop}" not registered`);
         }
         try {
           const result = await module[prop](...args);

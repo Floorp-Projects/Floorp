@@ -81,7 +81,7 @@ export function floorpCSKToNora(data: FloorpCSKData): CSKData {
       modifiers: {
         alt: datum.modifiers.includes('alt'),
         ctrl: datum.modifiers.includes('ctrl'),
-        meta: false,
+        meta: datum.modifiers.includes('meta'),
         shift: datum.modifiers.includes('shift'),
       },
     };

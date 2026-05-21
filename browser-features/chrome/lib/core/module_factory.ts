@@ -145,7 +145,7 @@ const _instances: Map<string, ModuleInstance> = new Map();
  * Register a module for runtime loading
  * Side effect: stores module handle in global registry
  */
-export function register<S, E>(handle: ModuleHandle<S, E>): void {
+export async function register<S, E>(handle: ModuleHandle<S, E>): Promise<void> {
   const name = handle.meta.name;
 
   // Check if already registered
@@ -159,7 +159,7 @@ export function register<S, E>(handle: ModuleHandle<S, E>): void {
   _instances.set(name, instance);
 
   // Run init
-  instance.init();
+  await instance.init();
 }
 
 /**
@@ -214,7 +214,7 @@ export async function hotswap<S, E>(
   await unregister(name);
 
   // Register new instance
-  register(handle);
+  await register(handle);
 
   return true;
 }
@@ -260,7 +260,7 @@ export function registerModule<S = unknown, E = unknown>(
   const handle = module(def);
 
   // Register immediately
-  register(handle);
+  void register(handle);
 
   // Handle HMR (Vite)
   // Note: In production builds this is ignored as import.meta.hot is undefined

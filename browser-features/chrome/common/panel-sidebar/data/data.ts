@@ -21,7 +21,7 @@ import { createRootHMR } from "#features-chrome/utils/base";
 import { isRight } from "fp-ts/Either";
 
 function getPanelSidebarData(stringData: string) {
-  return JSON.parse(stringData).data || {};
+  return JSON.parse(stringData).data ?? [];
 }
 
 function getPanelSidebarConfigParsed(stringData: string): unknown {

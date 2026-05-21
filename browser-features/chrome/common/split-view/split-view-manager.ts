@@ -49,6 +49,7 @@ export class SplitViewManager {
   private eventsCleanup: (() => void) | null = null;
   private activePaneCleanup: (() => void) | null = null;
   private sessionRestoreCleanup: (() => void) | null = null;
+  private effectDispose: (() => void) | null = null;
   private logger: ConsoleInstance;
 
   constructor(logger: ConsoleInstance) {
@@ -82,19 +83,19 @@ export class SplitViewManager {
     initPaneDrag(this.logger);
 
     // React to layout config changes
-    effect(() => {
+    this.effectDispose = effect(() => {
       const config = splitViewConfig.value;
       this.logger.debug(
         `[effect] layout config changed: ${config.layout}, maxPanes=${config.maxPanes}`,
       );
       applyLayout(this.logger);
-
-      return () => this.destroy();
     });
   }
 
   private destroy(): void {
     this.logger.debug("Destroying SplitViewManager");
+    this.effectDispose?.();
+    this.effectDispose = null;
     this.removeStyles();
     this.tabpanelsPatch?.unpatch();
     this.wrapperPatch?.unpatch();

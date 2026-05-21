@@ -26,18 +26,13 @@ export class KeyboardShortcutService {
         if (enabled) {
           this.attachToAllWindows();
         }
-      }
-
-      this.lastConfigString = configString;
-    });
-
-    effect(() => {
-      const enabled = isEnabled();
-      if (enabled) {
+      } else if (enabled) {
         this.attachToAllWindows();
       } else {
         this.destroyAllControllers();
       }
+
+      this.lastConfigString = configString;
     });
   }
 

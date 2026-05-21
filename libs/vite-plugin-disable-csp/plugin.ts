@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export function disableCspInDevPlugin(isDev: boolean) {
+import type { Plugin } from "vite";
+
+export function disableCspInDevPlugin(isDev: boolean): Plugin[] {
   if (!isDev) {
     return [];
   }
 
-  return {
+  return [{
     name: "disable-csp-in-dev",
     enforce: "post",
     transformIndexHtml(html: string) {
@@ -18,5 +20,5 @@ export function disableCspInDevPlugin(isDev: boolean) {
         "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;\">",
       );
     },
-  };
+  }];
 }

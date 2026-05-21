@@ -106,7 +106,9 @@ export function createNodeDisposer(node: Element, dispose: Disposer): void {
 
   // Observe the closest parent that won't be removed itself
   const parent = node.parentElement ?? (document?.body as Element | null);
-  if (parent) {
-    observer.observe(parent, { childList: true, subtree: true });
+  if (!parent) {
+    console.warn("createNodeDisposer: no observable parent, disposer leaked");
+    return;
   }
+  observer.observe(parent, { childList: true, subtree: true });
 }

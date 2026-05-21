@@ -8,6 +8,5 @@ export function getFluentLocalization(actionName: keyof CSKData) {
     console.error(`actionName(${actionName}) do not exists.`);
     return null;
   }
-  //TODO:
-  //return `floorp-custom-actions-${commands[actionName][1]}`;
+  return `floorp-custom-actions-${commands[actionName].type}`;
 }

@@ -30,6 +30,8 @@ export default defineConfig({
         /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/,
         /^moz-extension:\/\/.+$/,
         /^chrome:\/\/.+$/,
+        // "null" matches requests with `Origin: null` (e.g. file:// pages).
+        // Intentional for local development only; do not enable in production.
         "null",
       ],
     },
@@ -145,7 +147,7 @@ export default defineConfig({
       },
     },
 
-    istanbulPlugin(),
+    ...(process.env.COVERAGE ? [istanbulPlugin()] : []),
     genJarmnPlugin("content", "noraneko", "content"),
   ],
 

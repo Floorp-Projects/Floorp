@@ -27,6 +27,9 @@ export class EventSystem<T extends object> {
    * Register a handler for a specific event/method
    */
   on<K extends keyof T>(event: K, handler: T[K]): void {
+    if (this.handlers.has(event)) {
+      console.warn(`[EventSystem] Handler for "${String(event)}" is being overwritten (1 handler per event)`);
+    }
     this.handlers.set(event, handler);
   }
 

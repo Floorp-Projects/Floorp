@@ -20,15 +20,24 @@ export const setPrefFeatures = (allFeaturesKeys: ModulesKeys): void => {
     JSON.stringify(allFeaturesKeys),
   );
   Services.prefs.lockPref("noraneko.features.all");
-  prefs.setStringPref(
-    "noraneko.features.enabled",
-    JSON.stringify(allFeaturesKeys),
-  );
+  // Only write the enabled-features default when the user has not set a custom
+  // value. This allows individual modules to be opt-out via user preferences.
+  if (!Services.prefs.prefHasUserValue("noraneko.features.enabled")) {
+    prefs.setStringPref(
+      "noraneko.features.enabled",
+      JSON.stringify(allFeaturesKeys),
+    );
+  }
 };
+
+const EMPTY_MODULES_KEYS: ModulesKeys = { common: [], static: [] };
 
 export const getEnabledFeatures = (): ModulesKeys =>
   JSON.parse(
-    Services.prefs.getStringPref("noraneko.features.enabled", "{}"),
+    Services.prefs.getStringPref(
+      "noraneko.features.enabled",
+      JSON.stringify(EMPTY_MODULES_KEYS),
+    ),
   ) as ModulesKeys;
 
 // ============================================================================

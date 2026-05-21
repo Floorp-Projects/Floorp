@@ -33,6 +33,8 @@ export const initializeModules = async (
         await module.init();
       }
       if (module?.default) {
+        // module.default is expected to be a synchronous constructor.
+        // Async initialization should use the init() lifecycle hook above.
         new module.default();
       }
       registerModuleLoadState(module.name, true);

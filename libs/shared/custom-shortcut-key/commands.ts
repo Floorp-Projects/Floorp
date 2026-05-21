@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-// @ts-nocheck Firefox chrome globals (BrowserCommands, gBrowser, etc.) are untyped
+// Firefox chrome globals (BrowserCommands, gBrowser, etc.) are not typed in Deno/TS.
+// Minimal stubs below allow type-checking without @ts-nocheck.
+// deno-lint-ignore no-var
+declare const globalThis: Record<string, any>;
+// deno-lint-ignore no-var
+declare const Ci: Record<string, any>;
 
 export const csk_category = [
   "tab-action",
@@ -197,7 +202,7 @@ export const commands: Commands = {
       globalThis.BrowserPageActions.doCommandForAction(
         globalThis.PageActions.actionForID("bookmark"),
         event,
-        this,
+        null,
       ),
     type: "bookmark-action",
   },
@@ -262,7 +267,7 @@ export const commands: Commands = {
     type: "history-action",
   },
   "gecko-clear-recent-history": {
-    command: () => globalThis.BrowserTryToCloseWindow(),
+    command: () => globalThis.Sanitizer.showUI(window),
     type: "history-action",
   },
   "gecko-search-history": {
