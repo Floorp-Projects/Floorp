@@ -93,6 +93,7 @@
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:unplugin-swc@^1.5.9": "1.5.9_@swc+core@1.15.7",
     "npm:uuid@13": "13.0.0",
+    "npm:valibot@^1.2.0": "1.4.0_typescript@5.9.3",
     "npm:vite-plugin-istanbul@^7.2.1": "7.2.1_vite@7.3.0__@types+node@25.0.3__lightningcss@1.32.0_lightningcss@1.32.0",
     "npm:vite-tsconfig-paths@^6.0.3": "6.0.3_vite@8.0.10__@types+node@25.0.3_@types+node@25.0.3",
     "npm:vite@*": "8.0.10_@types+node@25.0.3",
@@ -3802,7 +3803,6 @@
         "dts-resolver",
         "get-tsconfig",
         "obug",
-        "rolldown@1.0.0-beta.55_@emnapi+core@1.10.0_@emnapi+runtime@1.10.0",
         "typescript"
       ],
       "optionalPeers": [
@@ -4254,6 +4254,15 @@
     "uuid@13.0.0": {
       "integrity": "sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==",
       "bin": true
+    },
+    "valibot@1.4.0_typescript@5.9.3": {
+      "integrity": "sha512-iC/x7fVcSyOwlm/VSt7RlHnzNGLGvR9GnxdifUeWoCJo0q4ZZvrVkIHC6faTlkxG47I2Y4UrFquPuVHCrOnrLg==",
+      "dependencies": [
+        "typescript"
+      ],
+      "optionalPeers": [
+        "typescript"
+      ]
     },
     "victory-vendor@37.3.6": {
       "integrity": "sha512-SbPDPdDBYp+5MJHhBCAyI7wKM3d5ivekigc2Dk2s7pgbZ9wIgIBYGVw4zGHBml/qTFbexrofXW6Gu4noGxrOwQ==",
@@ -4817,8 +4826,7 @@
       "libs/shared": {
         "dependencies": [
           "jsr:@types/gecko@*",
-          "npm:fp-ts@^2.16.11",
-          "npm:io-ts@^2.2.22"
+          "npm:valibot@^1.2.0"
         ],
         "packageJson": {
           "dependencies": [

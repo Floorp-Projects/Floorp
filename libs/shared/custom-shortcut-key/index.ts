@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { commands } from "./commands.ts";
-import { type CSKData, CSKCommandsCodec, CSKDataCodec } from "./defines.ts";
+import { type CSKData, parseCSKCommands, parseCSKData } from "./defines.ts";
 import { checkIsSystemShortcut } from "./utils.ts";
-import { pipe } from 'fp-ts/function';
-import { fold, getOrElseW } from 'fp-ts/Either';
 
 export class CustomShortcutKey {
   private static instance: CustomShortcutKey;
@@ -27,26 +25,21 @@ export class CustomShortcutKey {
   }
 
 
-  observe(_subj:unknown, _topic:unknown, data: string) {
-    const decoded = CSKCommandsCodec.decode(JSON.parse(data));
-    
-    pipe(
-      decoded,
-      fold(
-        (errors) => console.error('Failed to decode CSK command:', errors),
-        (d) => {
-          switch (d.type) {
-            case 'disable-csk':
-              this.disable_csk = d.data;
-              break;
-            case 'update-pref':
-              this.initCSKData();
-              console.log(this.cskData);
-              break;
-          }
-        }
-      )
-    );
+  observe(_subj: unknown, _topic: unknown, data: string) {
+    const d = parseCSKCommands(JSON.parse(data));
+    if (d === null) {
+      console.error('Failed to decode CSK command:', data);
+      return;
+    }
+    switch (d.type) {
+      case 'disable-csk':
+        this.disable_csk = d.data;
+        break;
+      case 'update-pref':
+        this.initCSKData();
+        console.log(this.cskData);
+        break;
+    }
   }
 
   cskData: CSKData = {};
@@ -61,13 +54,7 @@ export class CustomShortcutKey {
       const prefData = JSON.parse(
         Services.prefs.getStringPref("floorp.browser.nora.csk.data", "{}"),
       );
-
-      this.cskData = pipe(
-        CSKDataCodec.decode(prefData),
-        getOrElseW(errors => {
-          throw new Error(`CSKData validation failed: ${JSON.stringify(errors)}`);
-        })
-      );
+      this.cskData = parseCSKData(prefData);
     } catch (e) {
       console.error("Could not initialize CSKData, falling back to empty config.", e);
       this.cskData = {};
