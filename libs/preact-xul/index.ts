@@ -27,10 +27,6 @@ const commit = <T>(ref: Ref<T> | undefined, val: T | null) =>
 const liftRef = (tag: string, orig?: Ref<any>) => (el: Element | null) => {
   if (!el) return commit(orig, el); // Handle null case
   if ((el as any).__isXUL) return commit(orig, el); // Already XUL
-  if (!el.parentNode) {
-    console.warn("preact-xul: liftRef called with detached element, skipping materialize");
-    return;
-  }
   return commit(orig, materialize(el, tag)); // Transform to XUL
 };
 
