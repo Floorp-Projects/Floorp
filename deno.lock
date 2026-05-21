@@ -23,6 +23,7 @@
     "npm:@jsr/std__collections@^1.1.3": "1.1.3",
     "npm:@jsr/std__fs@^1.0.20": "1.0.20",
     "npm:@jsr/std__toml@^1.0.11": "1.0.11",
+    "npm:@mobily/ts-belt@^3.13.1": "3.13.1",
     "npm:@preact/signals-core@^1.8.0": "1.13.0",
     "npm:@preact/signals@^1.3.1": "1.3.4_preact@10.26.9",
     "npm:@preact/signals@^1.3.2": "1.3.4_preact@10.26.9",
@@ -653,6 +654,9 @@
         "@jsr/std__collections"
       ],
       "tarball": "https://npm.jsr.io/~/11/@jsr/std__toml/1.0.11.tgz"
+    },
+    "@mobily/ts-belt@3.13.1": {
+      "integrity": "sha512-K5KqIhPI/EoCTbA6CGbrenM9s41OouyK8A03fGJJcla/zKucsgLbz8HNbeseoLarRPgyWJsUyCYqFhI7t3Ra9Q=="
     },
     "@napi-rs/wasm-runtime@1.1.4_@emnapi+core@1.10.0_@emnapi+runtime@1.10.0": {
       "integrity": "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==",
@@ -4535,6 +4539,7 @@
           "jsr:@types/gecko@*",
           "npm:@deno/vite-plugin@^1.0.6",
           "npm:@jsr/std__assert@^1.0.16",
+          "npm:@mobily/ts-belt@^3.13.1",
           "npm:@preact/signals@^1.3.2",
           "npm:@types/chroma-js@^3.1.2",
           "npm:@types/uuid@11",

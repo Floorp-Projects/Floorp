@@ -5,6 +5,7 @@
     "@jsr/std__assert": "npm:@jsr/std__assert@^1.0.16",
     "@types/uuid": "npm:@types/uuid@^11.0.0",
     "es-toolkit": "npm:es-toolkit@^1.43.0",
+    "@mobily/ts-belt": "npm:@mobily/ts-belt@^3.13.1",
     "fp-ts": "npm:fp-ts@^2.16.11",
     "fp-ts/Either": "npm:fp-ts@^2.16.11/lib/Either.js",
     "fp-ts/function": "npm:fp-ts@^2.16.11/lib/function.js",
@@ -23,7 +24,9 @@
     "chroma-js": "npm:chroma-js@^3.2.0",
     "@types/chroma-js": "npm:@types/chroma-js@^3.1.2",
     "@types/gecko": "jsr:@types/gecko",
-    "#features-chrome/": "./"
+    "#features-chrome/": "./",
+    "@lib": "./lib/mod.ts",
+    "@lib/core": "./lib/core/mod.ts"
   },
   "compilerOptions": {
     "lib": [
