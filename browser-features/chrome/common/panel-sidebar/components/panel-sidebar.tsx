@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
+import { render } from "preact";
+import { effect } from "@preact/signals";
 import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
@@ -16,78 +16,63 @@ import {
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
-import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();
+  private panelContainers: Map<string, Element> = new Map();
+
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as
-      | XULElement
-      | undefined;
+      unknown as XULElement | undefined;
   }
 
   private get sidebarElement() {
     return document?.getElementById("panel-sidebar-box") as
-      | XULElement
-      | undefined;
-  }
-
-  private get browsers() {
-    return document?.querySelectorAll(".sidebar-panel-browser") as
-      | NodeListOf<XULElement>
-      | undefined;
+      unknown as XULElement | undefined;
   }
 
   constructor() {
-    this.owner = getOwner();
-    const exec = () => {
-      createEffect(() => {
-        // Only clear selection marker from sidebar panels (not workspaces).
-        const currentCheckedPanels = Array.from(
-          document?.querySelectorAll(
-            ".panel-sidebar-panel[data-checked][data-panel-id]",
-          ) ?? [],
-        );
-        // Use forEach instead of map to avoid type error
-        (currentCheckedPanels as XULElement[]).forEach((panel) => {
-          panel.removeAttribute("data-checked");
-        });
-
-        const currentPanel = this.getPanelData(selectedPanelId() ?? "");
-        if (currentPanel) {
-          document
-            // Select by data-panel-id to avoid touching workspace entries.
-            ?.querySelector(
-              `.panel-sidebar-panel[data-panel-id="${currentPanel.id}"]`,
-            )
-            ?.setAttribute("data-checked", "true");
-        }
+    effect(() => {
+      // Only clear selection marker from sidebar panels (not workspaces).
+      const currentCheckedPanels = Array.from(
+        document?.querySelectorAll(
+          ".panel-sidebar-panel[data-checked][data-panel-id]",
+        ) ?? [],
+      );
+      // Use forEach instead of map to avoid type error
+      (currentCheckedPanels as unknown as XULElement[]).forEach((panel) => {
+        panel.removeAttribute("data-checked");
       });
-    };
-    if (this.owner) runWithOwner(this.owner, exec);
-    else createRoot(exec);
-  }
 
-  private owner: Owner | null = null;
+      const currentPanel = this.getPanelData(selectedPanelId.value ?? "");
+      if (currentPanel) {
+        document
+          // Select by data-panel-id to avoid touching workspace entries.
+          ?.querySelector(
+            `.panel-sidebar-panel[data-panel-id="${currentPanel.id}"]`,
+          )
+          ?.setAttribute("data-checked", "true");
+      }
+    });
+  }
 
   public getBrowserElement(id: string) {
     return document?.getElementById(`sidebar-panel-${id}`) as
-      | (XULElement & {
+      unknown as (XULElement & {
         contentWindow: Window;
         goBack: () => void;
         goForward: () => void;
         goIndex: () => void;
         reload: () => void;
         toggleMute: () => void;
-      })
-      | undefined;
+      }) | undefined;
   }
 
   public getPanelData(id: string): Panel | undefined {
-    return panelSidebarData().find((panel) => panel.id === id);
+    return panelSidebarData.value.find((panel) => panel.id === id);
   }
 
   private createBrowserComponent(panel: Panel) {
@@ -106,10 +91,8 @@ export class CPanelSidebar {
   }
 
   private resetBrowsersFlex(): void {
-    if (this.browsers) {
-      for (const browser of this.browsers as Iterable<XULElement>) {
-        (browser as XULElement).removeAttribute("flex");
-      }
+    for (const container of this.panelContainers.values()) {
+      (container as unknown as XULElement).removeAttribute("flex");
     }
   }
 
@@ -118,7 +101,7 @@ export class CPanelSidebar {
       throw new Error("Parent element not found");
     }
 
-    // Dispose previous root for this panel if it exists (safety for re-renders)
+    // Dispose previous container for this panel if it exists
     const prevDispose = this.panelDisposers.get(panel.id);
     if (prevDispose) {
       try {
@@ -129,27 +112,26 @@ export class CPanelSidebar {
       this.panelDisposers.delete(panel.id);
     }
 
-    const exec = () => {
-      const dispose = render(
-        () => this.createBrowserComponent(panel),
-        this.parentElement as XULElement,
-        {
-          hotCtx: import.meta.hot,
-        },
-      );
-      if (typeof dispose === "function") {
-        this.panelDisposers.set(panel.id, dispose);
-      }
-    };
-    if (this.owner) runWithOwner(this.owner, exec);
-    else createRoot(exec);
+    // Create a dedicated container so we can cleanly unmount
+    const container = document?.createXULElement("vbox") as unknown as XULElement;
+    container.setAttribute("flex", "1");
+    this.parentElement.appendChild(container);
+    this.panelContainers.set(panel.id, container);
+
+    render(this.createBrowserComponent(panel), container as unknown as Element);
+
+    this.panelDisposers.set(panel.id, () => {
+      render(null, container as unknown as Element);
+      container.remove();
+      this.panelContainers.delete(panel.id);
+    });
 
     this.initBrowser(panel);
   }
 
   private initBrowser(panel: Panel) {
     if (panel.type === "extension") {
-      const browser = this.getBrowserElement(panel.id) as XULElement & {
+      const browser = this.getBrowserElement(panel.id) as unknown as XULElement & {
         contentWindow: Window;
       };
 
@@ -187,9 +169,9 @@ export class CPanelSidebar {
   }
 
   public changePanel(panelId: string): void {
-    if (panelId === selectedPanelId()) {
+    if (panelId === selectedPanelId.value) {
       setSelectedPanelId(null);
-      if (panelSidebarConfig().autoUnload) {
+      if (panelSidebarConfig.value.autoUnload) {
         this.unloadPanel(panelId);
       }
       return;
@@ -207,9 +189,10 @@ export class CPanelSidebar {
   }
 
   public showPanel(panel: Panel): void {
-    const browser = this.getBrowserElement(panel.id);
-    if (browser) {
-      browser.setAttribute("flex", "1");
+    const container = this.panelContainers.get(panel.id);
+    if (container) {
+      this.resetBrowsersFlex();
+      container.setAttribute("flex", "1");
       return;
     }
     this.renderBrowserComponent(panel);
@@ -220,7 +203,7 @@ export class CPanelSidebar {
     if (currentWidth) {
       setPanelSidebarData((prev) =>
         prev.map((panel) =>
-          panel.id === selectedPanelId()
+          panel.id === selectedPanelId.value
             ? { ...panel, width: Number(currentWidth) }
             : panel
         )
@@ -231,7 +214,7 @@ export class CPanelSidebar {
   private setSidebarWidth(panel: Panel) {
     this.sidebarElement?.style.setProperty(
       "width",
-      `${panel.width !== 0 ? panel.width : panelSidebarConfig().globalWidth}px`,
+      `${panel.width !== 0 ? panel.width : panelSidebarConfig.value.globalWidth}px`,
     );
   }
 
@@ -252,7 +235,7 @@ export class CPanelSidebar {
   }
 
   public unloadPanel(panelId: string) {
-    // Cleanup Solid root for this panel if present
+    // Cleanup preact root for this panel if present
     const dispose = this.panelDisposers.get(panelId);
     if (dispose) {
       try {
@@ -261,11 +244,6 @@ export class CPanelSidebar {
         console.warn("panel dispose failed", e);
       }
       this.panelDisposers.delete(panelId);
-    }
-
-    const browser = this.getBrowserElement(panelId);
-    if (browser) {
-      browser.remove();
     }
 
     setSelectedPanelId(null);

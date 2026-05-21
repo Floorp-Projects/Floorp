@@ -70,7 +70,12 @@ function getFallbackFavicon(panel: Panel): string {
         panel.url?.startsWith("http://") ||
         panel.url?.startsWith("https://")
       ) {
-        return `https://www.google.com/s2/favicons?domain=${panel.url}&sz=32`;
+        try {
+          const origin = new URL(panel.url).origin;
+          return `${origin}/favicon.ico`;
+        } catch {
+          return DEFAULT_FAVICON;
+        }
       }
       return DEFAULT_FAVICON;
   }

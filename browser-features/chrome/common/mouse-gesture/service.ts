@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
-  _setConfig,
+  _config,
   type GesturePattern,
   getConfig,
   isEnabled,
@@ -12,12 +12,8 @@ import {
   setEnabled,
 } from "./config.ts";
 import { MouseGestureController } from "./controller.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
-
-interface nsIObserver {
-  observe(subject: unknown, topic: string, data: string): void;
-}
+import { createRootHMR } from "#features-chrome/utils/base";
+import { effect } from "@preact/signals";
 
 /**
  * MouseGestureService manages the lifecycle of gesture controllers across windows.
@@ -25,13 +21,12 @@ interface nsIObserver {
 export class MouseGestureService {
   private controllers: Map<Window, MouseGestureController> = new Map();
   private lastConfigString = "";
-  private configObserver: nsIObserver | null = null;
 
   constructor() {
     this.initialize();
 
     // React to config changes
-    createEffect(() => {
+    effect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
       const enabled = isEnabled();
@@ -49,7 +44,7 @@ export class MouseGestureService {
     });
 
     // React to enabled state changes
-    createEffect(() => {
+    effect(() => {
       const enabled = isEnabled();
       if (enabled) {
         this.attachToAllWindows();
@@ -59,7 +54,6 @@ export class MouseGestureService {
       handleContextMenuAfterMouseUp(enabled);
     });
 
-    this.setupEnabledObserver();
   }
 
   private attachToAllWindows(): void {
@@ -125,46 +119,6 @@ export class MouseGestureService {
     this.controllers.clear();
   }
 
-  private setupEnabledObserver(): void {
-    if (this.configObserver) {
-      try {
-        Services.prefs.removeObserver(
-          "floorp.mousegesture.enabled",
-          this.configObserver,
-        );
-      } catch (e) {
-        console.error("[MouseGestureService] Error removing observer:", e);
-      }
-    }
-
-    this.configObserver = {
-      observe: (_subject: unknown, topic: string, data: string) => {
-        if (
-          topic === "nsPref:changed" &&
-          data === "floorp.mousegesture.enabled"
-        ) {
-          const enabled = Services.prefs.getBoolPref(
-            "floorp.mousegesture.enabled",
-            false,
-          );
-
-          if (enabled) {
-            this.attachToAllWindows();
-          } else {
-            this.destroyAllControllers();
-          }
-
-          handleContextMenuAfterMouseUp(enabled);
-        }
-      },
-    };
-
-    Services.prefs.addObserver(
-      "floorp.mousegesture.enabled",
-      this.configObserver,
-    );
-  }
-
   private initialize(): void {
     this.lastConfigString = JSON.stringify(getConfig());
     const enabled = isEnabled();
@@ -221,7 +175,7 @@ export class MouseGestureService {
 }
 
 function setConfig(config: MouseGestureConfig) {
-  _setConfig(config);
+  _config.value = config;
 }
 
 function createMouseGestureService() {

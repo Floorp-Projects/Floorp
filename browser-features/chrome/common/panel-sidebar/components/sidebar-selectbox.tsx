@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { For } from "solid-js";
 import { panelSidebarData } from "../data/data";
 import { PanelSidebarButton } from "./sidebar-panel-button";
 import { showPanelSidebarAddModal } from "./panel-sidebar-modal";
@@ -17,9 +16,9 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
       class="webpanel-box chromeclass-extrachrome chromeclass-directories instant customization-target"
     >
       <WorkspacesPanels />
-      <For each={panelSidebarData()}>
-        {(panel) => <PanelSidebarButton panel={panel} ctx={props.ctx} />}
-      </For>
+      {panelSidebarData.value.map((panel) => (
+        <PanelSidebarButton panel={panel} ctx={props.ctx} />
+      ))}
       <xul:toolbarbutton
         id="panel-sidebar-add"
         class="panel-sidebar-panel"

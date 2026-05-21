@@ -24,7 +24,7 @@
     "@std/assert": "jsr:@std/assert@^1.0.0",
     "@std/streams": "jsr:@std/streams@^1.0.14",
     "@std/toml": "npm:@jsr/std__toml@^1.0.11",
-    "vite": "npm:rolldown-vite@^7.3.0"
+    "vite": "npm:vite@^8"
   },
   "compilerOptions": {
     "lib": [

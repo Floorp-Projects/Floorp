@@ -3,18 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { render } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { effect } from "@preact/signals";
 import style from "./style.css?inline";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarSelectbox } from "./sidebar-selectbox";
 import { SidebarSplitter } from "./sidebar-splitter";
-import {
-  createEffect,
-  createRoot,
-  getOwner,
-  runWithOwner,
-  Show,
-} from "solid-js";
 import {
   isFloating,
   isPanelSidebarEnabled,
@@ -24,16 +19,44 @@ import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
 import type { CPanelSidebar } from "./panel-sidebar";
 
+type SidebarContentProps = { ctx: CPanelSidebar };
+
+function SidebarContent({ ctx }: SidebarContentProps) {
+  const enabled = isPanelSidebarEnabled.value;
+  const floating = isFloating.value;
+
+  if (!enabled) {
+    return null;
+  }
+
+  return (
+    <>
+      <xul:vbox
+        id="panel-sidebar-box"
+        class="chromeclass-extrachrome chromeclass-directories instant customization-target"
+        data-floating={floating.toString()}
+        popover="manual"
+      >
+        <SidebarHeader ctx={ctx} />
+        <BrowserBox />
+        {floating && <FloatingSplitter />}
+      </xul:vbox>
+      {!floating && <SidebarSplitter />}
+      <SidebarSelectbox ctx={ctx} />
+    </>
+  );
+}
+
 export class PanelSidebarElem {
   ctx: CPanelSidebar;
 
   private get documentElement() {
-    return document?.documentElement as XULElement;
+    return document?.documentElement as unknown as XULElement;
   }
 
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    if (!isPanelSidebarEnabled()) {
+    if (!isPanelSidebarEnabled.value) {
       return;
     }
     const parentElem = document?.getElementById("browser");
@@ -41,37 +64,37 @@ export class PanelSidebarElem {
 
     // Wait for the sidebar controller to be initialized
     // This is a workaround to avoid Extension Sidebar Panels not being loaded
-    const owner = getOwner();
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
     SidebarController.promiseInitialized.then(() => {
-      const exec = () =>
-        render(() => this.sidebar(), parentElem, {
-          marker: beforeElem as XULElement,
-        });
-      if (owner) runWithOwner(owner, exec);
-      else createRoot(exec);
+      // Create a container for the sidebar and insert it before the tabbox
+      const sidebarContainer = document?.createXULElement("box") as unknown as XULElement;
+      if (parentElem && beforeElem?.parentElement === parentElem) {
+        parentElem.insertBefore(sidebarContainer, beforeElem);
+      } else if (parentElem) {
+        parentElem.appendChild(sidebarContainer);
+      }
+      render(<SidebarContent ctx={this.ctx} />, sidebarContainer as unknown as Element);
     });
 
-    render(() => this.style(), document?.head);
+    if (document?.head) {
+      safeRender(<style>{style}</style>, document.head);
+    }
 
-    const execEffect = () =>
-      createEffect(() => {
-        if (selectedPanelId() === null) {
-          this.documentElement?.style.setProperty(
-            "--panel-sidebar-display",
-            "none",
-          );
-        } else {
-          this.documentElement?.style.setProperty(
-            "--panel-sidebar-display",
-            "flex",
-          );
-        }
-      });
-    if (owner) runWithOwner(owner, execEffect);
-    else createRoot(execEffect);
+    effect(() => {
+      if (selectedPanelId.value === null) {
+        this.documentElement?.style.setProperty(
+          "--panel-sidebar-display",
+          "none",
+        );
+      } else {
+        this.documentElement?.style.setProperty(
+          "--panel-sidebar-display",
+          "flex",
+        );
+      }
+    });
 
     this.setVerticalTabBgColor();
     Services.prefs.addObserver("sidebar.verticalTabs", () => {
@@ -84,33 +107,6 @@ export class PanelSidebarElem {
     this.documentElement?.style.setProperty(
       "--panel-sidebar-background-color",
       newValue ? "var(--toolbox-bgcolor)" : "var(--toolbar-bgcolor)",
-    );
-  }
-
-  private style() {
-    return <style>{style}</style>;
-  }
-
-  private sidebar() {
-    return (
-      <Show when={isPanelSidebarEnabled()}>
-        <xul:vbox
-          id="panel-sidebar-box"
-          class="chromeclass-extrachrome chromeclass-directories instant customization-target"
-          data-floating={isFloating().toString()}
-          popover="manual"
-        >
-          <SidebarHeader ctx={this.ctx} />
-          <BrowserBox />
-          <Show when={isFloating()}>
-            <FloatingSplitter />
-          </Show>
-        </xul:vbox>
-        <Show when={!isFloating()}>
-          <SidebarSplitter />
-        </Show>
-        <SidebarSelectbox ctx={this.ctx} />
-      </Show>
     );
   }
 }

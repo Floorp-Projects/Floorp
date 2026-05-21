@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type Accessor, createSignal } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { createRootHMR } from "#features-chrome/utils/base";
 import type { Panel } from "../utils/type.ts";
 import { getFirefoxSidebarPanels } from "../extension-panels.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
@@ -95,8 +96,7 @@ export class PanelSidebarAddModal {
   private static instance: PanelSidebarAddModal;
   private modalParent: ModalParent;
 
-  private texts: Accessor<I18nTextValues> = () => getTranslatedTexts();
-  private setTexts: (value: I18nTextValues) => void = () => {};
+  private texts: Signal<I18nTextValues> = signal(getTranslatedTexts());
 
   public static getInstance() {
     if (!PanelSidebarAddModal.instance) {
@@ -111,14 +111,9 @@ export class PanelSidebarAddModal {
 
     createRootHMR(
       () => {
-        const [texts, setTexts] = createSignal<I18nTextValues>(
-          getTranslatedTexts(),
-        );
-        this.texts = texts;
-        this.setTexts = setTexts;
-
+        this.texts = signal<I18nTextValues>(getTranslatedTexts());
         addI18nObserver(() => {
-          setTexts(getTranslatedTexts());
+          this.texts.value = getTranslatedTexts();
         });
       },
       import.meta.hot,
@@ -140,7 +135,7 @@ export class PanelSidebarAddModal {
 
   private createFormConfig(type: Panel["type"] = "web"): TForm {
     const extensions = getFirefoxSidebarPanels();
-    const texts = this.texts();
+    const texts = this.texts.value;
     const staticPanelOptions = Object.entries(STATIC_PANEL_DATA).map(
       ([key, panel]) => ({
         value: key,

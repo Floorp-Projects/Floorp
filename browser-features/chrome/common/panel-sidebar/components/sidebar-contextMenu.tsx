@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { CPanelSidebar } from "./panel-sidebar.tsx";
-import { createSignal, Show } from "solid-js";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 import type { Panel } from "../utils/type.ts";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
-import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
@@ -33,19 +33,27 @@ const getTranslations = () => ({
   delete: i18next.t(translationKeys.delete),
 });
 
-export const [contextPanel, setContextPanel] = createSignal<Panel | null>(null);
+export const contextPanel: Signal<Panel | null> = signal<Panel | null>(null);
+export const setContextPanel = (v: Panel | null): void => {
+  contextPanel.value = v;
+};
 
 export class SidebarContextMenuElem {
   ctx: CPanelSidebar;
+  private texts: Signal<ReturnType<typeof getTranslations>> = signal(
+    getTranslations(),
+  );
+
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    const owner: Owner | null = getOwner();
-    const exec = () =>
-      ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
-        this.sidebarContextMenu()
-      );
-    if (owner) runWithOwner(owner, exec);
-    else createRoot(exec);
+
+    addI18nObserver(() => {
+      this.texts.value = getTranslations();
+    });
+
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
+      this.sidebarContextMenu()
+    );
   }
 
   public contextPanelId: string | null = null;
@@ -80,7 +88,7 @@ export class SidebarContextMenuElem {
     }
 
     const panel = this.getPanelByOriginalTarget(
-      e.explicitOriginalTarget as XULElement,
+      e.explicitOriginalTarget as unknown as XULElement,
     );
 
     if (!panel) {
@@ -114,7 +122,7 @@ export class SidebarContextMenuElem {
 
   private handleUnloadCommand() {
     const gPanelSidebar = this.ctx;
-    const panelId = contextPanel()?.id;
+    const panelId = contextPanel.value?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
         gPanelSidebar.unloadPanel(panelId);
@@ -124,7 +132,7 @@ export class SidebarContextMenuElem {
 
   private handleDeleteCommand() {
     const gPanelSidebar = this.ctx;
-    const panelId = contextPanel()?.id;
+    const panelId = contextPanel.value?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
         gPanelSidebar.deletePanel(panelId);
@@ -134,7 +142,7 @@ export class SidebarContextMenuElem {
 
   private handleMuteCommand() {
     const gPanelSidebar = this.ctx;
-    const panelId = contextPanel()?.id;
+    const panelId = contextPanel.value?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
         gPanelSidebar.mutePanel(panelId);
@@ -144,7 +152,7 @@ export class SidebarContextMenuElem {
 
   private handleChangeZoomLevelCommand(type: "in" | "out" | "reset") {
     const gPanelSidebar = this.ctx;
-    const panelId = contextPanel()?.id;
+    const panelId = contextPanel.value?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
         gPanelSidebar.changeZoomLevel(panelId, type);
@@ -154,7 +162,7 @@ export class SidebarContextMenuElem {
 
   private handleChangeUserAgentCommand() {
     const gPanelSidebar = this.ctx;
-    const panelId = contextPanel()?.id;
+    const panelId = contextPanel.value?.id;
     if (panelId) {
       this.safeExecuteCommand(() => {
         gPanelSidebar.changeUserAgent(panelId);
@@ -163,12 +171,7 @@ export class SidebarContextMenuElem {
   }
 
   private sidebarContextMenu() {
-    const [texts, setTexts] = createSignal(getTranslations());
-
-    addI18nObserver(() => {
-      setTexts(getTranslations());
-    });
-
+    const texts = this.texts.value;
     return (
       <xul:popupset>
         <xul:menupopup
@@ -179,57 +182,59 @@ export class SidebarContextMenuElem {
           <xul:menuitem
             id="unloadWebpanelMenu"
             class="needLoadedWebpanel"
-            label={texts().unload}
+            label={texts.unload}
             accesskey="U"
             onCommand={() => this.handleUnloadCommand()}
           />
-          <Show when={contextPanel()?.type === "web"}>
-            <xul:menuseparator class="context-webpanel-separator" />
-            <xul:menuitem
-              id="muteMenu"
-              class="needLoadedWebpanel"
-              label={texts().mute}
-              accesskey="M"
-              onCommand={() => this.handleMuteCommand()}
-            />
-            <xul:menu
-              id="changeZoomLevelMenu"
-              class="needLoadedWebpanel needRunningExtensionsPanel"
-              label={texts().changeZoom}
-              accesskey="Z"
-            >
-              <xul:menupopup id="changeZoomLevelPopup">
-                <xul:menuitem
-                  id="zoomInMenu"
-                  label={texts().zoomIn}
-                  accesskey="I"
-                  onCommand={() => this.handleChangeZoomLevelCommand("in")}
-                />
-                <xul:menuitem
-                  id="zoomOutMenu"
-                  label={texts().zoomOut}
-                  accesskey="O"
-                  onCommand={() => this.handleChangeZoomLevelCommand("out")}
-                />
-                <xul:menuitem
-                  id="resetZoomMenu"
-                  label={texts().resetZoom}
-                  accesskey="R"
-                  onCommand={() => this.handleChangeZoomLevelCommand("reset")}
-                />
-              </xul:menupopup>
-            </xul:menu>
-            <xul:menuitem
-              id="changeUAWebpanelMenu"
-              label={texts().changeUA}
-              accesskey="R"
-              onCommand={() => this.handleChangeUserAgentCommand()}
-            />
-          </Show>
+          {contextPanel.value?.type === "web" && (
+            <>
+              <xul:menuseparator class="context-webpanel-separator" />
+              <xul:menuitem
+                id="muteMenu"
+                class="needLoadedWebpanel"
+                label={texts.mute}
+                accesskey="M"
+                onCommand={() => this.handleMuteCommand()}
+              />
+              <xul:menu
+                id="changeZoomLevelMenu"
+                class="needLoadedWebpanel needRunningExtensionsPanel"
+                label={texts.changeZoom}
+                accesskey="Z"
+              >
+                <xul:menupopup id="changeZoomLevelPopup">
+                  <xul:menuitem
+                    id="zoomInMenu"
+                    label={texts.zoomIn}
+                    accesskey="I"
+                    onCommand={() => this.handleChangeZoomLevelCommand("in")}
+                  />
+                  <xul:menuitem
+                    id="zoomOutMenu"
+                    label={texts.zoomOut}
+                    accesskey="O"
+                    onCommand={() => this.handleChangeZoomLevelCommand("out")}
+                  />
+                  <xul:menuitem
+                    id="resetZoomMenu"
+                    label={texts.resetZoom}
+                    accesskey="R"
+                    onCommand={() => this.handleChangeZoomLevelCommand("reset")}
+                  />
+                </xul:menupopup>
+              </xul:menu>
+              <xul:menuitem
+                id="changeUAWebpanelMenu"
+                label={texts.changeUA}
+                accesskey="R"
+                onCommand={() => this.handleChangeUserAgentCommand()}
+              />
+            </>
+          )}
           <xul:menuseparator class="context-webpanel-separator" />
           <xul:menuitem
             id="deleteWebpanelMenu"
-            label={texts().delete}
+            label={texts.delete}
             accesskey="D"
             onCommand={() => this.handleDeleteCommand()}
           />

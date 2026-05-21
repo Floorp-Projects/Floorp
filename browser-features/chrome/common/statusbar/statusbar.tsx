@@ -14,13 +14,7 @@ export function StatusBarElem() {
         toolbarname="Status bar"
         customizable="true"
         class={`browser-toolbar`}
-        style={{
-          display: manager.showStatusBar() ? "flex" : "none",
-          alignItems: "center",
-          width: "100%",
-          borderTop: "1px solid var(--chrome-content-separator-color)",
-          background: "var(--panel-sidebar-background-color)",
-        }}
+        style={`display: ${manager.showStatusBar.value ? "flex" : "none"}; align-items: center; width: 100%; border-top: 1px solid var(--chrome-content-separator-color); background: var(--panel-sidebar-background-color);`}
         mode="icons"
         context="toolbar-context-menu"
         accesskey="A"
@@ -32,7 +26,7 @@ export function StatusBarElem() {
           class="status-text"
         />
       </xul:toolbar>
-      <style class="nora-statusbar-utils" jsx>
+      <style class="nora-statusbar-utils">
         {statusbarUtilsStyle}
       </style>
     </>

@@ -22,7 +22,7 @@ export class PinnedTabController {
       for (const mutation of mutationList) {
         this.migratePinnedTabs(
           tabsContainer,
-          mutation.addedNodes as NodeListOf<Element>,
+          mutation.addedNodes as unknown as NodeListOf<Element>,
         );
       }
     });
@@ -33,7 +33,7 @@ export class PinnedTabController {
     if (pinnedTabsContainer.childElementCount > 0) {
       this.migratePinnedTabs(
         tabsContainer,
-        pinnedTabsContainer.childNodes as NodeListOf<Element>,
+        pinnedTabsContainer.childNodes as unknown as NodeListOf<Element>,
       );
     }
 
@@ -69,7 +69,7 @@ export class PinnedTabController {
   ): void {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
-    Array.from(pinnedTabs as Element[]).forEach((tab: Element) => {
+    Array.from(pinnedTabs).forEach((tab: Element) => {
       tab.setAttribute("newPin", "true");
 
       const firstUnpinnedTab = newContainer.querySelector(

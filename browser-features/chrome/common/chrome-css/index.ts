@@ -6,13 +6,13 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { ChromeCSSService } from "./service.tsx";
 
 /**
  * Chrome CSS component for user styles management
  */
-@noraComponent(import.meta.hot)
+@noraComponent("ChromeCSS", import.meta.hot)
 export default class ChromeCSS extends NoraComponentBase {
   static ctx: ChromeCSSService | null = null;
 

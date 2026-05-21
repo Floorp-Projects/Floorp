@@ -73,6 +73,14 @@ function getI18nextInstance(): I18NextLike | null {
         const def = m["default"] as Record<string, unknown>;
         if ("i" in def && def["i"]) resolved = def["i"];
         else resolved = def;
+      } else if (
+        "t" in m &&
+        m["t"] &&
+        typeof (m["t"] as { t?: unknown }).t === "function"
+      ) {
+        // vite v8 / rolldown bundle: `export { instance as t }`
+        // module.t holds the i18next instance which has its own .t method.
+        resolved = m["t"];
       } else {
         resolved = m;
       }
@@ -150,33 +158,53 @@ function ensureI18NInitialized(): void {
 }
 
 let globalI18nInitializedObserverBound = false;
+const i18nInitializedObserver = {
+  observe(...args: Array<unknown>): void {
+    try {
+      const topic = args[1] as string | undefined;
+      if (topic !== "noraneko-i18n-initialized") return;
+      logFloorpHub(
+        "Received noraneko-i18n-initialized; applying translations.",
+      );
+      applyFloorpHubWarningTexts();
+      applyFloorpStartWarningTexts();
+    } catch (e) {
+      // Prevent observer exceptions from bubbling and stopping other observers
+      // Log with a clear prefix to make debugging easier in runtime logs.
+      try {
+        console.error(
+          "Floorp Hub: error in noraneko-i18n-initialized observer",
+          e,
+        );
+      } catch {
+        // swallow any errors thrown while attempting to log
+      }
+    }
+  },
+};
+
 function bindGlobalI18nInitializedObserver(): void {
   if (globalI18nInitializedObserverBound) return;
   try {
-    Services.obs.addObserver((...args: Array<unknown>) => {
-      try {
-        const topic = args[1] as string | undefined;
-        if (topic !== "noraneko-i18n-initialized") return;
-        logFloorpHub(
-          "Received noraneko-i18n-initialized; applying translations.",
-        );
-        applyFloorpHubWarningTexts();
-        applyFloorpStartWarningTexts();
-      } catch (e) {
-        // Prevent observer exceptions from bubbling and stopping other observers
-        // Log with a clear prefix to make debugging easier in runtime logs.
-        try {
-          console.error(
-            "Floorp Hub: error in noraneko-i18n-initialized observer",
-            e,
-          );
-        } catch {
-          // swallow any errors thrown while attempting to log
-        }
-      }
-    }, "noraneko-i18n-initialized");
+    Services.obs.addObserver(i18nInitializedObserver, "noraneko-i18n-initialized");
     globalI18nInitializedObserverBound = true;
     logFloorpHub("Bound global i18n initialized observer.");
+    // Clean up when the preferences page is unloaded to avoid leaking the observer.
+    window.addEventListener(
+      "pagehide",
+      () => {
+        try {
+          Services.obs.removeObserver(
+            i18nInitializedObserver,
+            "noraneko-i18n-initialized",
+          );
+          globalI18nInitializedObserverBound = false;
+        } catch {
+          // best-effort cleanup
+        }
+      },
+      { once: true },
+    );
   } catch {
     // best-effort; ignore if Services not available
   }
@@ -192,7 +220,11 @@ function openFloorpHub(): void {
 
   const win = Services.wm.getMostRecentWindow(
     "navigator:browser",
-  ) as FirefoxWindow;
+  ) as FirefoxWindow | null;
+  if (!win) {
+    console.error("Floorp Hub: No browser window available to open hub tab.");
+    return;
+  }
   logFloorpHub("Opening Floorp Hub tab in browser window.");
   win.gBrowser.selectedTab = win.gBrowser.addTab("about:hub", {
     relatedToCurrent: true,
@@ -412,7 +444,7 @@ function injectFloorpHubWarningStyles(): void {
     }
     
     /* Blue card for Floorp Start (Home) warning - layout matches the yellow card */
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} {
+    #${FLOORP_START_WARNING_IDS.container} {
       background-color: #e8f4ff; /* light blue */
       border: 1px solid #7db2ff;
       border-radius: 6px;
@@ -422,12 +454,12 @@ function injectFloorpHubWarningStyles(): void {
       color: #0b2540;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__message {
+    #${FLOORP_START_WARNING_IDS.container} .floorp-hub-warning__message {
       font-size: 1em;
       line-height: 1.4;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__button {
+    #${FLOORP_START_WARNING_IDS.container} .floorp-hub-warning__button {
       background-color: #4da3ff;
       border: 1px solid #2b8cff;
       border-radius: 4px;
@@ -436,7 +468,7 @@ function injectFloorpHubWarningStyles(): void {
       color: #ffffff;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__button:hover {
+    #${FLOORP_START_WARNING_IDS.container} .floorp-hub-warning__button:hover {
       background-color: #3390ff;
     }
   `;
@@ -463,8 +495,14 @@ function bindI18nHandlersForWarning(): void {
   try {
     // Prefer event binding if available
     if (typeof instance.on === "function") {
-      instance.on("initialized", () => applyFloorpHubWarningTexts());
-      instance.on("languageChanged", () => applyFloorpHubWarningTexts());
+      instance.on("initialized", () => {
+        applyFloorpHubWarningTexts();
+        applyFloorpStartWarningTexts();
+      });
+      instance.on("languageChanged", () => {
+        applyFloorpHubWarningTexts();
+        applyFloorpStartWarningTexts();
+      });
       warningI18nHandlersBound = true;
       logFloorpHub("Bound i18next event handlers for warning banner.");
       // If already initialized, apply immediately
@@ -487,6 +525,7 @@ function bindI18nHandlersForWarning(): void {
               "i18next became initialized via poll; applying texts.",
             );
             applyFloorpHubWarningTexts();
+            applyFloorpStartWarningTexts();
             warningI18nHandlersBound = true;
             return;
           }
@@ -732,7 +771,13 @@ function createFloorpStartWarning(): void {
     }
     const win = Services.wm.getMostRecentWindow(
       "navigator:browser",
-    ) as FirefoxWindow;
+    ) as FirefoxWindow | null;
+    if (!win) {
+      console.error(
+        "Floorp Hub: No browser window available to open hub tab.",
+      );
+      return;
+    }
     win.gBrowser.selectedTab = win.gBrowser.addTab(
       "about:hub#/features/design",
       {
@@ -825,8 +870,22 @@ function getI18nUtils(): {
 }
 
 function hideNewTabPage(): void {
-  const pref = Services.prefs.getStringPref("floorp.design.configs");
-  const config = JSON.parse(pref).uiCustomization.disableFloorpStart;
+  let config = false;
+  try {
+    const pref = Services.prefs.getStringPref(
+      "floorp.design.configs",
+      "{}",
+    );
+    config =
+      (JSON.parse(pref) as {
+        uiCustomization?: { disableFloorpStart?: boolean };
+      })?.uiCustomization?.disableFloorpStart ?? false;
+  } catch (e) {
+    console.error(
+      "Floorp Hub: Failed to read floorp.design.configs",
+      e,
+    );
+  }
 
   if (!config) {
     logFloorpHub("Disabling Floorp start categories as per configuration.");

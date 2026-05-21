@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { workspacesDataStore } from "./data/data.ts";
 import i18next from "i18next";
@@ -42,9 +41,27 @@ export class WorkspacesTabContextMenu {
     }
 
     try {
-      render(() => this.contextMenu(), parentElem, {
-        marker: marker?.parentElement === parentElem ? marker : undefined,
-      });
+      // Build XUL elements directly to support marker-based insertion.
+      const menuEl = document?.createXULElement("menu") as unknown as XULElement;
+      menuEl.id = "context_MoveTabToOtherWorkspace";
+      menuEl.setAttribute(
+        "label",
+        getTranslatedText(translationKeys.moveTabToAnotherWorkspace),
+      );
+      menuEl.setAttribute("accesskey", "D");
+
+      const popupEl = document?.createXULElement("menupopup") as unknown as XULElement;
+      popupEl.id = "WorkspacesTabContextMenu";
+      popupEl.addEventListener("popupshowing", () =>
+        this.createTabworkspacesContextMenuItems(),
+      );
+      menuEl.appendChild(popupEl);
+
+      if (marker?.parentElement === parentElem) {
+        parentElem.insertBefore(menuEl, marker);
+      } else {
+        parentElem.appendChild(menuEl);
+      }
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -70,21 +87,6 @@ export class WorkspacesTabContextMenu {
     }
   }
 
-  public contextMenu() {
-    return (
-      <xul:menu
-        id="context_MoveTabToOtherWorkspace"
-        label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
-        accesskey="D"
-      >
-        <xul:menupopup
-          id="WorkspacesTabContextMenu"
-          onPopupShowing={() => this.createTabworkspacesContextMenuItems()}
-        />
-      </xul:menu>
-    );
-  }
-
   public createTabworkspacesContextMenuItems() {
     const menuElem = document?.getElementById("WorkspacesTabContextMenu");
     if (!menuElem) {
@@ -94,7 +96,7 @@ export class WorkspacesTabContextMenu {
       return;
     }
     while (menuElem?.firstChild) {
-      const child = menuElem.firstChild as XULElement;
+      const child = menuElem.firstChild as unknown as XULElement;
       child.remove();
     }
 

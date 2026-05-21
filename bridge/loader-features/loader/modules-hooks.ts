@@ -1,87 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
-type RejectFn = (reason: unknown) => void;
+/**
+ * Module hooks — backward-compatible re-export shim.
+ *
+ * Delegates to io/hooks.ts. The `_`-prefixed names are kept here because
+ * they were part of the original public surface (internal-but-exported).
+ * Do not add logic here.
+ */
 
-const _mapPromiseModuleState = new Map<
-  string,
-  [Promise<void>, () => void, RejectFn]
->();
-
-function createPromise(): [Promise<void>, () => void, RejectFn] {
-  let rs: (() => void) | null = null;
-  let rj: RejectFn | null = null;
-  const p = new Promise<void>((resolve, reject) => {
-    rs = resolve;
-    rj = reject;
-  });
-  return [p, rs!, rj!];
-}
-
-interface TModuleLib {
-  onModuleLoaded: (module: string) => Promise<void>;
-  _registerModuleLoadState: (module: string, isLoaded: boolean) => void;
-}
-
-class ModuleLib implements TModuleLib {
-  static _instance: ModuleLib | null = null;
-  static getInstance() {
-    if (!this._instance) {
-      this._instance = new ModuleLib();
-    }
-    return this._instance;
-  }
-  onModuleLoaded(module: string): Promise<void> {
-    if (_mapPromiseModuleState.has(module)) {
-      return _mapPromiseModuleState.get(module)![0];
-    } else if (this.rejected) {
-      return Promise.reject(new Error("Module Not Found"));
-    }
-
-    const pms = createPromise();
-    _mapPromiseModuleState.set(module, pms);
-    return pms[0];
-  }
-  _registerModuleLoadState(module: string, isLoaded: boolean) {
-    if (!_mapPromiseModuleState.has(module)) {
-      const pms = createPromise();
-      _mapPromiseModuleState.set(module, pms);
-    }
-    if (isLoaded) {
-      _mapPromiseModuleState.get(module)![1]();
-    } else {
-      _mapPromiseModuleState.get(module)![2](
-        new Error(`Failed to load module : ${module}`),
-      );
-    }
-  }
-  async _rejectOtherLoadStates() {
-    for (const [_, pms] of _mapPromiseModuleState) {
-      // Sentinel pattern: Promise.race returns the sentinel object immediately
-      // if pms[0] is still pending (not yet settled). A settled promise would
-      // win the race instead. This is how we detect "never resolved" states
-      // without blocking on them.
-      const sentinel = {};
-      if (sentinel === (await Promise.race([pms[0], sentinel]))) {
-        pms[2](new Error("Module Not Found"));
-      }
-    }
-    this.rejected = true;
-  }
-  private rejected = false;
-}
-
-export function onModuleLoaded(module: string): Promise<void> {
-  return ModuleLib.getInstance().onModuleLoaded(module);
-}
+export { onModuleLoaded } from "./io/mod.ts";
 
 // Functions below are prefixed with `_` to indicate they are internal to the
-// loader subsystem. Exported only because index.ts calls them directly;
+// loader subsystem. Exported only because index.ts called them directly;
 // treat them as implementation details, not public API.
-
-export function _registerModuleLoadState(module: string, isLoaded: boolean) {
-  return ModuleLib.getInstance()._registerModuleLoadState(module, isLoaded);
-}
-
-export function _rejectOtherLoadStates() {
-  return ModuleLib.getInstance()._rejectOtherLoadStates();
-}
+export {
+  registerModuleLoadState as _registerModuleLoadState,
+  rejectOtherLoadStates as _rejectOtherLoadStates,
+} from "./io/mod.ts";

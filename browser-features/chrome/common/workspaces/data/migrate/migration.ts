@@ -1,6 +1,6 @@
 import { zFloorp11WorkspacesSchema } from "./old_type.ts";
 import type { Floorp11Workspaces, WorkspaceDetail } from "./old_type.ts";
-import type { TWorkspace, TWorkspaceID } from "../../utils/type.ts";
+import type { TWorkspace, TWorkspaceID, TWorkspacesStoreData } from "../../utils/type.ts";
 import { zWorkspaceID } from "../../utils/type.ts";
 import {
   type setSelectedWorkspaceID as _setSelectedWorkspaceID,
@@ -296,13 +296,11 @@ export function migrateWorkspacesData(): Promise<void> {
                   );
                 }
                 if (defaultID) {
-                  setWorkspacesDataStore("defaultID", defaultID);
+                  setWorkspacesDataStore("defaultID", defaultID as TWorkspaceID);
                 }
                 setWorkspacesDataStore(
                   "data",
-                  new Map(dataMap) as unknown as Parameters<
-                    typeof setWorkspacesDataStore
-                  >[1],
+                  new Map(dataMap) as unknown as TWorkspacesStoreData["data"],
                 );
                 setWorkspacesDataStore("order", orderList);
                 console.debug(

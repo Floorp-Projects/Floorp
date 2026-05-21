@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, onCleanup } from "solid-js";
+import { computed, effect } from "@preact/signals";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs.ts";
@@ -26,10 +26,10 @@ export function replaceIconPaths(
 }
 
 export function BrowserDesignElement() {
-  const getCSS = () => getCSSFromConfig(config());
+  const getCSS = () => getCSSFromConfig(config.value);
 
   // Apply UserJS preferences
-  createEffect(() => {
+  effect(() => {
     const { userjs } = getCSS();
     if (userjs) {
       applyUserJS(userjs);
@@ -40,7 +40,7 @@ export function BrowserDesignElement() {
 
   // Register content CSS using StyleSheetService (AGENT_SHEET)
   // These styles apply to all documents including web content
-  createEffect(() => {
+  effect(() => {
     const { styles, stylesRaw, iconBasePath, useTabColorAsToolbarColor } =
       getCSS();
     const registeredURIs: nsIURI[] = [];
@@ -124,7 +124,7 @@ export function BrowserDesignElement() {
     }
 
     // Cleanup: Unregister sheets when component unmounts or styles change
-    onCleanup(() => {
+    return () => {
       for (const uri of registeredURIs) {
         try {
           if (sss.sheetRegistered(uri, AGENT_SHEET)) {
@@ -137,12 +137,12 @@ export function BrowserDesignElement() {
           );
         }
       }
-    });
+    };
   });
 
   // Compute Chrome-only styles (applied via DOM, not AGENT_SHEET)
   // These styles only affect the browser UI, not web content
-  const chromeStyleContent = createMemo(() => {
+  const chromeStyleContent = computed(() => {
     const { chromeStyles, chromeStylesRaw, iconBasePath } = getCSS();
 
     // Development mode: use raw CSS
@@ -165,7 +165,7 @@ export function BrowserDesignElement() {
   return (
     <>
       <style>{styleBrowser}</style>
-      <style>{chromeStyleContent()}</style>
+      <style>{chromeStyleContent.value}</style>
     </>
   );
 }

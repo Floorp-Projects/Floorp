@@ -3,21 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createRootHMR } from "@nora/solid-xul";
-import { createSignal } from "solid-js";
+import { h, render } from "preact";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { BrowserActionUtils } from "../../utils/browser-action.tsx";
 import {
   ZenModeMenuElement,
-  setZenModeEnabled,
+  zenModeEnabled,
   initZenModeState,
 } from "./zen-mode.tsx";
 import { StyleElement } from "./styleElem.tsx";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
 
-@noraComponent(import.meta.hot)
+@noraComponent("ZenMode", import.meta.hot)
 export default class ZenMode extends NoraComponentBase {
   init() {
     this.logger.info("Initializing Zen Mode");
@@ -54,10 +53,10 @@ export default class ZenMode extends NoraComponentBase {
     const marker = document!.getElementById("menu_openFirefoxView");
 
     try {
-      render(ZenModeMenuElement, menuPopup, {
-        marker: marker?.parentElement === menuPopup ? marker : undefined,
-        hotCtx: import.meta.hot,
-      });
+      // TODO(Stage3-Setup): solid-xul render supported marker (insertion point).
+      // Preact render appends to container; marker support can be added via
+      // a wrapper element inserted before marker if needed.
+      render(h(ZenModeMenuElement, null), menuPopup);
       this.logger.info("Zen Mode menu item rendered successfully.");
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
@@ -69,12 +68,12 @@ export default class ZenMode extends NoraComponentBase {
     BrowserActionUtils.createToolbarClickActionButton(
       "zen-mode-button",
       null,
-      () => setZenModeEnabled((prev) => !prev),
+      () => (zenModeEnabled.value = !zenModeEnabled.value),
       StyleElement(),
       null,
       null,
       (aNode: XULElement) => {
-        const tooltip = document!.createXULElement("tooltip") as XULElement;
+        const tooltip = document!.createXULElement("tooltip") as unknown as XULElement;
         tooltip.id = "zen-mode-button-tooltip";
         tooltip.setAttribute("hasbeenopened", "false");
         document!.getElementById("mainPopupSet")?.appendChild(tooltip);
@@ -82,26 +81,20 @@ export default class ZenMode extends NoraComponentBase {
 
         createRootHMR(
           () => {
-            const [texts, setTexts] = createSignal({
-              buttonLabel: "Zen Mode",
-              tooltipText: "Toggle Zen Mode",
-            });
-
-            aNode.setAttribute("label", texts().buttonLabel);
-            tooltip.setAttribute("label", texts().tooltipText);
-
-            addI18nObserver(() => {
-              setTexts({
-                buttonLabel: i18next.t("zen-mode.label", {
-                  defaultValue: "Zen Mode",
-                }),
-                tooltipText: i18next.t("zen-mode.tooltiptext", {
+            const updateTexts = () => {
+              aNode.setAttribute(
+                "label",
+                i18next.t("zen-mode.label", { defaultValue: "Zen Mode" }),
+              );
+              tooltip.setAttribute(
+                "label",
+                i18next.t("zen-mode.tooltiptext", {
                   defaultValue: "Toggle Zen Mode",
                 }),
-              });
-              aNode.setAttribute("label", texts().buttonLabel);
-              tooltip.setAttribute("label", texts().tooltipText);
-            });
+              );
+            };
+            updateTexts();
+            addI18nObserver(updateTexts);
           },
           import.meta.hot,
         );

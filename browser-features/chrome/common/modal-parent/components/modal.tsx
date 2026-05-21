@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Portal } from "solid-js/web";
+import { createPortal } from "preact/compat";
 import { ModalBrowser } from "./browser.tsx";
 import { isModalVisible } from "../data/data.ts";
 
@@ -14,14 +14,17 @@ type ModalProps = {
 
 export function Modal(props: ModalProps) {
   return (
-    <Portal mount={props.targetParent}>
-      <div
-        id="modal-parent-container"
-        data-visible={isModalVisible() ? "true" : undefined}
-        onClick={(e) => props.onBackdropClick(e)}
-      >
-        <ModalBrowser />
-      </div>
-    </Portal>
+    <>
+      {createPortal(
+        <div
+          id="modal-parent-container"
+          data-visible={isModalVisible.value ? "true" : undefined}
+          onClick={(e) => props.onBackdropClick(e as unknown as MouseEvent)}
+        >
+          <ModalBrowser />
+        </div>,
+        props.targetParent,
+      )}
+    </>
   );
 }

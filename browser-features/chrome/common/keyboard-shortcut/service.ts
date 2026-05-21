@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { _setConfig, getConfig, isEnabled, setEnabled } from "./config.ts";
+import { _config, getConfig, isEnabled, setEnabled } from "./config.ts";
 import { KeyboardShortcutController } from "./controller.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { createRootHMR } from "#features-chrome/utils/base";
+import { effect } from "@preact/signals";
 import type { KeyboardShortcutConfig } from "./type.ts";
 
 export class KeyboardShortcutService {
@@ -16,7 +16,7 @@ export class KeyboardShortcutService {
   constructor() {
     this.initialize();
 
-    createEffect(() => {
+    effect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
       const enabled = isEnabled();
@@ -26,18 +26,13 @@ export class KeyboardShortcutService {
         if (enabled) {
           this.attachToAllWindows();
         }
-      }
-
-      this.lastConfigString = configString;
-    });
-
-    createEffect(() => {
-      const enabled = isEnabled();
-      if (enabled) {
+      } else if (enabled) {
         this.attachToAllWindows();
       } else {
         this.destroyAllControllers();
       }
+
+      this.lastConfigString = configString;
     });
   }
 
@@ -140,7 +135,7 @@ export class KeyboardShortcutService {
 }
 
 function setConfig(config: KeyboardShortcutConfig) {
-  _setConfig(config);
+  _config.value = config;
 }
 
 function createKeyboardShortcutService() {

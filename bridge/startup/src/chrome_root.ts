@@ -78,15 +78,7 @@ if (import.meta.env.MODE === "dev") {
     );
     await testModule.default();
     setStartupMarker("nora.startup.test", "loaded");
-
-    // Keep the browser alive after test completion so the host-side
-    // test runner has time to collect results from prefs.js.
-    // Without this the browser may shut down before the runner reads
-    // the final state. Use setInterval (not an unresolved Promise) to
-    // avoid blocking the event loop.
-    // The interval is cleared after 10 minutes as a safety net.
-    const keepaliveId = setInterval(() => {}, 60_000);
-    setTimeout(() => clearInterval(keepaliveId), 600_000);
+    // Keepalive is managed inside runBrowserTests() in loader/test/index.ts.
   } catch (error) {
     setStartupMarker("nora.startup.error", String(error).slice(0, 300));
     throw error;

@@ -7,25 +7,22 @@ import type { Browser, Icon, Manifest } from "./type";
 import { DataManager } from "./dataStore";
 import { IconProcesser } from "./iconProcesser";
 import { ManifestProcesser } from "./manifestProcesser";
-import { createEffect, createRoot, createSignal } from "solid-js";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 
 export class ProgressiveWebApp {
   private static instance: ProgressiveWebApp;
   private dataManager: DataManager;
   private iconProcesser: IconProcesser;
   private manifestProcesser: ManifestProcesser;
-  private currentPWAs!: ReturnType<
-    typeof createSignal<Record<string, Manifest>>
-  >;
+  private currentPWAs!: Signal<Record<string, Manifest>>;
 
   private constructor() {
     this.dataManager = new DataManager();
     this.iconProcesser = new IconProcesser();
     this.manifestProcesser = new ManifestProcesser();
-    createRoot(() => {
-      this.currentPWAs = createSignal<Record<string, Manifest>>({});
-      this.initializeSignals();
-    });
+    this.currentPWAs = signal<Record<string, Manifest>>({});
+    this.initializeSignals();
   }
 
   public static getInstance(): ProgressiveWebApp {
@@ -36,10 +33,8 @@ export class ProgressiveWebApp {
   }
 
   private initializeSignals(): void {
-    const [, setCurrentPWAs] = this.currentPWAs;
-    createEffect(async () => {
-      const data = await this.dataManager.getCurrentSsbData();
-      setCurrentPWAs(data);
+    this.dataManager.getCurrentSsbData().then((data) => {
+      this.currentPWAs.value = data;
     });
   }
 
@@ -66,8 +61,7 @@ export class ProgressiveWebApp {
    * @returns Promise<Record<string, Manifest>>
    */
   public getAllPWAs(): Record<string, Manifest> {
-    const [currentPWAs] = this.currentPWAs;
-    return currentPWAs();
+    return this.currentPWAs.value;
   }
 
   /**
@@ -126,8 +120,7 @@ export class ProgressiveWebApp {
    * @returns Promise<boolean>
    */
   public isPWARegistered(url: string): boolean {
-    const [currentPWAs] = this.currentPWAs;
-    return Object.values(currentPWAs()).some(
+    return Object.values(this.currentPWAs.value).some(
       (manifest) => manifest.start_url === url,
     );
   }
@@ -138,9 +131,8 @@ export class ProgressiveWebApp {
    * @returns Promise<Manifest | null>
    */
   public getPWAByUrl(url: string): Manifest | null {
-    const [currentPWAs] = this.currentPWAs;
     return (
-      Object.values(currentPWAs()).find(
+      Object.values(this.currentPWAs.value).find(
         (manifest) => manifest.start_url === url,
       ) || null
     );
@@ -152,8 +144,7 @@ export class ProgressiveWebApp {
    * @returns Promise<Manifest | null>
    */
   public getSsbById(id: string): Manifest | null {
-    const [currentPWAs] = this.currentPWAs;
-    const manifest = Object.values(currentPWAs()).find(
+    const manifest = Object.values(this.currentPWAs.value).find(
       (m) => m.start_url === id,
     );
 

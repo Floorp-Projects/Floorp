@@ -3,7 +3,7 @@ import type { GestureActionRegistration } from "./gestures.ts";
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
     const targetDoc = win?.document ?? document;
-    return (targetDoc?.getElementById(id) as XULElement | null) ?? null;
+    return (targetDoc?.getElementById(id) as unknown as XULElement | null) ?? null;
   } catch {
     return null;
   }

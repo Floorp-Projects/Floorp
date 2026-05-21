@@ -32,6 +32,7 @@ export class TabDragDropManager {
   private originalOnDragOver: ((event: DragEvent) => void) | undefined | null =
     null;
   private dropEventListener: ((e: Event) => void) | null = null;
+  private dragStartListener: ((e: Event) => void) | null = null;
 
   constructor(
     private readonly resolveTabsContainer: () => XULElement | null,
@@ -63,7 +64,7 @@ export class TabDragDropManager {
       return event.clientX > rect.x + rect.width / 2 ? tabPos : tabPos + 1;
     };
 
-    tabContainer.addEventListener("dragstart", (event: Event) => {
+    this.dragStartListener = (event: Event) => {
       const dragEvent = event as DragEvent;
       const tab = this.getTabFromEventTarget(dragEvent);
       if (!tab || !this.arrowScrollbox) return;
@@ -97,7 +98,8 @@ export class TabDragDropManager {
           this.listenersActive = true;
         }
       }
-    });
+    };
+    tabContainer.addEventListener("dragstart", this.dragStartListener);
   }
 
   uninstall(): void {
@@ -120,7 +122,11 @@ export class TabDragDropManager {
       tabContainer._onDragOver = this.originalOnDragOver;
     }
 
-    // Remove drop event listener
+    // Remove drag/drop event listeners
+    if (this.dragStartListener) {
+      tabContainer.removeEventListener("dragstart", this.dragStartListener);
+      this.dragStartListener = null;
+    }
     if (this.dropEventListener) {
       tabContainer.removeEventListener("drop", this.dropEventListener);
       this.dropEventListener = null;
@@ -163,7 +169,7 @@ export class TabDragDropManager {
       return selectedTab;
     }
 
-    return tab as XULElement;
+    return tab as unknown as XULElement;
   }
 
   private performTabDragOver = (event: DragEvent): void => {
@@ -217,7 +223,7 @@ export class TabDragDropManager {
       this.positionInGroup = groupEnd - groupStart;
       dropIndex = groupEnd;
     } else if (tab.parentElement?.nodeName === "tab-group") {
-      this.groupToInsertTo = tab.parentElement as XULElement;
+      this.groupToInsertTo = tab.parentElement as unknown as XULElement;
       const groupStart = tab.parentElement.querySelector("tab:first-of-type");
       this.positionInGroup = dropIndex -
         Array.prototype.indexOf.call(tabs, groupStart);
@@ -240,7 +246,7 @@ export class TabDragDropManager {
       if (CSS.supports("offset-anchor", "left bottom")) {
         newMarginY += rect.height / 2 - tabRect.height / 2;
       }
-    } else if (dropIndex != null || dropIndex !== 0) {
+    } else if (dropIndex != null && dropIndex !== 0) {
       const tabRect = tabs[dropIndex].getBoundingClientRect();
       newMarginX = ltr ? tabRect.left - rect.left : rect.right - tabRect.right;
       newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
@@ -292,15 +298,15 @@ export class TabDragDropManager {
       draggedTab.parentNode?.parentNode?.parentNode?.nodeName === "tab-group"
     ) {
       const tabGroup = draggedTab.parentNode.parentNode
-        .parentNode as XULElement;
+        .parentNode as unknown as XULElement;
       const tabToMoveTo = allTabs[this.lastKnownIndex!];
       if (this.groupToInsertTo && "querySelectorAll" in tabGroup) {
         const tabs = Array.from(tabGroup.querySelectorAll("tab")) as XULTab[];
         this.moveTabsToGroup(tabs);
       } else if (this.lastKnownIndex !== allTabs.length - 1) {
-        gBrowser.moveTabBefore(tabGroup, tabToMoveTo);
+        gBrowser.moveTabBefore(tabGroup, tabToMoveTo as unknown as XULTab);
       } else {
-        gBrowser.moveTabAfter(tabGroup, tabToMoveTo);
+        gBrowser.moveTabAfter(tabGroup, tabToMoveTo as unknown as XULTab);
       }
     } else if (
       draggedTab &&
@@ -336,7 +342,7 @@ export class TabDragDropManager {
           if (pinned) {
             this.pinnedTabs.migratePinnedTabs(tabsContainer, pinned);
           }
-          setTimeout(() => {
+          queueMicrotask(() => {
             const tab = tabsContainer.querySelector(
               `.tabbrowser-tab[newPin]:nth-child(${
                 tabsContainer.querySelectorAll("tab[newPin]").length
@@ -355,7 +361,7 @@ export class TabDragDropManager {
                 tabsContainer.insertBefore(tab, tabToMoveAt);
               }
             }
-          }, 10);
+          });
         });
       } else if (this.groupToInsertTo) {
         this.moveTabsToGroup(selectedTabs);
@@ -376,9 +382,9 @@ export class TabDragDropManager {
           }
 
           if (!shouldMoveAfter) {
-            gBrowser.moveTabBefore(t, tabToMoveTo);
+            gBrowser.moveTabBefore(t, tabToMoveTo as unknown as XULTab);
           } else {
-            gBrowser.moveTabAfter(t, tabToMoveTo);
+            gBrowser.moveTabAfter(t, tabToMoveTo as unknown as XULTab);
           }
         });
       }
@@ -456,13 +462,13 @@ export class TabDragDropManager {
         gBrowser.moveTabToGroup(t, this.groupToInsertTo);
 
         if (tabInGroupToMoveTo) {
-          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as XULElement);
+          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as unknown as XULElement);
         } else {
           const lastTab = this.groupToInsertTo.querySelector(
             "tab:last-of-type",
           );
           if (lastTab) {
-            gBrowser.moveTabAfter(t, lastTab as XULElement);
+            gBrowser.moveTabAfter(t, lastTab as unknown as XULElement);
           }
         }
       }
