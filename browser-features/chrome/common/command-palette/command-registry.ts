@@ -204,6 +204,17 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-quit-from-application": ["quit", "exit"],
 };
 
+/**
+ * Mouse gesture actions listed here will be excluded from the command palette.
+ * Useful for: dangerous operations, duplicates, or commands that are not appropriate
+ * for the palette UI. This does NOT affect mouse gesture assignment — excluded
+ * actions remain available in the gesture settings.
+ */
+const EXCLUDED_PALETTE_ACTIONS: ReadonlySet<string> = new Set([
+  // Add action IDs here to exclude them from the command palette, e.g.:
+  // "gecko-quit-from-application",
+]);
+
 const cachedCommands: Record<string, PaletteCommand[]> = {};
 
 type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
@@ -246,14 +257,16 @@ function getActionDescriptionByOrientation(
 
 function buildGestureCommands(win?: Window): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
-  return gestureActions.map((action) => ({
-    id: action.name,
-    label: getActionDisplayNameByOrientation(action.name, win),
-    description: getActionDescriptionByOrientation(action.name, win),
-    category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
-    keywords: ACTION_KEYWORDS[action.name] ?? [],
-    fn: action.fn,
-  }));
+  return gestureActions
+    .filter((action) => !EXCLUDED_PALETTE_ACTIONS.has(action.name))
+    .map((action) => ({
+      id: action.name,
+      label: getActionDisplayNameByOrientation(action.name, win),
+      description: getActionDescriptionByOrientation(action.name, win),
+      category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
+      keywords: ACTION_KEYWORDS[action.name] ?? [],
+      fn: action.fn,
+    }));
 }
 
 function buildStepCommands(): PaletteCommand[] {
