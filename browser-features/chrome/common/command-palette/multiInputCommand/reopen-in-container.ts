@@ -13,10 +13,17 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
 
     const identities = await ContextualIdentityService.getPublicIdentities();
 
+    // Detect current tab's container
+    const currentTab = globalThis.gBrowser?.selectedTab;
+    const currentUserContextId = Number(
+      (currentTab as unknown as { userContextId?: number })?.userContextId ?? 0,
+    );
+
     const noContainer: CommandStepChoice = {
-      label: i18next.t("commandPalette.reopenInContainerNoContainer", {
-        defaultValue: "No Container",
-      }),
+      label:
+        i18next.t("commandPalette.reopenInContainerNoContainer", {
+          defaultValue: "No Container",
+        }) + (currentUserContextId === 0 ? " (✓)" : ""),
       value: "0",
       description: i18next.t(
         "commandPalette.reopenInContainerNoContainerDesc",
@@ -38,8 +45,9 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
         // getUserContextLabel handles both l10nId (built-in) and name (user-created)
         const label =
           ContextualIdentityService.getUserContextLabel(userContextId);
+        const isCurrent = userContextId === currentUserContextId;
         return {
-          label: label || "Unknown",
+          label: (label || "Unknown") + (isCurrent ? " (✓)" : ""),
           value: String(userContextId),
           description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
         };
@@ -89,6 +97,17 @@ export const reopenInContainerCommand: PaletteCommand = {
     const tab = globalThis.gBrowser.selectedTab;
 
     if (!tab) return;
+
+    // Skip if already in the requested container
+    const currentUserContextId = Number(
+      (tab as unknown as { userContextId?: number })?.userContextId ?? 0,
+    );
+    if (currentUserContextId === containerId) {
+      console.debug(
+        "[ReopenInContainer] Tab is already in the requested container, skipping.",
+      );
+      return;
+    }
 
     let triggeringPrincipal: nsIPrincipal;
 

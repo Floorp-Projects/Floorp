@@ -402,6 +402,9 @@
       "grid2x2": "グリッド (2×2)",
       "addPane": "区分けを追加",
       "removePane": "最後の区分けを削除"
+    },
+    "dropZone": {
+      "newWindow": "ここにドロップすると新しいウィンドウで開きます"
     }
   },
   "zen-mode": {
@@ -447,6 +450,33 @@
     "searchWebStepPlaceholder": "検索キーワード...",
     "searchWithEngine": "\"{{query}}\" を検索",
     "searchWithEngineDescription": "デフォルトの検索エンジンで検索します",
-    "searchWithEngineNamed": "{{engine}} で検索"
+    "searchWithEngineNamed": "{{engine}} で検索",
+    "searchWebValidationError": "検索キーワードを入力してください",
+    "searchWebEngineLabel": "検索エンジンを選択",
+    "searchWebEnginePlaceholder": "検索エンジンを選択...",
+    "searchEngineDefault": " (デフォルト)",
+    "searchWebWhereLabel": "検索結果を開く場所",
+    "searchWebWherePlaceholder": "開く場所を選択...",
+    "searchWebWhereNewTab": "新しいタブ",
+    "searchWebWhereNewTabDesc": "新しい前面タブで開く",
+    "searchWebWhereBackgroundTab": "バックグラウンドタブ",
+    "searchWebWhereBackgroundTabDesc": "新しいバックグラウンドタブで開く",
+    "searchWebWhereCurrentTab": "現在のタブ",
+    "searchWebWhereCurrentTabDesc": "現在のタブで移動",
+    "openUrlWhereLabel": "開く場所",
+    "openUrlWherePlaceholder": "開く場所を選択...",
+    "openUrlWhereNewTab": "新しいタブ",
+    "openUrlWhereNewTabDesc": "新しい前面タブで開く",
+    "openUrlWhereBackgroundTab": "バックグラウンドタブ",
+    "openUrlWhereBackgroundTabDesc": "新しいバックグラウンドタブで開く",
+    "openUrlWhereCurrentTab": "現在のタブ",
+    "openUrlWhereCurrentTabDesc": "現在のタブで移動",
+    "reopenInContainer": "コンテナーで再度開く",
+    "reopenInContainerDescription": "現在のタブを指定したコンテナーで再度開きます",
+    "reopenInContainerStepLabel": "コンテナーを選択",
+    "reopenInContainerStepPlaceholder": "コンテナーを選択...",
+    "reopenInContainerNoContainer": "コンテナーなし",
+    "reopenInContainerNoContainerDesc": "デフォルトのコンテキストで再度開く",
+    "loadingChoices": "読み込み中..."
   }
 }

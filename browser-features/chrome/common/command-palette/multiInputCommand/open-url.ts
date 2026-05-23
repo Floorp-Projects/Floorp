@@ -27,6 +27,18 @@ export const openUrlCommand: PaletteCommand = {
             defaultValue: "Please enter a valid URL",
           });
         }
+        // Accept scheme-prefixed URLs, domain-like patterns, and localhost
+        const looksValid =
+          /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) ||      // has scheme
+          /^[^\s]+\.[a-z]{2,}/i.test(trimmed) ||                  // domain-like
+          /^localhost(:\d+)?/.test(trimmed) ||                     // localhost
+          /^about:/.test(trimmed) ||                               // about: pages
+          /^floorp:\/\//.test(trimmed);                            // floorp:// pages
+        if (!looksValid) {
+          return i18next.t("commandPalette.openUrlValidationError", {
+            defaultValue: "Please enter a valid URL",
+          });
+        }
         return true;
       },
     },
