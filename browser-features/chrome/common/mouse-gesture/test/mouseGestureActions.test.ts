@@ -90,9 +90,86 @@ const rawTests: TestCase[] = [
     fn() {
       const actions = getAllGestureActions();
       const names = actions.map((a) => a.name);
-      assert(names.includes("gecko-close-other-tabs"), "should include gecko-close-other-tabs");
-      assert(names.includes("gecko-close-tabs-to-start"), "should include gecko-close-tabs-to-start");
-      assert(names.includes("gecko-close-tabs-to-end"), "should include gecko-close-tabs-to-end");
+      assert(
+        names.includes("gecko-close-other-tabs"),
+        "should include gecko-close-other-tabs",
+      );
+      assert(
+        names.includes("gecko-close-tabs-to-start"),
+        "should include gecko-close-tabs-to-start",
+      );
+      assert(
+        names.includes("gecko-close-tabs-to-end"),
+        "should include gecko-close-tabs-to-end",
+      );
+    },
+  },
+
+  // --- floorp-open-settings action ---
+  {
+    name: "floorp-open-settings action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-open-settings"),
+        "should include floorp-open-settings action",
+      );
+    },
+  },
+  {
+    name: "floorp-open-settings action calls win.openPreferences()",
+    fn() {
+      const fn = gestureActions.getAction("floorp-open-settings");
+      assert(
+        typeof fn === "function",
+        "floorp-open-settings should have a function",
+      );
+      let openPreferencesCalled = false;
+      const mockWin = {
+        openPreferences() {
+          openPreferencesCalled = true;
+        },
+      } as unknown as Window;
+      fn(mockWin);
+      assert(openPreferencesCalled, "should call win.openPreferences()");
+    },
+  },
+
+  // --- floorp-open-hub action ---
+  {
+    name: "floorp-open-hub action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-open-hub"),
+        "should include floorp-open-hub action",
+      );
+    },
+  },
+  {
+    name: "floorp-open-hub action calls win.switchToTabHavingURI()",
+    fn() {
+      const fn = gestureActions.getAction("floorp-open-hub");
+      assert(
+        typeof fn === "function",
+        "floorp-open-hub should have a function",
+      );
+      let switchToTabCalled = false;
+      let receivedURI: string | undefined;
+      const mockWin = {
+        switchToTabHavingURI(uri: { spec: string }, _openNew: boolean) {
+          switchToTabCalled = true;
+          receivedURI = uri.spec;
+        },
+      } as unknown as Window;
+      fn(mockWin);
+      assert(switchToTabCalled, "should call win.switchToTabHavingURI()");
+      assert(
+        typeof receivedURI === "string" && receivedURI.includes("about:hub"),
+        "should pass about:hub URI to switchToTabHavingURI",
+      );
     },
   },
 

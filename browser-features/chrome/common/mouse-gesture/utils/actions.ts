@@ -395,4 +395,16 @@ export const actions: GestureActionRegistration[] = [
       );
     },
   },
+  {
+    name: "floorp-open-settings",
+    fn: (win) => {
+      win.openPreferences();
+    },
+  },
+  {
+    name: "floorp-open-hub",
+    fn: (win) => {
+      win.switchToTabHavingURI(Services.io.newURI("about:hub"), true);
+    },
+  },
 ];

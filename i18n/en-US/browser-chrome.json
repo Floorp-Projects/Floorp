@@ -207,7 +207,9 @@
       "gecko-workspace-next": "Switch to Next Workspace",
       "gecko-workspace-previous": "Switch to Previous Workspace",
       "floorp-toggle-zen-mode": "Toggle Zen Mode",
-      "floorp-toggle-command-palette": "Toggle Command Palette"
+      "floorp-toggle-command-palette": "Toggle Command Palette",
+      "floorp-open-settings": "Open Settings",
+      "floorp-open-hub": "Open Floorp Hub"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
@@ -224,7 +226,9 @@
       "gecko-reload-all-tabs": "Reload all tabs",
       "gecko-restore-last-tab": "Reopen the last closed tab",
       "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
-      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands",
+      "floorp-open-settings": "Opens the Floorp settings page",
+      "floorp-open-hub": "Opens the Floorp Hub page"
     }
   },
   "qrCode": {
