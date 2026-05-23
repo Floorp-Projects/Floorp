@@ -424,9 +424,18 @@
       "workspace": "ワークスペース",
       "floorp": "Floorp",
       "media": "メディア",
-      "open-tabs": "タブを開く"
+      "open-tabs": "タブを開く",
+      "switcher": "切り替え"
     },
     "noResults": "コマンドが見つかりません",
-    "noResultsHint": "別の検索語をお試しください"
+    "noResultsHint": "別の検索語をお試しください",
+    "closedTabSwitcher": "閉じたタブを開き直す",
+    "closedTabSwitcherDescription": "最近閉じたタブを開き直します",
+    "closedTabSwitcherStepLabel": "閉じたタブを選択",
+    "closedTabSwitcherStepPlaceholder": "閉じたタブを選んでください...",
+    "closedWindowSwitcher": "閉じたウィンドウを開き直す",
+    "closedWindowSwitcherDescription": "最近閉じたウィンドウを開き直します",
+    "closedWindowSwitcherStepLabel": "閉じたウィンドウを選択",
+    "closedWindowSwitcherStepPlaceholder": "閉じたウィンドウを選んでください..."
   }
 }

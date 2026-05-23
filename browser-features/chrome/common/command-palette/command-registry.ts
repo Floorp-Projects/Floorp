@@ -10,6 +10,8 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
 import {
+  closedTabSwitcherCommand,
+  closedWindowSwitcherCommand,
   openUrlCommand,
   searchWebCommand,
   reopenInContainerCommand,
@@ -283,6 +285,8 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
 
 function buildStepCommands(): PaletteCommand[] {
   return [
+    closedTabSwitcherCommand,
+    closedWindowSwitcherCommand,
     openUrlCommand,
     searchWebCommand,
     reopenInContainerCommand,
