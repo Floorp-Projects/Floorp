@@ -14,7 +14,6 @@ import {
   searchWebCommand,
   reopenInContainerCommand,
   tabSwitcherCommand,
-  windowSwitcherCommand,
 } from "./multiInputCommand/index.ts";
 
 export interface CommandStepChoice {
@@ -288,7 +287,6 @@ function buildStepCommands(): PaletteCommand[] {
     searchWebCommand,
     reopenInContainerCommand,
     tabSwitcherCommand,
-    windowSwitcherCommand,
   ];
 }
 
