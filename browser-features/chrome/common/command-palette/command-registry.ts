@@ -13,6 +13,8 @@ import {
   openUrlCommand,
   searchWebCommand,
   reopenInContainerCommand,
+  tabSwitcherCommand,
+  windowSwitcherCommand,
 } from "./multiInputCommand/index.ts";
 
 export interface CommandStepChoice {
@@ -275,7 +277,13 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
 }
 
 function buildStepCommands(): PaletteCommand[] {
-  return [openUrlCommand, searchWebCommand, reopenInContainerCommand];
+  return [
+    openUrlCommand,
+    searchWebCommand,
+    reopenInContainerCommand,
+    tabSwitcherCommand,
+    windowSwitcherCommand,
+  ];
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {

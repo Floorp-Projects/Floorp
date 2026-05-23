@@ -3,3 +3,5 @@
 export { openUrlCommand } from "./open-url.ts";
 export { reopenInContainerCommand } from "./reopen-in-container.ts";
 export { searchWebCommand } from "./search-web.ts";
+export { tabSwitcherCommand } from "./switcher/tab-switcher.ts";
+export { windowSwitcherCommand } from "./switcher/window-switcher.ts";

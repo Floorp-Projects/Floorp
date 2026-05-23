@@ -434,7 +434,8 @@
       "workspace": "Workspaces",
       "floorp": "Floorp",
       "media": "Media",
-      "open-tabs": "Open Tabs"
+      "open-tabs": "Open Tabs",
+      "switcher": "Switcher"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -451,6 +452,16 @@
     "searchWebStepPlaceholder": "Search terms...",
     "searchWithEngine": "Search for \"{{query}}\"",
     "searchWithEngineDescription": "Search with your default search engine",
-    "searchWithEngineNamed": "Search with {{engine}}"
+    "searchWithEngineNamed": "Search with {{engine}}",
+    "tabSwitcher": "Switch Tab",
+    "tabSwitcherDescription": "Switch to a different tab in the current window",
+    "tabSwitcherStepLabel": "Select a tab",
+    "tabSwitcherStepPlaceholder": "Choose a tab...",
+    "windowSwitcher": "Switch Window",
+    "windowSwitcherDescription": "Switch to a different open window",
+    "windowSwitcherStepLabel": "Select a window",
+    "windowSwitcherStepPlaceholder": "Choose a window...",
+    "windowSwitcherCurrent": "current",
+    "windowSwitcherTabCount": "{{count}} tab(s)"
   }
 }
