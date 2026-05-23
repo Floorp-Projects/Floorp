@@ -140,6 +140,8 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "floorp-toggle-navigation-panel": "floorp",
   "floorp-toggle-zen-mode": "floorp",
   "floorp-toggle-command-palette": "floorp",
+  "floorp-open-settings": "floorp",
+  "floorp-open-hub": "floorp",
 
   "floorp-show-pip": "media",
 };
@@ -199,6 +201,8 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "floorp-hide-user-interface": ["hide ui", "hide interface"],
   "floorp-toggle-zen-mode": ["zen", "focus", "distraction free"],
   "floorp-toggle-command-palette": ["command palette", "palette", "command"],
+  "floorp-open-settings": ["settings", "preferences", "options"],
+  "floorp-open-hub": ["hub", "floorp hub", "settings", "preferences"],
   "floorp-show-pip": ["pip", "picture in picture", "mini player"],
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],
@@ -212,7 +216,8 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
  */
 const EXCLUDED_PALETTE_ACTIONS: ReadonlySet<string> = new Set([
   // Add action IDs here to exclude them from the command palette, e.g.:
-  // "gecko-quit-from-application",
+  "floorp-toggle-command-palette", // This would be redundant to include in the palette
+  "gecko-search-the-web", // This is already available as a step command, and may not work well as a gesture
 ]);
 
 const cachedCommands: Record<string, PaletteCommand[]> = {};
