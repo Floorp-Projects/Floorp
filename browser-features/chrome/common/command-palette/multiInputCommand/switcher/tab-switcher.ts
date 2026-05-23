@@ -4,6 +4,7 @@ import i18next from "i18next";
 import type {
   PaletteCommand,
   CommandStepChoice,
+  StepChoicesResult,
 } from "../../command-registry.ts";
 
 interface ChromeWindow extends Window {
@@ -14,31 +15,61 @@ interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;
 }
 
-export async function loadTabs(): Promise<CommandStepChoice[]> {
+export async function loadTabs(): Promise<
+  CommandStepChoice[] | StepChoicesResult
+> {
   try {
     const gBrowser = (globalThis as unknown as ChromeWindow).gBrowser;
     if (!gBrowser?.tabs) return [];
 
     const selectedTab = gBrowser.selectedTab;
+
+    let contextualIdentityService: {
+      getUserContextLabel(id: number): string;
+    } | null = null;
+    try {
+      const { ContextualIdentityService } = ChromeUtils.importESModule(
+        "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      );
+      ContextualIdentityService.ensureDataReady();
+      contextualIdentityService = ContextualIdentityService;
+    } catch {
+      // Container service not available, skip container info
+    }
+
     const choices: CommandStepChoice[] = [];
+    let defaultIndex = 0;
 
     for (const tab of gBrowser.tabs) {
-      if (tab === selectedTab) continue;
-
       const browser = tab.linkedBrowser as BrowserWithContent | undefined;
       if (!browser) continue;
 
       const label = tab.getAttribute("label") || browser.contentTitle || "";
       const url = browser.currentURI?.spec || "";
 
+      let description = url;
+      const userContextId = tab.getAttribute("usercontextid");
+      if (userContextId && userContextId !== "0" && contextualIdentityService) {
+        const containerName = contextualIdentityService.getUserContextLabel(
+          Number(userContextId),
+        );
+        if (containerName) {
+          description = `${url} • ${containerName}`;
+        }
+      }
+
+      if (tab === selectedTab) {
+        defaultIndex = choices.length;
+      }
+
       choices.push({
         label,
         value: String(tab._tPos),
-        description: url,
+        description,
       });
     }
 
-    return choices;
+    return { choices, defaultIndex };
   } catch (err) {
     console.error("[TabSwitcher] Failed to load tabs", err);
     return [];

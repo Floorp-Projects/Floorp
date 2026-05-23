@@ -26,6 +26,12 @@ export interface CommandStepChoice {
   description?: string;
 }
 
+export interface StepChoicesResult {
+  choices: CommandStepChoice[];
+  /** Index of the choice to select by default when the step loads. */
+  defaultIndex?: number;
+}
+
 export interface CommandStep {
   id: string;
   label: string;
@@ -45,7 +51,7 @@ export interface CommandStep {
    * If both `choices` and `choicesLoader` are defined, `choices` takes priority.
    * Use this for choices that need to be fetched asynchronously (e.g., search engines).
    */
-  choicesLoader?: () => Promise<CommandStepChoice[]>;
+  choicesLoader?: () => Promise<CommandStepChoice[] | StepChoicesResult>;
 }
 
 export interface PaletteCommand {

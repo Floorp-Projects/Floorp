@@ -11,7 +11,11 @@ import {
   getFrequencies,
 } from "./config.ts";
 import { getPaletteCommands, searchCommands } from "./command-registry.ts";
-import type { PaletteCommand } from "./command-registry.ts";
+import type {
+  PaletteCommand,
+  CommandStepChoice,
+  StepChoicesResult,
+} from "./command-registry.ts";
 
 function looksLikeUrl(query: string): boolean {
   if (query.startsWith("http://") || query.startsWith("https://")) return true;
@@ -367,16 +371,29 @@ export class CommandPaletteController {
       this.state.setStepChoicesLoading(true);
       step
         .choicesLoader()
-        .then((loadedChoices) => {
+        .then((result) => {
           // Only update if we're still on the same step
           if (this.state.currentStepIndex() === stepIndex) {
-            this.state.setStepChoicesBase(loadedChoices);
-            this.state.setFilteredStepChoices(loadedChoices);
-            this.state.setSelectedChoiceIndex(0);
+            const isResultObject = (v: unknown): v is StepChoicesResult =>
+              typeof v === "object" && v !== null && "choices" in v;
+            const choices = isResultObject(result)
+              ? result.choices
+              : (result as CommandStepChoice[]);
+            const defaultIdx = isResultObject(result)
+              ? result.defaultIndex
+              : undefined;
+
+            this.state.setStepChoicesBase(choices);
+            this.state.setFilteredStepChoices(choices);
+            this.state.setSelectedChoiceIndex(
+              defaultIdx !== undefined &&
+                defaultIdx >= 0 &&
+                defaultIdx < choices.length
+                ? defaultIdx
+                : 0,
+            );
             if (restoreValue) {
-              const idx = loadedChoices.findIndex(
-                (c) => c.value === restoreValue,
-              );
+              const idx = choices.findIndex((c) => c.value === restoreValue);
               if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
             }
             this.state.setStepChoicesLoading(false);
