@@ -33,21 +33,18 @@ import {
   assert.equal(computeDropZone(0.5, 1.0), "bottom");
   assert.equal(computeDropZone(0.5, 0.68), "bottom");
 
-  // Center: default zone ("right") — smaller center area with 33% threshold
-  assert.equal(computeDropZone(0.5, 0.5), "right");
+  // Center zone: relX and relY both within threshold boundaries
+  assert.equal(computeDropZone(0.5, 0.5), "center");
+  assert.equal(computeDropZone(0.4, 0.6), "center");
+  assert.equal(computeDropZone(0.6, 0.4), "center");
 }
 
 // computeDropZone — custom threshold
 {
   assert.equal(computeDropZone(0.1, 0.5, 0.15), "left");
-  assert.equal(computeDropZone(0.2, 0.5, 0.15), "right"); // past threshold, center defaults to right
+  assert.equal(computeDropZone(0.2, 0.5, 0.15), "center"); // past threshold, falls into center
   assert.equal(computeDropZone(0.5, 0.9, 0.33), "bottom");
-  assert.equal(computeDropZone(0.5, 0.5, 0.33), "right"); // center with 33% threshold
-}
-
-// computeDropZone — custom default zone
-{
-  assert.equal(computeDropZone(0.5, 0.5, 0.25, "bottom" as DropZone), "bottom");
+  assert.equal(computeDropZone(0.5, 0.5, 0.33), "center"); // center with 33% threshold
 }
 
 // X-axis priority over Y-axis
@@ -63,6 +60,7 @@ import {
   assert.equal(zoneToLayout("right"), "horizontal");
   assert.equal(zoneToLayout("top"), "vertical");
   assert.equal(zoneToLayout("bottom"), "vertical");
+  assert.equal(zoneToLayout("center"), "horizontal"); // center uses default layout
 }
 
 // zoneToTabOrder

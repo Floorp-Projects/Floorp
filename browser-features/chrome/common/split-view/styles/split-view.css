@@ -66,7 +66,12 @@
  * participate in the layout.
  */
 #tabbrowser-tabpanels[data-floorp-split]
-  > :not(.split-view-panel, .split-view-splitter, .floorp-split-handle, .floorp-grid-handle) {
+  > :not(
+    .split-view-panel,
+    .split-view-splitter,
+    .floorp-split-handle,
+    .floorp-grid-handle
+  ) {
   display: none !important;
 }
 
@@ -897,7 +902,9 @@
 .floorp-drop-zone {
   position: absolute;
   background: transparent;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
   border: 2px dashed transparent;
   border-radius: 4px;
 }

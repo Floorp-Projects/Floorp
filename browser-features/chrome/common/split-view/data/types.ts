@@ -59,6 +59,8 @@ export interface SplitViewGBrowser {
     tabs: SplitViewTab[],
     options?: { id?: string | null; insertBefore?: SplitViewTab | null },
   ): SplitViewWrapper | null;
+  /** Move a tab to a new window. */
+  replaceTabWithWindow(tab: SplitViewTab): void;
 }
 
 /** TabContextMenu global. */

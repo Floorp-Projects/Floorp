@@ -95,7 +95,9 @@ export function patchTabpanels(
 
     Object.defineProperty(tabpanels, "splitViewPanels", {
       set(newPanels: string[]) {
-        logger.debug(`[patch:splitViewPanels.set] incoming newPanels=[${newPanels ? newPanels.join(", ") : ""}]`);
+        logger.debug(
+          `[patch:splitViewPanels.set] incoming newPanels=[${newPanels ? newPanels.join(", ") : ""}]`,
+        );
         // Always call the original setter to ensure upstream state:
         // - .split-view-panel class on panels
         // - column attributes
@@ -122,6 +124,24 @@ export function patchTabpanels(
             const child = root.querySelector(`#${CSS.escape(id)}`);
             if (child) {
               child.setAttribute("column", String(i));
+            }
+          }
+        }
+
+        // Also set column attributes for grid-3pane layouts (3 panes).
+        // The CSS uses column="0", "1", "2" to place panels in grid cells.
+        if (newPanels.length === 3) {
+          const layoutAttr = (this as Element).getAttribute(
+            "split-view-layout",
+          );
+          if (layoutAttr?.startsWith("grid-3pane-")) {
+            const root = this as HTMLElement;
+            for (let i = 0; i < 3; i++) {
+              const id = newPanels[i]!;
+              const child = root.querySelector(`#${CSS.escape(id)}`);
+              if (child) {
+                child.setAttribute("column", String(i));
+              }
             }
           }
         }
@@ -235,7 +255,9 @@ export function patchTabpanels(
       }
     ).setSplitViewActive = function (this: HTMLElement, updatedValue: boolean) {
       // Capture split panel IDs BEFORE they are cleared by native code:
-      const panelsForBefore = (this as unknown as { splitViewPanels?: string[] }).splitViewPanels;
+      const panelsForBefore = (
+        this as unknown as { splitViewPanels?: string[] }
+      ).splitViewPanels;
       const beforeSplitPanelIds = panelsForBefore ? [...panelsForBefore] : [];
 
       // Reproduce the native logic: isActive is true only when the
@@ -252,7 +274,9 @@ export function patchTabpanels(
 
       try {
         origSetSplitViewActive.call(this, updatedValue);
-        logger.debug(`[patch:setSplitViewActive] original native setSplitViewActive called successfully`);
+        logger.debug(
+          `[patch:setSplitViewActive] original native setSplitViewActive called successfully`,
+        );
       } catch (e) {
         logger.error(`[patch:setSplitViewActive] original threw: ${e}`);
       }
@@ -277,7 +301,9 @@ export function patchTabpanels(
           tabsToolbar.setAttribute("splitview-multibar", "true");
         }
       } else {
-        logger.debug(`[patch:setSplitViewActive] DEACTIVE branch path: removing attributes`);
+        logger.debug(
+          `[patch:setSplitViewActive] DEACTIVE branch path: removing attributes`,
+        );
         this.removeAttribute("data-floorp-split");
         this.removeAttribute("split-view-layout");
         this.removeAttribute("data-floorp-dragging");
@@ -291,12 +317,20 @@ export function patchTabpanels(
         // `resetSplitPanelPresentationState` would skip cleanup. Use
         // `beforeSplitPanelIds` to identify former split panels and
         // force cleanup with the `force` flag.
-        const selectedPanel = (this as unknown as { selectedPanel?: HTMLElement | null }).selectedPanel;
+        const selectedPanel = (
+          this as unknown as { selectedPanel?: HTMLElement | null }
+        ).selectedPanel;
         const beforePanelSet = new Set(beforeSplitPanelIds);
         for (const child of (this as HTMLElement).children) {
           if (beforePanelSet.has(child.id)) {
-            const wasReset = resetSplitPanelPresentationState(child, selectedPanel, true);
-            logger.debug(`[patch:setSplitViewActive] force-reset presentation state for ${child.id}: wasReset=${wasReset}`);
+            const wasReset = resetSplitPanelPresentationState(
+              child,
+              selectedPanel,
+              true,
+            );
+            logger.debug(
+              `[patch:setSplitViewActive] force-reset presentation state for ${child.id}: wasReset=${wasReset}`,
+            );
           }
         }
 
@@ -353,8 +387,13 @@ export function patchTabpanels(
       tabpanels as unknown as {
         removeTabsFromSplitview: (tabs: SplitViewTab[]) => void;
       }
-    ).removeTabsFromSplitview = function (this: HTMLElement, tabs: SplitViewTab[]) {
-      logger.debug(`[patch:removeTabsFromSplitview] incoming tabs count=${tabs.length}`);
+    ).removeTabsFromSplitview = function (
+      this: HTMLElement,
+      tabs: SplitViewTab[],
+    ) {
+      logger.debug(
+        `[patch:removeTabsFromSplitview] incoming tabs count=${tabs.length}`,
+      );
 
       // Capture panel IDs BEFORE native clears #splitViewPanels.
       // The native code splices all panels from #splitViewPanels and then
@@ -370,7 +409,9 @@ export function patchTabpanels(
 
       try {
         origRemoveTabsFromSplitview.call(this, tabs);
-        logger.debug(`[patch:removeTabsFromSplitview] original native removeTabsFromSplitview called successfully`);
+        logger.debug(
+          `[patch:removeTabsFromSplitview] original native removeTabsFromSplitview called successfully`,
+        );
       } catch (e) {
         logger.error(`[patch:removeTabsFromSplitview] original threw: ${e}`);
       }
@@ -379,12 +420,17 @@ export function patchTabpanels(
       // The native setSplitViewActive(false) already ran inside
       // origRemoveTabsFromSplitview, but it couldn't capture panel IDs
       // because #splitViewPanels was already cleared.
-      const selectedPanel = (this as unknown as { selectedPanel?: HTMLElement | null })
-        .selectedPanel;
+      const selectedPanel = (
+        this as unknown as { selectedPanel?: HTMLElement | null }
+      ).selectedPanel;
       for (const id of dismissedPanelIds) {
         const panelEl = document?.getElementById(id);
         if (panelEl) {
-          const wasReset = resetSplitPanelPresentationState(panelEl, selectedPanel, true);
+          const wasReset = resetSplitPanelPresentationState(
+            panelEl,
+            selectedPanel,
+            true,
+          );
           logger.debug(
             `[patch:removeTabsFromSplitview] post-native force-reset ${id}: wasReset=${wasReset}`,
           );
@@ -400,7 +446,9 @@ export function patchTabpanels(
     };
     logger.debug("[patch] removeTabsFromSplitview method patched");
   } else {
-    logger.warn("[patch] removeTabsFromSplitview method not found on prototype");
+    logger.warn(
+      "[patch] removeTabsFromSplitview method not found on prototype",
+    );
   }
 
   // --- Patch showSplitViewPanels ---
