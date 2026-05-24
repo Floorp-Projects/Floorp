@@ -204,7 +204,8 @@
       "floorp-toggle-zen-mode": "禅モードの表示を切り替える",
       "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える",
       "floorp-open-settings": "設定を開く",
-      "floorp-open-hub": "Floorp Hubを開く"
+      "floorp-open-hub": "Floorp Hubを開く",
+      "floorp-toggle-share-mode": "共有モードの表示を切り替える"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",
@@ -218,7 +219,8 @@
       "floorp-toggle-zen-mode": "禅モードではすべての UI 要素が非表示になるので、現在のページに集中できます",
       "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します",
       "floorp-open-settings": "Floorpの設定ページを開きます",
-      "floorp-open-hub": "Floorp Hubページを開きます"
+      "floorp-open-hub": "Floorp Hubページを開きます",
+      "floorp-toggle-share-mode": "画面共有やプレゼンテーション時にUIを最小限にする共有モードを切り替えます"
     }
   },
   "qrCode": {

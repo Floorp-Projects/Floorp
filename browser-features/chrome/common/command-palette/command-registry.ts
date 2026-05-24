@@ -153,6 +153,7 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "floorp-open-hub": "floorp",
 
   "floorp-show-pip": "media",
+  "floorp-toggle-share-mode": "floorp",
 };
 
 const ACTION_KEYWORDS: Record<string, string[]> = {
@@ -213,6 +214,12 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "floorp-open-settings": ["settings", "preferences", "options"],
   "floorp-open-hub": ["hub", "floorp hub", "settings", "preferences"],
   "floorp-show-pip": ["pip", "picture in picture", "mini player"],
+  "floorp-toggle-share-mode": [
+    "share",
+    "share mode",
+    "presentation",
+    "screen share",
+  ],
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],
 };

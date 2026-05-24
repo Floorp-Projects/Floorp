@@ -1,4 +1,5 @@
 import type { GestureActionRegistration } from "./gestures.ts";
+import { setShareModeEnabled } from "../../browser-share-mode/browser-share-mode.tsx";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -406,5 +407,9 @@ export const actions: GestureActionRegistration[] = [
     fn: (win) => {
       win.switchToTabHavingURI(Services.io.newURI("about:hub"), true);
     },
+  },
+  {
+    name: "floorp-toggle-share-mode",
+    fn: () => setShareModeEnabled((prev) => !prev),
   },
 ];
