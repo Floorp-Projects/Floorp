@@ -176,9 +176,9 @@ export function ensureSplitPaneTabBrowsersAreWarmed(
     STATE_LOADING,
     STATE_LOADED,
     STATE_UNLOADING,
-    getTabState,
-    setTabState,
   } = switcher;
+  const getTabState = switcher.getTabState.bind(switcher);
+  const setTabState = switcher.setTabState.bind(switcher);
 
   if (
     typeof STATE_UNLOADED !== "number" ||

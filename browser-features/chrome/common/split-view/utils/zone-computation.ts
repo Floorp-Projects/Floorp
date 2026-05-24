@@ -5,7 +5,7 @@
 
 export type DropZone = "left" | "right" | "top" | "bottom";
 
-const DEFAULT_THRESHOLD = 0.25;
+const DEFAULT_THRESHOLD = 0.33;
 const DEFAULT_ZONE: DropZone = "right";
 
 /**

@@ -81,6 +81,7 @@ export function patchTabpanels(
   // --- Track originals for unpatch ---
   let patchedSplitViewPanels = false;
   let patchedIsSplitViewActive = false;
+  let patchedRemoveTabsFromSplitview = false;
   let origShowSplitViewPanels: ((tabs: SplitViewTab[]) => void) | null = null;
 
   // --- Patch splitViewPanels setter ---
@@ -94,6 +95,7 @@ export function patchTabpanels(
 
     Object.defineProperty(tabpanels, "splitViewPanels", {
       set(newPanels: string[]) {
+        logger.debug(`[patch:splitViewPanels.set] incoming newPanels=[${newPanels ? newPanels.join(", ") : ""}]`);
         // Always call the original setter to ensure upstream state:
         // - .split-view-panel class on panels
         // - column attributes
@@ -232,6 +234,10 @@ export function patchTabpanels(
         setSplitViewActive: (updatedValue: boolean) => void;
       }
     ).setSplitViewActive = function (this: HTMLElement, updatedValue: boolean) {
+      // Capture split panel IDs BEFORE they are cleared by native code:
+      const panelsForBefore = (this as unknown as { splitViewPanels?: string[] }).splitViewPanels;
+      const beforeSplitPanelIds = panelsForBefore ? [...panelsForBefore] : [];
+
       // Reproduce the native logic: isActive is true only when the
       // selected tab actually belongs to a split view AND the caller
       // requested activation.
@@ -246,15 +252,18 @@ export function patchTabpanels(
 
       try {
         origSetSplitViewActive.call(this, updatedValue);
+        logger.debug(`[patch:setSplitViewActive] original native setSplitViewActive called successfully`);
       } catch (e) {
         logger.error(`[patch:setSplitViewActive] original threw: ${e}`);
       }
 
       const splitTabCount = syncSplitTabMarkerAttrs();
+      logger.debug(`[patch:setSplitViewActive] splitTabCount=${splitTabCount}`);
 
       const tabsToolbar = document?.getElementById("TabsToolbar");
 
       if (isActive) {
+        logger.debug(`[patch:setSplitViewActive] active branch path`);
         this.setAttribute("data-floorp-split", "true");
         // Enable multibar attribute so Lepton theme doesn't
         // apply negative margins that hide split-view tabs.
@@ -268,6 +277,7 @@ export function patchTabpanels(
           tabsToolbar.setAttribute("splitview-multibar", "true");
         }
       } else {
+        logger.debug(`[patch:setSplitViewActive] DEACTIVE branch path: removing attributes`);
         this.removeAttribute("data-floorp-split");
         this.removeAttribute("split-view-layout");
         this.removeAttribute("data-floorp-dragging");
@@ -276,9 +286,20 @@ export function patchTabpanels(
         // When leaving split view, Gecko can keep `.split-view-panel`
         // / `.deck-selected` on old panes until the next native refresh.
         // Those stale classes can mask the newly selected normal tab panel.
+        // Firefox 151+ removes `split-view-panel-active` in native
+        // `removeTabsFromSplitview`, so the `hasSplitMarker` guard in
+        // `resetSplitPanelPresentationState` would skip cleanup. Use
+        // `beforeSplitPanelIds` to identify former split panels and
+        // force cleanup with the `force` flag.
+        const selectedPanel = (this as unknown as { selectedPanel?: HTMLElement | null }).selectedPanel;
+        const beforePanelSet = new Set(beforeSplitPanelIds);
         for (const child of (this as HTMLElement).children) {
-          resetSplitPanelPresentationState(child);
+          if (beforePanelSet.has(child.id)) {
+            const wasReset = resetSplitPanelPresentationState(child, selectedPanel, true);
+            logger.debug(`[patch:setSplitViewActive] force-reset presentation state for ${child.id}: wasReset=${wasReset}`);
+          }
         }
+
         // Clean up active pane indicator
         const staleActivePanes = this.querySelectorAll(
           "[data-floorp-active-pane]",
@@ -313,6 +334,73 @@ export function patchTabpanels(
     logger.debug("[patch] setSplitViewActive method patched");
   } else {
     logger.warn("[patch] setSplitViewActive method not found on prototype");
+  }
+
+  // --- Patch removeTabsFromSplitview method ---
+  // When tabs are removed from a split view, Gecko native code mutates its
+  // internal #splitViewPanels list and calls setSplitViewActive(false). We intercept
+  // removeTabsFromSplitview to deactivate the compositor/rendering state for the
+  // background tabs that were in the split. Gecko's switcher can then properly
+  // repaint them later.
+  const origRemoveTabsFromSplitview = proto.removeTabsFromSplitview as
+    | ((tabs: SplitViewTab[]) => void)
+    | undefined;
+
+  if (typeof origRemoveTabsFromSplitview === "function") {
+    patchedRemoveTabsFromSplitview = true;
+
+    (
+      tabpanels as unknown as {
+        removeTabsFromSplitview: (tabs: SplitViewTab[]) => void;
+      }
+    ).removeTabsFromSplitview = function (this: HTMLElement, tabs: SplitViewTab[]) {
+      logger.debug(`[patch:removeTabsFromSplitview] incoming tabs count=${tabs.length}`);
+
+      // Capture panel IDs BEFORE native clears #splitViewPanels.
+      // The native code splices all panels from #splitViewPanels and then
+      // calls setSplitViewActive(false) internally, so by the time our
+      // patched setSplitViewActive runs, splitViewPanels is already empty
+      // and beforeSplitPanelIds would be [] — skipping deck-selected cleanup.
+      const dismissedPanelIds = tabs
+        .filter((t) => t?.linkedPanel)
+        .map((t) => t.linkedPanel);
+      logger.debug(
+        `[patch:removeTabsFromSplitview] captured dismissedPanelIds=[${dismissedPanelIds.join(", ")}]`,
+      );
+
+      try {
+        origRemoveTabsFromSplitview.call(this, tabs);
+        logger.debug(`[patch:removeTabsFromSplitview] original native removeTabsFromSplitview called successfully`);
+      } catch (e) {
+        logger.error(`[patch:removeTabsFromSplitview] original threw: ${e}`);
+      }
+
+      // Direct cleanup of presentation state for dismissed panels.
+      // The native setSplitViewActive(false) already ran inside
+      // origRemoveTabsFromSplitview, but it couldn't capture panel IDs
+      // because #splitViewPanels was already cleared.
+      const selectedPanel = (this as unknown as { selectedPanel?: HTMLElement | null })
+        .selectedPanel;
+      for (const id of dismissedPanelIds) {
+        const panelEl = document?.getElementById(id);
+        if (panelEl) {
+          const wasReset = resetSplitPanelPresentationState(panelEl, selectedPanel, true);
+          logger.debug(
+            `[patch:removeTabsFromSplitview] post-native force-reset ${id}: wasReset=${wasReset}`,
+          );
+        }
+      }
+
+      // Do NOT manually set docShellIsActive=false or preserveLayers here.
+      // Directly manipulating these properties corrupts the AsyncTabSwitcher
+      // state machine: the switcher sees STATE_LOADING but docShell is
+      // inactive, so the load never completes and the tab stays in
+      // pendingpaint with opacity:0. Let the switcher handle deactivation
+      // through its normal unloadNonRequiredTabs flow.
+    };
+    logger.debug("[patch] removeTabsFromSplitview method patched");
+  } else {
+    logger.warn("[patch] removeTabsFromSplitview method not found on prototype");
   }
 
   // --- Patch showSplitViewPanels ---
@@ -452,6 +540,10 @@ export function patchTabpanels(
         // Restore the original prototype method by removing the instance override
         delete (tabpanels as unknown as Record<string, unknown>)
           .setSplitViewActive;
+      }
+      if (patchedRemoveTabsFromSplitview) {
+        delete (tabpanels as unknown as Record<string, unknown>)
+          .removeTabsFromSplitview;
       }
       if (origShowSplitViewPanels) {
         gBrowser.showSplitViewPanels = origShowSplitViewPanels;

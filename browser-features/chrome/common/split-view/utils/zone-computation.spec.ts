@@ -11,31 +11,30 @@ import {
   type DropZone,
 } from "./zone-computation.ts";
 
-// computeDropZone — default threshold 0.25
+// computeDropZone — default threshold 0.33
 {
-  // Left zone: relX < 0.25
+  // Left zone: relX < 0.33
   assert.equal(computeDropZone(0.1, 0.5), "left");
   assert.equal(computeDropZone(0, 0.5), "left");
-  assert.equal(computeDropZone(0.24, 0.5), "left");
+  assert.equal(computeDropZone(0.32, 0.5), "left");
 
-  // Right zone: relX > 0.75
+  // Right zone: relX > 0.67
   assert.equal(computeDropZone(0.9, 0.5), "right");
   assert.equal(computeDropZone(1.0, 0.5), "right");
-  assert.equal(computeDropZone(0.76, 0.5), "right");
+  assert.equal(computeDropZone(0.68, 0.5), "right");
 
-  // Top zone: relY < 0.25 (and relX not in edge zones)
+  // Top zone: relY < 0.33 (and relX not in edge zones)
   assert.equal(computeDropZone(0.5, 0.1), "top");
   assert.equal(computeDropZone(0.5, 0), "top");
-  assert.equal(computeDropZone(0.5, 0.24), "top");
+  assert.equal(computeDropZone(0.5, 0.32), "top");
 
-  // Bottom zone: relY > 0.75 (and relX not in edge zones)
+  // Bottom zone: relY > 0.67 (and relX not in edge zones)
   assert.equal(computeDropZone(0.5, 0.9), "bottom");
   assert.equal(computeDropZone(0.5, 1.0), "bottom");
-  assert.equal(computeDropZone(0.5, 0.76), "bottom");
+  assert.equal(computeDropZone(0.5, 0.68), "bottom");
 
-  // Center: default zone ("right")
+  // Center: default zone ("right") — smaller center area with 33% threshold
   assert.equal(computeDropZone(0.5, 0.5), "right");
-  assert.equal(computeDropZone(0.3, 0.3), "right");
 }
 
 // computeDropZone — custom threshold

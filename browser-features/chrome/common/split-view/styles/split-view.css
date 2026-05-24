@@ -905,14 +905,14 @@
 .floorp-drop-zone[data-zone="left"] {
   left: 0;
   top: 0;
-  width: 25%;
+  width: 33%;
   height: 100%;
 }
 
 .floorp-drop-zone[data-zone="right"] {
   right: 0;
   top: 0;
-  width: 25%;
+  width: 33%;
   height: 100%;
 }
 
@@ -920,19 +920,19 @@
   left: 0;
   top: 0;
   width: 100%;
-  height: 25%;
+  height: 33%;
 }
 
 .floorp-drop-zone[data-zone="bottom"] {
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 25%;
+  height: 33%;
 }
 
 .floorp-drop-zone[data-active] {
-  background: color-mix(in srgb, AccentColor 8%, transparent);
-  border-color: color-mix(in srgb, AccentColor 40%, transparent);
+  background: color-mix(in srgb, AccentColor 18%, transparent);
+  border-color: color-mix(in srgb, AccentColor 60%, transparent);
 }
 
 /* Divider line preview — shows where the split will appear */
@@ -942,13 +942,13 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 75%;
+  left: 67%;
   width: 2px;
-  background: color-mix(in srgb, AccentColor 48%, transparent);
+  background: color-mix(in srgb, AccentColor 60%, transparent);
 }
 
 #floorp-split-drop-overlay[data-active-zone="left"]::after {
-  left: 25%;
+  left: 33%;
 }
 
 #floorp-split-drop-overlay[data-active-zone="bottom"]::before,
@@ -957,13 +957,13 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 75%;
+  top: 67%;
   height: 2px;
-  background: color-mix(in srgb, AccentColor 48%, transparent);
+  background: color-mix(in srgb, AccentColor 60%, transparent);
 }
 
 #floorp-split-drop-overlay[data-active-zone="top"]::before {
-  top: 25%;
+  top: 33%;
 }
 
 /* Disable browser interaction during tab drag over content area */
