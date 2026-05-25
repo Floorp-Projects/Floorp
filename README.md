@@ -66,7 +66,7 @@ Floorp Browser is a free and open-source project. If you like Floorp Browser, pl
     <h4 style="text-align: center;">1Password</h4>
   </a>
   <a href="https://signpath.io/" style="margin: 10px; overflow: hidden; padding: 0px 30px;">
-    <img src="https://avatars.githubusercontent.com/SignPath?s=200&v=4" alt="SignPath" width="100" height="100">
+    <img src="https://avatars.githubusercontent.com/u/34448643?s=200&v=4" alt="SignPath" width="100" height="100">
     <h4 style="text-align: center;">SignPath</h4>
   </a>
 </div>
