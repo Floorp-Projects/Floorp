@@ -17,6 +17,7 @@ import {
   reopenInContainerCommand,
   tabSwitcherCommand,
 } from "./multiInputCommand/index.ts";
+import { searchHistory, isHistoryCommand } from "./history-provider.ts";
 
 export interface CommandStepChoice {
   /** Display label shown to the user */
@@ -316,6 +317,20 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   const commands = getPaletteCommands(win);
   if (!query.trim()) return commands;
   return fuzzySearch(query, commands);
+}
+
+export { isHistoryCommand };
+
+/**
+ * Search browsing history for the given query.
+ */
+export async function searchHistoryCommands(
+  query: string,
+  limit: number = 10,
+): Promise<PaletteCommand[]> {
+  if (!query.trim()) return [];
+
+  return searchHistory(query, limit);
 }
 
 export function getCommand(

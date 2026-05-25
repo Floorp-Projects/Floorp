@@ -427,7 +427,8 @@
       "floorp": "Floorp",
       "media": "メディア",
       "open-tabs": "タブを開く",
-      "switcher": "切り替え"
+      "switcher": "切り替え",
+      "history-suggestions": "履歴"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語をお試しください",

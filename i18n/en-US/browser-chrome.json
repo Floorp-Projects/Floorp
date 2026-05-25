@@ -437,7 +437,8 @@
       "floorp": "Floorp",
       "media": "Media",
       "open-tabs": "Open Tabs",
-      "switcher": "Switcher"
+      "switcher": "Switcher",
+      "history-suggestions": "History"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",

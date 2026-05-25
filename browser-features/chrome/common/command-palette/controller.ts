@@ -10,7 +10,11 @@ import {
   incrementFrequency,
   getFrequencies,
 } from "./config.ts";
-import { getPaletteCommands, searchCommands } from "./command-registry.ts";
+import {
+  getPaletteCommands,
+  searchCommands,
+  searchHistoryCommands,
+} from "./command-registry.ts";
 import type {
   PaletteCommand,
   CommandStepChoice,
@@ -56,6 +60,10 @@ export class CommandPaletteController {
       this.eventListenersAttached = false;
     }
     this.clearAnimOutTimer();
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
     if (this.state.isVisible()) {
       this.hidePalette();
     }
@@ -303,11 +311,18 @@ export class CommandPaletteController {
 
   private animOutTimer: ReturnType<typeof setTimeout> | null = null;
   private defaultEngineName: string | null = null;
+  private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private currentSearchQuery: string = "";
 
   public hidePalette(): void {
     this.state.setIsAnimatingOut(true);
     this.state.setIsVisible(false);
     this.debouncedUpdateSearch.clear();
+
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
 
     // Safety fallback: reset isAnimatingOut even if transitionend never fires
     // (prefers-reduced-motion, element removed, etc.)
@@ -674,6 +689,37 @@ export class CommandPaletteController {
     // Default to the second item when search suggestion is at top and other results exist,
     // so the first real command is selected instead of the always-present search suggestion.
     this.state.setSelectedIndex(trimmed && results.length > 1 ? 1 : 0);
+
+    // Debounced async history search
+    this.currentSearchQuery = trimmed;
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
+
+    if (trimmed) {
+      this.historySearchTimer = setTimeout(() => {
+        this.performHistorySearch(trimmed);
+      }, 150);
+    }
+  }
+
+  private async performHistorySearch(query: string): Promise<void> {
+    try {
+      const results = await searchHistoryCommands(query, 10);
+      // Only apply if query hasn't changed since we started
+      if (query !== this.currentSearchQuery) return;
+
+      const currentResults = this.state.filteredCommands();
+      const existingIds = new Set(currentResults.map((c) => c.id));
+      const newResults = results.filter((c) => !existingIds.has(c.id));
+
+      if (newResults.length > 0) {
+        this.state.setFilteredCommands([...currentResults, ...newResults]);
+      }
+    } catch (e) {
+      console.error("[command-palette] History search failed:", e);
+    }
   }
 
   private debouncedUpdateSearch = debounce((query: string) => {
