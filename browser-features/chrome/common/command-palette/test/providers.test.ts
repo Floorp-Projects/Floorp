@@ -177,6 +177,82 @@ const rawTests: TestCase[] = [
       }
     },
   },
+
+  // --- Bookmark Provider: result type safety ---
+  {
+    name: "searchBookmarks results have string labels (not URL objects)",
+    async fn() {
+      const results = await searchBookmarks("floorp");
+      for (let i = 0; i < results.length; i++) {
+        assert(
+          typeof results[i].label === "string",
+          `bookmark result[${i}] label should be string, got ${typeof results[i].label}`,
+        );
+        assert(
+          typeof results[i].description === "string",
+          `bookmark result[${i}] description should be string, got ${typeof results[i].description}`,
+        );
+      }
+    },
+  },
+  {
+    name: "searchBookmarks result IDs use __bookmark__ prefix",
+    async fn() {
+      const results = await searchBookmarks("floorp");
+      for (const cmd of results) {
+        assert(
+          cmd.id.startsWith("__bookmark__"),
+          `bookmark id "${cmd.id}" should start with "__bookmark__"`,
+        );
+        assert(
+          isBookmarkCommand(cmd.id),
+          `isBookmarkCommand should return true for "${cmd.id}"`,
+        );
+      }
+    },
+  },
+  {
+    name: "searchBookmarks does not return duplicate URLs",
+    async fn() {
+      const results = await searchBookmarks("floorp");
+      const descriptions = results.map((c) => c.description);
+      const uniqueDescriptions = new Set(descriptions);
+      assertEquals(
+        descriptions.length,
+        uniqueDescriptions.size,
+        "bookmark results should not contain duplicate URLs",
+      );
+    },
+  },
+  {
+    name: "isBookmarkCommand and isHistoryCommand do not overlap",
+    fn() {
+      const bookmarkId = "__bookmark__https://example.com";
+      const historyId = "__history__https://example.com";
+      assert(
+        isBookmarkCommand(bookmarkId) && !isHistoryCommand(bookmarkId),
+        "bookmark ID should only match isBookmarkCommand",
+      );
+      assert(
+        isHistoryCommand(historyId) && !isBookmarkCommand(historyId),
+        "history ID should only match isHistoryCommand",
+      );
+    },
+  },
+  {
+    name: "searchBookmarks keywords contain URL strings",
+    async fn() {
+      const results = await searchBookmarks("floorp");
+      for (const cmd of results) {
+        for (const kw of cmd.keywords) {
+          assert(
+            typeof kw === "string",
+            `keyword "${kw}" should be a string, got ${typeof kw}`,
+          );
+        }
+      }
+    },
+  },
 ];
 
 export function runAllTests() {

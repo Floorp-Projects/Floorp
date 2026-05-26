@@ -263,6 +263,8 @@ const rawTests: TestCase[] = [
         "media",
         "open-tabs",
         "switcher",
+        "history-suggestions",
+        "bookmark-suggestions",
       ]);
       const commands = getPaletteCommands();
       for (const cmd of commands) {
