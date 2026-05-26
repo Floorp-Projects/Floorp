@@ -712,12 +712,12 @@ export class CommandPaletteController {
     }
 
     if (trimmed) {
-      this.historySearchTimer = setTimeout(() => {
-        this.performHistorySearch(trimmed);
-      }, 150);
       this.bookmarkSearchTimer = setTimeout(() => {
         this.performBookmarkSearch(trimmed);
-      }, 150);
+      }, 100);
+      this.historySearchTimer = setTimeout(() => {
+        this.performHistorySearch(trimmed);
+      }, 200);
     }
   }
 
@@ -774,7 +774,24 @@ export class CommandPaletteController {
       );
 
       if (newResults.length > 0) {
-        this.state.setFilteredCommands([...currentResults, ...newResults]);
+        // Insert bookmark results before history results to maintain display order
+        const nonAsyncResults = currentResults.filter(
+          (c) =>
+            c.category !== "history-suggestions" &&
+            c.category !== "bookmark-suggestions",
+        );
+        const existingBookmarkResults = currentResults.filter(
+          (c) => c.category === "bookmark-suggestions",
+        );
+        const existingHistoryResults = currentResults.filter(
+          (c) => c.category === "history-suggestions",
+        );
+        this.state.setFilteredCommands([
+          ...nonAsyncResults,
+          ...existingBookmarkResults,
+          ...newResults,
+          ...existingHistoryResults,
+        ]);
         console.debug(
           "[command-palette] Updated filtered commands with bookmark results",
         );
