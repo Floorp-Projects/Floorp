@@ -7,6 +7,25 @@ import type {
   StepChoicesResult,
 } from "../../command-registry.ts";
 
+/**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
 
@@ -173,6 +192,7 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     "bookmarks",
     "favorite",
     "favourite",
+    ...getJapaneseReadings("floorp-bookmark-switcher"),
   ],
   steps: [
     {

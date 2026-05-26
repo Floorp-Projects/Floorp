@@ -6,6 +6,25 @@ import type {
   CommandStepChoice,
 } from "../../command-registry.ts";
 
+/**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export async function loadClosedTabs(): Promise<CommandStepChoice[]> {
   try {
     const entries = globalThis.SessionStore.getClosedTabData(globalThis.window);
@@ -44,6 +63,7 @@ export const closedTabSwitcherCommand: PaletteCommand = {
     "undo close tab",
     "restore tab",
     "recently closed",
+    ...getJapaneseReadings("floorp-closed-tab-switcher"),
   ],
   steps: [
     {

@@ -485,5 +485,6 @@
     "bookmarkSwitcherDescription": "Open a bookmarked page",
     "bookmarkSwitcherStepLabel": "Select a bookmark",
     "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
-  }
+  },
+  "commandPaletteReadings": {}
 }

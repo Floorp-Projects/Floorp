@@ -3,6 +3,25 @@
 import i18next from "i18next";
 import type { PaletteCommand } from "../command-registry.ts";
 
+/**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
   label: i18next.t("commandPalette.openUrl", { defaultValue: "Open URL" }),
@@ -10,7 +29,14 @@ export const openUrlCommand: PaletteCommand = {
     defaultValue: "Open a URL in a new tab",
   }),
   category: "navigation",
-  keywords: ["open url", "navigate", "go to", "open page", "url"],
+  keywords: [
+    "open url",
+    "navigate",
+    "go to",
+    "open page",
+    "url",
+    ...getJapaneseReadings("floorp-open-url"),
+  ],
   steps: [
     {
       id: "url",

@@ -6,6 +6,7 @@ import {
   getActionDisplayName,
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
+import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
@@ -242,6 +243,25 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
 };
 
 /**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Mouse gesture actions listed here will be excluded from the command palette.
  * Useful for: dangerous operations, duplicates, or commands that are not appropriate
  * for the palette UI. This does NOT affect mouse gesture assignment — excluded
@@ -302,7 +322,10 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
       label: getActionDisplayNameByOrientation(action.name, win),
       description: getActionDescriptionByOrientation(action.name, win),
       category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
-      keywords: ACTION_KEYWORDS[action.name] ?? [],
+      keywords: [
+        ...(ACTION_KEYWORDS[action.name] ?? []),
+        ...getJapaneseReadings(action.name),
+      ],
       fn: action.fn,
     }));
 }

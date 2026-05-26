@@ -3,6 +3,25 @@
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
 
+/**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
@@ -61,7 +80,14 @@ export const reopenInContainerCommand: PaletteCommand = {
     defaultValue: "Reopen the current tab in a specific container",
   }),
   category: "tabs",
-  keywords: ["container", "reopen", "context", "identity", "reopen in"],
+  keywords: [
+    "container",
+    "reopen",
+    "context",
+    "identity",
+    "reopen in",
+    ...getJapaneseReadings("floorp-reopen-in-container"),
+  ],
   steps: [
     {
       id: "container",

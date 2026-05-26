@@ -276,6 +276,95 @@ const rawTests: TestCase[] = [
     },
   },
 
+  // --- Japanese Hiragana Keyword Search ---
+  {
+    name: "fuzzyScore: hiragana keyword match scores",
+    fn() {
+      const target = makeTarget("タブを閉じる", "現在のタブを閉じる", "tabs", [
+        "close",
+        "remove tab",
+        "たぶをとじる",
+      ]);
+      const score = fuzzyScore("たぶをとじる", target);
+      assert(
+        score > 0,
+        `hiragana keyword match should score > 0, got ${score}`,
+      );
+    },
+  },
+  {
+    name: "fuzzyScore: partial hiragana keyword match scores",
+    fn() {
+      const target = makeTarget("タブを閉じる", "現在のタブを閉じる", "tabs", [
+        "close",
+        "remove tab",
+        "たぶをとじる",
+      ]);
+      const score = fuzzyScore("たぶ", target);
+      assert(
+        score > 0,
+        `partial hiragana keyword match should score > 0, got ${score}`,
+      );
+    },
+  },
+  {
+    name: "fuzzyScore: hiragana does not match without reading keywords",
+    fn() {
+      const target = makeTarget("タブを閉じる", "", "tabs", ["close"]);
+      const score = fuzzyScore("たぶをとじる", target);
+      assertEquals(
+        score,
+        0,
+        "hiragana should not match when no reading keyword exists",
+      );
+    },
+  },
+  {
+    name: "fuzzySearch: hiragana query finds command with reading keywords",
+    fn() {
+      const items = [
+        makeTarget("戻る", "", "navigation", ["back", "もどる"]),
+        makeTarget("進む", "", "navigation", ["forward", "すすむ"]),
+        makeTarget("タブを閉じる", "", "tabs", ["close", "たぶをとじる"]),
+        makeTarget("新しいタブ", "", "tabs", ["new tab", "あたらしたぶ"]),
+      ];
+      const results = fuzzySearch("たぶをとじる", items);
+      assert(results.length > 0, "should find at least one result");
+      assert(
+        results.some((r) => r.label === "タブを閉じる"),
+        "should find 'タブを閉じる' when searching hiragana",
+      );
+    },
+  },
+  {
+    name: "fuzzySearch: partial hiragana finds multiple commands",
+    fn() {
+      const items = [
+        makeTarget("戻る", "", "navigation", ["back", "もどる"]),
+        makeTarget("進む", "", "navigation", ["forward", "すすむ"]),
+        makeTarget("タブを閉じる", "", "tabs", ["close", "たぶをとじる"]),
+        makeTarget("新しいタブ", "", "tabs", ["new tab", "あたらしたぶ"]),
+      ];
+      const results = fuzzySearch("たぶ", items);
+      assert(
+        results.length >= 2,
+        `partial 'たぶ' should match at least 2 items, got ${results.length}`,
+      );
+    },
+  },
+  {
+    name: "fuzzySearch: mixed kanji label still matches directly",
+    fn() {
+      const items = [
+        makeTarget("戻る", "", "navigation", ["back", "もどる"]),
+        makeTarget("タブを閉じる", "", "tabs", ["close", "たぶをとじる"]),
+      ];
+      const results = fuzzySearch("戻る", items);
+      assert(results.length > 0, "should match kanji label directly");
+      assertEquals(results[0].label, "戻る");
+    },
+  },
+
   // --- Step Commands ---
   {
     name: "step commands are registered in palette",

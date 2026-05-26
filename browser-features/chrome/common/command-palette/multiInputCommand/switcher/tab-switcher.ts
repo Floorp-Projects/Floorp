@@ -7,6 +7,25 @@ import type {
   StepChoicesResult,
 } from "../../command-registry.ts";
 
+/**
+ * Get hiragana reading keywords for a given action/command ID from i18n.
+ * Returns an empty array for non-Japanese locales or if no readings are defined.
+ */
+function getJapaneseReadings(id: string): string[] {
+  try {
+    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
+      defaultValue: [] as string[],
+      returnObjects: true,
+    });
+    if (Array.isArray(readings)) {
+      return readings.filter((r): r is string => typeof r === "string");
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 interface ChromeWindow extends Window {
   gBrowser?: GBrowser;
 }
@@ -85,7 +104,13 @@ export const tabSwitcherCommand: PaletteCommand = {
     defaultValue: "Switch to a different tab in the current window",
   }),
   category: "switcher",
-  keywords: ["switch tab", "tab", "change tab", "go to tab"],
+  keywords: [
+    "switch tab",
+    "tab",
+    "change tab",
+    "go to tab",
+    ...getJapaneseReadings("floorp-tab-switcher"),
+  ],
   steps: [
     {
       id: "tab",
