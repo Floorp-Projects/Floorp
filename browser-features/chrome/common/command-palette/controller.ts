@@ -16,6 +16,7 @@ import {
   searchHistoryCommands,
   searchBookmarkCommands,
 } from "./command-registry.ts";
+import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
 import type {
   PaletteCommand,
   CommandStepChoice,
@@ -711,7 +712,7 @@ export class CommandPaletteController {
       this.bookmarkSearchTimer = null;
     }
 
-    if (trimmed) {
+    if (trimmed && !shareModeEnabled()) {
       this.bookmarkSearchTimer = setTimeout(() => {
         this.performBookmarkSearch(trimmed);
       }, 100);
