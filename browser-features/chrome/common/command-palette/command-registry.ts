@@ -12,6 +12,7 @@ import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
 import {
   closedTabSwitcherCommand,
   closedWindowSwitcherCommand,
+  historySwitcherCommand,
   openUrlCommand,
   searchWebCommand,
   reopenInContainerCommand,
@@ -296,6 +297,7 @@ function buildStepCommands(): PaletteCommand[] {
   return [
     closedTabSwitcherCommand,
     closedWindowSwitcherCommand,
+    historySwitcherCommand,
     openUrlCommand,
     searchWebCommand,
     reopenInContainerCommand,

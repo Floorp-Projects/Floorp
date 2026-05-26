@@ -439,7 +439,7 @@
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
       "history-suggestions": "History",
-"bookmark-suggestions": "Bookmarks"
+      "bookmark-suggestions": "Bookmarks"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -474,6 +474,10 @@
     "closedWindowSwitcher": "Reopen Closed Window",
     "closedWindowSwitcherDescription": "Reopen a recently closed window",
     "closedWindowSwitcherStepLabel": "Select a closed window",
-    "closedWindowSwitcherStepPlaceholder": "Choose a closed window..."
+    "closedWindowSwitcherStepPlaceholder": "Choose a closed window...",
+    "historySwitcher": "Browse History",
+    "historySwitcherDescription": "Open a page from your browsing history",
+    "historySwitcherStepLabel": "Select a history entry",
+    "historySwitcherStepPlaceholder": "Choose a history entry..."
   }
 }

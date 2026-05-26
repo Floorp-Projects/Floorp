@@ -429,7 +429,7 @@
       "open-tabs": "タブを開く",
       "switcher": "切り替え",
       "history-suggestions": "履歴",
-"bookmark-suggestions": "ブックマーク"
+      "bookmark-suggestions": "ブックマーク"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語をお試しください",
@@ -440,6 +440,10 @@
     "closedWindowSwitcher": "閉じたウィンドウを開き直す",
     "closedWindowSwitcherDescription": "最近閉じたウィンドウを開き直します",
     "closedWindowSwitcherStepLabel": "閉じたウィンドウを選択",
-    "closedWindowSwitcherStepPlaceholder": "閉じたウィンドウを選んでください..."
+    "closedWindowSwitcherStepPlaceholder": "閉じたウィンドウを選んでください...",
+    "historySwitcher": "履歴を開く",
+    "historySwitcherDescription": "閲覧履歴からページを開きます",
+    "historySwitcherStepLabel": "履歴を選択",
+    "historySwitcherStepPlaceholder": "履歴を選んでください..."
   }
 }

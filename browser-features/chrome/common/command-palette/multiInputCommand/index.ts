@@ -6,3 +6,4 @@ export { searchWebCommand } from "./search-web.ts";
 export { tabSwitcherCommand } from "./switcher/tab-switcher.ts";
 export { closedTabSwitcherCommand } from "./switcher/closed-tab-switcher.ts";
 export { closedWindowSwitcherCommand } from "./switcher/closed-window-switcher.ts";
+export { historySwitcherCommand } from "./switcher/history-switcher.ts";
