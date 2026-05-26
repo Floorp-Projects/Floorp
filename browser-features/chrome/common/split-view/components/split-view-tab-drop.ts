@@ -12,6 +12,7 @@ import {
 import { splitViewConfig } from "../data/config.js";
 import {
   computeDropZone,
+  computeLayoutForExistingSplit,
   zoneToLayout,
   zoneToTabOrder,
   type DropZone,
@@ -60,9 +61,9 @@ function findExistingSplitView(): SplitViewWrapper | null {
 
 /**
  * Find the most recently active tab (highest _lastAccessed) that is NOT the
- * dragged tab and NOT already in a split view. Uses Firefox's internal
- * _lastAccessed timestamp — same pattern as gecko-show-previously-selected-tab
- * in mouse-gesture/utils/actions.ts.
+ * dragged tab. Uses Firefox's internal _lastAccessed timestamp — same pattern
+ * as gecko-show-previously-selected-tab in mouse-gesture/utils/actions.ts.
+ * Split view tabs are included so the user's last-viewed tab is always chosen.
  */
 function findLastActivePartnerTab(
   gBrowser: NonNullable<ReturnType<typeof getGBrowser>>,
@@ -72,7 +73,6 @@ function findLastActivePartnerTab(
   let bestTime = -1;
   for (const tab of gBrowser.tabs) {
     if (tab === excludeTab) continue;
-    if ((tab as SplitViewTab).splitview) continue;
     const accessed = (tab as SplitViewTab & { _lastAccessed?: number })
       ._lastAccessed;
     // Infinity = currently selected tab — most recently active, return immediately
@@ -201,8 +201,15 @@ function onDragOver(event: DragEvent): void {
   const hasTabType = types ? Array.from(types).includes(TAB_DROP_TYPE) : false;
   if (!hasTabType) return;
 
-  // Bug 2: Don't intercept events inside the new window zone
-  if (isEventInsideNewWindowZone(event)) return;
+  // When over the new window zone, still preventDefault so Firefox's
+  // built-in detach-to-window does NOT fire before our drop handler.
+  // We skip overlay/zone-computation though — only the zone's own
+  // dragover handler (onNewWindowZoneDragOver) needs to run.
+  if (isEventInsideNewWindowZone(event)) {
+    event.preventDefault();
+    event.dataTransfer!.dropEffect = "move";
+    return;
+  }
 
   const overContent = isOverContentArea(event);
   if (!overContent) {
@@ -314,29 +321,54 @@ function onDrop(event: DragEvent): void {
       } else if (!splitView) {
         const partnerTab = findLastActivePartnerTab(gBrowser, tab);
         if (!partnerTab) return;
-        const wrapper = gBrowser.addTabSplitView([partnerTab, tab]);
-        if (wrapper) {
-          applyLayout(logger!);
+        if (partnerTab.splitview) {
+          const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
+          if (existingWrapper.tabs.length < maxPanes) {
+            existingWrapper.addTabs([tab]);
+            const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
+            if (layout) {
+              const groupId = getActiveSplitViewGroupId();
+              if (groupId) setPersistedGroupLayout(groupId, layout);
+            }
+            applyLayout(logger!);
+          }
+        } else {
+          const wrapper = gBrowser.addTabSplitView([partnerTab, tab]);
+          if (wrapper) {
+            applyLayout(logger!);
+          }
         }
       }
       return;
     }
 
-    // Edge zones always create a NEW split view with the most recently
-    // active tab — they never merge into an existing split view.
-    // (Merging into existing is handled by the center zone above.)
+    // Edge zones: add to existing split view if partner is in one,
+    // otherwise create a new split view with the most recently active tab.
     {
       const partnerTab = findLastActivePartnerTab(gBrowser, tab);
       if (!partnerTab) return;
-      const layout = zoneToLayout(zone);
-      const [first, second] = zoneToTabOrder(zone, partnerTab, tab);
-      const wrapper = gBrowser.addTabSplitView([first, second]);
-      if (wrapper) {
-        const groupId = getActiveSplitViewGroupId();
-        if (groupId) {
-          setPersistedGroupLayout(groupId, layout);
+      if (partnerTab.splitview) {
+        const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
+        if (existingWrapper.tabs.length < maxPanes) {
+          existingWrapper.addTabs([tab]);
+          const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
+          if (layout) {
+            const groupId = getActiveSplitViewGroupId();
+            if (groupId) setPersistedGroupLayout(groupId, layout);
+          }
+          applyLayout(logger!);
         }
-        applyLayout(logger!);
+      } else {
+        const layout = zoneToLayout(zone);
+        const [first, second] = zoneToTabOrder(zone, partnerTab, tab);
+        const wrapper = gBrowser.addTabSplitView([first, second]);
+        if (wrapper) {
+          const groupId = getActiveSplitViewGroupId();
+          if (groupId) {
+            setPersistedGroupLayout(groupId, layout);
+          }
+          applyLayout(logger!);
+        }
       }
     }
   }, 0);
