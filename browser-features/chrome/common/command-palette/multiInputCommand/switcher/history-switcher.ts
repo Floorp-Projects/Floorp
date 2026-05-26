@@ -4,47 +4,10 @@ import i18next from "i18next";
 import type {
   PaletteCommand,
   CommandStepChoice,
+  StepChoicesResult,
 } from "../../command-registry.ts";
 
-interface HistoryResultNode {
-  uri: string;
-  title: string;
-  accessCount: number;
-}
-
-interface HistoryQueryResult {
-  root: HistoryContainer;
-}
-
-interface HistoryContainer {
-  containerOpen: boolean;
-  childCount: number;
-  getChild(index: number): HistoryResultNode;
-}
-
-interface NavHistoryQuery {
-  searchTerms: string;
-  beginTime: number;
-  endTime: number;
-}
-
-interface NavHistoryQueryOptions {
-  sortingMode: number;
-  maxResults: number;
-}
-
-interface PlacesHistory {
-  getNewQuery(): NavHistoryQuery;
-  getNewQueryOptions(): NavHistoryQueryOptions;
-  executeQuery(
-    query: NavHistoryQuery,
-    options: NavHistoryQueryOptions,
-  ): HistoryQueryResult;
-}
-
-interface PlacesUtilsModule {
-  history: PlacesHistory;
-}
+const PAGE_SIZE = 20;
 
 interface ChromeWindow extends Window {
   gBrowser?: {
@@ -53,43 +16,121 @@ interface ChromeWindow extends Window {
   };
 }
 
-export async function loadHistory(): Promise<CommandStepChoice[]> {
+interface SqliteRow {
+  getResultByName(name: string): string | null;
+}
+
+interface SqliteConnection {
+  executeCached(sql: string, params?: unknown[]): Promise<SqliteRow[]>;
+  close(): Promise<void>;
+}
+
+interface SqliteModule {
+  cloneStorageConnection(connection: {
+    connection: unknown;
+    readOnly: boolean;
+  }): Promise<SqliteConnection>;
+}
+
+interface PlacesUtilsModule {
+  history: {
+    DBConnection: unknown;
+  };
+}
+
+/**
+ * Query browsing history from the Places database asynchronously using Sqlite.sys.mjs.
+ * This runs the query on a background thread, avoiding main-thread blocking.
+ */
+async function queryHistory(
+  offset: number,
+  limit: number,
+): Promise<CommandStepChoice[]> {
+  let conn: SqliteConnection | undefined;
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
     ) as PlacesUtilsModule;
 
-    const historyQuery = PlacesUtils.history.getNewQuery();
-    historyQuery.beginTime = (Date.now() - 7 * 24 * 60 * 60 * 1000) * 1000; // Last 7 days, in microseconds
-    historyQuery.endTime = Date.now() * 1000;
+    const { Sqlite } = ChromeUtils.importESModule(
+      "resource://gre/modules/Sqlite.sys.mjs",
+    ) as SqliteModule;
 
-    const options = PlacesUtils.history.getNewQueryOptions();
-    options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    options.maxResults = 50;
+    conn = await Sqlite.cloneStorageConnection({
+      connection: PlacesUtils.history.DBConnection,
+      readOnly: true,
+    });
 
-    const result = PlacesUtils.history.executeQuery(historyQuery, options);
-    const root = result.root;
+    const sevenDaysAgoMicroseconds =
+      (Date.now() - 7 * 24 * 60 * 60 * 1000) * 1000;
 
-    const choices: CommandStepChoice[] = [];
-    root.containerOpen = true;
-    try {
-      for (let i = 0; i < root.childCount; i++) {
-        const node = root.getChild(i);
-        choices.push({
-          label: node.title || node.uri,
-          value: node.uri,
-          description: node.uri,
-        });
-      }
-    } finally {
-      root.containerOpen = false;
-    }
+    const rows = await conn.executeCached(
+      `SELECT p.url, p.title, p.visit_count,
+              MAX(v.visit_date) AS last_visit_date
+       FROM moz_places p
+       JOIN moz_historyvisits v ON p.id = v.place_id
+       WHERE v.visit_date >= ?
+       GROUP BY p.id
+       ORDER BY last_visit_date DESC
+       LIMIT ? OFFSET ?`,
+      [sevenDaysAgoMicroseconds, limit, offset],
+    );
 
-    return choices;
+    return rows.map((row) => ({
+      label: row.getResultByName("title") || row.getResultByName("url") || "",
+      value: row.getResultByName("url") || "",
+      description: row.getResultByName("url") || "",
+    }));
   } catch (e) {
-    console.error("[HistorySwitcher] Failed to load history", e);
+    console.error("[HistorySwitcher] Failed to query history", e);
     return [];
+  } finally {
+    await conn?.close().catch(() => {});
   }
+}
+
+/**
+ * Creates the initial history loader that returns the first page of results
+ * with pagination support via loadMore callback.
+ */
+export function loadHistory(): Promise<
+  CommandStepChoice[] | StepChoicesResult
+> {
+  let offset = 0;
+
+  // We use a different approach: return StepChoicesResult with loadMore
+  // The hasMore flag is determined by checking if we got exactly PAGE_SIZE results
+  return (async (): Promise<StepChoicesResult> => {
+    const firstPage = await queryHistory(0, PAGE_SIZE + 1);
+    const hasExtra = firstPage.length > PAGE_SIZE;
+    if (hasExtra) {
+      firstPage.pop();
+    }
+    offset = firstPage.length;
+
+    // Simple heuristic: if we got PAGE_SIZE results, assume there might be more
+    const mayHaveMore = firstPage.length >= PAGE_SIZE;
+
+    return {
+      choices: firstPage,
+      hasMore: mayHaveMore,
+      loadMore: mayHaveMore
+        ? async (): Promise<{
+            choices: CommandStepChoice[];
+            hasMore: boolean;
+          }> => {
+            const nextPage = await queryHistory(offset, PAGE_SIZE + 1);
+            const hasMoreResults = nextPage.length > PAGE_SIZE;
+            if (hasMoreResults) {
+              nextPage.pop();
+            }
+            offset += nextPage.length;
+
+            return { choices: nextPage, hasMore: hasMoreResults };
+          }
+        : undefined,
+    };
+  })();
 }
 
 function navigateToUrl(win: Window, url: string): void {

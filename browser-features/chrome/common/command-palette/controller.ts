@@ -187,7 +187,19 @@ export class CommandPaletteController {
           const choices = this.state.filteredStepChoices();
           if (choices.length > 0) {
             const idx = this.state.selectedChoiceIndex();
-            this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+            const nextIdx = idx + 1;
+            if (nextIdx >= choices.length) {
+              // At the end of the list — try loading more
+              if (this.state.hasMoreChoices() && !this.state.loadingMore()) {
+                this.loadMoreChoices();
+              }
+              // Wrap around only if no more to load
+              if (!this.state.hasMoreChoices()) {
+                this.state.setSelectedChoiceIndex(0);
+              }
+            } else {
+              this.state.setSelectedChoiceIndex(nextIdx);
+            }
           }
         }
         break;
@@ -218,7 +230,17 @@ export class CommandPaletteController {
                 (idx - 1 + choices.length) % choices.length,
               );
             } else {
-              this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+              const nextIdx = idx + 1;
+              if (nextIdx >= choices.length) {
+                if (this.state.hasMoreChoices() && !this.state.loadingMore()) {
+                  this.loadMoreChoices();
+                }
+                if (!this.state.hasMoreChoices()) {
+                  this.state.setSelectedChoiceIndex(0);
+                }
+              } else {
+                this.state.setSelectedChoiceIndex(nextIdx);
+              }
             }
           }
         }
@@ -422,6 +444,15 @@ export class CommandPaletteController {
               const idx = choices.findIndex((c) => c.value === restoreValue);
               if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
             }
+            // Store pagination metadata
+            const hasMore = isResultObject(result)
+              ? (result.hasMore ?? false)
+              : false;
+            const loadMore = isResultObject(result)
+              ? result.loadMore
+              : undefined;
+            this.state.setHasMoreChoices(hasMore);
+            this.state.setLoadMoreCallback(() => loadMore ?? null);
             this.state.setStepChoicesLoading(false);
           }
         })
@@ -431,6 +462,8 @@ export class CommandPaletteController {
             this.state.setStepChoicesBase([]);
             this.state.setFilteredStepChoices([]);
             this.state.setStepChoicesLoading(false);
+            this.state.setHasMoreChoices(false);
+            this.state.setLoadMoreCallback(null);
           }
         });
       return;
@@ -440,6 +473,47 @@ export class CommandPaletteController {
     this.state.setStepChoicesBase([]);
     this.state.setFilteredStepChoices([]);
     this.state.setStepChoicesLoading(false);
+  }
+
+  private loadMoreChoices(): void {
+    const loadMore = this.state.loadMoreCallback();
+    if (!loadMore || this.state.loadingMore() || !this.state.hasMoreChoices())
+      return;
+
+    this.state.setLoadingMore(true);
+    loadMore()
+      .then(({ choices: newChoices, hasMore }) => {
+        if (!this.state.hasMoreChoices()) return; // Step may have changed
+
+        this.state.setHasMoreChoices(hasMore);
+
+        const currentBase = this.state.stepChoicesBase();
+        const updatedBase = [...currentBase, ...newChoices];
+        this.state.setStepChoicesBase(updatedBase);
+
+        // Re-apply current filter to the expanded list
+        const q = this.state.query().trim().toLowerCase();
+        if (!q) {
+          this.state.setFilteredStepChoices(updatedBase);
+        } else {
+          const filtered = updatedBase.filter(
+            (c) =>
+              c.label.toLowerCase().includes(q) ||
+              c.value.toLowerCase().includes(q) ||
+              (c.description?.toLowerCase().includes(q) ?? false),
+          );
+          this.state.setFilteredStepChoices(filtered);
+        }
+
+        // Keep selection at the same position (where "load more" was triggered)
+        // Don't reset selectedChoiceIndex — keep it where it was
+
+        this.state.setLoadingMore(false);
+      })
+      .catch((e) => {
+        console.error("[command-palette] Failed to load more choices:", e);
+        this.state.setLoadingMore(false);
+      });
   }
 
   private enterInputMode(cmd: PaletteCommand): void {

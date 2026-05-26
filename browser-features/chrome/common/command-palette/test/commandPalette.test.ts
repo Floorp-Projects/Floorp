@@ -480,6 +480,79 @@ const rawTests: TestCase[] = [
       }
     },
   },
+
+  // --- History Switcher & Pagination ---
+  {
+    name: "historySwitcherCommand is registered in step commands",
+    fn() {
+      const commands = getPaletteCommands();
+      const ids = commands.map((c) => c.id);
+      assert(
+        ids.includes("floorp-history-switcher"),
+        "should include floorp-history-switcher in palette commands",
+      );
+    },
+  },
+  {
+    name: "historySwitcherCommand step choicesLoader returns StepChoicesResult",
+    async fn() {
+      const { loadHistory } =
+        await import("../multiInputCommand/switcher/history-switcher.ts");
+      const result = await loadHistory();
+      const isResultObject =
+        typeof result === "object" && result !== null && "choices" in result;
+      assert(
+        isResultObject,
+        "loadHistory should return StepChoicesResult object",
+      );
+    },
+  },
+  {
+    name: "StepChoicesResult pagination: hasMore is boolean when present",
+    async fn() {
+      const { loadHistory } =
+        await import("../multiInputCommand/switcher/history-switcher.ts");
+      const result = await loadHistory();
+      const isResultObject =
+        typeof result === "object" && result !== null && "choices" in result;
+      if (!isResultObject) return;
+
+      const stepResult = result as {
+        choices?: unknown;
+        hasMore?: unknown;
+        loadMore?: unknown;
+      };
+      if (stepResult.hasMore !== undefined) {
+        assert(
+          typeof stepResult.hasMore === "boolean",
+          "hasMore should be boolean when present",
+        );
+      }
+      if (
+        stepResult.hasMore === true &&
+        typeof stepResult.loadMore === "function"
+      ) {
+        const loadMoreResult = await (
+          stepResult.loadMore as () => Promise<{
+            choices: unknown;
+            hasMore: boolean;
+          }>
+        )();
+        assert(
+          typeof loadMoreResult === "object" && loadMoreResult !== null,
+          "loadMore should return an object",
+        );
+        assert(
+          Array.isArray(loadMoreResult.choices),
+          "loadMore result should have choices array",
+        );
+        assert(
+          typeof loadMoreResult.hasMore === "boolean",
+          "loadMore result should have hasMore boolean",
+        );
+      }
+    },
+  },
 ];
 
 export function runAllTests() {

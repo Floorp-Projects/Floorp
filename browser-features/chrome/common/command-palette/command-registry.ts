@@ -34,6 +34,10 @@ export interface StepChoicesResult {
   choices: CommandStepChoice[];
   /** Index of the choice to select by default when the step loads. */
   defaultIndex?: number;
+  /** Whether more choices can be loaded via loadMore. */
+  hasMore?: boolean;
+  /** Load more choices and return the newly loaded choices with updated hasMore flag. */
+  loadMore?: () => Promise<{ choices: CommandStepChoice[]; hasMore: boolean }>;
 }
 
 export interface CommandStep {
