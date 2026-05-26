@@ -162,6 +162,7 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
 
   "floorp-show-pip": "media",
   "floorp-toggle-share-mode": "floorp",
+  "floorp-copy-page-url-as-markdown": "page",
 };
 
 const ACTION_KEYWORDS: Record<string, string[]> = {
@@ -227,6 +228,14 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
     "share mode",
     "presentation",
     "screen share",
+  ],
+  "floorp-copy-page-url-as-markdown": [
+    "copy",
+    "markdown",
+    "url",
+    "title",
+    "link",
+    "obsidian",
   ],
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],

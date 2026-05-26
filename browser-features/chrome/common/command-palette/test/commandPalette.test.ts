@@ -553,6 +553,53 @@ const rawTests: TestCase[] = [
       }
     },
   },
+
+  // --- floorp-copy-page-url-as-markdown command ---
+  {
+    name: "floorp-copy-page-url-as-markdown is in palette commands",
+    fn() {
+      const commands = getPaletteCommands();
+      const cmd = commands.find(
+        (c) => c.id === "floorp-copy-page-url-as-markdown",
+      );
+      assert(
+        cmd !== undefined,
+        "should find floorp-copy-page-url-as-markdown command",
+      );
+      assertEquals(cmd.category, "page", "should be in 'page' category");
+      assert(cmd.keywords.length > 0, "should have keywords");
+      assert(
+        cmd.keywords.includes("markdown"),
+        "keywords should include 'markdown'",
+      );
+      assert(
+        cmd.keywords.includes("obsidian"),
+        "keywords should include 'obsidian'",
+      );
+    },
+  },
+  {
+    name: "searchCommands finds floorp-copy-page-url-as-markdown by keyword",
+    fn() {
+      const results = searchCommands("markdown");
+      const ids = results.map((r) => r.id);
+      assert(
+        ids.includes("floorp-copy-page-url-as-markdown"),
+        "searching 'markdown' should find the copy-as-markdown command",
+      );
+    },
+  },
+  {
+    name: "searchCommands finds floorp-copy-page-url-as-markdown by 'obsidian'",
+    fn() {
+      const results = searchCommands("obsidian");
+      const ids = results.map((r) => r.id);
+      assert(
+        ids.includes("floorp-copy-page-url-as-markdown"),
+        "searching 'obsidian' should find the copy-as-markdown command",
+      );
+    },
+  },
 ];
 
 export function runAllTests() {

@@ -623,9 +623,140 @@ const rawTests: TestCase[] = [
       );
     },
   },
+
+  // --- floorp-copy-page-url-as-markdown action ---
+  {
+    name: "floorp-copy-page-url-as-markdown action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-copy-page-url-as-markdown"),
+        "should include floorp-copy-page-url-as-markdown action",
+      );
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown action copies markdown link to clipboard",
+    fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(
+        typeof fn === "function",
+        "floorp-copy-page-url-as-markdown should have a function",
+      );
+
+      const testUrl = "https://example.com/page";
+      const testTitle = "Example Page Title";
+      let clipboardText = "";
+      const originalWriteText = navigator.clipboard.writeText.bind(navigator.clipboard);
+
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: testTitle,
+          },
+        },
+      } as unknown as Window;
+
+      // Temporarily mock navigator.clipboard.writeText
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = async (text: string) => {
+        clipboardText = text;
+      };
+
+      try {
+        fn(mockWin);
+        // Wait a tick for the async clipboard write
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[${testTitle}](${testUrl})`,
+          "should copy markdown formatted link to clipboard",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown escapes brackets in title",
+    fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(typeof fn === "function", "action should have a function");
+
+      const testUrl = "https://example.com/page";
+      const testTitle = "Title with [brackets] inside";
+      let clipboardText = "";
+
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: testTitle,
+          },
+        },
+      } as unknown as Window;
+
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = async (text: string) => {
+        clipboardText = text;
+      };
+
+      try {
+        fn(mockWin);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[Title with \\[brackets\\] inside](${testUrl})`,
+          "should escape brackets in title",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown falls back to URL when title is empty",
+    fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(typeof fn === "function", "action should have a function");
+
+      const testUrl = "https://example.com/no-title";
+      let clipboardText = "";
+
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: "",
+          },
+        },
+      } as unknown as Window;
+
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = async (text: string) => {
+        clipboardText = text;
+      };
+
+      try {
+        fn(mockWin);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[${testUrl}](${testUrl})`,
+          "should use URL as title when contentTitle is empty",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
+    },
+  },
 ];
 
 const tests: TestCase[] = rawTests.map((testCase) => ({
+    name: testCase.name,
+    async fn() {
   name: testCase.name,
   async fn() {
     restoreGestureRegistry();

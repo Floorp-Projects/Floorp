@@ -205,7 +205,8 @@
       "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える",
       "floorp-open-settings": "設定を開く",
       "floorp-open-hub": "Floorp Hubを開く",
-      "floorp-toggle-share-mode": "共有モードの表示を切り替える"
+      "floorp-toggle-share-mode": "共有モードの表示を切り替える",
+      "floorp-copy-page-url-as-markdown": "ページURLをMarkdownでコピー"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",
@@ -220,7 +221,8 @@
       "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します",
       "floorp-open-settings": "Floorpの設定ページを開きます",
       "floorp-open-hub": "Floorp Hubページを開きます",
-      "floorp-toggle-share-mode": "画面共有やプレゼンテーション時にUIを最小限にする共有モードを切り替えます"
+      "floorp-toggle-share-mode": "画面共有やプレゼンテーション時にUIを最小限にする共有モードを切り替えます",
+      "floorp-copy-page-url-as-markdown": "現在のページのタイトルとURLをMarkdownリンク形式 [タイトル](URL) でクリップボードにコピーします"
     }
   },
   "qrCode": {

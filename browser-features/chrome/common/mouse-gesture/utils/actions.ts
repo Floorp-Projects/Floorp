@@ -412,4 +412,17 @@ export const actions: GestureActionRegistration[] = [
     name: "floorp-toggle-share-mode",
     fn: () => setShareModeEnabled((prev) => !prev),
   },
+  {
+    name: "floorp-copy-page-url-as-markdown",
+    fn: (win) => {
+      const browser = win.gBrowser.selectedBrowser;
+      const url = browser.currentURI.spec;
+      const title = browser.contentTitle || url;
+      const escapedTitle = title.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+      const markdown = `[${escapedTitle}](${url})`;
+      navigator.clipboard.writeText(markdown).catch((e) => {
+        console.error("[copy-url-as-markdown] Failed to copy to clipboard:", e);
+      });
+    },
+  },
 ];
