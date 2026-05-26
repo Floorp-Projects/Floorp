@@ -478,6 +478,10 @@
     "historySwitcher": "Browse History",
     "historySwitcherDescription": "Open a page from your browsing history",
     "historySwitcherStepLabel": "Select a history entry",
-    "historySwitcherStepPlaceholder": "Choose a history entry..."
+    "historySwitcherStepPlaceholder": "Choose a history entry...",
+    "bookmarkSwitcher": "Switch Bookmark",
+    "bookmarkSwitcherDescription": "Open a bookmarked page",
+    "bookmarkSwitcherStepLabel": "Select a bookmark",
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
   }
 }

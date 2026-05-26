@@ -444,6 +444,10 @@
     "historySwitcher": "履歴を開く",
     "historySwitcherDescription": "閲覧履歴からページを開きます",
     "historySwitcherStepLabel": "履歴を選択",
-    "historySwitcherStepPlaceholder": "履歴を選んでください..."
+    "historySwitcherStepPlaceholder": "履歴を選んでください...",
+    "bookmarkSwitcher": "ブックマークを開く",
+    "bookmarkSwitcherDescription": "ブックマークからページを開きます",
+    "bookmarkSwitcherStepLabel": "ブックマークを選択",
+    "bookmarkSwitcherStepPlaceholder": "ブックマークを検索・選択..."
   }
 }

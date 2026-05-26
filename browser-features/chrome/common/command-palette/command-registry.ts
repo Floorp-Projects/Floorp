@@ -10,6 +10,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
 import {
+  bookmarkSwitcherCommand,
   closedTabSwitcherCommand,
   closedWindowSwitcherCommand,
   historySwitcherCommand,
@@ -299,6 +300,7 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
 
 function buildStepCommands(): PaletteCommand[] {
   return [
+    bookmarkSwitcherCommand,
     closedTabSwitcherCommand,
     closedWindowSwitcherCommand,
     historySwitcherCommand,
