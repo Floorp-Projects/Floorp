@@ -438,7 +438,8 @@
       "media": "Media",
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
-      "history-suggestions": "History"
+      "history-suggestions": "History",
+"bookmark-suggestions": "Bookmarks"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",

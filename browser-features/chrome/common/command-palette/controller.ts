@@ -14,6 +14,7 @@ import {
   getPaletteCommands,
   searchCommands,
   searchHistoryCommands,
+  searchBookmarkCommands,
 } from "./command-registry.ts";
 import type {
   PaletteCommand,
@@ -63,6 +64,10 @@ export class CommandPaletteController {
     if (this.historySearchTimer) {
       clearTimeout(this.historySearchTimer);
       this.historySearchTimer = null;
+    }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
     }
     if (this.state.isVisible()) {
       this.hidePalette();
@@ -312,6 +317,7 @@ export class CommandPaletteController {
   private animOutTimer: ReturnType<typeof setTimeout> | null = null;
   private defaultEngineName: string | null = null;
   private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private bookmarkSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private currentSearchQuery: string = "";
 
   public hidePalette(): void {
@@ -322,6 +328,10 @@ export class CommandPaletteController {
     if (this.historySearchTimer) {
       clearTimeout(this.historySearchTimer);
       this.historySearchTimer = null;
+    }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
     }
 
     // Safety fallback: reset isAnimatingOut even if transitionend never fires
@@ -690,16 +700,23 @@ export class CommandPaletteController {
     // so the first real command is selected instead of the always-present search suggestion.
     this.state.setSelectedIndex(trimmed && results.length > 1 ? 1 : 0);
 
-    // Debounced async history search
+    // Debounced async history and bookmark search
     this.currentSearchQuery = trimmed;
     if (this.historySearchTimer) {
       clearTimeout(this.historySearchTimer);
       this.historySearchTimer = null;
     }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
+    }
 
     if (trimmed) {
       this.historySearchTimer = setTimeout(() => {
         this.performHistorySearch(trimmed);
+      }, 150);
+      this.bookmarkSearchTimer = setTimeout(() => {
+        this.performBookmarkSearch(trimmed);
       }, 150);
     }
   }
@@ -719,6 +736,51 @@ export class CommandPaletteController {
       }
     } catch (e) {
       console.error("[command-palette] History search failed:", e);
+    }
+  }
+
+  private async performBookmarkSearch(query: string): Promise<void> {
+    console.debug(
+      "[command-palette] performBookmarkSearch called with query:",
+      query,
+    );
+    try {
+      const results = await searchBookmarkCommands(query, 10);
+      console.debug(
+        "[command-palette] Bookmark search returned:",
+        results.length,
+        "results",
+      );
+
+      // Only apply if query hasn't changed since we started
+      if (query !== this.currentSearchQuery) {
+        console.debug(
+          "[command-palette] Bookmark search stale, currentQuery:",
+          this.currentSearchQuery,
+        );
+        return;
+      }
+
+      const currentResults = this.state.filteredCommands();
+      console.debug(
+        "[command-palette] Current filtered commands count:",
+        currentResults.length,
+      );
+      const existingIds = new Set(currentResults.map((c) => c.id));
+      const newResults = results.filter((c) => !existingIds.has(c.id));
+      console.debug(
+        "[command-palette] New bookmark results after dedup:",
+        newResults.length,
+      );
+
+      if (newResults.length > 0) {
+        this.state.setFilteredCommands([...currentResults, ...newResults]);
+        console.debug(
+          "[command-palette] Updated filtered commands with bookmark results",
+        );
+      }
+    } catch (e) {
+      console.error("[command-palette] Bookmark search failed:", e);
     }
   }
 

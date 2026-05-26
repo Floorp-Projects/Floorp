@@ -18,6 +18,7 @@ import {
   tabSwitcherCommand,
 } from "./multiInputCommand/index.ts";
 import { searchHistory, isHistoryCommand } from "./history-provider.ts";
+import { searchBookmarks, isBookmarkCommand } from "./bookmark-provider.ts";
 
 export interface CommandStepChoice {
   /** Display label shown to the user */
@@ -319,7 +320,7 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export { isHistoryCommand };
+export { isHistoryCommand, isBookmarkCommand };
 
 /**
  * Search browsing history for the given query.
@@ -331,6 +332,18 @@ export async function searchHistoryCommands(
   if (!query.trim()) return [];
 
   return searchHistory(query, limit);
+}
+
+/**
+ * Search bookmarks for the given query.
+ */
+export async function searchBookmarkCommands(
+  query: string,
+  limit: number = 10,
+): Promise<PaletteCommand[]> {
+  if (!query.trim()) return [];
+
+  return searchBookmarks(query, limit);
 }
 
 export function getCommand(

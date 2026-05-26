@@ -8,6 +8,7 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import { searchHistory, isHistoryCommand } from "../history-provider.ts";
+import { searchBookmarks, isBookmarkCommand } from "../bookmark-provider.ts";
 
 const REQUIRED_COMMAND_FIELDS = [
   "id",
@@ -107,6 +108,75 @@ const rawTests: TestCase[] = [
     },
   },
 
+  // --- Bookmark Provider: isBookmarkCommand ---
+  {
+    name: "isBookmarkCommand returns true for bookmark IDs",
+    fn() {
+      assert(
+        isBookmarkCommand("__bookmark__abc"),
+        'isBookmarkCommand("__bookmark__abc") should return true',
+      );
+      assert(
+        isBookmarkCommand("__bookmark__"),
+        'isBookmarkCommand("__bookmark__") should return true',
+      );
+    },
+  },
+  {
+    name: "isBookmarkCommand returns false for non-bookmark IDs",
+    fn() {
+      assert(
+        !isBookmarkCommand("some-other-id"),
+        'isBookmarkCommand("some-other-id") should return false',
+      );
+      assert(
+        !isBookmarkCommand("__history__something"),
+        'isBookmarkCommand("__history__something") should return false',
+      );
+      assert(
+        !isBookmarkCommand(""),
+        "isBookmarkCommand('') should return false",
+      );
+    },
+  },
+
+  // --- Bookmark Provider: searchBookmarks ---
+  {
+    name: "searchBookmarks returns PaletteCommand array with correct category",
+    async fn() {
+      const results = await searchBookmarks("test");
+      for (const cmd of results) {
+        assertEquals(
+          cmd.category,
+          "bookmark-suggestions",
+          `bookmark command "${cmd.label}" should have category "bookmark-suggestions"`,
+        );
+        assert(
+          cmd.id.startsWith("__bookmark__"),
+          `bookmark command id "${cmd.id}" should start with "__bookmark__"`,
+        );
+      }
+    },
+  },
+  {
+    name: "searchBookmarks returns array for empty query",
+    async fn() {
+      const results = await searchBookmarks("");
+      assert(Array.isArray(results), "searchBookmarks should return an array");
+    },
+  },
+  {
+    name: "searchBookmarks results have required PaletteCommand fields",
+    async fn() {
+      const results = await searchBookmarks("test");
+      for (let i = 0; i < results.length; i++) {
+        assertHasCommandFields(
+          results[i] as unknown as Record<string, unknown>,
+          `searchBookmarks result[${i}]`,
+        );
+      }
+    },
+  },
 ];
 
 export function runAllTests() {

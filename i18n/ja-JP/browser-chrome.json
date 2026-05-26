@@ -428,7 +428,8 @@
       "media": "メディア",
       "open-tabs": "タブを開く",
       "switcher": "切り替え",
-      "history-suggestions": "履歴"
+      "history-suggestions": "履歴",
+"bookmark-suggestions": "ブックマーク"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語をお試しください",
