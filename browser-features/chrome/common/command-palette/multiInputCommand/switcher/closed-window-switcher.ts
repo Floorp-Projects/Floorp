@@ -25,14 +25,14 @@ function getJapaneseReadings(id: string): string[] {
   }
 }
 
-export async function loadClosedWindows(): Promise<CommandStepChoice[]> {
+export function loadClosedWindows(): Promise<CommandStepChoice[]> {
   try {
     const closedWindows = (
       globalThis.SessionStore as unknown as { getClosedWindowData(): unknown[] }
     ).getClosedWindowData();
-    if (!Array.isArray(closedWindows) || closedWindows.length === 0) return [];
+    if (!Array.isArray(closedWindows) || closedWindows.length === 0) return Promise.resolve([]);
 
-    return closedWindows.map((entry: unknown, index: number) => {
+    return Promise.resolve(closedWindows.map((entry: unknown, index: number) => {
       const e = entry as {
         title?: string;
         tabs?: Array<{ title?: string }>;
@@ -46,10 +46,10 @@ export async function loadClosedWindows(): Promise<CommandStepChoice[]> {
             ? "0 tabs"
             : `${tabCount} tabs • ${e.tabs?.[0]?.title ?? ""}`,
       };
-    });
+    }));
   } catch (e) {
     console.error("[ClosedWindowSwitcher] Failed to load closed windows", e);
-    return [];
+    return Promise.resolve([]);
   }
 }
 

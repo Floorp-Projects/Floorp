@@ -138,23 +138,23 @@ export async function loadBookmarks(): Promise<
       choices: firstPage,
       hasMore,
       loadMore: hasMore
-        ? async (): Promise<{
+        ? (): Promise<{
             choices: CommandStepChoice[];
             hasMore: boolean;
           }> => {
             // Defensive: cache may have been invalidated
             if (!allFlatBookmarks) {
-              return { choices: [], hasMore: false };
+              return Promise.resolve({ choices: [], hasMore: false });
             }
             const nextBatch = allFlatBookmarks.slice(
               offset,
               offset + PAGE_SIZE,
             );
             offset += nextBatch.length;
-            return {
+            return Promise.resolve({
               choices: nextBatch,
               hasMore: offset < allFlatBookmarks.length,
-            };
+            });
           }
         : undefined,
     };

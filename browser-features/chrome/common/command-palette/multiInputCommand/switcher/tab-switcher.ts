@@ -34,12 +34,12 @@ interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;
 }
 
-export async function loadTabs(): Promise<
+export function loadTabs(): Promise<
   CommandStepChoice[] | StepChoicesResult
 > {
   try {
     const gBrowser = (globalThis as unknown as ChromeWindow).gBrowser;
-    if (!gBrowser?.tabs) return [];
+    if (!gBrowser?.tabs) return Promise.resolve([]);
 
     const selectedTab = gBrowser.selectedTab;
 
@@ -88,10 +88,10 @@ export async function loadTabs(): Promise<
       });
     }
 
-    return { choices, defaultIndex };
+    return Promise.resolve({ choices, defaultIndex });
   } catch (err) {
     console.error("[TabSwitcher] Failed to load tabs", err);
-    return [];
+    return Promise.resolve([]);
   }
 }
 

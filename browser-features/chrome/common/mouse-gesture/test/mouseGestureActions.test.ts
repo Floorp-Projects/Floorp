@@ -638,7 +638,7 @@ const rawTests: TestCase[] = [
   },
   {
     name: "floorp-copy-page-url-as-markdown action copies markdown link to clipboard",
-    fn() {
+    async fn() {
       const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
       assert(
         typeof fn === "function",
@@ -648,8 +648,6 @@ const rawTests: TestCase[] = [
       const testUrl = "https://example.com/page";
       const testTitle = "Example Page Title";
       let clipboardText = "";
-      const originalWriteText = navigator.clipboard.writeText.bind(navigator.clipboard);
-
       const mockWin = {
         gBrowser: {
           selectedBrowser: {
@@ -661,8 +659,9 @@ const rawTests: TestCase[] = [
 
       // Temporarily mock navigator.clipboard.writeText
       const savedWriteText = navigator.clipboard.writeText;
-      navigator.clipboard.writeText = async (text: string) => {
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
         clipboardText = text;
+        return Promise.resolve();
       };
 
       try {
@@ -681,7 +680,7 @@ const rawTests: TestCase[] = [
   },
   {
     name: "floorp-copy-page-url-as-markdown escapes brackets in title",
-    fn() {
+    async fn() {
       const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
       assert(typeof fn === "function", "action should have a function");
 
@@ -699,8 +698,9 @@ const rawTests: TestCase[] = [
       } as unknown as Window;
 
       const savedWriteText = navigator.clipboard.writeText;
-      navigator.clipboard.writeText = async (text: string) => {
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
         clipboardText = text;
+        return Promise.resolve();
       };
 
       try {
@@ -718,7 +718,7 @@ const rawTests: TestCase[] = [
   },
   {
     name: "floorp-copy-page-url-as-markdown falls back to URL when title is empty",
-    fn() {
+    async fn() {
       const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
       assert(typeof fn === "function", "action should have a function");
 
@@ -735,8 +735,9 @@ const rawTests: TestCase[] = [
       } as unknown as Window;
 
       const savedWriteText = navigator.clipboard.writeText;
-      navigator.clipboard.writeText = async (text: string) => {
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
         clipboardText = text;
+        return Promise.resolve();
       };
 
       try {
@@ -755,8 +756,6 @@ const rawTests: TestCase[] = [
 ];
 
 const tests: TestCase[] = rawTests.map((testCase) => ({
-    name: testCase.name,
-    async fn() {
   name: testCase.name,
   async fn() {
     restoreGestureRegistry();

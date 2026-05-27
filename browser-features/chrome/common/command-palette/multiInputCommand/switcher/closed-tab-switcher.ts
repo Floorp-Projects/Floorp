@@ -25,10 +25,10 @@ function getJapaneseReadings(id: string): string[] {
   }
 }
 
-export async function loadClosedTabs(): Promise<CommandStepChoice[]> {
+export function loadClosedTabs(): Promise<CommandStepChoice[]> {
   try {
     const entries = globalThis.SessionStore.getClosedTabData(globalThis.window);
-    if (!Array.isArray(entries) || entries.length === 0) return [];
+    if (!Array.isArray(entries) || entries.length === 0) return Promise.resolve([]);
 
     const choices: CommandStepChoice[] = entries.map(
       (entry: unknown, index: number) => {
@@ -41,10 +41,10 @@ export async function loadClosedTabs(): Promise<CommandStepChoice[]> {
       },
     );
 
-    return choices;
+    return Promise.resolve(choices);
   } catch (err) {
     console.error("[ClosedTabSwitcher] Failed to load closed tabs", err);
-    return [];
+    return Promise.resolve([]);
   }
 }
 

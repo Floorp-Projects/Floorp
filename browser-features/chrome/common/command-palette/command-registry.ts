@@ -365,11 +365,11 @@ export { isHistoryCommand, isBookmarkCommand };
 /**
  * Search browsing history for the given query.
  */
-export async function searchHistoryCommands(
+export function searchHistoryCommands(
   query: string,
   limit: number = 10,
 ): Promise<PaletteCommand[]> {
-  if (!query.trim()) return [];
+  if (!query.trim()) return Promise.resolve([]);
 
   return searchHistory(query, limit);
 }
@@ -377,11 +377,11 @@ export async function searchHistoryCommands(
 /**
  * Search bookmarks for the given query.
  */
-export async function searchBookmarkCommands(
+export function searchBookmarkCommands(
   query: string,
   limit: number = 10,
 ): Promise<PaletteCommand[]> {
-  if (!query.trim()) return [];
+  if (!query.trim()) return Promise.resolve([]);
 
   return searchBookmarks(query, limit);
 }

@@ -63,7 +63,7 @@ function navigateToUrl(win: Window, url: string): void {
   }
 }
 
-export async function searchHistory(
+export function searchHistory(
   query: string,
   limit: number = 10,
 ): Promise<PaletteCommand[]> {
