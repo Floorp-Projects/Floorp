@@ -11,7 +11,7 @@
     "tsdown": "npm:tsdown@^0.22.0"
   },
   "tasks": {
-    "build": "deno run -A npm:tsdown"
+    "build": "deno run -A npm:tsdown --config-loader unrun"
   },
   "lint": {
     "exclude": ["./_dist/**/*"]
