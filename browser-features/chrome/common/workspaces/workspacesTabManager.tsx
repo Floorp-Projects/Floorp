@@ -56,13 +56,13 @@ export class WorkspacesTabManager {
       ).SessionStore.promiseAllWindowsRestored
         .then(() => {
           this.initializeWorkspace();
-          globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+          globalThis.addEventListener("TabClose", this.boundHandleTabClose as EventListener);
           globalThis.addEventListener("TabOpen", this.boundHandleTabOpen);
         })
         .catch((error: Error) => {
           console.error("Error waiting for windows restore:", error);
           this.initializeWorkspace();
-          globalThis.addEventListener("TabClose", this.boundHandleTabClose);
+          globalThis.addEventListener("TabClose", this.boundHandleTabClose as EventListener);
           globalThis.addEventListener("TabOpen", this.boundHandleTabOpen);
         });
     };
@@ -200,7 +200,7 @@ export class WorkspacesTabManager {
   private boundHandleTabOpen: (event: Event) => void;
 
   public cleanup() {
-    globalThis.removeEventListener("TabClose", this.boundHandleTabClose);
+    globalThis.removeEventListener("TabClose", this.boundHandleTabClose as EventListener);
     globalThis.removeEventListener("TabOpen", this.boundHandleTabOpen);
   }
 
@@ -650,9 +650,11 @@ export class WorkspacesTabManager {
    * @returns void
    */
   switchToAnotherWorkspaceTab(workspaceId: TWorkspaceID) {
-    const workspaceTabs = document?.querySelectorAll(
-      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
-    ) as XULElement[];
+    const workspaceTabs = Array.from(
+      document?.querySelectorAll(
+        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
+      ) ?? [],
+    ) as unknown as XULElement[];
 
     if (!workspaceTabs?.length) {
       try {
@@ -677,9 +679,11 @@ export class WorkspacesTabManager {
    * @returns true if workspace has tabs.
    */
   public workspaceHasTabs(workspaceId: string) {
-    const workspaceTabs = document?.querySelectorAll(
-      `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
-    ) as XULElement[];
+    const workspaceTabs = Array.from(
+      document?.querySelectorAll(
+        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${workspaceId}"]`,
+      ) ?? [],
+    ) as unknown as XULElement[];
     return workspaceTabs?.length > 0 ? workspaceTabs[0] : false;
   }
 
@@ -710,9 +714,11 @@ export class WorkspacesTabManager {
     this.setWorkspaceIdToAttribute(tab, workspaceId);
 
     if (tab === globalThis.gBrowser.selectedTab && oldWorkspaceId) {
-      const oldWorkspaceTabs = document?.querySelectorAll(
-        `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${oldWorkspaceId}"]`,
-      ) as XULElement[];
+      const oldWorkspaceTabs = Array.from(
+        document?.querySelectorAll(
+          `[${WORKSPACE_TAB_ATTRIBUTION_ID}="${oldWorkspaceId}"]`,
+        ) ?? [],
+      ) as unknown as XULElement[];
 
       if (oldWorkspaceTabs && oldWorkspaceTabs.length > 0) {
         this.switchToAnotherWorkspaceTab(oldWorkspaceId);

@@ -28,7 +28,7 @@ export class PanelSidebarElem {
   ctx: CPanelSidebar;
 
   private get documentElement() {
-    return document?.documentElement as XULElement;
+    return document?.documentElement as unknown as XULElement;
   }
 
   constructor(ctx: CPanelSidebar) {
@@ -48,7 +48,7 @@ export class PanelSidebarElem {
     SidebarController.promiseInitialized.then(() => {
       const exec = () =>
         render(() => this.sidebar(), parentElem, {
-          marker: beforeElem as XULElement,
+          marker: beforeElem as unknown as XULElement,
         });
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);

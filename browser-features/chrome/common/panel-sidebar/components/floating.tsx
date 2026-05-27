@@ -143,10 +143,10 @@ export class PanelSidebarFloating {
   private initDragHeader() {
     const header = document?.getElementById(
       "panel-sidebar-header",
-    ) as XULElement;
+    ) as unknown as XULElement;
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
+    ) as unknown as XULElement;
 
     if (!header || !sidebarBox) {
       return;
@@ -170,7 +170,7 @@ export class PanelSidebarFloating {
       e.preventDefault();
       this.isDraggingHeader = true;
       setIsFloatingDragging(true);
-      const docEl = document?.documentElement as XULElement | null;
+      const docEl = document?.documentElement as unknown as XULElement | null;
       docEl?.style.setProperty("user-select", "none");
 
       const startX = e.clientX;
@@ -226,7 +226,7 @@ export class PanelSidebarFloating {
         setIsFloatingDragging(false);
         document?.removeEventListener("mousemove", onMouseMove);
         document?.removeEventListener("mouseup", onMouseUp);
-        const docEl = document?.documentElement as XULElement | null;
+        const docEl = document?.documentElement as unknown as XULElement | null;
         docEl?.style.removeProperty("user-select");
 
         this.savePosition();
@@ -240,7 +240,7 @@ export class PanelSidebarFloating {
   private savePosition() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (!sidebarBox) {
       return;
     }
@@ -263,7 +263,7 @@ export class PanelSidebarFloating {
   }
 
   private applyHeightToSidebarBox() {
-    const el = document?.getElementById("panel-sidebar-box") as
+    const el = document?.getElementById("panel-sidebar-box") as unknown as
       | XULElement
       | null;
     if (el) {
@@ -274,7 +274,7 @@ export class PanelSidebarFloating {
   private removeFloatingStyles() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (!sidebarBox) {
       return;
     }
@@ -291,7 +291,7 @@ export class PanelSidebarFloating {
   }
 
   private removeHeightToSidebarBox() {
-    const el = document?.getElementById("panel-sidebar-box") as
+    const el = document?.getElementById("panel-sidebar-box") as unknown as
       | XULElement
       | null;
     if (el) {
@@ -308,7 +308,7 @@ export class PanelSidebarFloating {
   private saveCurrentSidebarSize() {
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (!sidebarBox) return;
 
     const config = panelSidebarConfig();
@@ -327,7 +327,7 @@ export class PanelSidebarFloating {
     const config = panelSidebarConfig();
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
+    ) as unknown as XULElement;
 
     if (!sidebarBox) {
       return;

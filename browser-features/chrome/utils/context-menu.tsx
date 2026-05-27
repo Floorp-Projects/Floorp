@@ -45,10 +45,10 @@ export namespace ContextMenuUtils {
     checkedFunction: () => void,
   ) {
     const contextMenu = ContextMenu(id, l10n, runFunction);
-    const targetNode = document?.getElementById(checkID) as XULElement;
+    const targetNode = document?.getElementById(checkID) as unknown as XULElement;
     const renderElement = document?.getElementById(
       renderElementId,
-    ) as XULElement;
+    ) as unknown as XULElement;
 
     render(() => contextMenu, contentAreaContextMenu(), {
       marker: renderElement,

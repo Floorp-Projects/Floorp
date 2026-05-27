@@ -33,7 +33,7 @@ export class ModalManager {
   ): Promise<TFormResult | null> | undefined {
     const container = document?.getElementById(
       "modal-parent-container",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (container) {
       setModalVisible(true);
       setModalSize({
@@ -45,7 +45,7 @@ export class ModalManager {
       const browser = document?.getElementById(
         "modal-child-browser",
       // deno-lint-ignore no-explicit-any
-      ) as XULElement & { browsingContext: any };
+      ) as unknown as XULElement & { browsingContext: any };
 
       const actor = browser.browsingContext.currentWindowGlobal.getActor(
         "NRChromeModal",
@@ -66,7 +66,7 @@ export class ModalManager {
   public hide(): void {
     const browser = document?.getElementById(
       "modal-parent-container",
-    ) as XULElement;
+    ) as unknown as XULElement;
     if (browser) {
       setModalVisible(false);
       setModalSize({ width: 600, height: 800 });
