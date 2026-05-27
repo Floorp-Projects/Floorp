@@ -14,6 +14,7 @@
   },
   "imports": {
     "rolldown": "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5",
-    "tsdown": "npm:tsdown@^0.22.0"
+    "tsdown": "npm:tsdown@^0.22.0",
+    "unrun": "npm:unrun"
   }
 }
