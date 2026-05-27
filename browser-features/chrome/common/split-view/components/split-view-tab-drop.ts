@@ -289,36 +289,63 @@ function onDrop(event: DragEvent): void {
   cleanup();
 
   setTimeout(() => {
-    if (tab.splitview) return;
+    // Guard: if tab was closed or destroyed between cleanup and this deferred callback,
+    // skip all operations to avoid acting on stale state.
+    if (!tab.linkedBrowser) return;
 
-    // Center zone: add pane to existing split view, or create new with default layout
-    if (zone === "center") {
-      if (splitView && splitView.tabs.length < maxPanes) {
-        splitView.addTabs([tab]);
-        // When going from 2→3 panes, pick a grid-3pane layout based on the
-        // current layout direction so the existing pane arrangement is preserved.
-        const newPaneCount = splitView.tabs.length;
-        if (newPaneCount === 3) {
-          const currentLayout =
-            splitView.tabs.length >= 2
-              ? /* layout resolved from persisted state */ null
-              : null;
-          // Default center-drop to grid-3pane-right-main (new tab as main right pane)
-          // which is a natural extension of horizontal (side-by-side) layout.
-          const gridLayout = currentLayout ?? "grid-3pane-right-main";
-          const groupId = getActiveSplitViewGroupId();
-          if (groupId) {
-            setPersistedGroupLayout(groupId, gridLayout);
+    try {
+      if (tab.splitview) return;
+
+      // Center zone: add pane to existing split view, or create new with default layout
+      if (zone === "center") {
+        if (splitView && splitView.tabs.length < maxPanes) {
+          splitView.addTabs([tab]);
+          // When going from 2→3 panes, pick a grid-3pane layout based on the
+          // current layout direction so the existing pane arrangement is preserved.
+          const newPaneCount = splitView.tabs.length;
+          if (newPaneCount === 3) {
+            // Default center-drop to grid-3pane-right-main (new tab as main right pane)
+            // which is a natural extension of horizontal (side-by-side) layout.
+            const gridLayout = "grid-3pane-right-main";
+            const groupId = getActiveSplitViewGroupId();
+            if (groupId) {
+              setPersistedGroupLayout(groupId, gridLayout);
+            }
+            applyLayout(logger!);
+          } else if (newPaneCount === 4) {
+            const groupId = getActiveSplitViewGroupId();
+            if (groupId) {
+              setPersistedGroupLayout(groupId, "grid-2x2");
+            }
+            applyLayout(logger!);
           }
-          applyLayout(logger!);
-        } else if (newPaneCount === 4) {
-          const groupId = getActiveSplitViewGroupId();
-          if (groupId) {
-            setPersistedGroupLayout(groupId, "grid-2x2");
+        } else if (!splitView) {
+          const partnerTab = findLastActivePartnerTab(gBrowser, tab);
+          if (!partnerTab) return;
+          if (partnerTab.splitview) {
+            const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
+            if (existingWrapper.tabs.length < maxPanes) {
+              existingWrapper.addTabs([tab]);
+              const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
+              if (layout) {
+                const groupId = getActiveSplitViewGroupId();
+                if (groupId) setPersistedGroupLayout(groupId, layout);
+              }
+              applyLayout(logger!);
+            }
+          } else {
+            const wrapper = gBrowser.addTabSplitView([partnerTab, tab]);
+            if (wrapper) {
+              applyLayout(logger!);
+            }
           }
-          applyLayout(logger!);
         }
-      } else if (!splitView) {
+        return;
+      }
+
+      // Edge zones: add to existing split view if partner is in one,
+      // otherwise create a new split view with the most recently active tab.
+      {
         const partnerTab = findLastActivePartnerTab(gBrowser, tab);
         if (!partnerTab) return;
         if (partnerTab.splitview) {
@@ -333,43 +360,20 @@ function onDrop(event: DragEvent): void {
             applyLayout(logger!);
           }
         } else {
-          const wrapper = gBrowser.addTabSplitView([partnerTab, tab]);
+          const layout = zoneToLayout(zone);
+          const [first, second] = zoneToTabOrder(zone, partnerTab, tab);
+          const wrapper = gBrowser.addTabSplitView([first, second]);
           if (wrapper) {
+            const groupId = getActiveSplitViewGroupId();
+            if (groupId) {
+              setPersistedGroupLayout(groupId, layout);
+            }
             applyLayout(logger!);
           }
         }
       }
-      return;
-    }
-
-    // Edge zones: add to existing split view if partner is in one,
-    // otherwise create a new split view with the most recently active tab.
-    {
-      const partnerTab = findLastActivePartnerTab(gBrowser, tab);
-      if (!partnerTab) return;
-      if (partnerTab.splitview) {
-        const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
-        if (existingWrapper.tabs.length < maxPanes) {
-          existingWrapper.addTabs([tab]);
-          const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
-          if (layout) {
-            const groupId = getActiveSplitViewGroupId();
-            if (groupId) setPersistedGroupLayout(groupId, layout);
-          }
-          applyLayout(logger!);
-        }
-      } else {
-        const layout = zoneToLayout(zone);
-        const [first, second] = zoneToTabOrder(zone, partnerTab, tab);
-        const wrapper = gBrowser.addTabSplitView([first, second]);
-        if (wrapper) {
-          const groupId = getActiveSplitViewGroupId();
-          if (groupId) {
-            setPersistedGroupLayout(groupId, layout);
-          }
-          applyLayout(logger!);
-        }
-      }
+    } catch (err) {
+      logger?.error("[tab-drop] Error in deferred drop handler:", err);
     }
   }, 0);
 }

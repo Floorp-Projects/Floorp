@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { getGBrowser, type SplitViewGBrowser, type SplitViewTab } from "../data/types.js";
+import { findTabByPanelId } from "../utils/find-tab.js";
 
 /**
  * Subset of browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs we need so
@@ -38,17 +39,7 @@ function tabOwnerDocumentHidden(tab: SplitViewTab): boolean {
   return Boolean(og?.document?.hidden);
 }
 
-function findTabForPanelId(
-  gb: SplitViewGBrowser,
-  id: string,
-): SplitViewTab | undefined {
-  for (const t of gb.tabs) {
-    if (t.linkedPanel === id) {
-      return t;
-    }
-  }
-  return undefined;
-}
+const findTabForPanelId = findTabByPanelId;
 
 /**
  * Tabs in gBrowser._tabLayerCache get docShellIsActive=false from
