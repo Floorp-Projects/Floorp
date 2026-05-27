@@ -980,117 +980,55 @@
 
 /* ===== New Window Drop Zone ===== */
 
-/* ===== New Window Drop Zone ===== */
-
-@keyframes floorp-drop-zone-appear {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-@keyframes floorp-drop-zone-glow {
-  0%, 100% {
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.18),
-      0 0 0 0 color-mix(in srgb, AccentColor 0%, transparent);
-  }
-  50% {
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.18),
-      0 0 0 6px color-mix(in srgb, AccentColor 18%, transparent);
-  }
-}
-
-@keyframes floorp-drop-zone-icon-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
 #floorp-new-window-drop-zone {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  min-width: 280px;
-  padding: 32px 40px 28px;
-  border: 2px dashed color-mix(in srgb, currentColor 30%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--toolbar-bgcolor) 85%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  min-width: 260px;
+  padding: 28px 36px;
+  border: 2px dashed color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--toolbar-bgcolor) 92%, transparent);
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   z-index: 10000;
   pointer-events: auto;
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
-  transition:
-    border-color 200ms ease,
-    border-style 200ms ease,
-    background-color 200ms ease,
-    box-shadow 200ms ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 #floorp-new-window-drop-zone[drag-active] {
   display: flex;
-  animation:
-    floorp-drop-zone-appear 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards,
-    floorp-drop-zone-glow 2s ease-in-out infinite;
 }
 
 #floorp-new-window-drop-zone[drag-hover] {
   border-style: solid;
   border-color: AccentColor;
-  background: color-mix(in srgb, AccentColor 12%, var(--toolbar-bgcolor) 85%);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.22),
-    0 0 0 4px color-mix(in srgb, AccentColor 24%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
-  animation: none; /* stop glow — hover state has its own emphasis */
+  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-bgcolor));
 }
 
 .floorp-new-window-zone-icon {
-  width: 40px;
-  height: 40px;
-  opacity: 0.7;
-  transition: opacity 200ms ease, transform 200ms ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2.5'/%3E%3Cline x1='3' y1='9' x2='21' y2='9'/%3E%3Ccircle cx='6.5' cy='6' r='.75' fill='currentColor' stroke='none'/%3E%3Ccircle cx='9.25' cy='6' r='.75' fill='currentColor' stroke='none'/%3E%3Ccircle cx='12' cy='6' r='.75' fill='currentColor' stroke='none'/%3E%3Cpath d='M12.5 15l4-4m0 0v3.5m0-3.5H13' opacity='.9'/%3E%3C/svg%3E");
+  width: 32px;
+  height: 32px;
+  opacity: 0.6;
+  background-image: url("chrome://floorp/content/split-view/new-window.svg");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
 
-#floorp-new-window-drop-zone[drag-active] .floorp-new-window-zone-icon {
-  animation: floorp-drop-zone-icon-float 2s ease-in-out infinite;
-}
-
 #floorp-new-window-drop-zone[drag-hover] .floorp-new-window-zone-icon {
   opacity: 1;
-  transform: scale(1.08);
-  animation: none;
 }
 
 .floorp-new-window-zone-label {
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
   color: inherit;
   opacity: 0.7;
   text-align: center;
   white-space: nowrap;
-  transition: opacity 200ms ease;
 }
 
 #floorp-new-window-drop-zone[drag-hover] .floorp-new-window-zone-label {
