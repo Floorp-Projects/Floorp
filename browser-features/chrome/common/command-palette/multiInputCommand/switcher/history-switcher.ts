@@ -45,15 +45,19 @@ interface SqliteConnection {
 }
 
 interface SqliteModule {
-  cloneStorageConnection(connection: {
-    connection: unknown;
-    readOnly: boolean;
-  }): Promise<SqliteConnection>;
+  Sqlite: {
+    cloneStorageConnection(connection: {
+      connection: unknown;
+      readOnly: boolean;
+    }): Promise<SqliteConnection>;
+  };
 }
 
 interface PlacesUtilsModule {
-  history: {
-    DBConnection: unknown;
+  PlacesUtils: {
+    history: {
+      DBConnection: unknown;
+    };
   };
 }
 
@@ -79,6 +83,8 @@ async function queryHistory(
       connection: PlacesUtils.history.DBConnection,
       readOnly: true,
     });
+
+    if (!conn) return [];
 
     const sevenDaysAgoMicroseconds =
       (Date.now() - 7 * 24 * 60 * 60 * 1000) * 1000;

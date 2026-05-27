@@ -6,18 +6,21 @@ import {
   assertEquals,
   runTests,
   type TestCase,
-} from "../../../../test/utils/test_harness.ts";
+} from "../../../../../test/utils/test_harness.ts";
 import {
   bookmarkSwitcherCommand,
   loadBookmarks,
 } from "../bookmark-switcher.ts";
-import { getPaletteCommands } from "../../../../command-registry.ts";
+import {
+  getPaletteCommands,
+  type PaletteCommand,
+} from "../../../command-registry.ts";
 
 const rawTests: TestCase[] = [
   {
     name: "bookmarkSwitcherCommand has correct id",
     fn() {
-      assertEquals(bookmarkSwitcherCommand.id, "floorp-bookmark-switcher");
+      assertEquals(bookmarkSwitcherCommand.id, "floorp-bookmark-switcher", "id should be floorp-bookmark-switcher");
     },
   },
   {
@@ -48,7 +51,7 @@ const rawTests: TestCase[] = [
   {
     name: "bookmarkSwitcherCommand has correct category",
     fn() {
-      assertEquals(bookmarkSwitcherCommand.category, "switcher");
+      assertEquals(bookmarkSwitcherCommand.category, "switcher", "category should be switcher");
     },
   },
   {
@@ -58,7 +61,7 @@ const rawTests: TestCase[] = [
         Array.isArray(bookmarkSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(bookmarkSwitcherCommand.steps!.length, 1);
+      assertEquals(bookmarkSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
     },
   },
   {
@@ -137,7 +140,7 @@ const rawTests: TestCase[] = [
     fn() {
       const commands = getPaletteCommands();
       const found = commands.some(
-        (cmd) => cmd.id === "floorp-bookmark-switcher",
+        (cmd: PaletteCommand) => cmd.id === "floorp-bookmark-switcher",
       );
       assert(
         found,

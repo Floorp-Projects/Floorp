@@ -30,7 +30,9 @@ interface PlacesBookmarks {
 }
 
 interface PlacesUtilsModule {
-  bookmarks: PlacesBookmarks;
+  PlacesUtils: {
+    bookmarks: PlacesBookmarks;
+  };
 }
 
 function navigateToUrl(win: Window, url: string): void {

@@ -6,18 +6,21 @@ import {
   assertEquals,
   runTests,
   type TestCase,
-} from "../../../../test/utils/test_harness.ts";
+} from "../../../../../test/utils/test_harness.ts";
 import {
   closedTabSwitcherCommand,
   loadClosedTabs,
 } from "../closed-tab-switcher.ts";
-import { getPaletteCommands } from "../../../../command-registry.ts";
+import {
+  getPaletteCommands,
+  type PaletteCommand,
+} from "../../../command-registry.ts";
 
 const rawTests: TestCase[] = [
   {
     name: "closedTabSwitcherCommand has correct id",
     fn() {
-      assertEquals(closedTabSwitcherCommand.id, "floorp-closed-tab-switcher");
+      assertEquals(closedTabSwitcherCommand.id, "floorp-closed-tab-switcher", "id should be floorp-closed-tab-switcher");
     },
   },
   {
@@ -48,7 +51,7 @@ const rawTests: TestCase[] = [
   {
     name: "closedTabSwitcherCommand has correct category",
     fn() {
-      assertEquals(closedTabSwitcherCommand.category, "switcher");
+      assertEquals(closedTabSwitcherCommand.category, "switcher", "category should be switcher");
     },
   },
   {
@@ -58,7 +61,7 @@ const rawTests: TestCase[] = [
         Array.isArray(closedTabSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(closedTabSwitcherCommand.steps!.length, 1);
+      assertEquals(closedTabSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
     },
   },
   {
@@ -127,7 +130,7 @@ const rawTests: TestCase[] = [
     fn() {
       const commands = getPaletteCommands();
       const found = commands.some(
-        (cmd) => cmd.id === "floorp-closed-tab-switcher",
+        (cmd: PaletteCommand) => cmd.id === "floorp-closed-tab-switcher",
       );
       assert(
         found,

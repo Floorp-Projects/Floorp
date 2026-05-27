@@ -361,7 +361,7 @@ const rawTests: TestCase[] = [
       ];
       const results = fuzzySearch("戻る", items);
       assert(results.length > 0, "should match kanji label directly");
-      assertEquals(results[0].label, "戻る");
+      assertEquals(results[0].label, "戻る", "top result should be '戻る'");
     },
   },
 

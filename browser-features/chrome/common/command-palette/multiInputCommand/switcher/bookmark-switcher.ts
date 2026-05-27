@@ -57,11 +57,13 @@ interface PlacesUtilsBookmarks {
 }
 
 interface PlacesUtilsModule {
-  bookmarks: PlacesUtilsBookmarks;
-  promiseBookmarksTree(
-    guid: string,
-    options?: { includeItemIds?: boolean },
-  ): Promise<BookmarkTreeNode | null>;
+  PlacesUtils: {
+    bookmarks: PlacesUtilsBookmarks;
+    promiseBookmarksTree(
+      guid: string,
+      options?: { includeItemIds?: boolean },
+    ): Promise<BookmarkTreeNode | null>;
+  };
 }
 
 function buildPath(parentPath: string, folderTitle: string): string {
@@ -118,7 +120,7 @@ export async function loadBookmarks(): Promise<
     if (!tree?.children) return [];
 
     const userRoots = tree.children.filter(
-      (child) =>
+      (child: BookmarkTreeNode) =>
         child.guid === PlacesUtils.bookmarks.toolbarGuid ||
         child.guid === PlacesUtils.bookmarks.menuGuid ||
         child.guid === PlacesUtils.bookmarks.unfiledGuid ||

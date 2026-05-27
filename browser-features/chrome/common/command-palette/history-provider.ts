@@ -48,7 +48,9 @@ interface PlacesHistory {
 }
 
 interface PlacesUtilsModule {
-  history: PlacesHistory;
+  PlacesUtils: {
+    history: PlacesHistory;
+  };
 }
 
 function navigateToUrl(win: Window, url: string): void {
@@ -80,7 +82,7 @@ export function searchHistory(
 
       const options = PlacesUtils.history.getNewQueryOptions();
       options.sortingMode =
-        Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+        Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING ?? 1;
       options.maxResults = limit;
 
       const result = PlacesUtils.history.executeQuery(historyQuery, options);

@@ -6,15 +6,18 @@ import {
   assertEquals,
   runTests,
   type TestCase,
-} from "../../../../test/utils/test_harness.ts";
+} from "../../../../../test/utils/test_harness.ts";
 import { tabSwitcherCommand, loadTabs } from "../tab-switcher.ts";
-import { getPaletteCommands } from "../../../../command-registry.ts";
+import {
+  getPaletteCommands,
+  type PaletteCommand,
+} from "../../../command-registry.ts";
 
 const rawTests: TestCase[] = [
   {
     name: "tabSwitcherCommand has correct id",
     fn() {
-      assertEquals(tabSwitcherCommand.id, "floorp-tab-switcher");
+      assertEquals(tabSwitcherCommand.id, "floorp-tab-switcher", "id should be floorp-tab-switcher");
     },
   },
   {
@@ -45,7 +48,7 @@ const rawTests: TestCase[] = [
   {
     name: "tabSwitcherCommand has correct category",
     fn() {
-      assertEquals(tabSwitcherCommand.category, "switcher");
+      assertEquals(tabSwitcherCommand.category, "switcher", "category should be switcher");
     },
   },
   {
@@ -55,7 +58,7 @@ const rawTests: TestCase[] = [
         Array.isArray(tabSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(tabSwitcherCommand.steps!.length, 1);
+      assertEquals(tabSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
     },
   },
   {
@@ -107,7 +110,8 @@ const rawTests: TestCase[] = [
     name: "loadTabs items have label and value",
     async fn() {
       const result = await loadTabs();
-      for (const item of result) {
+      const choices = Array.isArray(result) ? result : result.choices;
+      for (const item of choices) {
         assert(
           typeof item.label === "string",
           "each item should have a string label",
@@ -123,7 +127,7 @@ const rawTests: TestCase[] = [
     name: "tabSwitcherCommand is registered in palette",
     fn() {
       const commands = getPaletteCommands();
-      const found = commands.some((cmd) => cmd.id === "floorp-tab-switcher");
+      const found = commands.some((cmd: PaletteCommand) => cmd.id === "floorp-tab-switcher");
       assert(
         found,
         "floorp-tab-switcher should be registered in palette commands",
