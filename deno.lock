@@ -84,7 +84,7 @@
     "npm:react-refresh@0.18": "0.18.0",
     "npm:react-router-dom@^7.11.0": "7.15.1_react@19.2.6_react-dom@19.2.6__react@19.2.6",
     "npm:react@^19.2.3": "19.2.6",
-    "npm:recharts@^3.6.0": "3.8.1_react@19.2.6_react-dom@19.2.6__react@19.2.6_react-is@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6_@types+react@19.2.15",
+    "npm:recharts@^3.6.0": "3.8.1_react@19.2.6_react-dom@19.2.6__react@19.2.6_react-is@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6__redux@5.0.1_@types+react@19.2.15",
     "npm:rolldown-vite@^7.3.0": "7.3.1_@types+node@25.9.1_picomatch@4.0.4",
     "npm:rolldown@^1.0.0-beta.57": "1.0.3",
     "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5": "1.0.3",
@@ -92,9 +92,10 @@
     "npm:solid-styled-jsx@~0.27.1": "0.27.1_solid-js@1.9.13__seroval@1.5.4_styled-jsx@3.4.7__react@19.2.6__stylis@3.5.4_react@19.2.6",
     "npm:tailwind-merge@^3.4.0": "3.6.0",
     "npm:tailwindcss@^4.1.18": "4.3.0",
-    "npm:tsdown@0.22": "0.22.0_typescript@5.9.3_rolldown@1.0.3",
+    "npm:tsdown@0.22": "0.22.0_typescript@5.9.3_unrun@0.3.0",
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:unplugin-swc@^1.5.9": "1.5.9_@swc+core@1.15.40",
+    "npm:unrun@*": "0.3.0",
     "npm:uuid@13": "13.0.2",
     "npm:vite-plugin-istanbul@^7.2.1": "7.2.1_vite@7.3.3__@types+node@25.9.1__lightningcss@1.32.0__picomatch@4.0.4_@types+node@25.9.1_lightningcss@1.32.0",
     "npm:vite-plugin-solid@^2.11.10": "2.11.12_solid-js@1.9.13__seroval@1.5.4_vite@7.3.3__@types+node@25.9.1__lightningcss@1.32.0__picomatch@4.0.4_@babel+core@7.29.7_@types+node@25.9.1_lightningcss@1.32.0",
@@ -1221,21 +1222,21 @@
         "@types/react"
       ]
     },
-    "@reduxjs/toolkit@2.12.0_react@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6_@types+react@19.2.15_redux@5.0.1": {
+    "@reduxjs/toolkit@2.12.0_react@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6__redux@5.0.1_@types+react@19.2.15_redux@5.0.1": {
       "integrity": "sha512-KiT+RzZbp6mQET+Mg+h2c97+9j1sNflUxQkIHI7Yuzf6Peu+OYpmkn6nbHWmLLWj+1ZODUJFwGZ7gx3L9R9EOw==",
       "dependencies": [
         "@standard-schema/spec",
         "@standard-schema/utils",
         "immer@11.1.8",
         "react",
-        "react-redux@9.3.0_@types+react@19.2.15_react@19.2.6_redux@5.0.1",
+        "react-redux",
         "redux",
         "redux-thunk",
         "reselect"
       ],
       "optionalPeers": [
         "react",
-        "react-redux@9.3.0_@types+react@19.2.15_react@19.2.6_redux@5.0.1"
+        "react-redux"
       ]
     },
     "@remirror/core-constants@3.0.0": {
@@ -3803,18 +3804,6 @@
     "react-is@19.2.6": {
       "integrity": "sha512-XjBR15BhXuylgWGuslhDKqlSayuqvqBX91BP8pauG8kd1zY8kotkNWbXksTCNRarse4kuGbe2kIY05ARtwNIvw=="
     },
-    "react-redux@9.3.0_@types+react@19.2.15_react@19.2.6": {
-      "integrity": "sha512-KQopgqFo/p/fgmAs5qz6p5RWaNAzq40WAu7fJIXnQpYxFPbJYtsJPWvGeF2rOBaY/kEuV77AVsX8TsQzKm+A/g==",
-      "dependencies": [
-        "@types/react",
-        "@types/use-sync-external-store",
-        "react",
-        "use-sync-external-store"
-      ],
-      "optionalPeers": [
-        "@types/react"
-      ]
-    },
     "react-redux@9.3.0_@types+react@19.2.15_react@19.2.6_redux@5.0.1": {
       "integrity": "sha512-KQopgqFo/p/fgmAs5qz6p5RWaNAzq40WAu7fJIXnQpYxFPbJYtsJPWvGeF2rOBaY/kEuV77AVsX8TsQzKm+A/g==",
       "dependencies": [
@@ -3900,7 +3889,7 @@
     "readdirp@5.0.0": {
       "integrity": "sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ=="
     },
-    "recharts@3.8.1_react@19.2.6_react-dom@19.2.6__react@19.2.6_react-is@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6_@types+react@19.2.15": {
+    "recharts@3.8.1_react@19.2.6_react-dom@19.2.6__react@19.2.6_react-is@19.2.6_react-redux@9.3.0__@types+react@19.2.15__react@19.2.6__redux@5.0.1_@types+react@19.2.15": {
       "integrity": "sha512-mwzmO1s9sFL0TduUpwndxCUNoXsBw3u3E/0+A+cLcrSfQitSG62L32N69GhqUrrT5qKcAE3pCGVINC6pqkBBQg==",
       "dependencies": [
         "@reduxjs/toolkit",
@@ -3912,7 +3901,7 @@
         "react",
         "react-dom",
         "react-is",
-        "react-redux@9.3.0_@types+react@19.2.15_react@19.2.6",
+        "react-redux",
         "reselect",
         "tiny-invariant",
         "use-sync-external-store",
@@ -4323,7 +4312,7 @@
       ],
       "bin": true
     },
-    "tsdown@0.22.0_typescript@5.9.3_rolldown@1.0.3": {
+    "tsdown@0.22.0_typescript@5.9.3_unrun@0.3.0": {
       "integrity": "sha512-FgW0hHb27nGQA/+F3d5+U9wKXkfilk9DVkc5+7x/ZqF03g+Hoz/eeApT32jqxATt9eRoR+1jxk7MUMON+O4CXw==",
       "dependencies": [
         "ansis",
@@ -4341,10 +4330,12 @@
         "tinyglobby",
         "tree-kill",
         "typescript",
-        "unconfig-core"
+        "unconfig-core",
+        "unrun"
       ],
       "optionalPeers": [
-        "typescript"
+        "typescript",
+        "unrun"
       ],
       "bin": true
     },
@@ -4397,6 +4388,13 @@
         "picomatch@4.0.4",
         "webpack-virtual-modules"
       ]
+    },
+    "unrun@0.3.0": {
+      "integrity": "sha512-5xw2AIVS2WR9Lqhz76qDIQLxipKRidf7Nq+Iz5SZ8shk1OmRlxnc6FyI/1Q2m99WLj6cbqaKFdESfWE99KPzlA==",
+      "dependencies": [
+        "rolldown@1.0.3"
+      ],
+      "bin": true
     },
     "update-browserslist-db@1.2.3_browserslist@4.28.2": {
       "integrity": "sha512-Js0m9cx+qOgDxo0eMiFGEueWztz+d4+M3rGlmKPT+T4IS/jP4ylw3Nwpu6cpTTP8R1MAC1kF4VbdLt3ARf209w==",
@@ -4702,6 +4700,7 @@
           "npm:birpc@4",
           "npm:oxlint@^1.35.0",
           "npm:tsdown@0.22",
+          "npm:unrun@*",
           "npm:vite@*"
         ],
         "packageJson": {
@@ -4716,6 +4715,7 @@
           "jsr:@types/gecko@*",
           "npm:rolldown@^1.0.0-beta.9-commit.d91dfb5",
           "npm:tsdown@0.22",
+          "npm:unrun@*",
           "npm:vite@*"
         ]
       },
