@@ -100,10 +100,21 @@ const rawTests: TestCase[] = [
     },
   },
   {
-    name: "loadTabs returns an array",
+    name: "loadTabs returns array or {choices, defaultIndex}",
     async fn() {
       const result = await loadTabs();
-      assert(Array.isArray(result), "loadTabs should return an array");
+      if (Array.isArray(result)) {
+        assert(Array.isArray(result), "loadTabs should return an array");
+      } else {
+        assert(
+          Array.isArray((result as { choices: unknown }).choices),
+          "loadTabs result.choices should be an array",
+        );
+        assert(
+          typeof (result as { defaultIndex: unknown }).defaultIndex === "number",
+          "loadTabs result.defaultIndex should be a number",
+        );
+      }
     },
   },
   {

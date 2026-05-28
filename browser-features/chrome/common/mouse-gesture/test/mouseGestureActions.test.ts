@@ -657,6 +657,13 @@ const rawTests: TestCase[] = [
         },
       } as unknown as Window;
 
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
+
       // Temporarily mock navigator.clipboard.writeText
       const savedWriteText = navigator.clipboard.writeText;
       navigator.clipboard.writeText = (text: string): Promise<void> => {
@@ -697,6 +704,13 @@ const rawTests: TestCase[] = [
         },
       } as unknown as Window;
 
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
+
       const savedWriteText = navigator.clipboard.writeText;
       navigator.clipboard.writeText = (text: string): Promise<void> => {
         clipboardText = text;
@@ -733,6 +747,13 @@ const rawTests: TestCase[] = [
           },
         },
       } as unknown as Window;
+
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
 
       const savedWriteText = navigator.clipboard.writeText;
       navigator.clipboard.writeText = (text: string): Promise<void> => {

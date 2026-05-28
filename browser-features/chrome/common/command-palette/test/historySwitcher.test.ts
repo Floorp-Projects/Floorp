@@ -164,23 +164,15 @@ const rawTests: TestCase[] = [
   {
     name: "historySwitcherCommand fn does not throw with empty args",
     fn() {
-      try {
-        historySwitcherCommand.fn(window, {});
-      } catch {
-        // May fail on missing browser state, acceptable
-      }
+      historySwitcherCommand.fn(window, {});
     },
   },
   {
     name: "historySwitcherCommand fn does not throw with valid URL args",
     fn() {
-      try {
-        historySwitcherCommand.fn(window, {
-          history: "https://example.com",
-        });
-      } catch {
-        // May fail on missing gBrowser, acceptable
-      }
+      historySwitcherCommand.fn(window, {
+        history: "https://example.com",
+      });
     },
   },
   {
