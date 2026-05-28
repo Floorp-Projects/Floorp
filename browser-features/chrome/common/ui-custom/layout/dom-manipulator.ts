@@ -1621,7 +1621,7 @@ export class DOMLayoutManager {
       navbar.isConnected &&
       (this.isNavbarAtBottom ||
         (navbar.parentElement !== null &&
-          (navbar.parentElement as XULElement | null) !== this.navigatorToolbox));
+          (navbar.parentElement as unknown as XULElement | null) !== this.navigatorToolbox));
 
     let insertionAnchor: XULElement | null = null;
     if (navbar && navbar.isConnected && navbarAtBottom) {
