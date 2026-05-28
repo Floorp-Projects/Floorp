@@ -6,6 +6,7 @@ import type {
   CommandStepChoice,
   StepChoicesResult,
 } from "../../command-registry.ts";
+import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 
 /**
  * Get hiragana reading keywords for a given action/command ID from i18n.
@@ -21,7 +22,8 @@ function getJapaneseReadings(id: string): string[] {
       return readings.filter((r): r is string => typeof r === "string");
     }
     return [];
-  } catch {
+  } catch (err) {
+    console.error("[BookmarkSwitcher]", "getJapaneseReadings error", err);
     return [];
   }
 }
@@ -33,36 +35,6 @@ interface ChromeWindow extends Window {
   gBrowser?: {
     selectedBrowser?: { contentPrincipal?: unknown };
     loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
-
-interface BookmarkTreeNode {
-  guid: string;
-  title: string;
-  index: number;
-  dateAdded: number;
-  lastModified: number;
-  type: string;
-  uri?: string;
-  children?: BookmarkTreeNode[];
-  root?: string;
-}
-
-interface PlacesUtilsBookmarks {
-  rootGuid: string;
-  menuGuid: string;
-  toolbarGuid: string;
-  unfiledGuid: string;
-  mobileGuid: string;
-}
-
-interface PlacesUtilsModule {
-  PlacesUtils: {
-    bookmarks: PlacesUtilsBookmarks;
-    promiseBookmarksTree(
-      guid: string,
-      options?: { includeItemIds?: boolean },
-    ): Promise<BookmarkTreeNode | null>;
   };
 }
 
@@ -132,8 +104,10 @@ export async function loadBookmarks(): Promise<
 
     allFlatBookmarks = allBookmarks;
 
-    const firstPage = allBookmarks.slice(0, PAGE_SIZE);
-    const hasMore = allBookmarks.length > PAGE_SIZE;
+    // Capture snapshot so loadMore doesn't reference mutable global
+    const snapshot = allBookmarks;
+    const firstPage = snapshot.slice(0, PAGE_SIZE);
+    const hasMore = snapshot.length > PAGE_SIZE;
     let offset = firstPage.length;
 
     return {
@@ -144,18 +118,14 @@ export async function loadBookmarks(): Promise<
             choices: CommandStepChoice[];
             hasMore: boolean;
           }> => {
-            // Defensive: cache may have been invalidated
-            if (!allFlatBookmarks) {
-              return Promise.resolve({ choices: [], hasMore: false });
-            }
-            const nextBatch = allFlatBookmarks.slice(
+            const nextBatch = snapshot.slice(
               offset,
               offset + PAGE_SIZE,
             );
             offset += nextBatch.length;
             return Promise.resolve({
               choices: nextBatch,
-              hasMore: offset < allFlatBookmarks.length,
+              hasMore: offset < snapshot.length,
             });
           }
         : undefined,

@@ -17,7 +17,8 @@ function getJapaneseReadings(id: string): string[] {
       return readings.filter((r): r is string => typeof r === "string");
     }
     return [];
-  } catch {
+  } catch (err) {
+    console.error("[MultiInputCommand] open-url i18n lookup failed:", err);
     return [];
   }
 }
