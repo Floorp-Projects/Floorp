@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { PaletteCommand } from "./command-registry.ts";
+import type { BookmarkItem, PlacesBookmarks, PlacesUtilsModule, UrlLike } from "./types.ts";
 
 const BOOKMARK_COMMAND_PREFIX = "__bookmark__";
 
@@ -8,30 +9,6 @@ interface ChromeWindow extends Window {
   gBrowser?: {
     selectedBrowser?: { contentPrincipal?: unknown };
     loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
-
-/** Firefox may return url as a string, URL object, or nsIURI */
-type UrlLike = string | { href: string } | { spec: string };
-
-interface BookmarkItem {
-  guid: string;
-  title: string | null;
-  url: UrlLike | null;
-  type: number;
-  parentGuid: string;
-  dateAdded: number | null;
-  lastModified: number | null;
-}
-
-interface PlacesBookmarks {
-  search(query: string): Promise<BookmarkItem[]>;
-  TYPE_BOOKMARK: number;
-}
-
-interface PlacesUtilsModule {
-  PlacesUtils: {
-    bookmarks: PlacesBookmarks;
   };
 }
 
@@ -60,8 +37,7 @@ export async function searchBookmarks(
   limit: number = 10,
 ): Promise<PaletteCommand[]> {
   console.debug(
-    "[command-palette/bookmark] searchBookmarks called with query:",
-    query,
+    "[command-palette/bookmark] searchBookmarks called",
   );
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
@@ -87,22 +63,6 @@ export async function searchBookmarks(
       results.length,
     );
 
-    if (results.length > 0) {
-      console.debug(
-        "[command-palette/bookmark] First raw result:",
-        JSON.stringify(results[0], null, 2),
-      );
-      console.debug(
-        "[command-palette/bookmark] First result type:",
-        typeof results[0].type,
-        results[0].type,
-      );
-      console.debug(
-        "[command-palette/bookmark] First result url type:",
-        typeof results[0].url,
-      );
-    }
-
     // Use TYPE_BOOKMARK constant if available, otherwise fall back to value 1
     const TYPE_BOOKMARK = PlacesUtils.bookmarks?.TYPE_BOOKMARK ?? 1;
 
@@ -114,16 +74,13 @@ export async function searchBookmarks(
         console.debug(
           "[command-palette/bookmark] Skipping non-bookmark item, type:",
           item.type,
-          "title:",
-          item.title,
         );
         continue;
       }
       const urlString = toUrlString(item.url);
       if (!urlString) {
         console.debug(
-          "[command-palette/bookmark] Skipping item with empty url, raw url:",
-          item.url,
+          "[command-palette/bookmark] Skipping item with empty url",
         );
         continue;
       }
