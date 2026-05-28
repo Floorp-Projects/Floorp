@@ -826,10 +826,7 @@ export class CommandPaletteController {
   }
 
   private async performBookmarkSearch(query: string): Promise<void> {
-    console.debug(
-      "[command-palette] performBookmarkSearch called with query:",
-      query,
-    );
+    console.debug("[command-palette] performBookmarkSearch called");
     try {
       const results = await searchBookmarkCommands(query, 10);
       console.debug(
@@ -840,10 +837,7 @@ export class CommandPaletteController {
 
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) {
-        console.debug(
-          "[command-palette] Bookmark search stale, currentQuery:",
-          this.currentSearchQuery,
-        );
+        console.debug("[command-palette] Bookmark search stale");
         return;
       }
 
