@@ -7,6 +7,7 @@ import {
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
 import i18next from "i18next";
+import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
@@ -202,26 +203,6 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],
 };
-
-/**
- * Get hiragana reading keywords for a given action/command ID from i18n.
- * Returns an empty array for non-Japanese locales or if no readings are defined.
- */
-function getJapaneseReadings(id: string): string[] {
-  try {
-    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
-      defaultValue: [] as string[],
-      returnObjects: true,
-    });
-    if (Array.isArray(readings)) {
-      return readings.filter((r): r is string => typeof r === "string");
-    }
-    return [];
-  } catch (err) {
-    console.error("[CommandPalette] getJapaneseReadings error for id=", id, err);
-    return [];
-  }
-}
 
 /**
  * Mouse gesture actions listed here will be excluded from the command palette.

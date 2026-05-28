@@ -12,7 +12,7 @@ import type { GestureActionRegistration } from "../utils/gestures.ts";
 import {
   shareModeEnabled,
   setShareModeEnabled,
-} from "../../browser-share-mode/browser-share-mode.tsx";
+} from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 import {
   assert,
   assertEquals,

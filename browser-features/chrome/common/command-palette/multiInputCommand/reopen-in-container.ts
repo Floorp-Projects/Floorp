@@ -2,25 +2,7 @@
 
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "../types.ts";
-
-/**
- * Get hiragana reading keywords for a given action/command ID from i18n.
- * Returns an empty array for non-Japanese locales or if no readings are defined.
- */
-function getJapaneseReadings(id: string): string[] {
-  try {
-    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
-      defaultValue: [] as string[],
-      returnObjects: true,
-    });
-    if (Array.isArray(readings)) {
-      return readings.filter((r): r is string => typeof r === "string");
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
+import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 
 export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {

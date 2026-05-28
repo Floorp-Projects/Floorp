@@ -1620,8 +1620,8 @@ export class DOMLayoutManager {
       navbar &&
       navbar.isConnected &&
       (this.isNavbarAtBottom ||
-        ((navbar.parentElement as unknown as XULElement) !== this.navigatorToolbox &&
-          navbar.parentElement !== null));
+        (navbar.parentElement !== null &&
+          navbar.parentElement !== this.navigatorToolbox));
 
     let insertionAnchor: XULElement | null = null;
     if (navbar && navbar.isConnected && navbarAtBottom) {

@@ -7,26 +7,7 @@ import type {
   StepChoicesResult,
 } from "../../types.ts";
 import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
-
-/**
- * Get hiragana reading keywords for a given action/command ID from i18n.
- * Returns an empty array for non-Japanese locales or if no readings are defined.
- */
-function getJapaneseReadings(id: string): string[] {
-  try {
-    const readings: unknown = i18next.t(`commandPaletteReadings.${id}`, {
-      defaultValue: [] as string[],
-      returnObjects: true,
-    });
-    if (Array.isArray(readings)) {
-      return readings.filter((r): r is string => typeof r === "string");
-    }
-    return [];
-  } catch (err) {
-    console.error("[BookmarkSwitcher]", "getJapaneseReadings error", err);
-    return [];
-  }
-}
+import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;

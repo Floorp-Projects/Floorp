@@ -1,5 +1,5 @@
 import type { GestureActionRegistration } from "./gestures.ts";
-import { setShareModeEnabled } from "../../browser-share-mode/browser-share-mode.tsx";
+import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
