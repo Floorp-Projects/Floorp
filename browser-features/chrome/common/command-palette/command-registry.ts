@@ -350,8 +350,8 @@ export function getShortcutForAction(actionId: string): string | null {
         return shortcutToString(shortcut);
       }
     }
-  } catch {
-    // keyboard-shortcut module may not be available
+  } catch (err) {
+    console.error("[CommandPalette]", "Failed to load keyboard shortcut config", err);
   }
   return null;
 }

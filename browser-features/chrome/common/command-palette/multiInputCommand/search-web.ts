@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand, CommandStepChoice } from "../types.ts";
-import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
+import type { PaletteCommand, CommandStepChoice } from "#features-chrome/common/command-palette/types.ts";
+import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 
 export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "./types.ts";
+import type { PaletteCommand } from "#features-chrome/common/command-palette/types.ts";
 
 const TAB_COMMAND_PREFIX = "__tab__";
 
