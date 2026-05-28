@@ -21,5 +21,52 @@ export interface PlacesBookmarks {
 export interface PlacesUtilsModule {
   PlacesUtils: {
     bookmarks: PlacesBookmarks;
+  } & {
+    history: PlacesHistory;
   };
+}
+
+export interface PlacesHistory {
+  getNewQuery(): NavHistoryQuery;
+  getNewQueryOptions(): NavHistoryQueryOptions;
+  executeQuery(
+    query: NavHistoryQuery,
+    options: NavHistoryQueryOptions,
+  ): HistoryQueryResult;
+}
+
+export interface NavHistoryQuery {
+  searchTerms: string;
+  beginTime: number;
+  endTime: number;
+}
+
+export interface NavHistoryQueryOptions {
+  sortingMode: number;
+  maxResults: number;
+}
+
+// --- History Provider Types ---
+
+export interface ChromeWindow extends Window {
+  gBrowser?: {
+    selectedBrowser?: { contentPrincipal?: unknown };
+    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
+  };
+}
+
+export interface HistoryResultNode {
+  uri: string;
+  title: string;
+  accessCount: number;
+}
+
+export interface HistoryQueryResult {
+  root: HistoryContainer;
+}
+
+export interface HistoryContainer {
+  containerOpen: boolean;
+  childCount: number;
+  getChild(index: number): HistoryResultNode;
 }

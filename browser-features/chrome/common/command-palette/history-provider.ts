@@ -1,57 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { PaletteCommand } from "./command-registry.ts";
+import type {
+  ChromeWindow,
+  PlacesUtilsModule,
+} from "./types.ts";
 
 const HISTORY_COMMAND_PREFIX = "__history__";
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
-
-interface HistoryResultNode {
-  uri: string;
-  title: string;
-  accessCount: number;
-}
-
-interface HistoryQueryResult {
-  root: HistoryContainer;
-}
-
-interface HistoryContainer {
-  containerOpen: boolean;
-  childCount: number;
-  getChild(index: number): HistoryResultNode;
-}
-
-interface NavHistoryQuery {
-  searchTerms: string;
-  beginTime: number;
-  endTime: number;
-}
-
-interface NavHistoryQueryOptions {
-  sortingMode: number;
-  maxResults: number;
-}
-
-interface PlacesHistory {
-  getNewQuery(): NavHistoryQuery;
-  getNewQueryOptions(): NavHistoryQueryOptions;
-  executeQuery(
-    query: NavHistoryQuery,
-    options: NavHistoryQueryOptions,
-  ): HistoryQueryResult;
-}
-
-interface PlacesUtilsModule {
-  PlacesUtils: {
-    history: PlacesHistory;
-  };
-}
 
 function navigateToUrl(win: Window, url: string): void {
   try {

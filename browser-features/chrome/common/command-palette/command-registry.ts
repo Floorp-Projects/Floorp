@@ -256,7 +256,8 @@ function getJapaneseReadings(id: string): string[] {
       return readings.filter((r): r is string => typeof r === "string");
     }
     return [];
-  } catch {
+  } catch (err) {
+    console.error("[CommandPalette] getJapaneseReadings error for id=", id, err);
     return [];
   }
 }

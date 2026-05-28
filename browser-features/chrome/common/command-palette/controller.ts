@@ -480,10 +480,15 @@ export class CommandPaletteController {
     if (!loadMore || this.state.loadingMore() || !this.state.hasMoreChoices())
       return;
 
+    const stepSnapshot = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
     this.state.setLoadingMore(true);
     loadMore()
       .then(({ choices: newChoices, hasMore }) => {
-        if (!this.state.hasMoreChoices()) return; // Step may have changed
+        const currentStepId = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
+        if (currentStepId !== stepSnapshot) {
+          this.state.setLoadingMore(false);
+          return;
+        }
 
         this.state.setHasMoreChoices(hasMore);
 
