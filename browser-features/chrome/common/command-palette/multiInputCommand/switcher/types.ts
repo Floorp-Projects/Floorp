@@ -29,3 +29,36 @@ export interface PlacesUtilsModule {
     ): Promise<BookmarkTreeNode | null>;
   };
 }
+
+export interface ChromeWindow extends Window {
+  gBrowser?: {
+    selectedBrowser?: { contentPrincipal?: unknown };
+    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
+  };
+}
+
+export interface SqliteRow {
+  getResultByName(name: string): string | null;
+}
+
+export interface SqliteConnection {
+  executeCached(sql: string, params?: unknown[]): Promise<SqliteRow[]>;
+  close(): Promise<void>;
+}
+
+export interface SqliteModule {
+  Sqlite: {
+    cloneStorageConnection(connection: {
+      connection: unknown;
+      readOnly: boolean;
+    }): Promise<SqliteConnection>;
+  };
+}
+
+export interface HistoryPlacesUtilsModule {
+  PlacesUtils: {
+    history: {
+      DBConnection: unknown;
+    };
+  };
+}

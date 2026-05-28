@@ -6,6 +6,13 @@ import type {
   CommandStepChoice,
   StepChoicesResult,
 } from "../../command-registry.ts";
+import type {
+  ChromeWindow,
+  SqliteRow,
+  SqliteConnection,
+  SqliteModule,
+  HistoryPlacesUtilsModule,
+} from "./types.ts";
 
 /**
  * Get hiragana reading keywords for a given action/command ID from i18n.
@@ -21,45 +28,13 @@ function getJapaneseReadings(id: string): string[] {
       return readings.filter((r): r is string => typeof r === "string");
     }
     return [];
-  } catch {
+  } catch (e) {
+    console.error("[HistorySwitcher]", "getJapaneseReadings i18n error:", e);
     return [];
   }
 }
 
 const PAGE_SIZE = 20;
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
-
-interface SqliteRow {
-  getResultByName(name: string): string | null;
-}
-
-interface SqliteConnection {
-  executeCached(sql: string, params?: unknown[]): Promise<SqliteRow[]>;
-  close(): Promise<void>;
-}
-
-interface SqliteModule {
-  Sqlite: {
-    cloneStorageConnection(connection: {
-      connection: unknown;
-      readOnly: boolean;
-    }): Promise<SqliteConnection>;
-  };
-}
-
-interface PlacesUtilsModule {
-  PlacesUtils: {
-    history: {
-      DBConnection: unknown;
-    };
-  };
-}
 
 /**
  * Query browsing history from the Places database asynchronously using Sqlite.sys.mjs.
@@ -73,7 +48,7 @@ async function queryHistory(
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
-    ) as PlacesUtilsModule;
+    ) as HistoryPlacesUtilsModule;
 
     const { Sqlite } = ChromeUtils.importESModule(
       "resource://gre/modules/Sqlite.sys.mjs",
@@ -133,13 +108,10 @@ export function loadHistory(): Promise<
     }
     offset = firstPage.length;
 
-    // Simple heuristic: if we got PAGE_SIZE results, assume there might be more
-    const mayHaveMore = firstPage.length >= PAGE_SIZE;
-
     return {
       choices: firstPage,
-      hasMore: mayHaveMore,
-      loadMore: mayHaveMore
+      hasMore: hasExtra,
+      loadMore: hasExtra
         ? async (): Promise<{
             choices: CommandStepChoice[];
             hasMore: boolean;
