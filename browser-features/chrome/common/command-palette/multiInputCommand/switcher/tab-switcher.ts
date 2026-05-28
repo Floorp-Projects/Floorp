@@ -5,7 +5,7 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-} from "../../command-registry.ts";
+} from "../../types.ts";
 
 /**
  * Get hiragana reading keywords for a given action/command ID from i18n.

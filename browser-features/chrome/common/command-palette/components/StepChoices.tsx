@@ -2,7 +2,7 @@
 
 import { For, Show } from "solid-js";
 import i18next from "i18next";
-import type { CommandStepChoice } from "../command-registry.ts";
+import type { CommandStepChoice } from "../types.ts";
 import type { PaletteState } from "../data/state.ts";
 
 interface StepChoicesProps {

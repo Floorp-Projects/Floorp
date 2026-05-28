@@ -45,10 +45,15 @@ export namespace ContextMenuUtils {
     checkedFunction: () => void,
   ) {
     const contextMenu = ContextMenu(id, l10n, runFunction);
-    const targetNode = document?.getElementById(checkID) as unknown as XULElement;
+    const targetNode = document?.getElementById(checkID) as unknown as XULElement | null;
     const renderElement = document?.getElementById(
       renderElementId,
-    ) as unknown as XULElement;
+    ) as unknown as XULElement | null;
+
+    if (!targetNode || !renderElement) {
+      console.warn("[ContextMenu]", `Element not found: ${!targetNode ? checkID : renderElementId}`);
+      return;
+    }
 
     render(() => contextMenu, contentAreaContextMenu(), {
       marker: renderElement,

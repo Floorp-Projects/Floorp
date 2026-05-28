@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "./command-registry.ts";
+import type { PaletteCommand } from "./types.ts";
 import type { BookmarkItem, PlacesBookmarks, PlacesUtilsModule, UrlLike } from "./types.ts";
 
 const BOOKMARK_COMMAND_PREFIX = "__bookmark__";

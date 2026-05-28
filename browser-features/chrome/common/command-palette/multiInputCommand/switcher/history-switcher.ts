@@ -5,7 +5,7 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-} from "../../command-registry.ts";
+} from "../../types.ts";
 import type {
   ChromeWindow,
   SqliteRow,

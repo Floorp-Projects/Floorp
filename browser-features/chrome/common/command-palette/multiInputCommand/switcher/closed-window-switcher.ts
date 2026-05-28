@@ -4,7 +4,7 @@ import i18next from "i18next";
 import type {
   PaletteCommand,
   CommandStepChoice,
-} from "../../command-registry.ts";
+} from "../../types.ts";
 
 /**
  * Get hiragana reading keywords for a given action/command ID from i18n.

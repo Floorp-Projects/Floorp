@@ -8,7 +8,7 @@ import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
 import { StepIndicator } from "./StepIndicator.tsx";
 import { StepChoices } from "./StepChoices.tsx";
-import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "../types.ts";
 
 function getController() {
   return commandPaletteService.getController(window);

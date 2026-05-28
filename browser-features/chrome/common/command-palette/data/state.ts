@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { createSignal } from "solid-js";
-import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "../types.ts";
 
 export type PaletteMode = "command" | "input";
 

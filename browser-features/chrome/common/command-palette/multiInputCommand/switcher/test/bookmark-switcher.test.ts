@@ -11,10 +11,8 @@ import {
   bookmarkSwitcherCommand,
   loadBookmarks,
 } from "../bookmark-switcher.ts";
-import {
-  getPaletteCommands,
-  type PaletteCommand,
-} from "../../../command-registry.ts";
+import { getPaletteCommands } from "../../../command-registry.ts";
+import type { PaletteCommand } from "../../../types.ts";
 
 const rawTests: TestCase[] = [
   {

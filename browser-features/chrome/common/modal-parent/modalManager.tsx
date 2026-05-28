@@ -10,7 +10,15 @@ import {
   setModalSize,
   setModalVisible,
 } from "./data/data.ts";
-import type { TForm, TFormResult } from "./utils/type";
+import type { TForm, TFormResult } from "./utils/type.ts";
+
+interface BrowsingContextLike {
+  currentWindowGlobal: {
+    getActor(name: string): {
+      sendQuery(message: string, data: unknown): Promise<unknown>;
+    };
+  };
+}
 
 export class ModalManager {
   private static get targetParent(): HTMLElement | null {
@@ -44,8 +52,11 @@ export class ModalManager {
 
       const browser = document?.getElementById(
         "modal-child-browser",
-      // deno-lint-ignore no-explicit-any
-      ) as unknown as XULElement & { browsingContext: any };
+      ) as unknown as XULElement & { browsingContext: BrowsingContextLike } | null;
+
+      if (!browser) {
+        return;
+      }
 
       const actor = browser.browsingContext.currentWindowGlobal.getActor(
         "NRChromeModal",

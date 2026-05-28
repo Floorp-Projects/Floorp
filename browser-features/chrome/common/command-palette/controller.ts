@@ -21,7 +21,7 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-} from "./command-registry.ts";
+} from "./types.ts";
 
 function looksLikeUrl(query: string): boolean {
   if (query.startsWith("http://") || query.startsWith("https://")) return true;
@@ -409,6 +409,9 @@ export class CommandPaletteController {
         if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
       }
       this.state.setStepChoicesLoading(false);
+      this.state.setHasMoreChoices(false);
+      this.state.setLoadMoreCallback(null);
+      this.state.setLoadingMore(false);
       return;
     }
 
@@ -473,6 +476,9 @@ export class CommandPaletteController {
     this.state.setStepChoicesBase([]);
     this.state.setFilteredStepChoices([]);
     this.state.setStepChoicesLoading(false);
+    this.state.setHasMoreChoices(false);
+    this.state.setLoadMoreCallback(null);
+    this.state.setLoadingMore(false);
   }
 
   private loadMoreChoices(): void {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "./command-registry.ts";
+import type { PaletteCommand } from "./types.ts";
 import type {
   ChromeWindow,
   PlacesUtilsModule,

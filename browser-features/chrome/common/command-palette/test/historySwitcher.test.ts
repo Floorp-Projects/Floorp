@@ -8,7 +8,7 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import { getPaletteCommands } from "../command-registry.ts";
-import type { CommandStepChoice } from "../command-registry.ts";
+import type { CommandStepChoice } from "../types.ts";
 import {
   historySwitcherCommand,
   loadHistory,
