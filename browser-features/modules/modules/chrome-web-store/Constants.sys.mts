@@ -271,6 +271,11 @@ export const INSTALL_ERROR_MESSAGE_KEYS: Record<number, string> = {
  * i18n Translation Keys for Chrome Web Store messages
  */
 export const CWS_I18N_KEYS = {
+  // Banner messages
+  banner: {
+    message: "chromeWebStore.banner.message",
+    messageWithName: "chromeWebStore.banner.messageWithName",
+  },
   // Button labels
   button: {
     addToFloorp: "chromeWebStore.button.addToFloorp",

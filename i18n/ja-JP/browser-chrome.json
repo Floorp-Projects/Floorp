@@ -321,6 +321,10 @@
     }
   },
   "chromeWebStore": {
+    "banner": {
+      "message": "Floorp でこの Chrome 拡張機能をインストールできます",
+      "messageWithName": "Floorp で「{{name}}」をインストールできます"
+    },
     "button": {
       "addToFloorp": "Floorp に追加",
       "installing": "インストール中...",

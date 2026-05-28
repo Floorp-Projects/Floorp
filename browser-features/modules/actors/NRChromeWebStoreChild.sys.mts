@@ -6,10 +6,9 @@
 /**
  * NRChromeWebStoreChild - Content process actor for Chrome Web Store integration
  *
- * This actor runs in the content process and provides functionality to:
- * - Inject "Add to Floorp" button on Chrome Web Store extension pages
- * - Extract extension metadata from the page
- * - Communicate with the parent process to initiate installation
+ * Injects a fixed top banner on Chrome Web Store extension pages allowing
+ * users to install Chrome extensions directly into Floorp. The banner is
+ * completely self-contained and does not depend on CWS DOM structure.
  *
  * @module NRChromeWebStoreChild
  */
@@ -32,9 +31,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
 // Constants
 // =============================================================================
 
-/** Main loop interval in milliseconds (following Fire-CWS approach) */
-const MAIN_LOOP_INTERVAL = 100;
-
 /** Button state reset delay in milliseconds */
 const BUTTON_RESET_DELAY = 3000;
 
@@ -56,6 +52,8 @@ let translationCacheInitialized = false;
  * Default translations (English) used when i18n is not yet initialized
  */
 const DEFAULT_TRANSLATIONS: Record<string, string> = {
+  [CWS_I18N_KEYS.banner.message]: "You can install this Chrome extension in Floorp",
+  [CWS_I18N_KEYS.banner.messageWithName]: 'You can install "{{name}}" in Floorp',
   [CWS_I18N_KEYS.button.addToFloorp]: "Add to Floorp",
   [CWS_I18N_KEYS.button.installing]: "Installing...",
   [CWS_I18N_KEYS.button.success]: "Added!",
@@ -69,34 +67,11 @@ const DEFAULT_TRANSLATIONS: Record<string, string> = {
 };
 
 // =============================================================================
-// DOM Structure-based Selectors (Language-independent)
+// Floorp Logo (64px PNG as data URI)
 // =============================================================================
-// Chrome Web Store uses a consistent DOM structure:
-// - main > div > section (first section contains the extension header)
-// - The header section contains: h1 (extension name), img (logo), button (Add to Chrome)
-// - Other sections contain: 概要/Overview, 詳細/Details, プライバシー/Privacy, etc.
-//
-// This approach uses structural selectors instead of text-based patterns,
-// making it work across all languages and UI changes.
 
-/**
- * Primary selector for the "Add to Chrome" button.
- * Uses DOM structure: main element contains sections, first section has h1 and the action button.
- * The button is a sibling of the div containing h1.
- */
-const ADD_BUTTON_STRUCTURE_SELECTOR =
-  "main section:has(h1) button:first-of-type";
-
-/**
- * Fallback selector using the first section approach
- */
-const ADD_BUTTON_FALLBACK_SELECTOR =
-  "main > div > section:first-of-type button:first-of-type";
-
-/**
- * Selector for extension logo image (fallback for extractExtensionMetadata)
- */
-const EXTENSION_LOGO_SELECTOR = "main section:has(h1) img";
+const FLOORP_LOGO_DATA_URI =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAQKADAAQAAAABAAAAQAAAAABlmWCKAAAQ/0lEQVR4Ae1ba4xdVRVe577m1aEPGIsU6IPaioRgNGI1UYu0QlGMWkUkIMaEGNSIiAR8V4EElYISY0RMjGJUDA+DCRpEEDXY8BCJijy1WAt9TNupc2emc+89Z/t9a+917r537p3ODPWX3ck5e52111p7fWuvvc8++86IHC6HI3A4Av/PEUgOBXj39cUDUut/t0h2mkhynCRS7mzXgW1dxrRJd+JZG2onddy3wcb9Uhm/M7l851jUOifSvJmTstskBaks+wSUPw/vjmyCozmCYUEXDrT2xFvEn0LH7kRynfX3wNjVUtt6Y7JJMvY0lxL3OCt9d+2K+eLS24BhnSomAVzut4ENXSgI645CEZ8G5q5/r9TKG5NNz/5H/ZjlrTBLeRV3m9aWxDXuAoZ1UgAQYtEr0OTZ6JIknfNAG9gk8FWXNuakv056ar9Qn9jVLMucAiC9Wz8NZ9/s+yIgUqhjoOQZaGtvCRZ1WA6FPnyhT3Mo6tps9Nw1S18uJXkaOvM8cgJnoal22nhWq2B0i/mdaONZHakq2cKvSkNWJZ97/sV2qemeZ58BFfkqRn+eT/kAmH4wnTW1jY5qG2WVIx+E6eAxp1+SPgaknFxLc7MpdGPGxX11+alSyLZAwevRYS5ucXnVe0Refb5Iz2DMfen05KjIn38k8sQdTVtT+3eSFdYkV/zzoabQ9NSMAwCciWxe+iDMrelq8qwbRVauFzc5hhdEW2CoZL11aNK2TvzQWVJMJOkZEHn2HpG7L+nqAhq2yGXPvxGxmcZaU73UJA9CbT4ewxrAEwjNx4CWvUnBZ9URSRslyTI0huyA6xBv+mPPrFmsrRufHSWFTEqNESmsfJsI+9r6+9b+zSf6qL7+6xY1fpCbQZhWTHd6pd6nsd04JvjcDICChJmLHgTeotQnRNLJIqZ59+XFWWA4TEytUNMJo1nHBbktpd4GLoYpFbn5jT4A1r8FwNfbJTuweiY7xe5exr2Xej8DT5vgOZrmHx19/UfFVQYBvCFpDc8OVwaZLpeulzSAdtJWx/RUXcCeTCSrNUTQl5x6sfeQ/SsKGLI6kSWI1GdiCN1oaE9f3A3LlkmS/R2geqdKotNSH0b/IcnG/oPRL0pWLwEUzJplAiTNmsXo9tq3traTl+tzojgp9qZS7ksl6TsCWfA6kcakabbWiRyAzycml27d2trQ+nTwDHDZdfCqVx1XUPAor0Gs/zoWvBpGJ8MF4w1sy7MUvHAZzTqm2R4/d2qPZLCoYG45aUw49IMpgD5lPV0joOATaXt2Dj47CExfpg0ARn+tFJONuVHrQGvcFq4QWf5WceOjGAg8h4XPMfU5cqw7lbb5jYnvpazmU0zjUS1RzBXQFzJtvCqy4nRsxxZ70GqCUrh0xwlGIhvdjcveAmbX0vUtoF96hfQbIaTeKBccdSx0cuaN4ib2KfisXpCCtvu++NoqD82XdH/4RlHnzQ/os+Q82sWzLmjGNx4FUXJZLJxJUVIGe/92YKVcaMxrKoQ+XPZNYHlNty/GrgGQRcsuQgqdQlO5MZLsi7fl60XmL5Vs306kZRnLBPnoNPRbGOiV/bffLs9dcV9TR0WCAEzk8TR0bDIQRudB1Y69EsT2ToxLz9CorP3krrD4xQahrHbYYXKKLDr+IpF/3cSn9tJxCiD1FwD8VYpGl2aqwah93JBee7W46m6MfkFcHa8mTXvw6TDmq7o7WcP7m6857qKwcPHiMy6OXEHbIIvoqYzyA02eyXfQX9jfK/teKMuuvy0CRvSp/qFixxZE8tiWJFcpJjS1l44BkHL2JRgayo3ZV5wFYc1lMFqUxoEGRp/gaRYdORBYzDztOye4AsEE4B4s5MjTNgbI06xzPjzzweusX4S9BX098qfbj/WYdHCCHwockbBgFICl5L7oBVvvUwLgvr18NRQ/5iMXGwRNgxVsR0++ULLRPdIYByPlxgRguUrzChng57MHRlAccQPaPvL2HMtIgmwJgemmP7+vgldvJs/cswSO6UgH0PSVz6jJ51VwH1dsZEVlSgDwHrsB7ZjUuDOVtCYdnk+/AXt9rProOEX656nPKWDTQFd/33GxCPCFFFdDYpo8/9xANw0vU/R1scg26phMd/2heX3y1G+PUF+aoCN/m/6X4SCxtZSWALjvLD0L3mzwcx1yjCKLLShHrhY5Zo1k1f2IPMH7uPjR9oBzGo95Cttcx5zW0ca21td+TSCt0wT9WY09n5dh9kyj399TkkqxJI//ZGnwFZVNh3b/xW1QjF5S73kA3E2vRYTc9b6N3gcprcPz6d8QN7pT6mPYmR+ACFJeNzy2oYk3P1gPEkwHAsnntgGBYz69Q22LHWtroyyfZ6A/hDfO9r+XpboTu1ItXfwnWueu91i9ZB4AyXZ9HCzM/6DcTB0fjFXvEulfLI2xccx9vvMx9wmQQMP8V5oLYerB0xa/4lpWfAIKPJvjBXihNEGjzUD7hfPg+pVyQY7AgvjYLVgLuvnfHNDVAatGQAPgrj+2Dzu+z+rHhK34NMRWXlR+/eckG9mO0ceS1+DCh9FHAOziQtNCIyiFvj4dUV3QIB8HgvPHsiBuV/AMAoOno88B8Zkwnf6i/oqMDjvZ8dgC72+L/2FQDQuwKmbA8huheXIm6KNwoRB4GH6u6ET/hi/gDVfH6NclxaYHA8VUgpOUJ0kGJMEgzTrdNyoDb98oq992trb9729OXgnfi2X4UqyLPIpN7NO30isfEHNAMyQ5CgdoxHxn2AkW1lDOl5wgIhjDR+Cq9yJrnpPaGBY+vPYKGCHGSS0HwKqLUdfveE6JWia1Z7Z5k53uDBrtW00Zo63upGc8k7EaDqWcev0N6VuIbEPGyj/uwnTEYtUEF9HAjADoFECaH6OIFDsdYy+scS3fIMh72Mmw8AE8+faaI1A6oHVMBx753S61E+vE9Fz0+QYB3nFc/Fps4Fez5RhkYsnxRLRitilAvCoEJzgqBJ7z8NmqD9zhMWHwRNBUsOiz9kJe3/jUM9pq4/1P9OkEL+BgURyBR3yKkQ3k+QefAZK90Fw9zQCNgN76S0lK/VLswdJQrmGna1vd0G5bXzUKeb4FSLO2NuPx2WirTeal6iPAGbKt2IMNVwUuwGf6rsHIwQe/FDswU4w3BGOLBoCjxMj44KCmAubQMz+VwvEbpDz+b5nk+x+HnrbX8PpQsBFWGzQTeCrQdmtvs2erKR7TbepT2iCbYf5n2D329uMDbP5x6rNkOKDkEOc+BUOaGckWPvkMGJRfQWpYgVvaWM2ReeQaZEGPlOcVsSbi3C/FKkujvGyOG218ZorR7XXcdoj0U5fiGLAu5QEcyTFd4TMc8Bex8GLWeVzDophDAJJz/j2BBmiE9KWiKakC+A9/RQoLl0tlHsCXUkQch5OWxqzbL+u8XMSXRduF7WvOq0R0LNeNT5k2fVfE26kPBzDzcRq96ASAvwr+YwB0r07Q4eL7W2l3jWJGeCzZxd2ED6DKy/6CrRg2/IwWWtvL2ffgVHZSJndWpba/IhUcfSeYCxxgLWaN/eB7vbxiqbi9O3wvlGF7LNuJR0Od+N14EE/hQFLOpNyPDdMLv8EvSF9r9kN7VrR/95TUdp2cfET/2KIZAMq4HwxtwHnT3Sbv68jrBYjNGXdIuu0xGd+ND8ZaSUrcxzICnLMsgS4uebnUt9wpezf/3OPuBiA3H2wEOe8r7IGI6U4B3LZjVBa8oiYnfnhYXWi95R14duLOSi7czdVRS3gL+AdtSNzdYZ6ASaeQPlqDHnlS5MU/YCocLeVB7ApdA0sAUo3tNgWMpslGHc5THxsT/bjBRoXfAaRh1y59Bk/PA8K3AHXsu2A6/fEDNalhOq46H+CJ1XxlrXTkP7DF4CndEgAysM/9FBThOQxoK2q/cPjnP14qyQACMIBtZx+CoK+2TgHwejHYPAgEb0HRADe/+oxvstPpM4A79lRl5boJvP58oHNfp/pf99gUZX6bEoDkguGn4N23NHp5FCkfQDbwK+2T35XCkSfgB5oGTqnrfkEMI43vY8iGqEOHThKELUQGyHj5B07ICmunvNEm287bVz0gFcz7JWeMtI6+ZULsPzApthy6J6YEQNm96ZcRhN0KRI0BECNKmvXfbkB6FjENerDfwEdShjcCXmf2aew/kwGeaQwgenHElW6mvz0rMLSxPy/vD0bI76bv0Ofw3qqceC6O3XMf6T384wC08nYLMXUoHQOQnLNvP9B8Xo2pYwG8GeZ8f+QKSXBCxLVASvhlqI5apwMyQPcJdB5AeBwWHXHxaMwfdfkjL39U5mk7BlMZ6uhRWmf9XSNjOO3OZP5J2OzQLwLPfSXNQAQesCimmQZA5Z7b+z1E8XGNpBpDJxquEN3tvxapPi+l+Yv8gojTG4fdWL43CCNho681F7qQ6vlo8zmMvLVZFsSjH+tPItgjowdk1QVh9OmfZic815En+OAnMRBLl9IxAyibbIKFYh1/iUBDvGgUo0uan8PcaGy5WJKFyIIBHGxWuCA2pwJfh7ag2Zk/j7hozwNtBoPgYvBK8zgs58OWBsrr79g9Jsef2sAPI/h9MPcPPql/kIGsXvSx4C5RLGjtVLoGgMLJedUHAPY2H11GmRdbAj22VWT73VIcWhFei3UkADrlFFEZyhIcpkMOnG14Jg8AGRQC9unrA0GaPOW36Y+OHcCaU5dl79vv/UG79yv4pv6F/gvutuS8kQfoRbcybQBUKSlejg7wCUSjLOgoph9Bc//RUhosSgGHEQ3dImP0mAEKhA6GICCADIaCA08DAZ6uFaw1KKhhX7OmTZ9979hdlRPeMYmdH/1oA80Byn3DsS19P0g5aACSD4xsRTpfpyPPDvSCVeuMsXniOikufpVmgcPZftpgqnoHdcGzxQwLYKJ0cyH0Cx+f8Rkb2oznZZuL4fBIVfoWZDL0Fhx2WP9ah0DkAWHfcp36TmqactAAqG5avRYdbvegQnox0qqNzp65SVO5tGBQivhYqmMtSPHFx+9z+21A0x3O2qvPRtj4Plt81libynLuIxO44RoenpCV5+HIR4Mb9U9f8kBo4LcLfZ5B8ecBBxFMPihj7sdyJTq5xYtqhEGi1jkH8tFLpLDm+1IZuw9LAE6My6mMV1N5/p+Yqyz2vdBex20KLBg0OVXGEWMtlcUnJTKwkguflah/1aVf1E+upM8mNV1t7k8no22c0vLTXvyZXLJGGdS0OJj2a/HL09HrJd39V0kGl0vt4Ztl4p4fWWtQmHGXkR62GoOZDJ7EP0EJ+p3697wtcu7EjP9MblbeuJ/1nYoDUZ6k6O+h5kvuKQNy7DtFVnwIBB62oK5j69yp2GDFbZ14cXtMd5LVPyJK1iTnTBz6P5S0vt2tlR+A/qA9T639MLTwc2c7tLUI8qGDzMz1f5i8v3bhFJPTMGa2CMYGSqUrMbpV9dMWHo52TmNBip+Jh+955XGxojHKo8p1Dol+FVty+Da7MusAJBvHX4TjzeOzGIjRBkzrtoDkK7bxo0C8FH3nrsafc704O/jhRTZbJRlq4M/P3O90JHNAHOV4hNtGmcHIAUagD4U+fXlZY/OscUBh1hnATpLT8Jf5kmK1k3vzlKYlG3G1yoCEi8CVDqMe861trvr0oZae7X1iP7MrcwoAu0jOkf3yRHoGAoEjItmjAA0MvwV0tC0jWIcM0PlPOlwtWUPL4M9Mfw/WlkvpQ3K+4LNwbkVdnptqU8v9UAakX/Bvc3Ia/D8O4Ms+AgCjkehUo4m/rujvjE1bTYqutek5HtUVtkHpfhmXO2e62WnaPEwdjsDhCByOQGsE/gsFxMtgKq5JEQAAAABJRU5ErkJggg==";
 
 // =============================================================================
 // SVG Path Constants
@@ -122,24 +97,19 @@ const SVG_PATH_CLOSE = "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59
 // =============================================================================
 
 export class NRChromeWebStoreChild extends JSWindowActorChild {
-  private buttonInjected = false;
-  private styleInjected = false;
+  private bannerInjected = false;
   private currentExtensionId: string | null = null;
   private installInProgress = false;
   private lastUrl: string | null = null;
-  private mainLoopInterval: number | null = null;
-  private hiddenAddToChromeButton = false;
+  private urlPollingTimer: number | null = null;
+  private nameUpdateTimer: number | null = null;
   private experimentEnabled: boolean | null = null;
   private isInstalled = false;
 
   /**
    * Get a translation for a key, using cache or default values
-   * @param key - Translation key
-   * @param vars - Optional variables for interpolation
-   * @returns Translated string
    */
   private t(key: string, vars?: Record<string, string | number>): string {
-    // Check cache first, then fall back to defaults
     let result = translationCache[key] || DEFAULT_TRANSLATIONS[key] || key;
 
     if (vars) {
@@ -152,11 +122,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
   /**
    * Create an SVG element with the given path
-   * This avoids using innerHTML which violates CSP on Chrome Web Store
    */
   private createSvgElement(viewBox: string, pathData: string, className?: string): SVGSVGElement {
     const doc = this.document!;
-    const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg") as unknown as SVGSVGElement;
     svg.setAttribute("viewBox", viewBox);
     svg.setAttribute("fill", "currentColor");
     if (className) {
@@ -172,17 +141,15 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
   /**
    * Create a button content element with icon and text
-   * This avoids using innerHTML which violates CSP on Chrome Web Store
    */
   private createButtonContent(iconPathData: string, text: string): DocumentFragment {
     const doc = this.document!;
     const fragment = doc.createDocumentFragment();
 
-    // Create SVG icon
-    const svg = this.createSvgElement("0 0 24 24", iconPathData, "floorp-add-button__icon");
+    const svg = this.createSvgElement("0 0 24 24", iconPathData);
+    svg.style.cssText = "width:20px;height:20px";
     fragment.appendChild(svg);
 
-    // Create text span
     const span = doc.createElement("span");
     span.textContent = text;
     fragment.appendChild(span);
@@ -196,13 +163,14 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private createSpinner(): HTMLElement {
     const doc = this.document!;
     const spinner = doc.createElement("div");
-    spinner.className = "floorp-add-button__spinner";
+    spinner.style.cssText =
+      "width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);" +
+      "border-top-color:white;border-radius:50%;animation:floorp-spin 0.8s linear infinite";
     return spinner;
   }
 
   /**
    * Initialize translation cache by requesting from parent process
-   * Retries if translations are not available yet (i18n not initialized)
    */
   private async initTranslations(retryCount = 0): Promise<void> {
     if (translationCacheInitialized) return;
@@ -211,9 +179,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const RETRY_DELAY = 200;
 
     try {
-      // Request all CWS translations from parent
       const translations = (await this.sendQuery("CWS:GetTranslations", {
         keys: [
+          CWS_I18N_KEYS.banner.message,
+          CWS_I18N_KEYS.banner.messageWithName,
           CWS_I18N_KEYS.button.addToFloorp,
           CWS_I18N_KEYS.button.installing,
           CWS_I18N_KEYS.button.success,
@@ -227,30 +196,25 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       })) as Record<string, string> | null;
 
       if (translations) {
-        // Check if translations are actually loaded (not just keys returned)
         const firstKey = CWS_I18N_KEYS.button.addToFloorp;
         if (translations[firstKey] && translations[firstKey] !== firstKey) {
           translationCache = { ...translationCache, ...translations };
           translationCacheInitialized = true;
         } else if (retryCount < MAX_RETRIES) {
-          // i18n not initialized yet, retry after delay
           await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
           return this.initTranslations(retryCount + 1);
         }
       }
     } catch {
-      // Translation request failed, retry if possible
       if (retryCount < MAX_RETRIES) {
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
         return this.initTranslations(retryCount + 1);
       }
-      // Failed to load translations, use defaults
     }
   }
 
   /**
    * Check if the Chrome Web Store experiment is enabled
-   * Results are cached for the lifetime of this actor
    */
   private async checkExperimentEnabled(): Promise<boolean> {
     if (this.experimentEnabled !== null) {
@@ -272,7 +236,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
   /**
    * Check if the extension is already installed
-   * @param extensionId - Chrome extension ID
    */
   private async checkInstallationStatus(extensionId: string): Promise<void> {
     try {
@@ -281,8 +244,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       })) as { installed: boolean };
       this.isInstalled = result.installed;
 
-      // Update button if it's already injected
-      if (this.buttonInjected && this.isInstalled) {
+      if (this.bannerInjected && this.isInstalled) {
         const doc = this.document;
         if (doc) {
           const button = doc.getElementById("floorp-add-extension-btn");
@@ -300,7 +262,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Called when the actor is created
    */
   actorCreated(): void {
-    // Initialize translations asynchronously
     this.initTranslations().catch(() => {});
   }
 
@@ -329,18 +290,17 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return;
     }
 
-    // Check if experiment is enabled before proceeding
     this.checkExperimentEnabled().then((enabled) => {
       if (!enabled) {
         return;
       }
 
-      // Inject styles
       this.injectStyles();
+      this.setupSPANavigationDetection();
 
-      // Start main loop for button injection and page modifications
-      // Following Fire-CWS approach: simple interval-based checking
-      this.startMainLoop();
+      if (this.isChromeWebStoreExtensionPage(url)) {
+        this.injectBanner();
+      }
     });
   }
 
@@ -357,119 +317,216 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     this.lastUrl = url ?? null;
 
     // Reset state for new page
-    this.buttonInjected = false;
+    this.bannerInjected = false;
     this.currentExtensionId = null;
     this.installInProgress = false;
-    this.hiddenAddToChromeButton = false;
     this.isInstalled = false;
 
-    // Remove existing button when navigating away
-    this.removeExistingButton();
+    this.removeExistingBanner();
+
+    if (url && this.isChromeWebStoreExtensionPage(url)) {
+      this.injectBanner();
+    }
   }
 
   /**
-   * Start the main loop for monitoring and modifying the page
-   * Following Fire-CWS's simple interval-based approach
+   * Set up SPA navigation detection using simple URL polling.
+   * This is the most reliable approach that works across all contexts.
    */
-  private startMainLoop(): void {
-    if (this.mainLoopInterval) {
-      clearTimeout(this.mainLoopInterval);
-    }
-
-    const mainLoop = () => {
-      // Check for URL changes (SPA navigation)
+  private setupSPANavigationDetection(): void {
+    const pollUrl = () => {
       const currentUrl = this.document?.location?.href;
       if (currentUrl && currentUrl !== this.lastUrl) {
         this.onUrlChange();
       }
+      this.urlPollingTimer = setTimeout(pollUrl, 500) as unknown as number;
+    };
+    this.urlPollingTimer = setTimeout(pollUrl, 500) as unknown as number;
+  }
 
-      // Hide "Add to Chrome" button after our button is injected
-      this.hideAddToChromeButton();
+  /**
+   * Check if URL is a Chrome Web Store extension detail page
+   */
+  private isChromeWebStoreExtensionPage(url: string): boolean {
+    return extractExtensionId(url) !== null;
+  }
 
-      // Inject button on extension pages
-      if (currentUrl && this.isChromeWebStoreExtensionPage(currentUrl)) {
-        this.attemptButtonInjection();
+  /**
+   * Inject the fixed top banner into the page
+   */
+  private injectBanner(): void {
+    if (this.bannerInjected) return;
+
+    const doc = this.document;
+    if (!doc?.body) return;
+
+    const url = doc.location?.href;
+    if (!url) return;
+
+    const extensionId = extractExtensionId(url);
+    if (!extensionId) return;
+
+    this.currentExtensionId = extensionId;
+    this.checkInstallationStatus(extensionId).catch(() => {});
+
+    // Create banner immediately — name may not be available yet on SPA navigation
+    const banner = this.createBanner("");
+    doc.body.insertBefore(banner, doc.body.firstChild);
+
+    // Spacer to prevent content from being hidden behind the fixed banner
+    const spacer = doc.createElement("div");
+    spacer.id = "floorp-cws-banner-spacer";
+    spacer.style.height = "66px";
+    doc.body.insertBefore(spacer, banner.nextSibling);
+
+    this.bannerInjected = true;
+
+    // Start watching for the extension name to appear in the DOM
+    this.startNameUpdatePolling();
+  }
+
+  /**
+   * Poll for the extension name to appear in the DOM and update the banner.
+   * After SPA navigation, the h1 may not be updated yet.
+   */
+  private startNameUpdatePolling(): void {
+    this.stopNameUpdatePolling();
+
+    const MAX_ATTEMPTS = 20;
+    let attempts = 0;
+
+    const tryUpdate = () => {
+      attempts++;
+      const name = this.extractExtensionName();
+      if (name) {
+        this.updateBannerName(name);
+        return;
       }
-
-      // Continue the loop
-      this.mainLoopInterval = setTimeout(
-        mainLoop,
-        MAIN_LOOP_INTERVAL,
-      ) as unknown as number;
+      if (attempts < MAX_ATTEMPTS) {
+        this.nameUpdateTimer = setTimeout(tryUpdate, 300) as unknown as number;
+      }
     };
 
-    // Start the loop
-    this.mainLoopInterval = setTimeout(
-      mainLoop,
-      MAIN_LOOP_INTERVAL,
-    ) as unknown as number;
+    this.nameUpdateTimer = setTimeout(tryUpdate, 300) as unknown as number;
   }
 
-  /**
-   * Hide the original "Add to Chrome" button
-   * This replaces the Chrome button with the Floorp button
-   */
-  private hideAddToChromeButton(): void {
-    if (this.hiddenAddToChromeButton) return;
-
-    const doc = this.document;
-    if (!doc) return;
-
-    // Only hide after we've injected our button
-    if (!this.buttonInjected) return;
-
-    // Find and hide the Add to Chrome button
-    const addToChromeButton = this.findOriginalAddToChromeButton();
-    if (addToChromeButton) {
-      (addToChromeButton as HTMLElement).style.setProperty(
-        "display",
-        "none",
-        "important",
-      );
-      this.hiddenAddToChromeButton = true;
+  private stopNameUpdatePolling(): void {
+    if (this.nameUpdateTimer) {
+      clearTimeout(this.nameUpdateTimer);
+      this.nameUpdateTimer = null;
     }
   }
 
   /**
-   * Find the original "Add to Chrome" button (not our Floorp button)
+   * Update the banner text with the extension name
    */
-  private findOriginalAddToChromeButton(): Element | null {
-    const doc = this.document;
-    if (!doc) return null;
-
-    // Find the visible h1's section and get the button
-    const allH1s = doc.querySelectorAll("h1");
-    for (const h1 of allH1s) {
-      if (!this.isElementVisible(h1)) continue;
-
-      const section = h1.closest("section");
-      if (!section) continue;
-
-      // Find button that is NOT our Floorp button
-      const buttons = section.querySelectorAll("button");
-      for (const button of buttons) {
-        if (
-          button.id !== "floorp-add-extension-btn" &&
-          this.isElementVisible(button)
-        ) {
-          return button;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Remove the existing Floorp button
-   */
-  private removeExistingButton(): void {
+  private updateBannerName(name: string): void {
     const doc = this.document;
     if (!doc) return;
 
-    const existingButton = doc.getElementById("floorp-add-extension-btn");
-    if (existingButton) {
-      existingButton.remove();
+    const textSpan = doc.querySelector("#floorp-cws-banner .floorp-cws-banner__text span:last-child");
+    if (!textSpan) return;
+
+    const messageText = this.t(CWS_I18N_KEYS.banner.messageWithName, { name });
+    textSpan.textContent = messageText;
+  }
+
+  /**
+   * Extract extension name from the page (best-effort, returns empty string if not found)
+   */
+  private extractExtensionName(): string {
+    const doc = this.document;
+    if (!doc) return "";
+
+    const h1 = doc.querySelector("h1");
+    return h1?.textContent?.trim() || "";
+  }
+
+  /**
+   * Create the fixed top banner element
+   */
+  private createBanner(extensionName: string): HTMLElement {
+    const doc = this.document!;
+
+    const banner = doc.createElement("div");
+    banner.id = "floorp-cws-banner";
+    banner.style.cssText =
+      "position:fixed;top:0;left:0;right:0;z-index:9999;width:100%;" +
+      "background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);" +
+      "color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;" +
+      "font-size:16px;border-bottom:3px solid #0b57d0;" +
+      "box-shadow:0 2px 12px rgba(0,0,0,0.4);" +
+      "animation:floorp-banner-slide-down 0.3s ease-out";
+
+    const content = doc.createElement("div");
+    content.style.cssText =
+      "display:flex;align-items:center;justify-content:space-between;" +
+      "max-width:1200px;margin:0 auto;padding:12px 24px;gap:20px";
+
+    // Text section
+    const textWrapper = doc.createElement("div");
+    textWrapper.style.cssText =
+      "display:flex;align-items:center;gap:12px;flex:1;min-width:0";
+
+    // Floorp logo
+    const logoImg = doc.createElement("img");
+    logoImg.src = FLOORP_LOGO_DATA_URI;
+    logoImg.alt = "Floorp";
+    logoImg.style.cssText = "width:32px;height:32px;flex-shrink:0";
+    textWrapper.appendChild(logoImg);
+
+    // Banner message
+    const messageText = extensionName
+      ? this.t(CWS_I18N_KEYS.banner.messageWithName, { name: extensionName })
+      : this.t(CWS_I18N_KEYS.banner.message);
+
+    const textSpan = doc.createElement("span");
+    textSpan.textContent = messageText;
+    textSpan.style.cssText = "font-size:16px;font-weight:500";
+    textWrapper.appendChild(textSpan);
+
+    content.appendChild(textWrapper);
+
+    // Install button
+    const button = doc.createElement("button");
+    button.id = "floorp-add-extension-btn";
+    button.style.cssText =
+      "display:inline-flex;align-items:center;justify-content:center;gap:8px;" +
+      "padding:0 28px;height:40px;background:#0b57d0;color:white;border:none;" +
+      "border-radius:20px;font-size:15px;font-weight:600;cursor:pointer;" +
+      "transition:all 0.2s ease;font-family:inherit;white-space:nowrap;flex-shrink:0";
+
+    if (this.isInstalled) {
+      this.updateButtonState(button, "installed");
+    } else {
+      const buttonText = this.t(CWS_I18N_KEYS.button.addToFloorp);
+      button.appendChild(this.createButtonContent(SVG_PATH_PLUS, buttonText));
+    }
+
+    button.addEventListener("click", () => this.handleInstallClick());
+    content.appendChild(button);
+
+    banner.appendChild(content);
+    return banner;
+  }
+
+  /**
+   * Remove the existing banner
+   */
+  private removeExistingBanner(): void {
+    this.stopNameUpdatePolling();
+
+    const doc = this.document;
+    if (!doc) return;
+
+    const existing = doc.getElementById("floorp-cws-banner");
+    if (existing) {
+      existing.remove();
+    }
+
+    const spacer = doc.getElementById("floorp-cws-banner-spacer");
+    if (spacer) {
+      spacer.remove();
     }
 
     const existingError = doc.getElementById("floorp-cws-error");
@@ -479,466 +536,34 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Check if URL is a Chrome Web Store extension detail page
-   * @param url - URL to check
-   */
-  private isChromeWebStoreExtensionPage(url: string): boolean {
-    return extractExtensionId(url) !== null;
-  }
-
-  /**
-   * Inject CSS styles for the Floorp button
+   * Inject CSS styles for the banner and button
    */
   private injectStyles(): void {
-    if (this.styleInjected) return;
-
     const doc = this.document;
     if (!doc) return;
+
+    const existing = doc.getElementById("floorp-cws-styles");
+    if (existing) return;
 
     const style = doc.createElement("style");
     style.id = "floorp-cws-styles";
     style.textContent = `
-      .floorp-add-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 24px;
-        height: 36px;
-        margin: 8px;
-        background: #0b57d0;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: none;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-
-      .floorp-add-button:hover {
-        background: #0842a0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-      }
-
-      .floorp-add-button:active {
-        background: #063281;
-      }
-
-      .floorp-add-button:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .floorp-add-button--installing {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-      }
-
-      .floorp-add-button--success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-      }
-
-      .floorp-add-button--error {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-      }
-
-      .floorp-add-button--installed {
-        background: #4b5563;
-        cursor: default;
-        box-shadow: none;
-      }
-
-      .floorp-add-button--installed:hover {
-        background: #4b5563;
-      }
-
-      .floorp-add-button__icon {
-        width: 20px;
-        height: 20px;
-      }
-
-      .floorp-add-button__spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: floorp-spin 0.8s linear infinite;
+      @keyframes floorp-banner-slide-down {
+        from { transform: translateY(-100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
 
       @keyframes floorp-spin {
         to { transform: rotate(360deg); }
       }
 
-      .floorp-cws-notice {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        margin: 0;
-        padding: 16px;
-        background: #fef3c7;
-        border: 1px solid #fcd34d;
-        border-radius: 12px;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #92400e;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        max-width: 400px;
-        animation: floorp-slide-in 0.3s ease-out;
-      }
-
       @keyframes floorp-slide-in {
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
       }
-
-      .floorp-cws-notice--error {
-        background: #fee2e2;
-        border-color: #fca5a5;
-        color: #991b1b;
-      }
-
-      .floorp-cws-notice__icon {
-        flex-shrink: 0;
-        width: 20px;
-        height: 20px;
-      }
-
-      /* Hide Chrome promotional elements */
-      [aria-labelledby="promo-header"] {
-        display: none !important;
-      }
-
-      /* Hide Chrome download prompt container (main > div > section > div.gSrP5d) */
-      main > div > section > div.gSrP5d {
-        display: none !important;
-      }
     `;
 
     (doc.head ?? doc.documentElement)?.appendChild(style);
-    this.styleInjected = true;
-  }
-
-  /**
-   * Check if the page is ready for button injection.
-   * For SPA navigation, the URL changes before the DOM is fully updated.
-   * We need to verify that the displayed content matches the current URL.
-   *
-   * @returns true if the page is ready, false otherwise
-   */
-  private isPageReadyForInjection(): boolean {
-    const doc = this.document;
-    if (!doc) return false;
-
-    const locationHref = doc.location?.href;
-    if (!locationHref) return false;
-
-    const extensionId = extractExtensionId(locationHref);
-    if (!extensionId) return false;
-
-    // Find the visible h1 (extension name)
-    const allH1s = doc.querySelectorAll("h1");
-    let visibleH1: HTMLHeadingElement | null = null;
-    for (const h1 of allH1s) {
-      if (this.isElementVisible(h1)) {
-        visibleH1 = h1 as HTMLHeadingElement;
-        break;
-      }
-    }
-
-    if (!visibleH1) {
-      return false;
-    }
-
-    // Check if the h1 is in a section
-    const section = visibleH1.closest("section");
-    if (!section) {
-      return false;
-    }
-
-    // Verify the "Add to Chrome" button is visible and ready
-    const button = section.querySelector("button");
-    if (!button || !this.isElementVisible(button)) {
-      return false;
-    }
-
-    // Note: The new Chrome Web Store doesn't include the extension ID in visible text anymore.
-    // We trust the URL contains the extension ID and the page has the expected structure (h1 + button).
-    return true;
-  }
-
-  /**
-   * Attempt to inject the Floorp button
-   * Following Fire-CWS approach: simple button detection and injection
-   * @returns true if injection was successful, false otherwise
-   */
-  private attemptButtonInjection(): boolean {
-    if (this.buttonInjected) return true;
-
-    const doc = this.document;
-    if (!doc) return false;
-
-    // For SPA navigation: verify the page is ready before injecting
-    if (!this.isPageReadyForInjection()) {
-      return false;
-    }
-
-    // Check installation status if needed
-    const url = doc.location?.href;
-    if (url) {
-      const extensionId = extractExtensionId(url);
-      if (extensionId && this.currentExtensionId !== extensionId) {
-        this.currentExtensionId = extensionId;
-        this.checkInstallationStatus(extensionId).catch(() => {});
-      }
-    }
-
-    // Find the "Add to Chrome" button using multiple strategies
-    const addToChromeButton = this.findAddToChromeButton();
-
-    if (addToChromeButton) {
-      return this.injectButtonNextTo(addToChromeButton);
-    }
-
-    // Fallback: try to find any suitable container
-    const fallbackContainer = this.findFallbackContainer();
-    if (fallbackContainer) {
-      return this.injectButtonInContainer(fallbackContainer);
-    }
-
-    return false;
-  }
-
-  /**
-   * Find the "Add to Chrome" button using DOM structure-based selectors.
-   *
-   * Chrome Web Store has a consistent DOM structure:
-   * - main > div > section (first section = header with extension info)
-   * - Header section contains: img (logo), h1 (name), and button (Add to Chrome)
-   * - The "Add to Chrome" button is the first button in the header section
-   *
-   * This approach is language-independent and doesn't rely on button text.
-   *
-   * NOTE: For SPA navigation, Chrome Web Store may have multiple h1 elements
-   * from different "pages". We need to find the VISIBLE h1 element.
-   */
-  private findAddToChromeButton(): Element | null {
-    const doc = this.document;
-    if (!doc) return null;
-
-    // Strategy 1: Find the VISIBLE h1 element and its nearby button
-    // This is the most reliable approach for SPA navigation
-    const allH1s = doc.querySelectorAll("h1");
-    for (const h1 of allH1s) {
-      if (!this.isElementVisible(h1)) continue;
-
-      // Check if this h1 is inside a section
-      const section = h1.closest("section");
-      if (!section) continue;
-
-      // Look for the "Add to Chrome" button near this h1
-      // DOM structure: section > div > div (contains h1) + div (contains button)
-      const h1Container = h1.closest("div");
-      const siblingDiv = h1Container?.nextElementSibling;
-      const button = siblingDiv?.querySelector("button");
-
-      if (
-        button &&
-        button.id !== "floorp-add-extension-btn" &&
-        this.isElementVisible(button)
-      ) {
-        return button;
-      }
-
-      // Alternative: Find first button within the section
-      const sectionButton = section.querySelector("button");
-      if (
-        sectionButton &&
-        sectionButton.id !== "floorp-add-extension-btn" &&
-        this.isElementVisible(sectionButton)
-      ) {
-        return sectionButton;
-      }
-    }
-
-    // Strategy 2: Use direct CSS selector (may not work with SPA)
-    const buttonViaSelector = doc.querySelector(ADD_BUTTON_STRUCTURE_SELECTOR);
-    if (
-      buttonViaSelector &&
-      buttonViaSelector.id !== "floorp-add-extension-btn" &&
-      this.isElementVisible(buttonViaSelector)
-    ) {
-      return buttonViaSelector;
-    }
-
-    // Strategy 3: Fallback to first section's first button
-    const fallbackButton = doc.querySelector(ADD_BUTTON_FALLBACK_SELECTOR);
-    if (
-      fallbackButton &&
-      fallbackButton.id !== "floorp-add-extension-btn" &&
-      this.isElementVisible(fallbackButton)
-    ) {
-      return fallbackButton;
-    }
-
-    return null;
-  }
-
-  /**
-   * Find a fallback container for button injection.
-   * Uses the header section structure if the Add to Chrome button is not found.
-   *
-   * NOTE: For SPA navigation, we need to find the VISIBLE h1 element's section.
-   */
-  private findFallbackContainer(): Element | null {
-    const doc = this.document;
-    if (!doc) return null;
-
-    // Strategy 1: Find the VISIBLE h1 element's container
-    const allH1s = doc.querySelectorAll("h1");
-    for (const h1 of allH1s) {
-      if (!this.isElementVisible(h1)) continue;
-
-      const section = h1.closest("section");
-      if (!section) continue;
-
-      // The button container is typically a sibling of the h1 container
-      const h1Container = h1.closest("div");
-      const siblingDiv = h1Container?.nextElementSibling;
-      if (siblingDiv && this.isElementVisible(siblingDiv)) {
-        return siblingDiv;
-      }
-      // If no sibling, use the parent of h1 container
-      if (h1Container?.parentElement) {
-        return h1Container.parentElement;
-      }
-    }
-
-    // Strategy 2: First visible section in main
-    const sections = doc.querySelectorAll("main section");
-    for (const section of sections) {
-      if (!this.isElementVisible(section)) continue;
-
-      // Find a div that contains or would contain action buttons
-      const divs = section.querySelectorAll("div");
-      for (const div of divs) {
-        if (
-          div.querySelector("button") ||
-          div.querySelector('a[role="button"]')
-        ) {
-          return div;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Check if an element is visible
-   */
-  private isElementVisible(element: Element): boolean {
-    const rect = element.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return false;
-
-    const style = this.contentWindow?.getComputedStyle(element);
-    if (!style) return true;
-
-    return (
-      style.getPropertyValue("display") !== "none" &&
-      style.getPropertyValue("visibility") !== "hidden" &&
-      style.getPropertyValue("opacity") !== "0"
-    );
-  }
-
-  /**
-   * Inject the Floorp button next to the Add to Chrome button
-   */
-  private injectButtonNextTo(targetButton: Element): boolean {
-    const doc = this.document;
-    if (!doc || this.buttonInjected) return false;
-
-    const locationHref = doc.location?.href;
-    if (!locationHref) {
-      return false;
-    }
-
-    const extensionId = extractExtensionId(locationHref);
-    if (!extensionId) {
-      return false;
-    }
-
-    this.currentExtensionId = extensionId;
-
-    // Create the Floorp button
-    const button = this.createFloorpButton();
-
-    // Insert after the Add to Chrome button
-    targetButton.insertAdjacentElement("afterend", button);
-    this.buttonInjected = true;
-
-    return true;
-  }
-
-  /**
-   * Inject the Floorp button in a container
-   */
-  private injectButtonInContainer(container: Element): boolean {
-    const doc = this.document;
-    if (!doc || this.buttonInjected) return false;
-
-    const locationHref = doc.location?.href;
-    if (!locationHref) {
-      return false;
-    }
-
-    const extensionId = extractExtensionId(locationHref);
-    if (!extensionId) {
-      return false;
-    }
-
-    this.currentExtensionId = extensionId;
-
-    // Create the Floorp button
-    const button = this.createFloorpButton();
-
-    // Append to container
-    container.appendChild(button);
-    this.buttonInjected = true;
-
-    return true;
-  }
-
-  /**
-   * Create the Floorp add extension button
-   */
-  private createFloorpButton(): HTMLButtonElement {
-    const doc = this.document!;
-    const button = doc.createElement("button");
-    button.id = "floorp-add-extension-btn";
-    button.className = "floorp-add-button";
-
-    if (this.isInstalled) {
-      this.updateButtonState(button, "installed");
-    } else {
-      const buttonText = this.t(CWS_I18N_KEYS.button.addToFloorp);
-      const content = this.createButtonContent(SVG_PATH_PLUS, buttonText);
-      button.appendChild(content);
-    }
-
-    button.addEventListener("click", () => this.handleInstallClick());
-    return button;
   }
 
   /**
@@ -952,13 +577,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       this.document?.getElementById("floorp-add-extension-btn") ?? null;
 
     try {
-      // Update button state to installing
       this.updateButtonState(button, "installing");
 
-      // Extract extension metadata
       const metadata = this.extractExtensionMetadata();
 
-      // Send install request to parent
       const result = (await this.sendQuery("CWS:InstallExtension", {
         extensionId: this.currentExtensionId,
         metadata,
@@ -979,7 +601,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
         error instanceof Error ? error.message : String(error);
       this.showError(errorMessage);
     } finally {
-      // Reset button state after delay
       setTimeout(() => {
         if (this.isInstalled) {
           this.updateButtonState(button, "installed");
@@ -997,23 +618,23 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   private updateButtonState(button: Element | null, state: ButtonState): void {
     if (!button) return;
 
-    // Remove all state classes
-    button.classList.remove(
-      "floorp-add-button--installing",
-      "floorp-add-button--success",
-      "floorp-add-button--error",
-      "floorp-add-button--installed",
-    );
+    const btnStyle = (button as HTMLElement).style;
 
-    // Clear existing content first
     while (button.firstChild) {
       button.removeChild(button.firstChild);
     }
 
+    const baseStyle =
+      "display:inline-flex;align-items:center;justify-content:center;gap:8px;" +
+      "padding:0 28px;height:40px;border:none;border-radius:20px;" +
+      "font-size:15px;font-weight:600;font-family:inherit;white-space:nowrap;transition:all 0.2s ease";
+
     switch (state) {
       case "installing": {
         const installingText = this.t(CWS_I18N_KEYS.button.installing);
-        button.classList.add("floorp-add-button--installing");
+        btnStyle.cssText = baseStyle +
+          ";background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:white;" +
+          "cursor:progress;box-shadow:0 4px 15px rgba(245,158,11,0.4)";
         const spinner = this.createSpinner();
         button.appendChild(spinner);
         const span = this.document!.createElement("span");
@@ -1025,7 +646,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       case "success": {
         const successText = this.t(CWS_I18N_KEYS.button.success);
-        button.classList.add("floorp-add-button--success");
+        btnStyle.cssText = baseStyle +
+          ";background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;" +
+          "cursor:default;box-shadow:0 4px 15px rgba(16,185,129,0.4)";
         button.appendChild(this.createButtonContent(SVG_PATH_CHECK, successText));
         (button as HTMLButtonElement).disabled = true;
         break;
@@ -1033,7 +656,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       case "installed": {
         const installedText = this.t(CWS_I18N_KEYS.button.installed);
-        button.classList.add("floorp-add-button--installed");
+        btnStyle.cssText = baseStyle +
+          ";background:#4b5563;color:white;cursor:default;box-shadow:none";
         button.appendChild(this.createButtonContent(SVG_PATH_CHECK, installedText));
         (button as HTMLButtonElement).disabled = true;
         break;
@@ -1041,7 +665,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       case "error": {
         const errorText = this.t(CWS_I18N_KEYS.button.error);
-        button.classList.add("floorp-add-button--error");
+        btnStyle.cssText = baseStyle +
+          ";background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:white;" +
+          "cursor:pointer;box-shadow:0 4px 15px rgba(239,68,68,0.4)";
         button.appendChild(this.createButtonContent(SVG_PATH_ERROR, errorText));
         (button as HTMLButtonElement).disabled = true;
         break;
@@ -1049,6 +675,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       default: {
         const defaultText = this.t(CWS_I18N_KEYS.button.addToFloorp);
+        btnStyle.cssText = baseStyle +
+          ";background:#0b57d0;color:white;cursor:pointer;box-shadow:none";
         button.appendChild(this.createButtonContent(SVG_PATH_PLUS, defaultText));
         (button as HTMLButtonElement).disabled = false;
       }
@@ -1056,15 +684,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Extract extension metadata from the current page using DOM structure.
-   *
-   * Chrome Web Store page structure:
-   * - main h1: Extension name
-   * - main section:has(h1) img: Extension icon
-   * - Section with h2 "概要"/"Overview": Description paragraphs
-   * - Section with h2 "詳細"/"Details": Version, author, size, etc. in list items
-   *
-   * NOTE: For SPA navigation, we need to find the VISIBLE h1 element.
+   * Extract extension metadata from the current page (best-effort).
+   * The name and icon are extracted from h1/img if available.
    */
   private extractExtensionMetadata(): ExtensionMetadata {
     const doc = this.document;
@@ -1075,103 +696,18 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     if (!doc) return metadata;
 
-    const main = doc.querySelector("main");
-    if (!main) return metadata;
-
-    // Extract extension name from VISIBLE h1
-    // Chrome Web Store SPA keeps old page elements, so we need to find the visible one
-    const allH1s = doc.querySelectorAll("h1");
-    let visibleH1: HTMLHeadingElement | null = null;
-    for (const h1 of allH1s) {
-      if (this.isElementVisible(h1)) {
-        visibleH1 = h1 as HTMLHeadingElement;
-        break;
-      }
+    // Extension name from h1 (best effort)
+    const h1 = doc.querySelector("h1");
+    if (h1?.textContent) {
+      metadata.name = h1.textContent.trim();
     }
 
-    if (visibleH1?.textContent) {
-      metadata.name = visibleH1.textContent.trim();
-    }
-
-    // Extract icon URL from img in the same section as visible h1
-    if (visibleH1) {
-      const section = visibleH1.closest("section");
+    // Icon from img near h1 (best effort)
+    if (h1) {
+      const section = h1.closest("section");
       const logoImg = section?.querySelector("img") as HTMLImageElement | null;
       if (logoImg?.src) {
         metadata.iconUrl = logoImg.src;
-      }
-    }
-
-    // Fallback: try the old selector
-    if (!metadata.iconUrl) {
-      const logoImg = doc.querySelector(
-        EXTENSION_LOGO_SELECTOR,
-      ) as HTMLImageElement | null;
-      if (logoImg?.src) {
-        metadata.iconUrl = logoImg.src;
-      }
-    }
-
-    // Find sections by their h2 headings (only visible sections)
-    const sections = main.querySelectorAll("section");
-
-    for (const section of sections) {
-      if (!this.isElementVisible(section)) continue;
-
-      const h2 = section.querySelector("h2");
-      const h2Text = h2?.textContent?.toLowerCase() || "";
-
-      // Extract description from Overview/概要 section
-      if (
-        h2Text.includes("概要") ||
-        h2Text.includes("overview") ||
-        h2Text.includes("summary")
-      ) {
-        const paragraph = section.querySelector("p");
-        if (paragraph?.textContent) {
-          metadata.description = paragraph.textContent.trim().slice(0, 500);
-        }
-      }
-
-      // Extract version and author from Details/詳細 section
-      if (
-        h2Text.includes("詳細") ||
-        h2Text.includes("detail") ||
-        h2Text.includes("information")
-      ) {
-        const listItems = section.querySelectorAll("li");
-        for (const li of listItems) {
-          const text = li.textContent || "";
-          const textLower = text.toLowerCase();
-
-          // Version: list item containing version-related keywords
-          if (
-            textLower.includes("バージョン") ||
-            textLower.includes("version")
-          ) {
-            // The version value is in the last child element
-            const valueEl = li.querySelector("div:last-child, span:last-child");
-            if (valueEl?.textContent) {
-              const versionMatch = valueEl.textContent.match(/[\d.]+/);
-              if (versionMatch) {
-                metadata.version = versionMatch[0];
-              }
-            }
-          }
-
-          // Author: list item containing publisher/author keywords
-          if (
-            textLower.includes("提供元") ||
-            textLower.includes("offered") ||
-            textLower.includes("publisher") ||
-            textLower.includes("author")
-          ) {
-            const valueEl = li.querySelector("div:last-child, span:last-child");
-            if (valueEl?.textContent) {
-              metadata.author = valueEl.textContent.trim();
-            }
-          }
-        }
       }
     }
 
@@ -1185,7 +721,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const doc = this.document;
     if (!doc) return;
 
-    // Remove existing error notice
     const existing = doc.getElementById("floorp-cws-error");
     if (existing) {
       existing.remove();
@@ -1196,17 +731,18 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     const notice = doc.createElement("div");
     notice.id = "floorp-cws-error";
-    notice.className = "floorp-cws-notice floorp-cws-notice--error";
+    notice.style.cssText =
+      "position:fixed;top:20px;right:20px;z-index:9999;" +
+      "display:flex;align-items:flex-start;gap:12px;margin:0;padding:16px;" +
+      "background:#fee2e2;border:1px solid #fca5a5;border-radius:12px;" +
+      "font-size:13px;line-height:1.5;color:#991b1b;" +
+      "box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:400px;" +
+      "animation:floorp-slide-in 0.3s ease-out";
 
-    // Create error icon
-    const errorIcon = this.createSvgElement(
-      "0 0 24 24",
-      SVG_PATH_INFO,
-      "floorp-cws-notice__icon"
-    );
+    const errorIcon = this.createSvgElement("0 0 24 24", SVG_PATH_INFO);
+    errorIcon.style.cssText = "flex-shrink:0;width:20px;height:20px";
     notice.appendChild(errorIcon);
 
-    // Create message container
     const messageDiv = doc.createElement("div");
     messageDiv.style.cssText = "flex: 1";
 
@@ -1225,7 +761,6 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
     notice.appendChild(messageDiv);
 
-    // Add close button
     const closeBtn = doc.createElement("button");
     closeBtn.style.cssText =
       "background:none;border:none;cursor:pointer;padding:0;color:inherit;opacity:0.7;margin-left:8px";
@@ -1239,14 +774,12 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     closeBtn.addEventListener("click", () => notice.remove());
     notice.appendChild(closeBtn);
 
-    // Append to body for fixed positioning
     if (doc.body) {
       doc.body.appendChild(notice);
-    } else {
+    } else if (doc.documentElement) {
       doc.documentElement.appendChild(notice);
     }
 
-    // Auto-remove after timeout
     setTimeout(() => {
       if (notice.isConnected) {
         notice.remove();
@@ -1255,33 +788,11 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
   }
 
   /**
-   * Escape HTML special characters to prevent XSS
-   */
-  private escapeHtml(text: string): string {
-    const div = this.document?.createElement("div");
-    if (div) {
-      div.textContent = text;
-      return String(div.innerHTML);
-    }
-    return text.replace(/[&<>"']/g, (char) => {
-      const escapeMap: Record<string, string> = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      };
-      return escapeMap[char] || char;
-    });
-  }
-
-  /**
    * Handle messages from parent actor
    */
   receiveMessage(message: { name: string; data?: unknown }): unknown {
     switch (message.name) {
       case "CWS:InstallProgress":
-        // Handle installation progress updates
         break;
 
       case "CWS:GetExtensionId":
@@ -1294,10 +805,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Clean up when the actor is destroyed
    */
   didDestroy(): void {
-    // Stop the main loop
-    if (this.mainLoopInterval) {
-      clearTimeout(this.mainLoopInterval);
-      this.mainLoopInterval = null;
+    this.stopNameUpdatePolling();
+    if (this.urlPollingTimer) {
+      clearTimeout(this.urlPollingTimer);
+      this.urlPollingTimer = null;
     }
   }
 }

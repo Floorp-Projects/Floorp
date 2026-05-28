@@ -331,6 +331,10 @@
     }
   },
   "chromeWebStore": {
+    "banner": {
+      "message": "You can install this Chrome extension in Floorp",
+      "messageWithName": "You can install \"{{name}}\" in Floorp"
+    },
     "button": {
       "addToFloorp": "Add to Floorp",
       "installing": "Installing...",
