@@ -8,7 +8,6 @@ import type {
 } from "../../types.ts";
 import type {
   ChromeWindow,
-  SqliteRow,
   SqliteConnection,
   SqliteModule,
   HistoryPlacesUtilsModule,

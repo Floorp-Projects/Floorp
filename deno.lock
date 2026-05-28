@@ -3,6 +3,7 @@
   "specifiers": {
     "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
+    "jsr:@std/cli@1.0.6": "1.0.6",
     "jsr:@std/cli@^1.0.25": "1.0.30",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
@@ -113,6 +114,9 @@
     },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/cli@1.0.6": {
+      "integrity": "d22d8b38c66c666d7ad1f2a66c5b122da1704f985d3c47f01129f05abb6c5d3d"
     },
     "@std/cli@1.0.30": {
       "integrity": "769446536522d0417d7127ebcabcafac1ab0ce6766d0eb3fca1d36326fe98d13",

@@ -6,7 +6,6 @@ import {
   getActionDisplayName,
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
-import i18next from "i18next";
 import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";

@@ -67,8 +67,8 @@ export class ModalManager {
       return new Promise((resolve) => {
         actor
           .sendQuery("NRChromeModal:show", safeForm)
-          .then((response: TFormResult | null) => {
-            resolve(response);
+          .then((response: unknown) => {
+            resolve(response as TFormResult | null);
           });
       });
     }

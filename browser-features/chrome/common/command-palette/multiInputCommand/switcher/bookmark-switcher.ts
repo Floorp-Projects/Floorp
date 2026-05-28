@@ -53,14 +53,9 @@ function flattenBookmarks(
   }
 }
 
-let allFlatBookmarks: CommandStepChoice[] | null = null;
-
 export async function loadBookmarks(): Promise<
   CommandStepChoice[] | StepChoicesResult
 > {
-  // Reset cache to ensure fresh data on each palette open
-  allFlatBookmarks = null;
-
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -82,8 +77,6 @@ export async function loadBookmarks(): Promise<
 
     const allBookmarks: CommandStepChoice[] = [];
     flattenBookmarks(userRoots, "", allBookmarks, Infinity);
-
-    allFlatBookmarks = allBookmarks;
 
     // Capture snapshot so loadMore doesn't reference mutable global
     const snapshot = allBookmarks;
