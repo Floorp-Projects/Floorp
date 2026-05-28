@@ -415,11 +415,23 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-copy-page-url-as-markdown",
     fn: (win) => {
-      const browser = win.gBrowser.selectedBrowser;
-      const url = browser.currentURI.spec;
+      const browser = win?.gBrowser?.selectedBrowser;
+      if (!browser) {
+        console.error("[copy-url-as-markdown] No selected browser found");
+        return;
+      }
+      const url = browser.currentURI?.spec;
+      if (!url) {
+        console.error("[copy-url-as-markdown] Could not get current URI");
+        return;
+      }
       const title = browser.contentTitle || url;
       const escapedTitle = title.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
       const markdown = `[${escapedTitle}](${url})`;
+      if (!navigator?.clipboard?.writeText) {
+        console.error("[copy-url-as-markdown] Clipboard API not available");
+        return;
+      }
       navigator.clipboard.writeText(markdown).catch((e) => {
         console.error("[copy-url-as-markdown] Failed to copy to clipboard:", e);
       });
