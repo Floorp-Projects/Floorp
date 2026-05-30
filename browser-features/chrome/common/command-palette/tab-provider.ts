@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "#features-chrome/common/command-palette/types.ts";
+import type { PaletteCommand, ChromeWindow } from "#features-chrome/common/command-palette/types.ts";
 
 const TAB_COMMAND_PREFIX = "__tab__";
-
-interface ChromeWindow extends Window {
-  gBrowser?: GBrowser;
-}
 
 interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;

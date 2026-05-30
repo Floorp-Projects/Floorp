@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "./types.ts";
-import type { PlacesUtilsModule, UrlLike } from "./types.ts";
+import type { PaletteCommand, ChromeWindow, SearchPlacesUtilsModule, UrlLike } from "./types.ts";
 
 const BOOKMARK_COMMAND_PREFIX = "__bookmark__";
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
 
 function navigateToUrl(win: Window, url: string): void {
   try {
@@ -42,7 +34,7 @@ export async function searchBookmarks(
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
-    ) as PlacesUtilsModule;
+    ) as SearchPlacesUtilsModule;
 
     console.debug(
       "[command-palette/bookmark] PlacesUtils.bookmarks available:",

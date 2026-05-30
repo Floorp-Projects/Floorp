@@ -5,13 +5,11 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-} from "../../types.ts";
-import type {
   ChromeWindow,
   SqliteConnection,
   SqliteModule,
   HistoryPlacesUtilsModule,
-} from "./types.ts";
+} from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 
 const PAGE_SIZE = 20;

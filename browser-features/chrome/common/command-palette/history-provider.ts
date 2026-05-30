@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand } from "./types.ts";
-import type {
-  ChromeWindow,
-  PlacesUtilsModule,
-} from "./types.ts";
+import type { PaletteCommand, ChromeWindow, SearchPlacesUtilsModule } from "./types.ts";
 
 const HISTORY_COMMAND_PREFIX = "__history__";
 
@@ -28,7 +24,7 @@ export function searchHistory(
     try {
       const { PlacesUtils } = ChromeUtils.importESModule(
         "resource://gre/modules/PlacesUtils.sys.mjs",
-      ) as PlacesUtilsModule;
+      ) as SearchPlacesUtilsModule;
 
       const historyQuery = PlacesUtils.history.getNewQuery();
       historyQuery.searchTerms = query;

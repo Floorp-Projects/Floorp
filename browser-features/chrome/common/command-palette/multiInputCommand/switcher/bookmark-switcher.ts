@@ -5,19 +5,14 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
+  ChromeWindow,
+  BookmarkTreeNode,
+  BookmarkTreePlacesUtilsModule,
 } from "../../types.ts";
-import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
 
 function buildPath(parentPath: string, folderTitle: string): string {
   const fullPath = parentPath ? `${parentPath} > ${folderTitle}` : folderTitle;
@@ -59,7 +54,7 @@ export async function loadBookmarks(): Promise<
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
-    ) as PlacesUtilsModule;
+    ) as BookmarkTreePlacesUtilsModule;
 
     const tree = await PlacesUtils.promiseBookmarksTree(
       PlacesUtils.bookmarks.rootGuid,

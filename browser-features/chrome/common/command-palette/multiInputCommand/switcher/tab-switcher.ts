@@ -5,12 +5,9 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
+  ChromeWindow,
 } from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
-
-interface ChromeWindow extends Window {
-  gBrowser?: GBrowser;
-}
 
 interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;

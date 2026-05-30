@@ -27,6 +27,7 @@ import type {
   StepChoicesResult,
   CommandStep,
   PaletteCommand,
+  ChromeWindow,
 } from "./types.ts";
 
 export type {
@@ -216,8 +217,6 @@ const EXCLUDED_PALETTE_ACTIONS: ReadonlySet<string> = new Set([
 ]);
 
 const cachedCommands: Record<string, PaletteCommand[]> = {};
-
-type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
 
 function isVerticalMode(win?: Window): boolean {
   const tabContainer = (win as ChromeWindow | undefined)?.gBrowser

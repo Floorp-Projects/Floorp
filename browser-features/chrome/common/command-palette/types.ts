@@ -18,35 +18,7 @@ export interface PlacesBookmarks {
   TYPE_BOOKMARK: number;
 }
 
-export interface PlacesUtilsModule {
-  PlacesUtils: {
-    bookmarks: PlacesBookmarks;
-  } & {
-    history: PlacesHistory;
-  };
-}
-
-export interface PlacesHistory {
-  getNewQuery(): NavHistoryQuery;
-  getNewQueryOptions(): NavHistoryQueryOptions;
-  executeQuery(
-    query: NavHistoryQuery,
-    options: NavHistoryQueryOptions,
-  ): HistoryQueryResult;
-}
-
-export interface NavHistoryQuery {
-  searchTerms: string;
-  beginTime: number;
-  endTime: number;
-}
-
-export interface NavHistoryQueryOptions {
-  sortingMode: number;
-  maxResults: number;
-}
-
-// --- History Provider Types ---
+// --- Canonical ChromeWindow type (single source of truth) ---
 
 export interface ChromeWindow extends Window {
   gBrowser?: {
@@ -55,20 +27,76 @@ export interface ChromeWindow extends Window {
   };
 }
 
-export interface HistoryResultNode {
-  uri: string;
+// --- Bookmark search types (used by bookmark-provider, history-provider) ---
+
+export interface SearchPlacesUtilsModule {
+  PlacesUtils: {
+    bookmarks: PlacesBookmarks;
+  } & {
+    history: {
+      DBConnection: unknown;
+    };
+  };
+}
+
+// --- Bookmark tree types (used by bookmark-switcher) ---
+
+export interface BookmarkTreeNode {
+  guid: string;
   title: string;
-  accessCount: number;
+  index: number;
+  dateAdded: number;
+  lastModified: number;
+  type: string;
+  uri?: string;
+  children?: BookmarkTreeNode[];
+  root?: string;
 }
 
-export interface HistoryQueryResult {
-  root: HistoryContainer;
+export interface PlacesUtilsBookmarks {
+  rootGuid: string;
+  menuGuid: string;
+  toolbarGuid: string;
+  unfiledGuid: string;
+  mobileGuid: string;
 }
 
-export interface HistoryContainer {
-  containerOpen: boolean;
-  childCount: number;
-  getChild(index: number): HistoryResultNode;
+export interface BookmarkTreePlacesUtilsModule {
+  PlacesUtils: {
+    bookmarks: PlacesUtilsBookmarks;
+    promiseBookmarksTree(
+      guid: string,
+      options?: { includeItemIds?: boolean },
+    ): Promise<BookmarkTreeNode | null>;
+  };
+}
+
+// --- SQLite types (used by history-switcher, history-provider) ---
+
+export interface SqliteRow {
+  getResultByName(name: string): string | null;
+}
+
+export interface SqliteConnection {
+  executeCached(sql: string, params?: unknown[]): Promise<SqliteRow[]>;
+  close(): Promise<void>;
+}
+
+export interface SqliteModule {
+  Sqlite: {
+    cloneStorageConnection(connection: {
+      connection: unknown;
+      readOnly: boolean;
+    }): Promise<SqliteConnection>;
+  };
+}
+
+export interface HistoryPlacesUtilsModule {
+  PlacesUtils: {
+    history: {
+      DBConnection: unknown;
+    };
+  };
 }
 
 // --- Command Palette Types ---
