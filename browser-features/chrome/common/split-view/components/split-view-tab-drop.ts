@@ -456,7 +456,7 @@ function onDragStart(event: DragEvent): void {
     return;
   }
 
-  const tabContainer = gBrowser.tabContainer as HTMLElement & {
+  const tabContainer = gBrowser.tabContainer as unknown as HTMLElement & {
     _tabForDragEvent?: (e: DragEvent) => SplitViewTab | null;
   };
   if (tabContainer._tabForDragEvent) {
