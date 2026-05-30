@@ -586,26 +586,42 @@ export class WorkspacesTabManager {
     }
 
     try {
-      const willChangeWorkspaceLastShowTab = document?.querySelector(
-        `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
-      ) as XULElement;
+      // Priority 1: If the currently selected tab already belongs to the
+      // target workspace, keep it.  This preserves SessionStore's correct
+      // startup selection and avoids overriding it with the first tab in
+      // DOM order (which is a pinned tab after restore, causing #2053).
+      const currentTab = globalThis.gBrowser.selectedTab as XULElement | null;
+      const currentTabInTargetWorkspace = currentTab &&
+        this.getWorkspaceIdFromAttribute(currentTab) === workspaceId;
 
-      if (willChangeWorkspaceLastShowTab) {
-        globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
+      if (currentTabInTargetWorkspace) {
+        // Keep the existing selection — SessionStore (or a previous switch)
+        // already chose the correct tab for this workspace.
       } else {
-        const tabToSelect = this.workspaceHasTabs(workspaceId);
-        if (tabToSelect) {
-          globalThis.gBrowser.selectedTab = tabToSelect;
+        // Priority 2: Use the last-shown tab for this workspace.
+        const willChangeWorkspaceLastShowTab = document?.querySelector(
+          `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
+        ) as XULElement;
+
+        if (willChangeWorkspaceLastShowTab) {
+          globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
         } else {
-          const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
-          if (nonWorkspaceTab !== true) {
-            globalThis.gBrowser.selectedTab = nonWorkspaceTab as XULElement;
-            this.setWorkspaceIdToAttribute(
-              nonWorkspaceTab as XULElement,
-              workspaceId,
-            );
+          // Priority 3: Fall back to the first tab in this workspace.
+          const tabToSelect = this.workspaceHasTabs(workspaceId);
+          if (tabToSelect) {
+            globalThis.gBrowser.selectedTab = tabToSelect;
           } else {
-            this.createTabForWorkspace(workspaceId, true);
+            // Priority 4: Claim an unattributed tab or create a new one.
+            const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
+            if (nonWorkspaceTab !== true) {
+              globalThis.gBrowser.selectedTab = nonWorkspaceTab as XULElement;
+              this.setWorkspaceIdToAttribute(
+                nonWorkspaceTab as XULElement,
+                workspaceId,
+              );
+            } else {
+              this.createTabForWorkspace(workspaceId, true);
+            }
           }
         }
       }
