@@ -4,24 +4,35 @@
 
 /**
  * Toggle visibility of all `#navigator-toolbox` children.
- * When restoring, ensures the navigation bar remains visible if multiple
- * elements are shown.
+ * Computes a single hide/show target state from the children's current
+ * visibility, then applies it consistently to all children to avoid mixed
+ * UI states. When restoring (showing), ensures the navigation bar remains
+ * visible if multiple elements are shown.
  */
 export function toggleUserInterface(doc: Document): void {
   try {
     const toolbox = doc.getElementById("navigator-toolbox");
     if (!toolbox) return;
+    if (toolbox.children.length === 0) return;
 
-    let shownElementAmount = 0;
+    // Compute a single target state: if any child is shown, hide all.
+    // Otherwise, show all. This avoids mixed UI states.
+    let anyShown = false;
     for (const child of toolbox.children) {
       const el = child as HTMLElement;
-      el.style.display = el.style.display ? "" : "none";
-      if (el.style.display === "") {
-        shownElementAmount++;
+      if (el.style.display !== "none") {
+        anyShown = true;
+        break;
       }
     }
+    const targetDisplay = anyShown ? "none" : "";
 
-    if (toolbox.children.length >= 2 && shownElementAmount > 1) {
+    for (const child of toolbox.children) {
+      (child as HTMLElement).style.display = targetDisplay;
+    }
+
+    // When restoring, ensure the navigation bar stays visible.
+    if (!anyShown && toolbox.children.length >= 2) {
       const navigationBar = toolbox.children[1] as HTMLElement;
       if (navigationBar?.style.display !== "") {
         navigationBar.style.display = "";
@@ -50,12 +61,13 @@ export function toggleNavigationPanel(doc: Document): void {
  * prompt, then restore the original tab when the user dismisses the dialog.
  */
 export function enableRestMode(win: Window): void {
-  try {
-    const doc = win.document!;
-    const selectedTab = win.gBrowser.selectedTab;
-    const selectedTabLocation =
-      selectedTab.linkedBrowser.documentURI?.spec;
+  const doc = win.document!;
+  const selectedTab = win.gBrowser.selectedTab;
+  const selectedTabLocation =
+    selectedTab.linkedBrowser.documentURI?.spec;
+  const tag = doc.createElement("style");
 
+  try {
     for (const tab of win.gBrowser.tabs) {
       win.gBrowser.discardBrowser(tab);
     }
@@ -64,7 +76,6 @@ export function enableRestMode(win: Window): void {
       win.openTrustedLinkIn("about:blank", "current");
     }
 
-    const tag = doc.createElement("style");
     tag.textContent = `* { display:none !important; }`;
     tag.setAttribute("id", "floorp-rest-mode");
     doc.head?.appendChild(tag);
@@ -78,13 +89,12 @@ export function enableRestMode(win: Window): void {
       l10n.formatValueSync("rest-mode") ?? "Rest Mode",
       l10n.formatValueSync("rest-mode-description") ?? "",
     );
-
-    doc.getElementById("floorp-rest-mode")?.remove();
-
+  } catch (e) {
+    console.error("[ui-toggle] Failed to enable rest mode:", e);
+  } finally {
+    tag.remove();
     if (selectedTabLocation) {
       win.openTrustedLinkIn(selectedTabLocation, "current");
     }
-  } catch (e) {
-    console.error("[ui-toggle] Failed to enable rest mode:", e);
   }
 }
