@@ -23,6 +23,7 @@ import type {
 import type {
   BrowserAutomationService,
   ElementResponse,
+  EvaluateResult,
   ScreenshotRect,
   TextResponse,
   ValueResponse,
@@ -1253,6 +1254,26 @@ export function registerCommonAutomationRoutes(
         json.text,
       );
       return { status: 200, body: { ok: !!ok } };
+    }),
+  );
+
+  // Evaluate JavaScript in the page context
+  ns.post<{ script: string }, EvaluateResult | ErrorResponse>(
+    "/instances/:id/evaluate",
+    safeRoute(async (ctx: RouterContext<{ script: string }>) => {
+      const json = ctx.json();
+      if (!json?.script) {
+        return { status: 400, body: { error: "script required" } };
+      }
+      const service = getService();
+      if (!service.evaluate) {
+        return { status: 501, body: { error: "evaluate not supported" } };
+      }
+      const result = await service.evaluate(ctx.params.id, json.script);
+      return {
+        status: 200,
+        body: result ?? { success: false, error: "Evaluation returned null" },
+      };
     }),
   );
 }
