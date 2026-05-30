@@ -5,12 +5,12 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-  ChromeWindow,
   SqliteConnection,
   SqliteModule,
   HistoryPlacesUtilsModule,
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { navigateToUrl } from "../../utils/navigate.ts";
 
 const PAGE_SIZE = 20;
 
@@ -108,18 +108,6 @@ export function loadHistory(): Promise<
   })();
 }
 
-function navigateToUrl(win: Window, url: string): void {
-  try {
-    const { gBrowser } = win as unknown as ChromeWindow;
-    const principal = gBrowser?.selectedBrowser?.contentPrincipal;
-    gBrowser?.loadURI?.(Services.io.newURI(url), {
-      triggeringPrincipal: principal,
-    });
-  } catch (e) {
-    console.error("[HistorySwitcher] Failed to navigate", e);
-  }
-}
-
 export const historySwitcherCommand: PaletteCommand = {
   id: "floorp-history-switcher",
   label: i18next.t("commandPalette.historySwitcher", {
@@ -152,6 +140,6 @@ export const historySwitcherCommand: PaletteCommand = {
   fn: (_win: Window, args?: Record<string, string>) => {
     const url = args?.history;
     if (!url) return;
-    navigateToUrl(_win, url);
+    navigateToUrl(_win, url, "[HistorySwitcher]");
   },
 };

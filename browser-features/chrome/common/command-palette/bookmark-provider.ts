@@ -1,20 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { PaletteCommand, ChromeWindow, SearchPlacesUtilsModule, UrlLike } from "./types.ts";
+import type { PaletteCommand, SearchPlacesUtilsModule, UrlLike } from "./types.ts";
+import { navigateToUrl } from "./utils/navigate.ts";
 
 const BOOKMARK_COMMAND_PREFIX = "__bookmark__";
-
-function navigateToUrl(win: Window, url: string): void {
-  try {
-    const { gBrowser } = win as ChromeWindow;
-    const principal = gBrowser?.selectedBrowser?.contentPrincipal;
-    gBrowser?.loadURI?.(Services.io.newURI(url), {
-      triggeringPrincipal: principal,
-    });
-  } catch (e) {
-    console.error("[command-palette] Bookmark navigation failed", e);
-  }
-}
 
 function toUrlString(url: UrlLike | null): string {
   if (!url) return "";

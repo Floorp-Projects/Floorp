@@ -5,11 +5,11 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
-  ChromeWindow,
   BookmarkTreeNode,
   BookmarkTreePlacesUtilsModule,
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { navigateToUrl } from "../../utils/navigate.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
@@ -105,18 +105,6 @@ export async function loadBookmarks(): Promise<
   }
 }
 
-function navigateToUrl(win: Window, url: string): void {
-  try {
-    const { gBrowser } = win as unknown as ChromeWindow;
-    const principal = gBrowser?.selectedBrowser?.contentPrincipal;
-    gBrowser?.loadURI?.(Services.io.newURI(url), {
-      triggeringPrincipal: principal,
-    });
-  } catch (e) {
-    console.error("[BookmarkSwitcher] Failed to navigate", e);
-  }
-}
-
 export const bookmarkSwitcherCommand: PaletteCommand = {
   id: "floorp-bookmark-switcher",
   label: i18next.t("commandPalette.bookmarkSwitcher", {
@@ -150,6 +138,6 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
   fn: (_win: Window, args?: Record<string, string>) => {
     const url = args?.bookmark;
     if (!url) return;
-    navigateToUrl(_win, url);
+    navigateToUrl(_win, url, "[BookmarkSwitcher]");
   },
 };
