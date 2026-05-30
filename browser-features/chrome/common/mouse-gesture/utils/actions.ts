@@ -399,18 +399,32 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-open-settings",
     fn: (win) => {
-      win.openPreferences();
+      try {
+        win.openPreferences();
+      } catch (e) {
+        console.error("[mouse-gesture] Failed to open settings:", e);
+      }
     },
   },
   {
     name: "floorp-open-hub",
     fn: (win) => {
-      win.switchToTabHavingURI(Services.io.newURI("about:hub"), true);
+      try {
+        win.switchToTabHavingURI(Services.io.newURI("about:hub"), true);
+      } catch (e) {
+        console.error("[mouse-gesture] Failed to open hub:", e);
+      }
     },
   },
   {
     name: "floorp-toggle-share-mode",
-    fn: () => setShareModeEnabled((prev) => !prev),
+    fn: () => {
+      try {
+        setShareModeEnabled((prev) => !prev);
+      } catch (e) {
+        console.error("[mouse-gesture] Failed to toggle share mode:", e);
+      }
+    },
   },
   {
     name: "floorp-copy-page-url-as-markdown",
@@ -427,7 +441,8 @@ export const actions: GestureActionRegistration[] = [
       }
       const title = browser.contentTitle || url;
       const escapedTitle = title.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
-      const markdown = `[${escapedTitle}](${url})`;
+      const escapedUrl = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
+      const markdown = `[${escapedTitle}](${escapedUrl})`;
       if (!navigator?.clipboard?.writeText) {
         console.error("[copy-url-as-markdown] Clipboard API not available");
         return;
