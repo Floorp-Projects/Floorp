@@ -1,5 +1,10 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import {
+  toggleUserInterface,
+  toggleNavigationPanel,
+  enableRestMode,
+} from "./ui-toggle.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -231,62 +236,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-rest-mode",
-    fn: (win) => {
-      const doc = win.document!;
-      const selectedTab = win.gBrowser.selectedTab;
-      const selectedTabLocation =
-        selectedTab.linkedBrowser.documentURI?.spec;
-      for (const tab of win.gBrowser.tabs) {
-        win.gBrowser.discardBrowser(tab);
-      }
-      if (selectedTabLocation) {
-        win.openTrustedLinkIn("about:blank", "current");
-      }
-      const tag = doc.createElement("style");
-      tag.textContent = `* { display:none !important; }`;
-      tag.setAttribute("id", "floorp-rest-mode");
-      doc.head?.appendChild(tag);
-      const l10n = new Localization(
-        ["browser/floorp.ftl", "branding/brand.ftl"],
-        true,
-      );
-      Services.prompt.alert(
-        null as unknown as mozIDOMWindowProxy,
-        l10n.formatValueSync("rest-mode") ?? "Rest Mode",
-        l10n.formatValueSync("rest-mode-description") ?? "",
-      );
-      doc.getElementById("floorp-rest-mode")?.remove();
-      if (selectedTabLocation) {
-        win.openTrustedLinkIn(selectedTabLocation, "current");
-      }
-    },
+    fn: (win) => enableRestMode(win),
   },
   {
     name: "floorp-hide-user-interface",
-    fn: (win) => {
-      const toolbox = win.document?.getElementById("navigator-toolbox");
-      if (!toolbox) return;
-      let shownElementAmount = 0;
-      for (const child of toolbox.children) {
-        const el = child as HTMLElement;
-        el.style.display = el.style.display ? "" : "none";
-        if (el.style.display === "") {
-          shownElementAmount++;
-        }
-      }
-      const navigationBar = toolbox.children[1] as HTMLElement | undefined;
-      if (shownElementAmount > 1 && navigationBar?.style.display !== "") {
-        navigationBar!.style.display = "";
-      }
-    },
+    fn: (win) => toggleUserInterface(win.document!),
   },
   {
     name: "floorp-toggle-navigation-panel",
-    fn: (win) => {
-      const navBar = win.document?.getElementById("nav-bar") as HTMLElement | null;
-      if (!navBar) return;
-      navBar.style.display = navBar.style.display ? "" : "none";
-    },
+    fn: (win) => toggleNavigationPanel(win.document!),
   },
   {
     name: "gecko-stop",

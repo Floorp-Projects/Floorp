@@ -2,6 +2,7 @@
 // @ts-nocheck Firefox chrome globals (BrowserCommands, gBrowser, etc.) are untyped
 
 import * as t from 'io-ts';
+import { toggleUserInterface, enableRestMode } from '../../../browser-features/chrome/common/mouse-gesture/utils/ui-toggle.ts';
 
 export const csk_category = [
   "tab-action",
@@ -130,34 +131,7 @@ export const commands: Commands = {
     type: "page-action",
   },
   "floorp-rest-mode": {
-    command: () => {
-      const selectedTab = globalThis.gBrowser.selectedTab;
-      const selectedTabLocation =
-        selectedTab.linkedBrowser.documentURI?.spec;
-      for (const tab of globalThis.gBrowser.tabs) {
-        globalThis.gBrowser.discardBrowser(tab);
-      }
-      if (selectedTabLocation) {
-        globalThis.openTrustedLinkIn("about:blank", "current");
-      }
-      const tag = globalThis.document.createElement("style");
-      tag.textContent = `* { display:none !important; }`;
-      tag.setAttribute("id", "floorp-rest-mode");
-      globalThis.document.head?.appendChild(tag);
-      const l10n = new Localization(
-        ["browser/floorp.ftl", "branding/brand.ftl"],
-        true,
-      );
-      Services.prompt.alert(
-        null,
-        l10n.formatValueSync("rest-mode"),
-        l10n.formatValueSync("rest-mode-description"),
-      );
-      globalThis.document.getElementById("floorp-rest-mode")?.remove();
-      if (selectedTabLocation) {
-        globalThis.openTrustedLinkIn(selectedTabLocation, "current");
-      }
-    },
+    command: () => enableRestMode(globalThis as unknown as Window),
     type: "page-action",
   },
   "gecko-zoom-in": {
@@ -173,22 +147,7 @@ export const commands: Commands = {
     type: "visible-action",
   },
   "floorp-hide-user-interface": {
-    command: () => {
-      const doc = globalThis.document;
-      const toolbox = doc.getElementById("navigator-toolbox");
-      if (!toolbox) return;
-      let shownElementAmount = 0;
-      for (const element of toolbox.children) {
-        element.style.display = element.style.display ? "" : "none";
-        if (element.style.display === "") {
-          shownElementAmount++;
-        }
-      }
-      const navigationBar = toolbox.children[1];
-      if (shownElementAmount > 1 && navigationBar?.style.display !== "") {
-        navigationBar.style.display = "";
-      }
-    },
+    command: () => toggleUserInterface(globalThis.document),
     type: "visible-action",
   },
   "gecko-back": { command: () => globalThis.BrowserBack(), type: "history-action" },
