@@ -337,7 +337,7 @@ export class CommandPaletteController {
     }
   }
 
-  private animOutTimer: number | null = null;
+  private animOutTimer: ReturnType<typeof setTimeout> | null = null;
   private defaultEngineName: string | null = null;
   private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
   private bookmarkSearchTimer: ReturnType<typeof setTimeout> | null = null;

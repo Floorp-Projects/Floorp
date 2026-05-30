@@ -3,6 +3,7 @@
 
 import {
   assert,
+  assertDoesNotThrow,
   assertEquals,
   runTests,
   type TestCase,
@@ -144,14 +145,6 @@ const rawTests: TestCase[] = [
     },
   },
 ];
-
-function assertDoesNotThrow(fn: () => void): void {
-  try {
-    fn();
-  } catch (err) {
-    assert(false, `Expected no throw, but got: ${String(err)}`);
-  }
-}
 
 export function runAllTests() {
   runTests("tab-switcher.test.ts", rawTests);

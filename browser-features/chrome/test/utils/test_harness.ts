@@ -78,6 +78,22 @@ export function assertThrows(fn: () => unknown, message: string): Error | null {
 }
 
 /**
+ * Assert that the given function does not throw.
+ */
+export function assertDoesNotThrow(
+  fn: () => void,
+  message?: string,
+): void {
+  try {
+    fn();
+  } catch (err) {
+    throw new Error(
+      message ?? `Expected no throw, but got: ${String(err)}`,
+    );
+  }
+}
+
+/**
  * Assert that `actual` is approximately equal to `expected` within `tolerance`.
  */
 export function assertApprox(
