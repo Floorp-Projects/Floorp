@@ -77,8 +77,8 @@ export class HubPanelMenu {
     win.gBrowser.selectedTab = win.gBrowser.addTab("about:hub", {
       relatedToCurrent: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-    win.PanelUI?.hide();
+    } as Parameters<typeof win.gBrowser.addTab>[1]);
+    (win.PanelUI as unknown as { hide: () => void })?.hide();
   }
 
   public static Render(): JSX.Element {

@@ -46,7 +46,7 @@ export class WorkspacesPopupContextMenu {
 
     // Traverse up to find the workspace div if we got a child element
     while (eventTargetElement && !eventTargetElement.id?.startsWith("workspace-")) {
-      eventTargetElement = eventTargetElement.parentElement as XULElement;
+      eventTargetElement = eventTargetElement.parentElement as unknown as XULElement;
     }
 
     // Extract workspace ID with validation

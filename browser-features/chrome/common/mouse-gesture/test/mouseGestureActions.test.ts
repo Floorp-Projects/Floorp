@@ -10,6 +10,10 @@ import {
 } from "../utils/gestures.ts";
 import type { GestureActionRegistration } from "../utils/gestures.ts";
 import {
+  shareModeEnabled,
+  setShareModeEnabled,
+} from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import {
   assert,
   assertEquals,
   runTests,
@@ -28,6 +32,18 @@ function restoreGestureRegistry(): void {
   for (const action of INITIAL_REGISTRY_ACTIONS) {
     gestureActions.registerAction(action);
   }
+}
+
+/** Save and restore shareModeEnabled signal state around a test block */
+function withShareModeRestored(fn: () => void): () => void {
+  return () => {
+    const original = shareModeEnabled();
+    try {
+      fn();
+    } finally {
+      setShareModeEnabled(original);
+    }
+  };
 }
 
 const rawTests: TestCase[] = [
@@ -90,10 +106,152 @@ const rawTests: TestCase[] = [
     fn() {
       const actions = getAllGestureActions();
       const names = actions.map((a) => a.name);
-      assert(names.includes("gecko-close-other-tabs"), "should include gecko-close-other-tabs");
-      assert(names.includes("gecko-close-tabs-to-start"), "should include gecko-close-tabs-to-start");
-      assert(names.includes("gecko-close-tabs-to-end"), "should include gecko-close-tabs-to-end");
+      assert(
+        names.includes("gecko-close-other-tabs"),
+        "should include gecko-close-other-tabs",
+      );
+      assert(
+        names.includes("gecko-close-tabs-to-start"),
+        "should include gecko-close-tabs-to-start",
+      );
+      assert(
+        names.includes("gecko-close-tabs-to-end"),
+        "should include gecko-close-tabs-to-end",
+      );
     },
+  },
+
+  // --- floorp-open-settings action ---
+  {
+    name: "floorp-open-settings action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-open-settings"),
+        "should include floorp-open-settings action",
+      );
+    },
+  },
+  {
+    name: "floorp-open-settings action calls win.openPreferences()",
+    fn() {
+      const fn = gestureActions.getAction("floorp-open-settings");
+      assert(
+        typeof fn === "function",
+        "floorp-open-settings should have a function",
+      );
+      let openPreferencesCalled = false;
+      const mockWin = {
+        openPreferences() {
+          openPreferencesCalled = true;
+        },
+      } as unknown as Window;
+      fn(mockWin);
+      assert(openPreferencesCalled, "should call win.openPreferences()");
+    },
+  },
+
+  // --- floorp-open-hub action ---
+  {
+    name: "floorp-open-hub action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-open-hub"),
+        "should include floorp-open-hub action",
+      );
+    },
+  },
+  {
+    name: "floorp-open-hub action calls win.switchToTabHavingURI()",
+    fn() {
+      const fn = gestureActions.getAction("floorp-open-hub");
+      assert(
+        typeof fn === "function",
+        "floorp-open-hub should have a function",
+      );
+      let switchToTabCalled = false;
+      let receivedURI: string | undefined;
+      const mockWin = {
+        switchToTabHavingURI(uri: { spec: string }, _openNew: boolean) {
+          switchToTabCalled = true;
+          receivedURI = uri.spec;
+        },
+      } as unknown as Window;
+      fn(mockWin);
+      assert(switchToTabCalled, "should call win.switchToTabHavingURI()");
+      assert(
+        typeof receivedURI === "string" && receivedURI.includes("about:hub"),
+        "should pass about:hub URI to switchToTabHavingURI",
+      );
+    },
+  },
+
+  // --- floorp-toggle-share-mode action ---
+  {
+    name: "floorp-toggle-share-mode action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-toggle-share-mode"),
+        "should include floorp-toggle-share-mode action",
+      );
+    },
+  },
+  {
+    name: "floorp-toggle-share-mode action is a function",
+    fn() {
+      const fn = gestureActions.getAction("floorp-toggle-share-mode");
+      assert(
+        typeof fn === "function",
+        "floorp-toggle-share-mode should have a function",
+      );
+    },
+  },
+  {
+    name: "floorp-toggle-share-mode action toggles share mode from false to true",
+    fn: withShareModeRestored(() => {
+      setShareModeEnabled(false);
+      const fn = gestureActions.getAction("floorp-toggle-share-mode");
+      assert(typeof fn === "function", "action should exist");
+      fn(window);
+      assertEquals(
+        shareModeEnabled(),
+        true,
+        "share mode should be true after toggling from false",
+      );
+    }),
+  },
+  {
+    name: "floorp-toggle-share-mode action toggles share mode from true to false",
+    fn: withShareModeRestored(() => {
+      setShareModeEnabled(true);
+      const fn = gestureActions.getAction("floorp-toggle-share-mode");
+      assert(typeof fn === "function", "action should exist");
+      fn(window);
+      assertEquals(
+        shareModeEnabled(),
+        false,
+        "share mode should be false after toggling from true",
+      );
+    }),
+  },
+  {
+    name: "floorp-toggle-share-mode action toggles multiple times correctly",
+    fn: withShareModeRestored(() => {
+      setShareModeEnabled(false);
+      const fn = gestureActions.getAction("floorp-toggle-share-mode");
+      assert(typeof fn === "function", "action should exist");
+      fn(window);
+      assertEquals(shareModeEnabled(), true, "first toggle: should be true");
+      fn(window);
+      assertEquals(shareModeEnabled(), false, "second toggle: should be false");
+      fn(window);
+      assertEquals(shareModeEnabled(), true, "third toggle: should be true");
+    }),
   },
 
   // --- gestureActions registry ---
@@ -463,6 +621,157 @@ const rawTests: TestCase[] = [
         beforeSize + 1,
         "should include newly registered action",
       );
+    },
+  },
+
+  // --- floorp-copy-page-url-as-markdown action ---
+  {
+    name: "floorp-copy-page-url-as-markdown action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-copy-page-url-as-markdown"),
+        "should include floorp-copy-page-url-as-markdown action",
+      );
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown action copies markdown link to clipboard",
+    async fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(
+        typeof fn === "function",
+        "floorp-copy-page-url-as-markdown should have a function",
+      );
+
+      const testUrl = "https://example.com/page";
+      const testTitle = "Example Page Title";
+      let clipboardText = "";
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: testTitle,
+          },
+        },
+      } as unknown as Window;
+
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
+
+      // Temporarily mock navigator.clipboard.writeText
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
+        clipboardText = text;
+        return Promise.resolve();
+      };
+
+      try {
+        fn(mockWin);
+        // Wait a tick for the async clipboard write
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[${testTitle}](${testUrl})`,
+          "should copy markdown formatted link to clipboard",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown escapes brackets in title",
+    async fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(typeof fn === "function", "action should have a function");
+
+      const testUrl = "https://example.com/page";
+      const testTitle = "Title with [brackets] inside";
+      let clipboardText = "";
+
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: testTitle,
+          },
+        },
+      } as unknown as Window;
+
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
+
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
+        clipboardText = text;
+        return Promise.resolve();
+      };
+
+      try {
+        fn(mockWin);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[Title with \\[brackets\\] inside](${testUrl})`,
+          "should escape brackets in title",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
+    },
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown falls back to URL when title is empty",
+    async fn() {
+      const fn = gestureActions.getAction("floorp-copy-page-url-as-markdown");
+      assert(typeof fn === "function", "action should have a function");
+
+      const testUrl = "https://example.com/no-title";
+      let clipboardText = "";
+
+      const mockWin = {
+        gBrowser: {
+          selectedBrowser: {
+            currentURI: { spec: testUrl },
+            contentTitle: "",
+          },
+        },
+      } as unknown as Window;
+
+      assert(
+        typeof navigator !== "undefined" &&
+          navigator.clipboard != null &&
+          typeof navigator.clipboard.writeText === "function",
+        "navigator.clipboard.writeText must exist for this test",
+      );
+
+      const savedWriteText = navigator.clipboard.writeText;
+      navigator.clipboard.writeText = (text: string): Promise<void> => {
+        clipboardText = text;
+        return Promise.resolve();
+      };
+
+      try {
+        fn(mockWin);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        assertEquals(
+          clipboardText,
+          `[${testUrl}](${testUrl})`,
+          "should use URL as title when contentTitle is empty",
+        );
+      } finally {
+        navigator.clipboard.writeText = savedWriteText;
+      }
     },
   },
 ];

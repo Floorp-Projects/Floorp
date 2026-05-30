@@ -391,7 +391,7 @@ function testRestoreOriginalContentRestoresIntro(): void {
   customizer.customizeWebExtPermissionPrompt(SAMPLE_CWS_INFO);
   const intro = document!.getElementById(
     "addon-webext-perm-intro",
-  ) as XULElement & { style: { display: string } };
+  ) as unknown as XULElement & { style: { display: string } };
   assertEquals(intro.style.display, "none", "intro should be hidden");
 
   // Restore should un-hide it

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand } from "../command-registry.ts";
+import type { PaletteCommand } from "../types.ts";
+import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -10,7 +11,14 @@ export const openUrlCommand: PaletteCommand = {
     defaultValue: "Open a URL in a new tab",
   }),
   category: "navigation",
-  keywords: ["open url", "navigate", "go to", "open page", "url"],
+  keywords: [
+    "open url",
+    "navigate",
+    "go to",
+    "open page",
+    "url",
+    ...getJapaneseReadings("floorp-open-url"),
+  ],
   steps: [
     {
       id: "url",

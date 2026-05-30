@@ -25,7 +25,7 @@ export class WebsitePanel {
     const webpanelBrowserId = `sidebar-panel-${id}`;
     const webpanelBrowser = parentWindow?.document?.getElementById(
       webpanelBrowserId,
-    ) as XULBrowserElement;
+    ) as unknown as XULBrowserElement;
 
     if (!webpanelBrowser) {
       throw new Error("Target panel window not found");

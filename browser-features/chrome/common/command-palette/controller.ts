@@ -10,8 +10,18 @@ import {
   incrementFrequency,
   getFrequencies,
 } from "./config.ts";
-import { getPaletteCommands, searchCommands } from "./command-registry.ts";
-import type { PaletteCommand } from "./command-registry.ts";
+import {
+  getPaletteCommands,
+  searchCommands,
+  searchHistoryCommands,
+  searchBookmarkCommands,
+} from "./command-registry.ts";
+import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
+import type {
+  PaletteCommand,
+  CommandStepChoice,
+  StepChoicesResult,
+} from "./types.ts";
 
 function looksLikeUrl(query: string): boolean {
   if (query.startsWith("http://") || query.startsWith("https://")) return true;
@@ -52,6 +62,14 @@ export class CommandPaletteController {
       this.eventListenersAttached = false;
     }
     this.clearAnimOutTimer();
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
+    }
     if (this.state.isVisible()) {
       this.hidePalette();
     }
@@ -169,7 +187,19 @@ export class CommandPaletteController {
           const choices = this.state.filteredStepChoices();
           if (choices.length > 0) {
             const idx = this.state.selectedChoiceIndex();
-            this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+            const nextIdx = idx + 1;
+            if (nextIdx >= choices.length) {
+              // At the end of the list — try loading more
+              if (this.state.hasMoreChoices() && !this.state.loadingMore()) {
+                this.loadMoreChoices();
+              }
+              // Wrap around only if no more to load
+              if (!this.state.hasMoreChoices()) {
+                this.state.setSelectedChoiceIndex(0);
+              }
+            } else {
+              this.state.setSelectedChoiceIndex(nextIdx);
+            }
           }
         }
         break;
@@ -200,7 +230,17 @@ export class CommandPaletteController {
                 (idx - 1 + choices.length) % choices.length,
               );
             } else {
-              this.state.setSelectedChoiceIndex((idx + 1) % choices.length);
+              const nextIdx = idx + 1;
+              if (nextIdx >= choices.length) {
+                if (this.state.hasMoreChoices() && !this.state.loadingMore()) {
+                  this.loadMoreChoices();
+                }
+                if (!this.state.hasMoreChoices()) {
+                  this.state.setSelectedChoiceIndex(0);
+                }
+              } else {
+                this.state.setSelectedChoiceIndex(nextIdx);
+              }
             }
           }
         }
@@ -297,13 +337,25 @@ export class CommandPaletteController {
     }
   }
 
-  private animOutTimer: ReturnType<typeof setTimeout> | null = null;
+  private animOutTimer: number | null = null;
   private defaultEngineName: string | null = null;
+  private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private bookmarkSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private currentSearchQuery: string = "";
 
   public hidePalette(): void {
     this.state.setIsAnimatingOut(true);
     this.state.setIsVisible(false);
     this.debouncedUpdateSearch.clear();
+
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
+    }
 
     // Safety fallback: reset isAnimatingOut even if transitionend never fires
     // (prefers-reduced-motion, element removed, etc.)
@@ -357,6 +409,9 @@ export class CommandPaletteController {
         if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
       }
       this.state.setStepChoicesLoading(false);
+      this.state.setHasMoreChoices(false);
+      this.state.setLoadMoreCallback(null);
+      this.state.setLoadingMore(false);
       return;
     }
 
@@ -367,18 +422,40 @@ export class CommandPaletteController {
       this.state.setStepChoicesLoading(true);
       step
         .choicesLoader()
-        .then((loadedChoices) => {
+        .then((result) => {
           // Only update if we're still on the same step
           if (this.state.currentStepIndex() === stepIndex) {
-            this.state.setStepChoicesBase(loadedChoices);
-            this.state.setFilteredStepChoices(loadedChoices);
-            this.state.setSelectedChoiceIndex(0);
+            const isResultObject = (v: unknown): v is StepChoicesResult =>
+              typeof v === "object" && v !== null && "choices" in v;
+            const choices = isResultObject(result)
+              ? result.choices
+              : (result as CommandStepChoice[]);
+            const defaultIdx = isResultObject(result)
+              ? result.defaultIndex
+              : undefined;
+
+            this.state.setStepChoicesBase(choices);
+            this.state.setFilteredStepChoices(choices);
+            this.state.setSelectedChoiceIndex(
+              defaultIdx !== undefined &&
+                defaultIdx >= 0 &&
+                defaultIdx < choices.length
+                ? defaultIdx
+                : 0,
+            );
             if (restoreValue) {
-              const idx = loadedChoices.findIndex(
-                (c) => c.value === restoreValue,
-              );
+              const idx = choices.findIndex((c) => c.value === restoreValue);
               if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
             }
+            // Store pagination metadata
+            const hasMore = isResultObject(result)
+              ? (result.hasMore ?? false)
+              : false;
+            const loadMore = isResultObject(result)
+              ? result.loadMore
+              : undefined;
+            this.state.setHasMoreChoices(hasMore);
+            this.state.setLoadMoreCallback(() => loadMore ?? null);
             this.state.setStepChoicesLoading(false);
           }
         })
@@ -388,6 +465,8 @@ export class CommandPaletteController {
             this.state.setStepChoicesBase([]);
             this.state.setFilteredStepChoices([]);
             this.state.setStepChoicesLoading(false);
+            this.state.setHasMoreChoices(false);
+            this.state.setLoadMoreCallback(null);
           }
         });
       return;
@@ -397,6 +476,55 @@ export class CommandPaletteController {
     this.state.setStepChoicesBase([]);
     this.state.setFilteredStepChoices([]);
     this.state.setStepChoicesLoading(false);
+    this.state.setHasMoreChoices(false);
+    this.state.setLoadMoreCallback(null);
+    this.state.setLoadingMore(false);
+  }
+
+  private loadMoreChoices(): void {
+    const loadMore = this.state.loadMoreCallback();
+    if (!loadMore || this.state.loadingMore() || !this.state.hasMoreChoices())
+      return;
+
+    const stepSnapshot = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
+    this.state.setLoadingMore(true);
+    loadMore()
+      .then(({ choices: newChoices, hasMore }) => {
+        const currentStepId = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
+        if (currentStepId !== stepSnapshot) {
+          this.state.setLoadingMore(false);
+          return;
+        }
+
+        this.state.setHasMoreChoices(hasMore);
+
+        const currentBase = this.state.stepChoicesBase();
+        const updatedBase = [...currentBase, ...newChoices];
+        this.state.setStepChoicesBase(updatedBase);
+
+        // Re-apply current filter to the expanded list
+        const q = this.state.query().trim().toLowerCase();
+        if (!q) {
+          this.state.setFilteredStepChoices(updatedBase);
+        } else {
+          const filtered = updatedBase.filter(
+            (c) =>
+              c.label.toLowerCase().includes(q) ||
+              c.value.toLowerCase().includes(q) ||
+              (c.description?.toLowerCase().includes(q) ?? false),
+          );
+          this.state.setFilteredStepChoices(filtered);
+        }
+
+        // Keep selection at the same position (where "load more" was triggered)
+        // Don't reset selectedChoiceIndex — keep it where it was
+
+        this.state.setLoadingMore(false);
+      })
+      .catch((e) => {
+        console.error("[command-palette] Failed to load more choices:", e);
+        this.state.setLoadingMore(false);
+      });
   }
 
   private enterInputMode(cmd: PaletteCommand): void {
@@ -657,6 +785,100 @@ export class CommandPaletteController {
     // Default to the second item when search suggestion is at top and other results exist,
     // so the first real command is selected instead of the always-present search suggestion.
     this.state.setSelectedIndex(trimmed && results.length > 1 ? 1 : 0);
+
+    // Debounced async history and bookmark search
+    this.currentSearchQuery = trimmed;
+    if (this.historySearchTimer) {
+      clearTimeout(this.historySearchTimer);
+      this.historySearchTimer = null;
+    }
+    if (this.bookmarkSearchTimer) {
+      clearTimeout(this.bookmarkSearchTimer);
+      this.bookmarkSearchTimer = null;
+    }
+
+    if (trimmed && !shareModeEnabled()) {
+      this.bookmarkSearchTimer = setTimeout(() => {
+        this.performBookmarkSearch(trimmed);
+      }, 100);
+      this.historySearchTimer = setTimeout(() => {
+        this.performHistorySearch(trimmed);
+      }, 200);
+    }
+  }
+
+  private async performHistorySearch(query: string): Promise<void> {
+    try {
+      const results = await searchHistoryCommands(query, 10);
+      // Only apply if query hasn't changed since we started
+      if (query !== this.currentSearchQuery) return;
+
+      const currentResults = this.state.filteredCommands();
+      const existingIds = new Set(currentResults.map((c) => c.id));
+      const newResults = results.filter((c) => !existingIds.has(c.id));
+
+      if (newResults.length > 0) {
+        this.state.setFilteredCommands([...currentResults, ...newResults]);
+      }
+    } catch (e) {
+      console.error("[command-palette] History search failed:", e);
+    }
+  }
+
+  private async performBookmarkSearch(query: string): Promise<void> {
+    console.debug("[command-palette] performBookmarkSearch called");
+    try {
+      const results = await searchBookmarkCommands(query, 10);
+      console.debug(
+        "[command-palette] Bookmark search returned:",
+        results.length,
+        "results",
+      );
+
+      // Only apply if query hasn't changed since we started
+      if (query !== this.currentSearchQuery) {
+        console.debug("[command-palette] Bookmark search stale");
+        return;
+      }
+
+      const currentResults = this.state.filteredCommands();
+      console.debug(
+        "[command-palette] Current filtered commands count:",
+        currentResults.length,
+      );
+      const existingIds = new Set(currentResults.map((c) => c.id));
+      const newResults = results.filter((c) => !existingIds.has(c.id));
+      console.debug(
+        "[command-palette] New bookmark results after dedup:",
+        newResults.length,
+      );
+
+      if (newResults.length > 0) {
+        // Insert bookmark results before history results to maintain display order
+        const nonAsyncResults = currentResults.filter(
+          (c) =>
+            c.category !== "history-suggestions" &&
+            c.category !== "bookmark-suggestions",
+        );
+        const existingBookmarkResults = currentResults.filter(
+          (c) => c.category === "bookmark-suggestions",
+        );
+        const existingHistoryResults = currentResults.filter(
+          (c) => c.category === "history-suggestions",
+        );
+        this.state.setFilteredCommands([
+          ...nonAsyncResults,
+          ...existingBookmarkResults,
+          ...newResults,
+          ...existingHistoryResults,
+        ]);
+        console.debug(
+          "[command-palette] Updated filtered commands with bookmark results",
+        );
+      }
+    } catch (e) {
+      console.error("[command-palette] Bookmark search failed:", e);
+    }
   }
 
   private debouncedUpdateSearch = debounce((query: string) => {
