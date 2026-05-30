@@ -1705,7 +1705,7 @@ class TabManager {
    * Supports async/await expressions. Returns a structured result
    * with JSON-serializable values.
    */
-  public async evaluate(
+  public evaluate(
     instanceId: string,
     script: string,
   ): Promise<{ success: boolean; result?: unknown; resultType?: string; error?: string; errorType?: string } | null> {

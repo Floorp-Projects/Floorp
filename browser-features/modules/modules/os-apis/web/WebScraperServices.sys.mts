@@ -14,7 +14,6 @@
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
-import { AutomationConstants } from "../../os-server/shared/http-tracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
 import { CookieHelper } from "./shared/CookieHelper.sys.mts";
@@ -368,7 +367,7 @@ class webScraper {
    * @returns Promise<string | null> - The HTML content as a string, or null if unavailable
    * @throws Error - If the browser instance is not found
    */
-  public async getHTML(
+  public getHTML(
     instanceId: string,
     options?: { selector?: string },
   ): Promise<string | null> {
@@ -391,7 +390,7 @@ class webScraper {
    * @returns Promise<string | null> - The visible text content, or null if unavailable
    * @throws Error - If the browser instance is not found
    */
-  public async getText(
+  public getText(
     instanceId: string,
     options:
       | boolean
@@ -426,14 +425,14 @@ class webScraper {
    * @returns Promise<string | null> - The element's HTML content, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async getAccessibilityTree(
+  public getAccessibilityTree(
     instanceId: string,
     options: { interestingOnly?: boolean; root?: string } = {},
   ): Promise<unknown> {
     return this.withActor(instanceId, "WebScraper:GetAccessibilityTree", options);
   }
 
-  public async getArticle(
+  public getArticle(
     instanceId: string,
   ): Promise<{
     title: string;
@@ -444,7 +443,7 @@ class webScraper {
     return this.withActor(instanceId, "WebScraper:GetArticle");
   }
 
-  public async getElement(
+  public getElement(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
@@ -463,7 +462,7 @@ class webScraper {
    * @returns Promise<string[]> - An array of matching elements' HTML content
    * @throws Error - If the browser instance is not found
    */
-  public async getElements(
+  public getElements(
     instanceId: string,
     selector: string,
   ): Promise<string[]> {
@@ -483,7 +482,7 @@ class webScraper {
    * @throws Error - If the browser instance is not found
    */
 
-  public async getElementByText(
+  public getElementByText(
     instanceId: string,
     textContent: string,
   ): Promise<string | null> {
@@ -503,7 +502,7 @@ class webScraper {
    * @throws Error - If the browser instance is not found
    */
 
-  public async getElementTextContent(
+  public getElementTextContent(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
@@ -524,7 +523,7 @@ class webScraper {
    * @returns Promise<string | null> - The element's text content, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async getElementText(
+  public getElementText(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
@@ -543,7 +542,7 @@ class webScraper {
    * @returns Promise<string | null> - CSS selector for the element, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async resolveFingerprint(
+  public resolveFingerprint(
     instanceId: string,
     fingerprint: string,
   ): Promise<string | null> {
@@ -558,7 +557,7 @@ class webScraper {
    * @returns Promise<boolean> - True if effects were cleared successfully
    * @throws Error - If the browser instance is not found
    */
-  public async clearEffects(instanceId: string): Promise<boolean> {
+  public clearEffects(instanceId: string): Promise<boolean> {
     return this.withActor(instanceId, "WebScraper:ClearEffects", undefined, false) as Promise<boolean>;
   }
 
@@ -576,7 +575,7 @@ class webScraper {
    * @returns Promise<boolean> - True if click was successful, false otherwise
    * @throws Error - If the browser instance is not found
    */
-  public async clickElement(
+  public clickElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
@@ -599,7 +598,7 @@ class webScraper {
    * @returns Promise<boolean> - True if element was found, false if timeout reached
    * @throws Error - If the browser instance is not found
    */
-  public async waitForElement(
+  public waitForElement(
     instanceId: string,
     selector: string,
     timeout = 5000,
@@ -619,7 +618,7 @@ class webScraper {
    * @returns Promise<boolean | null> - True if document is ready, false if timeout, null if error
    * @throws Error - If the browser instance is not found
    */
-  public async waitForReady(
+  public waitForReady(
     instanceId: string,
     timeout = 15000,
   ): Promise<boolean | null> {
@@ -636,7 +635,7 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeScreenshot(instanceId: string): Promise<string | null> {
+  public takeScreenshot(instanceId: string): Promise<string | null> {
     return this.withActor(instanceId, "WebScraper:TakeScreenshot");
   }
 
@@ -651,7 +650,7 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeElementScreenshot(
+  public takeElementScreenshot(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
@@ -668,7 +667,7 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeFullPageScreenshot(
+  public takeFullPageScreenshot(
     instanceId: string,
   ): Promise<string | null> {
     return this.withActor(instanceId, "WebScraper:TakeFullPageScreenshot");
@@ -685,7 +684,7 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeRegionScreenshot(
+  public takeRegionScreenshot(
     instanceId: string,
     rect?: { x?: number; y?: number; width?: number; height?: number },
   ): Promise<string | null> {
@@ -701,7 +700,7 @@ class webScraper {
    * @returns Promise<boolean> - True if all fields were filled successfully, false otherwise.
    * @throws Error - If the browser instance is not found
    */
-  public async fillForm(
+  public fillForm(
     instanceId: string,
     formData: { [selector: string]: string },
     options: { typingMode?: boolean; typingDelayMs?: number } = {},
@@ -716,7 +715,7 @@ class webScraper {
   /**
    * Types or sets a value into an element.
    */
-  public async inputElement(
+  public inputElement(
     instanceId: string,
     selector: string,
     value: string,
@@ -733,14 +732,14 @@ class webScraper {
   /**
    * Press a key or key combination.
    */
-  public async pressKey(instanceId: string, key: string): Promise<boolean> {
+  public pressKey(instanceId: string, key: string): Promise<boolean> {
     return this.withActor(instanceId, "WebScraper:PressKey", { key }, false) as Promise<boolean>;
   }
 
   /**
    * Upload a file through input[type=file]
    */
-  public async uploadFile(
+  public uploadFile(
     instanceId: string,
     selector: string,
     filePath: string,
@@ -751,7 +750,7 @@ class webScraper {
   /**
    * Gets the value of an input/textarea element
    */
-  public async getValue(
+  public getValue(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
@@ -766,7 +765,7 @@ class webScraper {
    * @param attributeName - Name of the attribute to retrieve
    * @returns Promise<string | null> - The attribute value, or null if not found
    */
-  public async getAttribute(
+  public getAttribute(
     instanceId: string,
     selector: string,
     attributeName: string,
@@ -781,7 +780,7 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if visible, false otherwise
    */
-  public async isVisible(
+  public isVisible(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
@@ -795,7 +794,7 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if enabled, false if disabled or not found
    */
-  public async isEnabled(
+  public isEnabled(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
@@ -809,7 +808,7 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if cleared successfully
    */
-  public async clearInput(
+  public clearInput(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
@@ -819,7 +818,7 @@ class webScraper {
   /**
    * Submits form associated with the selector element or the form itself
    */
-  public async submit(instanceId: string, selector: string): Promise<boolean> {
+  public submit(instanceId: string, selector: string): Promise<boolean> {
     return this.withActor(instanceId, "WebScraper:Submit", { selector }, false) as Promise<boolean>;
   }
 
@@ -831,7 +830,7 @@ class webScraper {
    * @param value - The value of the option to select
    * @returns Promise<boolean> - True if selected successfully
    */
-  public async selectOption(
+  public selectOption(
     instanceId: string,
     selector: string,
     value: string,
@@ -847,7 +846,7 @@ class webScraper {
    * @param checked - The desired checked state
    * @returns Promise<boolean> - True if set successfully
    */
-  public async setChecked(
+  public setChecked(
     instanceId: string,
     selector: string,
     checked: boolean,
@@ -862,7 +861,7 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if hover was simulated successfully
    */
-  public async hoverElement(
+  public hoverElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
@@ -872,7 +871,7 @@ class webScraper {
   /**
    * Scrolls the page to make an element visible
    */
-  public async scrollToElement(
+  public scrollToElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
@@ -882,14 +881,14 @@ class webScraper {
   /**
    * Gets the page title
    */
-  public async getPageTitle(instanceId: string): Promise<string | null> {
+  public getPageTitle(instanceId: string): Promise<string | null> {
     return this.withActor(instanceId, "WebScraper:GetPageTitle");
   }
 
   /**
    * Performs a double click on an element
    */
-  public async doubleClick(
+  public doubleClick(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
@@ -899,7 +898,7 @@ class webScraper {
   /**
    * Performs a right click (context menu) on an element
    */
-  public async rightClick(
+  public rightClick(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
@@ -909,7 +908,7 @@ class webScraper {
   /**
    * Focuses on an element
    */
-  public async focusElement(
+  public focusElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
@@ -919,7 +918,7 @@ class webScraper {
   /**
    * Performs a drag and drop operation between two elements
    */
-  public async dragAndDrop(
+  public dragAndDrop(
     instanceId: string,
     sourceSelector: string,
     targetSelector: string,
@@ -1068,7 +1067,7 @@ class webScraper {
   /**
    * Sets the innerHTML of an element (for contenteditable elements like rich text editors)
    */
-  public async setInnerHTML(
+  public setInnerHTML(
     instanceId: string,
     selector: string,
     html: string,
@@ -1079,7 +1078,7 @@ class webScraper {
   /**
    * Sets the textContent of an element (for contenteditable elements)
    */
-  public async setTextContent(
+  public setTextContent(
     instanceId: string,
     selector: string,
     text: string,
@@ -1090,7 +1089,7 @@ class webScraper {
   /**
    * Dispatches a custom event on an element (for triggering framework-specific handlers)
    */
-  public async dispatchEvent(
+  public dispatchEvent(
     instanceId: string,
     selector: string,
     eventType: string,
@@ -1113,7 +1112,7 @@ class webScraper {
    * @param text - The text value to dispatch as input.
    * @returns Promise<boolean | null> - True if successful, false on error, null if instance not found.
    */
-  public async dispatchTextInput(
+  public dispatchTextInput(
     instanceId: string,
     selector: string,
     text: string,
@@ -1126,7 +1125,7 @@ class webScraper {
    * Supports async/await expressions. Returns a structured result
    * with JSON-serializable values.
    */
-  public async evaluate(
+  public evaluate(
     instanceId: string,
     script: string,
   ): Promise<{ success: boolean; result?: unknown; resultType?: string; error?: string; errorType?: string } | null> {

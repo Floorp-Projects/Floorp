@@ -6,7 +6,6 @@ import type { SplitViewLayout } from "../data/types.js";
 export type DropZone = "left" | "right" | "top" | "bottom" | "center";
 
 const DEFAULT_THRESHOLD = 0.33;
-const DEFAULT_ZONE: DropZone = "center";
 
 /**
  * Determine which edge zone the cursor is in based on normalized coordinates.

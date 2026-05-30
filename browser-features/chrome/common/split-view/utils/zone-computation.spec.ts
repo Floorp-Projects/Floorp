@@ -8,7 +8,6 @@ import {
   computeDropZone,
   zoneToLayout,
   zoneToTabOrder,
-  type DropZone,
 } from "./zone-computation.ts";
 
 // computeDropZone — default threshold 0.33
