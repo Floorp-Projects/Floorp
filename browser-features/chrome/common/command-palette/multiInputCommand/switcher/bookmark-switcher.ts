@@ -13,6 +13,8 @@ import { navigateToUrl } from "../../utils/navigate.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
+/** Cap on how many bookmarks to eagerly flatten into memory */
+const MAX_FLATTEN_CAP = PAGE_SIZE * 10; // 500
 
 function buildPath(parentPath: string, folderTitle: string): string {
   const fullPath = parentPath ? `${parentPath} > ${folderTitle}` : folderTitle;
@@ -71,7 +73,7 @@ export async function loadBookmarks(): Promise<
     );
 
     const allBookmarks: CommandStepChoice[] = [];
-    flattenBookmarks(userRoots, "", allBookmarks, Infinity);
+    flattenBookmarks(userRoots, "", allBookmarks, MAX_FLATTEN_CAP);
 
     // Capture snapshot so loadMore doesn't reference mutable global
     const snapshot = allBookmarks;
