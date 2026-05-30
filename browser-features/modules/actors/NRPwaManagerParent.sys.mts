@@ -44,7 +44,12 @@ export class NRPwaManagerParent extends JSWindowActorParent {
               : c.name,
           }),
         );
-        this.sendAsyncMessage("PwaManager:GetContainers", containers);
+        // Serialize to string to avoid cross-compartment permission errors
+        // when the data crosses into content scope via Cu.exportFunction callback.
+        this.sendAsyncMessage(
+          "PwaManager:GetContainers",
+          JSON.stringify(containers),
+        );
         break;
       }
       case "PwaManager:SetContainer": {

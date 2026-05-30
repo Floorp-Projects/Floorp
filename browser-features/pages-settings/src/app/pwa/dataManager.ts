@@ -88,8 +88,18 @@ export type Container = {
 export function getContainers(): Promise<Container[]> {
   return new Promise((resolve, _reject) => {
     try {
-      globalThis.NRGetContainers((containers: Container[]) => {
-        resolve(containers ?? []);
+      globalThis.NRGetContainers((containers: string) => {
+        if (!containers) {
+          resolve([]);
+          return;
+        }
+        try {
+          const parsed = JSON.parse(containers);
+          resolve(parsed);
+        } catch (_e) {
+          console.error("Failed to parse containers:", containers);
+          resolve([]);
+        }
       });
     } catch (e) {
       console.error("Failed to get containers:", e);

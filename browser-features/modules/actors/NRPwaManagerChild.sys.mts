@@ -67,6 +67,8 @@ export class NRPwaManagerChild extends JSWindowActorChild {
       this.resolveGetContainers = resolve;
     });
     this.sendAsyncMessage("PwaManager:GetContainers");
+    // Parent sends a JSON string to avoid cross-compartment permission errors.
+    // Pass the raw string to the callback; the content-side code parses it.
     promise.then((containers) => callback(containers));
   }
 
