@@ -20,10 +20,11 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
     );
 
     const noContainer: CommandStepChoice = {
-      label:
-        i18next.t("commandPalette.reopenInContainerNoContainer", {
-          defaultValue: "No Container",
-        }) + (currentUserContextId === 0 ? " (✓)" : ""),
+      label: i18next.t("commandPalette.reopenInContainerNoContainer", {
+        defaultValue: "No Container",
+      }) + (currentUserContextId === 0
+        ? ` ${i18next.t("commandPalette.reopenInContainerCurrentSuffix", { defaultValue: "(current)" })}`
+        : ""),
       value: "0",
       description: i18next.t(
         "commandPalette.reopenInContainerNoContainerDesc",
@@ -47,7 +48,9 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
           ContextualIdentityService.getUserContextLabel(userContextId);
         const isCurrent = userContextId === currentUserContextId;
         return {
-          label: (label || "Unknown") + (isCurrent ? " (✓)" : ""),
+          label: (label || "Unknown") + (isCurrent
+            ? ` ${i18next.t("commandPalette.reopenInContainerCurrentSuffix", { defaultValue: "(current)" })}`
+            : ""),
           value: String(userContextId),
           description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
         };

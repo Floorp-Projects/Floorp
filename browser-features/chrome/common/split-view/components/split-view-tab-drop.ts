@@ -283,8 +283,6 @@ function onDrop(event: DragEvent): void {
   // corrupting the tab bar layout.
   const zone = activeZone;
   const tab = draggedTab;
-  const splitView = findExistingSplitView();
-  const maxPanes = splitViewConfig().maxPanes;
 
   cleanup();
 
@@ -292,51 +290,57 @@ function onDrop(event: DragEvent): void {
     // Guard: if tab was closed or destroyed between cleanup and this deferred callback,
     // skip all operations to avoid acting on stale state.
     if (!tab.linkedBrowser) return;
+    if (!logger) return;
+
+    // Re-query the current split view state rather than using the pre-cleanup
+    // snapshot — the wrapper may have been destroyed or mutated by Firefox's
+    // own drag-end handling that ran between cleanup() and this callback.
+    const currentSplitView = findExistingSplitView();
+    const currentMaxPanes = splitViewConfig().maxPanes;
 
     try {
       if (tab.splitview) return;
 
       // Center zone: add pane to existing split view, or create new with default layout
       if (zone === "center") {
-        if (splitView && splitView.tabs.length < maxPanes) {
-          splitView.addTabs([tab]);
-          // When going from 2→3 panes, pick a grid-3pane layout based on the
-          // current layout direction so the existing pane arrangement is preserved.
-          const newPaneCount = splitView.tabs.length;
+        if (currentSplitView && currentSplitView.tabs.length < currentMaxPanes) {
+          currentSplitView.addTabs([tab]);
+          const newPaneCount = currentSplitView.tabs.length;
           if (newPaneCount === 3) {
-            // Default center-drop to grid-3pane-right-main (new tab as main right pane)
-            // which is a natural extension of horizontal (side-by-side) layout.
             const gridLayout = "grid-3pane-right-main";
             const groupId = getActiveSplitViewGroupId();
             if (groupId) {
               setPersistedGroupLayout(groupId, gridLayout);
             }
-            applyLayout(logger!);
+            applyLayout(logger);
           } else if (newPaneCount === 4) {
             const groupId = getActiveSplitViewGroupId();
             if (groupId) {
               setPersistedGroupLayout(groupId, "grid-2x2");
             }
-            applyLayout(logger!);
+            applyLayout(logger);
           }
-        } else if (!splitView) {
+        } else if (!currentSplitView) {
           const partnerTab = findLastActivePartnerTab(gBrowser, tab);
           if (!partnerTab) return;
           if (partnerTab.splitview) {
             const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
-            if (existingWrapper.tabs.length < maxPanes) {
+            if (existingWrapper.tabs.length < currentMaxPanes) {
               existingWrapper.addTabs([tab]);
-              const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
-              if (layout) {
+              // Apply grid-3pane layout for 2→3 pane transition on center drop
+              const newPaneCount = existingWrapper.tabs.length;
+              if (newPaneCount === 3) {
                 const groupId = getActiveSplitViewGroupId();
-                if (groupId) setPersistedGroupLayout(groupId, layout);
+                if (groupId) {
+                  setPersistedGroupLayout(groupId, "grid-3pane-right-main");
+                }
               }
-              applyLayout(logger!);
+              applyLayout(logger);
             }
           } else {
             const wrapper = gBrowser.addTabSplitView([partnerTab, tab]);
             if (wrapper) {
-              applyLayout(logger!);
+              applyLayout(logger);
             }
           }
         }
@@ -350,14 +354,14 @@ function onDrop(event: DragEvent): void {
         if (!partnerTab) return;
         if (partnerTab.splitview) {
           const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
-          if (existingWrapper.tabs.length < maxPanes) {
+          if (existingWrapper.tabs.length < currentMaxPanes) {
             existingWrapper.addTabs([tab]);
             const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
             if (layout) {
               const groupId = getActiveSplitViewGroupId();
               if (groupId) setPersistedGroupLayout(groupId, layout);
             }
-            applyLayout(logger!);
+            applyLayout(logger);
           }
         } else {
           const layout = zoneToLayout(zone);
@@ -368,12 +372,12 @@ function onDrop(event: DragEvent): void {
             if (groupId) {
               setPersistedGroupLayout(groupId, layout);
             }
-            applyLayout(logger!);
+            applyLayout(logger);
           }
         }
       }
     } catch (err) {
-      logger?.error("[tab-drop] Error in deferred drop handler:", err);
+      logger.error("[tab-drop] Error in deferred drop handler:", err);
     }
   }, 0);
 }
@@ -396,9 +400,13 @@ function onDragStart(event: DragEvent): void {
   if (!Array.from(types).includes(TAB_DROP_TYPE)) return;
   const gBrowser = getGBrowser();
   if (!gBrowser) return;
-  // Bug 5: Try to get the actual dragged tab from the event target.
-  // event.target during dragstart on tabContainer is the tab element,
-  // which has a linkedTab property pointing to the SplitViewTab.
+
+  // Try to identify the actual dragged tab:
+  // 1. event.target on tabContainer is the tab element, which has a
+  //    linkedTab property pointing to the SplitViewTab.
+  // 2. Firefox's tabContainer exposes _tabForDragEvent(event) which
+  //    resolves the tab element from the drag event source node.
+  // 3. Fallback to selectedTab only when both above fail.
   const target = event.target;
   if (
     target &&
@@ -407,10 +415,21 @@ function onDragStart(event: DragEvent): void {
     target.linkedTab
   ) {
     draggedTabAtStart = target.linkedTab as SplitViewTab;
-  } else {
-    // Fallback: use selectedTab (may be incorrect for non-selected tab drags)
-    draggedTabAtStart = gBrowser.selectedTab ?? null;
+    return;
   }
+
+  const tabContainer = gBrowser.tabContainer as HTMLElement & {
+    _tabForDragEvent?: (e: DragEvent) => SplitViewTab | null;
+  };
+  if (tabContainer._tabForDragEvent) {
+    const dragTab = tabContainer._tabForDragEvent(event);
+    if (dragTab) {
+      draggedTabAtStart = dragTab;
+      return;
+    }
+  }
+
+  draggedTabAtStart = gBrowser.selectedTab ?? null;
 }
 
 function cleanup(): void {
@@ -463,4 +482,5 @@ export function destroyTabDrop(): void {
   removeDropOverlay();
   removeNewWindowZone();
   cleanup();
+  logger = null;
 }

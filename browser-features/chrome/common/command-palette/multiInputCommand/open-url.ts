@@ -31,7 +31,7 @@ export const openUrlCommand: PaletteCommand = {
         const looksValid =
           /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) ||      // has scheme
           /^[^\s]+\.[a-z]{2,}/i.test(trimmed) ||                  // domain-like
-          /^localhost(:\d+)?/.test(trimmed) ||                     // localhost
+          /^localhost(:\d+)?$/i.test(trimmed) ||                   // localhost
           /^about:/.test(trimmed) ||                               // about: pages
           /^floorp:\/\//.test(trimmed);                            // floorp:// pages
         if (!looksValid) {

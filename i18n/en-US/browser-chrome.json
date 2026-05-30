@@ -477,6 +477,7 @@
     "reopenInContainerStepPlaceholder": "Choose a container...",
     "reopenInContainerNoContainer": "No Container",
     "reopenInContainerNoContainerDesc": "Reopen in the default context",
+    "reopenInContainerCurrentSuffix": "(current)",
     "loadingChoices": "Loading options..."
   }
 }

@@ -95,9 +95,6 @@ export function patchTabpanels(
 
     Object.defineProperty(tabpanels, "splitViewPanels", {
       set(newPanels: string[]) {
-        logger.debug(
-          `[patch:splitViewPanels.set] incoming newPanels=[${newPanels ? newPanels.join(", ") : ""}]`,
-        );
         // Always call the original setter to ensure upstream state:
         // - .split-view-panel class on panels
         // - column attributes
@@ -160,9 +157,6 @@ export function patchTabpanels(
             if (child.classList.contains("split-view-panel")) {
               child.classList.remove("split-view-panel");
               child.removeAttribute("column");
-              logger.debug(
-                `[patch:splitViewPanels.set] cleaned stale .split-view-panel from ${childId}`,
-              );
             }
             if (child.classList.contains("split-view-panel-active")) {
               child.classList.remove("split-view-panel-active");
@@ -181,17 +175,11 @@ export function patchTabpanels(
         // Skip if panels haven't changed
         const panelKey = newPanels.join(",");
         if (panelKey === state.lastPanelIds) {
-          logger.debug(
-            `[patch:splitViewPanels.set] skip unchanged panelKey=[${panelKey}]`,
-          );
           return;
         }
 
         state.inSplitViewPanelsSet = true;
         state.lastPanelIds = panelKey;
-        logger.debug(
-          `[patch:splitViewPanels.set] panels=${newPanels.length}, ids=[${newPanels.join(", ")}]`,
-        );
 
         // Floorp enhancement: update handles and layout
         if (newPanels.length >= 2) {
@@ -268,26 +256,18 @@ export function patchTabpanels(
         gBrowserRef?.selectedTab as { splitview?: unknown } | undefined
       )?.splitview;
       const isActive = !!selectedSplitview && !!updatedValue;
-      logger.debug(
-        `[patch:setSplitViewActive] updatedValue=${updatedValue} selectedHasSplitview=${!!selectedSplitview} → isActive=${isActive}`,
-      );
 
       try {
         origSetSplitViewActive.call(this, updatedValue);
-        logger.debug(
-          `[patch:setSplitViewActive] original native setSplitViewActive called successfully`,
-        );
       } catch (e) {
         logger.error(`[patch:setSplitViewActive] original threw: ${e}`);
       }
 
       const splitTabCount = syncSplitTabMarkerAttrs();
-      logger.debug(`[patch:setSplitViewActive] splitTabCount=${splitTabCount}`);
 
       const tabsToolbar = document?.getElementById("TabsToolbar");
 
       if (isActive) {
-        logger.debug(`[patch:setSplitViewActive] active branch path`);
         this.setAttribute("data-floorp-split", "true");
         // Enable multibar attribute so Lepton theme doesn't
         // apply negative margins that hide split-view tabs.
@@ -301,9 +281,6 @@ export function patchTabpanels(
           tabsToolbar.setAttribute("splitview-multibar", "true");
         }
       } else {
-        logger.debug(
-          `[patch:setSplitViewActive] DEACTIVE branch path: removing attributes`,
-        );
         this.removeAttribute("data-floorp-split");
         this.removeAttribute("split-view-layout");
         this.removeAttribute("data-floorp-dragging");
@@ -323,13 +300,10 @@ export function patchTabpanels(
         const beforePanelSet = new Set(beforeSplitPanelIds);
         for (const child of (this as HTMLElement).children) {
           if (beforePanelSet.has(child.id)) {
-            const wasReset = resetSplitPanelPresentationState(
+            resetSplitPanelPresentationState(
               child,
               selectedPanel,
               true,
-            );
-            logger.debug(
-              `[patch:setSplitViewActive] force-reset presentation state for ${child.id}: wasReset=${wasReset}`,
             );
           }
         }
@@ -391,10 +365,6 @@ export function patchTabpanels(
       this: HTMLElement,
       tabs: SplitViewTab[],
     ) {
-      logger.debug(
-        `[patch:removeTabsFromSplitview] incoming tabs count=${tabs.length}`,
-      );
-
       // Capture panel IDs BEFORE native clears #splitViewPanels.
       // The native code splices all panels from #splitViewPanels and then
       // calls setSplitViewActive(false) internally, so by the time our
@@ -403,15 +373,9 @@ export function patchTabpanels(
       const dismissedPanelIds = tabs
         .filter((t) => t?.linkedPanel)
         .map((t) => t.linkedPanel);
-      logger.debug(
-        `[patch:removeTabsFromSplitview] captured dismissedPanelIds=[${dismissedPanelIds.join(", ")}]`,
-      );
 
       try {
         origRemoveTabsFromSplitview.call(this, tabs);
-        logger.debug(
-          `[patch:removeTabsFromSplitview] original native removeTabsFromSplitview called successfully`,
-        );
       } catch (e) {
         logger.error(`[patch:removeTabsFromSplitview] original threw: ${e}`);
       }
@@ -426,13 +390,10 @@ export function patchTabpanels(
       for (const id of dismissedPanelIds) {
         const panelEl = document?.getElementById(id);
         if (panelEl) {
-          const wasReset = resetSplitPanelPresentationState(
+          resetSplitPanelPresentationState(
             panelEl,
             selectedPanel,
             true,
-          );
-          logger.debug(
-            `[patch:removeTabsFromSplitview] post-native force-reset ${id}: wasReset=${wasReset}`,
           );
         }
       }
@@ -496,21 +457,6 @@ export function patchTabpanels(
           `[patch:showSplitViewPanels] filtered out ${invalidCount} tab(s) with null linkedBrowser`,
         );
       }
-      const inputDetail = tabs
-        .map(
-          (t, i) =>
-            `[${i}]=${t?.linkedPanel ?? "null"}:${t?.label?.slice(0, 24) ?? ""}`,
-        )
-        .join(" ");
-      logger.debug(
-        `[patch:showSplitViewPanels] validTabs=${validTabs.length}/${tabs.length} input: ${inputDetail}`,
-      );
-      const validDetail = validTabs
-        .map((t, i) => `[${i}]=${t.linkedPanel}`)
-        .join(" ");
-      logger.debug(
-        `[patch:showSplitViewPanels] validTabs order: ${validDetail}`,
-      );
       if (validTabs.length < 2) {
         logger.warn(
           "[patch:showSplitViewPanels] less than 2 valid tabs, skipping",
@@ -539,16 +485,6 @@ export function patchTabpanels(
           validTabs,
           "showSplitViewPanels",
         );
-        try {
-          const ids = tabpanels.splitViewPanels;
-          logger.debug(
-            `[patch:showSplitViewPanels:afterNative] tabpanels.splitViewPanels=[${ids?.join(", ") ?? "undefined"}]`,
-          );
-        } catch (readErr) {
-          logger.debug(
-            `[patch:showSplitViewPanels:afterNative] could not read splitViewPanels: ${readErr}`,
-          );
-        }
         scheduleSplitPaneWarmRetries(logger);
         const bumpSplitViewUi = (): void => {
           ensureSplitPaneTabBrowsersAreWarmed(logger);
