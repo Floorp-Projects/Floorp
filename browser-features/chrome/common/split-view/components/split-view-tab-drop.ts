@@ -36,6 +36,13 @@ let isTabDragging = false;
 let draggedTabAtStart: SplitViewTab | null = null;
 let cleanupFns: (() => void)[] = [];
 let logger: ConsoleInstance | null = null;
+/**
+ * Heartbeat timer: dragover fires continuously during a drag (~60fps).
+ * If this timer expires, the cursor has left the window — hide overlays.
+ * Workaround for Firefox Bugzilla #656164 where dragleave doesn't fire
+ * for native tab drags leaving the window.
+ */
+let dragLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 const t = (key: string, opts?: Record<string, string>): string =>
   (i18next.t as (k: string, o?: Record<string, string>) => string)(key, opts);
@@ -200,6 +207,16 @@ function onDragOver(event: DragEvent): void {
   const types = event.dataTransfer?.types;
   const hasTabType = types ? Array.from(types).includes(TAB_DROP_TYPE) : false;
   if (!hasTabType) return;
+
+  // Heartbeat: dragover stops firing when cursor leaves the window.
+  // Reset the timer on every event; if it expires, hide the overlays.
+  if (dragLeaveTimer) clearTimeout(dragLeaveTimer);
+  dragLeaveTimer = setTimeout(() => {
+    if (isTabDragging) {
+      hideDropOverlay();
+      removeNewWindowZone();
+    }
+  }, 200);
 
   // When over the new window zone, still preventDefault so Firefox's
   // built-in detach-to-window does NOT fire before our drop handler.
@@ -451,6 +468,10 @@ function onDragStart(event: DragEvent): void {
 }
 
 function cleanup(): void {
+  if (dragLeaveTimer) {
+    clearTimeout(dragLeaveTimer);
+    dragLeaveTimer = null;
+  }
   isTabDragging = false;
   draggedTabAtStart = null;
   activeZone = "right";
