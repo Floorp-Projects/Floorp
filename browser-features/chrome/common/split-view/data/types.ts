@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+export type { DropZone } from "../utils/zone-computation.js";
+
 export type SplitViewLayout =
   | "horizontal"
   | "vertical"
@@ -28,6 +30,7 @@ export interface SplitViewWrapper {
   tabs: SplitViewTab[];
   addTabs(tabs: SplitViewTab[]): void;
   reverseTabs(): void;
+  unsplitTabs(trigger: string | null): void;
 }
 
 /** MozTabpanels custom element with split-view properties. */
@@ -56,6 +59,8 @@ export interface SplitViewGBrowser {
     tabs: SplitViewTab[],
     options?: { id?: string | null; insertBefore?: SplitViewTab | null },
   ): SplitViewWrapper | null;
+  /** Move a tab to a new window. */
+  replaceTabWithWindow(tab: SplitViewTab): void;
 }
 
 /** TabContextMenu global. */

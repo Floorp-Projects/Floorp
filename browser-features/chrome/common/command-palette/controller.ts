@@ -171,7 +171,10 @@ export class CommandPaletteController {
       case "Escape":
         event.preventDefault();
         event.stopPropagation();
-        this.hidePalette();
+        // Step back through previous steps before closing the palette entirely.
+        // This avoids losing partially-completed input when the user just wants
+        // to go back one step.
+        this.goBackStep();
         break;
 
       case "Enter":
@@ -705,7 +708,9 @@ export class CommandPaletteController {
       : this.buildInitialCommandList();
     results.push(...commandResults);
 
-    // Always show search engine suggestion at the top when there's a query
+    // Show search engine suggestion at the bottom of the list as a fallback.
+    // Placing it at the bottom keeps the first matched command selected by
+    // default, so Enter always executes the best match — not the search fallback.
     if (trimmed) {
       const engineName = this.defaultEngineName;
       const descriptionText = engineName
@@ -717,7 +722,7 @@ export class CommandPaletteController {
             defaultValue: "Search with your default search engine",
           });
 
-      results.unshift({
+      results.push({
         id: "__search-engine-fallback",
         label: i18next.t("commandPalette.searchWithEngine", {
           defaultValue: `Search for "${trimmed}"`,
@@ -782,9 +787,7 @@ export class CommandPaletteController {
     }
 
     this.state.setFilteredCommands(results);
-    // Default to the second item when search suggestion is at top and other results exist,
-    // so the first real command is selected instead of the always-present search suggestion.
-    this.state.setSelectedIndex(trimmed && results.length > 1 ? 1 : 0);
+    this.state.setSelectedIndex(0);
 
     // Debounced async history and bookmark search
     this.currentSearchQuery = trimmed;

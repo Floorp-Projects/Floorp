@@ -70,18 +70,21 @@ export function clearSplitHandles(): void {
   const tabpanels = getTabpanels();
   if (!tabpanels) return;
   const handles = tabpanels.querySelectorAll(
-    ".floorp-split-handle, .floorp-grid-handle",
+    ".floorp-split-handle, .floorp-grid-handle, .split-view-splitter",
   );
   log.debug(`[clearSplitHandles] removing ${handles.length} handle(s)`);
   for (const handle of handles) {
     handle.remove();
   }
-  // Flex visual order follows DOM children; `splitViewPanels` order can differ.
-  // Strip stale `order` before flex/grid re-layout.
+  // Strip stale `order` and `flex` inline styles from all children.
+  // `insertFlexHandles` sets both on split panels, but native
+  // `removeTabsFromSplitview` (Firefox 151+) may already have removed the
+  // `.split-view-panel` class before this runs, so we cannot rely on it.
+  // Removing from non-split children is a no-op, so it's safe.
   for (const child of tabpanels.children) {
-    if (child.classList?.contains("split-view-panel")) {
-      (child as HTMLElement).style.removeProperty("order");
-    }
+    const style = (child as HTMLElement).style;
+    style.removeProperty("order");
+    style.removeProperty("flex");
   }
 }
 
