@@ -227,6 +227,50 @@ const rawTests: TestCase[] = [
       }
     },
   },
+  {
+    name: "loadMore returns empty choices on concurrent call (in-flight guard)",
+    async fn() {
+      const result = await loadHistory();
+      const isResultObject =
+        typeof result === "object" && result !== null && "choices" in result;
+      if (!isResultObject) return;
+
+      const stepResult = result as {
+        choices: CommandStepChoice[];
+        hasMore?: boolean;
+        loadMore?: () => Promise<{
+          choices: CommandStepChoice[];
+          hasMore: boolean;
+        }>;
+      };
+
+      if (stepResult.hasMore && stepResult.loadMore) {
+        // Fire two concurrent loadMore calls
+        const [first, second] = await Promise.all([
+          stepResult.loadMore(),
+          stepResult.loadMore(),
+        ]);
+
+        // One of them should return empty choices (the in-flight guard)
+        assert(
+          Array.isArray(first.choices),
+          "first loadMore should return choices array",
+        );
+        assert(
+          Array.isArray(second.choices),
+          "second loadMore should return choices array",
+        );
+
+        // At least one should have returned empty due to in-flight guard
+        const hasEmptyResult =
+          first.choices.length === 0 || second.choices.length === 0;
+        assert(
+          hasEmptyResult,
+          `in-flight guard should cause one concurrent call to return empty. Got ${first.choices.length} and ${second.choices.length} items`,
+        );
+      }
+    },
+  },
 ];
 
 export function runAllTests() {
