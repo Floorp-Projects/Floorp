@@ -393,6 +393,24 @@ function onDragEnd(): void {
   document.getElementById("navigator-toolbox")?.removeAttribute("movingtab");
 }
 
+/**
+ * When the drag leaves the document (cursor moves outside the browser window),
+ * hide the overlay and new-window zone so they don't linger. dragend may not
+ * fire reliably when Firefox natively detaches the tab to a new window.
+ * The elements are re-shown on the next dragover if the cursor returns.
+ */
+function onDragLeave(event: DragEvent): void {
+  if (!isTabDragging) return;
+  // relatedTarget is null when the pointer leaves the document entirely.
+  // When moving between children of the same document, relatedTarget is
+  // the element being entered.
+  const related = event.relatedTarget;
+  if (related === null || !(related instanceof Node) || !document.contains(related)) {
+    hideDropOverlay();
+    removeNewWindowZone();
+  }
+}
+
 /** Capture split view state and dragged tab on dragstart. */
 function onDragStart(event: DragEvent): void {
   const types = event.dataTransfer?.types;
@@ -453,6 +471,7 @@ export function initTabDrop(initLogger: ConsoleInstance): void {
   const onDropFn = (e: Event) => onDrop(e as DragEvent);
   const onEnd = () => onDragEnd();
   const onStart = (e: Event) => onDragStart(e as DragEvent);
+  const onLeave = (e: Event) => onDragLeave(e as DragEvent);
 
   // Capture split view state on dragstart (before Firefox switches tabs).
   const tabContainer = getGBrowser()?.tabContainer;
@@ -465,12 +484,14 @@ export function initTabDrop(initLogger: ConsoleInstance): void {
   document.addEventListener("dragover", onOver, true);
   document.addEventListener("drop", onDropFn, true);
   document.addEventListener("dragend", onEnd);
+  document.addEventListener("dragleave", onLeave);
 
   cleanupFns = [
     () => tabContainer?.removeEventListener("dragstart", onStart),
     () => document.removeEventListener("dragover", onOver, true),
     () => document.removeEventListener("drop", onDropFn, true),
     () => document.removeEventListener("dragend", onEnd),
+    () => document.removeEventListener("dragleave", onLeave),
   ];
 
   logger.debug("[tab-drop] document-level listeners attached (capture phase)");
