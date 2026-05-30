@@ -247,6 +247,9 @@ function onDragOver(event: DragEvent): void {
 
   if (!isTabDragging) {
     isTabDragging = true;
+  }
+  // Re-show the new window zone if the heartbeat timer removed it
+  if (!document.getElementById(NEW_WINDOW_ZONE_ID)) {
     showNewWindowZone();
   }
 
