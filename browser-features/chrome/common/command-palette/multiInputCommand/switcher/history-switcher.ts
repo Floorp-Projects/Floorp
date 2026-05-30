@@ -75,6 +75,7 @@ export function loadHistory(): Promise<
   CommandStepChoice[] | StepChoicesResult
 > {
   let offset = 0;
+  let isLoading = false;
 
   // We use a different approach: return StepChoicesResult with loadMore
   // The hasMore flag is determined by checking if we got exactly PAGE_SIZE results
@@ -94,14 +95,20 @@ export function loadHistory(): Promise<
             choices: CommandStepChoice[];
             hasMore: boolean;
           }> => {
-            const nextPage = await queryHistory(offset, PAGE_SIZE + 1);
-            const hasMoreResults = nextPage.length > PAGE_SIZE;
-            if (hasMoreResults) {
-              nextPage.pop();
-            }
-            offset += nextPage.length;
+            if (isLoading) return { choices: [], hasMore: true };
+            isLoading = true;
+            try {
+              const nextPage = await queryHistory(offset, PAGE_SIZE + 1);
+              const hasMoreResults = nextPage.length > PAGE_SIZE;
+              if (hasMoreResults) {
+                nextPage.pop();
+              }
+              offset += nextPage.length;
 
-            return { choices: nextPage, hasMore: hasMoreResults };
+              return { choices: nextPage, hasMore: hasMoreResults };
+            } finally {
+              isLoading = false;
+            }
           }
         : undefined,
     };

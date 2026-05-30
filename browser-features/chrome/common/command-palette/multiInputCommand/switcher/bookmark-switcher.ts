@@ -78,6 +78,7 @@ export async function loadBookmarks(): Promise<
     const firstPage = snapshot.slice(0, PAGE_SIZE);
     const hasMore = snapshot.length > PAGE_SIZE;
     let offset = firstPage.length;
+    let isLoading = false;
 
     return {
       choices: firstPage,
@@ -87,15 +88,21 @@ export async function loadBookmarks(): Promise<
             choices: CommandStepChoice[];
             hasMore: boolean;
           }> => {
-            const nextBatch = snapshot.slice(
-              offset,
-              offset + PAGE_SIZE,
-            );
-            offset += nextBatch.length;
-            return Promise.resolve({
-              choices: nextBatch,
-              hasMore: offset < snapshot.length,
-            });
+            if (isLoading) return Promise.resolve({ choices: [], hasMore: true });
+            isLoading = true;
+            try {
+              const nextBatch = snapshot.slice(
+                offset,
+                offset + PAGE_SIZE,
+              );
+              offset += nextBatch.length;
+              return Promise.resolve({
+                choices: nextBatch,
+                hasMore: offset < snapshot.length,
+              });
+            } finally {
+              isLoading = false;
+            }
           }
         : undefined,
     };
