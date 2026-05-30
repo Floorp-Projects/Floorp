@@ -17,32 +17,12 @@ export async function searchBookmarks(
   query: string,
   limit: number = 10,
 ): Promise<PaletteCommand[]> {
-  console.debug(
-    "[command-palette/bookmark] searchBookmarks called",
-  );
   try {
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
     ) as SearchPlacesUtilsModule;
 
-    console.debug(
-      "[command-palette/bookmark] PlacesUtils.bookmarks available:",
-      !!PlacesUtils.bookmarks,
-    );
-    console.debug(
-      "[command-palette/bookmark] PlacesUtils.bookmarks.search available:",
-      typeof PlacesUtils.bookmarks?.search,
-    );
-    console.debug(
-      "[command-palette/bookmark] TYPE_BOOKMARK value:",
-      PlacesUtils.bookmarks?.TYPE_BOOKMARK,
-    );
-
     const results = await PlacesUtils.bookmarks.search(query);
-    console.debug(
-      "[command-palette/bookmark] Raw results count:",
-      results.length,
-    );
 
     // Use TYPE_BOOKMARK constant if available, otherwise fall back to value 1
     const TYPE_BOOKMARK = PlacesUtils.bookmarks?.TYPE_BOOKMARK ?? 1;
@@ -51,20 +31,9 @@ export async function searchBookmarks(
     const commands: PaletteCommand[] = [];
 
     for (const item of results) {
-      if (item.type !== TYPE_BOOKMARK) {
-        console.debug(
-          "[command-palette/bookmark] Skipping non-bookmark item, type:",
-          item.type,
-        );
-        continue;
-      }
+      if (item.type !== TYPE_BOOKMARK) continue;
       const urlString = toUrlString(item.url);
-      if (!urlString) {
-        console.debug(
-          "[command-palette/bookmark] Skipping item with empty url",
-        );
-        continue;
-      }
+      if (!urlString) continue;
       if (seenUrls.has(urlString)) continue;
       seenUrls.add(urlString);
 
@@ -81,10 +50,6 @@ export async function searchBookmarks(
       if (commands.length >= limit) break;
     }
 
-    console.debug(
-      "[command-palette/bookmark] Final commands count:",
-      commands.length,
-    );
     return commands;
   } catch (e) {
     console.error("[command-palette/bookmark] Bookmark search failed:", e);

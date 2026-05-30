@@ -826,32 +826,17 @@ export class CommandPaletteController {
   }
 
   private async performBookmarkSearch(query: string): Promise<void> {
-    console.debug("[command-palette] performBookmarkSearch called");
     try {
       const results = await searchBookmarkCommands(query, 10);
-      console.debug(
-        "[command-palette] Bookmark search returned:",
-        results.length,
-        "results",
-      );
 
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) {
-        console.debug("[command-palette] Bookmark search stale");
         return;
       }
 
       const currentResults = this.state.filteredCommands();
-      console.debug(
-        "[command-palette] Current filtered commands count:",
-        currentResults.length,
-      );
       const existingIds = new Set(currentResults.map((c) => c.id));
       const newResults = results.filter((c) => !existingIds.has(c.id));
-      console.debug(
-        "[command-palette] New bookmark results after dedup:",
-        newResults.length,
-      );
 
       if (newResults.length > 0) {
         // Insert bookmark results before history results to maintain display order
@@ -872,9 +857,6 @@ export class CommandPaletteController {
           ...newResults,
           ...existingHistoryResults,
         ]);
-        console.debug(
-          "[command-palette] Updated filtered commands with bookmark results",
-        );
       }
     } catch (e) {
       console.error("[command-palette] Bookmark search failed:", e);
