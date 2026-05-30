@@ -3,18 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, For, onCleanup } from "solid-js";
-import type { JSX } from "solid-js";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { render } from "preact";
+import { useState, useEffect } from "preact/hooks";
+import { createRootHMR } from "#features-chrome/utils/base";
 import type { Browser, Manifest } from "./type";
 import type { PwaService } from "./pwaService";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
+type PanelTranslations = {
+  webapps: string;
+  installCurrent: string;
+  openInstalled: string;
+};
+
 export class SsbPanelView {
-  private static installedApps = createSignal<Manifest[]>([]);
+  private static installedApps: Signal<Manifest[]> = signal<Manifest[]>([]);
   private static pwaService: PwaService;
-  private isOpen = createSignal<boolean>(false);
+  private isOpen: Signal<boolean> = signal<boolean>(false);
   private isRendered = false;
 
   constructor(pwaService: PwaService) {
@@ -22,7 +30,6 @@ export class SsbPanelView {
     if (!this.panelUIButton) return;
 
     createRootHMR(() => {
-      const [, setIsOpen] = this.isOpen;
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (
@@ -31,7 +38,7 @@ export class SsbPanelView {
           ) {
             const isOpened =
               this.panelUIButton?.getAttribute("open") === "true";
-            setIsOpen(isOpened);
+            this.isOpen.value = isOpened;
 
             if (isOpened && !this.isRendered) {
               this.renderPanel();
@@ -44,7 +51,7 @@ export class SsbPanelView {
         attributes: true,
       });
 
-      onCleanup(() => observer.disconnect());
+      import.meta.hot?.dispose(() => observer.disconnect());
     }, import.meta.hot);
   }
 
@@ -70,9 +77,11 @@ export class SsbPanelView {
     if (!this.parentElement || !this.beforeElement) return;
 
     this.isRendered = true;
-    render(() => <SsbPanelView.Render />, this.parentElement, {
-      marker: this.beforeElement,
-    });
+
+    // Insert a container before the marker element
+    const container = document?.createElement("span") as HTMLElement;
+    this.parentElement.insertBefore(container, this.beforeElement);
+    render(<SsbPanelView.Render />, container);
   }
 
   private static async showSsbPanelSubView() {
@@ -85,10 +94,9 @@ export class SsbPanelView {
   }
 
   private static async updateInstalledApps() {
-    const [, setInstalledApps] = SsbPanelView.installedApps;
     const apps = await SsbPanelView.pwaService.getInstalledApps();
-    setInstalledApps(
-      Object.values(apps).map((value) => ({ ...(value as Manifest) })),
+    SsbPanelView.installedApps.value = Object.values(apps).map(
+      (value) => ({ ...(value as Manifest) }),
     );
   }
 
@@ -99,12 +107,13 @@ export class SsbPanelView {
     );
   }
 
-  private static InstalledAppsList(): JSX.Element {
-    const [apps] = SsbPanelView.installedApps;
+  private static InstalledAppsList() {
+    const apps = SsbPanelView.installedApps.value;
     return (
-      <For each={apps()}>
-        {(app) => (
+      <>
+        {apps.map((app) => (
           <xul:toolbarbutton
+            key={app.id}
             id={`ssb-${app.id}`}
             class="subviewbutton ssb-app-info-button"
             label={app.name}
@@ -114,32 +123,34 @@ export class SsbPanelView {
               SsbPanelView.pwaService.runSsbByUrl(app.start_url);
             }}
           />
-        )}
-      </For>
+        ))}
+      </>
     );
   }
 
-  public static Render(): JSX.Element {
-    const [translations, setTranslations] = createSignal({
+  public static Render() {
+    const [translations, setTranslations] = useState<PanelTranslations>({
       webapps: i18next.t("ssb.menu.webapps"),
       installCurrent: i18next.t("ssb.menu.install-current"),
       openInstalled: i18next.t("ssb.menu.open-installed"),
     });
 
-    addI18nObserver(() => {
-      setTranslations({
-        webapps: i18next.t("ssb.menu.webapps"),
-        installCurrent: i18next.t("ssb.menu.install-current"),
-        openInstalled: i18next.t("ssb.menu.open-installed"),
+    useEffect(() => {
+      addI18nObserver(() => {
+        setTranslations({
+          webapps: i18next.t("ssb.menu.webapps"),
+          installCurrent: i18next.t("ssb.menu.install-current"),
+          openInstalled: i18next.t("ssb.menu.open-installed"),
+        });
       });
-    });
+    }, []);
 
     return (
       <>
         <xul:toolbarbutton
           id="appMenu-ssb-button"
           class="subviewbutton subviewbutton-nav"
-          label={translations().webapps}
+          label={translations.webapps}
           closemenu="none"
           onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
@@ -148,7 +159,7 @@ export class SsbPanelView {
             <xul:toolbarbutton
               id="appMenu-install-or-open-ssb-current-page-button"
               class="subviewbutton"
-              label={translations().installCurrent}
+              label={translations.installCurrent}
               onCommand={() =>
                 SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
             />
@@ -156,9 +167,9 @@ export class SsbPanelView {
             <h2
               id="panelMenu_openInstalledApps"
               class="subview-subheader"
-              aria-label={translations().openInstalled}
+              aria-label={translations.openInstalled}
             >
-              {translations().openInstalled}
+              {translations.openInstalled}
             </h2>
             <xul:toolbaritem
               id="panelMenu_installedSsbMenu"

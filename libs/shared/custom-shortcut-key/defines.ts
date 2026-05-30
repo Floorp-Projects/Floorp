@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import * as t from 'io-ts';
-import { commands } from './commands';
-import { getOrElseW } from 'fp-ts/Either';
-import { pipe } from 'fp-ts/function';
+import * as v from 'valibot';
+import { commands } from './commands.ts';
 
 // KeyCodes list
 export const keyCodesList = {
@@ -33,67 +31,82 @@ export const keyCodesList = {
   F24: ["F24", "VK_F24"],
 } as const;
 
-// FloorpCSKData codec
-export const FloorpCSKData = t.array(
-  t.type({
-    actionName: t.string,
-    key: t.string,
-    keyCode: t.string,
-    modifiers: t.string,
+// FloorpCSKData schema
+export const FloorpCSKData = v.array(
+  v.object({
+    actionName: v.string(),
+    key: v.string(),
+    keyCode: v.string(),
+    modifiers: v.string(),
   })
 );
-export type FloorpCSKData = t.TypeOf<typeof FloorpCSKData>;
+export type FloorpCSKData = v.InferOutput<typeof FloorpCSKData>;
 
-// zCSKData equivalent in io-ts
-export const CSKDataCodec = t.record(
-  t.keyof(Object.keys(commands).reduce((acc, k) => {
-    acc[k] = null;
-    return acc;
-  }, {} as Record<string, null>)),
-  t.type({
-    modifiers: t.type({
-      alt: t.boolean,
-      ctrl: t.boolean,
-      meta: t.boolean,
-      shift: t.boolean,
-    }),
-    key: t.string,
-  })
+const cskEntrySchema = v.object({
+  modifiers: v.object({
+    alt: v.boolean(),
+    ctrl: v.boolean(),
+    meta: v.boolean(),
+    shift: v.boolean(),
+  }),
+  key: v.string(),
+});
+
+// CSKData schema
+export const CSKDataCodec = v.record(
+  v.picklist(Object.keys(commands) as [string, ...string[]]),
+  cskEntrySchema,
 );
-export type CSKData = t.TypeOf<typeof CSKDataCodec>;
+export type CSKData = Record<string, v.InferOutput<typeof cskEntrySchema>>;
 
-// Function replacing zCSKData.parse
+// CSKCommands schema
+export const CSKCommandsCodec = v.union([
+  v.object({
+    type: v.literal('disable-csk'),
+    data: v.boolean(),
+  }),
+  v.object({
+    type: v.literal('update-pref'),
+  }),
+]);
+export type CSKCommands = v.InferOutput<typeof CSKCommandsCodec>;
+
+// Function replacing zCSKData.parse / floorpCSKToNora
 export function floorpCSKToNora(data: FloorpCSKData): CSKData {
-  const arr: Record<string, { key: string; modifiers: CSKData['any']['modifiers'] }> = {};
-  
+  const arr: Record<string, { key: string; modifiers: { alt: boolean; ctrl: boolean; meta: boolean; shift: boolean } }> = {};
+
   for (const datum of data) {
     arr[datum.actionName] = {
       key: datum.keyCode ? datum.keyCode.replace('VK_', '') : datum.key,
       modifiers: {
         alt: datum.modifiers.includes('alt'),
         ctrl: datum.modifiers.includes('ctrl'),
-        meta: false,
+        meta: datum.modifiers.includes('meta'),
         shift: datum.modifiers.includes('shift'),
       },
     };
   }
 
-  return pipe(
-    CSKDataCodec.decode(arr),
-    getOrElseW(errors => {
-      throw new Error(`Invalid CSKData: ${JSON.stringify(errors)}`);
-    })
-  );
+  const result = v.safeParse(CSKDataCodec, arr);
+  if (!result.success) {
+    throw new Error('Invalid CSKData: ' + JSON.stringify(result.issues));
+  }
+  return result.output as CSKData;
 }
 
-// zCSKCommands equivalent in io-ts
-export const CSKCommandsCodec = t.union([
-  t.type({
-    type: t.keyof({ 'disable-csk': null }),
-    data: t.boolean,
-  }),
-  t.type({
-    type: t.keyof({ 'update-pref': null }),
-  }),
-]);
-export type CSKCommands = t.TypeOf<typeof CSKCommandsCodec>;
+// Parse helpers (consumers don't need to import valibot directly)
+export function parseCSKData(input: unknown): CSKData {
+  const result = v.safeParse(CSKDataCodec, input);
+  if (!result.success) {
+    throw new Error('Invalid CSKData: ' + JSON.stringify(result.issues));
+  }
+  return result.output as CSKData;
+}
+
+export function parseCSKCommands(input: unknown): CSKCommands | null {
+  const result = v.safeParse(CSKCommandsCodec, input);
+  if (!result.success) {
+    return null;
+  }
+  return result.output;
+}

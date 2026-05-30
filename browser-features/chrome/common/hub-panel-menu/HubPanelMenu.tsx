@@ -3,21 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, onCleanup } from "solid-js";
-import type { JSX } from "solid-js";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { signal, useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
+import type { ComponentChild } from "preact";
+import { h, render } from "preact";
+import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 export class HubPanelMenu {
-  private isOpen = createSignal<boolean>(false);
+  private isOpen = signal<boolean>(false);
   private isRendered = false;
 
   constructor() {
     if (!this.panelUIButton) return;
 
     createRootHMR(() => {
-      const [, setIsOpen] = this.isOpen;
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (
@@ -26,7 +27,7 @@ export class HubPanelMenu {
           ) {
             const isOpened =
               this.panelUIButton?.getAttribute("open") === "true";
-            setIsOpen(isOpened);
+            this.isOpen.value = isOpened;
 
             if (isOpened && !this.isRendered) {
               this.renderPanel();
@@ -39,7 +40,7 @@ export class HubPanelMenu {
         attributes: true,
       });
 
-      onCleanup(() => observer.disconnect());
+      addDisposer(() => observer.disconnect());
     }, import.meta.hot);
   }
 
@@ -67,36 +68,38 @@ export class HubPanelMenu {
     if (!this.parentElement) return;
 
     this.isRendered = true;
-    render(() => <HubPanelMenu.Render />, this.parentElement ?? undefined, {
-      marker: this.beforeElement ?? undefined,
-    });
+    render(h(HubPanelMenu.Render, null), this.parentElement!);
   }
 
   private static handleOpenHub() {
     const win = window;
+    // deno-lint-ignore no-explicit-any
     win.gBrowser.selectedTab = win.gBrowser.addTab("about:hub", {
-      relatedToCurrent: true,
+      relatedToCurrent: true, // type def gap: @types/gecko missing this option
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-    win.PanelUI?.hide();
+    } as any);
+    // deno-lint-ignore no-explicit-any
+    (win as any).PanelUI?.hide(); // type def gap: PanelUI.hide() missing from @types/gecko
   }
 
-  public static Render(): JSX.Element {
-    const [translations, setTranslations] = createSignal({
+  public static Render(): ComponentChild {
+    const translations = useSignal({
       title: i18next.t("hub.menu.title", { defaultValue: "Floorp Hub" }),
     });
 
-    addI18nObserver(() => {
-      setTranslations({
-        title: i18next.t("hub.menu.title", { defaultValue: "Floorp Hub" }),
+    useEffect(() => {
+      addI18nObserver(() => {
+        translations.value = {
+          title: i18next.t("hub.menu.title", { defaultValue: "Floorp Hub" }),
+        };
       });
-    });
+    }, []);
 
     return (
       <xul:toolbarbutton
         id="appMenu-floorp-hub-button"
         class="subviewbutton"
-        label={translations().title}
+        label={translations.value.title}
         onCommand={() => HubPanelMenu.handleOpenHub()}
       />
     );

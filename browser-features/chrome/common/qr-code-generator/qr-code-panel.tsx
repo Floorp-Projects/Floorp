@@ -5,17 +5,19 @@
 
 import { manager } from "./index.ts";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
+import type { ComponentChild } from "preact";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
-export function QRCodePanel() {
-  const [title, setTitle] = createSignal(
-    i18next.t("qrcode-generate-page-action-title"),
-  );
+export function QRCodePanel(): ComponentChild {
+  const title = useSignal(i18next.t("qrcode-generate-page-action-title"));
 
-  addI18nObserver(() => {
-    setTitle(i18next.t("qrcode-generate-page-action-title"));
-  });
+  useEffect(() => {
+    addI18nObserver(() => {
+      title.value = i18next.t("qrcode-generate-page-action-title");
+    });
+  }, []);
 
   return (
     <xul:panel
@@ -26,18 +28,14 @@ export function QRCodePanel() {
     >
       <xul:vbox id="qrcode-box">
         <xul:vbox class="panel-header qrcode-header">
-          <xul:label
-            class="qrcode-title"
-          >
-            {title()}
+          <xul:label class="qrcode-title">
+            {title.value}
           </xul:label>
         </xul:vbox>
 
         <xul:toolbarseparator class="qrcode-separator" />
 
-        <xul:vbox
-          id="qrcode-img-vbox"
-        />
+        <xul:vbox id="qrcode-img-vbox" />
       </xul:vbox>
     </xul:panel>
   );

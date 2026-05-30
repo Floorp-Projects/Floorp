@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-// @ts-nocheck Firefox chrome globals (BrowserCommands, gBrowser, etc.) are untyped
-
-import * as t from 'io-ts';
+// Firefox chrome globals (BrowserCommands, gBrowser, etc.) are not typed in Deno/TS.
+// Minimal stubs below allow type-checking without @ts-nocheck.
+// deno-lint-ignore no-var
+declare const globalThis: Record<string, any>;
+// deno-lint-ignore no-var
+declare const Ci: Record<string, any>;
 
 export const csk_category = [
   "tab-action",
@@ -21,23 +24,8 @@ export const csk_category = [
   "split-view-action",
 ] as const;
 
-
-const CskCategoryCodec = t.keyof(
-  csk_category.reduce((acc, k) => {
-    acc[k] = null;
-    return acc;
-  }, {} as Record<typeof csk_category[number], null>)
-);
-
-const CommandsCodec = t.record(
-  t.refinement(t.string, (s) => s.startsWith('gecko-') || s.startsWith('floorp-')),
-  t.type({
-    command: t.refinement(t.unknown, (u): u is ((ev:Event) => void) => typeof u === 'function'),
-    type: CskCategoryCodec,
-  })
-);
-
-type Commands = t.TypeOf<typeof CommandsCodec>;
+type CskCategory = typeof csk_category[number];
+type Commands = Record<string, { command: (ev: Event) => void; type: CskCategory }>;
 
 export const commands: Commands = {
   "gecko-open-new-tab": {
@@ -214,7 +202,7 @@ export const commands: Commands = {
       globalThis.BrowserPageActions.doCommandForAction(
         globalThis.PageActions.actionForID("bookmark"),
         event,
-        this,
+        null,
       ),
     type: "bookmark-action",
   },
@@ -279,7 +267,7 @@ export const commands: Commands = {
     type: "history-action",
   },
   "gecko-clear-recent-history": {
-    command: () => globalThis.BrowserTryToCloseWindow(),
+    command: () => globalThis.Sanitizer.showUI(window),
     type: "history-action",
   },
   "gecko-search-history": {

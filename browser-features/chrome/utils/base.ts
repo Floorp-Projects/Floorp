@@ -2,9 +2,9 @@
 
 import type { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
-import type { ClassDecorator } from "./decorator";
-import { createRootHMR } from "@nora/solid-xul";
-import { onCleanup } from "solid-js";
+import type { ClassDecorator } from "./decorator.d.ts";
+import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
+export { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 
 // U+2063 before `@` needed
 //https://github.com/microsoft/TypeScript/issues/47679
@@ -16,16 +16,23 @@ import { onCleanup } from "solid-js";
  * ```
  * @see {@link file://./../../vite.config.ts vite.config.ts} noraneko_component_hmr_support
  */
+/**
+ * 自己申告式：class 名を明示渡しで安定取得。
+ * SWC の TC39 stage 3 decorator transform が _clazz.name / ctx.name を
+ * 一部 class で空にする問題を回避する。
+ *
+ * @example ⁣@noraComponent("BrowserShareMode", import.meta.hot)
+ */
 export function noraComponent(
+  name: string,
   aViteHotContext: ViteHotContext | undefined,
 ): ClassDecorator<NoraComponentBase> {
-  return (_clazz, ctx) => {
-    if (_NoraComponentBase_viteHotContext.has(ctx.name!)) {
-      throw new Error(`Duplicate NoraComponent Name: ${ctx.name}`);
+  return (_clazz, _ctx) => {
+    if (_NoraComponentBase_viteHotContext.has(name)) {
+      throw new Error(`Duplicate NoraComponent Name: ${name}`);
     }
-
-    _NoraComponentBase_viteHotContext.set(ctx.name!, aViteHotContext);
-    console.debug("[nora@base] noraComponent " + ctx.name);
+    _NoraComponentBase_viteHotContext.set(name, aViteHotContext);
+    console.debug("[nora@base] noraComponent " + name);
   };
 }
 
@@ -48,11 +55,11 @@ export abstract class NoraComponentBase {
     });
     this.logger = _console;
 
-    // Run init with solid-js HMR support
+    // Run init with preact HMR support
     createRootHMR(() => {
       this.init();
-      onCleanup(() => {
-        nora_component_base_console.debug(`onCleanup ${this.constructor.name}`);
+      addDisposer(() => {
+        nora_component_base_console.debug(`dispose ${this.constructor.name}`);
         _NoraComponentBase_viteHotContext.delete(this.constructor.name);
       });
     }, hot);

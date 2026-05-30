@@ -3,9 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup } from "solid-js";
-import { Show } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import {
+  addDisposer,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
 import zenModeStyle from "./zen-mode.css?inline";
@@ -15,9 +18,9 @@ const ZENMODE_PREF = "floorp.zenmode.enabled";
 const EDGE_THRESHOLD = 10;
 const HIDE_DELAY_MS = 500;
 
-export const [zenModeEnabled, setZenModeEnabled] = createRootHMR(
+export const zenModeEnabled = createRootHMR(
   () =>
-    createSignal(
+    signal(
       typeof Services !== "undefined"
         ? Services.prefs.getBoolPref(ZENMODE_PREF, false)
         : false,
@@ -62,8 +65,8 @@ function measureAndSetCSSVariables() {
 }
 
 function setupPrefSync() {
-  createEffect(() => {
-    const enabled = zenModeEnabled();
+  rootEffect(() => {
+    const enabled = zenModeEnabled.value;
     Services.prefs.setBoolPref(ZENMODE_PREF, enabled);
 
     if (enabled) {
@@ -80,12 +83,12 @@ function setupPrefSync() {
 
   const observer = () => {
     const prefValue = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-    if (prefValue !== zenModeEnabled()) {
-      setZenModeEnabled(prefValue);
+    if (prefValue !== zenModeEnabled.value) {
+      zenModeEnabled.value = prefValue;
     }
   };
   Services.prefs.addObserver(ZENMODE_PREF, observer);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(ZENMODE_PREF, observer);
   });
 }
@@ -143,7 +146,7 @@ function setupHoverReveal() {
 
   /** Attempt to hide the top chrome; reschedule while a menupopup or urlbar is open. */
   const tryHideTop = () => {
-    if (!zenModeEnabled()) {
+    if (!zenModeEnabled.value) {
       topHideTimer = null;
       return;
     }
@@ -158,7 +161,7 @@ function setupHoverReveal() {
   };
 
   const handleMouseMove = (event: MouseEvent) => {
-    if (!zenModeEnabled()) return;
+    if (!zenModeEnabled.value) return;
 
     const { clientX, clientY } = event;
     const windowWidth = innerWidth;
@@ -248,14 +251,14 @@ function setupHoverReveal() {
   };
 
   const handleUrlbarFocusIn = (event: FocusEvent) => {
-    if (!zenModeEnabled()) return;
+    if (!zenModeEnabled.value) return;
     if (!isOrContainsUrlbar(event.target)) return;
     clearTopTimer();
     document!.documentElement!.setAttribute("zenmode-reveal-top", "");
   };
 
   const handleUrlbarFocusOut = (event: FocusEvent) => {
-    if (!zenModeEnabled()) return;
+    if (!zenModeEnabled.value) return;
     if (!isOrContainsUrlbar(event.target)) return;
     // Don't hide immediately — the urlbarView may still be open.  Schedule
     // a delayed hide; tryHideTop will keep rescheduling while [open] is set.
@@ -281,7 +284,7 @@ function setupHoverReveal() {
           mutation.attributeName === "open"
         ) {
           // [open] was removed → urlbarView closed
-          if (!urlbar.hasAttribute("open") && zenModeEnabled()) {
+          if (!urlbar.hasAttribute("open") && zenModeEnabled.value) {
             clearTopTimer();
             topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
           }
@@ -298,7 +301,7 @@ function setupHoverReveal() {
 
   addEventListener("mousemove", handleMouseMove);
 
-  onCleanup(() => {
+  addDisposer(() => {
     removeEventListener("mousemove", handleMouseMove);
 
     // Clean up urlbar listeners
@@ -326,41 +329,39 @@ export function initZenModeState() {
   // Disable zen mode when entering toolbar customization
   const customizeObserver = new MutationObserver(() => {
     if (document!.documentElement!.hasAttribute("customizing")) {
-      setZenModeEnabled(false);
+      zenModeEnabled.value = false;
     }
   });
   customizeObserver.observe(document!.documentElement!, {
     attributes: true,
     attributeFilter: ["customizing"],
   });
-  onCleanup(() => customizeObserver.disconnect());
+  addDisposer(() => customizeObserver.disconnect());
 }
 
 export function ZenModeMenuElement() {
-  const [label, setLabel] = createSignal(
+  const label = signal(
     i18next.t("zen-mode.menu-label", { defaultValue: "Toggle Zen Mode" }),
   );
 
   addI18nObserver(() => {
-    setLabel(
-      i18next.t("zen-mode.menu-label", { defaultValue: "Toggle Zen Mode" }),
-    );
+    label.value = i18next.t("zen-mode.menu-label", {
+      defaultValue: "Toggle Zen Mode",
+    });
   });
 
   return (
     <>
       <xul:menuitem
-        label={label()}
+        label={label.value}
         type="checkbox"
         id="toggle_zenmode"
-        checked={zenModeEnabled() || undefined}
-        onCommand={() => setZenModeEnabled((prev) => !prev)}
+        checked={zenModeEnabled.value || undefined}
+        onCommand={() => (zenModeEnabled.value = !zenModeEnabled.value)}
         accesskey="Z"
       />
 
-      <Show when={zenModeEnabled()}>
-        <style>{zenModeStyle}</style>
-      </Show>
+      {zenModeEnabled.value && <style>{zenModeStyle}</style>}
     </>
   );
 }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 import { config } from "#features-chrome/common/designs/configs.ts";
 
 import navbarBottomCSS from "./css/options/navbar-botttom.css?inline";
@@ -31,37 +31,37 @@ export class StyleManager {
   }
 
   private setupNavbarEffects() {
-    createEffect(() => {
+    effect(() => {
       this.applyStyle(
         "floorp-navvarcss",
         navbarBottomCSS,
-        config().uiCustomization.navbar.position === "bottom",
+        config.value.uiCustomization.navbar.position === "bottom",
       );
     });
   }
 
   private setupSearchbarEffects() {
-    createEffect(() => {
+    effect(() => {
       this.applyStyle(
         "floorp-searchbartop",
         movePageInsideSearchbarCSS,
-        config().uiCustomization.navbar.searchBarTop,
+        config.value.uiCustomization.navbar.searchBarTop,
       );
     });
   }
 
   private setupDisplayEffects() {
-    createEffect(() => {
+    effect(() => {
       this.applyStyle(
         "floorp-DFSN",
         disableFullScreenNotificationCSS,
-        config().uiCustomization.display.disableFullscreenNotification,
+        config.value.uiCustomization.display.disableFullscreenNotification,
       );
 
       this.applyStyle(
         "floorp-DB",
         deleteBorderCSS,
-        config().uiCustomization.display.deleteBrowserBorder,
+        config.value.uiCustomization.display.deleteBrowserBorder,
       );
 
 
@@ -69,32 +69,32 @@ export class StyleManager {
   }
 
   private setupSpecialEffects() {
-    createEffect(() => {
+    effect(() => {
       this.applyStyle(
         "floorp-optimizefortreestyletab",
         treestyletabCSS,
-        config().uiCustomization.special.optimizeForTreeStyleTab,
+        config.value.uiCustomization.special.optimizeForTreeStyleTab,
       );
 
       this.applyStyle(
         "floorp-hideForwardBackwardButton",
         msbuttonCSS,
-        config().uiCustomization.special.hideForwardBackwardButton,
+        config.value.uiCustomization.special.hideForwardBackwardButton,
       );
 
       this.applyStyle(
         "floorp-STG-like-floorp-workspaces",
         stgLikeFloorpWorkspacesCSS,
-        config().uiCustomization.special.stgLikeWorkspaces,
+        config.value.uiCustomization.special.stgLikeWorkspaces,
       );
     });
   }
 
   private setupMultirowTabEffects() {
-    createEffect(() => {
-      const isMultirowStyle = config().tabbar.tabbarStyle === "multirow";
+    effect(() => {
+      const isMultirowStyle = config.value.tabbar.tabbarStyle === "multirow";
       const newtabInsideEnabled =
-        config().uiCustomization.multirowTab.newtabInsideEnabled;
+        config.value.uiCustomization.multirowTab.newtabInsideEnabled;
 
       this.applyStyle(
         "floorp-newtabbuttoninmultirowtabbbar",
@@ -111,17 +111,17 @@ export class StyleManager {
   }
 
   private setupBookmarkBarEffects() {
-    createEffect(() => {
+    effect(() => {
       this.applyStyle(
         "floorp-bookmarkbar-focus-expand",
         bookmarkbarFocusExpandCSS,
-        config().uiCustomization.bookmarkBar?.focusExpand ?? false,
+        config.value.uiCustomization.bookmarkBar?.focusExpand ?? false,
       );
 
       this.applyStyle(
         "floorp-bookmarkbar-bottom",
         bookmarkbarBottomCSS,
-        (config().uiCustomization.bookmarkBar?.position ?? "top") === "bottom",
+        (config.value.uiCustomization.bookmarkBar?.position ?? "top") === "bottom",
       );
     });
   }

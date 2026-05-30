@@ -2,8 +2,8 @@
 
 // NOTICE: Do not add toolbar buttons code here. Create new folder or file for new toolbar buttons.
 
-import { render } from "@nora/solid-xul";
-import { createRoot, getOwner, type JSXElement } from "solid-js";
+import { render } from "preact";
+import type { ComponentChild } from "preact";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -15,17 +15,25 @@ export namespace BrowserActionUtils {
     widgetId: string,
     l10nId: string | null,
     onCommandFunc: () => void,
-    styleElement: JSXElement | null = null,
+    styleElement: ComponentChild | null = null,
     area: TCustomizableUIArea | null = CustomizableUI.AREA_NAVBAR,
     position: number | null = 0,
     onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
     // Add style Element for toolbar button icon.
-    // This render is runnning every open browser window.
-    if (styleElement) {
-      render(() => styleElement, document?.head, {
-        marker: document?.head?.lastChild as Element,
-      });
+    // This render is running every open browser window.
+    // Use a dedicated container instead of document.head directly:
+    // preact.render() replaces *all* children of its container, so mounting on
+    // document.head would destroy Firefox-internal <link>/<meta> nodes.
+    if (styleElement && document?.head) {
+      const rootId = `nora-browser-action-style-root-${widgetId}`;
+      let styleRoot = document.getElementById(rootId) as HTMLElement | null;
+      if (!styleRoot) {
+        styleRoot = document.createElement("div");
+        styleRoot.id = rootId;
+        document.head.appendChild(styleRoot);
+      }
+      render(styleElement, styleRoot);
     }
 
     // Create toolbar button only once per profile. Subsequent window opens reuse
@@ -46,6 +54,9 @@ export namespace BrowserActionUtils {
           onCommandFunc?.();
         },
         onCreated: (aNode: XULElement) => {
+          // Note: no reactive owner needed in preact/signals — effects are self-contained.
+          // Callers that set up reactive effects inside onCreatedFunc should use
+          // createNodeDisposer(aNode, dispose) to tie cleanup to the node's lifetime.
           onCreatedFunc?.(aNode);
         },
         defaultArea: area ?? undefined,
@@ -86,23 +97,36 @@ export namespace BrowserActionUtils {
     widgetId: string,
     l10nId: string,
     targetViewId: string,
-    popupElement: JSXElement,
+    popupElement: ComponentChild,
     onViewShowingFunc?: ((event: Event) => void) | null,
     onCreatedFunc?: ((aNode: XULElement) => void) | null,
     area: string = CustomizableUI.AREA_NAVBAR,
-    styleElement: JSXElement | null = null,
+    styleElement: ComponentChild | null = null,
     position: number | null = 0,
   ) {
-    if (styleElement) {
-      render(() => styleElement, document?.head, {
-        marker: document?.head?.lastChild as Element,
-      });
+    if (styleElement && document?.head) {
+      const rootId = `nora-browser-action-style-root-${widgetId}`;
+      let styleRoot = document.getElementById(rootId) as HTMLElement | null;
+      if (!styleRoot) {
+        styleRoot = document.createElement("div");
+        styleRoot.id = rootId;
+        document.head.appendChild(styleRoot);
+      }
+      render(styleElement, styleRoot);
     }
 
-    if (popupElement) {
-      render(() => popupElement, document?.getElementById("mainPopupSet"), {
-        marker: document?.getElementById("mainPopupSet")?.lastChild as Element,
-      });
+    const popupSet = document?.getElementById("mainPopupSet");
+    if (popupElement && popupSet) {
+      // Each widget gets its own container so that multiple createMenuToolbarButton
+      // calls don't clobber each other — preact.render() manages an entire container.
+      const containerId = `${widgetId}-popup-root`;
+      let container = document?.getElementById(containerId);
+      if (!container) {
+        container = document?.createXULElement("hbox");
+        container.id = containerId;
+        popupSet.appendChild(container);
+      }
+      render(popupElement, container);
     }
 
     const widget = CustomizableUI.getWidget(widgetId);
@@ -110,7 +134,9 @@ export namespace BrowserActionUtils {
       return;
     }
 
-    const owner = getOwner();
+    // Note: solid-js required getOwner()/createRoot(fn, owner) to pass reactive
+    // context through the async CustomizableUI.createWidget callback boundary.
+    // In preact/signals, effects are independently tracked — no owner needed.
     (async () => {
       CustomizableUI.createWidget({
         id: widgetId,
@@ -120,10 +146,10 @@ export namespace BrowserActionUtils {
         label: document?.l10n?.formatValue(l10nId) ?? "",
         removable: true,
         onCreated: (aNode: XULElement) => {
-          createRoot(() => onCreatedFunc?.(aNode), owner);
+          onCreatedFunc?.(aNode);
         },
         onViewShowing: (event: Event) => {
-          createRoot(() => onViewShowingFunc?.(event), owner);
+          onViewShowingFunc?.(event);
         },
         defaultArea: area,
       });

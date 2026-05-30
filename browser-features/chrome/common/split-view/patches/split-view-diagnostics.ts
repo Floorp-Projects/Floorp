@@ -102,7 +102,7 @@ export function logTabpanelsSplitDeepInvestigation(phase: string): void {
     browserElements.forEach((b, i) => {
       const cs = safeComputedStyle(b);
       const br = (b as HTMLElement).getBoundingClientRect();
-      const remote = (b as XULElement).getAttribute?.("remote") ?? "";
+      const remote = (b as unknown as XULElement).getAttribute?.("remote") ?? "";
       bits.push(
         `#${i} ${Math.round(br.width)}x${Math.round(br.height)} ` +
           `op=${cssValue(cs, "opacity")} fil=${cssValue(cs, "filter")} cv=${cssValue(cs, "content-visibility")} ` +

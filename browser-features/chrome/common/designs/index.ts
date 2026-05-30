@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { safeRender } from "@nora/preact-xul";
 import { BrowserDesignElement } from "./browser-design-element";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Designs", import.meta.hot)
 export default class Designs extends NoraComponentBase {
   init(): void {
     const head = document?.head;
@@ -19,7 +19,7 @@ export default class Designs extends NoraComponentBase {
     }
 
     try {
-      render(() => BrowserDesignElement(), head);
+      safeRender(BrowserDesignElement(), head);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       this.logger.error("Failed to render browser design element.", reason);

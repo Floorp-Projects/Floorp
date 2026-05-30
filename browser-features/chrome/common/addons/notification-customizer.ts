@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import i18next from "i18next";
-import { createSignal, type Accessor } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal, type Signal } from "@preact/signals";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { ChromeWebStoreInstallInfo } from "./types";
 
@@ -76,27 +76,24 @@ const getChromeExtensionPrompt = (name: string): string => {
 export class NotificationCustomizer {
   private originalDescriptionChildren: Node[] | null = null;
   private originalIntroDisplay: string | null = null;
-  private texts: Accessor<I18nTextValues>;
+  private texts: Signal<I18nTextValues>;
 
   constructor() {
-    // Initialize with default texts
-    let textsAccessor: Accessor<I18nTextValues> = () => getTranslatedTexts();
-
-    createRootHMR(
+    const texts = createRootHMR(
       () => {
-        const [texts, setTexts] =
-          createSignal<I18nTextValues>(getTranslatedTexts());
-        textsAccessor = texts;
+        const s = signal<I18nTextValues>(getTranslatedTexts());
 
         // Set up locale change observer for reactive updates
         addI18nObserver(() => {
-          setTexts(getTranslatedTexts());
+          s.value = getTranslatedTexts();
         });
+
+        return s;
       },
       import.meta.hot,
     );
 
-    this.texts = textsAccessor;
+    this.texts = texts;
   }
 
   /**
@@ -110,7 +107,7 @@ export class NotificationCustomizer {
       return;
     }
 
-    const texts = this.texts();
+    const texts = this.texts.value;
     const addonName = cwsInfo.name ?? texts.defaultExtensionName;
 
     const popupNotificationBody = notification.querySelector(
@@ -152,7 +149,7 @@ export class NotificationCustomizer {
       return;
     }
 
-    const texts = this.texts();
+    const texts = this.texts.value;
     const addonName = cwsInfo.name ?? texts.defaultExtensionName;
 
     const popupNotificationBody = notification.querySelector(
@@ -259,15 +256,15 @@ export class NotificationCustomizer {
       return;
     }
 
-    const texts = this.texts();
+    const texts = this.texts.value;
     const nameElements = addonList.querySelectorAll(
       ".addon-install-confirmation-name",
     );
     for (const nameElement of nameElements) {
-      const badge = document!.createXULElement("label") as XULElement;
+      const badge = document!.createXULElement("label") as unknown as XULElement;
       badge.setAttribute("value", texts.chromeBadge);
       badge.setAttribute("class", "chrome-extension-badge");
-      (badge as XULElement & { style: CSSStyleDeclaration }).style.cssText =
+      (badge as unknown as XULElement & { style: CSSStyleDeclaration }).style.cssText =
         "color: #4285f4; font-weight: bold; margin-inline-start: 8px; font-size: 0.9em;";
       nameElement.parentElement?.appendChild(badge);
     }
@@ -281,10 +278,10 @@ export class NotificationCustomizer {
       return;
     }
 
-    const texts = this.texts();
-    const warning = document!.createXULElement("description") as XULElement;
+    const texts = this.texts.value;
+    const warning = document!.createXULElement("description") as unknown as XULElement;
     warning.setAttribute("class", "chrome-extension-warning");
-    (warning as XULElement & { style: CSSStyleDeclaration }).style.cssText =
+    (warning as unknown as XULElement & { style: CSSStyleDeclaration }).style.cssText =
       "color: #f9ab00; font-size: 1.0em; margin-top: 8px; padding: 4px 8px; background: rgba(249, 171, 0, 0.1); border-radius: 4px;";
     warning.textContent = texts.compatibilityWarning;
 

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { commands } from "./commands.ts";
-import { type CSKData, CSKCommandsCodec, CSKDataCodec } from "./defines.ts";
+import { type CSKData, parseCSKCommands, parseCSKData } from "./defines.ts";
 import { checkIsSystemShortcut } from "./utils.ts";
-import { pipe } from 'fp-ts/function';
-import { fold, getOrElseW } from 'fp-ts/Either';
 
 export class CustomShortcutKey {
   private static instance: CustomShortcutKey;
   private static windows: Window[] = [];
+  private static windowHandlers: Map<Window, (ev: KeyboardEvent) => void> = new Map();
 
   //? this boolean disable shortcut of csk
   //? useful for registering
@@ -16,37 +15,32 @@ export class CustomShortcutKey {
   static getInstance() {
     if (!CustomShortcutKey.instance) {
       CustomShortcutKey.instance = new CustomShortcutKey();
+      Services.obs.addObserver(CustomShortcutKey.instance, "nora-csk");
     }
     if (!CustomShortcutKey.windows.includes(window)) {
       CustomShortcutKey.instance.startHandleShortcut(window);
       CustomShortcutKey.windows.push(window);
       console.log("add window");
     }
-    Services.obs.addObserver(CustomShortcutKey.instance, "nora-csk");
     return CustomShortcutKey.instance;
   }
 
 
-  observe(_subj:unknown, _topic:unknown, data: string) {
-    const decoded = CSKCommandsCodec.decode(JSON.parse(data));
-    
-    pipe(
-      decoded,
-      fold(
-        (errors) => console.error('Failed to decode CSK command:', errors),
-        (d) => {
-          switch (d.type) {
-            case 'disable-csk':
-              this.disable_csk = d.data;
-              break;
-            case 'update-pref':
-              this.initCSKData();
-              console.log(this.cskData);
-              break;
-          }
-        }
-      )
-    );
+  observe(_subj: unknown, _topic: unknown, data: string) {
+    const d = parseCSKCommands(JSON.parse(data));
+    if (d === null) {
+      console.error('Failed to decode CSK command:', data);
+      return;
+    }
+    switch (d.type) {
+      case 'disable-csk':
+        this.disable_csk = d.data;
+        break;
+      case 'update-pref':
+        this.initCSKData();
+        console.log(this.cskData);
+        break;
+    }
   }
 
   cskData: CSKData = {};
@@ -61,20 +55,14 @@ export class CustomShortcutKey {
       const prefData = JSON.parse(
         Services.prefs.getStringPref("floorp.browser.nora.csk.data", "{}"),
       );
-
-      this.cskData = pipe(
-        CSKDataCodec.decode(prefData),
-        getOrElseW(errors => {
-          throw new Error(`CSKData validation failed: ${JSON.stringify(errors)}`);
-        })
-      );
+      this.cskData = parseCSKData(prefData);
     } catch (e) {
       console.error("Could not initialize CSKData, falling back to empty config.", e);
       this.cskData = {};
     }
   }
   private startHandleShortcut(_window: Window) {
-    _window.addEventListener("keydown", (ev: KeyboardEvent) => {
+    const handler = (ev: KeyboardEvent) => {
       if (this.disable_csk) {
         console.log("disable-csk");
         return;
@@ -96,12 +84,24 @@ export class CustomShortcutKey {
             ev.ctrlKey === ctrl &&
             ev.metaKey === meta &&
             ev.shiftKey === shift &&
-            ev.key === shortcutDatum!.key
+            ev.key.toUpperCase() === shortcutDatum!.key.toUpperCase()
           ) {
             commands[key].command(ev);
           }
         }
       }
-    });
+    };
+    _window.addEventListener("keydown", handler);
+    CustomShortcutKey.windowHandlers.set(_window, handler);
+  }
+
+  uninstall(_window: Window) {
+    const handler = CustomShortcutKey.windowHandlers.get(_window);
+    if (handler) {
+      _window.removeEventListener("keydown", handler);
+      CustomShortcutKey.windowHandlers.delete(_window);
+    }
+    const idx = CustomShortcutKey.windows.indexOf(_window);
+    if (idx !== -1) CustomShortcutKey.windows.splice(idx, 1);
   }
 }

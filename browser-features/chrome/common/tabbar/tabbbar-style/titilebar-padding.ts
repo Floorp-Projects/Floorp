@@ -3,13 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { config } from "../../designs/configs";
+import { config } from "../../designs/configs.ts";
 
 export function checkPaddingEnabled() {
-  const isPaddingTopEnabled = config().tabbar.paddingEnabled;
+  const isPaddingTopEnabled = config.value.tabbar.paddingEnabled;
   const tabsToolbar: null | XULElement | undefined = document?.querySelector(
     "#TabsToolbar",
-  ) as XULElement | null | undefined;
+  ) as unknown as XULElement | null | undefined;
 
   tabsToolbar?.style.setProperty(
     "padding",

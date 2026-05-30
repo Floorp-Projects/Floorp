@@ -14,7 +14,7 @@ import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
 //TODO: refactor needed
 
-@noraComponent(import.meta.hot)
+@noraComponent("PanelSidebar", import.meta.hot)
 export default class PanelSidebar extends NoraComponentBase {
   init(): void {
     migratePanelSidebarData();

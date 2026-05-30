@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, onCleanup } from "solid-js";
+import { effect } from "@preact/signals";
 import { MULTIROW_TABBAR_BASE_CSS } from "./multirow-tabbar-css.ts";
 import { getTabsToolbar, resolveTabsContainer } from "./dom-utils.ts";
 import { PinnedTabController } from "./pinned-tab-controller.ts";
@@ -37,8 +37,8 @@ export class MultirowTabbarClass {
       return;
     }
 
-    createEffect(() => {
-      const isMultirowStyle = config().tabbar.tabbarStyle === "multirow";
+    effect(() => {
+      const isMultirowStyle = config.value.tabbar.tabbarStyle === "multirow";
 
       if (isMultirowStyle && !this.isEnabled) {
         // Enable multirow tabbar
@@ -50,15 +50,15 @@ export class MultirowTabbarClass {
 
       // Update max rows CSS if multirow is enabled
       if (isMultirowStyle) {
-        const multiRowConfig = config().tabbar.multiRowTabBar;
+        const multiRowConfig = config.value.tabbar.multiRowTabBar;
         const maxRowEnabled = multiRowConfig.maxRowEnabled ?? false;
         const maxRows = multiRowConfig.maxRow ?? 3;
         this.updateMaxRowsCSS(arrowScrollbox, maxRowEnabled, maxRows);
       }
-    });
 
-    onCleanup(() => {
-      this.cleanup();
+      return () => {
+        this.cleanup();
+      };
     });
   }
 

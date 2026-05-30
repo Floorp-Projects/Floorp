@@ -3,14 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { effect } from "@preact/signals";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import {
   type KeyboardShortcutConfig,
   type ShortcutConfig,
@@ -82,42 +78,37 @@ const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
   }
 };
 
-function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [enabled, setEnabled] = createSignal(
+function createEnabled(): Signal<boolean> {
+  const enabled = signal(
     Services.prefs.getBoolPref(
       KEYBOARD_SHORTCUT_ENABLED_PREF,
       defaultConfig.enabled,
     ),
   );
 
-  createEffect(() => {
-    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, enabled());
-  });
+  addDisposer(effect(() => {
+    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, enabled.value);
+  }));
 
   const enabledObserver = () => {
-    setEnabled(
-      Services.prefs.getBoolPref(
-        KEYBOARD_SHORTCUT_ENABLED_PREF,
-        defaultConfig.enabled,
-      ),
+    enabled.value = Services.prefs.getBoolPref(
+      KEYBOARD_SHORTCUT_ENABLED_PREF,
+      defaultConfig.enabled,
     );
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_ENABLED_PREF, enabledObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       KEYBOARD_SHORTCUT_ENABLED_PREF,
       enabledObserver,
     );
   });
 
-  return [enabled, setEnabled];
+  return enabled;
 }
 
-function createConfig(): [
-  Accessor<KeyboardShortcutConfig>,
-  Setter<KeyboardShortcutConfig>,
-] {
+function createConfig(): Signal<KeyboardShortcutConfig> {
   const legacyConfig = migrateLegacyConfig();
   if (legacyConfig) {
     clearLegacyConfig();
@@ -127,7 +118,7 @@ function createConfig(): [
     );
   }
 
-  const [config, setConfig] = createSignal<KeyboardShortcutConfig>(
+  const config = signal<KeyboardShortcutConfig>(
     parseConfig(
       Services.prefs.getStringPref(
         KEYBOARD_SHORTCUT_CONFIG_PREF,
@@ -136,48 +127,53 @@ function createConfig(): [
     ),
   );
 
-  createEffect(() => {
+  addDisposer(effect(() => {
     Services.prefs.setStringPref(
       KEYBOARD_SHORTCUT_CONFIG_PREF,
-      JSON.stringify(config()),
+      JSON.stringify(config.value),
     );
-  });
+  }));
 
   const configObserver = () => {
-    setConfig(
-      parseConfig(
-        Services.prefs.getStringPref(
-          KEYBOARD_SHORTCUT_CONFIG_PREF,
-          strDefaultConfig,
-        ),
+    config.value = parseConfig(
+      Services.prefs.getStringPref(
+        KEYBOARD_SHORTCUT_CONFIG_PREF,
+        strDefaultConfig,
       ),
     );
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_CONFIG_PREF, configObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       KEYBOARD_SHORTCUT_CONFIG_PREF,
       configObserver,
     );
   });
 
-  return [config, setConfig];
+  return config;
 }
 
-export const [_enabled, _setEnabled] = createRootHMR(
+export const _enabled: Signal<boolean> = createRootHMR(
   createEnabled,
   import.meta.hot,
 );
-export const [_config, _setConfig] = createRootHMR(
+export const _setEnabled = (v: boolean): void => {
+  _enabled.value = v;
+};
+
+export const _config: Signal<KeyboardShortcutConfig> = createRootHMR(
   createConfig,
   import.meta.hot,
 );
+export const _setConfig = (v: KeyboardShortcutConfig): void => {
+  _config.value = v;
+};
 
-export const isEnabled = () => _enabled();
-export const setEnabled = (value: boolean) => _setEnabled(value);
-export const getConfig = () => _config();
-export const setConfig = (value: KeyboardShortcutConfig) => _setConfig(value);
+export const isEnabled = () => _enabled.value;
+export const setEnabled = (value: boolean) => { _enabled.value = value; };
+export const getConfig = () => _config.value;
+export const setConfig = (value: KeyboardShortcutConfig) => { _config.value = value; };
 
 /**
  * Experiment "ks_safe_error_handling" — wraps getAction + fn invocation

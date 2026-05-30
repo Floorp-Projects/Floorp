@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
 import { getGBrowser } from "../data/types.js";
 import { applyLayoutAttribute } from "../layout.js";
 import { updateHandles } from "../components/split-view-splitters.js";
@@ -17,9 +16,9 @@ import { resolveLayoutForSplitTabs } from "./session-restore.js";
  */
 export function initSplitViewEvents(
   logger: ConsoleInstance,
-): void {
+): () => void {
   const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  if (!tabContainer) return () => {};
 
   const onSplitViewActivate = (e: Event): void => {
     // Re-apply layout AFTER the entire event cascade has settled.
@@ -86,7 +85,10 @@ export function initSplitViewEvents(
     onSplitViewDeactivate,
   );
 
-  onCleanup(() => {
+  logger.debug(
+    "[events] TabSplitViewActivate/Deactivate listeners attached",
+  );
+  return () => {
     tabContainer.removeEventListener(
       "TabSplitViewActivate",
       onSplitViewActivate,
@@ -95,9 +97,5 @@ export function initSplitViewEvents(
       "TabSplitViewDeactivate",
       onSplitViewDeactivate,
     );
-  });
-
-  logger.debug(
-    "[events] TabSplitViewActivate/Deactivate listeners attached",
-  );
+  };
 }

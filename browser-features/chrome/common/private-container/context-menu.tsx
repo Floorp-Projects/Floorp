@@ -1,22 +1,24 @@
-import { createRootHMR } from "@nora/solid-xul";
+import { useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
+import type { ComponentChild } from "preact";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
 import { FloorpPrivateContainer } from "./browser-private-container";
 
-export function ContextMenu() {
+export function ContextMenu(): ComponentChild {
   const translationKey = "privateContainer.reopenInPrivateContainer";
-  const [label, setLabel] = createSignal(i18next.t(translationKey));
+  const label = useSignal(i18next.t(translationKey));
 
-  createRootHMR(() => {
+  useEffect(() => {
     addI18nObserver(() => {
-      setLabel(i18next.t(translationKey));
+      label.value = i18next.t(translationKey);
     });
-  }, import.meta.hot);
+  }, []);
+
   return (
     <xul:menuitem
       id="context_toggleToPrivateContainer"
-      label={label()}
+      label={label.value}
       onCommand={() => {
         FloorpPrivateContainer.reopenInPrivateContainer();
       }}

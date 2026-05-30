@@ -22,7 +22,7 @@ type ExtendedGBrowser = typeof globalThis.gBrowser & {
   getTabForBrowser: (browser: unknown) => BrowserTab | null;
 };
 
-@noraComponent(import.meta.hot)
+@noraComponent("TabSleepExclusion", import.meta.hot)
 export default class TabSleepExclusion extends NoraComponentBase {
   private settings: TabSleepExclusionSettings = DEFAULT_SETTINGS;
   // Using 'any' for observer since the nsIObserver type doesn't include QueryInterface
