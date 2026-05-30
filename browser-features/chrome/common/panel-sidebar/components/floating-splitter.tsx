@@ -9,15 +9,15 @@ import { panelSidebarConfig, setIsFloatingDragging } from "../data/data.ts";
 export const [isResizeCooldown, setIsResizeCooldown] = createSignal<boolean>(
   false,
 );
-let resizeCooldownTimer: number | null = null;
+let resizeCooldownTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
 export function FloatingSplitter() {
   const onHorizontalMouseDown = (e: MouseEvent) => {
     setIsFloatingDragging(true);
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
-    const docEl = document?.documentElement as XULElement | null;
+    ) as unknown as XULElement;
+    const docEl = document?.documentElement as unknown as XULElement | null;
 
     if (!sidebarBox) {
       return;
@@ -108,8 +108,8 @@ export function FloatingSplitter() {
     setIsFloatingDragging(true);
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
-    const docEl = document?.documentElement as XULElement | null;
+    ) as unknown as XULElement;
+    const docEl = document?.documentElement as unknown as XULElement | null;
 
     if (!sidebarBox) {
       return;
@@ -200,8 +200,8 @@ export function FloatingSplitter() {
     setIsFloatingDragging(true);
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
-    ) as XULElement;
-    const docEl = document?.documentElement as XULElement | null;
+    ) as unknown as XULElement;
+    const docEl = document?.documentElement as unknown as XULElement | null;
 
     if (!sidebarBox) {
       return;

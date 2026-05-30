@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "#features-chrome/common/command-palette/types.ts";
+import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 
 export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {
@@ -58,7 +59,14 @@ export const searchWebCommand: PaletteCommand = {
     defaultValue: "Search with your default search engine",
   }),
   category: "search",
-  keywords: ["search", "web search", "find", "lookup", "google"],
+  keywords: [
+    "search",
+    "web search",
+    "find",
+    "lookup",
+    "google",
+    ...getJapaneseReadings("floorp-search-web"),
+  ],
   steps: [
     {
       id: "query",

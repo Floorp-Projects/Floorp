@@ -19,6 +19,7 @@
 import type {
   NRWebScraperMessageData,
   WebScraperContext,
+  EvaluateResult,
 } from "./webscraper/types.ts";
 import { DOMOperations } from "./webscraper/DOMOperations.ts";
 import { FormOperations } from "./webscraper/FormOperations.ts";
@@ -431,8 +432,66 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return domOps.resolveFingerprint(message.data.fingerprint);
         }
         break;
+      case "WebScraper:Evaluate":
+        if (typeof message.data?.script === "string") {
+          return this._evaluateScript(message.data.script);
+        }
+        break;
 
     }
     return null;
+  }
+
+  /**
+   * Evaluate a JavaScript string in the page content context.
+   * Supports async/await expressions. Returns a structured result
+   * with JSON-serializable values.
+   */
+  private async _evaluateScript(script: string): Promise<EvaluateResult> {
+    const win = this.contentWindow;
+    if (!win) {
+      return { success: false, error: "No content window available" };
+    }
+    try {
+      // Wrap in async IIFE to support `await` expressions in the script
+      const wrapped = `(async () => {\n${script}\n})()`;
+      // Use the content window's Function constructor so the code runs
+      // in the page's scope (not chrome-privileged).
+      const fn = new win.Function(wrapped);
+      const raw: unknown = await fn();
+
+      // Serialize result based on type
+      if (raw === undefined) {
+        return { success: true, result: undefined, resultType: "undefined" };
+      }
+      if (raw === null) {
+        return { success: true, result: null, resultType: "null" };
+      }
+
+      const resultType = Array.isArray(raw)
+        ? "array"
+        : raw instanceof win.Element
+          ? "element"
+          : raw instanceof win.NodeList
+            ? "nodelist"
+            : typeof raw;
+
+      // Try JSON round-trip; fall back to String() for non-serializable values
+      let result: unknown;
+      try {
+        result = JSON.parse(JSON.stringify(raw));
+      } catch {
+        result = String(raw);
+      }
+
+      return { success: true, result, resultType };
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      return {
+        success: false,
+        error: error.message,
+        errorType: error.name,
+      };
+    }
   }
 }

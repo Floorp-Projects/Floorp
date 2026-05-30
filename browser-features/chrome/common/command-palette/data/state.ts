@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { createSignal } from "solid-js";
-import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "../types.ts";
 
 export type PaletteMode = "command" | "input";
 
@@ -30,6 +30,11 @@ export function createPaletteState() {
   const [stepChoicesBase, setStepChoicesBase] = createSignal<
     CommandStepChoice[]
   >([]);
+  const [hasMoreChoices, setHasMoreChoices] = createSignal(false);
+  const [loadMoreCallback, setLoadMoreCallback] = createSignal<
+    (() => Promise<{ choices: CommandStepChoice[]; hasMore: boolean }>) | null
+  >(null);
+  const [loadingMore, setLoadingMore] = createSignal(false);
 
   return {
     isVisible,
@@ -60,6 +65,12 @@ export function createPaletteState() {
     setStepChoicesLoading,
     stepChoicesBase,
     setStepChoicesBase,
+    hasMoreChoices,
+    setHasMoreChoices,
+    loadMoreCallback,
+    setLoadMoreCallback,
+    loadingMore,
+    setLoadingMore,
     reset() {
       setQuery("");
       setSelectedIndex(0);
@@ -73,6 +84,9 @@ export function createPaletteState() {
       setSelectedChoiceIndex(0);
       setStepChoicesLoading(false);
       setStepChoicesBase([]);
+      setHasMoreChoices(false);
+      setLoadMoreCallback(null);
+      setLoadingMore(false);
     },
   };
 }

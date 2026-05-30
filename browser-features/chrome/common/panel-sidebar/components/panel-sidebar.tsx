@@ -24,13 +24,13 @@ import "../utils/webRequest.ts";
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();
   private get parentElement() {
-    return document?.getElementById("panel-sidebar-browser-box") as
+    return document?.getElementById("panel-sidebar-browser-box") as unknown as
       | XULElement
       | undefined;
   }
 
   private get sidebarElement() {
-    return document?.getElementById("panel-sidebar-box") as
+    return document?.getElementById("panel-sidebar-box") as unknown as
       | XULElement
       | undefined;
   }
@@ -74,7 +74,7 @@ export class CPanelSidebar {
   private owner: Owner | null = null;
 
   public getBrowserElement(id: string) {
-    return document?.getElementById(`sidebar-panel-${id}`) as
+    return document?.getElementById(`sidebar-panel-${id}`) as unknown as
       | (XULElement & {
         contentWindow: Window;
         goBack: () => void;

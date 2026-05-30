@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand, CommandStepChoice } from "../command-registry.ts";
+import type { PaletteCommand, CommandStepChoice } from "../types.ts";
+import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 
 export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {
@@ -58,7 +59,7 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
 
     return [noContainer, ...containerChoices];
   } catch (err) {
-    console.error("reopenInContainer loader failed", err);
+    console.error("[ReopenInContainer]", "reopenInContainer loader failed", err);
     return [];
   }
 }
@@ -72,7 +73,14 @@ export const reopenInContainerCommand: PaletteCommand = {
     defaultValue: "Reopen the current tab in a specific container",
   }),
   category: "tabs",
-  keywords: ["container", "reopen", "context", "identity", "reopen in"],
+  keywords: [
+    "container",
+    "reopen",
+    "context",
+    "identity",
+    "reopen in",
+    ...getJapaneseReadings("floorp-reopen-in-container"),
+  ],
   steps: [
     {
       id: "container",

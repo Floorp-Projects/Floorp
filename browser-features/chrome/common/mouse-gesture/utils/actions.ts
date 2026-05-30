@@ -1,4 +1,5 @@
 import type { GestureActionRegistration } from "./gestures.ts";
+import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -393,6 +394,47 @@ export const actions: GestureActionRegistration[] = [
         "floorp.zenmode.enabled",
         !Services.prefs.getBoolPref("floorp.zenmode.enabled", false),
       );
+    },
+  },
+  {
+    name: "floorp-open-settings",
+    fn: (win) => {
+      win.openPreferences();
+    },
+  },
+  {
+    name: "floorp-open-hub",
+    fn: (win) => {
+      win.switchToTabHavingURI(Services.io.newURI("about:hub"), true);
+    },
+  },
+  {
+    name: "floorp-toggle-share-mode",
+    fn: () => setShareModeEnabled((prev) => !prev),
+  },
+  {
+    name: "floorp-copy-page-url-as-markdown",
+    fn: (win) => {
+      const browser = win?.gBrowser?.selectedBrowser;
+      if (!browser) {
+        console.error("[copy-url-as-markdown] No selected browser found");
+        return;
+      }
+      const url = browser.currentURI?.spec;
+      if (!url) {
+        console.error("[copy-url-as-markdown] Could not get current URI");
+        return;
+      }
+      const title = browser.contentTitle || url;
+      const escapedTitle = title.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+      const markdown = `[${escapedTitle}](${url})`;
+      if (!navigator?.clipboard?.writeText) {
+        console.error("[copy-url-as-markdown] Clipboard API not available");
+        return;
+      }
+      navigator.clipboard.writeText(markdown).catch((e) => {
+        console.error("[copy-url-as-markdown] Failed to copy to clipboard:", e);
+      });
     },
   },
 ];

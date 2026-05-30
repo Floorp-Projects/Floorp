@@ -8,7 +8,7 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import { CommandPaletteController } from "../controller.ts";
-import type { PaletteCommand, CommandStep } from "../command-registry.ts";
+import type { PaletteCommand, CommandStep } from "#features-chrome/common/command-palette/types.ts";
 
 function makeStepCommand(steps: CommandStep[], fn?: PaletteCommand["fn"]): PaletteCommand {
   return {

@@ -44,9 +44,16 @@ class OSGlue {
   }
 
   private initializeModules() {
+    let loaded = 0;
     for (const module of this.modules) {
-      ChromeUtils.importESModule(module);
+      try {
+        ChromeUtils.importESModule(module);
+        loaded++;
+      } catch (e) {
+        console.error(`[Floorp OS] Failed to load module: ${module}`, e);
+      }
     }
+    console.info(`[Floorp OS] Loaded ${loaded}/${this.modules.length} OS API modules.`);
   }
 }
 

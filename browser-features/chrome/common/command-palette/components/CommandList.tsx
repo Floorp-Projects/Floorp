@@ -2,7 +2,7 @@
 
 import { createMemo, For, Show } from "solid-js";
 import i18next from "i18next";
-import type { PaletteCommand } from "../command-registry.ts";
+import type { PaletteCommand } from "../types.ts";
 import { CommandItem } from "./CommandItem.tsx";
 import { CategoryHeader } from "./CategoryHeader.tsx";
 

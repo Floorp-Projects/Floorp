@@ -75,7 +75,7 @@ export function PanelSidebarButton(props: {
 
     const contextMenu = document?.getElementById(
       "webpanel-context",
-    ) as XULPopupElement;
+    ) as unknown as XULPopupElement;
     if (contextMenu) {
       contextMenu.openPopupAtScreen(e.screenX, e.screenY, true);
     }
