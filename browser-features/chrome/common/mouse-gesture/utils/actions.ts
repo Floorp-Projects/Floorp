@@ -437,4 +437,116 @@ export const actions: GestureActionRegistration[] = [
       });
     },
   },
+  // ---- Split View Actions ----
+  {
+    name: "floorp-split-view-open-left",
+    fn: (win) => {
+      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
+        | { Functions: { setSplitView: (tab: unknown, dir: string) => void } }
+        | undefined;
+      if (!gSplitView?.Functions?.setSplitView) return;
+      gSplitView.Functions.setSplitView(
+        (win as unknown as { gBrowser: { selectedTab: unknown } }).gBrowser.selectedTab,
+        "left",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-open-right",
+    fn: (win) => {
+      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
+        | { Functions: { setSplitView: (tab: unknown, dir: string) => void } }
+        | undefined;
+      if (!gSplitView?.Functions?.setSplitView) return;
+      gSplitView.Functions.setSplitView(
+        (win as unknown as { gBrowser: { selectedTab: unknown } }).gBrowser.selectedTab,
+        "right",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-close",
+    fn: (_win) => {
+      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
+        | { Functions: { removeSplitView: () => void } }
+        | undefined;
+      if (!gSplitView?.Functions?.removeSplitView) return;
+      gSplitView.Functions.removeSplitView();
+    },
+  },
+  {
+    name: "floorp-split-view-swap-panes",
+    fn: (win) => {
+      const gBrowser = (win as unknown as {
+        gBrowser: { activeSplitView: { tabs: unknown[]; reverseTabs: () => void } | null };
+      }).gBrowser;
+      const activeSplitView = gBrowser?.activeSplitView;
+      if (!activeSplitView || activeSplitView.tabs.length < 2) return;
+      activeSplitView.reverseTabs();
+    },
+  },
+  {
+    name: "floorp-split-view-cycle-layout",
+    fn: (win) => {
+      const gBrowser = (win as unknown as {
+        gBrowser: { activeSplitView: { tabs: unknown[] } | null };
+      }).gBrowser;
+      const activeSplitView = gBrowser?.activeSplitView;
+      if (!activeSplitView || activeSplitView.tabs.length < 2) return;
+
+      const paneCount = activeSplitView.tabs.length;
+      type SplitViewLayout = "horizontal" | "vertical" | "grid-2x2"
+        | "grid-3pane-left-main" | "grid-3pane-right-main"
+        | "grid-3pane-top-main" | "grid-3pane-bottom-main";
+
+      const cycleMap: Record<number, SplitViewLayout[]> = {
+        2: ["horizontal", "vertical"],
+        3: ["horizontal", "vertical", "grid-3pane-left-main", "grid-3pane-right-main", "grid-3pane-top-main", "grid-3pane-bottom-main"],
+        4: ["horizontal", "vertical", "grid-2x2"],
+      };
+      const cycle = cycleMap[paneCount] ?? ["horizontal", "vertical"];
+
+      // SplitViewManager が保持する現在の layout 属性を取得
+      if (!win.document) return;
+      const container = win.document.querySelector("[split-view-layout]");
+      const currentLayout = (container?.getAttribute("split-view-layout") as SplitViewLayout) ?? "horizontal";
+      const currentIdx = cycle.indexOf(currentLayout);
+      const nextIdx = (currentIdx + 1) % cycle.length;
+      const nextLayout = cycle[nextIdx]!;
+
+      container?.setAttribute("split-view-layout", nextLayout);
+    },
+  },
+  {
+    name: "floorp-split-view-add-pane",
+    fn: (win) => {
+      const gBrowser = (win as unknown as {
+        gBrowser: {
+          activeSplitView: { tabs: unknown[]; addTabs: (tabs: unknown[]) => void } | null;
+          addTrustedTab: (url: string) => unknown;
+        };
+      }).gBrowser;
+      const activeSplitView = gBrowser?.activeSplitView;
+      if (!activeSplitView || !gBrowser) return;
+      if (activeSplitView.tabs.length >= 4) return;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      activeSplitView.addTabs([newTab]);
+    },
+  },
+  {
+    name: "floorp-split-view-remove-pane",
+    fn: (win) => {
+      const gBrowser = (win as unknown as {
+        gBrowser: {
+          activeSplitView: { tabs: unknown[] } | null;
+          moveTabToSplitView: (tab: unknown, wrapper: null) => void;
+        };
+      }).gBrowser;
+      const activeSplitView = gBrowser?.activeSplitView;
+      if (!activeSplitView || !gBrowser || activeSplitView.tabs.length <= 2) return;
+      const tabs = activeSplitView.tabs;
+      const lastTab = tabs[tabs.length - 1];
+      gBrowser.moveTabToSplitView(lastTab, null);
+    },
+  },
 ];

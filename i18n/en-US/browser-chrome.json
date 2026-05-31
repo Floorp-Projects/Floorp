@@ -211,7 +211,14 @@
       "floorp-open-settings": "Open Settings",
       "floorp-open-hub": "Open Floorp Hub",
       "floorp-toggle-share-mode": "Toggle Share Mode",
-      "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown"
+      "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown",
+      "floorp-split-view-open-left": "Split View Left",
+      "floorp-split-view-open-right": "Split View Right",
+      "floorp-split-view-close": "Close Split View",
+      "floorp-split-view-swap-panes": "Swap Split Panes",
+      "floorp-split-view-cycle-layout": "Cycle Split Layout",
+      "floorp-split-view-add-pane": "Add Pane to Split View",
+      "floorp-split-view-remove-pane": "Remove Pane from Split View"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
@@ -232,7 +239,14 @@
       "floorp-open-settings": "Opens the Floorp settings page",
       "floorp-open-hub": "Opens the Floorp Hub page",
       "floorp-toggle-share-mode": "Toggle Share Mode to minimize UI for screen sharing and presentations",
-      "floorp-copy-page-url-as-markdown": "Copy the current page title and URL as Markdown link format: [Title](URL)"
+      "floorp-copy-page-url-as-markdown": "Copy the current page title and URL as Markdown link format: [Title](URL)",
+      "floorp-split-view-open-left": "Open the current tab in a split view on the left side",
+      "floorp-split-view-open-right": "Open the current tab in a split view on the right side",
+      "floorp-split-view-close": "Close the active split view and return to single tab view",
+      "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
+      "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
+      "floorp-split-view-add-pane": "Add a new pane to the active split view",
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
     }
   },
   "qrCode": {

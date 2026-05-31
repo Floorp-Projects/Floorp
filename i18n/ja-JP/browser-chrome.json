@@ -202,7 +202,14 @@
       "gecko-workspace-next": "次のワークスペースに切り替える",
       "gecko-workspace-previous": "前のワークスペースに切り替える",
       "floorp-toggle-zen-mode": "禅モードの表示を切り替える",
-      "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える"
+      "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える",
+      "floorp-split-view-open-left": "左に分割表示",
+      "floorp-split-view-open-right": "右に分割表示",
+      "floorp-split-view-close": "分割表示を閉じる",
+      "floorp-split-view-swap-panes": "分割ペインを入れ替え",
+      "floorp-split-view-cycle-layout": "分割レイアウトを切り替え",
+      "floorp-split-view-add-pane": "ペインを追加",
+      "floorp-split-view-remove-pane": "ペインを削除"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",
@@ -214,7 +221,14 @@
       "gecko-reload-all-tabs": "すべてのタブを再読み込み",
       "gecko-restore-last-tab": "最後に閉じたタブを開きなおす",
       "floorp-toggle-zen-mode": "禅モードではすべての UI 要素が非表示になるので、現在のページに集中できます",
-      "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します"
+      "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します",
+      "floorp-split-view-open-left": "現在のタブを左側に分割表示します",
+      "floorp-split-view-open-right": "現在のタブを右側に分割表示します",
+      "floorp-split-view-close": "アクティブな分割表示を閉じ、単一タブ表示に戻します",
+      "floorp-split-view-swap-panes": "分割表示のペインの位置を入れ替えます",
+      "floorp-split-view-cycle-layout": "分割表示のレイアウト（水平、垂直、グリッド）を順番に切り替えます",
+      "floorp-split-view-add-pane": "アクティブな分割表示に新しいペインを追加します",
+      "floorp-split-view-remove-pane": "アクティブな分割表示の最後のペインを削除します"
     }
   },
   "qrCode": {
