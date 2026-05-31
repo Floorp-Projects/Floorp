@@ -373,23 +373,29 @@ export const commands: Commands = {
     type: "bms-action",
   },
   "floorp-open-split-view-on-left": {
-    command: () =>
-      globalThis.gSplitView.Functions.setSplitView(
-        globalThis.gBrowser.selectedTab,
-        "left",
-      ),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([newTab, gBrowser.selectedTab]);
+    },
     type: "split-view-action",
   },
   "floorp-open-split-view-on-right": {
-    command: () =>
-      globalThis.gSplitView.Functions.setSplitView(
-        globalThis.gBrowser.selectedTab,
-        "right",
-      ),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([gBrowser.selectedTab, newTab]);
+    },
     type: "split-view-action",
   },
   "floorp-close-split-view": {
-    command: () => globalThis.gSplitView.Functions.removeSplitView(),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.activeSplitView) return;
+      gBrowser.activeSplitView.unsplitTabs(null);
+    },
     type: "split-view-action",
   },
   "floorp-custom-action-1": {

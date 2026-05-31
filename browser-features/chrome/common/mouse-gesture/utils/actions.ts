@@ -441,61 +441,53 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-left",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-left: start");
-      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
-        | { Functions: { setSplitView: (tab: unknown, dir: string) => void } }
-        | undefined;
-      if (!gSplitView?.Functions?.setSplitView) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-left: gSplitView or setSplitView not available", {
-          hasGSplitView: gSplitView != null,
-          hasFunctions: gSplitView?.Functions != null,
-        });
+      const gBrowser = (win as unknown as {
+        gBrowser: {
+          selectedTab: unknown;
+          addTabSplitView: (tabs: unknown[]) => unknown;
+          addTrustedTab: (url: string) => unknown;
+          activeSplitView: { tabs: unknown[] } | null;
+        };
+      }).gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
         return;
       }
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-left: calling setSplitView with direction=left");
-      gSplitView.Functions.setSplitView(
-        (win as unknown as { gBrowser: { selectedTab: unknown } }).gBrowser.selectedTab,
-        "left",
-      );
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([newTab, selectedTab]);
     },
   },
   {
     name: "floorp-split-view-open-right",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-right: start");
-      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
-        | { Functions: { setSplitView: (tab: unknown, dir: string) => void } }
-        | undefined;
-      if (!gSplitView?.Functions?.setSplitView) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-right: gSplitView or setSplitView not available", {
-          hasGSplitView: gSplitView != null,
-          hasFunctions: gSplitView?.Functions != null,
-        });
+      const gBrowser = (win as unknown as {
+        gBrowser: {
+          selectedTab: unknown;
+          addTabSplitView: (tabs: unknown[]) => unknown;
+          addTrustedTab: (url: string) => unknown;
+          activeSplitView: { tabs: unknown[] } | null;
+        };
+      }).gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
         return;
       }
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-open-right: calling setSplitView with direction=right");
-      gSplitView.Functions.setSplitView(
-        (win as unknown as { gBrowser: { selectedTab: unknown } }).gBrowser.selectedTab,
-        "right",
-      );
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([selectedTab, newTab]);
     },
   },
   {
     name: "floorp-split-view-close",
-    fn: (_win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-close: start");
-      const gSplitView = (globalThis as Record<string, unknown>).gSplitView as
-        | { Functions: { removeSplitView: () => void } }
-        | undefined;
-      if (!gSplitView?.Functions?.removeSplitView) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-close: gSplitView or removeSplitView not available", {
-          hasGSplitView: gSplitView != null,
-          hasFunctions: gSplitView?.Functions != null,
-        });
+    fn: (win) => {
+      const gBrowser = (win as unknown as {
+        gBrowser: {
+          activeSplitView: { unsplitTabs: (trigger: string | null) => void } | null;
+        };
+      }).gBrowser;
+      if (!gBrowser?.activeSplitView) {
         return;
       }
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-close: calling removeSplitView");
-      gSplitView.Functions.removeSplitView();
+      gBrowser.activeSplitView.unsplitTabs(null);
     },
   },
   {
