@@ -307,6 +307,21 @@ function updateForwardingTarget(target: EventTarget | null): void {
         // Event was handled, don't forward
         return;
       }
+
+      // Skip click forwarding for buttons with dedicated fallback handlers.
+      // Their panels are opened on mousedown by attachFallbackNavbarHandlers,
+      // and forwarding the click causes the panel to close immediately.
+      // See Issue #2079.
+      const toolbarBtn = target?.closest("toolbarbutton, button");
+      if (toolbarBtn) {
+        const btnId = toolbarBtn.id || "";
+        if (
+          btnId === "fxa-toolbar-menu-button" ||
+          btnId === "unified-extensions-button"
+        ) {
+          return;
+        }
+      }
     }
 
     forwardEventToNavigatorToolbox(event, toolbox);
@@ -334,8 +349,14 @@ function isXULButton(element: Element | null): boolean {
     return false;
   }
 
-  // Check if it's a URL bar button (star-button, reload-button, etc.)
+  // Skip buttons handled by fallback navbar handlers — their click→command
+  // conversion is harmful when the panel is open. See Issue #2079.
   const id = button.id || "";
+  if (id === "fxa-toolbar-menu-button" || id === "unified-extensions-button") {
+    return false;
+  }
+
+  // Check if it's a URL bar button (star-button, reload-button, etc.)
   const isUrlbarButton =
     id.includes("button") ||
     id.includes("star") ||
