@@ -6,7 +6,7 @@ import {
 } from "#features-chrome/common/split-view/patches/session-restore.js";
 import { applyLayoutAttribute } from "#features-chrome/common/split-view/layout.js";
 import { updateHandles } from "#features-chrome/common/split-view/components/split-view-splitters.js";
-import type { SplitViewLayout } from "../../../split-view/data/types.ts";
+import type { SplitViewLayout } from "#features-chrome/common/split-view/data/types.js";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
