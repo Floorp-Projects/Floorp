@@ -198,7 +198,7 @@ export const commands: Commands = {
     command: () => globalThis.BrowserOffline.toggleOfflineStatus(),
     type: "tools-action",
   },
-  "gecko-gecko-open-screen-capture": {
+  "gecko-open-screen-capture": {
     command: () => globalThis.ScreenshotsUtils.notify(window, "shortcut"),
     type: "tools-action",
   },

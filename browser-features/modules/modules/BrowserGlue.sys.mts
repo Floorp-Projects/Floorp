@@ -389,7 +389,8 @@ const JS_WINDOW_ACTORS: {
         "../actors/NRMouseGestureScrollChild.sys.mts",
       ),
     },
-    matches: ["http://*/*", "https://*/*", "about:*"],
+    matches: ["http://*/*", "https://*/*", "file:///*", "about:*"],
+    allFrames: true,
   },
 };
 

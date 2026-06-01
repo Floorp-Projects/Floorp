@@ -6,6 +6,7 @@ import {
 } from "#features-chrome/common/split-view/patches/session-restore.js";
 import { applyLayoutAttribute } from "#features-chrome/common/split-view/layout.js";
 import { updateHandles } from "#features-chrome/common/split-view/components/split-view-splitters.js";
+import type { SplitViewLayout } from "../../../split-view/data/types.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -907,15 +908,6 @@ export const actions: GestureActionRegistration[] = [
         "floorp-split-view-cycle-layout: pane count",
         { paneCount },
       );
-
-      type SplitViewLayout =
-        | "horizontal"
-        | "vertical"
-        | "grid-2x2"
-        | "grid-3pane-left-main"
-        | "grid-3pane-right-main"
-        | "grid-3pane-top-main"
-        | "grid-3pane-bottom-main";
 
       const cycleMap: Record<number, SplitViewLayout[]> = {
         2: ["horizontal", "vertical"],

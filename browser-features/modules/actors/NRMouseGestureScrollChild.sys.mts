@@ -7,24 +7,28 @@ import { findScrollableElement, VALID_SCROLL_DIRECTIONS, type ScrollDirection } 
 
 export class NRMouseGestureScrollChild extends JSWindowActorChild {
   receiveMessage(message: { name: string; data?: unknown }) {
-    switch (message.name) {
-      case "MouseGestureScroll:Execute": {
-        const data = message.data as Record<string, unknown> | undefined;
-        const direction =
-          typeof data?.direction === "string" &&
-          (VALID_SCROLL_DIRECTIONS as readonly string[]).includes(
-            data.direction,
-          )
-            ? (data.direction as ScrollDirection)
-            : undefined;
-        if (!direction) return;
+    try {
+      switch (message.name) {
+        case "MouseGestureScroll:Execute": {
+          const data = message.data as Record<string, unknown> | undefined;
+          const direction =
+            typeof data?.direction === "string" &&
+            (VALID_SCROLL_DIRECTIONS as readonly string[]).includes(
+              data.direction,
+            )
+              ? (data.direction as ScrollDirection)
+              : undefined;
+          if (!direction) return;
 
-        const win = this.contentWindow;
-        if (!win) return;
+          const win = this.contentWindow;
+          if (!win) return;
 
-        this.executeScroll(win, direction);
-        break;
+          this.executeScroll(win, direction);
+          break;
+        }
       }
+    } catch (error) {
+      console.error("[MouseGestureScroll]", error, { messageName: message.name, data: message.data });
     }
   }
 
