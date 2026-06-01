@@ -377,7 +377,12 @@ export const commands: Commands = {
       const gBrowser = globalThis.gBrowser;
       if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([newTab, gBrowser.selectedTab]);
+      try {
+        gBrowser.addTabSplitView([newTab, gBrowser.selectedTab]);
+      } catch (e) {
+        console.error("[SplitView]", e);
+        gBrowser.removeTab(newTab);
+      }
     },
     type: "split-view-action",
   },
@@ -386,7 +391,12 @@ export const commands: Commands = {
       const gBrowser = globalThis.gBrowser;
       if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([gBrowser.selectedTab, newTab]);
+      try {
+        gBrowser.addTabSplitView([gBrowser.selectedTab, newTab]);
+      } catch (e) {
+        console.error("[SplitView]", e);
+        gBrowser.removeTab(newTab);
+      }
     },
     type: "split-view-action",
   },
