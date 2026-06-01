@@ -69,6 +69,7 @@ function testFindsHorizontallyScrollableContainer(): void {
     inner.appendChild(child);
     outer.appendChild(inner);
     inner.focus();
+    void inner.offsetHeight;
 
     const result = findScrollableElement(window, true);
     assertEquals(result, inner, "should find horizontally scrollable container");
@@ -94,6 +95,7 @@ function testFindsVerticallyScrollableContainer(): void {
     inner.appendChild(child);
     outer.appendChild(inner);
     inner.focus();
+    void inner.offsetHeight;
 
     const result = findScrollableElement(window, false);
     assertEquals(result, inner, "should find vertically scrollable container");
@@ -159,6 +161,7 @@ function testPrefersCloserScrollableAncestor(): void {
     outer.appendChild(middle);
     root.appendChild(outer);
     inner.focus();
+    void inner.offsetHeight;
 
     const result = findScrollableElement(window, true);
     assertEquals(result, inner, "should prefer closer scrollable ancestor");
