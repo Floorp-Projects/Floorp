@@ -63,6 +63,40 @@ const sendScrollCommand = (
   }
 };
 
+function applyThreePaneLayout(
+  win: Window,
+  targetLayout:
+    | "grid-3pane-left-main"
+    | "grid-3pane-right-main"
+    | "grid-3pane-top-main"
+    | "grid-3pane-bottom-main",
+): void {
+  const gBrowser = (
+    win as unknown as {
+      gBrowser: {
+        activeSplitView: { tabs: unknown[] } | null;
+        tabpanels: { splitViewPanels: unknown[] } | null;
+      };
+    }
+  ).gBrowser;
+  const activeSplitView = gBrowser?.activeSplitView;
+  if (!activeSplitView) return;
+
+  const groupId = getSplitViewGroupIdForTabs(
+    activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+  );
+  if (groupId) {
+    setPersistedGroupLayout(groupId, targetLayout);
+  }
+
+  const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+  applyLayoutAttribute(logger, targetLayout, 3);
+  const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+  if (panels) {
+    updateHandles(panels, targetLayout);
+  }
+}
+
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
@@ -514,11 +548,15 @@ export const actions: GestureActionRegistration[] = [
           );
           return;
         }
+        const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
         activeSplitView.addTabs([newTab]);
         const firstTab = activeSplitView.tabs[0];
         if (firstTab && firstTab !== newTab) {
           gBrowser.moveTabBefore(newTab, firstTab);
+        }
+        if (existingCount === 2) {
+          applyThreePaneLayout(win, "grid-3pane-left-main");
         }
         console.debug(
           "[mouse-gesture:split-view]",
@@ -564,8 +602,12 @@ export const actions: GestureActionRegistration[] = [
           );
           return;
         }
+        const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
         activeSplitView.addTabs([newTab]);
+        if (existingCount === 2) {
+          applyThreePaneLayout(win, "grid-3pane-right-main");
+        }
         console.debug(
           "[mouse-gesture:split-view]",
           "floorp-split-view-open-right: added pane to existing split view",
@@ -611,21 +653,26 @@ export const actions: GestureActionRegistration[] = [
           );
           return;
         }
+        const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
         activeSplitView.addTabs([newTab]);
         const firstTab = activeSplitView.tabs[0];
         if (firstTab && firstTab !== newTab) {
           gBrowser.moveTabBefore(newTab, firstTab);
         }
-        const groupId = getSplitViewGroupIdForTabs(
-          activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
-        );
-        if (groupId) {
-          setPersistedGroupLayout(groupId, "vertical");
+        if (existingCount === 2) {
+          applyThreePaneLayout(win, "grid-3pane-top-main");
+        } else {
+          const groupId = getSplitViewGroupIdForTabs(
+            activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+          );
+          if (groupId) {
+            setPersistedGroupLayout(groupId, "vertical");
+          }
         }
         console.debug(
           "[mouse-gesture:split-view]",
-          "floorp-split-view-open-top: added pane to existing split view (vertical)",
+          "floorp-split-view-open-top: added pane to existing split view",
         );
         return;
       }
@@ -683,17 +730,22 @@ export const actions: GestureActionRegistration[] = [
           );
           return;
         }
+        const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
         activeSplitView.addTabs([newTab]);
-        const groupId = getSplitViewGroupIdForTabs(
-          activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
-        );
-        if (groupId) {
-          setPersistedGroupLayout(groupId, "vertical");
+        if (existingCount === 2) {
+          applyThreePaneLayout(win, "grid-3pane-bottom-main");
+        } else {
+          const groupId = getSplitViewGroupIdForTabs(
+            activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+          );
+          if (groupId) {
+            setPersistedGroupLayout(groupId, "vertical");
+          }
         }
         console.debug(
           "[mouse-gesture:split-view]",
-          "floorp-split-view-open-bottom: added pane to existing split view (vertical)",
+          "floorp-split-view-open-bottom: added pane to existing split view",
         );
         return;
       }
