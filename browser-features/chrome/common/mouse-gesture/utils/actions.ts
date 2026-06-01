@@ -47,6 +47,10 @@ const sendScrollCommand = (
       "NRMouseGestureScroll",
     );
     if (!actor) return;
+    console.debug(
+      "[mouse-gesture] Sending scroll command to content:",
+      direction,
+    );
     actor.sendAsyncMessage("MouseGestureScroll:Execute", { direction });
   } catch (e) {
     console.error("[mouse-gesture] Failed to send scroll command:", e);
@@ -474,14 +478,16 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-left",
     fn: (win) => {
-      const gBrowser = (win as unknown as {
-        gBrowser: {
-          selectedTab: unknown;
-          addTabSplitView: (tabs: unknown[]) => unknown;
-          addTrustedTab: (url: string) => unknown;
-          activeSplitView: { tabs: unknown[] } | null;
-        };
-      }).gBrowser;
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            selectedTab: unknown;
+            addTabSplitView: (tabs: unknown[]) => unknown;
+            addTrustedTab: (url: string) => unknown;
+            activeSplitView: { tabs: unknown[] } | null;
+          };
+        }
+      ).gBrowser;
       if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
         return;
       }
@@ -493,14 +499,16 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-right",
     fn: (win) => {
-      const gBrowser = (win as unknown as {
-        gBrowser: {
-          selectedTab: unknown;
-          addTabSplitView: (tabs: unknown[]) => unknown;
-          addTrustedTab: (url: string) => unknown;
-          activeSplitView: { tabs: unknown[] } | null;
-        };
-      }).gBrowser;
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            selectedTab: unknown;
+            addTabSplitView: (tabs: unknown[]) => unknown;
+            addTrustedTab: (url: string) => unknown;
+            activeSplitView: { tabs: unknown[] } | null;
+          };
+        }
+      ).gBrowser;
       if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
         return;
       }
@@ -512,11 +520,15 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-close",
     fn: (win) => {
-      const gBrowser = (win as unknown as {
-        gBrowser: {
-          activeSplitView: { unsplitTabs: (trigger: string | null) => void } | null;
-        };
-      }).gBrowser;
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            activeSplitView: {
+              unsplitTabs: (trigger: string | null) => void;
+            } | null;
+          };
+        }
+      ).gBrowser;
       if (!gBrowser?.activeSplitView) {
         return;
       }
@@ -526,110 +538,191 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-swap-panes",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-swap-panes: start");
-      const gBrowser = (win as unknown as {
-        gBrowser: { activeSplitView: { tabs: unknown[]; reverseTabs: () => void } | null };
-      }).gBrowser;
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-swap-panes: start",
+      );
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            activeSplitView: {
+              tabs: unknown[];
+              reverseTabs: () => void;
+            } | null;
+          };
+        }
+      ).gBrowser;
       const activeSplitView = gBrowser?.activeSplitView;
       if (!activeSplitView) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-swap-panes: no active split view");
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-swap-panes: no active split view",
+        );
         return;
       }
       if (activeSplitView.tabs.length < 2) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-swap-panes: tabs.length < 2", {
-          tabCount: activeSplitView.tabs.length,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-swap-panes: tabs.length < 2",
+          {
+            tabCount: activeSplitView.tabs.length,
+          },
+        );
         return;
       }
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-swap-panes: calling reverseTabs", {
-        tabCount: activeSplitView.tabs.length,
-      });
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-swap-panes: calling reverseTabs",
+        {
+          tabCount: activeSplitView.tabs.length,
+        },
+      );
       activeSplitView.reverseTabs();
     },
   },
   {
     name: "floorp-split-view-cycle-layout",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: start");
-      const gBrowser = (win as unknown as {
-        gBrowser: { activeSplitView: { tabs: unknown[] } | null };
-      }).gBrowser;
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-cycle-layout: start",
+      );
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: { activeSplitView: { tabs: unknown[] } | null };
+        }
+      ).gBrowser;
       const activeSplitView = gBrowser?.activeSplitView;
       if (!activeSplitView) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: no active split view");
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-cycle-layout: no active split view",
+        );
         return;
       }
       if (activeSplitView.tabs.length < 2) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: tabs.length < 2", {
-          tabCount: activeSplitView.tabs.length,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-cycle-layout: tabs.length < 2",
+          {
+            tabCount: activeSplitView.tabs.length,
+          },
+        );
         return;
       }
 
       const paneCount = activeSplitView.tabs.length;
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: pane count", { paneCount });
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-cycle-layout: pane count",
+        { paneCount },
+      );
 
-      type SplitViewLayout = "horizontal" | "vertical" | "grid-2x2"
-        | "grid-3pane-left-main" | "grid-3pane-right-main"
-        | "grid-3pane-top-main" | "grid-3pane-bottom-main";
+      type SplitViewLayout =
+        | "horizontal"
+        | "vertical"
+        | "grid-2x2"
+        | "grid-3pane-left-main"
+        | "grid-3pane-right-main"
+        | "grid-3pane-top-main"
+        | "grid-3pane-bottom-main";
 
       const cycleMap: Record<number, SplitViewLayout[]> = {
         2: ["horizontal", "vertical"],
-        3: ["horizontal", "vertical", "grid-3pane-left-main", "grid-3pane-right-main", "grid-3pane-top-main", "grid-3pane-bottom-main"],
+        3: [
+          "horizontal",
+          "vertical",
+          "grid-3pane-left-main",
+          "grid-3pane-right-main",
+          "grid-3pane-top-main",
+          "grid-3pane-bottom-main",
+        ],
         4: ["horizontal", "vertical", "grid-2x2"],
       };
       const cycle = cycleMap[paneCount] ?? ["horizontal", "vertical"];
 
       if (!win.document) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: win.document is null");
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-cycle-layout: win.document is null",
+        );
         return;
       }
       const container = win.document.querySelector("[split-view-layout]");
       if (!container) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: no element with split-view-layout attribute found");
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-cycle-layout: no element with split-view-layout attribute found",
+        );
         return;
       }
-      const currentLayout = (container.getAttribute("split-view-layout") as SplitViewLayout) ?? "horizontal";
+      const currentLayout =
+        (container.getAttribute("split-view-layout") as SplitViewLayout) ??
+        "horizontal";
       const currentIdx = cycle.indexOf(currentLayout);
       const nextIdx = (currentIdx + 1) % cycle.length;
       const nextLayout = cycle[nextIdx]!;
 
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-cycle-layout: cycling layout", {
-        currentLayout,
-        nextLayout,
-        paneCount,
-        availableLayouts: cycle,
-      });
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-cycle-layout: cycling layout",
+        {
+          currentLayout,
+          nextLayout,
+          paneCount,
+          availableLayouts: cycle,
+        },
+      );
       container.setAttribute("split-view-layout", nextLayout);
     },
   },
   {
     name: "floorp-split-view-add-pane",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-add-pane: start");
-      const gBrowser = (win as unknown as {
-        gBrowser: {
-          activeSplitView: { tabs: unknown[]; addTabs: (tabs: unknown[]) => void } | null;
-          addTrustedTab: (url: string) => unknown;
-        };
-      }).gBrowser;
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-add-pane: start",
+      );
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            activeSplitView: {
+              tabs: unknown[];
+              addTabs: (tabs: unknown[]) => void;
+            } | null;
+            addTrustedTab: (url: string) => unknown;
+          };
+        }
+      ).gBrowser;
       const activeSplitView = gBrowser?.activeSplitView;
       if (!activeSplitView || !gBrowser) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-add-pane: no active split view or gBrowser", {
-          hasActiveSplitView: activeSplitView != null,
-          hasGBrowser: gBrowser != null,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-add-pane: no active split view or gBrowser",
+          {
+            hasActiveSplitView: activeSplitView != null,
+            hasGBrowser: gBrowser != null,
+          },
+        );
         return;
       }
       if (activeSplitView.tabs.length >= 4) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-add-pane: already at max panes", {
-          tabCount: activeSplitView.tabs.length,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-add-pane: already at max panes",
+          {
+            tabCount: activeSplitView.tabs.length,
+          },
+        );
         return;
       }
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-add-pane: adding new pane", {
-        currentTabCount: activeSplitView.tabs.length,
-      });
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-add-pane: adding new pane",
+        {
+          currentTabCount: activeSplitView.tabs.length,
+        },
+      );
       const newTab = gBrowser.addTrustedTab("about:opentabs");
       activeSplitView.addTabs([newTab]);
     },
@@ -637,33 +730,50 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-remove-pane",
     fn: (win) => {
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-remove-pane: start");
-      const gBrowser = (win as unknown as {
-        gBrowser: {
-          activeSplitView: { tabs: unknown[] } | null;
-          moveTabToSplitView: (tab: unknown, wrapper: null) => void;
-        };
-      }).gBrowser;
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-remove-pane: start",
+      );
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            activeSplitView: { tabs: unknown[] } | null;
+            moveTabToSplitView: (tab: unknown, wrapper: null) => void;
+          };
+        }
+      ).gBrowser;
       const activeSplitView = gBrowser?.activeSplitView;
       if (!activeSplitView || !gBrowser) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-remove-pane: no active split view or gBrowser", {
-          hasActiveSplitView: activeSplitView != null,
-          hasGBrowser: gBrowser != null,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-remove-pane: no active split view or gBrowser",
+          {
+            hasActiveSplitView: activeSplitView != null,
+            hasGBrowser: gBrowser != null,
+          },
+        );
         return;
       }
       if (activeSplitView.tabs.length <= 2) {
-        console.debug("[mouse-gesture:split-view]", "floorp-split-view-remove-pane: at minimum panes (2), cannot remove", {
-          tabCount: activeSplitView.tabs.length,
-        });
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-remove-pane: at minimum panes (2), cannot remove",
+          {
+            tabCount: activeSplitView.tabs.length,
+          },
+        );
         return;
       }
       const tabs = activeSplitView.tabs;
       const lastTab = tabs[tabs.length - 1];
-      console.debug("[mouse-gesture:split-view]", "floorp-split-view-remove-pane: removing last pane", {
-        tabCount: tabs.length,
-        lastTabIndex: tabs.length - 1,
-      });
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-remove-pane: removing last pane",
+        {
+          tabCount: tabs.length,
+          lastTabIndex: tabs.length - 1,
+        },
+      );
       gBrowser.moveTabToSplitView(lastTab, null);
     },
   },
