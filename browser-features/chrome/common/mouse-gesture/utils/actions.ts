@@ -246,6 +246,21 @@ export const actions: GestureActionRegistration[] = [
     fn: (win) => win.PlacesCommandHook.bookmarkPage(),
   },
   {
+    name: "gecko-open-bookmark-add-tool",
+    fn: (win) =>
+      win.PlacesUIUtils.showBookmarkPagesDialog(
+        win.PlacesCommandHook.uniqueCurrentPages,
+      ),
+  },
+  {
+    name: "gecko-open-bookmarks-manager",
+    fn: (win) => win.SidebarController.toggle("viewBookmarksSidebar"),
+  },
+  {
+    name: "gecko-toggle-bookmark-toolbar",
+    fn: (win) => win.BookmarkingUI.toggleBookmarksToolbar("bookmark-tools"),
+  },
+  {
     name: "gecko-open-home-page",
     fn: (win) =>
       win.switchToTabHavingURI(
@@ -360,6 +375,26 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-restore-last-tab",
     fn: (win) => win.SessionStore.undoCloseTab(win, 0),
+  },
+  {
+    name: "gecko-open-general-preferences",
+    fn: (win) => win.openPreferences(),
+  },
+  {
+    name: "gecko-open-privacy-preferences",
+    fn: (win) => win.openPreferences("panePrivacy"),
+  },
+  {
+    name: "gecko-open-workspaces-preferences",
+    fn: (win) => win.openPreferences("paneWorkspaces"),
+  },
+  {
+    name: "gecko-open-containers-preferences",
+    fn: (win) => win.openPreferences("paneContainers"),
+  },
+  {
+    name: "gecko-open-search-preferences",
+    fn: (win) => win.openPreferences("paneSearch"),
   },
   {
     name: "gecko-open-sync-preferences",
