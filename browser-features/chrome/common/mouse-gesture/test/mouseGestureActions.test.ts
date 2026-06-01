@@ -852,6 +852,28 @@ const rawTests: TestCase[] = [
       );
     },
   },
+  {
+    name: "floorp-split-view-open-top action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-top"),
+        "should include floorp-split-view-open-top action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-open-bottom action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-bottom"),
+        "should include floorp-split-view-open-bottom action",
+      );
+    },
+  },
 ];
 
 const tests: TestCase[] = rawTests.map((testCase) => ({

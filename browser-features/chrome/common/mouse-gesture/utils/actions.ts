@@ -1,5 +1,9 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import {
+  setPersistedGroupLayout,
+  getSplitViewGroupIdForTabs,
+} from "#features-chrome/common/split-view/patches/session-restore.js";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -515,6 +519,71 @@ export const actions: GestureActionRegistration[] = [
       const selectedTab = gBrowser.selectedTab;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
       gBrowser.addTabSplitView([selectedTab, newTab]);
+    },
+  },
+  {
+    name: "floorp-split-view-open-top",
+    fn: (win) => {
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            selectedTab: unknown;
+            addTabSplitView: (tabs: unknown[]) => unknown;
+            addTrustedTab: (url: string) => unknown;
+            activeSplitView: { tabs: unknown[] } | null;
+          };
+        }
+      ).gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+        return;
+      }
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([newTab, selectedTab]);
+      // Override the persisted group layout to "vertical" (top/bottom).
+      // addTabSplitView dispatches TabSplitViewActivate synchronously, which
+      // persists the default "horizontal" layout. The requestAnimationFrame
+      // in onSplitViewActivate has not yet fired, so we overwrite it now.
+      const activeSplitView = gBrowser.activeSplitView;
+      if (activeSplitView?.tabs) {
+        const groupId = getSplitViewGroupIdForTabs(
+          activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+        );
+        if (groupId) {
+          setPersistedGroupLayout(groupId, "vertical");
+        }
+      }
+    },
+  },
+  {
+    name: "floorp-split-view-open-bottom",
+    fn: (win) => {
+      const gBrowser = (
+        win as unknown as {
+          gBrowser: {
+            selectedTab: unknown;
+            addTabSplitView: (tabs: unknown[]) => unknown;
+            addTrustedTab: (url: string) => unknown;
+            activeSplitView: { tabs: unknown[] } | null;
+          };
+        }
+      ).gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+        return;
+      }
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([selectedTab, newTab]);
+      // Override the persisted group layout to "vertical" (top/bottom).
+      const activeSplitView = gBrowser.activeSplitView;
+      if (activeSplitView?.tabs) {
+        const groupId = getSplitViewGroupIdForTabs(
+          activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+        );
+        if (groupId) {
+          setPersistedGroupLayout(groupId, "vertical");
+        }
+      }
     },
   },
   {
