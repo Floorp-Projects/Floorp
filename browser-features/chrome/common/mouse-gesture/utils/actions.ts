@@ -4,6 +4,8 @@ import {
   setPersistedGroupLayout,
   getSplitViewGroupIdForTabs,
 } from "#features-chrome/common/split-view/patches/session-restore.js";
+import { applyLayoutAttribute } from "#features-chrome/common/split-view/layout.js";
+import { updateHandles } from "#features-chrome/common/split-view/components/split-view-splitters.js";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -658,7 +660,10 @@ export const actions: GestureActionRegistration[] = [
       );
       const gBrowser = (
         win as unknown as {
-          gBrowser: { activeSplitView: { tabs: unknown[] } | null };
+          gBrowser: {
+            activeSplitView: { tabs: unknown[] } | null;
+            tabpanels: { splitViewPanels: unknown[] } | null;
+          };
         }
       ).gBrowser;
       const activeSplitView = gBrowser?.activeSplitView;
@@ -742,7 +747,22 @@ export const actions: GestureActionRegistration[] = [
           availableLayouts: cycle,
         },
       );
-      container.setAttribute("split-view-layout", nextLayout);
+
+      // Persist the new layout so it survives re-activation and session restore.
+      const groupId = getSplitViewGroupIdForTabs(
+        activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+      );
+      if (groupId) {
+        setPersistedGroupLayout(groupId, nextLayout);
+      }
+
+      // Apply layout properly through the layout pipeline (handles, grid styles).
+      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      applyLayoutAttribute(logger, nextLayout, paneCount);
+      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      if (panels) {
+        updateHandles(panels, nextLayout);
+      }
     },
   },
   {
