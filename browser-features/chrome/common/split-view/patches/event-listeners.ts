@@ -42,6 +42,12 @@ export function initSplitViewEvents(
       if (!tabpanels) return;
 
       const panels = gBrowser?.tabpanels?.splitViewPanels;
+      console.debug("[event-listeners:onSplitViewActivate:rAF]", "panel check", {
+        eventTabsLength: tabs.length,
+        splitViewPanelsLength: panels?.length ?? 0,
+        panelIds: panels?.join(", ") ?? "(none)",
+        match: tabs.length === panels?.length,
+      });
       if (!panels || panels.length < 2) return;
 
       const layout = resolveLayoutForSplitTabs(tabs);

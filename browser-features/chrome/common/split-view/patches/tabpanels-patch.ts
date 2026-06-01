@@ -107,6 +107,13 @@ export function patchTabpanels(
           );
         }
 
+        console.debug("[patch:splitViewPanels.set]", "setter called", {
+          panelsLength: newPanels.length,
+          panelIds: newPanels,
+          lastPanelIds: state.lastPanelIds,
+          willSkip: newPanels.join(",") === state.lastPanelIds,
+        });
+
         const splitTabCount = syncSplitTabMarkerAttrs();
 
         // Grid cell placement follows `column="0"`…`"3"`. After tab reorder,
@@ -424,6 +431,12 @@ export function patchTabpanels(
         return;
       }
 
+      console.debug("[patch:showSplitViewPanels]", "called", {
+        tabsLength: tabs.length,
+        linkedPanels: tabs.map((t) => t?.linkedPanel ?? "(null)").join(", "),
+        hasLinkedBrowser: tabs.map((t) => !!t?.linkedBrowser),
+      });
+
       // The wrapper's private #tabs field can become stale after pane
       // swaps (reorderSplitTabsForDesiredOrder updates DOM order but
       // cannot touch the private field).  When #activate() later calls
@@ -451,6 +464,11 @@ export function patchTabpanels(
       const validTabs = tabs.filter(
         (tab: SplitViewTab) => tab && tab.linkedBrowser,
       );
+      console.debug("[patch:showSplitViewPanels]", "after filter", {
+        originalLength: tabs.length,
+        validLength: validTabs.length,
+        filteredOut: tabs.length - validTabs.length,
+      });
       const invalidCount = tabs.length - validTabs.length;
       if (invalidCount > 0) {
         logger.warn(

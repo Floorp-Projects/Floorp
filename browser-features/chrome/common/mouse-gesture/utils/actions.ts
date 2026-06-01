@@ -484,17 +484,46 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-left",
     fn: (win) => {
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-open-left: start",
+      );
       const gBrowser = (
         win as unknown as {
           gBrowser: {
             selectedTab: unknown;
             addTabSplitView: (tabs: unknown[]) => unknown;
             addTrustedTab: (url: string) => unknown;
-            activeSplitView: { tabs: unknown[] } | null;
+            activeSplitView: {
+              tabs: unknown[];
+              addTabs: (tabs: unknown[]) => void;
+            } | null;
+            moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
           };
         }
       ).gBrowser;
-      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+      if (!gBrowser?.addTabSplitView) {
+        return;
+      }
+      const activeSplitView = gBrowser.activeSplitView;
+      if (activeSplitView) {
+        if (activeSplitView.tabs.length >= 4) {
+          console.debug(
+            "[mouse-gesture:split-view]",
+            "floorp-split-view-open-left: max panes reached",
+          );
+          return;
+        }
+        const newTab = gBrowser.addTrustedTab("about:opentabs");
+        activeSplitView.addTabs([newTab]);
+        const firstTab = activeSplitView.tabs[0];
+        if (firstTab && firstTab !== newTab) {
+          gBrowser.moveTabBefore(newTab, firstTab);
+        }
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-open-left: added pane to existing split view",
+        );
         return;
       }
       const selectedTab = gBrowser.selectedTab;
@@ -505,17 +534,42 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-right",
     fn: (win) => {
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-open-right: start",
+      );
       const gBrowser = (
         win as unknown as {
           gBrowser: {
             selectedTab: unknown;
             addTabSplitView: (tabs: unknown[]) => unknown;
             addTrustedTab: (url: string) => unknown;
-            activeSplitView: { tabs: unknown[] } | null;
+            activeSplitView: {
+              tabs: unknown[];
+              addTabs: (tabs: unknown[]) => void;
+            } | null;
+            moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
           };
         }
       ).gBrowser;
-      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+      if (!gBrowser?.addTabSplitView) {
+        return;
+      }
+      const activeSplitView = gBrowser.activeSplitView;
+      if (activeSplitView) {
+        if (activeSplitView.tabs.length >= 4) {
+          console.debug(
+            "[mouse-gesture:split-view]",
+            "floorp-split-view-open-right: max panes reached",
+          );
+          return;
+        }
+        const newTab = gBrowser.addTrustedTab("about:opentabs");
+        activeSplitView.addTabs([newTab]);
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-open-right: added pane to existing split view",
+        );
         return;
       }
       const selectedTab = gBrowser.selectedTab;
@@ -526,65 +580,140 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-split-view-open-top",
     fn: (win) => {
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-open-top: start",
+      );
       const gBrowser = (
         win as unknown as {
           gBrowser: {
             selectedTab: unknown;
             addTabSplitView: (tabs: unknown[]) => unknown;
             addTrustedTab: (url: string) => unknown;
-            activeSplitView: { tabs: unknown[] } | null;
+            activeSplitView: {
+              tabs: unknown[];
+              addTabs: (tabs: unknown[]) => void;
+            } | null;
+            tabpanels: { splitViewPanels: unknown[] } | null;
+            moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
           };
         }
       ).gBrowser;
-      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+      if (!gBrowser?.addTabSplitView) {
         return;
       }
-      const selectedTab = gBrowser.selectedTab;
-      const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([newTab, selectedTab]);
-      // Override the persisted group layout to "vertical" (top/bottom).
-      // addTabSplitView dispatches TabSplitViewActivate synchronously, which
-      // persists the default "horizontal" layout. The requestAnimationFrame
-      // in onSplitViewActivate has not yet fired, so we overwrite it now.
       const activeSplitView = gBrowser.activeSplitView;
-      if (activeSplitView?.tabs) {
+      if (activeSplitView) {
+        if (activeSplitView.tabs.length >= 4) {
+          console.debug(
+            "[mouse-gesture:split-view]",
+            "floorp-split-view-open-top: max panes reached",
+          );
+          return;
+        }
+        const newTab = gBrowser.addTrustedTab("about:opentabs");
+        activeSplitView.addTabs([newTab]);
+        const firstTab = activeSplitView.tabs[0];
+        if (firstTab && firstTab !== newTab) {
+          gBrowser.moveTabBefore(newTab, firstTab);
+        }
         const groupId = getSplitViewGroupIdForTabs(
           activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
         );
         if (groupId) {
           setPersistedGroupLayout(groupId, "vertical");
         }
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-open-top: added pane to existing split view (vertical)",
+        );
+        return;
+      }
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([newTab, selectedTab]);
+      const newActiveSplitView = gBrowser.activeSplitView;
+      if (newActiveSplitView?.tabs) {
+        const groupId = getSplitViewGroupIdForTabs(
+          newActiveSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+        );
+        if (groupId) {
+          setPersistedGroupLayout(groupId, "vertical");
+        }
+      }
+      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      applyLayoutAttribute(logger, "vertical", 2);
+      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      if (panels) {
+        updateHandles(panels, "vertical");
       }
     },
   },
   {
     name: "floorp-split-view-open-bottom",
     fn: (win) => {
+      console.debug(
+        "[mouse-gesture:split-view]",
+        "floorp-split-view-open-bottom: start",
+      );
       const gBrowser = (
         win as unknown as {
           gBrowser: {
             selectedTab: unknown;
             addTabSplitView: (tabs: unknown[]) => unknown;
             addTrustedTab: (url: string) => unknown;
-            activeSplitView: { tabs: unknown[] } | null;
+            activeSplitView: {
+              tabs: unknown[];
+              addTabs: (tabs: unknown[]) => void;
+            } | null;
+            tabpanels: { splitViewPanels: unknown[] } | null;
+            moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
           };
         }
       ).gBrowser;
-      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) {
+      if (!gBrowser?.addTabSplitView) {
         return;
       }
-      const selectedTab = gBrowser.selectedTab;
-      const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([selectedTab, newTab]);
-      // Override the persisted group layout to "vertical" (top/bottom).
       const activeSplitView = gBrowser.activeSplitView;
-      if (activeSplitView?.tabs) {
+      if (activeSplitView) {
+        if (activeSplitView.tabs.length >= 4) {
+          console.debug(
+            "[mouse-gesture:split-view]",
+            "floorp-split-view-open-bottom: max panes reached",
+          );
+          return;
+        }
+        const newTab = gBrowser.addTrustedTab("about:opentabs");
+        activeSplitView.addTabs([newTab]);
         const groupId = getSplitViewGroupIdForTabs(
           activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
         );
         if (groupId) {
           setPersistedGroupLayout(groupId, "vertical");
         }
+        console.debug(
+          "[mouse-gesture:split-view]",
+          "floorp-split-view-open-bottom: added pane to existing split view (vertical)",
+        );
+        return;
+      }
+      const selectedTab = gBrowser.selectedTab;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      gBrowser.addTabSplitView([selectedTab, newTab]);
+      const newActiveSplitView = gBrowser.activeSplitView;
+      if (newActiveSplitView?.tabs) {
+        const groupId = getSplitViewGroupIdForTabs(
+          newActiveSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+        );
+        if (groupId) {
+          setPersistedGroupLayout(groupId, "vertical");
+        }
+      }
+      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      applyLayoutAttribute(logger, "vertical", 2);
+      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      if (panels) {
+        updateHandles(panels, "vertical");
       }
     },
   },
