@@ -28,6 +28,10 @@ export function initSplitViewEvents(
     // Skip if layout was already applied by the splitViewPanels setter.
     const detail = (e as CustomEvent).detail;
     const tabs = detail?.tabs;
+    console.debug("[event-listeners:onSplitViewActivate]", "event fired", {
+      hasTabs: Array.isArray(tabs),
+      tabCount: tabs?.length ?? 0,
+    });
     if (!Array.isArray(tabs) || tabs.length < 2) return;
 
     requestAnimationFrame(() => {
@@ -50,12 +54,20 @@ export function initSplitViewEvents(
       const expectedLayout =
         expectedLayoutResolved === "horizontal" ? "" : expectedLayoutResolved;
 
+      console.debug("[event-listeners:onSplitViewActivate:rAF]", "evaluating", {
+        resolvedLayout: layout,
+        currentLayoutAttr,
+        expectedLayout,
+        panelCount: panels?.length,
+      });
+
       // Only re-apply if layout attribute doesn't match expected state
       if (currentLayoutAttr === expectedLayout) {
         const handleCount = tabpanels.querySelectorAll(
           ".floorp-split-handle, .floorp-grid-handle",
         ).length;
         if (handleCount > 0) {
+          console.debug("[event-listeners:onSplitViewActivate:rAF]", "skipping (already correct)");
           logger.debug(
             `[onSplitViewActivate:rAF] layout already correct (${expectedLayout || "horizontal"}), handles=${handleCount}, skipping`,
           );
@@ -63,6 +75,7 @@ export function initSplitViewEvents(
         }
       }
 
+      console.debug("[event-listeners:onSplitViewActivate:rAF]", "re-applying layout");
       logger.debug(
         `[onSplitViewActivate:rAF] re-applying layout=${layout}, panels=${panels.length} (current="${currentLayoutAttr}", expected="${expectedLayout}")`,
       );

@@ -22,12 +22,23 @@ export function applyLayout(logger: ConsoleInstance): void {
   }
 
   const panels = gBrowser.tabpanels?.splitViewPanels;
+  console.debug("[layout:applyLayout]", "called", {
+    hasActiveSplitView: !!activeSplitView,
+    panelsCount: panels?.length ?? "no panels",
+  });
   if (!panels || panels.length < 2) {
     logger.debug(`[applyLayout] panels=${panels?.length ?? 0}, skipping`);
     return;
   }
 
   const layout = resolveLayoutForSplitTabs(activeSplitView.tabs);
+  const tabpanels = document?.getElementById("tabbrowser-tabpanels");
+  const currentAttr = tabpanels?.getAttribute("split-view-layout") ?? "(none)";
+  console.debug("[layout:applyLayout]", "resolved layout", {
+    resolvedLayout: layout,
+    panelCount: panels.length,
+    currentDomAttr: currentAttr,
+  });
   logger.debug(`[applyLayout] layout=${layout}, panels=${panels.length}`);
   applyLayoutAttribute(logger, layout, panels.length);
   updateHandles(panels, layout);
@@ -45,6 +56,12 @@ export function applyLayoutAttribute(
   if (!tabpanels) return;
 
   const effectiveLayout = getEffectiveSplitViewLayout(layout, paneCount);
+  console.debug("[layout:applyLayoutAttribute]", "applying", {
+    requestedLayout: layout,
+    effectiveLayout,
+    paneCount,
+    willSetAttribute: effectiveLayout !== "horizontal",
+  });
   if (effectiveLayout !== layout) {
     logger.debug(
       `[applyLayoutAttribute] layout=${layout} requires a different pane count, got ${paneCount}, falling back to horizontal`,
