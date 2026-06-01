@@ -40,32 +40,35 @@ export class NRMouseGestureScrollChild extends JSWindowActorChild {
   }
 
   private executeScroll(win: Window, direction: ScrollDirection): void {
+    const BEHAVIOR = "smooth"; // You can change this to "auto" if you want instant scrolling
+    const LINE_SCROLL_AMOUNT = 100; // Amount to scroll for line up/down
+
     switch (direction) {
       case "lineUp":
-        win.scrollBy({ top: -100, behavior: "auto" });
+        win.scrollBy({ top: -LINE_SCROLL_AMOUNT, behavior: BEHAVIOR });
         break;
       case "lineDown":
-        win.scrollBy({ top: 100, behavior: "auto" });
+        win.scrollBy({ top: LINE_SCROLL_AMOUNT, behavior: BEHAVIOR });
         break;
       case "pageUp":
-        win.scrollBy({ top: -win.innerHeight, behavior: "smooth" });
+        win.scrollBy({ top: -win.innerHeight, behavior: BEHAVIOR });
         break;
       case "pageDown":
-        win.scrollBy({ top: win.innerHeight, behavior: "smooth" });
+        win.scrollBy({ top: win.innerHeight, behavior: BEHAVIOR });
         break;
       case "lineRight":
-        win.scrollBy({ left: win.innerWidth * 0.8, behavior: "smooth" });
+        win.scrollBy({ left: LINE_SCROLL_AMOUNT, behavior: BEHAVIOR });
         break;
       case "lineLeft":
-        win.scrollBy({ left: -win.innerWidth * 0.8, behavior: "smooth" });
+        win.scrollBy({ left: -LINE_SCROLL_AMOUNT, behavior: BEHAVIOR });
         break;
       case "toTop":
-        win.scrollTo({ top: 0, behavior: "smooth" });
+        win.scrollTo({ top: 0, behavior: BEHAVIOR });
         break;
       case "toBottom":
         win.scrollTo({
           top: win.document.documentElement?.scrollHeight ?? 0,
-          behavior: "smooth",
+          behavior: BEHAVIOR,
         });
         break;
     }
