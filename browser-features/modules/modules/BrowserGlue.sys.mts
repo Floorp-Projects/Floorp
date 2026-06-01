@@ -378,6 +378,19 @@ const JS_WINDOW_ACTORS: {
       "*://127.0.0.1/*",
     ],
   },
+  NRMouseGestureScroll: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRMouseGestureScrollParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRMouseGestureScrollChild.sys.mts",
+      ),
+    },
+    matches: ["http://*/*", "https://*/*", "about:*"],
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);

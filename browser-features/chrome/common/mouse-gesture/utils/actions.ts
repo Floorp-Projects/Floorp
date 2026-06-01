@@ -28,6 +28,31 @@ const clickIfExists = (id: string, win?: Window) => {
   }
 };
 
+const sendScrollCommand = (
+  direction:
+    | "lineUp"
+    | "lineDown"
+    | "pageUp"
+    | "pageDown"
+    | "lineRight"
+    | "lineLeft"
+    | "toTop"
+    | "toBottom",
+  win: Window,
+) => {
+  try {
+    const browser = win.gBrowser?.selectedBrowser;
+    if (!browser) return;
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor(
+      "NRMouseGestureScroll",
+    );
+    if (!actor) return;
+    actor.sendAsyncMessage("MouseGestureScroll:Execute", { direction });
+  } catch (e) {
+    console.error("[mouse-gesture] Failed to send scroll command:", e);
+  }
+};
+
 export const actions: GestureActionRegistration[] = [
   {
     name: "gecko-back",
@@ -356,28 +381,36 @@ export const actions: GestureActionRegistration[] = [
     },
   },
   {
+    name: "gecko-scroll-line-up",
+    fn: (win) => sendScrollCommand("lineUp", win),
+  },
+  {
+    name: "gecko-scroll-line-down",
+    fn: (win) => sendScrollCommand("lineDown", win),
+  },
+  {
     name: "gecko-scroll-up",
-    fn: (win) => win.goDoCommand("cmd_scrollPageUp"),
+    fn: (win) => sendScrollCommand("pageUp", win),
   },
   {
     name: "gecko-scroll-down",
-    fn: (win) => win.goDoCommand("cmd_scrollPageDown"),
+    fn: (win) => sendScrollCommand("pageDown", win),
   },
   {
     name: "gecko-scroll-right",
-    fn: (win) => win.goDoCommand("cmd_scrollRight"),
+    fn: (win) => sendScrollCommand("lineRight", win),
   },
   {
     name: "gecko-scroll-left",
-    fn: (win) => win.goDoCommand("cmd_scrollLeft"),
+    fn: (win) => sendScrollCommand("lineLeft", win),
   },
   {
     name: "gecko-scroll-to-top",
-    fn: (win) => win.goDoCommand("cmd_scrollTop"),
+    fn: (win) => sendScrollCommand("toTop", win),
   },
   {
     name: "gecko-scroll-to-bottom",
-    fn: (win) => win.goDoCommand("cmd_scrollBottom"),
+    fn: (win) => sendScrollCommand("toBottom", win),
   },
   {
     name: "gecko-workspace-next",
