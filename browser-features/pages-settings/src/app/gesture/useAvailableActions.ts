@@ -70,7 +70,7 @@ export const GESTURE_ACTIONS = [
   "gecko-open-task-manager",
   "gecko-forget-history",
   "gecko-quick-forget-history",
-  "gecko-clear-recent-history",
+  // TODO: gecko-clear-recent-history — not registered in the gesture action registry (actions.ts), so assigning this gesture would silently fail
   "gecko-restore-last-session",
   "gecko-search-history",
   "gecko-manage-history",
