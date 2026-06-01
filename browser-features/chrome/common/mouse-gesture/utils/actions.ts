@@ -851,11 +851,11 @@ export const actions: GestureActionRegistration[] = [
         );
         return;
       }
-      const container = win.document.querySelector("[split-view-layout]");
+      const container = win.document.getElementById("tabbrowser-tabpanels");
       if (!container) {
         console.debug(
           "[mouse-gesture:split-view]",
-          "floorp-split-view-cycle-layout: no element with split-view-layout attribute found",
+          "floorp-split-view-cycle-layout: tabbrowser-tabpanels element not found",
         );
         return;
       }
@@ -863,7 +863,9 @@ export const actions: GestureActionRegistration[] = [
         (container.getAttribute("split-view-layout") as SplitViewLayout) ??
         "horizontal";
       const currentIdx = cycle.indexOf(currentLayout);
-      const nextIdx = (currentIdx + 1) % cycle.length;
+      const nextIdx = (currentIdx === -1
+        ? (currentLayout.startsWith("grid-3pane-") ? 2 : 0)
+        : (currentIdx + 1)) % cycle.length;
       const nextLayout = cycle[nextIdx]!;
 
       console.debug(
