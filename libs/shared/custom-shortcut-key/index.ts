@@ -62,6 +62,17 @@ export class CustomShortcutKey {
         Services.prefs.getStringPref("floorp.browser.nora.csk.data", "{}"),
       );
 
+      // Migrate legacy action IDs
+      const LEGACY_ID_MAP: Record<string, string> = {
+        "gecko-gecko-open-screen-capture": "gecko-open-screen-capture",
+      };
+      for (const [legacyId, currentId] of Object.entries(LEGACY_ID_MAP)) {
+        if (legacyId in prefData) {
+          prefData[currentId] = prefData[legacyId];
+          delete prefData[legacyId];
+        }
+      }
+
       this.cskData = pipe(
         CSKDataCodec.decode(prefData),
         getOrElseW(errors => {

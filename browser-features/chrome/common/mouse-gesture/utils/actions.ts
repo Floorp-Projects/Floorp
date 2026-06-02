@@ -569,6 +569,7 @@ export const actions: GestureActionRegistration[] = [
               addTabs: (tabs: unknown[]) => void;
             } | null;
             moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
+            removeTab: (tab: unknown) => void;
           };
         }
       ).gBrowser;
@@ -586,7 +587,13 @@ export const actions: GestureActionRegistration[] = [
         }
         const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
-        activeSplitView.addTabs([newTab]);
+        try {
+          activeSplitView.addTabs([newTab]);
+        } catch (e) {
+          console.error("[MouseGestures] Failed to add tab to split view:", e);
+          gBrowser.removeTab(newTab);
+          throw e;
+        }
         const firstTab = activeSplitView.tabs[0];
         if (firstTab && firstTab !== newTab) {
           gBrowser.moveTabBefore(newTab, firstTab);
@@ -602,7 +609,13 @@ export const actions: GestureActionRegistration[] = [
       }
       const selectedTab = gBrowser.selectedTab;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([newTab, selectedTab]);
+      try {
+        gBrowser.addTabSplitView([newTab, selectedTab]);
+      } catch (e) {
+        console.error("[MouseGestures] Failed to create split view:", e);
+        gBrowser.removeTab(newTab);
+        throw e;
+      }
     },
   },
   {
@@ -623,6 +636,7 @@ export const actions: GestureActionRegistration[] = [
               addTabs: (tabs: unknown[]) => void;
             } | null;
             moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
+            removeTab: (tab: unknown) => void;
           };
         }
       ).gBrowser;
@@ -640,7 +654,13 @@ export const actions: GestureActionRegistration[] = [
         }
         const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
-        activeSplitView.addTabs([newTab]);
+        try {
+          activeSplitView.addTabs([newTab]);
+        } catch (e) {
+          console.error("[MouseGestures] Failed to add tab to split view:", e);
+          gBrowser.removeTab(newTab);
+          throw e;
+        }
         if (existingCount === 2) {
           applyThreePaneLayout(win, "grid-3pane-right-main");
         }
@@ -652,7 +672,13 @@ export const actions: GestureActionRegistration[] = [
       }
       const selectedTab = gBrowser.selectedTab;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([selectedTab, newTab]);
+      try {
+        gBrowser.addTabSplitView([selectedTab, newTab]);
+      } catch (e) {
+        console.error("[MouseGestures] Failed to create split view:", e);
+        gBrowser.removeTab(newTab);
+        throw e;
+      }
     },
   },
   {
@@ -674,6 +700,7 @@ export const actions: GestureActionRegistration[] = [
             } | null;
             tabpanels: { splitViewPanels: unknown[] } | null;
             moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
+            removeTab: (tab: unknown) => void;
           };
         }
       ).gBrowser;
@@ -691,7 +718,13 @@ export const actions: GestureActionRegistration[] = [
         }
         const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
-        activeSplitView.addTabs([newTab]);
+        try {
+          activeSplitView.addTabs([newTab]);
+        } catch (e) {
+          console.error("[MouseGestures] Failed to add tab to split view:", e);
+          gBrowser.removeTab(newTab);
+          throw e;
+        }
         const firstTab = activeSplitView.tabs[0];
         if (firstTab && firstTab !== newTab) {
           gBrowser.moveTabBefore(newTab, firstTab);
@@ -714,7 +747,13 @@ export const actions: GestureActionRegistration[] = [
       }
       const selectedTab = gBrowser.selectedTab;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([newTab, selectedTab]);
+      try {
+        gBrowser.addTabSplitView([newTab, selectedTab]);
+      } catch (e) {
+        console.error("[MouseGestures] Failed to create split view:", e);
+        gBrowser.removeTab(newTab);
+        throw e;
+      }
       const newActiveSplitView = gBrowser.activeSplitView;
       if (newActiveSplitView?.tabs) {
         const groupId = getSplitViewGroupIdForTabs(
@@ -751,6 +790,7 @@ export const actions: GestureActionRegistration[] = [
             } | null;
             tabpanels: { splitViewPanels: unknown[] } | null;
             moveTabBefore: (tab: unknown, beforeTab: unknown) => void;
+            removeTab: (tab: unknown) => void;
           };
         }
       ).gBrowser;
@@ -768,7 +808,13 @@ export const actions: GestureActionRegistration[] = [
         }
         const existingCount = activeSplitView.tabs.length;
         const newTab = gBrowser.addTrustedTab("about:opentabs");
-        activeSplitView.addTabs([newTab]);
+        try {
+          activeSplitView.addTabs([newTab]);
+        } catch (e) {
+          console.error("[MouseGestures] Failed to add tab to split view:", e);
+          gBrowser.removeTab(newTab);
+          throw e;
+        }
         if (existingCount === 2) {
           applyThreePaneLayout(win, "grid-3pane-bottom-main");
         } else {
@@ -787,7 +833,13 @@ export const actions: GestureActionRegistration[] = [
       }
       const selectedTab = gBrowser.selectedTab;
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      gBrowser.addTabSplitView([selectedTab, newTab]);
+      try {
+        gBrowser.addTabSplitView([selectedTab, newTab]);
+      } catch (e) {
+        console.error("[MouseGestures] Failed to create split view:", e);
+        gBrowser.removeTab(newTab);
+        throw e;
+      }
       const newActiveSplitView = gBrowser.activeSplitView;
       if (newActiveSplitView?.tabs) {
         const groupId = getSplitViewGroupIdForTabs(
@@ -990,6 +1042,7 @@ export const actions: GestureActionRegistration[] = [
               addTabs: (tabs: unknown[]) => void;
             } | null;
             addTrustedTab: (url: string) => unknown;
+            removeTab: (tab: unknown) => void;
           };
         }
       ).gBrowser;
@@ -1023,7 +1076,13 @@ export const actions: GestureActionRegistration[] = [
         },
       );
       const newTab = gBrowser.addTrustedTab("about:opentabs");
-      activeSplitView.addTabs([newTab]);
+      try {
+        activeSplitView.addTabs([newTab]);
+      } catch (e) {
+        console.error("[MouseGestures] Failed to add tab to split view:", e);
+        gBrowser.removeTab(newTab);
+        throw e;
+      }
     },
   },
   {
