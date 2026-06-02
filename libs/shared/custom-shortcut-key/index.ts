@@ -68,7 +68,9 @@ export class CustomShortcutKey {
       };
       for (const [legacyId, currentId] of Object.entries(LEGACY_ID_MAP)) {
         if (legacyId in prefData) {
-          prefData[currentId] = prefData[legacyId];
+          if (!(currentId in prefData)) {
+            prefData[currentId] = prefData[legacyId];
+          }
           delete prefData[legacyId];
         }
       }
@@ -80,7 +82,7 @@ export class CustomShortcutKey {
         })
       );
     } catch (e) {
-      console.error("Could not initialize CSKData, falling back to empty config.", e);
+      console.error("[CustomShortcutKey]", "Could not initialize CSKData, falling back to empty config.", e);
       this.cskData = {};
     }
   }
