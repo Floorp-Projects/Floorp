@@ -26,7 +26,7 @@ function callNRFunction<T>(
             } else {
               resolve(parsed);
             }
-          } catch (e) {
+          } catch (_e) {
             reject(new Error(`${name}: invalid JSON response`));
           }
         });
@@ -37,16 +37,16 @@ function callNRFunction<T>(
   return Promise.reject(new Error(`${name} is not available`));
 }
 
-export async function getSearchEngines(): Promise<SearchEngine[]> {
+export function getSearchEngines(): Promise<SearchEngine[]> {
   // deno-lint-ignore no-window
   return callNRFunction<SearchEngine[]>(window.NRGetSearchEngines, "NRGetSearchEngines");
 }
 
-export async function getDefaultEngine(): Promise<SearchEngine> {
+export function getDefaultEngine(): Promise<SearchEngine> {
   // deno-lint-ignore no-window
   return callNRFunction<SearchEngine>(window.NRGetDefaultEngine, "NRGetDefaultEngine");
 }
-export async function setDefaultEngine(
+export function setDefaultEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
   console.log("setDefaultEngine", engineId);
@@ -54,12 +54,12 @@ export async function setDefaultEngine(
   return callNRFunction((cb) => window.NRSetDefaultEngine(engineId, cb), "NRSetDefaultEngine");
 }
 
-export async function getDefaultPrivateEngine(): Promise<SearchEngine> {
+export function getDefaultPrivateEngine(): Promise<SearchEngine> {
   // deno-lint-ignore no-window
   return callNRFunction<SearchEngine>(window.NRGetDefaultPrivateEngine, "NRGetDefaultPrivateEngine");
 }
 
-export async function setDefaultPrivateEngine(
+export function setDefaultPrivateEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
   // deno-lint-ignore no-window
