@@ -146,19 +146,24 @@ export default function CustomizePage() {
       e.identifier === selectedEngine
     );
 
+    const themeClass = selectedTheme === "dark"
+      ? "bg-neutral text-neutral-content"
+      : "bg-base-200";
+    const contentClass = selectedTheme === "dark"
+      ? "bg-neutral-focus"
+      : "bg-base-100";
+
     return (
       <div className="w-full h-full flex items-center justify-center">
         <div className="relative w-full max-w-md bg-base-300 rounded-lg p-4 shadow-lg">
-          <div
-            className={`mockup-browser border ${
-              selectedTheme === "dark"
-                ? "bg-neutral text-neutral-content"
-                : "bg-base-200"
-            }`}
-          >
+          <div className={`mockup-browser border ${themeClass}`}>
             <div className="mockup-browser-toolbar">
               <div className="input border border-base-content/20 flex items-center">
-                {currentEngine && getEngineIcon(currentEngine)}
+                {currentEngine ? getEngineIcon(currentEngine) : (
+                  <div className="w-5 h-5 mr-2 flex items-center justify-center rounded">
+                    <Search fill="none" size={16} />
+                  </div>
+                )}
                 <span className="truncate">
                   {currentEngine?.name || t("customize.searchEngine.default")}
                   {" "}
@@ -166,11 +171,7 @@ export default function CustomizePage() {
                 </span>
               </div>
             </div>
-            <div
-              className={`flex flex-col px-4 py-8 ${
-                selectedTheme === "dark" ? "bg-neutral-focus" : "bg-base-100"
-              }`}
-            >
+            <div className={`flex flex-col px-4 py-8 ${contentClass}`}>
               <div className="flex items-center mb-2">
                 <div className="w-4 h-4 rounded-full bg-primary mr-2"></div>
                 <div className="h-2 bg-base-content/20 rounded w-24"></div>

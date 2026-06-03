@@ -1,56 +1,69 @@
 import type { SearchEngine } from "./types.ts";
 import { rpc } from "../../lib/rpc/rpc";
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+function callNRFunction<T>(
+  fn: ((callback: (data: string) => void) => void) | undefined,
+  name: string,
+): Promise<T> {
+  if (typeof fn !== "undefined") {
+    return withTimeout(
+      new Promise<T>((resolve, reject) => {
+        fn((data: string) => {
+          try {
+            const parsed = JSON.parse(data);
+            // Check for error responses from the actor
+            if (parsed && typeof parsed === "object" && parsed.success === false) {
+              reject(new Error(parsed.error || `${name} returned an error`));
+            } else {
+              resolve(parsed);
+            }
+          } catch (e) {
+            reject(new Error(`${name}: invalid JSON response`));
+          }
+        });
+      }),
+      5000,
+    );
+  }
+  return Promise.reject(new Error(`${name} is not available`));
+}
+
 export async function getSearchEngines(): Promise<SearchEngine[]> {
-  return await new Promise((resolve) => {
-    // deno-lint-ignore no-window
-    window.NRGetSearchEngines((data: string) => {
-      const engines = JSON.parse(data);
-      resolve(engines);
-    });
-  });
+  // deno-lint-ignore no-window
+  return callNRFunction<SearchEngine[]>(window.NRGetSearchEngines, "NRGetSearchEngines");
 }
 
 export async function getDefaultEngine(): Promise<SearchEngine> {
-  return await new Promise((resolve) => {
-    // deno-lint-ignore no-window
-    window.NRGetDefaultEngine((data: string) => {
-      const engine = JSON.parse(data);
-      resolve(engine);
-    });
-  });
+  // deno-lint-ignore no-window
+  return callNRFunction<SearchEngine>(window.NRGetDefaultEngine, "NRGetDefaultEngine");
 }
 export async function setDefaultEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
   console.log("setDefaultEngine", engineId);
-  return await new Promise((resolve) => {
-    // deno-lint-ignore no-window
-    window.NRSetDefaultEngine(engineId, (data: string) => {
-      resolve(JSON.parse(data));
-    });
-  });
+  // deno-lint-ignore no-window
+  return callNRFunction((cb) => window.NRSetDefaultEngine(engineId, cb), "NRSetDefaultEngine");
 }
 
 export async function getDefaultPrivateEngine(): Promise<SearchEngine> {
-  return await new Promise((resolve) => {
-    // deno-lint-ignore no-window
-    window.NRGetDefaultPrivateEngine((data: string) => {
-      const engine = JSON.parse(data);
-      resolve(engine);
-    });
-  });
+  // deno-lint-ignore no-window
+  return callNRFunction<SearchEngine>(window.NRGetDefaultPrivateEngine, "NRGetDefaultPrivateEngine");
 }
 
 export async function setDefaultPrivateEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
-  return await new Promise((resolve) => {
-    // deno-lint-ignore no-window
-    window.NRSetDefaultPrivateEngine(engineId, (data: string) => {
-      resolve(JSON.parse(data));
-    });
-  });
+  // deno-lint-ignore no-window
+  return callNRFunction((cb) => window.NRSetDefaultPrivateEngine(engineId, cb), "NRSetDefaultPrivateEngine");
 }
 
 export async function getThemeSetting(): Promise<number | null> {
