@@ -92,6 +92,7 @@ class LocalHttpServer implements nsIServerSocketListener {
   private _token = "";
   private _router: _Router | null = null;
   private _activeConnections = 0;
+  private _updatingFromPrefs = false;
   private static readonly READ_HEAD_TIMEOUT_MS = 5000;
   private static readonly READ_BODY_TIMEOUT_MS = 8000;
   private static readonly MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB
@@ -267,12 +268,74 @@ class LocalHttpServer implements nsIServerSocketListener {
     }
   }
 
+  public ensureToken(): string {
+    const existing = Services.prefs.getStringPref(PREF_TOKEN, "");
+    if (existing) {
+      this.writeTokenFile(existing);
+      return existing;
+    }
+    const generated = Services.uuid.generateUUID().toString()
+      .replace(/[{}]/g, "");
+    try {
+      Services.prefs.setStringPref(PREF_TOKEN, generated);
+    } catch (e) {
+      err("Failed to persist server token to preferences:", e);
+    }
+    this.writeTokenFile(generated);
+    return generated;
+  }
+
+  private writeTokenFile(token: string): void {
+    try {
+      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
+      const floorpDir = PathUtils.join(homeDir, ".floorp");
+      const tokenFile = PathUtils.join(floorpDir, "os-server-token");
+      const encoder = new TextEncoder();
+      const content = encoder.encode(token);
+      void IOUtils.makeDirectory(floorpDir, { ignoreExisting: true }).then(
+        () => IOUtils.write(tokenFile, content, { mode: "overwrite" }),
+      ).then(
+        () => IOUtils.setPermissions(tokenFile, 0o600),
+      ).catch(
+        (e: unknown) => {
+          err("Failed to write token file:", e);
+        },
+      );
+    } catch (e) {
+      err("Failed to write token file:", e);
+    }
+  }
+
+  public deleteTokenFile(): void {
+    try {
+      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
+      const tokenFile = PathUtils.join(homeDir, ".floorp", "os-server-token");
+      void IOUtils.remove(tokenFile, { ignoreAbsent: true }).catch(
+        (e: unknown) => {
+          err("Failed to delete token file:", e);
+        },
+      );
+    } catch (e) {
+      err("Failed to delete token file:", e);
+    }
+  }
+
   private _updateFromPrefs() {
+    if (this._updatingFromPrefs) return;
+    this._updatingFromPrefs = true;
+    try {
+      this._updateFromPrefsInner();
+    } finally {
+      this._updatingFromPrefs = false;
+    }
+  }
+
+  private _updateFromPrefsInner() {
     const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
     const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
     if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
-      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      const token = this.ensureToken();
       if (!this._server) {
         this.start(port, token);
       } else {
@@ -592,7 +655,7 @@ function initializeServer() {
     const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
     if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
-      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      const token = osLocalServer.ensureToken();
       osLocalServer.start(port, token);
     }
   } catch (e) {
@@ -605,5 +668,5 @@ initializeServer();
 
 // Also export explicit control API
 export const startServer = (port = DEFAULT_PORT, token = "") =>
-  osLocalServer.start(port, token);
+  osLocalServer.start(port, token || osLocalServer.ensureToken());
 export const stopServer = () => osLocalServer.stop();

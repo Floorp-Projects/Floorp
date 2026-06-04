@@ -31,6 +31,7 @@ declare global {
       enabled: boolean;
       platformSupported: boolean;
       installedVersion: string;
+      serverToken: string;
     }>;
     getPlatformDebugInfo(): Promise<{
       os: string;
@@ -44,6 +45,7 @@ interface FloorpOSStatus {
   enabled: boolean;
   platformSupported: boolean;
   installedVersion: string;
+  serverToken: string;
 }
 
 export default function FloorpOS() {
@@ -216,6 +218,35 @@ export default function FloorpOS() {
                   }`}
                 />
               </div>
+
+              {status.enabled && status.serverToken && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                      {t("floorpOS.statusCard.serverToken")}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-mono break-all">
+                      {status.serverToken}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={async () => {
+                      try {
+                        if (!navigator.clipboard?.writeText) {
+                          throw new Error("Clipboard API unavailable");
+                        }
+                        await navigator.clipboard.writeText(status.serverToken);
+                      } catch (e) {
+                        console.error("[Floorp OS]", "Failed to copy token:", e);
+                      }
+                    }}
+                  >
+                    {t("floorpOS.statusCard.copyToken")}
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

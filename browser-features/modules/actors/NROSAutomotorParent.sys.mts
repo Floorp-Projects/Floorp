@@ -56,6 +56,10 @@ export class NROSAutomotorParent extends JSWindowActorParent {
             enabled: osAutomotorManager.isEnabled(),
             platformSupported: osAutomotorManager.isPlatformSupported(),
             installedVersion: osAutomotorManager.getInstalledVersion(),
+            serverToken: Services.prefs.getStringPref(
+              "floorp.os.server.token",
+              "",
+            ),
           });
 
         case "OSAutomotor:GetPlatformDebugInfo":
