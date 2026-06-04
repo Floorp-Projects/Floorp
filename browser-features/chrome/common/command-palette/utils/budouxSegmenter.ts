@@ -81,7 +81,8 @@ export function segmentJapaneseText(text: string): string[] {
 
 /**
  * Segments text and returns all segments plus the full original text (lowercased).
- * Useful for keyword generation where both whole and parts are valuable.
+ * Also generates hiragana-converted keywords from katakana portions using Budoux
+ * segmentation for fine-grained matching.
  */
 export function segmentTextForKeywords(text: string): string[] {
   if (!text.trim()) return [];
@@ -89,7 +90,7 @@ export function segmentTextForKeywords(text: string): string[] {
   const segments = segmentJapaneseText(text);
   const result = new Set<string>();
 
-  // Add the full original text
+  // Add the full original text (lowercased)
   const full = text.toLowerCase().trim();
   if (full) result.add(full);
 
@@ -97,6 +98,17 @@ export function segmentTextForKeywords(text: string): string[] {
   for (const seg of segments) {
     const s = seg.toLowerCase().trim();
     if (s) result.add(s);
+  }
+
+  // Generate hiragana-converted keywords from katakana portions
+  const hiraganaFull = toHiragana(full);
+  if (hiraganaFull !== full) {
+    const hiraganaSegments = segmentJapaneseText(hiraganaFull);
+    if (hiraganaFull.trim()) result.add(hiraganaFull.trim());
+    for (const seg of hiraganaSegments) {
+      const s = seg.toLowerCase().trim();
+      if (s) result.add(s);
+    }
   }
 
   return [...result];
@@ -125,4 +137,23 @@ export function isCJKLocale(): boolean {
   const locale = i18next.language ?? "";
   const prefix = locale.split("-")[0].toLowerCase();
   return CJK_LOCALE_PREFIXES.has(prefix);
+}
+
+/**
+ * Converts full-width katakana (U+30A1..U+30F6) to hiragana (U+3041..U+3096)
+ * using a fixed Unicode codepoint offset of 0x60.
+ * Non-katakana characters pass through unchanged.
+ * Prolonged sound mark (ー, U+30FC) is NOT converted (used identically in hiragana).
+ */
+export function toHiragana(text: string): string {
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code >= 0x30A1 && code <= 0x30F6) {
+      result += String.fromCharCode(code - 0x60);
+    } else {
+      result += text[i];
+    }
+  }
+  return result;
 }
