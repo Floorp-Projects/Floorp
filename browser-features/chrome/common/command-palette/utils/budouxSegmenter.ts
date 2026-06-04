@@ -22,7 +22,22 @@ const LOCALE_TO_CATEGORY: ReadonlyMap<string, LocaleCategory> = new Map([
  * Returns "other" for non-CJK/Thai locales.
  */
 function getLocaleCategory(locale: string): LocaleCategory {
-  const prefix = locale.split("-")[0].toLowerCase();
+  const lower = locale.toLowerCase();
+  const prefix = lower.split("-")[0];
+
+  // Differentiate simplified vs traditional Chinese
+  if (prefix === "zh") {
+    if (
+      lower.includes("-hant") ||
+      lower.includes("-tw") ||
+      lower.includes("-hk") ||
+      lower.includes("-mo")
+    ) {
+      return "zh-hant";
+    }
+    return "zh-hans";
+  }
+
   return LOCALE_TO_CATEGORY.get(prefix) ?? "other";
 }
 
