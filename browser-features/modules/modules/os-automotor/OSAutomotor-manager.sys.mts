@@ -651,6 +651,15 @@ class OSAutomotorManager {
       console.error("[Floorp OS] Error during filesystem cleanup:", e);
     }
 
+    // Remove token file
+    try {
+      const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
+      const tokenFile = PathUtils.join(homeDir, ".floorp", "os-server-token");
+      await IOUtils.remove(tokenFile, { ignoreAbsent: true });
+    } catch (e) {
+      console.error("[Floorp OS] Failed to remove token file:", e);
+    }
+
     // Clear preferences
     try {
       try {
@@ -689,6 +698,14 @@ class OSAutomotorManager {
         }
       } catch (e) {
         console.error("[Floorp OS] Failed to clear frontend version pref:", e);
+      }
+
+      try {
+        if (Services.prefs.prefHasUserValue("floorp.os.server.token")) {
+          Services.prefs.clearUserPref("floorp.os.server.token");
+        }
+      } catch (e) {
+        console.error("[Floorp OS] Failed to clear server token pref:", e);
       }
     } catch (e) {
       console.error("[Floorp OS] Error clearing prefs during reset:", e);
