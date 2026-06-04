@@ -38,6 +38,11 @@ export class WorkspacesTabManager {
   // "auto-created replacement tab" right after last-tab close.
   private recentOpenedAtByTab = new WeakMap<XULElement, number>();
   private recentOpenedAtPerWorkspace = new Map<TWorkspaceID, number>();
+  // Timestamp (Date.now()) of when the current handleTabClose invocation
+  // started. Used to distinguish tabs created by reopen/container-switch
+  // operations (created BEFORE the close) from Firefox auto-replacement tabs
+  // (created DURING the close). Fixes #2193.
+  private tabCloseStartTime = 0;
   // When true, handleTabClose skips its workspace-empty logic. Used during
   // bulk tab removal (workspace deletion) so that closing tabs one-by-one
   // does not interfere with the deletion flow (fixes #2247).
@@ -208,6 +213,8 @@ export class WorkspacesTabManager {
     // Skip workspace-empty logic when bulk-removing tabs (e.g. workspace deletion)
     if (this.suppressTabCloseHandling) return;
 
+    this.tabCloseStartTime = Date.now();
+
     const tab = event.target as XULElement;
     let workspaceId = this.getWorkspaceIdFromAttribute(tab);
 
@@ -243,6 +250,12 @@ export class WorkspacesTabManager {
       // auto-generated replacement tab from Firefox's closeWindowWithLastTab=false behavior.
       // We should ignore it when checking if the workspace is empty.
       if (createdAt && now - createdAt < 500) {
+        // If the tab was created BEFORE this handleTabClose started, it's from a
+        // reopen/container-switch operation (Floorp code or extension), not a
+        // Firefox auto-replacement tab. Always keep it. Fixes #2193.
+        if (createdAt <= this.tabCloseStartTime) {
+          return true;
+        }
         try {
           const browser = globalThis.gBrowser.getBrowserForTab(
             t as unknown as XULElement,
