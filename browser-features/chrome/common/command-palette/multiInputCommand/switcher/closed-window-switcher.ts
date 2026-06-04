@@ -6,6 +6,7 @@ import type {
   CommandStepChoice,
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
 
 export function loadClosedWindows(): Promise<CommandStepChoice[]> {
   try {
@@ -50,6 +51,7 @@ export const closedWindowSwitcherCommand: PaletteCommand = {
     "undo close window",
     "restore window",
     "recently closed",
+    ...getEnglishStepCommandKeywords("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
     ...getJapaneseReadings("floorp-closed-window-switcher"),
   ],
   steps: [

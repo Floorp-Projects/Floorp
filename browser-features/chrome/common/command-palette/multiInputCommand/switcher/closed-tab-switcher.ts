@@ -6,6 +6,7 @@ import type {
   CommandStepChoice,
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
 
 export function loadClosedTabs(): Promise<CommandStepChoice[]> {
   try {
@@ -45,6 +46,7 @@ export const closedTabSwitcherCommand: PaletteCommand = {
     "undo close tab",
     "restore tab",
     "recently closed",
+    ...getEnglishStepCommandKeywords("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
     ...getJapaneseReadings("floorp-closed-tab-switcher"),
   ],
   steps: [

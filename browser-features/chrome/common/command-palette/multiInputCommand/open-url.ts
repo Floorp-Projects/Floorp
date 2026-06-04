@@ -3,6 +3,7 @@
 import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../utils/getEnglishKeywords.ts";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -18,6 +19,7 @@ export const openUrlCommand: PaletteCommand = {
     "open page",
     "url",
     ...getJapaneseReadings("floorp-open-url"),
+    ...getEnglishStepCommandKeywords("commandPalette.openUrl", "commandPalette.openUrlDescription"),
   ],
   steps: [
     {

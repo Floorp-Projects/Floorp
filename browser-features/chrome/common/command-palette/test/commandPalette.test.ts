@@ -24,6 +24,10 @@ import {
   reopenInContainerCommand,
   loadContainers,
 } from "../multiInputCommand/reopen-in-container.ts";
+import {
+  getEnglishGestureKeywords,
+  getEnglishStepCommandKeywords,
+} from "../utils/getEnglishKeywords.ts";
 
 const makeTarget = (
   label: string,
@@ -37,6 +41,80 @@ const makeTarget = (
   category,
   keywords,
 });
+
+function testGetEnglishGestureKeywordsReturnsStrings(): void {
+  const keywords = getEnglishGestureKeywords("gecko-back");
+  assert(keywords.length > 0, "English keywords should return at least one item for gecko-back");
+  for (const kw of keywords) {
+    assert(typeof kw === "string", "All keywords should be strings");
+    assert(kw.length > 0, "Empty strings should not be included");
+  }
+}
+
+function testGetEnglishStepCommandKeywordsReturnsStrings(): void {
+  const keywords = getEnglishStepCommandKeywords(
+    "commandPalette.openUrl",
+    "commandPalette.openUrlDescription",
+  );
+  assert(keywords.length > 0, "English keywords should return at least one item for openUrl");
+  for (const kw of keywords) {
+    assert(typeof kw === "string", "All keywords should be strings");
+  }
+}
+
+function testGetEnglishKeywordsGracefulFailure(): void {
+  const gestureKw = getEnglishGestureKeywords("nonexistent-action-id");
+  assert(Array.isArray(gestureKw), "Should return an array for nonexistent gesture action");
+
+  const stepKw = getEnglishStepCommandKeywords(
+    "nonexistent.key",
+    "nonexistent.desc",
+  );
+  assert(Array.isArray(stepKw), "Should return an array for nonexistent step command key");
+}
+
+function testGestureCommandsHaveEnglishKeywords(): void {
+  const commands = getPaletteCommands();
+  const bookmarkCmd = commands.find((c) => c.id === "gecko-bookmark-this-page");
+  assert(!!bookmarkCmd, "Bookmark command should exist");
+  const hasBookmarkKeyword = bookmarkCmd!.keywords.some((kw) =>
+    kw.toLowerCase().includes("bookmark")
+  );
+  assert(hasBookmarkKeyword, "Bookmark command should contain 'bookmark' keyword");
+}
+
+function testSearchByEnglishKeywordBookmark(): void {
+  const results = searchCommands("bookmark");
+  const hasBookmark = results.some((c) => c.id === "gecko-bookmark-this-page");
+  assert(hasBookmark, "Searching 'bookmark' should find the bookmark command");
+}
+
+function testSearchByEnglishKeywordReload(): void {
+  const results = searchCommands("reload");
+  const hasReload = results.some((c) => c.id === "gecko-reload");
+  assert(hasReload, "Searching 'reload' should find the reload command");
+}
+
+function testSearchStepCommandByEnglish(): void {
+  const results = searchCommands("switch tab");
+  const hasTabSwitcher = results.some((c) => c.id === "floorp-tab-switcher");
+  assert(hasTabSwitcher, "Searching 'switch tab' should find the tab switcher");
+}
+
+function testEnglishKeywordScoreLowerThanLabel(): void {
+  const target = makeTarget(
+    "ブックマークを登録",
+    "ブックマークの説明",
+    "test",
+    ["bookmark", "star"],
+  );
+  const labelScore = fuzzyScore("ブックマーク", target);
+  const keywordScore = fuzzyScore("bookmark", target);
+  assert(
+    labelScore > keywordScore,
+    "Localized label score should be higher than English keyword score",
+  );
+}
 
 const rawTests: TestCase[] = [
   // --- Fuzzy Search ---
@@ -689,6 +767,15 @@ const rawTests: TestCase[] = [
       );
     },
   },
+
+  { name: "getEnglishGestureKeywords returns strings", fn: testGetEnglishGestureKeywordsReturnsStrings },
+  { name: "getEnglishStepCommandKeywords returns strings", fn: testGetEnglishStepCommandKeywordsReturnsStrings },
+  { name: "getEnglishKeywords graceful failure for missing keys", fn: testGetEnglishKeywordsGracefulFailure },
+  { name: "gesture commands have English keywords", fn: testGestureCommandsHaveEnglishKeywords },
+  { name: "search by English keyword: bookmark finds bookmark command", fn: testSearchByEnglishKeywordBookmark },
+  { name: "search by English keyword: reload finds reload command", fn: testSearchByEnglishKeywordReload },
+  { name: "search step command by English keyword", fn: testSearchStepCommandByEnglish },
+  { name: "English keyword score is lower than localized label score", fn: testEnglishKeywordScoreLowerThanLabel },
 ];
 
 export function runAllTests() {

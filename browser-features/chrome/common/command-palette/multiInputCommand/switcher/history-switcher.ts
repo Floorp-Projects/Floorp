@@ -13,6 +13,7 @@ import type {
   HistoryPlacesUtilsModule,
 } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
 
 const PAGE_SIZE = 20;
 
@@ -137,6 +138,7 @@ export const historySwitcherCommand: PaletteCommand = {
     "recent pages",
     "visited",
     "open history",
+    ...getEnglishStepCommandKeywords("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
     ...getJapaneseReadings("floorp-history-switcher"),
   ],
   steps: [

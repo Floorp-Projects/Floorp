@@ -7,6 +7,7 @@ import {
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
 import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
+import { getEnglishGestureKeywords } from "./utils/getEnglishKeywords.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
@@ -267,6 +268,7 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
       keywords: [
         ...(ACTION_KEYWORDS[action.name] ?? []),
         ...getJapaneseReadings(action.name),
+        ...getEnglishGestureKeywords(action.name),
       ],
       fn: action.fn,
     }));

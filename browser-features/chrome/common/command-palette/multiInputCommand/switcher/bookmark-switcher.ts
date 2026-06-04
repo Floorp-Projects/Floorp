@@ -8,6 +8,7 @@ import type {
 } from "../../types.ts";
 import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
@@ -139,6 +140,7 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     "favorite",
     "favourite",
     ...getJapaneseReadings("floorp-bookmark-switcher"),
+    ...getEnglishStepCommandKeywords("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
   ],
   steps: [
     {
