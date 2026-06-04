@@ -269,11 +269,31 @@ class LocalHttpServer implements nsIServerSocketListener {
 
   private ensureToken(): string {
     const existing = Services.prefs.getStringPref(PREF_TOKEN, "");
-    if (existing) return existing;
+    if (existing) {
+      this.writeTokenFile(existing);
+      return existing;
+    }
     const generated = Services.uuid.generateUUID().toString()
       .replace(/[{}]/g, "");
     Services.prefs.setStringPref(PREF_TOKEN, generated);
+    this.writeTokenFile(generated);
     return generated;
+  }
+
+  private writeTokenFile(token: string): void {
+    try {
+      const profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+      const tokenFile = PathUtils.join(profileDir, "floorp-os-server-token");
+      const encoder = new TextEncoder();
+      const content = encoder.encode(token);
+      void IOUtils.write(tokenFile, content, { mode: "overwrite" }).catch(
+        (e: unknown) => {
+          err("Failed to write token file:", e);
+        },
+      );
+    } catch (e) {
+      err("Failed to write token file:", e);
+    }
   }
 
   private _updateFromPrefs() {
