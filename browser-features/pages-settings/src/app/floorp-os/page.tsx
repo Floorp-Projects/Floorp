@@ -232,12 +232,15 @@ export default function FloorpOS() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => {
-                      navigator.clipboard.writeText(status.serverToken).catch(
-                        (e) => {
-                          console.error("[Floorp OS]", "Failed to copy token:", e);
-                        },
-                      );
+                    onClick={async () => {
+                      try {
+                        if (!navigator.clipboard?.writeText) {
+                          throw new Error("Clipboard API unavailable");
+                        }
+                        await navigator.clipboard.writeText(status.serverToken);
+                      } catch (e) {
+                        console.error("[Floorp OS]", "Failed to copy token:", e);
+                      }
                     }}
                   >
                     {t("floorpOS.statusCard.copyToken")}
