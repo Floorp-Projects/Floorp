@@ -7,6 +7,11 @@ import {
 import { applyLayoutAttribute } from "#features-chrome/common/split-view/layout.js";
 import { updateHandles } from "#features-chrome/common/split-view/components/split-view-splitters.js";
 import type { SplitViewLayout } from "#features-chrome/common/split-view/data/types.js";
+import {
+  toggleUserInterface,
+  toggleNavigationPanel,
+  enableRestMode,
+} from "./ui-toggle.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -316,15 +321,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-rest-mode",
-    fn: (win) => win.gFloorpCommands.enableRestMode(),
+    fn: (win) => enableRestMode(win),
   },
   {
     name: "floorp-hide-user-interface",
-    fn: (win) => win.gFloorpDesign.hideUserInterface(),
+    fn: (win) => toggleUserInterface(win.document!),
   },
   {
     name: "floorp-toggle-navigation-panel",
-    fn: (win) => win.gFloorpDesign.toggleNavigationPanel(),
+    fn: (win) => toggleNavigationPanel(win.document!),
   },
   {
     name: "gecko-stop",
