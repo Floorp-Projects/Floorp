@@ -509,6 +509,17 @@ class OSAutomotorManager {
     }
 
     try {
+      // Ensure auth token exists before enabling
+      const existingToken = Services.prefs.getStringPref(
+        "floorp.os.server.token",
+        "",
+      );
+      if (!existingToken) {
+        const generated = Services.uuid.generateUUID().toString()
+          .replace(/[{}]/g, "");
+        Services.prefs.setStringPref("floorp.os.server.token", generated);
+      }
+
       // Download and verify binary first
       await this.ensureBinaryInstalled();
 

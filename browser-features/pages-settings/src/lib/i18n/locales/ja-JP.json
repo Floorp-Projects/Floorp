@@ -467,7 +467,9 @@
             "running": "実行中",
             "stopped": "停止中",
             "enabledBadge": "有効",
-            "disabledBadge": "無効"
+            "disabledBadge": "無効",
+            "serverToken": "サーバートークン",
+            "copyToken": "コピー"
         },
         "controlsCard": {
             "title": "制御",

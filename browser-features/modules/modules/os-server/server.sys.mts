@@ -267,12 +267,21 @@ class LocalHttpServer implements nsIServerSocketListener {
     }
   }
 
+  private ensureToken(): string {
+    const existing = Services.prefs.getStringPref(PREF_TOKEN, "");
+    if (existing) return existing;
+    const generated = Services.uuid.generateUUID().toString()
+      .replace(/[{}]/g, "");
+    Services.prefs.setStringPref(PREF_TOKEN, generated);
+    return generated;
+  }
+
   private _updateFromPrefs() {
     const enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
     const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
     if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
-      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      const token = this.ensureToken();
       if (!this._server) {
         this.start(port, token);
       } else {
@@ -592,7 +601,7 @@ function initializeServer() {
     const mcpEnabled = Services.prefs.getBoolPref(PREF_MCP_ENABLED, false);
     if (enabled || mcpEnabled) {
       const port = Services.prefs.getIntPref(PREF_PORT, DEFAULT_PORT);
-      const token = Services.prefs.getStringPref(PREF_TOKEN, "");
+      const token = osLocalServer.ensureToken();
       osLocalServer.start(port, token);
     }
   } catch (e) {
