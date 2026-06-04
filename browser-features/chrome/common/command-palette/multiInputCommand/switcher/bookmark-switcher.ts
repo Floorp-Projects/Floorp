@@ -9,6 +9,7 @@ import type {
 import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "../../utils/budouxSegmenter.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
@@ -141,6 +142,7 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     "favourite",
     ...getJapaneseReadings("floorp-bookmark-switcher"),
     ...getEnglishStepCommandKeywords("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
   ],
   steps: [
     {

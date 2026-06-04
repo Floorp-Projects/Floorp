@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { segmentJapaneseText, isCJKLocale } from "./utils/budouxSegmenter.ts";
+
 export interface FuzzyTarget {
   id: string;
   label: string;
@@ -42,8 +44,25 @@ function singleWordScore(query: string, target: FuzzyTarget): number {
   return 0;
 }
 
+/**
+ * Splits a query into search terms. For CJK/Thai locales,
+ * uses Budoux segmentation to handle text without spaces.
+ * Falls back to whitespace splitting for other locales.
+ */
+function segmentQuery(query: string): string[] {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) return [];
+
+  if (isCJKLocale()) {
+    const segments = segmentJapaneseText(trimmed);
+    if (segments.length > 1) return segments;
+  }
+
+  return trimmed.split(/\s+/).filter(Boolean);
+}
+
 export function fuzzyScore(query: string, target: FuzzyTarget): number {
-  const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const words = segmentQuery(query);
 
   if (words.length <= 1) {
     return singleWordScore(query.trim(), target);

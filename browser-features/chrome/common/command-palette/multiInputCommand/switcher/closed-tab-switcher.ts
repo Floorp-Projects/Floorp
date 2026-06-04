@@ -7,6 +7,7 @@ import type {
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "../../utils/budouxSegmenter.ts";
 
 export function loadClosedTabs(): Promise<CommandStepChoice[]> {
   try {
@@ -47,6 +48,7 @@ export const closedTabSwitcherCommand: PaletteCommand = {
     "restore tab",
     "recently closed",
     ...getEnglishStepCommandKeywords("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
     ...getJapaneseReadings("floorp-closed-tab-switcher"),
   ],
   steps: [

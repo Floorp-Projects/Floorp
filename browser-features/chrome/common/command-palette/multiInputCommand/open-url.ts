@@ -4,6 +4,7 @@ import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "../utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "../utils/budouxSegmenter.ts";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -20,6 +21,7 @@ export const openUrlCommand: PaletteCommand = {
     "url",
     ...getJapaneseReadings("floorp-open-url"),
     ...getEnglishStepCommandKeywords("commandPalette.openUrl", "commandPalette.openUrlDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.openUrl", "commandPalette.openUrlDescription"),
   ],
   steps: [
     {

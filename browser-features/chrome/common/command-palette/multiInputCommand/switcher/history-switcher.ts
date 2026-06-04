@@ -14,6 +14,7 @@ import type {
 } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "../../utils/budouxSegmenter.ts";
 
 const PAGE_SIZE = 20;
 
@@ -139,6 +140,7 @@ export const historySwitcherCommand: PaletteCommand = {
     "visited",
     "open history",
     ...getEnglishStepCommandKeywords("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
     ...getJapaneseReadings("floorp-history-switcher"),
   ],
   steps: [

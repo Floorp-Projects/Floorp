@@ -8,6 +8,7 @@ import type {
 } from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 interface ChromeWindow extends Window {
   gBrowser?: GBrowser;
@@ -93,6 +94,7 @@ export const tabSwitcherCommand: PaletteCommand = {
     "change tab",
     "go to tab",
     ...getEnglishStepCommandKeywords("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
     ...getJapaneseReadings("floorp-tab-switcher"),
   ],
   steps: [
