@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { Parser } from "budoux";
+import {
+  loadDefaultJapaneseParser,
+  loadDefaultSimplifiedChineseParser,
+  loadDefaultTraditionalChineseParser,
+  loadDefaultThaiParser,
+  type Parser,
+} from "budoux";
 import i18next from "i18next";
 
 type LocaleCategory = "ja" | "zh-hans" | "zh-hant" | "th" | "other";
@@ -53,16 +59,16 @@ function getParser(category: LocaleCategory): Parser | null {
   try {
     switch (category) {
       case "ja":
-        parser = Parser.loadDefaultJapaneseParser();
+        parser = loadDefaultJapaneseParser();
         break;
       case "zh-hans":
-        parser = Parser.loadDefaultSimplifiedChineseParser();
+        parser = loadDefaultSimplifiedChineseParser();
         break;
       case "zh-hant":
-        parser = Parser.loadDefaultTraditionalChineseParser();
+        parser = loadDefaultTraditionalChineseParser();
         break;
       case "th":
-        parser = Parser.loadDefaultThaiParser();
+        parser = loadDefaultThaiParser();
         break;
     }
   } catch (err) {
