@@ -268,7 +268,7 @@ class LocalHttpServer implements nsIServerSocketListener {
     }
   }
 
-  private ensureToken(): string {
+  public ensureToken(): string {
     const existing = Services.prefs.getStringPref(PREF_TOKEN, "");
     if (existing) {
       this.writeTokenFile(existing);
@@ -276,7 +276,11 @@ class LocalHttpServer implements nsIServerSocketListener {
     }
     const generated = Services.uuid.generateUUID().toString()
       .replace(/[{}]/g, "");
-    Services.prefs.setStringPref(PREF_TOKEN, generated);
+    try {
+      Services.prefs.setStringPref(PREF_TOKEN, generated);
+    } catch (e) {
+      err("Failed to persist server token to preferences:", e);
+    }
     this.writeTokenFile(generated);
     return generated;
   }
@@ -664,5 +668,5 @@ initializeServer();
 
 // Also export explicit control API
 export const startServer = (port = DEFAULT_PORT, token = "") =>
-  osLocalServer.start(port, token);
+  osLocalServer.start(port, token || osLocalServer.ensureToken());
 export const stopServer = () => osLocalServer.stop();
