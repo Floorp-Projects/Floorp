@@ -2,6 +2,7 @@
 // @ts-nocheck Firefox chrome globals (BrowserCommands, gBrowser, etc.) are untyped
 
 import * as t from 'io-ts';
+import { toggleUserInterface, enableRestMode } from '../../../browser-features/chrome/common/mouse-gesture/utils/ui-toggle.ts';
 
 export const csk_category = [
   "tab-action",
@@ -130,7 +131,7 @@ export const commands: Commands = {
     type: "page-action",
   },
   "floorp-rest-mode": {
-    command: () => globalThis.gFloorpCommands.enableRestMode(),
+    command: () => enableRestMode(globalThis as unknown as Window),
     type: "page-action",
   },
   "gecko-zoom-in": {
@@ -146,7 +147,7 @@ export const commands: Commands = {
     type: "visible-action",
   },
   "floorp-hide-user-interface": {
-    command: () => globalThis.gFloorpDesign.hideUserInterface(),
+    command: () => toggleUserInterface(globalThis.document),
     type: "visible-action",
   },
   "gecko-back": { command: () => globalThis.BrowserBack(), type: "history-action" },

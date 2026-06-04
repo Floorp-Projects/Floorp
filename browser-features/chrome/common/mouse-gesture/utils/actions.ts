@@ -1,5 +1,10 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import {
+  toggleUserInterface,
+  toggleNavigationPanel,
+  enableRestMode,
+} from "./ui-toggle.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -231,15 +236,15 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-rest-mode",
-    fn: (win) => win.gFloorpCommands.enableRestMode(),
+    fn: (win) => enableRestMode(win),
   },
   {
     name: "floorp-hide-user-interface",
-    fn: (win) => win.gFloorpDesign.hideUserInterface(),
+    fn: (win) => toggleUserInterface(win.document!),
   },
   {
     name: "floorp-toggle-navigation-panel",
-    fn: (win) => win.gFloorpDesign.toggleNavigationPanel(),
+    fn: (win) => toggleNavigationPanel(win.document!),
   },
   {
     name: "gecko-stop",
