@@ -774,6 +774,106 @@ const rawTests: TestCase[] = [
       }
     },
   },
+  // --- split-view actions ---
+  {
+    name: "floorp-split-view-open-left action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-left"),
+        "should include floorp-split-view-open-left action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-open-right action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-right"),
+        "should include floorp-split-view-open-right action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-close action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-close"),
+        "should include floorp-split-view-close action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-swap-panes action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-swap-panes"),
+        "should include floorp-split-view-swap-panes action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-cycle-layout action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-cycle-layout"),
+        "should include floorp-split-view-cycle-layout action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-add-pane action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-add-pane"),
+        "should include floorp-split-view-add-pane action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-remove-pane action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-remove-pane"),
+        "should include floorp-split-view-remove-pane action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-open-top action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-top"),
+        "should include floorp-split-view-open-top action",
+      );
+    },
+  },
+  {
+    name: "floorp-split-view-open-bottom action is registered",
+    fn() {
+      const actions = getAllGestureActions();
+      const names = actions.map((a) => a.name);
+      assert(
+        names.includes("floorp-split-view-open-bottom"),
+        "should include floorp-split-view-open-bottom action",
+      );
+    },
+  },
 ];
 
 const tests: TestCase[] = rawTests.map((testCase) => ({
