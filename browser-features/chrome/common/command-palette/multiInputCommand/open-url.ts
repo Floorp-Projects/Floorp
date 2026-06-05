@@ -3,8 +3,8 @@
 import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
-import { getEnglishStepCommandKeywords } from "../utils/getEnglishKeywords.ts";
-import { getSegmentedKeywordsFromI18nKeys } from "../utils/budouxSegmenter.ts";
+import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",

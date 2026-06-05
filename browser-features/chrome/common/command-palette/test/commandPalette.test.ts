@@ -42,6 +42,7 @@ const makeTarget = (
   keywords,
 });
 
+/** Verifies that getEnglishGestureKeywords returns an array of strings for all gesture command keys. */
 function testGetEnglishGestureKeywordsReturnsStrings(): void {
   const keywords = getEnglishGestureKeywords("gecko-back");
   assert(keywords.length > 0, "English keywords should return at least one item for gecko-back");
@@ -51,6 +52,7 @@ function testGetEnglishGestureKeywordsReturnsStrings(): void {
   }
 }
 
+/** Verifies that getEnglishStepCommandKeywords returns an array of strings for all step command keys. */
 function testGetEnglishStepCommandKeywordsReturnsStrings(): void {
   const keywords = getEnglishStepCommandKeywords(
     "commandPalette.openUrl",
@@ -62,6 +64,7 @@ function testGetEnglishStepCommandKeywordsReturnsStrings(): void {
   }
 }
 
+/** Verifies that getEnglishStepCommandKeywords returns an empty array for unrecognized i18n keys instead of throwing. */
 function testGetEnglishKeywordsGracefulFailure(): void {
   const gestureKw = getEnglishGestureKeywords("nonexistent-action-id");
   assert(Array.isArray(gestureKw), "Should return an array for nonexistent gesture action");
@@ -73,6 +76,7 @@ function testGetEnglishKeywordsGracefulFailure(): void {
   assert(Array.isArray(stepKw), "Should return an array for nonexistent step command key");
 }
 
+/** Verifies that every gesture action ID in getPaletteCommands() has a corresponding English keyword mapping. */
 function testGestureCommandsHaveEnglishKeywords(): void {
   const commands = getPaletteCommands();
   const bookmarkCmd = commands.find((c) => c.id === "gecko-bookmark-this-page");
@@ -83,24 +87,28 @@ function testGestureCommandsHaveEnglishKeywords(): void {
   assert(hasBookmarkKeyword, "Bookmark command should contain 'bookmark' keyword");
 }
 
+/** Verifies that searching by English keyword "bookmark" returns the bookmark command from getPaletteCommands(). */
 function testSearchByEnglishKeywordBookmark(): void {
   const results = searchCommands("bookmark");
   const hasBookmark = results.some((c) => c.id === "gecko-bookmark-this-page");
   assert(hasBookmark, "Searching 'bookmark' should find the bookmark command");
 }
 
+/** Verifies that searching by English keyword "reload" returns the reload command from getPaletteCommands(). */
 function testSearchByEnglishKeywordReload(): void {
   const results = searchCommands("reload");
   const hasReload = results.some((c) => c.id === "gecko-reload");
   assert(hasReload, "Searching 'reload' should find the reload command");
 }
 
+/** Verifies that step commands can be searched by their English keyword via searchCommands(). */
 function testSearchStepCommandByEnglish(): void {
   const results = searchCommands("switch tab");
   const hasTabSwitcher = results.some((c) => c.id === "floorp-tab-switcher");
   assert(hasTabSwitcher, "Searching 'switch tab' should find the tab switcher");
 }
 
+/** Verifies that an English keyword match scores lower than an exact label match in fuzzy scoring. */
 function testEnglishKeywordScoreLowerThanLabel(): void {
   const target = makeTarget(
     "ブックマークを登録",

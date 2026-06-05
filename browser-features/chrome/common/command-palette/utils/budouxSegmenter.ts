@@ -8,8 +8,7 @@ import {
   type Parser,
 } from "budoux";
 import i18next from "i18next";
-
-type LocaleCategory = "ja" | "zh-hans" | "zh-hant" | "th" | "other";
+import type { LocaleCategory } from "./types.ts";
 
 const CJK_LOCALE_PREFIXES: ReadonlySet<string> = new Set([
   "ja",

@@ -54,8 +54,12 @@ function segmentQuery(query: string): string[] {
   if (!trimmed) return [];
 
   if (isCJKLocale()) {
-    const segments = segmentJapaneseText(trimmed);
-    if (segments.length > 1) return segments;
+    try {
+      const segments = segmentJapaneseText(trimmed);
+      if (segments.length > 1) return segments;
+    } catch (error) {
+      console.error("[CommandPalette]", error);
+    }
   }
 
   return trimmed.split(/\s+/).filter(Boolean);

@@ -13,8 +13,8 @@ import type {
   HistoryPlacesUtilsModule,
 } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
-import { getEnglishStepCommandKeywords } from "../../utils/getEnglishKeywords.ts";
-import { getSegmentedKeywordsFromI18nKeys } from "../../utils/budouxSegmenter.ts";
+import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 const PAGE_SIZE = 20;
 
