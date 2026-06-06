@@ -280,32 +280,7 @@
     "initializeConfirmDescription": "This removes all workspace data and recreates a single default workspace. Do you want to continue?",
     "initializeConfirmAction": "Initialize",
     "initializeConfirmCancel": "Cancel",
-    "tutorial": {
-      "step1": {
-        "title": "What are Workspaces?",
-        "description": "Workspaces let you organize tabs into named groups. Create separate workspaces for work, personal browsing, research, or any category you need."
-      },
-      "step2": {
-        "title": "Creating and Switching Workspaces",
-        "description": "Click the workspace button on the tab strip to open the workspace panel. Click + to create a new workspace, click any workspace to switch to it, or use the manage and restore buttons in the footer."
-      },
-      "step3": {
-        "title": "Customizing Workspaces",
-        "description": "Right-click a workspace to open the context menu: reorder (Move Up/Down), Delete, Manage (edit name, icon, and container), or Archive. You can also drag and drop to reorder."
-      },
-      "step4": {
-        "title": "Containers and Workspaces",
-        "description": "Each workspace can be assigned a Firefox Container. Tabs in a container-isolated workspace are separated from other containers — cookies, logins, and browsing data stay independent. This lets you use different accounts in the same browser window."
-      },
-      "step5": {
-        "title": "Archiving and Restoring",
-        "description": "When you archive a workspace, its tabs are closed and the workspace is hidden from the switcher, but all data is preserved. To restore, click the restore button (folder icon) in the popup footer to view and restore archived workspaces."
-      },
-      "step6": {
-        "title": "Managing from the Sidebar",
-        "description": "Enable \"Manage workspaces on sidebar\" in settings to switch and manage workspaces directly from the browser sidebar. In this mode, the toolbar popup is disabled and all workspace operations move to the sidebar panel."
-      }
-    },
+    "tutorial": {},
     "helpArchiveWorkspaces": "What happens when I archive a workspace?",
     "helpArchiveWorkspacesDescription": "Archived workspaces are hidden from the workspace switcher but their data is preserved. You can restore them later using the restore button (folder icon) in the workspace popup footer. Tabs in archived workspaces are closed but the workspace configuration is saved."
   },
@@ -665,28 +640,7 @@
     "defaultName": "New Gesture",
     "emptyPatternError": "Please set a gesture pattern",
     "duplicatePatternError": "This gesture pattern already exists",
-    "tutorial": {
-      "step1": {
-        "title": "How Mouse Gestures Work",
-        "description": "Hold the right mouse button and move your mouse in a direction to perform an action. For example, move left to go back, or move right to go forward."
-      },
-      "step2": {
-        "title": "Try a Basic Gesture",
-        "description": "Try drawing ↓ then ↑ (down then up). This gesture opens a new tab. Right-click and drag in the canvas below."
-      },
-      "step3": {
-        "title": "Back and Forward Gesture",
-        "description": "Try drawing ← (left). This gesture goes back in history. Right-click and drag in the canvas below."
-      },
-      "step4": {
-        "title": "Free Gesture Practice",
-        "description": "Try drawing any gesture freely. Right-click and drag in the canvas below. The detected directions will be shown."
-      },
-      "step5": {
-        "title": "Customize Your Gestures",
-        "description": "You can add, edit, or remove gestures in the Actions section on this page. Create your own gestures for the actions you use most."
-      }
-    },
+    "tutorial": {},
     "helpDefaultGestures": "What are the default gestures?",
     "helpDefaultGesturesDescription": "Default gestures include: Left → Go Back, Right → Go Forward, Down then Right → Close Tab, Down then Up → New Tab, Up → Scroll to Top, Down → Scroll to Bottom. You can customize all gestures in the Actions section."
   },
@@ -768,42 +722,9 @@
     "layout3PaneTop": "3-Pane (Large Top)",
     "layout3PaneBottom": "3-Pane (Large Bottom)",
     "learnMore": "Learn more about Split View",
-    "tutorial": {
-      "step1": {
-        "title": "Getting Started with Split View",
-        "description": "Split View lets you view multiple tabs simultaneously in a single window. To start, right-click on any tab and select \"Open in Split View\" from the context menu."
-      },
-      "step2": {
-        "title": "Try Different Layouts",
-        "description": "Choose from horizontal, vertical, or grid layouts. Click the layout buttons below the preview to see how each arrangement looks. You can also add or remove panes."
-      },
-      "step3": {
-        "title": "How to Use Split View",
-        "description": "Right-click any tab and select \"Open in Split View\". The tab will open alongside your current view. You can switch layouts from the split view toolbar."
-      },
-      "step4": {
-        "title": "Resizing Panes",
-        "description": "Drag the divider between panes to resize them. Try dragging the divider in the preview below to adjust pane sizes."
-      }
-    }
+    "tutorial": {}
   },
   "tutorial": {
-    "learnHowToUse": "Learn how to use",
-    "stepOf": "Step {{current}} of {{total}}",
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Got it",
-    "gestureCanvas": {
-      "placeholder": "Right-click and drag here to draw a gesture",
-      "detected": "Detected: {{pattern}}",
-      "matched": "Matched: {{action}}",
-      "success": "Correct! Well done!",
-      "tryAgain": "Try Again"
-    },
-    "splitviewSandbox": {
-      "changeLayout": "Change Layout",
-      "addPane": "Add Pane",
-      "removePane": "Remove Pane"
-    }
+    "learnHowToUse": "Learn how to use"
   }
 }

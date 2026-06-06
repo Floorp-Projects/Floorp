@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { LayoutSettings } from "./components/LayoutSettings.tsx";
 import { LearnButton } from "@/components/common/learn-button.tsx";
-import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
-import { SplitViewSandbox } from "@/components/common/splitview-sandbox.tsx";
 import {
   getSplitViewSettings,
   saveSplitViewSettings,
@@ -16,26 +14,6 @@ export default function Page() {
   const { t } = useTranslation();
   const methods = useForm<SplitViewFormData>({ defaultValues: {} });
 
-  const splitViewTutorialSteps: TutorialStep[] = [
-    {
-      titleKey: "splitView.tutorial.step1.title",
-      descriptionKey: "splitView.tutorial.step1.description",
-    },
-    {
-      titleKey: "splitView.tutorial.step2.title",
-      descriptionKey: "splitView.tutorial.step2.description",
-      content: <SplitViewSandbox />,
-    },
-    {
-      titleKey: "splitView.tutorial.step3.title",
-      descriptionKey: "splitView.tutorial.step3.description",
-    },
-    {
-      titleKey: "splitView.tutorial.step4.title",
-      descriptionKey: "splitView.tutorial.step4.description",
-      content: <SplitViewSandbox resizable />,
-    },
-  ];
   const { control, setValue } = methods;
   const watchAll = useWatch({ control });
 
@@ -74,7 +52,7 @@ export default function Page() {
           <p className="text-sm mb-4">
             {t("splitView.description")}
           </p>
-          <LearnButton steps={splitViewTutorialSteps} title={t("splitView.title")} />
+          <LearnButton tourId="splitView" />
         </header>
       </div>
       <div className="pl-6 space-y-6">

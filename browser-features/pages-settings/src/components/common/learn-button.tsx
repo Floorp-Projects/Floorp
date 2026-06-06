@@ -1,33 +1,29 @@
-import { useState } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { GraduationCap } from "lucide-react";
-import { TutorialModal, type TutorialStep } from "./tutorial-modal.tsx";
+import { rpc } from "../../lib/rpc/rpc.ts";
 
 interface LearnButtonProps {
-  steps: TutorialStep[];
-  title: string;
+  tourId: string;
+  labelKey?: string;
 }
 
-export function LearnButton({ steps, title }: LearnButtonProps) {
+export function LearnButton({ tourId, labelKey = "tutorial.learnHowToUse" }: LearnButtonProps) {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+
+  const handleStartTour = useCallback(async () => {
+    const payload = JSON.stringify({ tourId, step: 0 });
+    await rpc.setStringPref("floorp.guidedTour.active", payload);
+  }, [tourId]);
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="btn btn-sm btn-outline gap-2"
-      >
-        <GraduationCap size={16} />
-        {t("tutorial.learnHowToUse")}
-      </button>
-      <TutorialModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        steps={steps}
-        title={title}
-      />
-    </>
+    <button
+      type="button"
+      onClick={handleStartTour}
+      className="btn btn-sm btn-outline gap-2"
+    >
+      <GraduationCap size={16} />
+      {t(labelKey)}
+    </button>
   );
 }

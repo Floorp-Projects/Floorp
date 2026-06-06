@@ -8,9 +8,6 @@ import { useMouseGestureConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/Preferences.tsx";
 import { ActionsSettings } from "./components/ActionsSettings.tsx";
 import { LearnButton } from "@/components/common/learn-button.tsx";
-import type { TutorialStep } from "@/components/common/tutorial-modal.tsx";
-import { GestureCanvas } from "@/components/common/gesture-canvas.tsx";
-import type { GestureDirection } from "@/types/pref.ts";
 
 export default function Page() {
     const { t } = useTranslation();
@@ -24,60 +21,6 @@ export default function Page() {
         deleteAction,
         updateRockerAction,
     } = useMouseGestureConfig();
-
-    const gestureTutorialSteps: TutorialStep[] = [
-        {
-            titleKey: "mouseGesture.tutorial.step1.title",
-            descriptionKey: "mouseGesture.tutorial.step1.description",
-        },
-        {
-            titleKey: "mouseGesture.tutorial.step2.title",
-            descriptionKey: "mouseGesture.tutorial.step2.description",
-            content: (
-                <GestureCanvas
-                    targetPattern={["down", "up"] as GestureDirection[]}
-                    trailColor={config.trailColor}
-                    trailWidth={config.trailWidth}
-                    actionMap={{ "down,up": t("mouseGesture.actions.gecko-open-new-tab") }}
-                    onGestureComplete={() => {}}
-                />
-            ),
-        },
-        {
-            titleKey: "mouseGesture.tutorial.step3.title",
-            descriptionKey: "mouseGesture.tutorial.step3.description",
-            content: (
-                <GestureCanvas
-                    targetPattern={["left"] as GestureDirection[]}
-                    trailColor={config.trailColor}
-                    trailWidth={config.trailWidth}
-                    actionMap={{ left: t("mouseGesture.actions.gecko-back") }}
-                    onGestureComplete={() => {}}
-                />
-            ),
-        },
-        {
-            titleKey: "mouseGesture.tutorial.step4.title",
-            descriptionKey: "mouseGesture.tutorial.step4.description",
-            content: (
-                <GestureCanvas
-                    trailColor={config.trailColor}
-                    trailWidth={config.trailWidth}
-                    actionMap={{
-                        left: t("mouseGesture.actions.gecko-back"),
-                        right: t("mouseGesture.actions.gecko-forward"),
-                        "down,up": t("mouseGesture.actions.gecko-open-new-tab"),
-                        "down,right": t("mouseGesture.actions.gecko-close-tab"),
-                    }}
-                    onGestureComplete={() => {}}
-                />
-            ),
-        },
-        {
-            titleKey: "mouseGesture.tutorial.step5.title",
-            descriptionKey: "mouseGesture.tutorial.step5.description",
-        },
-    ];
 
     if (loading) {
         return <div className="py-6 text-center">{t("loading")}...</div>;
@@ -93,7 +36,7 @@ export default function Page() {
                     {t("mouseGesture.description")}
                 </p>
                 <div className="flex items-center gap-2">
-                    <LearnButton steps={gestureTutorialSteps} title={t("pages.mouseGesture")} />
+                    <LearnButton tourId="mouseGestures" />
                 </div>
             </div>
 
