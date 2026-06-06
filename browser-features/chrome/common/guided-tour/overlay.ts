@@ -17,7 +17,10 @@ interface TourCallbacks {
 }
 
 function injectStyles(doc: Document): void {
-  if (doc.getElementById(STYLES_ID)) return;
+  const existing = doc.getElementById(STYLES_ID);
+  if (existing) {
+    existing.remove();
+  }
 
   const style = doc.createElement("style");
   style.id = STYLES_ID;
@@ -25,7 +28,7 @@ function injectStyles(doc: Document): void {
     #${OVERLAY_ID} {
       position: fixed;
       inset: 0;
-      z-index: 99998;
+      z-index: 999999;
       pointer-events: none;
     }
     #${OVERLAY_ID}.floorp-tour-passthrough {
@@ -46,7 +49,9 @@ function injectStyles(doc: Document): void {
       position: fixed;
       z-index: 2;
       border-radius: 6px;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+      border: 3px solid rgba(99, 179, 237, 0.95);
+      background: rgba(99, 179, 237, 0.12);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 16px 6px rgba(99, 179, 237, 0.4);
       pointer-events: none;
       transition: all 0.3s ease;
     }
@@ -166,6 +171,8 @@ export class GuidedTourOverlay {
   private targetWindow: Window;
   private callbacks: TourCallbacks;
   private stepCount: number = 0;
+  private currentSelector: string | null = null;
+  private currentPlacement: TooltipPlacement = "bottom";
 
   constructor(win: Window, callbacks: TourCallbacks) {
     this.targetWindow = win;
@@ -276,6 +283,8 @@ export class GuidedTourOverlay {
     }
 
     // Position spotlight and tooltip
+    this.currentSelector = step.selector;
+    this.currentPlacement = step.tooltipPlacement;
     this.positionSpotlight(step.selector, step.tooltipPlacement);
 
     // Handle center placement class
@@ -400,18 +409,9 @@ export class GuidedTourOverlay {
   }
 
   private repositionTooltip(): void {
-    // Recalculate position on resize
-    const spotlight = this.spotlightEl;
-    if (!spotlight || spotlight.style.display === "none") return;
-
-    const left = parseFloat(spotlight.style.left) + SPOTLIGHT_PADDING;
-    const top = parseFloat(spotlight.style.top) + SPOTLIGHT_PADDING;
-    const width = parseFloat(spotlight.style.width) - SPOTLIGHT_PADDING * 2;
-    const height = parseFloat(spotlight.style.height) - SPOTLIGHT_PADDING * 2;
-
-    if (!isNaN(left) && !isNaN(top) && !isNaN(width) && !isNaN(height)) {
-      const rect = new DOMRect(left, top, width, height);
-      this.positionTooltip(rect, "bottom");
+    // Recalculate both spotlight and tooltip positions on resize
+    if (this.currentSelector) {
+      this.positionSpotlight(this.currentSelector, this.currentPlacement);
     }
   }
 

@@ -12,7 +12,7 @@ export function LearnButton({ tourId, labelKey = "tutorial.learnHowToUse" }: Lea
   const { t } = useTranslation();
 
   const handleStartTour = useCallback(async () => {
-    const payload = JSON.stringify({ tourId, step: 0 });
+    const payload = JSON.stringify({ tourId, currentStep: 0 });
     await rpc.setStringPref("floorp.guidedTour.active", payload);
   }, [tourId]);
 

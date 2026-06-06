@@ -16,7 +16,6 @@ import { GuidedTourOverlay } from "./overlay.ts";
 @noraComponent(import.meta.hot)
 export default class GuidedTour extends NoraComponentBase {
   init(): void {
-    this.logger.info("GuidedTour init called");
     const [currentTour, setCurrentTour] = createSignal<TourState | null>(null);
     let overlay: GuidedTourOverlay | null = null;
 
@@ -24,7 +23,13 @@ export default class GuidedTour extends NoraComponentBase {
       try {
         const raw = Services.prefs.getStringPref(TOUR_PREF, "");
         if (!raw) return null;
-        return JSON.parse(raw) as TourState;
+        const parsed = JSON.parse(raw);
+        // Normalize: accept both { tourId, currentStep } and legacy { tourId, step }
+        const state: TourState = {
+          tourId: parsed.tourId,
+          currentStep: parsed.currentStep ?? parsed.step ?? 0,
+        };
+        return state;
       } catch {
         return null;
       }
@@ -62,14 +67,22 @@ export default class GuidedTour extends NoraComponentBase {
         return;
       }
 
-      if (stepIndex < 0 || stepIndex >= tourDef.steps.length) {
+      const steps = tourDef.steps;
+      if (!steps || !Array.isArray(steps)) {
+        console.error("[GuidedTour] tourDef.steps is invalid:", steps);
         destroyOverlay();
         clearPref();
         return;
       }
 
-      const step = tourDef.steps[stepIndex];
-      const totalSteps = tourDef.steps.length;
+      if (typeof stepIndex !== "number" || stepIndex < 0 || stepIndex >= steps.length) {
+        destroyOverlay();
+        clearPref();
+        return;
+      }
+
+      const step = steps[stepIndex];
+      const totalSteps = steps.length;
 
       // If the step has a waitForSelector, check if it exists
       if (step.waitForSelector) {
@@ -78,6 +91,11 @@ export default class GuidedTour extends NoraComponentBase {
           // Element not found, skip after timeout
           const timeout = step.waitTimeout ?? 2000;
           setTimeout(() => {
+            // Guard: check if tour is still active before retrying
+            const currentState = parsePref();
+            if (!currentState || currentState.tourId !== tourId) {
+              return;
+            }
             const retryTarget = document.querySelector(
               step.waitForSelector!,
             );
@@ -201,7 +219,6 @@ export default class GuidedTour extends NoraComponentBase {
       setCurrentTour(initialState);
       showStep(initialState.tourId, initialState.currentStep);
     }
-    this.logger.info("GuidedTour init completed");
   }
 }
 
