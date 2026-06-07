@@ -51,14 +51,30 @@ export default class GuidedTour extends NoraComponentBase {
       }
     };
 
+    let healthCheckTimer: ReturnType<typeof setInterval> | null = null;
+
     const destroyOverlay = (): void => {
+      if (healthCheckTimer) {
+        clearInterval(healthCheckTimer);
+        healthCheckTimer = null;
+      }
       if (overlay) {
         overlay.destroy();
         overlay = null;
       }
     };
 
+    let pollingStepIndex = -1; // Guard: step currently being polled
+
     const showStep = (tourId: string, stepIndex: number): void => {
+      // Skip duplicate calls for a step that's already being polled
+      if (pollingStepIndex === stepIndex) {
+        console.log("[GuidedTour:showStep] skipping duplicate for polling step", stepIndex);
+        return;
+      }
+
+      console.log("[GuidedTour:showStep]", { tourId, stepIndex });
+
       const tourDef = getTourById(tourId);
       if (!tourDef) {
         console.warn("[GuidedTour] unknown tour:", tourId);
@@ -75,46 +91,100 @@ export default class GuidedTour extends NoraComponentBase {
         return;
       }
 
-      if (typeof stepIndex !== "number" || stepIndex < 0 || stepIndex >= steps.length) {
+      if (
+        typeof stepIndex !== "number" ||
+        stepIndex < 0 ||
+        stepIndex >= steps.length
+      ) {
+        console.log("[GuidedTour:showStep] step out of range, ending tour");
         destroyOverlay();
         clearPref();
         return;
       }
 
       const step = steps[stepIndex];
-      const totalSteps = steps.length;
 
-      // If the step has a waitForSelector, check if it exists
+      console.log("[GuidedTour:showStep] step data", {
+        stepIndex,
+        selector: step.selector,
+        placement: step.tooltipPlacement,
+        waitForSelector: step.waitForSelector,
+        hasAction: !!step.action,
+      });
+
+      // If the step has a waitForSelector, check if it exists AND is visible
       if (step.waitForSelector) {
+        const isVisible = (el: Element): boolean => {
+          // XUL panels/menupopups use state property, not CSS layout
+          const xulState = (el as Record<string, unknown>).state;
+          if (typeof xulState === "string") {
+            return xulState === "open" || xulState === "showing";
+          }
+          // Fallback: check CSS dimensions
+          const rect = el.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        };
         const target = document.querySelector(step.waitForSelector);
-        if (!target) {
-          // Element not found, skip after timeout
+        const targetVisible = target ? isVisible(target) : false;
+
+        console.log("[GuidedTour:showStep] waitForSelector check:", step.waitForSelector, {
+          found: !!target,
+          visible: targetVisible,
+          state: target ? (target as Record<string, unknown>).state : undefined,
+        });
+
+        // Only execute action if target is NOT already visible
+        // (avoids toggling off an already-open panel)
+        if (!targetVisible && step.action) {
+          console.log("[GuidedTour:showStep] executing action:", step.action);
+          executeAction(step.action);
+        }
+
+        if (!targetVisible) {
+          // Poll until it appears or timeout
           const timeout = step.waitTimeout ?? 2000;
-          setTimeout(() => {
-            // Guard: check if tour is still active before retrying
+          const deadline = Date.now() + timeout;
+          pollingStepIndex = stepIndex;
+          const poll = (): void => {
             const currentState = parsePref();
             if (!currentState || currentState.tourId !== tourId) {
+              pollingStepIndex = -1;
               return;
             }
-            const retryTarget = document.querySelector(
-              step.waitForSelector!,
-            );
-            if (!retryTarget) {
-              // Still not found, skip to next step
-              showStep(tourId, stepIndex + 1);
+
+            const el = document.querySelector(step.waitForSelector!);
+            if (el && isVisible(el)) {
+              // Now visible — proceed with overlay (do NOT re-call showStep)
+              pollingStepIndex = -1;
+              showStepOverlay(tourId, stepIndex, step, steps.length);
+            } else if (Date.now() < deadline) {
+              setTimeout(poll, 100);
             } else {
-              showStep(tourId, stepIndex);
+              console.log("[GuidedTour:showStep] waitForSelector timed out, skipping step");
+              pollingStepIndex = -1;
+              showStep(tourId, stepIndex + 1);
             }
-          }, timeout);
+          };
+          setTimeout(poll, 100);
           return;
+        }
+      } else {
+        // No waitForSelector — execute action unconditionally
+        if (step.action) {
+          console.log("[GuidedTour:showStep] executing action:", step.action);
+          executeAction(step.action);
         }
       }
 
-      // Execute action before showing the step
-      if (step.action) {
-        executeAction(step.action);
-      }
+      showStepOverlay(tourId, stepIndex, step, steps.length);
+    };
 
+    const showStepOverlay = (
+      tourId: string,
+      stepIndex: number,
+      step: import("./types.ts").TourStep,
+      totalSteps: number,
+    ): void => {
       // Create or reuse overlay
       if (!overlay) {
         overlay = new GuidedTourOverlay(window, {
@@ -127,7 +197,7 @@ export default class GuidedTour extends NoraComponentBase {
               };
               setCurrentTour(newState);
               setPref(newState);
-              showStep(newState.tourId, newState.currentStep);
+              // showStep will be called by the pref observer
             }
           },
           onPrev: () => {
@@ -139,7 +209,7 @@ export default class GuidedTour extends NoraComponentBase {
               };
               setCurrentTour(newState);
               setPref(newState);
-              showStep(newState.tourId, newState.currentStep);
+              // showStep will be called by the pref observer
             }
           },
           onSkip: () => {
@@ -149,6 +219,11 @@ export default class GuidedTour extends NoraComponentBase {
           },
         });
         overlay.create();
+        // Start periodic health check
+        if (healthCheckTimer) clearInterval(healthCheckTimer);
+        healthCheckTimer = setInterval(() => {
+          if (overlay) overlay.checkPanelState();
+        }, 500);
       }
 
       // Update overlay with translated text
@@ -157,12 +232,15 @@ export default class GuidedTour extends NoraComponentBase {
         titleKey: getTranslatedText(step.titleKey),
         descriptionKey: getTranslatedText(step.descriptionKey),
       };
+      console.log("[GuidedTour:showStepOverlay] updating overlay", {
+        stepIndex,
+        totalSteps,
+        translatedTitle: translatedStep.titleKey,
+      });
       overlay.updateStep(translatedStep, stepIndex, totalSteps);
     };
 
-    const executeAction = (
-      action: import("./types.ts").TourAction,
-    ): void => {
+    const executeAction = (action: import("./types.ts").TourAction): void => {
       try {
         switch (action.type) {
           case "click": {
@@ -173,8 +251,11 @@ export default class GuidedTour extends NoraComponentBase {
           case "rightClick": {
             const el = document.querySelector(action.selector);
             if (el) {
+              // Use PointerEvent — Firefox 151+ asserts that trusted pointer
+              // event messages must use the PointerEvent constructor
+              // (MouseEvent.cpp:161).
               el.dispatchEvent(
-                new MouseEvent("contextmenu", {
+                new PointerEvent("contextmenu", {
                   bubbles: true,
                   button: 2,
                 }),
@@ -201,6 +282,11 @@ export default class GuidedTour extends NoraComponentBase {
       if (!state) {
         destroyOverlay();
         return;
+      }
+
+      // Check panel health when pref changes
+      if (overlay) {
+        overlay.checkPanelState();
       }
 
       showStep(state.tourId, state.currentStep);

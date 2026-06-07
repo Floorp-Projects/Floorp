@@ -84,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.splitView"),
       url: "/features/splitview",
       icon: Columns2,
-      badge: "New",
+      badge: t("pages.badges.new"),
     },
     {
       title: t("pages.keyboardShortcuts"),

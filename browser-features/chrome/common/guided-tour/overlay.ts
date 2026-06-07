@@ -3,12 +3,52 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import i18next from "i18next";
 import type { TooltipPlacement, TourStep } from "./types.ts";
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-const OVERLAY_ID = "floorp-guided-tour-overlay";
-const STYLES_ID = "floorp-guided-tour-styles";
-const SPOTLIGHT_PADDING = 6;
+const PREFIX = "floorp-guided-tour";
+const STYLES_ID = `${PREFIX}-styles`;
+
+// XUL panel helper type — matches UITour.sys.mjs usage
+interface XulPanel extends XULElement {
+  openPopup(
+    anchor: Element | null,
+    position: string,
+    x?: number,
+    y?: number,
+  ): void;
+  moveTo(x: number, y: number): void;
+  hidePopup(): void;
+  readonly state: string;
+}
+
+function createPanel(
+  doc: Document,
+  id: string,
+  attrs: Record<string, string>,
+): XulPanel | null {
+  const popupSet = doc.getElementById("mainPopupSet");
+  if (!popupSet || !doc.createXULElement) return null;
+  const panel = doc.createXULElement("panel") as unknown as XulPanel;
+  panel.id = id;
+  for (const [k, v] of Object.entries(attrs)) panel.setAttribute(k, v);
+  popupSet.appendChild(panel);
+  return panel;
+}
+
+function closePanel(panel: XulPanel | null): void {
+  if (!panel) return;
+  try {
+    panel.hidePopup();
+  } catch {
+    /* already closed */
+  }
+  panel.remove();
+}
+
+function isOpen(panel: XulPanel | null): boolean {
+  return !!panel && (panel.state === "showing" || panel.state === "open");
+}
 
 interface TourCallbacks {
   onNext: () => void;
@@ -18,159 +58,79 @@ interface TourCallbacks {
 
 function injectStyles(doc: Document): void {
   const existing = doc.getElementById(STYLES_ID);
-  if (existing) {
-    existing.remove();
-  }
-
+  if (existing) existing.remove();
   const style = doc.createElement("style");
   style.id = STYLES_ID;
   style.textContent = `
-    #${OVERLAY_ID} {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
+    #${PREFIX}-spotlight-panel {
+      appearance: none;
       pointer-events: none;
+      border: none;
+      background-color: transparent;
+      -moz-window-shadow: none;
+      overflow: visible;
+      --panel-border-color: transparent;
+      --panel-background: transparent;
+      --panel-padding: 0;
     }
-    #${OVERLAY_ID}.floorp-tour-passthrough {
-      pointer-events: none;
-    }
-    .floorp-tour-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 1;
-      pointer-events: auto;
-      transition: opacity 0.25s ease;
-    }
-    .floorp-tour-passthrough .floorp-tour-backdrop {
-      pointer-events: none;
-    }
-    .floorp-tour-spotlight {
-      position: fixed;
-      z-index: 2;
+    #${PREFIX}-spotlight {
       border-radius: 6px;
       border: 3px solid rgba(99, 179, 237, 0.95);
       background: rgba(99, 179, 237, 0.12);
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 16px 6px rgba(99, 179, 237, 0.4);
-      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35), 0 0 16px 6px rgba(99, 179, 237, 0.4);
+      min-height: 24px; min-width: 24px;
       transition: all 0.3s ease;
     }
-    .floorp-tour-tooltip {
-      position: fixed;
-      z-index: 3;
-      background: -moz-dialog;
-      color: -moz-dialogtext;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      border-radius: 8px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
-      max-width: 360px;
-      min-width: 260px;
-      padding: 16px;
-      pointer-events: auto;
-      opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      font: message-box;
+    #${PREFIX}-tooltip-panel {
+      appearance: none;
+      background: transparent; border: none;
+      -moz-window-shadow: none;
+      --panel-border-color: transparent;
+      --panel-background: transparent;
+      --panel-padding: 0;
     }
-    .floorp-tour-tooltip.floorp-tour-visible {
-      opacity: 1;
-      transform: translateY(0);
+    #${PREFIX}-tooltip {
+      background: -moz-dialog; color: -moz-dialogtext;
+      border: 1px solid rgba(0,0,0,0.15); border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      max-width: 360px; min-width: 260px;
+      padding: 16px; font: message-box; pointer-events: auto;
     }
-    .floorp-tour-tooltip-title {
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    .floorp-tour-tooltip-desc {
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 14px;
-      opacity: 0.85;
-    }
-    .floorp-tour-tooltip-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+    .floorp-tour-tooltip-title { font-weight: bold; font-size: 14px; margin-bottom: 8px; }
+    .floorp-tour-tooltip-desc  { font-size: 13px; line-height: 1.5; margin-bottom: 14px; opacity: 0.85; }
+    .floorp-tour-tooltip-nav   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .floorp-tour-btn {
-      appearance: none;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      border-radius: 4px;
-      background: -moz-dialog;
-      color: -moz-dialogtext;
-      padding: 4px 12px;
-      font: message-box;
-      font-size: 12px;
-      cursor: pointer;
+      appearance: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px;
+      background: -moz-dialog; color: -moz-dialogtext;
+      padding: 4px 12px; font: message-box; font-size: 12px; cursor: pointer;
     }
-    .floorp-tour-btn:hover {
-      background: rgba(0, 0, 0, 0.06);
-    }
-    .floorp-tour-btn-primary {
-      background: AccentColor;
-      color: AccentColorText;
-      border-color: transparent;
-    }
-    .floorp-tour-btn-primary:hover {
-      filter: brightness(1.1);
-    }
+    .floorp-tour-btn:hover       { background: rgba(0,0,0,0.06); }
+    .floorp-tour-btn-primary     { background: AccentColor; color: AccentColorText; border-color: transparent; }
+    .floorp-tour-btn-primary:hover { filter: brightness(1.1); }
     .floorp-tour-skip {
-      appearance: none;
-      border: none;
-      background: transparent;
-      color: -moz-dialogtext;
-      opacity: 0.5;
-      cursor: pointer;
-      font: message-box;
-      font-size: 11px;
-      padding: 2px 4px;
+      appearance: none; border: none; background: transparent;
+      color: -moz-dialogtext; opacity: 0.5; cursor: pointer;
+      font: message-box; font-size: 11px; padding: 2px 4px;
     }
-    .floorp-tour-skip:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-    }
-    .floorp-tour-dots {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-    .floorp-tour-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.2);
-      transition: background 0.2s ease;
-    }
-    .floorp-tour-dot-active {
-      background: AccentColor;
-      width: 8px;
-      height: 8px;
-    }
-    .floorp-tour-center .floorp-tour-tooltip {
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) translateY(6px);
-    }
-    .floorp-tour-center .floorp-tour-tooltip.floorp-tour-visible {
-      transform: translate(-50%, -50%) translateY(0);
-    }
+    .floorp-tour-skip:hover { opacity: 0.8; text-decoration: underline; }
+    .floorp-tour-dots      { display: flex; gap: 6px; align-items: center; }
+    .floorp-tour-dot       { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.2); transition: background 0.2s ease; }
+    .floorp-tour-dot-active { background: AccentColor; width: 8px; height: 8px; }
   `;
   doc.head!.appendChild(style);
 }
 
 export class GuidedTourOverlay {
-  private root: HTMLDivElement | null = null;
-  private spotlightEl: HTMLDivElement | null = null;
+  private spotlightPanel: XulPanel | null = null;
+  private spotlightBox: HTMLDivElement | null = null;
+  private tooltipPanel: XulPanel | null = null;
   private tooltipEl: HTMLDivElement | null = null;
-  private backdropEl: HTMLDivElement | null = null;
   private tooltipTitleEl: HTMLDivElement | null = null;
   private tooltipDescEl: HTMLDivElement | null = null;
   private dotsContainer: HTMLDivElement | null = null;
   private resizeHandler: (() => void) | null = null;
   private targetWindow: Window;
   private callbacks: TourCallbacks;
-  private stepCount: number = 0;
   private currentSelector: string | null = null;
   private currentPlacement: TooltipPlacement = "bottom";
 
@@ -182,123 +142,222 @@ export class GuidedTourOverlay {
   create(): void {
     const doc = this.targetWindow.document;
     if (!doc) return;
-
     injectStyles(doc);
 
-    this.root = doc.createElement("div") as HTMLDivElement;
-    this.root.id = OVERLAY_ID;
+    // Spotlight panel (UITour highlight pattern)
+    this.spotlightPanel = createPanel(doc, `${PREFIX}-spotlight-panel`, {
+      level: "top",
+      type: "default",
+      noautohide: "true",
+      noautofocus: "true",
+      flip: "none",
+      consumeoutsideclicks: "false",
+    });
+    this.spotlightBox = doc.createElement("div") as HTMLDivElement;
+    this.spotlightBox.id = `${PREFIX}-spotlight`;
+    this.spotlightBox.style.display = "none";
+    this.spotlightPanel?.appendChild(this.spotlightBox);
 
-    this.backdropEl = doc.createElement("div") as HTMLDivElement;
-    this.backdropEl.className = "floorp-tour-backdrop";
-    this.backdropEl.addEventListener("click", () => this.callbacks.onSkip());
-
-    this.spotlightEl = doc.createElement("div") as HTMLDivElement;
-    this.spotlightEl.className = "floorp-tour-spotlight";
-    this.spotlightEl.style.display = "none";
-
+    // Tooltip panel (UITour tooltip pattern)
+    this.tooltipPanel = createPanel(doc, `${PREFIX}-tooltip-panel`, {
+      level: "top",
+      noautohide: "true",
+      noautofocus: "true",
+      // Allow the tooltip to flip to stay within the viewport
+      flip: "both",
+    });
     this.tooltipEl = doc.createElement("div") as HTMLDivElement;
-    this.tooltipEl.className = "floorp-tour-tooltip";
-
+    this.tooltipEl.id = `${PREFIX}-tooltip`;
     this.tooltipTitleEl = doc.createElement("div") as HTMLDivElement;
     this.tooltipTitleEl.className = "floorp-tour-tooltip-title";
-
-    const tooltipDesc = doc.createElement("div") as HTMLDivElement;
-    tooltipDesc.className = "floorp-tour-tooltip-desc";
-    this.tooltipDescEl = tooltipDesc;
+    this.tooltipDescEl = doc.createElement("div") as HTMLDivElement;
+    this.tooltipDescEl.className = "floorp-tour-tooltip-desc";
 
     const nav = doc.createElement("div") as HTMLDivElement;
     nav.className = "floorp-tour-tooltip-nav";
 
     const skipBtn = doc.createElement("button") as HTMLButtonElement;
     skipBtn.className = "floorp-tour-skip";
-    skipBtn.textContent = "Skip";
+    skipBtn.textContent = i18next.t("guidedTour.skip");
     skipBtn.addEventListener("click", () => this.callbacks.onSkip());
 
-    const dots = doc.createElement("div") as HTMLDivElement;
-    dots.className = "floorp-tour-dots";
-    this.dotsContainer = dots;
+    this.dotsContainer = doc.createElement("div") as HTMLDivElement;
+    this.dotsContainer.className = "floorp-tour-dots";
 
     const prevBtn = doc.createElement("button") as HTMLButtonElement;
     prevBtn.className = "floorp-tour-btn";
-    prevBtn.textContent = "← Prev";
+    prevBtn.textContent = i18next.t("guidedTour.previous");
     prevBtn.addEventListener("click", () => this.callbacks.onPrev());
 
     const nextBtn = doc.createElement("button") as HTMLButtonElement;
     nextBtn.className = "floorp-tour-btn floorp-tour-btn-primary";
-    nextBtn.textContent = "Next →";
+    nextBtn.textContent = i18next.t("guidedTour.next");
     nextBtn.addEventListener("click", () => this.callbacks.onNext());
 
     nav.appendChild(skipBtn);
-    nav.appendChild(dots);
+    nav.appendChild(this.dotsContainer);
     nav.appendChild(prevBtn);
     nav.appendChild(nextBtn);
 
     this.tooltipEl.appendChild(this.tooltipTitleEl);
-    this.tooltipEl.appendChild(tooltipDesc);
+    this.tooltipEl.appendChild(this.tooltipDescEl);
     this.tooltipEl.appendChild(nav);
+    this.tooltipPanel?.appendChild(this.tooltipEl);
 
-    this.root.appendChild(this.backdropEl);
-    this.root.appendChild(this.spotlightEl);
-    this.root.appendChild(this.tooltipEl);
-
-    doc.documentElement!.appendChild(this.root);
-
-    this.resizeHandler = () => this.repositionTooltip();
+    this.resizeHandler = () => this.reposition();
     this.targetWindow.addEventListener("resize", this.resizeHandler);
-
-    // show animation
-    requestAnimationFrame(() => {
-      if (this.tooltipEl) this.tooltipEl.classList.add("floorp-tour-visible");
-    });
   }
 
   updateStep(step: TourStep, currentStep: number, totalSteps: number): void {
-    this.stepCount = totalSteps;
-    if (!this.root || !this.tooltipTitleEl || !this.tooltipDescEl) return;
+    if (!this.tooltipTitleEl || !this.tooltipDescEl) return;
 
-    // Update passthrough mode
-    if (step.passthrough) {
-      this.root.classList.add("floorp-tour-passthrough");
-    } else {
-      this.root.classList.remove("floorp-tour-passthrough");
-    }
+    console.log("[GuidedTour:updateStep]", {
+      currentStep,
+      totalSteps,
+      selector: step.selector,
+      placement: step.tooltipPlacement,
+      titleKey: step.titleKey,
+    });
 
-    // Update text
     this.tooltipTitleEl.textContent = step.titleKey;
     this.tooltipDescEl.textContent = step.descriptionKey;
-
-    // Update dots
     this.updateDots(currentStep, totalSteps);
 
-    // Update button labels
-    const nav = this.tooltipEl!.querySelector(".floorp-tour-tooltip-nav");
+    const nav = this.tooltipEl?.querySelector(".floorp-tour-tooltip-nav");
     if (nav) {
-      const skipBtn = nav.querySelector(".floorp-tour-skip") as HTMLButtonElement;
-      const prevBtn = nav.querySelector(".floorp-tour-btn:not(.floorp-tour-btn-primary)") as HTMLButtonElement;
-      const nextBtn = nav.querySelector(".floorp-tour-btn-primary") as HTMLButtonElement;
-
-      if (skipBtn) skipBtn.textContent = currentStep === totalSteps - 1 ? "" : "Skip";
-      if (prevBtn) prevBtn.style.visibility = currentStep === 0 ? "hidden" : "visible";
-      if (nextBtn) nextBtn.textContent = currentStep === totalSteps - 1 ? "Got it" : "Next →";
+      const skip = nav.querySelector(".floorp-tour-skip") as HTMLButtonElement;
+      const prev = nav.querySelector(
+        ".floorp-tour-btn:not(.floorp-tour-btn-primary)",
+      ) as HTMLButtonElement;
+      const next = nav.querySelector(
+        ".floorp-tour-btn-primary",
+      ) as HTMLButtonElement;
+      if (skip)
+        skip.textContent =
+          currentStep === totalSteps - 1 ? "" : i18next.t("guidedTour.skip");
+      if (prev)
+        prev.style.visibility = currentStep === 0 ? "hidden" : "visible";
+      if (next)
+        next.textContent =
+          currentStep === totalSteps - 1
+            ? i18next.t("guidedTour.finish")
+            : i18next.t("guidedTour.next");
     }
 
-    // Position spotlight and tooltip
     this.currentSelector = step.selector;
     this.currentPlacement = step.tooltipPlacement;
-    this.positionSpotlight(step.selector, step.tooltipPlacement);
+    this.positionPanels(step.selector, step.tooltipPlacement);
+  }
 
-    // Handle center placement class
-    if (step.tooltipPlacement === "center" || !step.selector) {
-      this.root.classList.add("floorp-tour-center");
+  private positionPanels(
+    selector: string | null,
+    placement: TooltipPlacement,
+  ): void {
+    const doc = this.targetWindow.document;
+    if (!doc) return;
+
+    // Debug: log positioning info
+    console.log("[GuidedTour:positionPanels]", {
+      selector,
+      placement,
+      spotlightPanel: !!this.spotlightPanel,
+      tooltipPanel: !!this.tooltipPanel,
+    });
+
+    // Spotlight — UITour: openPopup(target, "overlap", offsetX, offsetY)
+    if (selector) {
+      const target = doc.querySelector(selector);
+      if (target && this.spotlightPanel && this.spotlightBox) {
+        const rect = target.getBoundingClientRect();
+        const minSize = 24;
+        const highlightW = Math.max(rect.width, minSize);
+        const highlightH = Math.max(rect.height, minSize);
+        this.spotlightBox.style.width = `${highlightW}px`;
+        this.spotlightBox.style.height = `${highlightH}px`;
+        this.spotlightBox.style.display = "block";
+        const offsetX = (rect.width - highlightW) / 2;
+        const offsetY = (rect.height - highlightH) / 2;
+        // MovePopupTo avoids hidePopup which can cascade-close other XUL popups
+        if (isOpen(this.spotlightPanel)) {
+          try {
+            this.spotlightPanel.moveTo(
+              Math.round(rect.x + offsetX),
+              Math.round(rect.y + offsetY),
+            );
+          } catch {
+            // fallback: hide and reopen
+            this.spotlightPanel.hidePopup();
+            this.spotlightPanel.openPopup(target, "overlap", offsetX, offsetY);
+          }
+        } else {
+          this.spotlightPanel.openPopup(target, "overlap", offsetX, offsetY);
+        }
+        const spotRect = this.spotlightBox.getBoundingClientRect();
+        console.log("[GuidedTour:spotlight:positioned]", {
+          target: { tag: target.tagName, id: target.id, x: rect.x, y: rect.y, w: rect.width, h: rect.height },
+          spotRect: { x: spotRect.x, y: spotRect.y, w: spotRect.width, h: spotRect.height },
+        });
+      } else {
+        console.log("[GuidedTour:spotlight] target not found or panel missing", {
+          target: !!target,
+          spotlightPanel: !!this.spotlightPanel,
+          spotlightBox: !!this.spotlightBox,
+        });
+        this.spotlightBox?.style.setProperty("display", "none");
+        if (isOpen(this.spotlightPanel)) this.spotlightPanel!.hidePopup();
+      }
     } else {
-      this.root.classList.remove("floorp-tour-center");
+      this.spotlightBox?.style.setProperty("display", "none");
+      if (isOpen(this.spotlightPanel)) this.spotlightPanel!.hidePopup();
     }
 
-    // Reset tooltip visibility for animation
-    this.tooltipEl!.classList.remove("floorp-tour-visible");
-    requestAnimationFrame(() => {
-      if (this.tooltipEl) this.tooltipEl.classList.add("floorp-tour-visible");
-    });
+    // Tooltip — UITour: openPopup(target, alignment, x, y)
+    if (isOpen(this.tooltipPanel)) this.tooltipPanel!.hidePopup();
+    if (selector) {
+      const target = doc.querySelector(selector);
+      if (target && this.tooltipPanel) {
+        const alignment = this.placementToAlignment(placement);
+        const targetRect = target.getBoundingClientRect();
+        this.tooltipPanel.openPopup(target, alignment, 0, 0);
+        // Log after popup is positioned
+        const tooltipRect = this.tooltipEl?.getBoundingClientRect();
+        console.log("[GuidedTour:tooltip:positioned]", {
+          viewport: { w: this.targetWindow.innerWidth, h: this.targetWindow.innerHeight },
+          target: { tag: target.tagName, id: target.id, x: targetRect.x, y: targetRect.y, w: targetRect.width, h: targetRect.height },
+          alignment,
+          tooltipPanelState: this.tooltipPanel.state,
+          tooltipRect: tooltipRect ? { x: tooltipRect.x, y: tooltipRect.y, w: tooltipRect.width, h: tooltipRect.height } : null,
+        });
+      } else {
+        console.log("[GuidedTour:tooltip] target not found", {
+          target: !!target,
+          tooltipPanel: !!this.tooltipPanel,
+        });
+      }
+    } else if (this.tooltipPanel) {
+      const browser = doc.getElementById("browser");
+      this.tooltipPanel.openPopup(browser, "after_start", 0, 0);
+      const tooltipRect = this.tooltipEl?.getBoundingClientRect();
+      console.log("[GuidedTour:tooltip:positioned] center mode", {
+        viewport: { w: this.targetWindow.innerWidth, h: this.targetWindow.innerHeight },
+        tooltipRect: tooltipRect ? { x: tooltipRect.x, y: tooltipRect.y, w: tooltipRect.width, h: tooltipRect.height } : null,
+      });
+    }
+  }
+
+  private placementToAlignment(placement: TooltipPlacement): string {
+    switch (placement) {
+      case "bottom":
+        return "bottomleft topleft";
+      case "top":
+        return "topleft bottomleft";
+      case "right":
+        return "start_before";
+      case "left":
+        return "end_before";
+      default:
+        return "overlap";
+    }
   }
 
   private updateDots(currentStep: number, totalSteps: number): void {
@@ -308,110 +367,51 @@ export class GuidedTourOverlay {
     this.dotsContainer.innerHTML = "";
     for (let i = 0; i < totalSteps; i++) {
       const dot = doc.createElement("div") as HTMLDivElement;
-      dot.className = i === currentStep
-        ? "floorp-tour-dot floorp-tour-dot-active"
-        : "floorp-tour-dot";
+      dot.className =
+        i === currentStep
+          ? "floorp-tour-dot floorp-tour-dot-active"
+          : "floorp-tour-dot";
       this.dotsContainer.appendChild(dot);
     }
   }
 
-  private positionSpotlight(
-    selector: string | null,
-    placement: TooltipPlacement,
-  ): void {
-    if (!this.spotlightEl || !this.tooltipEl) return;
-
-    if (!selector) {
-      // Full-screen centered mode
-      this.spotlightEl.style.display = "none";
-      this.tooltipEl.style.left = "50%";
-      this.tooltipEl.style.top = "50%";
-      this.tooltipEl.style.transform = "translate(-50%, -50%)";
-      return;
-    }
-
-    const target = this.targetWindow.document?.querySelector(selector);
-    if (!target) {
-      this.spotlightEl.style.display = "none";
-      // Fallback to center
-      this.tooltipEl.style.left = "50%";
-      this.tooltipEl.style.top = "50%";
-      this.tooltipEl.style.transform = "translate(-50%, -50%)";
-      return;
-    }
-
-    const rect = target.getBoundingClientRect();
-    const pad = SPOTLIGHT_PADDING;
-
-    // Show spotlight
-    this.spotlightEl.style.display = "block";
-    this.spotlightEl.style.left = `${rect.left - pad}px`;
-    this.spotlightEl.style.top = `${rect.top - pad}px`;
-    this.spotlightEl.style.width = `${rect.width + pad * 2}px`;
-    this.spotlightEl.style.height = `${rect.height + pad * 2}px`;
-
-    // Position tooltip
-    this.positionTooltip(rect, placement);
-  }
-
-  private positionTooltip(
-    targetRect: DOMRect,
-    placement: TooltipPlacement,
-  ): void {
-    if (!this.tooltipEl) return;
-
-    const tooltipWidth = 340;
-    const tooltipHeight = 160;
-    const gap = 12;
-    const vw = this.targetWindow.innerWidth;
-    const vh = this.targetWindow.innerHeight;
-
-    let left: number;
-    let top: number;
-    let transform: string = "";
-
-    switch (placement) {
-      case "bottom":
-        left = targetRect.left + targetRect.width / 2;
-        top = targetRect.bottom + gap;
-        transform = "translateX(-50%)";
-        break;
-      case "top":
-        left = targetRect.left + targetRect.width / 2;
-        top = targetRect.top - tooltipHeight - gap;
-        transform = "translateX(-50%)";
-        break;
-      case "right":
-        left = targetRect.right + gap;
-        top = targetRect.top + targetRect.height / 2;
-        transform = "translateY(-50%)";
-        break;
-      case "left":
-        left = targetRect.left - tooltipWidth - gap;
-        top = targetRect.top + targetRect.height / 2;
-        transform = "translateY(-50%)";
-        break;
-      case "center":
-      default:
-        left = vw / 2;
-        top = vh / 2;
-        transform = "translate(-50%, -50%)";
-        break;
-    }
-
-    // Clamp to viewport
-    left = Math.max(gap, Math.min(left, vw - tooltipWidth - gap));
-    top = Math.max(gap, Math.min(top, vh - tooltipHeight - gap));
-
-    this.tooltipEl.style.left = `${left}px`;
-    this.tooltipEl.style.top = `${top}px`;
-    this.tooltipEl.style.transform = transform;
-  }
-
-  private repositionTooltip(): void {
-    // Recalculate both spotlight and tooltip positions on resize
+  private reposition(): void {
+    console.log("[GuidedTour:reposition]", {
+      spotlightState: this.spotlightPanel?.state,
+      tooltipState: this.tooltipPanel?.state,
+      selector: this.currentSelector,
+    });
     if (this.currentSelector) {
-      this.positionSpotlight(this.currentSelector, this.currentPlacement);
+      this.positionPanels(this.currentSelector, this.currentPlacement);
+    }
+  }
+
+  private lastStateHash = "";
+
+  /** Check if panels are still open and log state (only on change) */
+  checkPanelState(): void {
+    const spotlightOpen = isOpen(this.spotlightPanel);
+    const tooltipOpen = isOpen(this.tooltipPanel);
+    const tooltipRect = this.tooltipEl?.getBoundingClientRect();
+    const wsPanel = this.targetWindow.document?.getElementById("workspacesToolbarButtonPanel");
+    const wsPanelRect = wsPanel?.getBoundingClientRect();
+    const wsPanelOpen = wsPanelRect ? (wsPanelRect.width > 0 && wsPanelRect.height > 0) : false;
+
+    const stateHash = `${spotlightOpen}:${tooltipOpen}:${wsPanelOpen}`;
+    if (stateHash === this.lastStateHash) return; // skip unchanged
+    this.lastStateHash = stateHash;
+
+    console.log("[GuidedTour:panelState]", {
+      spotlightOpen,
+      tooltipOpen,
+      tooltipRect: tooltipRect ? { x: tooltipRect.x, y: tooltipRect.y, w: tooltipRect.width, h: tooltipRect.height } : null,
+      wsPanelOpen,
+      wsPanelRect: wsPanelRect ? { x: wsPanelRect.x, y: wsPanelRect.y, w: wsPanelRect.width, h: wsPanelRect.height } : null,
+    });
+    // Auto-recover: if tooltip closed but should be open, re-position
+    if (!tooltipOpen && this.currentSelector) {
+      console.log("[GuidedTour:panelState] tooltip disappeared, re-positioning");
+      this.positionPanels(this.currentSelector, this.currentPlacement);
     }
   }
 
@@ -420,15 +420,12 @@ export class GuidedTourOverlay {
       this.targetWindow.removeEventListener("resize", this.resizeHandler);
       this.resizeHandler = null;
     }
-
-    if (this.root && this.root.parentNode) {
-      this.root.parentNode.removeChild(this.root);
-    }
-
-    this.root = null;
-    this.spotlightEl = null;
+    closePanel(this.spotlightPanel);
+    closePanel(this.tooltipPanel);
+    this.spotlightPanel = null;
+    this.spotlightBox = null;
+    this.tooltipPanel = null;
     this.tooltipEl = null;
-    this.backdropEl = null;
     this.tooltipTitleEl = null;
     this.tooltipDescEl = null;
     this.dotsContainer = null;

@@ -43,7 +43,10 @@
       "matchedText": "Matched Text",
       "results": "Search Results"
     },
-    "splitView": "Split View"
+    "splitView": "Split View",
+    "badges": {
+      "new": "New"
+    }
   },
   "home": {
     "welcome": "Welcome, {{name}} 👋",

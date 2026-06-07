@@ -28,12 +28,9 @@ export default function Page() {
     };
 
     fetchDefaultValues();
-    document.documentElement.addEventListener("onfocus", fetchDefaultValues);
+    window.addEventListener("focus", fetchDefaultValues);
     return () => {
-      document.documentElement.removeEventListener(
-        "onfocus",
-        fetchDefaultValues,
-      );
+      window.removeEventListener("focus", fetchDefaultValues);
     };
   }, [setValue]);
 

@@ -43,7 +43,10 @@
       "matchedText": "一致したテキスト",
       "results": "検索結果"
     },
-    "splitView": "分割ビュー"
+    "splitView": "分割ビュー",
+    "badges": {
+      "new": "新着"
+    }
   },
   "home": {
     "welcome": "ようこそ、 {{name}} さん 👋",

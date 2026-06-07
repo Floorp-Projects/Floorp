@@ -15,11 +15,12 @@ export const workspacesTour: TourDefinition = {
       tooltipPlacement: "bottom",
     },
     {
-      selector: "#workspaces-toolbar-button",
+      selector: "#workspacesToolbarButtonPanel",
       titleKey: "guidedTour.workspaces.step2.title",
       descriptionKey: "guidedTour.workspaces.step2.description",
       tooltipPlacement: "bottom",
       action: { type: "click", selector: "#workspaces-toolbar-button" },
+      waitForSelector: "#workspacesToolbarButtonPanel",
     },
     {
       selector: "#workspacesToolbarButtonPanel",
@@ -29,15 +30,10 @@ export const workspacesTour: TourDefinition = {
       waitForSelector: "#workspacesToolbarButtonPanel",
     },
     {
-      selector: "#workspaces-toolbar-item-context-menu",
+      selector: "#workspaces-toolbar-button",
       titleKey: "guidedTour.workspaces.step4.title",
       descriptionKey: "guidedTour.workspaces.step4.description",
       tooltipPlacement: "right",
-      action: {
-        type: "rightClick",
-        selector: "#workspaces-toolbar-button",
-      },
-      waitForSelector: "#workspaces-toolbar-item-context-menu",
     },
     {
       selector: null,
