@@ -7,6 +7,8 @@ import {
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
 import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
+import { getEnglishGestureKeywords } from "./utils/getEnglishKeywords.ts";
+import { segmentTextForKeywords } from "./utils/budouxSegmenter.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
@@ -259,17 +261,24 @@ function buildGestureCommands(win?: Window): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
   return gestureActions
     .filter((action) => !EXCLUDED_PALETTE_ACTIONS.has(action.name))
-    .map((action) => ({
-      id: action.name,
-      label: getActionDisplayNameByOrientation(action.name, win),
-      description: getActionDescriptionByOrientation(action.name, win),
-      category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
-      keywords: [
-        ...(ACTION_KEYWORDS[action.name] ?? []),
-        ...getJapaneseReadings(action.name),
-      ],
-      fn: action.fn,
-    }));
+    .map((action) => {
+      const label = getActionDisplayNameByOrientation(action.name, win);
+      const description = getActionDescriptionByOrientation(action.name, win);
+      return {
+        id: action.name,
+        label,
+        description,
+        category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
+        keywords: [
+          ...(ACTION_KEYWORDS[action.name] ?? []),
+          ...getJapaneseReadings(action.name),
+          ...getEnglishGestureKeywords(action.name),
+          ...segmentTextForKeywords(label),
+          ...segmentTextForKeywords(description),
+        ],
+        fn: action.fn,
+      };
+    });
 }
 
 function buildStepCommands(): PaletteCommand[] {

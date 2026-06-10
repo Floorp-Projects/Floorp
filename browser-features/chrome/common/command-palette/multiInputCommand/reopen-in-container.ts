@@ -3,6 +3,8 @@
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "../utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "../utils/budouxSegmenter.ts";
 
 export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {
@@ -80,6 +82,8 @@ export const reopenInContainerCommand: PaletteCommand = {
     "identity",
     "reopen in",
     ...getJapaneseReadings("floorp-reopen-in-container"),
+    ...getEnglishStepCommandKeywords("commandPalette.reopenInContainer", "commandPalette.reopenInContainerDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.reopenInContainer", "commandPalette.reopenInContainerDescription"),
   ],
   steps: [
     {

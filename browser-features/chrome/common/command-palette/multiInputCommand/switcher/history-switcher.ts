@@ -13,6 +13,8 @@ import type {
   HistoryPlacesUtilsModule,
 } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 const PAGE_SIZE = 20;
 
@@ -137,6 +139,8 @@ export const historySwitcherCommand: PaletteCommand = {
     "recent pages",
     "visited",
     "open history",
+    ...getEnglishStepCommandKeywords("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
     ...getJapaneseReadings("floorp-history-switcher"),
   ],
   steps: [

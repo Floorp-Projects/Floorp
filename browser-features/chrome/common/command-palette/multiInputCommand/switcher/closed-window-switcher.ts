@@ -6,6 +6,8 @@ import type {
   CommandStepChoice,
 } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 export function loadClosedWindows(): Promise<CommandStepChoice[]> {
   try {
@@ -50,6 +52,8 @@ export const closedWindowSwitcherCommand: PaletteCommand = {
     "undo close window",
     "restore window",
     "recently closed",
+    ...getEnglishStepCommandKeywords("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
     ...getJapaneseReadings("floorp-closed-window-switcher"),
   ],
   steps: [

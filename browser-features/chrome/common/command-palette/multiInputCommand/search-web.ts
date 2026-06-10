@@ -3,6 +3,8 @@
 import i18next from "i18next";
 import type { PaletteCommand, CommandStepChoice } from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
+import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
+import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 
 export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {
@@ -66,6 +68,8 @@ export const searchWebCommand: PaletteCommand = {
     "lookup",
     "google",
     ...getJapaneseReadings("floorp-search-web"),
+    ...getEnglishStepCommandKeywords("commandPalette.searchWeb", "commandPalette.searchWebDescription"),
+    ...getSegmentedKeywordsFromI18nKeys("commandPalette.searchWeb", "commandPalette.searchWebDescription"),
   ],
   steps: [
     {
