@@ -79,22 +79,11 @@ export function InstalledApps() {
     return !containers.some((c) => c.userContextId === userContextId);
   };
 
-  const CONTAINER_COLOR_MAP: Record<string, string> = {
-    blue: "#37adff",
-    turquoise: "#00c79a",
-    green: "#51cd00",
-    yellow: "#ffcb00",
-    orange: "#ff9f00",
-    red: "#ff613d",
-    pink: "#ff4bda",
-    purple: "#af51f5",
-  };
-
   const getContainerColor = (userContextId?: number): string | null => {
     if (!userContextId || userContextId === 0) return null;
     const container = containers.find((c) => c.userContextId === userContextId);
     if (!container) return null;
-    return CONTAINER_COLOR_MAP[container.color] ?? "#37adff";
+    return container.color || null;
   };
 
   const handleRename = (app: InstalledApp) => {
