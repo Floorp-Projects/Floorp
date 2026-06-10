@@ -247,6 +247,27 @@ export interface ArticleResult {
 }
 
 // =============================================================================
+// JavaScript Evaluation
+// =============================================================================
+
+/**
+ * Result from evaluating JavaScript in the page context.
+ * The `result` field is always JSON-serializable.
+ */
+export interface EvaluateResult {
+  /** Whether evaluation completed without throwing */
+  success: boolean;
+  /** JSON-serializable result value (omitted on error) */
+  result?: unknown;
+  /** JS type of the returned value: "string" | "number" | "boolean" | "object" | "array" | "undefined" | "null" | "function" | "element" | etc. */
+  resultType?: string;
+  /** Error message (when success is false) */
+  error?: string;
+  /** Error constructor name, e.g. "SyntaxError", "TypeError" (when success is false) */
+  errorType?: string;
+}
+
+// =============================================================================
 // Actor message type map (for type-safe sendQuery)
 // =============================================================================
 
@@ -287,5 +308,9 @@ export interface WebScraperMessages {
   "WebScraper:WaitForElement": {
     request: { selector: string; timeout?: number; state?: string };
     response: boolean;
+  };
+  "WebScraper:Evaluate": {
+    request: { script: string };
+    response: EvaluateResult;
   };
 }

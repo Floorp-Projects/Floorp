@@ -307,6 +307,21 @@ function updateForwardingTarget(target: EventTarget | null): void {
         // Event was handled, don't forward
         return;
       }
+
+      // Skip click forwarding for buttons with dedicated fallback handlers.
+      // Their panels are opened on mousedown by attachFallbackNavbarHandlers,
+      // and forwarding the click causes the panel to close immediately.
+      // See Issue #2079.
+      const toolbarBtn = target?.closest("toolbarbutton, button");
+      if (toolbarBtn) {
+        const btnId = toolbarBtn.id || "";
+        if (
+          btnId === "fxa-toolbar-menu-button" ||
+          btnId === "unified-extensions-button"
+        ) {
+          return;
+        }
+      }
     }
 
     forwardEventToNavigatorToolbox(event, toolbox);
@@ -334,8 +349,14 @@ function isXULButton(element: Element | null): boolean {
     return false;
   }
 
-  // Check if it's a URL bar button (star-button, reload-button, etc.)
+  // Skip buttons handled by fallback navbar handlers — their click→command
+  // conversion is harmful when the panel is open. See Issue #2079.
   const id = button.id || "";
+  if (id === "fxa-toolbar-menu-button" || id === "unified-extensions-button") {
+    return false;
+  }
+
+  // Check if it's a URL bar button (star-button, reload-button, etc.)
   const isUrlbarButton =
     id.includes("button") ||
     id.includes("star") ||
@@ -787,27 +808,27 @@ export class DOMLayoutManager {
   }> = [];
 
   private get navBar(): XULElement {
-    const element = document?.getElementById("nav-bar") as XULElement;
+    const element = document?.getElementById("nav-bar") as unknown as XULElement;
     return element;
   }
 
   private get fullscreenWrapper(): XULElement {
-    const element = document?.getElementById("a11y-announcement") as XULElement;
+    const element = document?.getElementById("a11y-announcement") as unknown as XULElement;
     return element;
   }
 
   private get navigatorToolbox(): XULElement {
-    const element = document?.getElementById("navigator-toolbox") as XULElement;
+    const element = document?.getElementById("navigator-toolbox") as unknown as XULElement;
     return element;
   }
 
   private get personalToolbar(): XULElement {
-    const element = document?.getElementById("PersonalToolbar") as XULElement;
+    const element = document?.getElementById("PersonalToolbar") as unknown as XULElement;
     return element;
   }
 
   private get appContent(): XULElement {
-    const element = document?.getElementById("appcontent") as XULElement;
+    const element = document?.getElementById("appcontent") as unknown as XULElement;
     return element;
   }
 
@@ -1620,8 +1641,8 @@ export class DOMLayoutManager {
       navbar &&
       navbar.isConnected &&
       (this.isNavbarAtBottom ||
-        (navbar.parentElement !== this.navigatorToolbox &&
-          navbar.parentElement !== null));
+        (navbar.parentElement !== null &&
+          (navbar.parentElement as unknown as XULElement | null) !== this.navigatorToolbox));
 
     let insertionAnchor: XULElement | null = null;
     if (navbar && navbar.isConnected && navbarAtBottom) {

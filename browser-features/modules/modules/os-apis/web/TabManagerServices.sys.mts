@@ -10,6 +10,8 @@ import type { WaitForElementState } from "../../os-server/shared/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
+import { CookieHelper } from "./shared/CookieHelper.sys.mts";
+import { NetworkIdleHelper } from "./shared/NetworkIdleHelper.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -1307,60 +1309,7 @@ class TabManager {
   > {
     const entry = this._getEntry(instanceId);
     if (!entry) return Promise.resolve([]);
-
-    try {
-      const uri = entry.browser.browsingContext?.currentURI;
-      if (!uri) return Promise.resolve([]);
-
-      const host = uri.host;
-      const principal =
-        entry.browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
-      const originAttributes = principal?.originAttributes ?? {};
-      const cookies: Array<{
-        name: string;
-        value: string;
-        domain?: string;
-        path?: string;
-        secure?: boolean;
-        httpOnly?: boolean;
-        sameSite?: string;
-        expirationDate?: number;
-      }> = [];
-
-      const cookieManager = Services.cookies;
-      const originAttrCandidates = [originAttributes];
-      // Always try empty originAttributes as fallback to find cookies
-      // set without specific container/private browsing attributes
-      originAttrCandidates.push({});
-
-      const seen = new Set<string>();
-
-      for (const attrs of originAttrCandidates) {
-        const enumerator = cookieManager.getCookiesFromHost(host, attrs);
-
-        for (const cookie of enumerator) {
-          const key = `${cookie.name}\u0001${cookie.host}\u0001${cookie.path}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-
-          cookies.push({
-            name: cookie.name,
-            value: cookie.value,
-            domain: cookie.host,
-            path: cookie.path,
-            secure: cookie.isSecure,
-            httpOnly: cookie.isHttpOnly,
-            sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
-            expirationDate: cookie.expiry,
-          });
-        }
-      }
-
-      return Promise.resolve(cookies);
-    } catch (e) {
-      console.error("TabManager: Error getting cookies:", e);
-      return Promise.resolve([]);
-    }
+    return Promise.resolve(CookieHelper.getCookies(entry.browser));
   }
 
   /**
@@ -1383,60 +1332,16 @@ class TabManager {
     if (!entry) return Promise.resolve(null);
 
     try {
+      // Strategy 1: Services.cookies.add() (parent-process)
+      if (CookieHelper.setCookieDirect(entry.browser, cookie)) {
+        return true;
+      }
+
+      // Strategy 2: Actor-based fallback (content-process document.cookie)
       const uri = entry.browser.browsingContext?.currentURI;
-      if (!uri) return Promise.resolve(false);
-
-      const sameSiteMap: Record<string, number> = {
-        None: 0,
-        Lax: 1,
-        Strict: 2,
-      };
-
-      const principal =
-        entry.browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
-      const originAttributes = principal?.originAttributes ?? {};
-
-      const isSecure = cookie.secure ?? uri.schemeIs("https");
-      let requestedSameSite = cookie.sameSite ?? "Lax";
-      if (requestedSameSite === "None" && !isSecure) {
-        // Firefox requires Secure for SameSite=None; fall back to Lax on http.
-        requestedSameSite = "Lax";
-      }
-      const schemeMap = isSecure
-        ? Ci.nsICookie.SCHEME_HTTPS
-        : uri.schemeIs("http")
-          ? Ci.nsICookie.SCHEME_HTTP
-          : 0; // SCHEME_UNKNOWN
-
-      const attrsList = [originAttributes];
-      if (Object.keys(originAttributes).length > 0) {
-        attrsList.push({});
-      }
-
-      const errors: Array<string | number> = [];
-
-      const cookieString = (() => {
-        const parts = [
-          `${cookie.name}=${cookie.value}`,
-          `Path=${cookie.path ?? "/"}`,
-          `SameSite=${requestedSameSite}`,
-        ];
-        if (cookie.domain ?? uri.host) {
-          parts.push(`Domain=${cookie.domain ?? uri.host}`);
-        }
-        if (cookie.expirationDate) {
-          parts.push(
-            `Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`,
-          );
-        }
-        if (isSecure) {
-          parts.push("Secure");
-        }
-        return parts.filter(Boolean).join("; ");
-      })();
-
-      try {
-        const actorResult = await this._queryActor<boolean>(
+      if (uri) {
+        const cookieString = CookieHelper.buildCookieString(cookie, uri.host);
+        const result = await this._queryActor<boolean>(
           instanceId,
           "WebScraper:SetCookieString",
           {
@@ -1445,68 +1350,13 @@ class TabManager {
             cookieValue: cookie.value,
           },
         );
-        if (actorResult) {
-          return true;
-        }
-      } catch (err) {
-        errors.push(String(err));
+        if (result) return true;
       }
 
-      const addWithAttrs = (attrs: Record<string, unknown>) => {
-        try {
-          const validation = Services.cookies.add(
-            cookie.domain ?? uri.host,
-            cookie.path ?? "/",
-            cookie.name,
-            cookie.value,
-            isSecure,
-            cookie.httpOnly ?? false,
-            false, // isSession
-            cookie.expirationDate ??
-              Math.floor(Date.now() / 1000) + 86400 * 365,
-            attrs,
-            sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
-            schemeMap,
-            Boolean(
-              (attrs as unknown as { partitionKey?: unknown }).partitionKey,
-            ),
-          );
-
-          if (validation?.result !== Ci.nsICookieValidation.eOK) {
-            errors.push(validation?.result ?? "unknown");
-            errors.push(validation?.errorString ?? "");
-            console.error(
-              "TabManager: Cookie rejected:",
-              validation?.result,
-              validation?.errorString,
-            );
-            return false;
-          }
-
-          // Cookie was successfully added (validation passed)
-          // Note: cookieExists() may return false immediately after add() due to timing
-          // or originAttributes mismatch, so we trust the validation result instead
-          return true;
-        } catch (err) {
-          errors.push(String(err));
-          return false;
-        }
-      };
-
-      for (const attrs of attrsList) {
-        if (addWithAttrs(attrs)) {
-          return Promise.resolve(true);
-        }
-      }
-
-      console.error(
-        "TabManager: Cookie could not be set (all attempts failed)",
-        errors,
-      );
-      return Promise.resolve(false);
+      return false;
     } catch (e) {
       console.error("TabManager: Error setting cookie:", e);
-      return Promise.resolve(false);
+      return false;
     }
   }
 
@@ -1744,6 +1594,7 @@ class TabManager {
 
   /**
    * Waits for network to become idle (no pending requests)
+   * Delegates to shared NetworkIdleHelper using GlobalHTTPTracker polling.
    */
   public async waitForNetworkIdle(
     instanceId: string,
@@ -1757,7 +1608,6 @@ class TabManager {
     // Wait for browsingContext to be ready (may not be available immediately after navigation)
     let bcid = browser.browsingContext?.id;
     if (!bcid) {
-      // Wait up to 500ms for browsingContext to become available
       for (let i = 0; i < 5; i++) {
         await new Promise((r) => setTimeout(r, 100));
         bcid = browser.browsingContext?.id;
@@ -1771,84 +1621,7 @@ class TabManager {
       }
     }
 
-    return new Promise((resolve) => {
-      const idleThreshold = 500;
-      const state = {
-        idleTimer: null as ReturnType<typeof setTimeout> | null,
-        resolved: false,
-      };
-
-      const resetIdleTimer = () => {
-        if (state.idleTimer) {
-          clearTimeout(state.idleTimer);
-        }
-        state.idleTimer = setTimeout(() => {
-          const activeCount = GlobalHTTPTracker.getActiveCount(bcid);
-          if (!state.resolved && activeCount === 0) {
-            console.log(`[TabManager] Network reached idle for BCID ${bcid}.`);
-            state.resolved = true;
-            cleanup();
-            resolve(true);
-          } else if (activeCount > 0) {
-            resetIdleTimer();
-          }
-        }, idleThreshold);
-      };
-
-      const cleanup = () => {
-        console.log("[TabManager] Cleaning up waitForNetworkIdle tracking...");
-        if (state.idleTimer) {
-          clearTimeout(state.idleTimer);
-        }
-        try {
-          Services.obs.removeObserver(observer, "http-on-opening-request");
-          Services.obs.removeObserver(observer, "http-on-stop-request");
-        } catch {
-          // Ignore
-        }
-      };
-
-      const observer = {
-        observe(subject: nsISupports, topic: string, _data: string | null) {
-          try {
-            // deno-lint-ignore no-explicit-any
-            const channel = (subject as any).QueryInterface(Ci.nsIHttpChannel);
-            if (channel.loadInfo?.browsingContextID === bcid) {
-              if (topic === "http-on-opening-request") {
-                if (state.idleTimer) {
-                  clearTimeout(state.idleTimer);
-                  state.idleTimer = null;
-                }
-              } else if (topic === "http-on-stop-request") {
-                resetIdleTimer();
-              }
-            }
-          } catch {
-            // Ignore
-          }
-        },
-      };
-
-      try {
-        Services.obs.addObserver(observer, "http-on-opening-request");
-        Services.obs.addObserver(observer, "http-on-stop-request");
-      } catch (e) {
-        console.error("TabManager: Error adding local observer:", e);
-        resolve(false);
-        return;
-      }
-
-      resetIdleTimer();
-
-      setTimeout(() => {
-        if (!state.resolved) {
-          console.log("[TabManager] waitForNetworkIdle timed out.");
-          state.resolved = true;
-          cleanup();
-          resolve(false);
-        }
-      }, timeout);
-    });
+    return NetworkIdleHelper.waitForIdle(bcid, { timeout });
   }
 
   /**
@@ -1925,6 +1698,28 @@ class TabManager {
       { selector, text },
     );
     return result;
+  }
+
+  /**
+   * Evaluates a JavaScript string in the page context.
+   * Supports async/await expressions. Returns a structured result
+   * with JSON-serializable values.
+   */
+  public evaluate(
+    instanceId: string,
+    script: string,
+  ): Promise<{ success: boolean; result?: unknown; resultType?: string; error?: string; errorType?: string } | null> {
+    return this._queryActor<{
+      success: boolean;
+      result?: unknown;
+      resultType?: string;
+      error?: string;
+      errorType?: string;
+    } | null>(
+      instanceId,
+      "WebScraper:Evaluate",
+      { script },
+    );
   }
 }
 

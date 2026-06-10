@@ -69,7 +69,7 @@ export class PinnedTabController {
   ): void {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
-    Array.from(pinnedTabs as Element[]).forEach((tab: Element) => {
+    (Array.from(pinnedTabs) as Element[]).forEach((tab) => {
       tab.setAttribute("newPin", "true");
 
       const firstUnpinnedTab = newContainer.querySelector(

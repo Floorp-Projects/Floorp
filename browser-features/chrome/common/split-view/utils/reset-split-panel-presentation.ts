@@ -14,19 +14,26 @@ type SplitPanelLike = {
 
 export function resetSplitPanelPresentationState(
   panel: SplitPanelLike,
+  selectedPanel?: SplitPanelLike | null,
+  force?: boolean,
 ): boolean {
-  const shouldReset =
+  const hasSplitMarker = force ||
     panel.classList.contains("split-view-panel") ||
     panel.classList.contains("split-view-panel-active") ||
     panel.hasAttribute("column");
-  if (!shouldReset) {
+
+  if (!hasSplitMarker) {
     return false;
   }
+
+  const isSelected = selectedPanel && panel === selectedPanel;
   panel.classList.remove(
     "split-view-panel",
     "split-view-panel-active",
-    "deck-selected",
   );
+  if (!isSelected) {
+    panel.classList.remove("deck-selected");
+  }
   panel.removeAttribute("column");
   panel.removeAttribute("data-floorp-active-pane");
   panel.removeAttribute("data-floorp-drag-source");

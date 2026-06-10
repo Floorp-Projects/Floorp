@@ -211,4 +211,24 @@ export interface BrowserAutomationService {
 
   // Visual effects
   clearEffects?(instanceId: string): Promise<boolean>;
+
+  // JavaScript evaluation
+  evaluate?(
+    instanceId: string,
+    script: string,
+  ): Promise<EvaluateResult | null>;
+}
+
+/** Result from evaluating JavaScript in the page context */
+export interface EvaluateResult {
+  /** Whether evaluation completed without throwing */
+  success: boolean;
+  /** JSON-serializable result value */
+  result?: unknown;
+  /** JS type of the returned value */
+  resultType?: string;
+  /** Error message (when success is false) */
+  error?: string;
+  /** Error constructor name, e.g. "SyntaxError" */
+  errorType?: string;
 }

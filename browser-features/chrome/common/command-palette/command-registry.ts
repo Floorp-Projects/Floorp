@@ -6,18 +6,37 @@ import {
   getActionDisplayName,
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
+import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
+import { getEnglishGestureKeywords } from "./utils/getEnglishKeywords.ts";
+import { segmentTextForKeywords } from "./utils/budouxSegmenter.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { getTabCommands, isTabCommand } from "./tab-provider.ts";
 import { getConfig, shortcutToString } from "../keyboard-shortcut/config.ts";
+import {
+  bookmarkSwitcherCommand,
+  closedTabSwitcherCommand,
+  closedWindowSwitcherCommand,
+  historySwitcherCommand,
+  openUrlCommand,
+  searchWebCommand,
+  reopenInContainerCommand,
+  tabSwitcherCommand,
+} from "./multiInputCommand/index.ts";
+import { searchHistory, isHistoryCommand } from "./history-provider.ts";
+import { searchBookmarks, isBookmarkCommand } from "./bookmark-provider.ts";
+import type {
+  CommandStepChoice,
+  StepChoicesResult,
+  CommandStep,
+  PaletteCommand,
+} from "./types.ts";
 
-export interface PaletteCommand {
-  id: string;
-  label: string;
-  description: string;
-  category: string;
-  keywords: string[];
-  fn: (win: Window) => void;
-}
+export type {
+  CommandStepChoice,
+  StepChoicesResult,
+  CommandStep,
+  PaletteCommand,
+};
 
 const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-back": "navigation",
@@ -28,6 +47,9 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-open-home-page": "navigation",
 
   "gecko-close-tab": "tabs",
+  "gecko-close-other-tabs": "tabs",
+  "gecko-close-tabs-to-start": "tabs",
+  "gecko-close-tabs-to-end": "tabs",
   "gecko-open-new-tab": "tabs",
   "gecko-duplicate-tab": "tabs",
   "gecko-reload-all-tabs": "tabs",
@@ -99,8 +121,12 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "floorp-toggle-navigation-panel": "floorp",
   "floorp-toggle-zen-mode": "floorp",
   "floorp-toggle-command-palette": "floorp",
+  "floorp-open-settings": "floorp",
+  "floorp-open-hub": "floorp",
 
   "floorp-show-pip": "media",
+  "floorp-toggle-share-mode": "floorp",
+  "floorp-copy-page-url-as-markdown": "page",
 };
 
 const ACTION_KEYWORDS: Record<string, string[]> = {
@@ -109,6 +135,27 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-reload": ["refresh", "reload"],
   "gecko-force-reload": ["hard refresh", "hard reload", "skip cache"],
   "gecko-close-tab": ["close", "remove tab"],
+  "gecko-close-other-tabs": [
+    "close other",
+    "close all other tabs",
+    "close others",
+  ],
+  "gecko-close-tabs-to-start": [
+    "close",
+    "up",
+    "close left",
+    "close above",
+    "close tabs to left",
+    "close previous tabs",
+  ],
+  "gecko-close-tabs-to-end": [
+    "close",
+    "down",
+    "close right",
+    "close below",
+    "close tabs to right",
+    "close following tabs",
+  ],
   "gecko-open-new-tab": ["new", "open tab", "create tab"],
   "gecko-duplicate-tab": ["clone", "copy tab"],
   "gecko-show-next-tab": ["next tab", "switch right"],
@@ -137,32 +184,125 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "floorp-hide-user-interface": ["hide ui", "hide interface"],
   "floorp-toggle-zen-mode": ["zen", "focus", "distraction free"],
   "floorp-toggle-command-palette": ["command palette", "palette", "command"],
+  "floorp-open-settings": ["settings", "preferences", "options"],
+  "floorp-open-hub": ["hub", "floorp hub", "settings", "preferences"],
   "floorp-show-pip": ["pip", "picture in picture", "mini player"],
+  "floorp-toggle-share-mode": [
+    "share",
+    "share mode",
+    "presentation",
+    "screen share",
+  ],
+  "floorp-copy-page-url-as-markdown": [
+    "copy",
+    "markdown",
+    "url",
+    "title",
+    "link",
+    "obsidian",
+  ],
   "gecko-enter-into-customize-mode": ["customize", "toolbar"],
   "gecko-quit-from-application": ["quit", "exit"],
 };
 
-let cachedCommands: PaletteCommand[] | null = null;
+/**
+ * Mouse gesture actions listed here will be excluded from the command palette.
+ * Useful for: dangerous operations, duplicates, or commands that are not appropriate
+ * for the palette UI. This does NOT affect mouse gesture assignment — excluded
+ * actions remain available in the gesture settings.
+ */
+const EXCLUDED_PALETTE_ACTIONS: ReadonlySet<string> = new Set([
+  // Add action IDs here to exclude them from the command palette, e.g.:
+  "floorp-toggle-command-palette", // This would be redundant to include in the palette
+  "gecko-search-the-web", // This is already available as a step command, and may not work well as a gesture
+]);
 
-function buildGestureCommands(): PaletteCommand[] {
+const cachedCommands: Record<string, PaletteCommand[]> = {};
+
+type ChromeWindow = Window & { gBrowser?: typeof globalThis.gBrowser };
+
+function isVerticalMode(win?: Window): boolean {
+  const tabContainer = (win as ChromeWindow | undefined)?.gBrowser
+    ?.tabContainer as (EventTarget & { verticalMode?: boolean }) | undefined;
+  return !!tabContainer?.verticalMode;
+}
+
+function getActionDisplayNameByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = isVerticalMode(win);
+  if (!isVertical) {
+    return getActionDisplayName(actionId);
+  }
+
+  const verticalLabel = getActionDisplayName(`${actionId}-vertical`);
+  return verticalLabel !== `${actionId}-vertical`
+    ? verticalLabel
+    : getActionDisplayName(actionId);
+}
+
+function getActionDescriptionByOrientation(
+  actionId: string,
+  win?: Window,
+): string {
+  const isVertical = isVerticalMode(win);
+  if (!isVertical) {
+    return getActionDescription(actionId);
+  }
+
+  const verticalDescription = getActionDescription(`${actionId}-vertical`);
+  return verticalDescription !== `${actionId}-vertical`
+    ? verticalDescription
+    : getActionDescription(actionId);
+}
+
+function buildGestureCommands(win?: Window): PaletteCommand[] {
   const gestureActions = getAllGestureActions();
-  return gestureActions.map((action) => ({
-    id: action.name,
-    label: getActionDisplayName(action.name),
-    description: getActionDescription(action.name),
-    category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
-    keywords: ACTION_KEYWORDS[action.name] ?? [],
-    fn: action.fn,
-  }));
+  return gestureActions
+    .filter((action) => !EXCLUDED_PALETTE_ACTIONS.has(action.name))
+    .map((action) => {
+      const label = getActionDisplayNameByOrientation(action.name, win);
+      const description = getActionDescriptionByOrientation(action.name, win);
+      return {
+        id: action.name,
+        label,
+        description,
+        category: ACTION_CATEGORY_MAP[action.name] ?? "tools",
+        keywords: [
+          ...(ACTION_KEYWORDS[action.name] ?? []),
+          ...getJapaneseReadings(action.name),
+          ...getEnglishGestureKeywords(action.name),
+          ...segmentTextForKeywords(label),
+          ...segmentTextForKeywords(description),
+        ],
+        fn: action.fn,
+      };
+    });
+}
+
+function buildStepCommands(): PaletteCommand[] {
+  return [
+    bookmarkSwitcherCommand,
+    closedTabSwitcherCommand,
+    closedWindowSwitcherCommand,
+    historySwitcherCommand,
+    openUrlCommand,
+    searchWebCommand,
+    reopenInContainerCommand,
+    tabSwitcherCommand,
+  ];
 }
 
 export function getPaletteCommands(win?: Window): PaletteCommand[] {
-  if (!cachedCommands) {
-    cachedCommands = buildGestureCommands();
+  const orientationKey = isVerticalMode(win) ? "vertical" : "horizontal";
+  if (!cachedCommands[orientationKey]) {
+    cachedCommands[orientationKey] = buildGestureCommands(win);
   }
-  const gestureCommands = cachedCommands;
+  const gestureCommands = cachedCommands[orientationKey];
   const tabCommands = win ? getTabCommands(win) : [];
-  return [...tabCommands, ...gestureCommands];
+  const stepCommands = buildStepCommands();
+  return [...tabCommands, ...gestureCommands, ...stepCommands];
 }
 
 export function searchCommands(query: string, win?: Window): PaletteCommand[] {
@@ -171,12 +311,43 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export function getCommand(id: string, win?: Window): PaletteCommand | undefined {
+export { isHistoryCommand, isBookmarkCommand };
+
+/**
+ * Search browsing history for the given query.
+ */
+export function searchHistoryCommands(
+  query: string,
+  limit: number = 10,
+): Promise<PaletteCommand[]> {
+  if (!query.trim()) return Promise.resolve([]);
+
+  return searchHistory(query, limit);
+}
+
+/**
+ * Search bookmarks for the given query.
+ */
+export function searchBookmarkCommands(
+  query: string,
+  limit: number = 10,
+): Promise<PaletteCommand[]> {
+  if (!query.trim()) return Promise.resolve([]);
+
+  return searchBookmarks(query, limit);
+}
+
+export function getCommand(
+  id: string,
+  win?: Window,
+): PaletteCommand | undefined {
   return getPaletteCommands(win).find((cmd) => cmd.id === id);
 }
 
 export function invalidateCache() {
-  cachedCommands = null;
+  for (const key of Object.keys(cachedCommands)) {
+    delete cachedCommands[key];
+  }
 }
 
 export function getShortcutForAction(actionId: string): string | null {
@@ -188,8 +359,8 @@ export function getShortcutForAction(actionId: string): string | null {
         return shortcutToString(shortcut);
       }
     }
-  } catch {
-    // keyboard-shortcut module may not be available
+  } catch (err) {
+    console.error("[CommandPalette]", "Failed to load keyboard shortcut config", err);
   }
   return null;
 }

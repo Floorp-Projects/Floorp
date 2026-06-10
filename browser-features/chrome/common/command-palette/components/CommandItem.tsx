@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Show, For } from "solid-js";
-import type { PaletteCommand } from "../command-registry.ts";
+import type { PaletteCommand } from "../types.ts";
 import { getHighlightSegments, type TextSegment } from "../utils/highlight.ts";
 import { getShortcutForAction } from "../command-registry.ts";
 

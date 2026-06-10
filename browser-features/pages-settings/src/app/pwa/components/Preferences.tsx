@@ -83,7 +83,7 @@ export function Preferences() {
 
           <div>
             <a
-              href="https://docs.floorp.app/docs/features/how-to-use-pwa"
+              href="https://docs.floorp.app/docs/features/webapps"
               target="_blank"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >

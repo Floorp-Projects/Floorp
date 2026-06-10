@@ -142,7 +142,7 @@ export class MultirowTabbarClass {
 
     if (maxRowEnabled && maxRows > 0) {
       const tabElement = document?.querySelector(".tabbrowser-tab");
-      const tabHeight = tabElement?.clientHeight ?? 33;
+      const tabHeight = tabElement?.clientHeight || 33;
       const maxHeight = tabHeight * maxRows;
       css += `
         max-height: ${maxHeight}px;

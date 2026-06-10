@@ -14,9 +14,10 @@
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
-import { AutomationConstants } from "../../os-server/shared/http-tracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
+import { CookieHelper } from "./shared/CookieHelper.sys.mts";
+import { NetworkIdleHelper } from "./shared/NetworkIdleHelper.sys.mts";
 
 const { E10SUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/E10SUtils.sys.mjs",
@@ -74,8 +75,9 @@ class webScraper {
   }
 
   /**
-   * Common helper: get browser ↁEget actor ↁEsendQuery.
+   * Common helper: check browser → get actor → sendQuery.
    * Reduces boilerplate across all service methods.
+   * Includes browser existence check and performance logging.
    */
   private async withActor<T>(
     instanceId: string,
@@ -84,6 +86,9 @@ class webScraper {
     fallback: T | null = null,
   ): Promise<T | null> {
     try {
+      if (!this._browserInstances.has(instanceId)) {
+        throw new Error(`Browser not found for instance ${instanceId}`);
+      }
       const actor = await this._getActorForBrowser(instanceId);
       if (!actor) return fallback;
       const _t0 = Date.now();
@@ -214,16 +219,34 @@ class webScraper {
       throw new Error("browser.loadURI is not defined");
     }
 
-    // Wait for page load via progress listener
+    // Wait for page load via progress listener (30s timeout)
     await new Promise<void>((resolve) => {
       let resolved = false;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
       const complete = () => {
         if (resolved) return;
         resolved = true;
+        if (timeoutId !== null) clearTimeout(timeoutId);
         resolve();
       };
 
       const { webProgress } = browser;
+
+      // Timeout guard: prevent hanging if page load never completes
+      timeoutId = setTimeout(() => {
+        if (resolved) return;
+        console.warn("[WebScraperServices] navigate timed out after 30 seconds");
+        resolved = true;
+        PROGRESS_LISTENERS.delete(progressListener);
+        try {
+          webProgress.removeProgressListener(
+            progressListener as nsIWebProgressListener,
+          );
+        } catch {
+          // Listener may already be removed
+        }
+        resolve();
+      }, 30000);
 
       /**
        * Progress listener to monitor page load completion
@@ -344,21 +367,11 @@ class webScraper {
    * @returns Promise<string | null> - The HTML content as a string, or null if unavailable
    * @throws Error - If the browser instance is not found
    */
-  public async getHTML(
+  public getHTML(
     instanceId: string,
     options?: { selector?: string },
   ): Promise<string | null> {
-    try {
-      const actor = await this._getActorForBrowser(instanceId);
-      if (!actor) return null;
-      return (await actor.sendQuery(
-        "WebScraper:GetHTML",
-        options ?? {},
-      )) as string | null;
-    } catch (e) {
-      console.error("Error getting HTML:", e);
-      return null;
-    }
+    return this.withActor(instanceId, "WebScraper:GetHTML", options ?? {});
   }
 
   /**
@@ -377,7 +390,7 @@ class webScraper {
    * @returns Promise<string | null> - The visible text content, or null if unavailable
    * @throws Error - If the browser instance is not found
    */
-  public async getText(
+  public getText(
     instanceId: string,
     options:
       | boolean
@@ -389,20 +402,10 @@ class webScraper {
           includeSelectorMap?: boolean;
         } = false,
   ): Promise<string | null> {
-    // Normalize: boolean ↁEold-style { includeSelectorMap }
+    // Normalize: boolean old-style { includeSelectorMap }
     const data =
       typeof options === "boolean" ? { includeSelectorMap: options } : options;
-
-    try {
-      const actor = await this._getActorForBrowser(instanceId);
-      if (!actor) return null;
-      return (await actor.sendQuery("WebScraper:GetText", data)) as
-        | string
-        | null;
-    } catch (e) {
-      console.error("Error getting text:", e);
-      return null;
-    }
+    return this.withActor(instanceId, "WebScraper:GetText", data);
   }
 
   /**
@@ -422,21 +425,14 @@ class webScraper {
    * @returns Promise<string | null> - The element's HTML content, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async getAccessibilityTree(
+  public getAccessibilityTree(
     instanceId: string,
     options: { interestingOnly?: boolean; root?: string } = {},
   ): Promise<unknown> {
-    try {
-      const actor = await this._getActorForBrowser(instanceId);
-      if (!actor) return null;
-      return await actor.sendQuery("WebScraper:GetAccessibilityTree", options);
-    } catch (e) {
-      console.error("Error getting accessibility tree:", e);
-      return null;
-    }
+    return this.withActor(instanceId, "WebScraper:GetAccessibilityTree", options);
   }
 
-  public async getArticle(
+  public getArticle(
     instanceId: string,
   ): Promise<{
     title: string;
@@ -444,30 +440,14 @@ class webScraper {
     markdown: string;
     length: number;
   } | null> {
-    try {
-      const actor = await this._getActorForBrowser(instanceId);
-      if (!actor) return null;
-      return (await actor.sendQuery("WebScraper:GetArticle")) as {
-        title: string;
-        byline: string;
-        markdown: string;
-        length: number;
-      } | null;
-    } catch (e) {
-      console.error("Error getting article:", e);
-      return null;
-    }
+    return this.withActor(instanceId, "WebScraper:GetArticle");
   }
 
-  public async getElement(
+  public getElement(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetElement", {
-      selector,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetElement", { selector });
   }
 
   /** Get all elements matching a selector from a browser instance
@@ -482,20 +462,11 @@ class webScraper {
    * @returns Promise<string[]> - An array of matching elements' HTML content
    * @throws Error - If the browser instance is not found
    */
-  public async getElements(
+  public getElements(
     instanceId: string,
     selector: string,
   ): Promise<string[]> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return [];
-    return ((await actor.sendQuery("WebScraper:GetElements", {
-      selector,
-    })) ?? []) as string[];
+    return this.withActor<string[]>(instanceId, "WebScraper:GetElements", { selector }) as Promise<string[]>;
   }
 
   /**  Get Element By Text Content
@@ -511,20 +482,11 @@ class webScraper {
    * @throws Error - If the browser instance is not found
    */
 
-  public async getElementByText(
+  public getElementByText(
     instanceId: string,
     textContent: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetElementByText", {
-      textContent,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetElementByText", { textContent });
   }
 
   /** Get Element Text Content
@@ -540,20 +502,11 @@ class webScraper {
    * @throws Error - If the browser instance is not found
    */
 
-  public async getElementTextContent(
+  public getElementTextContent(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetElementTextContent", {
-      selector,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetElementTextContent", { selector });
   }
 
   /**
@@ -570,20 +523,11 @@ class webScraper {
    * @returns Promise<string | null> - The element's text content, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async getElementText(
+  public getElementText(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetElementText", {
-      selector,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetElementText", { selector });
   }
 
   /**
@@ -598,20 +542,11 @@ class webScraper {
    * @returns Promise<string | null> - CSS selector for the element, or null if not found
    * @throws Error - If the browser instance is not found
    */
-  public async resolveFingerprint(
+  public resolveFingerprint(
     instanceId: string,
     fingerprint: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:ResolveFingerprint", {
-      fingerprint,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:ResolveFingerprint", { fingerprint });
   }
 
   /**
@@ -622,20 +557,8 @@ class webScraper {
    * @returns Promise<boolean> - True if effects were cleared successfully
    * @throws Error - If the browser instance is not found
    */
-  public async clearEffects(instanceId: string): Promise<boolean> {
-    try {
-      const browser = this._browserInstances.get(instanceId);
-      if (!browser) {
-        throw new Error(`Browser not found for instance ${instanceId}`);
-      }
-
-      const actor = await this._getActorForBrowser(instanceId);
-      if (!actor) return false;
-      await actor.sendQuery("WebScraper:ClearEffects");
-      return true;
-    } catch {
-      return false;
-    }
+  public clearEffects(instanceId: string): Promise<boolean> {
+    return this.withActor(instanceId, "WebScraper:ClearEffects", undefined, false) as Promise<boolean>;
   }
 
   /**
@@ -652,21 +575,11 @@ class webScraper {
    * @returns Promise<boolean> - True if click was successful, false otherwise
    * @throws Error - If the browser instance is not found
    */
-  public async clickElement(
+  public clickElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:ClickElement", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:ClickElement", { selector }, false) as Promise<boolean>;
   }
 
   /**
@@ -685,24 +598,13 @@ class webScraper {
    * @returns Promise<boolean> - True if element was found, false if timeout reached
    * @throws Error - If the browser instance is not found
    */
-  public async waitForElement(
+  public waitForElement(
     instanceId: string,
     selector: string,
     timeout = 5000,
     state: WaitForElementState = "attached",
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    return (await actor.sendQuery("WebScraper:WaitForElement", {
-      selector,
-      timeout,
-      state,
-    })) as boolean;
+    return this.withActor(instanceId, "WebScraper:WaitForElement", { selector, timeout, state }, false) as Promise<boolean>;
   }
 
   /**
@@ -716,20 +618,11 @@ class webScraper {
    * @returns Promise<boolean | null> - True if document is ready, false if timeout, null if error
    * @throws Error - If the browser instance is not found
    */
-  public async waitForReady(
+  public waitForReady(
     instanceId: string,
     timeout = 15000,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:WaitForReady", {
-      timeout,
-    })) as boolean | null;
+    return this.withActor(instanceId, "WebScraper:WaitForReady", { timeout });
   }
 
   /**
@@ -742,17 +635,8 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeScreenshot(instanceId: string): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:TakeScreenshot")) as
-      | string
-      | null;
+  public takeScreenshot(instanceId: string): Promise<string | null> {
+    return this.withActor(instanceId, "WebScraper:TakeScreenshot");
   }
 
   /**
@@ -766,20 +650,11 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeElementScreenshot(
+  public takeElementScreenshot(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:TakeElementScreenshot", {
-      selector,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:TakeElementScreenshot", { selector });
   }
 
   /**
@@ -792,19 +667,10 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeFullPageScreenshot(
+  public takeFullPageScreenshot(
     instanceId: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:TakeFullPageScreenshot")) as
-      | string
-      | null;
+    return this.withActor(instanceId, "WebScraper:TakeFullPageScreenshot");
   }
 
   /**
@@ -818,20 +684,11 @@ class webScraper {
    * @returns Promise<string | null> - Base64 encoded PNG image, or null on error
    * @throws Error - If the browser instance is not found
    */
-  public async takeRegionScreenshot(
+  public takeRegionScreenshot(
     instanceId: string,
     rect?: { x?: number; y?: number; width?: number; height?: number },
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:TakeRegionScreenshot", {
-      rect,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:TakeRegionScreenshot", { rect });
   }
 
   /**
@@ -843,107 +700,61 @@ class webScraper {
    * @returns Promise<boolean> - True if all fields were filled successfully, false otherwise.
    * @throws Error - If the browser instance is not found
    */
-  public async fillForm(
+  public fillForm(
     instanceId: string,
     formData: { [selector: string]: string },
     options: { typingMode?: boolean; typingDelayMs?: number } = {},
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:FillForm", {
+    return this.withActor(instanceId, "WebScraper:FillForm", {
       formData,
       typingMode: options.typingMode,
       typingDelayMs: options.typingDelayMs,
-    })) as boolean;
-    return result;
+    }, false) as Promise<boolean>;
   }
 
   /**
    * Types or sets a value into an element.
    */
-  public async inputElement(
+  public inputElement(
     instanceId: string,
     selector: string,
     value: string,
     options: { typingMode?: boolean; typingDelayMs?: number } = {},
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:InputElement", {
+    return this.withActor(instanceId, "WebScraper:InputElement", {
       selector,
       value,
       typingMode: options.typingMode,
       typingDelayMs: options.typingDelayMs,
-    })) as boolean;
-    return result;
+    });
   }
 
   /**
    * Press a key or key combination.
    */
-  public async pressKey(instanceId: string, key: string): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:PressKey", {
-      key,
-    })) as boolean;
-    return result;
+  public pressKey(instanceId: string, key: string): Promise<boolean> {
+    return this.withActor(instanceId, "WebScraper:PressKey", { key }, false) as Promise<boolean>;
   }
 
   /**
    * Upload a file through input[type=file]
    */
-  public async uploadFile(
+  public uploadFile(
     instanceId: string,
     selector: string,
     filePath: string,
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:UploadFile", {
-      selector,
-      filePath,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:UploadFile", { selector, filePath }, false) as Promise<boolean>;
   }
 
   /**
    * Gets the value of an input/textarea element
    */
-  public async getValue(
+  public getValue(
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetValue", {
-      selector,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetValue", { selector });
   }
 
   /**
@@ -954,22 +765,12 @@ class webScraper {
    * @param attributeName - Name of the attribute to retrieve
    * @returns Promise<string | null> - The attribute value, or null if not found
    */
-  public async getAttribute(
+  public getAttribute(
     instanceId: string,
     selector: string,
     attributeName: string,
   ): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetAttribute", {
-      selector,
-      attributeName,
-    })) as string | null;
+    return this.withActor(instanceId, "WebScraper:GetAttribute", { selector, attributeName });
   }
 
   /**
@@ -979,20 +780,11 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if visible, false otherwise
    */
-  public async isVisible(
+  public isVisible(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    return (await actor.sendQuery("WebScraper:IsVisible", {
-      selector,
-    })) as boolean;
+    return this.withActor(instanceId, "WebScraper:IsVisible", { selector }, false) as Promise<boolean>;
   }
 
   /**
@@ -1002,20 +794,11 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if enabled, false if disabled or not found
    */
-  public async isEnabled(
+  public isEnabled(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    return (await actor.sendQuery("WebScraper:IsEnabled", {
-      selector,
-    })) as boolean;
+    return this.withActor(instanceId, "WebScraper:IsEnabled", { selector }, false) as Promise<boolean>;
   }
 
   /**
@@ -1025,38 +808,18 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if cleared successfully
    */
-  public async clearInput(
+  public clearInput(
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:ClearInput", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:ClearInput", { selector }, false) as Promise<boolean>;
   }
 
   /**
    * Submits form associated with the selector element or the form itself
    */
-  public async submit(instanceId: string, selector: string): Promise<boolean> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return false;
-    const result = (await actor.sendQuery("WebScraper:Submit", {
-      selector,
-    })) as boolean;
-    return result;
+  public submit(instanceId: string, selector: string): Promise<boolean> {
+    return this.withActor(instanceId, "WebScraper:Submit", { selector }, false) as Promise<boolean>;
   }
 
   /**
@@ -1067,23 +830,12 @@ class webScraper {
    * @param value - The value of the option to select
    * @returns Promise<boolean> - True if selected successfully
    */
-  public async selectOption(
+  public selectOption(
     instanceId: string,
     selector: string,
     value: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:SelectOption", {
-      selector,
-      optionValue: value,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:SelectOption", { selector, optionValue: value });
   }
 
   /**
@@ -1094,23 +846,12 @@ class webScraper {
    * @param checked - The desired checked state
    * @returns Promise<boolean> - True if set successfully
    */
-  public async setChecked(
+  public setChecked(
     instanceId: string,
     selector: string,
     checked: boolean,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:SetChecked", {
-      selector,
-      checked,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:SetChecked", { selector, checked });
   }
 
   /**
@@ -1120,137 +861,72 @@ class webScraper {
    * @param selector - CSS selector to find the target element
    * @returns Promise<boolean> - True if hover was simulated successfully
    */
-  public async hoverElement(
+  public hoverElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:HoverElement", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:HoverElement", { selector });
   }
 
   /**
    * Scrolls the page to make an element visible
    */
-  public async scrollToElement(
+  public scrollToElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:ScrollToElement", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:ScrollToElement", { selector });
   }
 
   /**
    * Gets the page title
    */
-  public async getPageTitle(instanceId: string): Promise<string | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    return (await actor.sendQuery("WebScraper:GetPageTitle")) as string | null;
+  public getPageTitle(instanceId: string): Promise<string | null> {
+    return this.withActor(instanceId, "WebScraper:GetPageTitle");
   }
 
   /**
    * Performs a double click on an element
    */
-  public async doubleClick(
+  public doubleClick(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:DoubleClick", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:DoubleClick", { selector });
   }
 
   /**
    * Performs a right click (context menu) on an element
    */
-  public async rightClick(
+  public rightClick(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:RightClick", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:RightClick", { selector });
   }
 
   /**
    * Focuses on an element
    */
-  public async focusElement(
+  public focusElement(
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:Focus", {
-      selector,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:Focus", { selector });
   }
 
   /**
    * Performs a drag and drop operation between two elements
    */
-  public async dragAndDrop(
+  public dragAndDrop(
     instanceId: string,
     sourceSelector: string,
     targetSelector: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:DragAndDrop", {
+    return this.withActor(instanceId, "WebScraper:DragAndDrop", {
       selector: sourceSelector,
       targetSelector,
-    })) as boolean;
-    return result;
+    });
   }
 
   /**
@@ -1274,60 +950,7 @@ class webScraper {
         new Error(`Browser not found for instance ${instanceId}`),
       );
     }
-
-    try {
-      const uri = browser.browsingContext?.currentURI;
-      if (!uri) return Promise.resolve([]);
-
-      const host = uri.host;
-      const principal =
-        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
-      const originAttributes = principal?.originAttributes ?? {};
-      const cookies: Array<{
-        name: string;
-        value: string;
-        domain?: string;
-        path?: string;
-        secure?: boolean;
-        httpOnly?: boolean;
-        sameSite?: string;
-        expirationDate?: number;
-      }> = [];
-
-      const cookieManager = Services.cookies;
-      const originAttrCandidates = [originAttributes];
-      // Always try empty originAttributes as fallback to find cookies
-      // set without specific container/private browsing attributes
-      originAttrCandidates.push({});
-
-      const seen = new Set<string>();
-
-      for (const attrs of originAttrCandidates) {
-        const enumerator = cookieManager.getCookiesFromHost(host, attrs);
-
-        for (const cookie of enumerator) {
-          const key = `${cookie.name}\u0001${cookie.host}\u0001${cookie.path}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-
-          cookies.push({
-            name: cookie.name,
-            value: cookie.value,
-            domain: cookie.host,
-            path: cookie.path,
-            secure: cookie.isSecure,
-            httpOnly: cookie.isHttpOnly,
-            sameSite: ["None", "Lax", "Strict"][cookie.sameSite] ?? "None",
-            expirationDate: cookie.expiry,
-          });
-        }
-      }
-
-      return Promise.resolve(cookies);
-    } catch (e) {
-      console.error("WebScraper: Error getting cookies:", e);
-      return Promise.resolve([]);
-    }
+    return Promise.resolve(CookieHelper.getCookies(browser));
   }
 
   /**
@@ -1354,147 +977,36 @@ class webScraper {
     }
 
     try {
+      // Strategy 1: Services.cookies.add() (parent-process)
+      if (CookieHelper.setCookieDirect(browser, cookie)) {
+        return true;
+      }
+
+      // Strategy 2: Actor-based fallback (content-process document.cookie)
       const uri = browser.browsingContext?.currentURI;
-      if (!uri) return Promise.resolve(false);
-
-      const sameSiteMap: Record<string, number> = {
-        None: 0,
-        Lax: 1,
-        Strict: 2,
-      };
-
-      const principal =
-        browser.browsingContext?.currentWindowGlobal?.documentPrincipal;
-      const originAttributes = principal?.originAttributes ?? {};
-
-      const isSecure = cookie.secure ?? uri.schemeIs("https");
-      let requestedSameSite = cookie.sameSite ?? "Lax";
-      if (requestedSameSite === "None" && !isSecure) {
-        // SameSite=None には Secure が忁E��、ETTP では Lax にフォールバックする、E
-        requestedSameSite = "Lax";
-      }
-      const schemeMap = isSecure
-        ? Ci.nsICookie.SCHEME_HTTPS
-        : uri.schemeIs("http")
-          ? Ci.nsICookie.SCHEME_HTTP
-          : 0; // SCHEME_UNKNOWN
-
-      const attrsList = [originAttributes];
-      if (Object.keys(originAttributes).length > 0) {
-        attrsList.push({});
-      }
-
-      const errors: Array<string | number> = [];
-
-      const addWithAttrs = (attrs: Record<string, unknown>) => {
+      if (uri) {
         try {
-          const validation = Services.cookies.add(
-            cookie.domain ?? uri.host,
-            cookie.path ?? "/",
-            cookie.name,
-            cookie.value,
-            isSecure,
-            cookie.httpOnly ?? false,
-            false, // isSession
-            cookie.expirationDate ??
-              Math.floor(Date.now() / 1000) + 86400 * 365,
-            attrs,
-            sameSiteMap[requestedSameSite] ?? sameSiteMap.Lax,
-            schemeMap,
-            Boolean(
-              (attrs as unknown as { partitionKey?: unknown }).partitionKey,
-            ),
-          );
-
-          if (validation?.result !== Ci.nsICookieValidation.eOK) {
-            errors.push(validation?.result ?? "unknown");
-            errors.push(validation?.errorString ?? "");
-            console.error(
-              "WebScraper: Cookie rejected:",
-              validation?.result,
-              validation?.errorString,
-            );
-            return false;
-          }
-
-          // Verify cookie was actually stored
-          const storedDomain = cookie.domain ?? uri.host;
-
-          // Check if cookie actually exists after add
-          let cookieActuallyExists = false;
-          try {
-            cookieActuallyExists = Services.cookies.cookieExists(
-              storedDomain,
-              cookie.path ?? "/",
-              cookie.name,
-              attrs,
-            );
-          } catch {
-            // cookieExists check failed, assume cookie not stored
-          }
-
-          if (cookieActuallyExists) {
-            return true;
-          } else {
-            // Cookie was not actually stored despite validation passing
-            // Try next attrs or fallback
-            errors.push("cookie not stored despite validation success");
-            return false;
+          const actor = await this._getActorForBrowser(instanceId, 80, 100);
+          if (actor) {
+            const cookieString = CookieHelper.buildCookieString(cookie, uri.host);
+            const result = await actor
+              .sendQuery("WebScraper:SetCookieString", {
+                cookieString,
+                cookieName: cookie.name,
+                cookieValue: cookie.value,
+              })
+              .catch(() => null);
+            if (result) return true;
           }
         } catch (err) {
-          errors.push(String(err));
-          return false;
-        }
-      };
-
-      for (const attrs of attrsList) {
-        if (addWithAttrs(attrs)) {
-          return Promise.resolve(true);
+          console.error("WebScraper: Actor cookie fallback failed:", err);
         }
       }
 
-      // Fallback: try document.cookie within the content process
-      try {
-        const actor = await this._getActorForBrowser(instanceId, 80, 100);
-        if (actor) {
-          const parts = [
-            `${cookie.name}=${cookie.value}`,
-            `Path=${cookie.path ?? "/"}`,
-            `SameSite=${requestedSameSite}`,
-          ];
-          if (cookie.domain ?? uri.host) {
-            parts.push(`Domain=${cookie.domain ?? uri.host}`);
-          }
-          if (cookie.expirationDate) {
-            parts.push(
-              `Expires=${new Date(cookie.expirationDate * 1000).toUTCString()}`,
-            );
-          }
-          if (isSecure) {
-            parts.push("Secure");
-          }
-
-          const cookieString = parts.filter(Boolean).join("; ");
-
-          const fallback = await actor
-            .sendQuery("WebScraper:SetCookieString", {
-              cookieString: cookieString,
-              cookieName: cookie.name,
-              cookieValue: cookie.value,
-            })
-            .catch(() => null);
-          if (fallback) {
-            return true;
-          }
-        }
-      } catch (err) {
-        errors.push(String(err));
-      }
-
-      return Promise.resolve(false);
+      return false;
     } catch (e) {
       console.error("WebScraper: Error setting cookie:", e);
-      return Promise.resolve(false);
+      return false;
     }
   }
 
@@ -1526,7 +1038,7 @@ class webScraper {
 
   /**
    * Waits for network to become idle (no pending requests)
-   * Uses GlobalHTTPTracker for network state tracking (no duplicate observers)
+   * Delegates to shared NetworkIdleHelper using GlobalHTTPTracker polling.
    */
   public waitForNetworkIdle(
     instanceId: string,
@@ -1539,16 +1051,6 @@ class webScraper {
           ignorePatterns?: string[];
         } = {},
   ): Promise<boolean | null> {
-    // Backward compatibility: number ↁE{ timeout }
-    const opts =
-      typeof options === "number" ? { timeout: options } : options;
-    const {
-      timeout = AutomationConstants.NETWORK_IDLE_TIMEOUT_MS,
-      maxInflight = 0,
-      idleDuration = AutomationConstants.NETWORK_IDLE_THRESHOLD_MS,
-      ignorePatterns = [],
-    } = opts;
-
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
       throw new Error(`Browser not found for instance ${instanceId}`);
@@ -1559,139 +1061,45 @@ class webScraper {
       return Promise.resolve(null);
     }
 
-    // Pre-compile ignore patterns
-    const ignoreRegexps = ignorePatterns.map((p) => new RegExp(p));
-
-    return new Promise((resolve) => {
-      const state = {
-        pollTimer: null as ReturnType<typeof setTimeout> | null,
-        resolved: false,
-        startTime: Date.now(),
-        idleSince: 0,
-      };
-
-      const cleanup = () => {
-        if (state.pollTimer) {
-          clearTimeout(state.pollTimer);
-          state.pollTimer = null;
-        }
-      };
-
-      const poll = () => {
-        if (state.resolved) return;
-
-        let activeCount = GlobalHTTPTracker.getActiveCount(bcid);
-
-        // Subtract requests matching ignore patterns
-        if (ignoreRegexps.length > 0 && activeCount > 0) {
-          const activeUrls = GlobalHTTPTracker.getActiveURLs?.(bcid) ?? [];
-          const ignored = activeUrls.filter((url: string) =>
-            ignoreRegexps.some((re) => re.test(url)),
-          );
-          activeCount = Math.max(0, activeCount - ignored.length);
-        }
-
-        const elapsed = Date.now() - state.startTime;
-
-        if (activeCount <= maxInflight) {
-          if (state.idleSince === 0) {
-            state.idleSince = Date.now();
-          }
-          if (Date.now() - state.idleSince >= idleDuration) {
-            console.log(
-              `[WebScraper] Network idle for BCID ${bcid} after ${elapsed}ms`,
-            );
-            state.resolved = true;
-            cleanup();
-            resolve(true);
-            return;
-          }
-        } else {
-          state.idleSince = 0;
-        }
-
-        if (elapsed >= timeout) {
-          console.log(
-            `[WebScraper] waitForNetworkIdle timed out. Active: ${activeCount}`,
-          );
-          state.resolved = true;
-          cleanup();
-          resolve(false);
-        } else {
-          state.pollTimer = setTimeout(poll, 100);
-        }
-      };
-
-      poll();
-    });
+    return NetworkIdleHelper.waitForIdle(bcid, options);
   }
 
   /**
    * Sets the innerHTML of an element (for contenteditable elements like rich text editors)
    */
-  public async setInnerHTML(
+  public setInnerHTML(
     instanceId: string,
     selector: string,
     html: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:SetInnerHTML", {
-      selector,
-      innerHTML: html,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:SetInnerHTML", { selector, innerHTML: html });
   }
 
   /**
    * Sets the textContent of an element (for contenteditable elements)
    */
-  public async setTextContent(
+  public setTextContent(
     instanceId: string,
     selector: string,
     text: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:SetTextContent", {
-      selector,
-      textContent: text,
-    })) as boolean;
-    return result;
+    return this.withActor(instanceId, "WebScraper:SetTextContent", { selector, textContent: text });
   }
 
   /**
    * Dispatches a custom event on an element (for triggering framework-specific handlers)
    */
-  public async dispatchEvent(
+  public dispatchEvent(
     instanceId: string,
     selector: string,
     eventType: string,
     options?: { bubbles?: boolean; cancelable?: boolean },
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
-
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:DispatchEvent", {
+    return this.withActor(instanceId, "WebScraper:DispatchEvent", {
       selector,
       eventType,
       eventOptions: options,
-    })) as boolean;
-    return result;
+    });
   }
 
   /**
@@ -1704,23 +1112,28 @@ class webScraper {
    * @param text - The text value to dispatch as input.
    * @returns Promise<boolean | null> - True if successful, false on error, null if instance not found.
    */
-  public async dispatchTextInput(
+  public dispatchTextInput(
     instanceId: string,
     selector: string,
     text: string,
   ): Promise<boolean | null> {
-    const browser = this._browserInstances.get(instanceId);
-    if (!browser) {
-      throw new Error(`Browser not found for instance ${instanceId}`);
-    }
+    return this.withActor(instanceId, "WebScraper:DispatchTextInput", { selector, text });
+  }
 
-    const actor = await this._getActorForBrowser(instanceId);
-    if (!actor) return null;
-    const result = (await actor.sendQuery("WebScraper:DispatchTextInput", {
-      selector,
-      text,
-    })) as boolean;
-    return result;
+  /**
+   * Evaluates a JavaScript string in the page context.
+   * Supports async/await expressions. Returns a structured result
+   * with JSON-serializable values.
+   */
+  public evaluate(
+    instanceId: string,
+    script: string,
+  ): Promise<{ success: boolean; result?: unknown; resultType?: string; error?: string; errorType?: string } | null> {
+    return this.withActor(
+      instanceId,
+      "WebScraper:Evaluate",
+      { script },
+    );
   }
 }
 

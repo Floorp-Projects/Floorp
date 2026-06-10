@@ -66,7 +66,12 @@
  * participate in the layout.
  */
 #tabbrowser-tabpanels[data-floorp-split]
-  > :not(.split-view-panel, .split-view-splitter, .floorp-split-handle, .floorp-grid-handle) {
+  > :not(
+    .split-view-panel,
+    .split-view-splitter,
+    .floorp-split-handle,
+    .floorp-grid-handle
+  ) {
   display: none !important;
 }
 
@@ -878,5 +883,154 @@
 #tabbrowser-tabpanels[data-floorp-split]
   > .split-view-panel[data-floorp-drag-source]
   > .floorp-pane-drag-grip {
+  opacity: 1;
+}
+
+/* ===== Tab Drop Overlay — split view drop preview ===== */
+
+#floorp-split-drop-overlay {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+}
+
+#floorp-split-drop-overlay[data-active-zone] {
+  display: block;
+}
+
+.floorp-drop-zone {
+  position: absolute;
+  background: transparent;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+  border: 2px dashed transparent;
+  border-radius: 4px;
+}
+
+.floorp-drop-zone[data-zone="left"] {
+  left: 0;
+  top: 0;
+  width: 33%;
+  height: 100%;
+}
+
+.floorp-drop-zone[data-zone="right"] {
+  right: 0;
+  top: 0;
+  width: 33%;
+  height: 100%;
+}
+
+.floorp-drop-zone[data-zone="top"] {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 33%;
+}
+
+.floorp-drop-zone[data-zone="bottom"] {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 33%;
+}
+
+.floorp-drop-zone[data-active] {
+  background: color-mix(in srgb, AccentColor 18%, transparent);
+  border-color: color-mix(in srgb, AccentColor 60%, transparent);
+}
+
+/* Divider line preview — shows where the split will appear */
+#floorp-split-drop-overlay[data-active-zone="right"]::after,
+#floorp-split-drop-overlay[data-active-zone="left"]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 67%;
+  width: 2px;
+  background: color-mix(in srgb, AccentColor 60%, transparent);
+}
+
+#floorp-split-drop-overlay[data-active-zone="left"]::after {
+  left: 33%;
+}
+
+#floorp-split-drop-overlay[data-active-zone="bottom"]::before,
+#floorp-split-drop-overlay[data-active-zone="top"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 67%;
+  height: 2px;
+  background: color-mix(in srgb, AccentColor 60%, transparent);
+}
+
+#floorp-split-drop-overlay[data-active-zone="top"]::before {
+  top: 33%;
+}
+
+/* Disable browser interaction during tab drag over content area */
+#tabbrowser-tabpanels[data-floorp-tab-dragging] browser {
+  pointer-events: none !important;
+}
+
+/* ===== New Window Drop Zone ===== */
+
+#floorp-new-window-drop-zone {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 260px;
+  padding: 28px 36px;
+  border: 2px dashed color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--toolbar-bgcolor) 92%, transparent);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 10000;
+  pointer-events: auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+#floorp-new-window-drop-zone[drag-active] {
+  display: flex;
+}
+
+#floorp-new-window-drop-zone[drag-hover] {
+  border-style: solid;
+  border-color: AccentColor;
+  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-bgcolor));
+}
+
+.floorp-new-window-zone-icon {
+  width: 32px;
+  height: 32px;
+  opacity: 0.6;
+  background-image: url("chrome://floorp/content/split-view/new-window.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#floorp-new-window-drop-zone[drag-hover] .floorp-new-window-zone-icon {
+  opacity: 1;
+}
+
+.floorp-new-window-zone-label {
+  font-size: 13px;
+  color: inherit;
+  opacity: 0.7;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#floorp-new-window-drop-zone[drag-hover] .floorp-new-window-zone-label {
   opacity: 1;
 }

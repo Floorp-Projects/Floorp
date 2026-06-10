@@ -2,6 +2,7 @@
 // @ts-nocheck Firefox chrome globals (BrowserCommands, gBrowser, etc.) are untyped
 
 import * as t from 'io-ts';
+import { toggleUserInterface, enableRestMode } from '../../../browser-features/chrome/common/mouse-gesture/utils/ui-toggle.ts';
 
 export const csk_category = [
   "tab-action",
@@ -130,7 +131,7 @@ export const commands: Commands = {
     type: "page-action",
   },
   "floorp-rest-mode": {
-    command: () => globalThis.gFloorpCommands.enableRestMode(),
+    command: () => enableRestMode(globalThis as unknown as Window),
     type: "page-action",
   },
   "gecko-zoom-in": {
@@ -146,7 +147,7 @@ export const commands: Commands = {
     type: "visible-action",
   },
   "floorp-hide-user-interface": {
-    command: () => globalThis.gFloorpDesign.hideUserInterface(),
+    command: () => toggleUserInterface(globalThis.document),
     type: "visible-action",
   },
   "gecko-back": { command: () => globalThis.BrowserBack(), type: "history-action" },
@@ -198,7 +199,7 @@ export const commands: Commands = {
     command: () => globalThis.BrowserOffline.toggleOfflineStatus(),
     type: "tools-action",
   },
-  "gecko-gecko-open-screen-capture": {
+  "gecko-open-screen-capture": {
     command: () => globalThis.ScreenshotsUtils.notify(window, "shortcut"),
     type: "tools-action",
   },
@@ -373,23 +374,39 @@ export const commands: Commands = {
     type: "bms-action",
   },
   "floorp-open-split-view-on-left": {
-    command: () =>
-      globalThis.gSplitView.Functions.setSplitView(
-        globalThis.gBrowser.selectedTab,
-        "left",
-      ),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      try {
+        gBrowser.addTabSplitView([newTab, gBrowser.selectedTab]);
+      } catch (e) {
+        console.error("[SplitView]", e);
+        gBrowser.removeTab(newTab);
+      }
+    },
     type: "split-view-action",
   },
   "floorp-open-split-view-on-right": {
-    command: () =>
-      globalThis.gSplitView.Functions.setSplitView(
-        globalThis.gBrowser.selectedTab,
-        "right",
-      ),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.addTabSplitView || gBrowser.activeSplitView) return;
+      const newTab = gBrowser.addTrustedTab("about:opentabs");
+      try {
+        gBrowser.addTabSplitView([gBrowser.selectedTab, newTab]);
+      } catch (e) {
+        console.error("[SplitView]", e);
+        gBrowser.removeTab(newTab);
+      }
+    },
     type: "split-view-action",
   },
   "floorp-close-split-view": {
-    command: () => globalThis.gSplitView.Functions.removeSplitView(),
+    command: () => {
+      const gBrowser = globalThis.gBrowser;
+      if (!gBrowser?.activeSplitView) return;
+      gBrowser.activeSplitView.unsplitTabs(null);
+    },
     type: "split-view-action",
   },
   "floorp-custom-action-1": {

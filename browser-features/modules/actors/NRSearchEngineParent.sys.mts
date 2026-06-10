@@ -3,6 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// deno-lint-ignore no-explicit-any
+let _searchService: any = null;
+
+function getSearchService() {
+  if (!_searchService) {
+    const mod = ChromeUtils.importESModule(
+      "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+    );
+    _searchService = mod.SearchService;
+  }
+  return _searchService;
+}
+
 export class NRSearchEngineParent extends JSWindowActorParent {
   _ensureSearchUrlHasQueryParam(url: string): string {
     if (url && !url.endsWith("=")) {
@@ -15,11 +28,12 @@ export class NRSearchEngineParent extends JSWindowActorParent {
     switch (message.name) {
       case "SearchEngine:getSearchEngines": {
         try {
-          await Services.search.promiseInitialized;
+          const search = getSearchService();
+          await search.init();
 
-          const engines = await Services.search.getVisibleEngines();
-          const defaultEngine = await Services.search.getDefault();
-          const defaultPrivateEngine = await Services.search
+          const engines = await search.getVisibleEngines();
+          const defaultEngine = await search.getDefault();
+          const defaultPrivateEngine = await search
             .getDefaultPrivate();
 
           const engineList = await Promise.all(
@@ -50,7 +64,7 @@ export class NRSearchEngineParent extends JSWindowActorParent {
                   searchUrl: this._ensureSearchUrlHasQueryParam(
                     engine.getSubmission("", "text/html").uri.spec,
                   ),
-                  identifier: engine.identifier,
+                  identifier: engine.id || engine.identifier,
                   id: engine.id || engine.identifier,
                   telemetryId: engine.telemetryId || "",
                   description: engine.description || "",
@@ -86,9 +100,10 @@ export class NRSearchEngineParent extends JSWindowActorParent {
 
       case "SearchEngine:getDefaultEngine": {
         try {
-          await Services.search.promiseInitialized;
+          const search = getSearchService();
+          await search.init();
 
-          const defaultEngine = await Services.search.getDefault();
+          const defaultEngine = await search.getDefault();
 
           let iconURL = null;
           try {
@@ -114,7 +129,7 @@ export class NRSearchEngineParent extends JSWindowActorParent {
             searchUrl: this._ensureSearchUrlHasQueryParam(
               defaultEngine.getSubmission("", "text/html").uri.spec,
             ),
-            identifier: defaultEngine.identifier,
+            identifier: defaultEngine.id || defaultEngine.identifier,
             id: defaultEngine.id || defaultEngine.identifier,
             telemetryId: defaultEngine.telemetryId || "",
             description: defaultEngine.description || "",
@@ -145,22 +160,23 @@ export class NRSearchEngineParent extends JSWindowActorParent {
 
       case "SearchEngine:setDefaultEngine": {
         try {
-          await Services.search.promiseInitialized;
+          const search = getSearchService();
+          await search.init();
 
           const { engineId } = message.data;
 
-          const engines = await Services.search.getVisibleEngines();
+          const engines = await search.getVisibleEngines();
           const targetEngine = engines.find((engine: nsISearchEngine) =>
-            engine.identifier === engineId || engine.name === engineId
+            engine.id === engineId || engine.name === engineId
           );
 
           if (!targetEngine) {
             throw new Error(`Engine with ID ${engineId} not found`);
           }
 
-          await Services.search.setDefault(
+          await search.setDefault(
             targetEngine,
-            Ci.nsISearchService.CHANGE_REASON_UNKNOWN,
+            search.CHANGE_REASON.UNKNOWN,
           );
 
           this.sendAsyncMessage(
@@ -184,9 +200,10 @@ export class NRSearchEngineParent extends JSWindowActorParent {
 
       case "SearchEngine:getDefaultPrivateEngine": {
         try {
-          await Services.search.promiseInitialized;
+          const search = getSearchService();
+          await search.init();
 
-          const defaultPrivateEngine = await Services.search
+          const defaultPrivateEngine = await search
             .getDefaultPrivate();
 
           let iconURL = null;
@@ -213,7 +230,7 @@ export class NRSearchEngineParent extends JSWindowActorParent {
             searchUrl: this._ensureSearchUrlHasQueryParam(
               defaultPrivateEngine.getSubmission("", "text/html").uri.spec,
             ),
-            identifier: defaultPrivateEngine.identifier,
+            identifier: defaultPrivateEngine.id || defaultPrivateEngine.identifier,
             id: defaultPrivateEngine.id || defaultPrivateEngine.identifier,
             telemetryId: defaultPrivateEngine.telemetryId || "",
             description: defaultPrivateEngine.description || "",
@@ -244,22 +261,23 @@ export class NRSearchEngineParent extends JSWindowActorParent {
 
       case "SearchEngine:setDefaultPrivateEngine": {
         try {
-          await Services.search.promiseInitialized;
+          const search = getSearchService();
+          await search.init();
 
           const { engineId } = message.data;
 
-          const engines = await Services.search.getVisibleEngines();
+          const engines = await search.getVisibleEngines();
           const targetEngine = engines.find((engine: nsISearchEngine) =>
-            engine.identifier === engineId || engine.name === engineId
+            engine.id === engineId || engine.name === engineId
           );
 
           if (!targetEngine) {
             throw new Error(`Engine with ID ${engineId} not found`);
           }
 
-          await Services.search.setDefaultPrivate(
+          await search.setDefaultPrivate(
             targetEngine,
-            Ci.nsISearchService.CHANGE_REASON_UNKNOWN,
+            search.CHANGE_REASON.UNKNOWN,
           );
 
           this.sendAsyncMessage(
@@ -285,7 +303,9 @@ export class NRSearchEngineParent extends JSWindowActorParent {
         try {
           const { query, engineId } = message.data;
 
-          const engines = await Services.search.getVisibleEngines();
+          const search = getSearchService();
+          await search.init();
+          const engines = await search.getVisibleEngines();
           const targetEngine = engines.find((engine: nsISearchEngine) =>
             engine.id === engineId || engine.name === engineId
           );

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getGBrowser, type SplitViewTab } from "../data/types.js";
 import { swapPanesByTab } from "../utils/reorder-panes.js";
+import { findTabByPanelIdAuto } from "../utils/find-tab.js";
 
 let activeDragCleanup: (() => void) | null = null;
 
@@ -12,19 +12,6 @@ function getTabpanels(): HTMLElement | null {
   return document?.getElementById("tabbrowser-tabpanels") as
     | HTMLElement
     | null;
-}
-
-function panelIdToTab(panelId: string): SplitViewTab | null {
-  const gBrowser = getGBrowser();
-  if (!gBrowser?.tabs) {
-    return null;
-  }
-  for (const tab of gBrowser.tabs) {
-    if (tab.linkedPanel === panelId) {
-      return tab;
-    }
-  }
-  return null;
 }
 
 function removeAllGripsFrom(tabpanels: Element | null): void {
@@ -60,6 +47,9 @@ export function updatePaneDragGrips(
       continue;
     }
     grip.className = "floorp-pane-drag-grip";
+    grip.setAttribute("role", "button");
+    grip.setAttribute("aria-label", "Drag to reorder pane");
+    grip.setAttribute("tabindex", "0");
     grip.addEventListener("mousedown", (ev: Event) => {
       onGripMouseDown(ev as MouseEvent, logger);
     });
@@ -86,7 +76,7 @@ function onGripMouseDown(e: MouseEvent, logger: ConsoleInstance): void {
     return;
   }
 
-  const sourceTab = panelIdToTab(panel.id);
+  const sourceTab = findTabByPanelIdAuto(panel.id);
   if (!sourceTab?.splitview) {
     return;
   }
@@ -177,7 +167,7 @@ function onGripMouseDown(e: MouseEvent, logger: ConsoleInstance): void {
       r.el.hasAttribute("data-floorp-drop-target"),
     );
     const targetTab = targetEntry
-      ? panelIdToTab(targetEntry.id)
+      ? findTabByPanelIdAuto(targetEntry.id)
       : null;
     if (
       targetTab &&

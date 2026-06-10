@@ -25,7 +25,8 @@
     "vite-plugin-solid": "npm:vite-plugin-solid@^2.11.10",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^6.0.3",
     "chroma-js": "npm:chroma-js@^3.2.0",
-    "@types/chroma-js": "npm:@types/chroma-js@^3.1.2"
+    "@types/chroma-js": "npm:@types/chroma-js@^3.1.2",
+    "budoux": "npm:budoux@^0.6.4"
   },
   "tasks": {
     "build": "deno run -A npm:vite build"

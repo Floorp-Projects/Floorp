@@ -317,6 +317,30 @@ export class FloorpPrivateContainer {
         },
       );
 
+      // Defense-in-depth: the createBrowser override handles disableglobalhistory
+      // during element creation, but also apply tab-level attributes here.
+      if (
+        userContextId ===
+          PrivateContainer.getPrivateContainerUserContextId() &&
+        newTab?.linkedBrowser
+      ) {
+        try {
+          FloorpPrivateContainer.applyDoNotSaveHistoryToTab(
+            newTab as unknown as {
+              linkedBrowser: {
+                setAttribute: (arg0: string, arg1: string) => void;
+              };
+              setAttribute: (arg0: string, arg1: string) => void;
+            },
+          );
+        } catch (e) {
+          console.error(
+            "[FloorpPrivateContainer] Failed to apply history disabling to reopened tab:",
+            e,
+          );
+        }
+      }
+
       if (globalThis.gBrowser.selectedTab === tab) {
         globalThis.gBrowser.selectedTab = newTab;
       }

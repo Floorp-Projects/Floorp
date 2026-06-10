@@ -6,7 +6,9 @@ import i18next from "i18next";
 import { commandPaletteService } from "../service.ts";
 import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
-import type { PaletteCommand } from "../command-registry.ts";
+import { StepIndicator } from "./StepIndicator.tsx";
+import { StepChoices } from "./StepChoices.tsx";
+import type { PaletteCommand, CommandStepChoice } from "../types.ts";
 
 function getController() {
   return commandPaletteService.getController(window);
@@ -29,6 +31,18 @@ export function CommandPaletteUI() {
     controller.updateSearch(value);
   };
 
+  const handleBack = () => {
+    controller.goBackStep();
+  };
+
+  const handleChoiceSelect = (choice: CommandStepChoice) => {
+    // Ensure selectedChoiceIndex is set to the clicked choice's index
+    const idx = state.filteredStepChoices().findIndex((c) => c.value === choice.value);
+    if (idx >= 0) state.setSelectedChoiceIndex(idx);
+    state.setQuery(choice.label);
+    controller.advanceStep();
+  };
+
   const handleCommandSelect = (index: number) => {
     state.setSelectedIndex(index);
   };
@@ -43,13 +57,28 @@ export function CommandPaletteUI() {
     }
   };
 
-  // Scroll selected item into view
+  // Scroll selected item into view (command mode only)
   createEffect(
     on(state.selectedIndex, () => {
       if (!state.isVisible()) return;
+      if (state.mode() !== "command") return;
       requestAnimationFrame(() => {
         const selected = document.querySelector(
           '.command-palette-item[data-selected="true"]',
+        );
+        selected?.scrollIntoView({ block: "nearest" });
+      });
+    }),
+  );
+
+  // Scroll selected step choice into view (input mode with choices)
+  createEffect(
+    on(state.selectedChoiceIndex, () => {
+      if (!state.isVisible()) return;
+      if (state.mode() !== "input") return;
+      requestAnimationFrame(() => {
+        const selected = document.querySelector(
+          '.command-palette-step-choice-item[data-selected="true"]',
         );
         selected?.scrollIntoView({ block: "nearest" });
       });
@@ -67,6 +96,7 @@ export function CommandPaletteUI() {
             defaultValue: "Command Palette",
           })}
           data-visible={state.isVisible() ? "true" : undefined}
+          data-mode={state.mode()}
           onClick={handleBackdropClick}
           onTransitionEnd={handleTransitionEnd}
         >
@@ -74,14 +104,30 @@ export function CommandPaletteUI() {
             <SearchInput
               query={state.query()}
               onInput={handleInput}
+              onBack={handleBack}
+              state={state}
             />
-            <CommandList
-              commands={state.filteredCommands()}
-              selectedIndex={state.selectedIndex()}
-              query={state.query()}
-              onCommandSelect={handleCommandSelect}
-              onCommandExecute={handleCommandExecute}
-            />
+            <Show when={state.mode() === "input"}>
+              <StepIndicator state={state} />
+              <Show when={state.stepError()}>
+                {(error) => (
+                  <div class="command-palette-step-error">{error()}</div>
+                )}
+              </Show>
+              <StepChoices
+                state={state}
+                onSelect={handleChoiceSelect}
+              />
+            </Show>
+            <Show when={state.mode() === "command"}>
+              <CommandList
+                commands={state.filteredCommands()}
+                selectedIndex={state.selectedIndex()}
+                query={state.query()}
+                onCommandSelect={handleCommandSelect}
+                onCommandExecute={handleCommandExecute}
+              />
+            </Show>
           </div>
         </div>
       </Show>

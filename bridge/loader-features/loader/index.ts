@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
+// Shared type for modules loaded by the loader.
+// Used as the common contract between loadEnabledModules and initializeModules.
+interface LoaderModule {
+  name: string;
+  init?: () => Promise<void>;
+  initBeforeSessionStoreInit?: () => Promise<void>;
+  default?: new () => unknown;
+}
+
 import { initI18NForBrowserChrome } from "#i18n/config-browser-chrome.ts";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
@@ -62,48 +71,38 @@ function setPrefFeatures(all_features_keys: typeof MODULES_KEYS) {
   );
 }
 
-async function loadEnabledModules(enabled_features: typeof MODULES_KEYS) {
-  const modules: Array<{ init?: typeof Function; name: string }> = [];
-
-  const loadModulePromises = Object.entries(MODULES).flatMap(
+async function loadEnabledModules(
+  enabled_features: typeof MODULES_KEYS,
+): Promise<LoaderModule[]> {
+  const promises = Object.entries(MODULES).flatMap(
     ([categoryKey, categoryValue]) =>
-      Object.keys(categoryValue).map(async (moduleName) => {
-        if (
-          categoryKey in enabled_features &&
-          enabled_features[
-            categoryKey as keyof typeof enabled_features
-          ].includes(moduleName)
-        ) {
+      Object.keys(categoryValue)
+        .filter(
+          (moduleName) =>
+            categoryKey in enabled_features &&
+            enabled_features[
+              categoryKey as keyof typeof enabled_features
+            ].includes(moduleName),
+        )
+        .map(async (moduleName): Promise<LoaderModule | null> => {
           try {
             const module = await categoryValue[moduleName]();
-            modules.push(
-              Object.assign(
-                { name: moduleName },
-                module as {
-                  init?: typeof Function;
-                  initBeforeSessionStoreInit?: typeof Function;
-                },
-              ),
-            );
+            return {
+              name: moduleName,
+              ...(module as Omit<LoaderModule, "name">),
+            };
           } catch (e) {
             console.error(`[noraneko] Failed to load module ${moduleName}:`, e);
+            return null;
           }
-        }
-      }),
+        }),
   );
 
-  await Promise.all(loadModulePromises);
-  return modules;
+  const results = await Promise.all(promises);
+  return results.filter((m): m is LoaderModule => m !== null);
 }
 
-async function initializeModules(
-  modules: Array<{
-    init?: typeof Function;
-    initBeforeSessionStoreInit?: typeof Function;
-    name: string;
-    default?: typeof Function;
-  }>,
-) {
+async function initializeModules(modules: LoaderModule[]) {
   for (const module of modules) {
     try {
       await module?.initBeforeSessionStoreInit?.();
