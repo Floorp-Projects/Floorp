@@ -83,6 +83,8 @@ export function uninstallPwaApp(id: string): Promise<void> {
 export type Container = {
   userContextId: number;
   name: string;
+  color: string;
+  color: string;
 };
 
 export function getContainers(): Promise<Container[]> {

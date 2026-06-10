@@ -79,6 +79,24 @@ export function InstalledApps() {
     return !containers.some((c) => c.userContextId === userContextId);
   };
 
+  const CONTAINER_COLOR_MAP: Record<string, string> = {
+    blue: "#37adff",
+    turquoise: "#00c79a",
+    green: "#51cd00",
+    yellow: "#ffcb00",
+    orange: "#ff9f00",
+    red: "#ff613d",
+    pink: "#ff4bda",
+    purple: "#af51f5",
+  };
+
+  const getContainerColor = (userContextId?: number): string | null => {
+    if (!userContextId || userContextId === 0) return null;
+    const container = containers.find((c) => c.userContextId === userContextId);
+    if (!container) return null;
+    return CONTAINER_COLOR_MAP[container.color] ?? "#37adff";
+  };
+
   const handleRename = (app: InstalledApp) => {
     setSelectedApp(app);
     setNewName(app.name);
@@ -171,10 +189,17 @@ export function InstalledApps() {
             )
             : (
               <div className="space-y-4">
-                {(Object.values(installedApps) as InstalledApp[]).map((app) => (
+                {(Object.values(installedApps) as InstalledApp[]).map((app) => {
+                  const containerColor = getContainerColor(app.userContextId);
+                  return (
                   <div
                     key={app.id}
                     className="flex items-center p-3 border rounded-lg"
+                    style={containerColor ? {
+                      borderColor: containerColor,
+                      borderWidth: "2px",
+                      backgroundColor: `${containerColor}10`,
+                    } : undefined}
                   >
                     <img
                       src={app.icon}
@@ -236,7 +261,8 @@ export function InstalledApps() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
         </CardContent>
