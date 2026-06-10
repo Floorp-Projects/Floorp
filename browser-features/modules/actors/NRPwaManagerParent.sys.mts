@@ -33,29 +33,30 @@ export class NRPwaManagerParent extends JSWindowActorParent {
         break;
       }
       case "PwaManager:GetContainers": {
-        const { ContextualIdentityService } = ChromeUtils.importESModule(
-          "resource://gre/modules/ContextualIdentityService.sys.mjs",
-        );
-        const containers = ContextualIdentityService.getPublicIdentities().map(
-          (c: { userContextId: number; l10nId?: string; name: string }) => ({
-            userContextId: c.userContextId,
-            name: c.l10nId
-              ? ContextualIdentityService.getUserContextLabel(c.userContextId)
-              : c.name,
-          }),
-        );
-        this.sendAsyncMessage("PwaManager:GetContainers", containers);
+        try {
+          const { ContextualIdentityService } = ChromeUtils.importESModule(
+            "resource://gre/modules/ContextualIdentityService.sys.mjs",
+          );
+          const identities = ContextualIdentityService.getPublicIdentities();
+          const containers = identities.map(
+            (c: { userContextId: number; l10nId?: string; name: string }) => ({
+              userContextId: c.userContextId,
+              name: c.l10nId
+                ? ContextualIdentityService.getUserContextLabel(c.userContextId)
+                : c.name,
+            }),
+          );
+          this.sendAsyncMessage("PwaManager:GetContainers", JSON.stringify(containers));
+        } catch (e) {
+          console.error("[NRPwaManagerParent] Error getting containers:", e);
+          this.sendAsyncMessage("PwaManager:GetContainers", "[]");
+        }
         break;
       }
       case "PwaManager:SetContainer": {
-        Services.obs.notifyObservers(
-          {
-            wrappedJSObject: {
-              id: message.data.id,
-              userContextId: message.data.userContextId,
-            },
-          },
-          "nora-ssb-set-container",
+        await this.setContainerForSsb(
+          String(message.data.id),
+          Number(message.data.userContextId),
         );
         break;
       }
@@ -64,6 +65,61 @@ export class NRPwaManagerParent extends JSWindowActorParent {
 
   private get installedAppsStoreFile() {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
+  }
+
+  private buildKey(startUrl: string, userContextId: number = 0): string {
+    return `${startUrl}:${userContextId}`;
+  }
+
+  private async readSsbData(): Promise<Record<string, unknown>> {
+    const fileExists = await IOUtils.exists(this.installedAppsStoreFile);
+    if (!fileExists) {
+      return {};
+    }
+    return (await IOUtils.readJSON(this.installedAppsStoreFile)) as Record<string, unknown>;
+  }
+
+  private async writeSsbData(data: Record<string, unknown>): Promise<void> {
+    await IOUtils.writeJSON(this.installedAppsStoreFile, data);
+  }
+
+  private async setContainerForSsb(id: string, userContextId: number): Promise<void> {
+    try {
+      const ssbData = await this.readSsbData();
+      // Find the app by id
+      let foundKey: string | null = null;
+      let foundManifest: Record<string, unknown> | null = null;
+      for (const key in ssbData) {
+        const entry = ssbData[key] as Record<string, unknown>;
+        if (entry.id === id) {
+          foundKey = key;
+          foundManifest = entry;
+          break;
+        }
+      }
+
+      if (!foundKey || !foundManifest) {
+        console.warn("[NRPwaManagerParent] setContainerForSsb: app not found for id:", id);
+        return;
+      }
+
+      const startUrl = foundManifest.start_url as string;
+
+      // Remove old key
+      delete ssbData[foundKey];
+
+      // Update manifest
+      foundManifest.userContextId = userContextId > 0 ? userContextId : undefined;
+
+      // Save with new key
+      const newKey = this.buildKey(startUrl, userContextId);
+      ssbData[newKey] = foundManifest;
+
+      await this.writeSsbData(ssbData);
+
+    } catch (e) {
+      console.error("[NRPwaManagerParent] setContainerForSsb error:", e);
+    }
   }
 
   private async getInstalledApps() {

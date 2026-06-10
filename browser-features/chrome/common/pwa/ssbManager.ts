@@ -56,19 +56,7 @@ export class SiteSpecificBrowserManager {
       await this.uninstallById(subject?.wrappedJSObject?.id as string);
     }, "nora-ssb-uninstall");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      try {
-        const id = subject?.wrappedJSObject?.id as string;
-        const userContextId = subject?.wrappedJSObject?.userContextId as number;
-        await this.setContainerForSsb(id, userContextId);
-      } catch (error) {
-        console.error(
-          "[SiteSpecificBrowserManager] Failed to set SSB container",
-          error,
-        );
-      }
-    }, "nora-ssb-set-container");
+
   }
 
   private listener = {
@@ -352,11 +340,8 @@ export class SiteSpecificBrowserManager {
       ssbObj.start_url,
       ssbObj.userContextId ?? 0,
     );
-
-    // Remove from old key
     await this.dataManager.removeSsbData(oldKey);
 
-    // Save with new key
     const updatedManifest: Manifest = {
       ...ssbObj,
       userContextId: userContextId > 0 ? userContextId : undefined,
