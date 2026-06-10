@@ -193,6 +193,18 @@ export function InstalledApps() {
                             }`}
                           >
                             {getContainerName(app.userContextId)}
+                            {isContainerDeleted(app.userContextId) && (
+                              <button
+                                type="button"
+                                className="ml-1 text-xs underline"
+                                onClick={async () => {
+                                  await setSsbContainer(app.id, 0);
+                                  fetchApps();
+                                }}
+                              >
+                                {t("progressiveWebApp.resetContainer")}
+                              </button>
+                            )}
                           </span>
                         )}
                       </div>

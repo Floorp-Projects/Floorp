@@ -5,6 +5,7 @@
 
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
+import { DataManager as DataManagerClass } from "./dataStore.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
 
@@ -155,9 +156,10 @@ export class SiteSpecificBrowserManager {
     }
 
     for (const key in ssbData) {
+      const { startUrl } = DataManagerClass.parseKey(key);
       if (
-        key === currentTabSsb.start_url ||
-        currentTabSsb.start_url.startsWith(key)
+        startUrl === currentTabSsb.start_url ||
+        currentTabSsb.start_url.startsWith(startUrl)
       ) {
         return true;
       }
@@ -244,7 +246,9 @@ export class SiteSpecificBrowserManager {
       }
     }
 
-    await this.dataManager.removeSsbData(manifest.start_url);
+    await this.dataManager.removeSsbData(
+      DataManagerClass.buildKey(manifest.start_url, manifest.userContextId ?? 0),
+    );
   }
 
   public async uninstallById(id: string) {
@@ -255,9 +259,10 @@ export class SiteSpecificBrowserManager {
     await this.uninstall(ssbObj);
   }
 
-  private async getIdByUrl(url: string) {
+  private async getIdByUrl(url: string, userContextId: number = 0) {
     const ssbData = await this.dataManager.getCurrentSsbData();
-    return ssbData[url];
+    const key = DataManagerClass.buildKey(url, userContextId);
+    return ssbData[key];
   }
 
   public async getSsbObj(id: string) {
@@ -343,11 +348,19 @@ export class SiteSpecificBrowserManager {
       return false;
     }
 
+    const oldKey = DataManagerClass.buildKey(
+      ssbObj.start_url,
+      ssbObj.userContextId ?? 0,
+    );
+
+    // Remove from old key
+    await this.dataManager.removeSsbData(oldKey);
+
+    // Save with new key
     const updatedManifest: Manifest = {
       ...ssbObj,
       userContextId: userContextId > 0 ? userContextId : undefined,
     };
-
     await this.dataManager.saveSsbData(updatedManifest);
     return true;
   }

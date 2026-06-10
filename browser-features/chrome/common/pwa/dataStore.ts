@@ -13,6 +13,29 @@ export class DataManager {
   constructor() {
   }
 
+  /**
+   * Builds a composite key from start_url and userContextId.
+   * Format: "start_url:userContextId"
+   */
+  public static buildKey(startUrl: string, userContextId: number = 0): string {
+    return `${startUrl}:${userContextId}`;
+  }
+
+  /**
+   * Parses a composite key back into start_url and userContextId.
+   */
+  public static parseKey(
+    key: string,
+  ): { startUrl: string; userContextId: number } {
+    const lastColon = key.lastIndexOf(":");
+    if (lastColon === -1) {
+      return { startUrl: key, userContextId: 0 };
+    }
+    const startUrl = key.substring(0, lastColon);
+    const userContextId = parseInt(key.substring(lastColon + 1), 10) || 0;
+    return { startUrl, userContextId };
+  }
+
   public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
     const fileExists = await IOUtils.exists(this.ssbStoreFile);
     if (!fileExists) {
@@ -26,6 +49,15 @@ export class DataManager {
     if (this.isLegacyFormat(data)) {
       const migratedData = this.migrateFromLegacyFormat(
         data as Record<string, LegacyPWAEntry>,
+      );
+      await this.overrideCurrentSsbData(migratedData);
+      return migratedData;
+    }
+
+    // Migrate old key format (start_url only) to composite key (start_url:userContextId)
+    if (this.isOldKeyFormat(data as Record<string, Manifest>)) {
+      const migratedData = this.migrateToCompositeKeyFormat(
+        data as Record<string, Manifest>,
       );
       await this.overrideCurrentSsbData(migratedData);
       return migratedData;
@@ -46,6 +78,45 @@ export class DataManager {
       }
     }
     return false;
+  }
+
+  /**
+   * Checks if the data uses the old key format (start_url only, no composite key).
+   * Returns true if any key does not contain a userContextId suffix.
+   */
+  private isOldKeyFormat(data: Record<string, Manifest>): boolean {
+    if (!data) return false;
+    for (const key in data) {
+      // Composite keys always have a colon followed by a number
+      // Old keys are just URLs (e.g., "https://example.com/")
+      const manifest = data[key];
+      if (manifest.userContextId === undefined) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Migrates from old key format (start_url) to composite key format (start_url:userContextId).
+   */
+  private migrateToCompositeKeyFormat(
+    data: Record<string, Manifest>,
+  ): Record<string, Manifest> {
+    const migrated: Record<string, Manifest> = {};
+    for (const key in data) {
+      const manifest = data[key];
+      // Assign default userContextId if not present
+      if (manifest.userContextId === undefined) {
+        manifest.userContextId = 0;
+      }
+      const newKey = DataManager.buildKey(
+        manifest.start_url,
+        manifest.userContextId,
+      );
+      migrated[newKey] = manifest;
+    }
+    return migrated;
   }
 
   private extractIconSrc(entry: LegacyPWAEntry): string | undefined {
@@ -115,16 +186,16 @@ export class DataManager {
   }
 
   public async saveSsbData(manifest: Manifest) {
-    const start_url = manifest.start_url;
+    const key = DataManager.buildKey(manifest.start_url, manifest.userContextId ?? 0);
     const currentSsbData = await this.getCurrentSsbData();
-    currentSsbData[start_url] = manifest;
+    currentSsbData[key] = manifest;
     await this.overrideCurrentSsbData(currentSsbData);
   }
 
-  public async removeSsbData(url: string) {
+  public async removeSsbData(key: string) {
     const list = await this.getCurrentSsbData();
-    if (list[url]) {
-      delete list[url];
+    if (list[key]) {
+      delete list[key];
       await this.overrideCurrentSsbData(list);
     }
   }

@@ -455,6 +455,7 @@
         "setContainer": "Set Container",
         "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
         "containerDeleted": "Container deleted",
+        "resetContainer": "Reset",
         "save": "Save",
         "errorSettingContainer": "Failed to set container"
     },
