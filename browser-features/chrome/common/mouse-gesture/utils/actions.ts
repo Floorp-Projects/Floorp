@@ -69,6 +69,18 @@ const sendScrollCommand = (
   }
 };
 
+
+const sendLinkHintCommand = (win: Window, action: string): void => {
+  try {
+    const browser = win.gBrowser?.selectedBrowser;
+    if (!browser) return;
+    const actor = browser.browsingContext?.currentWindowGlobal?.getActor("NRLinkHints");
+    if (!actor) return;
+    actor.sendAsyncMessage("LinkHints:Activate", { action });
+  } catch (e) {
+    console.error("[mouse-gesture] Failed to activate link hints:", e);
+  }
+};
 function applyThreePaneLayout(
   win: Window,
   targetLayout:
@@ -1139,5 +1151,26 @@ export const actions: GestureActionRegistration[] = [
       );
       gBrowser.moveTabToSplitView(lastTab, null);
     },
+  },
+
+  {
+    name: "floorp-link-hints-open-current-tab",
+    fn: (win) => sendLinkHintCommand(win, "openCurrentTab"),
+  },
+  {
+    name: "floorp-link-hints-open-new-tab",
+    fn: (win) => sendLinkHintCommand(win, "openNewTab"),
+  },
+  {
+    name: "floorp-link-hints-open-new-background-tab",
+    fn: (win) => sendLinkHintCommand(win, "openNewBackgroundTab"),
+  },
+  {
+    name: "floorp-link-hints-copy-url",
+    fn: (win) => sendLinkHintCommand(win, "copyUrl"),
+  },
+  {
+    name: "floorp-link-hints-hover",
+    fn: (win) => sendLinkHintCommand(win, "hover"),
   },
 ];

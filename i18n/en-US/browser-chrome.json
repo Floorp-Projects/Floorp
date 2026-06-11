@@ -222,7 +222,12 @@
       "floorp-split-view-swap-panes": "Swap Split Panes",
       "floorp-split-view-cycle-layout": "Cycle Split Layout",
       "floorp-split-view-add-pane": "Add Pane to Split View",
-      "floorp-split-view-remove-pane": "Remove Pane from Split View"
+      "floorp-split-view-remove-pane": "Remove Pane from Split View",
+      "floorp-link-hints-open-current-tab": "Open Link (Link Hints)",
+      "floorp-link-hints-open-new-tab": "Open Link in New Tab (Link Hints)",
+      "floorp-link-hints-open-new-background-tab": "Open Link in Background Tab (Link Hints)",
+      "floorp-link-hints-copy-url": "Copy Link URL (Link Hints)",
+      "floorp-link-hints-hover": "Hover Link (Link Hints)"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
@@ -252,7 +257,12 @@
       "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
       "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
       "floorp-split-view-add-pane": "Add a new pane to the active split view",
-      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view",
+      "floorp-link-hints-open-current-tab": "Activate link hints mode to open a link in the current tab",
+      "floorp-link-hints-open-new-tab": "Activate link hints mode to open a link in a new foreground tab",
+      "floorp-link-hints-open-new-background-tab": "Activate link hints mode to open a link in a new background tab",
+      "floorp-link-hints-copy-url": "Activate link hints mode to copy a link URL to clipboard",
+      "floorp-link-hints-hover": "Activate link hints mode to hover over an element"
     }
   },
   "qrCode": {

@@ -202,7 +202,12 @@
       "gecko-workspace-next": "次のワークスペースに切り替える",
       "gecko-workspace-previous": "前のワークスペースに切り替える",
       "floorp-toggle-zen-mode": "禅モードの表示を切り替える",
-      "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える"
+      "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える",
+      "floorp-link-hints-open-current-tab": "リンクを開く（リンクヒント）",
+      "floorp-link-hints-open-new-tab": "リンクを新しいタブで開く（リンクヒント）",
+      "floorp-link-hints-open-new-background-tab": "リンクをバックグラウンドタブで開く（リンクヒント）",
+      "floorp-link-hints-copy-url": "リンクURLをコピー（リンクヒント）",
+      "floorp-link-hints-hover": "リンクをホバー（リンクヒント）"
     },
     "descriptions": {
       "gecko-back": "前のページに戻る",
@@ -214,7 +219,12 @@
       "gecko-reload-all-tabs": "すべてのタブを再読み込み",
       "gecko-restore-last-tab": "最後に閉じたタブを開きなおす",
       "floorp-toggle-zen-mode": "禅モードではすべての UI 要素が非表示になるので、現在のページに集中できます",
-      "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します"
+      "floorp-toggle-command-palette": "コマンドを検索および実行できるコマンドパレットを開閉します",
+      "floorp-link-hints-open-current-tab": "リンクヒントモードを有効にし、現在のタブでリンクを開きます",
+      "floorp-link-hints-open-new-tab": "リンクヒントモードを有効にし、新しいフォアグラウンドタブでリンクを開きます",
+      "floorp-link-hints-open-new-background-tab": "リンクヒントモードを有効にし、新しいバックグラウンドタブでリンクを開きます",
+      "floorp-link-hints-copy-url": "リンクヒントモードを有効にし、リンクURLをクリップボードにコピーします",
+      "floorp-link-hints-hover": "リンクヒントモードを有効にし、要素の上にホバーします"
     }
   },
   "qrCode": {

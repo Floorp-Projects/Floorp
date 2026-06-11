@@ -392,6 +392,21 @@ const JS_WINDOW_ACTORS: {
     matches: ["http://*/*", "https://*/*", "file:///*", "about:*"],
     allFrames: true,
   },
+  NRLinkHints: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRLinkHintsParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRLinkHintsChild.sys.mts",
+      ),
+    },
+    matches: ["http://*/*", "https://*/*", "file:///*"],
+    allFrames: false,
+  },
+
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
