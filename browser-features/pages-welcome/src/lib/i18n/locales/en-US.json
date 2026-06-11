@@ -110,6 +110,7 @@
     "workspaces": {
       "title": "Workspaces",
       "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+      "startTour": "Start the tour",
       "features": [
         "Categorize by purpose: work, personal, etc.",
         "Visually identify with custom icons",

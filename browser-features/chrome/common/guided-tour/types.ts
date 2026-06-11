@@ -1,7 +1,12 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// SPDX-License-Identifier: MPL-2.0
+
+/** ツアー起動リクエスト用の one-shot pref。chrome 側が消費後すぐクリアする */
+export const TOUR_REQUEST_PREF = "floorp.guidedTour.request";
+
+/** pref に書き込まれる起動リクエストの形 */
+export interface TourRequest {
+  tourId: string;
+}
 
 export type TooltipPlacement = "top" | "bottom" | "left" | "right" | "center";
 
@@ -10,30 +15,31 @@ export type TourAction =
   | { type: "rightClick"; selector: string }
   | { type: "scrollIntoView"; selector: string };
 
+/**
+ * ユーザーが実際に UI を操作したら次のステップへ進むトリガー。
+ * event はターゲット上で capture フェーズで監視される。
+ */
+export interface AdvanceTrigger {
+  event: string;
+  selector: string;
+}
+
 export interface TourStep {
-  /** CSS selector for the target element (null = full-screen centered tooltip) */
+  /** スポットライトを当てる要素。null なら中央カードのみ表示 */
   selector: string | null;
-
-  /** i18n key for step title */
   titleKey: string;
-
-  /** i18n key for step description */
   descriptionKey: string;
-
-  /** Where to position the tooltip relative to the target */
-  tooltipPlacement: TooltipPlacement;
-
-  /** Optional: action to perform before showing this step */
+  placement: TooltipPlacement;
+  /** ステップ表示前に実行するアクション（パネルを開く等） */
   action?: TourAction;
-
-  /** Optional: wait for this selector to appear before showing the step */
+  /** この要素が可視になるまで待ってから表示する */
   waitForSelector?: string;
-
-  /** Optional: max time in ms to wait for waitForSelector before skipping */
+  /** waitForSelector のタイムアウト (ms)。デフォルト 3000 */
   waitTimeout?: number;
-
-  /** Whether this step allows pointer events to pass through to the content area */
+  /** true ならスポットライト内をクリック可能にする（実操作を促す） */
   passthrough?: boolean;
+  /** ユーザー操作による自動進行 */
+  advanceOn?: AdvanceTrigger;
 }
 
 export interface TourDefinition {
@@ -41,9 +47,11 @@ export interface TourDefinition {
   steps: TourStep[];
 }
 
-export interface TourState {
-  tourId: string;
-  currentStep: number;
-}
+export type TourStatus = "idle" | "active" | "error";
 
-export const TOUR_PREF = "floorp.guidedTour.active";
+export interface TargetRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}

@@ -1,0 +1,113 @@
+#floorp-guided-tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  pointer-events: none;
+  font-family: system-ui, sans-serif;
+}
+
+.floorp-guided-tour-blocker {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.floorp-guided-tour-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.floorp-guided-tour-spotlight {
+  position: fixed;
+  border-radius: 8px;
+  box-shadow: 0 0 0 100000px rgba(0, 0, 0, 0.45);
+  outline: 2px solid color-mix(in srgb, AccentColor 80%, white);
+  outline-offset: 1px;
+  pointer-events: none;
+  transition:
+    left 0.18s ease,
+    top 0.18s ease,
+    width 0.18s ease,
+    height 0.18s ease;
+}
+
+.floorp-guided-tour-tooltip {
+  position: fixed;
+  width: 320px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 12px;
+  background: light-dark(#ffffff, #2b2a33);
+  color: light-dark(#15141a, #fbfbfe);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  transition: left 0.18s ease, top 0.18s ease;
+}
+
+.floorp-guided-tour-progress {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.floorp-guided-tour-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.floorp-guided-tour-description {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  opacity: 0.9;
+}
+
+.floorp-guided-tour-tryit {
+  font-size: 12px;
+  font-weight: 600;
+  color: AccentColor;
+  margin: 0 0 12px;
+}
+
+.floorp-guided-tour-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.floorp-guided-tour-buttons-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.floorp-guided-tour-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.floorp-guided-tour-btn-primary {
+  background: AccentColor;
+  color: AccentColorText;
+}
+
+.floorp-guided-tour-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.floorp-guided-tour-btn-ghost {
+  background: transparent;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.floorp-guided-tour-btn-ghost:hover {
+  opacity: 1;
+  background: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.1));
+}

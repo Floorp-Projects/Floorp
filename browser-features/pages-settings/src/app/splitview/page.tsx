@@ -3,7 +3,6 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { LayoutSettings } from "./components/LayoutSettings.tsx";
-import { LearnButton } from "@/components/common/learn-button.tsx";
 import {
   getSplitViewSettings,
   saveSplitViewSettings,
@@ -49,7 +48,6 @@ export default function Page() {
           <p className="text-sm mb-4">
             {t("splitView.description")}
           </p>
-          <LearnButton tourId="splitView" />
         </header>
       </div>
       <div className="pl-6 space-y-6">

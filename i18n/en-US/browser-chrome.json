@@ -543,6 +543,8 @@
     "previous": "← Prev",
     "skip": "Skip",
     "finish": "Got it",
+    "tryIt": "Try it",
+    "progress": "Step {{current}} of {{total}}",
     "workspaces": {
       "step1": {
         "title": "What are Workspaces?",
@@ -567,42 +569,6 @@
       "step6": {
         "title": "Sidebar Mode",
         "description": "You can manage workspaces from the panel sidebar as well. Enable sidebar management in the Workspaces settings for quick access without opening a popup."
-      }
-    },
-    "mouseGestures": {
-      "step1": {
-        "title": "How Mouse Gestures Work",
-        "description": "Mouse gestures let you trigger actions by drawing patterns while holding the right mouse button. It's a fast way to navigate without reaching for the keyboard."
-      },
-      "step2": {
-        "title": "Try a Gesture",
-        "description": "Right-click and drag downward, then upward (↓↑) on the page below. This is the gesture for opening a new tab."
-      },
-      "step3": {
-        "title": "Back Gesture",
-        "description": "Now try right-clicking and dragging to the left (←). This is the gesture for going back to the previous page."
-      },
-      "step4": {
-        "title": "Customize Your Gestures",
-        "description": "You can add, edit, or remove gestures in the Mouse Gesture settings. Assign any direction pattern to any browser action you want."
-      }
-    },
-    "splitView": {
-      "step1": {
-        "title": "Getting Started with Split View",
-        "description": "Split View lets you view multiple tabs side by side in the same window. Click the split view button in the toolbar to get started."
-      },
-      "step2": {
-        "title": "Open in Split View",
-        "description": "Right-click any tab and select 'Open in Split View' from the context menu to split the current view with that tab."
-      },
-      "step3": {
-        "title": "Context Menu Options",
-        "description": "The context menu provides options to open a tab in split view, add a pane to an existing split, or move tabs between panes."
-      },
-      "step4": {
-        "title": "Layout Picker",
-        "description": "Use the split view toolbar button to switch between layouts — horizontal, vertical, grid, or three-pane arrangements. You can also resize panes by dragging the divider."
       }
     }
   }
