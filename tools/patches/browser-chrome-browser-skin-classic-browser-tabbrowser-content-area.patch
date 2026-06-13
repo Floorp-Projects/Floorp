@@ -1,7 +1,8 @@
 diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
+index dff8162a84dbb..3021a591a6442 100644
 --- ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
 +++ ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-@@ -165,8 +165,8 @@
+@@ -255,8 +255,8 @@
      --panel-min-width: 140px;
      min-width: var(--panel-min-width);
      max-width: calc(100% - var(--panel-min-width));
@@ -10,24 +11,25 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
 +    flex: 1 1 0;
 +    width: auto;
    }
-
+ 
    &[splitview] {
-@@ -213,29 +213,53 @@
+@@ -316,9 +316,10 @@
        }
      }
-
+ 
 +    /* Column ordering for N-way split */
 +    /* First panel - no start margin */
      .split-view-panel[column="0"] {
 -      order: 0;
 -      margin-inline-end: 0;
 +      order: var(--panel-order, 0);
-
+ 
        @media not (-moz-platform: macos) {
          z-index: 1;
+@@ -332,9 +333,20 @@
        }
      }
-
+ 
 +    /* Last panel - no end margin (detected via :last-child in flex) */
 +    .split-view-panel:last-child {
 +      margin-inline-end: 0;
@@ -45,12 +47,11 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
 +      order: var(--splitter-order);
        -moz-user-focus: normal;
        border-color: transparent;
-
-       &:focus-visible {
-         outline: auto;
+ 
+@@ -343,9 +355,21 @@
        }
      }
-
+ 
 -    .split-view-panel[column="1"] {
 -      order: 2;
 -      margin-inline-start: 0;
@@ -70,5 +71,5 @@ diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area
 +      grid-template-columns: 1fr 1fr 1fr;
 +      grid-template-rows: 1fr 1fr;
      }
-
+ 
      /* Panels with a custom width shouldn't grow. */

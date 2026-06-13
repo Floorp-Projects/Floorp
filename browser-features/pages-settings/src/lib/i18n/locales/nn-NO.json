@@ -452,7 +452,7 @@
         "uninstall": "Uninstall",
         "container": "Behaldar",
         "noContainer": "Ingen behaldar",
-        "setContainer": "Set behaldar",
+        "setContainer": "Vel behaldar",
         "containerDescription": "Vel kva Firefox-behaldar denne appen opnast i. Behaldarar isolerer informasjonskapslar og nettstedsdata.",
         "containerDeleted": "Behaldar sletta",
         "save": "Lagra",

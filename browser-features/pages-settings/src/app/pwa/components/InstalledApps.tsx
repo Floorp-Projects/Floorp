@@ -60,9 +60,9 @@ export function InstalledApps() {
   useEffect(() => {
     fetchApps();
     fetchContainers();
-    document.documentElement.addEventListener("focus", fetchApps);
+    globalThis.addEventListener("focus", fetchApps);
     return () => {
-      document.documentElement.removeEventListener("focus", fetchApps);
+      globalThis.removeEventListener("focus", fetchApps);
     };
   }, []);
 
@@ -186,7 +186,7 @@ export function InstalledApps() {
                         <p className="font-medium truncate">{app.name}</p>
                         {app.userContextId && app.userContextId > 0 && (
                           <span
-                            className={`text-xs px-1.5 py-0.5 rounded ${
+                            className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
                               isContainerDeleted(app.userContextId)
                                 ? "bg-warning/20 text-warning"
                                 : "bg-base-200 text-base-content/70"
@@ -279,7 +279,9 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(containerDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(containerDialogRef)}>
+            {t("progressiveWebApp.close")}
+          </button>
         </form>
       </dialog>
 
@@ -326,7 +328,9 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(renameDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(renameDialogRef)}>
+            {t("progressiveWebApp.close")}
+          </button>
         </form>
       </dialog>
 
@@ -367,7 +371,9 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>
+            {t("progressiveWebApp.close")}
+          </button>
         </form>
       </dialog>
     </>
