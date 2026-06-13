@@ -61,6 +61,9 @@ function findNonEmptyThemeVariables(): string[] {
   const found = new Set<string>();
   for (const element of elements) {
     const style = globalThis.getComputedStyle(element);
+    if (!style) {
+      continue;
+    }
     for (const name of collectNonEmptyThemeVariables(style)) {
       found.add(name);
     }
