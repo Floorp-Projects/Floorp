@@ -227,6 +227,25 @@ export class DataManager {
       await this.overrideCurrentSsbData(list);
     }
   }
+
+  public async moveSsbKey(
+    oldKey: string,
+    manifest: Manifest,
+  ): Promise<boolean> {
+    const newKey = buildSsbKey(manifest.start_url, manifest.userContextId ?? 0);
+    const list = await this.getCurrentSsbData();
+    if (!list[oldKey]) {
+      return false;
+    }
+    if (newKey !== oldKey && list[newKey]) {
+      return false;
+    }
+
+    delete list[oldKey];
+    list[newKey] = manifest;
+    await this.overrideCurrentSsbData(list);
+    return true;
+  }
 }
 
 export class DataStoreProvider {

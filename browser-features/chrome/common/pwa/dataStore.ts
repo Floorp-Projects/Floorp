@@ -210,4 +210,29 @@ export class DataManager {
       await this.overrideCurrentSsbData(list);
     }
   }
+
+  /**
+   * Moves an SSB entry from one composite key to another in a single write.
+   */
+  public async moveSsbKey(
+    oldKey: string,
+    manifest: Manifest,
+  ): Promise<boolean> {
+    const newKey = DataManager.buildKey(
+      manifest.start_url,
+      manifest.userContextId ?? 0,
+    );
+    const list = await this.getCurrentSsbData();
+    if (!list[oldKey]) {
+      return false;
+    }
+    if (newKey !== oldKey && list[newKey]) {
+      return false;
+    }
+
+    delete list[oldKey];
+    list[newKey] = manifest;
+    await this.overrideCurrentSsbData(list);
+    return true;
+  }
 }

@@ -1,7 +1,8 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+index 0aa4baea8e5e6..bd8855254ea0a 100644
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -148,6 +148,20 @@
+@@ -250,6 +250,20 @@ var gBrowserInit = {
    },
  
    onDOMContentLoaded() {
@@ -22,7 +23,7 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -156,6 +170,17 @@
+@@ -258,6 +272,17 @@ var gBrowserInit = {
        { categoryName: "browser-window-domcontentloaded-before-tabbrowser" },
        window
      );
@@ -38,11 +39,11 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * END
 +     */
  
-     gBrowser = new window.Tabbrowser();
-     gBrowser.init();
-@@ -1162,6 +1187,20 @@
-     // Final window teardown, do this last.
-     gBrowser.destroy();
+     // This adds gBrowser to the global scope.
+     BrowserUtils.callModulesFromCategory(
+@@ -1316,9 +1341,34 @@ var gBrowserInit = {
+       window
+     );
      window.XULBrowserWindow = null;
 +    /**
 +     * * NORANEKO PATCH - 0.1.19
@@ -61,10 +62,6 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-@@ -1170,5 +1209,16 @@
-       { categoryName: "browser-window-unload" },
-       window
-     );
 +    /**
 +     * * NORANEKO PATCH - 0.1.19
 +     * * [PANEL_SIDEBAR]
@@ -76,5 +73,6 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * [PANEL_SIDEBAR]
 +     * * END
 +     */
-   },
- };
+ 
+     BrowserUtils.callModulesFromCategory(
+       { categoryName: "browser-window-final-unload", jsGlobal: globalThis },

@@ -204,8 +204,7 @@ const tests: TestCase[] = [
         icon: "",
         userContextId: 2,
       };
-      let removed = false;
-      let saved = false;
+      let moved = false;
       const managerLike = {
         getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
         dataManager: {
@@ -214,13 +213,9 @@ const tests: TestCase[] = [
               "https://example.com/:0": defaultEntry,
               "https://example.com/:2": containerEntry,
             }),
-          removeSsbData: () => {
-            removed = true;
-            return Promise.resolve();
-          },
-          saveSsbData: () => {
-            saved = true;
-            return Promise.resolve();
+          moveSsbKey: () => {
+            moved = true;
+            return Promise.resolve(false);
           },
         },
       };
@@ -233,8 +228,7 @@ const tests: TestCase[] = [
         );
 
       assertEquals(result, false, "reset should fail on default-key collision");
-      assertEquals(removed, false, "existing container entry must remain");
-      assertEquals(saved, false, "default entry must not be overwritten");
+      assertEquals(moved, false, "moveSsbKey must not run on collision");
     },
   },
 ];

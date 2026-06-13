@@ -10,6 +10,27 @@ import { getUserContextIdForBrowser } from "./containerUtils.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
 
+type SsbObserverPayload = {
+  wrappedJSObject?: {
+    id?: string;
+    newName?: string;
+    key?: string;
+  };
+};
+
+function getSsbObserverPayload(
+  subject: unknown,
+): SsbObserverPayload["wrappedJSObject"] {
+  if (typeof subject !== "object" || subject === null) {
+    return undefined;
+  }
+  const payload = (subject as SsbObserverPayload).wrappedJSObject;
+  if (typeof payload !== "object" || payload === null) {
+    return undefined;
+  }
+  return payload;
+}
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
@@ -44,29 +65,53 @@ export class SiteSpecificBrowserManager {
 
     globalThis.gBrowser.addTabsProgressListener(this.listener);
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.renameSsb(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.newName as string,
-        subject?.wrappedJSObject?.key as string | undefined,
-      );
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        const newName = payload?.newName;
+        if (!id || !newName) {
+          return;
+        }
+        await this.renameSsb(id, newName, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] rename observer failed:",
+          error,
+        );
+      }
     }, "nora-ssb-rename");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.uninstallById(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.key as string | undefined,
-      );
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        if (!id) {
+          return;
+        }
+        await this.uninstallById(id, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] uninstall observer failed:",
+          error,
+        );
+      }
     }, "nora-ssb-uninstall");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.resetContainerForSsb(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.key as string | undefined,
-      );
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        if (!id) {
+          return;
+        }
+        await this.resetContainerForSsb(id, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] reset-container observer failed:",
+          error,
+        );
+      }
     }, "nora-ssb-reset-container");
   }
 
@@ -493,14 +538,12 @@ export class SiteSpecificBrowserManager {
       return false;
     }
 
-    await this.dataManager.removeSsbData(oldKey);
-
     const updatedManifest: Manifest = {
       ...ssbObj,
       userContextId: undefined,
     };
-    await this.dataManager.saveSsbData(updatedManifest);
-    return true;
+
+    return await this.dataManager.moveSsbKey(oldKey, updatedManifest);
   }
 
   public useOSIntegration() {

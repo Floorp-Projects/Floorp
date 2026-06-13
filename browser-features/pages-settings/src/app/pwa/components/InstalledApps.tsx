@@ -62,9 +62,9 @@ export function InstalledApps() {
   useEffect(() => {
     fetchApps();
     fetchContainers();
-    document.documentElement.addEventListener("focus", fetchApps);
+    globalThis.addEventListener("focus", fetchApps);
     return () => {
-      document.documentElement.removeEventListener("focus", fetchApps);
+      globalThis.removeEventListener("focus", fetchApps);
     };
   }, []);
 
@@ -163,6 +163,8 @@ export function InstalledApps() {
                     storageKey,
                   };
                   const containerColor = getContainerColor(app.userContextId);
+                  const showContainerBadge = (app.userContextId ?? 0) > 0 ||
+                    isContainerDeleted(app.userContextId);
                   return (
                     <div
                       key={storageKey}
@@ -185,30 +187,32 @@ export function InstalledApps() {
                           <p className="font-medium truncate">
                             {appWithKey.name}
                           </p>
-                          <span
-                            className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
-                              isContainerDeleted(app.userContextId)
-                                ? "bg-warning/20 text-warning"
-                                : "bg-base-200 text-base-content/70"
-                            }`}
-                          >
-                            {getContainerName(appWithKey.userContextId)}
-                            {isContainerDeleted(appWithKey.userContextId) && (
-                              <button
-                                type="button"
-                                className="ml-1 text-xs underline"
-                                onClick={async () => {
-                                  await resetSsbContainer(
-                                    appWithKey.id,
-                                    appWithKey.storageKey,
-                                  );
-                                  fetchApps();
-                                }}
-                              >
-                                {t("progressiveWebApp.resetContainer")}
-                              </button>
-                            )}
-                          </span>
+                          {showContainerBadge && (
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
+                                isContainerDeleted(app.userContextId)
+                                  ? "bg-warning/20 text-warning"
+                                  : "bg-base-200 text-base-content/70"
+                              }`}
+                            >
+                              {getContainerName(appWithKey.userContextId)}
+                              {isContainerDeleted(appWithKey.userContextId) && (
+                                <button
+                                  type="button"
+                                  className="ml-1 text-xs underline"
+                                  onClick={async () => {
+                                    await resetSsbContainer(
+                                      appWithKey.id,
+                                      appWithKey.storageKey,
+                                    );
+                                    fetchApps();
+                                  }}
+                                >
+                                  {t("progressiveWebApp.resetContainer")}
+                                </button>
+                              )}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-base-content/70 truncate">
                           {appWithKey.start_url}
@@ -282,7 +286,7 @@ export function InstalledApps() {
         </div>
         <form method="dialog" className="modal-backdrop">
           <button type="submit" onClick={() => handleClose(renameDialogRef)}>
-            close
+            {t("progressiveWebApp.close")}
           </button>
         </form>
       </dialog>
@@ -325,7 +329,7 @@ export function InstalledApps() {
         </div>
         <form method="dialog" className="modal-backdrop">
           <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>
-            close
+            {t("progressiveWebApp.close")}
           </button>
         </form>
       </dialog>

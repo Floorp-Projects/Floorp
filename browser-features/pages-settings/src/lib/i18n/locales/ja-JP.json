@@ -448,6 +448,7 @@
         "uninstallConfirmation": "ウェブアプリをアンインストール",
         "uninstallWarning": "本当に [{{name}}] をアンインストールしますか？",
         "cancel": "キャンセル",
+        "close": "閉じる",
         "rename": "名前を変更",
         "uninstall": "アンインストール",
         "container": "コンテナ",

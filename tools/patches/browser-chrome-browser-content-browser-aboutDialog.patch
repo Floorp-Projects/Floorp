@@ -1,5 +1,5 @@
 diff --git a/browser/chrome/browser/content/browser/aboutDialog.css b/browser/chrome/browser/content/browser/aboutDialog.css
-index bca264f..6860af7 100755
+index 017125bc2510e..b18aa07417c44 100644
 --- ./browser/chrome/browser/content/browser/aboutDialog.css
 +++ ./browser/chrome/browser/content/browser/aboutDialog.css
 @@ -17,7 +17,10 @@
@@ -19,6 +19,6 @@ index bca264f..6860af7 100755
    background-repeat: no-repeat;
    background-size: 288px auto;
 +  padding-top: 75px;
+   -moz-context-properties: fill;
+   fill: currentColor;
    /* move wordmark down a bit so it doesnt bump up too closely to top of dialog */
-   margin-top: 20px;
-   /* We don't want this box to contribute arbitrarily to the intrinsic size of
