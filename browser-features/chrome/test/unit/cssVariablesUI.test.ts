@@ -146,15 +146,18 @@ function testAtLeastOneThemeVariableIsSet(): void {
   // Fallback: resolved chrome styles still prove the theme pipeline is active.
   const navBar = document.getElementById("nav-bar");
   if (navBar) {
-    const backgroundColor = globalThis.getComputedStyle(navBar).backgroundColor;
-    const hasResolvedBackground = backgroundColor.trim() !== "" &&
-      backgroundColor !== "transparent" &&
-      backgroundColor !== "rgba(0, 0, 0, 0)";
-    assert(
-      hasResolvedBackground,
-      "nav-bar should have a resolved background when :root theme variables are empty",
-    );
-    return;
+    const navStyle = globalThis.getComputedStyle(navBar);
+    if (navStyle) {
+      const backgroundColor = navStyle.backgroundColor;
+      const hasResolvedBackground = backgroundColor.trim() !== "" &&
+        backgroundColor !== "transparent" &&
+        backgroundColor !== "rgba(0, 0, 0, 0)";
+      assert(
+        hasResolvedBackground,
+        "nav-bar should have a resolved background when :root theme variables are empty",
+      );
+      return;
+    }
   }
 
   assert(
