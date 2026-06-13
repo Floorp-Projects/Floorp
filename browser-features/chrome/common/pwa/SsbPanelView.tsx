@@ -8,11 +8,16 @@ import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import type { Browser, Manifest } from "./type";
 import type { PwaService } from "./pwaService";
+import { getContainerLabel, getUserContextIdForBrowser } from "./containerUtils.ts";
+import { SsbContainerSelect } from "./SsbContainerSelect.tsx";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 export class SsbPanelView {
   private static installedApps = createSignal<Manifest[]>([]);
+  private static selectedContainerId = createSignal(0);
+  private static panelIsInstalled = createSignal(false);
+  private static subviewSessionActive = false;
   private static pwaService: PwaService;
   private isOpen = createSignal<boolean>(false);
   private isRendered = false;
@@ -76,12 +81,34 @@ export class SsbPanelView {
   }
 
   private static async showSsbPanelSubView() {
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+
+    if (!SsbPanelView.subviewSessionActive) {
+      SsbPanelView.subviewSessionActive = true;
+      const tabContainerId = getUserContextIdForBrowser(browser);
+      SsbPanelView.selectedContainerId[1](tabContainerId);
+      void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
+    }
+
     await globalThis.PanelUI.showSubView(
       "PanelUI-ssb",
       document?.getElementById("appMenu-ssb-button"),
     );
 
-    SsbPanelView.updateInstalledApps();
+    await SsbPanelView.updateInstalledApps();
+  }
+
+  private static resetSubviewSession() {
+    SsbPanelView.subviewSessionActive = false;
+  }
+
+  private static async updatePanelInstallState(
+    browser: Browser,
+    userContextId: number,
+  ) {
+    const installed = await SsbPanelView.pwaService
+      .checkPageIsInstalledForContainer(browser, userContextId);
+    SsbPanelView.panelIsInstalled[1](installed);
   }
 
   private static async updateInstalledApps() {
@@ -92,11 +119,31 @@ export class SsbPanelView {
     );
   }
 
+  private static onContainerSelect = (userContextId: number) => {
+    SsbPanelView.selectedContainerId[1](userContextId);
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+    void SsbPanelView.updatePanelInstallState(browser, userContextId);
+  };
+
   private static handleInstallOrRunCurrentPageAsSsb() {
+    const selectedContainerId = SsbPanelView.selectedContainerId[0]();
+    console.debug("[PWA:install-launch] SsbPanelView install/open", {
+      selectedContainerId,
+      pageUrl: globalThis.gBrowser.selectedBrowser?.currentURI?.spec,
+    });
     SsbPanelView.pwaService.installOrRunCurrentPageAsSsb(
       globalThis.gBrowser.selectedBrowser as Browser,
       false,
+      selectedContainerId,
     );
+  }
+
+  private static formatAppLabel(app: Manifest): string {
+    const containerLabel = getContainerLabel(app.userContextId ?? 0);
+    if (!containerLabel) {
+      return app.name;
+    }
+    return `${app.name} (${containerLabel})`;
   }
 
   private static InstalledAppsList(): JSX.Element {
@@ -107,11 +154,14 @@ export class SsbPanelView {
           <xul:toolbarbutton
             id={`ssb-${app.id}`}
             class="subviewbutton ssb-app-info-button"
-            label={app.name}
+            label={SsbPanelView.formatAppLabel(app)}
             image={app.icon}
             data-ssbId={app.id}
             onCommand={() => {
-              SsbPanelView.pwaService.runSsbByUrl(app.start_url);
+              SsbPanelView.pwaService.runSsbByUrl(
+                app.start_url,
+                app.userContextId,
+              );
             }}
           />
         )}
@@ -123,6 +173,7 @@ export class SsbPanelView {
     const [translations, setTranslations] = createSignal({
       webapps: i18next.t("ssb.menu.webapps"),
       installCurrent: i18next.t("ssb.menu.install-current"),
+      openCurrent: i18next.t("ssb.menu.open-current"),
       openInstalled: i18next.t("ssb.menu.open-installed"),
     });
 
@@ -130,9 +181,13 @@ export class SsbPanelView {
       setTranslations({
         webapps: i18next.t("ssb.menu.webapps"),
         installCurrent: i18next.t("ssb.menu.install-current"),
+        openCurrent: i18next.t("ssb.menu.open-current"),
         openInstalled: i18next.t("ssb.menu.open-installed"),
       });
     });
+
+    const [selectedContainerId] = SsbPanelView.selectedContainerId;
+    const [panelIsInstalled] = SsbPanelView.panelIsInstalled;
 
     return (
       <>
@@ -143,15 +198,28 @@ export class SsbPanelView {
           closemenu="none"
           onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
-        <xul:panelview id="PanelUI-ssb">
+        <xul:panelview
+          id="PanelUI-ssb"
+          onViewHiding={() => SsbPanelView.resetSubviewSession()}
+        >
           <xul:vbox id="ssb-subview-body" class="panel-subview-body">
-            <xul:toolbarbutton
-              id="appMenu-install-or-open-ssb-current-page-button"
-              class="subviewbutton"
-              label={translations().installCurrent}
-              onCommand={() =>
-                SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
-            />
+            <xul:vbox id="ssb-install-section" class="ssb-menu-install-section">
+              <SsbContainerSelect
+                selectedId={selectedContainerId}
+                onSelect={SsbPanelView.onContainerSelect}
+                labelKey="ssb.menu.container"
+                menuPopupLevel="top"
+              />
+              <xul:toolbarbutton
+                id="appMenu-install-or-open-ssb-current-page-button"
+                class="subviewbutton"
+                label={panelIsInstalled()
+                  ? translations().openCurrent
+                  : translations().installCurrent}
+                onCommand={() =>
+                  SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
+              />
+            </xul:vbox>
             <xul:toolbarseparator />
             <h2
               id="panelMenu_openInstalledApps"

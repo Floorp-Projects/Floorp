@@ -199,6 +199,10 @@ export default defineConfig({
         find: "#features-pages",
         replacement: r("../../browser-features"),
       },
+      {
+        find: "#libs",
+        replacement: r("../../libs"),
+      },
     ],
   },
 });

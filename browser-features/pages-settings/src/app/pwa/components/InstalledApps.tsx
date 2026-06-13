@@ -8,12 +8,12 @@ import { useTranslation } from "react-i18next";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import type { InstalledApp, TProgressiveWebAppObject } from "@/types/pref.ts";
 import {
+  type Container,
+  getContainers,
   getInstalledApps,
   renamePwaApp,
+  resetSsbContainer,
   uninstallPwaApp,
-  getContainers,
-  setSsbContainer,
-  type Container,
 } from "../dataManager.ts";
 import { LayoutGrid } from "lucide-react";
 
@@ -25,15 +25,11 @@ export function InstalledApps() {
   const [containers, setContainers] = useState<Container[]>([]);
   const [selectedApp, setSelectedApp] = useState<InstalledApp | null>(null);
   const [newName, setNewName] = useState("");
-  const [selectedContainerId, setSelectedContainerId] = useState<number>(0);
   const [error, setError] = useState<string>("");
   const renameDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
     HTMLDialogElement
   >;
   const uninstallDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
-    HTMLDialogElement
-  >;
-  const containerDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
     HTMLDialogElement
   >;
 
@@ -99,13 +95,6 @@ export function InstalledApps() {
     uninstallDialogRef.current?.showModal();
   };
 
-  const handleContainer = (app: InstalledApp) => {
-    setSelectedApp(app);
-    setSelectedContainerId(app.userContextId ?? 0);
-    setError("");
-    containerDialogRef.current?.showModal();
-  };
-
   const executeRename = async () => {
     if (!selectedApp || !newName) return;
 
@@ -138,22 +127,6 @@ export function InstalledApps() {
     }
   };
 
-  const executeSetContainer = async () => {
-    if (!selectedApp) return;
-
-    try {
-      await setSsbContainer(selectedApp.id, selectedContainerId);
-      containerDialogRef.current?.close();
-      setError("");
-      setTimeout(() => {
-        fetchApps();
-      }, 1000);
-    } catch (e) {
-      setError(t("progressiveWebApp.errorSettingContainer"));
-      console.error("Error setting container:", e);
-    }
-  };
-
   const handleClose = (dialogRef: React.RefObject<HTMLDialogElement>) => {
     setError("");
     dialogRef.current?.close();
@@ -181,26 +154,27 @@ export function InstalledApps() {
                 {(Object.values(installedApps) as InstalledApp[]).map((app) => {
                   const containerColor = getContainerColor(app.userContextId);
                   return (
-                  <div
-                    key={app.id}
-                    className="flex items-center p-3 border rounded-lg"
-                    style={containerColor ? {
-                      borderColor: containerColor,
-                      borderWidth: "2px",
-                      backgroundColor: `${containerColor}10`,
-                    } : undefined}
-                  >
-                    <img
-                      src={app.icon}
-                      alt={app.name}
-                      className="w-8 h-8 rounded mr-3"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium truncate">{app.name}</p>
-                        {app.userContextId && app.userContextId > 0 && (
+                    <div
+                      key={app.id}
+                      className="flex items-center p-3 border rounded-lg"
+                      style={containerColor
+                        ? {
+                          borderColor: containerColor,
+                          borderWidth: "2px",
+                          backgroundColor: `${containerColor}10`,
+                        }
+                        : undefined}
+                    >
+                      <img
+                        src={app.icon}
+                        alt={app.name}
+                        className="w-8 h-8 rounded mr-3"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{app.name}</p>
                           <span
-                            className={`text-xs px-1.5 py-0.5 rounded ${
+                            className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
                               isContainerDeleted(app.userContextId)
                                 ? "bg-warning/20 text-warning"
                                 : "bg-base-200 text-base-content/70"
@@ -212,7 +186,7 @@ export function InstalledApps() {
                                 type="button"
                                 className="ml-1 text-xs underline"
                                 onClick={async () => {
-                                  await setSsbContainer(app.id, 0);
+                                  await resetSsbContainer(app.id);
                                   fetchApps();
                                 }}
                               >
@@ -220,95 +194,34 @@ export function InstalledApps() {
                               </button>
                             )}
                           </span>
-                        )}
+                        </div>
+                        <p className="text-sm text-base-content/70 truncate">
+                          {app.start_url}
+                        </p>
                       </div>
-                      <p className="text-sm text-base-content/70 truncate">
-                        {app.start_url}
-                      </p>
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={() => handleRename(app)}
+                        >
+                          {t("progressiveWebApp.renameApp")}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-error"
+                          onClick={() => handleUninstall(app)}
+                        >
+                          {t("progressiveWebApp.uninstallApp")}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        type="button"
-                        className="btn btn-sm"
-                        onClick={() => handleContainer(app)}
-                      >
-                        {t("progressiveWebApp.container")}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm"
-                        onClick={() => handleRename(app)}
-                      >
-                        {t("progressiveWebApp.renameApp")}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-error"
-                        onClick={() => handleUninstall(app)}
-                      >
-                        {t("progressiveWebApp.uninstallApp")}
-                      </button>
-                    </div>
-                  </div>
                   );
                 })}
               </div>
             )}
         </CardContent>
       </Card>
-
-      <dialog
-        ref={containerDialogRef}
-        className="modal modal-bottom sm:modal-middle"
-        onClick={(e) => {
-          if (e.target === containerDialogRef.current) {
-            handleClose(containerDialogRef);
-          }
-        }}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            {t("progressiveWebApp.setContainer")}
-          </h3>
-          {error && <p className="text-error mb-4">{error}</p>}
-          <p className="py-4 text-base-content/70">
-            {t("progressiveWebApp.containerDescription")}
-          </p>
-          <select
-            className="select select-bordered w-full mb-4"
-            value={selectedContainerId}
-            onChange={(e) => setSelectedContainerId(Number(e.target.value))}
-          >
-            <option value={0}>
-              {t("progressiveWebApp.noContainer")}
-            </option>
-            {containers.map((c) => (
-              <option key={c.userContextId} value={c.userContextId}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <div className="modal-action">
-            <button
-              type="button"
-              className="btn"
-              onClick={() => handleClose(containerDialogRef)}
-            >
-              {t("progressiveWebApp.cancel")}
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={executeSetContainer}
-            >
-              {t("progressiveWebApp.save")}
-            </button>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(containerDialogRef)}>close</button>
-        </form>
-      </dialog>
 
       <dialog
         ref={renameDialogRef}
@@ -353,7 +266,9 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(renameDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(renameDialogRef)}>
+            close
+          </button>
         </form>
       </dialog>
 
@@ -394,7 +309,9 @@ export function InstalledApps() {
           </div>
         </div>
         <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>close</button>
+          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>
+            close
+          </button>
         </form>
       </dialog>
     </>

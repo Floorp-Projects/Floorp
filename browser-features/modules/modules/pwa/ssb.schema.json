@@ -59,6 +59,10 @@
                 "background_color": {
                     "type": "string",
                     "description": "Background color for the PWA splash screen"
+                },
+                "userContextId": {
+                    "type": "integer",
+                    "description": "Firefox Container userContextId assigned at install time"
                 }
             },
             "additionalProperties": true

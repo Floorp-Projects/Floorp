@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { buildSsbKey, parseSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
 import type { LegacyPWAEntry, Manifest } from "./type.ts";
 
 export class DataManager {
@@ -18,7 +19,7 @@ export class DataManager {
    * Format: "start_url:userContextId"
    */
   public static buildKey(startUrl: string, userContextId: number = 0): string {
-    return `${startUrl}:${userContextId}`;
+    return buildSsbKey(startUrl, userContextId);
   }
 
   /**
@@ -27,13 +28,7 @@ export class DataManager {
   public static parseKey(
     key: string,
   ): { startUrl: string; userContextId: number } {
-    const lastColon = key.lastIndexOf(":");
-    if (lastColon === -1) {
-      return { startUrl: key, userContextId: 0 };
-    }
-    const startUrl = key.substring(0, lastColon);
-    const userContextId = parseInt(key.substring(lastColon + 1), 10) || 0;
-    return { startUrl, userContextId };
+    return parseSsbKey(key);
   }
 
   public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
@@ -186,7 +181,10 @@ export class DataManager {
   }
 
   public async saveSsbData(manifest: Manifest) {
-    const key = DataManager.buildKey(manifest.start_url, manifest.userContextId ?? 0);
+    const key = DataManager.buildKey(
+      manifest.start_url,
+      manifest.userContextId ?? 0,
+    );
     const currentSsbData = await this.getCurrentSsbData();
     currentSsbData[key] = manifest;
     await this.overrideCurrentSsbData(currentSsbData);

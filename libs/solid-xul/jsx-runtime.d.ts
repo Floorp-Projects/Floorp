@@ -76,6 +76,7 @@ export namespace JSX {
     oncommand?: string;
     onCommand?: () => void;
     value?: string;
+    closemenu?: "none" | "all" | "current" | "parent";
   }
 
   interface XULRichListItem extends XULElementBase {
@@ -88,6 +89,7 @@ export namespace JSX {
   }
 
   interface XULMenuPopupElement extends XULElementBase {
+    level?: "top" | "parent" | "floating";
     position?:
       | "after_start"
       | "bottomright topright"
@@ -102,6 +104,8 @@ export namespace JSX {
 
   interface XULPanelElement extends XULElementBase {
     type?: "arrow";
+    noautofocus?: boolean;
+    onViewHiding?: () => void;
     position?:
       | "after_start"
       | "end_before"
@@ -109,7 +113,7 @@ export namespace JSX {
       | "bottomright topright"
       | "overlap";
     onPopupShowing?: () => void;
-    onPopupHiding?: () => void;
+    onPopupHiding?: (event: Event) => void;
     onpopupshowing?: string;
   }
 
@@ -144,10 +148,12 @@ export namespace JSX {
   interface XULButtonElement extends XULElementBase {
     label?: string;
     accesskey?: string;
+    type?: "menu" | "button";
     oncommand?: string;
     onCommand?: () => void;
     context?: string;
     image?: string;
+    disabled?: boolean;
   }
 
   interface XULImageElement extends XULElementBase {

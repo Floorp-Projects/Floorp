@@ -2,17 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { getContainerColorHex } from "#libs/pwa/containerColorMap.ts";
+
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
 
 function getShellService() {
-  return ChromeUtils.importESModule("resource:///modules/ShellService.sys.mjs")
-    .ShellService;
+  return ChromeUtils.importESModule(
+    "moz-src:///browser/components/shell/ShellService.sys.mjs",
+  ).ShellService;
 }
 
 const { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs",
+);
+
+const { getContainerColorName } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/pwa/containerDisplay.sys.mjs",
 );
 
 const ImgTools = Cc["@mozilla.org/image/tools;1"].getService(
@@ -315,7 +322,118 @@ export const ImageTools = {
   decodeImageFromArrayBuffer(arrayBuffer: ArrayBuffer, contentType: string) {
     return ImgTools.decodeImageFromArrayBuffer(arrayBuffer, contentType);
   },
+
+  async applyContainerBadgeToIcon(
+    container: imgIContainer,
+    userContextId: number,
+    size = 128,
+  ): Promise<imgIContainer> {
+    if (userContextId <= 0) {
+      return container;
+    }
+
+    const colorName = getContainerColorName(userContextId);
+    if (!colorName) {
+      return container;
+    }
+
+    try {
+      const canvasWindow = getCanvasWindow();
+      const badgeColor = resolveContainerBadgeColor(canvasWindow, colorName);
+      const pngBlob = (await ImageTools.scaleImage(
+        container,
+        size,
+        size,
+      )) as Blob;
+      return await drawIconWithContainerBadge(
+        canvasWindow,
+        pngBlob,
+        size,
+        badgeColor,
+      );
+    } catch (error) {
+      console.warn("[ImageTools] Failed to apply container badge:", error);
+      return container;
+    }
+  },
 };
+
+function getCanvasWindow(): Window {
+  const enumerator = Services.wm.getEnumerator("navigator:browser");
+  while (enumerator.hasMoreElements()) {
+    const win = enumerator.getNext() as Window;
+    if (win?.document) {
+      return win;
+    }
+  }
+
+  return Services.appShell.hiddenDOMWindow;
+}
+
+function resolveContainerBadgeColor(win: Window, colorName: string): string {
+  const fromTheme = win
+    .getComputedStyle(win.document.documentElement)
+    .getPropertyValue(`--identity-tab-color-${colorName}`)
+    .trim();
+  if (fromTheme) {
+    return fromTheme;
+  }
+  return getContainerColorHex(colorName);
+}
+
+function drawIconWithContainerBadge(
+  win: Window,
+  pngBlob: Blob,
+  size: number,
+  badgeColor: string,
+): Promise<imgIContainer> {
+  return drawIconWithContainerBadgeAsync(win, pngBlob, size, badgeColor);
+}
+
+async function drawIconWithContainerBadgeAsync(
+  win: Window,
+  pngBlob: Blob,
+  size: number,
+  badgeColor: string,
+): Promise<imgIContainer> {
+  const doc = win.document;
+  const canvas = doc.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "canvas",
+  ) as HTMLCanvasElement;
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas 2D context unavailable.");
+  }
+
+  // img.onload + blob: URL can hang in parent-process chrome; use createImageBitmap.
+  const bitmap = await win.createImageBitmap(pngBlob);
+  try {
+    ctx.drawImage(bitmap, 0, 0, size, size);
+
+    const badgeRadius = Math.max(2, size * 0.16);
+    const centerX = size - badgeRadius - 1;
+    const centerY = size - badgeRadius - 1;
+
+    ctx.fillStyle = badgeColor;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, badgeRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = Math.max(1, size * 0.05);
+    ctx.stroke();
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const result = await ImageTools.loadImage(Services.io.newURI(dataUrl));
+    return result.container;
+  } finally {
+    bitmap.close();
+  }
+}
 
 function rasterizeVectorIcon(
   container: imgIContainer,
@@ -379,9 +497,8 @@ function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
   }
 
   const semicolonIndex = metadata.indexOf(";");
-  const mime = semicolonIndex === -1
-    ? metadata
-    : metadata.substring(0, semicolonIndex);
+  const mime =
+    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
 
   if (!mime) {
     return null;

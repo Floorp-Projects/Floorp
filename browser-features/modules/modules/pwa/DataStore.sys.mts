@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
 import type {
   LegacyPWAEntry,
   Manifest,
@@ -25,9 +26,11 @@ async function getSchemaValidator() {
 }
 
 export class DataManager {
-  private schemaValidator: Awaited<
-    ReturnType<typeof getSchemaValidator>
-  > | null = null;
+  private schemaValidator:
+    | Awaited<
+      ReturnType<typeof getSchemaValidator>
+    >
+    | null = null;
 
   private get ssbStoreFile() {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
@@ -86,6 +89,15 @@ export class DataManager {
       return migratedData;
     }
 
+    // Migrate old key format (start_url only) to composite key (start_url:userContextId)
+    if (this.isOldKeyFormat(data as Record<string, Manifest>)) {
+      const migratedData = this.migrateToCompositeKeyFormat(
+        data as Record<string, Manifest>,
+      );
+      await this.overrideCurrentSsbData(migratedData);
+      return migratedData;
+    }
+
     // Validate data against schema (non-blocking warning only)
     await this.validateData(data);
 
@@ -93,8 +105,6 @@ export class DataManager {
   }
 
   private isLegacyFormat(data: Record<string, LegacyPWAEntry>): boolean {
-    // Check if the data has the structure of legacy format
-    // In legacy format, entries have 'startURI' and 'manifest' properties
     if (!data) return false;
 
     for (const key in data) {
@@ -105,27 +115,49 @@ export class DataManager {
     return false;
   }
 
+  private isOldKeyFormat(data: Record<string, Manifest>): boolean {
+    if (!data) return false;
+    for (const key in data) {
+      const manifest = data[key];
+      if (manifest.userContextId === undefined) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private migrateToCompositeKeyFormat(
+    data: Record<string, Manifest>,
+  ): Record<string, Manifest> {
+    const migrated: Record<string, Manifest> = {};
+    for (const key in data) {
+      const manifest = data[key];
+      if (manifest.userContextId === undefined) {
+        manifest.userContextId = 0;
+      }
+      const newKey = buildSsbKey(manifest.start_url, manifest.userContextId);
+      migrated[newKey] = manifest;
+    }
+    return migrated;
+  }
+
   private extractIconSrc(entry: LegacyPWAEntry): string | undefined {
     const { manifest } = entry;
 
     if (!manifest.icons) return undefined;
 
-    // Try to find an icon from the icons array
     if (Array.isArray(manifest.icons)) {
-      // If icons is an array, check each item
       for (const icon of manifest.icons) {
         if (icon && typeof icon === "object" && "src" in icon) {
           return icon.src;
         }
       }
     } else if (manifest.icons.src && Array.isArray(manifest.icons.src)) {
-      // Handle the structure defined in LegacyPWAEntry type
       if (manifest.icons.src.length > 0) {
         return manifest.icons.src[0].src;
       }
     }
 
-    // If no icon found, return undefined
     return undefined;
   }
 
@@ -139,7 +171,6 @@ export class DataManager {
       const startUrl = entry.startURI || entry.manifest.start_url;
       const name = entry.name || "Unnamed App";
 
-      // Create the basic manifest object with required fields
       const manifest: Manifest = {
         id: entry.id,
         name: name,
@@ -149,19 +180,17 @@ export class DataManager {
         icon: "",
       };
 
-      // Extract icon if available
       const iconSrc = this.extractIconSrc(entry);
       if (iconSrc) {
         manifest.icon = iconSrc;
       }
 
-      // Copy any config values if they exist
       if (entry.config) {
         // @ts-expect-error - Adding non-standard property that may be in the data
         manifest.config = { ...entry.config };
       }
 
-      migratedData[startUrl] = manifest;
+      migratedData[buildSsbKey(startUrl, 0)] = manifest;
     }
 
     return migratedData;
@@ -172,16 +201,16 @@ export class DataManager {
   }
 
   public async saveSsbData(manifest: Manifest) {
-    const start_url = manifest.start_url;
+    const key = buildSsbKey(manifest.start_url, manifest.userContextId ?? 0);
     const currentSsbData = await this.getCurrentSsbData();
-    currentSsbData[start_url] = manifest;
+    currentSsbData[key] = manifest;
     await this.overrideCurrentSsbData(currentSsbData);
   }
 
-  public async removeSsbData(url: string) {
+  public async removeSsbData(key: string) {
     const list = await this.getCurrentSsbData();
-    if (list[url]) {
-      delete list[url];
+    if (list[key]) {
+      delete list[key];
       await this.overrideCurrentSsbData(list);
     }
   }

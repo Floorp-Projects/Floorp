@@ -79,7 +79,7 @@ export default class Pwa extends NoraComponentBase {
         if (id) {
           const ssbObj = await ctx.getSsbObj(id);
           if (ssbObj) {
-            await ctx.runSsbByUrl(ssbObj.start_url);
+            await ctx.runSsbByUrl(ssbObj.start_url, ssbObj.userContextId);
           }
           try {
             Services.prefs.clearUserPref("floorp.ssb.startup.id");

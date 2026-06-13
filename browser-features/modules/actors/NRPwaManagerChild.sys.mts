@@ -1,4 +1,3 @@
-
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,8 +27,8 @@ export class NRPwaManagerChild extends JSWindowActorChild {
       Cu.exportFunction(this.NRGetContainers.bind(this), window, {
         defineAs: "NRGetContainers",
       });
-      Cu.exportFunction(this.NRSetSsbContainer.bind(this), window, {
-        defineAs: "NRSetSsbContainer",
+      Cu.exportFunction(this.NRResetSsbContainer.bind(this), window, {
+        defineAs: "NRResetSsbContainer",
         asAsync: true,
       });
     }
@@ -64,8 +63,8 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     promise.then((containersJson) => callback(containersJson));
   }
 
-  NRSetSsbContainer(id: string, userContextId: number) {
-    this.sendAsyncMessage("PwaManager:SetContainer", { id, userContextId });
+  NRResetSsbContainer(id: string) {
+    this.sendAsyncMessage("PwaManager:ResetContainer", { id });
   }
 
   resolveGetInstalledApps:

@@ -1034,7 +1034,7 @@
       "resource:///modules/SharingUtils.sys.mjs": [
         "browser/modules/SharingUtils.sys.mjs"
       ],
-      "resource:///modules/ShellService.sys.mjs": [
+      "moz-src:///browser/components/shell/ShellService.sys.mjs": [
         "browser/components/shell/ShellService.sys.mjs"
       ],
       "resource:///modules/SiteDataManager.sys.mjs": [

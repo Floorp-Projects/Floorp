@@ -15,13 +15,13 @@ export class NRWelcomePageParent extends JSWindowActorParent {
         const isUserLocaleSet = Services.prefs.prefHasUserValue(
           "intl.locale.requested",
         );
-        const availableLocales = await LangPackMatcher.mockable
-          .getAvailableLangpacks();
+        const availableLocales =
+          await LangPackMatcher.mockable.getAvailableLangpacks();
         const installedLocales = await LangPackMatcher.getAvailableLocales();
         let langPackInfo = null;
         if (localeInfo.matchType !== "match") {
-          langPackInfo = await LangPackMatcher
-            .negotiateLangPackForLanguageMismatch();
+          langPackInfo =
+            await LangPackMatcher.negotiateLangPackForLanguageMismatch();
         }
         this.sendAsyncMessage(
           "WelcomePage:localeInfoResponse",
@@ -73,9 +73,8 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
         if (langPack) {
           try {
-            const success = await LangPackMatcher.ensureLangPackInstalled(
-              langPack,
-            );
+            const success =
+              await LangPackMatcher.ensureLangPackInstalled(langPack);
 
             this.sendAsyncMessage(
               "WelcomePage:installLangPackResponse",
@@ -129,7 +128,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
       case "WelcomePage:setDefaultBrowser": {
         const { ShellService } = ChromeUtils.importESModule(
-          "resource:///modules/ShellService.sys.mjs",
+          "moz-src:///browser/components/shell/ShellService.sys.mjs",
         );
 
         await ShellService.setDefaultBrowser();

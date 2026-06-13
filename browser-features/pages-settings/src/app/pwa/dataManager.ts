@@ -84,7 +84,6 @@ export type Container = {
   userContextId: number;
   name: string;
   color: string;
-  color: string;
 };
 
 export function getContainers(): Promise<Container[]> {
@@ -98,7 +97,10 @@ export function getContainers(): Promise<Container[]> {
         try {
           resolve(JSON.parse(containersJson));
         } catch (e) {
-          console.error("[PWA:dataManager] Failed to parse containers JSON:", e);
+          console.error(
+            "[PWA:dataManager] Failed to parse containers JSON:",
+            e,
+          );
           resolve([]);
         }
       });
@@ -109,16 +111,13 @@ export function getContainers(): Promise<Container[]> {
   });
 }
 
-export function setSsbContainer(
-  id: string,
-  userContextId: number,
-): Promise<void> {
+export function resetSsbContainer(id: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      globalThis.NRSetSsbContainer(id, userContextId);
+      globalThis.NRResetSsbContainer(id);
       resolve();
     } catch (e) {
-      console.error("Failed to set PWA container:", e);
+      console.error("Failed to reset PWA container:", e);
       reject(e);
     }
   });

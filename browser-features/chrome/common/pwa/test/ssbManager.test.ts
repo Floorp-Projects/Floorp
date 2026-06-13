@@ -2,7 +2,9 @@
 // @colocated-env browser
 
 import { SiteSpecificBrowserManager } from "../ssbManager.ts";
+import { DataManager } from "../dataStore.ts";
 import {
+  assert,
   assertEquals,
   runTests,
   type TestCase,
@@ -111,6 +113,42 @@ const tests: TestCase[] = [
         assertEquals(threw, undefined, `${spec} must not throw`);
         assertEquals(result, false, `${spec} must return false`);
       }
+    },
+  },
+  {
+    name: "buildKey differentiates containers for the same start URL",
+    fn() {
+      const url = "https://example.com/";
+      const keyA = DataManager.buildKey(url, 1);
+      const keyB = DataManager.buildKey(url, 2);
+      assert(keyA !== keyB, "composite keys must differ per container");
+      assertEquals(
+        DataManager.parseKey(keyA).userContextId,
+        1,
+        "container A id",
+      );
+      assertEquals(
+        DataManager.parseKey(keyB).userContextId,
+        2,
+        "container B id",
+      );
+    },
+  },
+  {
+    name: "buildKey default container uses userContextId 0",
+    fn() {
+      const url = "https://example.com/";
+      const key = DataManager.buildKey(url, 0);
+      assertEquals(
+        DataManager.parseKey(key).userContextId,
+        0,
+        "default container id",
+      );
+      assertEquals(
+        DataManager.parseKey(key).startUrl,
+        url,
+        "start URL preserved",
+      );
     },
   },
 ];

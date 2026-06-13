@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "ウェブアプリ",
       "install-current": "現在のページをプログレッシブウェブアプリとしてインストール",
-      "open-installed": "インストールしたアプリを開く"
+      "open-current": "選択したコンテナーでアプリを開く",
+      "open-installed": "インストールしたアプリを開く",
+      "container": "コンテナー"
     },
     "page-action": {
       "title": "アプリを開く",
       "install": "アプリをインストール",
       "open": "アプリを開く",
       "cancel": "キャンセル",
-      "site-icon": "サイトのアイコン"
+      "site-icon": "サイトのアイコン",
+      "container": "コンテナー",
+      "no-container": "コンテナーなし"
+    },
+    "window": {
+      "container-tooltip": "コンテナー: {{name}}",
+      "container-fallback": "コンテナー #{{id}}"
     }
   },
   "privateContainer": {
