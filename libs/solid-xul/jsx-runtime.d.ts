@@ -26,6 +26,8 @@ export namespace JSX {
     align?: "center";
     crop?: string;
     context?: string;
+    tooltiptext?: string;
+    value?: string;
     // XUL string event handlers (XUL evaluates string attributes as JS)
     onmouseover?: string | ((e: Event) => void);
     onmouseout?: string | ((e: Event) => void);

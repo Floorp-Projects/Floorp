@@ -199,7 +199,7 @@ export class SsbPageAction {
               id="ssb-panel"
               type="arrow"
               position="bottomright topright"
-              noautofocus={true}
+              noautofocus
               onPopupShowing={this.onPopupShowing}
               onPopupHiding={this.onPopupHiding}
             >

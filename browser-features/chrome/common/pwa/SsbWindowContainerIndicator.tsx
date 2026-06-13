@@ -22,12 +22,13 @@ export function SsbWindowContainerIndicator(props: {
       id="ssb-container-indicator"
       class="ssb-container-indicator"
       data-container-color={colorName()}
-      value={displayLabel()}
       crop="end"
       tooltiptext={i18next.t("ssb.window.container-tooltip", {
         name: displayLabel(),
       })}
-    />
+    >
+      {displayLabel()}
+    </xul:label>
   );
 }
 

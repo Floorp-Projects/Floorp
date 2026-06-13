@@ -19,7 +19,7 @@ export interface SsbContainerSelectProps {
 }
 
 function hideMenuPopup(menuitem: XULElement): void {
-  const popup = menuitem.parentElement as XULElement & {
+  const popup = menuitem.parentElement as unknown as XULElement & {
     hidePopup?: () => void;
   };
   popup.hidePopup?.();
@@ -62,8 +62,9 @@ export function SsbContainerSelect(props: SsbContainerSelectProps): JSX.Element 
       <xul:label
         id="ssb-container-label"
         class="ssb-container-label"
-        value={containerLabel()}
-      />
+      >
+        {containerLabel()}
+      </xul:label>
       <xul:button
         id="ssb-container-menu-button"
         class="ssb-container-menu-button"
