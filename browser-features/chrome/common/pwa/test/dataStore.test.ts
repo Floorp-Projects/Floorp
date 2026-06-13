@@ -65,7 +65,11 @@ const tests: TestCase[] = [
         undefined,
         "legacy migration must not leave start_url-only keys",
       );
-      assertEquals(migrated[`${startUrl}:0`].start_url, startUrl);
+      assertEquals(
+        migrated[`${startUrl}:0`].start_url,
+        startUrl,
+        "start URL preserved after legacy migration",
+      );
     },
   },
 ];

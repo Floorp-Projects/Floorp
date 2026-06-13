@@ -171,10 +171,11 @@ const tests: TestCase[] = [
       const managerLike = {
         getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
         dataManager: {
-          getCurrentSsbData: async () => ({
-            "https://example.com/:0": first,
-            "https://example.com/:2": second,
-          }),
+          getCurrentSsbData: () =>
+            Promise.resolve({
+              "https://example.com/:0": first,
+              "https://example.com/:2": second,
+            }),
         },
       };
 
@@ -208,15 +209,18 @@ const tests: TestCase[] = [
       const managerLike = {
         getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
         dataManager: {
-          getCurrentSsbData: async () => ({
-            "https://example.com/:0": defaultEntry,
-            "https://example.com/:2": containerEntry,
-          }),
-          removeSsbData: async () => {
+          getCurrentSsbData: () =>
+            Promise.resolve({
+              "https://example.com/:0": defaultEntry,
+              "https://example.com/:2": containerEntry,
+            }),
+          removeSsbData: () => {
             removed = true;
+            return Promise.resolve();
           },
-          saveSsbData: async () => {
+          saveSsbData: () => {
             saved = true;
+            return Promise.resolve();
           },
         },
       };
