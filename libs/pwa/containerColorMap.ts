@@ -1,6 +1,10 @@
 /**
  * Maps Firefox Contextual Identity color values to CSS variable suffixes.
  * Shared between chrome UI and parent-process icon badging.
+ *
+ * Canonical color values live in Firefox's usercontext.css:
+ * browser/components/contextualidentity/content/usercontext.css
+ * (classes `.identity-color-{name}` define `--identity-tab-color`).
  */
 
 export const CONTAINER_COLOR_NUMBER_MAP: Record<number, string> = {
@@ -16,7 +20,10 @@ export const CONTAINER_COLOR_NUMBER_MAP: Record<number, string> = {
   9: "gray",
 };
 
-/** Fallback hex when theme CSS variables are unavailable (e.g. headless). */
+/**
+ * Last-resort fallback when usercontext.css is unavailable (headless, tests).
+ * Values mirror usercontext.css defaults.
+ */
 export const CONTAINER_COLOR_HEX: Record<string, string> = {
   blue: "#37adff",
   turquoise: "#00c79a",
@@ -31,6 +38,43 @@ export const CONTAINER_COLOR_HEX: Record<string, string> = {
 };
 
 const VALID_COLOR_NAMES = new Set(Object.keys(CONTAINER_COLOR_HEX));
+
+const IDENTITY_COLOR_PROPERTIES_ON_CLASS = [
+  "--identity-tab-color",
+  "--identity-icon-color",
+] as const;
+
+const IDENTITY_COLOR_CSS_VARS_ON_ROOT = [
+  (name: string) => `--identity-color-${name}`,
+  (name: string) => `--identity-tab-color-${name}`,
+] as const;
+
+type ColorResolvableWindow = {
+  document: {
+    documentElement: {
+      appendChild: (node: unknown) => void;
+    };
+    createElement: (tag: string) => {
+      className: string;
+      hidden: boolean;
+      remove: () => void;
+    };
+  };
+  getComputedStyle: (element: unknown) => {
+    getPropertyValue: (property: string) => string;
+  };
+};
+
+type ColorResolvableDocument = {
+  documentElement: unknown;
+  defaultView: ColorResolvableWindow | null;
+};
+
+function normalizeColorName(
+  colorName: string | null | undefined,
+): string {
+  return colorName && VALID_COLOR_NAMES.has(colorName) ? colorName : "blue";
+}
 
 export function mapColorToCSSVariable(
   color: number | string | null | undefined,
@@ -60,24 +104,47 @@ export function getContainerColorHex(colorName: string): string {
   return CONTAINER_COLOR_HEX[colorName] ?? CONTAINER_COLOR_HEX.blue;
 }
 
-const IDENTITY_COLOR_CSS_VARS = [
-  (name: string) => `--identity-color-${name}`,
-  (name: string) => `--identity-tab-color-${name}`,
-] as const;
+/**
+ * Reads the resolved color from Firefox's usercontext.css via a probe element
+ * with class `identity-color-{name}`.
+ */
+export function resolveContainerDisplayColorFromWindow(
+  colorName: string | null | undefined,
+  win: ColorResolvableWindow,
+): string {
+  const name = normalizeColorName(colorName);
+  const doc = win.document;
+  const probe = doc.createElement("span");
+  probe.className = `identity-color-${name}`;
+  probe.hidden = true;
+  doc.documentElement.appendChild(probe);
+
+  try {
+    const probeStyle = win.getComputedStyle(probe);
+    for (const prop of IDENTITY_COLOR_PROPERTIES_ON_CLASS) {
+      const value = probeStyle.getPropertyValue(prop).trim();
+      if (value) {
+        return value;
+      }
+    }
+
+    const rootStyle = win.getComputedStyle(doc.documentElement);
+    for (const toVar of IDENTITY_COLOR_CSS_VARS_ON_ROOT) {
+      const value = rootStyle.getPropertyValue(toVar(name)).trim();
+      if (value) {
+        return value;
+      }
+    }
+  } finally {
+    probe.remove();
+  }
+
+  return getContainerColorHex(name);
+}
 
 /**
  * Resolves a container color name to a concrete CSS color value.
- * Theme variables may be unset in PWA windows; falls back to hex map.
  */
-type ColorResolvableDocument = {
-  documentElement: unknown;
-  defaultView: {
-    getComputedStyle: (element: unknown) => {
-      getPropertyValue: (property: string) => string;
-    };
-  } | null;
-};
-
 export function resolveContainerDisplayColor(
   colorName: string | null | undefined,
   doc: ColorResolvableDocument | null = null,
@@ -86,17 +153,9 @@ export function resolveContainerDisplayColor(
     ("document" in globalThis
       ? (globalThis as { document?: ColorResolvableDocument }).document ?? null
       : null);
-  const name = colorName && VALID_COLOR_NAMES.has(colorName) ? colorName : "blue";
-  const root = resolvedDoc?.documentElement;
   const view = resolvedDoc?.defaultView;
-  if (root && view) {
-    const style = view.getComputedStyle(root);
-    for (const toVar of IDENTITY_COLOR_CSS_VARS) {
-      const value = style.getPropertyValue(toVar(name)).trim();
-      if (value) {
-        return value;
-      }
-    }
+  if (view) {
+    return resolveContainerDisplayColorFromWindow(colorName, view);
   }
-  return getContainerColorHex(name);
+  return getContainerColorHex(normalizeColorName(colorName));
 }

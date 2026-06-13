@@ -3,17 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** Firefox container color name → hex mapping (from toolkit/components/usercontext/content/userContext.css) */
-const CONTAINER_COLORS: Record<string, string> = {
-  blue: "#37adff",
-  turquoise: "#00c79a",
-  green: "#51cd00",
-  yellow: "#ffcb00",
-  orange: "#ff9f00",
-  red: "#ff613d",
-  pink: "#ff4bda",
-  purple: "#af51f5",
-};
+const { resolveContainerColor } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/pwa/containerDisplay.sys.mjs",
+);
 
 export class NRPwaManagerParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
@@ -63,7 +55,7 @@ export class NRPwaManagerParent extends JSWindowActorParent {
               name: c.l10nId
                 ? ContextualIdentityService.getUserContextLabel(c.userContextId)
                 : c.name,
-              color: CONTAINER_COLORS[c.color] ?? c.color,
+              color: resolveContainerColor(c.color),
             }),
           );
           this.sendAsyncMessage(

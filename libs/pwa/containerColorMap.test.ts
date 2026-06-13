@@ -3,6 +3,7 @@ import {
   getContainerColorHex,
   mapColorToCSSVariable,
   resolveContainerDisplayColor,
+  resolveContainerDisplayColorFromWindow,
 } from "./containerColorMap.ts";
 
 Deno.test("mapColorToCSSVariable maps numeric colors", () => {
@@ -29,4 +30,35 @@ Deno.test("getContainerColorHex returns fallback for known colors", () => {
 Deno.test("resolveContainerDisplayColor falls back to hex without document", () => {
   assertEquals(resolveContainerDisplayColor("red", null), "#ff613d");
   assertEquals(resolveContainerDisplayColor(null, null), "#37adff");
+});
+
+Deno.test("resolveContainerDisplayColorFromWindow reads usercontext.css vars", () => {
+  const mockWin = {
+    document: {
+      documentElement: {
+        appendChild: () => {},
+      },
+      createElement: () => ({
+        className: "",
+        hidden: false,
+        remove: () => {},
+      }),
+    },
+    getComputedStyle: (element: unknown) => ({
+      getPropertyValue: (prop: string) => {
+        if (
+          (element as { className?: string }).className === "identity-color-red" &&
+          prop === "--identity-tab-color"
+        ) {
+          return "#ff613d";
+        }
+        return "";
+      },
+    }),
+  };
+
+  assertEquals(
+    resolveContainerDisplayColorFromWindow("red", mockWin),
+    "#ff613d",
+  );
 });

@@ -4,7 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "./type.ts";
-import { mapColorToCSSVariable } from "#libs/pwa/containerColorMap.ts";
+import {
+  getContainerColorHex,
+  mapColorToCSSVariable,
+  resolveContainerDisplayColorFromWindow,
+} from "#libs/pwa/containerColorMap.ts";
 
 type ContainerIdentity = {
   userContextId: number;
@@ -69,4 +73,55 @@ export function getSsbDisplayName(ssb: Manifest): string {
 
   const label = getContainerLabel(userContextId);
   return label ? `${ssb.name} (${label})` : ssb.name;
+}
+
+function getBrowserChromeWindow(): ColorResolvableWindow | null {
+  const enumerator = Services.wm.getEnumerator("navigator:browser");
+  while (enumerator.hasMoreElements()) {
+    const win = enumerator.getNext() as ColorResolvableWindow | null;
+    if (win?.document) {
+      return win;
+    }
+  }
+  return null;
+}
+
+type ColorResolvableWindow = {
+  document: {
+    documentElement: {
+      appendChild: (node: unknown) => void;
+    };
+    createElement: (tag: string) => {
+      className: string;
+      hidden: boolean;
+      remove: () => void;
+    };
+  };
+  getComputedStyle: (element: unknown) => {
+    getPropertyValue: (property: string) => string;
+  };
+};
+
+/**
+ * Resolves a ContextualIdentity color to a displayable CSS color.
+ * Uses Firefox usercontext.css when a browser window is available.
+ */
+export function resolveContainerColor(
+  color: number | string | null | undefined,
+): string {
+  if (typeof color === "string" && /^#[0-9a-f]{3,8}$/i.test(color)) {
+    return color;
+  }
+
+  const colorName = mapColorToCSSVariable(color);
+  if (!colorName) {
+    return typeof color === "string" ? color : getContainerColorHex("blue");
+  }
+
+  const win = getBrowserChromeWindow();
+  if (win) {
+    return resolveContainerDisplayColorFromWindow(colorName, win);
+  }
+
+  return getContainerColorHex(colorName);
 }

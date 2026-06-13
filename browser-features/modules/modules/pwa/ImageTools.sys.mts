@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getContainerColorHex } from "#libs/pwa/containerColorMap.ts";
+import { resolveContainerDisplayColorFromWindow } from "#libs/pwa/containerColorMap.ts";
 
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
@@ -371,14 +371,7 @@ function getCanvasWindow(): Window {
 }
 
 function resolveContainerBadgeColor(win: Window, colorName: string): string {
-  const fromTheme = win
-    .getComputedStyle(win.document.documentElement)
-    .getPropertyValue(`--identity-tab-color-${colorName}`)
-    .trim();
-  if (fromTheme) {
-    return fromTheme;
-  }
-  return getContainerColorHex(colorName);
+  return resolveContainerDisplayColorFromWindow(colorName, win);
 }
 
 function drawIconWithContainerBadge(
