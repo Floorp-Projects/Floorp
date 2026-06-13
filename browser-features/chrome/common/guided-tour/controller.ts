@@ -38,7 +38,7 @@ export class TourController {
   private rafId: number | null = null;
   private advanceCleanup: (() => void) | null = null;
   private readonly workspacePanelGuard = new WorkspacePanelGuard();
-  private panelSyncTimers: number[] = [];
+  private panelSyncTimers: ReturnType<typeof setTimeout>[] = [];
   private targetElement: Element | null = null;
 
   constructor() {
