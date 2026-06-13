@@ -1,21 +1,33 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import {
-  runCommandChecked,
-  Logger,
-  exists,
-  safeRemove,
-} from "./utils.ts";
-import { BIN_DIR } from "./defines.ts";
+import { exists, Logger, runCommandChecked, safeRemove } from "./utils.ts";
+import { BIN_DIR, PLATFORM } from "./defines.ts";
 
 const logger = new Logger("patcher");
 
 const PATCHES_DIR = "tools/patches";
 const PATCHES_TMP = "_dist/bin/applied_patches";
+const PLATFORM_PATCH_SUFFIX_RE = /\.(darwin|linux|windows)\.patch$/;
 
 function binDir(): string {
   return BIN_DIR;
+}
+
+export function patchAppliesToCurrentPlatform(filename: string): boolean {
+  const match = filename.match(PLATFORM_PATCH_SUFFIX_RE);
+  if (!match) return true;
+  return match[1] === PLATFORM;
+}
+
+function listPatchFiles(): string[] {
+  if (!exists(PATCHES_DIR)) return [];
+  return Array.from(Deno.readDirSync(PATCHES_DIR))
+    .map((entry) => entry.name)
+    .filter((name) =>
+      name.endsWith(".patch") && patchAppliesToCurrentPlatform(name)
+    )
+    .sort();
 }
 
 function gitInitialized(dir: string): boolean {
@@ -54,15 +66,15 @@ export function patchNeeded(): boolean {
   if (!exists(PATCHES_DIR)) return false;
   if (!exists(PATCHES_TMP)) return true;
 
-  const patchesDirFiles = Array.from(Deno.readDirSync(PATCHES_DIR))
-    .map((e) => e.name)
-    .sort();
+  const patchesDirFiles = listPatchFiles();
   const patchesTmpFiles = Array.from(Deno.readDirSync(PATCHES_TMP))
     .map((e) => e.name)
+    .filter((name) => patchAppliesToCurrentPlatform(name))
     .sort();
 
-  if (JSON.stringify(patchesDirFiles) !== JSON.stringify(patchesTmpFiles))
+  if (JSON.stringify(patchesDirFiles) !== JSON.stringify(patchesTmpFiles)) {
     return true;
+  }
 
   for (const patch of patchesDirFiles) {
     const patchInDir = Deno.readTextFileSync(path.join(PATCHES_DIR, patch));
@@ -85,6 +97,7 @@ export function applyPatches(): void {
     let reverseIsAborted = false;
     const entries = Array.from(Deno.readDirSync(PATCHES_TMP))
       .map((e) => e.name)
+      .filter((name) => patchAppliesToCurrentPlatform(name))
       .sort();
     for (const patch of entries) {
       const patchPath = path.join(PATCHES_TMP, patch);
@@ -120,13 +133,7 @@ export function applyPatches(): void {
   logger.info("Applying new patches.");
   Deno.mkdirSync(PATCHES_TMP, { recursive: true });
   let aborted = false;
-  const entries = exists(PATCHES_DIR)
-    ? Array.from(Deno.readDirSync(PATCHES_DIR))
-        .map((e) => e.name)
-        .sort()
-    : [];
-  for (const patch of entries) {
-    if (!patch.endsWith(".patch")) continue;
+  for (const patch of listPatchFiles()) {
     const patchPath = path.join(PATCHES_DIR, patch);
     logger.info(`Applying patch: ${patchPath}`);
     const result = runCommandChecked(
@@ -145,7 +152,7 @@ export function applyPatches(): void {
     if (result.success) {
       try {
         Deno.copyFileSync(patchPath, path.join(PATCHES_TMP, patch));
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       } catch (e: any) {
         logger.warn(`Failed to copy patch to tmp: ${e?.message ?? e}`);
         aborted = true;
@@ -186,14 +193,13 @@ export function createPatches(): void {
       continue;
     }
 
-    const modifiedDiff =
-      diffRes.stdout
-        .replace(/^--- a\//gm, "--- ./")
-        .replace(/^\+\+\+ b\//gm, "+++ ./")
-        .trim() + "\n";
+    const modifiedDiff = diffRes.stdout
+      .replace(/^--- a\//gm, "--- ./")
+      .replace(/^\+\+\+ b\//gm, "+++ ./")
+      .trim() + "\n";
 
-    const patchName =
-      file.replace(/\//g, "-").replace(/\.[^\/.]+$/, "") + ".patch";
+    const patchName = file.replace(/\//g, "-").replace(/\.[^\/.]+$/, "") +
+      ".patch";
     const patchPath = path.join(PATCHES_DIR, patchName);
     Deno.writeTextFileSync(patchPath, modifiedDiff);
     logger.info(`Created/Updated patch: ${patchPath}`);
