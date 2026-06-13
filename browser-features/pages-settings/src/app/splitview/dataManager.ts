@@ -37,19 +37,24 @@ export async function saveSplitViewSettings(
   const { enabled, layout, maxPanes, flexRatios, gridColRatio, gridRowRatio } =
     data;
 
-  await Promise.all([
-    rpc.setBoolPref(PREF_SPLIT_VIEW_ENABLED, enabled),
-    rpc.setBoolPref(PREF_BROWSER_SPLIT_VIEW_ENABLED, enabled),
-    rpc.setStringPref(
-      PREF_SPLIT_VIEW_CONFIG,
-      JSON.stringify({ layout, maxPanes }),
-    ),
-    rpc.setStringPref(
-      PREF_SPLIT_VIEW_PANE_SIZES,
-      JSON.stringify({ flexRatios, gridColRatio, gridRowRatio }),
-    ),
-  ]);
-  return true;
+  try {
+    await Promise.all([
+      rpc.setBoolPref(PREF_SPLIT_VIEW_ENABLED, enabled),
+      rpc.setBoolPref(PREF_BROWSER_SPLIT_VIEW_ENABLED, enabled),
+      rpc.setStringPref(
+        PREF_SPLIT_VIEW_CONFIG,
+        JSON.stringify({ layout, maxPanes }),
+      ),
+      rpc.setStringPref(
+        PREF_SPLIT_VIEW_PANE_SIZES,
+        JSON.stringify({ flexRatios, gridColRatio, gridRowRatio }),
+      ),
+    ]);
+    return true;
+  } catch (error) {
+    console.error("[SplitViewSettings] Failed to save settings", error);
+    return false;
+  }
 }
 
 export async function getSplitViewSettings(): Promise<SplitViewFormData> {
@@ -105,19 +110,24 @@ export function useSplitViewSettings() {
 
   const updateSettings = useCallback(
     async (partial: Partial<SplitViewFormData>) => {
-      const next = { ...settings, ...partial };
-      if (
-        partial.maxPanes !== undefined &&
-        partial.maxPanes !== settings.maxPanes &&
-        partial.flexRatios === undefined
-      ) {
-        next.flexRatios = defaultFlexRatiosForMaxPanes(partial.maxPanes);
+      try {
+        const next = { ...settings, ...partial };
+        if (
+          partial.maxPanes !== undefined &&
+          partial.maxPanes !== settings.maxPanes &&
+          partial.flexRatios === undefined
+        ) {
+          next.flexRatios = defaultFlexRatiosForMaxPanes(partial.maxPanes);
+        }
+        const saved = await saveSplitViewSettings(next);
+        if (saved) {
+          setSettings(next);
+        }
+        return saved;
+      } catch (error) {
+        console.error("[SplitViewSettings] Failed to update settings", error);
+        return false;
       }
-      const saved = await saveSplitViewSettings(next);
-      if (saved) {
-        setSettings(next);
-      }
-      return saved;
     },
     [settings],
   );

@@ -68,6 +68,22 @@ export function resolveEnabledFromPrefs(
   return floorp && browser;
 }
 
+function clampRatio(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  return Math.max(0, Math.min(1, value));
+}
+
+function normalizeFlexRatios(values: unknown[]): number[] {
+  const normalized = values
+    .map((value) => clampRatio(value))
+    .filter((value): value is number => value !== null);
+  return normalized.length > 0
+    ? normalized
+    : [...DEFAULT_PANE_SIZES.flexRatios];
+}
+
 export function parseSplitViewConfig(
   configStr: string | null,
 ): Pick<SplitViewFormData, "layout" | "maxPanes"> {
@@ -98,13 +114,15 @@ export function parseSplitViewPaneSizes(
   try {
     const raw = JSON.parse(paneSizesStr || "{}");
     if (Array.isArray(raw.flexRatios) && raw.flexRatios.length > 0) {
-      paneSizes.flexRatios = raw.flexRatios;
+      paneSizes.flexRatios = normalizeFlexRatios(raw.flexRatios);
     }
-    if (typeof raw.gridColRatio === "number") {
-      paneSizes.gridColRatio = raw.gridColRatio;
+    const gridColRatio = clampRatio(raw.gridColRatio);
+    if (gridColRatio !== null) {
+      paneSizes.gridColRatio = gridColRatio;
     }
-    if (typeof raw.gridRowRatio === "number") {
-      paneSizes.gridRowRatio = raw.gridRowRatio;
+    const gridRowRatio = clampRatio(raw.gridRowRatio);
+    if (gridRowRatio !== null) {
+      paneSizes.gridRowRatio = gridRowRatio;
     }
   } catch {
     // use defaults

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Lightbulb, X, ExternalLink } from "lucide-react";
+import { ExternalLink, Lightbulb, X } from "lucide-react";
 import { rpc } from "../../lib/rpc/rpc.ts";
 
 interface Tip {
@@ -56,10 +56,14 @@ async function getSeenTips(): Promise<string[]> {
 }
 
 async function markTipSeen(id: string): Promise<void> {
-  const seen = await getSeenTips();
-  if (!seen.includes(id)) {
-    seen.push(id);
-    await rpc.setStringPref(PREF_SEEN_TIPS, JSON.stringify(seen));
+  try {
+    const seen = await getSeenTips();
+    if (!seen.includes(id)) {
+      seen.push(id);
+      await rpc.setStringPref(PREF_SEEN_TIPS, JSON.stringify(seen));
+    }
+  } catch (error) {
+    console.error("[TipBanner] Failed to mark tip as seen", error);
   }
 }
 
@@ -131,8 +135,8 @@ export function TipBanner() {
   const translateClass = dismissed
     ? "translate-y-4 lg:translate-y-0 lg:-translate-x-4 opacity-0"
     : mounted
-      ? "translate-y-0 lg:translate-x-0 opacity-100"
-      : "translate-y-4 lg:translate-y-0 lg:-translate-x-4 opacity-0";
+    ? "translate-y-0 lg:translate-x-0 opacity-100"
+    : "translate-y-4 lg:translate-y-0 lg:-translate-x-4 opacity-0";
 
   return (
     <div className="fixed bottom-4 left-4 right-4 lg:top-4 lg:bottom-auto z-40 flex justify-center lg:justify-start pointer-events-none">

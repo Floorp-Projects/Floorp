@@ -8,12 +8,18 @@ interface LearnButtonProps {
   labelKey?: string;
 }
 
-export function LearnButton({ tourId, labelKey = "tutorial.learnHowToUse" }: LearnButtonProps) {
+export function LearnButton(
+  { tourId, labelKey = "tutorial.learnHowToUse" }: LearnButtonProps,
+) {
   const { t } = useTranslation();
 
   const handleStartTour = useCallback(async () => {
     const payload = JSON.stringify({ tourId });
-    await rpc.setStringPref("floorp.guidedTour.request", payload);
+    try {
+      await rpc.setStringPref("floorp.guidedTour.request", payload);
+    } catch (error) {
+      console.error("[LearnButton] Failed to start tour", error);
+    }
   }, [tourId]);
 
   return (

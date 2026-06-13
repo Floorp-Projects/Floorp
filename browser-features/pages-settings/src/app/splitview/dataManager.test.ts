@@ -53,6 +53,27 @@ Deno.test("parseSplitViewPaneSizes falls back to defaults for invalid data", () 
   );
 });
 
+Deno.test("parseSplitViewPaneSizes normalizes invalid ratio values", () => {
+  assertEquals(
+    parseSplitViewPaneSizes(
+      '{"flexRatios":["bad",0.4],"gridColRatio":null,"gridRowRatio":1.5}',
+    ),
+    {
+      flexRatios: [0.4],
+      gridColRatio: 0.5,
+      gridRowRatio: 1,
+    },
+  );
+  assertEquals(
+    parseSplitViewPaneSizes('{"flexRatios":["x","y"],"gridColRatio":-0.2}'),
+    {
+      flexRatios: [0.5, 0.5],
+      gridColRatio: 0,
+      gridRowRatio: 0.5,
+    },
+  );
+});
+
 Deno.test("isValidSplitViewFormData rejects incomplete data", () => {
   assertEquals(isValidSplitViewFormData({}), false);
   assertEquals(

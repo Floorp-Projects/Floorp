@@ -81,6 +81,7 @@ export function BasicSettings({
           <a
             href="https://docs.floorp.app/docs/features/split-view"
             target="_blank"
+            rel="noopener noreferrer"
             className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
           >
             {t("splitView.learnMore")}

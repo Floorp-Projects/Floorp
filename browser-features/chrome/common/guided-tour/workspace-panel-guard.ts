@@ -9,14 +9,6 @@ const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
-interface PanelUIType {
-  showSubView: (
-    viewId: string,
-    anchor: Element,
-    event?: Event,
-  ) => Promise<void>;
-}
-
 /**
  * ワークスペースパネルを開くヘルパー。
  * noautohide 等のパネル改変は行わない（ツアー終了後に閉じられなくなる副作用を避ける）。
@@ -58,11 +50,9 @@ export class WorkspacePanelGuard {
     const button = document.querySelector(WORKSPACE_BUTTON_SELECTOR);
     if (!button) return;
 
-    const panelUI = (globalThis as typeof globalThis & { PanelUI?: PanelUIType })
-      .PanelUI;
-    if (panelUI?.showSubView) {
+    if (globalThis.PanelUI?.showSubView) {
       try {
-        await panelUI.showSubView(WORKSPACE_VIEW_ID, button);
+        await globalThis.PanelUI.showSubView(WORKSPACE_VIEW_ID, button);
         return;
       } catch (error) {
         console.error("[GuidedTour] PanelUI.showSubView failed:", error);
