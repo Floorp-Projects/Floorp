@@ -392,7 +392,7 @@
         "icon": "Icon",
         "width": "Width",
         "zoomLevel": "Zoom Level",
-        "container": "Container",
+        "container": "Kontener",
         "noContainer": "Bez kontenera",
         "useUserAgent": "Use Mobile User Agent",
         "panelType": "Panel Type",
@@ -424,7 +424,7 @@
             "staticPanelRequired": "Please select a sidebar tool",
             "invalidWidth": "Width must be at least 100 pixels"
         },
-        "save": "Save",
+        "save": "Zapisz",
         "cancel": "Anuluj"
     },
     "progressiveWebApp": {
@@ -449,7 +449,14 @@
         "uninstallWarning": "Are you sure you want to uninstall \"{{name}}\"?",
         "cancel": "Cancel",
         "rename": "Rename",
-        "uninstall": "Uninstall"
+        "uninstall": "Uninstall",
+        "container": "Kontener",
+        "noContainer": "Bez kontenera",
+        "setContainer": "Ustaw kontener",
+        "containerDescription": "Wybierz kontener Firefox, w którym ta aplikacja będzie otwierana. Kontenery izolują ciasteczka i dane witryn.",
+        "containerDeleted": "Kontener usunięty",
+        "save": "Zapisz",
+        "errorSettingContainer": "Nie udało się ustawić kontenera"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -393,7 +393,7 @@
         "width": "Genişlik",
         "zoomLevel": "Yakınlaştırma Düzeyi",
         "container": "Kapsayıcı",
-        "noContainer": "Kapsayıcı Yok",
+        "noContainer": "Kapsayıcı yok",
         "useUserAgent": "Mobil Kullanıcı Aracısını Kullan",
         "panelType": "Panel Türü",
         "panelList": "Panel Listesi",
@@ -449,7 +449,14 @@
         "uninstallWarning": "\"{{name}}\" web uygulamasını kaldırmak istediğinizden emin misiniz?",
         "cancel": "Vazgeç",
         "rename": "Yeniden adlandır",
-        "uninstall": "Kaldır"
+        "uninstall": "Kaldır",
+        "container": "Kapsayıcı",
+        "noContainer": "Kapsayıcı yok",
+        "setContainer": "Kapsayıcı ayarla",
+        "containerDescription": "Bu uygulamanın açılacağı Firefox kapsayıcısını seçin. Kapsayıcılar çerezleri ve site verilerini yalıtır.",
+        "containerDeleted": "Kapsayıcı silindi",
+        "save": "Kaydet",
+        "errorSettingContainer": "Kapsayıcı ayarlanamadı"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

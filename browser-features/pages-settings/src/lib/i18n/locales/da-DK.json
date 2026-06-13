@@ -449,7 +449,14 @@
         "uninstallWarning": "Er du sikker på, at du vil afinstallere \"{{name}}\"?",
         "cancel": "Annuller",
         "rename": "Omdøb",
-        "uninstall": "Afinstaller"
+        "uninstall": "Afinstaller",
+        "container": "Beholder",
+        "noContainer": "Ingen beholder",
+        "setContainer": "Indstil beholder",
+        "containerDescription": "Vælg hvilken Firefox-beholder denne app åbnes i. Beholdere isolerer cookies og webstedsdata.",
+        "containerDeleted": "Beholder slettet",
+        "save": "Gem",
+        "errorSettingContainer": "Kunne ikke indstille beholder"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

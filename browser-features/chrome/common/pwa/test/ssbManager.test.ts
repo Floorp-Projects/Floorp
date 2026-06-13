@@ -2,7 +2,10 @@
 // @colocated-env browser
 
 import { SiteSpecificBrowserManager } from "../ssbManager.ts";
+import { DataManager } from "../dataStore.ts";
+import type { Manifest } from "../type.ts";
 import {
+  assert,
   assertEquals,
   runTests,
   type TestCase,
@@ -111,6 +114,121 @@ const tests: TestCase[] = [
         assertEquals(threw, undefined, `${spec} must not throw`);
         assertEquals(result, false, `${spec} must return false`);
       }
+    },
+  },
+  {
+    name: "buildKey differentiates containers for the same start URL",
+    fn() {
+      const url = "https://example.com/";
+      const keyA = DataManager.buildKey(url, 1);
+      const keyB = DataManager.buildKey(url, 2);
+      assert(keyA !== keyB, "composite keys must differ per container");
+      assertEquals(
+        DataManager.parseKey(keyA).userContextId,
+        1,
+        "container A id",
+      );
+      assertEquals(
+        DataManager.parseKey(keyB).userContextId,
+        2,
+        "container B id",
+      );
+    },
+  },
+  {
+    name: "buildKey default container uses userContextId 0",
+    fn() {
+      const url = "https://example.com/";
+      const key = DataManager.buildKey(url, 0);
+      assertEquals(
+        DataManager.parseKey(key).userContextId,
+        0,
+        "default container id",
+      );
+      assertEquals(
+        DataManager.parseKey(key).startUrl,
+        url,
+        "start URL preserved",
+      );
+    },
+  },
+  {
+    name: "getSsbObj prefers storage key when ids collide",
+    async fn() {
+      const first: Manifest = {
+        id: "same-id",
+        name: "Default",
+        start_url: "https://example.com/",
+        icon: "",
+      };
+      const second: Manifest = {
+        id: "same-id",
+        name: "Container",
+        start_url: "https://example.com/",
+        icon: "",
+        userContextId: 2,
+      };
+      const managerLike = {
+        getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
+        dataManager: {
+          getCurrentSsbData: () =>
+            Promise.resolve({
+              "https://example.com/:0": first,
+              "https://example.com/:2": second,
+            }),
+        },
+      };
+
+      const result = await SiteSpecificBrowserManager.prototype.getSsbObj.call(
+        managerLike as unknown as SiteSpecificBrowserManager,
+        "same-id",
+        "https://example.com/:2",
+      );
+
+      assertEquals(result, second, "storage key should select exact manifest");
+    },
+  },
+  {
+    name: "resetContainerForSsb does not overwrite an existing default entry",
+    async fn() {
+      const defaultEntry: Manifest = {
+        id: "default-id",
+        name: "Default",
+        start_url: "https://example.com/",
+        icon: "",
+      };
+      const containerEntry: Manifest = {
+        id: "container-id",
+        name: "Container",
+        start_url: "https://example.com/",
+        icon: "",
+        userContextId: 2,
+      };
+      let moved = false;
+      const managerLike = {
+        getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
+        dataManager: {
+          getCurrentSsbData: () =>
+            Promise.resolve({
+              "https://example.com/:0": defaultEntry,
+              "https://example.com/:2": containerEntry,
+            }),
+          moveSsbKey: () => {
+            moved = true;
+            return Promise.resolve(false);
+          },
+        },
+      };
+
+      const result = await SiteSpecificBrowserManager.prototype
+        .resetContainerForSsb.call(
+          managerLike as unknown as SiteSpecificBrowserManager,
+          "container-id",
+          "https://example.com/:2",
+        );
+
+      assertEquals(result, false, "reset should fail on default-key collision");
+      assertEquals(moved, false, "moveSsbKey must not run on collision");
     },
   },
 ];

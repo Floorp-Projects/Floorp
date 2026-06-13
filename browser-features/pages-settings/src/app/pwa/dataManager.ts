@@ -56,10 +56,14 @@ export function getInstalledApps(): Promise<TProgressiveWebAppObject> {
   });
 }
 
-export function renamePwaApp(id: string, newName: string): Promise<void> {
+export function renamePwaApp(
+  id: string,
+  newName: string,
+  key?: string,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      globalThis.NRRenameSsb(id, newName);
+      globalThis.NRRenameSsb(id, newName, key);
       resolve();
     } catch (e) {
       console.error("Failed to rename PWA:", e);
@@ -68,13 +72,56 @@ export function renamePwaApp(id: string, newName: string): Promise<void> {
   });
 }
 
-export function uninstallPwaApp(id: string): Promise<void> {
+export function uninstallPwaApp(id: string, key?: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      globalThis.NRUninstallSsb(id);
+      globalThis.NRUninstallSsb(id, key);
       resolve();
     } catch (e) {
       console.error("Failed to uninstall PWA:", e);
+      reject(e);
+    }
+  });
+}
+
+export type Container = {
+  userContextId: number;
+  name: string;
+  color: string;
+};
+
+export function getContainers(): Promise<Container[]> {
+  return new Promise((resolve, _reject) => {
+    try {
+      if (typeof globalThis.NRGetContainers !== "function") {
+        resolve([]);
+        return;
+      }
+      globalThis.NRGetContainers((containersJson: string) => {
+        try {
+          resolve(JSON.parse(containersJson));
+        } catch (e) {
+          console.error(
+            "[PWA:dataManager] Failed to parse containers JSON:",
+            e,
+          );
+          resolve([]);
+        }
+      });
+    } catch (e) {
+      console.error("[PWA:dataManager] Failed to get containers:", e);
+      resolve([]);
+    }
+  });
+}
+
+export function resetSsbContainer(id: string, key?: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      globalThis.NRResetSsbContainer(id, key);
+      resolve();
+    } catch (e) {
+      console.error("Failed to reset PWA container:", e);
       reject(e);
     }
   });

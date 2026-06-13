@@ -5,8 +5,31 @@
 
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
+import { DataManager as DataManagerClass } from "./dataStore.ts";
+import { getUserContextIdForBrowser } from "./containerUtils.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
+
+type SsbObserverPayload = {
+  wrappedJSObject?: {
+    id?: string;
+    newName?: string;
+    key?: string;
+  };
+};
+
+function getSsbObserverPayload(
+  subject: unknown,
+): SsbObserverPayload["wrappedJSObject"] {
+  if (typeof subject !== "object" || subject === null) {
+    return undefined;
+  }
+  const payload = (subject as SsbObserverPayload).wrappedJSObject;
+  if (typeof payload !== "object" || payload === null) {
+    return undefined;
+  }
+  return payload;
+}
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -42,18 +65,54 @@ export class SiteSpecificBrowserManager {
 
     globalThis.gBrowser.addTabsProgressListener(this.listener);
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.renameSsb(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.newName as string,
-      );
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        const newName = payload?.newName;
+        if (!id || !newName) {
+          return;
+        }
+        await this.renameSsb(id, newName, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] rename observer failed:",
+          error,
+        );
+      }
     }, "nora-ssb-rename");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.uninstallById(subject?.wrappedJSObject?.id as string);
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        if (!id) {
+          return;
+        }
+        await this.uninstallById(id, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] uninstall observer failed:",
+          error,
+        );
+      }
     }, "nora-ssb-uninstall");
+
+    Services.obs.addObserver(async (subject: unknown) => {
+      try {
+        const payload = getSsbObserverPayload(subject);
+        const id = payload?.id;
+        if (!id) {
+          return;
+        }
+        await this.resetContainerForSsb(id, payload?.key);
+      } catch (error) {
+        console.error(
+          "[SiteSpecificBrowserManager] reset-container observer failed:",
+          error,
+        );
+      }
+    }, "nora-ssb-reset-container");
   }
 
   private listener = {
@@ -62,17 +121,127 @@ export class SiteSpecificBrowserManager {
     },
   };
 
-  onCommand() {
-    this.installOrRunCurrentPageAsSsb(
-      globalThis.gBrowser.selectedBrowser as Browser,
-      true,
+  public async installOrRunCurrentPageAsSsb(
+    browser: Browser,
+    asPwa = true,
+    installUserContextId?: number,
+  ) {
+    const tabUserContextId = getUserContextIdForBrowser(browser);
+    console.debug("[PWA:install-launch] installOrRunCurrentPageAsSsb", {
+      asPwa,
+      installUserContextId,
+      tabUserContextId,
+      pageUrl: browser.currentURI?.spec,
+    });
+
+    const isInstalled = installUserContextId !== undefined
+      ? await this.checkPageIsInstalledForContainer(
+        browser,
+        installUserContextId,
+      )
+      : await this.checkCurrentPageIsInstalled(browser);
+
+    console.debug("[PWA:install-launch] isInstalled check", { isInstalled });
+
+    if (isInstalled) {
+      const currentTabSsb = await this.getCurrentTabSsb(browser);
+
+      if (!currentTabSsb) {
+        console.warn(
+          "[PWA:install-launch] isInstalled=true but getCurrentTabSsb returned null",
+        );
+        return;
+      }
+
+      const runUserContextId = installUserContextId !== undefined
+        ? installUserContextId
+        : tabUserContextId;
+      console.debug("[PWA:install-launch] run existing SSB", {
+        startUrl: currentTabSsb.start_url,
+        runUserContextId,
+      });
+      await this.runSsbByUrl(currentTabSsb.start_url, runUserContextId);
+    } else {
+      const userContextId = installUserContextId ?? tabUserContextId;
+      const manifest = await this.createFromBrowser(browser, {
+        useWebManifest: asPwa,
+        userContextId,
+      });
+
+      if (!manifest) {
+        console.warn(
+          "[PWA:install-launch] createFromBrowser returned null manifest",
+        );
+        return;
+      }
+
+      console.debug("[PWA:install-launch] installing manifest", {
+        id: manifest.id,
+        name: manifest.name,
+        startUrl: manifest.start_url,
+        userContextId: manifest.userContextId ?? 0,
+      });
+
+      await this.install(manifest);
+
+      console.debug(
+        "[PWA:install-launch] install() finished, scheduling launch in 3000ms",
+        {
+          startUrl: manifest.start_url,
+          userContextId: manifest.userContextId,
+        },
+      );
+
+      // Installing needs some time to finish
+      globalThis.setTimeout(() => {
+        console.debug(
+          "[PWA:install-launch] setTimeout fired, calling runSsbByUrl",
+          {
+            startUrl: manifest.start_url,
+            userContextId: manifest.userContextId,
+          },
+        );
+        void this.runSsbByUrl(manifest.start_url, manifest.userContextId)
+          .then(() => {
+            console.debug("[PWA:install-launch] runSsbByUrl completed");
+          })
+          .catch((error) => {
+            console.error(
+              "[PWA:install-launch] runSsbByUrl failed after install:",
+              error,
+            );
+          });
+      }, 3000);
+    }
+  }
+
+  public async checkPageIsInstalledForContainer(
+    browser: Browser,
+    userContextId: number,
+  ): Promise<boolean> {
+    if (!this.checkSiteCanBeInstall(browser.currentURI)) {
+      return false;
+    }
+
+    const currentTabSsb = await this.getCurrentTabSsb(browser);
+
+    if (!currentTabSsb) {
+      return false;
+    }
+
+    const ssb = await this.getSsbByUrlAndContainer(
+      currentTabSsb.start_url,
+      userContextId,
     );
+    return ssb !== undefined;
   }
 
   closePopup() {
-    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
-      hidePopup: () => void;
-    };
+    const panel = document?.getElementById("ssb-panel") as unknown as
+      & XULElement
+      & {
+        hidePopup: () => void;
+      };
     if (panel) {
       panel.hidePopup();
     }
@@ -93,62 +262,23 @@ export class SiteSpecificBrowserManager {
     return currentTabSsb;
   }
 
-  public async installOrRunCurrentPageAsSsb(browser: Browser, asPwa = true) {
-    const isInstalled = await this.checkCurrentPageIsInstalled(browser);
-
-    if (isInstalled) {
-      const currentTabSsb = await this.getCurrentTabSsb(browser);
-
-      if (!currentTabSsb) {
-        return;
-      }
-
-      const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
-
-      if (ssbObj && globalThis.gBrowser.selectedBrowser.currentURI) {
-        await this.runSsbByUrl(
-          globalThis.gBrowser.selectedBrowser.currentURI.spec,
-        );
-      }
-    } else {
-      const manifest = await this.createFromBrowser(browser, {
-        useWebManifest: asPwa,
-      });
-
-      if (!manifest) {
-        return;
-      }
-
-      await this.install(manifest);
-
-      // Installing needs some time to finish
-      globalThis.setTimeout(() => {
-        this.runSsbByUrl(manifest.start_url);
-      }, 3000);
-    }
-  }
-
   public async checkCurrentPageIsInstalled(browser: Browser): Promise<boolean> {
     if (!this.checkSiteCanBeInstall(browser.currentURI)) {
       return false;
     }
 
     const currentTabSsb = await this.getCurrentTabSsb(browser);
-    const ssbData = await this.dataManager.getCurrentSsbData();
 
     if (!currentTabSsb) {
       return false;
     }
 
-    for (const key in ssbData) {
-      if (
-        key === currentTabSsb.start_url ||
-        currentTabSsb.start_url.startsWith(key)
-      ) {
-        return true;
-      }
-    }
-    return false;
+    const userContextId = getUserContextIdForBrowser(browser);
+    const ssb = await this.getSsbByUrlAndContainer(
+      currentTabSsb.start_url,
+      userContextId,
+    );
+    return ssb !== undefined;
   }
 
   /**
@@ -179,35 +309,74 @@ export class SiteSpecificBrowserManager {
 
   private async createFromBrowser(
     browser: Browser,
-    options: { useWebManifest: boolean },
+    options: { useWebManifest: boolean; userContextId: number },
   ): Promise<Manifest | null> {
-    return await this.manifestProcesser.getManifestFromBrowser(
+    const manifest = await this.manifestProcesser.getManifestFromBrowser(
       browser,
       options.useWebManifest,
     );
+
+    if (!manifest) {
+      return null;
+    }
+
+    if (options.userContextId > 0) {
+      manifest.userContextId = options.userContextId;
+    }
+
+    return manifest;
   }
 
   private async install(manifest: Manifest) {
-    if (SupportClass) {
-      if (AppConstants.platform === "win") {
-        // Windows install (taskbar integration) is controlled by A/B test
-        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass(this);
-          await windowsSupport.install(manifest);
-        } else {
-          console.debug(
-            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
-          );
-        }
-      } else if (AppConstants.platform === "linux") {
-        // Linux install (.desktop file generation) is NOT controlled by A/B test
-        // This is excluded from A/B test as per requirements
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.install(manifest);
-      }
-    }
+    console.debug("[PWA:install-launch] install() start", {
+      id: manifest.id,
+      platform: AppConstants.platform,
+    });
 
     await this.dataManager.saveSsbData(manifest);
+    console.debug("[PWA:install-launch] saveSsbData finished", {
+      key: DataManagerClass.buildKey(
+        manifest.start_url,
+        manifest.userContextId ?? 0,
+      ),
+    });
+
+    if (!SupportClass) {
+      console.debug(
+        "[PWA:install-launch] no OS SupportClass for this platform",
+      );
+      return;
+    }
+
+    void this.installOsIntegration(manifest).catch((error) => {
+      console.error(
+        "[PWA:install-launch] OS integration install failed:",
+        error,
+      );
+    });
+  }
+
+  private async installOsIntegration(manifest: Manifest) {
+    if (AppConstants.platform === "win") {
+      if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
+        console.debug("[PWA:install-launch] Windows OS install starting");
+        const windowsSupport = new SupportClass(this);
+        await windowsSupport.install(manifest);
+        console.debug("[PWA:install-launch] Windows OS install finished");
+      } else {
+        console.debug(
+          "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
+        );
+      }
+      return;
+    }
+
+    if (AppConstants.platform === "linux") {
+      console.debug("[PWA:install-launch] Linux OS install starting");
+      const linuxSupport = new SupportClass(this);
+      await linuxSupport.install(manifest);
+      console.debug("[PWA:install-launch] Linux OS install finished");
+    }
   }
 
   private async uninstall(manifest: Manifest) {
@@ -230,24 +399,36 @@ export class SiteSpecificBrowserManager {
       }
     }
 
-    await this.dataManager.removeSsbData(manifest.start_url);
+    await this.dataManager.removeSsbData(
+      DataManagerClass.buildKey(
+        manifest.start_url,
+        manifest.userContextId ?? 0,
+      ),
+    );
   }
 
-  public async uninstallById(id: string) {
-    const ssbObj = await this.getSsbObj(id);
+  public async uninstallById(id: string, key?: string) {
+    const ssbObj = await this.getSsbObj(id, key);
     if (!ssbObj) {
       return;
     }
     await this.uninstall(ssbObj);
   }
 
-  private async getIdByUrl(url: string) {
+  public async getSsbByUrlAndContainer(
+    url: string,
+    userContextId: number = 0,
+  ): Promise<Manifest | undefined> {
     const ssbData = await this.dataManager.getCurrentSsbData();
-    return ssbData[url];
+    const key = DataManagerClass.buildKey(url, userContextId);
+    return ssbData[key];
   }
 
-  public async getSsbObj(id: string) {
+  public async getSsbObj(id: string, key?: string) {
     const ssbData = await this.dataManager.getCurrentSsbData();
+    if (key && ssbData[key]) {
+      return ssbData[key] as Manifest;
+    }
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         return value as Manifest;
@@ -256,8 +437,8 @@ export class SiteSpecificBrowserManager {
     return null;
   }
 
-  public async runSsbByUrl(url: string) {
-    await this.ssbRunner.runSsbByUrl(url);
+  public async runSsbByUrl(url: string, userContextId?: number) {
+    await this.ssbRunner.runSsbByUrl(url, userContextId);
   }
 
   private async onCurrentTabChangedOrLoaded() {
@@ -265,10 +446,11 @@ export class SiteSpecificBrowserManager {
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
-    const currentPageHasSsbManifest =
-      await this.manifestProcesser.getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled =
-      await this.checkCurrentPageIsInstalled(browser);
+    const currentPageHasSsbManifest = await this.manifestProcesser
+      .getManifestFromBrowser(browser, true);
+    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
+      browser,
+    );
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
@@ -302,8 +484,12 @@ export class SiteSpecificBrowserManager {
     return await this.dataManager.getCurrentSsbData();
   }
 
-  public async renameSsb(id: string, newName: string): Promise<boolean> {
-    const ssbObj = await this.getSsbObj(id);
+  public async renameSsb(
+    id: string,
+    newName: string,
+    key?: string,
+  ): Promise<boolean> {
+    const ssbObj = await this.getSsbObj(id, key);
     if (!ssbObj) {
       return false;
     }
@@ -318,6 +504,46 @@ export class SiteSpecificBrowserManager {
     await this.install(updatedManifest);
 
     return true;
+  }
+
+  /**
+   * Clears a deleted container assignment by moving the entry to the default
+   * container key (userContextId 0).
+   */
+  public async resetContainerForSsb(
+    id: string,
+    key?: string,
+  ): Promise<boolean> {
+    const ssbObj = await this.getSsbObj(id, key);
+    if (!ssbObj) {
+      return false;
+    }
+
+    const currentContextId = ssbObj.userContextId ?? 0;
+    if (currentContextId === 0) {
+      return true;
+    }
+
+    const oldKey = DataManagerClass.buildKey(
+      ssbObj.start_url,
+      currentContextId,
+    );
+    const defaultKey = DataManagerClass.buildKey(ssbObj.start_url, 0);
+    const currentSsbData = await this.dataManager.getCurrentSsbData();
+    if (currentSsbData[defaultKey] && defaultKey !== oldKey) {
+      console.warn(
+        "[SiteSpecificBrowserManager] Cannot reset container because default container entry already exists",
+        { startUrl: ssbObj.start_url, oldKey, defaultKey },
+      );
+      return false;
+    }
+
+    const updatedManifest: Manifest = {
+      ...ssbObj,
+      userContextId: undefined,
+    };
+
+    return await this.dataManager.moveSsbKey(oldKey, updatedManifest);
   }
 
   public useOSIntegration() {

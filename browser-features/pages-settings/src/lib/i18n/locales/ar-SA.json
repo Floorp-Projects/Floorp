@@ -449,7 +449,14 @@
         "uninstallWarning": "Are you sure you want to uninstall \"{{name}}\"?",
         "cancel": "Cancel",
         "rename": "Rename",
-        "uninstall": "Uninstall"
+        "uninstall": "Uninstall",
+        "container": "حاوية",
+        "noContainer": "بدون حاوية",
+        "setContainer": "تعيين حاوية",
+        "containerDescription": "اختر حاوية Firefox التي يفتح فيها هذا التطبيق. الحاويات تعزل ملفات تعريف الارتباط وبيانات الموقع.",
+        "containerDeleted": "تم حذف الحاوية",
+        "save": "حفظ",
+        "errorSettingContainer": "فشل تعيين الحاوية"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

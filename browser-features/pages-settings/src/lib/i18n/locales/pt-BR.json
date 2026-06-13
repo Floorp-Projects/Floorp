@@ -449,7 +449,14 @@
         "uninstallWarning": "Tem certeza de que deseja desinstalar o \"{{name}}\"?",
         "cancel": "Cancelar",
         "rename": "Renomear",
-        "uninstall": "Desinstalar"
+        "uninstall": "Desinstalar",
+        "container": "Contêiner",
+        "noContainer": "Sem contêiner",
+        "setContainer": "Definir contêiner",
+        "containerDescription": "Escolha em qual contêiner do Firefox este aplicativo será aberto. Contêineres isolam cookies e dados do site.",
+        "containerDeleted": "Contêiner excluído",
+        "save": "Salvar",
+        "errorSettingContainer": "Falha ao definir contêiner"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

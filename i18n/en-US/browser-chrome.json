@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Web Apps",
       "install-current": "Install Current Page as Progressive Web App",
-      "open-installed": "Open Installed Apps"
+      "open-current": "Open app in selected container",
+      "open-installed": "Open Installed Apps",
+      "container": "Container"
     },
     "page-action": {
       "title": "Open Application",
       "install": "Install Application",
       "open": "Open Application",
       "cancel": "Cancel",
-      "site-icon": "Site icon"
+      "site-icon": "Site icon",
+      "container": "Container",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {

@@ -279,7 +279,7 @@ export interface LazyModules {
   "resource:///modules/SearchModeSwitcher.sys.mjs": typeof import("resource:///modules/SearchModeSwitcher.sys.mjs");
   "resource:///modules/SelectionChangedMenulist.sys.mjs": typeof import("resource:///modules/SelectionChangedMenulist.sys.mjs");
   "resource:///modules/SharingUtils.sys.mjs": typeof import("resource:///modules/SharingUtils.sys.mjs");
-  "resource:///modules/ShellService.sys.mjs": typeof import("resource:///modules/ShellService.sys.mjs");
+  "moz-src:///browser/components/shell/ShellService.sys.mjs": typeof import("moz-src:///browser/components/shell/ShellService.sys.mjs");
   "resource:///modules/SiteDataManager.sys.mjs": typeof import("resource:///modules/SiteDataManager.sys.mjs");
   "resource:///modules/SitePermissions.sys.mjs": typeof import("resource:///modules/SitePermissions.sys.mjs");
   "resource:///modules/SyncedTabsController.sys.mjs": typeof import("resource:///modules/SyncedTabsController.sys.mjs");

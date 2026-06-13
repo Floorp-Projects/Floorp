@@ -449,7 +449,14 @@
         "uninstallWarning": "本当に \"{{name}}\" をアンインストールしますか？",
         "cancel": "キャンセル",
         "rename": "名前を変更",
-        "uninstall": "アンインストール"
+        "uninstall": "アンインストール",
+        "container": "コンテナ",
+        "noContainer": "コンテナなし",
+        "setContainer": "コンテナを設定",
+        "containerDescription": "このアプリを開く際に使用するFirefoxコンテナを選択します。コンテナはCookieやサイトデータを分離します。",
+        "containerDeleted": "コンテナが削除済み",
+        "save": "保存",
+        "errorSettingContainer": "コンテナの設定に失敗しました"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -449,7 +449,14 @@
         "uninstallWarning": "Вы уверены, что хотите удалить «{{name}}»?",
         "cancel": "Отменить",
         "rename": "Переименовать",
-        "uninstall": "Удалить"
+        "uninstall": "Удалить",
+        "container": "Контейнер",
+        "noContainer": "Без контейнера",
+        "setContainer": "Назначить контейнер",
+        "containerDescription": "Выберите контейнер Firefox, в котором будет открываться это приложение. Контейнеры изолируют файлы cookie и данные сайтов.",
+        "containerDeleted": "Контейнер удалён",
+        "save": "Сохранить",
+        "errorSettingContainer": "Не удалось назначить контейнер"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

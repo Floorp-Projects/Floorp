@@ -1,4 +1,6 @@
 import type { Manifest } from "../type.ts";
+import { getSsbDisplayName } from "../containerDisplay.sys.mts";
+import { sanitizeDesktopEntryValue } from "#libs/pwa/desktopEntry.ts";
 
 const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
@@ -217,7 +219,12 @@ export class LinuxSupport {
     const startupWMClass = `floorp-${slug}`;
 
     tokens.push("--name", startupWMClass);
-    tokens.push("--profile", PathUtils.profileDir, "--start-ssb", ssb.id);
+    tokens.push(
+      "--profile",
+      PathUtils.profileDir,
+      "--start-ssb",
+      sanitizeDesktopEntryValue(ssb.id),
+    );
     const execCommand = tokens
       .map((token) => this.escapeExecToken(token))
       .join(" ");
@@ -231,12 +238,13 @@ export class LinuxSupport {
     iconPath: string | null,
     startupWMClass: string,
   ) {
+    const displayName = getSsbDisplayName(ssb);
     const lines = [
       "[Desktop Entry]",
       "Version=1.0",
       "Type=Application",
-      `Name=${ssb.name}`,
-      `Comment=${ssb.short_name ?? ssb.name}`,
+      `Name=${sanitizeDesktopEntryValue(displayName)}`,
+      `Comment=${sanitizeDesktopEntryValue(ssb.short_name ?? displayName)}`,
       `Exec=${execCommand}`,
       `Icon=${iconPath ?? "floorp"}`,
       "Terminal=false",
@@ -244,8 +252,8 @@ export class LinuxSupport {
       "StartupNotify=true",
       `StartupWMClass=${startupWMClass}`,
       "X-MultipleArgs=false",
-      `X-Floorp-StartUrl=${ssb.start_url}`,
-      `X-Floorp-Id=${ssb.id}`,
+      `X-Floorp-StartUrl=${sanitizeDesktopEntryValue(ssb.start_url)}`,
+      `X-Floorp-Id=${sanitizeDesktopEntryValue(ssb.id)}`,
     ];
 
     return `${lines.join("\n")}\n`;
@@ -276,19 +284,15 @@ export class LinuxSupport {
       try {
         const iconURI = Services.io.newURI(ssb.icon);
         const targetFile = new LinuxSupport.nsIFile(paths.iconPath);
-        const savedPath = await ImageTools.saveIconForPlatform(
-          iconURI,
-          targetFile,
-          128,
+        const { container } = await ImageTools.loadImage(iconURI);
+        const badgedContainer = await ImageTools.applyContainerBadgeToIcon(
+          container,
+          ssb.userContextId ?? 0,
           128,
         );
-        if (savedPath) {
-          iconFile = new LinuxSupport.nsIFile(savedPath);
-          paths.iconPath = savedPath;
-          console.debug("[LinuxSupport] Icon saved successfully");
-        } else {
-          iconFile = null;
-        }
+        await ImageTools.saveIcon(badgedContainer, 128, 128, targetFile);
+        iconFile = targetFile;
+        console.debug("[LinuxSupport] Icon saved successfully");
       } catch (error) {
         console.error("Failed to save SSB icon for Linux", error);
         iconFile = null;

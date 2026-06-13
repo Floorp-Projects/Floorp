@@ -449,7 +449,14 @@
         "uninstallWarning": "Είστε σίγουροι ότι θέλετε να απεγκαταστήσετε το \"{{name}}\";",
         "cancel": "Ακύρωση",
         "rename": "Μετονομασία",
-        "uninstall": "Απεγκατάσταση"
+        "uninstall": "Απεγκατάσταση",
+        "container": "Περιέκτης",
+        "noContainer": "Χωρίς περιέκτη",
+        "setContainer": "Ορισμός περιέκτη",
+        "containerDescription": "Επιλέξτε τον περιέκτη Firefox στον οποίο θα ανοίγει αυτή η εφαρμογή. Οι περιέκτες απομονώνουν τα cookies και τα δεδομένα ιστοτόπου.",
+        "containerDeleted": "Ο περιέκτης διαγράφηκε",
+        "save": "Αποθήκευση",
+        "errorSettingContainer": "Αποτυχία ορισμού περιέκτη"
     },
     "floorpOS": {
         "title": "{{productName}} OS",

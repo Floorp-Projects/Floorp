@@ -449,7 +449,14 @@
         "uninstallWarning": "Yakin ingin mencopot \"{{name}}\"?",
         "cancel": "Batal",
         "rename": "Ganti nama",
-        "uninstall": "Copot"
+        "uninstall": "Copot",
+        "container": "Kontainer",
+        "noContainer": "Tanpa Kontainer",
+        "setContainer": "Atur Kontainer",
+        "containerDescription": "Pilih Kontainer Firefox tempat aplikasi ini dibuka. Kontainer memisahkan cookie dan data situs.",
+        "containerDeleted": "Kontainer dihapus",
+        "save": "Simpan",
+        "errorSettingContainer": "Gagal mengatur kontainer"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
