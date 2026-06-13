@@ -3,6 +3,7 @@
 
 import { SiteSpecificBrowserManager } from "../ssbManager.ts";
 import { DataManager } from "../dataStore.ts";
+import type { Manifest } from "../type.ts";
 import {
   assert,
   assertEquals,
@@ -149,6 +150,87 @@ const tests: TestCase[] = [
         url,
         "start URL preserved",
       );
+    },
+  },
+  {
+    name: "getSsbObj prefers storage key when ids collide",
+    async fn() {
+      const first: Manifest = {
+        id: "same-id",
+        name: "Default",
+        start_url: "https://example.com/",
+        icon: "",
+      };
+      const second: Manifest = {
+        id: "same-id",
+        name: "Container",
+        start_url: "https://example.com/",
+        icon: "",
+        userContextId: 2,
+      };
+      const managerLike = {
+        getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
+        dataManager: {
+          getCurrentSsbData: async () => ({
+            "https://example.com/:0": first,
+            "https://example.com/:2": second,
+          }),
+        },
+      };
+
+      const result = await SiteSpecificBrowserManager.prototype.getSsbObj.call(
+        managerLike as unknown as SiteSpecificBrowserManager,
+        "same-id",
+        "https://example.com/:2",
+      );
+
+      assertEquals(result, second, "storage key should select exact manifest");
+    },
+  },
+  {
+    name: "resetContainerForSsb does not overwrite an existing default entry",
+    async fn() {
+      const defaultEntry: Manifest = {
+        id: "default-id",
+        name: "Default",
+        start_url: "https://example.com/",
+        icon: "",
+      };
+      const containerEntry: Manifest = {
+        id: "container-id",
+        name: "Container",
+        start_url: "https://example.com/",
+        icon: "",
+        userContextId: 2,
+      };
+      let removed = false;
+      let saved = false;
+      const managerLike = {
+        getSsbObj: SiteSpecificBrowserManager.prototype.getSsbObj,
+        dataManager: {
+          getCurrentSsbData: async () => ({
+            "https://example.com/:0": defaultEntry,
+            "https://example.com/:2": containerEntry,
+          }),
+          removeSsbData: async () => {
+            removed = true;
+          },
+          saveSsbData: async () => {
+            saved = true;
+          },
+        },
+      };
+
+      const result = await SiteSpecificBrowserManager.prototype
+        .resetContainerForSsb.call(
+          managerLike as unknown as SiteSpecificBrowserManager,
+          "container-id",
+          "https://example.com/:2",
+        );
+
+      assertEquals(result, false, "reset should fail on default-key collision");
+      assertEquals(removed, false, "existing container entry must remain");
+      assertEquals(saved, false, "default entry must not be overwritten");
     },
   },
 ];

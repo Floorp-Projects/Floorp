@@ -11,6 +11,10 @@ export class DataManager {
     return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
   }
 
+  private get ssbStoreDirectory() {
+    return PathUtils.join(PathUtils.profileDir, "ssb");
+  }
+
   constructor() {
   }
 
@@ -32,6 +36,7 @@ export class DataManager {
   }
 
   public async getCurrentSsbData(): Promise<Record<string, Manifest>> {
+    await this.ensureStoreDirectory();
     const fileExists = await IOUtils.exists(this.ssbStoreFile);
     if (!fileExists) {
       await IOUtils.writeJSON(this.ssbStoreFile, {});
@@ -170,13 +175,21 @@ export class DataManager {
         manifest.config = { ...entry.config };
       }
 
-      migratedData[startUrl] = manifest;
+      migratedData[DataManager.buildKey(startUrl, 0)] = manifest;
     }
 
     return migratedData;
   }
 
+  private async ensureStoreDirectory() {
+    await IOUtils.makeDirectory(this.ssbStoreDirectory, {
+      createAncestors: true,
+      ignoreExisting: true,
+    });
+  }
+
   private async overrideCurrentSsbData(ssbData: object) {
+    await this.ensureStoreDirectory();
     await IOUtils.writeJSON(this.ssbStoreFile, ssbData);
   }
 

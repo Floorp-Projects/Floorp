@@ -183,7 +183,9 @@ export class SSBCommandLineHandler {
 
       // Start SSB directly (works even without existing browser window)
       // The startSSBFromCmdLine function handles LastWindowClosingSurvivalArea
-      startSSBFromCmdLine(id, !this.isInitialized);
+      void startSSBFromCmdLine(id, !this.isInitialized).catch((error) => {
+        console.error("[SSBCommandLineHandler] Failed to start SSB:", error);
+      });
       this.isInitialized = true;
     }
   }

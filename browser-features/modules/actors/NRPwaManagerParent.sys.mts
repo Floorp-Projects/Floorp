@@ -6,9 +6,45 @@
 const { resolveContainerColor } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/containerDisplay.sys.mjs",
 );
+const { DataStoreProvider } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/pwa/DataStore.sys.mjs",
+);
+
+type WindowGlobalWithDocumentURI = {
+  documentURI?: {
+    spec?: string;
+  };
+};
+
+function isAllowedPwaManagerSource(href: string): boolean {
+  try {
+    const url = new URL(href);
+    if (url.protocol === "chrome:" && url.hostname === "noraneko-settings") {
+      return true;
+    }
+    if (url.protocol === "about:" && url.pathname === "hub") {
+      return true;
+    }
+    return (
+      url.hostname === "localhost" &&
+      url.port === "5183" &&
+      (url.protocol === "http:" || url.protocol === "https:")
+    );
+  } catch {
+    return false;
+  }
+}
 
 export class NRPwaManagerParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
+    if (!this.isAllowedMessageSource()) {
+      console.warn(
+        `[NRPwaManagerParent] Rejected ${message.name} from unauthorized source`,
+      );
+      this.replyWithEmptyResult(message.name);
+      return;
+    }
+
     switch (message.name) {
       case "PwaManager:GetInstalledApps": {
         this.sendAsyncMessage(
@@ -22,6 +58,7 @@ export class NRPwaManagerParent extends JSWindowActorParent {
           {
             wrappedJSObject: {
               id: message.data.id,
+              key: message.data.key,
               newName: message.data.newName,
             },
           },
@@ -31,7 +68,7 @@ export class NRPwaManagerParent extends JSWindowActorParent {
       }
       case "PwaManager:UninstallSsb": {
         Services.obs.notifyObservers(
-          { wrappedJSObject: { id: message.data.id } },
+          { wrappedJSObject: { id: message.data.id, key: message.data.key } },
           "nora-ssb-uninstall",
         );
         break;
@@ -70,7 +107,7 @@ export class NRPwaManagerParent extends JSWindowActorParent {
       }
       case "PwaManager:ResetContainer": {
         Services.obs.notifyObservers(
-          { wrappedJSObject: { id: message.data.id } },
+          { wrappedJSObject: { id: message.data.id, key: message.data.key } },
           "nora-ssb-reset-container",
         );
         break;
@@ -78,17 +115,30 @@ export class NRPwaManagerParent extends JSWindowActorParent {
     }
   }
 
-  private async getInstalledApps() {
-    const fileExists = await IOUtils.exists(this.installedAppsStoreFile);
-    if (!fileExists) {
-      IOUtils.writeJSON(this.installedAppsStoreFile, {});
-      return {};
-    }
-    const installedApps = await IOUtils.readJSON(this.installedAppsStoreFile);
-    return JSON.stringify(installedApps);
+  private get sourceSpec(): string {
+    const currentWindowGlobal = this.browsingContext
+      ?.currentWindowGlobal as WindowGlobalWithDocumentURI | null;
+    return currentWindowGlobal?.documentURI?.spec ?? "";
   }
 
-  private get installedAppsStoreFile() {
-    return PathUtils.join(PathUtils.profileDir, "ssb", "ssb.json");
+  private isAllowedMessageSource(): boolean {
+    return isAllowedPwaManagerSource(this.sourceSpec);
+  }
+
+  private replyWithEmptyResult(messageName: string) {
+    switch (messageName) {
+      case "PwaManager:GetInstalledApps":
+        this.sendAsyncMessage("PwaManager:GetInstalledApps", "{}");
+        break;
+      case "PwaManager:GetContainers":
+        this.sendAsyncMessage("PwaManager:GetContainers", "[]");
+        break;
+    }
+  }
+
+  private async getInstalledApps() {
+    const installedApps = await DataStoreProvider.getDataManager()
+      .getCurrentSsbData();
+    return JSON.stringify(installedApps);
   }
 }

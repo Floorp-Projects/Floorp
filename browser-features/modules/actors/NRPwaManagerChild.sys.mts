@@ -3,16 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+function isAllowedPwaManagerLocation(href: string): boolean {
+  try {
+    const url = new URL(href);
+    if (url.protocol === "chrome:" && url.hostname === "noraneko-settings") {
+      return true;
+    }
+    if (url.protocol === "about:" && url.pathname === "hub") {
+      return true;
+    }
+    return (
+      url.hostname === "localhost" &&
+      url.port === "5183" &&
+      (url.protocol === "http:" || url.protocol === "https:")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export class NRPwaManagerChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRPwaManagerChild created!");
     const window = this.contentWindow;
-    if (
-      window?.location.port === "5183" ||
-      window?.location.href.startsWith("chrome://") ||
-      window?.location.href.startsWith("about:")
-    ) {
-      console.debug("NRPwaManager 5183 ! or Chrome Page!");
+    if (window && isAllowedPwaManagerLocation(window.location.href)) {
+      console.debug("NRPwaManager allowed page!");
       Cu.exportFunction(this.NRGetInstalledApps.bind(this), window, {
         defineAs: "NRGetInstalledApps",
       });
@@ -45,12 +60,12 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     promise.then((installedApps) => callback(installedApps));
   }
 
-  NRRenameSsb(id: string, newName: string) {
-    this.sendAsyncMessage("PwaManager:RenameSsb", { id, newName });
+  NRRenameSsb(id: string, newName: string, key?: string) {
+    this.sendAsyncMessage("PwaManager:RenameSsb", { id, key, newName });
   }
 
-  NRUninstallSsb(id: string) {
-    this.sendAsyncMessage("PwaManager:UninstallSsb", { id });
+  NRUninstallSsb(id: string, key?: string) {
+    this.sendAsyncMessage("PwaManager:UninstallSsb", { id, key });
   }
 
   NRGetContainers(
@@ -63,8 +78,8 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     promise.then((containersJson) => callback(containersJson));
   }
 
-  NRResetSsbContainer(id: string) {
-    this.sendAsyncMessage("PwaManager:ResetContainer", { id });
+  NRResetSsbContainer(id: string, key?: string) {
+    this.sendAsyncMessage("PwaManager:ResetContainer", { id, key });
   }
 
   resolveGetInstalledApps:

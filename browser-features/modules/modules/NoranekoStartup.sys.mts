@@ -23,7 +23,8 @@ export let isFirstRun = false;
 export let isUpdated = false;
 
 const executedFunctions = new Set<string>();
-const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
+const RELEASE_NOTES_URL =
+  `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
 
 export function executeOnce(id: string, callback: () => void): boolean {
   if (executedFunctions.has(id)) {
@@ -414,6 +415,35 @@ async function setupBrowserOSComponents(): Promise<void> {
   );
 }
 
+function registerSsbCommandLineHandler(): void {
+  executeOnce("register-ssb-command-line-handler", () => {
+    const { SSBCommandLineHandler } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+    );
+    const contractId = "@noraneko.org/commandlinehandler/general-start-ssb;1";
+    const factory: nsIFactory = {
+      createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
+        return new SSBCommandLineHandler().QueryInterface(iid);
+      },
+    };
+
+    const registrar = Components.manager as unknown as nsIComponentRegistrar;
+    registrar.registerFactory(
+      Services.uuid.generateUUID(),
+      "Floorp SSB command line handler",
+      contractId,
+      factory,
+    );
+    Services.catMan.addCategoryEntry(
+      "command-line-handler",
+      "m-floorp-ssb",
+      contractId,
+      false,
+      true,
+    );
+  });
+}
+
 async function initializeExperiments() {
   const { Experiments } = await ChromeUtils.importESModule(
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
@@ -422,6 +452,7 @@ async function initializeExperiments() {
 }
 
 (async () => {
+  registerSsbCommandLineHandler();
   await registerCustomAboutPages();
   initializeVersionInfo();
   await initializeExperiments();

@@ -49,17 +49,24 @@ export class SiteSpecificBrowserManager {
       await this.renameSsb(
         subject?.wrappedJSObject?.id as string,
         subject?.wrappedJSObject?.newName as string,
+        subject?.wrappedJSObject?.key as string | undefined,
       );
     }, "nora-ssb-rename");
 
     // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
-      await this.uninstallById(subject?.wrappedJSObject?.id as string);
+      await this.uninstallById(
+        subject?.wrappedJSObject?.id as string,
+        subject?.wrappedJSObject?.key as string | undefined,
+      );
     }, "nora-ssb-uninstall");
 
     // deno-lint-ignore no-explicit-any
     Services.obs.addObserver(async (subject: any) => {
-      await this.resetContainerForSsb(subject?.wrappedJSObject?.id as string);
+      await this.resetContainerForSsb(
+        subject?.wrappedJSObject?.id as string,
+        subject?.wrappedJSObject?.key as string | undefined,
+      );
     }, "nora-ssb-reset-container");
   }
 
@@ -290,7 +297,9 @@ export class SiteSpecificBrowserManager {
     });
 
     if (!SupportClass) {
-      console.debug("[PWA:install-launch] no OS SupportClass for this platform");
+      console.debug(
+        "[PWA:install-launch] no OS SupportClass for this platform",
+      );
       return;
     }
 
@@ -353,8 +362,8 @@ export class SiteSpecificBrowserManager {
     );
   }
 
-  public async uninstallById(id: string) {
-    const ssbObj = await this.getSsbObj(id);
+  public async uninstallById(id: string, key?: string) {
+    const ssbObj = await this.getSsbObj(id, key);
     if (!ssbObj) {
       return;
     }
@@ -370,8 +379,11 @@ export class SiteSpecificBrowserManager {
     return ssbData[key];
   }
 
-  public async getSsbObj(id: string) {
+  public async getSsbObj(id: string, key?: string) {
     const ssbData = await this.dataManager.getCurrentSsbData();
+    if (key && ssbData[key]) {
+      return ssbData[key] as Manifest;
+    }
     for (const value of Object.values(ssbData)) {
       if ((value as Manifest).id === id) {
         return value as Manifest;
@@ -427,8 +439,12 @@ export class SiteSpecificBrowserManager {
     return await this.dataManager.getCurrentSsbData();
   }
 
-  public async renameSsb(id: string, newName: string): Promise<boolean> {
-    const ssbObj = await this.getSsbObj(id);
+  public async renameSsb(
+    id: string,
+    newName: string,
+    key?: string,
+  ): Promise<boolean> {
+    const ssbObj = await this.getSsbObj(id, key);
     if (!ssbObj) {
       return false;
     }
@@ -449,8 +465,11 @@ export class SiteSpecificBrowserManager {
    * Clears a deleted container assignment by moving the entry to the default
    * container key (userContextId 0).
    */
-  public async resetContainerForSsb(id: string): Promise<boolean> {
-    const ssbObj = await this.getSsbObj(id);
+  public async resetContainerForSsb(
+    id: string,
+    key?: string,
+  ): Promise<boolean> {
+    const ssbObj = await this.getSsbObj(id, key);
     if (!ssbObj) {
       return false;
     }
@@ -464,6 +483,16 @@ export class SiteSpecificBrowserManager {
       ssbObj.start_url,
       currentContextId,
     );
+    const defaultKey = DataManagerClass.buildKey(ssbObj.start_url, 0);
+    const currentSsbData = await this.dataManager.getCurrentSsbData();
+    if (currentSsbData[defaultKey] && defaultKey !== oldKey) {
+      console.warn(
+        "[SiteSpecificBrowserManager] Cannot reset container because default container entry already exists",
+        { startUrl: ssbObj.start_url, oldKey, defaultKey },
+      );
+      return false;
+    }
+
     await this.dataManager.removeSsbData(oldKey);
 
     const updatedManifest: Manifest = {
