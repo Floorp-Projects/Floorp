@@ -40,6 +40,11 @@ export interface TourStep {
   passthrough?: boolean;
   /** ユーザー操作による自動進行 */
   advanceOn?: AdvanceTrigger;
+  /**
+   * true のときワークスペースパネルの popuphiding を抑止し、
+   * ツアー UI 操作でパネルが閉じないようにする。
+   */
+  keepWorkspacePanelOpen?: boolean;
 }
 
 export interface TourDefinition {

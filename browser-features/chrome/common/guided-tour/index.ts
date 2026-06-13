@@ -7,11 +7,13 @@ import {
 } from "#features-chrome/utils/base.ts";
 import { TourController } from "./controller.ts";
 import { createTourOverlay } from "./components/TourOverlay.tsx";
+import { WorkspacePanelGuard } from "./workspace-panel-guard.ts";
 import style from "./style.css?inline";
 
 @noraComponent(import.meta.hot)
 export default class GuidedTour extends NoraComponentBase {
   init(): void {
+    WorkspacePanelGuard.cleanupStale();
     if (!document.getElementById("floorp-guided-tour-style")) {
       const styleEl = document.createElement("style");
       styleEl.id = "floorp-guided-tour-style";

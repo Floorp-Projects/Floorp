@@ -2,6 +2,7 @@
 
 import { type Accessor, createSignal, onCleanup } from "solid-js";
 import { getTourById } from "./tour-definitions/index.ts";
+import { WorkspacePanelGuard } from "./workspace-panel-guard.ts";
 import {
   type TargetRect,
   TOUR_REQUEST_PREF,
@@ -36,6 +37,8 @@ export class TourController {
   private generation = 0;
   private rafId: number | null = null;
   private advanceCleanup: (() => void) | null = null;
+  private readonly workspacePanelGuard = new WorkspacePanelGuard();
+  private panelSyncTimers: number[] = [];
   private targetElement: Element | null = null;
 
   constructor() {
@@ -86,19 +89,37 @@ export class TourController {
       this.stop();
       return;
     }
-    void this.showStep(this.stepIndex() + 1);
+    const nextIndex = this.stepIndex() + 1;
+    const nextStep = this.tour()?.steps[nextIndex];
+    setTimeout(() => {
+      void this.showStep(nextIndex).then(() => {
+        if (nextStep?.keepWorkspacePanelOpen) {
+          void this.workspacePanelGuard.ensureOpen();
+        }
+      });
+    }, 0);
   }
 
   prev(): void {
     if (this.stepIndex() > 0) {
-      void this.showStep(this.stepIndex() - 1);
+      const prevIndex = this.stepIndex() - 1;
+      const prevStep = this.tour()?.steps[prevIndex];
+      setTimeout(() => {
+        void this.showStep(prevIndex).then(() => {
+          if (prevStep?.keepWorkspacePanelOpen) {
+            void this.workspacePanelGuard.ensureOpen();
+          }
+        });
+      }, 0);
     }
   }
 
   stop(): void {
     this.generation++;
+    this.clearPanelSyncTimers();
     this.stopTrackingTarget();
     this.detachAdvanceTrigger();
+    WorkspacePanelGuard.cleanupStale();
     this.targetElement = null;
     this.setTargetRect(null);
     this.setStepReady(false);
@@ -117,7 +138,17 @@ export class TourController {
 
     const gen = ++this.generation;
     this.detachAdvanceTrigger();
-    this.setStepReady(false);
+
+    const panelAlreadyOpen = step.waitForSelector
+      ? this.queryVisible(step.waitForSelector) !== null
+      : false;
+    const needsAsyncPrep =
+      (step.waitForSelector !== undefined && !panelAlreadyOpen) ||
+      (step.action !== undefined && !panelAlreadyOpen);
+
+    if (needsAsyncPrep) {
+      this.setStepReady(false);
+    }
     this.setStepIndex(index);
 
     try {
@@ -158,6 +189,7 @@ export class TourController {
 
       this.startTrackingTarget();
       this.attachAdvanceTrigger(step);
+      this.syncWorkspacePanelForStep(step);
       this.setStatus("active");
       this.setStepReady(true);
     } catch (e) {
@@ -306,6 +338,33 @@ export class TourController {
   private detachAdvanceTrigger(): void {
     this.advanceCleanup?.();
     this.advanceCleanup = null;
+  }
+
+  private syncWorkspacePanelForStep(step: TourStep): void {
+    if (!step.keepWorkspacePanelOpen) return;
+    this.scheduleWorkspacePanelOpen();
+  }
+
+  private scheduleWorkspacePanelOpen(): void {
+    if (!this.tour()) return;
+    this.clearPanelSyncTimers();
+    const open = () => {
+      if (this.status() !== "active") return;
+      const step = this.currentStep();
+      if (!step?.keepWorkspacePanelOpen) return;
+      void this.workspacePanelGuard.ensureOpen();
+    };
+    open();
+    this.panelSyncTimers.push(window.setTimeout(open, 0));
+    this.panelSyncTimers.push(window.setTimeout(open, 50));
+    this.panelSyncTimers.push(window.setTimeout(open, 150));
+  }
+
+  private clearPanelSyncTimers(): void {
+    for (const id of this.panelSyncTimers) {
+      clearTimeout(id);
+    }
+    this.panelSyncTimers = [];
   }
 
   /** 起動リクエスト pref を監視し、消費したら即クリアする */

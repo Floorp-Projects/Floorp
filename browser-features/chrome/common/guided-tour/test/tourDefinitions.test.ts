@@ -80,6 +80,32 @@ function testPassthroughStepsHaveTarget(): void {
   }
 }
 
+/** パネル表示済みの連続ステップでツールバーをトグルしない */
+function testWorkspacesPanelStepsDoNotRetoggleToolbar(): void {
+  const tour = getTourById("workspaces");
+  assert(tour !== undefined, "workspaces tour must exist");
+  const step4 = tour.steps[3];
+  assertEquals(
+    step4.action,
+    undefined,
+    "step 4 must not click toolbar (would toggle panel closed)",
+  );
+  assertEquals(
+    step4.waitForSelector,
+    undefined,
+    "step 4 assumes panel stays open from step 3",
+  );
+  assert(step4.passthrough === true, "step 4 needs passthrough for right-click");
+  assert(
+    step4.keepWorkspacePanelOpen === true,
+    "step 4 must keep workspace panel open",
+  );
+  assert(
+    tour.steps[2].keepWorkspacePanelOpen === true,
+    "step 3 must keep workspace panel open",
+  );
+}
+
 function testRequestPrefIsNamespaced(): void {
   assert(
     TOUR_REQUEST_PREF.startsWith("floorp.guidedTour."),
@@ -109,6 +135,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "passthrough steps have a target",
       fn: testPassthroughStepsHaveTarget,
+    },
+    {
+      name: "workspaces panel steps do not retoggle toolbar",
+      fn: testWorkspacesPanelStepsDoNotRetoggleToolbar,
     },
     { name: "request pref is namespaced", fn: testRequestPrefIsNamespaced },
   ];

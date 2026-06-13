@@ -5,16 +5,12 @@ import { Portal } from "solid-js/web";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { TourController } from "../controller.ts";
-import type { TargetRect, TooltipPlacement } from "../types.ts";
-
-const SPOTLIGHT_PADDING = 6;
-const TOOLTIP_GAP = 12;
-const VIEWPORT_MARGIN = 8;
-
-interface TooltipPosition {
-  left: number;
-  top: number;
-}
+import type { TargetRect } from "../types.ts";
+import {
+  getChromeObstacleRects,
+  resolveTooltipPosition,
+  SPOTLIGHT_PADDING,
+} from "../tooltip-position.ts";
 
 interface TourTexts {
   next: string;
@@ -23,70 +19,6 @@ interface TourTexts {
   finish: string;
   tryIt: string;
   progress: (current: number, total: number) => string;
-}
-
-function computeTooltipPosition(
-  rect: TargetRect | null,
-  placement: TooltipPlacement,
-  tooltipW: number,
-  tooltipH: number,
-  viewportW: number,
-  viewportH: number,
-): TooltipPosition {
-  if (!rect || placement === "center") {
-    return {
-      left: (viewportW - tooltipW) / 2,
-      top: (viewportH - tooltipH) / 2,
-    };
-  }
-
-  const pad = SPOTLIGHT_PADDING + TOOLTIP_GAP;
-  const centerX = rect.x + rect.width / 2;
-  const centerY = rect.y + rect.height / 2;
-
-  const positions: Record<
-    Exclude<TooltipPlacement, "center">,
-    TooltipPosition
-  > = {
-    top: { left: centerX - tooltipW / 2, top: rect.y - pad - tooltipH },
-    bottom: { left: centerX - tooltipW / 2, top: rect.y + rect.height + pad },
-    left: { left: rect.x - pad - tooltipW, top: centerY - tooltipH / 2 },
-    right: { left: rect.x + rect.width + pad, top: centerY - tooltipH / 2 },
-  };
-
-  // 画面外にはみ出す場合は反対側へ flip
-  const fits = (p: TooltipPosition) =>
-    p.left >= VIEWPORT_MARGIN &&
-    p.top >= VIEWPORT_MARGIN &&
-    p.left + tooltipW <= viewportW - VIEWPORT_MARGIN &&
-    p.top + tooltipH <= viewportH - VIEWPORT_MARGIN;
-
-  const flipOf: Record<string, TooltipPlacement> = {
-    top: "bottom",
-    bottom: "top",
-    left: "right",
-    right: "left",
-  };
-
-  let pos = positions[placement];
-  if (!fits(pos)) {
-    const flipped = positions[
-      flipOf[placement] as Exclude<TooltipPlacement, "center">
-    ];
-    if (fits(flipped)) pos = flipped;
-  }
-
-  // 最終的に画面内へクランプ
-  return {
-    left: Math.min(
-      Math.max(pos.left, VIEWPORT_MARGIN),
-      viewportW - tooltipW - VIEWPORT_MARGIN,
-    ),
-    top: Math.min(
-      Math.max(pos.top, VIEWPORT_MARGIN),
-      viewportH - tooltipH - VIEWPORT_MARGIN,
-    ),
-  };
 }
 
 export function createTourOverlay(controller: TourController) {
@@ -113,15 +45,18 @@ export function createTourOverlay(controller: TourController) {
 
     const [tooltipSize, setTooltipSize] = createSignal({ w: 320, h: 160 });
 
-    const visible = () =>
-      controller.status() === "active" &&
-      controller.tour() !== null && controller.stepReady();
+    // ステップ遷移中もオーバーレイ DOM を維持し、XUL パネルの focus 喪失による
+    // 自動クローズを防ぐ。表示内容の切り替えは stepReady で制御する。
+    const tourActive = () =>
+      controller.status() === "active" && controller.tour() !== null;
+
+    const contentReady = () => tourActive() && controller.stepReady();
 
     const step = () => controller.currentStep();
 
     const spotlight = createMemo<TargetRect | null>(() => {
       const rect = controller.targetRect();
-      if (!visible() || !step()?.selector || !rect) return null;
+      if (!contentReady() || !step()?.selector || !rect) return null;
       return {
         x: rect.x - SPOTLIGHT_PADDING,
         y: rect.y - SPOTLIGHT_PADDING,
@@ -135,7 +70,7 @@ export function createTourOverlay(controller: TourController) {
     createEffect(() => {
       void step();
       void texts();
-      void visible();
+      void contentReady();
       requestAnimationFrame(() => {
         const el = document.getElementById("floorp-guided-tour-tooltip");
         if (el) {
@@ -147,15 +82,16 @@ export function createTourOverlay(controller: TourController) {
       });
     });
 
-    const tooltipPos = createMemo<TooltipPosition>(() => {
+    const tooltipPos = createMemo(() => {
       const s = step();
-      return computeTooltipPosition(
+      return resolveTooltipPosition(
         spotlight(),
         s?.placement ?? "center",
         tooltipSize().w,
         tooltipSize().h,
         window.innerWidth,
         window.innerHeight,
+        getChromeObstacleRects(),
       );
     });
 
@@ -194,9 +130,24 @@ export function createTourOverlay(controller: TourController) {
 
     return (
       <Portal mount={document.getElementById("main-window") ?? undefined}>
-        <Show when={visible()}>
+        <Show when={tourActive()}>
           <div id="floorp-guided-tour-overlay">
+            {/* ステップ準備中は全面ブロック（DOM は維持してパネルを閉じさせない） */}
+            <Show when={!contentReady()}>
+              <div class="floorp-guided-tour-dim" />
+              <div
+                class="floorp-guided-tour-blocker"
+                style={{
+                  left: "0",
+                  top: "0",
+                  width: `${window.innerWidth}px`,
+                  height: `${window.innerHeight}px`,
+                }}
+              />
+            </Show>
+
             {/* 入力ブロッカー（dim なし、イベント遮断のみ） */}
+            <Show when={contentReady()}>
             {blockers().map((b) => (
               <div
                 class="floorp-guided-tour-blocker"
@@ -291,6 +242,7 @@ export function createTourOverlay(controller: TourController) {
                 </div>
               </div>
             </div>
+            </Show>
           </div>
         </Show>
       </Portal>

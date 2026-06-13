@@ -9,7 +9,7 @@ export const workspacesTour: TourDefinition = {
       selector: "#workspaces-toolbar-button",
       titleKey: "guidedTour.workspaces.step1.title",
       descriptionKey: "guidedTour.workspaces.step1.description",
-      placement: "bottom",
+      placement: "left",
     },
     {
       // ボタンを実際にクリックしてパネルを開いてもらう。
@@ -17,7 +17,7 @@ export const workspacesTour: TourDefinition = {
       selector: "#workspaces-toolbar-button",
       titleKey: "guidedTour.workspaces.step2.title",
       descriptionKey: "guidedTour.workspaces.step2.description",
-      placement: "bottom",
+      placement: "left",
       passthrough: true,
       advanceOn: { event: "click", selector: "#workspaces-toolbar-button" },
     },
@@ -28,14 +28,16 @@ export const workspacesTour: TourDefinition = {
       placement: "right",
       action: { type: "click", selector: "#workspaces-toolbar-button" },
       waitForSelector: "#workspacesToolbarButtonPanel",
+      keepWorkspacePanelOpen: true,
     },
     {
+      // ステップ3で開いたパネルをそのまま使う。トグル action は付けない
       selector: "#workspacesToolbarButtonPanel",
       titleKey: "guidedTour.workspaces.step4.title",
       descriptionKey: "guidedTour.workspaces.step4.description",
       placement: "right",
-      action: { type: "click", selector: "#workspaces-toolbar-button" },
-      waitForSelector: "#workspacesToolbarButtonPanel",
+      passthrough: true,
+      keepWorkspacePanelOpen: true,
     },
     {
       selector: null,
