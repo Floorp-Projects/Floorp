@@ -91,7 +91,9 @@ export function logTabpanelsSplitDeepInvestigation(phase: string): void {
       const cs = safeComputedStyle(bc);
       bcSnippet =
         `browserContainer ${Math.round(br.width)}x${Math.round(br.height)} ` +
-        `disp=${cssValue(cs, "display")} op=${cssValue(cs, "opacity")} vis=${cssValue(cs, "visibility")} ` +
+        `disp=${cssValue(cs, "display")} op=${cssValue(cs, "opacity")} vis=${
+          cssValue(cs, "visibility")
+        } ` +
         `mozSub=${cssValue(cs, "-moz-subtree-hidden-only-visually")}`;
     }
     const browsers = child.querySelectorAll("browser");
@@ -105,13 +107,19 @@ export function logTabpanelsSplitDeepInvestigation(phase: string): void {
       const remote = (b as XULElement).getAttribute?.("remote") ?? "";
       bits.push(
         `#${i} ${Math.round(br.width)}x${Math.round(br.height)} ` +
-          `op=${cssValue(cs, "opacity")} fil=${cssValue(cs, "filter")} cv=${cssValue(cs, "content-visibility")} ` +
+          `op=${cssValue(cs, "opacity")} fil=${cssValue(cs, "filter")} cv=${
+            cssValue(cs, "content-visibility")
+          } ` +
           `pe=${cssValue(cs, "pointer-events")} remote=${remote}`,
       );
     });
     emitDiag(
-      `[deep ${phase}] panel=${child.id} rect=${Math.round(r.width)}x${Math.round(r.height)} ` +
-        `| ${bcSnippet} | browser count=${browsers.length} ${bits.join(" || ")}`,
+      `[deep ${phase}] panel=${child.id} rect=${Math.round(r.width)}x${
+        Math.round(r.height)
+      } ` +
+        `| ${bcSnippet} | browser count=${browsers.length} ${
+          bits.join(" || ")
+        }`,
     );
   }
 }
@@ -139,16 +147,26 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
     let browserSnippet = "no <browser>";
     if (browser) {
       const bs = safeComputedStyle(browser);
-      browserSnippet = `<browser> opacity=${cssValue(bs, "opacity")} vis=${cssValue(bs, "visibility")} mozSub=${cssValue(bs, "-moz-subtree-hidden-only-visually")}`;
+      browserSnippet = `<browser> opacity=${cssValue(bs, "opacity")} vis=${
+        cssValue(bs, "visibility")
+      } mozSub=${cssValue(bs, "-moz-subtree-hidden-only-visually")}`;
     }
     emitDiag(
-      `[${phase}] panel id=${child.id} column=${child.getAttribute("column") ?? "—"} ` +
+      `[${phase}] panel id=${child.id} column=${
+        child.getAttribute("column") ?? "—"
+      } ` +
         `floorpActive=${child.hasAttribute("data-floorp-active-pane")} ` +
-        `classes=[${[...child.classList].filter((c) => !!c && (c.includes("split") || c === "deck-selected")).join(", ") || "—"}] ` +
+        `classes=[${
+          [...child.classList].filter((c) =>
+            !!c && (c.includes("split") || c === "deck-selected")
+          ).join(", ") || "—"
+        }] ` +
         `paneActive=${child.classList.contains("split-view-panel-active")} ` +
         `deck-selected=${child.classList.contains("deck-selected")} ` +
         `mozSub=${cssValue(st, "-moz-subtree-hidden-only-visually")} ` +
-        `vis=${cssValue(st, "visibility")} op=${cssValue(st, "opacity")} | ${browserSnippet}`,
+        `vis=${cssValue(st, "visibility")} op=${
+          cssValue(st, "opacity")
+        } | ${browserSnippet}`,
     );
   }
 
@@ -160,24 +178,24 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
 
   const splitGroupTabs: HTMLElement[] = document
     ? Array.from(
-        document.querySelectorAll<HTMLElement>(
-          "#tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]",
-        ),
-      )
+      document.querySelectorAll<HTMLElement>(
+        "#tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]",
+      ),
+    )
     : [];
   const splitMarkerTabs: HTMLElement[] = document
     ? Array.from(
-        document.querySelectorAll<HTMLElement>(
-          "#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]",
-        ),
-      )
+      document.querySelectorAll<HTMLElement>(
+        "#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]",
+      ),
+    )
     : [];
   const allTabs: HTMLElement[] = document
     ? Array.from(
-        document.querySelectorAll<HTMLElement>(
-          "#tabbrowser-tabs .tabbrowser-tab",
-        ),
-      )
+      document.querySelectorAll<HTMLElement>(
+        "#tabbrowser-tabs .tabbrowser-tab",
+      ),
+    )
     : [];
 
   let splitviewPropTabs = 0;
@@ -193,42 +211,61 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
     | undefined;
 
   emitDiag(
-    `[${phase}] strip attrs: toolbar.multibar=${tabsToolbar?.getAttribute("multibar") ?? "null"} ` +
-      `toolbar.splitview-multibar=${tabsToolbar?.getAttribute("splitview-multibar") ?? "null"} ` +
+    `[${phase}] strip attrs: toolbar.multibar=${
+      tabsToolbar?.getAttribute("multibar") ?? "null"
+    } ` +
+      `toolbar.splitview-multibar=${
+        tabsToolbar?.getAttribute("splitview-multibar") ?? "null"
+      } ` +
       `tabpanels.splitview=${tp.getAttribute("splitview") ?? "null"} ` +
-      `tabpanels.data-floorp-split=${tp.getAttribute("data-floorp-split") ?? "null"} ` +
+      `tabpanels.data-floorp-split=${
+        tp.getAttribute("data-floorp-split") ?? "null"
+      } ` +
       `groupTabs=${splitGroupTabs.length} markerTabs=${splitMarkerTabs.length} splitviewPropTabs=${splitviewPropTabs} ` +
-      `selected.linkedPanel=${selectedTab?.linkedPanel ?? "null"} selected.hasSplit=${!!selectedTab?.splitview}`,
+      `selected.linkedPanel=${
+        selectedTab?.linkedPanel ?? "null"
+      } selected.hasSplit=${!!selectedTab?.splitview}`,
   );
 
   if (arrowscrollbox) {
     const s = safeComputedStyle(arrowscrollbox);
     emitDiag(
-      `[${phase}] arrowscrollbox: overflowing=${arrowscrollbox.getAttribute("overflowing") ?? "null"} ` +
-        `maxHeight=${cssValue(s, "max-height")} height=${cssValue(s, "height")} display=${cssValue(s, "display")} vis=${cssValue(s, "visibility")}`,
+      `[${phase}] arrowscrollbox: overflowing=${
+        arrowscrollbox.getAttribute("overflowing") ?? "null"
+      } ` +
+        `maxHeight=${cssValue(s, "max-height")} height=${
+          cssValue(s, "height")
+        } display=${cssValue(s, "display")} vis=${cssValue(s, "visibility")}`,
     );
   }
   if (pinnedContainer) {
     const s = safeComputedStyle(pinnedContainer);
     emitDiag(
-      `[${phase}] pinned-tabs-container: overflowing=${pinnedContainer.getAttribute("overflowing") ?? "null"} ` +
-        `maxHeight=${cssValue(s, "max-height")} height=${cssValue(s, "height")} display=${cssValue(s, "display")} vis=${cssValue(s, "visibility")}`,
+      `[${phase}] pinned-tabs-container: overflowing=${
+        pinnedContainer.getAttribute("overflowing") ?? "null"
+      } ` +
+        `maxHeight=${cssValue(s, "max-height")} height=${
+          cssValue(s, "height")
+        } display=${cssValue(s, "display")} vis=${cssValue(s, "visibility")}`,
     );
   }
   if (tabbrowserTabs) {
     const s = safeComputedStyle(tabbrowserTabs);
     emitDiag(
-      `[${phase}] tabbrowser-tabs: orient=${tabbrowserTabs.getAttribute("orient") ?? "null"} ` +
+      `[${phase}] tabbrowser-tabs: orient=${
+        tabbrowserTabs.getAttribute("orient") ?? "null"
+      } ` +
         `overflow=${tabbrowserTabs.getAttribute("overflow") ?? "null"} ` +
-        `maxHeight=${cssValue(s, "max-height")} height=${cssValue(s, "height")}`,
+        `maxHeight=${cssValue(s, "max-height")} height=${
+          cssValue(s, "height")
+        }`,
     );
   }
 
   // Per-tab strip style snapshots (focus on split tabs, incl. non-selected).
   const splitTabsDetailed: HTMLElement[] = allTabs.filter(
     (tab: HTMLElement) => {
-      const hasGroupAttr =
-        tab.hasAttribute("floorpSplitViewGroupId") ||
+      const hasGroupAttr = tab.hasAttribute("floorpSplitViewGroupId") ||
         tab.hasAttribute("floorpsplitviewgroupid");
       const hasMarkerAttr = tab.hasAttribute("data-floorp-split-tab");
       const hasSplitProp = Boolean(
@@ -256,11 +293,20 @@ export function logTabpanelsSplitDiagnostics(phase: string): void {
         `visuallyselected=${tabEl.hasAttribute("visuallyselected")} ` +
         `multiselected=${tabEl.hasAttribute("multiselected")} ` +
         `pinned=${tabEl.hasAttribute("pinned")} ` +
-        `group=${tabEl.getAttribute("floorpSplitViewGroupId") ?? tabEl.getAttribute("floorpsplitviewgroupid") ?? "null"} ` +
+        `group=${
+          tabEl.getAttribute("floorpSplitViewGroupId") ??
+            tabEl.getAttribute("floorpsplitviewgroupid") ?? "null"
+        } ` +
         `marker=${tabEl.getAttribute("data-floorp-split-tab") ?? "null"} ` +
-        `tab[maxH=${cssValue(tabStyle, "max-height")} h=${cssValue(tabStyle, "height")}] ` +
-        `stack[maxH=${cssValue(stackStyle, "max-height")} h=${cssValue(stackStyle, "height")}] ` +
-        `content[maxH=${cssValue(contentStyle, "max-height")} h=${cssValue(contentStyle, "height")}]`,
+        `tab[maxH=${cssValue(tabStyle, "max-height")} h=${
+          cssValue(tabStyle, "height")
+        }] ` +
+        `stack[maxH=${cssValue(stackStyle, "max-height")} h=${
+          cssValue(stackStyle, "height")
+        }] ` +
+        `content[maxH=${cssValue(contentStyle, "max-height")} h=${
+          cssValue(contentStyle, "height")
+        }]`,
     );
   }
 

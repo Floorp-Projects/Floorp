@@ -690,14 +690,13 @@
  * persisted split-tab markers so this works even when a non-split tab is selected.
  */
 :root:is(
-    :has(
-      #tabbrowser-tabpanels[data-floorp-split],
-      #tabbrowser-tabpanels[splitview],
-      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-    ),
-    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  )
+  :has(
+    #tabbrowser-tabpanels[data-floorp-split], #tabbrowser-tabpanels[splitview], #tabbrowser-tabs
+      .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs
+      .tabbrowser-tab[floorpsplitviewgroupid]
+  ),
+  :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
+)
   :is(
     #TabsToolbar:not([multibar]) #pinned-tabs-container,
     #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox,
@@ -725,14 +724,13 @@
       .tab-content
   ),
 :root:not([uidensity="compact"]):is(
-    :has(
-      #tabbrowser-tabpanels[data-floorp-split],
-      #tabbrowser-tabpanels[splitview],
-      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-    ),
-    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  )
+  :has(
+    #tabbrowser-tabpanels[data-floorp-split], #tabbrowser-tabpanels[splitview], #tabbrowser-tabs
+      .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs
+      .tabbrowser-tab[floorpsplitviewgroupid]
+  ),
+  :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
+)
   :is(
     #TabsToolbar:not([multibar]) #pinned-tabs-container,
     #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox

@@ -724,6 +724,12 @@
     "layout3PaneRight": "3ペイン (右メイン)",
     "layout3PaneTop": "3ペイン (上メイン)",
     "layout3PaneBottom": "3ペイン (下メイン)",
+    "sizeSettings": "ペインサイズ",
+    "sizeSettingsDescription": "新しい分割ビューのデフォルトのペイン比率を調整します",
+    "flexRatio": "ペインのバランス",
+    "flexRatioPane": "ペイン {{pane}} の比率",
+    "gridColRatio": "列の分割",
+    "gridRowRatio": "行の分割",
     "learnMore": "分割ビューについて詳しく",
     "tutorial": {
       "step1": {

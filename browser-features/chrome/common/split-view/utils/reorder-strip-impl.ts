@@ -34,8 +34,9 @@ export function reorderSplitTabsForDesiredOrderImpl<T>(
     }
 
     if (cur < goal) {
-      const beforeTab =
-        goal + 1 < tabsArr.length ? (tabsArr[goal + 1] as T) : null;
+      const beforeTab = goal + 1 < tabsArr.length
+        ? (tabsArr[goal + 1] as T)
+        : null;
       moveTabBefore(tab, beforeTab);
     } else {
       const beforeTab = tabsArr[goal] as T;

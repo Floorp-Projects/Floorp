@@ -1,42 +1,18 @@
 import React from "react";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { LayoutSettings } from "./components/LayoutSettings.tsx";
-import {
-  getSplitViewSettings,
-  saveSplitViewSettings,
-} from "./dataManager.ts";
-import type { SplitViewFormData } from "@/types/pref.ts";
+import { PaneSizeSettings } from "./components/PaneSizeSettings.tsx";
+import { useSplitViewSettings } from "./dataManager.ts";
 
 export default function Page() {
   const { t } = useTranslation();
-  const methods = useForm<SplitViewFormData>({ defaultValues: {} });
+  const { settings, loading, updateSettings, toggleEnabled } =
+    useSplitViewSettings();
 
-  const { control, setValue } = methods;
-  const watchAll = useWatch({ control });
-
-  React.useEffect(() => {
-    const fetchDefaultValues = async () => {
-      const values = await getSplitViewSettings();
-      if (!values) return;
-
-      for (const key in values) {
-        setValue(key as keyof SplitViewFormData, values[key as keyof SplitViewFormData]);
-      }
-    };
-
-    fetchDefaultValues();
-    window.addEventListener("focus", fetchDefaultValues);
-    return () => {
-      window.removeEventListener("focus", fetchDefaultValues);
-    };
-  }, [setValue]);
-
-  React.useEffect(() => {
-    if (Object.keys(watchAll).length === 0) return;
-    saveSplitViewSettings(watchAll as SplitViewFormData);
-  }, [watchAll]);
+  if (loading) {
+    return <div className="py-6 text-center">{t("loading")}...</div>;
+  }
 
   return (
     <div className="p-6">
@@ -51,12 +27,19 @@ export default function Page() {
         </header>
       </div>
       <div className="pl-6 space-y-6">
-        <FormProvider {...methods}>
-          <form className="space-y-6">
-            <BasicSettings />
-            <LayoutSettings />
-          </form>
-        </FormProvider>
+        <BasicSettings
+          settings={settings}
+          onToggleEnabled={toggleEnabled}
+          onMaxPanesChange={(maxPanes) => updateSettings({ maxPanes })}
+        />
+        <LayoutSettings
+          settings={settings}
+          onLayoutChange={(layout) => updateSettings({ layout })}
+        />
+        <PaneSizeSettings
+          settings={settings}
+          onPaneSizesChange={(paneSizes) => updateSettings(paneSizes)}
+        />
       </div>
     </div>
   );

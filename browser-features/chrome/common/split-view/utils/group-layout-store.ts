@@ -3,10 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type {
-  SplitViewLayout,
-  SplitViewPaneSizes,
-} from "../data/types.js";
+import type { SplitViewLayout, SplitViewPaneSizes } from "../data/types.js";
 
 export type GroupLayoutEntry = {
   groupId: string;
@@ -57,8 +54,8 @@ export function parseGroupLayoutStore(raw: string): GroupLayoutStore {
       return empty;
     }
     const groups = Array.isArray(
-      (parsed as { groups?: unknown }).groups,
-    )
+        (parsed as { groups?: unknown }).groups,
+      )
       ? (parsed as { groups: unknown[] }).groups
       : [];
     return {
@@ -80,8 +77,8 @@ export function parseGroupLayoutStore(raw: string): GroupLayoutStore {
           groupId: candidate.groupId,
           layout: candidate.layout as SplitViewLayout,
           paneSizes: isValidPaneSizes(
-            (candidate as { paneSizes?: unknown }).paneSizes,
-          )
+              (candidate as { paneSizes?: unknown }).paneSizes,
+            )
             ? (candidate as { paneSizes: SplitViewPaneSizes }).paneSizes
             : undefined,
         }];
@@ -96,14 +93,16 @@ export function getGroupLayoutFromStore(
   store: GroupLayoutStore,
   groupId: string,
 ): SplitViewLayout | null {
-  return store.groups.find((entry) => entry.groupId === groupId)?.layout ?? null;
+  return store.groups.find((entry) => entry.groupId === groupId)?.layout ??
+    null;
 }
 
 export function getGroupPaneSizesFromStore(
   store: GroupLayoutStore,
   groupId: string,
 ): SplitViewPaneSizes | null {
-  return store.groups.find((entry) => entry.groupId === groupId)?.paneSizes ?? null;
+  return store.groups.find((entry) => entry.groupId === groupId)?.paneSizes ??
+    null;
 }
 
 export function upsertGroupLayoutInStore(

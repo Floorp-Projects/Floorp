@@ -26,8 +26,9 @@ export function patchSplitViewWrapper(
     return null;
   }
 
-  const wrapperProto = WrapperClass.prototype as SplitViewWrapper &
-    Record<string, unknown>;
+  const wrapperProto = WrapperClass.prototype as
+    & SplitViewWrapper
+    & Record<string, unknown>;
   const origReverseTabs = wrapperProto.reverseTabs;
 
   Object.defineProperty(wrapperProto, "reverseTabs", {

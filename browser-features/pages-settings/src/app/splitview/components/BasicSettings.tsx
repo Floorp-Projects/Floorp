@@ -1,19 +1,27 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
-import { useFormContext } from "react-hook-form";
 import { ExternalLink, LayoutGrid } from "lucide-react";
 import type { SplitViewFormData } from "@/types/pref.ts";
 
-export function BasicSettings() {
+interface BasicSettingsProps {
+  settings: SplitViewFormData;
+  onToggleEnabled: () => Promise<boolean>;
+  onMaxPanesChange: (maxPanes: number) => Promise<boolean>;
+}
+
+export function BasicSettings({
+  settings,
+  onToggleEnabled,
+  onMaxPanesChange,
+}: BasicSettingsProps) {
   const { t } = useTranslation();
-  const { getValues, setValue } = useFormContext<SplitViewFormData>();
 
   return (
     <Card>
@@ -22,7 +30,9 @@ export function BasicSettings() {
           <LayoutGrid className="size-5" />
           {t("splitView.basicSettings")}
         </CardTitle>
-        <CardDescription>{t("splitView.basicSettingsDescription")}</CardDescription>
+        <CardDescription>
+          {t("splitView.basicSettingsDescription")}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between gap-2">
@@ -36,8 +46,10 @@ export function BasicSettings() {
           </div>
           <Switch
             id="enable-splitview"
-            checked={!!getValues("enabled")}
-            onChange={(e) => setValue("enabled", e.target.checked)}
+            checked={settings.enabled}
+            onChange={() => {
+              void onToggleEnabled();
+            }}
           />
         </div>
 
@@ -53,8 +65,11 @@ export function BasicSettings() {
           <select
             id="max-panes"
             className="select select-bordered select-sm w-24"
-            value={getValues("maxPanes")}
-            onChange={(e) => setValue("maxPanes", Number(e.target.value))}
+            value={settings.maxPanes}
+            disabled={!settings.enabled}
+            onChange={(e) => {
+              void onMaxPanesChange(Number(e.target.value));
+            }}
           >
             <option value={2}>2</option>
             <option value={3}>3</option>

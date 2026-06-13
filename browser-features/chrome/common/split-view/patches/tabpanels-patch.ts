@@ -174,7 +174,9 @@ export function patchTabpanels(
         // Re-entrancy guard
         if (state.inSplitViewPanelsSet) {
           logger.warn(
-            `[patch:splitViewPanels.set] skipped (re-entrant); incoming=[${newPanels.join(", ")}]`,
+            `[patch:splitViewPanels.set] skipped (re-entrant); incoming=[${
+              newPanels.join(", ")
+            }]`,
           );
           return;
         }
@@ -426,7 +428,9 @@ export function patchTabpanels(
       if (state.inShowSplitViewPanels) {
         logger.warn(
           `[patch:showSplitViewPanels] skipped (re-entrant); argTabs=${tabs.length} ` +
-            `linkedPanels=[${tabs.map((t) => t?.linkedPanel ?? "?").join(", ")}]`,
+            `linkedPanels=[${
+              tabs.map((t) => t?.linkedPanel ?? "?").join(", ")
+            }]`,
         );
         return;
       }

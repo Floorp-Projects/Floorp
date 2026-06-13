@@ -5,6 +5,7 @@
 
 import { onCleanup } from "solid-js";
 import { splitViewConfig, splitViewPaneSizes } from "../data/config.js";
+import { isSplitViewEnabled } from "../data/enabled.js";
 import {
   getGBrowser,
   PREF_SPLIT_VIEW_SESSION_STATE,
@@ -405,7 +406,9 @@ export function applySplitViewSessionMarkersForTabs(
   setPersistedGroupPaneSizes(groupId, paneSizes);
 
   logger.debug(
-    `[session-restore:markers] source=${source} groupId=${groupId}, tabs=${tabs.length}, layout=${layout}, linkedPanels=[${tabs.map((t) => t.linkedPanel).join(", ")}]`,
+    `[session-restore:markers] source=${source} groupId=${groupId}, tabs=${tabs.length}, layout=${layout}, linkedPanels=[${
+      tabs.map((t) => t.linkedPanel).join(", ")
+    }]`,
   );
 }
 
@@ -456,13 +459,9 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
     return;
   }
 
-  const splitEnabled = Services.prefs.getBoolPref(
-    "browser.tabs.splitView.enabled",
-    false,
-  );
-  if (!splitEnabled) {
+  if (!isSplitViewEnabled()) {
     logger.debug(
-      "[session-restore:restore] skip: browser.tabs.splitView.enabled=false",
+      "[session-restore:restore] skip: split view disabled",
     );
     return;
   }
@@ -499,7 +498,10 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
   );
 
   logger.debug(
-    `[session-restore:restore] restorableGroups=${groupsToRestore.map((group) => `${group.groupId}(${group.tabs.length})`).join(", ") || "none"}`,
+    `[session-restore:restore] restorableGroups=${
+      groupsToRestore.map((group) => `${group.groupId}(${group.tabs.length})`)
+        .join(", ") || "none"
+    }`,
   );
 
   if (groupsToRestore.length === 0) {
@@ -528,7 +530,9 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
       });
       logger.debug(
         `[session-restore:restore] addTabSplitView ok: ${group.tabs.length} pane(s), ` +
-          `groupId=${group.groupId}, wrapper=${wrapper ? "created" : "null"}, ` +
+          `groupId=${group.groupId}, wrapper=${
+            wrapper ? "created" : "null"
+          }, ` +
           `linkedPanels=[${group.tabs.map((t) => t.linkedPanel).join(", ")}]`,
       );
       restoredTabs.push(...group.tabs);
@@ -627,7 +631,9 @@ export function initSessionRestore(logger: ConsoleInstance): void {
       false,
     );
   } catch (e) {
-    logger.error(`[session-restore] addObserver(sessionstore-windows-restored): ${e}`);
+    logger.error(
+      `[session-restore] addObserver(sessionstore-windows-restored): ${e}`,
+    );
   }
 
   onCleanup(() => {

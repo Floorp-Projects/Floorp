@@ -1,98 +1,135 @@
+import { useCallback, useEffect, useState } from "react";
 import { rpc } from "../../lib/rpc/rpc.ts";
 import type { SplitViewFormData } from "@/types/pref.ts";
+import {
+  createDefaultSplitViewSettings,
+  defaultFlexRatiosForMaxPanes,
+  isValidSplitViewFormData,
+  parseSplitViewConfig,
+  parseSplitViewPaneSizes,
+  PREF_BROWSER_SPLIT_VIEW_ENABLED,
+  PREF_SPLIT_VIEW_CONFIG,
+  PREF_SPLIT_VIEW_ENABLED,
+  PREF_SPLIT_VIEW_PANE_SIZES,
+  resolveEnabledFromPrefs,
+} from "./splitViewSettingsLogic.ts";
 
-export const DEFAULT_CONFIG = {
-  layout: "horizontal" as const,
-  maxPanes: 4,
-};
-
-export const DEFAULT_PANE_SIZES = {
-  flexRatios: [0.5, 0.5],
-  gridColRatio: 0.5,
-  gridRowRatio: 0.5,
-};
-
-const VALID_LAYOUTS = new Set([
-  "horizontal",
-  "vertical",
-  "grid-2x2",
-  "grid-3pane-left-main",
-  "grid-3pane-right-main",
-  "grid-3pane-top-main",
-  "grid-3pane-bottom-main",
-]);
+export {
+  createDefaultSplitViewSettings,
+  defaultFlexRatiosForMaxPanes,
+  isValidSplitViewFormData,
+  parseSplitViewConfig,
+  parseSplitViewPaneSizes,
+  PREF_BROWSER_SPLIT_VIEW_ENABLED,
+  PREF_SPLIT_VIEW_CONFIG,
+  PREF_SPLIT_VIEW_ENABLED,
+  PREF_SPLIT_VIEW_PANE_SIZES,
+  resolveEnabledFromPrefs,
+} from "./splitViewSettingsLogic.ts";
 
 export async function saveSplitViewSettings(
-  data: SplitViewFormData,
-): Promise<void> {
-  if (Object.keys(data).length === 0) return;
+  data: Partial<SplitViewFormData>,
+): Promise<boolean> {
+  if (!isValidSplitViewFormData(data)) {
+    return false;
+  }
 
-  const { enabled, ...configData } = data;
+  const { enabled, layout, maxPanes, flexRatios, gridColRatio, gridRowRatio } =
+    data;
 
   await Promise.all([
-    rpc.setBoolPref("floorp.splitView.enabled", enabled),
+    rpc.setBoolPref(PREF_SPLIT_VIEW_ENABLED, enabled),
+    rpc.setBoolPref(PREF_BROWSER_SPLIT_VIEW_ENABLED, enabled),
     rpc.setStringPref(
-      "floorp.splitView.config",
-      JSON.stringify({
-        layout: configData.layout,
-        maxPanes: configData.maxPanes,
-      }),
+      PREF_SPLIT_VIEW_CONFIG,
+      JSON.stringify({ layout, maxPanes }),
     ),
     rpc.setStringPref(
-      "floorp.splitView.paneSizes",
-      JSON.stringify({
-        flexRatios: configData.flexRatios,
-        gridColRatio: configData.gridColRatio,
-        gridRowRatio: configData.gridRowRatio,
-      }),
+      PREF_SPLIT_VIEW_PANE_SIZES,
+      JSON.stringify({ flexRatios, gridColRatio, gridRowRatio }),
     ),
   ]);
+  return true;
 }
 
 export async function getSplitViewSettings(): Promise<SplitViewFormData> {
-  const [enabled, configStr, paneSizesStr] = await Promise.all([
-    rpc.getBoolPref("floorp.splitView.enabled"),
-    rpc.getStringPref("floorp.splitView.config"),
-    rpc.getStringPref("floorp.splitView.paneSizes"),
-  ]);
+  const [floorpEnabled, browserEnabled, configStr, paneSizesStr] = await Promise
+    .all([
+      rpc.getBoolPref(PREF_SPLIT_VIEW_ENABLED),
+      rpc.getBoolPref(PREF_BROWSER_SPLIT_VIEW_ENABLED),
+      rpc.getStringPref(PREF_SPLIT_VIEW_CONFIG),
+      rpc.getStringPref(PREF_SPLIT_VIEW_PANE_SIZES),
+    ]);
 
-  let config = { ...DEFAULT_CONFIG };
-  try {
-    const raw = JSON.parse(configStr || "{}");
-    if (VALID_LAYOUTS.has(raw.layout)) {
-      config.layout = raw.layout;
-    }
-    if (
-      typeof raw.maxPanes === "number" &&
-      Number.isInteger(raw.maxPanes) &&
-      raw.maxPanes >= 2 &&
-      raw.maxPanes <= 4
-    ) {
-      config.maxPanes = raw.maxPanes;
-    }
-  } catch {
-    // use defaults
-  }
-
-  let paneSizes = { ...DEFAULT_PANE_SIZES };
-  try {
-    const raw = JSON.parse(paneSizesStr || "{}");
-    if (Array.isArray(raw.flexRatios) && raw.flexRatios.length > 0) {
-      paneSizes.flexRatios = raw.flexRatios;
-    }
-    if (typeof raw.gridColRatio === "number") {
-      paneSizes.gridColRatio = raw.gridColRatio;
-    }
-    if (typeof raw.gridRowRatio === "number") {
-      paneSizes.gridRowRatio = raw.gridRowRatio;
-    }
-  } catch {
-    // use defaults
-  }
+  const enabled = resolveEnabledFromPrefs(floorpEnabled, browserEnabled);
 
   return {
-    enabled: enabled ?? true,
-    ...config,
-    ...paneSizes,
+    enabled,
+    ...parseSplitViewConfig(configStr),
+    ...parseSplitViewPaneSizes(paneSizesStr),
+  };
+}
+
+export function useSplitViewSettings() {
+  const [settings, setSettings] = useState<SplitViewFormData>(
+    createDefaultSplitViewSettings(),
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        const values = await getSplitViewSettings();
+        setSettings(values);
+
+        const [floorpEnabled, browserEnabled] = await Promise.all([
+          rpc.getBoolPref(PREF_SPLIT_VIEW_ENABLED),
+          rpc.getBoolPref(PREF_BROWSER_SPLIT_VIEW_ENABLED),
+        ]);
+        if (
+          floorpEnabled !== values.enabled ||
+          browserEnabled !== values.enabled
+        ) {
+          await saveSplitViewSettings(values);
+        }
+      } catch (error) {
+        console.error("[SplitViewSettings] Failed to load settings", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  const updateSettings = useCallback(
+    async (partial: Partial<SplitViewFormData>) => {
+      const next = { ...settings, ...partial };
+      if (
+        partial.maxPanes !== undefined &&
+        partial.maxPanes !== settings.maxPanes &&
+        partial.flexRatios === undefined
+      ) {
+        next.flexRatios = defaultFlexRatiosForMaxPanes(partial.maxPanes);
+      }
+      const saved = await saveSplitViewSettings(next);
+      if (saved) {
+        setSettings(next);
+      }
+      return saved;
+    },
+    [settings],
+  );
+
+  const toggleEnabled = useCallback(async () => {
+    return updateSettings({ enabled: !settings.enabled });
+  }, [settings.enabled, updateSettings]);
+
+  return {
+    settings,
+    loading,
+    updateSettings,
+    toggleEnabled,
   };
 }

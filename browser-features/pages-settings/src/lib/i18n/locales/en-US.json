@@ -724,6 +724,12 @@
     "layout3PaneRight": "3-Pane (Large Right)",
     "layout3PaneTop": "3-Pane (Large Top)",
     "layout3PaneBottom": "3-Pane (Large Bottom)",
+    "sizeSettings": "Pane Sizes",
+    "sizeSettingsDescription": "Adjust default pane proportions for new split views",
+    "flexRatio": "Pane balance",
+    "flexRatioPane": "Pane {{pane}} share",
+    "gridColRatio": "Column split",
+    "gridRowRatio": "Row split",
     "learnMore": "Learn more about Split View",
     "tutorial": {}
   },

@@ -112,6 +112,8 @@ export const DEFAULT_PANE_SIZES: SplitViewPaneSizes = {
   gridRowRatio: 0.5,
 };
 
+export const PREF_SPLIT_VIEW_ENABLED = "floorp.splitView.enabled";
+export const PREF_BROWSER_SPLIT_VIEW_ENABLED = "browser.tabs.splitView.enabled";
 export const PREF_SPLIT_VIEW_CONFIG = "floorp.splitView.config";
 export const PREF_SPLIT_VIEW_PANE_SIZES = "floorp.splitView.paneSizes";
 /** JSON: { groups: { groupId: string; layout: SplitViewLayout }[] } — per-group layout for future multi-split. */

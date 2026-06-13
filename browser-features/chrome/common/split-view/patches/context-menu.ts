@@ -9,6 +9,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { SplitViewTab } from "../data/types.js";
 import { getGBrowser, getTabContextMenu } from "../data/types.js";
 import { splitViewConfig } from "../data/config.js";
+import { isSplitViewEnabled } from "../data/enabled.js";
 import { swapPanesByTab } from "../utils/reorder-panes.js";
 
 const t = (key: string, opts?: Record<string, string>): string =>
@@ -25,7 +26,10 @@ export function initContextMenu(logger: ConsoleInstance): void {
   const updateLabels = (): void => {
     const openInSplitItem = document?.getElementById("floorp_openInSplitView");
     if (openInSplitItem) {
-      openInSplitItem.setAttribute("label", t("splitView.contextMenu.openInSplitView"));
+      openInSplitItem.setAttribute(
+        "label",
+        t("splitView.contextMenu.openInSplitView"),
+      );
     }
     const addPaneItem = document?.getElementById("floorp_addPaneToSplitView");
     if (addPaneItem) {
@@ -44,10 +48,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     if (!separateItem) return;
 
     const gBrowser = getGBrowser();
-    const splitViewEnabled = Services.prefs.getBoolPref(
-      "browser.tabs.splitView.enabled",
-      false,
-    );
+    const splitViewEnabled = isSplitViewEnabled();
     if (!splitViewEnabled) return;
 
     const activeSplitView = gBrowser?.activeSplitView;
@@ -69,8 +70,8 @@ export function initContextMenu(logger: ConsoleInstance): void {
     );
 
     // === Open in Split View (create new split from multi-selected tabs) ===
-    const shouldShowOpenInSplit =
-      multiSelectedTabs.length >= 2 && !activeSplitView;
+    const shouldShowOpenInSplit = multiSelectedTabs.length >= 2 &&
+      !activeSplitView;
 
     let openInSplitItem = document?.getElementById(
       "floorp_openInSplitView",
@@ -109,8 +110,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     }
 
     // === Add Pane to Split View ===
-    const shouldShowAddPane =
-      hasSplitViewTab &&
+    const shouldShowAddPane = hasSplitViewTab &&
       activeSplitView &&
       activeSplitView.tabs.length < splitViewConfig().maxPanes;
 
@@ -142,10 +142,9 @@ export function initContextMenu(logger: ConsoleInstance): void {
               currentSplitView.addTabs(nonSplitTabs);
             }
           });
-          const insertAddPaneAfter =
-            openInSplitItem && !openInSplitItem.hidden
-              ? openInSplitItem
-              : separateItem;
+          const insertAddPaneAfter = openInSplitItem && !openInSplitItem.hidden
+            ? openInSplitItem
+            : separateItem;
           insertAddPaneAfter.after(addPaneItem);
         }
       }
@@ -157,8 +156,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     }
 
     // === Move to Pane submenu ===
-    const shouldShowMoveToPane =
-      hasSplitViewTab &&
+    const shouldShowMoveToPane = hasSplitViewTab &&
       activeSplitView &&
       activeSplitView.tabs.length >= 2;
 
@@ -187,12 +185,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
             moveMenu.appendChild(popup);
           }
 
-          const insertMoveAfter =
-            addPaneItem && !addPaneItem.hidden
-              ? addPaneItem
-              : openInSplitItem && !openInSplitItem.hidden
-                ? openInSplitItem
-                : separateItem;
+          const insertMoveAfter = addPaneItem && !addPaneItem.hidden
+            ? addPaneItem
+            : openInSplitItem && !openInSplitItem.hidden
+            ? openInSplitItem
+            : separateItem;
           insertMoveAfter.after(moveMenu);
         }
       }
@@ -230,8 +227,7 @@ function onMoveToPanePopupShowing(logger: ConsoleInstance): void {
   const activeSplitView = gBrowser?.activeSplitView;
   if (!activeSplitView) return;
 
-  const contextTabs: SplitViewTab[] =
-    getTabContextMenu()?.contextTabs ?? [];
+  const contextTabs: SplitViewTab[] = getTabContextMenu()?.contextTabs ?? [];
   const contextTab = contextTabs[0];
   if (!contextTab) return;
 
