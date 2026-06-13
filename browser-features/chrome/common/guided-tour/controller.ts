@@ -355,9 +355,9 @@ export class TourController {
       void this.workspacePanelGuard.ensureOpen();
     };
     open();
-    this.panelSyncTimers.push(window.setTimeout(open, 0));
-    this.panelSyncTimers.push(window.setTimeout(open, 50));
-    this.panelSyncTimers.push(window.setTimeout(open, 150));
+    this.panelSyncTimers.push(setTimeout(open, 0));
+    this.panelSyncTimers.push(setTimeout(open, 50));
+    this.panelSyncTimers.push(setTimeout(open, 150));
   }
 
   private clearPanelSyncTimers(): void {

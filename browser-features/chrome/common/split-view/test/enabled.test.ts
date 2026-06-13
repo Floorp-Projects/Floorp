@@ -77,4 +77,8 @@ const tests: TestCase[] = [
   },
 ];
 
-runTests(tests);
+export async function runAllTests(): Promise<void> {
+  await runTests("enabled.test.ts", tests);
+}
+
+await runAllTests();

@@ -87,7 +87,7 @@ function normalizeFlexRatios(values: unknown[]): number[] {
 export function parseSplitViewConfig(
   configStr: string | null,
 ): Pick<SplitViewFormData, "layout" | "maxPanes"> {
-  let config = { ...DEFAULT_CONFIG };
+  const config = { ...DEFAULT_CONFIG };
   try {
     const raw = JSON.parse(configStr || "{}");
     if (VALID_LAYOUTS.has(raw.layout)) {
@@ -110,7 +110,7 @@ export function parseSplitViewConfig(
 export function parseSplitViewPaneSizes(
   paneSizesStr: string | null,
 ): Pick<SplitViewFormData, "flexRatios" | "gridColRatio" | "gridRowRatio"> {
-  let paneSizes = { ...DEFAULT_PANE_SIZES };
+  const paneSizes = { ...DEFAULT_PANE_SIZES };
   try {
     const raw = JSON.parse(paneSizesStr || "{}");
     if (Array.isArray(raw.flexRatios) && raw.flexRatios.length > 0) {

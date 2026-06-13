@@ -5,7 +5,6 @@ import { rpc } from "../../lib/rpc/rpc.ts";
 import panelSidebarSvg from "./assets/panelsidebar.svg";
 import workspacesSvg from "./assets/workspaces.svg";
 import pwaSvg from "./assets/pwa.svg";
-import mouseGestureSvg from "./assets/mousegesture.svg";
 import {
   Columns2,
   Globe,
@@ -138,7 +137,10 @@ export default function FeaturesPage() {
 
   const getTranslatedFeatures = (path: string): string[] => {
     const features = t(path, { returnObjects: true });
-    return Array.isArray(features) ? features : [];
+    if (!Array.isArray(features)) return [];
+    return features.filter((feature): feature is string =>
+      typeof feature === "string"
+    );
   };
 
   const panelSidebarFeatures = getTranslatedFeatures(

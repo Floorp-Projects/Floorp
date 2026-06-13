@@ -132,7 +132,7 @@ export function useSplitViewSettings() {
     [settings],
   );
 
-  const toggleEnabled = useCallback(async () => {
+  const toggleEnabled = useCallback(() => {
     return updateSettings({ enabled: !settings.enabled });
   }, [settings.enabled, updateSettings]);
 

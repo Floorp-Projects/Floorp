@@ -89,8 +89,8 @@ export function createTourOverlay(controller: TourController) {
         s?.placement ?? "center",
         tooltipSize().w,
         tooltipSize().h,
-        window.innerWidth,
-        window.innerHeight,
+        globalThis.innerWidth,
+        globalThis.innerHeight,
         getChromeObstacleRects(),
       );
     });
@@ -105,8 +105,8 @@ export function createTourOverlay(controller: TourController) {
     // passthrough のときはスポットライト内が素通しになり実操作できる。
     const blockers = createMemo(() => {
       const s = spotlight();
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = globalThis.innerWidth;
+      const h = globalThis.innerHeight;
       if (!s) {
         return [{ left: 0, top: 0, width: w, height: h }];
       }
@@ -140,108 +140,108 @@ export function createTourOverlay(controller: TourController) {
                 style={{
                   left: "0",
                   top: "0",
-                  width: `${window.innerWidth}px`,
-                  height: `${window.innerHeight}px`,
+                  width: `${globalThis.innerWidth}px`,
+                  height: `${globalThis.innerHeight}px`,
                 }}
               />
             </Show>
 
             {/* 入力ブロッカー（dim なし、イベント遮断のみ） */}
             <Show when={contentReady()}>
-            {blockers().map((b) => (
-              <div
-                class="floorp-guided-tour-blocker"
-                style={{
-                  left: `${b.left}px`,
-                  top: `${b.top}px`,
-                  width: `${b.width}px`,
-                  height: `${b.height}px`,
-                }}
-              />
-            ))}
-
-            {/* スポットライト: box-shadow で周囲を dim */}
-            <Show
-              when={spotlight()}
-              fallback={<div class="floorp-guided-tour-dim" />}
-            >
-              {(s) => (
+              {blockers().map((b) => (
                 <div
-                  class="floorp-guided-tour-spotlight"
-                  data-passthrough={step()?.passthrough ? "true" : undefined}
+                  class="floorp-guided-tour-blocker"
                   style={{
-                    left: `${s().x}px`,
-                    top: `${s().y}px`,
-                    width: `${s().width}px`,
-                    height: `${s().height}px`,
+                    left: `${b.left}px`,
+                    top: `${b.top}px`,
+                    width: `${b.width}px`,
+                    height: `${b.height}px`,
                   }}
                 />
-              )}
-            </Show>
+              ))}
 
-            {/* passthrough でない場合はスポットライト内のクリックも遮断 */}
-            <Show when={spotlight() && !step()?.passthrough}>
-              <div
-                class="floorp-guided-tour-blocker"
-                style={{
-                  left: `${spotlight()!.x}px`,
-                  top: `${spotlight()!.y}px`,
-                  width: `${spotlight()!.width}px`,
-                  height: `${spotlight()!.height}px`,
-                }}
-              />
-            </Show>
-
-            <div
-              id="floorp-guided-tour-tooltip"
-              class="floorp-guided-tour-tooltip"
-              role="dialog"
-              aria-modal="false"
-              style={{
-                left: `${tooltipPos().left}px`,
-                top: `${tooltipPos().top}px`,
-              }}
-            >
-              <div class="floorp-guided-tour-progress">{progressText()}</div>
-              <h2 class="floorp-guided-tour-title">
-                {i18next.t(step()?.titleKey ?? "")}
-              </h2>
-              <p class="floorp-guided-tour-description">
-                {i18next.t(step()?.descriptionKey ?? "")}
-              </p>
-              <Show when={step()?.passthrough}>
-                <p class="floorp-guided-tour-tryit">{texts().tryIt}</p>
+              {/* スポットライト: box-shadow で周囲を dim */}
+              <Show
+                when={spotlight()}
+                fallback={<div class="floorp-guided-tour-dim" />}
+              >
+                {(s) => (
+                  <div
+                    class="floorp-guided-tour-spotlight"
+                    data-passthrough={step()?.passthrough ? "true" : undefined}
+                    style={{
+                      left: `${s().x}px`,
+                      top: `${s().y}px`,
+                      width: `${s().width}px`,
+                      height: `${s().height}px`,
+                    }}
+                  />
+                )}
               </Show>
-              <div class="floorp-guided-tour-buttons">
-                <Show when={!controller.isLastStep()}>
-                  <button
-                    type="button"
-                    class="floorp-guided-tour-btn floorp-guided-tour-btn-ghost"
-                    onClick={() => controller.stop()}
-                  >
-                    {texts().skip}
-                  </button>
+
+              {/* passthrough でない場合はスポットライト内のクリックも遮断 */}
+              <Show when={spotlight() && !step()?.passthrough}>
+                <div
+                  class="floorp-guided-tour-blocker"
+                  style={{
+                    left: `${spotlight()!.x}px`,
+                    top: `${spotlight()!.y}px`,
+                    width: `${spotlight()!.width}px`,
+                    height: `${spotlight()!.height}px`,
+                  }}
+                />
+              </Show>
+
+              <div
+                id="floorp-guided-tour-tooltip"
+                class="floorp-guided-tour-tooltip"
+                role="dialog"
+                aria-modal="false"
+                style={{
+                  left: `${tooltipPos().left}px`,
+                  top: `${tooltipPos().top}px`,
+                }}
+              >
+                <div class="floorp-guided-tour-progress">{progressText()}</div>
+                <h2 class="floorp-guided-tour-title">
+                  {i18next.t(step()?.titleKey ?? "")}
+                </h2>
+                <p class="floorp-guided-tour-description">
+                  {i18next.t(step()?.descriptionKey ?? "")}
+                </p>
+                <Show when={step()?.passthrough}>
+                  <p class="floorp-guided-tour-tryit">{texts().tryIt}</p>
                 </Show>
-                <div class="floorp-guided-tour-buttons-right">
-                  <Show when={controller.stepIndex() > 0}>
+                <div class="floorp-guided-tour-buttons">
+                  <Show when={!controller.isLastStep()}>
                     <button
                       type="button"
                       class="floorp-guided-tour-btn floorp-guided-tour-btn-ghost"
-                      onClick={() => controller.prev()}
+                      onClick={() => controller.stop()}
                     >
-                      {texts().previous}
+                      {texts().skip}
                     </button>
                   </Show>
-                  <button
-                    type="button"
-                    class="floorp-guided-tour-btn floorp-guided-tour-btn-primary"
-                    onClick={() => controller.next()}
-                  >
-                    {controller.isLastStep() ? texts().finish : texts().next}
-                  </button>
+                  <div class="floorp-guided-tour-buttons-right">
+                    <Show when={controller.stepIndex() > 0}>
+                      <button
+                        type="button"
+                        class="floorp-guided-tour-btn floorp-guided-tour-btn-ghost"
+                        onClick={() => controller.prev()}
+                      >
+                        {texts().previous}
+                      </button>
+                    </Show>
+                    <button
+                      type="button"
+                      class="floorp-guided-tour-btn floorp-guided-tour-btn-primary"
+                      onClick={() => controller.next()}
+                    >
+                      {controller.isLastStep() ? texts().finish : texts().next}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
             </Show>
           </div>
         </Show>
