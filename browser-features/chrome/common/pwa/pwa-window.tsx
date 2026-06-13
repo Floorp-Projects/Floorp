@@ -285,26 +285,44 @@ export class PwaWindowSupport {
       return;
     }
 
-    const tab = globalThis.gBrowser.selectedTab;
-    if (tab.getAttribute("usercontextid") === String(userContextId)) {
-      return;
-    }
-
-    const url = globalThis.gBrowser.selectedBrowser?.currentURI?.spec ??
-      "about:blank";
-
     const triggeringPrincipal = Services.scriptSecurityManager
       .createNullPrincipal({
         userContextId,
       }) as nsIPrincipal;
 
-    const newTab = globalThis.gBrowser.addTrustedTab(url, {
-      userContextId,
-      triggeringPrincipal,
-    });
+    const tabsToMigrate = Array.from(
+      globalThis.gBrowser.tabs as Iterable<XULElement>,
+    ).filter(
+      (tab) => tab.getAttribute("usercontextid") !== String(userContextId),
+    );
 
-    globalThis.gBrowser.selectedTab = newTab;
-    globalThis.gBrowser.removeTab(tab);
+    if (tabsToMigrate.length === 0) {
+      return;
+    }
+
+    const previouslySelected = globalThis.gBrowser.selectedTab as XULElement;
+    let replacementSelected: XULElement | null = null;
+
+    for (const tab of tabsToMigrate) {
+      const browser = globalThis.gBrowser.getBrowserForTab(tab);
+      const url = browser?.currentURI?.spec ?? "about:blank";
+
+      const newTab = globalThis.gBrowser.addTrustedTab(url, {
+        userContextId,
+        triggeringPrincipal,
+      });
+      newTab.setAttribute("floorpSSB", "true");
+
+      if (tab === previouslySelected) {
+        replacementSelected = newTab;
+      }
+
+      globalThis.gBrowser.removeTab(tab);
+    }
+
+    if (replacementSelected) {
+      globalThis.gBrowser.selectedTab = replacementSelected;
+    }
   }
 
   private renderStyles(): void {
