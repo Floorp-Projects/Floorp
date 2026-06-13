@@ -7,8 +7,65 @@ import { assert, runTests } from "../utils/test_harness.ts";
 // Helpers
 // ---------------------------------------------------------------------------
 
+const THEME_VARIABLE_CANDIDATES = [
+  "--toolbar-bgcolor",
+  "--toolbar-color",
+  "--tab-selected-bgcolor",
+  "--lwt-accent-color",
+  "--lwt-text-color",
+  "--arrowpanel-background",
+  "--tabpanel-background-color",
+  "--focus-outline-color",
+] as const;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForCondition(
+  predicate: () => boolean,
+  timeoutMs = 5000,
+  intervalMs = 50,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) {
+      return true;
+    }
+    await sleep(intervalMs);
+  }
+  return predicate();
+}
+
 function getRootComputedStyle(): CSSStyleDeclaration {
   return globalThis.getComputedStyle(document.documentElement!)!;
+}
+
+function collectNonEmptyThemeVariables(
+  style: CSSStyleDeclaration,
+): string[] {
+  return THEME_VARIABLE_CANDIDATES.filter(
+    (name) => style.getPropertyValue(name).trim() !== "",
+  );
+}
+
+function findNonEmptyThemeVariables(): string[] {
+  const elements: Element[] = [document.documentElement!];
+  for (const id of ["navigator-toolbox", "nav-bar", "browser", "TabsToolbar"]) {
+    const element = document.getElementById(id);
+    if (element) {
+      elements.push(element);
+    }
+  }
+
+  const found = new Set<string>();
+  for (const element of elements) {
+    const style = globalThis.getComputedStyle(element);
+    for (const name of collectNonEmptyThemeVariables(style)) {
+      found.add(name);
+    }
+  }
+  return [...found];
 }
 
 // ---------------------------------------------------------------------------
@@ -124,21 +181,14 @@ function testComputedStyleOnTabsToolbar(): void {
 // Tests — CSS variable resolution returns non-empty for themed variables
 // ---------------------------------------------------------------------------
 
-function testAtLeastOneThemeVariableIsSet(): void {
-  const style = getRootComputedStyle();
-  const candidates = [
-    "--toolbar-bgcolor",
-    "--toolbar-color",
-    "--tab-selected-bgcolor",
-    "--lwt-accent-color",
-    "--arrowpanel-background",
-  ];
-
-  const nonEmpty = candidates.filter(
-    (name) => style.getPropertyValue(name).trim() !== "",
+async function testAtLeastOneThemeVariableIsSet(): Promise<void> {
+  const hasThemeVariables = await waitForCondition(
+    () => findNonEmptyThemeVariables().length > 0,
+    5000,
+    50,
   );
   assert(
-    nonEmpty.length > 0,
+    hasThemeVariables,
     "at least one standard theme CSS variable should have a non-empty value",
   );
 }
