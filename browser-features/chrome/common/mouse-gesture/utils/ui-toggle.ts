@@ -2,6 +2,18 @@
 // Shared UI toggle utilities for keyboard shortcuts and mouse gestures.
 // Extracted from legacy gFloorpDesign (Floorp-core/browser/base/content/browser-design.mjs).
 
+function getDisplay(el: HTMLElement): string {
+  return el.style.getPropertyValue("display");
+}
+
+function setDisplay(el: HTMLElement, value: string): void {
+  if (value === "") {
+    el.style.removeProperty("display");
+    return;
+  }
+  el.style.setProperty("display", value);
+}
+
 /**
  * Toggle visibility of all `#navigator-toolbox` children.
  * Computes a single hide/show target state from the children's current
@@ -20,7 +32,7 @@ export function toggleUserInterface(doc: Document): void {
     let anyShown = false;
     for (const child of toolbox.children) {
       const el = child as HTMLElement;
-      if (el.style.display !== "none") {
+      if (getDisplay(el) !== "none") {
         anyShown = true;
         break;
       }
@@ -28,14 +40,14 @@ export function toggleUserInterface(doc: Document): void {
     const targetDisplay = anyShown ? "none" : "";
 
     for (const child of toolbox.children) {
-      (child as HTMLElement).style.display = targetDisplay;
+      setDisplay(child as HTMLElement, targetDisplay);
     }
 
     // When restoring, ensure the navigation bar stays visible.
     if (!anyShown && toolbox.children.length >= 2) {
       const navigationBar = toolbox.children[1] as HTMLElement;
-      if (navigationBar?.style.display !== "") {
-        navigationBar.style.display = "";
+      if (getDisplay(navigationBar) !== "") {
+        setDisplay(navigationBar, "");
       }
     }
   } catch (e) {
@@ -50,7 +62,7 @@ export function toggleNavigationPanel(doc: Document): void {
   try {
     const navBar = doc.getElementById("nav-bar") as HTMLElement | null;
     if (!navBar) return;
-    navBar.style.display = navBar.style.display ? "" : "none";
+    setDisplay(navBar, getDisplay(navBar) ? "" : "none");
   } catch (e) {
     console.error("[ui-toggle] Failed to toggle navigation panel:", e);
   }
@@ -63,8 +75,7 @@ export function toggleNavigationPanel(doc: Document): void {
 export function enableRestMode(win: Window): void {
   const doc = win.document!;
   const selectedTab = win.gBrowser.selectedTab;
-  const selectedTabLocation =
-    selectedTab.linkedBrowser.documentURI?.spec;
+  const selectedTabLocation = selectedTab.linkedBrowser.documentURI?.spec;
   const tag = doc.createElement("style");
 
   try {

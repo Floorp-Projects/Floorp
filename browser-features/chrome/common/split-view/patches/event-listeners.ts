@@ -51,14 +51,15 @@ export function initSplitViewEvents(
       if (!panels || panels.length < 2) return;
 
       const layout = resolveLayoutForSplitTabs(tabs);
-      const currentLayoutAttr =
-        tabpanels.getAttribute("split-view-layout") ?? "";
+      const currentLayoutAttr = tabpanels.getAttribute("split-view-layout") ??
+        "";
       const expectedLayoutResolved = getEffectiveSplitViewLayout(
         layout,
         panels.length,
       );
-      const expectedLayout =
-        expectedLayoutResolved === "horizontal" ? "" : expectedLayoutResolved;
+      const expectedLayout = expectedLayoutResolved === "horizontal"
+        ? ""
+        : expectedLayoutResolved;
 
       console.debug("[event-listeners:onSplitViewActivate:rAF]", "evaluating", {
         resolvedLayout: layout,
@@ -75,7 +76,9 @@ export function initSplitViewEvents(
         if (handleCount > 0) {
           console.debug("[event-listeners:onSplitViewActivate:rAF]", "skipping (already correct)");
           logger.debug(
-            `[onSplitViewActivate:rAF] layout already correct (${expectedLayout || "horizontal"}), handles=${handleCount}, skipping`,
+            `[onSplitViewActivate:rAF] layout already correct (${
+              expectedLayout || "horizontal"
+            }), handles=${handleCount}, skipping`,
           );
           return;
         }

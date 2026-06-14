@@ -12,12 +12,12 @@ import {
 } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import {
-  type SplitViewConfig,
-  type SplitViewPaneSizes,
   DEFAULT_CONFIG,
   DEFAULT_PANE_SIZES,
   PREF_SPLIT_VIEW_CONFIG,
   PREF_SPLIT_VIEW_PANE_SIZES,
+  type SplitViewConfig,
+  type SplitViewPaneSizes,
 } from "./types.js";
 
 function deepEquals(a: unknown, b: unknown): boolean {
@@ -74,11 +74,10 @@ function parsePaneSizesPref(prefName: string): SplitViewPaneSizes {
       return DEFAULT_PANE_SIZES;
     }
     return {
-      flexRatios:
-        Array.isArray(raw.flexRatios) &&
-        raw.flexRatios.every((v: unknown) => typeof v === "number")
-          ? raw.flexRatios.map(clampRatio)
-          : DEFAULT_PANE_SIZES.flexRatios,
+      flexRatios: Array.isArray(raw.flexRatios) &&
+          raw.flexRatios.every((v: unknown) => typeof v === "number")
+        ? raw.flexRatios.map(clampRatio)
+        : DEFAULT_PANE_SIZES.flexRatios,
       gridColRatio: clampRatio(raw.gridColRatio),
       gridRowRatio: clampRatio(raw.gridRowRatio),
     };

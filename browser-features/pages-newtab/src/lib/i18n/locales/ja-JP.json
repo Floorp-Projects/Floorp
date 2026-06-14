@@ -1,54 +1,81 @@
 {
-    "title": "Floorp Start",
-    "topSites": {
-        "addSite": "サイトを追加",
-        "addNewSite": "新しいサイトを追加",
-        "url": "URL",
-        "label": "表示名",
-        "cancel": "キャンセル",
-        "add": "追加",
-        "close": "閉じる",
-        "labelPlaceholder": "ウェブサイト名",
-        "pin": "ピン留め",
-        "unpin": "ピン留めを外す",
-        "block": "ブロック",
-        "blockTitle": "[{{title}}] をブロックしますか？",
-        "blockConfirm": "このサイトはトップサイトから削除され、二度と提案されなくなります。設定でブロックされたサイトを管理できます。",
-        "invalidUrl": "無効な URL"
-    },
-    "settings": {
-        "newTabSettings": "新しいタブの設定",
-        "displayComponents": "表示する要素",
-        "topSites": "トップサイト",
-        "clock": "時計",
-        "searchBar": "検索バー",
-        "backgroundSettings": "背景画像の設定",
-        "noBackground": "背景なし",
-        "randomImage": "ランダム画像",
-        "customImage": "カスタム画像",
-        "folderImages": "フォルダーの画像",
-        "floorpImages": "Floorp の画像",
-        "currentImage": "現在の画像:",
-        "imageRecommendation": "推奨: 1920x1080 以上",
-        "currentFolder": "現在のフォルダー:",
-        "selectFolder": "フォルダーを選択",
-        "selected": "選択中",
-        "enableSlideshow": "スライドショーを有効にする",
-        "slideshowInterval": "スライドショーの間隔",
-        "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Floorp Start を無効にする (クラシックな about:newtab を使用)",
-        "disableFloorpStartDescription": "有効にすると、Floorp Start は従来の Firefox の新しいタブ / ホームページで置き換えられます。",
-        "restartRequired": "完全に有効にするにはブラウザーの再起動が必要です。",
-        "firefoxLayout": "従来のレイアウトを使用 (Firefox Home 風)"
-    },
-    "searchBar": {
-        "searchOrEnterUrl": "検索または URL を入力",
-        "loadingSearchEngines": "検索エンジンを読み込み中..."
-    },
-    "settingsButton": {
-        "settings": "設定"
-    },
-    "modal": {
-        "close": "閉じる"
+  "title": "Floorp Start",
+  "topSites": {
+    "addSite": "サイトを追加",
+    "addNewSite": "新しいサイトを追加",
+    "url": "URL",
+    "label": "表示名",
+    "cancel": "キャンセル",
+    "add": "追加",
+    "close": "閉じる",
+    "labelPlaceholder": "ウェブサイト名",
+    "pin": "ピン留め",
+    "unpin": "ピン留めを外す",
+    "block": "ブロック",
+    "blockTitle": "[{{title}}] をブロックしますか？",
+    "blockConfirm": "このサイトはトップサイトから削除され、二度と提案されなくなります。設定でブロックされたサイトを管理できます。",
+    "invalidUrl": "無効な URL"
+  },
+  "settings": {
+    "newTabSettings": "新しいタブの設定",
+    "displayComponents": "表示する要素",
+    "topSites": "トップサイト",
+    "clock": "時計",
+    "searchBar": "検索バー",
+    "backgroundSettings": "背景画像の設定",
+    "noBackground": "背景なし",
+    "randomImage": "ランダム画像",
+    "customImage": "カスタム画像",
+    "folderImages": "フォルダーの画像",
+    "floorpImages": "Floorp の画像",
+    "currentImage": "現在の画像:",
+    "imageRecommendation": "推奨: 1920x1080 以上",
+    "currentFolder": "現在のフォルダー:",
+    "selectFolder": "フォルダーを選択",
+    "selected": "選択中",
+    "enableSlideshow": "スライドショーを有効にする",
+    "slideshowInterval": "スライドショーの間隔",
+    "floorpStart": "Floorp Start",
+    "disableFloorpStart": "Floorp Start を無効にする (クラシックな about:newtab を使用)",
+    "disableFloorpStartDescription": "有効にすると、Floorp Start は従来の Firefox の新しいタブ / ホームページで置き換えられます。",
+    "restartRequired": "完全に有効にするにはブラウザーの再起動が必要です。",
+    "firefoxLayout": "従来のレイアウトを使用 (Firefox Home 風)",
+    "tipBanner": "機能ヒント"
+  },
+  "searchBar": {
+    "searchOrEnterUrl": "検索または URL を入力",
+    "loadingSearchEngines": "検索エンジンを読み込み中..."
+  },
+  "settingsButton": {
+    "settings": "設定"
+  },
+  "modal": {
+    "close": "閉じる"
+  },
+  "tipBanner": {
+    "learnMore": "詳しく",
+    "dismiss": "閉じる",
+    "tips": {
+      "splitView": {
+        "title": "分割ビューでマルチタスク",
+        "description": "複数のタブを並べて表示。タブを右クリックして「分割ビューで開く」を選択してください。"
+      },
+      "panelSidebar": {
+        "title": "パネルサイドバーにサイトをピン留め",
+        "description": "ブラウジング中にサイドバーからお気に入りのサイト、メモ、ブックマークにアクセス。"
+      },
+      "workspaces": {
+        "title": "ワークスペースでタブを整理",
+        "description": "タブを仕事・プライベート・リサーチなど目的別にグループ化して、瞬時に切り替え。"
+      },
+      "mouseGesture": {
+        "title": "マウスジェスチャーで操作",
+        "description": "右クリックしながらドラッグして、戻る、タブを閉じるなどのアクションを実行。"
+      },
+      "shortcuts": {
+        "title": "キーボードショートカットをカスタマイズ",
+        "description": "Floorp Hubでブラウザの操作に独自のキーボードショートカットを割り当て。"
+      }
     }
+  }
 }

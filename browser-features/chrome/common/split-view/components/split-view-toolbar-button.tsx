@@ -5,7 +5,10 @@
 
 import { splitViewConfig } from "../data/config.js";
 import { getGBrowser } from "../data/types.js";
-import { getActiveSplitViewGroupId, getPersistedGroupLayout } from "../patches/session-restore.js";
+import {
+  getActiveSplitViewGroupId,
+  getPersistedGroupLayout,
+} from "../patches/session-restore.js";
 
 /**
  * Enhances the URL bar split view button to show N-pane information.
@@ -83,8 +86,6 @@ function updateButton(paneCount: number): void {
 
   button.setAttribute("data-pane-count", String(paneCount));
   const groupId = getActiveSplitViewGroupId();
-  const layout = groupId
-    ? getPersistedGroupLayout(groupId)
-    : null;
+  const layout = groupId ? getPersistedGroupLayout(groupId) : null;
   button.setAttribute("data-layout", layout ?? splitViewConfig().layout);
 }

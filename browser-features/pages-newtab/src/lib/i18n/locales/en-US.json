@@ -1,54 +1,81 @@
 {
-    "title": "Floorp Start",
-    "topSites": {
-        "addSite": "Add site",
-        "addNewSite": "Add new site",
-        "url": "URL",
-        "label": "Label",
-        "cancel": "Cancel",
-        "add": "Add",
-        "close": "Close",
-        "labelPlaceholder": "Website name",
-        "pin": "Pin",
-        "unpin": "Unpin",
-        "block": "Block",
-        "blockTitle": "Block \"{{title}}\"?",
-        "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
-        "invalidUrl": "Invalid URL"
-    },
-    "settings": {
-        "newTabSettings": "New Tab Settings",
-        "displayComponents": "Display Components",
-        "topSites": "Top Sites",
-        "clock": "Clock",
-        "searchBar": "Search Bar",
-        "backgroundSettings": "Background Settings",
-        "noBackground": "No Background",
-        "randomImage": "Random Image",
-        "customImage": "Custom Image",
-        "folderImages": "Images from Folder",
-        "floorpImages": "Floorp Images",
-        "currentImage": "Current Image:",
-        "imageRecommendation": "Recommendation: Use images with a resolution of 1920x1080 or higher.",
-        "currentFolder": "Current Folder:",
-        "selectFolder": "Select Folder",
-        "selected": "Selected",
-        "enableSlideshow": "Enable Slideshow",
-        "slideshowInterval": "Interval (seconds)",
-        "floorpStart": "Floorp Start",
-        "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
-        "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
-        "restartRequired": "Requires browser restart to take full effect.",
-        "firefoxLayout": "Use Legacy Layout (Like Firefox Home)"
-    },
-    "searchBar": {
-        "searchOrEnterUrl": "Search or enter URL",
-        "loadingSearchEngines": "Loading search engines..."
-    },
-    "settingsButton": {
-        "settings": "Settings"
-    },
-    "modal": {
-        "close": "Close"
+  "title": "Floorp Start",
+  "topSites": {
+    "addSite": "Add site",
+    "addNewSite": "Add new site",
+    "url": "URL",
+    "label": "Label",
+    "cancel": "Cancel",
+    "add": "Add",
+    "close": "Close",
+    "labelPlaceholder": "Website name",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "block": "Block",
+    "blockTitle": "Block \"{{title}}\"?",
+    "blockConfirm": "This site will be removed from your Top Sites and won't be suggested again. You can manage blocked sites in settings.",
+    "invalidUrl": "Invalid URL"
+  },
+  "settings": {
+    "newTabSettings": "New Tab Settings",
+    "displayComponents": "Display Components",
+    "topSites": "Top Sites",
+    "clock": "Clock",
+    "searchBar": "Search Bar",
+    "backgroundSettings": "Background Settings",
+    "noBackground": "No Background",
+    "randomImage": "Random Image",
+    "customImage": "Custom Image",
+    "folderImages": "Images from Folder",
+    "floorpImages": "Floorp Images",
+    "currentImage": "Current Image:",
+    "imageRecommendation": "Recommendation: Use images with a resolution of 1920x1080 or higher.",
+    "currentFolder": "Current Folder:",
+    "selectFolder": "Select Folder",
+    "selected": "Selected",
+    "enableSlideshow": "Enable Slideshow",
+    "slideshowInterval": "Interval (seconds)",
+    "floorpStart": "Floorp Start",
+    "disableFloorpStart": "Disable Floorp Start (use classic about:newtab)",
+    "disableFloorpStartDescription": "When enabled, Floorp Start will be replaced by the classic Firefox new tab / home page.",
+    "restartRequired": "Requires browser restart to take full effect.",
+    "firefoxLayout": "Use Legacy Layout (Like Firefox Home)",
+    "tipBanner": "Feature Tips"
+  },
+  "searchBar": {
+    "searchOrEnterUrl": "Search or enter URL",
+    "loadingSearchEngines": "Loading search engines..."
+  },
+  "settingsButton": {
+    "settings": "Settings"
+  },
+  "modal": {
+    "close": "Close"
+  },
+  "tipBanner": {
+    "learnMore": "Learn More",
+    "dismiss": "Dismiss",
+    "tips": {
+      "splitView": {
+        "title": "Try Split View for multitasking",
+        "description": "View multiple tabs side by side. Right-click a tab and select \"Open in Split View\" to get started."
+      },
+      "panelSidebar": {
+        "title": "Pin websites to the Panel Sidebar",
+        "description": "Access your favorite sites, notes, and bookmarks from the sidebar while browsing."
+      },
+      "workspaces": {
+        "title": "Organize tabs with Workspaces",
+        "description": "Group tabs by purpose — work, personal, research — and switch between them instantly."
+      },
+      "mouseGesture": {
+        "title": "Navigate with Mouse Gestures",
+        "description": "Hold right-click and drag to perform actions like going back, closing tabs, and more."
+      },
+      "shortcuts": {
+        "title": "Customize Keyboard Shortcuts",
+        "description": "Assign your own keyboard shortcuts for browser actions in Floorp Hub."
+      }
     }
+  }
 }

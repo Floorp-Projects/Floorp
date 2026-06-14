@@ -214,6 +214,18 @@ export function Settings({
                 {t("settings.firefoxLayout")}
               </span>
             </label>
+            <label className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={components.tipBanner}
+                onChange={() => toggleComponent("tipBanner")}
+                disabled={isSubmitting}
+                className="form-checkbox h-5 w-5 text-primary rounded border-gray-300 dark:border-gray-600 focus:ring-primary"
+              />
+              <span className="text-gray-700 dark:text-gray-200">
+                {t("settings.tipBanner")}
+              </span>
+            </label>
           </div>
         </section>
 

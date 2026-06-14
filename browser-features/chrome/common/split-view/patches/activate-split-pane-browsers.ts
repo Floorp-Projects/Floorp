@@ -308,7 +308,9 @@ export function scheduleSequentialSplitTabSelectionForLoad(
       const tab = findTabForPanelId(gb, id);
       if (tab) {
         gb.selectedTab = tab;
-        logger.debug(`[splitPaneCycle] select ${id} (${index + 1}/${ids.length})`);
+        logger.debug(
+          `[splitPaneCycle] select ${id} (${index + 1}/${ids.length})`,
+        );
       }
       index++;
       const aboutToRestore = index === ids.length;

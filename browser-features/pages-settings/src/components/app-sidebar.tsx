@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
   Briefcase,
+  Columns2,
   Cpu,
   Grip,
   House,
@@ -78,6 +79,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.workspaces"),
       url: "/features/workspaces",
       icon: Briefcase,
+    },
+    {
+      title: t("pages.splitView"),
+      url: "/features/splitview",
+      icon: Columns2,
+      badge: t("pages.badges.new"),
     },
     {
       title: t("pages.keyboardShortcuts"),

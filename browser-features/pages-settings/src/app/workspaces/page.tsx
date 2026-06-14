@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { getWorkspaceSettings, saveWorkspaceSettings } from "./dataManager.ts";
 import type { WorkspacesFormData } from "@/types/pref.ts";
+import { LearnButton } from "@/components/common/learn-button.tsx";
 
 export default function Page() {
   const { t } = useTranslation();
@@ -47,7 +48,10 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-2">
           {t("workspaces.workspaces")}
         </h1>
-        <p className="text-sm mb-8">{t("workspaces.workspacesDescription")}</p>
+        <p className="text-sm mb-4">{t("workspaces.workspacesDescription")}</p>
+        <div className="flex items-center gap-2">
+          <LearnButton tourId="workspaces" />
+        </div>
       </div>
 
       <FormProvider {...methods}>

@@ -164,7 +164,7 @@ function onGripMouseDown(e: MouseEvent, logger: ConsoleInstance): void {
 
   const onUp = (ev: MouseEvent): void => {
     const targetEntry = cachedRects.find((r) =>
-      r.el.hasAttribute("data-floorp-drop-target"),
+      r.el.hasAttribute("data-floorp-drop-target")
     );
     const targetTab = targetEntry
       ? findTabByPanelIdAuto(targetEntry.id)
@@ -205,9 +205,11 @@ export function destroyPaneDrag(): void {
   removeAllGripsFrom(getTabpanels());
   const tabpanels = getTabpanels();
   tabpanels?.removeAttribute("data-floorp-dragging");
-  for (const el of document?.querySelectorAll(
-    ".split-view-panel[data-floorp-drag-source], .split-view-panel[data-floorp-drop-target]",
-  ) ?? []) {
+  for (
+    const el of document?.querySelectorAll(
+      ".split-view-panel[data-floorp-drag-source], .split-view-panel[data-floorp-drop-target]",
+    ) ?? []
+  ) {
     el.removeAttribute("data-floorp-drag-source");
     el.removeAttribute("data-floorp-drop-target");
   }

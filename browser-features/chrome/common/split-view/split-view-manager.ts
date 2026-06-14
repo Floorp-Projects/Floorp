@@ -10,12 +10,12 @@ import {
   updateHandles,
 } from "./components/split-view-splitters.js";
 import {
-  initLayoutPicker,
   destroyLayoutPicker,
+  initLayoutPicker,
 } from "./components/split-view-layout-picker.js";
 import {
-  initToolbarButtonEnhancement,
   destroyToolbarButtonEnhancement,
+  initToolbarButtonEnhancement,
 } from "./components/split-view-toolbar-button.js";
 import splitViewStyles from "./styles/split-view.css?inline";
 import { createPatchState } from "./patches/patch-state.js";
@@ -90,7 +90,7 @@ export class SplitViewManager {
     onCleanup(() => this.destroy());
   }
 
-  private destroy(): void {
+  destroy(): void {
     this.logger.debug("Destroying SplitViewManager");
     this.removeStyles();
     this.tabpanelsPatch?.unpatch();
