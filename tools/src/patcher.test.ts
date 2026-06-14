@@ -8,6 +8,21 @@ Deno.test("patchAppliesToCurrentPlatform accepts generic patch files", () => {
   );
 });
 
+Deno.test("patchAppliesToCurrentPlatform accepts unified patch files on all platforms", () => {
+  assertEquals(
+    patchAppliesToCurrentPlatform(
+      "browser-chrome-browser-content-browser-browser-init.patch",
+    ),
+    true,
+  );
+  assertEquals(
+    patchAppliesToCurrentPlatform(
+      "browser-chrome-browser-content-browser-aboutDialog.patch",
+    ),
+    true,
+  );
+});
+
 Deno.test("patchAppliesToCurrentPlatform filters platform-specific patch files", () => {
   const platform = Deno.build.os === "darwin"
     ? "darwin"
@@ -17,14 +32,8 @@ Deno.test("patchAppliesToCurrentPlatform filters platform-specific patch files",
 
   assertEquals(
     patchAppliesToCurrentPlatform(
-      "browser-chrome-browser-content-browser-browser-init.darwin.patch",
+      "browser-chrome-browser-content-browser-browser-init.windows.patch",
     ),
-    platform === "darwin",
-  );
-  assertEquals(
-    patchAppliesToCurrentPlatform(
-      "browser-chrome-browser-content-browser-browser-init.linux.patch",
-    ),
-    platform === "linux",
+    platform === "windows",
   );
 });
