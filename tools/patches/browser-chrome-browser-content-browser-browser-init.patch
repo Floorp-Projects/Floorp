@@ -1,7 +1,7 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -148,6 +148,20 @@
+@@ -250,6 +250,20 @@ var gBrowserInit = {
    },
  
    onDOMContentLoaded() {
@@ -22,8 +22,8 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -156,6 +170,17 @@
-       { categoryName: "browser-window-domcontentloaded-before-tabbrowser" },
+@@ -267,6 +281,17 @@ var gBrowserInit = {
+       },
        window
      );
 +    /**
@@ -37,13 +37,13 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * [PANEL_SIDEBAR]
 +     * * END
 +     */
+     gURLBar.addGBrowserListeners();
+     if (Services.prefs.getBoolPref("browser.search.widget.new", false)) {
+       document.getElementById("searchbar-new")?.addGBrowserListeners();
+@@ -1308,6 +1333,20 @@ var gBrowserInit = {
+       PanelUI.uninit();
+     }
  
-     gBrowser = new window.Tabbrowser();
-     gBrowser.init();
-@@ -1162,6 +1187,20 @@
-     // Final window teardown, do this last.
-     gBrowser.destroy();
-     window.XULBrowserWindow = null;
 +    /**
 +     * * NORANEKO PATCH - 0.1.19
 +     * * [PANEL_SIDEBAR]
@@ -58,13 +58,13 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * [PANEL_SIDEBAR]
 +     * * END
 +     */
+     BrowserUtils.callModulesFromCategory(
+       {
+         categoryName: "browser-window-unload-tabbrowser",
+@@ -1319,6 +1358,17 @@ var gBrowserInit = {
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-@@ -1170,5 +1209,16 @@
-       { categoryName: "browser-window-unload" },
-       window
-     );
 +    /**
 +     * * NORANEKO PATCH - 0.1.19
 +     * * [PANEL_SIDEBAR]
@@ -76,5 +76,6 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +     * * [PANEL_SIDEBAR]
 +     * * END
 +     */
-   },
- };
+ 
+     BrowserUtils.callModulesFromCategory(
+       { categoryName: "browser-window-final-unload", jsGlobal: globalThis },
