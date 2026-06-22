@@ -2,10 +2,11 @@
 // @colocated-env browser
 
 import {
-  type TestCase,
   assertEquals,
   runTests,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
+import { resolveDropIndicatorTarget } from "../multirow-tabbar/tab-drag-drop-manager.ts";
 
 // ---------------------------------------------------------------------------
 // Tests — TabDragDropManager dragend listener
@@ -80,6 +81,46 @@ function testDragEndWithNullState(): void {
   assertEquals(state.draggedTabIndex, null, "draggedTabIndex remains null");
 }
 
+function testDropIndicatorTargets(): void {
+  const first = resolveDropIndicatorTarget(0, 3);
+  assertEquals(
+    first?.tabIndex,
+    0,
+    "index 0 should target the first tab",
+  );
+  assertEquals(first?.atEnd, false, "index 0 should use the leading edge");
+
+  const middle = resolveDropIndicatorTarget(1, 3);
+  assertEquals(
+    middle?.tabIndex,
+    1,
+    "middle index should target that tab",
+  );
+  assertEquals(
+    middle?.atEnd,
+    false,
+    "middle index should use the leading edge",
+  );
+
+  const end = resolveDropIndicatorTarget(3, 3);
+  assertEquals(
+    end?.tabIndex,
+    2,
+    "tabCount should target the trailing edge of the last tab",
+  );
+  assertEquals(end?.atEnd, true, "tabCount should use the trailing edge");
+  assertEquals(
+    resolveDropIndicatorTarget(0, 0),
+    null,
+    "an empty tab strip has no indicator target",
+  );
+  assertEquals(
+    resolveDropIndicatorTarget(4, 3),
+    null,
+    "out-of-range indices should be rejected",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
@@ -91,6 +132,10 @@ const tests: TestCase[] = [
     fn: testDragEndClearsDraggedTabIndex,
   },
   { name: "dragend with null state", fn: testDragEndWithNullState },
+  {
+    name: "drop indicator targets include index zero",
+    fn: testDropIndicatorTargets,
+  },
 ];
 
-runTests("tab-drag-drop-manager.test", tests);
+await runTests("tab-drag-drop-manager.test", tests);
