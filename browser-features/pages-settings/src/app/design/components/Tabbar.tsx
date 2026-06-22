@@ -100,7 +100,7 @@ export function Tabbar() {
           <span className="text-sm">
             {t("design.verticalTabIsRemovedFromBrowser")}{" "}
             <a
-              href="https://docs.floorp.app/docs/features/about-vertical-tab-bar"
+              href="https://docs.floorp.app/docs/features/tab-bar-layout"
               target="_blank"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >
