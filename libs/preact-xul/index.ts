@@ -47,6 +47,10 @@ const patch = (vnode: VNode) => {
   }
 };
 
+// NOTE: This module monkey-patches options.vnode globally and affects all Preact
+// instances in the same JS context. It must be imported exactly once per JS
+// context. Multiple imports will chain patches correctly via prev?.(v), but
+// importing this module in multiple contexts will cause duplicate patching.
 const prev = options.vnode;
 options.vnode = (v) => (patch(v), prev?.(v));
 
