@@ -3,12 +3,12 @@
 import { parseArgs } from "@std/cli";
 import { walkSync } from "@std/fs";
 import * as path from "@std/path";
-import { PROJECT_ROOT } from "./defines.ts";
+import { PATHS, PROJECT_ROOT } from "./defines.ts";
 import {
   detectLayer,
   escapeRegExp,
-  isTestFile,
   isResultMatchTarget,
+  isTestFile,
   normalizeBrowserResultPath,
   normalizeSlashes,
   parseLayer,
@@ -16,9 +16,9 @@ import {
 } from "./colocated_test_utils.ts";
 import { sleep } from "./async_utils.ts";
 import {
-  collectBrowserTestResultsFromPrefs,
   type BrowserTestCollection,
   type BrowserTestResult,
+  collectBrowserTestResultsFromPrefs,
 } from "./browser_test_collector.ts";
 
 export interface RunnerOptions {
@@ -37,6 +37,11 @@ const MARIONETTE_PORT_FILE = path.join(
   "_dist",
   "marionette-port.txt",
 );
+const TEST_FILTER_PREF = "nora.tests.filter";
+const TEST_FILTER_COUNT_PREF = "nora.tests.filter.count";
+const TEST_FILTER_ITEM_PREF_PREFIX = "nora.tests.filter.";
+const TEST_RUN_ID_PREF = "nora.tests.run_id";
+const TEST_CONTROL_FILE = "nora-tests-control.json";
 const MAX_TEST_EXECUTION_TIMEOUT_MS = 1_800_000;
 const DEFAULT_TEST_COLLECTION_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
 const DEFAULT_AUTOSTART_READY_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
@@ -90,8 +95,9 @@ function formatConsoleLine(level: LogLevel, message: string): string {
     return "";
   }
 
-  const levelLabel =
-    level === "ERROR" ? paint("ERROR", "1;31") : paint("INFO", "1;36");
+  const levelLabel = level === "ERROR"
+    ? paint("ERROR", "1;31")
+    : paint("INFO", "1;36");
 
   let formattedMessage = message;
   if (level === "INFO" && message.startsWith("✓")) {
@@ -131,11 +137,13 @@ const WALK_SKIP_PATTERNS = [
 function discoverAllTests(): string[] {
   const files: string[] = [];
 
-  for (const entry of walkSync(PROJECT_ROOT, {
-    includeDirs: false,
-    followSymlinks: false,
-    skip: WALK_SKIP_PATTERNS,
-  })) {
+  for (
+    const entry of walkSync(PROJECT_ROOT, {
+      includeDirs: false,
+      followSymlinks: false,
+      skip: WALK_SKIP_PATTERNS,
+    })
+  ) {
     const ext = path.extname(entry.path);
     if (!SOURCE_EXTENSIONS.has(ext)) {
       continue;
@@ -153,9 +161,10 @@ function discoverAllTests(): string[] {
 function isBrowserDiscoverableTest(relPath: string): boolean {
   const normalized = relPath.replaceAll("\\", "/");
   return (
-    /^browser-features\/chrome\/(?:.*\/)?test\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
-      normalized,
-    ) ||
+    /^browser-features\/chrome\/(?:.*\/)?test\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/
+      .test(
+        normalized,
+      ) ||
     /^browser-features\/modules\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
       normalized,
     ) ||
@@ -598,7 +607,9 @@ async function stopPosixProcessTree(
   }
   writeLog?.(
     "INFO",
-    `Sending SIGTERM to ${initialTargets.length} process(es): ${initialTargets.join(", ")}`,
+    `Sending SIGTERM to ${initialTargets.length} process(es): ${
+      initialTargets.join(", ")
+    }`,
   );
   signalPids(initialTargets, "SIGTERM");
 
@@ -627,7 +638,9 @@ async function stopPosixProcessTree(
   const killTargets = sanitizeKillTargets(Array.from(remaining));
   writeLog?.(
     "INFO",
-    `Sending SIGKILL to ${killTargets.length} remaining process(es): ${killTargets.join(", ")}`,
+    `Sending SIGKILL to ${killTargets.length} remaining process(es): ${
+      killTargets.join(", ")
+    }`,
   );
   signalPids(killTargets, "SIGKILL");
 }
@@ -705,7 +718,7 @@ function filterBrowserResults(
   targetRels: string[],
 ): BrowserTestResult[] {
   return results.filter((result) =>
-    targetRels.some((targetRel) => isResultMatchTarget(result.file, targetRel)),
+    targetRels.some((targetRel) => isResultMatchTarget(result.file, targetRel))
   );
 }
 
@@ -730,7 +743,7 @@ function findUnexpectedBrowserTargets(
   return normalizedBrowserTargets.filter(
     (browserTarget) =>
       !targetRels.some((targetRel) =>
-        isResultMatchTarget(browserTarget, targetRel),
+        isResultMatchTarget(browserTarget, targetRel)
       ),
   );
 }
@@ -741,7 +754,7 @@ function findUnknownAliasResults(results: BrowserTestResult[]): string[] {
       results
         .map((result) => normalizeBrowserResultPath(result.file))
         .filter((normalizedPath) =>
-          normalizedPath.startsWith("[unknown-alias] "),
+          normalizedPath.startsWith("[unknown-alias] ")
         ),
     ),
   ).sort((a, b) => a.localeCompare(b));
@@ -752,6 +765,72 @@ function writeRunLog(logFilePath: string, lines: string[]): void {
   const body = `${lines.join("\n")}\n`;
   Deno.writeTextFileSync(logFilePath, body);
   Deno.writeTextFileSync(path.join(TEST_LOG_DIR, "latest.log"), body);
+}
+
+function createRunId(): string {
+  return crypto.randomUUID();
+}
+
+export function browserFilterTargetsForRun(
+  targetRels: string[],
+  scopedRun: boolean,
+): string[] {
+  return scopedRun ? targetRels : [];
+}
+
+export function replaceStringPref(
+  content: string,
+  prefName: string,
+  value: string,
+): string {
+  const prefPattern = new RegExp(
+    `^user_pref\\("${escapeRegExp(prefName)}",\\s*".*"\\);\\r?\\n?`,
+    "m",
+  );
+  const withoutOldPref = content.replace(prefPattern, "");
+  const prefix = withoutOldPref.length > 0 && !withoutOldPref.endsWith("\n")
+    ? `${withoutOldPref}\n`
+    : withoutOldPref;
+  return `${prefix}user_pref("${prefName}", ${JSON.stringify(value)});\n`;
+}
+
+function writeBrowserTestControlPrefs(
+  targetRels: string[],
+  runId: string,
+): void {
+  const prefsPath = path.join(PATHS.profile_test, "prefs.js");
+  Deno.mkdirSync(path.dirname(prefsPath), { recursive: true });
+
+  let content = "";
+  try {
+    content = Deno.readTextFileSync(prefsPath);
+  } catch {
+    // A fresh test profile may not have prefs.js yet.
+  }
+
+  const payload = JSON.stringify(targetRels);
+  const withFilter = replaceStringPref(content, TEST_FILTER_PREF, payload);
+  const withFilterCount = replaceStringPref(
+    withFilter,
+    TEST_FILTER_COUNT_PREF,
+    String(targetRels.length),
+  );
+  const withFilterItems = targetRels.reduce(
+    (currentContent, targetRel, index) =>
+      replaceStringPref(
+        currentContent,
+        `${TEST_FILTER_ITEM_PREF_PREFIX}${index}`,
+        targetRel,
+      ),
+    withFilterCount,
+  );
+  const withRunId = replaceStringPref(withFilterItems, TEST_RUN_ID_PREF, runId);
+
+  Deno.writeTextFileSync(prefsPath, withRunId);
+  Deno.writeTextFileSync(
+    path.join(PATHS.profile_test, TEST_CONTROL_FILE),
+    `${JSON.stringify({ runId, filter: targetRels })}\n`,
+  );
 }
 
 async function main(): Promise<number> {
@@ -851,6 +930,34 @@ async function main(): Promise<number> {
     writeLine("INFO", "Waiting for browser test results via prefs file...");
 
     const runningBeforeConnect = await hasRunningTestBrowser();
+    const scopedRun = options.near !== undefined || options.layer !== "all";
+    if (runningBeforeConnect && scopedRun) {
+      writeLine(
+        "ERROR",
+        "A running test browser was detected. Scoped runs require nora.tests.filter and nora.tests.run_id to be written before browser startup.",
+      );
+      writeLine(
+        "ERROR",
+        "Stop the running test browser and rerun this command, or start the collector with --no-autostart before launching the browser.",
+      );
+      exitCode = 1;
+      return exitCode;
+    }
+
+    let runId: string | undefined;
+    if (!runningBeforeConnect) {
+      runId = createRunId();
+      writeBrowserTestControlPrefs(
+        browserFilterTargetsForRun(targetRels, scopedRun),
+        runId,
+      );
+    } else {
+      writeLine(
+        "INFO",
+        "Running test browser detected; browser-side target filter can only apply when set before browser startup.",
+      );
+    }
+
     if (options.autoStart && !runningBeforeConnect) {
       writeLine(
         "INFO",
@@ -883,13 +990,16 @@ async function main(): Promise<number> {
     try {
       const browserCollection = await collectBrowserTestResultsFromPrefs(
         resolveStageTimeoutMs(options.timeoutMs, "browser test collection"),
+        runId,
       );
       const browserResults = browserCollection.results;
       const results = filterBrowserResults(browserResults, targetRels);
-      const missingTargets = findMissingTargets(results, targetRels);
+      const missingTargets = browserCollection.aborted
+        ? []
+        : findMissingTargets(results, targetRels);
       const unknownAliasResults = findUnknownAliasResults(browserResults);
-      const strictDiscoveryReconciliation =
-        options.layer === "all" && !options.near;
+      const strictDiscoveryReconciliation = options.layer === "all" &&
+        !options.near;
       const unexpectedBrowserTargets = strictDiscoveryReconciliation
         ? findUnexpectedBrowserTargets(browserCollection, targetRels)
         : [];
@@ -905,15 +1015,37 @@ async function main(): Promise<number> {
         if (result.ok) {
           writeLine(
             "INFO",
-            `✓ ${normalizeBrowserResultPath(result.file)} (${result.mode}, ${result.durationMs}ms)`,
+            `✓ ${
+              normalizeBrowserResultPath(result.file)
+            } (${result.mode}, ${result.durationMs}ms)`,
           );
         } else {
           writeLine(
             "ERROR",
-            `✗ ${normalizeBrowserResultPath(result.file)} (${result.durationMs}ms)`,
+            `✗ ${
+              normalizeBrowserResultPath(result.file)
+            } (${result.durationMs}ms)`,
           );
           writeLine("ERROR", `  ${result.error ?? "Unknown error"}`);
         }
+      }
+
+      const skippedTargets = browserCollection.aborted
+        ? targetRels.filter((targetRel) =>
+          !results.some((result) => isResultMatchTarget(result.file, targetRel))
+        )
+        : [];
+      if (browserCollection.aborted) {
+        writeLine("ERROR", "");
+        writeLine(
+          "ERROR",
+          browserCollection.abortReason ??
+            "Browser-side runner aborted before completing all target tests.",
+        );
+        writeLine(
+          "ERROR",
+          `Skipped ${skippedTargets.length} remaining target test file(s).`,
+        );
       }
 
       if (missingTargets.length > 0) {
@@ -950,17 +1082,24 @@ async function main(): Promise<number> {
       }
 
       const passed = results.filter((r) => r.ok).length;
-      const failed =
-        results.length -
+      const abortFailure = browserCollection.aborted &&
+          !results.some((r) => r.timedOut)
+        ? 1
+        : 0;
+      const failed = results.length -
         passed +
         missingTargets.length +
         unexpectedBrowserTargets.length +
-        unknownAliasResults.length;
+        unknownAliasResults.length +
+        abortFailure;
+      const skipped = skippedTargets.length;
 
       writeSection("Summary");
       writeLine(
         "INFO",
-        `Browser test result: ${passed} passed, ${failed} failed`,
+        `Browser test result: ${passed} passed, ${failed} failed${
+          skipped > 0 ? `, ${skipped} skipped` : ""
+        }`,
       );
       if (failed > 0) {
         exitCode = 1;

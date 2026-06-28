@@ -20,19 +20,25 @@ export interface BrowserTestResult {
   file: string;
   ok: boolean;
   durationMs: number;
-  mode: "import" | "runAllTests";
+  mode: "import" | "runAllTests" | "mozillaTasks";
   error?: string;
+  timedOut?: boolean;
 }
 
 export interface BrowserTestCollection {
   results: BrowserTestResult[];
   discoveredFiles: string[];
+  aborted?: boolean;
+  abortReason?: string;
 }
 
 interface TestState {
   status: "running" | "done" | "error";
   results: BrowserTestResult[];
   discoveredFiles?: string[];
+  runId?: string;
+  aborted?: boolean;
+  abortReason?: string;
   error?: string;
 }
 
@@ -59,8 +65,9 @@ const PREF_REGEX =
  */
 export async function collectBrowserTestResultsFromPrefs(
   timeoutMs = PREFS_FILE_DEFAULT_TIMEOUT_MS,
+  expectedRunId?: string,
+  prefsPath = PATHS.profile_test + "/prefs.js",
 ): Promise<BrowserTestCollection> {
-  const prefsPath = PATHS.profile_test + "/prefs.js";
   const deadline = Date.now() + timeoutMs;
   let lastStatus = "(none)";
   let sawRunning = false;
@@ -88,16 +95,45 @@ export async function collectBrowserTestResultsFromPrefs(
         const BACKSLASH_SENTINEL = "\x00BS";
         const raw = match[1]
           .replace(/\\x5c/g, BACKSLASH_SENTINEL)
-          .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
-            String.fromCharCode(parseInt(hex, 16)),
+          .replace(
+            /\\x([0-9a-fA-F]{2})/g,
+            (_, hex) => String.fromCharCode(parseInt(hex, 16)),
           )
-          .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
-            String.fromCharCode(parseInt(hex, 16)),
+          .replace(
+            /\\u([0-9a-fA-F]{4})/g,
+            (_, hex) => String.fromCharCode(parseInt(hex, 16)),
           )
           .replaceAll(BACKSLASH_SENTINEL, "\\\\");
         const jsonString: string = JSON.parse(`"${raw}"`);
         const state: TestState = JSON.parse(jsonString);
         lastStatus = state.status;
+
+        if (expectedRunId) {
+          if (state.runId !== expectedRunId) {
+            await sleep(PREFS_FILE_POLL_INTERVAL_MS);
+            continue;
+          }
+
+          if (state.status === "done") {
+            return {
+              results: state.results,
+              discoveredFiles: state.discoveredFiles ?? [],
+              aborted: state.aborted,
+              abortReason: state.abortReason,
+            };
+          }
+
+          if (state.status === "error") {
+            throw new Error(
+              `Browser test runner encountered a fatal error: ${
+                state.error ?? "unknown"
+              }`,
+            );
+          }
+
+          await sleep(PREFS_FILE_POLL_INTERVAL_MS);
+          continue;
+        }
 
         // Phase 1: Wait for the browser-side runner to start a fresh run.
         // If the pref already contains "done" from a previous run we must
@@ -118,12 +154,16 @@ export async function collectBrowserTestResultsFromPrefs(
           return {
             results: state.results,
             discoveredFiles: state.discoveredFiles ?? [],
+            aborted: state.aborted,
+            abortReason: state.abortReason,
           };
         }
 
         if (state.status === "error") {
           throw new Error(
-            `Browser test runner encountered a fatal error: ${state.error ?? "unknown"}`,
+            `Browser test runner encountered a fatal error: ${
+              state.error ?? "unknown"
+            }`,
           );
         }
         // status === "running" — keep polling
