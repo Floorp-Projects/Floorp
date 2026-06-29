@@ -84,11 +84,32 @@ jobs:
           deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
           FELES_PID=$!
 
+          kill_process_tree() {
+            local root_pid="$1"
+            local all_pids="$root_pid"
+            local queue="$root_pid"
+
+            while [[ -n "$queue" ]]; do
+              local next_queue=""
+              for pid in $queue; do
+                local children
+                children="$(pgrep -P "$pid" || true)"
+                if [[ -n "$children" ]]; then
+                  all_pids="$all_pids $children"
+                  next_queue="$next_queue $children"
+                fi
+              done
+              queue="$next_queue"
+            done
+
+            kill $all_pids >/dev/null 2>&1 || true
+            sleep 5
+            kill -9 $all_pids >/dev/null 2>&1 || true
+          }
+
           cleanup() {
             if kill -0 "$FELES_PID" >/dev/null 2>&1; then
-              kill "$FELES_PID" >/dev/null 2>&1 || true
-              sleep 5
-              kill -9 "$FELES_PID" >/dev/null 2>&1 || true
+              kill_process_tree "$FELES_PID"
             fi
           }
           trap cleanup EXIT
@@ -135,15 +156,36 @@ jobs:
             > _dist/ci-downloaded-firefox-test.log 2>&1 &
           TEST_PID=$!
 
+          kill_process_tree() {
+            local root_pid="$1"
+            local all_pids="$root_pid"
+            local queue="$root_pid"
+
+            while [[ -n "$queue" ]]; do
+              local next_queue=""
+              for pid in $queue; do
+                local children
+                children="$(pgrep -P "$pid" || true)"
+                if [[ -n "$children" ]]; then
+                  all_pids="$all_pids $children"
+                  next_queue="$next_queue $children"
+                fi
+              done
+              queue="$next_queue"
+            done
+
+            kill $all_pids >/dev/null 2>&1 || true
+            sleep 5
+            kill -9 $all_pids >/dev/null 2>&1 || true
+          }
+
           cleanup() {
             if kill -0 "$TEST_PID" >/dev/null 2>&1; then
               kill "$TEST_PID" >/dev/null 2>&1 || true
             fi
 
             if [[ "${FELES_PID:-}" != "" ]] && kill -0 "$FELES_PID" >/dev/null 2>&1; then
-              kill "$FELES_PID" >/dev/null 2>&1 || true
-              sleep 5
-              kill -9 "$FELES_PID" >/dev/null 2>&1 || true
+              kill_process_tree "$FELES_PID"
             fi
           }
           trap cleanup EXIT
@@ -206,5 +248,6 @@ jobs:
             _dist/ci-feles-build-test.log
             _dist/ci-downloaded-firefox-test.log
             _dist/ci-downloaded-firefox-feles-build-test.log
+            logs/vite-*.log
             _dist/firefox-tests/SUMMARY.md
             browser-features/chrome/test/firefox-downloaded/generated/manifest.json
