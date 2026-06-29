@@ -154,6 +154,7 @@ export default defineConfig({
   // 既存の設定...
   optimizeDeps: {
     ignoreOutdatedRequests: true,
+    noDiscovery: true,
     include: [
       "./node_modules/@nora",
       "solid-js",
