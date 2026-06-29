@@ -1,7 +1,7 @@
 ---
 title: "CI & Test Reference"
 sidebar_label: "CI & Tests"
-floorp_commit: "5a0ffa953e51935961c389aa01cd7785b84e74f9"
+floorp_commit: "bbf2312810681f7a87de6243cc8daaf1f40dd76b"
 generated: true
 ---
 # CI & Test Reference
@@ -18,12 +18,12 @@ The browser integration workflow starts a virtual display, launches Floorp throu
 
 ```bash
 deno task test:smoke
-deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
-deno task test --no-autostart
-deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome
-deno task firefox-tests:prepare-browser
-deno task test --no-autostart --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome
 deno task feles-build test > _dist/ci-downloaded-firefox-feles-build-test.log 2>&1 &
+deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
+deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome --source-repo "$FIREFOX_TEST_RUNTIME_REPOSITORY" --source-ref "$FIREFOX_TEST_RUNTIME_REF"
+deno task firefox-tests:prepare-browser
+deno task test --no-autostart
+deno task test --no-autostart --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome > _dist/ci-downloaded-firefox-test.log 2>&1 &
 deno test -A tools/src/colocated_test_runner.test.ts
 ```
 
@@ -38,6 +38,7 @@ The docs workflow run commands include inventory collection, generated MDX verif
 ```bash
 deno task docs-pipeline:collect --out _dist/docs-pipeline/inventory.json
 deno task docs-pipeline:verify --inventory _dist/docs-pipeline/inventory.json
+deno task docs-pipeline:verify --inventory _dist/docs-pipeline/inventory.json --docs-dir docs
 deno task test:docs-pipeline
 deno task docs-pipeline:audit --inventory _dist/docs-pipeline/inventory.json --docs-dir docs --out _dist/docs-pipeline/llm/audit.json
 ```

@@ -866,7 +866,11 @@ function sampleInventoryWithCiCommands(): DocsInventory {
           permissions: ["contents:read"],
           runCommands: [
             "deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &",
+            "deno task feles-build test > _dist/ci-downloaded-firefox-feles-build-test.log 2>&1 &",
+            'deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome --source-repo "$FIREFOX_TEST_RUNTIME_REPOSITORY" --source-ref "$FIREFOX_TEST_RUNTIME_REF"',
+            "deno task firefox-tests:prepare-browser",
             "deno task test --no-autostart",
+            "deno task test --no-autostart --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome > _dist/ci-downloaded-firefox-test.log 2>&1 &",
             "deno task test:smoke",
           ],
         },
@@ -1181,6 +1185,22 @@ Deno.test("writeGeneratedDocs stabilizes CI reference from inventory", async () 
     assert(
       text.includes(
         "deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &",
+      ),
+    );
+    assert(
+      text.includes(
+        "deno task feles-build test > _dist/ci-downloaded-firefox-feles-build-test.log 2>&1 &",
+      ),
+    );
+    assert(
+      text.includes(
+        'deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome --source-repo "$FIREFOX_TEST_RUNTIME_REPOSITORY" --source-ref "$FIREFOX_TEST_RUNTIME_REF"',
+      ),
+    );
+    assert(text.includes("deno task firefox-tests:prepare-browser"));
+    assert(
+      text.includes(
+        "deno task test --no-autostart --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome > _dist/ci-downloaded-firefox-test.log 2>&1 &",
       ),
     );
     assert(

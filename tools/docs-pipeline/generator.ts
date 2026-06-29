@@ -1797,6 +1797,8 @@ function buildCiTestReference(inventory: DocsInventory): string {
   const browserCommands = selectCommands(browserWorkflow?.runCommands ?? [], [
     "deno task test:smoke",
     "deno task feles-build test",
+    "deno task firefox-tests:collect",
+    "deno task firefox-tests:prepare-browser",
     "deno task test --no-autostart",
     "deno test -A tools/src/colocated_test_runner.test.ts",
   ]);
@@ -1861,9 +1863,10 @@ function buildCiTestReference(inventory: DocsInventory): string {
 function selectCommands(commands: string[], prefixes: string[]): string[] {
   const selected: string[] = [];
   for (const prefix of prefixes) {
-    const command = commands.find((candidate) => candidate.startsWith(prefix));
-    if (command && !selected.includes(command)) {
-      selected.push(command);
+    for (const command of commands) {
+      if (command.startsWith(prefix) && !selected.includes(command)) {
+        selected.push(command);
+      }
     }
   }
   return selected;
