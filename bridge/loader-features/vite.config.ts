@@ -12,6 +12,7 @@ const r = (dir: string) => {
 };
 
 export default defineConfig({
+  cacheDir: "../../node_modules/.vite/loader-features",
   publicDir: r("public"),
   server: {
     port: 5181,
