@@ -110,6 +110,9 @@ Before adding a new compatibility shim, write down:
 
 Do not add broad placeholder helpers. A shim should fail loudly for unsupported
 arguments or modes so imported tests do not become false positives.
+Harness-shape compatibility, such as starting Mozilla-style tasks from one clean
+selected `about:blank` tab, belongs in the shared runner layer instead of in
+individual imported files.
 
 ## Verification
 

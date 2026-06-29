@@ -106,6 +106,21 @@ function browserForTab(tab) {
   }
 }
 
+add_task(async function browserStartsWithCleanSingleTab() {
+  await waitForBrowserChromeReady();
+
+  is(
+    gBrowser.tabs.length,
+    1,
+    "Mozilla-style browser tests should start with one clean tab",
+  );
+  is(
+    gBrowser.currentURI?.spec,
+    TEST_URL,
+    "Mozilla-style browser tests should start on about:blank",
+  );
+});
+
 add_task(async function openTabAndCloseIt() {
   await waitForBrowserChromeReady();
 

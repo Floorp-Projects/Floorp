@@ -19,7 +19,9 @@ type GlobalName =
   | "BrowserTestUtils"
   | "makeURI"
   | "gBrowser"
-  | "gBrowserInit";
+  | "gBrowserInit"
+  | "BrowserCommands"
+  | "gURLBar";
 
 type PreviousGlobal = {
   existed: boolean;
@@ -45,9 +47,12 @@ const GLOBAL_NAMES: GlobalName[] = [
   "makeURI",
   "gBrowser",
   "gBrowserInit",
+  "BrowserCommands",
+  "gURLBar",
 ];
 
 const objectHasOwn = Object.prototype.hasOwnProperty;
+const urlbarFocusedTabs: unknown[] = [];
 
 function formatValue(value: unknown): string {
   try {
@@ -86,8 +91,10 @@ type ServicesLike = {
 
 type BrowserChromeWindowLike = {
   closed?: boolean;
+  BrowserCommands?: unknown;
   gBrowser?: unknown;
   gBrowserInit?: unknown;
+  gURLBar?: unknown;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -359,6 +366,85 @@ function browserForTab(
   }
 
   return undefined;
+}
+
+function gURLBarRecord(
+  globals: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  const globalURLBar = waiveXrays(globals.gURLBar, globals);
+  if (isRecord(globalURLBar)) {
+    return globalURLBar;
+  }
+
+  const browserWindow = mostRecentBrowserWindow(globals);
+  const windowURLBar = waiveXrays(browserWindow.gURLBar, globals);
+  return isRecord(windowURLBar) ? windowURLBar : undefined;
+}
+
+function rememberUrlbarFocusedTab(
+  tab: unknown,
+  globals: Record<string, unknown>,
+): void {
+  if (!tabListIncludes(urlbarFocusedTabs, tab, globals)) {
+    urlbarFocusedTabs.push(waiveXrays(tab, globals));
+  }
+}
+
+function forgetUrlbarFocusedTab(
+  tab: unknown,
+  globals: Record<string, unknown>,
+): void {
+  const index = urlbarFocusedTabs.findIndex((candidate) =>
+    sameTab(candidate, tab, globals)
+  );
+  if (index >= 0) {
+    urlbarFocusedTabs.splice(index, 1);
+  }
+}
+
+function captureUrlbarFocusForSelectedTab(
+  gBrowserValue: unknown,
+  globals: Record<string, unknown>,
+): void {
+  const gBrowser = waiveXrays(gBrowserValue, globals);
+  if (!isRecord(gBrowser) || !gBrowser.selectedTab) {
+    return;
+  }
+
+  const urlbar = gURLBarRecord(globals);
+  if (!urlbar || !("focused" in urlbar)) {
+    return;
+  }
+
+  if (urlbar.focused === true) {
+    rememberUrlbarFocusedTab(gBrowser.selectedTab, globals);
+  } else {
+    forgetUrlbarFocusedTab(gBrowser.selectedTab, globals);
+  }
+}
+
+async function waitForRememberedUrlbarFocus(
+  tab: unknown,
+  globals: Record<string, unknown>,
+): Promise<void> {
+  if (!tabListIncludes(urlbarFocusedTabs, tab, globals)) {
+    return;
+  }
+
+  const urlbar = gURLBarRecord(globals);
+  if (!urlbar) {
+    return;
+  }
+
+  try {
+    await waitForCondition(
+      () => urlbar.focused === true,
+      "BrowserTestUtils expected urlbar focus to be restored",
+      5000,
+    );
+  } catch {
+    // Preserve the upstream assertion failure when focus is never restored.
+  }
 }
 
 function browserCurrentSpec(
@@ -894,6 +980,7 @@ async function openNewForegroundTabCompat(
   await waitForTabSwitch(gBrowser, tab, globals);
 
   await loadPromise;
+  captureUrlbarFocusForSelectedTab(gBrowser, globals);
   return tab;
 }
 
@@ -1030,6 +1117,55 @@ async function browserStoppedCompat(
   });
 }
 
+async function resetBrowserTabsForMozillaTask(
+  globals: Record<string, unknown>,
+): Promise<void> {
+  const browserWindow = mostRecentBrowserWindow(globals);
+  const gBrowser = waiveXrays(browserWindow.gBrowser, globals);
+  if (!isRecord(gBrowser)) {
+    return;
+  }
+
+  const existingTabs = tabList(gBrowser);
+  if (existingTabs.length === 0) {
+    return;
+  }
+
+  urlbarFocusedTabs.length = 0;
+  const keeper = addTabCompat(gBrowser, "about:blank", undefined, globals);
+  gBrowser.selectedTab = keeper;
+  await waitForTabSwitch(gBrowser, keeper, globals);
+
+  const keeperBrowser = browserForTab(gBrowser, keeper, globals);
+  await browserLoadedCompat(
+    keeperBrowser,
+    false,
+    "about:blank",
+    globals,
+  ).catch(() => undefined);
+
+  for (const tab of existingTabs) {
+    if (
+      sameTab(tab, keeper, globals) ||
+      !tabListIncludes(tabList(gBrowser), tab, globals)
+    ) {
+      continue;
+    }
+    await removeTabCompat(tab, {
+      animate: false,
+      skipPermitUnload: true,
+    }, globals);
+  }
+
+  await waitForCondition(
+    () =>
+      tabList(gBrowser).length === 1 &&
+      sameTab(gBrowser.selectedTab, keeper, globals),
+    "Mozilla task expected a clean single-tab browser window",
+    10000,
+  );
+}
+
 function ownerGlobalFromTab(
   tab: unknown,
   globals: Record<string, unknown>,
@@ -1065,6 +1201,7 @@ async function removeTabCompat(
     tab,
     isRecord(options) ? options : undefined,
   ]);
+  forgetUrlbarFocusedTab(tab, globals);
   await waitForCondition(
     () => !tabListIncludes(tabList(browser), tab, globals),
     "BrowserTestUtils expected tab removal",
@@ -1080,8 +1217,11 @@ async function switchTabCompat(
   if (!isRecord(gBrowser)) {
     throw new Error("BrowserTestUtils.switchTab requires a gBrowser");
   }
+  captureUrlbarFocusForSelectedTab(gBrowser, globals);
   gBrowser.selectedTab = tab;
   await waitForTabSwitch(gBrowser, tab, globals);
+  await waitForRememberedUrlbarFocus(tab, globals);
+  captureUrlbarFocusForSelectedTab(gBrowser, globals);
   return tab;
 }
 
@@ -1384,6 +1524,15 @@ export class MozillaTaskContext {
       if (browserWindow.gBrowserInit) {
         globals.gBrowserInit = waiveXrays(browserWindow.gBrowserInit, globals);
       }
+      if (browserWindow.BrowserCommands) {
+        globals.BrowserCommands = waiveXrays(
+          browserWindow.BrowserCommands,
+          globals,
+        );
+      }
+      if (browserWindow.gURLBar) {
+        globals.gURLBar = waiveXrays(browserWindow.gURLBar, globals);
+      }
     }
 
     globals.add_task = (fn: TaskFunction): void => {
@@ -1482,13 +1631,29 @@ export class MozillaTaskContext {
 
   async runTasks(): Promise<void> {
     const failures: string[] = [];
-
-    for (const task of this.#tasks) {
+    let setupOk = true;
+    if (usesMozillaBorrowedStyle(this.#file)) {
       try {
-        await task.fn();
+        await resetBrowserTabsForMozillaTask(
+          globalThis as Record<string, unknown>,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        failures.push(`${task.name}: ${message}`);
+        failures.push(`browser setup: ${message}`);
+        setupOk = false;
+      }
+    }
+
+    if (setupOk) {
+      for (const task of this.#tasks) {
+        try {
+          await task.fn();
+        } catch (error) {
+          const message = error instanceof Error
+            ? error.message
+            : String(error);
+          failures.push(`${task.name}: ${message}`);
+        }
       }
     }
 

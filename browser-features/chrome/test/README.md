@@ -49,9 +49,10 @@ candidate Firefox tests or deciding whether a runner shim is worth adding.
 
 Imported Firefox tests that are not stable in the Floorp runner should stay in
 the source tree with a non-discovered suffix such as `.quarantined.js`, plus a
-file-local note explaining the blocker. The current stable imported set lives
-under `firefox-imported/*.test.js`; `browserBug484315.quarantined.js` is kept as
-evidence for a popup-window case that still needs a safer Floorp harness path.
+file-local note explaining the blocker. The remaining stable adapted imports
+live under `firefox-imported/*.test.js`; `browserBug484315.quarantined.js` is
+kept as evidence for a popup-window case that still needs a safer Floorp harness
+path.
 
 ## Current Compatibility Surface
 
@@ -65,12 +66,16 @@ subset:
 - `isnot(actual, unexpected, message?)`
 - `info(message)`
 - `todo(condition, message?)`
-- `gBrowser` and `gBrowserInit` for borrowed-style `.test.js`, `.test.mjs`, and
-  `.test.jsx` modules. These are resolved from the most recent browser window
-  and exposed through a small Xray-waiving compatibility proxy.
+- `gBrowser`, `gBrowserInit`, `BrowserCommands`, and `gURLBar` for
+  borrowed-style `.test.js`, `.test.mjs`, and `.test.jsx` modules. These are
+  resolved from the most recent browser window; `gBrowser` is exposed through a
+  small Xray-waiving compatibility proxy.
 
 Cleanups run in last-in, first-out order after tasks complete. They also run
 when a task fails, and failures are reported together for the test file.
+Before Mozilla-style tasks run, the compatibility layer normalizes the browser
+window to a single selected `about:blank` tab, matching the startup assumption
+used by many Firefox browser-chrome tests.
 
 ## Verification
 
