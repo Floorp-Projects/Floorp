@@ -132,7 +132,9 @@ async function addNotification(box, label, value, priorityName) {
 }
 
 add_task(async function testStackingOrder() {
-  const browserWindow = /** @type {BrowserWindowLike} */ (window);
+  const browserWindow = /** @type {BrowserWindowLike} */ (
+    /** @type {unknown} */ (window)
+  );
   /** @type {NotificationBoxLike | null} */
   let browserBox = null;
   /** @type {NotificationBoxLike | null} */
