@@ -2,9 +2,10 @@
 
 # Firefox Test Import Workflow
 
-Use this workflow when collecting upstream Firefox tests for Floorp's chrome
+Use this workflow when selecting upstream Firefox tests for Floorp's chrome
 colocated runner. The goal is to turn Firefox tests into real Floorp runtime
-coverage without silently depending on unsupported mochitest behavior.
+coverage without committing a large raw upstream test dump or silently depending
+on unsupported mochitest behavior.
 
 ## Scope
 
@@ -67,7 +68,14 @@ specified with focused behavior.
 
 ## Import Rules
 
-When importing or closely adapting Firefox test code:
+Prefer downloaded raw tests first. Add the upstream path to
+`firefox-downloaded/allowlist.json` when the raw file can run unchanged from the
+downloaded `_dist/firefox-tests/files/` collection through a generated wrapper.
+Generated wrappers live under `firefox-downloaded/generated/` and are ignored by
+git.
+
+When a test needs Floorp-specific changes, import or closely adapt Firefox test
+code under `firefox-imported/` instead:
 
 - Preserve the upstream MPL-2.0 license header and copyright notices.
 - Add `// @colocated-env browser`.
@@ -105,8 +113,18 @@ arguments or modes so imported tests do not become false positives.
 
 ## Verification
 
-Use the real Floorp test runner whenever practical. Start with discovery, then
-run the imported test path:
+For downloaded raw tests, collect a browser-chrome snapshot, generate wrappers,
+and run the generated directory:
+
+```bash
+deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome
+deno task firefox-tests:prepare-browser
+deno task test --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome --list
+deno task test --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome
+```
+
+Use the real Floorp test runner whenever practical. For repo-local adapted tests,
+start with discovery, then run the imported test path:
 
 ```bash
 deno task test --near browser-features/chrome/test/<area>/<file>.test.js --layer chrome --list

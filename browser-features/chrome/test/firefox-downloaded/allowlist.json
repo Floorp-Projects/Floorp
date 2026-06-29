@@ -1,0 +1,7 @@
+[
+  {
+    "name": "browser-bug-537474",
+    "path": "browser/base/content/test/general/browser_bug537474.js",
+    "note": "Raw upstream browser-chrome test that runs through the Floorp mochitest compatibility layer."
+  }
+]

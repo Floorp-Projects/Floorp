@@ -71,6 +71,7 @@
     "docs-pipeline:verify": "deno run --allow-read --allow-write=_dist tools/docs-pipeline/mod.ts verify",
     "docs-pipeline:verify-docs": "deno run --allow-read --allow-write=_dist tools/docs-pipeline/mod.ts verify --inventory _dist/docs-pipeline/inventory.json --docs-dir docs",
     "firefox-tests:collect": "deno run --allow-write=_dist --allow-run=git tools/firefox-tests/collect_firefox_tests.ts",
+    "firefox-tests:prepare-browser": "deno run --allow-read --allow-write=browser-features/chrome/test/firefox-downloaded/generated tools/firefox-tests/prepare_firefox_browser_tests.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
     "test:firefox-tests": "deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/",
     "test:host": "deno test --allow-read --allow-write tools/src/",

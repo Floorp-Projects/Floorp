@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+env:
+  FIREFOX_TEST_RUNTIME_REPOSITORY: Floorp-Projects/Floorp-Runtime
+  FIREFOX_TEST_RUNTIME_REF: nora-0.2.0
+
 jobs:
   # ── Smoke: lint / type check / test discovery (fast, no browser) ──
   smoke:
@@ -40,6 +44,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Checkout Floorp Runtime for downloaded Firefox tests
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FIREFOX_TEST_RUNTIME_REPOSITORY }}
+          ref: ${{ env.FIREFOX_TEST_RUNTIME_REF }}
+          path: _dist/floorp-runtime
+          fetch-depth: 1
+          persist-credentials: false
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -97,6 +109,90 @@ jobs:
 
           deno task test --no-autostart
 
+      - name: Collect downloaded Firefox browser tests
+        run: |
+          deno task firefox-tests:collect \
+            --runtime-dir _dist/floorp-runtime \
+            --out _dist/firefox-tests \
+            --scope browser-chrome \
+            --source-repo "$FIREFOX_TEST_RUNTIME_REPOSITORY" \
+            --source-ref "$FIREFOX_TEST_RUNTIME_REF"
+
+      - name: Prepare downloaded Firefox browser test wrappers
+        run: deno task firefox-tests:prepare-browser
+
+      - name: Run downloaded Firefox browser tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _dist _dist/profile/test
+          rm -f _dist/marionette-port.txt _dist/profile/test/nora-tests-control.json
+
+          deno task test \
+            --no-autostart \
+            --near browser-features/chrome/test/firefox-downloaded/generated \
+            --layer chrome \
+            > _dist/ci-downloaded-firefox-test.log 2>&1 &
+          TEST_PID=$!
+
+          cleanup() {
+            if kill -0 "$TEST_PID" >/dev/null 2>&1; then
+              kill "$TEST_PID" >/dev/null 2>&1 || true
+            fi
+
+            if [[ "${FELES_PID:-}" != "" ]] && kill -0 "$FELES_PID" >/dev/null 2>&1; then
+              kill "$FELES_PID" >/dev/null 2>&1 || true
+              sleep 5
+              kill -9 "$FELES_PID" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          for i in {1..60}; do
+            if [[ -s _dist/profile/test/nora-tests-control.json ]]; then
+              break
+            fi
+
+            if ! kill -0 "$TEST_PID" >/dev/null 2>&1; then
+              cat _dist/ci-downloaded-firefox-test.log || true
+              wait "$TEST_PID"
+            fi
+
+            sleep 1
+          done
+
+          if [[ ! -s _dist/profile/test/nora-tests-control.json ]]; then
+            echo "::error::Downloaded Firefox test control prefs were not written"
+            cat _dist/ci-downloaded-firefox-test.log || true
+            exit 1
+          fi
+
+          deno task feles-build test > _dist/ci-downloaded-firefox-feles-build-test.log 2>&1 &
+          FELES_PID=$!
+
+          for i in {1..300}; do
+            if [[ -s _dist/marionette-port.txt ]]; then
+              echo "Marionette ready on port $(cat _dist/marionette-port.txt)"
+              break
+            fi
+
+            if ! kill -0 "$FELES_PID" >/dev/null 2>&1; then
+              echo "::error::feles-build test exited before Marionette became ready"
+              cat _dist/ci-downloaded-firefox-feles-build-test.log || true
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          if [[ ! -s _dist/marionette-port.txt ]]; then
+            echo "::error::Marionette startup timed out"
+            cat _dist/ci-downloaded-firefox-feles-build-test.log || true
+            exit 1
+          fi
+
+          wait "$TEST_PID"
+
       - name: Run runner unit tests
         run: deno test -A tools/src/colocated_test_runner.test.ts
 
@@ -108,3 +204,7 @@ jobs:
           path: |
             logs/test/latest.log
             _dist/ci-feles-build-test.log
+            _dist/ci-downloaded-firefox-test.log
+            _dist/ci-downloaded-firefox-feles-build-test.log
+            _dist/firefox-tests/SUMMARY.md
+            browser-features/chrome/test/firefox-downloaded/generated/manifest.json

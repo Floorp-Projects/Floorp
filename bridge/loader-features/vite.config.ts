@@ -202,6 +202,10 @@ export default defineConfig({
         replacement: r("../../browser-features"),
       },
       {
+        find: "#firefox-tests",
+        replacement: r("../../_dist/firefox-tests/files"),
+      },
+      {
         find: "#libs",
         replacement: r("../../libs"),
       },

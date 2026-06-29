@@ -22,7 +22,7 @@ wrapped.
 
 ## Borrowing Firefox Tests
 
-Prefer porting Firefox browser-chrome test patterns before copying large files.
+Prefer downloaded raw Firefox tests before copying code into this repository.
 Small tests are good candidates when they:
 
 - use browser-window APIs such as `gBrowser` and `Services`;
@@ -30,7 +30,14 @@ Small tests are good candidates when they:
   mochitest harness features;
 - can run as a module after being renamed to `*.test.js` or `*.test.ts`.
 
-When copying or closely adapting upstream Firefox test code:
+If the raw upstream file can run unchanged, add it to
+`firefox-downloaded/allowlist.json`. CI collects the raw files into
+`_dist/firefox-tests/files/`, generates ignored wrappers under
+`firefox-downloaded/generated/`, and runs those wrappers through the normal
+Floorp test runner.
+
+When copying or closely adapting upstream Firefox test code under
+`firefox-imported/`:
 
 - preserve the MPL-2.0 license header;
 - record the upstream source path and revision or retrieval date;

@@ -20,6 +20,10 @@ The browser integration workflow starts a virtual display, launches Floorp throu
 deno task test:smoke
 deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
 deno task test --no-autostart
+deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome
+deno task firefox-tests:prepare-browser
+deno task test --no-autostart --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome
+deno task feles-build test > _dist/ci-downloaded-firefox-feles-build-test.log 2>&1 &
 deno test -A tools/src/colocated_test_runner.test.ts
 ```
 
