@@ -1,7 +1,7 @@
 ---
 title: "Command Reference"
 sidebar_label: "Commands"
-floorp_commit: "d129e2a2e9c5983b277fc850b61d6a2995b2acff"
+floorp_commit: "640197692d8f575b524ac391a3c64dbe8d18d3fe"
 generated: true
 ---
 # Command Reference
@@ -160,6 +160,16 @@ Implementation: `deno run -A tools/feles-build.ts`
 
 Source: `deno.json:58`
 
+### `deno task firefox-tests:collect`
+
+```bash
+deno task firefox-tests:collect
+```
+
+Implementation: `deno run --allow-write=_dist --allow-run=git tools/firefox-tests/collect_firefox_tests.ts`
+
+Source: `deno.json:73`
+
 ### `deno task test`
 
 ```bash
@@ -168,7 +178,7 @@ deno task test
 
 Implementation: `deno run -A tools/src/colocated_test_runner.ts`
 
-Source: `deno.json:73`
+Source: `deno.json:74`
 
 ### `deno task test:docs-pipeline`
 
@@ -177,6 +187,16 @@ deno task test:docs-pipeline
 ```
 
 Implementation: `deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/`
+
+Source: `deno.json:77`
+
+### `deno task test:firefox-tests`
+
+```bash
+deno task test:firefox-tests
+```
+
+Implementation: `deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/`
 
 Source: `deno.json:75`
 
@@ -188,7 +208,7 @@ deno task test:host
 
 Implementation: `deno test --allow-read --allow-write tools/src/`
 
-Source: `deno.json:74`
+Source: `deno.json:76`
 
 ### `deno task test:integration`
 
@@ -198,7 +218,7 @@ deno task test:integration
 
 Implementation: `deno task test && deno task test:os-api --quick`
 
-Source: `deno.json:82`
+Source: `deno.json:84`
 
 ### `deno task test:os-api`
 
@@ -208,7 +228,7 @@ deno task test:os-api
 
 Implementation: `deno run -A tools/os-test/verify_os_server_full.ts`
 
-Source: `deno.json:77`
+Source: `deno.json:79`
 
 ### `deno task test:os-api:effects`
 
@@ -218,7 +238,7 @@ deno task test:os-api:effects
 
 Implementation: `deno run -A tools/os-test/test-enhanced-effects.ts`
 
-Source: `deno.json:81`
+Source: `deno.json:83`
 
 ### `deno task test:os-api:local-page`
 
@@ -228,7 +248,7 @@ deno task test:os-api:local-page
 
 Implementation: `deno run -A tools/os-test/test-with-local-page.ts`
 
-Source: `deno.json:80`
+Source: `deno.json:82`
 
 ### `deno task test:os-api:network-idle`
 
@@ -238,7 +258,7 @@ deno task test:os-api:network-idle
 
 Implementation: `deno run -A tools/os-test/verify_network_idle_rigorous.ts`
 
-Source: `deno.json:79`
+Source: `deno.json:81`
 
 ### `deno task test:os-api:wrapper`
 
@@ -248,7 +268,7 @@ deno task test:os-api:wrapper
 
 Implementation: `deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts`
 
-Source: `deno.json:78`
+Source: `deno.json:80`
 
 ### `deno task test:smoke`
 
@@ -258,7 +278,7 @@ deno task test:smoke
 
 Implementation: `deno run -A tools/src/smoke_runner.ts`
 
-Source: `deno.json:76`
+Source: `deno.json:78`
 
 ## feles-build Commands
 

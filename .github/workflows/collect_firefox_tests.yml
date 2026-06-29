@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: "(CI) Collect Firefox Tests"
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_repository:
+        description: "Runtime repository to collect Firefox tests from"
+        required: true
+        default: "Floorp-Projects/Floorp-Runtime"
+      runtime_ref:
+        description: "Runtime ref, branch, tag, or SHA"
+        required: true
+        default: "nora-0.2.0"
+      scope:
+        description: "Firefox test collection scope"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - browser-chrome
+      retention_days:
+        description: "Artifact retention days"
+        required: true
+        default: 14
+        type: number
+
+permissions:
+  contents: read
+
+jobs:
+  collect-firefox-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout Floorp Runtime
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.runtime_repository }}
+          ref: ${{ inputs.runtime_ref }}
+          path: _dist/floorp-runtime
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-firefox-tests-${{ hashFiles('deno.lock') }}
+          restore-keys: deno-firefox-tests-
+
+      - run: deno install
+
+      - name: Verify Firefox test collector
+        run: deno task test:firefox-tests
+
+      - name: Collect Firefox tests
+        env:
+          COLLECTION_SCOPE: ${{ inputs.scope }}
+          RUNTIME_REF: ${{ inputs.runtime_ref }}
+          RUNTIME_REPOSITORY: ${{ inputs.runtime_repository }}
+        run: |
+          deno task firefox-tests:collect \
+            --runtime-dir _dist/floorp-runtime \
+            --out _dist/firefox-tests \
+            --scope "$COLLECTION_SCOPE" \
+            --source-repo "$RUNTIME_REPOSITORY" \
+            --source-ref "$RUNTIME_REF"
+
+      - name: Upload Firefox test collection
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-tests-${{ inputs.scope }}
+          path: _dist/firefox-tests
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention_days }}
