@@ -2,6 +2,9 @@
 
 type TaskFunction = () => void | Promise<void>;
 type CleanupFunction = () => void | Promise<void>;
+type ConditionFunction = () => unknown | Promise<unknown>;
+type EventCheckFunction = (event: unknown) => unknown | Promise<unknown>;
+type MutationCheckFunction = () => unknown;
 
 type GlobalName =
   | "add_task"
@@ -12,6 +15,7 @@ type GlobalName =
   | "info"
   | "todo"
   | "Assert"
+  | "TestUtils"
   | "BrowserTestUtils"
   | "makeURI"
   | "gBrowser"
@@ -36,6 +40,7 @@ const GLOBAL_NAMES: GlobalName[] = [
   "info",
   "todo",
   "Assert",
+  "TestUtils",
   "BrowserTestUtils",
   "makeURI",
   "gBrowser",
@@ -118,6 +123,47 @@ async function waitForCondition(
   if (!predicate()) {
     throw new Error(message);
   }
+}
+
+async function waitForMozillaCondition(
+  condition: ConditionFunction,
+  message = "waitForCondition",
+  intervalMs = 100,
+  maxTries = 50,
+): Promise<unknown> {
+  if (typeof condition !== "function") {
+    throw new Error("waitForCondition requires a condition function");
+  }
+
+  const interval = Number.isFinite(intervalMs) && intervalMs >= 0
+    ? intervalMs
+    : 100;
+  const tries = Number.isFinite(maxTries) && maxTries > 0
+    ? Math.floor(maxTries)
+    : 50;
+
+  for (let index = 0; index < tries; index++) {
+    let result: unknown;
+    try {
+      result = await condition();
+    } catch (error) {
+      throw new Error(
+        `${message} - threw exception: ${
+          error instanceof Error ? error.message : formatValue(error)
+        }`,
+      );
+    }
+
+    if (result) {
+      return result;
+    }
+
+    if (index < tries - 1) {
+      await wait(interval);
+    }
+  }
+
+  throw new Error(`${message} - timed out after ${tries} tries.`);
 }
 
 function servicesFromGlobals(globals: Record<string, unknown>): ServicesLike {
@@ -415,6 +461,282 @@ function waitForEvent(
       reject(error);
     }
   });
+}
+
+function waitForEventCompat(
+  targetValue: unknown,
+  eventName: string,
+  capture: unknown,
+  checkFn: unknown,
+  wantsUntrusted: unknown,
+  globals: Record<string, unknown>,
+  timeoutMs = 10000,
+): Promise<unknown> {
+  const target = eventTargetRecord(targetValue, globals);
+  if (!target) {
+    return Promise.reject(
+      new Error(`BrowserTestUtils.waitForEvent requires ${eventName} target`),
+    );
+  }
+
+  const addEventListener = callableMethod(target, "addEventListener");
+  const removeEventListener = callableMethod(target, "removeEventListener");
+  if (!addEventListener || !removeEventListener) {
+    return Promise.reject(new Error(`Cannot wait for ${eventName}`));
+  }
+
+  const listenerOptions = typeof capture === "boolean" || isRecord(capture)
+    ? capture
+    : false;
+  const eventCheck = typeof checkFn === "function"
+    ? checkFn as EventCheckFunction
+    : undefined;
+
+  return new Promise<unknown>((resolve, reject) => {
+    let settled = false;
+    const cleanup = (): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeoutId);
+      try {
+        removeEventListener.call(
+          target,
+          eventName,
+          onEvent,
+          listenerOptions,
+        );
+      } catch {
+        // Event targets may reject late removal during shutdown.
+      }
+    };
+
+    const settleAsync = (
+      callback: () => void,
+    ): void => {
+      setTimeout(callback, 0);
+    };
+
+    const onEvent = (event: unknown): void => {
+      Promise.resolve().then(async () => {
+        if (settled) {
+          return;
+        }
+        try {
+          if (eventCheck && !await eventCheck(event)) {
+            return;
+          }
+          cleanup();
+          settleAsync(() => resolve(event));
+        } catch (error) {
+          cleanup();
+          settleAsync(() => reject(error));
+        }
+      });
+    };
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timed out waiting for ${eventName}`));
+    }, timeoutMs);
+
+    try {
+      addEventListener.call(
+        target,
+        eventName,
+        onEvent,
+        listenerOptions,
+        wantsUntrusted,
+      );
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
+
+type MutationObserverLike = {
+  observe: (target: unknown, options: unknown) => void;
+  disconnect: () => void;
+};
+
+type MutationObserverConstructorLike = new (
+  callback: (records: unknown[], observer: MutationObserverLike) => void,
+) => MutationObserverLike;
+
+function mutationObserverConstructor(
+  targetValue: unknown,
+  globals: Record<string, unknown>,
+): MutationObserverConstructorLike | undefined {
+  const target = waiveXrays(targetValue, globals);
+  const targetRecord = isRecord(target) ? target : undefined;
+  const ownerGlobal = waiveXrays(
+    targetRecord?.documentGlobal ?? targetRecord?.ownerGlobal,
+    globals,
+  );
+  const constructorValue = isRecord(ownerGlobal)
+    ? ownerGlobal.MutationObserver
+    : globals.MutationObserver;
+
+  if (typeof constructorValue !== "function") {
+    return undefined;
+  }
+
+  return constructorValue as MutationObserverConstructorLike;
+}
+
+function waitForMutationConditionCompat(
+  targetValue: unknown,
+  options: unknown,
+  checkFn: unknown,
+  globals: Record<string, unknown>,
+  timeoutMs = 10000,
+): Promise<unknown> {
+  const target = waiveXrays(targetValue, globals);
+  if (!isRecord(target)) {
+    return Promise.reject(
+      new Error("BrowserTestUtils.waitForMutationCondition requires a target"),
+    );
+  }
+  if (typeof checkFn !== "function") {
+    return Promise.reject(
+      new Error(
+        "BrowserTestUtils.waitForMutationCondition requires a condition",
+      ),
+    );
+  }
+
+  const mutationObserver = mutationObserverConstructor(target, globals);
+  if (!mutationObserver) {
+    return Promise.reject(
+      new Error("MutationObserver is unavailable in this test context"),
+    );
+  }
+  const check = checkFn as MutationCheckFunction;
+
+  try {
+    const initial = check();
+    if (initial) {
+      return Promise.resolve(initial);
+    }
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  return new Promise<unknown>((resolve, reject) => {
+    let settled = false;
+    let observer: MutationObserverLike | undefined;
+    const cleanup = (): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeoutId);
+      try {
+        observer?.disconnect();
+      } catch {
+        // Observers may already be disconnected during test teardown.
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(
+        new Error("Timed out waiting for BrowserTestUtils mutation condition"),
+      );
+    }, timeoutMs);
+
+    try {
+      observer = new mutationObserver(() => {
+        if (settled) {
+          return;
+        }
+        try {
+          const value = check();
+          if (!value) {
+            return;
+          }
+          cleanup();
+          resolve(value);
+        } catch (error) {
+          cleanup();
+          reject(error);
+        }
+      });
+      observer.observe(target, isRecord(options) ? options : {});
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
+
+function notificationStack(
+  notificationBoxValue: unknown,
+  globals: Record<string, unknown>,
+): unknown {
+  const notificationBox = waiveXrays(notificationBoxValue, globals);
+  if (!isRecord(notificationBox)) {
+    return undefined;
+  }
+  return waiveXrays(notificationBox.stack, globals);
+}
+
+function notificationValue(
+  notification: unknown,
+  globals: Record<string, unknown>,
+): unknown {
+  const notificationRecord = waiveXrays(notification, globals);
+  if (!isRecord(notificationRecord)) {
+    return undefined;
+  }
+  const getAttribute = callableMethod(notificationRecord, "getAttribute");
+  if (!getAttribute) {
+    return undefined;
+  }
+  try {
+    return getAttribute.call(notificationRecord, "value");
+  } catch {
+    return undefined;
+  }
+}
+
+function findNotificationInNotificationBox(
+  notificationBoxValue: unknown,
+  notificationValueExpected: unknown,
+  globals: Record<string, unknown>,
+): unknown {
+  const stack = notificationStack(notificationBoxValue, globals);
+  const stackRecord = waiveXrays(stack, globals);
+  if (!isRecord(stackRecord)) {
+    return undefined;
+  }
+  const children = stackRecord.children;
+  const candidates = isIterable(children) ? Array.from(children) : [];
+  return candidates.find((candidate) =>
+    notificationValue(candidate, globals) === notificationValueExpected
+  );
+}
+
+async function waitForNotificationInNotificationBoxCompat(
+  notificationBox: unknown,
+  notificationValueExpected: unknown,
+  globals: Record<string, unknown>,
+): Promise<unknown> {
+  return await waitForMozillaCondition(
+    () =>
+      findNotificationInNotificationBox(
+        notificationBox,
+        notificationValueExpected,
+        globals,
+      ),
+    `notification ${
+      String(notificationValueExpected)
+    } should be in the notification box`,
+    25,
+    400,
+  );
 }
 
 async function waitForTabSwitch(
@@ -763,6 +1085,24 @@ async function switchTabCompat(
   return tab;
 }
 
+function createTestUtils(): Record<string, unknown> {
+  return {
+    async waitForCondition(
+      condition: ConditionFunction,
+      message?: string,
+      interval?: number,
+      maxTries?: number,
+    ) {
+      return await waitForMozillaCondition(
+        condition,
+        message,
+        interval,
+        maxTries,
+      );
+    },
+  };
+}
+
 function createBrowserTestUtils(
   globals: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -784,6 +1124,57 @@ function createBrowserTestUtils(
     },
     async browserStopped(browser: unknown) {
       return await browserStoppedCompat(browser, globals);
+    },
+    async waitForCondition(
+      condition: ConditionFunction,
+      message?: string,
+      interval?: number,
+      maxTries?: number,
+    ) {
+      return await waitForMozillaCondition(
+        condition,
+        message,
+        interval,
+        maxTries,
+      );
+    },
+    async waitForEvent(
+      target: unknown,
+      eventName: string,
+      capture?: unknown,
+      checkFn?: unknown,
+      wantsUntrusted?: unknown,
+    ) {
+      return await waitForEventCompat(
+        target,
+        eventName,
+        capture,
+        checkFn,
+        wantsUntrusted,
+        globals,
+      );
+    },
+    async waitForMutationCondition(
+      target: unknown,
+      options: unknown,
+      checkFn: unknown,
+    ) {
+      return await waitForMutationConditionCompat(
+        target,
+        options,
+        checkFn,
+        globals,
+      );
+    },
+    async waitForNotificationInNotificationBox(
+      notificationBox: unknown,
+      notificationValue: unknown,
+    ) {
+      return await waitForNotificationInNotificationBoxCompat(
+        notificationBox,
+        notificationValue,
+        globals,
+      );
     },
     async openNewForegroundTab(
       gBrowser: unknown,
@@ -861,7 +1252,58 @@ function createAssert(): Record<string, unknown> {
         );
       }
     },
+    notDeepEqual(
+      actual: unknown,
+      expected: unknown,
+      message = "notDeepEqual",
+    ): void {
+      if (deepEqual(actual, expected)) {
+        throw new Error(
+          `${message} (did not expect: ${formatValue(expected)})`,
+        );
+      }
+    },
     equal(actual: unknown, expected: unknown, message = "equal"): void {
+      if (!Object.is(actual, expected)) {
+        throw new Error(
+          `${message} (expected: ${formatValue(expected)}, actual: ${
+            formatValue(actual)
+          })`,
+        );
+      }
+    },
+    notEqual(
+      actual: unknown,
+      unexpected: unknown,
+      message = "notEqual",
+    ): void {
+      if (Object.is(actual, unexpected)) {
+        throw new Error(
+          `${message} (unexpected: ${formatValue(unexpected)})`,
+        );
+      }
+    },
+    notStrictEqual(
+      actual: unknown,
+      unexpected: unknown,
+      message = "notStrictEqual",
+    ): void {
+      if (Object.is(actual, unexpected)) {
+        throw new Error(
+          `${message} (unexpected: ${formatValue(unexpected)})`,
+        );
+      }
+    },
+    ok(condition: unknown, message = "ok"): void {
+      if (!condition) {
+        throw new Error(message);
+      }
+    },
+    strictEqual(
+      actual: unknown,
+      expected: unknown,
+      message = "strictEqual",
+    ): void {
       if (!Object.is(actual, expected)) {
         throw new Error(
           `${message} (expected: ${formatValue(expected)}, actual: ${
@@ -1003,6 +1445,7 @@ export class MozillaTaskContext {
     };
 
     globals.Assert = createAssert();
+    globals.TestUtils = createTestUtils();
     globals.BrowserTestUtils = createBrowserTestUtils(globals);
     globals.makeURI = (uri: string): unknown => {
       const services = servicesFromGlobals(globals);

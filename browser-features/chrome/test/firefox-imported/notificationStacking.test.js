@@ -13,9 +13,9 @@
 //   Firefox browser-chrome
 // Local changes:
 //   Renamed to Floorp colocated format, added provenance and type reference,
-//   resolved the browser notification box from the browser window, replaced
-//   BrowserTestUtils.waitForNotificationInNotificationBox and Assert.deepEqual
-//   with local test helpers, and moved cleanup to registerCleanupFunction.
+//   resolved the browser notification box from the browser window, used the
+//   mochitest compatibility layer for wait helpers and assertions, and moved
+//   cleanup to registerCleanupFunction.
 
 /**
  * @typedef {{
@@ -61,23 +61,6 @@ function browserNotificationBox(browserWindow) {
 }
 
 /**
- * @param {() => boolean} predicate
- * @param {string} message
- * @param {number} [timeoutMs]
- */
-async function waitForCondition(predicate, message, timeoutMs = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (predicate()) {
-      ok(true, message);
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  ok(predicate(), message);
-}
-
-/**
  * @param {GBrowserWithNotificationBox} browser
  * @param {XULElement} tab
  */
@@ -94,32 +77,6 @@ function browserForTab(browser, tab) {
 
 /**
  * @param {NotificationBoxLike} box
- * @param {string} value
- */
-async function waitForNotificationInNotificationBox(box, value) {
-  await waitForCondition(
-    () =>
-      [...box.stack.children].some((child) =>
-        child.getAttribute("value") === value
-      ),
-    `notification ${value} should be in the notification box`,
-  );
-}
-
-/**
- * @param {Element[]} actual
- * @param {Element[]} expected
- * @param {string} message
- */
-function isElementOrder(actual, expected, message) {
-  is(actual.length, expected.length, `${message}: length`);
-  for (let index = 0; index < expected.length; index++) {
-    is(actual[index], expected[index], `${message}: item ${index}`);
-  }
-}
-
-/**
- * @param {NotificationBoxLike} box
  * @param {string} label
  * @param {string} value
  * @param {"INFO" | "WARNING" | "CRITICAL"} priorityName
@@ -127,7 +84,7 @@ function isElementOrder(actual, expected, message) {
 async function addNotification(box, label, value, priorityName) {
   const priority = box[`PRIORITY_${priorityName}_MEDIUM`];
   const notification = box.appendNotification(value, { label, priority });
-  await waitForNotificationInNotificationBox(box, value);
+  await BrowserTestUtils.waitForNotificationInNotificationBox(box, value);
   return notification;
 }
 
@@ -151,7 +108,7 @@ add_task(async function testStackingOrder() {
   }
 
   browserBox = browserNotificationBox(browserWindow);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () => Boolean(gBrowserWithNotificationBox.selectedTab),
     "browser window should select a tab",
   );
@@ -217,14 +174,14 @@ add_task(async function testStackingOrder() {
     "WARNING",
   );
 
-  isElementOrder(
-    [browserThree, browserTwo, browserOne],
+  Assert.deepEqual(
     [...browserBox.stack.children],
+    [browserThree, browserTwo, browserOne],
     "Browser notifications prepended",
   );
-  isElementOrder(
-    [tabOne, tabTwo, tabThree],
+  Assert.deepEqual(
     [...tabNotificationBox.stack.children],
+    [tabOne, tabTwo, tabThree],
     "Tab notifications appended",
   );
 });

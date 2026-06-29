@@ -27,7 +27,21 @@ declare function todo(condition: unknown, message?: string): void;
 declare const Assert: {
   deepEqual(actual: unknown, expected: unknown, message?: string): void;
   equal(actual: unknown, expected: unknown, message?: string): void;
+  notDeepEqual(actual: unknown, expected: unknown, message?: string): void;
+  notEqual(actual: unknown, expected: unknown, message?: string): void;
+  notStrictEqual(actual: unknown, expected: unknown, message?: string): void;
+  ok(condition: unknown, message?: string): void;
+  strictEqual(actual: unknown, expected: unknown, message?: string): void;
 };
+
+declare namespace TestUtils {
+  function waitForCondition(
+    condition: () => unknown | Promise<unknown>,
+    message?: string,
+    interval?: number,
+    maxTries?: number,
+  ): Promise<unknown>;
+}
 
 declare const BrowserTestUtils: {
   addTab(gBrowser: unknown, urlOrOptions?: unknown, options?: unknown): unknown;
@@ -37,6 +51,28 @@ declare const BrowserTestUtils: {
     wanted?: unknown,
   ): Promise<unknown>;
   browserStopped(browser: unknown): Promise<unknown>;
+  waitForCondition(
+    condition: () => unknown | Promise<unknown>,
+    message?: string,
+    interval?: number,
+    maxTries?: number,
+  ): Promise<unknown>;
+  waitForEvent(
+    target: unknown,
+    eventName: string,
+    capture?: unknown,
+    checkFn?: (event: unknown) => unknown | Promise<unknown>,
+    wantsUntrusted?: unknown,
+  ): Promise<unknown>;
+  waitForMutationCondition(
+    target: unknown,
+    options: unknown,
+    checkFn: () => unknown,
+  ): Promise<unknown>;
+  waitForNotificationInNotificationBox(
+    notificationBox: unknown,
+    notificationValue: unknown,
+  ): Promise<unknown>;
   openNewForegroundTab(
     gBrowser: unknown,
     opening?: unknown,
