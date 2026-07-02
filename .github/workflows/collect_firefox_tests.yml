@@ -78,6 +78,9 @@ jobs:
             --source-repo "$RUNTIME_REPOSITORY" \
             --source-ref "$RUNTIME_REF"
 
+      - name: Triage Firefox browser-chrome candidates
+        run: deno task firefox-tests:triage-browser
+
       - name: Upload Firefox test collection
         uses: actions/upload-artifact@v4
         with:

@@ -74,6 +74,11 @@ downloaded `_dist/firefox-tests/files/` collection through a generated wrapper.
 Generated wrappers live under `firefox-downloaded/generated/` and are ignored by
 git.
 
+Use `firefox-downloaded/quarantine.json` for downloaded raw candidates that are
+known not to run yet. Keep the blocker, required APIs, source ref, and last
+observed date in that metadata instead of adding a failing raw file to
+`allowlist.json`.
+
 When a test needs Floorp-specific changes, import or closely adapt Firefox test
 code under `firefox-imported/` instead:
 
@@ -121,13 +126,18 @@ and run the generated directory:
 
 ```bash
 deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --scope browser-chrome
+deno task firefox-tests:triage-browser
 deno task firefox-tests:prepare-browser
 deno task test --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome --list
 deno task test --near browser-features/chrome/test/firefox-downloaded/generated --layer chrome
 ```
 
-Use the real Floorp test runner whenever practical. For repo-local adapted tests,
-start with discovery, then run the imported test path:
+Review `_dist/firefox-tests/TRIAGE.md` before promoting more tests. Move only
+small batches of stable candidates into `firefox-downloaded/allowlist.json`;
+leave blocked candidates in `quarantine.json` or classify them as shim work.
+
+Use the real Floorp test runner whenever practical. For repo-local adapted
+tests, start with discovery, then run the imported test path:
 
 ```bash
 deno task test --near browser-features/chrome/test/<area>/<file>.test.js --layer chrome --list

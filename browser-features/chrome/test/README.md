@@ -36,6 +36,10 @@ If the raw upstream file can run unchanged, add it to
 `firefox-downloaded/generated/`, and runs those wrappers through the normal
 Floorp test runner.
 
+Downloaded candidates that are useful but not ready for CI should be tracked in
+`firefox-downloaded/quarantine.json` and reviewed through
+`deno task firefox-tests:triage-browser` after collection.
+
 When copying or closely adapting upstream Firefox test code under
 `firefox-imported/`:
 
@@ -72,10 +76,10 @@ subset:
   small Xray-waiving compatibility proxy.
 
 Cleanups run in last-in, first-out order after tasks complete. They also run
-when a task fails, and failures are reported together for the test file.
-Before Mozilla-style tasks run, the compatibility layer normalizes the browser
-window to a single selected `about:blank` tab, matching the startup assumption
-used by many Firefox browser-chrome tests.
+when a task fails, and failures are reported together for the test file. Before
+Mozilla-style tasks run, the compatibility layer normalizes the browser window
+to a single selected `about:blank` tab, matching the startup assumption used by
+many Firefox browser-chrome tests.
 
 ## Verification
 

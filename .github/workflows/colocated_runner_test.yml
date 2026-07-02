@@ -139,6 +139,9 @@ jobs:
             --source-repo "$FIREFOX_TEST_RUNTIME_REPOSITORY" \
             --source-ref "$FIREFOX_TEST_RUNTIME_REF"
 
+      - name: Triage downloaded Firefox browser tests
+        run: deno task firefox-tests:triage-browser
+
       - name: Prepare downloaded Firefox browser test wrappers
         run: deno task firefox-tests:prepare-browser
 
@@ -250,4 +253,6 @@ jobs:
             _dist/ci-downloaded-firefox-feles-build-test.log
             logs/vite-*.log
             _dist/firefox-tests/SUMMARY.md
+            _dist/firefox-tests/TRIAGE.md
+            _dist/firefox-tests/triage.json
             browser-features/chrome/test/firefox-downloaded/generated/manifest.json
