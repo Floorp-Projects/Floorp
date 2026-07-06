@@ -23,14 +23,10 @@
     "prettier": "^3.7.4",
     "puppeteer-core": "^24.34.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.0",
-    "vite-plugin-solid": "^2.11.10"
+    "vite": "^8"
   },
   "dependencies": {
     "@deno/vite-plugin": "^1.0.6",
-    "@solid-primitives/memo": "^1.4.3",
-    "@solid-primitives/scheduled": "^1.5.2",
-    "@solid-primitives/utils": "^6.3.2",
     "@swc/core": "^1.15.7",
     "@tailwindcss/vite": "^4.1.18",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -40,7 +36,6 @@
     "i18next": "^25.7.3",
     "io-ts": "^2.2.22",
     "qr-code-styling": "^1.9.2",
-    "solid-js": "^1.9.10",
     "tailwindcss": "^4.1.18",
     "unplugin-swc": "^1.5.9",
     "uuid": "^13.0.0",

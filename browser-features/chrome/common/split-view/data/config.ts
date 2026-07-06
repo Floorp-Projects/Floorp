@@ -3,14 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal, effect } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 import {
   type SplitViewConfig,
   type SplitViewPaneSizes,
@@ -87,68 +81,41 @@ function parsePaneSizesPref(prefName: string): SplitViewPaneSizes {
   }
 }
 
-function createSplitViewConfig(): [
-  Accessor<SplitViewConfig>,
-  Setter<SplitViewConfig>,
-] {
-  const [config, setConfig] = createSignal<SplitViewConfig>(
-    parseConfigPref(PREF_SPLIT_VIEW_CONFIG),
-    { equals: deepEquals },
-  );
+function makePrefSignal<T>(
+  parsePref: () => T,
+  prefName: string,
+  equals: (a: T, b: T) => boolean,
+): Signal<T> {
+  const sig = signal<T>(parsePref());
 
-  createEffect(() => {
-    Services.prefs.setStringPref(
-      PREF_SPLIT_VIEW_CONFIG,
-      JSON.stringify(config()),
-    );
+  effect(() => {
+    const v = sig.value;
+    Services.prefs.setStringPref(prefName, JSON.stringify(v));
   });
 
   const observer = () => {
-    setConfig(parseConfigPref(PREF_SPLIT_VIEW_CONFIG));
+    const next = parsePref();
+    if (!equals(sig.value, next)) sig.value = next;
   };
+  Services.prefs.addObserver(prefName, observer);
 
-  Services.prefs.addObserver(PREF_SPLIT_VIEW_CONFIG, observer);
-  onCleanup(() => {
-    Services.prefs.removeObserver(PREF_SPLIT_VIEW_CONFIG, observer);
+  import.meta.hot?.dispose(() => {
+    Services.prefs.removeObserver(prefName, observer);
   });
 
-  return [config, setConfig];
+  return sig;
 }
 
-function createSplitViewPaneSizes(): [
-  Accessor<SplitViewPaneSizes>,
-  Setter<SplitViewPaneSizes>,
-] {
-  const [paneSizes, setPaneSizes] = createSignal<SplitViewPaneSizes>(
-    parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES),
-    { equals: deepEquals },
-  );
-
-  createEffect(() => {
-    Services.prefs.setStringPref(
-      PREF_SPLIT_VIEW_PANE_SIZES,
-      JSON.stringify(paneSizes()),
-    );
-  });
-
-  const observer = () => {
-    setPaneSizes(parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES));
-  };
-
-  Services.prefs.addObserver(PREF_SPLIT_VIEW_PANE_SIZES, observer);
-  onCleanup(() => {
-    Services.prefs.removeObserver(PREF_SPLIT_VIEW_PANE_SIZES, observer);
-  });
-
-  return [paneSizes, setPaneSizes];
-}
-
-export const [splitViewConfig, setSplitViewConfig] = createRootHMR(
-  createSplitViewConfig,
-  import.meta.hot,
+export const splitViewConfig: Signal<SplitViewConfig> = makePrefSignal(
+  () => parseConfigPref(PREF_SPLIT_VIEW_CONFIG),
+  PREF_SPLIT_VIEW_CONFIG,
+  deepEquals,
 );
+export const setSplitViewConfig = (v: SplitViewConfig) => { splitViewConfig.value = v; };
 
-export const [splitViewPaneSizes, setSplitViewPaneSizes] = createRootHMR(
-  createSplitViewPaneSizes,
-  import.meta.hot,
+export const splitViewPaneSizes: Signal<SplitViewPaneSizes> = makePrefSignal(
+  () => parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES),
+  PREF_SPLIT_VIEW_PANE_SIZES,
+  deepEquals,
 );
+export const setSplitViewPaneSizes = (v: SplitViewPaneSizes) => { splitViewPaneSizes.value = v; };

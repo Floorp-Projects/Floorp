@@ -71,9 +71,7 @@ export class SiteSpecificBrowserManager {
   }
 
   closePopup() {
-    const panel = document?.getElementById(
-      "ssb-panel",
-    ) as unknown as XULElement & {
+    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
       hidePopup: () => void;
     };
     if (panel) {

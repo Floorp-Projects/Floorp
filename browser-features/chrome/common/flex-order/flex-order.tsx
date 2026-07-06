@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
-import { createSignal, onCleanup } from "solid-js";
+import { render } from "@nora/preact-xul";
+import { signal } from "@preact/signals";
+import { addDisposer, createRootHMR, rootEffect } from "@nora/preact-xul/lifetime";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
-// @ts-types="solid-js"
-import { createEffect } from "solid-js";
 
 type Orders = {
   fxSidebar: number;
@@ -16,6 +15,8 @@ type Orders = {
   floorpSidebarSplitter: number;
   floorpSidebar: number;
   floorpSidebarSelectBox: number;
+  verticaltabbarSplitter?: number;
+  verticaltabbar?: number;
 };
 
 // deno-lint-ignore no-namespace
@@ -29,9 +30,9 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   const browserBoxId = "tabbrowser-tabbox";
 
-  const [orders, setOrders] = createRootHMR(
+  const orders = createRootHMR(
     () =>
-      createSignal<Orders>({
+      signal<Orders>({
         fxSidebar: -1,
         fxSidebarSplitter: -1,
         browserBox: -1,
@@ -44,38 +45,27 @@ export namespace gFlexOrder {
 
   export function init() {
     const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
-    const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+    const floorpSidebarPositionPref = panelSidebarConfig.value.position_start;
 
     applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
     renderOrderStyle();
-    Services.prefs.addObserver(fxSidebarPosition, () => {
-      const fxSidebarPositionPref = Services.prefs.getBoolPref(
-        fxSidebarPosition,
-      );
-      const floorpSidebarPositionPref = panelSidebarConfig().position_start;
 
-      applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+    const onPrefChange = () => {
+      const fxPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const floorpPref = panelSidebarConfig.value.position_start;
+      applyFlexOrder(fxPref, floorpPref);
       renderOrderStyle();
+    };
+
+    Services.prefs.addObserver(fxSidebarPosition, onPrefChange);
+    addDisposer(() => {
+      Services.prefs.removeObserver(fxSidebarPosition, onPrefChange);
     });
 
-    onCleanup(() => {
-      Services.prefs.removeObserver(fxSidebarPosition, () => {
-        const fxSidebarPositionPref = Services.prefs.getBoolPref(
-          fxSidebarPosition,
-        );
-        const floorpSidebarPositionPref = panelSidebarConfig().position_start;
-        applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
-        renderOrderStyle();
-      });
-    });
-
-    createEffect(() => {
-      const fxSidebarPositionPref = Services.prefs.getBoolPref(
-        fxSidebarPosition,
-      );
-      const floorpSidebarPositionPref = panelSidebarConfig().position_start;
-
-      applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
+    rootEffect(() => {
+      const fxPref = Services.prefs.getBoolPref(fxSidebarPosition);
+      const floorpPref = panelSidebarConfig.value.position_start;
+      applyFlexOrder(fxPref, floorpPref);
       renderOrderStyle();
     });
   }
@@ -86,27 +76,27 @@ export namespace gFlexOrder {
   ) {
     if (fxSidebarPositionPref && floorpSidebarPositionPref) {
       // Fx's sidebar -> browser -> Floorp's sidebar
-      setOrders({
+      orders.value = {
         fxSidebar: 0,
         fxSidebarSplitter: 1,
         browserBox: 2,
         floorpSidebarSplitter: 3,
         floorpSidebar: 4,
         floorpSidebarSelectBox: 5,
-      });
+      };
     } else if (fxSidebarPositionPref && !floorpSidebarPositionPref) {
       // Floorp sidebar -> Fx's sidebar -> browser
-      setOrders({
+      orders.value = {
         floorpSidebarSelectBox: 0,
         floorpSidebar: 1,
         floorpSidebarSplitter: 2,
         fxSidebar: 3,
         fxSidebarSplitter: 4,
         browserBox: 5,
-      });
+      };
     } else if (!fxSidebarPositionPref && floorpSidebarPositionPref) {
       // browser -> Vertical tab bar -> Fx's sidebar -> Floorp's sidebar
-      setOrders({
+      orders.value = {
         browserBox: 0,
         verticaltabbarSplitter: 1,
         verticaltabbar: 2,
@@ -115,10 +105,10 @@ export namespace gFlexOrder {
         floorpSidebarSplitter: 5,
         floorpSidebar: 6,
         floorpSidebarSelectBox: 7,
-      });
+      };
     } else {
       // Floorp's sidebar -> browser -> Vertical tab bar -> Fx's sidebar
-      setOrders({
+      orders.value = {
         floorpSidebarSelectBox: 0,
         floorpSidebar: 1,
         floorpSidebarSplitter: 2,
@@ -127,31 +117,31 @@ export namespace gFlexOrder {
         verticaltabbar: 5,
         fxSidebar: 6,
         fxSidebarSplitter: 7,
-      });
+      };
     }
   }
 
   function renderOrderStyle() {
     render(() => (
-      <style jsx>
+      <style>
         {`
       #${fxSidebarId} {
-        order: ${orders().fxSidebar} !important;
+        order: ${orders.value.fxSidebar} !important;
       }
       #${floorpSidebarId} {
-        order: ${orders().floorpSidebar} !important;
+        order: ${orders.value.floorpSidebar} !important;
       }
       #${floorpSidebarSelectBoxId} {
-        order: ${orders().floorpSidebarSelectBox} !important;
+        order: ${orders.value.floorpSidebarSelectBox} !important;
       }
       #${floorpSidebarSplitterId} {
-        order: ${orders().floorpSidebarSplitter} !important;
+        order: ${orders.value.floorpSidebarSplitter} !important;
       }
       #${fxSidebarSplitterId} {
-        order: ${orders().fxSidebarSplitter} !important;
+        order: ${orders.value.fxSidebarSplitter} !important;
       }
       #${browserBoxId} {
-        order: ${orders().browserBox} !important;
+        order: ${orders.value.browserBox} !important;
       }
     `}
       </style>

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { render } from "preact";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { externalBrowserService } from "./external-browser-service.ts";
@@ -33,9 +33,7 @@ export class ExternalBrowserTabContextMenu {
     const marker = document?.getElementById(MARKER_ID);
 
     try {
-      render(() => this.menu(), parentElem, {
-        marker: marker?.parentElement === parentElem ? marker : undefined,
-      });
+      render(this.menu(), parentElem);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -84,7 +82,7 @@ export class ExternalBrowserTabContextMenu {
   }
 
   private async populateMenu(): Promise<void> {
-    const popup = document?.getElementById(MENU_POPUP_ID) as XULElement | null;
+    const popup = document?.getElementById(MENU_POPUP_ID) as unknown as XULElement | null;
     if (!popup) {
       return;
     }

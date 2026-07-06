@@ -86,5 +86,5 @@ function updateButton(paneCount: number): void {
   const layout = groupId
     ? getPersistedGroupLayout(groupId)
     : null;
-  button.setAttribute("data-layout", layout ?? splitViewConfig().layout);
+  button.setAttribute("data-layout", layout ?? splitViewConfig.value.layout);
 }

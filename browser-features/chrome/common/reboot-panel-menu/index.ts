@@ -6,7 +6,7 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { RebootPanelMenu } from "./RebootPanelMenu";
 
-@noraComponent(import.meta.hot)
+@noraComponent("RebootPanelMenuComponent", import.meta.hot)
 export default class RebootPanelMenuComponent extends NoraComponentBase {
   private rebootPanelMenu: RebootPanelMenu | null = null;
 

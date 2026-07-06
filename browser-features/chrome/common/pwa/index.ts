@@ -6,7 +6,7 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { SsbPageAction } from "./SsbPageAction.tsx";
 import { SsbPanelView } from "./SsbPanelView.tsx";
 import { enabled } from "./config.ts";
@@ -16,12 +16,12 @@ import { ManifestProcesser } from "./manifestProcesser.ts";
 import { DataManager } from "./dataStore.ts";
 import { SiteSpecificBrowserManager } from "./ssbManager.ts";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Pwa", import.meta.hot)
 export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
 
   init() {
-    if (!enabled()) return;
+    if (!enabled.value) return;
     const manifestProcesser = new ManifestProcesser();
     const dataManager = new DataManager();
     const ssbManager = new SiteSpecificBrowserManager(
@@ -55,9 +55,9 @@ export default class Pwa extends NoraComponentBase {
               Services.prefs.setBoolPref("floorp.browser.ssb.enabled", false);
               // Since we disabled the feature, we should probably stop here
               // But strictly speaking, we are in the init() so the UI is already created.
-              // A weird state, but it will be disabled effectively on next run or if components check enabled() reactively.
+              // A weird state, but it will be disabled effectively on next run or if components check enabled.value reactively.
               // Given PwaWindowSupport checks enabled status implicitly or by existence, it might be fine.
-              // Actually, PwaWindowSupport doesn't check 'enabled()' in constructor, it checks taskbartab attr.
+              // Actually, PwaWindowSupport doesn't check 'enabled.value' in constructor, it checks taskbartab attr.
               // But SsbPageAction etc might be visible.
               // However, typically this init runs once. If we disable it, the reactive config in config.ts will update.
               // Let's verify config.ts reactive behavior.

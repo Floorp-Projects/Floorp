@@ -10,6 +10,14 @@
       "jsr:@types/gecko"
     ]
   },
+  "imports": {
+    "i18next": "npm:i18next@^25.7.3",
+    "preact": "npm:preact@^10.26.9",
+    "preact/hooks": "npm:preact@^10.26.9/hooks",
+    "@preact/signals": "npm:@preact/signals@^1.3.2",
+    "@nora/preact-xul/lifetime": "../libs/preact-xul/lifetime.ts",
+    "@std/toml": "npm:@jsr/std__toml@^1.0.11"
+  },
   "exports": {
     ".": "./deno.json"
   }

@@ -6,7 +6,7 @@
 import type { TWorkspaceID } from "../utils/type";
 import type { WorkspacesService } from "../workspacesService";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { signal } from "@preact/signals";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const translationKeys = {
@@ -30,44 +30,44 @@ const getTranslations = () => ({
   archive: translate(translationKeys.archive),
 });
 
+// Module-level signal: translations are shared across all ContextMenu instances.
+const texts = signal(getTranslations());
+addI18nObserver(() => {
+  texts.value = getTranslations();
+});
+
 export function ContextMenu(props: {
   disableBefore: boolean;
   disableAfter: boolean;
   contextWorkspaceId: TWorkspaceID;
   ctx: WorkspacesService;
 }) {
-  const [texts, setTexts] = createSignal(getTranslations());
-
-  addI18nObserver(() => {
-    setTexts(getTranslations());
-  });
-
   return (
     <>
       <xul:menuitem
-        label={texts().moveUp}
+        label={texts.value.moveUp}
         disabled={props.disableBefore}
         onCommand={() => props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)}
       />
       <xul:menuitem
-        label={texts().moveDown}
+        label={texts.value.moveDown}
         disabled={props.disableAfter}
         onCommand={() =>
           props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)}
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
-        label={texts().delete}
+        label={texts.value.delete}
         onCommand={() => props.ctx.deleteWorkspace(props.contextWorkspaceId)}
       />
       <xul:menuitem
-        label={texts().manage}
+        label={texts.value.manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
       />
       <xul:menuseparator class="workspaces-context-menu-separator" />
       <xul:menuitem
-        label={texts().archive}
+        label={texts.value.archive}
         onCommand={async () => {
           await props.ctx.archiveWorkspace(props.contextWorkspaceId);
         }}

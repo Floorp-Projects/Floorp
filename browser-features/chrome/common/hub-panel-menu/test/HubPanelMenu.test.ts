@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
 import { assert, assertEquals, runTests } from "../../../test/utils/test_harness.ts";
 import { HubPanelMenu } from "../HubPanelMenu.tsx";
 
@@ -86,7 +86,7 @@ function testStaticRenderCreatesToolbarButton(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  render(() => HubPanelMenu.Render(), container);
+  render(h(HubPanelMenu.Render, null), container);
 
   const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
   assert(
@@ -428,7 +428,7 @@ function testStaticRenderLabelWithDefaultTranslation(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  render(() => HubPanelMenu.Render(), container);
+  render(h(HubPanelMenu.Render, null), container);
 
   const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
   assert(rendered !== null, "Hub button should be rendered");
@@ -447,18 +447,18 @@ function testStaticRenderWithCommandHandler(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  render(() => HubPanelMenu.Render(), container);
+  render(h(HubPanelMenu.Render, null), container);
 
   const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
   assert(rendered !== null, "Hub button should be rendered");
 
   // Check that the element has the command handler attached
-  // In Solid-XUL, onCommand becomes a command event listener
+  // In preact-xul, onCommand becomes a command event listener
   const _hasCommandListener =
     rendered!.getAttribute("command") !== null ||
     rendered!.getAttribute("oncommand") !== null;
 
-  // Note: Solid-XUL handles events differently, so we just verify the element renders
+  // Note: preact-xul handles events differently, so we just verify the element renders
   assert(
     rendered!.tagName.toLowerCase() === "toolbarbutton" ||
       rendered!.tagName.toLowerCase() === "xul:toolbarbutton",
@@ -561,8 +561,8 @@ function testMutationObserverDisconnectsOnCleanup(): void {
   // Verify instance was created
   assert(instance !== null, "Instance should be created");
 
-  // In a real scenario, when the component is destroyed, onCleanup would be called
-  // which would call observer.disconnect()
+  // In a real scenario, when the component is destroyed, the addDisposer callback
+  // would call observer.disconnect()
   // This test verifies the instance structure supports cleanup
   assert(
     typeof instance === "object",

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 import { config } from "#features-chrome/common/designs/configs.ts";
 
 const DOM_LAYOUT_MANAGER_DEBUG_PREFIX = "[DOMLayoutManager]";
@@ -121,7 +121,7 @@ function tryInstallNavigatorToolboxMirror(): boolean {
 
   const toolbox = document?.getElementById(
     "navigator-toolbox",
-  ) as XULElement | null;
+  ) as unknown as XULElement | null;
   if (!toolbox) {
     return false;
   }
@@ -381,10 +381,10 @@ function isStarButton(element: Element | null): XULElement | null {
     targetId === "star-button" || targetId === "star-button-box";
   const starButtonElement = element.closest(
     "#star-button, #star-button-box",
-  ) as XULElement | null;
+  ) as unknown as XULElement | null;
 
   if (isStarButtonById || starButtonElement) {
-    return (starButtonElement || element) as XULElement | null;
+    return (starButtonElement || element) as unknown as XULElement | null;
   }
 
   return null;
@@ -488,16 +488,16 @@ function forwardEventToNavigatorToolbox(
       if (originalTarget && isXULButton(originalTarget)) {
         const button = originalTarget.closest(
           "toolbarbutton, button",
-        ) as XULElement | null;
+        ) as unknown as XULElement | null;
         if (button && button.id) {
           // Try to call doCommand() first, which is the standard way to trigger XUL button actions
           let doCommandSucceeded = false;
           try {
             if (
-              typeof (button as XULElement & { doCommand?: () => void })
+              typeof (button as unknown as XULElement & { doCommand?: () => void })
                 .doCommand === "function"
             ) {
-              (button as XULElement & { doCommand: () => void }).doCommand();
+              (button as unknown as XULElement & { doCommand: () => void }).doCommand();
               doCommandSucceeded = true;
             }
           } catch {
@@ -764,7 +764,7 @@ function handleBookmarkCommandEvent(event: Event): boolean {
   }
 
   // Get bookmark URI from the button's _placesNode property
-  const bookmarkButton = target as XULElement & {
+  const bookmarkButton = target as unknown as XULElement & {
     _placesNode?: { uri?: string };
   };
   const uri = bookmarkButton._placesNode?.uri;
@@ -857,8 +857,8 @@ export class DOMLayoutManager {
   }
 
   private setupNavbarPosition() {
-    createEffect(() => {
-      const currentPosition = config().uiCustomization.navbar.position;
+    effect(() => {
+      const currentPosition = config.value.uiCustomization.navbar.position;
       try {
         if (currentPosition === "bottom") {
           this.moveNavbarToBottom();
@@ -948,7 +948,7 @@ export class DOMLayoutManager {
     if (this.isNavbarAtBottom) {
       return;
     }
-    if (config().uiCustomization.navbar.position !== "bottom") {
+    if (config.value.uiCustomization.navbar.position !== "bottom") {
       return;
     }
 
@@ -956,7 +956,7 @@ export class DOMLayoutManager {
     const fullscreenWrapper = this.fullscreenWrapper;
     const statusbar = document?.getElementById(
       "nora-statusbar",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
 
     if (!navbar) {
       console.warn(`${DOMLayoutManager.DEBUG_PREFIX} navbar element not found`);
@@ -1595,12 +1595,12 @@ export class DOMLayoutManager {
   }
 
   private setupBookmarkBarPosition() {
-    createEffect(() => {
+    effect(() => {
       const currentPosition =
-        config().uiCustomization.bookmarkBar?.position ?? "top";
+        config.value.uiCustomization.bookmarkBar?.position ?? "top";
       // Track navbar position to ensure bookmark bar is placed correctly
       // This creates a dependency so effect re-runs when navbar position changes
-      const _navbarPosition = config().uiCustomization.navbar.position;
+      const _navbarPosition = config.value.uiCustomization.navbar.position;
       try {
         if (currentPosition === "bottom") {
           this.moveBookmarkBarToBottom();
@@ -1625,7 +1625,7 @@ export class DOMLayoutManager {
     const fullscreenWrapper = this.fullscreenWrapper;
     const statusbar = document?.getElementById(
       "nora-statusbar",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
     const navbar = this.navBar;
 
     if (!bookmarkBar) {

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import { effect } from "@preact/signals";
 import {
   isFloating,
   panelSidebarConfig,
@@ -44,57 +44,44 @@ export class PanelSidebarFloating {
   private isDraggingHeader = false;
 
   constructor() {
-    const owner = getOwner();
-    const exec1 = () => {
-      createEffect(() => {
-        if (isFloating()) {
-          if (!this.userResizedHeight) {
-            this.applyHeightToSidebarBox();
-          }
-          this.initResizeObserver();
-          this.initDragHeader();
-          this.applyStoredPositionToSidebarBox();
-          document?.addEventListener(
-            "mousedown",
-            this.handleOutsideClick,
-            true,
-          );
-        } else {
-          this.removeFloatingStyles();
-          this.resizeObserver?.disconnect();
-          document?.removeEventListener(
-            "mousedown",
-            this.handleOutsideClick,
-            true,
-          );
-          this.userResizedHeight = false;
-          this.restoreActivePanel();
+    effect(() => {
+      if (isFloating.value) {
+        if (!this.userResizedHeight) {
+          this.applyHeightToSidebarBox();
         }
-      });
-    };
+        this.initResizeObserver();
+        this.initDragHeader();
+        this.applyStoredPositionToSidebarBox();
+        document?.addEventListener(
+          "mousedown",
+          this.handleOutsideClick,
+          true,
+        );
+      } else {
+        this.removeFloatingStyles();
+        this.resizeObserver?.disconnect();
+        document?.removeEventListener(
+          "mousedown",
+          this.handleOutsideClick,
+          true,
+        );
+        this.userResizedHeight = false;
+        this.restoreActivePanel();
+      }
+    });
 
-    const exec2 = () => {
-      createEffect(() => {
-        const position = panelSidebarConfig().position_start;
-        if (position) {
-          document
-            ?.getElementById("panel-sidebar-box")
-            ?.setAttribute("data-floating-splitter-side", "start");
-        } else {
-          document
-            ?.getElementById("panel-sidebar-box")
-            ?.setAttribute("data-floating-splitter-side", "end");
-        }
-      });
-    };
-
-    if (owner) {
-      runWithOwner(owner, exec1);
-      runWithOwner(owner, exec2);
-    } else {
-      createRoot(exec1);
-      createRoot(exec2);
-    }
+    effect(() => {
+      const position = panelSidebarConfig.value.position_start;
+      if (position) {
+        document
+          ?.getElementById("panel-sidebar-box")
+          ?.setAttribute("data-floating-splitter-side", "start");
+      } else {
+        document
+          ?.getElementById("panel-sidebar-box")
+          ?.setAttribute("data-floating-splitter-side", "end");
+      }
+    });
   }
 
   private initResizeObserver() {
@@ -111,7 +98,7 @@ export class PanelSidebarFloating {
       for (const entry of entries) {
         if (
           entry.target.id === this.parentHeightTargetId &&
-          isFloating() &&
+          isFloating.value &&
           !this.userResizedHeight
         ) {
           this.applyHeightToSidebarBox();
@@ -254,7 +241,7 @@ export class PanelSidebarFloating {
       10,
     );
 
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
     setPanelSidebarConfig({
       ...config,
       floatingPositionLeft: left,
@@ -299,6 +286,7 @@ export class PanelSidebarFloating {
     }
   }
 
+
   private getBrowserHeight() {
     return (
       document?.getElementById(this.parentHeightTargetId)?.clientHeight ?? 0
@@ -311,7 +299,7 @@ export class PanelSidebarFloating {
     ) as unknown as XULElement;
     if (!sidebarBox) return;
 
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
 
     const width = sidebarBox.getBoundingClientRect().width;
     const height = sidebarBox.getBoundingClientRect().height;
@@ -324,7 +312,7 @@ export class PanelSidebarFloating {
   }
 
   private applyStoredPositionToSidebarBox() {
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
     ) as unknown as XULElement;
@@ -362,7 +350,7 @@ export class PanelSidebarFloating {
       sidebarBox.style.setProperty("top", `${top}px`);
     } else {
       // position_start に応じてデフォルトの左右を調整
-      const isStart = panelSidebarConfig().position_start;
+      const isStart = panelSidebarConfig.value.position_start;
       const currentWidth = sidebarBox.getBoundingClientRect().width || 400;
       const browserW = document?.getElementById("browser")?.clientWidth ??
         globalThis.innerWidth;
@@ -389,11 +377,11 @@ export class PanelSidebarFloating {
   }
 
   private handleOutsideClick = (event: MouseEvent) => {
-    if (!isFloating()) {
+    if (!isFloating.value) {
       return;
     }
 
-    if (isResizeCooldown() || this.isDraggingHeader) {
+    if (isResizeCooldown.value || this.isDraggingHeader) {
       return;
     }
 
@@ -402,14 +390,14 @@ export class PanelSidebarFloating {
     const splitter = document?.getElementById("panel-sidebar-splitter");
     const browsers = sidebarBox?.querySelectorAll(".sidebar-panel-browser");
 
-    const clickedBrowser = (event.target as XULElement).ownerDocument
+    const clickedBrowser = (event.target as unknown as XULElement).ownerDocument
       ?.activeElement;
     const clickedBrowserIsSidebarBrowser = Array.from(browsers ?? []).some(
       (browser) => browser === clickedBrowser,
     );
     const clickedElementIsChromeSidebar = Object.values(STATIC_PANEL_DATA).some(
       (panel) =>
-        panel.url === (clickedBrowser as XULElement).ownerDocument?.documentURI,
+        panel.url === (clickedBrowser as unknown as XULElement).ownerDocument?.documentURI,
     );
     const clickedElementIsWebTypeBrowser = clickedBrowser?.baseURI?.startsWith(
       `${AppConstants.BROWSER_CHROME_URL}?floorpWebPanelId`,
@@ -431,7 +419,7 @@ export class PanelSidebarFloating {
   };
 
   private restoreActivePanel() {
-    const currentPanelId = selectedPanelId();
+    const currentPanelId = selectedPanelId.value;
 
     if (currentPanelId) {
       try {

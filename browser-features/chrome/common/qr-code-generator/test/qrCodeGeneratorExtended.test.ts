@@ -18,7 +18,7 @@ function testUpdateCurrentTabUrlReadsSelectedTab(): void {
 
   manager.updateCurrentTabUrl();
   assertEquals(
-    manager.currentUrl(),
+    manager.currentUrl.value,
     expectedUrl,
     "currentUrl should reflect selected tab URL",
   );
@@ -48,18 +48,18 @@ function testDownloadQRCodeDelegatesToUnderlyingInstance(): void {
 function testShowHideCycleKeepsSignalConsistent(): void {
   const manager = new QRCodeManager();
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "panel starts hidden");
+  assertEquals(manager.showPanel.value, false, "panel starts hidden");
 
   manager.showQRPanel();
-  assertEquals(manager.showPanel(), true, "show should set signal true");
+  assertEquals(manager.showPanel.value, true, "show should set signal true");
 
   manager.hideQRPanel();
-  assertEquals(manager.showPanel(), false, "hide should set signal false");
+  assertEquals(manager.showPanel.value, false, "hide should set signal false");
 }
 
 function testHandlePopupShowingWithEmptyUrl(): void {
   const manager = new QRCodeManager();
-  manager.setCurrentUrl("");
+  manager.currentUrl.value = ("");
 
   // Should not throw when URL is empty
   let threw = false;
@@ -73,7 +73,7 @@ function testHandlePopupShowingWithEmptyUrl(): void {
 
 function testHandlePopupShowingWithMissingContainer(): void {
   const manager = new QRCodeManager();
-  manager.setCurrentUrl("https://example.com");
+  manager.currentUrl.value = ("https://example.com");
 
   // Should not throw when container is missing
   let threw = false;
@@ -273,12 +273,12 @@ function testMultipleManagerInstances(): void {
   // Both should have different signal states
   manager1.showQRPanel();
   assertEquals(
-    manager1.showPanel(),
+    manager1.showPanel.value,
     true,
     "first manager showPanel should be true",
   );
   assertEquals(
-    manager2.showPanel(),
+    manager2.showPanel.value,
     false,
     "second manager showPanel should remain false",
   );
@@ -330,7 +330,7 @@ function testConstructorPreservesExistingGlobalObjects(): void {
 
 function testShowQRPanelUpdatesCurrentUrl(): void {
   const manager = new QRCodeManager();
-  const _initialUrl = manager.currentUrl();
+  const _initialUrl = manager.currentUrl.value;
 
   // showQRPanel should call updateCurrentTabUrl
   manager.showQRPanel();
@@ -338,7 +338,7 @@ function testShowQRPanelUpdatesCurrentUrl(): void {
   // If gBrowser is available, URL might change
   // If not, it should at least not throw
   assertEquals(
-    manager.showPanel(),
+    manager.showPanel.value,
     true,
     "showPanel should be true after showQRPanel",
   );
@@ -346,17 +346,17 @@ function testShowQRPanelUpdatesCurrentUrl(): void {
 
 function testHideQRPanelDoesNotUpdateUrl(): void {
   const manager = new QRCodeManager();
-  manager.setCurrentUrl("https://example.com");
+  manager.currentUrl.value = ("https://example.com");
 
   manager.hideQRPanel();
 
   assertEquals(
-    manager.currentUrl(),
+    manager.currentUrl.value,
     "https://example.com",
     "currentUrl should not change on hideQRPanel",
   );
   assertEquals(
-    manager.showPanel(),
+    manager.showPanel.value,
     false,
     "showPanel should be false after hideQRPanel",
   );
@@ -404,9 +404,9 @@ function testConcurrentShowHideOperations(): void {
   // Rapid show/hide cycles
   for (let i = 0; i < 10; i++) {
     manager.showQRPanel();
-    assertEquals(manager.showPanel(), true, `showPanel should be true at iteration ${i}`);
+    assertEquals(manager.showPanel.value, true, `showPanel should be true at iteration ${i}`);
     manager.hideQRPanel();
-    assertEquals(manager.showPanel(), false, `showPanel should be false at iteration ${i}`);
+    assertEquals(manager.showPanel.value, false, `showPanel should be false at iteration ${i}`);
   }
 }
 
@@ -419,10 +419,10 @@ function testGlobalFloorpMethodsExecute(): void {
   let threw = false;
   try {
     if (typeof qrCode?.show === "function") (qrCode.show as () => void)();
-    assertEquals(manager.showPanel(), true, "global show() should work");
+    assertEquals(manager.showPanel.value, true, "global show() should work");
 
     if (typeof qrCode?.hide === "function") (qrCode.hide as () => void)();
-    assertEquals(manager.showPanel(), false, "global hide() should work");
+    assertEquals(manager.showPanel.value, false, "global hide() should work");
 
     if (typeof qrCode?.generateForUrl === "function") (qrCode.generateForUrl as (url: string) => void)("https://example.com");
     // Should not throw, actual QR code generation is async

@@ -1,0 +1,25 @@
+{
+  "name": "@nora/preact-xul",
+  "compilerOptions": {
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "imports": {
+    "preact": "npm:preact@^10.26.9",
+    "@preact/signals": "npm:@preact/signals@^1.3.2"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-slow-types"]
+    }
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./jsx-runtime": "./jsx-runtime.d.ts",
+    "./lifetime": "./lifetime.ts"
+  }
+}

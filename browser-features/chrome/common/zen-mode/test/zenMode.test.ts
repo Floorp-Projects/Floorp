@@ -3,7 +3,6 @@
 
 import {
   zenModeEnabled,
-  setZenModeEnabled,
   initZenModeState,
   ZenModeMenuElement,
 } from "../zen-mode.tsx";
@@ -13,82 +12,82 @@ import {
   assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
 
 const ZENMODE_PREF = "floorp.zenmode.enabled";
 
 function testZenModeSignalReadable(): void {
-  const value = zenModeEnabled();
+  const value = zenModeEnabled.value;
   assert(typeof value === "boolean", "zenModeEnabled should return a boolean");
 }
 
 function testSetZenModeEnabledToggles(): void {
-  const original = zenModeEnabled();
+  const original = zenModeEnabled.value;
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
     assertEquals(
-      zenModeEnabled(),
+      zenModeEnabled.value,
       true,
       "zenModeEnabled should be true after setting true",
     );
 
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
     assertEquals(
-      zenModeEnabled(),
+      zenModeEnabled.value,
       false,
       "zenModeEnabled should be false after setting false",
     );
   } finally {
-    setZenModeEnabled(original);
+    zenModeEnabled.value = original;
   }
 }
 
 function testZenModePrefSync(): void {
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
 
   try {
     initZenModeState();
 
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
     assertEquals(
       Services.prefs.getBoolPref(ZENMODE_PREF, false),
       true,
-      "Pref should be true after setZenModeEnabled(true)",
+      "Pref should be true after zenModeEnabled.value = true",
     );
 
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
     assertEquals(
       Services.prefs.getBoolPref(ZENMODE_PREF, false),
       false,
-      "Pref should be false after setZenModeEnabled(false)",
+      "Pref should be false after zenModeEnabled.value = false",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testZenModeAttributeOnDocumentElement(): void {
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
 
   try {
     initZenModeState();
 
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
     assert(
       document?.documentElement?.hasAttribute("zenmode"),
       "documentElement should have 'zenmode' attribute when zen mode is enabled",
     );
 
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
     assert(
       !document?.documentElement?.hasAttribute("zenmode"),
       "documentElement should not have 'zenmode' attribute when zen mode is disabled",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
     document?.documentElement?.removeAttribute("zenmode");
     document?.documentElement?.removeAttribute("zenmode-reveal-top");
@@ -99,32 +98,32 @@ function testZenModeAttributeOnDocumentElement(): void {
 
 function testZenModePrefObserverUpdatesSignal(): void {
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
 
   try {
     initZenModeState();
 
     Services.prefs.setBoolPref(ZENMODE_PREF, true);
     assertEquals(
-      zenModeEnabled(),
+      zenModeEnabled.value,
       true,
       "Signal should be true after pref set to true externally",
     );
 
     Services.prefs.setBoolPref(ZENMODE_PREF, false);
     assertEquals(
-      zenModeEnabled(),
+      zenModeEnabled.value,
       false,
       "Signal should be false after pref set to false externally",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
@@ -140,7 +139,7 @@ function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
     document!.body?.appendChild(mockToolbox as unknown as Node);
 
     // Enable zen mode and measure
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     const root = document!.documentElement as HTMLElement;
     const toolboxHeight = root.style.getPropertyValue(
@@ -154,13 +153,13 @@ function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
 
     document!.body?.removeChild(mockToolbox as unknown as Node);
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
@@ -171,7 +170,7 @@ function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
     }
 
     // Should not throw when toolbox is missing
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     const root = document!.documentElement as HTMLElement;
     const toolboxHeight = root.style.getPropertyValue(
@@ -184,17 +183,17 @@ function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
       "CSS variable read should succeed even when toolbox is missing",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testTopEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     // Create a mock toolbox
     const mockToolbox = document!.createElement("div") as unknown as XULElement;
@@ -234,17 +233,17 @@ function testTopEdgeHoverRevealSetsAttribute(): void {
     document!.body?.removeChild(mockToolbox as unknown as Node);
     document!.documentElement?.removeAttribute("zenmode-reveal-top");
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testBottomEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     // Simulate mouse move to bottom edge
     const mouseEvent = new MouseEvent("mousemove", {
@@ -260,17 +259,17 @@ function testBottomEdgeHoverRevealSetsAttribute(): void {
 
     document!.documentElement?.removeAttribute("zenmode-reveal-bottom");
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testSideEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     // Simulate mouse move to left edge
     const mouseEvent = new MouseEvent("mousemove", {
@@ -286,17 +285,17 @@ function testSideEdgeHoverRevealSetsAttribute(): void {
 
     document!.documentElement?.removeAttribute("zenmode-reveal-side");
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testHoverRevealDoesNotTriggerWhenDisabled(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
 
     // Simulate mouse move to top edge
     const mouseEvent = new MouseEvent("mousemove", {
@@ -310,17 +309,17 @@ function testHoverRevealDoesNotTriggerWhenDisabled(): void {
       "zenmode-reveal-top attribute should NOT be set when zen mode is disabled",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testZenModeDisablingRemovesAllRevealAttributes(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     // Manually set all reveal attributes
     document!.documentElement?.setAttribute("zenmode-reveal-top", "");
@@ -328,7 +327,7 @@ function testZenModeDisablingRemovesAllRevealAttributes(): void {
     document!.documentElement?.setAttribute("zenmode-reveal-side", "");
 
     // Disable zen mode
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
 
     assert(
       !document!.documentElement?.hasAttribute("zenmode-reveal-top"),
@@ -343,14 +342,14 @@ function testZenModeDisablingRemovesAllRevealAttributes(): void {
       "zenmode-reveal-side should be removed when zen mode is disabled",
     );
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testZenModeMenuElementHasCorrectId(): void {
   const container = document!.createElement("div");
-  render(() => ZenModeMenuElement(), container);
+  render(h(ZenModeMenuElement, null), container);
 
   const menuitem = container.querySelector("#toggle_zenmode");
   assert(
@@ -362,14 +361,14 @@ function testZenModeMenuElementHasCorrectId(): void {
 }
 
 function testZenModeMenuElementCheckedStateSyncs(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
 
     const container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
+    render(h(ZenModeMenuElement, null), container);
 
     const menuitem = container.querySelector("#toggle_zenmode");
     const checked = menuitem?.getAttribute("checked");
@@ -381,14 +380,14 @@ function testZenModeMenuElementCheckedStateSyncs(): void {
 
     menuitem?.remove();
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }
 
 function testZenModeMenuElementHasCorrectAccesskey(): void {
   const container = document!.createElement("div");
-  render(() => ZenModeMenuElement(), container);
+  render(h(ZenModeMenuElement, null), container);
 
   const menuitem = container.querySelector("#toggle_zenmode");
   const accesskey = menuitem?.getAttribute("accesskey");
@@ -399,14 +398,14 @@ function testZenModeMenuElementHasCorrectAccesskey(): void {
 }
 
 function testZenModeMenuElementConditionallyRendersStyle(): void {
-  const originalSignal = zenModeEnabled();
+  const originalSignal = zenModeEnabled.value;
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
 
   try {
     // Test with zen mode disabled
-    setZenModeEnabled(false);
+    zenModeEnabled.value = false;
     let container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
+    render(h(ZenModeMenuElement, null), container);
     let styleElement = container.querySelector("style");
 
     assert(
@@ -415,9 +414,9 @@ function testZenModeMenuElementConditionallyRendersStyle(): void {
     );
 
     // Test with zen mode enabled
-    setZenModeEnabled(true);
+    zenModeEnabled.value = true;
     container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
+    render(h(ZenModeMenuElement, null), container);
     styleElement = container.querySelector("style");
 
     assert(
@@ -427,7 +426,7 @@ function testZenModeMenuElementConditionallyRendersStyle(): void {
 
     container.remove();
   } finally {
-    setZenModeEnabled(originalSignal);
+    zenModeEnabled.value = originalSignal;
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
   }
 }

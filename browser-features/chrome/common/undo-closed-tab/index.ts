@@ -4,12 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "../../utils/base.ts";
-import { createRootHMR } from "@nora/solid-xul";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { StyleElement } from "./styleElem.tsx";
 import { BrowserActionUtils } from "../../utils/browser-action.tsx";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -20,16 +19,6 @@ declare global {
     undoCloseTab: () => void;
   }
 }
-
-type UndoClosedTabTexts = {
-  buttonLabel: string;
-  tooltipText: string;
-};
-
-const defaultTexts: UndoClosedTabTexts = {
-  buttonLabel: "Undo Closed Tab",
-  tooltipText: "Reopen the last closed tab (Ctrl+Shift+T)",
-};
 
 const BROWSER_WINDOW_TYPE = "navigator:browser";
 
@@ -49,7 +38,7 @@ function triggerUndoClosedTabForActiveWindow(): void {
   }
 }
 
-@noraComponent(import.meta.hot)
+@noraComponent("UndoClosedTab", import.meta.hot)
 export default class UndoClosedTab extends NoraComponentBase {
   init() {
     BrowserActionUtils.createToolbarClickActionButton(
@@ -60,7 +49,7 @@ export default class UndoClosedTab extends NoraComponentBase {
       CustomizableUI.AREA_NAVBAR,
       3,
       (aNode: XULElement) => {
-        const tooltip = document?.createXULElement("tooltip") as XULElement;
+        const tooltip = document?.createXULElement("tooltip") as unknown as XULElement;
         tooltip.id = "undo-closed-tab-tooltip";
         tooltip.setAttribute("hasbeenopened", "false");
 
@@ -70,22 +59,17 @@ export default class UndoClosedTab extends NoraComponentBase {
 
         createRootHMR(
           () => {
-            const [texts, setTexts] =
-              createSignal<UndoClosedTabTexts>(defaultTexts);
-
-            aNode.setAttribute("label", texts().buttonLabel);
-            tooltip.setAttribute("label", texts().tooltipText);
-
-            addI18nObserver(() => {
-              setTexts({
-                buttonLabel: i18next.t("undo-closed-tab.label"),
-                tooltipText: i18next.t("undo-closed-tab.tooltiptext", {
+            const updateTexts = () => {
+              aNode.setAttribute("label", i18next.t("undo-closed-tab.label"));
+              tooltip.setAttribute(
+                "label",
+                i18next.t("undo-closed-tab.tooltiptext", {
                   shortcut: "(Ctrl+Shift+T)",
                 }),
-              });
-              aNode.setAttribute("label", texts().buttonLabel);
-              tooltip.setAttribute("label", texts().tooltipText);
-            });
+              );
+            };
+            updateTexts();
+            addI18nObserver(updateTexts);
           },
           import.meta.hot,
         );

@@ -6,13 +6,13 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { ProfileManagerService } from "./service.tsx";
 
 /**
  * Chrome CSS component for user styles management
  */
-@noraComponent(import.meta.hot)
+@noraComponent("ProfileManager", import.meta.hot)
 export default class ProfileManager extends NoraComponentBase {
   static ctx: ProfileManagerService | null = null;
 

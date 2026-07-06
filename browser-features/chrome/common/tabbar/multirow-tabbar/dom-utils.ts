@@ -1,5 +1,5 @@
 export function getTabsToolbar(): XULElement | null {
-  return document?.getElementById("TabsToolbar") as XULElement | null;
+  return document?.getElementById("TabsToolbar") as unknown as XULElement | null;
 }
 
 export function resolveTabsContainer(): XULElement | null {
@@ -11,7 +11,7 @@ export function resolveTabsContainer(): XULElement | null {
     arrowScrollbox = newScrollbox;
   }
 
-  return arrowScrollbox as XULElement | null;
+  return arrowScrollbox as unknown as XULElement | null;
 }
 
 export function findChildIndex(container: Element, child: Element): number {

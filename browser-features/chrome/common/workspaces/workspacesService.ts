@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { onCleanup } from "solid-js";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data";
 import type {
   TWorkspace,
@@ -143,13 +142,15 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       );
     });
 
-    onCleanup(() => {
-      globalThis.gBrowser.removeTabsProgressListener(this.listener);
-      globalThis.gBrowser.tabContainer.removeEventListener(
-        "TabOpen",
-        this.boundHandleTabOpen,
-      );
-    });
+  }
+
+  /** Call when this service is torn down (e.g. HMR or window close). */
+  destroy(): void {
+    globalThis.gBrowser.removeTabsProgressListener(this.listener);
+    globalThis.gBrowser.tabContainer.removeEventListener(
+      "TabOpen",
+      this.boundHandleTabOpen,
+    );
   }
   setCurrentWorkspaceID(id: TWorkspaceID): void {
     this.dataManagerCtx.setCurrentWorkspaceID(id);
@@ -563,7 +564,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   private handleTabOpen = (event: Event) => {
     const tabEvent = event as CustomEvent;
-    const tab = (tabEvent.target || tabEvent.detail) as XULElement;
+    const tab = (tabEvent.target || tabEvent.detail) as unknown as XULElement;
     if (!tab) {
       return;
     }

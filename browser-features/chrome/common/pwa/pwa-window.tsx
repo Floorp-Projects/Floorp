@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
-import { createEffect, createSignal } from "solid-js";
+import { createRootHMR } from "#features-chrome/utils/base";
+import { render } from "preact";
+import { signal, effect } from "@preact/signals";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
@@ -16,7 +17,7 @@ import {
 import { isContainerExperimentEnabled } from "./containerUtils.ts";
 
 export class PwaWindowSupport {
-  private ssbId = createSignal<string | null>(null);
+  private ssbId = signal<string | null>(null);
   private initialized = false;
 
   constructor(private pwaService: PwaService) {
@@ -64,8 +65,7 @@ export class PwaWindowSupport {
   }
 
   private async getSsb() {
-    const [ssbId] = this.ssbId;
-    const id = ssbId();
+    const id = this.ssbId.value;
     if (!id) {
       return null;
     }
@@ -105,8 +105,7 @@ export class PwaWindowSupport {
   }
 
   private setupSignals(ssbIdAttr: string): void {
-    const [, setSsbId] = this.ssbId;
-    setSsbId(ssbIdAttr);
+    this.ssbId.value = ssbIdAttr;
   }
 
   private setupPageActions(): void {
@@ -194,7 +193,7 @@ export class PwaWindowSupport {
     await this.ensureContainerIndicator(userContextId);
 
     createRootHMR(() => {
-      createEffect(() => {
+      effect(() => {
         this.shouldShowToolbar();
         this.updateToolbarVisibility(this.shouldShowToolbar());
       });
@@ -250,11 +249,9 @@ export class PwaWindowSupport {
     console.debug(
       "[PwaWindowSupport] mounting ssb-container-indicator beside taskbar-tabs-favicon",
     );
-    render(
-      () => <SsbWindowContainerIndicator userContextId={userContextId} />,
-      navBar,
-      { marker },
-    );
+    const indicatorContainer = document?.createElement("span") as HTMLElement;
+    navBar.insertBefore(indicatorContainer, marker);
+    render(<SsbWindowContainerIndicator userContextId={userContextId} />, indicatorContainer);
   }
 
   private getUserContextIdFromArgs(): number {
@@ -332,7 +329,17 @@ export class PwaWindowSupport {
 
   private renderStyles(): void {
     createRootHMR(() => {
-      render(() => this.createStyleElement(), document?.head);
+      let styleRoot = document?.getElementById("floorp-pwa-window-style-root") as HTMLElement | null;
+      if (!styleRoot) {
+        styleRoot = document!.createElement("div");
+        styleRoot.id = "floorp-pwa-window-style-root";
+        document!.head.appendChild(styleRoot);
+      }
+      render(this.createStyleElement(), styleRoot);
+      return () => {
+        render(null, styleRoot!);
+        styleRoot?.remove();
+      };
     }, import.meta.hot);
   }
 
@@ -360,7 +367,7 @@ export class PwaWindowSupport {
       }
 
       createRootHMR(() => {
-        createEffect(() => {
+        effect(() => {
           const showToolbar = this.shouldShowToolbar();
           customTitlebar.allowedBy("non-popup", this.shouldUseCustomTitlebar());
           this.updateToolbarVisibility(showToolbar);
@@ -375,7 +382,7 @@ export class PwaWindowSupport {
   }
 
   private shouldShowToolbar(): boolean {
-    return config().showToolbar !== false;
+    return config.value.showToolbar !== false;
   }
 
   private shouldUseCustomTitlebar(): boolean {
@@ -491,8 +498,7 @@ export class PwaWindowSupport {
   }
 
   public get ssbWindowId(): string | null {
-    const [ssbId] = this.ssbId;
-    return ssbId();
+    return this.ssbId.value;
   }
 
   public async getSsbObj(id: string) {

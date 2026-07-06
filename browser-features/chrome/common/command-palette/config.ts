@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+  createRootHMR,
+  rootEffect,
+  addDisposer,
+} from "@nora/preact-xul/lifetime";
 
 export const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
 export const COMMAND_PALETTE_RECENT_PREF = "floorp.commandPalette.recentCommands";
@@ -40,60 +39,52 @@ const parseRecentCommands = (jsonStr: string): string[] => {
   return [];
 };
 
-function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [enabled, setEnabled] = createSignal(
+function createEnabledSignal(): Signal<boolean> {
+  const sig = signal(
     Services.prefs.getBoolPref(
       COMMAND_PALETTE_ENABLED_PREF,
       defaultConfig.enabled,
     ),
   );
 
-  createEffect(() => {
+  rootEffect(() => {
     try {
-      Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, enabled());
+      Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, sig.value);
     } catch (e) {
       console.error("[command-palette] Failed to persist enabled pref", e);
     }
   });
 
   const enabledObserver = () => {
-    setEnabled(
-      Services.prefs.getBoolPref(
-        COMMAND_PALETTE_ENABLED_PREF,
-        defaultConfig.enabled,
-      ),
+    sig.value = Services.prefs.getBoolPref(
+      COMMAND_PALETTE_ENABLED_PREF,
+      defaultConfig.enabled,
     );
   };
 
   Services.prefs.addObserver(COMMAND_PALETTE_ENABLED_PREF, enabledObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       COMMAND_PALETTE_ENABLED_PREF,
       enabledObserver,
     );
   });
 
-  return [enabled, setEnabled];
+  return sig;
 }
 
-function createRecentCommands(): [
-  Accessor<string[]>,
-  Setter<string[]>,
-] {
-  const [recent, setRecent] = createSignal(
+function createRecentCommandsSignal(): Signal<string[]> {
+  const sig = signal(
     parseRecentCommands(
-      Services.prefs.getStringPref(
-        COMMAND_PALETTE_RECENT_PREF,
-        "[]",
-      ),
+      Services.prefs.getStringPref(COMMAND_PALETTE_RECENT_PREF, "[]"),
     ),
   );
 
-  createEffect(() => {
+  rootEffect(() => {
     try {
       Services.prefs.setStringPref(
         COMMAND_PALETTE_RECENT_PREF,
-        JSON.stringify(recent()),
+        JSON.stringify(sig.value),
       );
     } catch (e) {
       console.error("[command-palette] Failed to persist recent commands", e);
@@ -101,44 +92,37 @@ function createRecentCommands(): [
   });
 
   const recentObserver = () => {
-    setRecent(
-      parseRecentCommands(
-        Services.prefs.getStringPref(
-          COMMAND_PALETTE_RECENT_PREF,
-          "[]",
-        ),
-      ),
+    sig.value = parseRecentCommands(
+      Services.prefs.getStringPref(COMMAND_PALETTE_RECENT_PREF, "[]"),
     );
   };
 
   Services.prefs.addObserver(COMMAND_PALETTE_RECENT_PREF, recentObserver);
-  onCleanup(() => {
-    Services.prefs.removeObserver(
-      COMMAND_PALETTE_RECENT_PREF,
-      recentObserver,
-    );
+  addDisposer(() => {
+    Services.prefs.removeObserver(COMMAND_PALETTE_RECENT_PREF, recentObserver);
   });
 
-  return [recent, setRecent];
+  return sig;
 }
 
-export const [_enabled, _setEnabled] = createRootHMR(
-  createEnabled,
+export const _enabled = createRootHMR(createEnabledSignal, import.meta.hot);
+export const _setEnabled = (value: boolean) => { _enabled.value = value; };
+export const _recentCommands = createRootHMR(
+  createRecentCommandsSignal,
   import.meta.hot,
 );
-export const [_recentCommands, _setRecentCommands] = createRootHMR(
-  createRecentCommands,
-  import.meta.hot,
-);
+export const _setRecentCommands = (value: string[]) => {
+  _recentCommands.value = value;
+};
 
-export const isEnabled = () => _enabled();
-export const setEnabled = (value: boolean) => _setEnabled(value);
-export const getRecentCommands = () => _recentCommands();
+export const isEnabled = () => _enabled.value;
+export const setEnabled = (value: boolean) => { _enabled.value = value; };
+export const getRecentCommands = () => _recentCommands.value;
 
 export function addRecentCommand(id: string) {
-  const current = _recentCommands().filter((c) => c !== id);
+  const current = _recentCommands.value.filter((c) => c !== id);
   current.unshift(id);
-  _setRecentCommands(current.slice(0, defaultConfig.maxRecentCommands));
+  _recentCommands.value = current.slice(0, defaultConfig.maxRecentCommands);
 }
 
 const parseFrequency = (jsonStr: string): Record<string, number> => {
@@ -153,21 +137,18 @@ const parseFrequency = (jsonStr: string): Record<string, number> => {
   return {};
 };
 
-function createFrequency(): [
-  Accessor<Record<string, number>>,
-  Setter<Record<string, number>>,
-] {
-  const [freq, setFreq] = createSignal(
+function createFrequencySignal(): Signal<Record<string, number>> {
+  const sig = signal(
     parseFrequency(
       Services.prefs.getStringPref(COMMAND_PALETTE_FREQUENCY_PREF, "{}"),
     ),
   );
 
-  createEffect(() => {
+  rootEffect(() => {
     try {
       Services.prefs.setStringPref(
         COMMAND_PALETTE_FREQUENCY_PREF,
-        JSON.stringify(freq()),
+        JSON.stringify(sig.value),
       );
     } catch (e) {
       console.error("[command-palette] Failed to persist frequency", e);
@@ -175,30 +156,28 @@ function createFrequency(): [
   });
 
   const freqObserver = () => {
-    setFreq(
-      parseFrequency(
-        Services.prefs.getStringPref(COMMAND_PALETTE_FREQUENCY_PREF, "{}"),
-      ),
+    sig.value = parseFrequency(
+      Services.prefs.getStringPref(COMMAND_PALETTE_FREQUENCY_PREF, "{}"),
     );
   };
 
   Services.prefs.addObserver(COMMAND_PALETTE_FREQUENCY_PREF, freqObserver);
-  onCleanup(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(COMMAND_PALETTE_FREQUENCY_PREF, freqObserver);
   });
 
-  return [freq, setFreq];
+  return sig;
 }
 
-export const [_frequency, _setFrequency] = createRootHMR(
-  createFrequency,
-  import.meta.hot,
-);
+export const _frequency = createRootHMR(createFrequencySignal, import.meta.hot);
+export const _setFrequency = (value: Record<string, number>) => {
+  _frequency.value = value;
+};
 
-export const getFrequencies = () => _frequency();
+export const getFrequencies = () => _frequency.value;
 
 export function incrementFrequency(id: string) {
-  const current = { ..._frequency() };
+  const current = { ..._frequency.value };
   current[id] = (current[id] ?? 0) + 1;
-  _setFrequency(current);
+  _frequency.value = current;
 }

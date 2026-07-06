@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import type { JSX } from "solid-js";
+import { h, render } from "preact";
 import { RebootPanelMenu } from "../RebootPanelMenu.tsx";
 import {
   assert,
@@ -9,15 +9,6 @@ import {
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
-
-let solidXulRender: ((fn: () => JSX.Element, container: HTMLElement) => void) | null = null;
-
-async function getSolidXulRender(): Promise<(fn: () => JSX.Element, container: HTMLElement) => void> {
-  if (solidXulRender) return solidXulRender;
-  const mod = await import("@nora/solid-xul");
-  solidXulRender = mod.render;
-  return solidXulRender;
-}
 
 // Test constants
 const PANEL_UI_BUTTON_ID = "PanelUI-menu-button";
@@ -166,22 +157,19 @@ function testMultipleInstancesCanBeCreated(): void {
 // ===========================================================================
 
 function testRenderReturnsJsxTree(): void {
-  const node = RebootPanelMenu.Render();
-  assert(node !== null, "Render should return a JSX tree");
-  assertEquals(
-    typeof node,
-    "object",
-    "Render return value should be object-like",
-  );
+  const container = document!.createElement("div");
+  document!.body!.appendChild(container);
+  // RebootPanelMenu.Render is a preact component; render via preact to satisfy hooks
+  render(h(RebootPanelMenu.Render, null), container);
+  assert(container.hasChildNodes(), "Render should produce a component tree");
+  container.remove();
 }
 
-async function testRenderCreatesRestartButton(): Promise<void> {
+function testRenderCreatesRestartButton(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  // Render the component using dynamic import instead of require
-  const render = await getSolidXulRender();
-  render(() => RebootPanelMenu.Render(), container);
+  render(h(RebootPanelMenu.Render, null), container);
 
   const restartButton = container.querySelector(`#${RESTART_BUTTON_ID}`);
   assert(
@@ -192,12 +180,11 @@ async function testRenderCreatesRestartButton(): Promise<void> {
   container.remove();
 }
 
-async function testRenderCreatesRebootPanelView(): Promise<void> {
+function testRenderCreatesRebootPanelView(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  const render = await getSolidXulRender();
-  render(() => RebootPanelMenu.Render(), container);
+  render(h(RebootPanelMenu.Render, null), container);
 
   const panelView = container.querySelector(`#${REBOOT_PANEL_ID}`);
   assert(
@@ -208,12 +195,11 @@ async function testRenderCreatesRebootPanelView(): Promise<void> {
   container.remove();
 }
 
-async function testRenderCreatesAllRestartButtons(): Promise<void> {
+function testRenderCreatesAllRestartButtons(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  const render = await getSolidXulRender();
-  render(() => RebootPanelMenu.Render(), container);
+  render(h(RebootPanelMenu.Render, null), container);
 
   const normalButton = container.querySelector(
     "#appMenu-restart-normal-button",
@@ -241,12 +227,11 @@ async function testRenderCreatesAllRestartButtons(): Promise<void> {
   container.remove();
 }
 
-async function testRenderUsesTranslations(): Promise<void> {
+function testRenderUsesTranslations(): void {
   const container = document!.createElement("div");
   document!.body!.appendChild(container);
 
-  const render = await getSolidXulRender();
-  render(() => RebootPanelMenu.Render(), container);
+  render(h(RebootPanelMenu.Render, null), container);
 
   const restartButton = container.querySelector(`#${RESTART_BUTTON_ID}`);
   assert(restartButton !== null, "Restart button should exist");
@@ -653,15 +638,18 @@ function testShowRebootPanelSubViewHandlesMissingAnchor(): void {
 // ===========================================================================
 
 function testRenderWithMissingDocumentDoesNotThrow(): void {
-  // In Firefox, globalThis.document is a getter-only property and cannot be
-  // reassigned directly. The Render() method should still work regardless.
+  // RebootPanelMenu.Render is a preact component with hooks — must be called
+  // through preact render. Verify it does not throw when rendered normally.
+  const container = document!.createElement("div");
+  document!.body!.appendChild(container);
+  let threw = false;
   try {
-    // Render should handle missing document gracefully
-    const node = RebootPanelMenu.Render();
-    assert(node !== null, "Render should still return JSX tree");
+    render(h(RebootPanelMenu.Render, null), container);
   } catch {
-    // If Render() throws due to missing DOM elements, that is acceptable.
+    threw = true;
   }
+  assert(!threw, "Render should not throw in a normal preact render context");
+  container.remove();
 }
 
 function testRenderPanelWithoutRenderFlag(): void {
@@ -693,8 +681,8 @@ function testMutationObserverDisconnectsOnCleanup(): void {
   // Verify instance was created
   assert(instance !== null, "Instance should be created");
 
-  // In a real scenario, when the component is destroyed, onCleanup would be called
-  // which would call observer.disconnect()
+  // In a real scenario, when the component is destroyed, the addDisposer callback
+  // would call observer.disconnect()
   // This test verifies the instance structure supports cleanup
   assert(
     typeof instance === "object",

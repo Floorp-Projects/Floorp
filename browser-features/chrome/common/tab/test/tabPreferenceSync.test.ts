@@ -4,21 +4,15 @@
 import { TabDoubleClickClose } from "../doubleClickClose/index.ts";
 import { TabOpenPosition } from "../openPosition/index.ts";
 import { TabScroll } from "../scroll/index.ts";
-import { config, setConfig } from "../../designs/configs.ts";
-import { createRoot } from "solid-js";
+import { config } from "../../designs/configs.ts";
 import {
   assertEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInSolidRoot(construct: () => void): void {
-  let dispose: (() => void) | undefined;
-  createRoot((cleanup) => {
-    dispose = cleanup;
-    construct();
-  });
-  dispose?.();
+function constructInPreactEffect(construct: () => void): void {
+  construct();
 }
 
 function withTabConfigPatch(
@@ -29,10 +23,11 @@ function withTabConfigPatch(
   },
   run: () => void,
 ): void {
-  const original = JSON.parse(JSON.stringify(config()));
+  const original = JSON.parse(JSON.stringify(config.value));
 
   try {
-    setConfig((prev) => ({
+    const prev = config.value;
+    config.value = {
       ...prev,
       tab: {
         ...prev.tab,
@@ -44,11 +39,11 @@ function withTabConfigPatch(
           enabled: patch.tabScrollEnabled ?? prev.tab.tabScroll.enabled,
         },
       },
-    }));
+    };
 
     run();
   } finally {
-    setConfig(original);
+    config.value = original;
   }
 }
 
@@ -58,7 +53,7 @@ function testTabDoubleClickCloseSyncsPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabDubleClickToClose: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabDoubleClickClose();
       });
       assertEquals(
@@ -78,7 +73,7 @@ function testTabOpenPositionSyncsPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 2 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -98,7 +93,7 @@ function testTabScrollSyncsSwitchByScrollingPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactEffect(() => {
         new TabScroll();
       });
       assertEquals(

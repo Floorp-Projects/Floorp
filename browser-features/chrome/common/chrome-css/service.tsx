@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRoot, createSignal, onCleanup, onMount } from "solid-js";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { effect, signal } from "@preact/signals";
+import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
+import { render } from "@nora/preact-xul";
 import { CSSEntry } from "./cssEntry.ts";
 import i18next from "i18next";
 
@@ -25,9 +26,7 @@ export class ChromeCSSService {
   readCSS: Record<string, CSSEntry> = {};
   initialized = false;
 
-  private cssFilesSignal = createSignal<
-    Array<{ name: string; entry: CSSEntry }>
-  >([], { equals: false });
+  cssFiles = signal<Array<{ name: string; entry: CSSEntry }>>([], );
 
   private dispose: (() => void) | null = null;
   // Disposers and cleanup hooks used by PanelMenu
@@ -46,11 +45,11 @@ export class ChromeCSSService {
   private constructor() {}
 
   getCssFiles() {
-    return this.cssFilesSignal[0]();
+    return this.cssFiles.value;
   }
 
   private setCssFiles(files: Array<{ name: string; entry: CSSEntry }>) {
-    this.cssFilesSignal[1](files);
+    this.cssFiles.value = files;
   }
 
   private get document(): Document {
@@ -58,7 +57,7 @@ export class ChromeCSSService {
   }
 
   private getElement(id: string): XULElement | null {
-    return this.document.getElementById(id) as XULElement | null;
+    return this.document.getElementById(id) as unknown as XULElement | null;
   }
 
   init(): void {
@@ -386,8 +385,6 @@ export class ChromeCSSService {
   }
 
   async getDefaultEditorPath(): Promise<string> {
-    // temporary variable removed (unused)
-
     if (AppConstants.platform === "win") {
       // Check VS Code first on Windows
       const vscodePath = `${
@@ -435,7 +432,6 @@ export class ChromeCSSService {
         whichProcess.init(whichApp);
 
         // Check if 'code' is in PATH by attempting to run 'which code'.
-        // If it doesn't throw, assume 'code' is available on PATH.
         try {
           whichProcess.run(true, ["code"], 1);
           return "code";
@@ -478,19 +474,14 @@ export class ChromeCSSService {
       } else if (AppConstants.platform === "macosx") {
         // macOS: Handle special cases for different editors
         if (editorPath.includes("TextEdit")) {
-          // TextEdit requires special handling
           args = [filePath];
         } else if (editorPath.includes("code") || editorPath.includes("Code")) {
-          // VS Code
           args = [filePath];
         } else if (editorPath.includes("subl")) {
-          // Sublime Text
           args = [filePath];
         } else if (editorPath.includes("atom")) {
-          // Atom
           args = [filePath];
         } else {
-          // Default: use open command for .app bundles
           if (editorPath.endsWith(".app") || editorPath.includes(".app/")) {
             const openApp = Cc["@mozilla.org/file/local;1"].createInstance(
               Ci.nsIFile,
@@ -600,7 +591,6 @@ export class ChromeCSSService {
         await this.getDefaultEditorPath();
 
       if (editorPath && await IOUtils.exists(editorPath)) {
-        // Ask user if they want to open the file for editing
         const openMsg = i18next.t("chrome_css.open_file_in_editor") ??
           `Open ${fileName} in editor?`;
         const shouldOpen = Services.prompt.confirm(
@@ -613,7 +603,6 @@ export class ChromeCSSService {
           this.edit(filePath);
         }
       } else {
-        // If no editor is available, just notify that the file was created
         const createdMsg = i18next.t("chrome_css.file_created_successfully") ??
           `File ${fileName} created successfully`;
         Services.prompt.alert(
@@ -629,11 +618,11 @@ export class ChromeCSSService {
     }
   }
 }
+
 class PanelMenu {
   private isRendered = false;
 
   constructor(private service: ChromeCSSService) {
-    // Use HMR-aware root to avoid duplicate renders on module hot-reload
     if (!document) return;
     if (!this.panelUIButton) return;
 
@@ -656,7 +645,7 @@ class PanelMenu {
       observer.observe(this.panelUIButton!, { attributes: true });
 
       // ensure observer is disconnected when this root is disposed
-      onCleanup(() => observer.disconnect());
+      addDisposer(() => observer.disconnect());
 
       // Try immediate render if panel parent is already present
       this.renderIntoPanel();
@@ -676,7 +665,6 @@ class PanelMenu {
   }
 
   private get beforeElement(): HTMLElement | null {
-    // Use the requested element id for marker placement
     return document?.getElementById("appMenu-extensions-themes-button") as
       | HTMLElement
       | null;
@@ -697,35 +685,31 @@ class PanelMenu {
 
     this.isRendered = true;
 
-    // Create a reactive root for the panel UI render
-    createRoot((dispose) => {
-      // store dispose so service.uninit can call it
-      this.service.panelDispose = dispose;
-
-      // Render the main Chrome CSS menu into the panel parent
+    // Render the main Chrome CSS menu into the panel parent
+    if (this.parentElement) {
+      const menuWrapper = document.createElement("div");
+      menuWrapper.style.display = "contents";
+      this.parentElement.insertBefore(menuWrapper, this.beforeElement ?? null);
       render(
         () => <ChromeCSSMenuWrapper service={this.service} />,
-        this.parentElement ?? undefined,
-        {
-          marker: this.beforeElement ?? undefined,
-        },
+        menuWrapper,
       );
+    }
 
-      // Also render the keyset into the mainKeyset if present
-      const mainKeyset = document?.getElementById("mainKeyset");
-      if (mainKeyset) {
-        const keysetContainer = document.createXULElement(
-          "keyset",
-        ) as XULElement;
-        keysetContainer.id = "usercssloader-keyset-placeholder";
-        mainKeyset.appendChild(keysetContainer);
+    // Also render the keyset into the mainKeyset if present
+    const mainKeyset = document?.getElementById("mainKeyset");
+    if (mainKeyset) {
+      const keysetContainer = document.createXULElement(
+        "keyset",
+      ) as unknown as XULElement;
+      keysetContainer.id = "usercssloader-keyset-placeholder";
+      mainKeyset.appendChild(keysetContainer);
 
-        render(
-          () => <CSSKeyset onRebuild={() => this.service.rebuild()} />,
-          keysetContainer,
-        );
-      }
-    });
+      render(
+        () => <CSSKeyset onRebuild={() => this.service.rebuild()} />,
+        keysetContainer,
+      );
+    }
   }
 }
 
@@ -735,7 +719,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
  * Wrapper component for Chrome CSS Menu
  */
 const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
-  const [translations, setTranslations] = createSignal({
+  const translations = signal({
     menu: i18next.t("chrome_css.menu"),
     rebuild: i18next.t("chrome_css.rebuild"),
     create: i18next.t("chrome_css.create"),
@@ -746,14 +730,14 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
 
   createRootHMR(() => {
     addI18nObserver(() => {
-      setTranslations({
+      translations.value = {
         menu: i18next.t("chrome_css.menu"),
         rebuild: i18next.t("chrome_css.rebuild"),
         create: i18next.t("chrome_css.create"),
         open_folder: i18next.t("chrome_css.open_folder"),
         edit_user_chrome: i18next.t("chrome_css.edit_user_chrome"),
         edit_user_content: i18next.t("chrome_css.edit_user_content"),
-      });
+      };
     });
   }, import.meta.hot);
 
@@ -773,7 +757,7 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
       <xul:toolbarbutton
         id="appMenu-usercss-button"
         class="subviewbutton subviewbutton-nav"
-        label={translations().menu}
+        label={translations.value.menu}
         closemenu="none"
         onCommand={() => showSubView()}
       />
@@ -782,32 +766,32 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
           <xul:toolbarbutton
             id="appMenu-usercss-rebuild-button"
             class="subviewbutton"
-            label={translations().rebuild}
+            label={translations.value.rebuild}
             onCommand={() => props.service.rebuild()}
           />
           <xul:toolbarseparator />
           <xul:toolbarbutton
             id="appMenu-usercss-create-button"
             class="subviewbutton"
-            label={translations().create}
+            label={translations.value.create}
             onCommand={() => props.service.create()}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-open-folder-button"
             class="subviewbutton"
-            label={translations().open_folder}
+            label={translations.value.open_folder}
             onCommand={() => props.service.openFolder()}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-edit-chrome-button"
             class="subviewbutton"
-            label={translations().edit_user_chrome}
+            label={translations.value.edit_user_chrome}
             onCommand={() => props.service.editUserCSS("userChrome.css")}
           />
           <xul:toolbarbutton
             id="appMenu-usercss-edit-content-button"
             class="subviewbutton"
-            label={translations().edit_user_content}
+            label={translations.value.edit_user_content}
             onCommand={() => props.service.editUserCSS("userContent.css")}
           />
           <xul:toolbarseparator />
@@ -818,8 +802,6 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
   );
 };
 
-// The panel-based UI is rendered by `ChromeCSSMenuWrapper`.
-
 /**
  * CSS Items Component
  */
@@ -828,7 +810,7 @@ const CSSItems = (props: { service: ChromeCSSService }) => {
 
   return (
     <xul:vbox id="usercssloader-css-items">
-      {service.getCssFiles().map(({ name, entry }) => (
+      {service.cssFiles.value.map(({ name, entry }) => (
         <CSSItem
           fileName={name}
           enabled={entry.enabled}
@@ -904,13 +886,11 @@ const CSSItem = (props: {
       }`}
       role="menuitem"
       onClick={(e) => {
-        // left click toggles
         e.stopPropagation();
         safeToggle();
       }}
-      onMouseDown={(e) => handleClick(e)}
+      onMouseDown={(e) => handleClick(e as unknown as MouseEvent)}
     >
-      {/* Render a simple checkmark on the left to avoid XUL checkbox typing issues */}
       <xul:image
         class="usercssloader-checkbox ctaMenuLogo toolbarbutton-icon"
         src={enabled ? "chrome://global/skin/icons/check.svg" : ""}
@@ -923,17 +903,18 @@ const CSSItem = (props: {
 
 /**
  * Keyset Component
+ * onMount equivalent: effect with no signal reads runs once, return fn is cleanup
  */
 const CSSKeyset = (props: { onRebuild: () => void }) => {
   const { onRebuild } = props;
 
-  onMount(() => {
+  effect(() => {
     const handleRebuild = () => onRebuild();
     document!.addEventListener("css-rebuild", handleRebuild);
 
-    onCleanup(() => {
+    return () => {
       document!.removeEventListener("css-rebuild", handleRebuild);
-    });
+    };
   });
 
   return (

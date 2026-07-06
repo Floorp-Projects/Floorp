@@ -3,13 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal } from "solid-js";
+import { effect, signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import { panelSidebarConfig, setIsFloatingDragging } from "../data/data.ts";
 
-export const [isResizeCooldown, setIsResizeCooldown] = createSignal<boolean>(
-  false,
-);
-let resizeCooldownTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+export const isResizeCooldown: Signal<boolean> = signal<boolean>(false);
+export const setIsResizeCooldown = (v: boolean): void => {
+  isResizeCooldown.value = v;
+};
+let resizeCooldownTimer: number | null = null;
 
 export function FloatingSplitter() {
   const onHorizontalMouseDown = (e: MouseEvent) => {
@@ -333,24 +336,26 @@ export function FloatingSplitter() {
     document?.addEventListener("mouseup", onMouseUp);
   };
 
-  createEffect(() => {
-    const position = panelSidebarConfig().position_start;
-    if (position) {
-      document
-        ?.getElementById("floating-splitter-right")
-        ?.setAttribute("data-floating-splitter-side", "start");
-      document
-        ?.getElementById("floating-splitter-corner-bottomright")
-        ?.setAttribute("data-floating-splitter-corner", "start");
-    } else {
-      document
-        ?.getElementById("floating-splitter-right")
-        ?.setAttribute("data-floating-splitter-side", "end");
-      document
-        ?.getElementById("floating-splitter-corner-bottomright")
-        ?.setAttribute("data-floating-splitter-corner", "end");
-    }
-  });
+  useEffect(() => {
+    return effect(() => {
+      const position = panelSidebarConfig.value.position_start;
+      if (position) {
+        document
+          ?.getElementById("floating-splitter-right")
+          ?.setAttribute("data-floating-splitter-side", "start");
+        document
+          ?.getElementById("floating-splitter-corner-bottomright")
+          ?.setAttribute("data-floating-splitter-corner", "start");
+      } else {
+        document
+          ?.getElementById("floating-splitter-right")
+          ?.setAttribute("data-floating-splitter-side", "end");
+        document
+          ?.getElementById("floating-splitter-corner-bottomright")
+          ?.setAttribute("data-floating-splitter-corner", "end");
+      }
+    });
+  }, []);
 
   return (
     <>

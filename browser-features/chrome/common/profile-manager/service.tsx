@@ -6,10 +6,9 @@
 import { BrowserActionUtils } from "#features-chrome/utils/browser-action.tsx";
 import { MenuPopup } from "./components/popup.tsx";
 import toolbarStyles from "./styles.css?inline";
-import type { JSX } from "solid-js";
+import type { ComponentChild } from "preact";
 import i18next from "i18next";
-import { createRootHMR } from "@nora/solid-xul";
-import { createSignal } from "solid-js";
+import { createRootHMR } from "#features-chrome/utils/base";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
@@ -73,7 +72,7 @@ export class ProfileManagerService {
           this.updateButtonIfNeeded();
         },
         CustomizableUI.AREA_NAVBAR,
-        this.StyleElement() as JSX.Element,
+        this.StyleElement() as ComponentChild,
         0,
       );
       // Ensure we update the button immediately as well in case the widget
@@ -93,7 +92,7 @@ export class ProfileManagerService {
       | XULElement
       | null;
     if (!tooltip) {
-      tooltip = document?.createXULElement("tooltip") as XULElement;
+      tooltip = document?.createXULElement("tooltip") as unknown as XULElement;
       tooltip.id = "profile-manager-button-tooltip";
       tooltip.setAttribute("hasbeenopened", "false");
       document?.getElementById("mainPopupSet")?.appendChild(tooltip);
@@ -101,25 +100,22 @@ export class ProfileManagerService {
     }
 
     createRootHMR(() => {
-      const [texts, setTexts] = createSignal<ProfileManagerTexts>(
-        // use translated texts if available, otherwise fallback to defaults
-        getTranslatedTexts() ?? defaultTexts,
-      );
+      let texts: ProfileManagerTexts = getTranslatedTexts() ?? defaultTexts;
 
       addI18nObserver(() => {
-        setTexts(getTranslatedTexts());
+        texts = getTranslatedTexts();
         // update attributes when language changes
-        aNode.setAttribute("label", texts().label);
-        aNode.setAttribute("tooltiptext", texts().tooltipText);
-        tooltip?.setAttribute("label", texts().tooltipText);
+        aNode.setAttribute("label", texts.label);
+        aNode.setAttribute("tooltiptext", texts.tooltipText);
+        tooltip?.setAttribute("label", texts.tooltipText);
       });
 
       console.debug("Updating Profile Manager button texts");
 
       // initial set
-      aNode.setAttribute("label", texts().label);
-      aNode.setAttribute("tooltiptext", texts().tooltipText);
-      tooltip?.setAttribute("label", texts().tooltipText);
+      aNode.setAttribute("label", texts.label);
+      aNode.setAttribute("tooltiptext", texts.tooltipText);
+      tooltip?.setAttribute("label", texts.tooltipText);
     }, import.meta.hot);
   }
 }

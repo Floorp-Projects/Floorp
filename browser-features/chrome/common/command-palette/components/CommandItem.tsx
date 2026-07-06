@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { Show, For } from "solid-js";
 import type { PaletteCommand } from "../types.ts";
 import { getHighlightSegments, type TextSegment } from "../utils/highlight.ts";
 import { getShortcutForAction } from "../command-registry.ts";
@@ -22,11 +21,11 @@ export function CommandItem(props: CommandItemProps) {
     props.onExecute();
   };
 
-  const segments = (): TextSegment[] =>
-    getHighlightSegments(props.query, props.command.label);
-
-  const shortcut = (): string | null =>
-    getShortcutForAction(props.command.id);
+  const segments: TextSegment[] = getHighlightSegments(
+    props.query,
+    props.command.label,
+  );
+  const shortcut: string | null = getShortcutForAction(props.command.id);
 
   return (
     <div
@@ -36,19 +35,17 @@ export function CommandItem(props: CommandItemProps) {
       onClick={handleClick}
       role="option"
       aria-selected={props.isSelected}
-      tabindex={props.isSelected ? 0 : -1}
+      tabIndex={props.isSelected ? 0 : -1}
     >
       <div class="command-palette-item-info">
         <span class="command-palette-item-label">
-          <For each={segments()}>
-            {(seg) =>
-              seg.matched ? (
-                <strong class="command-palette-match">{seg.text}</strong>
-              ) : (
-                seg.text
-              )
-            }
-          </For>
+          {segments.map((seg) =>
+            seg.matched ? (
+              <strong class="command-palette-match">{seg.text}</strong>
+            ) : (
+              seg.text
+            )
+          )}
         </span>
         {props.command.description && (
           <span class="command-palette-item-description">
@@ -56,9 +53,7 @@ export function CommandItem(props: CommandItemProps) {
           </span>
         )}
       </div>
-      <Show when={shortcut()}>
-        {(s) => <kbd class="command-palette-shortcut-badge">{s()}</kbd>}
-      </Show>
+      {shortcut && <kbd class="command-palette-shortcut-badge">{shortcut}</kbd>}
     </div>
   );
 }

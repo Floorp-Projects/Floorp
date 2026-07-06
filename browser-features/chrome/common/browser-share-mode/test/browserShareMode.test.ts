@@ -3,7 +3,6 @@
 
 import {
   shareModeEnabled,
-  setShareModeEnabled,
 } from "../browser-share-mode.tsx";
 import BrowserShareMode from "../index.ts";
 
@@ -21,11 +20,11 @@ import {
 /** Save and restore shareModeEnabled signal state around a test block */
 function withStateRestored(fn: () => void): () => void {
   return () => {
-    const original = shareModeEnabled();
+    const original = shareModeEnabled.value;
     try {
       fn();
     } finally {
-      setShareModeEnabled(original);
+      shareModeEnabled.value = original;
     }
   };
 }
@@ -68,7 +67,7 @@ function cleanupDOM(): void {
 // ---------------------------------------------------------------------------
 
 function testShareModeSignalReadable(): void {
-  const value = shareModeEnabled();
+  const value = shareModeEnabled.value;
   assert(
     typeof value === "boolean",
     "shareModeEnabled should return a boolean",
@@ -76,98 +75,100 @@ function testShareModeSignalReadable(): void {
 }
 
 const testShareModeDefaultIsFalse = withStateRestored(() => {
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "shareModeEnabled default should be false",
   );
 });
 
 const testSetShareModeEnabledToggles = withStateRestored(() => {
-  setShareModeEnabled(true);
+  shareModeEnabled.value = true;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "shareModeEnabled should be true after setting true",
   );
 
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "shareModeEnabled should be false after setting false",
   );
 });
 
 const testSetShareModeEnabledWithCallback = withStateRestored(() => {
-  setShareModeEnabled(false);
-  setShareModeEnabled((prev) => !prev);
+  shareModeEnabled.value = false;
+  shareModeEnabled.value = !shareModeEnabled.value;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "shareModeEnabled should toggle from false to true via callback",
   );
 
-  setShareModeEnabled((prev) => !prev);
+  shareModeEnabled.value = !shareModeEnabled.value;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "shareModeEnabled should toggle from true to false via callback",
   );
 });
 
 const testMultipleToggleCycles = withStateRestored(() => {
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
   for (let i = 0; i < 10; i++) {
-    setShareModeEnabled((prev) => !prev);
+    shareModeEnabled.value = !shareModeEnabled.value;
   }
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "After even number of toggles, should return to original state",
   );
 
-  setShareModeEnabled((prev) => !prev);
-  assertEquals(shareModeEnabled(), true, "One more toggle should make it true");
+  shareModeEnabled.value = !shareModeEnabled.value;
+  assertEquals(shareModeEnabled.value, true, "One more toggle should make it true");
 });
 
 const testSetShareModeEnabledIdempotent = withStateRestored(() => {
-  setShareModeEnabled(true);
-  setShareModeEnabled(true);
+  shareModeEnabled.value = true;
+  shareModeEnabled.value = true;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "Setting same value twice should be idempotent",
   );
 
-  setShareModeEnabled(false);
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
+  shareModeEnabled.value = false;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "Setting same value twice should be idempotent",
   );
 });
 
 const testCallbackReceivesCorrectPreviousValue = withStateRestored(() => {
-  setShareModeEnabled(false);
-  setShareModeEnabled((prev) => {
+  shareModeEnabled.value = false;
+  {
+    const prev = shareModeEnabled.value;
     assertEquals(prev, false, "Callback should receive current false value");
-    return !prev;
-  });
+    shareModeEnabled.value = !prev;
+  }
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "Should be true after toggling from false",
   );
 
-  setShareModeEnabled((prev) => {
+  {
+    const prev = shareModeEnabled.value;
     assertEquals(prev, true, "Callback should receive current true value");
-    return !prev;
-  });
+    shareModeEnabled.value = !prev;
+  }
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "Should be false after toggling from true",
   );
@@ -299,22 +300,22 @@ function testMockToolsPopupStructure(): void {
 // ---------------------------------------------------------------------------
 
 const testShareModeSignalAffectsMultipleReads = withStateRestored(() => {
-  setShareModeEnabled(true);
-  const read1 = shareModeEnabled();
-  const read2 = shareModeEnabled();
+  shareModeEnabled.value = true;
+  const read1 = shareModeEnabled.value;
+  const read2 = shareModeEnabled.value;
   assertEquals(read1, true, "first read should be true");
   assertEquals(read2, true, "second read should also be true");
   assertEquals(read1, read2, "consecutive reads should be consistent");
 
-  setShareModeEnabled(false);
-  const read3 = shareModeEnabled();
+  shareModeEnabled.value = false;
+  const read3 = shareModeEnabled.value;
   assertEquals(read3, false, "read after set should be false");
 });
 
 const testShareModeSignalIdentityAcrossReads = withStateRestored(() => {
-  setShareModeEnabled(true);
-  const value1 = shareModeEnabled();
-  const value2 = shareModeEnabled();
+  shareModeEnabled.value = true;
+  const value1 = shareModeEnabled.value;
+  const value2 = shareModeEnabled.value;
   assertNotEquals(value1, undefined, "should not be undefined");
   assertNotEquals(value2, undefined, "should not be undefined");
 });
@@ -324,18 +325,18 @@ const testShareModeSignalIdentityAcrossReads = withStateRestored(() => {
 // ---------------------------------------------------------------------------
 
 const testSignalStateIsolationFalse = withStateRestored(() => {
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "signal should be false when set to false",
   );
 });
 
 const testSignalStateIsolationTrue = withStateRestored(() => {
-  setShareModeEnabled(true);
+  shareModeEnabled.value = true;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "signal should be true when set to true",
   );
@@ -649,28 +650,28 @@ function testDocumentReadyStates(): void {
 
 const testSetShareModeEnabledWithUndefinedCallback = withStateRestored(() => {
   // Test that callback handles edge cases
-  setShareModeEnabled(false);
+  shareModeEnabled.value = false;
 
   // Callback that returns same value
-  setShareModeEnabled((prev) => prev);
+  shareModeEnabled.value = shareModeEnabled.value;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "signal should remain false when callback returns same value",
   );
 
   // Callback that returns boolean explicitly
-  setShareModeEnabled(() => true);
+  shareModeEnabled.value = true;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     true,
     "signal should be true when callback returns true",
   );
 
   // Callback that returns boolean explicitly
-  setShareModeEnabled(() => false);
+  shareModeEnabled.value = false;
   assertEquals(
-    shareModeEnabled(),
+    shareModeEnabled.value,
     false,
     "signal should be false when callback returns false",
   );
@@ -678,11 +679,11 @@ const testSetShareModeEnabledWithUndefinedCallback = withStateRestored(() => {
 
 const testShareModeSignalBooleanValues = withStateRestored(() => {
   // Test explicit boolean values
-  setShareModeEnabled(true);
-  assertEquals(shareModeEnabled(), true, "signal should be explicitly true");
+  shareModeEnabled.value = true;
+  assertEquals(shareModeEnabled.value, true, "signal should be explicitly true");
 
-  setShareModeEnabled(false);
-  assertEquals(shareModeEnabled(), false, "signal should be explicitly false");
+  shareModeEnabled.value = false;
+  assertEquals(shareModeEnabled.value, false, "signal should be explicitly false");
 });
 
 // ---------------------------------------------------------------------------

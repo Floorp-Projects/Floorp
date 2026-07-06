@@ -8,7 +8,7 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import ModalParent from "../index.ts";
-import { isModalVisible, setModalVisible } from "../data/data.ts";
+import { isModalVisible } from "../data/data.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers – save/restore modal visibility state
@@ -17,11 +17,11 @@ import { isModalVisible, setModalVisible } from "../data/data.ts";
 let savedVisible: boolean;
 
 function saveState(): void {
-  savedVisible = isModalVisible();
+  savedVisible = isModalVisible.value;
 }
 
 function restoreState(): void {
-  setModalVisible(savedVisible);
+  isModalVisible.value = savedVisible;
 }
 
 // ---------------------------------------------------------------------------

@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { createEffect } from "solid-js";
+import { effect } from "@preact/signals";
 
 export class TabOpenPosition {
   constructor() {
-    createEffect(() => {
-      const option = config().tab.tabOpenPosition;
+    effect(() => {
+      const option = config.value.tab.tabOpenPosition;
       Services.prefs.setIntPref(
         "floorp.browser.tabs.openNewTabPosition",
         option,

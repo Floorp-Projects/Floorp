@@ -2,8 +2,7 @@
 
 import { isEnabled } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { createRootHMR, rootEffect } from "@nora/preact-xul/lifetime";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 
 export class CommandPaletteService {
@@ -13,8 +12,10 @@ export class CommandPaletteService {
     this.registerAction();
     this.initialize();
 
-    createEffect(() => {
-      const enabled = isEnabled();
+    // rootEffect registers its dispose with the enclosing createRootHMR scope
+    // so the effect is torn down on HMR reload.
+    rootEffect(() => {
+      const enabled = isEnabled(); // reads _enabled.value → tracked
       if (enabled) {
         this.attachToAllWindows();
       } else {

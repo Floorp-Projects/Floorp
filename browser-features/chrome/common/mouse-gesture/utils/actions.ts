@@ -1,5 +1,5 @@
 import type { GestureActionRegistration } from "./gestures.ts";
-import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import { shareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 import {
   setPersistedGroupLayout,
   getSplitViewGroupIdForTabs,
@@ -16,7 +16,7 @@ import {
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
     const targetDoc = win?.document ?? document;
-    return (targetDoc?.getElementById(id) as XULElement | null) ?? null;
+    return (targetDoc?.getElementById(id) as unknown as XULElement | null) ?? null;
   } catch {
     return null;
   }
@@ -528,7 +528,7 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-toggle-share-mode",
-    fn: () => setShareModeEnabled((prev) => !prev),
+    fn: () => { shareModeEnabled.value = !shareModeEnabled.value; },
   },
   {
     name: "floorp-copy-page-url-as-markdown",

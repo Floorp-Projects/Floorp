@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup } from "solid-js";
-import type {} from "solid-styled-jsx";
+import { signal } from "@preact/signals";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 
 type StatusBarGlobals = typeof globalThis & {
   FirefoxViewHandler?: {
@@ -22,37 +22,38 @@ type StatusBarGlobals = typeof globalThis & {
 };
 
 export class StatusBarManager {
-  _showStatusBar = createSignal(
+  showStatusBar = signal(
     Services.prefs.getBoolPref("noraneko.statusbar.enable", false),
   );
-  showStatusBar = this._showStatusBar[0];
-  setShowStatusBar = this._showStatusBar[1];
+
   constructor() {
     //? this effect will not called when pref is changed to same value.
     Services.prefs.addObserver(
       "noraneko.statusbar.enable",
       this.observerStatusbarPref,
     );
-    createEffect(() => {
+    rootEffect(() => {
       Services.prefs.setBoolPref(
         "noraneko.statusbar.enable",
-        this.showStatusBar(),
+        this.showStatusBar.value,
       );
-      onCleanup(() => {
+      return () => {
         Services.prefs.removeObserver(
           "noraneko.statusbar.enable",
           this.observerStatusbarPref,
         );
-      });
+      };
     });
 
     if (!globalThis.gFloorp) {
       globalThis.gFloorp = {};
     }
     globalThis.gFloorp.statusBar = {
-      setShow: this.setShowStatusBar,
+      setShow: (v: boolean) => {
+        this.showStatusBar.value = v;
+      },
     };
-    onCleanup(() => {
+    addDisposer(() => {
       globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
   }
@@ -119,7 +120,7 @@ export class StatusBarManager {
       }
     });
 
-    createEffect(() => {
+    rootEffect(() => {
       const statuspanelLabel = document?.querySelector("#statuspanel-label");
       const statuspanel = document?.querySelector<XULElement>("#statuspanel") ??
         null;
@@ -152,7 +153,7 @@ export class StatusBarManager {
           statusText?.removeAttribute("hidden");
         }
       });
-      if (this.showStatusBar()) {
+      if (this.showStatusBar.value) {
         if (statusText) {
           statusText.appendChild(statuspanelLabel);
         } else {
@@ -170,8 +171,8 @@ export class StatusBarManager {
 
   //if we use just method, `this` will be broken
   private observerStatusbarPref = () => {
-    this.setShowStatusBar((_prev) => {
-      return Services.prefs.getBoolPref("noraneko.statusbar.enable");
-    });
+    this.showStatusBar.value = Services.prefs.getBoolPref(
+      "noraneko.statusbar.enable",
+    );
   };
 }

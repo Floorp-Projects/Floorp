@@ -11,7 +11,6 @@ import {
 import type { GestureActionRegistration } from "../utils/gestures.ts";
 import {
   shareModeEnabled,
-  setShareModeEnabled,
 } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
 import {
   assert,
@@ -37,11 +36,11 @@ function restoreGestureRegistry(): void {
 /** Save and restore shareModeEnabled signal state around a test block */
 function withShareModeRestored(fn: () => void): () => void {
   return () => {
-    const original = shareModeEnabled();
+    const original = shareModeEnabled.value;
     try {
       fn();
     } finally {
-      setShareModeEnabled(original);
+      shareModeEnabled.value = original;
     }
   };
 }
@@ -214,12 +213,12 @@ const rawTests: TestCase[] = [
   {
     name: "floorp-toggle-share-mode action toggles share mode from false to true",
     fn: withShareModeRestored(() => {
-      setShareModeEnabled(false);
+      shareModeEnabled.value = false;
       const fn = gestureActions.getAction("floorp-toggle-share-mode");
       assert(typeof fn === "function", "action should exist");
       fn(window);
       assertEquals(
-        shareModeEnabled(),
+        shareModeEnabled.value,
         true,
         "share mode should be true after toggling from false",
       );
@@ -228,12 +227,12 @@ const rawTests: TestCase[] = [
   {
     name: "floorp-toggle-share-mode action toggles share mode from true to false",
     fn: withShareModeRestored(() => {
-      setShareModeEnabled(true);
+      shareModeEnabled.value = true;
       const fn = gestureActions.getAction("floorp-toggle-share-mode");
       assert(typeof fn === "function", "action should exist");
       fn(window);
       assertEquals(
-        shareModeEnabled(),
+        shareModeEnabled.value,
         false,
         "share mode should be false after toggling from true",
       );
@@ -242,15 +241,15 @@ const rawTests: TestCase[] = [
   {
     name: "floorp-toggle-share-mode action toggles multiple times correctly",
     fn: withShareModeRestored(() => {
-      setShareModeEnabled(false);
+      shareModeEnabled.value = false;
       const fn = gestureActions.getAction("floorp-toggle-share-mode");
       assert(typeof fn === "function", "action should exist");
       fn(window);
-      assertEquals(shareModeEnabled(), true, "first toggle: should be true");
+      assertEquals(shareModeEnabled.value, true, "first toggle: should be true");
       fn(window);
-      assertEquals(shareModeEnabled(), false, "second toggle: should be false");
+      assertEquals(shareModeEnabled.value, false, "second toggle: should be false");
       fn(window);
-      assertEquals(shareModeEnabled(), true, "third toggle: should be true");
+      assertEquals(shareModeEnabled.value, true, "third toggle: should be true");
     }),
   },
 
