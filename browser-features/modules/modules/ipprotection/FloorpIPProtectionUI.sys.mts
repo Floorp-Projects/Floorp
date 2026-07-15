@@ -153,7 +153,11 @@ function ensureStyle(
 ): void {
   let style = root.getElementById(id) as HTMLStyleElement | null;
   if (!style) {
-    style = root.ownerDocument.createElement("style");
+    const doc = root.ownerDocument;
+    if (!doc) {
+      return;
+    }
+    style = doc.createElement("style");
     style.id = id;
     root.prepend(style);
   }
@@ -210,7 +214,9 @@ function updateToolbarButton(
   button.removeAttribute("data-l10n-id");
   setAttributeIfChanged(button, "label", strings.title);
   const tooltip = resolveFloorpIPProtectionToolbarTooltip(
-    button.classList,
+    Array.from(button.classList).filter(
+      (className): className is string => className !== null,
+    ),
     strings,
   );
   setAttributeIfChanged(button, "tooltiptext", tooltip);
@@ -238,6 +244,10 @@ function updateUnauthenticatedPanel(
   root: ShadowRoot,
   strings: FloorpIPProtectionDisclosureStrings,
 ): boolean {
+  const doc = root.ownerDocument;
+  if (!doc) {
+    return false;
+  }
   const title = root.getElementById("unauthenticated-vpn-title");
   const message = root.getElementById("unauthenticated-vpn-message");
   const getStarted = root.getElementById("unauthenticated-get-started");
@@ -254,7 +264,7 @@ function updateUnauthenticatedPanel(
 
   let disclosure = root.getElementById(FULL_DISCLOSURE_ID);
   if (!disclosure) {
-    disclosure = root.ownerDocument.createElement("div");
+    disclosure = doc.createElement("div");
     disclosure.id = FULL_DISCLOSURE_ID;
     disclosure.setAttribute("role", "note");
     getStarted.before(disclosure);
@@ -279,11 +289,11 @@ function updateUnauthenticatedPanel(
     setTextIfChanged(terms, strings.termsOfUse);
     setTextIfChanged(privacy, strings.privacyNotice);
     footer.replaceChildren(
-      root.ownerDocument.createTextNode(strings.termsPrefix),
+      doc.createTextNode(strings.termsPrefix),
       terms,
-      root.ownerDocument.createTextNode(strings.termsConjunction),
+      doc.createTextNode(strings.termsConjunction),
       privacy,
-      root.ownerDocument.createTextNode(strings.termsSuffix),
+      doc.createTextNode(strings.termsSuffix),
     );
   }
   markReady(footer);
@@ -327,8 +337,12 @@ function ensurePanelHeaderObserver(
   panel: Element,
   strings: FloorpIPProtectionDisclosureStrings,
 ): void {
-  const header = win.document.getElementById(HEADER_CONTENT_ID);
-  const helpButton = win.document.getElementById(HEADER_BUTTON_ID);
+  const doc = win.document;
+  if (!doc) {
+    return;
+  }
+  const header = doc.getElementById(HEADER_CONTENT_ID);
+  const helpButton = doc.getElementById(HEADER_BUTTON_ID);
   if (!header || !helpButton) {
     return;
   }
@@ -364,6 +378,9 @@ function ensurePanel(
   strings: FloorpIPProtectionDisclosureStrings,
 ): void {
   const doc = win.document;
+  if (!doc) {
+    return;
+  }
   const panel = doc.getElementById(PANEL_ID);
   if (!panel || state.panelRepairing) {
     return;
@@ -411,7 +428,11 @@ function ensurePanel(
     ensureStyle(outerRoot, OUTER_STYLE_ID, OUTER_SHADOW_STYLES);
     let scope = outerRoot.getElementById(SCOPE_ID);
     if (!scope) {
-      scope = outerRoot.ownerDocument.createElement("div");
+      const ownerDocument = outerRoot.ownerDocument;
+      if (!ownerDocument) {
+        return;
+      }
+      scope = ownerDocument.createElement("div");
       scope.id = SCOPE_ID;
       scope.setAttribute("role", "note");
       wrapper.append(scope);
@@ -467,7 +488,11 @@ function ensureToolbar(
   state: WindowObserver,
   strings: FloorpIPProtectionDisclosureStrings,
 ): void {
-  const button = win.document.getElementById(TOOLBAR_BUTTON_ID);
+  const doc = win.document;
+  if (!doc) {
+    return;
+  }
+  const button = doc.getElementById(TOOLBAR_BUTTON_ID);
   if (!button) {
     return;
   }
@@ -493,9 +518,14 @@ function ensureToolbar(
 }
 
 function initializeBrowserDocument(win: BrowserWindow): void {
+  const doc = win.document;
+  const documentElement = doc?.documentElement;
+  if (!doc || !documentElement) {
+    return;
+  }
   if (
     observedWindows.has(win) ||
-    win.document.documentElement.getAttribute("windowtype") !==
+    documentElement.getAttribute("windowtype") !==
       "navigator:browser"
   ) {
     return;
@@ -519,7 +549,7 @@ function initializeBrowserDocument(win: BrowserWindow): void {
     panelRepairing: false,
   };
   observedWindows.set(win, state);
-  state.documentObserver.observe(win.document.documentElement, {
+  state.documentObserver.observe(documentElement, {
     childList: true,
     subtree: true,
   });
@@ -529,7 +559,7 @@ function initializeBrowserDocument(win: BrowserWindow): void {
     if (target?.id !== PANEL_ID) {
       return;
     }
-    const panel = win.document.getElementById(PANEL_ID);
+    const panel = doc.getElementById(PANEL_ID);
     markNotReady(panel);
     if (event.type === "ViewHiding") {
       cancelPanelRetry(win, state);
@@ -539,8 +569,8 @@ function initializeBrowserDocument(win: BrowserWindow): void {
     state.panelRetryAttempts = 0;
     ensurePanel(win, state, strings);
   };
-  win.document.addEventListener("ViewShowing", onPanelEvent, true);
-  win.document.addEventListener("ViewHiding", onPanelEvent, true);
+  doc.addEventListener("ViewShowing", onPanelEvent, true);
+  doc.addEventListener("ViewHiding", onPanelEvent, true);
 
   win.addEventListener(
     "unload",
@@ -551,8 +581,8 @@ function initializeBrowserDocument(win: BrowserWindow): void {
       state.panelOuterObserver?.disconnect();
       state.panelInnerObserver?.disconnect();
       cancelPanelRetry(win, state);
-      win.document.removeEventListener("ViewShowing", onPanelEvent, true);
-      win.document.removeEventListener("ViewHiding", onPanelEvent, true);
+      doc.removeEventListener("ViewShowing", onPanelEvent, true);
+      doc.removeEventListener("ViewHiding", onPanelEvent, true);
       observedWindows.delete(win);
     },
     { once: true },
@@ -563,7 +593,11 @@ function initializeBrowserDocument(win: BrowserWindow): void {
 }
 
 function observeBrowserWindow(win: BrowserWindow): void {
-  if (win.document.readyState === "loading") {
+  const doc = win.document;
+  if (!doc) {
+    return;
+  }
+  if (doc.readyState === "loading") {
     win.addEventListener(
       "DOMContentLoaded",
       () => initializeBrowserDocument(win),

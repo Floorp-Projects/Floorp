@@ -1067,6 +1067,10 @@ function ensureFloorpIPProtectionPreferencesStyle(): void {
   if (doc.getElementById(id)) {
     return;
   }
+  const documentElement = doc.documentElement;
+  if (!documentElement) {
+    return;
+  }
   const style = doc.createElement("style");
   style.id = id;
   style.textContent = `
@@ -1084,7 +1088,7 @@ function ensureFloorpIPProtectionPreferencesStyle(): void {
       line-height: 1.4;
     }
   `;
-  doc.documentElement.append(style);
+  documentElement.append(style);
 }
 
 function updateFloorpIPProtectionGroupConfig(
