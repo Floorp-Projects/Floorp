@@ -440,6 +440,35 @@
     "tooltiptext": "禅モードの表示を切り替える",
     "menu-label": "禅モードの表示を切り替える"
   },
+  "ipProtection": {
+    "title": "ブラウザー VPN",
+    "toolbar": {
+      "activeTooltip": "ブラウザー VPN はオンです — Floorp での対象ウェブ閲覧通信を保護中",
+      "inactiveTooltip": "ブラウザー VPN はオフです — ウェブ閲覧通信は保護されていません",
+      "excludedTooltip": "このサイトではブラウザー VPN がオフです — このサイトは保護されていません",
+      "pausedTooltip": "ブラウザー VPN は一時停止中です — ウェブ閲覧通信は保護されていません",
+      "errorTooltip": "ブラウザー VPN — 接続エラーのため、対象ウェブ閲覧通信は保護されていません",
+      "helpTooltip": "ブラウザー VPN のサポートページを開く"
+    },
+    "scope": {
+      "summary": "有効時は、Floorp での対象ウェブ閲覧通信を保護できます。保護範囲に OS や他のアプリの通信は含まれません。",
+      "fullDisclosure": "この機能は Mozilla アカウントと Mozilla のサービス基盤を使用します。Floorp は Mozilla とは独立したプロジェクトであり、Mozilla による提携、承認、推奨を示すものではありません。利用可否は、地域、アカウント状態、Mozilla 側の提供条件によって決まります。"
+    },
+    "unauthenticated": {
+      "title": "ブラウザー VPN を試す"
+    },
+    "settings": {
+      "promoHeading": "ブラウザー VPN を試す",
+      "promoMessage": "サインインして利用可否を確認した後、Floorp での対象ウェブ閲覧通信を保護できます。"
+    },
+    "terms": {
+      "prefix": "続行すると、",
+      "termsOfUse": "Mozilla Firefox 利用規約",
+      "conjunction": "に同意し、",
+      "privacyNotice": "Mozilla Firefox プライバシー通知",
+      "suffix": "を確認したものとみなされます。"
+    }
+  },
   "commandPalette": {
     "dialogLabel": "コマンドパレット",
     "placeholder": "コマンドを入力...",

@@ -16,6 +16,11 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+const { FloorpIPProtectionUI } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/ipprotection/FloorpIPProtectionUI.sys.mjs",
+);
+const isFloorpIPProtectionUIReady = FloorpIPProtectionUI.installEarly();
+
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
@@ -458,6 +463,11 @@ async function initializeExperiments() {
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
   );
   await Experiments.init();
+
+  const { FloorpIPProtectionGate } = await ChromeUtils.importESModule(
+    "resource://noraneko/modules/ipprotection/FloorpIPProtectionGate.sys.mjs",
+  );
+  FloorpIPProtectionGate.apply(isFloorpIPProtectionUIReady);
 }
 
 (async () => {

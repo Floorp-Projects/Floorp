@@ -7,9 +7,45 @@ interface FirefoxWindow extends Window {
 
 interface XULElement extends Element {}
 
+type FloorpIPProtectionDisclosureStrings = Readonly<{
+  title: string;
+  scope: string;
+  fullDisclosure: string;
+  settingsPromoHeading: string;
+  settingsPromoMessage: string;
+}>;
+
+type IPProtectionSettingItem = Readonly<{
+  id?: string;
+  l10nId?: string;
+  controlAttrs?: Readonly<Record<string, unknown>>;
+}>;
+
+type IPProtectionSettingGroupConfig = Readonly<{
+  l10nId?: string;
+  controlAttrs?: Readonly<Record<string, unknown>>;
+  items?: readonly IPProtectionSettingItem[];
+}>;
+
+type IPProtectionSettingGroup = HTMLElement & {
+  config?: IPProtectionSettingGroupConfig;
+  requestUpdate?: () => void;
+};
+
+type IPProtectionPromo = HTMLElement & {
+  heading?: string;
+  message?: string;
+};
+
 // In Firefox browser chrome context, document is always available.
 // Gecko types declare it as `Document | null`, but it is never null here.
 const doc = document!;
+
+const { getFloorpIPProtectionDisclosureStrings } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/ipprotection/FloorpIPProtectionDisclosure.sys.mjs",
+);
+const FLOORP_IP_PROTECTION_DISCLOSURE =
+  getFloorpIPProtectionDisclosureStrings() as FloorpIPProtectionDisclosureStrings;
 
 const FLOORP_HUB_WARNING_IDS = {
   container: "floorp-hub-warning",
@@ -1013,8 +1049,219 @@ function initHideNewTabPage(): void {
   }
 }
 
+const FLOORP_IP_PROTECTION_READY_ATTRIBUTE = "data-floorp-ipprotection-ready";
+const FLOORP_IP_PROTECTION_DISCLOSURE_ID = "floorpIPProtectionDisclosure";
+
+function setElementAttributeIfChanged(
+  element: Element,
+  name: string,
+  value: string,
+): void {
+  if (element.getAttribute(name) !== value) {
+    element.setAttribute(name, value);
+  }
+}
+
+function ensureFloorpIPProtectionPreferencesStyle(): void {
+  const id = "floorp-ipprotection-preferences-style";
+  if (doc.getElementById(id)) {
+    return;
+  }
+  const style = doc.createElement("style");
+  style.id = id;
+  style.textContent = `
+    setting-group[groupid="ipprotection"]:not([${FLOORP_IP_PROTECTION_READY_ATTRIBUTE}="true"]) {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    #${FLOORP_IP_PROTECTION_DISCLOSURE_ID} {
+      color: var(--text-color-deemphasized);
+      background-color: var(--background-color-box-info);
+      border-radius: var(--border-radius-medium);
+      margin-block-end: var(--space-medium);
+      padding: var(--space-medium);
+      line-height: 1.4;
+    }
+  `;
+  doc.documentElement.append(style);
+}
+
+function updateFloorpIPProtectionGroupConfig(
+  group: IPProtectionSettingGroup,
+): void {
+  const config = group.config;
+  if (!config?.items) {
+    return;
+  }
+  const items = config.items;
+  const promoItem = items.find(
+    (item) => item.id === "ipProtectionNotOptedInSection",
+  );
+  if (
+    config.l10nId === undefined &&
+    config.controlAttrs?.label === FLOORP_IP_PROTECTION_DISCLOSURE.title &&
+    promoItem?.l10nId === undefined &&
+    promoItem?.controlAttrs?.heading ===
+      FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoHeading &&
+    promoItem.controlAttrs.message ===
+      FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoMessage
+  ) {
+    return;
+  }
+  group.config = {
+    ...config,
+    l10nId: undefined,
+    controlAttrs: {
+      ...config.controlAttrs,
+      label: FLOORP_IP_PROTECTION_DISCLOSURE.title,
+    },
+    items: items.map((item) =>
+      item.id === "ipProtectionNotOptedInSection"
+        ? {
+          ...item,
+          l10nId: undefined,
+          controlAttrs: {
+            ...item.controlAttrs,
+            heading: FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoHeading,
+            message: FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoMessage,
+          },
+        }
+        : item
+    ),
+  };
+  group.requestUpdate?.();
+}
+
+function ensureOneFloorpIPProtectionPreferences(
+  group: IPProtectionSettingGroup,
+): void {
+  group.removeAttribute(FLOORP_IP_PROTECTION_READY_ATTRIBUTE);
+  updateFloorpIPProtectionGroupConfig(group);
+
+  const fieldset = group.querySelector("moz-fieldset") as
+    | (HTMLElement & { label?: string })
+    | null;
+  const promo = group.querySelector(
+    "#setting-control-ipProtectionNotOptedInSection > moz-promo",
+  ) as IPProtectionPromo | null;
+  const promoControl = group.querySelector(
+    "#setting-control-ipProtectionNotOptedInSection",
+  );
+  if (!fieldset || !promo || !promoControl) {
+    return;
+  }
+
+  fieldset.removeAttribute("data-l10n-id");
+  if (fieldset.label !== FLOORP_IP_PROTECTION_DISCLOSURE.title) {
+    fieldset.label = FLOORP_IP_PROTECTION_DISCLOSURE.title;
+  }
+  setElementAttributeIfChanged(
+    fieldset,
+    "label",
+    FLOORP_IP_PROTECTION_DISCLOSURE.title,
+  );
+
+  promo.removeAttribute("data-l10n-id");
+  if (
+    promo.heading !== FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoHeading
+  ) {
+    promo.heading = FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoHeading;
+  }
+  if (
+    promo.message !== FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoMessage
+  ) {
+    promo.message = FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoMessage;
+  }
+  setElementAttributeIfChanged(
+    promo,
+    "heading",
+    FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoHeading,
+  );
+  setElementAttributeIfChanged(
+    promo,
+    "message",
+    FLOORP_IP_PROTECTION_DISCLOSURE.settingsPromoMessage,
+  );
+
+  let disclosure = group.querySelector(
+    `#${FLOORP_IP_PROTECTION_DISCLOSURE_ID}`,
+  );
+  if (!disclosure) {
+    disclosure = doc.createElement("div");
+    disclosure.id = FLOORP_IP_PROTECTION_DISCLOSURE_ID;
+    disclosure.setAttribute("role", "note");
+    promoControl.before(disclosure);
+  }
+  const disclosureText =
+    `${FLOORP_IP_PROTECTION_DISCLOSURE.scope} ${FLOORP_IP_PROTECTION_DISCLOSURE.fullDisclosure}`;
+  if (disclosure.textContent !== disclosureText) {
+    disclosure.textContent = disclosureText;
+  }
+  setElementAttributeIfChanged(
+    group,
+    FLOORP_IP_PROTECTION_READY_ATTRIBUTE,
+    "true",
+  );
+}
+
+function ensureFloorpIPProtectionPreferences(): void {
+  ensureFloorpIPProtectionPreferencesStyle();
+  const groups = doc.querySelectorAll<IPProtectionSettingGroup>(
+    'setting-group[groupid="ipprotection"]',
+  );
+  for (const group of groups) {
+    ensureOneFloorpIPProtectionPreferences(group);
+  }
+}
+
+let floorpIPProtectionPreferencesObserver: MutationObserver | null = null;
+
+function initFloorpIPProtectionPreferences(): void {
+  const run = (): void => {
+    ensureFloorpIPProtectionPreferences();
+    if (floorpIPProtectionPreferencesObserver) {
+      return;
+    }
+    floorpIPProtectionPreferencesObserver = new (doc.defaultView as unknown as {
+      MutationObserver: typeof MutationObserver;
+    }).MutationObserver(() => {
+      ensureFloorpIPProtectionPreferences();
+    });
+    const target = doc.getElementById("mainPrefPane") ?? doc.body;
+    if (target) {
+      floorpIPProtectionPreferencesObserver.observe(target, {
+        attributes: true,
+        attributeFilter: [
+          "data-l10n-id",
+          "label",
+          "heading",
+          "message",
+        ],
+        childList: true,
+        subtree: true,
+      });
+    }
+    doc.defaultView?.addEventListener(
+      "unload",
+      () => {
+        floorpIPProtectionPreferencesObserver?.disconnect();
+        floorpIPProtectionPreferencesObserver = null;
+      },
+      { once: true },
+    );
+  };
+
+  if (doc.readyState === "loading") {
+    doc.addEventListener("DOMContentLoaded", run, { once: true });
+  } else {
+    run();
+  }
+}
+
 ensureI18NInitialized();
 addFloorpHubCategory();
 ensureFloorpHubWarning();
 ensureFloorpStartWarning();
 initHideNewTabPage();
+initFloorpIPProtectionPreferences();
