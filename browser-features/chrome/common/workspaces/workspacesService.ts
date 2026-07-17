@@ -115,8 +115,22 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // IMPORTANT: This must happen before restoration completes so that
     // SessionStore includes floorpWorkspaceId in the restored tab data.
     globalThis.SessionStore.promiseInitialized.then(() => {
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+      // Firefox 152 removed SessionStore.persistTabAttribute; guard so
+      // window initialization survives on newer runtimes. Split-view's
+      // session-restore patch shows the setCustomTabValue fallback that
+      // real persistence needs — porting workspaces onto it is the
+      // follow-up; this keeps the feature from throwing until then.
+      const ss = globalThis.SessionStore as unknown as {
+        persistTabAttribute?: (attr: string) => void;
+      };
+      if (typeof ss.persistTabAttribute === "function") {
+        ss.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+        ss.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+      } else {
+        console.warn(
+          "[workspaces] SessionStore.persistTabAttribute unavailable; workspace tab attributes will not persist across restarts",
+        );
+      }
     });
 
     // Delay TabOpen handler and ProgressListener registration until AFTER
