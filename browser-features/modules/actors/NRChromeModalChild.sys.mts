@@ -17,6 +17,15 @@ export class NRChromeModalChild extends JSWindowActorChild {
         this.renderContent(window, message.data);
         return await this.waitForUserInput(window);
       }
+      case "NRChromeModal:ping": {
+        // Health probe: tells the parent whether the page actually mounted
+        // (waitForReady gives up after ~5s and proceeds regardless, after
+        // which waitForUserInput can pend forever on a dead page).
+        const doc = window?.document as Document & {
+          documentElement?: HTMLElement;
+        };
+        return doc?.documentElement?.dataset?.noraModalReady === "true";
+      }
     }
     return null;
   }
