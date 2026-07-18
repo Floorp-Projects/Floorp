@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} is open-source software available under the Mozilla Public License 2.0, made possible by the Firefox open-source project and other open-source software.",
         "openSourceLicenseNotice": "Open Source License",
         "versionInfo": "Version",
-        "license": "License"
+        "license": "License",
+        "noraneko": {
+            "logoAlt": "Browser Logo",
+            "description": "Noraneko is a browser as testhead of Floorp 12. Floorp is based on Firefox & Noraneko.",
+            "communityCredit": "Made by Noraneko Community with ❤",
+            "repositoryLabel": "GitHub Repository: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Updates & Experiments",
