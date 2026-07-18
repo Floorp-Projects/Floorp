@@ -13,14 +13,14 @@ import { splitViewConfig } from "../data/config.js";
 import {
   computeDropZone,
   computeLayoutForExistingSplit,
+  type DropZone,
   zoneToLayout,
   zoneToTabOrder,
-  type DropZone,
 } from "../utils/zone-computation.js";
 import {
-  showDropOverlay,
   hideDropOverlay,
   removeDropOverlay,
+  showDropOverlay,
 } from "./split-view-drop-overlay.js";
 import {
   getActiveSplitViewGroupId,
@@ -28,6 +28,13 @@ import {
 } from "../patches/session-restore.js";
 import { applyLayout } from "../layout.js";
 import { forceCleanupDragState } from "../utils/force-cleanup.js";
+import {
+  captureNativeTabDragRecovery,
+  type DragSessionReader,
+  getCurrentNativeDragSession,
+  type NativeTabDragRecovery,
+  recoverLostNativeTabDrag,
+} from "./native-tab-drag-recovery.js";
 
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 const NEW_WINDOW_ZONE_ID = "floorp-new-window-drop-zone";
@@ -36,10 +43,9 @@ const PREF_SPLIT_VIEW_DND_CREATION_ENABLED =
 
 let activeZone: DropZone = "right";
 let isTabDragging = false;
-/** Tab being dragged, captured at dragstart. */
-let draggedTabAtStart: SplitViewTab | null = null;
 let cleanupFns: (() => void)[] = [];
 let logger: ConsoleInstance | null = null;
+let nativeDragSessionReader: DragSessionReader = getCurrentNativeDragSession;
 /**
  * Heartbeat timer: dragover fires continuously during a drag (~60fps).
  * If this timer expires, the cursor has left the window — hide overlays.
@@ -59,26 +65,47 @@ let dragLeaveTimer: ReturnType<typeof setTimeout> | null = null;
  * layout (Issue: split view created after nudging a tab inside the tab
  * strip renders with a stale positional offset).
  */
+interface DragTransaction {
+  readonly tab: SplitViewTab;
+  readonly nativeRecovery: NativeTabDragRecovery | null;
+  dragendObserved: boolean;
+  recoveryDeadlineAt: number | null;
+  recoveryReason: LostTerminalReason | null;
+  recoveryTimer: ReturnType<typeof setTimeout> | null;
+}
+
 interface PendingSplitViewCreation {
+  transaction: DragTransaction;
   tab: SplitViewTab;
   zone: DropZone;
+  source: "content-drop";
 }
+let activeDragTransaction: DragTransaction | null = null;
 let pendingCreation: PendingSplitViewCreation | null = null;
+
 /**
- * Fallback timer that flushes `pendingCreation` if the native `dragend`
- * never arrives within the same drag gesture. `dragend` is the expected
- * flush path, but it can be dropped (Firefox Bugzilla #656164); without a
- * fallback the split view would silently never be created in that case.
+ * Give a late normal dragend time to reach Gecko's tab-container handler before
+ * attempting any private lost-terminal recovery. Floorp UI is cleared before
+ * this timer starts, so the grace period never leaves content input blocked.
  */
-const PENDING_CREATION_FALLBACK_MS = 100;
-let pendingCreationFlushTimer: ReturnType<typeof setTimeout> | null = null;
+const LOST_DRAGEND_RECOVERY_RETRY_MS = 100;
+const LOST_DRAGEND_RECOVERY_DEADLINE_MS = 1000;
+
+type LostTerminalReason =
+  | "content-drop"
+  | "mouseup"
+  | "window-blur"
+  | "document-hidden"
+  | "dragged-tab-close"
+  | "stuck-watchdog";
 
 /**
  * Watchdog: if `data-floorp-tab-dragging` (or any sibling drag attribute)
  * lingers on tabpanels for more than this duration without a fresh dragover,
- * we assume the drag's terminal events (dragend/drop) were lost and force a
- * cleanup. Keep this short enough that users don't notice a stuck state,
- * but long enough that legitimate pauses in dragover don't trigger it.
+ * we assume the drag's terminal events (dragend/drop) were lost, clear Floorp
+ * UI, and schedule guarded native recovery. Keep this short enough that users
+ * don't notice a stuck state, but long enough that legitimate pauses in
+ * dragover don't trigger it.
  */
 const STUCK_DRAG_WATCHDOG_MS = 2000;
 let stuckDragWatchdog: ReturnType<typeof setTimeout> | null = null;
@@ -92,84 +119,6 @@ export function isTabDragToSplitCreationEnabled(): boolean {
 
 function getTabpanels(): HTMLElement | null {
   return document?.getElementById("tabbrowser-tabpanels") as HTMLElement | null;
-}
-
-/**
- * Finish the visual side of Firefox's native tab-drag move that
- * `finishAnimateTabMove` would normally handle.
- *
- * Background: when a tab is nudged within the tab strip during a drag,
- * `_animateTabMove` (drag-and-drop.js) sets `style.transform` on the dragged
- * tab *and its neighbours*, and the drag-over-a-group path sets the
- * `movingtab-group` / `movingtab-addToGroup` attributes plus the
- * `--dragover-tab-group-color*` CSS variables (the blue "drop here to group"
- * indicator) and a `dragover-groupTarget` attribute on the hovered tab. All of
- * these are normally cleared by native `finishAnimateTabMove`, which is itself
- * gated on the `movingtab` attribute (`if (!this.#isMovingTab()) return;`).
- *
- * The split-view tab-drop path interferes with that cleanup:
- *   - `onDrop` runs `cleanup()` → `forceCleanupDragState()`, which removes the
- *     `movingtab` attribute as a safety net against leaked `pointer-events:none`;
- *   - later, native `dragend` → `handle_dragend` → `finishAnimateTabMove` sees
- *     `movingtab` already gone and returns early, so NONE of the visual state
- *     is cleared — per-tab `transform`s, the blue group indicator, etc.
- *   - when `addTabSplitView` then moves those tabs into the wrapper, the stale
- *     `transform` travels with them (positional offset bug) and the group
- *     indicator keeps painting over the tab strip.
- *
- * Calling this immediately before `addTabSplitView`/`addTabs` reproduces the
- * cleanup `finishAnimateTabMove` would have done (drag-and-drop.js: clearing
- * `transform` + `dragover-groupTarget` on every `dragAndDropElement`, removing
- * the `movingtab-group` / `movingtab-ungroup` / `movingtab-addToGroup`
- * attributes, and dropping the `--dragover-tab-group-color*` CSS variables), so
- * no drag visuals survive into the wrapper — regardless of whether the native
- * function actually ran.
- */
-function finishNativeTabMoveVisuals(): void {
-  const tabContainer = getGBrowser()?.tabContainer as
-    | (HTMLElement & {
-        tabDragAndDrop?: {
-          _tabbrowserTabs?: HTMLElement & {
-            dragAndDropElements?: Iterable<HTMLElement>;
-          };
-        };
-      })
-    | undefined;
-  const tbts = tabContainer?.tabDragAndDrop?._tabbrowserTabs;
-
-  // Prefer Firefox's own dragAndDropElements list — it is exactly the set
-  // `_animateTabMove` applied transforms to (tabs AND split-view wrappers).
-  const dde = tbts?.dragAndDropElements;
-  let items: HTMLElement[];
-  if (dde) {
-    items = Array.from(dde);
-  } else {
-    // Fallback: sweep all tabbrowser-tabs and split-view wrappers in the strip.
-    const all = document?.querySelectorAll(
-      ".tabbrowser-tab, tab-split-view-wrapper",
-    );
-    items = all ? (Array.from(all) as HTMLElement[]) : [];
-  }
-  for (const item of items) {
-    // _animateTabMove's translate; also clear dragover-groupTarget (native
-    // _resetGroupTarget) for any tab that was the hovered grouping target.
-    if (item.style.transform) {
-      item.style.transform = "";
-    }
-    item.removeAttribute("dragover-groupTarget");
-  }
-
-  if (tbts) {
-    // Native finishAnimateTabMove attribute cleanup.
-    tbts.removeAttribute("movingtab-group");
-    tbts.removeAttribute("movingtab-ungroup");
-    tbts.removeAttribute("movingtab-addToGroup");
-    // Native _setDragOverGroupColor(null): drop the blue group-indicator CSS
-    // variables, which otherwise keep painting over the tab strip.
-    tbts.style.removeProperty("--dragover-tab-group-color");
-    tbts.style.removeProperty("--dragover-tab-group-color-invert");
-    tbts.style.removeProperty("--dragover-tab-group-color-pale");
-  }
 }
 
 /**
@@ -334,14 +283,14 @@ function onNewWindowZoneDrop(event: DragEvent): void {
   if (zone) zone.removeAttribute("drag-hover");
 
   const gBrowser = getGBrowser();
-  const draggedTab = draggedTabAtStart;
+  const draggedTab = activeDragTransaction?.tab ?? null;
   if (!gBrowser || !draggedTab) {
-    cleanup();
+    abortDragTransaction();
     return;
   }
 
   // Move the dragged tab to a new window
-  cleanup();
+  abortDragTransaction();
   gBrowser.replaceTabWithWindow(draggedTab);
 }
 
@@ -357,9 +306,7 @@ function isEventInsideNewWindowZone(event: DragEvent): boolean {
 
 function onDragOver(event: DragEvent): void {
   if (!isTabDragToSplitCreationEnabled()) {
-    if (isTabDragging) {
-      cleanup();
-    }
+    abortDragTransaction();
     return;
   }
 
@@ -430,7 +377,7 @@ function onDragOver(event: DragEvent): void {
     showNewWindowZone();
   }
 
-  const draggedTab = draggedTabAtStart;
+  const draggedTab = activeDragTransaction?.tab ?? null;
   const activeSplitView = findExistingSplitView();
   const maxPanes = splitViewConfig().maxPanes;
 
@@ -447,9 +394,7 @@ function onDragOver(event: DragEvent): void {
 
 function onDrop(event: DragEvent): void {
   if (!isTabDragToSplitCreationEnabled()) {
-    if (isTabDragging) {
-      cleanup();
-    }
+    abortDragTransaction();
     return;
   }
 
@@ -470,24 +415,24 @@ function onDrop(event: DragEvent): void {
 
   const gBrowser = getGBrowser();
   if (!gBrowser) {
-    cleanup();
+    abortDragTransaction();
     return;
   }
 
-  const draggedTab = draggedTabAtStart;
-  if (!draggedTab) {
-    cleanup();
+  const transaction = activeDragTransaction;
+  const draggedTab = transaction?.tab ?? null;
+  if (!transaction || !draggedTab) {
+    abortDragTransaction();
     return;
   }
 
   if (draggedTab.splitview) {
-    cleanup();
+    abortDragTransaction();
     return;
   }
 
   // Save state before cleanup — split view creation is deferred until after
-  // Firefox's native `dragend` runs (see `pendingCreation` /
-  // `flushPendingCreationOnDragEnd`). The native `handle_dragend` calls
+  // Firefox's native bubbling `dragend` runs. The native `handle_dragend` calls
   // `finishAnimateTabMove` (clearing per-tab `transform`s set by
   // `_animateTabMove`) and `_resetTabsAfterDrop` (clearing per-tab inline
   // styles) and deletes `_dragData`. If we move tabs into the wrapper before
@@ -497,32 +442,22 @@ function onDrop(event: DragEvent): void {
   // offset. Deferring until the real `dragend` event guarantees native
   // cleanup has completed first.
   const zone = activeZone;
-  const tab = draggedTab;
-
-  cleanup();
-
-  pendingCreation = { tab, zone };
-  // Safety net: `dragend` is the primary flush path, but it can be dropped
-  // (Firefox Bugzilla #656164). If it never arrives, flush after a short
-  // grace period so the split view is still created. The timer is cleared on
-  // the normal `dragend` path.
-  if (pendingCreationFlushTimer) clearTimeout(pendingCreationFlushTimer);
-  pendingCreationFlushTimer = setTimeout(() => {
-    pendingCreationFlushTimer = null;
-    if (!pendingCreation) return;
-    logger?.warn(
-      "[tab-drop] dragend not received within grace period — flushing " +
-        "pending split view creation via fallback timer",
-    );
-    flushPendingCreationOnDragEnd();
-  }, PENDING_CREATION_FALLBACK_MS);
+  pendingCreation = {
+    transaction,
+    tab: draggedTab,
+    zone,
+    source: "content-drop",
+  };
+  scheduleLostTerminalRecovery(transaction, "content-drop");
 }
 
 /**
  * Actually create (or extend) the split view for the captured drop. Extracted
  * from `onDrop` so it can run from the `dragend` handler after native cleanup.
  */
-function runDeferredSplitViewCreation(creation: PendingSplitViewCreation): void {
+function runDeferredSplitViewCreation(
+  creation: PendingSplitViewCreation,
+): void {
   const { tab, zone } = creation;
   // Guard: if tab was closed or destroyed between cleanup and this deferred callback,
   // skip all operations to avoid acting on stale state.
@@ -531,15 +466,6 @@ function runDeferredSplitViewCreation(creation: PendingSplitViewCreation): void 
 
   const gBrowser = getGBrowser();
   if (!gBrowser) return;
-
-  // CRITICAL: finish the native tab-move visuals BEFORE moving tabs into the
-  // wrapper. This runs from the `dragend` handler, but native
-  // `finishAnimateTabMove` may have been skipped because `cleanup()` →
-  // `forceCleanupDragState()` already removed the `movingtab` attribute that
-  // gates it (`if (!this.#isMovingTab()) return;`). Without this sweep, stale
-  // `transform`s travel into the wrapper (positional offset) and the blue
-  // drag-over-group indicator keeps painting over the tab strip.
-  finishNativeTabMoveVisuals();
 
   // Re-query the current split view state rather than using the pre-cleanup
   // snapshot — the wrapper may have been destroyed or mutated by Firefox's
@@ -573,7 +499,8 @@ function runDeferredSplitViewCreation(creation: PendingSplitViewCreation): void 
         const partnerTab = findLastActivePartnerTab(gBrowser, tab);
         if (!partnerTab) return;
         if (partnerTab.splitview) {
-          const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
+          const existingWrapper = partnerTab
+            .splitview as unknown as SplitViewWrapper;
           if (existingWrapper.tabs.length < currentMaxPanes) {
             existingWrapper.addTabs([tab]);
             // Apply grid-3pane layout for 2→3 pane transition on center drop
@@ -602,10 +529,14 @@ function runDeferredSplitViewCreation(creation: PendingSplitViewCreation): void 
       const partnerTab = findLastActivePartnerTab(gBrowser, tab);
       if (!partnerTab) return;
       if (partnerTab.splitview) {
-        const existingWrapper = partnerTab.splitview as unknown as SplitViewWrapper;
+        const existingWrapper = partnerTab
+          .splitview as unknown as SplitViewWrapper;
         if (existingWrapper.tabs.length < currentMaxPanes) {
           existingWrapper.addTabs([tab]);
-          const layout = computeLayoutForExistingSplit(zone, existingWrapper.tabs.length - 1);
+          const layout = computeLayoutForExistingSplit(
+            zone,
+            existingWrapper.tabs.length - 1,
+          );
           if (layout) {
             const groupId = getActiveSplitViewGroupId();
             if (groupId) setPersistedGroupLayout(groupId, layout);
@@ -630,49 +561,241 @@ function runDeferredSplitViewCreation(creation: PendingSplitViewCreation): void 
   }
 }
 
-/**
- * Flush any pending split-view creation captured at drop time. Called from
- * the `dragend` handler so that Firefox's native post-drag cleanup
- * (`finishAnimateTabMove` / `_resetTabsAfterDrop`) has already run, which
- * prevents stale per-tab `transform`s from lingering on tabs as they are
- * moved into the wrapper.
- */
-function flushPendingCreationOnDragEnd(): void {
-  if (!pendingCreation) return;
-  if (pendingCreationFlushTimer) {
-    clearTimeout(pendingCreationFlushTimer);
-    pendingCreationFlushTimer = null;
+function cancelLostTerminalRecovery(transaction: DragTransaction): void {
+  if (transaction.recoveryTimer !== null) {
+    clearTimeout(transaction.recoveryTimer);
+    transaction.recoveryTimer = null;
+  }
+}
+
+function takePendingCreation(
+  transaction: DragTransaction,
+): PendingSplitViewCreation | null {
+  if (pendingCreation?.transaction !== transaction) {
+    return null;
   }
   const creation = pendingCreation;
   pendingCreation = null;
-  runDeferredSplitViewCreation(creation);
+  return creation;
 }
 
-function onDragEnd(): void {
-  if (!isTabDragToSplitCreationEnabled()) {
-    if (isTabDragging) {
-      cleanup();
+function eventBelongsToTransaction(
+  event: DragEvent,
+  transaction: DragTransaction,
+): boolean {
+  const target = event.target;
+  if ((target as unknown) === transaction.tab) {
+    return true;
+  }
+  if (
+    target &&
+    typeof target === "object" &&
+    "linkedTab" in target &&
+    target.linkedTab === transaction.tab
+  ) {
+    return true;
+  }
+
+  const dataTransfer = event.dataTransfer as unknown as {
+    mozGetDataAt?: (format: string, index: number) => unknown;
+  } | null;
+  try {
+    if (
+      dataTransfer?.mozGetDataAt?.(TAB_DROP_TYPE, 0) === transaction.tab
+    ) {
+      return true;
+    }
+  } catch {
+    // Fall through to Gecko's event-to-tab resolver.
+  }
+
+  const tabContainer = getGBrowser()?.tabContainer as unknown as {
+    _tabForDragEvent?: (dragEvent: DragEvent) => SplitViewTab | null;
+  } | null;
+  try {
+    return tabContainer?._tabForDragEvent?.(event) === transaction.tab;
+  } catch {
+    return false;
+  }
+}
+
+function finishLostTerminalRecovery(transaction: DragTransaction): void {
+  cancelLostTerminalRecovery(transaction);
+  if (activeDragTransaction === transaction) {
+    activeDragTransaction = null;
+  }
+  if (pendingCreation?.transaction === transaction) {
+    pendingCreation = null;
+  }
+  clearFloorpDragUi();
+}
+
+function expireLostTerminalRecovery(transaction: DragTransaction): void {
+  if (activeDragTransaction !== transaction) return;
+  const reason = transaction.recoveryReason ?? "stuck-watchdog";
+  logger?.warn(
+    `[tab-drop] ${reason}: native drag session remained active through the ` +
+      `${LOST_DRAGEND_RECOVERY_DEADLINE_MS}ms recovery deadline; ` +
+      "discarding the captured transaction and pending split creation",
+  );
+  finishLostTerminalRecovery(transaction);
+}
+
+function scheduleNextLostTerminalAttempt(transaction: DragTransaction): void {
+  if (transaction.recoveryTimer !== null) return;
+  const deadlineAt = transaction.recoveryDeadlineAt;
+  if (deadlineAt === null) return;
+
+  const remainingMs = deadlineAt - Date.now();
+  if (remainingMs <= 0) {
+    expireLostTerminalRecovery(transaction);
+    return;
+  }
+
+  transaction.recoveryTimer = setTimeout(
+    () => attemptLostTerminalRecovery(transaction),
+    Math.min(LOST_DRAGEND_RECOVERY_RETRY_MS, remainingMs),
+  );
+}
+
+function attemptLostTerminalRecovery(transaction: DragTransaction): void {
+  transaction.recoveryTimer = null;
+  if (activeDragTransaction !== transaction) {
+    return;
+  }
+  if (transaction.dragendObserved) {
+    abortDragTransaction();
+    return;
+  }
+
+  const deadlineAt = transaction.recoveryDeadlineAt;
+  if (deadlineAt === null || Date.now() >= deadlineAt) {
+    expireLostTerminalRecovery(transaction);
+    return;
+  }
+
+  const nativeRecovery = transaction.nativeRecovery;
+  const result = nativeRecovery === null ? "blocked" : recoverLostNativeTabDrag(
+    nativeRecovery,
+    activeDragTransaction.nativeRecovery,
+    nativeDragSessionReader,
+  );
+
+  if (result === "active-session") {
+    // This result is explicitly retryable: preserve both the captured native
+    // transaction and any accepted content drop. The helper has not consumed
+    // its terminal guard, so a later session-null attempt can finalize once.
+    if (Date.now() >= deadlineAt) {
+      expireLostTerminalRecovery(transaction);
+    } else {
+      scheduleNextLostTerminalAttempt(transaction);
     }
     return;
   }
 
-  // Run deferred split-view creation FIRST, before cleanup(), so that it
-  // executes in the same `dragend` task — after native `handle_dragend` has
-  // cleared transforms/inline-styles via `finishAnimateTabMove` and
-  // `_resetTabsAfterDrop`. `dragend` is the only reliable signal that the
-  // native drag is truly over and its cleanup has completed; using a plain
-  // `setTimeout(0)` instead races against that cleanup when the tab was
-  // nudged within the tab strip.
-  flushPendingCreationOnDragEnd();
+  const reason = transaction.recoveryReason ?? "stuck-watchdog";
+  const creation = result === "full" &&
+      pendingCreation?.source === "content-drop"
+    ? takePendingCreation(transaction)
+    : null;
 
-  cleanup();
-  // Belt-and-suspenders: ensure Firefox's "movingtab" attribute is cleared.
-  // handle_dragend normally does this, but if the dragged tab was consumed
-  // by our drop handler, the attribute may linger on gNavToolbox, which
-  // applies `pointer-events: none` to the nav-bar and blocks all clicks
-  // (including context menus).
-  document.getElementById("tabbrowser-tabs")?.removeAttribute("movingtab");
-  document.getElementById("navigator-toolbox")?.removeAttribute("movingtab");
+  if (result === "blocked") {
+    logger?.warn(
+      `[tab-drop] ${reason}: captured native identity or terminal state ` +
+        "changed; hard-aborting the transaction and pending split creation",
+    );
+    abortDragTransaction();
+    return;
+  }
+
+  finishLostTerminalRecovery(transaction);
+
+  if (result === "full" && creation) {
+    if (!isTabDragToSplitCreationEnabled()) {
+      logger?.warn(
+        `[tab-drop] ${reason}: native drag state recovered, but ` +
+          "drag-to-split creation is now disabled",
+      );
+      return;
+    }
+    logger?.warn(
+      `[tab-drop] ${reason}: native dragend was lost; ` +
+        "recovered the captured transaction",
+    );
+    runDeferredSplitViewCreation(creation);
+    return;
+  }
+
+  if (result === "ui-only-tab-gone") {
+    logger?.warn(
+      `[tab-drop] ${reason}: dragged tab is gone; recovered native UI only`,
+    );
+    return;
+  }
+
+  logger?.warn(
+    `[tab-drop] ${reason}: recovered native drag state; ` +
+      "no accepted content drop, so no split was created",
+  );
+}
+
+/**
+ * Clear Floorp-owned UI immediately, then retry identity-scoped recovery every
+ * 100ms while Gecko still reports an active native drag. The first safety
+ * signal fixes a one-second absolute deadline; later signals cannot extend it.
+ */
+function scheduleLostTerminalRecovery(
+  transaction: DragTransaction,
+  reason: LostTerminalReason,
+): void {
+  clearFloorpDragUi();
+  if (
+    activeDragTransaction !== transaction ||
+    transaction.dragendObserved
+  ) {
+    return;
+  }
+
+  if (transaction.recoveryDeadlineAt === null) {
+    transaction.recoveryDeadlineAt = Date.now() +
+      LOST_DRAGEND_RECOVERY_DEADLINE_MS;
+    transaction.recoveryReason = reason;
+  }
+  scheduleNextLostTerminalAttempt(transaction);
+}
+
+function onDragEnd(event: DragEvent): void {
+  const transaction = activeDragTransaction;
+  if (!transaction) {
+    clearFloorpDragUi();
+    return;
+  }
+
+  if (!eventBelongsToTransaction(event, transaction)) {
+    logger?.warn(
+      "[tab-drop] dragend identity did not match the captured transaction; " +
+        "discarding pending split creation",
+    );
+    abortDragTransaction();
+    return;
+  }
+
+  // This document listener is intentionally registered in the bubble phase.
+  // Gecko's tab-container dragend handler has therefore already finalized its
+  // multi-selected tabs, animation, styles, and _dragData. Do not repeat or
+  // approximate any of those private operations on the normal path.
+  transaction.dragendObserved = true;
+  if (transaction.nativeRecovery) {
+    transaction.nativeRecovery.dragendObserved = true;
+  }
+  cancelLostTerminalRecovery(transaction);
+  const creation = takePendingCreation(transaction);
+  activeDragTransaction = null;
+  clearFloorpDragUi();
+
+  if (creation && isTabDragToSplitCreationEnabled()) {
+    runDeferredSplitViewCreation(creation);
+  }
 }
 
 /**
@@ -687,30 +810,21 @@ function onDragLeave(event: DragEvent): void {
   // When moving between children of the same document, relatedTarget is
   // the element being entered.
   const related = event.relatedTarget;
-  if (related === null || !(related instanceof Node) || !document.contains(related)) {
+  if (
+    related === null || !(related instanceof Node) ||
+    !document.contains(related)
+  ) {
     hideDropOverlay();
     removeNewWindowZone();
   }
 }
 
-/** Capture split view state and dragged tab on dragstart. */
-function onDragStart(event: DragEvent): void {
-  if (!isTabDragToSplitCreationEnabled()) {
-    if (isTabDragging) {
-      cleanup();
-    }
-    return;
-  }
-
-  const types = event.dataTransfer?.types;
-  if (!types) return;
-  if (!Array.from(types).includes(TAB_DROP_TYPE)) return;
+function resolveDraggedTabAtStart(event: DragEvent): SplitViewTab | null {
   const gBrowser = getGBrowser();
-  if (!gBrowser) return;
-
+  if (!gBrowser) return null;
   // Try to identify the actual dragged tab:
-  // 1. event.target on tabContainer is the tab element, which has a
-  //    linkedTab property pointing to the SplitViewTab.
+  // 1. event.target is the tab itself, or a test/proxy element whose linkedTab
+  //    points to the SplitViewTab.
   // 2. Firefox's tabContainer exposes _tabForDragEvent(event) which
   //    resolves the tab element from the drag event source node.
   // 3. Fallback to selectedTab only when both above fail.
@@ -718,11 +832,17 @@ function onDragStart(event: DragEvent): void {
   if (
     target &&
     typeof target === "object" &&
+    gBrowser.tabs.includes(target as unknown as SplitViewTab)
+  ) {
+    return target as unknown as SplitViewTab;
+  }
+  if (
+    target &&
+    typeof target === "object" &&
     "linkedTab" in target &&
     target.linkedTab
   ) {
-    draggedTabAtStart = target.linkedTab as SplitViewTab;
-    return;
+    return target.linkedTab as SplitViewTab;
   }
 
   const tabContainer = gBrowser.tabContainer as unknown as HTMLElement & {
@@ -731,41 +851,70 @@ function onDragStart(event: DragEvent): void {
   if (tabContainer._tabForDragEvent) {
     const dragTab = tabContainer._tabForDragEvent(event);
     if (dragTab) {
-      draggedTabAtStart = dragTab;
-      return;
+      return dragTab;
     }
   }
 
-  draggedTabAtStart = gBrowser.selectedTab ?? null;
+  return gBrowser.selectedTab ?? null;
 }
 
-function cleanup(): void {
+/** Capture one identity-scoped drag transaction at dragstart. */
+function onDragStart(event: DragEvent): void {
+  if (!isTabDragToSplitCreationEnabled()) {
+    abortDragTransaction();
+    return;
+  }
+
+  const types = event.dataTransfer?.types;
+  if (!types || !Array.from(types).includes(TAB_DROP_TYPE)) return;
+
+  const draggedTab = resolveDraggedTabAtStart(event);
+  if (!draggedTab) {
+    abortDragTransaction();
+    return;
+  }
+
+  // A second dragstart makes any older pending transaction ambiguous.
+  abortDragTransaction();
+  activeDragTransaction = {
+    tab: draggedTab,
+    nativeRecovery: captureNativeTabDragRecovery(draggedTab),
+    dragendObserved: false,
+    recoveryDeadlineAt: null,
+    recoveryReason: null,
+    recoveryTimer: null,
+  };
+}
+
+/**
+ * Clear only attributes, elements, and UI timers owned by Floorp split view.
+ * The transaction-owned recovery timer is canceled separately by dragend or a
+ * hard abort so this helper can safely run when lost recovery is scheduled.
+ */
+function clearFloorpDragUi(): void {
   if (dragLeaveTimer) {
     clearTimeout(dragLeaveTimer);
     dragLeaveTimer = null;
   }
-  if (pendingCreationFlushTimer) {
-    clearTimeout(pendingCreationFlushTimer);
-    pendingCreationFlushTimer = null;
-  }
   clearStuckDragWatchdog();
   isTabDragging = false;
-  draggedTabAtStart = null;
   activeZone = "right";
-  // Drop the pending split-view creation. It is only flushed from `dragend`
-  // (see `onDragEnd`) or its fallback timer; if we reach `cleanup()` another
-  // way — e.g. the stuck-drag watchdog, a global mouseup/blur safety net, or
-  // detach-to-window where the tab is gone — the drag was abandoned and no
-  // split view should be created.
-  pendingCreation = null;
   removeDropOverlay();
   removeNewWindowZone();
-  // Belt-and-suspenders: clear every drag-related attribute and overlay
-  // element that could leak across event races. `dragend` may not fire
-  // reliably (Firefox Bugzilla #656164 — e.g. when the tab is detached to
-  // a new window), so every exit path must guarantee a full cleanup.
-  // `forceCleanupDragState` is idempotent and a no-op when nothing is leaked.
+  // This helper deliberately does not remove Gecko's `movingtab`, mutate
+  // `_dragData`, or invoke native finalizers.
   forceCleanupDragState(logger);
+}
+
+/** Fail closed: discard the transaction and pending split, then clear UI. */
+function abortDragTransaction(): void {
+  const transaction = activeDragTransaction;
+  if (transaction) {
+    cancelLostTerminalRecovery(transaction);
+  }
+  activeDragTransaction = null;
+  pendingCreation = null;
+  clearFloorpDragUi();
 }
 
 /**
@@ -773,8 +922,8 @@ function cleanup(): void {
  * `data-floorp-tab-dragging` is set. If `STUCK_DRAG_WATCHDOG_MS` elapses
  * without a fresh dragover, dragend, or drop, we treat the drag as lost
  * (the most common cause is detach-to-window, where Firefox never delivers
- * dragend/drop to this window) and force a cleanup so mouse input on the
- * content area is restored instead of staying blocked until restart.
+ * dragend/drop to this window), restore content input immediately, and give a
+ * late normal dragend a short chance to cancel guarded recovery.
  */
 function scheduleStuckDragWatchdog(): void {
   if (stuckDragWatchdog) clearTimeout(stuckDragWatchdog);
@@ -785,9 +934,14 @@ function scheduleStuckDragWatchdog(): void {
     if (stuck) {
       logger?.warn(
         "[tab-drop] stuck-drag watchdog fired — dragend/drop was lost, " +
-          "forcing cleanup to restore mouse input",
+          "scheduling guarded recovery",
       );
-      cleanup();
+      const transaction = activeDragTransaction;
+      if (transaction) {
+        scheduleLostTerminalRecovery(transaction, "stuck-watchdog");
+      } else {
+        clearFloorpDragUi();
+      }
     }
   }, STUCK_DRAG_WATCHDOG_MS);
 }
@@ -801,11 +955,15 @@ function clearStuckDragWatchdog(): void {
 
 // --- Public API ---
 
-export function initTabDrop(initLogger: ConsoleInstance): void {
+export function initTabDrop(
+  initLogger: ConsoleInstance,
+  readNativeDragSession: DragSessionReader = getCurrentNativeDragSession,
+): void {
   logger = initLogger;
+  nativeDragSessionReader = readNativeDragSession;
   const onOver = (e: Event) => onDragOver(e as DragEvent);
   const onDropFn = (e: Event) => onDrop(e as DragEvent);
-  const onEnd = () => onDragEnd();
+  const onEnd = (e: Event) => onDragEnd(e as DragEvent);
   const onStart = (e: Event) => onDragStart(e as DragEvent);
   const onLeave = (e: Event) => onDragLeave(e as DragEvent);
 
@@ -813,16 +971,34 @@ export function initTabDrop(initLogger: ConsoleInstance): void {
   // #656164) and leave `data-floorp-tab-dragging` on tabpanels, which
   // permanently blocks mouse input on the content area. Reaching a mouseup,
   // a window blur, a visibility change, or a TabClose during an active drag
-  // is a strong signal that the drag is over — force a cleanup in those
-  // cases. `cleanup()` is idempotent and a no-op when nothing is active.
+  // is a strong signal that the drag is over. Clear Floorp UI immediately,
+  // then leave a short grace period for a normal Gecko-first dragend before
+  // attempting guarded lost-terminal recovery. Safety-only terminals never
+  // create a split view.
   const onGlobalMouseUp = (): void => {
-    if (isTabDragging) cleanup();
+    const transaction = activeDragTransaction;
+    if (transaction) {
+      scheduleLostTerminalRecovery(transaction, "mouseup");
+    } else if (isTabDragging) {
+      clearFloorpDragUi();
+    }
   };
   const onWindowBlur = (): void => {
-    if (isTabDragging) cleanup();
+    const transaction = activeDragTransaction;
+    if (transaction) {
+      scheduleLostTerminalRecovery(transaction, "window-blur");
+    } else if (isTabDragging) {
+      clearFloorpDragUi();
+    }
   };
   const onVisibilityChange = (): void => {
-    if (document.hidden && isTabDragging) cleanup();
+    if (!document.hidden) return;
+    const transaction = activeDragTransaction;
+    if (transaction) {
+      scheduleLostTerminalRecovery(transaction, "document-hidden");
+    } else if (isTabDragging) {
+      clearFloorpDragUi();
+    }
   };
   // Detach-to-window: when a tab is dragged out of the window, Firefox
   // closes the source tab (dispatching TabClose on it) and opens a new
@@ -832,14 +1008,18 @@ export function initTabDrop(initLogger: ConsoleInstance): void {
   // only react when the closed tab is the one we captured at dragstart, so
   // an unrelated tab closing mid-drag does not abort the active drag.
   const onTabClose = (event: Event): void => {
-    if (!isTabDragging) return;
+    const transaction = activeDragTransaction;
+    if (!transaction) return;
     const closingTab = event.target as SplitViewTab | null;
-    if (closingTab && closingTab === draggedTabAtStart) {
+    if (closingTab && closingTab === transaction.tab) {
+      if (transaction.nativeRecovery) {
+        transaction.nativeRecovery.tabGoneObserved = true;
+      }
       logger?.warn(
         "[tab-drop] dragged tab closed mid-drag — assuming detach-to-window, " +
-          "forcing cleanup to restore mouse input",
+          "scheduling guarded recovery",
       );
-      cleanup();
+      scheduleLostTerminalRecovery(transaction, "dragged-tab-close");
     }
   };
 
@@ -874,15 +1054,15 @@ export function initTabDrop(initLogger: ConsoleInstance): void {
     () => globalThis.removeEventListener("TabClose", onTabClose),
   ];
 
-  logger.debug("[tab-drop] document-level listeners attached (capture phase)");
+  logger.debug(
+    "[tab-drop] document drag listeners attached (dragend in bubble phase)",
+  );
 }
 
 export function destroyTabDrop(): void {
   for (const fn of cleanupFns) fn();
   cleanupFns = [];
-  removeDropOverlay();
-  removeNewWindowZone();
-  clearStuckDragWatchdog();
-  cleanup();
+  abortDragTransaction();
   logger = null;
+  nativeDragSessionReader = getCurrentNativeDragSession;
 }
