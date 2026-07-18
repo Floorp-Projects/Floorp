@@ -27,8 +27,10 @@ import type { IDollarRecognizer } from "./utils/dollar.ts";
 export class MouseGestureController {
   private isGestureActive = false;
   private isContextMenuPrevented = false;
-  private preventionTimeoutId: number | ReturnType<typeof setTimeout> | null =
-    null;
+  private preventionTimeoutId: number | null = null;
+  private isWheelGestureFired = false;
+  private isWheelGestureSuppressionActive = false;
+  private wheelGestureSuppressionTimeoutId: number | null = null;
   private mouseTrail: { x: number; y: number }[] = [];
   private display: GestureDisplay;
   private eventListenersAttached = false;
@@ -65,6 +67,14 @@ export class MouseGestureController {
     this.targetWindow.addEventListener("wheel", this.handleMouseWheel, {
       passive: false,
     });
+    this.targetWindow.addEventListener(
+      "blur",
+      this.handleInteractionInterrupted,
+    );
+    this.targetWindow.addEventListener(
+      "pagehide",
+      this.handleInteractionInterrupted,
+    );
     this.eventListenersAttached = true;
   }
 
@@ -79,13 +89,18 @@ export class MouseGestureController {
         true,
       );
       this.targetWindow.removeEventListener("wheel", this.handleMouseWheel);
+      this.targetWindow.removeEventListener(
+        "blur",
+        this.handleInteractionInterrupted,
+      );
+      this.targetWindow.removeEventListener(
+        "pagehide",
+        this.handleInteractionInterrupted,
+      );
       this.eventListenersAttached = false;
     }
 
-    if (this.preventionTimeoutId !== null) {
-      clearTimeout(this.preventionTimeoutId);
-      this.preventionTimeoutId = null;
-    }
+    this.clearPreventionTimeout();
 
     this.resetGestureState();
     this.display.destroy();
@@ -163,13 +178,63 @@ export class MouseGestureController {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  private clearPreventionTimeout(): void {
+    if (this.preventionTimeoutId === null) {
+      return;
+    }
+
+    this.targetWindow.clearTimeout(this.preventionTimeoutId);
+    this.preventionTimeoutId = null;
+  }
+
+  private scheduleContextMenuPreventionRelease(timeout: number): void {
+    this.clearPreventionTimeout();
+    this.isContextMenuPrevented = true;
+    this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
+      this.isContextMenuPrevented = false;
+      this.preventionTimeoutId = null;
+    }, timeout);
+  }
+
+  private clearWheelGestureState(): void {
+    if (this.wheelGestureSuppressionTimeoutId !== null) {
+      this.targetWindow.clearTimeout(this.wheelGestureSuppressionTimeoutId);
+      this.wheelGestureSuppressionTimeoutId = null;
+    }
+
+    this.isWheelGestureFired = false;
+    this.isWheelGestureSuppressionActive = false;
+  }
+
+  private startWheelGestureSuppression(timeout: number): void {
+    this.clearWheelGestureState();
+    this.isWheelGestureSuppressionActive = true;
+    this.wheelGestureSuppressionTimeoutId = this.targetWindow.setTimeout(() => {
+      this.isWheelGestureSuppressionActive = false;
+      this.wheelGestureSuppressionTimeoutId = null;
+    }, timeout);
+  }
+
+  private resetDisabledState(): void {
+    this.isContextMenuPrevented = false;
+    this.clearPreventionTimeout();
+    this.resetGestureState();
+  }
+
   private resetGestureState(): void {
     this.isGestureActive = false;
     this.isRockerGestureFired = false;
+    this.clearWheelGestureState();
     this.mouseTrail = [];
     this.display.hide();
     this.pressedButtons.clear();
   }
+
+  private handleInteractionInterrupted = (): void => {
+    this.isContextMenuPrevented = false;
+    this.clearPreventionTimeout();
+    this.resetGestureState();
+  };
 
   private getViewportPointFromEvent(event: MouseEvent): {
     x: number;
@@ -195,9 +260,27 @@ export class MouseGestureController {
   }
 
   private handleMouseDown = (event: MouseEvent): void => {
-    if (!isEnabled()) return;
+    if (!isEnabled()) {
+      this.resetDisabledState();
+      return;
+    }
+
+    // A fresh right-button mousedown proves that the previous physical button
+    // cycle ended, even if its mouseup was lost while focus was changing.
+    if (event.button === 2 && this.isWheelGestureFired) {
+      this.resetGestureState();
+    }
 
     this.pressedButtons.add(event.button);
+
+    // Once a wheel gesture has fired, it owns the remainder of this right-button
+    // cycle. Do not allow a later button press to turn it into a rocker gesture.
+    if (this.isWheelGestureFired) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     const config = getConfig();
 
     // Handle rocker gestures (left+right mouse buttons)
@@ -209,9 +292,10 @@ export class MouseGestureController {
       // Right button held, then left button pressed -> use configured action
       if (this.isGestureActive && event.button === LEFT) {
         action = config.rockerActions.rightLeft;
-      }
-      // Left button held, then right button pressed -> use configured action
-      else if (this.pressedButtons.has(LEFT) && event.button === RIGHT) {
+      } else if (
+        // Left button held, then right button pressed -> use configured action
+        this.pressedButtons.has(LEFT) && event.button === RIGHT
+      ) {
         action = config.rockerActions.leftRight;
       }
 
@@ -228,11 +312,11 @@ export class MouseGestureController {
     // Only start gesture on right mouse button
     if (event.button !== 2 || this.isGestureActive) return;
 
+    // A new right-button cycle supersedes any bounded suppression left by the
+    // previous wheel gesture.
+    this.clearWheelGestureState();
     this.isContextMenuPrevented = true;
-    if (this.preventionTimeoutId !== null) {
-      clearTimeout(this.preventionTimeoutId);
-      this.preventionTimeoutId = null;
-    }
+    this.clearPreventionTimeout();
 
     this.isGestureActive = true;
     this.mouseTrail = [this.getViewportPointFromEvent(event)];
@@ -242,7 +326,14 @@ export class MouseGestureController {
   };
 
   private handleMouseMove = (event: MouseEvent): void => {
-    if (!this.isGestureActive || !isEnabled()) return;
+    if (!isEnabled()) {
+      this.resetDisabledState();
+      return;
+    }
+
+    // Wheel gestures are discrete and must not fall through to drawn gesture
+    // recognition if the pointer moves before the right button is released.
+    if (!this.isGestureActive || this.isWheelGestureFired) return;
 
     // Collect trail point (use browser-global -> viewport mapping)
     const point = this.getViewportPointFromEvent(event);
@@ -301,26 +392,43 @@ export class MouseGestureController {
   private handleMouseUp = (event: MouseEvent): void => {
     this.pressedButtons.delete(event.button);
 
+    if (!isEnabled()) {
+      this.resetDisabledState();
+      return;
+    }
+
+    // Complete a wheel gesture on right-button release without entering the
+    // zero-movement drawn-gesture path. The separate suppression state remains
+    // alive long enough to cover Firefox's post-mouseup contextmenu event and
+    // any residual wheel events, but does not permit another action.
+    if (this.isWheelGestureFired) {
+      if (event.button === 2) {
+        const preventionTimeout = getConfig().contextMenu.preventionTimeout;
+        this.isContextMenuPrevented = false;
+        this.clearPreventionTimeout();
+        this.resetGestureState();
+        this.startWheelGestureSuppression(preventionTimeout);
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     // Handle rocker gesture cleanup
     if (this.isRockerGestureFired) {
       if (this.pressedButtons.size === 0) {
         this.resetGestureState();
-        this.isContextMenuPrevented = true;
-        if (this.preventionTimeoutId) {
-          clearTimeout(this.preventionTimeoutId);
-          this.preventionTimeoutId = null;
-        }
-        this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
-          this.isContextMenuPrevented = false;
-          this.preventionTimeoutId = null;
-        }, getConfig().contextMenu.preventionTimeout);
+        this.scheduleContextMenuPreventionRelease(
+          getConfig().contextMenu.preventionTimeout,
+        );
       }
       event.preventDefault();
       event.stopPropagation();
       return;
     }
 
-    if (!this.isGestureActive || event.button !== 2 || !isEnabled()) return;
+    if (!this.isGestureActive || event.button !== 2) return;
 
     const config = getConfig();
     const preventionTimeout = config.contextMenu.preventionTimeout;
@@ -358,14 +466,7 @@ export class MouseGestureController {
         this.targetWindow.setTimeout(() => {
           executeGestureAction(actionInfo.action, this.targetWindow);
           this.resetGestureState();
-          if (this.preventionTimeoutId) {
-            clearTimeout(this.preventionTimeoutId);
-            this.preventionTimeoutId = null;
-          }
-          this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
-            this.isContextMenuPrevented = false;
-            this.preventionTimeoutId = null;
-          }, preventionTimeout);
+          this.scheduleContextMenuPreventionRelease(preventionTimeout);
         }, 100);
 
         return;
@@ -373,19 +474,33 @@ export class MouseGestureController {
     }
 
     // No gesture recognized - prevent context menu and reset
-    if (this.preventionTimeoutId) {
-      clearTimeout(this.preventionTimeoutId);
-      this.preventionTimeoutId = null;
-    }
-    this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
-      this.isContextMenuPrevented = false;
-      this.preventionTimeoutId = null;
-    }, preventionTimeout);
     this.resetGestureState();
+    this.scheduleContextMenuPreventionRelease(preventionTimeout);
   };
 
   private handleMouseWheel = (event: WheelEvent): void => {
-    if (!this.isGestureActive || !isEnabled()) {
+    if (!isEnabled()) {
+      this.resetDisabledState();
+      return;
+    }
+
+    // After the first wheel action, consume all remaining wheel events in this
+    // cycle (including momentum/residual events after mouseup) without firing a
+    // second action.
+    if (this.isWheelGestureFired || this.isWheelGestureSuppressionActive) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    // A rocker action already owns this button cycle.
+    if (this.isRockerGestureFired) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    if (!this.isGestureActive) {
       return;
     }
 
@@ -402,25 +517,29 @@ export class MouseGestureController {
     }
 
     if (action) {
+      // Set the exact-once latch before executing the action so synchronous
+      // re-entrancy cannot execute another wheel action.
+      this.isWheelGestureFired = true;
+      this.isContextMenuPrevented = false;
+      this.clearPreventionTimeout();
       executeGestureAction(action, this.targetWindow);
       event.preventDefault();
       event.stopPropagation();
-
-      this.isContextMenuPrevented = true;
-
-      if (this.preventionTimeoutId) {
-        clearTimeout(this.preventionTimeoutId);
-        this.preventionTimeoutId = null;
-      }
-      this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
-        this.isContextMenuPrevented = false;
-        this.preventionTimeoutId = null;
-      }, getConfig().contextMenu.preventionTimeout);
     }
   };
 
   private handleContextMenu = (event: MouseEvent): void => {
-    if ((this.isGestureActive || this.isContextMenuPrevented) && isEnabled()) {
+    if (!isEnabled()) {
+      this.resetDisabledState();
+      return;
+    }
+
+    if (
+      this.isGestureActive ||
+      this.isContextMenuPrevented ||
+      this.isWheelGestureFired ||
+      this.isWheelGestureSuppressionActive
+    ) {
       event.preventDefault();
       event.stopPropagation();
     }
