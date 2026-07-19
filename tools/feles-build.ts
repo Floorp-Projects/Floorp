@@ -78,7 +78,6 @@ async function runDev(): Promise<void> {
       // Launch browser; when it exits (or fails to launch), take the dev
       // servers down with it — otherwise they keep listening on their
       // ports and the next run dies with "port already in use".
-      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run().then(() => {
         logger.info("Browser closed — shutting down dev servers.");
         DevServer.shutdown();
@@ -143,7 +142,6 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
       // servers down with it — otherwise ~9 vite servers keep listening
       // on 5170-5190 after "Browser Closed" and the next stage run fails
       // with "Port 5181 is already in use".
-      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run({ marionette }).then(() => {
         logger.info("Browser closed — shutting down dev servers.");
         DevServer.shutdown();
