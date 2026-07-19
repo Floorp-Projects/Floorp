@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Belt-and-suspenders cleanup of all split-view drag-related state that can
+ * Belt-and-suspenders cleanup of Floorp-owned split-view drag UI that can
  * leak across event races (e.g. Firefox Bugzilla #656164 where `dragend`
  * doesn't fire when a tab is consumed by a drop handler, or when a tab is
- * detached to a new window). When any of these attributes or overlay
- * elements lingers, it applies `pointer-events: none` to web content (via
- * `split-view.css` and Firefox's own `browser.css`) and blocks all mouse
- * input on the page until the browser is restarted.
+ * detached to a new window). Lingering Floorp drag attributes apply
+ * `pointer-events: none` to web content via `split-view.css` and can block
+ * mouse input until the browser is restarted.
  *
  * This helper is intentionally idempotent and side-effect-free when nothing
  * is leaked — safe to call on every drag/drop/mouseup/blur event.
@@ -18,11 +17,14 @@
  * Coverage:
  * - `#tabbrowser-tabpanels[data-floorp-dragging]` (splitter / pane reorder)
  * - `#tabbrowser-tabpanels[data-floorp-tab-dragging]` (tab drop)
- * - `#tabbrowser-tabs[movingtab]` and `#navigator-toolbox[movingtab]`
- *   (Firefox-native leftover; `browser.css` applies `pointer-events: none`
- *   to `#navigator-toolbox[movingtab]`)
  * - `#floorp-split-drop-overlay` element appended to `documentElement`
  * - `#floorp-new-window-drop-zone` element appended to `documentElement`
+ *
+ * Gecko-owned state such as `movingtab`, `_dragData`, and native tab-move
+ * transforms is deliberately out of scope. Clearing it before Gecko's normal
+ * bubbling `dragend` handler runs can prevent native multi-tab finalization.
+ * Lost native dragend recovery, when provably safe, is handled separately by
+ * the tab-drop transaction guard.
  *
  * See: Floorp PR #2492, Firefox Bugzilla #656164.
  */
@@ -44,19 +46,6 @@ export function forceCleanupDragState(
           "[force-cleanup] removed lingering data-floorp-tab-dragging",
         );
       }
-    }
-
-    // Firefox's `browser.css` targets `#tabbrowser-tabs[movingtab]` and
-    // `#navigator-toolbox[movingtab]` (NOT tabpanels), so sweep those.
-    const tabbrowserTabs = document?.getElementById("tabbrowser-tabs");
-    if (tabbrowserTabs?.hasAttribute("movingtab")) {
-      tabbrowserTabs.removeAttribute("movingtab");
-      logger?.debug("[force-cleanup] removed lingering movingtab on tabs");
-    }
-    const navigatorToolbox = document?.getElementById("navigator-toolbox");
-    if (navigatorToolbox?.hasAttribute("movingtab")) {
-      navigatorToolbox.removeAttribute("movingtab");
-      logger?.debug("[force-cleanup] removed lingering movingtab on toolbox");
     }
 
     const overlay = document?.getElementById("floorp-split-drop-overlay");

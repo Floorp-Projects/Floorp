@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Ứng dụng Web",
       "install-current": "Cài đặt trang hiện tại như một ứng dụng Web",
-      "open-installed": "Mở các ứng dụng đã cài"
+      "open-current": "Open app in selected container",
+      "open-installed": "Mở các ứng dụng đã cài",
+      "container": "Ngăn chứa"
     },
     "page-action": {
       "title": "Mở ứng dụng",
       "install": "Cài đặt ứng dụng",
       "open": "Mở ứng dụng",
       "cancel": "Hủy",
-      "site-icon": "Site icon"
+      "site-icon": "Site icon",
+      "container": "Ngăn chứa",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
@@ -198,8 +206,8 @@
       "gecko-reverse-sidebar": "Reverse Sidebar Position",
       "gecko-hide-sidebar": "Ẩn thanh bên",
       "gecko-toggle-sidebar": "Đóng mở thanh bên",
-      "gecko-scroll-up": "Page Up",
-      "gecko-scroll-down": "Page Down",
+      "gecko-scroll-up": "Cuộn lên",
+      "gecko-scroll-down": "Cuộn xuống",
       "gecko-scroll-line-up": "Cuộn lên",
       "gecko-scroll-line-down": "Cuộn xuống",
       "gecko-scroll-right": "Cuộn phải ",
@@ -439,6 +447,35 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Command Palette",

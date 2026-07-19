@@ -103,6 +103,32 @@ function extractVarDecl(css: string, name: string): string {
   return m ? m[1].trim() : "";
 }
 
+/** Extract the selector of the compat rule that restores the right-sidebar
+ * direction. Keeping this derived from the emitted CSS makes the selector
+ * semantics below a regression test for the actual production stylesheet. */
+function extractSidebarPositionEndSelector(): string {
+  const match = LEPTON_COMPAT_152_CSS.match(
+    /([^{}]+)\{\s*direction:\s*rtl\s*;\s*\}/,
+  );
+  const selector = match?.[1]?.trim() ?? "";
+  assert(
+    selector.includes("#sidebar-box"),
+    "compat layer should provide a direction rule for #sidebar-box",
+  );
+  return selector;
+}
+
+function makeSidebarBox(
+  positionEndValue: string | null,
+): HTMLDivElement {
+  const sidebarBox = document.createElement("div");
+  sidebarBox.id = "sidebar-box";
+  if (positionEndValue !== null) {
+    sidebarBox.setAttribute("sidebar-positionend", positionEndValue);
+  }
+  return sidebarBox;
+}
+
 // ---------------------------------------------------------------------------
 // Tests — the alias table matches the 151 -> 152 rename evidence
 // ---------------------------------------------------------------------------
@@ -424,6 +450,48 @@ function testCompatFixesPanelBackground(): void {
   );
 }
 
+/** Gecko 152 uses [sidebar-positionend] as a boolean presence attribute. The
+ *  compat selector must therefore match every present value, not only
+ *  [sidebar-positionend="true"]. */
+function testCompatFixesRightSidebarByAttributePresence(): void {
+  const selector = extractSidebarPositionEndSelector();
+  assert(
+    selector.includes("[sidebar-positionend]"),
+    "right-sidebar compat should target Gecko 152's attribute",
+  );
+  assert(
+    !selector.includes('[sidebar-positionend="true"]'),
+    "right-sidebar compat must use presence semantics, not value equality",
+  );
+
+  for (const value of ["", "true", "false"]) {
+    assert(
+      makeSidebarBox(value).matches(selector),
+      `right-sidebar selector should match present value ${
+        JSON.stringify(value)
+      }`,
+    );
+  }
+}
+
+/** A left sidebar has neither position-end attribute. It must retain its
+ *  normal LTR direction; older Gecko's [positionend] marker remains accepted
+ *  for backward compatibility. */
+function testCompatPreservesLeftAndLegacySidebarSemantics(): void {
+  const selector = extractSidebarPositionEndSelector();
+  assert(
+    !makeSidebarBox(null).matches(selector),
+    "right-sidebar compat must not match a left sidebar",
+  );
+
+  const legacyRightSidebar = makeSidebarBox(null);
+  legacyRightSidebar.setAttribute("positionend", "");
+  assert(
+    legacyRightSidebar.matches(selector),
+    "right-sidebar compat should retain the legacy presence attribute",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests — Floorp-specific icon patches are preserved out-of-vendor
 // ---------------------------------------------------------------------------
@@ -506,6 +574,14 @@ export async function runAllTests(): Promise<void> {
     // symptom coverage
     { name: "compat fixes dialog background (black dialog symptom)", fn: testCompatFixesDialogBackground },
     { name: "compat fixes panel background (transparent panel symptom)", fn: testCompatFixesPanelBackground },
+    {
+      name: "right-sidebar compat uses attribute presence",
+      fn: testCompatFixesRightSidebarByAttributePresence,
+    },
+    {
+      name: "right-sidebar compat preserves left and legacy semantics",
+      fn: testCompatPreservesLeftAndLegacySidebarSemantics,
+    },
     // icon patches
     { name: "floorp icon patches present", fn: testFloorpIconPatchesPresent },
     { name: "bundled compat is color + lepton + icons", fn: testBundledCompatIsColorPlusLeptonPlusIcons },

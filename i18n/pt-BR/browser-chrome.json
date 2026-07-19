@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Aplicativos Web",
       "install-current": "Instalar a página atual como um aplicativo da Web progressivo",
-      "open-installed": "Abrir Aplicativos Web instalados"
+      "open-current": "Abrir aplicativo no recipiente selecionado",
+      "open-installed": "Abrir Aplicativos Web instalados",
+      "container": "Contêiner"
     },
     "page-action": {
       "title": "Abrir aplicativo",
       "install": "Instalar aplicativo",
       "open": "Abrir aplicativo",
       "cancel": "Cancelar",
-      "site-icon": "Ícone do site"
+      "site-icon": "Ícone do site",
+      "container": "Contêiner",
+      "no-container": "Sem contêiner"
+    },
+    "window": {
+      "container-tooltip": "Contêiner: {{name}}",
+      "container-fallback": "Contêiner #{{id}}"
     }
   },
   "privateContainer": {
@@ -198,8 +206,8 @@
       "gecko-reverse-sidebar": "Inverter posição da barra lateral",
       "gecko-hide-sidebar": "Ocultar barra lateral",
       "gecko-toggle-sidebar": "Mostrar/ocultar barra lateral",
-      "gecko-scroll-up": "Subir página",
-      "gecko-scroll-down": "Descer página",
+      "gecko-scroll-up": "Rolar para cima",
+      "gecko-scroll-down": "Rolar para baixo",
       "gecko-scroll-line-up": "Rolar para cima",
       "gecko-scroll-line-down": "Rolar para baixo",
       "gecko-scroll-right": "Rolar à direita",
@@ -439,6 +447,35 @@
     "label": "Modo Zen",
     "tooltiptext": "Ativar/Desativar Modo Zen",
     "menu-label": "Ativar/Desativar Modo Zen"
+  },
+  "ipProtection": {
+    "title": "VPN do navegador",
+    "toolbar": {
+      "activeTooltip": "A VPN do navegador está ativada para tráfego de navegação na web no Floorp",
+      "inactiveTooltip": "A VPN do navegador está desativada — o tráfego de navegação na web não está protegido",
+      "excludedTooltip": "A VPN do navegador está desativada para este site — este site não está protegido",
+      "pausedTooltip": "A VPN do navegador está em pausa — o tráfego de navegação na web não está protegido",
+      "errorTooltip": "VPN do navegador — erro de conexão; tráfego de navegação elegível não está protegido",
+      "helpTooltip": "Abrir a página de suporte à VPN do navegador"
+    },
+    "scope": {
+      "summary": "Quando ativo, a VPN do navegador pode proteger o tráfego de navegação elegível no Floorp. Seu escopo não inclui seu sistema operacional ou outros apps.",
+      "fullDisclosure": "Este recurso utiliza uma conta Mozilla e a infraestrutura de serviços da Mozilla. O Floorp é um projeto independente e não é afiliado, endossado nem patrocinado pela Mozilla. A disponibilidade depende da sua região, do status da sua conta e dos requisitos de elegibilidade dos serviços da Mozilla."
+    },
+    "unauthenticated": {
+      "title": "Experimente a VPN do navegador"
+    },
+    "settings": {
+      "promoHeading": "Experimente a VPN do navegador",
+      "promoMessage": "Proteger o tráfego de navegação web elegível no Floorp após entrar e confirmar a disponibilidade do serviço."
+    },
+    "terms": {
+      "prefix": "Ao continuar, você concorda com",
+      "termsOfUse": "Termos de Uso do Mozilla Firefox",
+      "conjunction": " e reconhece ",
+      "privacyNotice": "Aviso de privacidade do Mozilla Firefox",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Paleta de comandos",

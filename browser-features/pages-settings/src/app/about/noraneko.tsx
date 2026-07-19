@@ -43,7 +43,7 @@ export default function Page() {
             <div className="flex items-center gap-4">
               <img
                 src="chrome://branding/content/about-logo@2x.png"
-                alt="Browser Logo"
+                alt={t("about.noraneko.logoAlt")}
                 className="w-11 h-11"
               />
               <p className="text-xl">
@@ -55,11 +55,8 @@ export default function Page() {
                 })}
               </p>
             </div>
-            <p>
-              Noraneko is a browser as testhead of Floorp 12. Floorp is based on
-              Firefox & Noraneko.
-            </p>
-            <p>Made by Noraneko Community with ❤</p>
+            <p>{t("about.noraneko.description")}</p>
+            <p>{t("about.noraneko.communityCredit")}</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -105,7 +102,7 @@ export default function Page() {
                 className="flex items-center gap-2"
               >
                 <SiGithub className="size-4" />
-                GitHub Repository: Floorp-Projects/Floorp
+                {t("about.noraneko.repositoryLabel")}
                 <ExternalLink className="size-4" />
               </a>
             </Button>

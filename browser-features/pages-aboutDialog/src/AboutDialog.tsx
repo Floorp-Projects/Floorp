@@ -410,7 +410,7 @@ export function AboutDialog() {
                 class="ad-community-item"
                 onClick={(e) => {
                   e.preventDefault();
-                  openExternalUrl("https://discord.gg/floorp");
+                  openExternalUrl("https://floorp.app/discord");
                 }}
               >
                 <span class="ad-community-icon">

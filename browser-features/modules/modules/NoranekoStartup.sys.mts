@@ -16,6 +16,23 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+function installFloorpIPProtectionUIEarly(): boolean {
+  try {
+    const { FloorpIPProtectionUI } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/ipprotection/FloorpIPProtectionUI.sys.mjs",
+    );
+    return FloorpIPProtectionUI.installEarly();
+  } catch (error) {
+    console.error(
+      "[FloorpIPProtectionUI] Failed to install the early runtime adapter:",
+      error,
+    );
+    return false;
+  }
+}
+
+const isFloorpIPProtectionUIReady = installFloorpIPProtectionUIEarly();
+
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
@@ -458,6 +475,11 @@ async function initializeExperiments() {
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
   );
   await Experiments.init();
+
+  const { FloorpIPProtectionGate } = await ChromeUtils.importESModule(
+    "resource://noraneko/modules/ipprotection/FloorpIPProtectionGate.sys.mjs",
+  );
+  FloorpIPProtectionGate.apply(isFloorpIPProtectionUIReady);
 }
 
 (async () => {

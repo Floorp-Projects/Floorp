@@ -47,7 +47,9 @@ cp "$FIREFOX_JS_PATH" "$TEMP_FILE"
 declare -a NEW_PREFS=()
 
 # Parse override.ini
-while IFS= read -r line; do
+# `|| [[ -n "$line" ]]` keeps the final line even when the file has no
+# trailing newline — read returns false there but still fills $line.
+while IFS= read -r line || [[ -n "$line" ]]; do
     # Skip empty lines and comment lines
     if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
         continue

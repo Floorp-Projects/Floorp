@@ -157,6 +157,21 @@ export class MultirowTabbarClass {
   }
 
   private cleanup(): void {
+    // HMR/dispose path: ensure the drag-drop manager's monkey-patches and
+    // capture-phase listeners are torn down. Without this, hot-updating the
+    // tabbar leaves stale drop-method overrides and duplicate capture-phase
+    // listeners on `gBrowser.tabContainer`, which is the root cause of "old
+    // behavior persists after edit" symptoms.
+    if (this.isEnabled) {
+      try {
+        this.disableMultiRowTabs();
+      } catch (e) {
+        console.error(
+          "[MultirowTabbar] Failed to disable multi-row tabs during cleanup:",
+          e,
+        );
+      }
+    }
     if (this.agentSheetUri) {
       try {
         const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(

@@ -296,10 +296,10 @@ export function patchTabpanels(
         clearSplitHandles();
         clearGridStyles(this);
         // Safety net: leaving split view is a definitive teardown moment.
-        // Sweep every drag-related attribute (`data-floorp-dragging`,
-        // `data-floorp-tab-dragging`, Firefox's `movingtab`) and any
-        // lingering drop overlay so web content always regains mouse input.
-        // Idempotent; no-op when nothing is leaked.
+        // Sweep Floorp drag attributes (`data-floorp-dragging` and
+        // `data-floorp-tab-dragging`) plus lingering overlays so web content
+        // regains mouse input. Gecko-owned `movingtab` is left for native
+        // drag finalization. Idempotent; no-op when nothing is leaked.
         forceCleanupDragState(logger);
         // When leaving split view, Gecko can keep `.split-view-panel`
         // / `.deck-selected` on old panes until the next native refresh.
@@ -565,8 +565,8 @@ export function patchTabpanels(
       if (tabsToolbar) {
         tabsToolbar.removeAttribute("splitview-multibar");
       }
-      // Final teardown: sweep all drag-related attributes and overlays so
-      // unpatching can never leave mouse input blocked on content.
+      // Final teardown: sweep Floorp-owned drag attributes and overlays so
+      // unpatching cannot leave Floorp UI blocking mouse input on content.
       forceCleanupDragState(logger);
       const splitMarkerTabs = document?.querySelectorAll<HTMLElement>(
         "#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab]",

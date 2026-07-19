@@ -1,6 +1,9 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
 import type { DesignFormData } from "@/types/pref.ts";
 
+const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
+const DEFAULT_SPLIT_VIEW_DND_CREATE = true;
+
 // Lepton Settings Interface
 export interface LeptonFormData {
   // Auto-hide settings
@@ -211,6 +214,10 @@ export async function saveDesignSettings(
     },
   };
   rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+  await rpc.setBoolPref(
+    SPLIT_VIEW_DND_CREATE_PREF,
+    settings.tabDragToSplitCreate,
+  );
 
   const { hasTabStyleChanged = false } = options;
 
@@ -230,6 +237,9 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     return null;
   }
   const data = JSON.parse(result);
+  const splitViewDndCreateEnabled = await rpc.getBoolPref(
+    SPLIT_VIEW_DND_CREATE_PREF,
+  );
   const formData: DesignFormData = {
     design: data.globalConfigs.userInterface,
     position: data.tabbar.tabbarPosition,
@@ -238,6 +248,8 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     tabMinHeight: data.tab.tabMinHeight,
     tabMinWidth: data.tab.tabMinWidth,
     tabPinTitle: data.tab.tabPinTitle,
+    tabDragToSplitCreate: splitViewDndCreateEnabled ??
+      DEFAULT_SPLIT_VIEW_DND_CREATE,
     tabScrollReverse: data.tab.tabScroll.reverse,
     tabScrollWrap: data.tab.tabScroll.wrap,
     tabDubleClickToClose: data.tab.tabDubleClickToClose,

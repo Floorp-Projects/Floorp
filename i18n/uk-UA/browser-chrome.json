@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Вебзастосунок",
       "install-current": "Встановити поточну сторінку як прогресивний вебзастосунок",
-      "open-installed": "Відкрити встановлені застосунки"
+      "open-current": "Open app in selected container",
+      "open-installed": "Відкрити встановлені застосунки",
+      "container": "Контейнер"
     },
     "page-action": {
       "title": "Відкрити застосунок",
       "install": "Встановити застосунок",
       "open": "Відкрити застосунок",
       "cancel": "Скасувати",
-      "site-icon": "Іконка сайту"
+      "site-icon": "Іконка сайту",
+      "container": "Контейнер",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
@@ -198,8 +206,8 @@
       "gecko-reverse-sidebar": "Зворотне положення бічної панелі",
       "gecko-hide-sidebar": "Приховати бічну панель",
       "gecko-toggle-sidebar": "Toggle Sidebar",
-      "gecko-scroll-up": "Page Up",
-      "gecko-scroll-down": "Page Down",
+      "gecko-scroll-up": "Прокрутити вгору",
+      "gecko-scroll-down": "Прокрутити вниз",
       "gecko-scroll-line-up": "Прокрутити вгору",
       "gecko-scroll-line-down": "Прокрутити вниз",
       "gecko-scroll-right": "Прокрутити праворуч",
@@ -439,6 +447,35 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Command Palette",

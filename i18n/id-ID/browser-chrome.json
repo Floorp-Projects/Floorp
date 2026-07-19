@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Aplikasi Web",
       "install-current": "Pasang Halaman Saat Ini sebagai Aplikasi Web Progresif",
-      "open-installed": "Buka Aplikasi Terpasang"
+      "open-current": "Buka aplikasi di kontainer terpilih",
+      "open-installed": "Buka Aplikasi Terpasang",
+      "container": "Kontainer"
     },
     "page-action": {
       "title": "Buka Aplikasi",
       "install": "Pasang Aplikasi",
       "open": "Buka Aplikasi",
       "cancel": "Batal",
-      "site-icon": "Ikon situs"
+      "site-icon": "Ikon situs",
+      "container": "Kontainer",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Kontainer: {{name}}",
+      "container-fallback": "Kontainer #{{id}}"
     }
   },
   "privateContainer": {
@@ -191,21 +199,21 @@
       "gecko-restore-last-session": "Restore Last Session",
       "gecko-search-history": "Search History",
       "gecko-manage-history": "Manage History",
-      "gecko-open-downloads": "Open Downloads",
+      "gecko-open-downloads": "Buka Unduhan",
       "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
       "gecko-show-history-sidebar": "Show History Sidebar",
       "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
       "gecko-reverse-sidebar": "Reverse Sidebar Position",
       "gecko-hide-sidebar": "Hide Sidebar",
       "gecko-toggle-sidebar": "Toggle Sidebar",
-      "gecko-scroll-up": "Page Up",
-      "gecko-scroll-down": "Page Down",
-      "gecko-scroll-line-up": "Scroll Up",
-      "gecko-scroll-line-down": "Scroll Down",
-      "gecko-scroll-right": "Scroll Right",
-      "gecko-scroll-left": "Scroll Left",
-      "gecko-scroll-to-top": "Scroll to Top",
-      "gecko-scroll-to-bottom": "Scroll to Bottom",
+      "gecko-scroll-up": "Scroll Up",
+      "gecko-scroll-down": "Scroll Down",
+      "gecko-scroll-line-up": "Gulir ke Atas",
+      "gecko-scroll-line-down": "Gulir ke Bawah",
+      "gecko-scroll-right": "Gulir ke Kanan",
+      "gecko-scroll-left": "Gulir ke Kiri",
+      "gecko-scroll-to-top": "Gulir ke Atas Halaman",
+      "gecko-scroll-to-bottom": "Gulir ke Bawah Halaman",
       "gecko-workspace-next": "Beralih ke Ruang Kerja Berikutnya",
       "gecko-workspace-previous": "Beralih ke Ruang Kerja Sebelumnya",
       "floorp-toggle-zen-mode": "Toggle Zen Mode",
@@ -237,7 +245,7 @@
       "gecko-open-new-tab": "Open a new tab",
       "gecko-duplicate-tab": "Duplicate the current tab",
       "gecko-reload-all-tabs": "Reload all tabs",
-      "gecko-restore-last-tab": "Reopen the last closed tab",
+      "gecko-restore-last-tab": "Buka kembali tab yang baru ditutup",
       "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
       "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands",
       "floorp-open-settings": "Membuka halaman pengaturan Floorp",
@@ -405,7 +413,7 @@
       "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
       "defaultExtensionName": "this extension",
       "chromeBadge": "[Chrome]",
-      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+      "compatibilityWarning": "Ekstensi Chrome ini telah dikonversi ke format yang kompatibel dengan Firefox. Beberapa fitur mungkin tidak berfungsi dengan baik."
     }
   },
   "hub": {
@@ -440,28 +448,57 @@
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
   },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
+  },
   "commandPalette": {
     "dialogLabel": "Command Palette",
     "placeholder": "Type a command...",
     "navigateTo": "Go to {{url}}",
     "categories": {
       "recent": "Recently Used",
-      "navigation": "Navigation",
+      "navigation": "Navigasi",
       "tabs": "Tab",
-      "zoom": "Zoom",
+      "zoom": "Zum",
       "bookmarks": "Markah",
-      "page": "Page",
+      "page": "Halaman",
       "search": "Cari",
       "sidebar": "Sidebar",
       "scrolling": "Scrolling",
       "history": "Riwayat",
-      "window": "Window",
-      "tools": "Tools",
+      "window": "Jendela",
+      "tools": "Alat",
       "downloads": "Unduhan",
       "workspace": "Ruang Kerja",
       "floorp": "Floorp",
       "media": "Media",
-      "open-tabs": "Open Tabs",
+      "open-tabs": "Tab Terbuka",
       "switcher": "Switcher",
       "history-suggestions": "Riwayat",
       "bookmark-suggestions": "Markah"
@@ -492,7 +529,7 @@
     "searchWebWhereNewTabDesc": "Open in a new foreground tab",
     "searchWebWhereBackgroundTab": "Background Tab",
     "searchWebWhereBackgroundTabDesc": "Open in a new background tab",
-    "searchWebWhereCurrentTab": "Current Tab",
+    "searchWebWhereCurrentTab": "Tab Saat Ini",
     "searchWebWhereCurrentTabDesc": "Navigate the current tab",
     "openUrlWhereLabel": "Where to open",
     "openUrlWherePlaceholder": "Select where to open...",

@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "웹 앱",
       "install-current": "현재 페이지를 프로그레시브 웹 앱으로서 설치",
-      "open-installed": "설치된 웹 앱 열기"
+      "open-current": "선택한 컨테이너에서 앱 열기",
+      "open-installed": "설치된 웹 앱 열기",
+      "container": "컨테이너"
     },
     "page-action": {
       "title": "애플리케이션 열기",
       "install": "애플리케이션 설치",
       "open": "애플리케이션 열기",
       "cancel": "취소",
-      "site-icon": "사이트 아이콘"
+      "site-icon": "사이트 아이콘",
+      "container": "컨테이너",
+      "no-container": "컨테이너 없음"
+    },
+    "window": {
+      "container-tooltip": "컨테이너: {{name}}",
+      "container-fallback": "컨테이너 #{{id}}"
     }
   },
   "privateContainer": {
@@ -198,8 +206,8 @@
       "gecko-reverse-sidebar": "사이드바 위치 반전",
       "gecko-hide-sidebar": "사이드바 숨기기",
       "gecko-toggle-sidebar": "사이드바 전환",
-      "gecko-scroll-up": "페이지 위로",
-      "gecko-scroll-down": "페이지 아래로",
+      "gecko-scroll-up": "위로 스크롤",
+      "gecko-scroll-down": "아래로 스크롤",
       "gecko-scroll-line-up": "위로 스크롤",
       "gecko-scroll-line-down": "아래로 스크롤",
       "gecko-scroll-right": "오른쪽으로 스크롤",
@@ -439,6 +447,35 @@
     "label": "Zen 모드",
     "tooltiptext": "Zen 모드 전환",
     "menu-label": "Zen 모드 전환"
+  },
+  "ipProtection": {
+    "title": "브라우저 VPN",
+    "toolbar": {
+      "activeTooltip": "Floorp에서 해당하는 웹 브라우징 트래픽에 브라우저 VPN이 켜져 있습니다",
+      "inactiveTooltip": "브라우저 VPN 꺼짐 — 웹 브라우징 트래픽이 보호되지 않습니다",
+      "excludedTooltip": "이 사이트에서 브라우저 VPN 꺼짐 — 이 사이트는 보호되지 않습니다",
+      "pausedTooltip": "브라우저 VPN 중지됨 — 웹 브라우징 트래픽이 보호되지 않습니다",
+      "errorTooltip": "브라우저 VPN — 연결 오류. 해당하는 웹 브라우징 트래픽이 보호되지 않습니다",
+      "helpTooltip": "브라우저 VPN 지원 페이지 열기"
+    },
+    "scope": {
+      "summary": "브라우저 VPN을 켜면, Floorp에서 해당하는 웹 트래픽을 보호할 수 있습니다. 운영 체제나 다른 앱에는 적용되지 않습니다.",
+      "fullDisclosure": "이 기능은 Mozilla 계정과 Mozilla 서비스 인프라를 이용합니다. Floorp는 독립적인 프로젝트이며, Mozilla의 제휴, 승인, 후원을 받지 않습니다. 이용 가능 여부는 사용자의 지역, 계정 상태, Mozilla의 서비스 이용 자격 요건에 따라 달라집니다."
+    },
+    "unauthenticated": {
+      "title": "브라우저 VPN 사용"
+    },
+    "settings": {
+      "promoHeading": "브라우저 VPN 사용",
+      "promoMessage": "로그인하고 서비스 이용 가능 여부를 확인한 뒤, Floorp에서 해당하는 웹 브라우징 트래픽을 보호하세요."
+    },
+    "terms": {
+      "prefix": "계속하면, ",
+      "termsOfUse": "Mozilla Firefox 이용 약관",
+      "conjunction": "에 동의하고, ",
+      "privacyNotice": "Mozilla Firefox 개인정보취급방침",
+      "suffix": "을 확인한 것으로 간주합니다."
+    }
   },
   "commandPalette": {
     "dialogLabel": "명령 팔레트",

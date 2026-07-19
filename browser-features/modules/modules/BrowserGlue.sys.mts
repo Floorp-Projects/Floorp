@@ -28,6 +28,7 @@ const JS_WINDOW_ACTORS: {
       ),
       events: {
         DOMContentLoaded: {},
+        DOMDocElementInserted: {},
       },
     },
     matches: ["about:preferences*", "about:settings*"],

@@ -65,6 +65,7 @@ export const zDesignFormData = t.type({
   tabScrollReverse: t.boolean,
   tabScrollWrap: t.boolean,
   tabDubleClickToClose: t.boolean,
+  tabDragToSplitCreate: t.boolean,
 
   // UI customization
   navbarPosition: t.union([t.literal("top"), t.literal("bottom")]),
