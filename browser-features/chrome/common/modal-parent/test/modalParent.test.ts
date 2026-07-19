@@ -9,6 +9,11 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import ModalParent from "../index.ts";
 import { isModalVisible, setModalVisible } from "../data/data.ts";
+import {
+  ModalManager,
+  type ModalActorLike,
+  probeModalChildAlive,
+} from "../modalManager.tsx";
 
 // ---------------------------------------------------------------------------
 // Helpers – save/restore modal visibility state
@@ -371,10 +376,159 @@ function testModalParentMethodChaining(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Dead-child watchdog
+// ---------------------------------------------------------------------------
+
+/** Records every message sent, and answers the health probe as instructed. */
+function makeActor(
+  answer: "alive" | "dead" | "silent" | "throw",
+): ModalActorLike & { sent: string[] } {
+  const sent: string[] = [];
+  return {
+    sent,
+    sendQuery(message: string): Promise<unknown> {
+      sent.push(message);
+      if (message === "NRChromeModal:ping") {
+        switch (answer) {
+          case "alive":
+            return Promise.resolve(true);
+          case "dead":
+            return Promise.resolve(false);
+          case "throw":
+            return Promise.reject(new Error("actor gone"));
+          default:
+            return new Promise(() => {});
+        }
+      }
+      // The show query pends until the user submits — which is the whole
+      // reason the watchdog has to probe separately.
+      return new Promise(() => {});
+    },
+  };
+}
+
+async function testProbeReportsAliveChild(): Promise<void> {
+  assertEquals(
+    await probeModalChildAlive(makeActor("alive"), 50),
+    true,
+    "a mounted page should probe alive",
+  );
+}
+
+async function testProbeReportsDeadChild(): Promise<void> {
+  assertEquals(
+    await probeModalChildAlive(makeActor("dead"), 50),
+    false,
+    "a page reporting not-ready should probe dead",
+  );
+  assertEquals(
+    await probeModalChildAlive(makeActor("throw"), 50),
+    false,
+    "an actor error should probe dead rather than reject",
+  );
+}
+
+async function testProbeTimesOutOnSilentChild(): Promise<void> {
+  const started = Date.now();
+  assertEquals(
+    await probeModalChildAlive(makeActor("silent"), 50),
+    false,
+    "a child that never answers should probe dead",
+  );
+  assert(
+    Date.now() - started < 2000,
+    "probe should resolve on its own timeout, not wait for the child",
+  );
+}
+
+/** A manager with a stub actor and timings short enough to test. */
+class StubbedModalManager extends ModalManager {
+  constructor(private actor: ModalActorLike) {
+    super();
+    this.watchdogDelayMs = 10;
+    this.pingTimeoutMs = 30;
+  }
+  protected override resolveActor(): ModalActorLike | null {
+    return this.actor;
+  }
+}
+
+/**
+ * The case from the review: the page never mounts, nothing ever answers, and
+ * the overlay would otherwise blanket the window with no way out.
+ */
+async function testDeadChildTearsDownOverlay(): Promise<void> {
+  const container = document?.getElementById("modal-parent-container");
+  assert(
+    !!container,
+    "modal-parent-container should exist once the chrome layer has initialised",
+  );
+
+  const actor = makeActor("silent");
+  const manager = new StubbedModalManager(actor);
+
+  const result = await manager.show(
+    { forms: [], title: "dead child" },
+    { width: 100, height: 100 },
+  );
+
+  assertEquals(result, null, "a dead child should settle the caller with null");
+  assertEquals(
+    isModalVisible(),
+    false,
+    "the overlay should be torn down, not left covering the window",
+  );
+  assert(
+    actor.sent.includes("NRChromeModal:cancel"),
+    "the child should be told to stop waiting for input",
+  );
+}
+
+/** Escape dismisses the overlay; the caller must not wait forever. */
+async function testHideSettlesPendingModal(): Promise<void> {
+  const container = document?.getElementById("modal-parent-container");
+  assert(
+    !!container,
+    "modal-parent-container should exist once the chrome layer has initialised",
+  );
+
+  // An alive child makes the watchdog a no-op, so only hide() can settle it.
+  const actor = makeActor("alive");
+  const manager = new StubbedModalManager(actor);
+
+  const shown = manager.show(
+    { forms: [], title: "escape" },
+    { width: 100, height: 100 },
+  );
+  manager.hide();
+
+  assertEquals(
+    await shown,
+    null,
+    "hide() should settle a pending show with null",
+  );
+  assert(
+    actor.sent.includes("NRChromeModal:cancel"),
+    "hide() should release the child too",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
 const tests: TestCase[] = [
+  { name: "probe reports an alive child", fn: testProbeReportsAliveChild },
+  { name: "probe reports a dead child", fn: testProbeReportsDeadChild },
+  {
+    name: "probe times out on a silent child",
+    fn: testProbeTimesOutOnSilentChild,
+  },
+  {
+    name: "dead child tears down the overlay",
+    fn: testDeadChildTearsDownOverlay,
+  },
+  { name: "hide settles a pending modal", fn: testHideSettlesPendingModal },
   { name: "getInstance returns object", fn: testGetInstanceReturnsObject },
   { name: "getInstance is singleton", fn: testGetInstanceIsSingleton },
   { name: "showNoraModal does not crash", fn: testShowNoraModalDoesNotCrash },
