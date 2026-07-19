@@ -161,7 +161,8 @@ declare namespace globalThis {
     getClosedTabCount(window?: Window): number;
     getClosedTabData(window?: Window): unknown[];
     promiseInitialized: Promise<void>;
-    persistTabAttribute(attrName: string): void;
+    /** Removed in Firefox 152 — feature-detect before calling. */
+    persistTabAttribute?(attrName: string): void;
   };
   var DownloadsPanel: {
     show(): Promise<void>;

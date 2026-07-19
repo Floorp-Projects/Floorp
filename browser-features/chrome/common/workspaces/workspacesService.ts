@@ -110,28 +110,37 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       this.setCurrentWorkspaceID(id);
     }
 
-    // Register persistTabAttribute early (after promiseInitialized) so
-    // SessionStore knows to save/restore our custom tab attributes.
-    // IMPORTANT: This must happen before restoration completes so that
-    // SessionStore includes floorpWorkspaceId in the restored tab data.
-    globalThis.SessionStore.promiseInitialized.then(() => {
-      // Firefox 152 removed SessionStore.persistTabAttribute; guard so
-      // window initialization survives on newer runtimes. Split-view's
-      // session-restore patch shows the setCustomTabValue fallback that
-      // real persistence needs — porting workspaces onto it is the
-      // follow-up; this keeps the feature from throwing until then.
-      const ss = globalThis.SessionStore as unknown as {
-        persistTabAttribute?: (attr: string) => void;
-      };
-      if (typeof ss.persistTabAttribute === "function") {
-        ss.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-        ss.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
-      } else {
-        console.warn(
-          "[workspaces] SessionStore.persistTabAttribute unavailable; workspace tab attributes will not persist across restarts",
+    // Register persistTabAttribute early (after promiseInitialized) where the
+    // runtime still offers it, so SessionStore saves and restores our tab
+    // attributes itself.
+    //
+    // Firefox 152 removed it: SessionStore.sys.mjs has no such method, and
+    // TabAttributes.sys.mjs now hard-codes PERSISTED_ATTRIBUTES to
+    // ["customizemode"] with no way to register another name. Calling it
+    // unguarded rejects at window init.
+    //
+    // Losing it costs us nothing, because the workspace attributes do not
+    // depend on it: the runtime patches persist them directly —
+    // tools/patches/browser-modules-sessionstore-TabState.sys.patch writes
+    // tabData.floorpWorkspaceId / floorpLastShowWorkspaceId when tab state is
+    // collected, and browser-chrome-...-tabbrowser.patch sets both attributes
+    // back on the restored tab. This call stays as belt-and-braces for
+    // runtimes that still have the API.
+    globalThis.SessionStore.promiseInitialized
+      .then(() => {
+        if (typeof globalThis.SessionStore.persistTabAttribute === "function") {
+          globalThis.SessionStore.persistTabAttribute(
+            WORKSPACE_TAB_ATTRIBUTION_ID,
+          );
+          globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+        }
+      })
+      .catch((e: unknown) => {
+        console.error(
+          "[workspaces] failed to register persisted tab attributes",
+          e,
         );
-      }
-    });
+      });
 
     // Delay TabOpen handler and ProgressListener registration until AFTER
     // session restore completes. During restore (between promiseInitialized
