@@ -98,15 +98,51 @@ export class KeyboardShortcutController {
   private checkAndExecuteShortcut(): boolean {
     const config = getConfig();
     const shortcuts = config.shortcuts;
+    const typing = this.isTypingContext();
 
     for (const [_id, shortcut] of Object.entries(shortcuts)) {
       if (this.isShortcutMatch(shortcut)) {
+        // Bare printable keys (like plain "Z") must not fire while the user
+        // is typing into an editable field.
+        if (typing && this.isBarePrintableShortcut(shortcut)) {
+          continue;
+        }
         this.executeShortcut(shortcut);
         this.resetState();
         return true;
       }
     }
 
+    return false;
+  }
+
+  private isBarePrintableShortcut(shortcut: ShortcutConfig): boolean {
+    const m = shortcut.modifiers;
+    return (
+      !m.alt && !m.ctrl && !m.meta && !m.shift &&
+      /^[A-Za-z0-9]$/.test(shortcut.key)
+    );
+  }
+
+  private isTypingContext(): boolean {
+    const doc = this.targetWindow.document;
+    const el = doc?.activeElement as
+      | (Element & { isInputFocused?: boolean })
+      | null;
+    if (!el) return false;
+
+    const name = el.localName ?? "";
+    if (name === "input" || name === "textarea") return true;
+    if ((el as unknown as HTMLElement).isContentEditable) return true;
+    // urlbar/searchbar/findbar host their <input> in shadow DOM, so
+    // activeElement often reports the host element.
+    if (el.closest?.("#urlbar, #searchbar, findbar")) return true;
+    // Remote web content: the <browser> element holds focus. Trust its
+    // input-focus hint when the platform provides one; otherwise assume
+    // not typing (same behavior as before this guard).
+    if (name === "browser") {
+      return el.isInputFocused === true;
+    }
     return false;
   }
 
