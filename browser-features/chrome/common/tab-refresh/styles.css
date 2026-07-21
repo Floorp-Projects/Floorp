@@ -1,0 +1,45 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== Hover-to-reload: glyph at the tab's right edge ===== */
+/* Shown via [floorp-show-refresh], stamped by the tab-refresh feature
+   after a short hover. A JS timer rather than transition-delay:
+   pointer-events cannot be delayed in CSS, so the button would be
+   invisibly clickable during the wait and stray right-edge clicks would
+   reload. */
+/* The doubled id (#tabbrowser-tabs#tabbrowser-tabs) outranks Lepton's
+   id-level tab rules without escalating everything to !important. */
+#tabbrowser-tabs#tabbrowser-tabs .tabbrowser-tab:not([pinned]) .floorp-tab-refresh {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute !important;
+  inset-inline-end: 7px !important;
+  inset-block-start: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 14px !important;
+  height: 14px !important;
+  padding: 1px !important;
+  margin: 0 !important;
+  z-index: 2;
+  border-radius: 3px;
+  /* No painted background: the box shows whatever colour it sits over,
+     and the backdrop frost alone blanks any lettering beneath — so it
+     matches every surface (hovered, selected) by construction. */
+  backdrop-filter: blur(8px);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  transition: opacity 0.18s ease;
+}
+
+/* Shown only when the option is on (floorp.tabs.hoverReload.enabled; the
+   feature mirrors the pref onto this root attribute). */
+:root[floorp-hover-reload] #tabbrowser-tabs#tabbrowser-tabs .tabbrowser-tab:not([pinned])[floorp-show-refresh] .floorp-tab-refresh {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#tabbrowser-tabs#tabbrowser-tabs .tabbrowser-tab:not([pinned]) .floorp-tab-refresh:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
