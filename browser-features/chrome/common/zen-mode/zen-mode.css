@@ -4,23 +4,27 @@
 
 /* ===== Zen Mode: Hide all browser chrome ===== */
 
-/* Navigator toolbox (tab bar + navigation bar)
-   transform visually slides the toolbox up WITHOUT changing its layout position
-   → Firefox still calculates urlbarView / popup positions against the correct origin.
-   margin-bottom collapses the space so the browser content fills the gap. */
+/* Navigator toolbox (tab bar + navigation bar).
+   Out of flow: the page owns the full window height by construction, and
+   the bar slides in OVER the content as a sheet. translateY(-100%) is
+   relative to the toolbox's own height, so any chrome composition
+   (address bar toggled, stack bar mounted) retracts exactly — there is
+   no measured distance to go stale, which is the bug class the old
+   margin arithmetic kept producing. Anchored popups (urlbarView, toolbar
+   panels) still resolve correctly: revealed, the toolbox occupies the
+   same screen position it has outside zen. */
 :root[zenmode] #navigator-toolbox {
-  position: relative !important;
-  transform: translateY(
-    calc(-1 * var(--zenmode-toolbox-height, 80px))
-  ) !important;
-  margin-bottom: calc(-1 * var(--zenmode-toolbox-height, 80px)) !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: translateY(-100%) !important;
   opacity: 0 !important;
   pointer-events: none !important;
   transition:
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.25s ease !important;
-  z-index: 1 !important;
+  z-index: 101 !important;
 }
 
 /* URL bar is rendered in the top layer via the Popover API (popover="manual"),
@@ -38,7 +42,13 @@
   display: none !important;
 }
 
-/* Floorp panel sidebar — slide out via negative margin */
+/* Floorp panel sidebar — slide out via negative margin. Kept on the
+   measured-margin mechanism (unlike the toolbox/statusbar): its two
+   boxes share one window edge, so out-of-flow positioning would need a
+   measured offset between them — the same cache disease this rewrite
+   removes. Their sizes are static (fixed icon strip, splitter-set panel
+   width), and the resize observer trues the variables up the moment the
+   boxes first lay out. */
 :root[zenmode] #panel-sidebar-box {
   margin-inline-start: calc(
     -1 * var(--zenmode-sidebar-width, 250px)
@@ -61,14 +71,35 @@
     opacity 0.25s ease !important;
 }
 
-/* Status bar — slide down via negative margin */
+/* The splitter exists only while a panel is open (translate, docs, …)
+   and was never part of the retract — its few grey pixels stayed at the
+   window edge when zen hid a sidebar with an open panel. No measured
+   margin needed: display removes its space outright. */
+:root[zenmode]:not([zenmode-reveal-side]) #panel-sidebar-splitter {
+  display: none !important;
+}
+
+/* Re-basing a measured sidebar distance (first layout after boot,
+   splitter drag) must snap, not slide. */
+:root[zenmode][zenmode-rebase] #panel-sidebar-box,
+:root[zenmode][zenmode-rebase] #panel-sidebar-select-box {
+  transition: none !important;
+}
+
+/* Status bar — out of flow at the window bottom, slides down by its own
+   height. Same self-sizing rationale as the toolbox. */
 :root[zenmode] #nora-statusbar {
-  margin-bottom: calc(-1 * var(--zenmode-statusbar-height, 30px)) !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: translateY(100%) !important;
   opacity: 0 !important;
   pointer-events: none !important;
   transition:
-    margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.25s ease !important;
+  z-index: 101 !important;
 }
 
 /* ===== Window drag region ===== */
@@ -91,13 +122,12 @@
 
 /* ===== Hover Reveal ===== */
 
-/* Reveal top chrome — slide back in via transform and restore spacing */
+/* Reveal top chrome — the sheet slides in over the page; the page never
+   reflows. */
 :root[zenmode][zenmode-reveal-top] #navigator-toolbox {
-  transform: translateY(0) !important;
-  margin-bottom: 0 !important;
+  transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
-  z-index: 101 !important;
 }
 
 /* Reveal urlbar (top-layer element is not affected by ancestor styles) */
@@ -120,9 +150,9 @@
   pointer-events: auto !important;
 }
 
-/* Reveal status bar on hover — slide back in */
+/* Reveal status bar on hover — slides up over the page */
 :root[zenmode][zenmode-reveal-bottom] #nora-statusbar {
-  margin-bottom: 0 !important;
+  transform: none !important;
   opacity: 1 !important;
   pointer-events: auto !important;
 }
