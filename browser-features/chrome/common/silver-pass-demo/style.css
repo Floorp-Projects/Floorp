@@ -1,0 +1,201 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+#SilverPassPageAction {
+  border-radius: 4px;
+}
+
+#silver-pass-panel {
+  --silver-pass-accent: #2b6f68;
+  --silver-pass-accent-strong: #174f4a;
+  --silver-pass-soft: color-mix(
+    in srgb,
+    var(--silver-pass-accent) 12%,
+    transparent
+  );
+  --silver-pass-border: color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 12px;
+}
+
+#silver-pass-panel-content {
+  width: 410px;
+  max-width: 90vw;
+  max-height: min(720px, 82vh);
+  overflow-y: auto;
+  color: var(--arrowpanel-color, var(--toolbar-color));
+  background: var(--arrowpanel-background, var(--toolbar-bgcolor));
+}
+
+.silver-pass-header {
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--silver-pass-border);
+}
+
+.silver-pass-badge {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  place-content: center;
+  color: #fff;
+  background: var(--silver-pass-accent);
+}
+
+.silver-pass-badge > label {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.silver-pass-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.silver-pass-subtitle {
+  margin: 4px 0 0;
+  color: color-mix(in srgb, currentColor 76%, transparent);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+.silver-pass-body {
+  gap: 12px;
+  padding: 14px;
+}
+
+.silver-pass-section {
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--silver-pass-border);
+  border-radius: 10px;
+}
+
+.silver-pass-section--primary {
+  border-color: color-mix(in srgb, var(--silver-pass-accent) 58%, transparent);
+  background: var(--silver-pass-soft);
+}
+
+.silver-pass-section-title,
+.silver-pass-reason-label,
+.silver-pass-term-label {
+  margin: 0;
+  font-weight: 700;
+}
+
+.silver-pass-section-title {
+  color: var(--silver-pass-accent-strong);
+  font-size: 15px;
+}
+
+.silver-pass-section description,
+.silver-pass-message,
+.silver-pass-term-explanation {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: normal;
+}
+
+.silver-pass-reason-label {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.silver-pass-highlight-button {
+  appearance: none;
+  min-height: 34px;
+  margin: 8px 0 0;
+  padding: 8px 14px;
+  border: 1px solid var(--silver-pass-accent-strong);
+  border-radius: 7px;
+  color: #fff;
+  background: var(--silver-pass-accent);
+  font-weight: 700;
+}
+
+.silver-pass-highlight-button:hover {
+  background: var(--silver-pass-accent-strong);
+}
+
+.silver-pass-highlight-button:active {
+  transform: translateY(1px);
+}
+
+.silver-pass-terms {
+  gap: 8px;
+}
+
+.silver-pass-term {
+  gap: 3px;
+  padding-top: 8px;
+  border-top: 1px solid var(--silver-pass-border);
+}
+
+.silver-pass-term:first-child {
+  padding-top: 2px;
+  border-top: 0;
+}
+
+.silver-pass-term-label {
+  font-size: 13px;
+}
+
+.silver-pass-term-explanation {
+  color: color-mix(in srgb, currentColor 84%, transparent);
+}
+
+.silver-pass-message {
+  display: block;
+  margin: 14px;
+  padding: 14px;
+  border-radius: 9px;
+}
+
+.silver-pass-loading {
+  gap: 10px;
+  background: var(--silver-pass-soft);
+}
+
+.silver-pass-loading-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--silver-pass-accent);
+}
+
+.silver-pass-message--unsupported {
+  border: 1px solid #b07a18;
+  background: color-mix(in srgb, #e3a12d 16%, transparent);
+}
+
+.silver-pass-message--error {
+  border: 1px solid #b94a48;
+  background: color-mix(in srgb, #d9534f 14%, transparent);
+}
+
+@media (prefers-contrast: more) {
+  #silver-pass-panel {
+    --silver-pass-border: currentColor;
+  }
+
+  .silver-pass-section,
+  .silver-pass-message {
+    border-width: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  .silver-pass-badge,
+  .silver-pass-highlight-button,
+  .silver-pass-loading-dot {
+    color: ButtonText;
+    background: ButtonFace;
+    border: 1px solid ButtonText;
+  }
+}

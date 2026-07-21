@@ -189,6 +189,8 @@ export interface GetTextOptions {
   enableFingerprints?: boolean;
   /** Append selector map at end of output (default: false) */
   includeSelectorMap?: boolean;
+  /** Append same-origin iframe text from the document (default: true) */
+  includeIframes?: boolean;
 }
 
 // =============================================================================

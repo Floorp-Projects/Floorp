@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>高齢者移動支援券の申請｜東雲市</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+          "Yu Gothic UI", "Yu Gothic", sans-serif;
+        color: #17233a;
+        background: #f4f7fb;
+        font-size: 18px;
+        line-height: 1.75;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          linear-gradient(180deg, #e9f2fc 0, #f4f7fb 22rem),
+          #f4f7fb;
+      }
+
+      a {
+        color: #075da8;
+        text-decoration-thickness: 0.12em;
+        text-underline-offset: 0.2em;
+      }
+
+      a:hover {
+        text-decoration-thickness: 0.18em;
+      }
+
+      :focus-visible {
+        outline: 4px solid #f9b900;
+        outline-offset: 4px;
+      }
+
+      .demo-notice {
+        margin: 0;
+        padding: 0.65rem 1rem;
+        color: #ffffff;
+        background: #173b69;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: 0.02em;
+      }
+
+      .site-header {
+        border-bottom: 1px solid #c8d5e4;
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .site-header__inner,
+      .breadcrumb,
+      main,
+      .site-footer__inner {
+        width: min(1120px, calc(100% - 2rem));
+        margin-inline: auto;
+      }
+
+      .site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 5rem;
+        gap: 1.5rem;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: #102f56;
+      }
+
+      .brand__mark {
+        display: grid;
+        width: 2.7rem;
+        height: 2.7rem;
+        place-items: center;
+        border-radius: 50%;
+        color: #ffffff;
+        background: #146a63;
+        font-weight: 800;
+      }
+
+      .brand__name {
+        display: block;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .brand__department {
+        display: block;
+        margin-top: 0.2rem;
+        color: #52657c;
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+
+      .header-contact {
+        margin: 0;
+        color: #334e6e;
+        font-size: 0.85rem;
+        text-align: right;
+      }
+
+      .header-contact strong {
+        display: block;
+        color: #123c68;
+        font-size: 1rem;
+      }
+
+      .breadcrumb {
+        padding-block: 1.15rem;
+        color: #52657c;
+        font-size: 0.85rem;
+      }
+
+      .breadcrumb ol {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .breadcrumb li:not(:last-child)::after {
+        margin-left: 0.45rem;
+        content: "/";
+        color: #8291a3;
+      }
+
+      main {
+        padding-bottom: 5rem;
+      }
+
+      .page-heading {
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        border-left: 8px solid #16786f;
+        border-radius: 0 16px 16px 0;
+        background: #ffffff;
+        box-shadow: 0 12px 34px rgba(28, 54, 84, 0.08);
+      }
+
+      .eyebrow {
+        margin: 0 0 0.35rem;
+        color: #12655f;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        overflow-wrap: anywhere;
+      }
+
+      h1 {
+        margin: 0;
+        color: #102f56;
+        font-size: clamp(1.7rem, 5vw, 2.55rem);
+        line-height: 1.35;
+      }
+
+      .lead {
+        max-width: 46rem;
+        margin: 1rem 0 0;
+        color: #344b66;
+        font-size: 1.05rem;
+      }
+
+      .updated {
+        margin: 0.75rem 0 0;
+        color: #607086;
+        font-size: 0.8rem;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 18rem;
+        align-items: start;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+
+      .content-stack {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .card {
+        padding: clamp(1.25rem, 3vw, 2rem);
+        border: 1px solid #d5dfeb;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 7px 24px rgba(28, 54, 84, 0.06);
+      }
+
+      .card h2 {
+        margin: 0 0 1rem;
+        padding-bottom: 0.55rem;
+        border-bottom: 3px solid #cce5e1;
+        color: #153c67;
+        font-size: 1.35rem;
+        line-height: 1.45;
+      }
+
+      .card h3 {
+        margin: 1.35rem 0 0.45rem;
+        color: #17466f;
+        font-size: 1.05rem;
+      }
+
+      .card p:last-child,
+      .card ul:last-child,
+      .card ol:last-child {
+        margin-bottom: 0;
+      }
+
+      .important {
+        padding: 1rem 1.15rem;
+        border: 2px solid #dc7b00;
+        border-radius: 10px;
+        background: #fff8e8;
+      }
+
+      .important strong {
+        color: #8a3e00;
+      }
+
+      .check-list,
+      .document-list {
+        padding-left: 1.4rem;
+      }
+
+      .check-list li,
+      .document-list li {
+        margin-block: 0.55rem;
+        padding-left: 0.2rem;
+      }
+
+      .process {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.8rem;
+        padding: 0;
+        counter-reset: process;
+        list-style: none;
+      }
+
+      .process li {
+        position: relative;
+        min-height: 8rem;
+        padding: 3rem 1rem 1rem;
+        border: 1px solid #b8c9dc;
+        border-radius: 10px;
+        background: #f6f9fc;
+      }
+
+      .process li::before {
+        position: absolute;
+        top: 0.8rem;
+        left: 1rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        color: #ffffff;
+        background: #156d66;
+        content: counter(process);
+        counter-increment: process;
+        font-size: 0.85rem;
+        font-weight: 800;
+        line-height: 1.75rem;
+        text-align: center;
+      }
+
+      .sidebar {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .sidebar-card {
+        padding: 1.25rem;
+        border-radius: 12px;
+        background: #e7f2f0;
+      }
+
+      .sidebar-card h2 {
+        margin: 0 0 0.75rem;
+        color: #164f4a;
+        font-size: 1.1rem;
+      }
+
+      .sidebar-card p {
+        margin: 0.45rem 0;
+        font-size: 0.9rem;
+      }
+
+      .related-list {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      .related-list li {
+        margin-block: 0.55rem;
+        color: #274b5f;
+        font-size: 0.9rem;
+      }
+
+      .action-area {
+        scroll-margin-top: 2rem;
+        text-align: center;
+      }
+
+      .action-area p {
+        max-width: 38rem;
+        margin: 0 auto 1.1rem;
+      }
+
+      .primary-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: min(100%, 20rem);
+        min-height: 3.5rem;
+        padding: 0.8rem 1.5rem;
+        border: 3px solid #0e4d49;
+        border-radius: 10px;
+        color: #ffffff;
+        background: #147269;
+        box-shadow: 0 4px 0 #0e4d49;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .primary-action:hover {
+        background: #0e5e57;
+      }
+
+      .primary-action:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #0e4d49;
+      }
+
+      .local-status {
+        min-height: 2rem;
+        margin: 1rem auto 0;
+        color: #724000;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .site-footer {
+        border-top: 4px solid #16786f;
+        color: #eaf2f8;
+        background: #173b69;
+      }
+
+      .site-footer__inner {
+        padding-block: 1.5rem;
+      }
+
+      .site-footer p {
+        margin: 0.25rem 0;
+        font-size: 0.82rem;
+      }
+
+      @media (max-width: 860px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          grid-row: 1;
+        }
+
+        .process {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        :root {
+          font-size: 16px;
+        }
+
+        .site-header__inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding-block: 1rem;
+          gap: 0.75rem;
+        }
+
+        .header-contact {
+          text-align: left;
+        }
+
+        .page-heading {
+          border-left-width: 6px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <p class="demo-notice" role="status">
+      Silver Guide
+      動作確認用の架空ページです。実在の自治体・制度とは関係ありません。
+    </p>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <div class="brand" aria-label="東雲市 市民福祉部">
+          <span class="brand__mark" aria-hidden="true">東</span>
+          <span>
+            <span class="brand__name">東雲市</span>
+            <span class="brand__department"
+            >市民福祉部 高齢者支援課</span>
+          </span>
+        </div>
+        <p class="header-contact">
+          お問い合わせ（平日 8時30分〜17時）
+          <strong>電話 00-1234-5678</strong>
+        </p>
+      </div>
+    </header>
+
+    <nav class="breadcrumb" aria-label="現在位置">
+      <ol>
+        <li><a href="#top">ホーム</a></li>
+        <li><a href="#overview">高齢者支援</a></li>
+        <li aria-current="page">高齢者移動支援券の申請</li>
+      </ol>
+    </nav>
+
+    <main id="top" data-silver-pass-demo="municipal-application-v1">
+      <header class="page-heading">
+        <p class="eyebrow">暮らしの手続き・高齢者支援</p>
+        <h1>高齢者移動支援券の交付申請</h1>
+        <p class="lead">
+          バスやタクシーで利用できる移動支援券を、年度ごとに交付します。
+          このページでは、対象となる方、必要な書類、申請の流れをご案内します。
+        </p>
+        <p class="updated">掲載内容の基準日：2026年4月1日</p>
+      </header>
+
+      <div class="layout">
+        <div class="content-stack">
+          <section
+            class="card"
+            id="overview"
+            aria-labelledby="overview-heading"
+          >
+            <h2 id="overview-heading">制度の概要</h2>
+            <p>
+              高齢者移動支援券は、外出に不安のある方の通院や買い物を支える制度です。
+              交付申請を行い、市の審査を経て支援券を受け取ります。
+            </p>
+            <p class="important">
+              <strong>申請できる方：</strong>
+              東雲市に住民登録がある75歳以上の方で、申請年度の住民税非課税世帯に属する方
+            </p>
+          </section>
+
+          <section class="card" aria-labelledby="eligibility-heading">
+            <h2 id="eligibility-heading">対象となる方</h2>
+            <p>次の条件をすべて満たす必要があります。</p>
+            <ul class="check-list">
+              <li>申請日時点で75歳以上であること</li>
+              <li>
+                東雲市に住民登録があり、現在も市内に居住していること
+              </li>
+              <li>
+                世帯全員の当年度分の住民税が課税されていないこと
+              </li>
+              <li>
+                同じ年度に、ほかの移動支援制度による助成を受けていないこと
+              </li>
+            </ul>
+          </section>
+
+          <section class="card" aria-labelledby="documents-heading">
+            <h2 id="documents-heading">申請に必要なもの</h2>
+            <ol class="document-list">
+              <li>
+                <strong>本人確認書類</strong><br />
+                運転免許証、マイナンバーカード、健康保険証など
+              </li>
+              <li>
+                <strong>所得・課税証明書</strong><br />
+                その年の1月1日に東雲市外に住んでいた方のみ必要です。
+              </li>
+              <li>
+                <strong
+                >マイナンバーカードの暗証番号</strong><br />
+                電子申請では、利用者証明用電子証明書の暗証番号（数字4桁）を使用します。
+              </li>
+            </ol>
+          </section>
+
+          <section class="card" aria-labelledby="process-heading">
+            <h2 id="process-heading">申請から交付まで</h2>
+            <ol class="process">
+              <li>
+                <strong
+                >申請する</strong><br />画面の案内に沿って必要事項を入力します。
+              </li>
+              <li>
+                <strong
+                >市が審査する</strong><br />対象要件と申請内容を確認します。
+              </li>
+              <li>
+                <strong
+                >支援券を受け取る</strong><br />審査後、およそ2週間で郵送します。
+              </li>
+            </ol>
+          </section>
+
+          <section class="card action-area" aria-labelledby="action-heading">
+            <h2 id="action-heading">オンラインで申請する</h2>
+            <p id="action-description">
+              必要なものを手元に用意してから、申請画面へ進んでください。
+              入力の途中で内容を一時保存することはできません。
+            </p>
+            <button
+              class="primary-action"
+              id="apply-start"
+              type="button"
+              data-silver-pass-target="apply-start"
+              aria-describedby="action-description action-status"
+            >
+              申請画面へ進む
+            </button>
+            <p class="local-status" id="action-status" aria-live="polite"></p>
+          </section>
+        </div>
+
+        <aside class="sidebar" aria-label="補足情報">
+          <section class="sidebar-card" aria-labelledby="related-heading">
+            <h2 id="related-heading">関連する手続き</h2>
+            <ul class="related-list">
+              <li>支援券を紛失したとき</li>
+              <li>住所や氏名が変わったとき</li>
+              <li>代理の方が申請するとき</li>
+              <li>翌年度も利用を希望するとき</li>
+            </ul>
+          </section>
+
+          <section class="sidebar-card" aria-labelledby="help-heading">
+            <h2 id="help-heading">手続きにお困りの方</h2>
+            <p>
+              高齢者支援課の窓口でも申請できます。ご本人による申請が難しい場合は、事前にご相談ください。
+            </p>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p><strong>架空自治体 東雲市</strong></p>
+        <p>
+          このページはSilver
+          Passの機能を説明するためのデモです。入力内容の収集や送信は行いません。
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const applyButton = document.querySelector("#apply-start");
+      const actionStatus = document.querySelector("#action-status");
+
+      applyButton?.addEventListener("click", () => {
+        if (actionStatus) {
+          actionStatus.textContent =
+            "デモのため、申請画面には移動しません。入力や送信も行われていません。";
+        }
+      });
+    </script>
+  </body>
+</html>

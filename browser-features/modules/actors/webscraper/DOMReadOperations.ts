@@ -451,6 +451,7 @@ export class DOMReadOperations {
       viewportMargin = 500,
       enableFingerprints = true,
       includeSelectorMap = false,
+      includeIframes = true,
     } = options;
 
     try {
@@ -516,12 +517,14 @@ export class DOMReadOperations {
             shadowText.trim() +
             "\n\n";
         }
-        const iframeText = this.getTextFromIframes(doc);
-        if (iframeText) {
-          result +=
-            "\n\n---\n\n#### iframe Content\n\n" +
-            iframeText.trim() +
-            "\n\n";
+        if (includeIframes) {
+          const iframeText = this.getTextFromIframes(doc);
+          if (iframeText) {
+            result +=
+              "\n\n---\n\n#### iframe Content\n\n" +
+              iframeText.trim() +
+              "\n\n";
+          }
         }
       }
 

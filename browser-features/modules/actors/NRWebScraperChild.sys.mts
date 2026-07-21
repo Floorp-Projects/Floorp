@@ -171,6 +171,7 @@ export class NRWebScraperChild extends JSWindowActorChild {
             viewportMargin: textOpts.viewportMargin as number | undefined,
             enableFingerprints: textOpts.enableFingerprints as boolean | undefined,
             includeSelectorMap: textOpts.includeSelectorMap as boolean | undefined,
+            includeIframes: textOpts.includeIframes as boolean | undefined,
           });
         }
         // Legacy boolean
