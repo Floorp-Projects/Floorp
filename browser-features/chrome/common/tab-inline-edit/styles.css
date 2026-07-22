@@ -1,0 +1,26 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The input is an overlay above the strip, anchored at the double-clicked
+   tab. The strip must be the containing block, or the absolute overlay
+   resolves against the window and lands nowhere near its tab. */
+#TabsToolbar {
+  position: relative !important;
+}
+
+#TabsToolbar .floorp-tab-url-input {
+  position: absolute;
+  z-index: 10;
+  box-sizing: border-box;
+  background: var(--lwt-accent-color, #282828);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  outline: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 0 8px;
+  border-radius: 3px;
+  transition: width 0.14s ease-out;
+}
