@@ -19,6 +19,20 @@ import {
 import { clearLegacyConfig, migrateLegacyConfig } from "./migration.ts";
 import { isRight } from "fp-ts/Either";
 
+/**
+ * Chrome-control shortcuts sit on the platform's "with Alt" chord: Cmd+Alt
+ * on macOS, Ctrl+Alt everywhere else. Matching window-drag, which branches
+ * the same way - meta on Windows is the Windows key, which is not a
+ * shortcut anyone wants to press.
+ */
+const IS_MAC = /mac/i.test(navigator.platform ?? "");
+const CHROME_CHORD = {
+  alt: true,
+  ctrl: !IS_MAC,
+  meta: IS_MAC,
+  shift: false,
+} as const;
+
 export const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
 export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
@@ -30,8 +44,8 @@ export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
  * Shape: `Record<string, ShortcutConfig>` where each entry contains
  * `key`, `modifiers`, and `action`.
  *
- * The sole default mapping is the **F2** key for
- * "floorp-toggle-command-palette", with all modifiers set to `false`.
+ * Defaults: **F2** for "floorp-toggle-command-palette" (no modifiers), and
+ * the platform Alt chord + **Z** for "floorp-toggle-zen-mode".
  */
 const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
   return {
@@ -39,6 +53,13 @@ const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
       key: "F2",
       modifiers: { alt: false, ctrl: false, meta: false, shift: false },
       action: "floorp-toggle-command-palette",
+    },
+    // On the Alt chord (same family as the Alt+Cmd/Ctrl+Alt window drag):
+    // plain keys fire while typing in web pages, and plain Cmd+Z is undo.
+    "floorp-toggle-zen-mode": {
+      key: "Z",
+      modifiers: { ...CHROME_CHORD },
+      action: "floorp-toggle-zen-mode",
     },
   };
 };
@@ -56,9 +77,14 @@ const normalizeConfig = (
   return {
     ...defaultConfig,
     ...config,
-    shortcuts:
-      (config?.shortcuts as Record<string, ShortcutConfig> | undefined) ??
-      defaultConfig.shortcuts,
+    shortcuts: {
+      // Merge so new default shortcuts reach profiles that saved an older
+      // config. Caveat: a default the user deleted (rather than rebound)
+      // comes back — acceptable until configs carry a schema version.
+      ...defaultConfig.shortcuts,
+      ...((config?.shortcuts as Record<string, ShortcutConfig> | undefined) ??
+        {}),
+    },
   } as KeyboardShortcutConfig;
 };
 
