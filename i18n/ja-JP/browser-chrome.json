@@ -18,6 +18,7 @@
       "container": "コンテナー",
       "no-container": "コンテナーなし",
       "icon": "アイコン",
+      "icon-search": "アイコンを検索…",
       "edit-title": "ワークスペースを編集",
       "save": "保存",
       "cancel": "キャンセル"

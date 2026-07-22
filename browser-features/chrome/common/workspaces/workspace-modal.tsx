@@ -33,6 +33,7 @@ type I18nTextValues = {
   container: string;
   noContainer: string;
   icon: string;
+  iconSearch: string;
   editTitle: string;
   save: string;
   cancel: string;
@@ -44,6 +45,7 @@ const translationKeys = {
   container: "workspaces.modal.container",
   noContainer: "workspaces.modal.no-container",
   icon: "workspaces.modal.icon",
+  iconSearch: "workspaces.modal.icon-search",
   editTitle: "workspaces.modal.edit-title",
   save: "workspaces.modal.save",
   cancel: "workspaces.modal.cancel",
@@ -56,6 +58,7 @@ const getTranslatedTexts = (): I18nTextValues => {
     container: i18next.t(translationKeys.container),
     noContainer: i18next.t(translationKeys.noContainer),
     icon: i18next.t(translationKeys.icon),
+    iconSearch: i18next.t(translationKeys.iconSearch),
     editTitle: i18next.t(translationKeys.editTitle),
     save: i18next.t(translationKeys.save),
     cancel: i18next.t(translationKeys.cancel),
@@ -138,15 +141,15 @@ export class WorkspaceManageModal {
         },
         {
           id: "icon",
-          type: "dropdown",
+          type: "icon-picker",
           label: texts.icon,
-          value: workspace.icon || "fingerprint",
+          placeholder: texts.iconSearch,
+          value: workspace.icon || "",
           required: true,
-          options: this.iconCtx.workspaceIconsArray.map((iconName) => ({
-            value: iconName,
-            label: this.iconTranslationsHandler.getTranslatedIconName(iconName),
-            icon: this.iconCtx.getWorkspaceIconUrl(iconName),
-          })),
+          // The picker supplies Material Symbols and Lucide itself. The
+          // bundled set stays resolvable so existing workspaces keep the
+          // icon they were given, it is simply no longer what is offered.
+          options: [],
         },
       ],
       title: texts.editTitle,

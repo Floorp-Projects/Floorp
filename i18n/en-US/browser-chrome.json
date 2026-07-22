@@ -18,6 +18,7 @@
       "container": "Container",
       "no-container": "No Container",
       "icon": "Icon",
+      "icon-search": "Search icons…",
       "edit-title": "Edit Workspace",
       "save": "Save Changes",
       "cancel": "Cancel"

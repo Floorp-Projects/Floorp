@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.8.0",
+    "@material-symbols/svg-400": "^0.45.8",
     "@tailwindcss/vite": "^4.1.18",
     "birpc": "^4.0.0",
     "clsx": "^2.1.1",
