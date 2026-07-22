@@ -15,50 +15,38 @@ const ZENMODE_PREF = "floorp.zenmode.enabled";
 const EDGE_THRESHOLD = 10;
 const HIDE_DELAY_MS = 500;
 
+// Windows always open out of zen. Seeding from the pref meant a new window
+// inherited whichever window happened to toggle last, which is not a state
+// anyone asked for — and a window that opens with its chrome retracted is
+// disorienting when you did not choose it for that window.
 export const [zenModeEnabled, setZenModeEnabled] = createRootHMR(
-  () =>
-    createSignal(
-      typeof Services !== "undefined"
-        ? Services.prefs.getBoolPref(ZENMODE_PREF, false)
-        : false,
-    ),
+  () => createSignal(false),
   import.meta.hot,
 );
 
 function measureAndSetCSSVariables() {
   const root = document!.documentElement as HTMLElement;
 
-  const toolbox = document!.getElementById("navigator-toolbox");
-  if (toolbox) {
-    root.style.setProperty(
-      "--zenmode-toolbox-height",
-      `${toolbox.getBoundingClientRect().height}px`,
-    );
-  }
+  // Only the panel sidebar still uses measured retract distances (its
+  // two boxes share one window edge, so the self-sizing transform trick
+  // the toolbox/statusbar use doesn't compose for them). Only record
+  // elements that are actually rendered: a toggled-off sidebar
+  // (display:none) measures 0, and recording that poisons the distances
+  // — the side reveal then slides out an empty zero-based husk. A hidden
+  // element's vars simply keep their last (or default) value, which is
+  // correct: its retract math is moot while it has no box.
+  const setIfRendered = (id: string, prop: string, axis: "w" | "h") => {
+    const el = document!.getElementById(id);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const size = axis === "w" ? rect.width : rect.height;
+    if (size > 0) {
+      root.style.setProperty(prop, `${size}px`);
+    }
+  };
 
-  const sidebar = document!.getElementById("panel-sidebar-box");
-  if (sidebar) {
-    root.style.setProperty(
-      "--zenmode-sidebar-width",
-      `${sidebar.getBoundingClientRect().width}px`,
-    );
-  }
-
-  const selectBox = document!.getElementById("panel-sidebar-select-box");
-  if (selectBox) {
-    root.style.setProperty(
-      "--zenmode-selectbox-width",
-      `${selectBox.getBoundingClientRect().width}px`,
-    );
-  }
-
-  const statusbar = document!.getElementById("nora-statusbar");
-  if (statusbar) {
-    root.style.setProperty(
-      "--zenmode-statusbar-height",
-      `${statusbar.getBoundingClientRect().height}px`,
-    );
-  }
+  setIfRendered("panel-sidebar-box", "--zenmode-sidebar-width", "w");
+  setIfRendered("panel-sidebar-select-box", "--zenmode-selectbox-width", "w");
 }
 
 function setupPrefSync() {
@@ -78,16 +66,13 @@ function setupPrefSync() {
     }
   });
 
-  const observer = () => {
-    const prefValue = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-    if (prefValue !== zenModeEnabled()) {
-      setZenModeEnabled(prefValue);
-    }
-  };
-  Services.prefs.addObserver(ZENMODE_PREF, observer);
-  onCleanup(() => {
-    Services.prefs.removeObserver(ZENMODE_PREF, observer);
-  });
+  // Deliberately no pref observer. Zen mode is per-window: every window runs
+  // its own copy of this feature, so an observer here made each of them mirror
+  // the pref and one window entering zen dragged all the others in with it.
+  //
+  // The pref is still written above, but only as persistence — it seeds the
+  // signal when a window is created, so a new window (and the next launch)
+  // opens in the state last chosen, without linking live windows together.
 }
 
 /**
@@ -153,6 +138,9 @@ function setupHoverReveal() {
       topHideTimer = setTimeout(tryHideTop, HIDE_DELAY_MS);
       return;
     }
+    // Refresh the sidebar's measured distances opportunistically; the
+    // toolbox needs none (it retracts by its own height via transform).
+    measureAndSetCSSVariables();
     document!.documentElement!.removeAttribute("zenmode-reveal-top");
     topHideTimer = null;
   };
@@ -196,6 +184,7 @@ function setupHoverReveal() {
         if (clientY < rect.top) {
           clearBottomTimer();
           bottomHideTimer = setTimeout(() => {
+            measureAndSetCSSVariables();
             document!.documentElement!.removeAttribute("zenmode-reveal-bottom");
             bottomHideTimer = null;
           }, HIDE_DELAY_MS);
@@ -226,6 +215,7 @@ function setupHoverReveal() {
       if (!insideSidebar) {
         clearSideTimer();
         sideHideTimer = setTimeout(() => {
+          measureAndSetCSSVariables();
           document!.documentElement!.removeAttribute("zenmode-reveal-side");
           sideHideTimer = null;
         }, HIDE_DELAY_MS);
@@ -322,6 +312,43 @@ function setupHoverReveal() {
 export function initZenModeState() {
   setupPrefSync();
   setupHoverReveal();
+
+  // Keep the retract distance honest while zen is active: the toolbox's
+  // natural height changes under zen (address-bar hide/unhide, stack bar
+  // mounting), and a stale --zenmode-toolbox-height either over-pulls
+  // the toolbox (page top cut off) or under-pulls it (blank strip above
+  // the content). Margins animate, heights don't, so the observer stays
+  // quiet during zen's own retract/reveal transitions.
+  if (typeof ResizeObserver !== "undefined") {
+    const observer = new ResizeObserver(() => {
+      if (!zenModeEnabled()) return;
+      // Snap to the new distance without playing the slide transition —
+      // the chrome is off-screen and the toggle should be invisible.
+      const root = document!.documentElement!;
+      root.setAttribute("zenmode-rebase", "");
+      measureAndSetCSSVariables();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          root.removeAttribute("zenmode-rebase");
+        });
+      });
+    });
+    // Toolbox and statusbar retract by their own size now (translate
+    // -100%/100%) and need no observation. The sidebar boxes remain
+    // measured: watch them so their first real layout after boot (and
+    // splitter drags) true the variables up — the CSS defaults are a few
+    // px off the real sizes, visible as a small hop on early toggles.
+    for (
+      const id of [
+        "panel-sidebar-select-box",
+        "panel-sidebar-box",
+      ]
+    ) {
+      const el = document!.getElementById(id);
+      if (el) observer.observe(el);
+    }
+    onCleanup(() => observer.disconnect());
+  }
 
   // Disable zen mode when entering toolbar customization
   const customizeObserver = new MutationObserver(() => {
