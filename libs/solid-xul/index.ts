@@ -72,7 +72,11 @@ const {
         node.setAttribute(name, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
         node.setAttribute(name, value.toString());
-      } else if (value === undefined) {
+      } else if (value === undefined || value === null) {
+        // null and undefined both mean "no attribute". null previously fell
+        // through to the throw below, and one null prop (e.g. a lazy tab's
+        // linkedPanel feeding an attribute) took down the whole component
+        // render with it.
         node.removeAttribute(name);
       } else {
         throw Error(
