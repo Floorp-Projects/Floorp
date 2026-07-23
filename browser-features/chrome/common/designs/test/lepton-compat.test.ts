@@ -60,7 +60,7 @@ function makeConfig(
       tabMinHeight: 30,
       tabMinWidth: 76,
       tabPinTitle: false,
-      tabDubleClickToClose: false,
+      tabDoubleClickToClose: false,
       tabOpenPosition: -1,
     },
     uiCustomization: {
