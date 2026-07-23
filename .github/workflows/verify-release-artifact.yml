@@ -832,6 +832,57 @@ jobs:
 
           codesign_log="$RUNNER_TEMP/floorp-codesign-verification.txt"
           if [[ "$VALIDATION_ONLY" == "true" ]]; then
+            reject_validation_signature() {
+              local message="$1"
+              local code_path="$2"
+              echo "$message: $code_path" >&2
+              exit 1
+            }
+
+            assert_validation_linker_signed_adhoc() {
+              local code_path="$1"
+              cat "$codesign_log"
+              if [[ "$TARGET_ARCH" != "aarch64" ]]; then
+                reject_validation_signature \
+                  "Validation-only Floorp package contains signed code" \
+                  "$code_path"
+              fi
+
+              local signature
+              signature="$(sed -n 's/^Signature=//p' "$codesign_log" | head -n 1)"
+              if [[ "$signature" != "adhoc" ]]; then
+                reject_validation_signature \
+                  "Validation-only signature is not ad-hoc" \
+                  "$code_path"
+              fi
+
+              local team_identifier
+              team_identifier="$(
+                sed -n 's/^TeamIdentifier=//p' "$codesign_log" | head -n 1
+              )"
+              if [[ "$team_identifier" != "not set" ]]; then
+                reject_validation_signature \
+                  "Validation-only signature unexpectedly has a TeamIdentifier" \
+                  "$code_path"
+              fi
+
+              if grep -q '^Authority=' "$codesign_log"; then
+                reject_validation_signature \
+                  "Validation-only package contains certificate-backed signed code" \
+                  "$code_path"
+              fi
+
+              local code_directory
+              code_directory="$(sed -n '/^CodeDirectory /p' "$codesign_log" | head -n 1)"
+              if [[ "$code_directory" != *adhoc* ]] || [[ "$code_directory" != *linker-signed* ]]; then
+                reject_validation_signature \
+                  "Validation-only signature is not linker-generated ad-hoc metadata" \
+                  "$code_path"
+              fi
+
+              echo "Observed expected validation-only ad-hoc linker-signed metadata: $code_path"
+            }
+
             if codesign --verify --deep --strict --verbose=2 \
               "$app_bundle" > "$codesign_log" 2>&1; then
               cat "$codesign_log"
@@ -846,11 +897,9 @@ jobs:
               exit 1
             fi
             while IFS= read -r -d '' code_path; do
-              if codesign --display --verbose=2 \
+              if codesign --display --verbose=4 \
                 "$code_path" > "$codesign_log" 2>&1; then
-                cat "$codesign_log"
-                echo "Validation-only Floorp package contains signed code: $code_path" >&2
-                exit 1
+                assert_validation_linker_signed_adhoc "$code_path"
               fi
             done < <(APP_BUNDLE="$app_bundle" python3 - <<'PY'
           import os

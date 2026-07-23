@@ -738,6 +738,41 @@ Deno.test("exact Runtime artifact download uses the flat consolidated layout", a
   assertStringIncludes(downloadStep, "merge-multiple: true");
 });
 
+Deno.test("mac validation verifier only allows arm64 linker-signed ad-hoc metadata", async () => {
+  const verifierWorkflow = await Deno.readTextFile(
+    new URL(
+      "../../.github/workflows/verify-release-artifact.yml",
+      import.meta.url,
+    ),
+  );
+
+  for (
+    const expected of [
+      "assert_validation_linker_signed_adhoc()",
+      'if [[ "$TARGET_ARCH" != "aarch64" ]]; then',
+      "s/^Signature=//p",
+      '[[ "$signature" != "adhoc" ]]',
+      "s/^TeamIdentifier=//p",
+      '[[ "$team_identifier" != "not set" ]]',
+      "^Authority=",
+      "linker-signed",
+      "Observed expected validation-only ad-hoc linker-signed metadata",
+      "Validation-only Floorp app unexpectedly has a valid code signature",
+      "Observed expected unsigned validation-only Floorp app",
+    ]
+  ) {
+    assertStringIncludes(verifierWorkflow, expected);
+  }
+
+  const helperIndex = verifierWorkflow.indexOf(
+    "assert_validation_linker_signed_adhoc()",
+  );
+  const unsignedIndex = verifierWorkflow.indexOf(
+    "Observed expected unsigned validation-only Floorp app",
+  );
+  assertEquals(helperIndex >= 0 && unsignedIndex > helperIndex, true);
+});
+
 Deno.test("release publication is serialized across source workflow runs", async () => {
   const publishWorkflow = await Deno.readTextFile(
     new URL("../../.github/workflows/publish_release.yml", import.meta.url),
