@@ -233,10 +233,6 @@ declare namespace globalThis {
     DEFAULT_REMOTE_TYPE: string;
     EXTENSION_REMOTE_TYPE: string;
     deserializePrincipal(principal: unknown): unknown;
-    getRemoteTypeForURI(uri: string, ...args: unknown[]): string;
-    predictOriginAttributes(
-      options: Record<string, unknown>,
-    ): Record<string, unknown>;
   };
   var UrlbarUtils: { stripUnsafeProtocolOnPaste(text: string): string };
   var E: unknown;

@@ -13,9 +13,6 @@ import { waitForActor } from "./shared/waitForActor.sys.mts";
 import { CookieHelper } from "./shared/CookieHelper.sys.mts";
 import { NetworkIdleHelper } from "./shared/NetworkIdleHelper.sys.mts";
 
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs",
-);
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -767,17 +764,8 @@ class TabManager {
     const { browser } = this._getInstance(instanceId);
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
 
-    const oa = E10SUtils.predictOriginAttributes({ browser });
     const loadURIOptions = {
       triggeringPrincipal: principal,
-      remoteType: E10SUtils.getRemoteTypeForURI(
-        url,
-        true,
-        false,
-        E10SUtils.DEFAULT_REMOTE_TYPE,
-        null,
-        oa,
-      ),
     };
 
     // Check if browser.loadURI is defined before calling it
