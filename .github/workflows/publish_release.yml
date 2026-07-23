@@ -2,327 +2,932 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-name: "(P) |α| Publish Release"
+name: "(P) Publish immutable release bundle v2"
 
 on:
   workflow_call:
     inputs:
+      source_workflow_run_id:
+        description: "Floorp workflow run containing the immutable bundle artifact"
+        type: string
+        required: true
+      bundle_artifact:
+        description: 'Exact JSON identity: {"name":string,"id":positive integer,"digest":"sha256:<64 lowercase hex>"}'
+        type: string
+        required: true
       publish_ppa:
+        description: "Publish the release DEB through the existing PPA workflow"
         type: boolean
         required: false
         default: false
-      linux_deb_run_id:
-        type: string
+    secrets:
+      UPDATES_ACTIONS_TOKEN:
+        description: "Token scoped only to dispatching and reading Floorp-Updates Actions"
+        required: true
+      PORTABLE_ACTIONS_TOKEN:
+        description: "Token scoped only to dispatching and reading Floorp-Portable-v2 Actions"
+        required: true
+      KEYMASK:
         required: false
+      GPG_SEC:
+        required: false
+      GPG_SSB:
+        required: false
+      PPA_FTP_URL:
+        required: false
+      PPA_FTP_USER:
+        required: false
+      PPA_FTP_PASS:
+        required: false
+      CLOUDFLARE_API_TOKEN_FOR_PURGE:
+        required: false
+      CLOUDFLARE_ZONE_ID:
+        required: false
+    outputs:
+      manifest_set_id:
+        description: "Published release manifest set identity"
+        value: ${{ jobs.prepare_release.outputs.manifest_set_id }}
+      firefox_version:
+        description: "Published Firefox version"
+        value: ${{ jobs.prepare_release.outputs.firefox_version }}
+      floorp_version:
+        description: "Published Floorp version"
+        value: ${{ jobs.prepare_release.outputs.floorp_version }}
+      release_tag:
+        description: "Published release tag"
+        value: ${{ jobs.prepare_release.outputs.release_tag }}
 
 permissions:
-  contents: write
+  actions: read
+  contents: read
 
-run-name: "|α| Publish Release"
+concurrency:
+  group: publish-release-v2-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
-  main:
-    runs-on: ubuntu-latest
+  prepare_release:
+    name: Validate immutable bundle and create draft release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: write
     outputs:
-      VERSION: ${{ steps.setup.outputs.VERSION }}
-      NR_VERSION: ${{ steps.setup.outputs.NR_VERSION }}
+      manifest_set_id: ${{ steps.validate.outputs.manifest-set-id }}
+      firefox_version: ${{ steps.validate.outputs.firefox-version }}
+      floorp_version: ${{ steps.validate.outputs.floorp-version }}
+      release_tag: ${{ steps.manifest.outputs.release-tag }}
+      floorp_head_sha: ${{ steps.manifest.outputs.floorp-head-sha }}
+      bundle_artifact_id: ${{ steps.bundle.outputs.artifact-id }}
     steps:
-      - uses: actions/setup-node@v4
+      - name: Revalidate the exact bundle identity through REST
+        id: bundle
+        uses: actions/github-script@v7
+        env:
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          BUNDLE_ARTIFACT: ${{ inputs.bundle_artifact }}
+          PUBLISH_PPA: ${{ inputs.publish_ppa }}
         with:
-          node-version: 22
+          github-token: ${{ github.token }}
+          script: |
+            const fail = (message) => {
+              core.setFailed(message);
+              throw new Error(message);
+            };
+            if (!/^[1-9][0-9]*$/.test(process.env.SOURCE_WORKFLOW_RUN_ID || "")) {
+              fail("source_workflow_run_id must be a positive decimal integer");
+            }
+            const runId = Number(process.env.SOURCE_WORKFLOW_RUN_ID);
+            if (!Number.isSafeInteger(runId)) {
+              fail("source_workflow_run_id exceeds JavaScript's safe integer range");
+            }
+            if (process.env.PUBLISH_PPA === "true" && runId !== context.runId) {
+              fail("PPA publication requires the exact current source workflow run");
+            }
+            let expected;
+            try {
+              expected = JSON.parse(process.env.BUNDLE_ARTIFACT);
+            } catch (error) {
+              fail(`bundle_artifact is not valid JSON: ${error.message}`);
+            }
+            if (
+              expected === null || Array.isArray(expected) ||
+              typeof expected !== "object" ||
+              Object.keys(expected).sort().join(",") !== "digest,id,name"
+            ) {
+              fail("bundle_artifact must contain exactly name, id, and digest");
+            }
+            if (expected.name !== "floorp-release-bundle-v2") {
+              fail("Only the production floorp-release-bundle-v2 artifact can be published");
+            }
+            if (!Number.isSafeInteger(expected.id) || expected.id < 1) {
+              fail("bundle_artifact.id must be a positive safe integer");
+            }
+            if (!/^sha256:[0-9a-f]{64}$/.test(expected.digest || "")) {
+              fail("bundle_artifact.digest must be a lowercase sha256 digest");
+            }
 
-      - uses: denoland/setup-deno@v2
+            const {data: run} = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            if (run.id !== runId || run.repository?.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              fail("Bundle source workflow repository or ID mismatch");
+            }
+            if (runId === context.runId) {
+              if (!["queued", "in_progress", "completed"].includes(run.status)) {
+                fail(`Current source workflow has an invalid status: ${run.status}`);
+              }
+            } else if (run.status !== "completed" || run.conclusion !== "success") {
+              fail("A prior bundle source workflow must be completed successfully");
+            }
+            if (!/^[0-9a-f]{40}$/.test(run.head_sha || "")) {
+              fail("Bundle source workflow has a non-canonical head SHA");
+            }
+
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId,
+                per_page: 100,
+              },
+            );
+            const idMatches = artifacts.filter((artifact) => artifact.id === expected.id);
+            const nameMatches = artifacts.filter(
+              (artifact) => artifact.name === expected.name && !artifact.expired,
+            );
+            if (idMatches.length !== 1 || nameMatches.length !== 1 || nameMatches[0].id !== expected.id) {
+              fail("Bundle name and ID do not identify one unexpired source-run artifact");
+            }
+            const artifact = idMatches[0];
+            if (
+              artifact.name !== expected.name || artifact.digest !== expected.digest ||
+              artifact.expired || !Number.isInteger(artifact.size_in_bytes) ||
+              artifact.size_in_bytes < 1
+            ) {
+              fail("Bundle REST identity, expiry, or size does not match the input identity");
+            }
+            core.setOutput("artifact-id", String(expected.id));
+            core.setOutput("source-head-sha", run.head_sha);
+
+      - name: Download only the exact bundle artifact ID
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.bundle.outputs.artifact-id }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/floorp-release-bundle-v2
+          merge-multiple: true
+
+      - name: Read the manifest-bound Floorp commit
+        id: manifest
+        uses: actions/github-script@v7
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/floorp-release-bundle-v2
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          SOURCE_HEAD_SHA: ${{ steps.bundle.outputs.source-head-sha }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const manifestPath = path.join(
+              process.env.BUNDLE_DIR,
+              "release-manifest-set-v2.json",
+            );
+            if (!fs.statSync(manifestPath, {throwIfNoEntry: false})?.isFile()) {
+              throw new Error("Bundle lacks root release-manifest-set-v2.json");
+            }
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+            if (manifest.schema_version !== 2 || manifest.mode !== "production") {
+              throw new Error("Bundle manifest is not a production v2 manifest");
+            }
+            if (
+              !manifest.floorp || manifest.floorp.repository !== `${context.repo.owner}/${context.repo.repo}` ||
+              !/^[0-9a-f]{40}$/.test(manifest.floorp.head_sha || "")
+            ) {
+              throw new Error("Bundle manifest has invalid Floorp provenance");
+            }
+            if (manifest.floorp.head_sha !== process.env.SOURCE_HEAD_SHA) {
+              throw new Error("Bundle manifest Floorp head differs from its source workflow run");
+            }
+            if (String(manifest.floorp.workflow_run_id) !== process.env.SOURCE_WORKFLOW_RUN_ID) {
+              throw new Error("Bundle manifest source workflow run does not match the requested run");
+            }
+            if (
+              typeof manifest.floorp.release_tag !== "string" ||
+              !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(manifest.floorp.release_tag)
+            ) {
+              throw new Error("Bundle manifest has a non-canonical release tag");
+            }
+            core.setOutput("floorp-head-sha", manifest.floorp.head_sha);
+            core.setOutput("release-tag", manifest.floorp.release_tag);
+
+      - name: Checkout the manifest-bound Floorp commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.manifest.outputs.floorp-head-sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
-      - name: init zx
+      - name: Reject unsigned, validation, or inconsistent release bundles
+        id: validate
+        shell: bash
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/floorp-release-bundle-v2
         run: |
-          deno install -g -A npm:zx
+          set -euo pipefail
+          deno run --allow-read --allow-write \
+            tools/src/release_provenance.ts \
+            validate-release-bundle \
+            --bundle-dir "$BUNDLE_DIR" \
+            --production \
+            --github-output "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - name: Refuse to mutate an existing public or unrelated draft release
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.manifest.outputs.release-tag }}
+          FLOORP_HEAD_SHA: ${{ steps.manifest.outputs.floorp-head-sha }}
+          FLOORP_VERSION: ${{ steps.validate.outputs.floorp-version }}
         with:
-          fetch-depth: 1
-          ref: main
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-windows-x86_64-mar-full
-          path: ~/noraneko-publish/win
           github-token: ${{ github.token }}
+          script: |
+            async function resolveTagCommit(tag, allowMissing) {
+              let object;
+              try {
+                const response = await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/${tag}`,
+                });
+                object = response.data.object;
+              } catch (error) {
+                if (allowMissing && error.status === 404) return null;
+                throw error;
+              }
+              for (let depth = 0; object.type === "tag"; depth += 1) {
+                if (depth >= 8) {
+                  throw new Error(`Tag ${tag} exceeds the annotated-tag depth limit`);
+                }
+                const response = await github.rest.git.getTag({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_sha: object.sha,
+                });
+                object = response.data.object;
+              }
+              if (object.type !== "commit" || !/^[0-9a-f]{40}$/.test(object.sha)) {
+                throw new Error(`Tag ${tag} does not resolve to a canonical commit`);
+              }
+              return object.sha;
+            }
+            const existingTagCommit = await resolveTagCommit(
+              process.env.RELEASE_TAG,
+              true,
+            );
+            if (
+              existingTagCommit !== null &&
+              existingTagCommit !== process.env.FLOORP_HEAD_SHA
+            ) {
+              throw new Error(
+                `Existing tag ${process.env.RELEASE_TAG} resolves to ` +
+                `${existingTagCommit}, not ${process.env.FLOORP_HEAD_SHA}`,
+              );
+            }
 
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-linux-x86_64-mar-full
-          path: ~/noraneko-publish/linux
-          github-token: ${{ github.token }}
+            const releases = await github.paginate(
+              github.rest.repos.listReleases,
+              {owner: context.repo.owner, repo: context.repo.repo, per_page: 100},
+            );
+            const matches = releases.filter(
+              (release) => release.tag_name === process.env.RELEASE_TAG,
+            );
+            if (matches.length > 1) {
+              throw new Error("Multiple releases use the requested immutable tag");
+            }
+            if (matches.length === 0) {
+              return;
+            }
+            const release = matches[0];
+            if (!release.draft) {
+              throw new Error(
+                `Refusing to replace assets on public release ${process.env.RELEASE_TAG}`,
+              );
+            }
+            if (release.target_commitish !== process.env.FLOORP_HEAD_SHA) {
+              throw new Error("Existing draft is bound to a different Floorp commit");
+            }
+            const allowedAssets = new Set([
+              `floorp-${process.env.FLOORP_VERSION}.deb`,
+              "floorp-stub.installer.exe",
+              "floorp-linux-aarch64-full.mar",
+              "floorp-linux-aarch64.tar.xz",
+              "floorp-linux-x86_64-full.mar",
+              "floorp-linux-x86_64.tar.xz",
+              "floorp-mac-universal-full.mar",
+              "floorp-macOS-universal.dmg",
+              "floorp-windows-x86_64-full.mar",
+              "floorp-windows-x86_64.installer.exe",
+              "hashes.txt",
+              "linux-aarch64-meta.json",
+              "linux-meta.json",
+              "mac-meta.json",
+              "release-manifest-set-v2.json",
+              "win-meta.json",
+            ]);
+            if (release.assets.some((asset) => !allowedAssets.has(asset.name))) {
+              throw new Error("Existing draft contains an asset outside the v2 bundle");
+            }
+            if (new Set(release.assets.map((asset) => asset.name)).size !== release.assets.length) {
+              throw new Error("Existing draft contains duplicate asset names");
+            }
 
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-mac-universal-mar-full
-          path: ~/noraneko-publish/mac
-          github-token: ${{ github.token }}
-
-      - name: Download Windows installer
-        uses: actions/download-artifact@v4
-        with:
-          name: noraneko-windows-x86_64-installer
-          path: ~/noraneko-publish/win-dist
-          github-token: ${{ github.token }}
-
-      - name: Download Linux installer
-        uses: actions/download-artifact@v4
-        with:
-          name: noraneko-linux-x86_64-installer
-          path: ~/noraneko-publish/linux-dist
-          github-token: ${{ github.token }}
-
-      - name: Download Linux PPA DEB
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-Linux-x64-deb
-          path: ~/noraneko-publish/linux-deb
-          github-token: ${{ github.token }}
-
-      - name: Download macOS installer
-        uses: actions/download-artifact@v4
-        with:
-          name: noraneko-mac-universal-installer
-          path: ~/noraneko-publish/mac-dist
-          github-token: ${{ github.token }}
-
-      - name: Download Linux aarch64 artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: floorp-linux-aarch64-mar-full
-          path: ~/noraneko-publish/linux-aarch64
-          github-token: ${{ github.token }}
-
-      - name: Download Linux aarch64 installer
-        uses: actions/download-artifact@v4
-        with:
-          name: noraneko-linux-aarch64-installer
-          path: ~/noraneko-publish/linux-aarch64-dist
-          github-token: ${{ github.token }}
-
-      # PPA-related setup and artifact download were moved to a
-      # reusable workflow (`.github/workflows/publish_ppa.yml`) which is
-      # called after the updater dispatch. See the `publish_ppa` job.
-
-      - name: Download Stub Installers from latest release
-        run: |
-          set -eux
-          mkdir -p ~/noraneko-publish/stub-installers
-
-          # Download the known stub installer directly. No token required.
-          URL="https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-stub.installer.exe"
-          OUT="$HOME/noraneko-publish/stub-installers/$(basename "$URL")"
-
-          echo "Downloading stub installer from $URL to $OUT"
-          curl -L --fail -o "$OUT" "$URL"
-
-          echo "Downloaded contents of ~/noraneko-publish/stub-installers:"
-          ls -la ~/noraneko-publish/stub-installers || true
-
-      - name: Setup
-        id: setup
-        run: |
-          deno install --allow-scripts
-          sudo apt install jq
-
-          VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/"//g')
-          NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/"//g')
-
-          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
-          echo "NR_VERSION=${NR_VERSION}" >> "$GITHUB_ENV"
-          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "NR_VERSION=${NR_VERSION}" >> "$GITHUB_OUTPUT"
-
-          echo "BUILDID=$(cat ~/noraneko-publish/mac/meta.json | jq '.buildid' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "BUILDID2=$(cat ~/noraneko-publish/mac/meta.json | jq '.noraneko_buildid' | sed 's/"//g')" >> "$GITHUB_ENV"
-          echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
-
-      - name: Check Files
-        run: |
-          echo "Windows Files:"
-          ls -la ~/noraneko-publish/win
-          echo "Linux Files:"
-          ls -la ~/noraneko-publish/linux
-          echo "Linux DEB Files:"
-          ls -la ~/noraneko-publish/linux-deb
-          echo "Linux aarch64 Files:"
-          ls -la ~/noraneko-publish/linux-aarch64
-          echo "macOS Files:"
-          ls -la ~/noraneko-publish/mac
-          echo "Windows Installer Files:"
-          ls -la ~/noraneko-publish/win-dist
-          echo "Linux Installer Files:"
-          ls -la ~/noraneko-publish/linux-dist
-          echo "Linux aarch64 Installer Files:"
-          ls -la ~/noraneko-publish/linux-aarch64-dist
-          echo "macOS Installer Files:"
-          ls -la ~/noraneko-publish/mac-dist
-
-      - name: Prepare meta.json files with platform-specific names
-        run: |
-          cp ~/noraneko-publish/win/meta.json ~/noraneko-publish/win-meta.json
-          cp ~/noraneko-publish/linux/meta.json ~/noraneko-publish/linux-meta.json
-          cp ~/noraneko-publish/linux-aarch64/meta.json ~/noraneko-publish/linux-aarch64-meta.json
-          cp ~/noraneko-publish/mac/meta.json ~/noraneko-publish/mac-meta.json
-
-      - name: Generate hashes.txt
-        run: |
-          cd ~/noraneko-publish
-          echo "# Floorp ${{ env.NR_VERSION }} - File Hashes" > hashes.txt
-          echo "Generated on: $(date -u)" >> hashes.txt
-          echo "" >> hashes.txt
-
-          echo "## Windows Files" >> hashes.txt
-          find win -name "*.mar" -o -name "*.exe" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          find win-dist -name "*.exe" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          echo "" >> hashes.txt
-
-          echo "## Linux Files" >> hashes.txt
-          find linux -name "*.mar" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          find linux-dist -type f | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          echo "" >> hashes.txt
-
-          echo "## Linux aarch64 Files" >> hashes.txt
-          find linux-aarch64 -name "*.mar" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          find linux-aarch64-dist -type f | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          echo "" >> hashes.txt
-
-          echo "## macOS Files" >> hashes.txt
-          find mac -name "*.mar" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          find mac-dist -name "*.dmg" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-          echo "" >> hashes.txt
-
-          echo "## Stub Installers" >> hashes.txt
-          find stub-installers -name "*.exe" | while read file; do
-            echo "SHA256: $(sha256sum "$file" | cut -d' ' -f1) - $file" >> hashes.txt
-          done
-
-      # NOTE: The PPA publishing step was moved out of the `main` job and
-      # implemented as a separate job `publish_ppa` that runs after the
-      # updater dispatch. See the `publish_ppa` job defined below.
-      - name: Deploy to GitHub Releases 🚀
+      - name: Create or update the draft GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*.exe
-            ${{ env.ROOT_DIR }}/noraneko-publish/win-meta.json
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-dist/**
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-deb/*.deb
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-meta.json
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-dist/**
-            ${{ env.ROOT_DIR }}/noraneko-publish/linux-aarch64-meta.json
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac-dist/*.dmg
-            ${{ env.ROOT_DIR }}/noraneko-publish/mac-meta.json
-            ${{ env.ROOT_DIR }}/noraneko-publish/stub-installers/**
-            ${{ env.ROOT_DIR }}/noraneko-publish/hashes.txt
-          tag_name: "v${{ env.NR_VERSION }}"
-          name: "Floorp ${{ env.NR_VERSION }}"
+          tag_name: ${{ steps.manifest.outputs.release-tag }}
+          target_commitish: ${{ steps.manifest.outputs.floorp-head-sha }}
+          name: Floorp ${{ steps.validate.outputs.floorp-version }}
           body: |
-            Release Note: https://blog.floorp.app/release/${{ env.NR_VERSION }}
+            Release Note: https://blog.floorp.app/release/${{ steps.validate.outputs.floorp-version }}
 
-            ## What's Changed
-
-            ${{ steps.release_notes.outputs.body }}
+            This draft was assembled from an immutable, natively verified release manifest set.
           generate_release_notes: true
           draft: true
+          prerelease: false
           make_latest: true
+          fail_on_unmatched_files: true
+          files: ${{ runner.temp }}/floorp-release-bundle-v2/*
           token: ${{ github.token }}
 
   release_check:
-    needs: [main]
-    runs-on: ubuntu-latest
+    name: Manual approval and public release gate
+    needs: prepare_release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     environment: Deploy-to-installer-release
+    permissions:
+      actions: read
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Check Release is Published
+      - name: Download the immutable expected bundle again by artifact ID
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.prepare_release.outputs.bundle_artifact_id }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/expected-release-bundle
+          merge-multiple: true
+
+      - name: Require the exact draft to have been published manually
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ needs.prepare_release.outputs.release_tag }}
+          FLOORP_HEAD_SHA: ${{ needs.prepare_release.outputs.floorp_head_sha }}
+          FLOORP_VERSION: ${{ needs.prepare_release.outputs.floorp_version }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const {data: release} = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: process.env.RELEASE_TAG,
+            });
+            let object = (await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/${process.env.RELEASE_TAG}`,
+            })).data.object;
+            for (let depth = 0; object.type === "tag"; depth += 1) {
+              if (depth >= 8) {
+                throw new Error("Release tag exceeds the annotated-tag depth limit");
+              }
+              object = (await github.rest.git.getTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_sha: object.sha,
+              })).data.object;
+            }
+            if (
+              object.type !== "commit" ||
+              object.sha !== process.env.FLOORP_HEAD_SHA
+            ) {
+              throw new Error(
+                `Release tag resolves to ${object.type}:${object.sha}, not ` +
+                process.env.FLOORP_HEAD_SHA,
+              );
+            }
+            if (release.draft || release.prerelease) {
+              throw new Error(
+                `Release ${process.env.RELEASE_TAG} must be public and stable before updater deployment`,
+              );
+            }
+            if (release.tag_name !== process.env.RELEASE_TAG) {
+              throw new Error("Published release tag changed after validation");
+            }
+            if (release.target_commitish !== process.env.FLOORP_HEAD_SHA) {
+              throw new Error(
+                `Release target ${release.target_commitish} is not the manifest head ` +
+                process.env.FLOORP_HEAD_SHA,
+              );
+            }
+            const expectedAssets = [
+              `floorp-${process.env.FLOORP_VERSION}.deb`,
+              "floorp-stub.installer.exe",
+              "floorp-linux-aarch64-full.mar",
+              "floorp-linux-aarch64.tar.xz",
+              "floorp-linux-x86_64-full.mar",
+              "floorp-linux-x86_64.tar.xz",
+              "floorp-mac-universal-full.mar",
+              "floorp-macOS-universal.dmg",
+              "floorp-windows-x86_64-full.mar",
+              "floorp-windows-x86_64.installer.exe",
+              "hashes.txt",
+              "linux-aarch64-meta.json",
+              "linux-meta.json",
+              "mac-meta.json",
+              "release-manifest-set-v2.json",
+              "win-meta.json",
+            ].sort();
+            const actualAssets = release.assets.map((asset) => asset.name).sort();
+            if (JSON.stringify(actualAssets) !== JSON.stringify(expectedAssets)) {
+              throw new Error(
+                `Published assets differ from the exact release bundle: ${actualAssets.join(", ")}`,
+              );
+            }
+            if (release.assets.some((asset) => !Number.isInteger(asset.size) || asset.size < 1)) {
+              throw new Error("Published release contains an empty asset");
+            }
+
+      - name: Prove every public release asset is byte-identical to the bundle
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
+          RELEASE_TAG: ${{ needs.prepare_release.outputs.release_tag }}
+          EXPECTED_DIR: ${{ runner.temp }}/expected-release-bundle
+          PUBLIC_DIR: ${{ runner.temp }}/public-release-assets
         run: |
-          IS_DRAFT=$(gh release view "v$NR_VERSION" --json isDraft --jq '.isDraft')
-          if [ "$IS_DRAFT" == "true" ]; then
-            echo "Error: Release v$NR_VERSION is still a draft!"
-            echo "Please manually publish the release before approving this deployment."
+          set -euo pipefail
+          mkdir "$PUBLIC_DIR"
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir "$PUBLIC_DIR"
+
+          expected_names="$RUNNER_TEMP/expected-public-asset-names.txt"
+          public_names="$RUNNER_TEMP/actual-public-asset-names.txt"
+          find "$EXPECTED_DIR" -mindepth 1 -maxdepth 1 -type f \
+            -printf '%f\n' | sort > "$expected_names"
+          find "$PUBLIC_DIR" -mindepth 1 -maxdepth 1 -type f \
+            -printf '%f\n' | sort > "$public_names"
+          if ! diff -u "$expected_names" "$public_names"; then
+            echo "Public release asset names differ from the immutable bundle" >&2
             exit 1
           fi
-          echo "Release v$NR_VERSION is public. Proceeding with deployment."
+          if [[ "$(wc -l < "$expected_names" | tr -d ' ')" != 16 ]]; then
+            echo "Immutable release bundle does not contain exactly 16 assets" >&2
+            exit 1
+          fi
 
-  publish:
-    needs: [release_check, main]
-    runs-on: ubuntu-latest
-    environment:
-      name: Deploy-to-updater-release
-    outputs:
-      NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
-      VERSION: ${{ needs.main.outputs.VERSION }}
+          while IFS= read -r filename; do
+            if ! cmp --silent \
+              "$EXPECTED_DIR/$filename" \
+              "$PUBLIC_DIR/$filename"; then
+              echo "Public release asset differs from immutable bundle: $filename" >&2
+              exit 1
+            fi
+          done < "$expected_names"
+          echo "All 16 public release assets are byte-identical to the bundle."
+
+  publish_updates:
+    name: Publish and verify stable updater metadata v2
+    needs: [prepare_release, release_check]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: Deploy-to-updater-release
+    permissions:
+      actions: read
+      contents: read
     steps:
-      - name: Deploy to Floorp Update Server 🚀
+      - name: Dispatch the exact Updates v2 request and capture its run ID
+        id: dispatch
+        uses: actions/github-script@v7
         env:
-          NR_VERSION: ${{ needs.main.outputs.NR_VERSION }}
-          VERSION: ${{ needs.main.outputs.VERSION }}
-          GH_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare_release.outputs.release_tag }}
+          FLOORP_VERSION: ${{ needs.prepare_release.outputs.floorp_version }}
+          FIREFOX_VERSION: ${{ needs.prepare_release.outputs.firefox_version }}
+          MANIFEST_SET_ID: ${{ needs.prepare_release.outputs.manifest_set_id }}
+        with:
+          github-token: ${{ secrets.UPDATES_ACTIONS_TOKEN }}
+          script: |
+            const requestId =
+              `floorp-${context.runId}-${process.env.GITHUB_RUN_ATTEMPT}`;
+            if (!/^[A-Za-z0-9._-]{1,64}$/.test(requestId)) {
+              throw new Error("Generated Updates request ID is not canonical");
+            }
+            const releaseBase =
+              `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/download/` +
+              process.env.RELEASE_TAG;
+            const response = await github.request(
+              "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
+              {
+                owner: "Floorp-Projects",
+                repo: "Floorp-Updates",
+                workflow_id: "update-stable-updatexml-files-v2.yml",
+                ref: "main",
+                return_run_details: true,
+                inputs: {
+                  "win-mar-url": `${releaseBase}/floorp-windows-x86_64-full.mar`,
+                  "linux-mar-url": `${releaseBase}/floorp-linux-x86_64-full.mar`,
+                  "linux-aarch64-mar-url": `${releaseBase}/floorp-linux-aarch64-full.mar`,
+                  "mac-mar-url": `${releaseBase}/floorp-mac-universal-full.mar`,
+                  "win-meta-url": `${releaseBase}/win-meta.json`,
+                  "linux-meta-url": `${releaseBase}/linux-meta.json`,
+                  "linux-aarch64-meta-url": `${releaseBase}/linux-aarch64-meta.json`,
+                  "mac-meta-url": `${releaseBase}/mac-meta.json`,
+                  "firefox-version": process.env.FIREFOX_VERSION,
+                  "app-version2": process.env.FLOORP_VERSION,
+                  "request-id": requestId,
+                  "dry-run": false,
+                },
+                headers: {"X-GitHub-Api-Version": "2026-03-10"},
+              },
+            );
+            const runId = response.data?.workflow_run_id;
+            if (response.status !== 200 || !Number.isSafeInteger(runId) || runId < 1) {
+              throw new Error("Updates dispatch did not return a positive workflow_run_id");
+            }
+            core.setOutput("request-id", requestId);
+            core.setOutput("workflow-run-id", String(runId));
+
+      - name: Poll only the returned Updates run and bind its result artifact
+        id: updates_result
+        uses: actions/github-script@v7
+        env:
+          UPDATES_RUN_ID: ${{ steps.dispatch.outputs.workflow-run-id }}
+          REQUEST_ID: ${{ steps.dispatch.outputs.request-id }}
+          FLOORP_VERSION: ${{ needs.prepare_release.outputs.floorp_version }}
+        with:
+          github-token: ${{ secrets.UPDATES_ACTIONS_TOKEN }}
+          script: |
+            const runId = Number(process.env.UPDATES_RUN_ID);
+            const expectedTitle =
+              `Stable v2 ${process.env.FLOORP_VERSION} (${process.env.REQUEST_ID})`;
+            let completedRun;
+            for (let attempt = 1; attempt <= 180; attempt += 1) {
+              const {data: run} = await github.rest.actions.getWorkflowRun({
+                owner: "Floorp-Projects",
+                repo: "Floorp-Updates",
+                run_id: runId,
+              });
+              if (
+                run.id !== runId || run.event !== "workflow_dispatch" ||
+                run.head_branch !== "main" ||
+                run.path !== ".github/workflows/update-stable-updatexml-files-v2.yml" ||
+                run.display_title !== expectedTitle
+              ) {
+                throw new Error("Returned Updates run does not match the dispatched request");
+              }
+              if (run.status === "completed") {
+                if (run.conclusion !== "success") {
+                  throw new Error(`Updates run concluded ${run.conclusion}`);
+                }
+                completedRun = run;
+                break;
+              }
+              if (
+                !["requested", "queued", "in_progress", "waiting", "pending"]
+                  .includes(run.status)
+              ) {
+                throw new Error(`Updates run entered unexpected status ${run.status}`);
+              }
+              await new Promise((resolve) => setTimeout(resolve, 10000));
+            }
+            if (!completedRun) {
+              throw new Error("Timed out waiting 30 minutes for the exact Updates run");
+            }
+
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: "Floorp-Projects",
+                repo: "Floorp-Updates",
+                run_id: runId,
+                per_page: 100,
+              },
+            );
+            const expectedName = `stable-update-result-${process.env.REQUEST_ID}`;
+            const matches = artifacts.filter(
+              (artifact) => artifact.name === expectedName && !artifact.expired,
+            );
+            if (matches.length !== 1) {
+              throw new Error(`Expected exactly one unexpired ${expectedName} artifact`);
+            }
+            const artifact = matches[0];
+            if (
+              !Number.isSafeInteger(artifact.id) || artifact.id < 1 ||
+              !/^sha256:[0-9a-f]{64}$/.test(artifact.digest || "") ||
+              !Number.isInteger(artifact.size_in_bytes) || artifact.size_in_bytes < 1
+            ) {
+              throw new Error("Updates result artifact has an invalid immutable identity");
+            }
+            core.setOutput("artifact-id", String(artifact.id));
+            core.setOutput("artifact-name", artifact.name);
+            core.setOutput("artifact-digest", artifact.digest);
+
+      - name: Download only the exact Updates result artifact ID
+        uses: actions/download-artifact@v4
+        with:
+          repository: Floorp-Projects/Floorp-Updates
+          run-id: ${{ steps.dispatch.outputs.workflow-run-id }}
+          artifact-ids: ${{ steps.updates_result.outputs.artifact-id }}
+          github-token: ${{ secrets.UPDATES_ACTIONS_TOKEN }}
+          path: ${{ runner.temp }}/stable-update-result
+          merge-multiple: true
+
+      - name: Validate Updates request, manifest, status, and commit result
+        id: result
+        shell: bash
+        env:
+          RESULT_DIR: ${{ runner.temp }}/stable-update-result
+          REQUEST_ID: ${{ steps.dispatch.outputs.request-id }}
+          MANIFEST_SET_ID: ${{ needs.prepare_release.outputs.manifest_set_id }}
         run: |
-          gh workflow run update-stable-updatexml-files.yml \
-            --repo Floorp-Projects/Floorp-Updates \
-            --ref main \
-            -f win-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-windows-x86_64-full.mar" \
-            -f linux-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-linux-x86_64-full.mar" \
-            -f linux-aarch64-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-linux-aarch64-full.mar" \
-            -f mac-mar-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/floorp-mac-universal-full.mar" \
-            -f win-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/win-meta.json" \
-            -f linux-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/linux-meta.json" \
-            -f linux-aarch64-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/linux-aarch64-meta.json" \
-            -f mac-meta-url="https://github.com/Floorp-Projects/Floorp/releases/download/v${NR_VERSION}/mac-meta.json" \
-            -f firefox-version="${VERSION}" \
-            -f app-version2="${NR_VERSION}"
+          set -euo pipefail
+          result="$RESULT_DIR/stable-update-result.json"
+          mapfile -d '' -t files < <(find "$RESULT_DIR" -type f -print0)
+          if (( ${#files[@]} != 1 )) || [[ "${files[0]}" != "$result" ]]; then
+            echo "Expected exactly root stable-update-result.json" >&2
+            exit 1
+          fi
+          jq -e \
+            --arg request "$REQUEST_ID" \
+            --arg manifest "$MANIFEST_SET_ID" '
+              type == "object" and
+              (keys | sort) == [
+                "base_sha", "deploy_required", "endpoint_sha256",
+                "manifest_set_id", "request_id", "schema_version", "status",
+                "transition", "updates_commit_sha"
+              ] and
+              .schema_version == 1 and
+              .request_id == $request and
+              .manifest_set_id == $manifest and
+              (.status == "updated" or .status == "noop") and
+              .transition == .status and
+              (.deploy_required | type) == "boolean" and
+              (.base_sha | type == "string" and test("^[0-9a-f]{40}$")) and
+              (.endpoint_sha256 | type) == "object" and
+              (.endpoint_sha256 | keys | sort) == [
+                "browser/stable/Darwin/aarch64/update.xml",
+                "browser/stable/Darwin/x86_64/update.xml",
+                "browser/stable/Linux/aarch64/update.xml",
+                "browser/stable/Linux/x86_64/update.xml",
+                "browser/stable/WINNT/x86_64/update.xml"
+              ] and
+              ([.endpoint_sha256[] |
+                type == "string" and test("^sha256:[0-9a-f]{64}$")
+              ] | all) and
+              (
+                if .deploy_required then
+                  .status == "updated" and
+                  (.updates_commit_sha | type == "string" and test("^[0-9a-f]{40}$")) and
+                  .updates_commit_sha != .base_sha
+                else
+                  .status == "noop" and
+                  (.updates_commit_sha == null or
+                    .updates_commit_sha == .base_sha)
+                end
+              )
+            ' "$result" >/dev/null
+
+          deploy_required="$(jq -r '.deploy_required' "$result")"
+          updates_commit_sha="$(jq -r '.updates_commit_sha // ""' "$result")"
+          echo "deploy-required=$deploy_required" >> "$GITHUB_OUTPUT"
+          echo "updates-commit-sha=$updates_commit_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Poll the exact Cloudflare deployment run without accepting stale main
+        if: steps.result.outputs.deploy-required == 'true'
+        uses: actions/github-script@v7
+        env:
+          UPDATES_COMMIT_SHA: ${{ steps.result.outputs.updates-commit-sha }}
+        with:
+          github-token: ${{ secrets.UPDATES_ACTIONS_TOKEN }}
+          script: |
+            const expectedSha = process.env.UPDATES_COMMIT_SHA;
+            const owner = "Floorp-Projects";
+            const repo = "Floorp-Updates";
+            const assertMain = async () => {
+              const {data: ref} = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: "heads/main",
+              });
+              if (ref.object.sha !== expectedSha) {
+                throw new Error(
+                  `Floorp-Updates main advanced to ${ref.object.sha}; refusing stale ${expectedSha}`,
+                );
+              }
+            };
+            await assertMain();
+            const {data: workflow} = await github.rest.actions.getWorkflow({
+              owner,
+              repo,
+              workflow_id: "upload-cfp.yml",
+            });
+            if (
+              workflow.path !== ".github/workflows/upload-cfp.yml" ||
+              workflow.name !== "Deploy Floorp Updates to Cloudflare Pages"
+            ) {
+              throw new Error("Cloudflare deployment workflow identity changed");
+            }
+
+            let exactRunId;
+            for (let attempt = 1; attempt <= 120; attempt += 1) {
+              await assertMain();
+              const runs = await github.paginate(
+                github.rest.actions.listWorkflowRuns,
+                {
+                  owner,
+                  repo,
+                  workflow_id: workflow.id,
+                  branch: "main",
+                  event: "push",
+                  per_page: 100,
+                },
+              );
+              const matches = runs.filter((run) => run.head_sha === expectedSha);
+              const ids = [...new Set(matches.map((run) => run.id))];
+              if (ids.length > 1) {
+                throw new Error("Multiple Cloudflare workflow runs matched the exact update commit");
+              }
+              if (ids.length === 1) {
+                exactRunId = ids[0];
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+            if (!exactRunId) {
+              throw new Error("Timed out waiting for the exact Cloudflare push run");
+            }
+
+            for (let attempt = 1; attempt <= 180; attempt += 1) {
+              await assertMain();
+              const {data: run} = await github.rest.actions.getWorkflowRun({
+                owner,
+                repo,
+                run_id: exactRunId,
+              });
+              if (
+                run.workflow_id !== workflow.id || run.head_sha !== expectedSha ||
+                run.head_branch !== "main" || run.event !== "push" ||
+                run.path !== ".github/workflows/upload-cfp.yml"
+              ) {
+                throw new Error("Cloudflare run no longer matches its exact commit and workflow");
+              }
+              if (run.status === "completed") {
+                if (run.conclusion !== "success") {
+                  throw new Error(`Cloudflare deployment concluded ${run.conclusion}`);
+                }
+                await assertMain();
+                return;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+            throw new Error("Timed out waiting for the exact Cloudflare deployment run");
+
+      - name: Verify all five public updater endpoint byte hashes
+        shell: bash
+        env:
+          RESULT_FILE: ${{ runner.temp }}/stable-update-result/stable-update-result.json
+          REQUEST_ID: ${{ steps.dispatch.outputs.request-id }}
+        run: |
+          set -euo pipefail
+          declare -A endpoints=(
+            ["browser/stable/WINNT/x86_64/update.xml"]="https://updates.floorp.app/browser/stable/WINNT/x86_64/update.xml"
+            ["browser/stable/Linux/x86_64/update.xml"]="https://updates.floorp.app/browser/stable/Linux/x86_64/update.xml"
+            ["browser/stable/Linux/aarch64/update.xml"]="https://updates.floorp.app/browser/stable/Linux/aarch64/update.xml"
+            ["browser/stable/Darwin/x86_64/update.xml"]="https://updates.floorp.app/browser/stable/Darwin/x86_64/update.xml"
+            ["browser/stable/Darwin/aarch64/update.xml"]="https://updates.floorp.app/browser/stable/Darwin/aarch64/update.xml"
+          )
+
+          for attempt in $(seq 1 120); do
+            all_match=true
+            for repository_path in "${!endpoints[@]}"; do
+              expected="$(jq -er --arg path "$repository_path" '.endpoint_sha256[$path]' "$RESULT_FILE")"
+              output="$RUNNER_TEMP/public-$(printf '%s' "$repository_path" | sha256sum | cut -d' ' -f1).xml"
+              http_code="$(
+                curl --silent --show-error --location \
+                  --connect-timeout 10 --max-time 30 \
+                  --output "$output" --write-out '%{http_code}' \
+                  "${endpoints[$repository_path]}?force=1&request=$REQUEST_ID" || true
+              )"
+              if [[ "$http_code" != 200 ]]; then
+                all_match=false
+                continue
+              fi
+              if ! python3 - "$output" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse(sys.argv[1]).getroot()
+          if root.tag.rsplit("}", 1)[-1] != "updates":
+              raise SystemExit("public updater response root is not <updates>")
+          PY
+              then
+                all_match=false
+                continue
+              fi
+              actual="sha256:$(sha256sum "$output" | cut -d' ' -f1)"
+              if [[ "$actual" != "$expected" ]]; then
+                all_match=false
+              fi
+            done
+            if [[ "$all_match" == true ]]; then
+              echo "All five public updater endpoints match the committed result hashes."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public updater endpoints did not converge within ten minutes" >&2
+          exit 1
 
   trigger_portable:
-    needs: [publish]
-    runs-on: ubuntu-latest
+    name: Build the exact public Floorp Portable release
+    needs: [prepare_release, publish_updates]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
     steps:
-      - name: Trigger Floorp Portable Build
+      - name: Dispatch and wait for only the returned Portable run
+        uses: actions/github-script@v7
         env:
-          GH_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
-          NR_VERSION: ${{ needs.publish.outputs.NR_VERSION }}
-        run: |
-          gh workflow run build.yml \
-            --repo Floorp-Projects/Floorp-Portable-v2 \
-            --ref master \
-            -f version="$NR_VERSION"
+          FLOORP_VERSION: ${{ needs.prepare_release.outputs.floorp_version }}
+        with:
+          github-token: ${{ secrets.PORTABLE_ACTIONS_TOKEN }}
+          script: |
+            const owner = "Floorp-Projects";
+            const repo = "Floorp-Portable-v2";
+            const response = await github.request(
+              "POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches",
+              {
+                owner,
+                repo,
+                workflow_id: "build.yml",
+                ref: "master",
+                return_run_details: true,
+                inputs: {version: process.env.FLOORP_VERSION},
+                headers: {"X-GitHub-Api-Version": "2026-03-10"},
+              },
+            );
+            const runId = response.data?.workflow_run_id;
+            if (response.status !== 200 || !Number.isSafeInteger(runId) || runId < 1) {
+              throw new Error("Portable dispatch did not return a positive workflow_run_id");
+            }
+            for (let attempt = 1; attempt <= 180; attempt += 1) {
+              const {data: run} = await github.rest.actions.getWorkflowRun({
+                owner,
+                repo,
+                run_id: runId,
+              });
+              if (
+                run.id !== runId || run.event !== "workflow_dispatch" ||
+                run.head_branch !== "master" || run.path !== ".github/workflows/build.yml"
+              ) {
+                throw new Error("Returned Portable run does not match the dispatched workflow");
+              }
+              if (run.status === "completed") {
+                if (run.conclusion !== "success") {
+                  throw new Error(`Portable build concluded ${run.conclusion}`);
+                }
+                return;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 10000));
+            }
+            throw new Error("Timed out waiting for the exact Portable build run");
 
   publish_ppa:
-    needs: [trigger_portable, publish]
+    name: Publish the exact source-run DEB to PPA
+    needs: [prepare_release, trigger_portable]
     if: ${{ inputs.publish_ppa }}
+    permissions:
+      actions: read
+      contents: read
     uses: ./.github/workflows/publish_ppa.yml
     with:
-      nr_version: ${{ needs.publish.outputs.NR_VERSION }}
-      artifact_run_id: ${{ inputs.linux_deb_run_id }}
+      nr_version: ${{ needs.prepare_release.outputs.floorp_version }}
+      artifact_run_id: ${{ inputs.source_workflow_run_id }}
     secrets:
       KEYMASK: ${{ secrets.KEYMASK }}
       GPG_SEC: ${{ secrets.GPG_SEC }}
@@ -330,5 +935,5 @@ jobs:
       PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
       PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
       PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
-      CLOUDFLARE_API_TOKEN_FOR_PURGE: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
-      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOULDFLARE_ZONE_ID }}
+      CLOUDFLARE_API_TOKEN_FOR_PURGE: ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
