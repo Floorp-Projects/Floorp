@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "7e2e9c05e1c6c0113f74e9d4ea72654cb63e7500"
+floorp_commit: "b68a377d95d9971c6f98dcb1549ba49c82a30122"
 generated: true
 ---
 # Architecture Overview
@@ -117,7 +117,7 @@ The docs pipeline treats Floorp OS API as a special integration layer for local 
 
 ## Commands And CI
 
-Deno task inventory comes from `deno.json` and currently lists 28 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+Deno task inventory comes from `deno.json` and currently lists 29 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
 
 CI workflows recorded in the docs inventory:
 
@@ -125,6 +125,7 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`

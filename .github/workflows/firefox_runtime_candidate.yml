@@ -1,0 +1,347 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: "(CI) Locked Firefox Material Drift (Tracking Ref)"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly Monday 01:00 JST. Tracking-ref inspection never gates pull requests.
+    - cron: "0 16 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  locked-material-drift:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.cache/deno
+          key: deno-firefox-runtime-tracking-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}
+          restore-keys: deno-firefox-runtime-tracking-
+
+      - run: deno install
+
+      - name: Validate canonical Runtime lock
+        run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+
+      - name: Resolve tracking source from canonical lock
+        id: tracking-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno eval '
+            const lock = JSON.parse(await Deno.readTextFile("floorp-runtime.lock.json"));
+            const ref = lock.source.trackingRef;
+            if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$/.test(ref) ||
+              ref.includes("..") || ref.includes("@{") || ref.endsWith(".") ||
+              ref.endsWith("/") || ref.includes("//")) {
+              throw new Error(`Unsafe tracking source ref: ${ref}`);
+            }
+            const output = [
+              `repository=${lock.source.repository}`,
+              `ref=${ref}`,
+              `tracking_ref=${lock.source.trackingRef}`,
+            ].join("\n") + "\n";
+            await Deno.writeTextFile(Deno.env.get("GITHUB_OUTPUT"), output, { append: true });
+          '
+
+      - name: Checkout Runtime tracking ref
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          repository: ${{ steps.tracking-source.outputs.repository }}
+          ref: ${{ steps.tracking-source.outputs.ref }}
+          path: _dist/runtime-tracking
+          fetch-depth: 1
+          persist-credentials: false
+
+      # The tracking checkout is data only. The bounded collector reads only the
+      # 54 locked materials and eight locked tests; nothing is imported or run.
+      - name: Collect locked test projection from tracking ref
+        shell: bash
+        env:
+          TRACKING_RUNTIME_REPOSITORY: ${{ steps.tracking-source.outputs.repository }}
+          TRACKING_RUNTIME_REF: ${{ steps.tracking-source.outputs.ref }}
+        run: |
+          set -euo pipefail
+          deno task firefox-tests:collect \
+            --candidate \
+            --runtime-dir _dist/runtime-tracking \
+            --out _dist/firefox-runtime-tracking \
+            --source-repo "$TRACKING_RUNTIME_REPOSITORY" \
+            --source-ref "$TRACKING_RUNTIME_REF"
+
+      - name: Triage locked test projection statically
+        run: >-
+          deno task firefox-tests:triage-browser
+          --collection _dist/firefox-runtime-tracking
+          --out _dist/firefox-runtime-tracking
+
+      - name: Build deterministic locked-material drift report
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno eval '
+            const decoder = new TextDecoder();
+            const trackingRoot = "_dist/runtime-tracking";
+            const collectionRoot = "_dist/firefox-runtime-tracking";
+            const readJson = async (file) => JSON.parse(await Deno.readTextFile(file));
+            const gitOutput = async (args) => {
+              const result = await new Deno.Command("git", {
+                args: ["-C", trackingRoot, ...args],
+                stdout: "piped",
+                stderr: "piped",
+              }).output();
+              if (!result.success) {
+                throw new Error(decoder.decode(result.stderr).trim());
+              }
+              return result.stdout;
+            };
+            const gitText = async (args) => decoder.decode(await gitOutput(args)).trim();
+            const sha256 = async (bytes) => Array.from(
+              new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+              (byte) => byte.toString(16).padStart(2, "0"),
+            ).join("");
+            const sorted = (values) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
+
+            const lock = await readJson("floorp-runtime.lock.json");
+            const collection = await readJson(`${collectionRoot}/manifest.json`);
+            const projectedTests = await readJson(
+              `${collectionRoot}/browser-chrome-candidates.json`,
+            );
+            const triage = await readJson(`${collectionRoot}/triage.json`);
+            if (collection.mode !== "candidate") {
+              throw new Error(`Expected bounded candidate collection, got ${collection.mode}`);
+            }
+
+            const treeLines = (await gitText([
+              "ls-tree",
+              "-l",
+              "HEAD",
+              "--",
+              ...lock.source.materials.entries.map((entry) => entry.path),
+            ]))
+              .split("\n")
+              .filter(Boolean);
+            const tree = new Map();
+            for (const line of treeLines) {
+              const match = line.match(/^(\d+)\s+(\S+)\s+([0-9a-f]+)\s+(-|\d+)\t(.+)$/);
+              if (!match) throw new Error(`Unexpected git ls-tree line: ${line}`);
+              tree.set(match[5], {
+                mode: match[1],
+                type: match[2],
+                gitBlob: match[3],
+                bytes: match[4] === "-" ? null : Number(match[4]),
+              });
+            }
+
+            const materialChecks = [];
+            for (const expected of lock.source.materials.entries) {
+              const entry = tree.get(expected.path);
+              if (!entry || entry.type !== "blob") {
+                materialChecks.push({
+                  path: expected.path,
+                  role: expected.role,
+                  status: "missing",
+                  expected: {
+                    mode: expected.mode,
+                    bytes: expected.bytes,
+                    sha256: expected.sha256,
+                  },
+                  actual: null,
+                  changes: ["missing"],
+                });
+                continue;
+              }
+              const blob = await gitOutput(["show", `HEAD:${expected.path}`]);
+              const actual = {
+                mode: entry.mode,
+                bytes: blob.byteLength,
+                sha256: await sha256(blob),
+              };
+              const changes = [];
+              if (actual.mode !== expected.mode) changes.push("mode");
+              if (actual.bytes !== expected.bytes) changes.push("bytes");
+              if (actual.sha256 !== expected.sha256) changes.push("sha256");
+              materialChecks.push({
+                path: expected.path,
+                role: expected.role,
+                status: changes.length === 0 ? "match" : "changed",
+                expected: {
+                  mode: expected.mode,
+                  bytes: expected.bytes,
+                  sha256: expected.sha256,
+                },
+                actual,
+                changes,
+              });
+            }
+
+            const lockedTests = lock.source.tests.entries;
+            const lockedSelection = sorted(lockedTests.map((entry) => entry.path));
+            const lockedSelectionSet = new Set(lockedSelection);
+            const unexpectedProjectedTests = projectedTests
+              .map((entry) => entry.path)
+              .filter((path) => !lockedSelectionSet.has(path));
+            if (unexpectedProjectedTests.length > 0) {
+              throw new Error(
+                `Bounded tracking projection contained unlocked tests: ${unexpectedProjectedTests.join(", ")}`,
+              );
+            }
+            const projectedTestByPath = new Map(
+              projectedTests.map((entry) => [entry.path, entry]),
+            );
+            const lockedTestPresence = lockedTests.map((expected) => {
+              const entry = projectedTestByPath.get(expected.path);
+              return {
+                path: expected.path,
+                present: entry !== undefined,
+                expectedManifest: expected.manifest,
+                manifest: entry?.nearestManifest ?? null,
+                sha256: entry?.sha256 ?? null,
+              };
+            });
+            const lockedSelectionRemoved = lockedTestPresence
+              .filter((entry) => !entry.present)
+              .map((entry) => entry.path);
+            const triageByPath = new Map(triage.tests.map((entry) => [entry.path, entry]));
+            const lockedTestByPath = new Map(lockedTests.map((entry) => [entry.path, entry]));
+            const selectedTriage = lockedSelection.map((path) => {
+              const entry = triageByPath.get(path);
+              const expected = lockedTestByPath.get(path);
+              const changes = [];
+              if (!entry) changes.push("missing-from-triage");
+              if (entry && entry.classification !== "already-allowed") {
+                changes.push("classification");
+              }
+              if (entry && expected && entry.nearestManifest !== expected.manifest) {
+                changes.push("manifest");
+              }
+              return {
+                path,
+                status: changes.length === 0 ? "match" : "changed",
+                classification: entry?.classification ?? null,
+                manifest: entry?.nearestManifest ?? null,
+                sha256: entry?.sha256 ?? null,
+                changes,
+              };
+            });
+
+            const materialDrift = materialChecks.filter((entry) => entry.status !== "match");
+            const closureMaterialDrift = materialDrift.filter((entry) =>
+              entry.role === "manifest" || entry.role === "support" || entry.role === "head-support"
+            );
+            const triageDrift = selectedTriage.filter((entry) => entry.status !== "match");
+            const actionable = materialDrift.length > 0 ||
+              lockedSelectionRemoved.length > 0 ||
+              triageDrift.length > 0;
+            const trackingCommit = await gitText(["rev-parse", "HEAD"]);
+            const trackingTree = await gitText(["rev-parse", "HEAD^{tree}"]);
+
+            const report = {
+              schemaVersion: 1,
+              lockedSource: {
+                repository: lock.source.repository,
+                ref: lock.source.ref,
+                trackingRef: lock.source.trackingRef,
+                commit: lock.source.commit,
+                tree: lock.source.tree,
+              },
+              trackingSource: {
+                repository: collection.source.repository,
+                ref: collection.source.ref,
+                commit: trackingCommit,
+                tree: trackingTree,
+              },
+              informationalDrift: {
+                commitChanged: trackingCommit !== lock.source.commit,
+                treeChanged: trackingTree !== lock.source.tree,
+              },
+              drift: {
+                actionable,
+                lockedSelectionRemoved,
+                selectedTriage: triageDrift,
+                materials: materialDrift,
+                closureMaterials: closureMaterialDrift,
+              },
+              lockedSelection,
+              lockedTestPresence,
+              selectedTriage,
+              lockedManifestClosure: lock.source.tests.manifests,
+              materialChecks,
+              trackingProjection: {
+                mode: collection.mode,
+                scope: collection.scope,
+                counts: collection.counts,
+                lockedTests: projectedTests
+                  .map((entry) => ({
+                    path: entry.path,
+                    nearestManifest: entry.nearestManifest,
+                    sha256: entry.sha256,
+                  }))
+                  .sort((a, b) => a.path.localeCompare(b.path)),
+                triageCounts: triage.counts,
+              },
+            };
+            await Deno.writeTextFile(
+              "_dist/firefox-runtime-tracking-drift.json",
+              `${JSON.stringify(report, null, 2)}\n`,
+            );
+          '
+          if grep -Eq '"(generatedAt|generated_at|timestamp|lastObserved)"' \
+            _dist/firefox-runtime-tracking-drift.json; then
+            echo "::error::Tracking-ref report contains a forbidden timestamp field"
+            exit 1
+          fi
+
+      - name: Write locked-material drift summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ ! -f _dist/firefox-runtime-tracking-drift.json ]]; then
+            echo "Tracking-ref drift report was not produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "## Locked Firefox material drift at tracking ref"
+            echo
+            echo "- Locked commit: \`$(jq -r .lockedSource.commit _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Tracking ref: \`$(jq -r .lockedSource.trackingRef _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Tracking commit: \`$(jq -r .trackingSource.commit _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Commit changed (informational): \`$(jq -r .informationalDrift.commitChanged _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Tree changed (informational): \`$(jq -r .informationalDrift.treeChanged _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Actionable drift: \`$(jq -r .drift.actionable _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Missing locked tests: \`$(jq -r '.drift.lockedSelectionRemoved | length' _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Changed or missing locked materials: \`$(jq -r '.drift.materials | length' _dist/firefox-runtime-tracking-drift.json)\`"
+            echo "- Selected triage or manifest changes: \`$(jq -r '.drift.selectedTriage | length' _dist/firefox-runtime-tracking-drift.json)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Evaluate actionable locked-material drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$(jq -r .drift.actionable _dist/firefox-runtime-tracking-drift.json)" == "true" ]]; then
+            echo "::error::Actionable locked Firefox material drift detected; inspect the deterministic report artifact."
+            exit 1
+          fi
+
+      - name: Upload deterministic tracking-ref report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: firefox-runtime-tracking-drift
+          path: _dist/firefox-runtime-tracking-drift.json
+          if-no-files-found: error
+          retention-days: 30

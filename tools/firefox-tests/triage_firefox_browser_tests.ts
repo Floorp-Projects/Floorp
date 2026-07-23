@@ -2,6 +2,7 @@
 
 import { parseArgs } from "@std/cli";
 import * as path from "@std/path";
+import { loadRuntimeLock, type RuntimeLock } from "../src/runtime_lock.ts";
 
 type TriageClassification =
   | "direct"
@@ -16,20 +17,14 @@ type RuleClassification = Exclude<
   "direct" | "quarantined" | "already-allowed"
 >;
 
-type AllowlistEntry =
-  | string
-  | {
-    path: string;
-    name?: string;
-    note?: string;
-  };
-
 interface FirefoxTestCollectionManifest {
   schemaVersion: number;
+  mode?: "candidate" | "locked";
   source?: {
     repository?: string;
     ref?: string;
     commit?: string;
+    tree?: string;
   };
   files?: Array<{
     path: string;
@@ -92,14 +87,14 @@ interface TriageEntry {
 
 interface TriageManifest {
   schemaVersion: 1;
-  generatedAt: string;
+  mode: "candidate" | "locked";
   source: {
     repository: string;
     ref: string;
     commit: string;
+    tree: string;
   };
   collectionDir: string;
-  allowlistPath: string;
   quarantinePath: string;
   counts: {
     candidates: number;
@@ -110,14 +105,12 @@ interface TriageManifest {
 
 interface TriageFirefoxBrowserTestsOptions {
   collectionDir: string;
-  allowlistPath: string;
   quarantinePath: string;
   outputDir: string;
+  runtimeLock?: RuntimeLock;
 }
 
 const DEFAULT_COLLECTION_DIR = "_dist/firefox-tests";
-const DEFAULT_ALLOWLIST_PATH =
-  "browser-features/chrome/test/firefox-downloaded/allowlist.json";
 const DEFAULT_QUARANTINE_PATH =
   "browser-features/chrome/test/firefox-downloaded/quarantine.json";
 
@@ -257,18 +250,6 @@ function assertArray(value: unknown, name: string): unknown[] {
     throw new Error(`${name} must be an array`);
   }
   return value;
-}
-
-function normalizeAllowlistEntry(entry: unknown, index: number): string {
-  if (typeof entry === "string") {
-    return normalizeUpstreamPath(ensureString(entry, `allowlist[${index}]`));
-  }
-  if (!isRecord(entry)) {
-    throw new Error(`allowlist[${index}] must be a string or object`);
-  }
-  return normalizeUpstreamPath(
-    ensureString(entry.path, `allowlist[${index}].path`),
-  );
 }
 
 function ensureStringArray(value: unknown, name: string): string[] {
@@ -445,7 +426,8 @@ function buildMarkdownReport(manifest: TriageManifest): string {
     `Source repository: \`${manifest.source.repository}\``,
     `Source ref: \`${manifest.source.ref}\``,
     `Source commit: \`${manifest.source.commit}\``,
-    `Generated at: \`${manifest.generatedAt}\``,
+    `Source tree: \`${manifest.source.tree}\``,
+    `Collection mode: \`${manifest.mode}\``,
     "",
     "## Counts",
     "",
@@ -482,7 +464,7 @@ async function readCandidateSource(
 function validateQuarantineEntries(
   entries: QuarantineEntry[],
   candidatePaths: Set<string>,
-  allowlistPaths: Set<string>,
+  lockedPaths: Set<string>,
 ): Map<string, QuarantineEntry> {
   const duplicates = duplicateValues(entries.map((entry) => entry.path));
   if (duplicates.length > 0) {
@@ -492,28 +474,28 @@ function validateQuarantineEntries(
   }
 
   for (const entry of entries) {
-    if (!candidatePaths.has(entry.path)) {
+    if (lockedPaths.has(entry.path)) {
       throw new Error(
-        `Quarantined Firefox test is missing from browser-chrome candidates: ${entry.path}`,
-      );
-    }
-    if (allowlistPaths.has(entry.path)) {
-      throw new Error(
-        `Quarantined Firefox test also appears in allowlist: ${entry.path}`,
+        `Quarantined Firefox test also appears in the Runtime lock: ${entry.path}`,
       );
     }
   }
 
-  return new Map(entries.map((entry) => [entry.path, entry]));
+  return new Map(
+    entries.filter((entry) => candidatePaths.has(entry.path)).map((entry) => [
+      entry.path,
+      entry,
+    ]),
+  );
 }
 
 export async function triageFirefoxBrowserTests(
   options: TriageFirefoxBrowserTestsOptions,
 ): Promise<TriageManifest> {
   const collectionDir = path.resolve(options.collectionDir);
-  const allowlistPath = path.resolve(options.allowlistPath);
   const quarantinePath = path.resolve(options.quarantinePath);
   const outputDir = path.resolve(options.outputDir);
+  const lock = options.runtimeLock ?? await loadRuntimeLock();
 
   const collectionManifest = await readJsonFile<FirefoxTestCollectionManifest>(
     path.join(collectionDir, "manifest.json"),
@@ -521,12 +503,45 @@ export async function triageFirefoxBrowserTests(
   const candidates = await readJsonFile<BrowserChromeCandidate[]>(
     path.join(collectionDir, "browser-chrome-candidates.json"),
   );
-  const allowlistRaw = await readJsonFile<AllowlistEntry[]>(allowlistPath);
   const quarantineRaw = await readJsonFile<QuarantineEntry[]>(quarantinePath);
 
+  if (
+    collectionManifest.mode !== "candidate" &&
+    collectionManifest.mode !== "locked"
+  ) {
+    throw new Error(
+      `Unsupported Firefox test collection mode: ${
+        collectionManifest.mode ?? "missing"
+      }`,
+    );
+  }
+  if (collectionManifest.source?.repository !== lock.source.repository) {
+    throw new Error(
+      `Firefox test collection repository mismatch: expected ${lock.source.repository}`,
+    );
+  }
+  if (
+    collectionManifest.mode === "locked" &&
+    (collectionManifest.source.commit !== lock.source.commit ||
+      collectionManifest.source.tree !== lock.source.tree ||
+      collectionManifest.source.ref !== lock.source.ref)
+  ) {
+    throw new Error(
+      "Locked Firefox test collection source does not match the Runtime lock",
+    );
+  }
+  if (
+    collectionManifest.mode === "candidate" &&
+    collectionManifest.source.ref !== lock.source.trackingRef
+  ) {
+    throw new Error(
+      `Candidate Firefox test collection must use tracking ref ${lock.source.trackingRef}`,
+    );
+  }
+
   const candidatePaths = new Set(candidates.map((candidate) => candidate.path));
-  const allowlistPaths = new Set(
-    assertArray(allowlistRaw, "allowlist").map(normalizeAllowlistEntry),
+  const lockedPaths = new Set(
+    lock.source.tests.entries.map((entry) => entry.path),
   );
   const quarantineEntries = assertArray(quarantineRaw, "quarantine").map(
     normalizeQuarantineEntry,
@@ -534,7 +549,7 @@ export async function triageFirefoxBrowserTests(
   const quarantineByPath = validateQuarantineEntries(
     quarantineEntries,
     candidatePaths,
-    allowlistPaths,
+    lockedPaths,
   );
 
   const counts = emptyClassificationCounts();
@@ -548,7 +563,7 @@ export async function triageFirefoxBrowserTests(
     );
     const sourceClassification = classifySource(source);
     const quarantine = quarantineByPath.get(candidate.path);
-    const classification: TriageClassification = allowlistPaths.has(
+    const classification: TriageClassification = lockedPaths.has(
         candidate.path,
       )
       ? "already-allowed"
@@ -591,14 +606,14 @@ export async function triageFirefoxBrowserTests(
 
   const manifest: TriageManifest = {
     schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
+    mode: collectionManifest.mode,
     source: {
       repository: collectionManifest.source?.repository ?? "",
       ref: collectionManifest.source?.ref ?? "",
       commit: collectionManifest.source?.commit ?? "",
+      tree: collectionManifest.source?.tree ?? "",
     },
     collectionDir: formatRelative(Deno.cwd(), collectionDir),
-    allowlistPath: formatRelative(Deno.cwd(), allowlistPath),
     quarantinePath: formatRelative(Deno.cwd(), quarantinePath),
     counts: {
       candidates: candidates.length,
@@ -626,7 +641,6 @@ function usage(): string {
     "",
     "Options:",
     `  --collection <path>   Collected Firefox test directory (default: ${DEFAULT_COLLECTION_DIR})`,
-    `  --allowlist <path>    Allowlist JSON file (default: ${DEFAULT_ALLOWLIST_PATH})`,
     `  --quarantine <path>   Quarantine JSON file (default: ${DEFAULT_QUARANTINE_PATH})`,
     "  --out <path>          Triage output directory (default: --collection)",
     "  --help, -h            Show this help",
@@ -635,12 +649,11 @@ function usage(): string {
 
 export async function main(args: string[]): Promise<void> {
   const parsed = parseArgs(args, {
-    string: ["collection", "allowlist", "quarantine", "out"],
+    string: ["collection", "quarantine", "out"],
     boolean: ["help"],
     alias: { h: "help" },
     default: {
       collection: DEFAULT_COLLECTION_DIR,
-      allowlist: DEFAULT_ALLOWLIST_PATH,
       quarantine: DEFAULT_QUARANTINE_PATH,
     },
   });
@@ -657,7 +670,6 @@ export async function main(args: string[]): Promise<void> {
   const output = typeof parsed.out === "string" ? parsed.out : collection;
   const manifest = await triageFirefoxBrowserTests({
     collectionDir: collection,
-    allowlistPath: ensureString(parsed.allowlist, "--allowlist"),
     quarantinePath: ensureString(parsed.quarantine, "--quarantine"),
     outputDir: output,
   });

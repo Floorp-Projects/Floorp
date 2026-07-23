@@ -1795,11 +1795,15 @@ function buildCiTestReference(inventory: DocsInventory): string {
   );
 
   const browserCommands = selectCommands(browserWorkflow?.runCommands ?? [], [
+    "deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock",
     "deno task test:smoke",
+    "deno task test:host",
+    "deno task test:firefox-tests",
     "deno task feles-build test",
     "deno task firefox-tests:collect",
+    "deno task firefox-tests:triage-browser",
     "deno task firefox-tests:prepare-browser",
-    "deno task test --no-autostart",
+    "deno task test --layer all",
     "deno test -A tools/src/colocated_test_runner.test.ts",
   ]);
   const docsCommands = selectCommands(docsWorkflow?.runCommands ?? [], [
@@ -1826,7 +1830,7 @@ function buildCiTestReference(inventory: DocsInventory): string {
     "",
     `Triggers: ${formatList(browserWorkflow?.triggers ?? [])}`,
     "",
-    "The browser integration workflow starts a virtual display, launches Floorp through `feles-build test`, waits for Marionette, and then runs colocated browser tests against that running instance.",
+    "The browser integration workflow validates the canonical Runtime lock, checks host and synchronization tooling, prepares the locked Firefox browser tests, starts a virtual display, launches Floorp through `feles-build test`, waits for Marionette, and runs the combined all-layer suite against that instance.",
     "",
     "```bash",
     ...browserCommands,

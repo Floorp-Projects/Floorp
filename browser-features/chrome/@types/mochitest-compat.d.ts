@@ -78,7 +78,7 @@ declare const BrowserTestUtils: {
     opening?: unknown,
     waitForLoad?: unknown,
   ): Promise<unknown>;
-  removeTab(tab: unknown, options?: unknown): Promise<void>;
+  removeTab(tab: unknown, options?: unknown): void;
   switchTab(gBrowser: unknown, tab: unknown): Promise<unknown>;
   withNewTab(opening: unknown, task: (browser: unknown) => unknown): Promise<
     unknown

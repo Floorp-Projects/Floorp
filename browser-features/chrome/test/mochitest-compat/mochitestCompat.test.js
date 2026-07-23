@@ -57,6 +57,24 @@ add_task(async function asyncTasksAreAwaited() {
   is(value, 42, "add_task should await async task functions");
 });
 
+add_task(function mozillaTaskProgressIsPublished() {
+  const progress =
+    /** @type {{ status?: string, index?: number, total?: number, testName?: string } | undefined} */ (
+      globalThis.__NORA_TEST_PROGRESS__
+    );
+  is(progress?.status, "running", "task progress should be running");
+  ok((progress?.index ?? 0) > 0, "task progress should include an index");
+  ok(
+    (progress?.total ?? 0) >= (progress?.index ?? 0),
+    "task progress total should cover the current index",
+  );
+  is(
+    progress?.testName,
+    "mozillaTaskProgressIsPublished",
+    "task progress should include the registered task name",
+  );
+});
+
 add_task(async function waitForConditionHelpersResolveAndReject() {
   let testUtilsValue = "";
   const testUtilsPromise = TestUtils.waitForCondition(

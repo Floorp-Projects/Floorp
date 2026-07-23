@@ -2,8 +2,11 @@
 
 import { parseArgs } from "@std/cli";
 import * as path from "@std/path";
-
-export type CollectionScope = "all" | "browser-chrome";
+import {
+  loadRuntimeLock,
+  type RuntimeLock,
+  type RuntimeMaterial,
+} from "../src/runtime_lock.ts";
 
 type Harness =
   | "a11y"
@@ -27,11 +30,14 @@ type FileRole = "candidate" | "head" | "manifest" | "support" | "test";
 export interface CollectFirefoxTestsOptions {
   runtimeDir: string;
   outputDir: string;
-  scope: CollectionScope;
   sourceRepo: string;
   sourceRef?: string;
   pathPrefix?: string;
+  candidate?: boolean;
+  runtimeLock?: RuntimeLock;
 }
+
+type CollectionMode = "candidate" | "locked";
 
 interface GitTreeEntry {
   mode: string;
@@ -53,6 +59,8 @@ interface CollectedFile {
   outputPath: string;
   size: number;
   sha256: string;
+  mode: string;
+  gitBlob: string;
   harnesses: Harness[];
   roles: FileRole[];
 }
@@ -81,16 +89,17 @@ interface BrowserChromeCandidate {
 
 interface CollectionManifest {
   schemaVersion: 1;
-  generatedAt: string;
+  mode: CollectionMode;
   source: {
     repository: string;
     ref: string;
     commit: string;
+    tree: string;
   };
   filters: {
     pathPrefix: string | null;
   };
-  scope: CollectionScope;
+  scope: "browser-chrome" | "locked-closure";
   counts: {
     roots: number;
     files: number;
@@ -139,13 +148,6 @@ const WELL_KNOWN_TEST_ROOTS: readonly TestRoot[] = [
   },
 ];
 
-const TEST_FILE_PATTERN =
-  /^(browser|test|chrome|a11y|crashtest|reftest|xpcshell)[_-].+\.(?:html|js|mjs|xhtml)$/;
-const BROWSER_CHROME_CANDIDATE_PATTERN = /^browser_.+\.(?:js|mjs)$/;
-const PYTHON_TEST_PATTERN = /(?:^test_.+\.py$|.+_test\.py$)/;
-const WEB_PLATFORM_TEST_PATTERN =
-  /(?:\.(?:any|window|worker|sharedworker|serviceworker)\.js|\.https?\.html|\.tentative\.html|\.html|\.xhtml)$/;
-
 function normalizeGitPath(value: string): string {
   return value.replaceAll("\\", "/").replace(/^\/+/, "");
 }
@@ -182,11 +184,8 @@ function isWithinPathPrefix(
   return pathPrefix === null || isPathInsideRoot(filePath, pathPrefix);
 }
 
-function shouldIncludeRoot(root: TestRoot, scope: CollectionScope): boolean {
-  if (scope === "all") {
-    return true;
-  }
-  return root.harness === "browser-chrome" || root.harness === "chrome";
+function shouldIncludeRoot(root: TestRoot): boolean {
+  return root.harness === "browser-chrome";
 }
 
 function isLikelyTestManifestPath(manifestPath: string): boolean {
@@ -267,45 +266,21 @@ function detectHarnessForManifest(manifestPath: string): Harness | undefined {
   return undefined;
 }
 
-function rolesForFile(entry: GitTreeEntry, roots: TestRoot[]): FileRole[] {
-  const base = basenameForGitPath(entry.path);
-  const roles = new Set<FileRole>();
-
-  if (roots.some((root) => root.manifestPath === entry.path)) {
-    roles.add("manifest");
-  }
-  if (base === "head.js" || base === "head.mjs") {
-    roles.add("head");
-  }
-  if (TEST_FILE_PATTERN.test(base)) {
-    roles.add("test");
-  }
-  if (PYTHON_TEST_PATTERN.test(base)) {
-    roles.add("test");
-  }
-  if (
-    roots.some((root) => root.harness === "web-platform") &&
-    !entry.path.includes("/resources/") &&
-    WEB_PLATFORM_TEST_PATTERN.test(base)
-  ) {
-    roles.add("test");
-  }
-  if (
-    roots.some((root) =>
-      root.harness === "browser-chrome" || root.harness === "chrome"
-    ) && BROWSER_CHROME_CANDIDATE_PATTERN.test(base)
-  ) {
-    roles.add("candidate");
-  }
-  if (roles.size === 0) {
-    roles.add("support");
-  }
-
-  return [...roles].sort();
-}
-
 function sortUniqueHarnesses(roots: TestRoot[]): Harness[] {
   return [...new Set(roots.map((root) => root.harness))].sort();
+}
+
+function rolesForLockedMaterial(material: RuntimeMaterial): FileRole[] {
+  switch (material.role) {
+    case "test":
+      return ["candidate", "test"];
+    case "manifest":
+      return ["manifest"];
+    case "head-support":
+      return ["head"];
+    case "support":
+      return ["support"];
+  }
 }
 
 function parseLsTreeLine(line: string): GitTreeEntry {
@@ -419,18 +394,20 @@ async function runGitText(runtimeDir: string, args: string[]): Promise<string> {
 
 async function listGitTree(
   runtimeDir: string,
-  pathPrefix: string | null,
+  materials: RuntimeMaterial[],
 ): Promise<GitTreeEntry[]> {
+  if (materials.length === 0) {
+    return [];
+  }
   const args = [
     "ls-tree",
     "-r",
     "-l",
     "--full-tree",
     "HEAD",
+    "--",
+    ...materials.map((entry) => entry.path),
   ];
-  if (pathPrefix !== null) {
-    args.push("--", pathPrefix);
-  }
 
   const text = await runGitText(runtimeDir, args);
   return text.trimEnd().split("\n")
@@ -547,7 +524,6 @@ async function writeCollectedBlobs(
 
 function discoverTestRoots(
   entries: GitTreeEntry[],
-  scope: CollectionScope,
   pathPrefix: string | null,
 ): TestRoot[] {
   const manifestRoots = entries
@@ -568,12 +544,12 @@ function discoverTestRoots(
         manifestName,
         harness,
       };
-      return shouldIncludeRoot(root, scope) ? root : undefined;
+      return shouldIncludeRoot(root) ? root : undefined;
     })
     .filter((entry): entry is TestRoot => entry !== undefined);
 
   const wellKnownRoots = WELL_KNOWN_TEST_ROOTS.filter((root) =>
-    shouldIncludeRoot(root, scope) &&
+    shouldIncludeRoot(root) &&
     entries.some((entry) =>
       isWithinPathPrefix(entry.path, pathPrefix) &&
       isPathInsideRoot(entry.path, root.path)
@@ -598,42 +574,95 @@ function rootsForEntry(entry: GitTreeEntry, roots: TestRoot[]): TestRoot[] {
   return matchingRoots.filter((root) => root.path.length === deepestPathLength);
 }
 
-function buildBrowserChromeCandidates(
-  files: CollectedFile[],
-  roots: TestRoot[],
-): BrowserChromeCandidate[] {
-  const filesByDirectory = new Map<string, CollectedFile[]>();
-  for (const file of files) {
-    const directory = dirnameForGitPath(file.path);
-    const existing = filesByDirectory.get(directory) ?? [];
-    existing.push(file);
-    filesByDirectory.set(directory, existing);
+function lockedRoots(lock: RuntimeLock): TestRoot[] {
+  return lock.source.tests.manifests.map((manifest) => ({
+    path: dirnameForGitPath(manifest.path),
+    manifestPath: manifest.path,
+    manifestName: basenameForGitPath(manifest.path),
+    harness: "browser-chrome",
+  } satisfies TestRoot));
+}
+
+function selectLockedFiles(
+  entries: GitTreeEntry[],
+  lock: RuntimeLock,
+): SelectedFile[] {
+  const entriesByPath = new Map(entries.map((entry) => [entry.path, entry]));
+  const selected: SelectedFile[] = [];
+
+  for (const material of lock.source.materials.entries) {
+    const entry = entriesByPath.get(material.path);
+    if (!entry) {
+      throw new Error(`Locked Runtime material is missing: ${material.path}`);
+    }
+    if (entry.type !== "blob") {
+      throw new Error(
+        `Locked Runtime material is not a blob: ${material.path} (${entry.type})`,
+      );
+    }
+    if (entry.mode !== material.mode) {
+      throw new Error(
+        `Locked Runtime material mode mismatch for ${material.path}: expected ${material.mode}, got ${entry.mode}`,
+      );
+    }
+    if (entry.object !== material.gitBlob) {
+      throw new Error(
+        `Locked Runtime material Git blob mismatch for ${material.path}: expected ${material.gitBlob}, got ${entry.object}`,
+      );
+    }
+    if (entry.size !== material.bytes) {
+      throw new Error(
+        `Locked Runtime material size mismatch for ${material.path}: expected ${material.bytes}, got ${
+          entry.size ?? "unknown"
+        }`,
+      );
+    }
+    selected.push({
+      entry,
+      harnesses: ["browser-chrome"],
+      roles: rolesForLockedMaterial(material),
+    });
   }
 
-  return files
-    .filter((file) => file.roles.includes("candidate"))
-    .map((file) => {
-      const directory = dirnameForGitPath(file.path);
-      const directoryFiles = filesByDirectory.get(directory) ?? [];
-      const nearestRoot = roots
-        .filter((root) =>
-          isPathInsideRoot(file.path, root.path) &&
-          (root.harness === "browser-chrome" || root.harness === "chrome")
-        )
-        .sort((a, b) => b.path.length - a.path.length)[0];
-      return {
-        path: file.path,
-        directory,
-        nearestManifest: nearestRoot?.manifestPath ?? "",
-        hasHeadJs: directoryFiles.some((entry) => entry.roles.includes("head")),
-        supportFileCount: directoryFiles.filter((entry) =>
-          entry.roles.includes("support")
-        ).length,
-        size: file.size,
-        sha256: file.sha256,
-      };
-    })
-    .sort((a, b) => a.path.localeCompare(b.path));
+  if (selected.length !== lock.source.materials.count) {
+    throw new Error(
+      `Locked Runtime material count mismatch: expected ${lock.source.materials.count}, got ${selected.length}`,
+    );
+  }
+  return selected;
+}
+
+function buildLockedBrowserChromeCandidates(
+  files: CollectedFile[],
+  lock: RuntimeLock,
+  requireComplete: boolean,
+): BrowserChromeCandidate[] {
+  const filesByPath = new Map(files.map((file) => [file.path, file]));
+  const manifestsByPath = new Map(
+    lock.source.tests.manifests.map((manifest) => [manifest.path, manifest]),
+  );
+
+  return lock.source.tests.entries.flatMap((test) => {
+    const file = filesByPath.get(test.path);
+    const manifest = manifestsByPath.get(test.manifest);
+    if (!file || !manifest) {
+      if (requireComplete) {
+        throw new Error(`Locked test closure is incomplete: ${test.path}`);
+      }
+      return [];
+    }
+    return [{
+      path: test.path,
+      directory: dirnameForGitPath(test.path),
+      nearestManifest: test.manifest,
+      hasHeadJs: manifest.supportPaths.some((supportPath) =>
+        basenameForGitPath(supportPath) === "head.js"
+      ),
+      supportFileCount: manifest.supportPaths.length,
+      size: file.size,
+      sha256: file.sha256,
+    }];
+  }).sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function incrementRecord<T extends string>(
@@ -658,9 +687,10 @@ function buildSummary(manifest: CollectionManifest): string {
     `Source repository: \`${manifest.source.repository}\``,
     `Source ref: \`${manifest.source.ref}\``,
     `Source commit: \`${manifest.source.commit}\``,
+    `Source tree: \`${manifest.source.tree}\``,
+    `Collection mode: \`${manifest.mode}\``,
     `Path prefix: \`${manifest.filters.pathPrefix ?? "[none]"}\``,
     `Scope: \`${manifest.scope}\``,
-    `Generated at: \`${manifest.generatedAt}\``,
     "",
     "## Counts",
     "",
@@ -687,13 +717,6 @@ function buildSummary(manifest: CollectionManifest): string {
   ].join("\n");
 }
 
-function parseScope(value: string): CollectionScope {
-  if (value === "all" || value === "browser-chrome") {
-    return value;
-  }
-  throw new Error(`Invalid --scope value: ${value}`);
-}
-
 function ensureString(value: unknown, name: string): string {
   if (typeof value !== "string" || value.trim() === "") {
     throw new Error(`${name} is required`);
@@ -714,6 +737,102 @@ export async function collectFirefoxTests(
   const runtimeDir = path.resolve(options.runtimeDir);
   const outputDir = path.resolve(options.outputDir);
   const pathPrefix = normalizeOptionalPathPrefix(options.pathPrefix);
+  const lock = options.runtimeLock ?? await loadRuntimeLock();
+  const mode: CollectionMode = options.candidate ? "candidate" : "locked";
+  const sourceCommit = (await runGitText(runtimeDir, ["rev-parse", "HEAD"]))
+    .trim();
+  const sourceTree = (await runGitText(runtimeDir, [
+    "rev-parse",
+    "HEAD^{tree}",
+  ])).trim();
+  let sourceRef: string;
+
+  if (options.sourceRepo !== lock.source.repository) {
+    throw new Error(
+      `Runtime repository mismatch: expected ${lock.source.repository}, got ${options.sourceRepo}`,
+    );
+  }
+  if (mode === "candidate") {
+    if (options.sourceRef === undefined) {
+      throw new Error(
+        `Candidate collection requires --source-ref ${lock.source.trackingRef}`,
+      );
+    }
+    sourceRef = options.sourceRef;
+    if (sourceRef !== lock.source.trackingRef) {
+      throw new Error(
+        `Candidate collection must use tracking ref ${lock.source.trackingRef}, got ${sourceRef}`,
+      );
+    }
+    const sourceRefCommit = (await runGitText(runtimeDir, [
+      "rev-parse",
+      "--verify",
+      `${sourceRef}^{commit}`,
+    ])).trim();
+    if (sourceCommit !== sourceRefCommit) {
+      throw new Error(
+        `Candidate Runtime checkout HEAD mismatch for ${sourceRef}: expected ${sourceRefCommit}, got ${sourceCommit}`,
+      );
+    }
+  } else {
+    sourceRef = options.sourceRef ?? lock.source.ref;
+    if (pathPrefix !== null) {
+      throw new Error("Locked collection does not permit --path-prefix");
+    }
+    if (sourceRef !== lock.source.ref) {
+      throw new Error(
+        `Locked Runtime ref mismatch: expected ${lock.source.ref}, got ${sourceRef}`,
+      );
+    }
+    if (sourceCommit !== lock.source.commit) {
+      throw new Error(
+        `Locked Runtime commit mismatch: expected ${lock.source.commit}, got ${sourceCommit}`,
+      );
+    }
+    if (sourceTree !== lock.source.tree) {
+      throw new Error(
+        `Locked Runtime tree mismatch: expected ${lock.source.tree}, got ${sourceTree}`,
+      );
+    }
+  }
+
+  const effectivePathPrefix = mode === "candidate" ? pathPrefix : null;
+  const projectedMaterials = mode === "candidate"
+    ? lock.source.materials.entries.filter((material) =>
+      isWithinPathPrefix(material.path, effectivePathPrefix)
+    )
+    : lock.source.materials.entries;
+  const entries = await listGitTree(runtimeDir, projectedMaterials);
+  const roots = mode === "candidate"
+    ? discoverTestRoots(entries, effectivePathPrefix)
+    : lockedRoots(lock);
+
+  const selectedFiles: SelectedFile[] = mode === "locked"
+    ? selectLockedFiles(entries, lock)
+    : [];
+  const harnessCounts = {} as Record<Harness, number>;
+  const extensionCounts: Record<string, number> = {};
+
+  if (mode === "candidate") {
+    const projectedMaterialsByPath = new Map(
+      projectedMaterials.map((material) => [material.path, material]),
+    );
+    for (const entry of entries) {
+      const material = projectedMaterialsByPath.get(entry.path);
+      if (!material) {
+        continue;
+      }
+
+      const matchingRoots = rootsForEntry(entry, roots);
+      selectedFiles.push({
+        entry,
+        harnesses: matchingRoots.length > 0
+          ? sortUniqueHarnesses(matchingRoots)
+          : ["browser-chrome"],
+        roles: rolesForLockedMaterial(material),
+      });
+    }
+  }
 
   await Deno.remove(outputDir, { recursive: true }).catch((error) => {
     if (!(error instanceof Deno.errors.NotFound)) {
@@ -721,35 +840,6 @@ export async function collectFirefoxTests(
     }
   });
   await Deno.mkdir(outputDir, { recursive: true });
-
-  const sourceCommit = (await runGitText(runtimeDir, ["rev-parse", "HEAD"]))
-    .trim();
-  const sourceRef = options.sourceRef ??
-    (await runGitText(runtimeDir, ["rev-parse", "--abbrev-ref", "HEAD"]))
-      .trim();
-  const entries = await listGitTree(runtimeDir, pathPrefix);
-  const roots = discoverTestRoots(entries, options.scope, pathPrefix);
-
-  const selectedFiles: SelectedFile[] = [];
-  const harnessCounts = {} as Record<Harness, number>;
-  const extensionCounts: Record<string, number> = {};
-
-  for (const entry of entries) {
-    if (!isWithinPathPrefix(entry.path, pathPrefix)) {
-      continue;
-    }
-
-    const matchingRoots = rootsForEntry(entry, roots);
-    if (matchingRoots.length === 0) {
-      continue;
-    }
-
-    selectedFiles.push({
-      entry,
-      harnesses: sortUniqueHarnesses(matchingRoots),
-      roles: rolesForFile(entry, matchingRoots),
-    });
-  }
 
   const writtenBlobs = await writeCollectedBlobs(
     runtimeDir,
@@ -765,6 +855,20 @@ export async function collectFirefoxTests(
     }
 
     const { entry, harnesses, roles } = selectedFile;
+    const expectedMaterial = mode === "locked"
+      ? lock.source.materials.entries.find((material) =>
+        material.path === entry.path
+      )
+      : undefined;
+    if (
+      expectedMaterial &&
+      (written.size !== expectedMaterial.bytes ||
+        written.sha256 !== expectedMaterial.sha256)
+    ) {
+      throw new Error(
+        `Locked Runtime material content mismatch for ${entry.path}: expected ${expectedMaterial.bytes} bytes/${expectedMaterial.sha256}, got ${written.size} bytes/${written.sha256}`,
+      );
+    }
     for (const harness of harnesses) {
       incrementRecord(harnessCounts, harness);
     }
@@ -774,24 +878,29 @@ export async function collectFirefoxTests(
       outputPath: written.outputPath,
       size: written.size,
       sha256: written.sha256,
+      mode: entry.mode,
+      gitBlob: entry.object,
       harnesses,
       roles,
     });
   }
 
-  const candidates = buildBrowserChromeCandidates(collectedFiles, roots);
+  const candidates = mode === "locked"
+    ? buildLockedBrowserChromeCandidates(collectedFiles, lock, true)
+    : buildLockedBrowserChromeCandidates(collectedFiles, lock, false);
   const manifest: CollectionManifest = {
     schemaVersion: 1,
-    generatedAt: new Date().toISOString(),
+    mode,
     source: {
       repository: options.sourceRepo,
       ref: sourceRef,
       commit: sourceCommit,
+      tree: sourceTree,
     },
     filters: {
-      pathPrefix,
+      pathPrefix: effectivePathPrefix,
     },
-    scope: options.scope,
+    scope: mode === "candidate" ? "locked-closure" : "browser-chrome",
     counts: {
       roots: roots.length,
       files: collectedFiles.length,
@@ -824,10 +933,10 @@ function usage(): string {
     "Options:",
     "  --runtime-dir <path>   Floorp-Runtime checkout to read",
     `  --out <path>           Output directory (default: ${DEFAULT_OUTPUT_DIR})`,
-    "  --scope <scope>        all | browser-chrome (default: all)",
     `  --source-repo <repo>   Source repository label (default: ${DEFAULT_SOURCE_REPO})`,
     "  --source-ref <ref>     Source ref label recorded in manifest",
-    "  --path-prefix <path>   Optional upstream path prefix filter",
+    "  --path-prefix <path>   Optional prefix within the locked candidate projection",
+    "  --candidate            Static moving-ref projection of the locked closure",
     "  --help, -h             Show this help",
   ].join("\n");
 }
@@ -837,16 +946,20 @@ export async function main(args: string[]): Promise<void> {
     string: [
       "runtime-dir",
       "out",
-      "scope",
       "source-repo",
       "source-ref",
       "path-prefix",
     ],
-    boolean: ["help"],
+    boolean: ["candidate", "help"],
     alias: { h: "help" },
+    unknown: (arg, key) => {
+      if (key !== undefined) {
+        throw new Error(`Unknown option: ${arg}`);
+      }
+      return true;
+    },
     default: {
       out: DEFAULT_OUTPUT_DIR,
-      scope: "all",
       "source-repo": DEFAULT_SOURCE_REPO,
     },
   });
@@ -862,7 +975,6 @@ export async function main(args: string[]): Promise<void> {
   const manifest = await collectFirefoxTests({
     runtimeDir: ensureString(parsed["runtime-dir"], "--runtime-dir"),
     outputDir: ensureString(parsed.out, "--out"),
-    scope: parseScope(ensureString(parsed.scope, "--scope")),
     sourceRepo: ensureString(parsed["source-repo"], "--source-repo"),
     sourceRef: typeof parsed["source-ref"] === "string"
       ? parsed["source-ref"]
@@ -870,6 +982,7 @@ export async function main(args: string[]): Promise<void> {
     pathPrefix: typeof parsed["path-prefix"] === "string"
       ? parsed["path-prefix"]
       : undefined,
+    candidate: parsed.candidate,
   });
 
   console.log(

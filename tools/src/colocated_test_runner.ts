@@ -42,6 +42,7 @@ const TEST_FILTER_COUNT_PREF = "nora.tests.filter.count";
 const TEST_FILTER_ITEM_PREF_PREFIX = "nora.tests.filter.";
 const TEST_RUN_ID_PREF = "nora.tests.run_id";
 const TEST_CONTROL_FILE = "nora-tests-control.json";
+const TEST_CONTROL_SCHEMA_VERSION = 1;
 const MAX_TEST_EXECUTION_TIMEOUT_MS = 1_800_000;
 const DEFAULT_TEST_COLLECTION_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
 const DEFAULT_AUTOSTART_READY_TIMEOUT_MS = MAX_TEST_EXECUTION_TIMEOUT_MS;
@@ -794,11 +795,20 @@ export function replaceStringPref(
   return `${prefix}user_pref("${prefName}", ${JSON.stringify(value)});\n`;
 }
 
-function writeBrowserTestControlPrefs(
+export interface BrowserTestControl {
+  schemaVersion: typeof TEST_CONTROL_SCHEMA_VERSION;
+  runId: string;
+  expiresAtMs: number;
+  filter: string[];
+}
+
+export function writeBrowserTestControlPrefs(
   targetRels: string[],
   runId: string,
+  expiresAtMs: number,
+  profileDir = PATHS.profile_test,
 ): void {
-  const prefsPath = path.join(PATHS.profile_test, "prefs.js");
+  const prefsPath = path.join(profileDir, "prefs.js");
   Deno.mkdirSync(path.dirname(prefsPath), { recursive: true });
 
   let content = "";
@@ -827,10 +837,92 @@ function writeBrowserTestControlPrefs(
   const withRunId = replaceStringPref(withFilterItems, TEST_RUN_ID_PREF, runId);
 
   Deno.writeTextFileSync(prefsPath, withRunId);
+  const control: BrowserTestControl = {
+    schemaVersion: TEST_CONTROL_SCHEMA_VERSION,
+    runId,
+    expiresAtMs,
+    filter: targetRels,
+  };
   Deno.writeTextFileSync(
-    path.join(PATHS.profile_test, TEST_CONTROL_FILE),
-    `${JSON.stringify({ runId, filter: targetRels })}\n`,
+    path.join(profileDir, TEST_CONTROL_FILE),
+    `${JSON.stringify(control)}\n`,
   );
+}
+
+function readStringPref(content: string, prefName: string): string | undefined {
+  const match = content.match(
+    new RegExp(
+      `^user_pref\\("${
+        escapeRegExp(prefName)
+      }",\\s*("(?:[^"\\\\]|\\\\.)*")\\);\\r?$`,
+      "m",
+    ),
+  );
+  if (!match) return undefined;
+  try {
+    const value: unknown = JSON.parse(match[1]);
+    return typeof value === "string" ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function removeOwnedControlPrefs(content: string): string {
+  return content
+    .split(/(?<=\n)/)
+    .filter((line) => {
+      const match = line.match(/^user_pref\("([^"]+)",/);
+      if (!match) return true;
+      const name = match[1];
+      return name !== TEST_FILTER_PREF &&
+        name !== TEST_FILTER_COUNT_PREF &&
+        name !== TEST_RUN_ID_PREF &&
+        !new RegExp(
+          `^${escapeRegExp(TEST_FILTER_ITEM_PREF_PREFIX)}\\d+$`,
+        ).test(name);
+    })
+    .join("");
+}
+
+export function clearBrowserTestControlPrefs(
+  runId: string,
+  profileDir = PATHS.profile_test,
+): void {
+  const errors: string[] = [];
+  const prefsPath = path.join(profileDir, "prefs.js");
+  try {
+    const content = Deno.readTextFileSync(prefsPath);
+    if (readStringPref(content, TEST_RUN_ID_PREF) === runId) {
+      Deno.writeTextFileSync(prefsPath, removeOwnedControlPrefs(content));
+    }
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      errors.push(`prefs cleanup: ${errorToMessage(error)}`);
+    }
+  }
+
+  const controlPath = path.join(profileDir, TEST_CONTROL_FILE);
+  try {
+    const parsed: unknown = JSON.parse(Deno.readTextFileSync(controlPath));
+    if (
+      typeof parsed === "object" && parsed !== null &&
+      "runId" in parsed && parsed.runId === runId
+    ) {
+      Deno.removeSync(controlPath);
+    }
+  } catch (error) {
+    if (
+      !(error instanceof Deno.errors.NotFound) &&
+      !(error instanceof SyntaxError)
+    ) {
+      errors.push(`control-file cleanup: ${errorToMessage(error)}`);
+    }
+  }
+  if (errors.length > 0) {
+    throw new Error(
+      `Browser test control cleanup was incomplete. ${errors.join(" | ")}`,
+    );
+  }
 }
 
 async function main(): Promise<number> {
@@ -842,6 +934,7 @@ async function main(): Promise<number> {
   );
   let exitCode = 0;
   let autoStartedBrowser: Deno.ChildProcess | null = null;
+  let ownedRunId: string | undefined;
 
   const writeLine = (level: LogLevel, message: string) => {
     const timestamp = new Date().toISOString();
@@ -947,9 +1040,11 @@ async function main(): Promise<number> {
     let runId: string | undefined;
     if (!runningBeforeConnect) {
       runId = createRunId();
+      ownedRunId = runId;
       writeBrowserTestControlPrefs(
         browserFilterTargetsForRun(targetRels, scopedRun),
         runId,
+        runDeadlineMs,
       );
     } else {
       writeLine(
@@ -1012,6 +1107,14 @@ async function main(): Promise<number> {
           "INFO",
           `[${i + 1}/${results.length}] Completed ${normalizedFile}`,
         );
+        if (result.source === "downloaded-firefox" && result.upstreamPath) {
+          writeLine(
+            "INFO",
+            `  Firefox source: ${result.upstreamPath}${
+              result.manifestPath ? ` (${result.manifestPath})` : ""
+            }`,
+          );
+        }
         if (result.ok) {
           writeLine(
             "INFO",
@@ -1027,6 +1130,16 @@ async function main(): Promise<number> {
             } (${result.durationMs}ms)`,
           );
           writeLine("ERROR", `  ${result.error ?? "Unknown error"}`);
+        }
+        for (const task of result.tasks ?? []) {
+          writeLine(
+            task.ok ? "INFO" : "ERROR",
+            `  ${
+              task.ok ? "✓" : "✗"
+            } task ${task.index}: ${task.name} (${task.durationMs}ms)${
+              task.error ? ` — ${task.error}` : ""
+            }`,
+          );
         }
       }
 
@@ -1093,6 +1206,12 @@ async function main(): Promise<number> {
         unknownAliasResults.length +
         abortFailure;
       const skipped = skippedTargets.length;
+      const downloadedResults = results.filter((result) =>
+        result.source === "downloaded-firefox"
+      );
+      const downloadedTasks = downloadedResults.flatMap((result) =>
+        result.tasks ?? []
+      );
 
       writeSection("Summary");
       writeLine(
@@ -1101,6 +1220,14 @@ async function main(): Promise<number> {
           skipped > 0 ? `, ${skipped} skipped` : ""
         }`,
       );
+      if (downloadedResults.length > 0) {
+        const passedDownloadedTasks = downloadedTasks.filter((task) => task.ok)
+          .length;
+        writeLine(
+          "INFO",
+          `Downloaded Firefox coverage: ${downloadedResults.length} file(s), ${downloadedTasks.length} task(s), ${passedDownloadedTasks} passed`,
+        );
+      }
       if (failed > 0) {
         exitCode = 1;
       }
@@ -1121,6 +1248,20 @@ async function main(): Promise<number> {
   } finally {
     if (autoStartedBrowser) {
       await stopAutoStartedBrowser(autoStartedBrowser, writeLine);
+    }
+
+    if (ownedRunId) {
+      try {
+        clearBrowserTestControlPrefs(ownedRunId);
+      } catch (error) {
+        writeLine(
+          "ERROR",
+          `Failed to clear browser test control state: ${
+            errorToMessage(error)
+          }`,
+        );
+        exitCode = 1;
+      }
     }
 
     const finishedAt = new Date();

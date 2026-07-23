@@ -4,6 +4,7 @@
 /// <reference path="../../@types/mochitest-compat.d.ts" />
 
 const TEST_URL = "about:blank";
+let expectedCountAfterNoAwaitRemovals = -1;
 
 /**
  * @param {() => boolean} predicate
@@ -34,10 +35,24 @@ async function waitForCondition(predicate, message, timeoutMs = 2000, details) {
 }
 
 function tabApiState() {
+  const tabs = Array.from(gBrowser.tabs, (tab, index) => {
+    const tabWithState = /** @type {XULElement & { closing?: boolean }} */ (
+      tab
+    );
+    const browser = browserForTab(tab);
+    return [
+      `${index}:${browser?.currentURI?.spec ?? "unknown"}`,
+      tab === gBrowser.selectedTab ? "selected" : "background",
+      tab.hidden ? "hidden" : "visible",
+      tab.pinned ? "pinned" : "unpinned",
+      tabWithState.closing ? "closing" : "open",
+    ].join(":");
+  });
   return [
     `addTab=${typeof gBrowser.addTab}`,
     `removeTab=${typeof gBrowser.removeTab}`,
     `tabs=${gBrowser.tabs?.length ?? "missing"}`,
+    `state=[${tabs.join(", ")}]`,
   ].join(", ");
 }
 
@@ -118,6 +133,18 @@ add_task(async function browserStartsWithCleanSingleTab() {
     gBrowser.currentURI?.spec,
     TEST_URL,
     "Mozilla-style browser tests should start on about:blank",
+  );
+});
+
+add_task(async function activeSplitViewUsesNativePrivateReceiver() {
+  await waitForBrowserChromeReady();
+
+  const activeSplitView = /** @type {{ activeSplitView?: unknown }} */ (
+    gBrowser
+  ).activeSplitView;
+  ok(
+    activeSplitView === null || typeof activeSplitView === "object",
+    "gBrowser.activeSplitView should be readable with its native private receiver",
   );
 });
 
@@ -247,6 +274,64 @@ add_task(async function browserTestUtilsAddTabReturnsTab() {
   );
 });
 
+add_task(
+  async function browserTestUtilsRemovesHiddenAndPinnedTabsWithoutAwait() {
+    await waitForBrowserChromeReady();
+
+    expectedCountAfterNoAwaitRemovals = gBrowser.tabs.length;
+    const startingTab = gBrowser.selectedTab;
+    /** @type {XULElement | null} */
+    let hiddenTab = /** @type {XULElement} */ (
+      BrowserTestUtils.addTab(gBrowser, "data:text/plain;hidden tab")
+    );
+    /** @type {XULElement | null} */
+    let pinnedTab = null;
+
+    registerCleanupFunction(() => {
+      if (hiddenTab && hasTab(hiddenTab)) {
+        BrowserTestUtils.removeTab(hiddenTab);
+        hiddenTab = null;
+      }
+      if (pinnedTab && hasTab(pinnedTab)) {
+        BrowserTestUtils.removeTab(pinnedTab);
+        pinnedTab = null;
+      }
+    });
+
+    const gBrowserWithTabMove = /** @type {{
+      moveTabBefore(tab: XULElement, beforeTab: XULElement): void;
+    }} */
+      (/** @type {unknown} */ (gBrowser));
+    gBrowserWithTabMove.moveTabBefore(hiddenTab, startingTab);
+    gBrowser.hideTab(hiddenTab);
+    pinnedTab = /** @type {XULElement} */ (
+      BrowserTestUtils.addTab(gBrowser, "data:text/plain;pinned tab", {
+        pinned: true,
+      })
+    );
+    ok(hiddenTab.hidden, "the removal fixture should include a hidden tab");
+    ok(pinnedTab.pinned, "the removal fixture should include a pinned tab");
+
+    const hiddenResult = BrowserTestUtils.removeTab(hiddenTab);
+    const pinnedResult = BrowserTestUtils.removeTab(pinnedTab);
+    hiddenTab = null;
+    pinnedTab = null;
+
+    is(hiddenResult, undefined, "removeTab should synchronously return void");
+    is(pinnedResult, undefined, "removeTab should not require awaiting");
+  },
+);
+
+add_task(async function noAwaitTabRemovalsDrainBeforeNextTask() {
+  await waitForBrowserChromeReady();
+
+  is(
+    gBrowser.tabs.length,
+    expectedCountAfterNoAwaitRemovals,
+    "hidden and pinned tab removals should drain before the next task",
+  );
+});
+
 add_task(async function browserTestUtilsWithNewTabPassesBrowser() {
   await waitForBrowserChromeReady();
 
@@ -264,5 +349,7 @@ add_task(async function browserTestUtilsWithNewTabPassesBrowser() {
   await waitForCondition(
     () => gBrowser.tabs.length === initialCount,
     "withNewTab should remove its temporary tab",
+    5000,
+    tabApiState,
   );
 });

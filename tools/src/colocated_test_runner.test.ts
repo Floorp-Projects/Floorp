@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import {
   detectLayer,
   escapeRegExp,
@@ -9,7 +9,11 @@ import {
   normalizeBrowserResultPath,
   parseLayer,
 } from "./colocated_test_utils.ts";
-import { parseOptions } from "./colocated_test_runner.ts";
+import {
+  clearBrowserTestControlPrefs,
+  parseOptions,
+  writeBrowserTestControlPrefs,
+} from "./colocated_test_runner.ts";
 
 Deno.test("isTestFile detects supported test patterns", () => {
   assertEquals(isTestFile("foo/bar.test.ts"), true);
@@ -198,4 +202,89 @@ Deno.test("parseOptions supports help mode", () => {
   assertEquals(options.help, true);
   assertEquals(options.timeoutMs, 1_800_000);
   assertEquals(options.startupTimeoutMs, 1_800_000);
+});
+
+Deno.test("browser test control is versioned, expiring, and cleared by owner", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const profileDir = `${root}/profile/test`;
+    await Deno.mkdir(profileDir, { recursive: true });
+    await Deno.writeTextFile(
+      `${profileDir}/prefs.js`,
+      'user_pref("floorp.unrelated", "keep");\n' +
+        'user_pref("nora.tests.filter.9", "stale");\n',
+    );
+
+    const runId = "current-run";
+    const expiresAtMs = 1_900_000_000_000;
+    const filter = ["browser-features/chrome/test/current.test.ts"];
+    writeBrowserTestControlPrefs(
+      filter,
+      runId,
+      expiresAtMs,
+      profileDir,
+    );
+
+    assertEquals(
+      JSON.parse(
+        await Deno.readTextFile(
+          `${profileDir}/nora-tests-control.json`,
+        ),
+      ),
+      { schemaVersion: 1, runId, expiresAtMs, filter },
+    );
+    const writtenPrefs = await Deno.readTextFile(`${profileDir}/prefs.js`);
+    assertEquals(writtenPrefs.includes('user_pref("floorp.unrelated"'), true);
+    assertEquals(writtenPrefs.includes(`user_pref("nora.tests.run_id"`), true);
+    assertEquals(
+      writtenPrefs.includes(`user_pref("nora.tests.filter.0"`),
+      true,
+    );
+
+    clearBrowserTestControlPrefs("different-run", profileDir);
+    assertEquals(
+      (await Deno.stat(`${profileDir}/nora-tests-control.json`)).isFile,
+      true,
+    );
+
+    clearBrowserTestControlPrefs(runId, profileDir);
+    const cleanedPrefs = await Deno.readTextFile(`${profileDir}/prefs.js`);
+    assertEquals(cleanedPrefs.includes('user_pref("floorp.unrelated"'), true);
+    assertEquals(cleanedPrefs.includes("nora.tests."), false);
+    await assertRejects(
+      () => Deno.stat(`${profileDir}/nora-tests-control.json`),
+      Deno.errors.NotFound,
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("host cleanup removes its control file even when prefs cleanup fails", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const profileDir = `${root}/profile/test`;
+    await Deno.mkdir(`${profileDir}/prefs.js`, { recursive: true });
+    await Deno.writeTextFile(
+      `${profileDir}/nora-tests-control.json`,
+      JSON.stringify({
+        schemaVersion: 1,
+        runId: "owned-run",
+        expiresAtMs: 1_900_000_000_000,
+        filter: [],
+      }),
+    );
+
+    assertThrows(
+      () => clearBrowserTestControlPrefs("owned-run", profileDir),
+      Error,
+      "cleanup was incomplete",
+    );
+    await assertRejects(
+      () => Deno.stat(`${profileDir}/nora-tests-control.json`),
+      Deno.errors.NotFound,
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
 });

@@ -3,6 +3,7 @@
 import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import * as path from "@std/path";
 import { triageFirefoxBrowserTests } from "./triage_firefox_browser_tests.ts";
+import { createTestRuntimeLock } from "./test_runtime_lock.ts";
 
 type FixtureFile = {
   path: string;
@@ -50,10 +51,12 @@ async function writeFixtureCollection(
 
   await writeJson(path.join(collectionDir, "manifest.json"), {
     schemaVersion: 1,
+    mode: "candidate",
     source: {
       repository: "Floorp-Projects/Floorp-Runtime",
       ref: "fixture-ref",
       commit: "fixture-commit",
+      tree: "fixture-tree",
     },
     files: collectionFiles,
   });
@@ -75,7 +78,7 @@ function testByPath(
   return entry;
 }
 
-Deno.test("triageFirefoxBrowserTests classifies allowlisted, quarantined, direct, runner-shim, and unsupported candidates", async () => {
+Deno.test("triageFirefoxBrowserTests classifies locked, quarantined, direct, runner-shim, and unsupported candidates", async () => {
   const dir = await Deno.makeTempDir();
   try {
     const allowedPath = "browser/base/content/test/general/browser_allowed.js";
@@ -111,10 +114,8 @@ Deno.test("triageFirefoxBrowserTests classifies allowlisted, quarantined, direct
           "add_task(async function unsupported() { await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {}); await BrowserTestUtils.waitForContentEvent(gBrowser.selectedBrowser, 'click'); });\n",
       },
     ]);
-    const allowlistPath = path.join(dir, "allowlist.json");
     const quarantinePath = path.join(dir, "quarantine.json");
     const outputDir = path.join(dir, "triage");
-    await writeJson(allowlistPath, [{ path: allowedPath }]);
     await writeJson(quarantinePath, [
       {
         path: quarantinedPath,
@@ -128,9 +129,17 @@ Deno.test("triageFirefoxBrowserTests classifies allowlisted, quarantined, direct
 
     const manifest = await triageFirefoxBrowserTests({
       collectionDir,
-      allowlistPath,
       quarantinePath,
       outputDir,
+      runtimeLock: createTestRuntimeLock({
+        tests: [{
+          path: allowedPath,
+          manifest: "browser/base/content/test/general/browser.toml",
+          expectedTasks: 1,
+          headPolicy: "harness-replaced",
+          supportPolicy: "locked-not-loaded",
+        }],
+      }),
     });
 
     assertEquals(manifest.counts.candidates, 5);
@@ -177,6 +186,7 @@ Deno.test("triageFirefoxBrowserTests classifies allowlisted, quarantined, direct
       path.join(outputDir, "triage.json"),
     );
     assertStringIncludes(triageJson, "fixture-commit");
+    assertEquals(Object.hasOwn(JSON.parse(triageJson), "generatedAt"), false);
     const report = await Deno.readTextFile(path.join(outputDir, "TRIAGE.md"));
     assertStringIncludes(report, "Firefox Browser Test Triage");
     assertStringIncludes(report, unsupportedPath);
@@ -195,9 +205,7 @@ Deno.test("triageFirefoxBrowserTests rejects quarantine entries with missing req
         source: "add_task(function popup() { OpenBrowserWindow({}); });\n",
       },
     ]);
-    const allowlistPath = path.join(dir, "allowlist.json");
     const quarantinePath = path.join(dir, "quarantine.json");
-    await writeJson(allowlistPath, []);
     await writeJson(quarantinePath, [
       {
         path: upstreamPath,
@@ -212,9 +220,9 @@ Deno.test("triageFirefoxBrowserTests rejects quarantine entries with missing req
       () =>
         triageFirefoxBrowserTests({
           collectionDir,
-          allowlistPath,
           quarantinePath,
           outputDir: path.join(dir, "triage"),
+          runtimeLock: createTestRuntimeLock(),
         }),
       Error,
       "reason is required",
@@ -224,7 +232,7 @@ Deno.test("triageFirefoxBrowserTests rejects quarantine entries with missing req
   }
 });
 
-Deno.test("triageFirefoxBrowserTests rejects quarantine paths missing from candidates", async () => {
+Deno.test("triageFirefoxBrowserTests ignores quarantine paths absent from a scoped candidate collection", async () => {
   const dir = await Deno.makeTempDir();
   try {
     const collectionDir = await writeFixtureCollection(dir, [
@@ -233,9 +241,7 @@ Deno.test("triageFirefoxBrowserTests rejects quarantine paths missing from candi
         source: "add_task(function direct() { ok(true); });\n",
       },
     ]);
-    const allowlistPath = path.join(dir, "allowlist.json");
     const quarantinePath = path.join(dir, "quarantine.json");
-    await writeJson(allowlistPath, []);
     await writeJson(quarantinePath, [
       {
         path: "browser/base/content/test/general/browser_missing.js",
@@ -247,17 +253,14 @@ Deno.test("triageFirefoxBrowserTests rejects quarantine paths missing from candi
       },
     ]);
 
-    await assertRejects(
-      () =>
-        triageFirefoxBrowserTests({
-          collectionDir,
-          allowlistPath,
-          quarantinePath,
-          outputDir: path.join(dir, "triage"),
-        }),
-      Error,
-      "missing from browser-chrome candidates",
-    );
+    const manifest = await triageFirefoxBrowserTests({
+      collectionDir,
+      quarantinePath,
+      outputDir: path.join(dir, "triage"),
+      runtimeLock: createTestRuntimeLock(),
+    });
+    assertEquals(manifest.counts.candidates, 1);
+    assertEquals(manifest.counts.classifications.quarantined, 0);
   } finally {
     await Deno.remove(dir, { recursive: true });
   }
@@ -273,9 +276,7 @@ Deno.test("triageFirefoxBrowserTests rejects duplicate quarantine paths", async 
         source: "add_task(function popup() { OpenBrowserWindow({}); });\n",
       },
     ]);
-    const allowlistPath = path.join(dir, "allowlist.json");
     const quarantinePath = path.join(dir, "quarantine.json");
-    await writeJson(allowlistPath, []);
     await writeJson(quarantinePath, [
       {
         path: upstreamPath,
@@ -299,9 +300,9 @@ Deno.test("triageFirefoxBrowserTests rejects duplicate quarantine paths", async 
       () =>
         triageFirefoxBrowserTests({
           collectionDir,
-          allowlistPath,
           quarantinePath,
           outputDir: path.join(dir, "triage"),
+          runtimeLock: createTestRuntimeLock(),
         }),
       Error,
       "Duplicate quarantined Firefox test path",

@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import * as path from "@std/path";
-import { collectBrowserTestResultsFromPrefs } from "./browser_test_collector.ts";
+import {
+  type BrowserTestResult,
+  collectBrowserTestResultsFromPrefs,
+} from "./browser_test_collector.ts";
 
 type TestState = {
   status: "running" | "done" | "error";
-  results: Array<{
-    file: string;
-    ok: boolean;
-    durationMs: number;
-    mode: "import" | "runAllTests" | "mozillaTasks";
-  }>;
+  results: BrowserTestResult[];
   discoveredFiles?: string[];
   runId?: string;
   error?: string;
@@ -41,6 +39,18 @@ Deno.test("collectBrowserTestResultsFromPrefs returns matching runId done state"
           ok: true,
           durationMs: 7,
           mode: "mozillaTasks",
+          source: "downloaded-firefox",
+          upstreamPath:
+            "browser/base/content/test/general/browser_bug537474.js",
+          manifestPath: "browser/base/content/test/general/browser.toml",
+          tasks: [
+            {
+              index: 1,
+              name: "test_bug537474",
+              ok: true,
+              durationMs: 6,
+            },
+          ],
         },
       ],
     };
@@ -59,24 +69,48 @@ Deno.test("collectBrowserTestResultsFromPrefs returns matching runId done state"
   }
 });
 
-Deno.test("collectBrowserTestResultsFromPrefs ignores stale runId results", async () => {
+Deno.test("collectBrowserTestResultsFromPrefs rejects a matching error promptly", async () => {
   const dir = await Deno.makeTempDir();
   try {
     const prefsPath = path.join(dir, "prefs.js");
     await Deno.writeTextFile(
       prefsPath,
       encodePrefState({
-        status: "done",
+        status: "error",
+        runId: "fresh-run",
+        discoveredFiles: [],
+        results: [],
+        error: "correlated bootstrap failure",
+      }),
+    );
+
+    await assertRejects(
+      () =>
+        collectBrowserTestResultsFromPrefs(
+          200,
+          "fresh-run",
+          prefsPath,
+        ),
+      Error,
+      "fatal error: correlated bootstrap failure",
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("collectBrowserTestResultsFromPrefs ignores a stale mismatched error until fresh done", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const prefsPath = path.join(dir, "prefs.js");
+    await Deno.writeTextFile(
+      prefsPath,
+      encodePrefState({
+        status: "error",
         runId: "stale-run",
         discoveredFiles: ["browser-features/chrome/test/stale.test.js"],
-        results: [
-          {
-            file: "browser-features/chrome/test/stale.test.js",
-            ok: true,
-            durationMs: 1,
-            mode: "import",
-          },
-        ],
+        results: [],
+        error: "stale failure must be ignored",
       }),
     );
 
@@ -115,6 +149,54 @@ Deno.test("collectBrowserTestResultsFromPrefs ignores stale runId results", asyn
       "browser-features/chrome/test/fresh.test.js",
     );
     assertEquals(collection.results[0]?.mode, "mozillaTasks");
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("collectBrowserTestResultsFromPrefs ignores a stale mismatched error until fresh error", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const prefsPath = path.join(dir, "prefs.js");
+    await Deno.writeTextFile(
+      prefsPath,
+      encodePrefState({
+        status: "error",
+        runId: "stale-run",
+        discoveredFiles: [],
+        results: [],
+        error: "stale failure must be ignored",
+      }),
+    );
+
+    const writer = (async () => {
+      await sleep(25);
+      await Deno.writeTextFile(
+        prefsPath,
+        encodePrefState({
+          status: "error",
+          runId: "fresh-run",
+          discoveredFiles: [],
+          results: [],
+          error: "fresh correlated failure",
+        }),
+      );
+    })();
+
+    try {
+      await assertRejects(
+        () =>
+          collectBrowserTestResultsFromPrefs(
+            2500,
+            "fresh-run",
+            prefsPath,
+          ),
+        Error,
+        "fatal error: fresh correlated failure",
+      );
+    } finally {
+      await writer;
+    }
   } finally {
     await Deno.remove(dir, { recursive: true });
   }

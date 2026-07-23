@@ -30,15 +30,19 @@ Small tests are good candidates when they:
   mochitest harness features;
 - can run as a module after being renamed to `*.test.js` or `*.test.ts`.
 
-If the raw upstream file can run unchanged, add it to
-`firefox-downloaded/allowlist.json`. CI collects the raw files into
-`_dist/firefox-tests/files/`, generates ignored wrappers under
-`firefox-downloaded/generated/`, and runs those wrappers through the normal
-Floorp test runner.
+If a raw upstream file can run unchanged, add it through the reviewed refresh
+of the repository-root `floorp-runtime.lock.json`. The lock is the sole
+authority for the executable tests, manifests, support material, preferences,
+task counts, Runtime source identity, and native Runtime artifacts. CI verifies
+that exact closure, collects it into `_dist/firefox-tests/files/`, generates
+ignored wrappers under `firefox-downloaded/generated/`, and runs those wrappers
+through the normal Floorp test runner.
 
 Downloaded candidates that are useful but not ready for CI should be tracked in
 `firefox-downloaded/quarantine.json` and reviewed through
-`deno task firefox-tests:triage-browser` after collection.
+`deno task firefox-tests:triage-browser` after a static `--candidate`
+collection. Candidate collections are bounded to the lock's existing material
+closure and cannot be prepared or executed.
 
 When copying or closely adapting upstream Firefox test code under
 `firefox-imported/`:

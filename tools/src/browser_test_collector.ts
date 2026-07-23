@@ -21,6 +21,16 @@ export interface BrowserTestResult {
   ok: boolean;
   durationMs: number;
   mode: "import" | "runAllTests" | "mozillaTasks";
+  source?: "downloaded-firefox";
+  upstreamPath?: string;
+  manifestPath?: string;
+  tasks?: Array<{
+    index: number;
+    name: string;
+    ok: boolean;
+    durationMs: number;
+    error?: string;
+  }>;
   error?: string;
   timedOut?: boolean;
 }

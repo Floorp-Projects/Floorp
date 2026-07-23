@@ -33,6 +33,19 @@ type RegisteredTask = {
   fn: TaskFunction;
 };
 
+type TrackedTabRemoval = {
+  tab: unknown;
+  gBrowser: Record<string, unknown>;
+};
+
+export interface MozillaTaskResult {
+  index: number;
+  name: string;
+  ok: boolean;
+  durationMs: number;
+  error?: string;
+}
+
 const GLOBAL_NAMES: GlobalName[] = [
   "add_task",
   "registerCleanupFunction",
@@ -207,11 +220,8 @@ function mostRecentBrowserWindow(
   globals: Record<string, unknown>,
 ): BrowserChromeWindowLike {
   const services = servicesFromGlobals(globals);
-  const maybeRecentWindow = waiveXrays(
-    services.wm?.getMostRecentBrowserWindow?.() ??
-      services.wm?.getMostRecentWindow("navigator:browser"),
-    globals,
-  );
+  const maybeRecentWindow = services.wm?.getMostRecentBrowserWindow?.() ??
+    services.wm?.getMostRecentWindow("navigator:browser");
   if (isHealthyBrowserWindow(maybeRecentWindow, globals)) {
     return maybeRecentWindow as BrowserChromeWindowLike;
   }
@@ -220,7 +230,7 @@ function mostRecentBrowserWindow(
   let fallbackWindow: BrowserChromeWindowLike | undefined;
   if (enumerator) {
     while (enumerator.hasMoreElements()) {
-      const maybeWindow = waiveXrays(enumerator.getNext(), globals);
+      const maybeWindow = enumerator.getNext();
       if (isHealthyBrowserWindow(maybeWindow, globals)) {
         fallbackWindow = maybeWindow as BrowserChromeWindowLike;
       }
@@ -263,6 +273,21 @@ function isHealthyGBrowser(
     return true;
   }
   return isRecord(browserForTab(gBrowser, gBrowser.selectedTab, globals));
+}
+
+function healthyGBrowserForMutation(
+  globals: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  const globalGBrowser = globals.gBrowser;
+  if (isHealthyGBrowser(globalGBrowser, globals) && isRecord(globalGBrowser)) {
+    return globalGBrowser;
+  }
+
+  const browserWindow = mostRecentBrowserWindow(globals);
+  const windowGBrowser = browserWindow.gBrowser;
+  return isHealthyGBrowser(windowGBrowser, globals) && isRecord(windowGBrowser)
+    ? windowGBrowser
+    : undefined;
 }
 
 function waiveXrays(
@@ -345,6 +370,54 @@ function tabListIncludes(
   globals: Record<string, unknown>,
 ): boolean {
   return tabs.some((candidate) => sameTab(candidate, tab, globals));
+}
+
+function trackTabRemoval(
+  trackedRemovals: TrackedTabRemoval[],
+  tab: unknown,
+  gBrowser: Record<string, unknown>,
+): void {
+  if (
+    trackedRemovals.some((tracked) =>
+      Object.is(tracked.tab, tab) && Object.is(tracked.gBrowser, gBrowser)
+    )
+  ) {
+    return;
+  }
+  trackedRemovals.push({ tab, gBrowser });
+}
+
+async function drainTrackedTabRemovals(
+  trackedRemovals: TrackedTabRemoval[],
+): Promise<string[]> {
+  const failures: string[] = [];
+  const pending = trackedRemovals.splice(0);
+  for (const [index, tracked] of pending.entries()) {
+    try {
+      await waitForCondition(
+        () => {
+          const absentFromBrowser = !tabList(tracked.gBrowser).some((tab) =>
+            Object.is(tab, tracked.tab)
+          );
+          const tabRecord = isRecord(tracked.tab) ? tracked.tab : undefined;
+          const disconnected = tabRecord &&
+              typeof tabRecord.isConnected === "boolean"
+            ? tabRecord.isConnected === false
+            : true;
+          return absentFromBrowser && disconnected;
+        },
+        "BrowserTestUtils expected complete tab removal",
+        10000,
+      );
+    } catch (error) {
+      failures.push(
+        `tab removal ${index + 1}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+  return failures;
 }
 
 function browserForTab(
@@ -874,11 +947,7 @@ function makeLoadOptions(
   extraOptions: Record<string, unknown> = {},
 ): Record<string, unknown> {
   const services = servicesFromGlobals(globals);
-  const options: Record<string, unknown> = {
-    inBackground: false,
-    skipAnimation: true,
-    ...extraOptions,
-  };
+  const options: Record<string, unknown> = { ...extraOptions };
   if (!("triggeringPrincipal" in options)) {
     const principal = services.scriptSecurityManager?.getSystemPrincipal();
     if (principal) {
@@ -900,7 +969,7 @@ async function waitForNewTab(
     );
     return Boolean(newTab);
   }, "BrowserTestUtils expected a new tab");
-  return waiveXrays(newTab, globals);
+  return newTab;
 }
 
 function addTabCompat(
@@ -909,7 +978,7 @@ function addTabCompat(
   maybeOptions: unknown,
   globals: Record<string, unknown>,
 ): unknown {
-  const gBrowser = waiveXrays(gBrowserValue, globals);
+  const gBrowser = gBrowserValue;
   if (!isRecord(gBrowser) || typeof gBrowser.addTab !== "function") {
     throw new Error("BrowserTestUtils.addTab requires a gBrowser");
   }
@@ -921,12 +990,9 @@ function addTabCompat(
     ? urlOrOptions
     : {};
   const previousTabs = tabList(gBrowser);
-  const returnedTab = waiveXrays(
-    Reflect.apply(gBrowser.addTab, gBrowser, [
-      url,
-      makeLoadOptions(globals, optionsInput),
-    ]),
-    globals,
+  const returnedTab = gBrowser.addTab(
+    url,
+    makeLoadOptions(globals, optionsInput),
   );
   if (returnedTab) {
     return returnedTab;
@@ -936,7 +1002,7 @@ function addTabCompat(
     !tabListIncludes(previousTabs, tab, globals)
   );
   if (newTab) {
-    return waiveXrays(newTab, globals);
+    return newTab;
   }
 
   throw new Error(
@@ -950,7 +1016,7 @@ async function openNewForegroundTabCompat(
   waitForLoad: unknown,
   globals: Record<string, unknown>,
 ): Promise<unknown> {
-  const gBrowser = waiveXrays(gBrowserValue, globals);
+  const gBrowser = gBrowserValue;
   if (!isRecord(gBrowser)) {
     throw new Error(
       "BrowserTestUtils.openNewForegroundTab requires a gBrowser",
@@ -1119,10 +1185,10 @@ async function browserStoppedCompat(
 
 async function resetBrowserTabsForMozillaTask(
   globals: Record<string, unknown>,
+  trackedRemovals: TrackedTabRemoval[],
 ): Promise<void> {
-  const browserWindow = mostRecentBrowserWindow(globals);
-  const gBrowser = waiveXrays(browserWindow.gBrowser, globals);
-  if (!isRecord(gBrowser)) {
+  const gBrowser = healthyGBrowserForMutation(globals);
+  if (!gBrowser) {
     return;
   }
 
@@ -1151,10 +1217,22 @@ async function resetBrowserTabsForMozillaTask(
     ) {
       continue;
     }
-    await removeTabCompat(tab, {
-      animate: false,
-      skipPermitUnload: true,
-    }, globals);
+    removeTabCompat(
+      tab,
+      {
+        animate: false,
+        skipPermitUnload: true,
+      },
+      globals,
+      trackedRemovals,
+    );
+  }
+
+  const removalFailures = await drainTrackedTabRemovals(
+    trackedRemovals,
+  );
+  if (removalFailures.length > 0) {
+    throw new Error(removalFailures.join(" | "));
   }
 
   await waitForCondition(
@@ -1166,46 +1244,37 @@ async function resetBrowserTabsForMozillaTask(
   );
 }
 
-function ownerGlobalFromTab(
+function browserWindowFromTab(
   tab: unknown,
-  globals: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
-  const tabRecord = waiveXrays(tab, globals);
+  const tabRecord = tab;
   if (isRecord(tabRecord)) {
-    const ownerGlobal = waiveXrays(tabRecord.ownerGlobal, globals);
-    if (isRecord(ownerGlobal)) {
-      return ownerGlobal;
+    const browserWindow = tabRecord.documentGlobal || tabRecord.ownerGlobal;
+    if (isRecord(browserWindow)) {
+      return browserWindow;
     }
   }
-  const browserWindow = mostRecentBrowserWindow(globals);
-  return isRecord(browserWindow)
-    ? browserWindow as Record<string, unknown>
-    : {};
+  return undefined;
 }
 
-async function removeTabCompat(
+function removeTabCompat(
   tab: unknown,
   options: unknown,
   globals: Record<string, unknown>,
-): Promise<void> {
-  const ownerGlobal = ownerGlobalFromTab(tab, globals);
-  const gBrowser = isRecord(ownerGlobal?.gBrowser)
-    ? ownerGlobal.gBrowser
-    : mostRecentBrowserWindow(globals).gBrowser;
-  const browser = waiveXrays(gBrowser, globals);
-  if (!isRecord(browser) || typeof browser.removeTab !== "function") {
+  trackedRemovals: TrackedTabRemoval[],
+): void {
+  const browserWindow = browserWindowFromTab(tab);
+  const gBrowser = browserWindow?.gBrowser;
+  if (!isRecord(gBrowser) || typeof gBrowser.removeTab !== "function") {
     throw new Error("BrowserTestUtils.removeTab requires a removable tab");
   }
 
-  Reflect.apply(browser.removeTab, browser, [
+  gBrowser.removeTab(
     tab,
-    isRecord(options) ? options : undefined,
-  ]);
-  forgetUrlbarFocusedTab(tab, globals);
-  await waitForCondition(
-    () => !tabListIncludes(tabList(browser), tab, globals),
-    "BrowserTestUtils expected tab removal",
+    isRecord(options) ? options : {},
   );
+  trackTabRemoval(trackedRemovals, tab, gBrowser);
+  forgetUrlbarFocusedTab(tab, globals);
 }
 
 async function switchTabCompat(
@@ -1213,7 +1282,7 @@ async function switchTabCompat(
   tab: unknown,
   globals: Record<string, unknown>,
 ): Promise<unknown> {
-  const gBrowser = waiveXrays(gBrowserValue, globals);
+  const gBrowser = gBrowserValue;
   if (!isRecord(gBrowser)) {
     throw new Error("BrowserTestUtils.switchTab requires a gBrowser");
   }
@@ -1245,6 +1314,7 @@ function createTestUtils(): Record<string, unknown> {
 
 function createBrowserTestUtils(
   globals: Record<string, unknown>,
+  trackedRemovals: TrackedTabRemoval[],
 ): Record<string, unknown> {
   return {
     addTab(gBrowser: unknown, urlOrOptions?: unknown, options?: unknown) {
@@ -1328,14 +1398,17 @@ function createBrowserTestUtils(
         globals,
       );
     },
-    async removeTab(tab: unknown, options?: unknown) {
-      await removeTabCompat(tab, options, globals);
+    removeTab(tab: unknown, options?: unknown): void {
+      removeTabCompat(tab, options, globals, trackedRemovals);
     },
     async switchTab(gBrowser: unknown, tab: unknown) {
       return await switchTabCompat(gBrowser, tab, globals);
     },
     async withNewTab(opening: unknown, task: unknown) {
-      const gBrowser = mostRecentBrowserWindow(globals).gBrowser;
+      const gBrowser = healthyGBrowserForMutation(globals);
+      if (!gBrowser) {
+        throw new Error("BrowserTestUtils.withNewTab requires a gBrowser");
+      }
       const tab = await openNewForegroundTabCompat(
         gBrowser,
         opening,
@@ -1343,18 +1416,34 @@ function createBrowserTestUtils(
         globals,
       );
       const browser = browserForTab(
-        waiveXrays(gBrowser, globals) as Record<string, unknown>,
+        gBrowser,
         tab,
         globals,
       );
+      let result: unknown;
+      const failures: string[] = [];
       try {
         if (typeof task === "function") {
-          return await task(browser);
+          result = await task(browser);
         }
-        return undefined;
-      } finally {
-        await removeTabCompat(tab, undefined, globals);
+      } catch (error) {
+        failures.push(error instanceof Error ? error.message : String(error));
       }
+
+      try {
+        removeTabCompat(tab, undefined, globals, trackedRemovals);
+        const removalFailures = await drainTrackedTabRemovals(
+          trackedRemovals,
+        );
+        failures.push(...removalFailures);
+      } catch (error) {
+        failures.push(error instanceof Error ? error.message : String(error));
+      }
+
+      if (failures.length > 0) {
+        throw new Error(failures.join(" | "));
+      }
+      return result;
     },
   };
 }
@@ -1455,40 +1544,12 @@ function createAssert(): Record<string, unknown> {
   };
 }
 
-function createGBrowserCompat(
-  rawGBrowser: unknown,
-  globals: Record<string, unknown>,
-): unknown {
-  const waivedGBrowser = waiveXrays(rawGBrowser, globals);
-  if (!isRecord(waivedGBrowser)) {
-    return waivedGBrowser;
-  }
-
-  return new Proxy(waivedGBrowser, {
-    get(target, property, receiver) {
-      const value = Reflect.get(target, property, receiver);
-
-      if (property === "tabs" && isIterable(value)) {
-        return Array.from(value, (tab) => waiveXrays(tab, globals));
-      }
-
-      if (typeof value === "function") {
-        return (...args: unknown[]) =>
-          waiveXrays(Reflect.apply(value, target, args), globals);
-      }
-
-      return waiveXrays(value, globals);
-    },
-    set(target, property, value, receiver) {
-      return Reflect.set(target, property, value, receiver);
-    },
-  });
-}
-
 export class MozillaTaskContext {
   readonly #file: string;
   readonly #tasks: RegisteredTask[] = [];
+  readonly #taskResults: MozillaTaskResult[] = [];
   readonly #cleanups: CleanupFunction[] = [];
+  readonly #trackedTabRemovals: TrackedTabRemoval[] = [];
   readonly #previous = new Map<GlobalName, PreviousGlobal>();
   #installed = false;
 
@@ -1498,6 +1559,10 @@ export class MozillaTaskContext {
 
   get taskCount(): number {
     return this.#tasks.length;
+  }
+
+  get taskResults(): readonly MozillaTaskResult[] {
+    return this.#taskResults;
   }
 
   install(): void {
@@ -1515,23 +1580,29 @@ export class MozillaTaskContext {
 
     if (usesMozillaBorrowedStyle(this.#file)) {
       const browserWindow = mostRecentBrowserWindow(globals);
-      if (browserWindow.gBrowser) {
-        globals.gBrowser = createGBrowserCompat(
-          browserWindow.gBrowser,
-          globals,
-        );
+      if (
+        !isHealthyGBrowser(globals.gBrowser, globals) &&
+        browserWindow.gBrowser
+      ) {
+        globals.gBrowser = browserWindow.gBrowser;
       }
-      if (browserWindow.gBrowserInit) {
-        globals.gBrowserInit = waiveXrays(browserWindow.gBrowserInit, globals);
+      if (
+        !isRecord(waiveXrays(globals.gBrowserInit, globals)) &&
+        browserWindow.gBrowserInit
+      ) {
+        globals.gBrowserInit = browserWindow.gBrowserInit;
       }
-      if (browserWindow.BrowserCommands) {
-        globals.BrowserCommands = waiveXrays(
-          browserWindow.BrowserCommands,
-          globals,
-        );
+      if (
+        !isRecord(waiveXrays(globals.BrowserCommands, globals)) &&
+        browserWindow.BrowserCommands
+      ) {
+        globals.BrowserCommands = browserWindow.BrowserCommands;
       }
-      if (browserWindow.gURLBar) {
-        globals.gURLBar = waiveXrays(browserWindow.gURLBar, globals);
+      if (
+        !isRecord(waiveXrays(globals.gURLBar, globals)) &&
+        browserWindow.gURLBar
+      ) {
+        globals.gURLBar = browserWindow.gURLBar;
       }
     }
 
@@ -1595,7 +1666,10 @@ export class MozillaTaskContext {
 
     globals.Assert = createAssert();
     globals.TestUtils = createTestUtils();
-    globals.BrowserTestUtils = createBrowserTestUtils(globals);
+    globals.BrowserTestUtils = createBrowserTestUtils(
+      globals,
+      this.#trackedTabRemovals,
+    );
     globals.makeURI = (uri: string): unknown => {
       const services = servicesFromGlobals(globals);
       if (!services.io) {
@@ -1629,13 +1703,15 @@ export class MozillaTaskContext {
     this.#installed = false;
   }
 
-  async runTasks(): Promise<void> {
+  async runTasks(): Promise<readonly MozillaTaskResult[]> {
     const failures: string[] = [];
+    this.#taskResults.length = 0;
     let setupOk = true;
     if (usesMozillaBorrowedStyle(this.#file)) {
       try {
         await resetBrowserTabsForMozillaTask(
           globalThis as Record<string, unknown>,
+          this.#trackedTabRemovals,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -1645,14 +1721,53 @@ export class MozillaTaskContext {
     }
 
     if (setupOk) {
-      for (const task of this.#tasks) {
+      for (const [taskIndex, task] of this.#tasks.entries()) {
+        const startedAtMs = Date.now();
+        (globalThis as Record<string, unknown>).__NORA_TEST_PROGRESS__ = {
+          moduleName: this.#file,
+          testName: task.name,
+          status: "running",
+          index: taskIndex + 1,
+          total: this.#tasks.length,
+          startedAtMs,
+        };
+        let taskFailure: string | undefined;
         try {
           await task.fn();
         } catch (error) {
-          const message = error instanceof Error
-            ? error.message
-            : String(error);
-          failures.push(`${task.name}: ${message}`);
+          taskFailure = error instanceof Error ? error.message : String(error);
+        } finally {
+          const removalFailures = await drainTrackedTabRemovals(
+            this.#trackedTabRemovals,
+          );
+          if (removalFailures.length > 0) {
+            taskFailure = [
+              taskFailure,
+              ...removalFailures.map((failure) => `post-task ${failure}`),
+            ].filter((failure): failure is string => Boolean(failure)).join(
+              " | ",
+            );
+          }
+
+          this.#taskResults.push({
+            index: taskIndex + 1,
+            name: task.name,
+            ok: taskFailure === undefined,
+            durationMs: Math.max(0, Date.now() - startedAtMs),
+            error: taskFailure,
+          });
+          if (taskFailure !== undefined) {
+            failures.push(`${task.name}: ${taskFailure}`);
+          }
+
+          (globalThis as Record<string, unknown>).__NORA_TEST_PROGRESS__ = {
+            moduleName: this.#file,
+            testName: task.name,
+            status: "done",
+            index: taskIndex + 1,
+            total: this.#tasks.length,
+            startedAtMs,
+          };
         }
       }
     }
@@ -1665,6 +1780,8 @@ export class MozillaTaskContext {
         `${this.#file} Mozilla task failures: ${failures.join(" | ")}`,
       );
     }
+
+    return this.taskResults;
   }
 
   async cleanupAfterImportOnly(): Promise<void> {
@@ -1693,6 +1810,13 @@ export class MozillaTaskContext {
       }
       ordinal++;
     }
+
+    const removalFailures = await drainTrackedTabRemovals(
+      this.#trackedTabRemovals,
+    );
+    failures.push(
+      ...removalFailures.map((failure) => `post-cleanup ${failure}`),
+    );
 
     return failures;
   }
