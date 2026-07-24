@@ -7,6 +7,7 @@ import {
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
+import { IconPickerField } from "./components/IconPickerField.tsx";
   TForm,
   TFormItem,
 } from "../../../common/modal-parent/utils/type.ts";
@@ -281,6 +282,31 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   portalContainer,
                 )}
               </div>
+            )}
+          />
+        </div>
+      );
+
+    case "icon-picker":
+      return (
+        <div className="mb-4 w-full">
+          {item.label && (
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+              {item.label}
+            </label>
+          )}
+          <Controller
+            name={item.id}
+            control={control}
+            defaultValue={String(item.value || "")}
+            rules={{ required: item.required }}
+            render={({ field: { onChange, value } }) => (
+              <IconPickerField
+                options={item.options ?? []}
+                value={String(value ?? "")}
+                placeholder={item.placeholder}
+                onChange={onChange}
+              />
             )}
           />
         </div>

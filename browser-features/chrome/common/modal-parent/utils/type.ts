@@ -7,7 +7,11 @@ export interface TFormItem {
     | "dropdown"
     | "checkbox"
     | "radio"
-    | "url";
+    | "url"
+    /* Searchable grid over the bundled Material Symbols and Lucide sets.
+       options are ignored; the picker supplies its own icons and hands
+       back a self-contained data: URI. */
+    | "icon-picker";
   id: string;
   label?: string;
   value?: string | number;
