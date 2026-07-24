@@ -1,0 +1,705 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== Row 1: a stack's member tabs are represented by the chip alone.
+   Everything below is scoped to groups tab-stacks explicitly owns
+   ([data-floorp-stack]); split-view's groups render natively. ===== */
+/* visibility:collapse only removes width in XUL box layout; the strip
+   is flexbox, where it acts like plain hidden and the invisible tabs
+   still claim their flex size (a giant blank gap in sparse strips).
+   Zero every box metric instead — the tabs stay rendered for Firefox's
+   tab machinery but take no space. */
+#tabbrowser-tabs tab-group[data-floorp-stack] > .tabbrowser-tab {
+  visibility: collapse !important;
+  flex: 0 0 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Group chip styled as a normal tab: the stack's current tab title with the
+   count on the right. The native group color stays as the marker. */
+tab-group[data-floorp-stack] .tab-group-label-container {
+  align-items: center !important;
+}
+
+/* tab-group is display:contents — it has no box, so sizing rules on it
+   do nothing and its children participate directly in the strip
+   flexbox. The chip's real box is the label container: give IT a tab's
+   flex weight and width envelope (an uncapped max-width made it grow to
+   eat the free strip space while the centered label stayed small — the
+   chip appeared to float in blank space). */
+/* #tabbrowser-tabs prefix is load-bearing: leptonChrome.css carries
+   `#tabbrowser-tabs[orient="horizontal"] .tab-group-label-container
+   { margin-inline-start: 4px !important }` — an id-level !important that
+   outranks a plain tab-group selector, so the chip sat 4px right of the
+   previous tab's background edge with a dead strip between them. */
+#tabbrowser-tabs tab-group[data-floorp-stack] > .tab-group-label-container {
+  /* Exactly a tab's flex: `flex: 100 100` (basis 0) is what .tabbrowser-tab
+     uses, so the chip grows and shrinks in lockstep with its neighbours.
+     Basis auto sized the chip to its full title text instead — a fresh
+     stack (or one that just adopted a tab with a long title) rendered up
+     to twice as wide as the tabs beside it. */
+  flex: 100 100 0% !important;
+  min-width: var(--tab-min-width, 76px) !important;
+  /* NO !important on max-width — deliberately. When a drag starts, native
+     freezes every strip cell with an INLINE max-width at its current
+     width, then pulls the dragged tab out of flow. An !important here
+     beat that freeze, making the chip the only cell still free to flex —
+     it absorbed the whole vacated width and ballooned mid-drag. Tabs'
+     own max-width is plain for exactly this reason. */
+  max-width: var(--tab-max-width, 225px);
+  align-items: stretch !important;
+  /* Vertical seat comes from pack="start" (set in index.ts): XUL layout
+     attributes are presentation hints that author CSS cannot override. */
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+}
+
+/* Close button (injected): absolute overlay at the chip's left edge —
+   same side as the tabs' favicon-hover close, and being out of flow it
+   can never change the chip's size on hover. Closes the whole stack. */
+tab-group[data-floorp-stack] .floorp-stack-close {
+  display: none;
+  position: absolute;
+  /* 6px + the chip's 1px border = the tabs' 7px favicon offset. */
+  inset-inline-start: 6px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+  border-radius: 3px;
+  background-color: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.9));
+  -moz-context-properties: fill;
+  fill: currentColor;
+  cursor: pointer;
+}
+
+/* Chip glyph occupies the X's exact box and yields to it on hover —
+   the same icon<->close swap tabs get. */
+tab-group[data-floorp-stack] .floorp-stack-icon {
+  position: absolute;
+  /* 6px + the chip's 1px border = the tabs' 7px favicon offset. */
+  inset-inline-start: 6px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+  opacity: 0.75;
+  pointer-events: none;
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+tab-group[data-floorp-stack] .tab-group-label-container:hover .floorp-stack-icon {
+  display: none;
+}
+
+tab-group[data-floorp-stack] .tab-group-label-container:hover .floorp-stack-close {
+  display: flex;
+}
+
+tab-group[data-floorp-stack] .floorp-stack-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Plain tab groups: no connecting lines anywhere — membership reads as
+   a transparent wash of the group color on each member tab instead
+   (the drawn lines looked wrong against the compact theme). */
+#tabbrowser-tabs tab-group .tab-group-label-container::after {
+  display: none !important;
+}
+
+#tabbrowser-tabs tab-group .tabbrowser-tab .tab-group-line {
+  display: none !important;
+}
+
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tabbrowser-tab .tab-background {
+  background-color: color-mix(in srgb, var(--tab-group-color-invert, currentColor) 16%, transparent) !important;
+}
+
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tabbrowser-tab[visuallyselected] .tab-background {
+  background-color: color-mix(in srgb, var(--tab-group-color-invert, currentColor) 32%, transparent) !important;
+}
+
+/* Native label pill on plain groups sat ~4px low, like the chip used
+   to — same seat as the tabs. Sized so an unnamed group is a tidy square
+   around the glyph rather than a bare colour swatch. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label {
+  margin-top: 1px !important;
+  margin-bottom: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px;
+  min-height: 20px;
+  padding: 2px 5px !important;
+  box-sizing: border-box;
+  /* Native caps the label at 10em and relies on text-overflow — which
+     inline-flex display silently disables (the text becomes a flex item),
+     so long typed names hard-clipped mid-letter. Grow to the same cap as
+     a stack chip instead; the fade below handles the excess. */
+  max-width: var(--tab-max-width, 225px) !important;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Native collapsed/active labels grow a bright 1px outline ring that
+     reads as a misshapen border on the icon square — the member tabs
+     already show selection, so the ring adds nothing here. */
+  outline: none !important;
+}
+
+/* Fade the tail like a tab label — but only when the text actually
+   overflows (index.ts marks that): the label box hugs its content, so an
+   unconditional fade would eat the end of every short name. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack])
+  .tab-group-label[data-floorp-cropped] {
+  mask-image: linear-gradient(to left, transparent, black 1.5em);
+}
+
+/* Same layers glyph as the stack chips, so both group kinds read as tab
+   containers at a glance. Mask + currentColor keeps it legible on any
+   group colour. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  background-color: currentColor;
+  mask-image: url('data:image/svg+xml;utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/%3E%3Cpath d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/%3E%3Cpath d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/%3E%3C/svg%3E');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* Unnamed group: the label holds a zero-width space rather than nothing, so
+   :empty never matches it and the 4px flex gap still reserves room for that
+   invisible character — which is what made the chip wider than it is tall.
+   index.ts marks these with data-floorp-unnamed; here it becomes a true square
+   with the glyph centred in it. */
+#tabbrowser-tabs tab-group[data-floorp-unnamed]:not([data-floorp-stack])
+  .tab-group-label {
+  min-width: 24px;
+  padding: 2px !important;
+  gap: 0;
+  justify-content: center;
+}
+
+/* A collapsed group holding the active tab shows a "+N" badge for the tabs you
+   cannot see. Stock leaves it on the bar background with a coloured underline,
+   which reads as a stray mark beside the chip. Paint it in the group colour so
+   the label and the count are one continuous cell. */
+/* Colour the whole cell rather than a pill floating inside it. The label and
+   the count each sit in their own container, so paint those the full height of
+   the row and let the label itself go transparent. Both use the same
+   light-dark() expression stock uses for the label — hardcoding
+   --tab-group-color made the count noticeably darker than the chip in dark
+   mode, where that expression resolves to the inverted variant instead. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label-container,
+#tabbrowser-tabs tab-group:not([data-floorp-stack])
+  .tab-group-overflow-count-container {
+  /* A wash of the group colour, not the solid native cell: the solid
+     bright invert forced dark text (unreadable against the compact
+     theme, and the dark colour inherited into member-tab titles on the
+     dark wash). 32% matches a selected member's wash — the label reads
+     as the strongest cell of its group, and the strip's normal light
+     text works on it. */
+  background-color: color-mix(
+    in srgb,
+    light-dark(var(--tab-group-color), var(--tab-group-color-invert)) 32%,
+    transparent
+  );
+  align-items: center;
+  justify-content: center;
+  min-height: var(--floorp-tab-height, var(--tab-min-height, 30px));
+  padding: 0 !important;
+  /* Stock puts a 4px margin on the left of the label container and nothing on
+     the right, which reads as the cell being padded on one side only. */
+  margin: 0 !important;
+}
+
+/* The container carries the colour now, so the label must not paint its own —
+   two stacked backgrounds is what made the icon box read as a separate tile. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label {
+  background-color: transparent !important;
+  margin: 0 !important;
+  min-height: 0;
+}
+
+/* No group-coloured text anywhere: the earlier group-level colour rule
+   resolved to Firefox's DARK text token and inherited into member-tab
+   titles sitting on the dark wash — near-black on near-black. With the
+   cell itself now a wash, the strip's normal light text works for the
+   label, the count and every member title alike; `inherit !important`
+   still overrides native's own label colour (which assumes the solid
+   cell). The glyph paints with currentColor and follows for free. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label,
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-overflow-count {
+  color: inherit !important;
+}
+
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-overflow-count {
+  padding: 0 6px 0 2px !important;
+  margin: 0 !important;
+}
+
+/* The underline is stock's group-line indicator. With the whole cell coloured
+   it has nothing left to distinguish, and just looks like an artefact. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack])
+  .tab-group-overflow-count-container::after {
+  content: none !important;
+}
+
+/* Hover reads as ONE unit. Stock's hover highlight is an element wrapped
+   around the label alone, so on a collapsed group the label half lit up
+   while the count half (a sibling cell) sat unchanged — obvious under the
+   built-in colour themes. Kill the stock label-only highlight and paint
+   both cells together: hovering anywhere on a collapsed group brightens
+   the pair; on an expanded group (no count cell) the label cell brightens
+   by itself. */
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label-hover-highlight {
+  background: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+#tabbrowser-tabs tab-group:not([data-floorp-stack]) .tab-group-label-container:hover,
+#tabbrowser-tabs tab-group[collapsed]:not([data-floorp-stack]):hover > .tab-group-label-container,
+#tabbrowser-tabs tab-group[collapsed]:not([data-floorp-stack]):hover > .tab-group-overflow-count-container {
+  background-color: color-mix(
+    in srgb,
+    light-dark(var(--tab-group-color), var(--tab-group-color-invert)) 45%,
+    transparent
+  );
+}
+
+tab-group[data-floorp-stack] .tab-group-label {
+  /* Hide the native group-name text; our ::before shows name/tab title. */
+  font-size: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border-radius: 4px !important;
+  /* Title clears the (hover-shown) close button at the left edge. */
+  padding: 0 9px 0 25px !important;
+  /* Exactly the tab's selection box: --floorp-tab-height, top-aligned. The
+     row is 2px taller than that box, so filling the row made the chip a
+     hair taller than its neighbours. */
+  min-height: var(--floorp-tab-height, var(--tab-min-height, 30px));
+  max-height: var(--floorp-tab-height, var(--tab-min-height, 30px));
+  /* Width comes from the group box (which flexes like a tab). */
+  flex: 1 1 auto !important;
+  min-width: 0;
+  max-width: none;
+  font-weight: normal !important;
+  cursor: pointer;
+  /* The group color lives in the border only: the native solid pill
+     (light --tab-group-color-invert fill + dark inverted text) stood
+     out too much against the compact theme. Fill and text match normal
+     tabs; inner content (title + count) unchanged. */
+  background-color: color-mix(in srgb, currentColor 8%, transparent) !important;
+  color: inherit !important;
+  border: 1px solid var(--tab-group-color-invert, currentColor) !important;
+  /* Top-aligned with the tab backgrounds; the container's
+     justify-content: flex-start (above) does the work. */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Active stack: the selected tab lives inside this group. Firefox marks
+   the group [hasactivetab], so no JS is needed. Match a selected tab's
+   22% currentColor wash exactly, and brighten the group-colour border, so
+   an active stack reads with the same visual language as a selected tab. */
+#tabbrowser-tabs tab-group[data-floorp-stack][hasactivetab] .tab-group-label {
+  background-color: color-mix(in srgb, currentColor 22%, transparent) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--tab-group-color-invert, currentColor) 85%,
+    white 15%
+  ) !important;
+}
+
+/* No native 2px group underline beneath the chip. */
+tab-group[data-floorp-stack] .tab-group-label-container::after {
+  display: none !important;
+}
+
+/* No separator lines flanking a stack chip — each tab paints 1px lines
+   at both edges via .tab-stack::before/::after right-borders; next to
+   the chip's colored border they read as doubled lines. */
+.tabbrowser-tab:has(+ tab-group[data-floorp-stack]) .tab-stack::after,
+tab-group[data-floorp-stack] + .tabbrowser-tab .tab-stack::before {
+  border-right: none !important;
+}
+
+tab-group[data-floorp-stack] .tab-group-label::before {
+  content: attr(data-floorp-title);
+  font-size: 12px;
+  flex: 1 1 auto;
+  text-align: start;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Same overflow treatment as tab labels: fade the tail out (tabs.css
+     masks .tab-label-container with this exact gradient). A short title
+     never reaches the fade zone, so nothing changes for it. */
+  mask-image: linear-gradient(to left, transparent, black 1em);
+}
+
+tab-group[data-floorp-stack] .tab-group-label[data-floorp-count]::after {
+  content: attr(data-floorp-count);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-inline-start: auto;
+  padding-inline-start: 8px;
+}
+
+/* ===== Row 2: the stack bar ===== */
+/* Inside #navigator-toolbox the bar retracts and reveals with the rest of
+   the top chrome in zen mode — no dedicated hide rule needed. */
+/* Transparent: the toolbox paints the background, so both rows share
+   the exact same colour by construction. The strip stacks above the bar
+   so the slide-in emerges from underneath it. */
+#TabsToolbar {
+  position: relative;
+  z-index: 2;
+}
+
+#floorp-stack-bar {
+  background: transparent;
+  border-bottom: 1px solid var(--chrome-content-separator-color, rgba(0, 0, 0, 0.2));
+  padding: 0 8px;
+  /* Match row 1 exactly: a 32px row whose cells are --floorp-tab-height,
+     leaving the same 1px above/below the top row's tabs have. */
+  min-height: calc(var(--floorp-tab-height, var(--tab-min-height, 30px)) + 2px);
+  max-height: calc(var(--floorp-tab-height, var(--tab-min-height, 30px)) + 2px);
+  position: relative;
+  z-index: 1;
+  animation: floorp-stack-bar-in 0.1s ease-out;
+}
+
+@keyframes floorp-stack-bar-in {
+  from {
+    margin-top: -30px;
+    opacity: 0.4;
+  }
+  to {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+/* Same scroll-arrow containers as the tab strip. When the bar is NOT
+   overflowing the buttons stay exactly as tuned (transparent spacers —
+   the + button's alignment was measured against them). */
+#floorp-stack-bar::part(scrollbutton-up),
+#floorp-stack-bar::part(scrollbutton-down) {
+  padding-inline: 2px !important;
+  margin-inline: 0 !important;
+  border-inline: none !important;
+}
+
+/* Overflowing only: stock tabs.css gives the strip's arrows this
+   treatment keyed to #tabbrowser-arrowscrollbox, so this bar's id gets
+   none of it and fell back to bare toolkit chevrons with clipped pills
+   flush against the glyph. Scoped to [overflowing] so the tuned
+   not-overflowing spacing above is untouched. */
+#floorp-stack-bar[overflowing]::part(scrollbutton-up),
+#floorp-stack-bar[overflowing]::part(scrollbutton-down) {
+  --arrowscrollbox-scrollicon-border-radius: var(--tab-border-radius);
+  --arrowscrollbox-scrollicon-hover-background-color: var(
+    --toolbarbutton-background-color-hover
+  );
+  --arrowscrollbox-scrollicon-active-background-color: var(
+    --toolbarbutton-background-color-active
+  );
+  appearance: none;
+  fill: var(--toolbarbutton-icon-fill);
+  background-color: var(--toolbar-bgcolor);
+}
+
+/* Proxies size like top-row tabs: start wide, shrink to the tab floor,
+   and only then overflow into the scroll arrows. The explicit basis
+   matters — with basis auto the cropped labels measure near zero and
+   everything compresses without ever overflowing. */
+.floorp-stack-tab {
+  flex: 0 1 180px !important;
+  min-width: var(--tab-min-width, 76px) !important;
+  max-width: 200px;
+}
+
+/* Inline address edit: the cell eases wider and hands its space to a
+   text input; width is transitioned so it opens and closes smoothly. */
+.floorp-stack-tab {
+  transition: flex-basis 0.14s ease-out, max-width 0.14s ease-out;
+}
+
+.floorp-stack-tab[data-editing="true"] {
+  flex: 0 0 340px !important;
+  max-width: 340px !important;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.floorp-stack-url-input {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--tab-text-color, #fbfbfe);
+  font: inherit;
+  font-size: 12px;
+  padding: 0;
+}
+
+/* Rectangular cells like the top row: flush edges, no radius, full row
+   height; the hover paints the whole block. */
+.floorp-stack-tab {
+  border-radius: 0;
+  padding: 0 10px 0 6px;
+  margin-inline-end: 0;
+  /* Same box as a row-1 tab, centred in the row. */
+  align-self: center;
+  height: var(--floorp-tab-height, var(--tab-min-height, 30px));
+  cursor: default;
+  position: relative;
+}
+
+/* The top row's hover grey, as a plain rectangle. */
+.floorp-stack-tab:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* Separator lines between cells at the exact boundary, near full
+   height — same as the lines the top row draws between tabs. */
+.floorp-stack-tab::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 4px;
+  inset-block-end: 4px;
+  width: 1px;
+  background: rgba(251, 251, 254, 0.2);
+}
+
+/* No boundary line touching a filled (hovered/selected) cell — same as
+   the top row, where separators yield around the active tab. */
+.floorp-stack-tab:hover::after,
+.floorp-stack-tab[data-selected="true"]::after,
+.floorp-stack-tab:has(+ .floorp-stack-tab:hover)::after,
+.floorp-stack-tab:has(+ .floorp-stack-tab[data-selected="true"])::after {
+  background: transparent;
+}
+
+/* Drop-position indicator during proxy drags (box-shadow tracks the
+   rounded corners; ::before/::after are taken by the separators). */
+.floorp-stack-tab[data-drop-side="before"] {
+  box-shadow: inset 2px 0 0 var(--focus-outline-color, #0a84ff);
+}
+
+.floorp-stack-tab[data-drop-side="after"] {
+  box-shadow: inset -2px 0 0 var(--focus-outline-color, #0a84ff);
+}
+
+/* Row-1 insertion feedback for proxy drags is the NATIVE .tab-drop-indicator
+   (positioned by showStripDropLine in index.ts) — box-shadow edge lines were
+   unreadable beside a stack chip's coloured border. */
+
+/* Drag ghost for proxy drags (HTML node: snapshotting live XUL inside
+   the strip is flaky — same trick as the workspaces rows). */
+/* Ghost mirrors a row-2 cell: same rectangle, height, padding and type —
+   it is a tab being dragged, so it should look like one. */
+.floorpStackDragGhost {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+  box-sizing: border-box;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 10px 0 6px;
+  border: none;
+  border-radius: 0;
+  background: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.95));
+  color: var(--tab-text-color, #fbfbfe);
+  font-size: 12px;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.floorp-stack-tab[data-selected="true"] {
+  background: var(
+    --tab-selected-bgcolor,
+    var(--toolbarbutton-active-background, rgba(128, 128, 128, 0.3))
+  );
+}
+
+/* Favicon swaps to a close button on hover — same manner as row-1 tabs */
+.floorp-stack-tab-iconbox {
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 6px;
+}
+
+.floorp-stack-tab-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.floorp-stack-tab-close {
+  display: none;
+  width: 14px;
+  height: 14px;
+  padding: 1px !important;
+  margin: 1px !important;
+
+  /* The inner toolbarbutton icon renders at its natural 16px unless
+     pinned — same 12px glyph as the top row's X. */
+  & > .toolbarbutton-icon {
+    width: 12px !important;
+    height: 12px !important;
+    padding: 0 !important;
+  }
+  border-radius: 3px;
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  /* The native toolbarbutton hover paints a border/appearance; own the
+     whole thing so it matches the chip's X exactly. */
+  appearance: none !important;
+  border: none !important;
+  background-color: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.9));
+}
+
+.floorp-stack-tab-close:hover {
+  border: none !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.floorp-stack-tab:hover .floorp-stack-tab-icon {
+  display: none;
+}
+
+.floorp-stack-tab:hover .floorp-stack-tab-close {
+  display: flex;
+}
+
+.floorp-stack-tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Row-2 "+": square and full-height like the cells, no border/appearance
+   (the native toolbarbutton draws both). The label's own line box sat the
+   glyph ~2px low — line-height 1 + centring fixes that. */
+#floorp-stack-newtab {
+  appearance: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  padding: 2px 8px !important;
+  margin: 0 !important;
+  align-self: stretch !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Unchanged from the original — only the glyph's vertical seat was off. */
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#floorp-stack-newtab:hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+#floorp-stack-newtab .toolbarbutton-text,
+#floorp-stack-newtab label {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+
+/* Drag-over-chip: light the whole cell ("drop to join this stack") — set
+   by onChipDragOverHighlight in index.ts. Replaces the thin insertion
+   underline for the join gesture. */
+#tabbrowser-tabs tab-group[data-floorp-stack][data-floorp-drop-into] .tab-group-label {
+  background-color: color-mix(
+    in srgb,
+    var(--focus-outline-color, #0a84ff) 35%,
+    transparent
+  ) !important;
+  border-color: var(--focus-outline-color, #0a84ff) !important;
+}
+
+/* While the native drop target is a stack, the dragged tab must NOT show
+   the native "will join this group" underline (its .tab-group-line painted
+   in the group colour): it keys off the dragged tab's box edges, so it led
+   or trailed the chip highlight by half a tab depending on drag direction.
+   The chip highlight above is the one true join signal. The attribute is
+   maintained by the _animateTabMove wrapper in index.ts; plain groups keep
+   the native underline. */
+#tabbrowser-tabs[data-floorp-stack-droptarget] .tabbrowser-tab .tab-group-line {
+  display: none !important;
+}
+
+
+/* ===== Group colour palette: fix red + a second row ===== */
+/* Native's red swatch points at --color-red-* design tokens this runtime
+   never defines, so the swatch painted a transparent circle ("there's no
+   red!"). Define the trio. The group colour setter templates ANY name
+   into var(--tab-group-color-<name>), so the eight extra colours below
+   need nothing more than these variables (swatches injected by
+   onGroupEditorShowing in index.ts). */
+:root {
+  --color-red-70: #b3231a;
+  --color-red-20: #ff453a;
+  --color-red-0: #ffe3e0;
+
+  --tab-group-color-crimson: #881337;
+  --tab-group-color-crimson-invert: #e11d48;
+  --tab-group-color-crimson-pale: #ffe4e6;
+  --tab-group-color-amber: #b45309;
+  --tab-group-color-amber-invert: #fbbf24;
+  --tab-group-color-amber-pale: #fef3c7;
+  --tab-group-color-lime: #4d7c0f;
+  --tab-group-color-lime-invert: #a3e635;
+  --tab-group-color-lime-pale: #ecfccb;
+  --tab-group-color-teal: #0f766e;
+  --tab-group-color-teal-invert: #2dd4bf;
+  --tab-group-color-teal-pale: #ccfbf1;
+  --tab-group-color-indigo: #4338ca;
+  --tab-group-color-indigo-invert: #818cf8;
+  --tab-group-color-indigo-pale: #e0e7ff;
+  --tab-group-color-magenta: #a21caf;
+  --tab-group-color-magenta-invert: #e879f9;
+  --tab-group-color-magenta-pale: #fae8ff;
+  --tab-group-color-brown: #6b4423;
+  --tab-group-color-brown-invert: #c9915f;
+  --tab-group-color-brown-pale: #f3e5d8;
+  --tab-group-color-slate: #475569;
+  --tab-group-color-slate-invert: #94a3b8;
+  --tab-group-color-slate-pale: #e2e8f0;
+}
+
+/* Seventeen swatches wrap into a second row. Native lays the single
+   row out with space-between, which spread a part-filled second row
+   into scattered islands ("bottom row is missing some") — pack rows
+   from the start with a uniform gap instead. */
+.tab-group-editor-swatches {
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
