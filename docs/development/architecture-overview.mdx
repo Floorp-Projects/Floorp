@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "b68a377d95d9971c6f98dcb1549ba49c82a30122"
+floorp_commit: "fe772e6de397ba1d44a91c45b359629b28d63bca"
 generated: true
 ---
 # Architecture Overview
@@ -121,6 +121,7 @@ Deno task inventory comes from `deno.json` and currently lists 29 tasks. The fel
 
 CI workflows recorded in the docs inventory:
 
+- `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
 - `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
@@ -135,3 +136,5 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
+- `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`
