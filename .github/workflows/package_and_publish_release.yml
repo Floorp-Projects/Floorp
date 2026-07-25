@@ -1,79 +1,574 @@
+# SPDX-License-Identifier: MPL-2.0
+
 name: "(P) ⚠️ Package and Publish Release"
 
-on:
+'on':
   workflow_dispatch:
     inputs:
-      runtime_windows_artifact_workflow_run_id:
-        description: "The workflow run ID for the Windows runtime artifact"
-        required: false
+      runtime_workflow_run_id:
+        description: Successful Floorp-Runtime daily-build workflow run ID
+        required: true
         type: string
-      runtime_linux_artifact_workflow_run_id:
-        description: "The workflow run ID for the Linux runtime artifact"
-        required: false
+      runtime_manifest_artifact_id:
+        description: Immutable floorp-runtime-build-manifest-v2 artifact ID
+        required: true
         type: string
-      runtime_mac_artifact_workflow_run_id:
-        description: "The workflow run ID for the macOS runtime artifact"
+      validation_only:
+        description: Build, verify, and assemble without signing or publishing
         required: false
-        type: string
-      runtime_linux_aarch64_artifact_workflow_run_id:
-        description: "The workflow run ID for the Linux aarch64 runtime artifact"
-        required: false
-        type: string
+        type: boolean
+        default: false
+
 permissions:
-  contents: write
+  actions: read
+  contents: read
+
+run-name: >-
+  Package release from Runtime run ${{ inputs.runtime_workflow_run_id }}
+  ${{ inputs.validation_only && ' (validation only)' || '' }}
 
 jobs:
   check-version:
+    name: Check release version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check if version already exists
+        with:
+          persist-credentials: false
+
+      - name: Require the production Floorp default branch
+        if: ${{ inputs.validation_only != true }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data: repository} = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const expectedRef = `refs/heads/${repository.default_branch}`;
+            if (context.ref !== expectedRef) {
+              throw new Error(
+                `Production releases require ${expectedRef}, got ${context.ref}`,
+              );
+            }
+
+      - name: Reject an existing production release
+        if: ${{ inputs.validation_only != true }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           VERSION=$(jq -r .version package.json)
           if gh release view "v$VERSION"; then
-            echo "Version v$VERSION already exists. Exiting..."
+            echo "Version v$VERSION already exists. Exiting..." >&2
             exit 1
           fi
 
-  package-windows:
+      - name: Reject a production tag bound to another commit
+        if: ${{ inputs.validation_only != true }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const version = JSON.parse(
+              fs.readFileSync("package.json", "utf8"),
+            ).version;
+            if (!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(version || "")) {
+              throw new Error("package.json contains a non-canonical release version");
+            }
+            const tag = `v${version}`;
+            let object;
+            try {
+              const response = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`,
+              });
+              object = response.data.object;
+            } catch (error) {
+              if (error.status === 404) return;
+              throw error;
+            }
+            for (let depth = 0; object.type === "tag"; depth += 1) {
+              if (depth >= 8) {
+                throw new Error(`Tag ${tag} exceeds the annotated-tag depth limit`);
+              }
+              const response = await github.rest.git.getTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_sha: object.sha,
+              });
+              object = response.data.object;
+            }
+            if (object.type !== "commit" || object.sha !== context.sha) {
+              throw new Error(
+                `Existing tag ${tag} is not bound to Floorp head ${context.sha}`,
+              );
+            }
+
+  validate-runtime-provenance:
+    name: Validate Runtime provenance
     needs: check-version
+    uses: ./.github/workflows/validate-runtime-provenance.yml
+    with:
+      runtime_workflow_run_id: ${{ inputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: ${{ inputs.runtime_manifest_artifact_id }}
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  package-windows:
+    name: Package Windows x86_64
+    needs: validate-runtime-provenance
     uses: ./.github/workflows/package.yml
     with:
       platform: Windows-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
-    secrets: inherit
+      provenance_mode: >-
+        ${{ inputs.validation_only && 'stable-v2-validation' || 'stable-v2' }}
+      runtime_repository: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_repository }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_digest }}
+      floorp_head_sha: ${{ github.sha }}
+      skip_signing: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+      SIGNPATH_API_TOKEN: >-
+        ${{ ! inputs.validation_only && secrets.SIGNPATH_API_TOKEN || '' }}
 
   package-linux:
-    needs: check-version
+    name: Package Linux x86_64
+    needs: validate-runtime-provenance
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
-    secrets: inherit
-
-  package-macos:
-    needs: check-version
-    uses: ./.github/workflows/package.yml
-    with:
-      platform: macOS-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
-    secrets: inherit
+      provenance_mode: >-
+        ${{ inputs.validation_only && 'stable-v2-validation' || 'stable-v2' }}
+      runtime_repository: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_repository }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_digest }}
+      floorp_head_sha: ${{ github.sha }}
+      skip_signing: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
 
   package-linux-aarch64:
-    needs: check-version
+    name: Package Linux aarch64
+    needs: validate-runtime-provenance
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-aarch64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_aarch64_artifact_workflow_run_id }}
-    secrets: inherit
+      provenance_mode: >-
+        ${{ inputs.validation_only && 'stable-v2-validation' || 'stable-v2' }}
+      runtime_repository: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_repository }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_digest }}
+      floorp_head_sha: ${{ github.sha }}
+      skip_signing: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
 
-  publishs:
+  package-macos:
+    name: Package macOS universal
+    needs: validate-runtime-provenance
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: macOS-x64
+      provenance_mode: >-
+        ${{ inputs.validation_only && 'stable-v2-validation' || 'stable-v2' }}
+      runtime_repository: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_repository }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_digest }}
+      floorp_head_sha: ${{ github.sha }}
+      skip_signing: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+      APPLE_DEVELOPER_P12_BASE64: >-
+        ${{ ! inputs.validation_only && secrets.APPLE_DEVELOPER_P12_BASE64 || '' }}
+      APPLE_DEVELOPER_P12_PASSWORD: >-
+        ${{ ! inputs.validation_only && secrets.APPLE_DEVELOPER_P12_PASSWORD || '' }}
+      APPLE_PROVISIONING_PROFILE_BASE64: >-
+        ${{ ! inputs.validation_only && secrets.APPLE_PROVISIONING_PROFILE_BASE64 || '' }}
+      APPLE_DEVELOPER_API_KEY_JSON: >-
+        ${{ ! inputs.validation_only && secrets.APPLE_DEVELOPER_API_KEY_JSON || '' }}
+      APPLE_DEVELOPER_TEAM_ID: >-
+        ${{ ! inputs.validation_only && secrets.APPLE_DEVELOPER_TEAM_ID || '' }}
+
+  verify-windows-x86_64:
+    name: Verify Windows x86_64 package
+    needs: [validate-runtime-provenance, package-windows]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: ${{ needs.package-windows.outputs.installer_artifact_name }}
+      package_artifact_id: ${{ needs.package-windows.outputs.installer_artifact_id }}
+      package_artifact_digest: ${{ needs.package-windows.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.windows_artifact_digest }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: windows
+      native_arch: x86_64
+      runner: windows-2025
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  verify-linux-x86_64:
+    name: Verify Linux x86_64 package
+    needs: [validate-runtime-provenance, package-linux]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: ${{ needs.package-linux.outputs.installer_artifact_name }}
+      package_artifact_id: ${{ needs.package-linux.outputs.installer_artifact_id }}
+      package_artifact_digest: ${{ needs.package-linux.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_artifact_digest }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: linux
+      native_arch: x86_64
+      runner: ubuntu-24.04
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  verify-linux-aarch64:
+    name: Verify Linux aarch64 package
+    needs: [validate-runtime-provenance, package-linux-aarch64]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: >-
+        ${{ needs.package-linux-aarch64.outputs.installer_artifact_name }}
+      package_artifact_id: >-
+        ${{ needs.package-linux-aarch64.outputs.installer_artifact_id }}
+      package_artifact_digest: >-
+        ${{ needs.package-linux-aarch64.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.linux_aarch64_artifact_digest }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: linuxAarch64
+      native_arch: aarch64
+      runner: ubuntu-24.04-arm
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  verify-mac-x86_64:
+    name: Verify macOS x86_64 package
+    needs: [validate-runtime-provenance, package-macos]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: ${{ needs.package-macos.outputs.installer_artifact_name }}
+      package_artifact_id: ${{ needs.package-macos.outputs.installer_artifact_id }}
+      package_artifact_digest: ${{ needs.package-macos.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_digest }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: mac
+      native_arch: x86_64
+      runner: macos-15-intel
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  verify-mac-aarch64:
+    name: Verify macOS aarch64 package
+    needs: [validate-runtime-provenance, package-macos]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: ${{ needs.package-macos.outputs.installer_artifact_name }}
+      package_artifact_id: ${{ needs.package-macos.outputs.installer_artifact_id }}
+      package_artifact_digest: ${{ needs.package-macos.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_head_sha }}
+      runtime_manifest_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.runtime_manifest_artifact_digest }}
+      runtime_artifact_name: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_name }}
+      runtime_artifact_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_id }}
+      runtime_artifact_digest: >-
+        ${{ needs.validate-runtime-provenance.outputs.mac_artifact_digest }}
+      expected_build_id: >-
+        ${{ needs.validate-runtime-provenance.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: mac
+      native_arch: aarch64
+      runner: macos-14
+      validation_only: ${{ inputs.validation_only }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+
+  assemble-release-bundle:
+    name: Assemble verified release bundle
     needs:
-      [package-windows, package-linux, package-macos, package-linux-aarch64]
+      - validate-runtime-provenance
+      - package-windows
+      - package-linux
+      - package-linux-aarch64
+      - package-macos
+      - verify-windows-x86_64
+      - verify-linux-x86_64
+      - verify-linux-aarch64
+      - verify-mac-x86_64
+      - verify-mac-aarch64
+    uses: ./.github/workflows/assemble-release-bundle.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      floorp_head_sha: ${{ github.sha }}
+      validation_only: ${{ inputs.validation_only }}
+      runtime_context_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.validate-runtime-provenance.outputs.provenance_artifact_name,
+        needs.validate-runtime-provenance.outputs.provenance_artifact_id,
+        needs.validate-runtime-provenance.outputs.provenance_artifact_digest) }}
+      windows_installer_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-windows.outputs.installer_artifact_name,
+        needs.package-windows.outputs.installer_artifact_id,
+        needs.package-windows.outputs.installer_artifact_digest) }}
+      windows_mar_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-windows.outputs.mar_artifact_name,
+        needs.package-windows.outputs.mar_artifact_id,
+        needs.package-windows.outputs.mar_artifact_digest) }}
+      linux_installer_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-linux.outputs.installer_artifact_name,
+        needs.package-linux.outputs.installer_artifact_id,
+        needs.package-linux.outputs.installer_artifact_digest) }}
+      linux_mar_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-linux.outputs.mar_artifact_name,
+        needs.package-linux.outputs.mar_artifact_id,
+        needs.package-linux.outputs.mar_artifact_digest) }}
+      linux_deb_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-linux.outputs.deb_artifact_name,
+        needs.package-linux.outputs.deb_artifact_id,
+        needs.package-linux.outputs.deb_artifact_digest) }}
+      linux_aarch64_installer_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-linux-aarch64.outputs.installer_artifact_name,
+        needs.package-linux-aarch64.outputs.installer_artifact_id,
+        needs.package-linux-aarch64.outputs.installer_artifact_digest) }}
+      linux_aarch64_mar_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-linux-aarch64.outputs.mar_artifact_name,
+        needs.package-linux-aarch64.outputs.mar_artifact_id,
+        needs.package-linux-aarch64.outputs.mar_artifact_digest) }}
+      mac_installer_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-macos.outputs.installer_artifact_name,
+        needs.package-macos.outputs.installer_artifact_id,
+        needs.package-macos.outputs.installer_artifact_digest) }}
+      mac_mar_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.package-macos.outputs.mar_artifact_name,
+        needs.package-macos.outputs.mar_artifact_id,
+        needs.package-macos.outputs.mar_artifact_digest) }}
+      verification_windows_x86_64_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.verify-windows-x86_64.outputs.record_artifact_name,
+        needs.verify-windows-x86_64.outputs.record_artifact_id,
+        needs.verify-windows-x86_64.outputs.record_artifact_digest) }}
+      verification_linux_x86_64_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.verify-linux-x86_64.outputs.record_artifact_name,
+        needs.verify-linux-x86_64.outputs.record_artifact_id,
+        needs.verify-linux-x86_64.outputs.record_artifact_digest) }}
+      verification_linux_aarch64_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.verify-linux-aarch64.outputs.record_artifact_name,
+        needs.verify-linux-aarch64.outputs.record_artifact_id,
+        needs.verify-linux-aarch64.outputs.record_artifact_digest) }}
+      verification_mac_x86_64_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.verify-mac-x86_64.outputs.record_artifact_name,
+        needs.verify-mac-x86_64.outputs.record_artifact_id,
+        needs.verify-mac-x86_64.outputs.record_artifact_digest) }}
+      verification_mac_aarch64_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.verify-mac-aarch64.outputs.record_artifact_name,
+        needs.verify-mac-aarch64.outputs.record_artifact_id,
+        needs.verify-mac-aarch64.outputs.record_artifact_digest) }}
+
+  publish:
+    name: Publish verified release
+    needs: assemble-release-bundle
+    if: ${{ inputs.validation_only != true }}
+    permissions:
+      actions: read
+      contents: write
     uses: ./.github/workflows/publish_release.yml
     with:
+      source_workflow_run_id: ${{ github.run_id }}
+      bundle_artifact: >-
+        ${{ format('{{"name":"{0}","id":{1},"digest":"{2}"}}',
+        needs.assemble-release-bundle.outputs.artifact_name,
+        needs.assemble-release-bundle.outputs.artifact_id,
+        needs.assemble-release-bundle.outputs.artifact_digest) }}
       publish_ppa: true
-      linux_deb_run_id: ${{ needs.package-linux.outputs.run_id }}
-    secrets: inherit
+    secrets:
+      UPDATES_ACTIONS_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
+      PORTABLE_ACTIONS_TOKEN: ${{ secrets.UPDATE_SERVER_TOKEN }}
+      KEYMASK: ${{ secrets.KEYMASK }}
+      GPG_SEC: ${{ secrets.GPG_SEC }}
+      GPG_SSB: ${{ secrets.GPG_SSB }}
+      PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
+      PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
+      PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
+      CLOUDFLARE_API_TOKEN_FOR_PURGE: >-
+        ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
+      CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+
+  validation-complete:
+    name: Validation-only release bundle complete
+    needs: assemble-release-bundle
+    if: ${{ inputs.validation_only == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize validation result
+        env:
+          BUNDLE_ARTIFACT_NAME: >-
+            ${{ needs.assemble-release-bundle.outputs.artifact_name }}
+          BUNDLE_ARTIFACT_ID: >-
+            ${{ needs.assemble-release-bundle.outputs.artifact_id }}
+          BUNDLE_ARTIFACT_DIGEST: >-
+            ${{ needs.assemble-release-bundle.outputs.artifact_digest }}
+          MANIFEST_SET_ID: >-
+            ${{ needs.assemble-release-bundle.outputs.manifest_set_id }}
+          RELEASE_TAG: ${{ needs.assemble-release-bundle.outputs.release_tag }}
+        run: |
+          {
+            echo "### Validation-only release bundle completed"
+            echo ""
+            echo "- Bundle: \`${BUNDLE_ARTIFACT_NAME}\`"
+            echo "- Artifact ID: \`${BUNDLE_ARTIFACT_ID}\`"
+            echo "- Artifact digest: \`${BUNDLE_ARTIFACT_DIGEST}\`"
+            echo "- Manifest set: \`${MANIFEST_SET_ID}\`"
+            echo "- Candidate release tag: \`${RELEASE_TAG}\`"
+            echo "- Publication: skipped"
+          } >> "$GITHUB_STEP_SUMMARY"
