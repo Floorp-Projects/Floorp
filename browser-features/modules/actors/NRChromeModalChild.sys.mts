@@ -5,6 +5,9 @@
 
 import type { TForm } from "../../chrome/common/modal-parent/utils/type.ts";
 export class NRChromeModalChild extends JSWindowActorChild {
+  /** Set while waitForUserInput is outstanding; releases it with null. */
+  private cancelPendingInput: (() => void) | null = null;
+
   actorCreated() {
     console.log("NRChromeModalChild actor created");
   }
@@ -16,6 +19,22 @@ export class NRChromeModalChild extends JSWindowActorChild {
         await this.waitForReady(window);
         this.renderContent(window, message.data);
         return await this.waitForUserInput(window);
+      }
+      case "NRChromeModal:ping": {
+        // Health probe: tells the parent whether the page actually mounted
+        // (waitForReady gives up after ~5s and proceeds regardless, after
+        // which waitForUserInput can pend forever on a dead page).
+        const doc = window?.document as Document & {
+          documentElement?: HTMLElement;
+        };
+        return doc?.documentElement?.dataset?.noraModalReady === "true";
+      }
+      case "NRChromeModal:cancel": {
+        // The parent stopped waiting — the user dismissed the overlay, or
+        // the watchdog found the page dead. Release waitForUserInput so the
+        // show query does not sit here for the life of the window.
+        this.cancelPendingInput?.();
+        return true;
       }
     }
     return null;
@@ -64,18 +83,25 @@ export class NRChromeModalChild extends JSWindowActorChild {
     }
   }
 
-  private waitForUserInput(win: Window): Promise<Record<string, unknown>> {
+  private waitForUserInput(
+    win: Window,
+  ): Promise<Record<string, unknown> | null> {
     return new Promise((resolve) => {
+      // Fallback: also support legacy sendForm injection for safety or if postMessage fails
+      const originalSendForm = win.sendForm;
+
+      // Assigned below — messageHandler and cleanup refer to each other.
+      let cleanup = () => {};
+
       // Listen for messages from the content window
       // We need to listen on the window itself because postMessage targets the window
       // But in actor context, we might need to listen to the message manager or add listener to the window
-
       const messageHandler = (event: MessageEvent) => {
         // Verify the message is from our content
         // In actor, event.source might be a proxy or wrapper, strict equality check might fail
         // So we rely on the message structure
         if (event.data && event.data.type === "nora-modal-submit") {
-          win.removeEventListener("message", messageHandler);
+          cleanup();
 
           const data = event.data.detail;
           resolve(data);
@@ -83,21 +109,31 @@ export class NRChromeModalChild extends JSWindowActorChild {
         }
       };
 
+      cleanup = () => {
+        win.removeEventListener("message", messageHandler);
+        win.sendForm = originalSendForm;
+        this.cancelPendingInput = null;
+      };
+
       // Add listener to the content window
       // Note: In JSWindowActorChild, we are in the same process but separated by security wrapper
       // Listening on 'win' should catch postMessage from content to itself
       win.addEventListener("message", messageHandler);
 
-      // Fallback: also support legacy sendForm injection for safety or if postMessage fails
-      const originalSendForm = win.sendForm;
       win.sendForm = (data: Record<string, unknown>) => {
-        win.removeEventListener("message", messageHandler);
+        cleanup();
         resolve(data);
         if (originalSendForm) {
           return originalSendForm.call(win, data);
         }
         this.removeContent(win);
         return null;
+      };
+
+      this.cancelPendingInput = () => {
+        cleanup();
+        resolve(null);
+        this.removeContent(win);
       };
     });
   }
