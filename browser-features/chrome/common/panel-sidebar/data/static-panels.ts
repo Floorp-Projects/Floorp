@@ -54,6 +54,17 @@ const BASE_STATIC_PANEL_DATA: StaticPanelData = {
     defaultWidth: 415,
   },
 
+  /* Firefox's own translator, which runs the models locally — the text
+     never leaves the machine. Static rather than a web panel: web panels
+     host their site inside a nested browser.xhtml, which content scripts
+     never enter, so an extension cannot restyle or act on it. */
+  "floorp//translate": {
+    url: "about:translations",
+    icon: "chrome://browser/skin/translations.svg",
+    l10n: "translate-sidebar",
+    defaultWidth: 415,
+  },
+
   "floorp//downloads": {
     url: "about:downloads",
     icon: "chrome://browser/skin/downloads/downloads.svg",
