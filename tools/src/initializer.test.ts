@@ -326,6 +326,9 @@ function fakeLockedOperations(
       });
       if (!options.missingExecutable) {
         await Deno.writeFile(layout.executable, new Uint8Array([1]));
+        if (Deno.build.os !== "windows" && artifact.platform !== "windows") {
+          await Deno.chmod(layout.executable, 0o755);
+        }
       }
       if (artifact.platform === "macos") {
         const contentsRoot = path.dirname(path.dirname(layout.applicationIni));
