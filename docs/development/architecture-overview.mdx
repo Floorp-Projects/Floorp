@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "fe772e6de397ba1d44a91c45b359629b28d63bca"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
 generated: true
 ---
 # Architecture Overview
@@ -20,13 +20,13 @@ Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the s
 
 ## Startup And Loader Flow
 
-The startup bridge is owned by `bridge/startup/src/chrome_root.ts:59`. It selects these loader entry points from the inventory:
+The startup bridge is owned by `bridge/startup/src/chrome_root.ts:61`. It selects these loader entry points from the inventory:
 
 - Development: `http://localhost:5181/loader/index.ts`
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:17` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:18` on port 5181.
 
 ## Privileged Modules And Window Actors
 
@@ -117,14 +117,16 @@ The docs pipeline treats Floorp OS API as a special integration layer for local 
 
 ## Commands And CI
 
-Deno task inventory comes from `deno.json` and currently lists 25 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+Deno task inventory comes from `deno.json` and currently lists 29 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
 
 CI workflows recorded in the docs inventory:
 
 - `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
 - `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`

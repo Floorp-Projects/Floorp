@@ -115,6 +115,7 @@ type TCustomizableUIArea =
 
 // Gecko globals
 declare var gBrowser: GBrowser;
+declare var gURLBar: { focused: boolean };
 declare var TabContextMenu: TabContextMenu;
 declare var PanelUI: PanelUI;
 declare var gFloorp: GFloorp;

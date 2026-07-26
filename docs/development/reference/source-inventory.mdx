@@ -1,12 +1,12 @@
 ---
 title: "Source Inventory"
 sidebar_label: "Source Inventory"
-floorp_commit: "fe772e6de397ba1d44a91c45b359629b28d63bca"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
 generated: true
 ---
 # Source Inventory
 
-Inventory generated from Floorp commit `fe772e6de397ba1d44a91c45b359629b28d63bca`.
+Inventory generated from Floorp commit `1d1a9c886fed24a1d426c981baa3117003d03415`.
 
 ## Source Precedence
 
@@ -47,7 +47,7 @@ Inventory generated from Floorp commit `fe772e6de397ba1d44a91c45b359629b28d63bca
 
 ## Command Sources
 
-- Deno tasks: `deno.json` (25 tasks)
+- Deno tasks: `deno.json` (29 tasks)
 - feles-build CLI: `tools/feles-build.ts` (5 commands)
 
 ## Feature Catalog Sources
@@ -62,8 +62,10 @@ Inventory generated from Floorp commit `fe772e6de397ba1d44a91c45b359629b28d63bca
 
 - `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
 - `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`

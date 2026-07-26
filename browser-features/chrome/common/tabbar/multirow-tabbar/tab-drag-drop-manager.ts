@@ -520,11 +520,18 @@ export class TabDragDropManager {
           }
 
           gBrowser.pinTab(t);
-          const pinned = document?.querySelectorAll(
-            "#pinned-tabs-container .tabbrowser-tab",
+          const pinnedTabsContainer = document?.getElementById(
+            "pinned-tabs-container",
           );
-          if (pinned) {
-            this.pinnedTabs.migratePinnedTabs(tabsContainer, pinned);
+          const pinned = pinnedTabsContainer?.querySelectorAll(
+            ".tabbrowser-tab",
+          );
+          if (pinnedTabsContainer && pinned) {
+            this.pinnedTabs.migratePinnedTabs(
+              tabsContainer,
+              pinned,
+              pinnedTabsContainer,
+            );
           }
           setTimeout(() => {
             const tab = tabsContainer.querySelector(

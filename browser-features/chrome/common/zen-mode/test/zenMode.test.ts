@@ -2,9 +2,9 @@
 // @colocated-env browser
 
 import {
-  zenModeEnabled,
-  setZenModeEnabled,
   initZenModeState,
+  setZenModeEnabled,
+  zenModeEnabled,
   ZenModeMenuElement,
 } from "../zen-mode.tsx";
 
@@ -16,6 +16,26 @@ import {
 import { render } from "@nora/solid-xul";
 
 const ZENMODE_PREF = "floorp.zenmode.enabled";
+
+function temporarilyRemoveElementById(id: string): () => void {
+  const element = document!.getElementById(id);
+  const parent = element?.parentNode ?? null;
+  const nextSibling = element?.nextSibling ?? null;
+  if (!element || !parent) {
+    return () => {};
+  }
+
+  parent.removeChild(element);
+  return () => {
+    if (element.parentNode) {
+      return;
+    }
+    parent.insertBefore(
+      element,
+      nextSibling?.parentNode === parent ? nextSibling : null,
+    );
+  };
+}
 
 function testZenModeSignalReadable(): void {
   const value = zenModeEnabled();
@@ -162,14 +182,9 @@ function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
 function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
   const originalSignal = zenModeEnabled();
   const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
+  const restoreToolbox = temporarilyRemoveElementById("navigator-toolbox");
 
   try {
-    // Ensure no toolbox exists
-    const existingToolbox = document!.getElementById("navigator-toolbox");
-    if (existingToolbox) {
-      existingToolbox.remove();
-    }
-
     // Should not throw when toolbox is missing
     setZenModeEnabled(true);
 
@@ -186,6 +201,7 @@ function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
   } finally {
     setZenModeEnabled(originalSignal);
     Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
+    restoreToolbox();
   }
 }
 
