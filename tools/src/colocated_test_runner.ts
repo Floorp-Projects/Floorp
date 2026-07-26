@@ -3,7 +3,7 @@
 import { parseArgs } from "@std/cli";
 import { walkSync } from "@std/fs";
 import * as path from "@std/path";
-import { PATHS, PROJECT_ROOT } from "./defines.ts";
+import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
 import {
   detectLayer,
   escapeRegExp,
@@ -434,6 +434,1087 @@ async function hasRunningTestBrowser(): Promise<boolean> {
   }
 }
 
+export interface WindowsProcessRecord {
+  processId: number;
+  parentProcessId: number;
+  creationDate: string | null;
+  executablePath: string | null;
+  commandLine: string | null;
+}
+
+export interface WindowsListenerRecord {
+  localAddress: string;
+  localPort: number;
+  state: string;
+  owningProcess: number;
+}
+
+export interface WindowsProcessIdentity {
+  processId: number;
+  creationDate: string;
+  executablePath: string;
+  commandLine: string | null;
+}
+
+export interface WindowsAutoStartState {
+  deno: WindowsProcessIdentity;
+  floorpExecutablePath: string;
+  ownedFloorp: Map<number, WindowsProcessIdentity>;
+  blockedFloorpProcessIds: Set<number>;
+  ambiguousFloorp: string[];
+  listenerRoot: WindowsProcessIdentity | null;
+  port: number | null;
+  treeKillSafe: boolean;
+}
+
+export interface WindowsProcessControlDeps {
+  listProcesses(): Promise<WindowsProcessRecord[]>;
+  listListeners(port: number): Promise<WindowsListenerRecord[]>;
+  taskkill(
+    processId: number,
+    includeTree: boolean,
+  ): Promise<{ success: boolean; code: number }>;
+  isPortReachable(port: number): Promise<boolean>;
+  sleep(ms: number): Promise<void>;
+}
+
+const WINDOWS_PROCESS_SNAPSHOT_SCRIPT = String.raw`
+$ErrorActionPreference = 'Stop'
+$rows = @(
+  Get-CimInstance -ClassName Win32_Process -ErrorAction Stop |
+    ForEach-Object {
+      [pscustomobject]@{
+        ProcessId = [int]$_.ProcessId
+        ParentProcessId = [int]$_.ParentProcessId
+        CreationDate = if ($null -eq $_.CreationDate) { $null } else { [string]$_.CreationDate }
+        ExecutablePath = if ($null -eq $_.ExecutablePath) { $null } else { [string]$_.ExecutablePath }
+        CommandLine = if ($null -eq $_.CommandLine) { $null } else { [string]$_.CommandLine }
+      }
+    }
+)
+ConvertTo-Json -InputObject $rows -Compress -Depth 4
+`.trim();
+
+const WINDOWS_LISTENER_SNAPSHOT_SCRIPT = String.raw`
+$ErrorActionPreference = 'Stop'
+$port = 0
+if (-not [int]::TryParse($env:FLOORP_COLOCATED_LOCAL_PORT, [ref]$port)) {
+  throw 'FLOORP_COLOCATED_LOCAL_PORT must be an integer'
+}
+if ($port -lt 1 -or $port -gt 65535) {
+  throw 'FLOORP_COLOCATED_LOCAL_PORT is outside the TCP port range'
+}
+$connections = @(Get-NetTCPConnection -ErrorAction Stop)
+$rows = @(
+  $connections |
+    Where-Object { [int]$_.LocalPort -eq $port -and [string]$_.State -eq 'Listen' } |
+    ForEach-Object {
+      [pscustomobject]@{
+        LocalAddress = [string]$_.LocalAddress
+        LocalPort = [int]$_.LocalPort
+        State = [string]$_.State
+        OwningProcess = [int]$_.OwningProcess
+      }
+    }
+)
+ConvertTo-Json -InputObject $rows -Compress -Depth 4
+`.trim();
+
+const WINDOWS_DENO_IDENTITY_RETRY_COUNT = 5;
+const WINDOWS_DENO_IDENTITY_RETRY_DELAY_MS = 50;
+const WINDOWS_TEARDOWN_POLL_INTERVAL_MS = 250;
+const WINDOWS_TEARDOWN_MAX_POLLS = Math.max(
+  1,
+  Math.ceil(AUTOSTART_STOP_TIMEOUT_MS / WINDOWS_TEARDOWN_POLL_INTERVAL_MS),
+);
+
+function parseJsonObjectRows(
+  raw: string,
+  label: string,
+): Record<string, unknown>[] {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    throw new Error(`${label} returned an empty response`);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error) {
+    throw new Error(`${label} returned invalid JSON: ${errorToMessage(error)}`);
+  }
+
+  if (parsed === null) {
+    throw new Error(`${label} returned null`);
+  }
+
+  const rows = Array.isArray(parsed) ? parsed : [parsed];
+  return rows.map((row, index) => {
+    if (typeof row !== "object" || row === null || Array.isArray(row)) {
+      throw new Error(`${label} row ${index} is not an object`);
+    }
+    return row as Record<string, unknown>;
+  });
+}
+
+function requiredProperty(
+  row: Record<string, unknown>,
+  name: string,
+  label: string,
+): unknown {
+  if (!(name in row)) {
+    throw new Error(`${label} is missing ${name}`);
+  }
+  return row[name];
+}
+
+function requiredInteger(
+  value: unknown,
+  label: string,
+  minimum: number,
+): number {
+  if (!Number.isInteger(value) || (value as number) < minimum) {
+    throw new Error(`${label} must be an integer >= ${minimum}`);
+  }
+  return value as number;
+}
+
+function requiredString(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${label} must be a non-empty string`);
+  }
+  return value;
+}
+
+function nullableString(value: unknown, label: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${label} must be a string or null`);
+  }
+  return value;
+}
+
+export function parseWindowsProcessSnapshot(
+  raw: string,
+): WindowsProcessRecord[] {
+  return parseJsonObjectRows(raw, "Win32_Process snapshot").map(
+    (row, index) => ({
+      processId: requiredInteger(
+        requiredProperty(row, "ProcessId", `Win32_Process row ${index}`),
+        `Win32_Process row ${index}.ProcessId`,
+        0,
+      ),
+      parentProcessId: requiredInteger(
+        requiredProperty(
+          row,
+          "ParentProcessId",
+          `Win32_Process row ${index}`,
+        ),
+        `Win32_Process row ${index}.ParentProcessId`,
+        0,
+      ),
+      creationDate: nullableString(
+        requiredProperty(row, "CreationDate", `Win32_Process row ${index}`),
+        `Win32_Process row ${index}.CreationDate`,
+      ),
+      executablePath: nullableString(
+        requiredProperty(row, "ExecutablePath", `Win32_Process row ${index}`),
+        `Win32_Process row ${index}.ExecutablePath`,
+      ),
+      commandLine: nullableString(
+        requiredProperty(row, "CommandLine", `Win32_Process row ${index}`),
+        `Win32_Process row ${index}.CommandLine`,
+      ),
+    }),
+  );
+}
+
+export function parseWindowsListenerSnapshot(
+  raw: string,
+): WindowsListenerRecord[] {
+  return parseJsonObjectRows(raw, "TCP listener snapshot").map(
+    (row, index) => ({
+      localAddress: requiredString(
+        requiredProperty(row, "LocalAddress", `TCP listener row ${index}`),
+        `TCP listener row ${index}.LocalAddress`,
+      ),
+      localPort: requiredInteger(
+        requiredProperty(row, "LocalPort", `TCP listener row ${index}`),
+        `TCP listener row ${index}.LocalPort`,
+        1,
+      ),
+      state: requiredString(
+        requiredProperty(row, "State", `TCP listener row ${index}`),
+        `TCP listener row ${index}.State`,
+      ),
+      owningProcess: requiredInteger(
+        requiredProperty(row, "OwningProcess", `TCP listener row ${index}`),
+        `TCP listener row ${index}.OwningProcess`,
+        1,
+      ),
+    }),
+  );
+}
+
+function normalizeWindowsExecutablePath(value: string): string {
+  return value.trim().replaceAll("/", "\\").replace(/\\+$/, "").toLowerCase();
+}
+
+export function isSameWindowsExecutablePath(
+  actual: string | null,
+  expected: string,
+): boolean {
+  return actual !== null &&
+    normalizeWindowsExecutablePath(actual) ===
+      normalizeWindowsExecutablePath(expected);
+}
+
+function hasDenoFelesBuildTestMarker(commandLine: string | null): boolean {
+  if (commandLine === null) {
+    return false;
+  }
+  return /(?:^|\s)["']?task["']?\s+["']?feles-build["']?\s+["']?test["']?(?:\s|$)/i
+    .test(commandLine);
+}
+
+function isContentProcessCommandLine(commandLine: string | null): boolean {
+  return commandLine !== null &&
+    /(?:^|\s)["']?-contentproc["']?(?:\s|$)/i.test(commandLine);
+}
+
+function commandLineParentPid(commandLine: string | null): number | null {
+  if (commandLine === null) {
+    return null;
+  }
+  const match = /(?:^|\s)["']?-parentPid["']?(?:\s+|=)["']?(\d+)["']?(?=\s|$)/i
+    .exec(commandLine);
+  if (!match) {
+    return null;
+  }
+  const processId = Number(match[1]);
+  return Number.isInteger(processId) && processId > 0 ? processId : null;
+}
+
+function processIndex(
+  processes: WindowsProcessRecord[],
+): Map<number, WindowsProcessRecord> {
+  const result = new Map<number, WindowsProcessRecord>();
+  for (const process of processes) {
+    if (result.has(process.processId)) {
+      throw new Error(
+        `Win32_Process snapshot contains duplicate PID ${process.processId}`,
+      );
+    }
+    result.set(process.processId, process);
+  }
+  return result;
+}
+
+function captureWindowsProcessIdentity(
+  process: WindowsProcessRecord,
+  label: string,
+): WindowsProcessIdentity {
+  if (process.processId <= 0) {
+    throw new Error(`${label} has an invalid PID ${process.processId}`);
+  }
+  if (!process.creationDate) {
+    throw new Error(`${label} PID ${process.processId} has no CreationDate`);
+  }
+  if (!process.executablePath) {
+    throw new Error(`${label} PID ${process.processId} has no ExecutablePath`);
+  }
+  return {
+    processId: process.processId,
+    creationDate: process.creationDate,
+    executablePath: process.executablePath,
+    commandLine: process.commandLine,
+  };
+}
+
+export function matchesWindowsProcessIdentity(
+  process: WindowsProcessRecord,
+  identity: WindowsProcessIdentity,
+): boolean {
+  return process.processId === identity.processId &&
+    process.creationDate === identity.creationDate &&
+    isSameWindowsExecutablePath(
+      process.executablePath,
+      identity.executablePath,
+    );
+}
+
+function matchesWindowsDenoIdentity(
+  process: WindowsProcessRecord,
+  identity: WindowsProcessIdentity,
+): boolean {
+  return matchesWindowsProcessIdentity(process, identity) &&
+    process.commandLine === identity.commandLine &&
+    hasDenoFelesBuildTestMarker(process.commandLine);
+}
+
+export function assertWindowsAutoStartPreflight(
+  processes: WindowsProcessRecord[],
+  floorpExecutablePath = BIN_PATH_EXE,
+): void {
+  if (processes.length === 0) {
+    throw new Error("Win32_Process preflight returned no processes");
+  }
+  processIndex(processes);
+  const existing = processes.filter((process) =>
+    isSameWindowsExecutablePath(
+      process.executablePath,
+      floorpExecutablePath,
+    )
+  );
+  if (existing.length > 0) {
+    throw new Error(
+      `Refusing auto-start: ${existing.length} existing process(es) use the locked test browser executable`,
+    );
+  }
+}
+
+export function selectWindowsDenoIdentity(
+  processes: WindowsProcessRecord[],
+  processId: number,
+  denoExecutablePath: string,
+): WindowsProcessIdentity {
+  const process = processIndex(processes).get(processId);
+  if (!process) {
+    throw new Error(`Auto-started Deno PID ${processId} was not found`);
+  }
+  if (
+    !isSameWindowsExecutablePath(process.executablePath, denoExecutablePath)
+  ) {
+    throw new Error(
+      `Auto-started Deno PID ${processId} does not match the spawned executable`,
+    );
+  }
+  if (!hasDenoFelesBuildTestMarker(process.commandLine)) {
+    throw new Error(
+      `Auto-started Deno PID ${processId} does not contain the expected task marker`,
+    );
+  }
+  return captureWindowsProcessIdentity(process, "Auto-started Deno");
+}
+
+export function createWindowsAutoStartState(
+  deno: WindowsProcessIdentity,
+  floorpExecutablePath = BIN_PATH_EXE,
+): WindowsAutoStartState {
+  return {
+    deno,
+    floorpExecutablePath,
+    ownedFloorp: new Map<number, WindowsProcessIdentity>(),
+    blockedFloorpProcessIds: new Set<number>(),
+    ambiguousFloorp: [],
+    listenerRoot: null,
+    port: null,
+    treeKillSafe: true,
+  };
+}
+
+function isDescendantByParentProcessId(
+  processId: number,
+  ancestorProcessId: number,
+  processes: Map<number, WindowsProcessRecord>,
+): boolean {
+  const seen = new Set<number>();
+  let current = processes.get(processId);
+  while (current) {
+    if (seen.has(current.processId)) {
+      throw new Error(
+        `Win32_Process ancestry contains a cycle at PID ${current.processId}`,
+      );
+    }
+    seen.add(current.processId);
+    if (current.parentProcessId === ancestorProcessId) {
+      return true;
+    }
+    if (current.parentProcessId <= 0) {
+      return false;
+    }
+    current = processes.get(current.parentProcessId);
+  }
+  return false;
+}
+
+function addUniqueMessage(target: string[], message: string): void {
+  if (!target.includes(message)) {
+    target.push(message);
+  }
+}
+
+export function reconcileWindowsFloorpOwnership(
+  state: WindowsAutoStartState,
+  processes: WindowsProcessRecord[],
+  floorpExecutablePath = state.floorpExecutablePath,
+): string[] {
+  const issues: string[] = [];
+  let byPid: Map<number, WindowsProcessRecord>;
+  try {
+    byPid = processIndex(processes);
+  } catch (error) {
+    state.treeKillSafe = false;
+    throw error;
+  }
+  const denoProcess = byPid.get(state.deno.processId);
+  const denoIsLive = denoProcess !== undefined &&
+    matchesWindowsDenoIdentity(denoProcess, state.deno);
+  if (
+    denoProcess !== undefined &&
+    !matchesWindowsDenoIdentity(denoProcess, state.deno)
+  ) {
+    issues.push(
+      `Auto-started Deno PID ${state.deno.processId} no longer matches its captured identity`,
+    );
+  }
+
+  const candidates = processes.filter((process) =>
+    isSameWindowsExecutablePath(
+      process.executablePath,
+      floorpExecutablePath,
+    )
+  );
+  const linked = new Set<number>();
+
+  for (const [processId, identity] of state.ownedFloorp) {
+    if (state.blockedFloorpProcessIds.has(processId)) {
+      continue;
+    }
+    const current = byPid.get(processId);
+    if (!current) {
+      continue;
+    }
+    if (!matchesWindowsProcessIdentity(current, identity)) {
+      issues.push(
+        `Owned Floorp PID ${processId} no longer matches its captured identity`,
+      );
+      continue;
+    }
+    linked.add(processId);
+  }
+
+  if (denoIsLive && state.listenerRoot === null) {
+    for (const candidate of candidates) {
+      if (state.blockedFloorpProcessIds.has(candidate.processId)) {
+        continue;
+      }
+      if (
+        isDescendantByParentProcessId(
+          candidate.processId,
+          state.deno.processId,
+          byPid,
+        )
+      ) {
+        linked.add(candidate.processId);
+      }
+    }
+  }
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const candidate of candidates) {
+      if (
+        linked.has(candidate.processId) ||
+        state.blockedFloorpProcessIds.has(candidate.processId)
+      ) {
+        continue;
+      }
+      const actualParentIsOwned = linked.has(candidate.parentProcessId);
+      const commandParent = commandLineParentPid(candidate.commandLine);
+      const commandParentIsOwned = commandParent !== null &&
+        linked.has(commandParent);
+      if (actualParentIsOwned || commandParentIsOwned) {
+        linked.add(candidate.processId);
+        changed = true;
+      }
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (state.blockedFloorpProcessIds.has(candidate.processId)) {
+      addUniqueMessage(
+        state.ambiguousFloorp,
+        `Blocked identity-mismatched exact-path Floorp PID ${candidate.processId}`,
+      );
+      continue;
+    }
+    if (!linked.has(candidate.processId)) {
+      addUniqueMessage(
+        state.ambiguousFloorp,
+        `Unlinked exact-path Floorp PID ${candidate.processId}`,
+      );
+      continue;
+    }
+    try {
+      const identity = captureWindowsProcessIdentity(candidate, "Owned Floorp");
+      const existing = state.ownedFloorp.get(candidate.processId);
+      if (existing && !matchesWindowsProcessIdentity(candidate, existing)) {
+        issues.push(
+          `Owned Floorp PID ${candidate.processId} was reused by another process`,
+        );
+        continue;
+      }
+      state.ownedFloorp.set(candidate.processId, identity);
+    } catch (error) {
+      addUniqueMessage(
+        state.ambiguousFloorp,
+        `Exact-path Floorp PID ${candidate.processId} has an invalid identity: ${
+          errorToMessage(error)
+        }`,
+      );
+    }
+  }
+
+  if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+    state.treeKillSafe = false;
+  }
+
+  return issues;
+}
+
+function matchesWindowsProcessIdentityStrict(
+  process: WindowsProcessRecord,
+  identity: WindowsProcessIdentity,
+): boolean {
+  return matchesWindowsProcessIdentity(process, identity) &&
+    process.commandLine === identity.commandLine;
+}
+
+export function promoteWindowsReadyBrowserOwnership(
+  state: WindowsAutoStartState,
+  processes: WindowsProcessRecord[],
+  listenerRoot: WindowsProcessIdentity,
+  previouslyOwned: ReadonlyMap<number, WindowsProcessIdentity>,
+): string[] {
+  const byPid = processIndex(processes);
+  const verified = new Map<number, WindowsProcessIdentity>();
+  const issues: string[] = [];
+
+  for (const [processId, identity] of previouslyOwned) {
+    const current = byPid.get(processId);
+    if (!current) {
+      continue;
+    }
+    if (!matchesWindowsProcessIdentityStrict(current, identity)) {
+      state.blockedFloorpProcessIds.add(processId);
+      issues.push(
+        `Previously owned Floorp PID ${processId} no longer matches its captured identity`,
+      );
+      continue;
+    }
+    verified.set(processId, identity);
+  }
+
+  if (!state.blockedFloorpProcessIds.has(listenerRoot.processId)) {
+    verified.set(listenerRoot.processId, listenerRoot);
+  }
+
+  state.ownedFloorp.clear();
+  for (const [processId, identity] of verified) {
+    state.ownedFloorp.set(processId, identity);
+  }
+
+  if (issues.length > 0) {
+    state.treeKillSafe = false;
+  }
+  return issues;
+}
+
+export function selectWindowsListenerRoot(
+  port: number,
+  listeners: WindowsListenerRecord[],
+  processes: WindowsProcessRecord[],
+  denoIdentity: WindowsProcessIdentity,
+  floorpExecutablePath = BIN_PATH_EXE,
+  previouslyOwned?: ReadonlyMap<number, WindowsProcessIdentity>,
+): WindowsProcessIdentity {
+  const listenRows = listeners.filter((listener) =>
+    listener.localPort === port && listener.state.toLowerCase() === "listen"
+  );
+  const owners = new Set(listenRows.map((listener) => listener.owningProcess));
+  if (owners.size !== 1) {
+    throw new Error(
+      `Expected exactly one owner for TCP port ${port}; found ${owners.size}`,
+    );
+  }
+
+  const ownerPid = owners.values().next().value as number;
+  const byPid = processIndex(processes);
+  const denoProcess = byPid.get(denoIdentity.processId);
+  if (denoProcess && !matchesWindowsDenoIdentity(denoProcess, denoIdentity)) {
+    throw new Error(
+      "Captured Deno identity no longer matches the process table",
+    );
+  }
+
+  const owner = byPid.get(ownerPid);
+  if (!owner) {
+    throw new Error(`TCP port ${port} owner PID ${ownerPid} was not found`);
+  }
+  if (
+    !isSameWindowsExecutablePath(owner.executablePath, floorpExecutablePath)
+  ) {
+    throw new Error(
+      `TCP port ${port} owner PID ${ownerPid} is not the locked test browser executable`,
+    );
+  }
+  if (owner.commandLine === null) {
+    throw new Error(
+      `TCP port ${port} owner PID ${ownerPid} has no command line`,
+    );
+  }
+  if (isContentProcessCommandLine(owner.commandLine)) {
+    throw new Error(`TCP port ${port} is owned by a Floorp content process`);
+  }
+  const ownerIdentity = captureWindowsProcessIdentity(
+    owner,
+    "TCP listener root",
+  );
+  const currentlyDescended = denoProcess !== undefined &&
+    isDescendantByParentProcessId(
+      owner.processId,
+      denoIdentity.processId,
+      byPid,
+    );
+  const previouslyCaptured = previouslyOwned?.get(ownerPid);
+  const matchesPreviouslyCaptured = previouslyCaptured !== undefined &&
+    matchesWindowsProcessIdentity(owner, previouslyCaptured);
+  if (!currentlyDescended && !matchesPreviouslyCaptured) {
+    throw new Error(
+      `TCP port ${port} owner PID ${ownerPid} is not descended from Deno and has no matching previously-owned identity`,
+    );
+  }
+  return ownerIdentity;
+}
+
+async function runPowerShellJson(
+  script: string,
+  environment?: Record<string, string>,
+): Promise<string> {
+  const output = await new Deno.Command("powershell.exe", {
+    args: ["-NoProfile", "-NonInteractive", "-Command", script],
+    env: environment,
+    stdout: "piped",
+    stderr: "null",
+  }).output();
+  if (!output.success) {
+    throw new Error(
+      `PowerShell inspection failed with exit code ${output.code}`,
+    );
+  }
+  return new TextDecoder().decode(output.stdout);
+}
+
+function createWindowsProcessControlDeps(): WindowsProcessControlDeps {
+  return {
+    async listProcesses() {
+      return parseWindowsProcessSnapshot(
+        await runPowerShellJson(WINDOWS_PROCESS_SNAPSHOT_SCRIPT),
+      );
+    },
+    async listListeners(port) {
+      return parseWindowsListenerSnapshot(
+        await runPowerShellJson(WINDOWS_LISTENER_SNAPSHOT_SCRIPT, {
+          FLOORP_COLOCATED_LOCAL_PORT: String(port),
+        }),
+      );
+    },
+    async taskkill(processId, includeTree) {
+      const args = ["/PID", String(processId)];
+      if (includeTree) {
+        args.push("/T");
+      }
+      args.push("/F");
+      try {
+        const output = await new Deno.Command("taskkill.exe", {
+          args,
+          stdout: "null",
+          stderr: "null",
+        }).output();
+        return { success: output.success, code: output.code };
+      } catch {
+        return { success: false, code: -1 };
+      }
+    },
+    isPortReachable: _isTcpPortReachable,
+    sleep,
+  };
+}
+
+async function captureWindowsDenoIdentityWithRetry(
+  processId: number,
+  deps: WindowsProcessControlDeps,
+): Promise<WindowsProcessIdentity> {
+  let lastError: unknown;
+  for (
+    let attempt = 0;
+    attempt < WINDOWS_DENO_IDENTITY_RETRY_COUNT;
+    attempt++
+  ) {
+    try {
+      return selectWindowsDenoIdentity(
+        await deps.listProcesses(),
+        processId,
+        Deno.execPath(),
+      );
+    } catch (error) {
+      lastError = error;
+      if (attempt + 1 < WINDOWS_DENO_IDENTITY_RETRY_COUNT) {
+        await deps.sleep(WINDOWS_DENO_IDENTITY_RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw new Error(
+    `Could not capture the auto-started Deno identity: ${
+      errorToMessage(lastError)
+    }`,
+  );
+}
+
+async function refreshWindowsOwnershipOrThrow(
+  state: WindowsAutoStartState,
+  deps: WindowsProcessControlDeps,
+): Promise<void> {
+  try {
+    const issues = reconcileWindowsFloorpOwnership(
+      state,
+      await deps.listProcesses(),
+    );
+    if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+      throw new Error(
+        [...issues, ...state.ambiguousFloorp].join(" | "),
+      );
+    }
+  } catch (error) {
+    state.treeKillSafe = false;
+    throw error;
+  }
+}
+
+export async function captureWindowsReadyBrowser(
+  state: WindowsAutoStartState,
+  port: number,
+  deps: WindowsProcessControlDeps,
+): Promise<void> {
+  state.port = port;
+  const previouslyOwned = new Map(state.ownedFloorp);
+  try {
+    const processes = await deps.listProcesses();
+    const listeners = await deps.listListeners(port);
+    const listenerRoot = selectWindowsListenerRoot(
+      port,
+      listeners,
+      processes,
+      state.deno,
+      state.floorpExecutablePath,
+      previouslyOwned,
+    );
+    const promotionIssues = promoteWindowsReadyBrowserOwnership(
+      state,
+      processes,
+      listenerRoot,
+      previouslyOwned,
+    );
+    const preListenerIssues = reconcileWindowsFloorpOwnership(
+      state,
+      processes,
+    );
+    state.listenerRoot = listenerRoot;
+    const issues = [
+      ...promotionIssues,
+      ...preListenerIssues,
+      ...reconcileWindowsFloorpOwnership(state, processes),
+    ];
+    if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+      throw new Error(
+        `Windows browser ownership capture failed: ${
+          [...issues, ...state.ambiguousFloorp].join(" | ")
+        }`,
+      );
+    }
+  } catch (error) {
+    state.treeKillSafe = false;
+    throw error;
+  }
+}
+
+function orderedOwnedFloorpIdentities(
+  state: WindowsAutoStartState,
+): WindowsProcessIdentity[] {
+  const identities = Array.from(state.ownedFloorp.values());
+  return identities.sort((left, right) => {
+    if (left.processId === state.listenerRoot?.processId) {
+      return -1;
+    }
+    if (right.processId === state.listenerRoot?.processId) {
+      return 1;
+    }
+    return left.processId - right.processId;
+  });
+}
+
+export async function stopWindowsAutoStartedBrowser(
+  state: WindowsAutoStartState,
+  deps: WindowsProcessControlDeps,
+  writeLog?: (level: LogLevel, message: string) => void,
+): Promise<void> {
+  const errors: string[] = [];
+  const recordError = (message: string) => addUniqueMessage(errors, message);
+  const readProcesses = async (
+    stage: string,
+  ): Promise<WindowsProcessRecord[] | null> => {
+    try {
+      return await deps.listProcesses();
+    } catch (error) {
+      state.treeKillSafe = false;
+      recordError(`${stage}: ${errorToMessage(error)}`);
+      return null;
+    }
+  };
+
+  const initialProcesses = await readProcesses("initial process enumeration");
+  if (initialProcesses) {
+    try {
+      const issues = reconcileWindowsFloorpOwnership(
+        state,
+        initialProcesses,
+      );
+      for (const issue of issues) {
+        recordError(issue);
+      }
+      if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+        state.treeKillSafe = false;
+      }
+    } catch (error) {
+      state.treeKillSafe = false;
+      recordError(`initial ownership reconciliation: ${errorToMessage(error)}`);
+    }
+  }
+
+  const denoVerification = await readProcesses(
+    `pre-taskkill verification for Deno PID ${state.deno.processId}`,
+  );
+  if (denoVerification) {
+    try {
+      const verificationIssues = reconcileWindowsFloorpOwnership(
+        state,
+        denoVerification,
+      );
+      for (const issue of verificationIssues) {
+        recordError(issue);
+      }
+      if (
+        verificationIssues.length > 0 || state.ambiguousFloorp.length > 0
+      ) {
+        state.treeKillSafe = false;
+      }
+      const denoProcess = processIndex(denoVerification).get(
+        state.deno.processId,
+      );
+      if (denoProcess) {
+        if (
+          matchesWindowsDenoIdentity(denoProcess, state.deno)
+        ) {
+          try {
+            const includeTree = state.treeKillSafe;
+            const result = await deps.taskkill(
+              state.deno.processId,
+              includeTree,
+            );
+            writeLog?.(
+              "INFO",
+              `Diagnostic taskkill for auto-started Deno PID ${state.deno.processId}: tree=${includeTree}, success=${result.success}, code=${result.code}`,
+            );
+          } catch (error) {
+            writeLog?.(
+              "INFO",
+              `Diagnostic taskkill for auto-started Deno PID ${state.deno.processId} threw: ${
+                errorToMessage(error)
+              }`,
+            );
+          }
+        } else {
+          state.treeKillSafe = false;
+          recordError(
+            `Skipped Deno PID ${state.deno.processId}: captured identity no longer matches`,
+          );
+        }
+      }
+    } catch (error) {
+      state.treeKillSafe = false;
+      recordError(`Deno identity verification: ${errorToMessage(error)}`);
+    }
+  }
+
+  for (let poll = 0; poll < WINDOWS_TEARDOWN_MAX_POLLS; poll++) {
+    const processes = await readProcesses(`teardown poll ${poll + 1}`);
+    if (!processes) {
+      break;
+    }
+    try {
+      for (const issue of reconcileWindowsFloorpOwnership(state, processes)) {
+        recordError(issue);
+      }
+    } catch (error) {
+      state.treeKillSafe = false;
+      recordError(`ownership reconciliation: ${errorToMessage(error)}`);
+      break;
+    }
+
+    const byPid = processIndex(processes);
+    const liveOwned = orderedOwnedFloorpIdentities(state).filter((identity) => {
+      const current = byPid.get(identity.processId);
+      if (!current) {
+        return false;
+      }
+      if (!matchesWindowsProcessIdentity(current, identity)) {
+        state.treeKillSafe = false;
+        recordError(
+          `Skipped Floorp PID ${identity.processId}: captured identity no longer matches`,
+        );
+        return false;
+      }
+      return true;
+    });
+    if (liveOwned.length === 0) {
+      break;
+    }
+
+    for (const identity of liveOwned) {
+      const freshProcesses = await readProcesses(
+        `pre-taskkill verification for Floorp PID ${identity.processId}`,
+      );
+      if (!freshProcesses) {
+        break;
+      }
+      let current: WindowsProcessRecord | undefined;
+      try {
+        current = processIndex(freshProcesses).get(identity.processId);
+      } catch (error) {
+        state.treeKillSafe = false;
+        recordError(
+          `pre-taskkill verification for Floorp PID ${identity.processId}: ${
+            errorToMessage(error)
+          }`,
+        );
+        break;
+      }
+      if (!current) {
+        continue;
+      }
+      if (!matchesWindowsProcessIdentity(current, identity)) {
+        state.treeKillSafe = false;
+        recordError(
+          `Skipped Floorp PID ${identity.processId}: identity changed before taskkill`,
+        );
+        continue;
+      }
+      try {
+        const result = await deps.taskkill(identity.processId, false);
+        writeLog?.(
+          "INFO",
+          `Owned Floorp root-only taskkill PID ${identity.processId}: success=${result.success}, code=${result.code}`,
+        );
+      } catch (error) {
+        writeLog?.(
+          "INFO",
+          `Owned Floorp root-only taskkill PID ${identity.processId} threw: ${
+            errorToMessage(error)
+          }`,
+        );
+      }
+    }
+
+    try {
+      await deps.sleep(WINDOWS_TEARDOWN_POLL_INTERVAL_MS);
+    } catch (error) {
+      recordError(`teardown polling delay: ${errorToMessage(error)}`);
+      break;
+    }
+  }
+
+  const finalProcesses = await readProcesses("final process enumeration");
+  if (finalProcesses) {
+    try {
+      for (
+        const issue of reconcileWindowsFloorpOwnership(state, finalProcesses)
+      ) {
+        recordError(issue);
+      }
+      const finalByPid = processIndex(finalProcesses);
+      for (const identity of state.ownedFloorp.values()) {
+        const current = finalByPid.get(identity.processId);
+        if (current && matchesWindowsProcessIdentity(current, identity)) {
+          recordError(
+            `Owned Floorp PID ${identity.processId} survived teardown`,
+          );
+        } else if (current) {
+          recordError(
+            `Floorp PID ${identity.processId} was reused before final verification`,
+          );
+        }
+      }
+      const currentDeno = finalByPid.get(state.deno.processId);
+      if (currentDeno && matchesWindowsDenoIdentity(currentDeno, state.deno)) {
+        recordError(
+          `Auto-started Deno PID ${state.deno.processId} survived teardown`,
+        );
+      } else if (currentDeno) {
+        recordError(
+          `Deno PID ${state.deno.processId} was reused before final verification`,
+        );
+      }
+    } catch (error) {
+      recordError(`final ownership verification: ${errorToMessage(error)}`);
+    }
+  }
+
+  for (const ambiguity of state.ambiguousFloorp) {
+    recordError(ambiguity);
+  }
+
+  if (state.port !== null) {
+    try {
+      const finalListeners = await deps.listListeners(state.port);
+      if (finalListeners.length > 0) {
+        recordError(
+          `Captured Marionette port ${state.port} still has ${finalListeners.length} listener row(s)`,
+        );
+      }
+    } catch (error) {
+      recordError(
+        `Could not query listeners for captured Marionette port ${state.port}: ${
+          errorToMessage(error)
+        }`,
+      );
+    }
+
+    try {
+      if (await deps.isPortReachable(state.port)) {
+        recordError(
+          `Captured Marionette port ${state.port} remained reachable`,
+        );
+      }
+    } catch (error) {
+      recordError(
+        `Could not verify captured Marionette port ${state.port}: ${
+          errorToMessage(error)
+        }`,
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `Windows browser teardown failed closed: ${errors.join(" | ")}`,
+    );
+  }
+}
+
 function startTestBrowserProcess(): Deno.ChildProcess {
   const denoPath = Deno.execPath();
   return new Deno.Command(denoPath, {
@@ -447,14 +1528,24 @@ function startTestBrowserProcess(): Deno.ChildProcess {
 async function waitForAutoStartedBrowser(
   child: Deno.ChildProcess,
   startupTimeoutMs: number,
+  windowsState?: WindowsAutoStartState,
+  windowsDeps?: WindowsProcessControlDeps,
 ): Promise<void> {
   const deadline = Date.now() + startupTimeoutMs;
 
   while (Date.now() < deadline) {
+    if (windowsState && windowsDeps) {
+      await refreshWindowsOwnershipOrThrow(windowsState, windowsDeps);
+    }
+
     const maybeStatus = await Promise.race([
       child.status,
       sleep(AUTOSTART_POLL_INTERVAL_MS).then(() => null),
     ]);
+
+    if (windowsState && windowsDeps) {
+      await refreshWindowsOwnershipOrThrow(windowsState, windowsDeps);
+    }
 
     if (maybeStatus) {
       throw new Error(
@@ -646,37 +1737,122 @@ async function stopPosixProcessTree(
   signalPids(killTargets, "SIGKILL");
 }
 
+export interface WindowsSpawnedRootControl {
+  processId: number;
+  killRoot(): void;
+  status: Promise<unknown>;
+}
+
+export async function stopWindowsSpawnedChildRootOnly(
+  control: WindowsSpawnedRootControl,
+  sleepFn: (ms: number) => Promise<void> = sleep,
+): Promise<void> {
+  try {
+    control.killRoot();
+  } catch {
+    // The root may already have exited; status remains the authoritative proof.
+  }
+
+  const outcome = await Promise.race([
+    control.status.then(() => "exited" as const),
+    sleepFn(AUTOSTART_STOP_TIMEOUT_MS).then(() => "timeout" as const),
+  ]);
+  if (outcome === "timeout") {
+    throw new Error(
+      `Timed out while stopping spawned Deno root PID ${control.processId}`,
+    );
+  }
+}
+
+export async function stopWindowsAutoStartedBrowserWithRootFallback(
+  state: WindowsAutoStartState,
+  deps: WindowsProcessControlDeps,
+  rootControl: WindowsSpawnedRootControl,
+  writeLog?: (level: LogLevel, message: string) => void,
+  sleepFn: (ms: number) => Promise<void> = sleep,
+): Promise<void> {
+  try {
+    await stopWindowsAutoStartedBrowser(state, deps, writeLog);
+    return;
+  } catch (teardownError) {
+    const teardownMessage = errorToMessage(teardownError);
+    writeLog?.(
+      "INFO",
+      `Verified Windows teardown failed; stopping only the spawned Deno root handle: ${teardownMessage}`,
+    );
+    try {
+      await stopWindowsSpawnedChildRootOnly(rootControl, sleepFn);
+    } catch (fallbackError) {
+      throw new Error(
+        `${teardownMessage}; spawned Deno root-only fallback failed: ${
+          errorToMessage(fallbackError)
+        }`,
+      );
+    }
+    throw new Error(
+      `${teardownMessage}; spawned Deno root-only fallback completed`,
+    );
+  }
+}
+
 async function stopAutoStartedBrowser(
   child: Deno.ChildProcess,
+  windowsState: WindowsAutoStartState | null,
+  windowsDeps: WindowsProcessControlDeps | null,
   writeLog?: (level: LogLevel, message: string) => void,
 ): Promise<void> {
   if (child.pid === undefined) {
-    writeLog?.(
-      "INFO",
-      "Auto-started browser PID is unavailable; skipping teardown",
+    throw new Error(
+      "Auto-started browser PID is unavailable; teardown cannot be verified",
     );
-    return;
   }
 
   if (Deno.build.os === "windows") {
-    writeLog?.(
-      "INFO",
-      `Stopping auto-started browser process tree (windows, root pid=${child.pid})`,
-    );
-    try {
-      await new Deno.Command("taskkill", {
-        args: ["/PID", String(child.pid), "/T", "/F"],
-        stdout: "null",
-        stderr: "null",
-      }).output();
+    const invalidStateReason = !windowsState || !windowsDeps
+      ? "Windows teardown has no verified auto-start ownership state"
+      : windowsState.deno.processId !== child.pid
+      ? "Windows teardown state does not match the spawned Deno child PID"
+      : null;
+    if (invalidStateReason) {
       writeLog?.(
         "INFO",
-        "taskkill completed for auto-started browser process tree",
+        `${invalidStateReason}; stopping only the spawned Deno root handle`,
       );
-    } catch {
-      // process may have exited already
-      writeLog?.("INFO", "taskkill failed or process already exited");
+      let rootStopError: unknown;
+      try {
+        await stopWindowsSpawnedChildRootOnly({
+          processId: child.pid,
+          killRoot: () => child.kill("SIGKILL"),
+          status: child.status,
+        });
+      } catch (error) {
+        rootStopError = error;
+      }
+      throw new Error(
+        `${invalidStateReason}; root-only stop ${
+          rootStopError
+            ? `failed: ${errorToMessage(rootStopError)}`
+            : "completed"
+        }`,
+      );
     }
+    if (!windowsState || !windowsDeps) {
+      throw new Error("Windows teardown state narrowing failed");
+    }
+    writeLog?.(
+      "INFO",
+      `Stopping verified auto-started browser processes (windows, deno pid=${child.pid})`,
+    );
+    await stopWindowsAutoStartedBrowserWithRootFallback(
+      windowsState,
+      windowsDeps,
+      {
+        processId: child.pid,
+        killRoot: () => child.kill("SIGKILL"),
+        status: child.status,
+      },
+      writeLog,
+    );
     return;
   }
 
@@ -934,6 +2110,8 @@ async function main(): Promise<number> {
   );
   let exitCode = 0;
   let autoStartedBrowser: Deno.ChildProcess | null = null;
+  let windowsAutoStartState: WindowsAutoStartState | null = null;
+  let windowsProcessDeps: WindowsProcessControlDeps | null = null;
   let ownedRunId: string | undefined;
 
   const writeLine = (level: LogLevel, message: string) => {
@@ -1060,11 +2238,49 @@ async function main(): Promise<number> {
       );
 
       try {
+        if (Deno.build.os === "windows") {
+          windowsProcessDeps = createWindowsProcessControlDeps();
+          assertWindowsAutoStartPreflight(
+            await windowsProcessDeps.listProcesses(),
+          );
+        }
         autoStartedBrowser = startTestBrowserProcess();
+        if (Deno.build.os === "windows") {
+          if (!windowsProcessDeps || autoStartedBrowser.pid === undefined) {
+            throw new Error(
+              "Windows auto-start did not provide the required process-control state",
+            );
+          }
+          windowsAutoStartState = createWindowsAutoStartState(
+            await captureWindowsDenoIdentityWithRetry(
+              autoStartedBrowser.pid,
+              windowsProcessDeps,
+            ),
+          );
+        }
         await waitForAutoStartedBrowser(
           autoStartedBrowser,
           resolveStageTimeoutMs(options.startupTimeoutMs, "browser startup"),
+          windowsAutoStartState ?? undefined,
+          windowsProcessDeps ?? undefined,
         );
+        if (Deno.build.os === "windows") {
+          const marionettePort = readMarionettePortFromFile();
+          if (
+            !windowsAutoStartState || !windowsProcessDeps ||
+            marionettePort === null || marionettePort < 1 ||
+            marionettePort > 65_535
+          ) {
+            throw new Error(
+              "Windows auto-start could not capture a valid Marionette port",
+            );
+          }
+          await captureWindowsReadyBrowser(
+            windowsAutoStartState,
+            marionettePort,
+            windowsProcessDeps,
+          );
+        }
         writeLine(
           "INFO",
           "Auto-started test browser is ready. Waiting for test results...",
@@ -1247,7 +2463,22 @@ async function main(): Promise<number> {
     exitCode = 1;
   } finally {
     if (autoStartedBrowser) {
-      await stopAutoStartedBrowser(autoStartedBrowser, writeLine);
+      try {
+        await stopAutoStartedBrowser(
+          autoStartedBrowser,
+          windowsAutoStartState,
+          windowsProcessDeps,
+          writeLine,
+        );
+      } catch (error) {
+        writeLine(
+          "ERROR",
+          `Failed to stop auto-started browser safely: ${
+            errorToMessage(error)
+          }`,
+        );
+        exitCode = 1;
+      }
     }
 
     if (ownedRunId) {

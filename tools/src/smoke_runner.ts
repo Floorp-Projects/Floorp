@@ -46,7 +46,12 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
   const unitSteps: SmokeStep[] = [
     {
       name: "colocated runner unit tests",
-      args: ["test", "tools/src/colocated_test_runner.test.ts"],
+      args: [
+        "test",
+        "--allow-read",
+        "--allow-write",
+        "tools/src/colocated_test_runner.test.ts",
+      ],
     },
   ];
 
