@@ -195,6 +195,38 @@ Deno.test("triageFirefoxBrowserTests classifies locked, quarantined, direct, run
   }
 });
 
+Deno.test("triageFirefoxBrowserTests classifies an unknown BrowserTestUtils method as unsupported", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const upstreamPath =
+      "browser/base/content/test/general/browser_unknown_browser_test_utils.js";
+    const collectionDir = await writeFixtureCollection(dir, [{
+      path: upstreamPath,
+      source:
+        "add_task(async function unknown() { await BrowserTestUtils.futureMethod(); });\n",
+    }]);
+    const quarantinePath = path.join(dir, "quarantine.json");
+    await writeJson(quarantinePath, []);
+
+    const manifest = await triageFirefoxBrowserTests({
+      collectionDir,
+      quarantinePath,
+      outputDir: path.join(dir, "triage"),
+      runtimeLock: createTestRuntimeLock(),
+    });
+    const unknown = testByPath(manifest.tests, upstreamPath);
+
+    assertEquals(unknown.classification, "unsupported");
+    assertEquals(unknown.detectedApis, ["BrowserTestUtils.futureMethod"]);
+    assertEquals(unknown.requiredApis, ["BrowserTestUtils.futureMethod"]);
+    assertEquals(unknown.reasons, [
+      "uses an unsupported BrowserTestUtils method",
+    ]);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
 Deno.test("triageFirefoxBrowserTests rejects quarantine entries with missing required fields", async () => {
   const dir = await Deno.makeTempDir();
   try {

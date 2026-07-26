@@ -313,6 +313,181 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
+      name: "restart does not mix partial injected dependencies with globals",
+      fn: () => {
+        const harness = createRestartHarness();
+        const restartGlobal = globalThis as Record<string, unknown>;
+        const previousServicesDescriptor = Object.getOwnPropertyDescriptor(
+          restartGlobal,
+          "Services",
+        );
+        const partialDependencies: RestartDependencies = {
+          isDev: false,
+          hasChrome: true,
+          Cc: harness.dependencies.Cc,
+          Ci: harness.dependencies.Ci,
+          fallbackRestart: harness.dependencies.fallbackRestart,
+        };
+
+        Object.defineProperty(restartGlobal, "Services", {
+          value: harness.dependencies.Services,
+          configurable: true,
+          writable: true,
+        });
+        try {
+          restart(false, partialDependencies);
+
+          assertEquals(
+            harness.calls.join(","),
+            "fallback:false",
+            "partial injection should use fallback without privileged effects",
+          );
+        } finally {
+          if (previousServicesDescriptor) {
+            Object.defineProperty(
+              restartGlobal,
+              "Services",
+              previousServicesDescriptor,
+            );
+          } else {
+            delete restartGlobal.Services;
+          }
+        }
+      },
+    },
+    {
+      name: "restart requires a factory and numeric startup flags",
+      fn: () => {
+        const missingFactoryHarness = createRestartHarness();
+        restart(false, {
+          ...missingFactoryHarness.dependencies,
+          Cc: {},
+        });
+
+        assertEquals(
+          missingFactoryHarness.calls.join(","),
+          "fallback:false",
+          "missing cancel-quit factory should use fallback",
+        );
+
+        const missingFlagsHarness = createRestartHarness();
+        restart(true, {
+          ...missingFlagsHarness.dependencies,
+          Ci: {
+            nsISupportsPRBool: missingFlagsHarness.dependencies.Ci
+              ?.nsISupportsPRBool,
+          },
+        });
+
+        assertEquals(
+          missingFlagsHarness.calls.join(","),
+          "fallback:true",
+          "missing startup flags should use fallback",
+        );
+
+        const nonNumericFlagsHarness = createRestartHarness();
+        restart(false, {
+          ...nonNumericFlagsHarness.dependencies,
+          Ci: {
+            nsISupportsPRBool: nonNumericFlagsHarness.dependencies.Ci
+              ?.nsISupportsPRBool,
+            nsIAppStartup: {
+              eAttemptQuit: Number.NaN,
+              eRestart: 2,
+            },
+          },
+        });
+
+        assertEquals(
+          nonNumericFlagsHarness.calls.join(","),
+          "fallback:false",
+          "non-finite startup flags should use fallback",
+        );
+      },
+    },
+    {
+      name: "restart requires both privileged startup methods",
+      fn: () => {
+        const missingSafeModeHarness = createRestartHarness();
+        const servicesWithoutSafeMode = {
+          obs: missingSafeModeHarness.dependencies.Services?.obs,
+          startup: {
+            quit: missingSafeModeHarness.dependencies.Services?.startup.quit,
+          },
+        } as unknown as NonNullable<RestartDependencies["Services"]>;
+        restart(false, {
+          ...missingSafeModeHarness.dependencies,
+          Services: servicesWithoutSafeMode,
+        });
+
+        assertEquals(
+          missingSafeModeHarness.calls.join(","),
+          "fallback:false",
+          "normal restart should fall back when safe-mode restart is missing",
+        );
+
+        const missingQuitHarness = createRestartHarness();
+        const servicesWithoutQuit = {
+          obs: missingQuitHarness.dependencies.Services?.obs,
+          startup: {
+            restartInSafeMode: missingQuitHarness.dependencies.Services?.startup
+              .restartInSafeMode,
+          },
+        } as unknown as NonNullable<RestartDependencies["Services"]>;
+        restart(true, {
+          ...missingQuitHarness.dependencies,
+          Services: servicesWithoutQuit,
+        });
+
+        assertEquals(
+          missingQuitHarness.calls.join(","),
+          "fallback:true",
+          "safe-mode restart should fall back when normal quit is missing",
+        );
+      },
+    },
+    {
+      name: "restart uses global fallback for partial injected dependencies",
+      fn: () => {
+        const harness = createRestartHarness();
+        const restartGlobal = globalThis as
+          & GlobalThis
+          & Record<string, unknown>;
+        const hadGlobalFallback = Object.hasOwn(restartGlobal, "NRRestart");
+        const previousGlobalFallback = restartGlobal.NRRestart;
+        const globalFallbackValues: boolean[] = [];
+
+        try {
+          restartGlobal.NRRestart = (safeMode: boolean) => {
+            globalFallbackValues.push(safeMode);
+          };
+          restart(true, {
+            isDev: false,
+            hasChrome: true,
+            Ci: harness.dependencies.Ci,
+            Services: harness.dependencies.Services,
+          });
+
+          assertEquals(
+            harness.calls.length,
+            0,
+            "partial injection should not call injected privileged services",
+          );
+          assertEquals(
+            globalFallbackValues.join(","),
+            "true",
+            "partial injection should preserve safe mode in global fallback",
+          );
+        } finally {
+          if (hadGlobalFallback) {
+            restartGlobal.NRRestart = previousGlobalFallback;
+          } else {
+            delete restartGlobal.NRRestart;
+          }
+        }
+      },
+    },
+    {
       name: "restart forwards normal and safe-mode requests to fallback",
       fn: () => {
         const harness = createRestartHarness();

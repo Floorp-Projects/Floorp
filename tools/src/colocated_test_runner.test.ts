@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertMatch,
+  assertRejects,
+  assertThrows,
+} from "@std/assert";
 import {
   detectLayer,
   escapeRegExp,
@@ -27,6 +32,40 @@ import {
   type WindowsProcessRecord,
   writeBrowserTestControlPrefs,
 } from "./colocated_test_runner.ts";
+
+Deno.test("browser detection uses the abort-bounded TCP reachability helper", async () => {
+  const source = await Deno.readTextFile(
+    new URL("./colocated_test_runner.ts", import.meta.url),
+  );
+  const helperStart = source.indexOf("async function _isTcpPortReachable(");
+  const detectionStart = source.indexOf(
+    "async function hasRunningTestBrowser(",
+  );
+  const detectionEnd = source.indexOf(
+    "export interface WindowsProcessRecord",
+    detectionStart,
+  );
+
+  assertEquals(helperStart >= 0, true);
+  assertEquals(detectionStart > helperStart, true);
+  assertEquals(detectionEnd > detectionStart, true);
+
+  const helperSource = source.slice(helperStart, detectionStart);
+  const detectionSource = source.slice(detectionStart, detectionEnd);
+  assertMatch(
+    helperSource,
+    /Deno\.connect\(\{[\s\S]*signal:\s*AbortSignal\.timeout\(timeoutMs\)/,
+  );
+  assertMatch(
+    helperSource,
+    /try\s*\{\s*return true;\s*\}\s*finally\s*\{\s*conn\.close\(\);\s*\}/,
+  );
+  assertMatch(
+    detectionSource,
+    /return await _isTcpPortReachable\(port\);/,
+  );
+  assertEquals(detectionSource.includes("Deno.connect"), false);
+});
 
 Deno.test("isTestFile detects supported test patterns", () => {
   assertEquals(isTestFile("foo/bar.test.ts"), true);

@@ -435,7 +435,6 @@ async function writeCollectedBlobBytes(
   outputRoot: string,
   stdin: WritableStreamDefaultWriter<Uint8Array>,
   stdout: ByteStreamReader,
-  stderrText: Promise<string>,
   entry: GitTreeEntry,
 ): Promise<WrittenBlob> {
   const encoder = new TextEncoder();
@@ -444,11 +443,8 @@ async function writeCollectedBlobBytes(
   const header = await stdout.readLine();
   const match = header.match(/^([0-9a-f]+) (\S+) (\d+)$/);
   if (!match) {
-    const stderr = (await stderrText).trim();
     throw new Error(
-      `Unexpected git cat-file header for ${entry.path}: ${header}${
-        stderr === "" ? "" : `\n${stderr}`
-      }`,
+      `Unexpected git cat-file header for ${entry.path}: ${header}`,
     );
   }
   if (match[1] !== entry.object || match[2] !== "blob") {
@@ -489,6 +485,7 @@ async function writeCollectedBlobs(
   const stdin = child.stdin.getWriter();
   const stdout = new ByteStreamReader(child.stdout);
   const stderrText = new Response(child.stderr).text();
+  const statusPromise = child.status;
   const written = new Map<string, WrittenBlob>();
 
   try {
@@ -499,28 +496,40 @@ async function writeCollectedBlobs(
           outputRoot,
           stdin,
           stdout,
-          stderrText,
           entry,
         ),
       );
     }
     await stdin.close();
-  } catch (error) {
-    await stdin.close().catch(() => {});
+
+    const [status, stderr] = await Promise.all([statusPromise, stderrText]);
     await stdout.cancel();
-    child.kill("SIGTERM");
+    if (!status.success) {
+      throw new Error(`git cat-file --batch failed: ${stderr.trim()}`);
+    }
+
+    return written;
+  } catch (error) {
+    const abortInput = stdin.abort(error).catch(() => {});
+    const cancelOutput = stdout.cancel().catch(() => {});
+    try {
+      child.kill("SIGTERM");
+    } catch {
+      // The child may already have exited. Cleanup must preserve the first error.
+    }
+    await Promise.allSettled([
+      abortInput,
+      cancelOutput,
+      statusPromise,
+      stderrText,
+    ]);
     throw error;
   }
-
-  const status = await child.status;
-  const stderr = (await stderrText).trim();
-  await stdout.cancel();
-  if (!status.success) {
-    throw new Error(`git cat-file --batch failed: ${stderr}`);
-  }
-
-  return written;
 }
+
+export const collectFirefoxTestsTestInternals = {
+  writeCollectedBlobs,
+};
 
 function discoverTestRoots(
   entries: GitTreeEntry[],

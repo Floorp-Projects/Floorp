@@ -10,13 +10,17 @@ import {
 import {
   BROWSER_HTTP_LOADER_ORIGIN,
   injectBrowserXhtml,
+  injectPreferencesXhtmlDev,
   parseXhtmlCliArgs,
   transformBrowserXhtml,
+  transformPreferencesXhtmlForDev,
 } from "../scripts/xhtml.ts";
 
 const STARTUP_SCRIPT_SRC = "chrome://noraneko-startup/content/chrome_root.js";
 const STRICT_CSP =
   "default-src 'none'; script-src chrome: moz-src: resource: 'report-sample'; img-src chrome: data:";
+const PREFERENCES_DEV_CSP =
+  "default-src chrome: http://localhost:* ws://localhost:*; img-src chrome: moz-icon: https: blob: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'";
 
 function fixture(
   csp: string | null = STRICT_CSP,
@@ -38,6 +42,31 @@ function fixture(
 
 function count(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
+}
+
+function preferencesFixture(
+  options: {
+    includeCsp?: boolean;
+    duplicateCsp?: boolean;
+    nonCspFirst?: boolean;
+  } = {},
+): string {
+  const includeCsp = options.includeCsp ?? true;
+  const nonCspMeta = options.nonCspFirst
+    ? '<meta name="viewport" content="width=device-width" />'
+    : "";
+  const cspMeta = includeCsp
+    ? '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'" />'
+    : "";
+  return `<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    ${nonCspMeta}
+    ${cspMeta}
+    ${options.duplicateCsp ? cspMeta : ""}
+  </head>
+  <body />
+</html>`;
 }
 
 function strictToDev(): string {
@@ -227,6 +256,62 @@ Deno.test("browser XHTML owns exactly one startup script after repeated injectio
     output,
     /<script[^>]*data-geckomixin=""[^>]*chrome_root\.js|<script[^>]*chrome_root\.js[^>]*data-geckomixin=""/,
   );
+});
+
+Deno.test("development preferences XHTML rewrites the CSP meta after a non-CSP meta", () => {
+  const source = preferencesFixture({ nonCspFirst: true });
+  const output = transformPreferencesXhtmlForDev(source);
+
+  assertEquals(count(output, PREFERENCES_DEV_CSP), 1);
+  assertEquals(count(output, 'content="width=device-width"'), 1);
+  assertEquals(output.includes("default-src 'none'"), false);
+  assertEquals(transformPreferencesXhtmlForDev(output), output);
+});
+
+Deno.test("development preferences XHTML requires exactly one CSP meta", () => {
+  assertThrows(
+    () =>
+      transformPreferencesXhtmlForDev(
+        preferencesFixture({ includeCsp: false, nonCspFirst: true }),
+      ),
+    Error,
+    "expected exactly one CSP meta, found 0",
+  );
+  assertThrows(
+    () =>
+      transformPreferencesXhtmlForDev(
+        preferencesFixture({ duplicateCsp: true }),
+      ),
+    Error,
+    "expected exactly one CSP meta, found 2",
+  );
+});
+
+Deno.test("development preferences XHTML injection leaves source unchanged on CSP validation failure", async () => {
+  const temp = await Deno.makeTempDir({
+    prefix: "floorp-preferences-failure-",
+  });
+  const directory =
+    `${temp}/browser/chrome/browser/content/browser/preferences`;
+  const path = `${directory}/preferences.xhtml`;
+  const invalidSources = [
+    preferencesFixture({ includeCsp: false, nonCspFirst: true }),
+    preferencesFixture({ duplicateCsp: true }),
+  ];
+  try {
+    await Deno.mkdir(directory, { recursive: true });
+    for (const source of invalidSources) {
+      await Deno.writeTextFile(path, source);
+      await assertRejects(
+        () => injectPreferencesXhtmlDev(temp),
+        Error,
+        "expected exactly one CSP meta",
+      );
+      assertEquals(await Deno.readTextFile(path), source);
+    }
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
 });
 
 Deno.test("XHTML CLI keeps browser HTTP permission explicit and off by default", () => {

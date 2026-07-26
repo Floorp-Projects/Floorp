@@ -330,7 +330,7 @@ function detectBrowserTestUtilsMethods(source: string): TriageFinding[] {
     } else {
       findings.push({
         api,
-        classification: "needs-runner-shim",
+        classification: "unsupported",
         reason: "uses an unsupported BrowserTestUtils method",
       });
     }

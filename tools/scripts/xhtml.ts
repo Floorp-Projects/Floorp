@@ -7,6 +7,8 @@ export const BROWSER_HTTP_LOADER_ORIGIN = "http://localhost:5181";
 
 const CSP_HEADER = "content-security-policy";
 const STARTUP_SCRIPT_SRC = "chrome://noraneko-startup/content/chrome_root.js";
+const PREFERENCES_DEV_CSP =
+  "default-src chrome: http://localhost:* ws://localhost:*; img-src chrome: moz-icon: https: blob: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'";
 
 type ParsedXmlDocument = ReturnType<DOMParser["parseFromString"]>;
 type ParsedElement = NonNullable<
@@ -24,7 +26,7 @@ export interface XhtmlCliOptions {
 }
 
 function fail(message: string): never {
-  throw new Error(`Invalid browser.xhtml: ${message}`);
+  throw new Error(`Invalid XHTML: ${message}`);
 }
 
 function assertEntityReferences(value: string): void {
@@ -410,23 +412,33 @@ export async function injectBrowserXhtml(
   await fs.writeFile(browserXhtmlPath, output);
 }
 
-async function injectXhtmlDev(binPath: string): Promise<void> {
+/** Pure, fail-closed development preferences.xhtml CSP transformation. */
+export function transformPreferencesXhtmlForDev(source: string): string {
+  assertWellFormedXml(source);
+  const document = new DOMParser().parseFromString(source, "text/xml");
+  const meta = findCspMeta(document);
+  meta.setAttribute("content", PREFERENCES_DEV_CSP);
+
+  const output = document.toString();
+  assertWellFormedXml(output);
+  const outputDocument = new DOMParser().parseFromString(output, "text/xml");
+  const outputMeta = findCspMeta(outputDocument);
+  if (
+    getCaseInsensitiveAttribute(outputMeta, "content") !== PREFERENCES_DEV_CSP
+  ) {
+    fail("preferences CSP transformation did not reach the expected value");
+  }
+  return output;
+}
+
+export async function injectPreferencesXhtmlDev(
+  binPath: string,
+): Promise<void> {
   const preferencesXhtmlPath =
     `${binPath}/browser/chrome/browser/content/browser/preferences/preferences.xhtml`;
-  const document = new DOMParser().parseFromString(
-    await fs.readFile(preferencesXhtmlPath, "utf8"),
-    "text/xml",
-  );
-
-  const meta = document.querySelector("meta");
-  if (meta) {
-    meta.setAttribute(
-      "content",
-      `default-src chrome: http://localhost:* ws://localhost:*; img-src chrome: moz-icon: https: blob: data:; style-src chrome: data: 'unsafe-inline'; object-src 'none'`,
-    );
-  }
-
-  await fs.writeFile(preferencesXhtmlPath, document.toString());
+  const source = await fs.readFile(preferencesXhtmlPath, "utf8");
+  const output = transformPreferencesXhtmlForDev(source);
+  await fs.writeFile(preferencesXhtmlPath, output);
 }
 
 export function parseXhtmlCliArgs(args: string[]): XhtmlCliOptions {
@@ -453,6 +465,6 @@ if (import.meta.main) {
     allowBrowserHttpLoader: options.allowBrowserHttpLoader,
   });
   if (options.isDev) {
-    await injectXhtmlDev(options.binPath);
+    await injectPreferencesXhtmlDev(options.binPath);
   }
 }

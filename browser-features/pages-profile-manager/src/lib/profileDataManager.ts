@@ -696,6 +696,74 @@ export type RestartDependencies = {
   fallbackRestart?: ((safeMode: boolean) => void) | null;
 };
 
+type RestartPrivilegedEnvironment = {
+  Cc: NonNullable<RestartDependencies["Cc"]>;
+  Ci: Omit<NonNullable<RestartDependencies["Ci"]>, "nsIAppStartup"> & {
+    nsIAppStartup: NonNullable<
+      NonNullable<RestartDependencies["Ci"]>["nsIAppStartup"]
+    >;
+  };
+  Services: NonNullable<RestartDependencies["Services"]>;
+};
+
+type RestartPrivilegedEnvironmentCandidate = {
+  Cc?: RestartDependencies["Cc"];
+  Ci?: RestartDependencies["Ci"];
+  Services?: RestartDependencies["Services"];
+};
+
+const restartCancelQuitContract = "@mozilla.org/supports-PRBool;1";
+
+function isCompleteRestartPrivilegedEnvironment(
+  candidate: RestartPrivilegedEnvironmentCandidate,
+): candidate is RestartPrivilegedEnvironment {
+  const cancelQuitFactory = candidate.Cc?.[restartCancelQuitContract];
+  const appStartup = candidate.Ci?.nsIAppStartup;
+  const observerService = candidate.Services?.obs;
+  const startupService = candidate.Services?.startup;
+
+  return (
+    typeof cancelQuitFactory?.createInstance === "function" &&
+    candidate.Ci?.nsISupportsPRBool !== undefined &&
+    candidate.Ci.nsISupportsPRBool !== null &&
+    Number.isInteger(appStartup?.eAttemptQuit) &&
+    Number.isInteger(appStartup?.eRestart) &&
+    typeof observerService?.notifyObservers === "function" &&
+    typeof startupService?.quit === "function" &&
+    typeof startupService.restartInSafeMode === "function"
+  );
+}
+
+function getRestartPrivilegedEnvironment(
+  dependencies: RestartDependencies,
+  restartGlobals: RestartPrivilegedEnvironmentCandidate,
+): RestartPrivilegedEnvironment | null {
+  const hasInjectedCc = Object.hasOwn(dependencies, "Cc");
+  const hasInjectedCi = Object.hasOwn(dependencies, "Ci");
+  const hasInjectedServices = Object.hasOwn(dependencies, "Services");
+  const hasAnyInjectedPrivilegedDependency = hasInjectedCc || hasInjectedCi ||
+    hasInjectedServices;
+
+  if (hasAnyInjectedPrivilegedDependency) {
+    if (!(hasInjectedCc && hasInjectedCi && hasInjectedServices)) {
+      return null;
+    }
+
+    const injectedEnvironment: RestartPrivilegedEnvironmentCandidate = {
+      Cc: dependencies.Cc,
+      Ci: dependencies.Ci,
+      Services: dependencies.Services,
+    };
+    return isCompleteRestartPrivilegedEnvironment(injectedEnvironment)
+      ? injectedEnvironment
+      : null;
+  }
+
+  return isCompleteRestartPrivilegedEnvironment(restartGlobals)
+    ? restartGlobals
+    : null;
+}
+
 export function restart(
   safeMode = false,
   dependencies: RestartDependencies = {},
@@ -707,32 +775,33 @@ export function restart(
   };
   const isDev = dependencies.isDev ?? __isDev;
   const hasChrome = dependencies.hasChrome ?? __hasChrome;
-  const Cc = dependencies.Cc ?? restartGlobals.Cc;
-  const Ci = dependencies.Ci ?? restartGlobals.Ci;
-  const Services = dependencies.Services ?? restartGlobals.Services;
 
   if (!isDev && hasChrome) {
     try {
-      const cancelQuit = Cc![
-        "@mozilla.org/supports-PRBool;1"
-      ].createInstance(Ci!.nsISupportsPRBool);
-      Services!.obs.notifyObservers(
-        cancelQuit,
-        "quit-application-requested",
-        "restart",
+      const privilegedEnvironment = getRestartPrivilegedEnvironment(
+        dependencies,
+        restartGlobals,
       );
-      if (cancelQuit.data) {
+      if (privilegedEnvironment) {
+        const cancelQuit = privilegedEnvironment.Cc[restartCancelQuitContract]
+          .createInstance(privilegedEnvironment.Ci.nsISupportsPRBool);
+        privilegedEnvironment.Services.obs.notifyObservers(
+          cancelQuit,
+          "quit-application-requested",
+          "restart",
+        );
+        if (cancelQuit.data) {
+          return;
+        }
+        const flags = privilegedEnvironment.Ci.nsIAppStartup.eAttemptQuit |
+          privilegedEnvironment.Ci.nsIAppStartup.eRestart;
+        if (safeMode) {
+          privilegedEnvironment.Services.startup.restartInSafeMode(flags);
+        } else {
+          privilegedEnvironment.Services.startup.quit(flags);
+        }
         return;
       }
-      const flags = Ci!.nsIAppStartup
-        ? Ci!.nsIAppStartup.eAttemptQuit | Ci!.nsIAppStartup.eRestart
-        : 0;
-      if (safeMode) {
-        Services!.startup.restartInSafeMode(flags);
-      } else {
-        Services!.startup.quit(flags);
-      }
-      return;
     } catch (e) {
       console.error("[profileDataManager] restart (privileged):", e);
     }

@@ -126,19 +126,18 @@ jobs:
               throw new Error(`Expected bounded candidate collection, got ${collection.mode}`);
             }
 
-            const treeLines = (await gitText([
+            const treeRecords = decoder.decode(await gitOutput([
               "ls-tree",
               "-l",
+              "-z",
               "HEAD",
               "--",
               ...lock.source.materials.entries.map((entry) => entry.path),
-            ]))
-              .split("\n")
-              .filter(Boolean);
+            ])).split("\0").filter((record) => record !== "");
             const tree = new Map();
-            for (const line of treeLines) {
-              const match = line.match(/^(\d+)\s+(\S+)\s+([0-9a-f]+)\s+(-|\d+)\t(.+)$/);
-              if (!match) throw new Error(`Unexpected git ls-tree line: ${line}`);
+            for (const record of treeRecords) {
+              const match = record.match(/^(\d+)\s+(\S+)\s+([0-9a-f]+)\s+(-|\d+)\t([\s\S]+)$/);
+              if (!match) throw new Error(`Unexpected git ls-tree record: ${record}`);
               tree.set(match[5], {
                 mode: match[1],
                 type: match[2],

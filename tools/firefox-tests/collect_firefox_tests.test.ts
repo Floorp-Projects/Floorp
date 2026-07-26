@@ -510,6 +510,89 @@ Deno.test("collectFirefoxTests materializes only an exact locked closure", async
   }
 });
 
+Deno.test("collectFirefoxTests reports a missing loose Git object without hanging", async () => {
+  const { runtimeDir, lock } = await createLockedRuntimeFixture();
+  const testDir = await Deno.makeTempDir();
+  let worker: Worker | undefined;
+  let workerUrl: string | undefined;
+  try {
+    const missingMaterial = lock.source.materials.entries.find((material) =>
+      material.role === "test"
+    );
+    if (!missingMaterial) {
+      throw new Error("Missing test material in fixture lock");
+    }
+    const missingObjectPath = path.join(
+      runtimeDir,
+      ".git",
+      "objects",
+      missingMaterial.gitBlob.slice(0, 2),
+      missingMaterial.gitBlob.slice(2),
+    );
+    await Deno.stat(missingObjectPath);
+    await Deno.remove(missingObjectPath);
+
+    const outputDir = path.join(testDir, "collection");
+    const collectorUrl = new URL(
+      "./collect_firefox_tests.ts",
+      import.meta.url,
+    ).href;
+    const entry = {
+      mode: missingMaterial.mode,
+      type: "blob",
+      object: missingMaterial.gitBlob,
+      size: missingMaterial.bytes,
+      path: missingMaterial.path,
+    };
+    workerUrl = URL.createObjectURL(
+      new Blob([
+        [
+          `import { collectFirefoxTestsTestInternals } from ${
+            JSON.stringify(collectorUrl)
+          };`,
+          "try {",
+          `  await collectFirefoxTestsTestInternals.writeCollectedBlobs(${
+            JSON.stringify(runtimeDir)
+          }, ${JSON.stringify(outputDir)}, [${JSON.stringify(entry)}]);`,
+          '  Reflect.apply(Reflect.get(globalThis, "postMessage"), globalThis, [{ error: "Collector unexpectedly succeeded" }]);',
+          "} catch (error) {",
+          '  Reflect.apply(Reflect.get(globalThis, "postMessage"), globalThis, [{',
+          "    error: error instanceof Error ? error.message : String(error),",
+          "  }]);",
+          "}",
+          "",
+        ].join("\n"),
+      ], { type: "application/javascript" }),
+    );
+    worker = new Worker(workerUrl, { type: "module" });
+    const result = await new Promise<{ error: string }>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Collector worker did not exit within 10000 ms"));
+      }, 10_000);
+      worker!.onmessage = (event: MessageEvent<{ error: string }>) => {
+        clearTimeout(timeoutId);
+        resolve(event.data);
+      };
+      worker!.onerror = (event) => {
+        clearTimeout(timeoutId);
+        reject(new Error(event.message));
+      };
+    });
+
+    assertStringIncludes(
+      result.error,
+      `Unexpected git cat-file header for ${missingMaterial.path}: ${missingMaterial.gitBlob} missing`,
+    );
+  } finally {
+    worker?.terminate();
+    if (workerUrl !== undefined) {
+      URL.revokeObjectURL(workerUrl);
+    }
+    await Deno.remove(runtimeDir, { recursive: true });
+    await Deno.remove(testDir, { recursive: true });
+  }
+});
+
 Deno.test("collectFirefoxTests rejects locked material identity drift", async () => {
   const { runtimeDir, lock } = await createLockedRuntimeFixture();
   const outputDir = await Deno.makeTempDir();

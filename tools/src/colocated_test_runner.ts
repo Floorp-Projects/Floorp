@@ -390,25 +390,20 @@ async function _isTcpPortReachable(
   port: number,
   timeoutMs = 1_500,
 ): Promise<boolean> {
-  let timedOut = false;
-
-  const connectPromise = Deno.connect({ hostname: "127.0.0.1", port })
-    .then((conn) => {
-      try {
-        conn.close();
-      } catch {
-        // best-effort close
-      }
-      return !timedOut;
-    })
-    .catch(() => false);
-
-  const timeoutPromise = sleep(timeoutMs).then(() => {
-    timedOut = true;
+  try {
+    const conn = await Deno.connect({
+      hostname: "127.0.0.1",
+      port,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    try {
+      return true;
+    } finally {
+      conn.close();
+    }
+  } catch {
     return false;
-  });
-
-  return await Promise.race([connectPromise, timeoutPromise]);
+  }
 }
 
 async function hasRunningTestBrowser(): Promise<boolean> {
@@ -417,21 +412,7 @@ async function hasRunningTestBrowser(): Promise<boolean> {
     return false;
   }
 
-  // Check port reachability without connecting to Marionette directly.
-  // Connecting and immediately closing a TCP socket to the Marionette
-  // port can interfere with the Marionette server, causing the browser
-  // to become unresponsive or shut down.
-  // Instead, we rely on the port file's existence and an additional
-  // small delay to ensure the server is listening.
-  try {
-    // Quick TCP check: just attempt a connection and immediately close.
-    // Use a very short timeout to avoid blocking.
-    const conn = await Deno.connect({ hostname: "127.0.0.1", port });
-    conn.close();
-    return true;
-  } catch {
-    return false;
-  }
+  return await _isTcpPortReachable(port);
 }
 
 export interface WindowsProcessRecord {

@@ -281,7 +281,7 @@ function setSinglePlistString(
         `macOS Info.plist ${key} is not represented by exactly one string value.`,
       );
     }
-    return content.replace(plistStringPairPattern(key), replacement);
+    return content.replace(plistStringPairPattern(key), () => replacement);
   }
 
   const insertIndex = content.lastIndexOf("</dict>");
@@ -1040,11 +1040,14 @@ async function isolateLockedRuntimeControlState(
   if (!(await pathExists(source))) return undefined;
   const backupRoot = path.join(distRoot, `runtime-control-backup-${nonce}`);
   const backup = path.join(backupRoot, "marionette-port.txt");
+  let backupRootCreated = false;
   try {
     await Deno.mkdir(backupRoot);
+    backupRootCreated = true;
     await rename(source, backup);
     return backupRoot;
   } catch (error) {
+    if (!backupRootCreated) throw error;
     if (await pathExists(backup)) {
       try {
         await rename(backup, source);

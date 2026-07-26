@@ -631,6 +631,43 @@ Deno.test("locked macOS Runtime commits only final developer paths", async () =>
   }
 });
 
+Deno.test("locked macOS Runtime preserves dollar replacement tokens in final developer paths", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const artifact = lockedMacArtifact();
+    const binRoot = path.resolve(root, "$1-$&", "bin");
+
+    await installLockedRuntime({
+      lock: lockedRuntime(artifact),
+      target: { platform: "macos", architecture: "universal" },
+      binRootDir: binRoot,
+      profileDir: path.resolve(root, "profile/test"),
+      operations: fakeLockedOperations(artifact, {
+        nonce: "mac-dollar-path",
+      }),
+    });
+
+    const layout = runtimeLayoutFor(binRoot, artifact);
+    const infoPlistPath = path.join(
+      path.dirname(path.dirname(layout.applicationIni)),
+      "Info.plist",
+    );
+    const content = await Deno.readTextFile(infoPlistPath);
+    const finalDeveloperPath = path.join(binRoot, "floorp");
+    const escapedFinalDeveloperPath = finalDeveloperPath.replaceAll(
+      "&",
+      "&amp;",
+    );
+    assertEquals(
+      content.split(`<string>${escapedFinalDeveloperPath}</string>`).length - 1,
+      2,
+    );
+    assertEquals(content.includes("$1-$&amp;"), true);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test("locked macOS plist patch failure aborts before swap and invalidates control", async () => {
   const root = await Deno.makeTempDir();
   try {
@@ -886,6 +923,46 @@ for (
     }
   });
 }
+
+Deno.test("locked Runtime control backup collision rejects without deleting preexisting recovery data", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const artifact = lockedArtifact();
+    const binRoot = `${root}/bin`;
+    const profile = `${root}/profile/test`;
+    const nonce = "control-backup-collision";
+    const controlBackupRoot = `${root}/runtime-control-backup-${nonce}`;
+    const sentinel = `${controlBackupRoot}/recovery-sentinel`;
+    await writeOldRuntime(binRoot);
+    await Deno.mkdir(profile, { recursive: true });
+    await Deno.mkdir(controlBackupRoot);
+    await Deno.writeTextFile(sentinel, "preserve");
+    await Deno.writeTextFile(`${root}/marionette-port.txt`, "2828");
+
+    await assertRejects(
+      () =>
+        installLockedRuntime({
+          lock: lockedRuntime(artifact),
+          target: { platform: "windows", architecture: "x86_64" },
+          binRootDir: binRoot,
+          profileDir: profile,
+          operations: fakeLockedOperations(artifact, { nonce }),
+        }),
+      Deno.errors.AlreadyExists,
+    );
+    assertEquals(await Deno.readTextFile(sentinel), "preserve");
+    assertEquals(
+      await Deno.readTextFile(`${root}/marionette-port.txt`),
+      "2828",
+    );
+    assertEquals(
+      await Deno.readTextFile(`${binRoot}/floorp/old.txt`),
+      "old-runtime",
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
 
 Deno.test("locked Runtime transaction collision invalidates control without deleting recovery data", async () => {
   const root = await Deno.makeTempDir();
