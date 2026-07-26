@@ -24,9 +24,16 @@ export type HoverReloadPrefs = {
   removeObserver: (name: string, observer: HoverReloadPrefObserver) => void;
 };
 
+export type HoverReloadTimerHandle =
+  | number
+  | ReturnType<typeof globalThis.setTimeout>;
+
 export type HoverReloadClock = {
-  setTimeout: (callback: () => void, delay: number) => number;
-  clearTimeout: (handle: number) => void;
+  setTimeout: (
+    callback: () => void,
+    delay: number,
+  ) => HoverReloadTimerHandle;
+  clearTimeout: (handle: HoverReloadTimerHandle) => void;
 };
 
 export type HoverReloadMutationObserver = {

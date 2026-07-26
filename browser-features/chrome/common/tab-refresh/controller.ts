@@ -12,6 +12,7 @@ import type {
   HoverReloadPrefObserver,
   HoverReloadPrefs,
   HoverReloadTab,
+  HoverReloadTimerHandle,
   HoverReloadUnloadTarget,
 } from "./types.ts";
 
@@ -98,7 +99,7 @@ export class HoverReloadController {
   private blockedControlHovered = false;
   private pendingTab: HoverReloadTab | null = null;
   private visibleTab: HoverReloadTab | null = null;
-  private timer: number | null = null;
+  private timer: HoverReloadTimerHandle | null = null;
   private glyph: GlyphRecord | null = null;
   private mutationObserver: HoverReloadMutationObserver | null = null;
 

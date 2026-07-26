@@ -20,6 +20,7 @@ import type {
   HoverReloadPrefObserver,
   HoverReloadPrefs,
   HoverReloadTab,
+  HoverReloadTimerHandle,
 } from "../types.ts";
 import {
   assert as harnessAssert,
@@ -80,7 +81,7 @@ class FakePrefs implements HoverReloadPrefs {
 
 class FakeClock implements HoverReloadClock {
   private nextHandle = 1;
-  private readonly callbacks = new Map<number, () => void>();
+  private readonly callbacks = new Map<HoverReloadTimerHandle, () => void>();
   private lastScheduledCallback: (() => void) | null = null;
   readonly scheduledDelays: number[] = [];
 
@@ -88,7 +89,10 @@ class FakeClock implements HoverReloadClock {
     return this.callbacks.size;
   }
 
-  setTimeout(callback: () => void, delay: number): number {
+  setTimeout(
+    callback: () => void,
+    delay: number,
+  ): HoverReloadTimerHandle {
     const handle = this.nextHandle++;
     this.scheduledDelays.push(delay);
     this.lastScheduledCallback = callback;
@@ -96,7 +100,7 @@ class FakeClock implements HoverReloadClock {
     return handle;
   }
 
-  clearTimeout(handle: number): void {
+  clearTimeout(handle: HoverReloadTimerHandle): void {
     this.callbacks.delete(handle);
   }
 
