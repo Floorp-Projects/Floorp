@@ -35,7 +35,18 @@ const RUNTIME_BASE_URL = "https://dev-assets.floorp.app/floorp-runtime-builds/";
 const RUNTIME_INDEX_URL = `${RUNTIME_BASE_URL}.ftp-deploy-sync-state.json`;
 
 export const LOCKED_RUNTIME_ENV = "FLOORP_RUNTIME_LOCKED";
+export const LOCKED_RUNTIME_GITHUB_TOKEN_ENV = "FLOORP_RUNTIME_GITHUB_TOKEN";
 export const LOCKED_RUNTIME_MARKER = ".floorp-runtime-lock.json";
+
+export type LockedRuntimeFetch = (
+  input: string | URL | Request,
+  init?: RequestInit,
+) => Promise<Response>;
+
+export interface LockedRuntimeNetworkOptions {
+  githubToken?: string;
+  fetchImpl?: LockedRuntimeFetch;
+}
 
 export interface NativeRuntimeTarget {
   platform: RuntimePlatform;
@@ -75,7 +86,8 @@ export interface LockedRuntimeOperations {
   nonce(): string;
 }
 
-export interface LockedRuntimeInstallOptions {
+export interface LockedRuntimeInstallOptions
+  extends LockedRuntimeNetworkOptions {
   lock: RuntimeLock;
   target?: NativeRuntimeTarget;
   binRootDir?: string;
@@ -391,13 +403,27 @@ function githubRepositoryApiPath(repository: string): string {
   return repositoryParts.map(encodeURIComponent).join("/");
 }
 
-function lockedReleaseAssetApiUrl(
+function isPlainLockedRuntimeAssetName(assetName: string): boolean {
+  return assetName.length > 0 && assetName !== "." && assetName !== ".." &&
+    !assetName.includes("/") && !assetName.includes("\\") &&
+    !path.isAbsolute(assetName);
+}
+
+export function lockedReleasePublicDownloadUrl(
   repository: string,
-  assetId: number,
+  ref: string,
+  assetName: string,
 ): string {
-  return `https://api.github.com/repos/${
-    githubRepositoryApiPath(repository)
-  }/releases/assets/${assetId}`;
+  const repositoryPath = githubRepositoryApiPath(repository);
+  if (!ref || ref === "." || ref === "..") {
+    throw new Error("Invalid locked Runtime release ref.");
+  }
+  if (!isPlainLockedRuntimeAssetName(assetName)) {
+    throw new Error("Locked Runtime asset names must be plain file names.");
+  }
+  return `https://github.com/${repositoryPath}/releases/download/${
+    encodeURIComponent(ref)
+  }/${encodeURIComponent(assetName)}`;
 }
 
 function parseReleaseMetadata(value: unknown): LockedReleaseMetadata {
@@ -438,19 +464,60 @@ function parseReleaseMetadata(value: unknown): LockedReleaseMetadata {
   };
 }
 
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_LOCKED_RUNTIME_REDIRECTS = 5;
+
+function normalizedGitHubToken(value: string | undefined): string | undefined {
+  const token = value?.trim();
+  if (!token) return undefined;
+  const hasInvalidCharacter = [...token].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 0x20 || codePoint === 0x7f ||
+      character.trim().length === 0;
+  });
+  if (hasInvalidCharacter) {
+    throw new Error("Locked Runtime GitHub token has an invalid format.");
+  }
+  return token;
+}
+
+function githubApiHeaders(
+  accept: string,
+  githubToken: string | undefined,
+): Headers {
+  const headers = new Headers({
+    Accept: accept,
+    "X-GitHub-Api-Version": "2022-11-28",
+  });
+  const token = normalizedGitHubToken(githubToken);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return headers;
+}
+
 async function fetchLockedReleaseMetadata(
   lock: RuntimeLock,
+  options: LockedRuntimeNetworkOptions = {},
 ): Promise<LockedReleaseMetadata> {
   const repository = githubRepositoryApiPath(lock.source.repository);
   const url =
     `https://api.github.com/repos/${repository}/releases/${lock.source.release.id}`;
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    redirect: "follow",
-  });
+  let response: Response;
+  try {
+    response = await (options.fetchImpl ?? globalThis.fetch)(url, {
+      headers: githubApiHeaders(
+        "application/vnd.github+json",
+        options.githubToken,
+      ),
+      redirect: "manual",
+    });
+  } catch {
+    throw new Error("Locked Runtime release metadata request failed.");
+  }
+  if (REDIRECT_STATUSES.has(response.status)) {
+    throw new Error(
+      "Unexpected redirect while fetching locked Runtime release metadata.",
+    );
+  }
   if (!response.ok) {
     throw new Error(
       `HTTP ${response.status} while fetching locked Runtime release metadata.`,
@@ -462,16 +529,58 @@ async function fetchLockedReleaseMetadata(
 async function downloadLockedFile(
   url: string,
   destination: string,
+  fetchImpl: LockedRuntimeFetch = globalThis.fetch,
 ): Promise<void> {
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/octet-stream",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-    redirect: "follow",
-  });
+  let currentUrl: URL;
+  try {
+    currentUrl = new URL(url);
+  } catch {
+    throw new Error("Locked Runtime asset URL is invalid.");
+  }
+  if (currentUrl.protocol !== "https:") {
+    throw new Error("Locked Runtime asset URL must use HTTPS.");
+  }
+
+  let response: Response | undefined;
+  for (
+    let redirectCount = 0;
+    redirectCount <= MAX_LOCKED_RUNTIME_REDIRECTS;
+    redirectCount += 1
+  ) {
+    try {
+      response = await fetchImpl(currentUrl, {
+        headers: { Accept: "application/octet-stream" },
+        redirect: "manual",
+      });
+    } catch {
+      throw new Error("Locked Runtime asset download request failed.");
+    }
+    if (!REDIRECT_STATUSES.has(response.status)) break;
+    if (redirectCount === MAX_LOCKED_RUNTIME_REDIRECTS) {
+      throw new Error("Locked Runtime asset download exceeded redirect limit.");
+    }
+    const location = response.headers.get("location");
+    if (!location) {
+      throw new Error("Locked Runtime asset redirect has no location.");
+    }
+    let nextUrl: URL;
+    try {
+      nextUrl = new URL(location, currentUrl);
+    } catch {
+      throw new Error("Locked Runtime asset redirect location is invalid.");
+    }
+    if (nextUrl.protocol !== "https:") {
+      throw new Error("Locked Runtime asset redirect must use HTTPS.");
+    }
+    currentUrl = nextUrl;
+  }
+  if (!response) {
+    throw new Error("Locked Runtime asset download produced no response.");
+  }
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} while downloading ${url}.`);
+    throw new Error(
+      `HTTP ${response.status} while downloading locked Runtime asset.`,
+    );
   }
   await Deno.mkdir(path.dirname(destination), { recursive: true });
   const output = await Deno.open(destination, {
@@ -480,16 +589,16 @@ async function downloadLockedFile(
   });
   try {
     if (!response.body) {
-      throw new Error(`Download response for ${url} has no body.`);
+      throw new Error("Locked Runtime asset download has no body.");
     }
     await response.body.pipeTo(output.writable);
-  } catch (error) {
+  } catch {
     try {
       output.close();
     } catch {
       // pipeTo closes the writable in the normal and error paths.
     }
-    throw error;
+    throw new Error("Failed while writing locked Runtime asset.");
   }
 }
 
@@ -579,9 +688,16 @@ async function extractLockedMainArchive(
   }
 }
 
-const defaultLockedRuntimeOperations = (): LockedRuntimeOperations => ({
-  fetchRelease: fetchLockedReleaseMetadata,
-  download: downloadLockedFile,
+const defaultLockedRuntimeOperations = (
+  networkOptions: LockedRuntimeNetworkOptions = {},
+): LockedRuntimeOperations => ({
+  fetchRelease: (lock) => fetchLockedReleaseMetadata(lock, networkOptions),
+  download: (url, destination) =>
+    downloadLockedFile(
+      url,
+      destination,
+      networkOptions.fetchImpl ?? globalThis.fetch,
+    ),
   sha256: sha256File,
   extractMain: extractLockedMainArchive,
   extractCompanion: extractZipSafely,
@@ -592,8 +708,9 @@ const defaultLockedRuntimeOperations = (): LockedRuntimeOperations => ({
 
 const mergeLockedRuntimeOperations = (
   overrides: Partial<LockedRuntimeOperations> | undefined,
+  networkOptions: LockedRuntimeNetworkOptions = {},
 ): LockedRuntimeOperations => ({
-  ...defaultLockedRuntimeOperations(),
+  ...defaultLockedRuntimeOperations(networkOptions),
   ...overrides,
 });
 
@@ -752,6 +869,31 @@ function resolveLockedReleaseAssets(
   };
 }
 
+export interface LockedRuntimeReleaseMetadataValidationOptions
+  extends LockedRuntimeNetworkOptions {
+  lock: RuntimeLock;
+  operations?: Partial<LockedRuntimeOperations>;
+}
+
+/**
+ * Validate the live GitHub release identity and asset metadata against the
+ * canonical lock. This network gate is intentionally separate from native
+ * artifact validation so fork PRs can use deterministic public downloads.
+ */
+export async function validateLockedRuntimeReleaseMetadata(
+  options: LockedRuntimeReleaseMetadataValidationOptions,
+): Promise<LockedReleaseMetadata> {
+  const operations = mergeLockedRuntimeOperations(options.operations, {
+    githubToken: options.githubToken,
+    fetchImpl: options.fetchImpl,
+  });
+  const release = await operations.fetchRelease(options.lock);
+  for (const artifact of options.lock.artifacts) {
+    resolveLockedReleaseAssets(options.lock, artifact, release);
+  }
+  return release;
+}
+
 async function assertRuntimeTree(
   root: string,
   artifact: RuntimeArtifact,
@@ -843,7 +985,8 @@ async function assertCompanionApplicationIni(
   }
 }
 
-export interface LockedRuntimeValidationOptions {
+export interface LockedRuntimeValidationOptions
+  extends LockedRuntimeNetworkOptions {
   lock: RuntimeLock;
   destinationRoot: string;
   target?: NativeRuntimeTarget;
@@ -860,7 +1003,9 @@ export async function validateLockedRuntimeArtifact(
   const target = options.target ??
     resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
   const artifact = selectLockedRuntimeArtifact(options.lock, target);
-  const operations = mergeLockedRuntimeOperations(options.operations);
+  const operations = mergeLockedRuntimeOperations(options.operations, {
+    fetchImpl: options.fetchImpl,
+  });
   const destinationRoot = path.resolve(options.destinationRoot);
   if (await pathExists(destinationRoot)) {
     throw new Error(
@@ -868,9 +1013,8 @@ export async function validateLockedRuntimeArtifact(
     );
   }
   if (
-    path.basename(artifact.asset.name) !== artifact.asset.name ||
-    path.basename(artifact.applicationIniAsset.name) !==
-      artifact.applicationIniAsset.name
+    !isPlainLockedRuntimeAssetName(artifact.asset.name) ||
+    !isPlainLockedRuntimeAssetName(artifact.applicationIniAsset.name)
   ) {
     throw new Error("Locked Runtime asset names must be plain file names.");
   }
@@ -896,20 +1040,15 @@ export async function validateLockedRuntimeArtifact(
     await Deno.mkdir(destinationRoot);
     await Deno.mkdir(companionRoot);
 
-    const release = await operations.fetchRelease(options.lock);
-    const releaseAssets = resolveLockedReleaseAssets(
-      options.lock,
-      artifact,
-      release,
-    );
     await awaitParallelOperations("Locked Runtime downloads", [
       {
         name: artifact.asset.name,
         run: () =>
           operations.download(
-            lockedReleaseAssetApiUrl(
+            lockedReleasePublicDownloadUrl(
               options.lock.source.repository,
-              releaseAssets.main.id,
+              options.lock.source.ref,
+              artifact.asset.name,
             ),
             archivePath,
           ),
@@ -918,9 +1057,10 @@ export async function validateLockedRuntimeArtifact(
         name: artifact.applicationIniAsset.name,
         run: () =>
           operations.download(
-            lockedReleaseAssetApiUrl(
+            lockedReleasePublicDownloadUrl(
               options.lock.source.repository,
-              releaseAssets.companion.id,
+              options.lock.source.ref,
+              artifact.applicationIniAsset.name,
             ),
             companionArchivePath,
           ),
@@ -1219,7 +1359,9 @@ export async function installLockedRuntime(
     return { artifact, reused: true };
   }
 
-  const operations = mergeLockedRuntimeOperations(options.operations);
+  const operations = mergeLockedRuntimeOperations(options.operations, {
+    fetchImpl: options.fetchImpl,
+  });
   const nonce = operations.nonce();
   const profileDir = path.resolve(options.profileDir ?? PATHS.profile_test);
   const stageRoot = `${binRootDir}.runtime-staging-${nonce}`;

@@ -10,6 +10,23 @@ Deno.test("Runtime lock CLI parses validate-lock with the canonical default", ()
   assertEquals(options.out, undefined);
 });
 
+Deno.test("Runtime lock CLI parses trusted release metadata validation", () => {
+  const options = parseRuntimeLockCliArgs(["validate-release-metadata"]);
+  assertEquals(options.command, "validate-release-metadata");
+  assert(options.lockPath instanceof URL);
+  assertEquals(options.out, undefined);
+  assertThrows(
+    () =>
+      parseRuntimeLockCliArgs([
+        "validate-release-metadata",
+        "--out",
+        "_dist/runtime-validation",
+      ]),
+    Error,
+    "does not accept --out",
+  );
+});
+
 Deno.test("Runtime lock CLI requires an output for native validation", () => {
   assertThrows(
     () => parseRuntimeLockCliArgs(["validate-native"]),

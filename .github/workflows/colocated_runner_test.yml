@@ -32,6 +32,13 @@ jobs:
       - run: deno install
       - name: Validate canonical Runtime lock
         run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+      - name: Validate locked Runtime release metadata
+        if: github.event_name != 'pull_request'
+        env:
+          FLOORP_RUNTIME_GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: >-
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts
+          validate-release-metadata
       - run: deno task test:smoke
       - name: Run host tool tests
         run: deno task test:host
@@ -96,9 +103,16 @@ jobs:
         run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
 
       - name: Validate locked native Runtime artifact
+        if: matrix.browser_suite != true
         run: >-
           deno run -A tools/runtime-lock/runtime_lock_cli.ts
           validate-native --out _dist/runtime-validation
+
+      - name: Install locked Runtime for browser suite
+        if: matrix.browser_suite == true
+        run: >-
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts
+          install-native
 
       - name: Read locked Runtime source
         if: matrix.browser_suite == true

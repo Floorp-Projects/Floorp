@@ -4,8 +4,11 @@ import * as path from "@std/path";
 import { PROJECT_ROOT } from "../src/defines.ts";
 import {
   installLockedRuntime,
+  isEnvironmentPermissionError,
+  LOCKED_RUNTIME_GITHUB_TOKEN_ENV,
   resolveNativeRuntimeTarget,
   validateLockedRuntimeArtifact,
+  validateLockedRuntimeReleaseMetadata,
 } from "../src/initializer.ts";
 import {
   loadRuntimeLock,
@@ -16,7 +19,8 @@ import {
 export type RuntimeLockCommand =
   | "install-native"
   | "validate-lock"
-  | "validate-native";
+  | "validate-native"
+  | "validate-release-metadata";
 
 export interface RuntimeLockCliOptions {
   command: RuntimeLockCommand;
@@ -27,18 +31,21 @@ export interface RuntimeLockCliOptions {
 const HELP = `
 Usage:
   deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock [--lock <path>]
+  deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-release-metadata [--lock <path>]
   deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-native --out <directory> [--lock <path>]
   deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native [--lock <path>]
 
 Commands:
   validate-lock    Parse and strictly validate the canonical Runtime lock.
+  validate-release-metadata
+                   Validate live GitHub release identity and asset metadata.
   validate-native  Download, authenticate, extract, and inspect this host's artifact without installing it.
   install-native   Transactionally install this host's exact locked Runtime into _dist/bin.
 `.trim();
 
 function isRuntimeLockCommand(value: string): value is RuntimeLockCommand {
   return value === "install-native" || value === "validate-lock" ||
-    value === "validate-native";
+    value === "validate-native" || value === "validate-release-metadata";
 }
 
 function resolveValidationOutput(value: string): string {
@@ -123,11 +130,41 @@ function lockSummary(lock: RuntimeLock): Record<string, unknown> {
   };
 }
 
+function readRuntimeGitHubToken(): string | undefined {
+  try {
+    const token = Deno.env.get(LOCKED_RUNTIME_GITHUB_TOKEN_ENV)?.trim();
+    return token || undefined;
+  } catch (error) {
+    if (isEnvironmentPermissionError(error)) return undefined;
+    throw error;
+  }
+}
+
 export async function runRuntimeLockCli(args: string[]): Promise<void> {
   const options = parseRuntimeLockCliArgs(args);
   const lock = await loadRuntimeLock(options.lockPath);
   if (options.command === "validate-lock") {
     console.log(JSON.stringify(lockSummary(lock), null, 2));
+    return;
+  }
+  if (options.command === "validate-release-metadata") {
+    const release = await validateLockedRuntimeReleaseMetadata({
+      lock,
+      githubToken: readRuntimeGitHubToken(),
+    });
+    console.log(
+      JSON.stringify(
+        {
+          status: "validated",
+          releaseId: release.id,
+          tagName: release.tagName,
+          immutable: release.immutable,
+          assets: release.assets.length,
+        },
+        null,
+        2,
+      ),
+    );
     return;
   }
 

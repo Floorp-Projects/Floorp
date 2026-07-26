@@ -8,6 +8,7 @@ import {
   installLockedRuntime,
   isLockedRuntimeRequested,
   type LockedReleaseMetadata,
+  lockedReleasePublicDownloadUrl,
   type LockedRuntimeOperations,
   pickRuntimeEntry,
   resolveNativeRuntimeTarget,
@@ -15,6 +16,7 @@ import {
   runtimeLayoutFor,
   scoreRuntimeEntry,
   validateLockedRuntimeArtifact,
+  validateLockedRuntimeReleaseMetadata,
 } from "./initializer.ts";
 import type { RuntimeArtifact, RuntimeLock } from "./runtime_lock.ts";
 
@@ -244,6 +246,47 @@ function lockedRuntime(artifact = lockedArtifact()): RuntimeLock {
   };
 }
 
+Deno.test("locked Runtime public download URLs encode locked path segments", () => {
+  assertEquals(
+    lockedReleasePublicDownloadUrl(
+      "Floorp-Projects/Floorp-Runtime",
+      "daily/test #1",
+      "floorp build+#.zip",
+    ),
+    "https://github.com/Floorp-Projects/Floorp-Runtime/releases/download/daily%2Ftest%20%231/floorp%20build%2B%23.zip",
+  );
+});
+
+Deno.test("locked Runtime public download URLs reject unsafe fields", () => {
+  assertThrows(
+    () => lockedReleasePublicDownloadUrl("invalid", "daily-test", "a.zip"),
+    Error,
+    "Invalid locked Runtime repository",
+  );
+  assertThrows(
+    () =>
+      lockedReleasePublicDownloadUrl(
+        "Floorp-Projects/Floorp-Runtime",
+        "..",
+        "a.zip",
+      ),
+    Error,
+    "release ref",
+  );
+  for (const assetName of ["", "..", "../a.zip", "dir\\a.zip"]) {
+    assertThrows(
+      () =>
+        lockedReleasePublicDownloadUrl(
+          "Floorp-Projects/Floorp-Runtime",
+          "daily-test",
+          assetName,
+        ),
+      Error,
+      "plain file names",
+    );
+  }
+});
+
 function releaseMetadata(artifact: RuntimeArtifact): LockedReleaseMetadata {
   return {
     id: 100,
@@ -263,6 +306,30 @@ function releaseMetadata(artifact: RuntimeArtifact): LockedReleaseMetadata {
         size: artifact.applicationIniAsset.size,
         digest: `sha256:${artifact.applicationIniAsset.sha256}`,
         browserDownloadUrl: "https://malicious.invalid/companion",
+      },
+    ],
+  };
+}
+
+function releaseMetadataPayload(artifact: RuntimeArtifact): unknown {
+  return {
+    id: 100,
+    tag_name: "daily-test",
+    immutable: false,
+    assets: [
+      {
+        id: artifact.asset.id,
+        name: artifact.asset.name,
+        size: artifact.asset.size,
+        digest: `sha256:${artifact.asset.sha256}`,
+        browser_download_url: "https://malicious.invalid/main",
+      },
+      {
+        id: artifact.applicationIniAsset.id,
+        name: artifact.applicationIniAsset.name,
+        size: artifact.applicationIniAsset.size,
+        digest: `sha256:${artifact.applicationIniAsset.sha256}`,
+        browser_download_url: "https://malicious.invalid/companion",
       },
     ],
   };
@@ -288,7 +355,7 @@ function fakeLockedOperations(
     fetchRelease: () => Promise.resolve(releaseMetadata(artifact)),
     download: async (url, destination) => {
       options.downloadUrls?.push(url);
-      const size = url.endsWith(`/${artifact.asset.id}`)
+      const size = url.endsWith(`/${encodeURIComponent(artifact.asset.name)}`)
         ? artifact.asset.size
         : artifact.applicationIniAsset.size;
       await Deno.writeFile(destination, new Uint8Array(size));
@@ -371,6 +438,19 @@ function fakeLockedOperations(
     remove: options.remove ?? ((filePath) => Deno.remove(filePath)),
     nonce: () => options.nonce,
   };
+}
+
+function fakeLockedOperationsWithoutNetwork(
+  artifact: RuntimeArtifact,
+  options: FakeOperationOptions,
+): Partial<LockedRuntimeOperations> {
+  const operations = fakeLockedOperations(artifact, options);
+  const {
+    fetchRelease: _fetchRelease,
+    download: _download,
+    ...withoutNetwork
+  } = operations;
+  return withoutNetwork;
 }
 
 async function writeOldRuntime(binRoot: string): Promise<void> {
@@ -596,7 +676,7 @@ Deno.test("locked macOS Runtime commits only final developer paths", async () =>
     const noDownload = fakeLockedOperations(artifact, {
       nonce: "mac-reuse",
     });
-    noDownload.fetchRelease = () =>
+    noDownload.download = () =>
       Promise.reject(new Error("stale macOS plist triggered replacement"));
     const reused = await installLockedRuntime({
       lock: lockedRuntime(artifact),
@@ -728,21 +808,25 @@ Deno.test("locked Runtime ignores release metadata download URLs", async () => {
   try {
     const artifact = lockedArtifact();
     const downloadUrls: string[] = [];
+    const operations = fakeLockedOperations(artifact, {
+      nonce: "verified-public-urls",
+      downloadUrls,
+    });
+    operations.fetchRelease = () => {
+      throw new Error("public native validation must not fetch metadata");
+    };
     await installLockedRuntime({
       lock: lockedRuntime(artifact),
       target: { platform: "windows", architecture: "x86_64" },
       binRootDir: `${root}/bin`,
       profileDir: `${root}/profile/test`,
-      operations: fakeLockedOperations(artifact, {
-        nonce: "verified-api-urls",
-        downloadUrls,
-      }),
+      operations,
     });
     assertEquals(
       downloadUrls.toSorted(),
       [
-        `https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/releases/assets/${artifact.asset.id}`,
-        `https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/releases/assets/${artifact.applicationIniAsset.id}`,
+        `https://github.com/Floorp-Projects/Floorp-Runtime/releases/download/daily-test/${artifact.asset.name}`,
+        `https://github.com/Floorp-Projects/Floorp-Runtime/releases/download/daily-test/${artifact.applicationIniAsset.name}`,
       ].toSorted(),
     );
     assertEquals(
@@ -754,6 +838,272 @@ Deno.test("locked Runtime ignores release metadata download URLs", async () => {
   }
 });
 
+Deno.test("trusted Runtime metadata validation uses scoped optional auth", async () => {
+  const artifact = lockedArtifact();
+  const token = "runtime-token-value";
+  let authenticated = false;
+  const release = await validateLockedRuntimeReleaseMetadata({
+    lock: lockedRuntime(artifact),
+    githubToken: `  ${token}  `,
+    fetchImpl: (input, init) => {
+      assertEquals(
+        String(input),
+        "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/releases/100",
+      );
+      const headers = new Headers(init?.headers);
+      assertEquals(headers.get("authorization"), `Bearer ${token}`);
+      assertEquals(headers.get("accept"), "application/vnd.github+json");
+      assertEquals(init?.redirect, "manual");
+      authenticated = true;
+      return Promise.resolve(
+        new Response(JSON.stringify(releaseMetadataPayload(artifact)), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    },
+  });
+  assertEquals(authenticated, true);
+  assertEquals(release.id, 100);
+
+  await validateLockedRuntimeReleaseMetadata({
+    lock: lockedRuntime(artifact),
+    fetchImpl: (_input, init) => {
+      assertEquals(new Headers(init?.headers).get("authorization"), null);
+      return Promise.resolve(
+        new Response(JSON.stringify(releaseMetadataPayload(artifact)), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    },
+  });
+});
+
+Deno.test("trusted Runtime metadata validation fails closed on lock drift", async () => {
+  const artifact = lockedArtifact();
+  const lock = lockedRuntime(artifact);
+  const driftCases: Array<{
+    name: string;
+    mutate: (release: LockedReleaseMetadata) => void;
+    expectedMessage: string;
+  }> = [
+    {
+      name: "release id",
+      mutate: (release) => release.id += 1,
+      expectedMessage: "release identity",
+    },
+    {
+      name: "release tag",
+      mutate: (release) => release.tagName = "other-tag",
+      expectedMessage: "release identity",
+    },
+    {
+      name: "release immutable flag",
+      mutate: (release) => release.immutable = !release.immutable,
+      expectedMessage: "release identity",
+    },
+    {
+      name: "asset id",
+      mutate: (release) => release.assets[0].id += 1,
+      expectedMessage: "Expected exactly one GitHub release asset",
+    },
+    {
+      name: "asset name",
+      mutate: (release) => release.assets[0].name = "other.zip",
+      expectedMessage: "does not match the lock",
+    },
+    {
+      name: "asset size",
+      mutate: (release) => release.assets[0].size += 1,
+      expectedMessage: "does not match the lock",
+    },
+    {
+      name: "asset digest",
+      mutate: (release) => {
+        release.assets[0].digest = `sha256:${"0".repeat(64)}`;
+      },
+      expectedMessage: "does not match the lock",
+    },
+  ];
+
+  for (const driftCase of driftCases) {
+    const mismatch = structuredClone(releaseMetadata(artifact));
+    driftCase.mutate(mismatch);
+    await assertRejects(
+      () =>
+        validateLockedRuntimeReleaseMetadata({
+          lock,
+          operations: {
+            fetchRelease: () => Promise.resolve(mismatch),
+          },
+        }),
+      Error,
+      driftCase.expectedMessage,
+      driftCase.name,
+    );
+  }
+});
+
+Deno.test("trusted Runtime metadata errors redact token and redirect URL", async () => {
+  const artifact = lockedArtifact();
+  const token = "runtime-secret-token";
+  const signedQuery = "signed-query-secret";
+  const error = await assertRejects(
+    () =>
+      validateLockedRuntimeReleaseMetadata({
+        lock: lockedRuntime(artifact),
+        githubToken: token,
+        fetchImpl: () =>
+          Promise.resolve(
+            new Response(null, {
+              status: 302,
+              headers: {
+                location:
+                  `https://release-assets.githubusercontent.com/file?sig=${signedQuery}`,
+              },
+            }),
+          ),
+      }),
+    Error,
+    "Unexpected redirect",
+  );
+  assertEquals(error.message.includes(token), false);
+  assertEquals(error.message.includes(signedQuery), false);
+});
+
+Deno.test("public Runtime downloads support direct and redirected HTTPS responses", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const artifact = lockedArtifact();
+    const calls: Array<{ url: string; authorization: string | null }> = [];
+    const destinationRoot = path.resolve(`${root}/validated`);
+    await validateLockedRuntimeArtifact({
+      lock: lockedRuntime(artifact),
+      destinationRoot,
+      target: { platform: "windows", architecture: "x86_64" },
+      operations: fakeLockedOperationsWithoutNetwork(artifact, {
+        nonce: "public-network",
+      }),
+      fetchImpl: (input, init) => {
+        const url = new URL(String(input));
+        const headers = new Headers(init?.headers);
+        calls.push({
+          url: url.toString(),
+          authorization: headers.get("authorization"),
+        });
+        assertEquals(init?.redirect, "manual");
+        if (url.hostname === "github.com") {
+          if (url.pathname.endsWith(`/${artifact.asset.name}`)) {
+            return Promise.resolve(
+              new Response(new Uint8Array(artifact.asset.size), {
+                status: 200,
+              }),
+            );
+          }
+          return Promise.resolve(
+            new Response(null, {
+              status: 302,
+              headers: {
+                location:
+                  `https://release-assets.githubusercontent.com/${artifact.applicationIniAsset.name}?sig=temporary`,
+              },
+            }),
+          );
+        }
+        assertEquals(url.hostname, "release-assets.githubusercontent.com");
+        return Promise.resolve(
+          new Response(
+            new Uint8Array(artifact.applicationIniAsset.size),
+            { status: 200 },
+          ),
+        );
+      },
+    });
+    assertEquals(calls.length, 3);
+    assertEquals(calls.every((call) => call.authorization === null), true);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("public Runtime download failures redact signed redirect URLs", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const artifact = lockedArtifact();
+    const signedQuery = "signed-query-secret";
+    const error = await assertRejects(
+      () =>
+        validateLockedRuntimeArtifact({
+          lock: lockedRuntime(artifact),
+          destinationRoot: path.resolve(`${root}/validated`),
+          target: { platform: "windows", architecture: "x86_64" },
+          operations: fakeLockedOperationsWithoutNetwork(artifact, {
+            nonce: "public-network-error",
+          }),
+          fetchImpl: () =>
+            Promise.resolve(
+              new Response(null, {
+                status: 302,
+                headers: {
+                  location: `http://example.invalid/file?sig=${signedQuery}`,
+                },
+              }),
+            ),
+        }),
+      AggregateError,
+      "after all parallel operations settled",
+    );
+    assertEquals(error.message.includes(signedQuery), false);
+    assertEquals(error.message.includes("example.invalid"), false);
+    assert(error.message.includes("must use HTTPS"));
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("browser CI keeps Runtime downloads tokenless", async () => {
+  const workflow = await Deno.readTextFile(
+    new URL(
+      "../../.github/workflows/colocated_runner_test.yml",
+      import.meta.url,
+    ),
+  );
+  const nativeValidationStart = workflow.indexOf(
+    "- name: Validate locked native Runtime artifact",
+  );
+  const browserInstallStart = workflow.indexOf(
+    "- name: Install locked Runtime for browser suite",
+  );
+  const sourceReadStart = workflow.indexOf(
+    "- name: Read locked Runtime source",
+  );
+  assert(nativeValidationStart >= 0);
+  assert(browserInstallStart > nativeValidationStart);
+  assert(sourceReadStart > browserInstallStart);
+  const publicRuntimeSteps = workflow.slice(
+    nativeValidationStart,
+    sourceReadStart,
+  );
+  assertEquals(publicRuntimeSteps.includes("GITHUB_TOKEN"), false);
+  assert(publicRuntimeSteps.includes("validate-native"));
+  assert(publicRuntimeSteps.includes("install-native"));
+
+  const trustedMetadataStart = workflow.indexOf(
+    "- name: Validate locked Runtime release metadata",
+  );
+  const smokeStart = workflow.indexOf("- run: deno task test:smoke");
+  assert(trustedMetadataStart >= 0);
+  assert(smokeStart > trustedMetadataStart);
+  const trustedMetadataStep = workflow.slice(
+    trustedMetadataStart,
+    smokeStart,
+  );
+  assert(trustedMetadataStep.includes("github.event_name != 'pull_request'"));
+  assert(trustedMetadataStep.includes("FLOORP_RUNTIME_GITHUB_TOKEN"));
+  assert(trustedMetadataStep.includes("validate-release-metadata"));
+});
+
 Deno.test("locked Runtime waits for all failed downloads before cleanup", async () => {
   const root = await Deno.makeTempDir();
   try {
@@ -762,7 +1112,7 @@ Deno.test("locked Runtime waits for all failed downloads before cleanup", async 
     const destinationRoot = path.resolve(`${root}/validated`);
     const operations = fakeLockedOperations(artifact, { nonce });
     operations.download = (url, destination) => {
-      if (url.endsWith(`/${artifact.asset.id}`)) {
+      if (url.endsWith(`/${encodeURIComponent(artifact.asset.name)}`)) {
         throw new Error("fast main download failure");
       }
       return (async () => {
@@ -1240,7 +1590,7 @@ Deno.test("matching locked Runtime reuse preserves current test control state", 
     await Deno.writeTextFile(`${root}/marionette-port.txt`, marionettePort);
 
     const noDownload = fakeLockedOperations(artifact, { nonce: "reuse" });
-    noDownload.fetchRelease = () =>
+    noDownload.download = () =>
       Promise.reject(new Error("matching Runtime unexpectedly downloaded"));
     const reused = await installLockedRuntime({
       lock: lockedRuntime(artifact),
@@ -1280,7 +1630,7 @@ Deno.test("matching locked Runtime marker still validates the installed tree", a
     });
 
     const noDownload = fakeLockedOperations(artifact, { nonce: "reuse" });
-    noDownload.fetchRelease = () =>
+    noDownload.download = () =>
       Promise.reject(new Error("matching Runtime unexpectedly downloaded"));
     const reused = await installLockedRuntime({
       lock: lockedRuntime(artifact),
