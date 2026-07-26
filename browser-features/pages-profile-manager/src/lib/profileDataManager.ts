@@ -52,10 +52,12 @@ const __isDev = Boolean(__meta.env?.DEV);
 const __g = globalThis as unknown as Record<string, unknown>;
 const __hasChrome = typeof __g.ChromeUtils !== "undefined";
 
-export async function getCurrentProfile(): Promise<{
-  profileName: string;
-  profilePath: string;
-} | null> {
+export async function getCurrentProfile(): Promise<
+  {
+    profileName: string;
+    profilePath: string;
+  } | null
+> {
   // If we're running in a non-dev chrome context and privileged APIs are
   // available, perform the same direct operations as the Parent would.
   const isDev = __isDev;
@@ -317,7 +319,7 @@ export function openProfile(profileIdentifier: string): void {
       ]?.getService?.(
         // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -367,7 +369,7 @@ export function createProfileWizard(): void {
         ]?.getService?.(
           // deno-lint-ignore no-explicit-any
           (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-        // deno-lint-ignore no-explicit-any
+          // deno-lint-ignore no-explicit-any
         ) as any;
 
         const persistProfiles = () => {
@@ -447,7 +449,7 @@ export function flushProfiles(): void {
       ]?.getService?.(
         // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       ) as any;
       profileService.flush();
       return;
@@ -480,7 +482,7 @@ export async function removeProfile(
       ]?.getService?.(
         // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -517,8 +519,10 @@ export async function removeProfile(
     try {
       const removeFn = (globalThis as GlobalThis).NRRemoveProfile;
       if (typeof removeFn === "function") {
-        removeFn(profileIdentifier, deleteFiles, (res: unknown) =>
-          resolve(Boolean(res)),
+        removeFn(
+          profileIdentifier,
+          deleteFiles,
+          (res: unknown) => resolve(Boolean(res)),
         );
       } else {
         resolve(false);
@@ -544,7 +548,7 @@ export async function renameProfile(
       ]?.getService?.(
         // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -581,8 +585,10 @@ export async function renameProfile(
     try {
       const renameFn = (globalThis as GlobalThis).NRRenameProfile;
       if (typeof renameFn === "function") {
-        renameFn(profileIdentifier, newName, (res: unknown) =>
-          resolve(Boolean(res)),
+        renameFn(
+          profileIdentifier,
+          newName,
+          (res: unknown) => resolve(Boolean(res)),
         );
       } else {
         resolve(false);
@@ -607,7 +613,7 @@ export async function setDefaultProfile(
       ]?.getService?.(
         // deno-lint-ignore no-explicit-any
         (globalThis as any).Components.interfaces.nsIToolkitProfileService,
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       ) as any;
 
       let target = null;
@@ -644,8 +650,9 @@ export async function setDefaultProfile(
     try {
       const setDefaultFn = (globalThis as GlobalThis).NRSetDefaultProfile;
       if (typeof setDefaultFn === "function") {
-        setDefaultFn(profileIdentifier, (res: unknown) =>
-          resolve(Boolean(res)),
+        setDefaultFn(
+          profileIdentifier,
+          (res: unknown) => resolve(Boolean(res)),
         );
       } else {
         resolve(false);
@@ -657,18 +664,59 @@ export async function setDefaultProfile(
   });
 }
 
-export function restart(safeMode = false): void {
-  const isDev = __isDev;
-  const hasChrome = __hasChrome;
+type RestartCancelQuit = { data: boolean };
+
+export type RestartDependencies = {
+  isDev?: boolean;
+  hasChrome?: boolean;
+  Cc?: Record<
+    string,
+    { createInstance: (interfaceType: unknown) => RestartCancelQuit }
+  >;
+  Ci?: {
+    nsISupportsPRBool: unknown;
+    nsIAppStartup?: {
+      eAttemptQuit: number;
+      eRestart: number;
+    };
+  };
+  Services?: {
+    obs: {
+      notifyObservers: (
+        subject: RestartCancelQuit,
+        topic: string,
+        data: string,
+      ) => void;
+    };
+    startup: {
+      quit: (flags: number) => void;
+      restartInSafeMode: (flags: number) => void;
+    };
+  };
+  fallbackRestart?: ((safeMode: boolean) => void) | null;
+};
+
+export function restart(
+  safeMode = false,
+  dependencies: RestartDependencies = {},
+): void {
+  const restartGlobals = globalThis as unknown as {
+    Cc?: RestartDependencies["Cc"];
+    Ci?: RestartDependencies["Ci"];
+    Services?: RestartDependencies["Services"];
+  };
+  const isDev = dependencies.isDev ?? __isDev;
+  const hasChrome = dependencies.hasChrome ?? __hasChrome;
+  const Cc = dependencies.Cc ?? restartGlobals.Cc;
+  const Ci = dependencies.Ci ?? restartGlobals.Ci;
+  const Services = dependencies.Services ?? restartGlobals.Services;
+
   if (!isDev && hasChrome) {
     try {
-      // deno-lint-ignore no-explicit-any
-      const cancelQuit = (globalThis as any).Cc[
+      const cancelQuit = Cc![
         "@mozilla.org/supports-PRBool;1"
-      // deno-lint-ignore no-explicit-any
-      ].createInstance((globalThis as any).Ci.nsISupportsPRBool);
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services.obs.notifyObservers(
+      ].createInstance(Ci!.nsISupportsPRBool);
+      Services!.obs.notifyObservers(
         cancelQuit,
         "quit-application-requested",
         "restart",
@@ -676,19 +724,13 @@ export function restart(safeMode = false): void {
       if (cancelQuit.data) {
         return;
       }
-      // deno-lint-ignore no-explicit-any
-      const flags = (globalThis as any).Ci.nsIAppStartup
-        // deno-lint-ignore no-explicit-any
-        ? (globalThis as any).Ci.nsIAppStartup.eAttemptQuit |
-          // deno-lint-ignore no-explicit-any
-          (globalThis as any).Ci.nsIAppStartup.eRestart
+      const flags = Ci!.nsIAppStartup
+        ? Ci!.nsIAppStartup.eAttemptQuit | Ci!.nsIAppStartup.eRestart
         : 0;
       if (safeMode) {
-        // deno-lint-ignore no-explicit-any
-        (globalThis as any).Services.startup.restartInSafeMode(flags);
+        Services!.startup.restartInSafeMode(flags);
       } else {
-        // deno-lint-ignore no-explicit-any
-        (globalThis as any).Services.startup.quit(flags);
+        Services!.startup.quit(flags);
       }
       return;
     } catch (e) {
@@ -697,7 +739,9 @@ export function restart(safeMode = false): void {
   }
 
   try {
-    const restartFn = (globalThis as GlobalThis).NRRestart;
+    const restartFn = Object.hasOwn(dependencies, "fallbackRestart")
+      ? dependencies.fallbackRestart
+      : (globalThis as GlobalThis).NRRestart;
     if (typeof restartFn === "function") {
       restartFn(safeMode);
     }

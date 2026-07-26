@@ -10,9 +10,13 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-let solidXulRender: ((fn: () => JSX.Element, container: HTMLElement) => void) | null = null;
+let solidXulRender:
+  | ((fn: () => JSX.Element, container: HTMLElement) => void)
+  | null = null;
 
-async function getSolidXulRender(): Promise<(fn: () => JSX.Element, container: HTMLElement) => void> {
+async function getSolidXulRender(): Promise<
+  (fn: () => JSX.Element, container: HTMLElement) => void
+> {
   if (solidXulRender) return solidXulRender;
   const mod = await import("@nora/solid-xul");
   solidXulRender = mod.render;
@@ -349,172 +353,91 @@ function testRenderPanelInsertsBeforeQuitButton(): void {
 // ===========================================================================
 
 function testHandleRestartCallsServices(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
   let quitCalled = false;
   let quitFlags = 0;
 
   // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    startup: {
-      quit: (flags: number) => {
-        quitCalled = true;
-        quitFlags = flags;
-      },
-      eForceQuit: 1,
-      eRestart: 2,
+  (RebootPanelMenu as any).handleRestart({
+    quit: (flags: number) => {
+      quitCalled = true;
+      quitFlags = flags;
     },
-  };
+    forceQuit: 1,
+    restart: 2,
+  });
 
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).handleRestart();
-
-    assert(quitCalled, "handleRestart should call Services.startup.quit");
-    assertEquals(
-      quitFlags,
-      3, // eForceQuit | eRestart
-      "handleRestart should use correct quit flags",
-    );
-  } finally {
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
-    }
-  }
+  assert(quitCalled, "handleRestart should call Services.startup.quit");
+  assertEquals(
+    quitFlags,
+    3, // eForceQuit | eRestart
+    "handleRestart should use correct quit flags",
+  );
 }
 
 function testHandleRestartWithCacheClearInvalidatesCaches(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-  // deno-lint-ignore no-explicit-any
-  const originalCi = (globalThis as any).Ci;
-
-  let invalidateCalled = false;
-  let quitCalled = false;
+  const calls: string[] = [];
   let quitFlags = 0;
 
   // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    appinfo: {
-      invalidateCachesOnRestart: () => {
-        invalidateCalled = true;
-      },
+  (RebootPanelMenu as any).handleRestartWithCacheClear({
+    invalidateCachesOnRestart: () => calls.push("invalidate"),
+    quit: (flags: number) => {
+      calls.push("quit");
+      quitFlags = flags;
     },
-    startup: {
-      quit: (flags: number) => {
-        quitCalled = true;
-        quitFlags = flags;
-      },
-    },
-  };
+    restart: 2,
+    attemptQuit: 4,
+  });
 
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).Ci = {
-    nsIAppStartup: {
-      eRestart: 2,
-      eAttemptQuit: 4,
-    },
-  };
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).handleRestartWithCacheClear();
-
-    assert(
-      invalidateCalled,
-      "handleRestartWithCacheClear should call invalidateCachesOnRestart",
-    );
-    assert(
-      quitCalled,
-      "handleRestartWithCacheClear should call Services.startup.quit",
-    );
-    assertEquals(
-      quitFlags,
-      6, // eRestart | eAttemptQuit
-      "handleRestartWithCacheClear should use correct quit flags",
-    );
-  } finally {
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
-    }
-    if (originalCi !== undefined) {
-      Object.defineProperty(globalThis, "Ci", {
-        value: originalCi,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Ci = undefined;
-    }
-  }
+  assertEquals(
+    calls.join(","),
+    "invalidate,quit",
+    "handleRestartWithCacheClear should invalidate caches before quitting",
+  );
+  assertEquals(
+    quitFlags,
+    6, // eRestart | eAttemptQuit
+    "handleRestartWithCacheClear should use correct quit flags",
+  );
 }
 
 function testHandleRestartInSafeModeNotifiesObservers(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
   let notified = false;
   let notifiedTopic = "";
-  let _notifiedData: unknown = null;
+  let notifiedSubject: unknown = null;
+  const expectedSubject = {};
 
   // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    obs: {
-      notifyObservers: (_subject: unknown, topic: string, data: unknown) => {
-        notified = true;
-        notifiedTopic = topic;
-        _notifiedData = data;
-      },
+  (RebootPanelMenu as any).handleRestartInSafeMode({
+    notifyObservers: (subject: unknown, topic: string) => {
+      notified = true;
+      notifiedSubject = subject;
+      notifiedTopic = topic;
     },
-  };
+    subject: expectedSubject,
+  });
 
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).handleRestartInSafeMode();
-
-    assert(
-      notified,
-      "handleRestartInSafeMode should call Services.obs.notifyObservers",
-    );
-    assertEquals(
-      notifiedTopic,
-      "restart-in-safe-mode",
-      "handleRestartInSafeMode should notify with correct topic",
-    );
-  } finally {
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
-    }
-  }
+  assert(
+    notified,
+    "handleRestartInSafeMode should call Services.obs.notifyObservers",
+  );
+  assertEquals(
+    notifiedSubject,
+    expectedSubject,
+    "handleRestartInSafeMode should notify with the expected subject",
+  );
+  assertEquals(
+    notifiedTopic,
+    "restart-in-safe-mode",
+    "handleRestartInSafeMode should notify with correct topic",
+  );
 }
 
 // ===========================================================================
 // SubView Tests
 // ===========================================================================
 
-function testShowRebootPanelSubViewCallsPanelUI(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-
+async function testShowRebootPanelSubViewCallsPanelUI(): Promise<void> {
   let showSubViewCalled = false;
   let viewId = "";
   let anchorElement: unknown = null;
@@ -524,26 +447,16 @@ function testShowRebootPanelSubViewCallsPanelUI(): void {
   restartButton.id = RESTART_BUTTON_ID;
   document!.body!.appendChild(restartButton);
 
-  // PanelUI may be read-only in Firefox, use Object.defineProperty
-  try {
-    Object.defineProperty(globalThis, "PanelUI", {
-      value: {
-        showSubView: (id: string, anchor: unknown) => {
-          showSubViewCalled = true;
-          viewId = id;
-          anchorElement = anchor;
-        },
-      },
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // PanelUI is non-configurable; test may not verify behavior fully.
-  }
-
   try {
     // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).showRebootPanelSubView();
+    await (RebootPanelMenu as any).showRebootPanelSubView({
+      showSubView: (id: string, anchor: unknown) => {
+        showSubViewCalled = true;
+        viewId = id;
+        anchorElement = anchor;
+      },
+      getAnchor: () => restartButton,
+    });
 
     assert(
       showSubViewCalled,
@@ -561,91 +474,31 @@ function testShowRebootPanelSubViewCallsPanelUI(): void {
     );
   } finally {
     restartButton.remove();
-    if (originalPanelUI !== undefined) {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: originalPanelUI,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if PanelUI cannot be restored.
-      }
-    } else {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: undefined,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if PanelUI cannot be set to undefined.
-      }
-    }
   }
 }
 
-function testShowRebootPanelSubViewHandlesMissingAnchor(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-
+async function testShowRebootPanelSubViewHandlesMissingAnchor(): Promise<void> {
   let showSubViewCalled = false;
   let anchorElement: unknown = null;
 
-  // Don't create restart button - anchor will be null
+  // deno-lint-ignore no-explicit-any
+  await (RebootPanelMenu as any).showRebootPanelSubView({
+    showSubView: (_id: string, anchor: unknown) => {
+      showSubViewCalled = true;
+      anchorElement = anchor;
+    },
+    getAnchor: () => null,
+  });
 
-  // PanelUI may be read-only in Firefox, use Object.defineProperty
-  try {
-    Object.defineProperty(globalThis, "PanelUI", {
-      value: {
-        showSubView: (_id: string, anchor: unknown) => {
-          showSubViewCalled = true;
-          anchorElement = anchor;
-        },
-      },
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // PanelUI is non-configurable; test may not verify behavior fully.
-  }
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).showRebootPanelSubView();
-
-    assert(
-      showSubViewCalled,
-      "showRebootPanelSubView should still call PanelUI.showSubView",
-    );
-    assertEquals(
-      anchorElement,
-      null,
-      "showRebootPanelSubView should pass null anchor when button not found",
-    );
-  } finally {
-    if (originalPanelUI !== undefined) {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: originalPanelUI,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if PanelUI cannot be restored.
-      }
-    } else {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: undefined,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if PanelUI cannot be set to undefined.
-      }
-    }
-  }
+  assert(
+    showSubViewCalled,
+    "showRebootPanelSubView should still call PanelUI.showSubView",
+  );
+  assertEquals(
+    anchorElement,
+    null,
+    "showRebootPanelSubView should pass null anchor when button not found",
+  );
 }
 
 // ===========================================================================
@@ -724,81 +577,6 @@ function testRenderPanelOnlyOnceWhenOpen(): void {
   assert(instance !== null, "Instance should handle multiple open events");
 
   cleanupDOM();
-}
-
-function testHandleRestartWithoutServices(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
-  // Remove Services to test error handling
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = undefined;
-
-  let threw = false;
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).handleRestart();
-  } catch {
-    threw = true;
-  }
-
-  // Should handle missing Services gracefully or throw expected error
-  assert(
-    typeof threw === "boolean",
-    "handleRestart should handle missing Services",
-  );
-
-  // Restore Services
-  if (originalServices !== undefined) {
-    Object.defineProperty(globalThis, "Services", {
-      value: originalServices,
-      configurable: true,
-    });
-  }
-}
-
-function testShowRebootPanelSubViewWithoutPanelUI(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-
-  // Remove PanelUI to test error handling
-  // PanelUI may be read-only in Firefox, use Object.defineProperty with try/catch
-  try {
-    Object.defineProperty(globalThis, "PanelUI", {
-      value: undefined,
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // PanelUI is non-configurable; test may not fully exercise this path.
-  }
-
-  let threw = false;
-  try {
-    // deno-lint-ignore no-explicit-any
-    (RebootPanelMenu as any).showRebootPanelSubView();
-  } catch {
-    threw = true;
-  }
-
-  // Should handle missing PanelUI gracefully or throw expected error
-  assert(
-    typeof threw === "boolean",
-    "showRebootPanelSubView should handle missing PanelUI",
-  );
-
-  // Restore PanelUI
-  if (originalPanelUI !== undefined) {
-    try {
-      Object.defineProperty(globalThis, "PanelUI", {
-        value: originalPanelUI,
-        configurable: true,
-        writable: true,
-      });
-    } catch {
-      // Ignore if PanelUI cannot be restored.
-    }
-  }
 }
 
 // ===========================================================================
@@ -893,14 +671,6 @@ export async function runAllTests(): Promise<void> {
     {
       name: "render panel only once when open",
       fn: testRenderPanelOnlyOnceWhenOpen,
-    },
-    {
-      name: "handleRestart without Services",
-      fn: testHandleRestartWithoutServices,
-    },
-    {
-      name: "showRebootPanelSubView without PanelUI",
-      fn: testShowRebootPanelSubViewWithoutPanelUI,
     },
   ];
 

@@ -3,14 +3,15 @@
 
 import {
   getCurrentProfile,
-  getProfiles,
   getFxAccountsInfo,
-  openUrl,
+  getProfiles,
   openProfile,
+  openUrl,
   removeProfile,
   renameProfile,
-  setDefaultProfile,
   restart,
+  type RestartDependencies,
+  setDefaultProfile,
 } from "../../src/lib/profileDataManager.ts";
 import {
   assert,
@@ -18,6 +19,85 @@ import {
   runTests,
   type TestCase,
 } from "../../../chrome/test/utils/test_harness.ts";
+
+type RestartHarness = {
+  dependencies: RestartDependencies;
+  calls: string[];
+  cancelQuit: { data: boolean };
+  interfaceType: unknown;
+  notifiedSubject: unknown;
+  notifiedTopic: string;
+  notifiedData: string;
+  quitFlags: number | null;
+  safeModeFlags: number | null;
+  fallbackValues: boolean[];
+};
+
+function createRestartHarness(cancelOnNotify = false): RestartHarness {
+  const interfaceType = {};
+  const harness: RestartHarness = {
+    dependencies: {},
+    calls: [],
+    cancelQuit: { data: false },
+    interfaceType,
+    notifiedSubject: null,
+    notifiedTopic: "",
+    notifiedData: "",
+    quitFlags: null,
+    safeModeFlags: null,
+    fallbackValues: [],
+  };
+
+  harness.dependencies = {
+    isDev: false,
+    hasChrome: true,
+    Cc: {
+      "@mozilla.org/supports-PRBool;1": {
+        createInstance: (receivedInterfaceType) => {
+          harness.calls.push("create-cancel-quit");
+          harness.interfaceType = receivedInterfaceType;
+          return harness.cancelQuit;
+        },
+      },
+    },
+    Ci: {
+      nsISupportsPRBool: interfaceType,
+      nsIAppStartup: {
+        eAttemptQuit: 1,
+        eRestart: 2,
+      },
+    },
+    Services: {
+      obs: {
+        notifyObservers: (subject, topic, data) => {
+          harness.calls.push("notify");
+          harness.notifiedSubject = subject;
+          harness.notifiedTopic = topic;
+          harness.notifiedData = data;
+          if (cancelOnNotify) {
+            subject.data = true;
+          }
+        },
+      },
+      startup: {
+        quit: (flags) => {
+          harness.calls.push("quit");
+          harness.quitFlags = flags;
+        },
+        restartInSafeMode: (flags) => {
+          harness.calls.push("safe-mode");
+          harness.safeModeFlags = flags;
+        },
+      },
+    },
+    fallbackRestart: (safeMode) => {
+      harness.calls.push(`fallback:${safeMode}`);
+      harness.fallbackValues.push(safeMode);
+    },
+  };
+
+  return harness;
+}
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
@@ -139,7 +219,8 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
-      name: "setDefaultProfile returns false when NRSetDefaultProfile is not set",
+      name:
+        "setDefaultProfile returns false when NRSetDefaultProfile is not set",
       fn: async () => {
         (globalThis as Record<string, unknown>).NRSetDefaultProfile = undefined;
         const result = await setDefaultProfile("some-id");
@@ -147,11 +228,128 @@ export async function runAllTests(): Promise<void> {
       },
     },
     {
-      name: "restart does not throw when NRRestart is not set",
+      name: "restart uses privileged quit with restart flags",
       fn: () => {
-        (globalThis as Record<string, unknown>).NRRestart = undefined;
-        restart();
-        restart(true);
+        const harness = createRestartHarness();
+        restart(false, harness.dependencies);
+
+        assertEquals(
+          harness.calls.join(","),
+          "create-cancel-quit,notify,quit",
+          "normal restart should notify before quitting",
+        );
+        assertEquals(
+          harness.interfaceType,
+          harness.dependencies.Ci?.nsISupportsPRBool,
+          "restart should create the expected cancel-quit interface",
+        );
+        assertEquals(
+          harness.notifiedSubject,
+          harness.cancelQuit,
+          "restart should notify with the cancel-quit subject",
+        );
+        assertEquals(
+          harness.notifiedTopic,
+          "quit-application-requested",
+          "restart should use the quit request topic",
+        );
+        assertEquals(
+          harness.notifiedData,
+          "restart",
+          "restart should identify the quit as a restart",
+        );
+        assertEquals(harness.quitFlags, 3, "restart should combine quit flags");
+        assertEquals(
+          harness.safeModeFlags,
+          null,
+          "normal restart should not enter safe mode",
+        );
+      },
+    },
+    {
+      name: "restart uses privileged safe-mode restart with restart flags",
+      fn: () => {
+        const harness = createRestartHarness();
+        restart(true, harness.dependencies);
+
+        assertEquals(
+          harness.calls.join(","),
+          "create-cancel-quit,notify,safe-mode",
+          "safe-mode restart should notify before restarting",
+        );
+        assertEquals(
+          harness.safeModeFlags,
+          3,
+          "safe-mode restart should combine quit flags",
+        );
+        assertEquals(
+          harness.quitFlags,
+          null,
+          "safe-mode restart should not call normal quit",
+        );
+      },
+    },
+    {
+      name: "restart stops when quit is canceled",
+      fn: () => {
+        const harness = createRestartHarness(true);
+        restart(false, harness.dependencies);
+
+        assertEquals(
+          harness.calls.join(","),
+          "create-cancel-quit,notify",
+          "canceled restart should stop after notification",
+        );
+        assertEquals(
+          harness.quitFlags,
+          null,
+          "canceled restart should not quit",
+        );
+        assertEquals(
+          harness.safeModeFlags,
+          null,
+          "canceled restart should not enter safe mode",
+        );
+      },
+    },
+    {
+      name: "restart forwards normal and safe-mode requests to fallback",
+      fn: () => {
+        const harness = createRestartHarness();
+        harness.dependencies.isDev = true;
+        harness.dependencies.hasChrome = false;
+
+        restart(false, harness.dependencies);
+        restart(true, harness.dependencies);
+
+        assertEquals(
+          harness.calls.join(","),
+          "fallback:false,fallback:true",
+          "fallback should receive both restart modes",
+        );
+        assertEquals(
+          harness.fallbackValues.join(","),
+          "false,true",
+          "fallback should preserve the safe-mode argument",
+        );
+      },
+    },
+    {
+      name: "restart does not throw without a fallback",
+      fn: () => {
+        const harness = createRestartHarness();
+        harness.dependencies.isDev = true;
+        harness.dependencies.hasChrome = false;
+        harness.dependencies.fallbackRestart = null;
+
+        restart(false, harness.dependencies);
+        restart(true, harness.dependencies);
+
+        assertEquals(
+          harness.calls.length,
+          0,
+          "missing fallback should not call privileged restart effects",
+        );
       },
     },
   ];
