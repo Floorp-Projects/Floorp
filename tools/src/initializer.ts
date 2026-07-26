@@ -108,6 +108,39 @@ export const pickRuntimeEntry = (
 const buildRuntimeUrl = (entryName: string): string =>
   `${RUNTIME_BASE_URL}${entryName}`;
 
+// Fallback source: the Floorp-runtime GitHub releases carry the same
+// artifacts. Used when the CDN index is unreachable or unusable, which
+// otherwise makes first-time setup impossible.
+const RUNTIME_RELEASES_LATEST_API =
+  "https://api.github.com/repos/Floorp-Projects/Floorp-runtime/releases/latest";
+
+interface RuntimeReleaseAsset {
+  name: string;
+  browser_download_url: string;
+}
+
+const fetchLatestRuntimeReleaseAssets = async (): Promise<
+  RuntimeReleaseAsset[]
+> => {
+  const resp = await fetch(RUNTIME_RELEASES_LATEST_API, {
+    headers: { Accept: "application/vnd.github+json" },
+    redirect: "follow",
+  });
+  if (!resp.ok) {
+    throw new Error(
+      `HTTP ${resp.status} while fetching Floorp-runtime latest release`,
+    );
+  }
+  const release = (await resp.json()) as { assets?: RuntimeReleaseAsset[] };
+  const assets = (release.assets ?? []).filter(
+    (asset) => typeof asset?.name === "string" && asset.name.length > 0,
+  );
+  if (!assets.length) {
+    throw new Error("Latest Floorp-runtime release has no assets.");
+  }
+  return assets;
+};
+
 const fetchRuntimeIndex = async (): Promise<RuntimeDeployIndex> => {
   const maxAttempts = 5;
   let lastError: Error | undefined;
@@ -418,19 +451,44 @@ export async function decompressBin(): Promise<void> {
 
 export async function downloadBin(filename: string): Promise<void> {
   const binArchive = getBinArchive();
-  const index = await fetchRuntimeIndex();
-  const entries = filterRuntimeEntries(index);
 
-  if (!entries.length) {
-    throw new Error(
-      "Runtime build index does not contain any downloadable file entries.",
+  let pickedName: string;
+  let downloadUrl: string;
+  try {
+    const index = await fetchRuntimeIndex();
+    const entries = filterRuntimeEntries(index);
+
+    if (!entries.length) {
+      throw new Error(
+        "Runtime build index does not contain any downloadable file entries.",
+      );
+    }
+
+    const picked = pickRuntimeEntry(entries, binArchive);
+    pickedName = picked.name;
+    downloadUrl = buildRuntimeUrl(picked.name);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warn(
+      `Runtime CDN unavailable (${message}); falling back to the Floorp-runtime GitHub releases.`,
     );
+    const assets = await fetchLatestRuntimeReleaseAssets();
+    const picked = pickRuntimeEntry(
+      assets.map((asset) => ({ type: "file", name: asset.name })),
+      binArchive,
+    );
+    const asset = assets.find((entry) => entry.name === picked.name);
+    if (!asset) {
+      throw new Error(
+        `Matched release asset '${picked.name}' disappeared from the release listing.`,
+      );
+    }
+    pickedName = asset.name;
+    downloadUrl = asset.browser_download_url;
   }
 
-  const picked = pickRuntimeEntry(entries, binArchive);
-  const downloadUrl = buildRuntimeUrl(picked.name);
   logger.info(
-    `Downloading runtime artifact '${picked.name}' for ${binArchive.platform}/${binArchive.architecture}`,
+    `Downloading runtime artifact '${pickedName}' for ${binArchive.platform}/${binArchive.architecture}`,
   );
 
   const resp = await fetch(downloadUrl, { redirect: "follow" });
@@ -530,7 +588,7 @@ export async function downloadBin(filename: string): Promise<void> {
 
   // Non-zip expected (e.g., .tar.xz, .dmg): extract inner file from the downloaded zip.
   const tmpZipPath = path.resolve(
-    `_dist/runtime_artifact_${Date.now()}_${picked.name}`,
+    `_dist/runtime_artifact_${Date.now()}_${pickedName}`,
   );
   const tmpExtractDir = `_dist/runtime_artifact_extract_${Date.now()}`;
   try {
@@ -592,7 +650,7 @@ export async function downloadBin(filename: string): Promise<void> {
 
     if (!pickedInner) {
       throw new Error(
-        `Inner file with expected extension '${wantedExt}' not found in artifact '${picked.name}'.`,
+        `Inner file with expected extension '${wantedExt}' not found in artifact '${pickedName}'.`,
       );
     }
 
