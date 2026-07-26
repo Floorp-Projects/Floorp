@@ -169,18 +169,26 @@ jobs:
           deno eval '
             const generatedRoot =
               "browser-features/chrome/test/firefox-downloaded/generated";
-            const manifest = JSON.parse(await Deno.readTextFile(
-              `${generatedRoot}/manifest.json`,
-            ));
-            if (manifest.schemaVersion !== 1 || manifest.tests?.length !== 8) {
-              throw new Error("Expected generated manifest schema 1 with exactly 8 wrappers");
+            const [manifest, lock] = await Promise.all([
+              Deno.readTextFile(`${generatedRoot}/manifest.json`).then(JSON.parse),
+              Deno.readTextFile("floorp-runtime.lock.json").then(JSON.parse),
+            ]);
+            const expectedFileCount = lock.source.tests.count;
+            const expectedTaskCount = lock.source.tests.totalTasks;
+            if (manifest.schemaVersion !== 1 ||
+              manifest.tests?.length !== expectedFileCount) {
+              throw new Error(
+                `Expected generated manifest schema 1 with exactly ${expectedFileCount} wrappers`,
+              );
             }
             const taskCount = manifest.tests.reduce(
               (sum, test) => sum + test.expectedTaskCount,
               0,
             );
-            if (taskCount !== 15) {
-              throw new Error(`Expected 15 locked tasks, got ${taskCount}`);
+            if (taskCount !== expectedTaskCount) {
+              throw new Error(
+                `Expected ${expectedTaskCount} locked tasks, got ${taskCount}`,
+              );
             }
             for (const test of manifest.tests) {
               if (!test.upstreamPath || !test.manifestPath || !test.wrapperPath ||
@@ -200,8 +208,18 @@ jobs:
               const info = await Deno.stat(`${generatedRoot}/${test.wrapperPath}`);
               if (!info.isFile) throw new Error(`Missing wrapper: ${test.wrapperPath}`);
             }
+            let wrapperFileCount = 0;
+            for await (const entry of Deno.readDir(generatedRoot)) {
+              if (entry.isFile && entry.name.endsWith(".test.js")) {
+                wrapperFileCount += 1;
+              }
+            }
+            if (wrapperFileCount !== expectedFileCount) {
+              throw new Error(
+                `Expected ${expectedFileCount} generated wrapper files, got ${wrapperFileCount}`,
+              );
+            }
           '
-          test "$(find browser-features/chrome/test/firefox-downloaded/generated -maxdepth 1 -name '*.test.js' -type f | wc -l)" -eq 8
 
       - name: Set up virtual display
         if: matrix.browser_suite == true
@@ -320,7 +338,12 @@ jobs:
           set -euo pipefail
           test -s logs/test/latest.log
           deno eval '
-            const log = await Deno.readTextFile("logs/test/latest.log");
+            const [log, lock] = await Promise.all([
+              Deno.readTextFile("logs/test/latest.log"),
+              Deno.readTextFile("floorp-runtime.lock.json").then(JSON.parse),
+            ]);
+            const expectedFileCount = lock.source.tests.count;
+            const expectedTaskCount = lock.source.tests.totalTasks;
             const coverage = [...log.matchAll(
               /^\[[^\r\n]+\] \[INFO\] Downloaded Firefox coverage: (\d+) file\(s\), (\d+) task\(s\), (\d+) passed$/gm,
             )];
@@ -332,9 +355,11 @@ jobs:
             const [fileCount, taskCount, passedTaskCount] = coverage[0]
               .slice(1, 4)
               .map(Number);
-            if (fileCount !== 8 || taskCount !== 15 || passedTaskCount !== 15) {
+            if (fileCount !== expectedFileCount ||
+              taskCount !== expectedTaskCount ||
+              passedTaskCount !== expectedTaskCount) {
               throw new Error(
-                `Expected executed coverage 8 files / 15 tasks / 15 passed, got ${fileCount} files / ${taskCount} tasks / ${passedTaskCount} passed`,
+                `Expected executed coverage ${expectedFileCount} files / ${expectedTaskCount} tasks / ${expectedTaskCount} passed, got ${fileCount} files / ${taskCount} tasks / ${passedTaskCount} passed`,
               );
             }
             const exitCodes = log.match(/^\[META\] exitCode=.*$/gm) ?? [];

@@ -30,8 +30,9 @@ function createReadyPipe(): ReadyPipe {
     }
 
     write(chunk: Uint8Array | string) {
-      const s =
-        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      const s = typeof chunk === "string"
+        ? chunk
+        : new TextDecoder().decode(chunk);
       for (const cb of this.listeners) cb(s);
     }
 
@@ -64,7 +65,7 @@ async function runDev(): Promise<void> {
     devPages: true,
     allowBrowserHttpLoader: true,
   });
-  DevEnvManager.setup();
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -127,7 +128,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     devPages: true,
     allowBrowserHttpLoader: false,
   });
-  DevEnvManager.setup();
+  DevEnvManager.setup({ allowBrowserHttpLoader: false });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -176,7 +177,7 @@ async function runTest(): Promise<void> {
     devPages: true,
     allowBrowserHttpLoader: true,
   });
-  DevEnvManager.setup();
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {

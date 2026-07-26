@@ -62,24 +62,24 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-984");
+  assertEquals(canonicalLock.source.ref, "daily-998");
   assertEquals(
     canonicalLock.source.commit,
-    "cc0c8e744c9c4697722c7455888e29f1138dcd4f",
+    "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "19cdccd436b48f96af644f61a4c0a28e4a00e3ad",
+    "e555a371e1a24f18c8085058461f92c06e0b997d",
   );
   assertEquals(canonicalLock.source.release, {
-    id: 356105522,
+    id: 359773143,
     immutable: false,
   });
-  assertEquals(canonicalLock.source.materials.count, 54);
-  assertEquals(canonicalLock.source.materials.totalBytes, 223622);
+  assertEquals(canonicalLock.source.materials.count, 53);
+  assertEquals(canonicalLock.source.materials.totalBytes, 220264);
   assertEquals(canonicalLock.source.tests.count, 8);
   assertEquals(canonicalLock.source.tests.totalTasks, 15);
-  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 94);
+  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
 
   const roleCounts = Object.groupBy(
     canonicalLock.source.materials.entries,
@@ -88,7 +88,7 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(roleCounts.test?.length, 8);
   assertEquals(roleCounts.manifest?.length, 6);
   assertEquals(roleCounts["head-support"]?.length, 5);
-  assertEquals(roleCounts.support?.length, 35);
+  assertEquals(roleCounts.support?.length, 34);
 
   assertEquals(
     Object.fromEntries(
@@ -118,51 +118,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       tuple: "linux/aarch64",
-      assetId: 481483241,
-      assetSize: 70443176,
+      assetId: 489491168,
+      assetSize: 71744816,
       assetSha:
-        "ea665c85df7ddc437d22722c387248dcca265952c2071e88437ea279be9df269",
-      iniId: 481483244,
-      iniSize: 537,
+        "89506cb64f9b4b717d683ecd4e4623c529e67466b89c0b722d64c0a52d9b3df4",
+      iniId: 489491163,
+      iniSize: 535,
       iniSha:
-        "acbfe303c1d756ca68e3b7305dc7a1b4fd144e566bd7f12b9be5d091f38b6f8e",
-      buildId: "20260718073540",
+        "64d53c8d58efe71ede5db1d8608c42b435eaf7b01e00aa03a1e1a517446e0bdc",
+      buildId: "20260725075208",
     },
     {
       tuple: "linux/x86_64",
-      assetId: 481483240,
-      assetSize: 81878192,
+      assetId: 489491173,
+      assetSize: 82741760,
       assetSha:
-        "558c5c540f7b6a87421d1bc9e63adbf84a34c98945439381803f98a96465a957",
-      iniId: 481483247,
-      iniSize: 537,
+        "5bdfca2b437e884929bef19ebf1093598cabaf6fe70ee84bac8883e4c2a9392b",
+      iniId: 489491164,
+      iniSize: 535,
       iniSha:
-        "aa5d537da1ed4af5701704c82c244252da715d9d8d5f53933cf547bcaa10151f",
-      buildId: "20260718102500",
+        "fa6e0eb6867331244ae9de01859f28f77079bc44c2d96cdf7f9ec1790e09def4",
+      buildId: "20260725075208",
     },
     {
       tuple: "macos/universal",
-      assetId: 481483236,
-      assetSize: 175982069,
+      assetId: 489491167,
+      assetSize: 176824587,
       assetSha:
-        "171b7d2446e554eeeffcc11f86cb747441c2d0b9cb3d431a5887674aa6d69845",
-      iniId: 481483249,
-      iniSize: 537,
+        "899f43aee0da04209bbddf5afab8473cad9ddc5785ce428c1feee5a96fbfa391",
+      iniId: 489491175,
+      iniSize: 535,
       iniSha:
-        "dde5aa33136dd545e2afb7aa5757e88a5a970fd38a0d42bdf8f55ecd25493bc8",
-      buildId: "20260718072840",
+        "3a943f943967fbe4af72e5781a41377ded486ec299a2e778bb654cc67d8c252c",
+      buildId: "20260725075208",
     },
     {
       tuple: "windows/x86_64",
-      assetId: 481483239,
-      assetSize: 131544355,
+      assetId: 489491165,
+      assetSize: 133135974,
       assetSha:
-        "0f424c8698a35039f470debf3e875996cd571cf6abf415727e2efdf686fa62fd",
-      iniId: 481483243,
-      iniSize: 536,
+        "d5c3cbcb3c7c3f0852d36047f45fcf98c10fdb3b9160316b1cd242e9119bbe8c",
+      iniId: 489491166,
+      iniSize: 535,
       iniSha:
-        "b22af470c7ab9f65822299fb4edd037512f1f804060502b59eff6d4822ac8564",
-      buildId: "20260718112318",
+        "49a78a5484e97e2ce80b1341522da6e1616aa878cf163e2964cd3c7863b90ae4",
+      buildId: "20260725075208",
     },
   ];
 
@@ -181,7 +181,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["152.0.7", "152.0.7", "152.0.7", "152.0.7"],
+    ["153.0", "153.0", "153.0", "153.0"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,
@@ -296,10 +296,10 @@ Deno.test("parseRuntimeLock rejects malformed source and material identities", (
 Deno.test("parseRuntimeLock rejects material totals, duplicates, and drift", () => {
   expectInvalid((lock) => {
     lock.source.materials.count += 1;
-  }, "expected 54");
+  }, `expected ${canonicalLock.source.materials.entries.length}`);
   expectInvalid((lock) => {
     lock.source.materials.totalBytes += 1;
-  }, "expected 223622");
+  }, `expected ${canonicalLock.source.materials.totalBytes}`);
   expectInvalid((lock) => {
     lock.source.materials.entries[1].path =
       lock.source.materials.entries[0].path;
@@ -324,13 +324,13 @@ Deno.test("parseRuntimeLock rejects material totals, duplicates, and drift", () 
 Deno.test("parseRuntimeLock rejects task, manifest, and support closure drift", () => {
   expectInvalid((lock) => {
     lock.source.tests.count += 1;
-  }, "expected 8");
+  }, `expected ${canonicalLock.source.tests.entries.length}`);
   expectInvalid((lock) => {
     lock.source.tests.totalTasks += 1;
-  }, "expected 15");
+  }, `expected ${canonicalLock.source.tests.totalTasks}`);
   expectInvalid((lock) => {
     lock.source.tests.supportDependencyEdges -= 1;
-  }, "expected 94");
+  }, `expected ${canonicalLock.source.tests.supportDependencyEdges}`);
   expectInvalid((lock) => {
     lock.source.tests.entries[0].expectedTasks = 0;
   }, "safe integer");
@@ -401,9 +401,20 @@ Deno.test("parseRuntimeLock rejects malformed or duplicate release assets", () =
   expectInvalid((lock) => {
     lock.artifacts[0].asset.sha256 = "ABC";
   }, "lowercase hexadecimal");
-  expectInvalid((lock) => {
-    lock.artifacts[0].version = "152.0";
-  }, "three-component");
+  for (
+    const invalidVersion of [
+      "153",
+      "153.0.0.0",
+      "0153.0",
+      "153.00",
+      "153.0a1",
+      "153.0 ",
+    ]
+  ) {
+    expectInvalid((lock) => {
+      lock.artifacts[0].version = invalidVersion;
+    }, "canonical two- or three-component");
+  }
   expectInvalid((lock) => {
     lock.artifacts[0].version = "153.0.0";
   }, "share one version");
@@ -414,3 +425,20 @@ Deno.test("parseRuntimeLock rejects malformed or duplicate release assets", () =
     lock.artifacts[0].buildId = "20260230073540";
   }, "invalid UTC");
 });
+
+Deno.test(
+  "parseRuntimeLock preserves canonical two- and three-component versions",
+  () => {
+    for (const expectedVersion of ["153.0", "152.0.7"]) {
+      const lock = cloneLock();
+      for (const entry of lock.artifacts) {
+        entry.version = expectedVersion;
+      }
+      const parsed = parseRuntimeLock(lock);
+      assertEquals(
+        parsed.artifacts.map((entry) => entry.version),
+        Array(4).fill(expectedVersion),
+      );
+    }
+  },
+);

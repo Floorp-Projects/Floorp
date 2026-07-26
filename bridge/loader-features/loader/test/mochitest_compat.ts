@@ -96,6 +96,9 @@ type ServicesLike = {
   io?: {
     newURI: (uri: string) => unknown;
   };
+  prefs?: {
+    getBoolPref: (name: string, fallback?: boolean) => boolean;
+  };
   scriptSecurityManager?: {
     getSystemPrincipal: () => unknown;
   };
@@ -898,34 +901,107 @@ async function waitForNotificationInNotificationBoxCompat(
   );
 }
 
-async function waitForTabSwitch(
-  gBrowser: Record<string, unknown>,
-  tab: unknown,
-  globals: Record<string, unknown>,
-): Promise<void> {
-  const tabContainer = eventTargetRecord(gBrowser.tabContainer, globals);
-  const switchEvent = tabContainer
-    ? Promise.race([
-      waitForEvent(
-        tabContainer,
-        "TabSwitchDone",
-        () => sameTab(gBrowser.selectedTab, tab, globals),
-      ),
-      waitForEvent(
-        tabContainer,
-        "TabSelect",
-        () => sameTab(gBrowser.selectedTab, tab, globals),
-      ),
-    ]).catch(() => undefined)
-    : Promise.resolve(undefined);
+type TabSwitchWaitHandle = {
+  promise: Promise<void>;
+  cancel: () => void;
+};
 
-  await waitForCondition(
-    () =>
-      sameTab(gBrowser.selectedTab, tab, globals) &&
-      isRecord(browserForTab(gBrowser, tab, globals)),
-    "BrowserTestUtils expected tab switch",
-  );
-  await Promise.race([switchEvent, wait(100)]);
+function armTabSwitchWait(
+  gBrowser: Record<string, unknown>,
+  globals: Record<string, unknown>,
+  timeoutMs = 5000,
+): TabSwitchWaitHandle {
+  const target = eventTargetRecord(gBrowser, globals);
+  if (!target) {
+    throw new Error("BrowserTestUtils.switchTab requires a tabbrowser target");
+  }
+
+  const addEventListener = callableMethod(target, "addEventListener");
+  const removeEventListener = callableMethod(target, "removeEventListener");
+  if (!addEventListener || !removeEventListener) {
+    throw new Error("BrowserTestUtils.switchTab requires event listeners");
+  }
+
+  const services = servicesFromGlobals(globals);
+  const ownerDocument = waiveXrays(target.ownerDocument, globals);
+  let waitForDelayedSwitch = false;
+  try {
+    waitForDelayedSwitch = services.prefs?.getBoolPref(
+      "test.wait300msAfterTabSwitch",
+      false,
+    ) === true;
+  } catch {
+    // Match the upstream false fallback when the pref service is unavailable.
+  }
+  const eventName = waitForDelayedSwitch ||
+      (isRecord(ownerDocument) && ownerDocument.hidden === true)
+    ? "TabSwitchDone"
+    : "TabSwitched";
+
+  let resolveWait: () => void = () => {};
+  let rejectWait: (reason: unknown) => void = () => {};
+  let settled = false;
+  let listenerRegistered = false;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const promise = new Promise<void>((resolve, reject) => {
+    resolveWait = resolve;
+    rejectWait = reject;
+  });
+
+  const cleanup = (): void => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+      timeoutId = undefined;
+    }
+    if (listenerRegistered) {
+      listenerRegistered = false;
+      try {
+        removeEventListener.call(target, eventName, onEvent, false);
+      } catch {
+        // Event targets may reject late removal during shutdown.
+      }
+    }
+  };
+
+  const onEvent = (): void => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    cleanup();
+    setTimeout(resolveWait, 0);
+  };
+
+  timeoutId = setTimeout(() => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    cleanup();
+    rejectWait(new Error(`Timed out waiting for ${eventName}`));
+  }, timeoutMs);
+
+  try {
+    listenerRegistered = true;
+    addEventListener.call(target, eventName, onEvent, false);
+  } catch (error) {
+    settled = true;
+    cleanup();
+    resolveWait();
+    throw error;
+  }
+
+  return {
+    promise,
+    cancel(): void {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolveWait();
+    },
+  };
 }
 
 function numberConstant(
@@ -955,21 +1031,6 @@ function makeLoadOptions(
     }
   }
   return options;
-}
-
-async function waitForNewTab(
-  gBrowser: Record<string, unknown>,
-  previousTabs: unknown[],
-  globals: Record<string, unknown>,
-): Promise<unknown> {
-  let newTab: unknown;
-  await waitForCondition(() => {
-    newTab = tabList(gBrowser).find((tab) =>
-      !tabListIncludes(previousTabs, tab, globals)
-    );
-    return Boolean(newTab);
-  }, "BrowserTestUtils expected a new tab");
-  return newTab;
 }
 
 function addTabCompat(
@@ -1025,14 +1086,39 @@ async function openNewForegroundTabCompat(
 
   const previousTabs = tabList(gBrowser);
   let tab: unknown;
-  if (typeof opening === "function") {
-    opening();
-    tab = await waitForNewTab(gBrowser, previousTabs, globals);
-  } else {
-    tab = addTabCompat(gBrowser, opening, undefined, globals);
+  const switchPromise = switchTabCompat(
+    gBrowser,
+    () => {
+      if (typeof opening === "function") {
+        opening();
+        tab = gBrowser.selectedTab;
+        if (tabListIncludes(previousTabs, tab, globals)) {
+          throw new Error(
+            "BrowserTestUtils expected the callback to select a new tab",
+          );
+        }
+      } else {
+        tab = addTabCompat(gBrowser, opening, undefined, globals);
+        gBrowser.selectedTab = tab;
+      }
+
+      if (!tab) {
+        throw new Error("BrowserTestUtils expected a new tab");
+      }
+    },
+    globals,
+  );
+
+  if (!tab) {
+    void switchPromise.catch(() => undefined);
+    throw new Error("BrowserTestUtils expected a new tab");
   }
 
   const browser = browserForTab(gBrowser, tab, globals);
+  if (!isRecord(browser)) {
+    void switchPromise.catch(() => undefined);
+    throw new Error("BrowserTestUtils expected the new tab browser");
+  }
   const requestedUrl = typeof opening === "string"
     ? opening
     : opening === undefined
@@ -1042,11 +1128,8 @@ async function openNewForegroundTabCompat(
     ? browserLoadedCompat(browser, false, requestedUrl, globals)
     : undefined;
 
-  gBrowser.selectedTab = tab;
-  await waitForTabSwitch(gBrowser, tab, globals);
-
+  await switchPromise;
   await loadPromise;
-  captureUrlbarFocusForSelectedTab(gBrowser, globals);
   return tab;
 }
 
@@ -1198,9 +1281,16 @@ async function resetBrowserTabsForMozillaTask(
   }
 
   urlbarFocusedTabs.length = 0;
-  const keeper = addTabCompat(gBrowser, "about:blank", undefined, globals);
-  gBrowser.selectedTab = keeper;
-  await waitForTabSwitch(gBrowser, keeper, globals);
+  let keeper: unknown;
+  await switchTabCompat(
+    gBrowser,
+    () => {
+      keeper = addTabCompat(gBrowser, "about:blank", undefined, globals);
+      gBrowser.selectedTab = keeper;
+      return keeper;
+    },
+    globals,
+  );
 
   const keeperBrowser = browserForTab(gBrowser, keeper, globals);
   await browserLoadedCompat(
@@ -1277,9 +1367,9 @@ function removeTabCompat(
   forgetUrlbarFocusedTab(tab, globals);
 }
 
-async function switchTabCompat(
+function switchTabCompat(
   gBrowserValue: unknown,
-  tab: unknown,
+  switching: unknown,
   globals: Record<string, unknown>,
 ): Promise<unknown> {
   const gBrowser = gBrowserValue;
@@ -1287,11 +1377,52 @@ async function switchTabCompat(
     throw new Error("BrowserTestUtils.switchTab requires a gBrowser");
   }
   captureUrlbarFocusForSelectedTab(gBrowser, globals);
-  gBrowser.selectedTab = tab;
-  await waitForTabSwitch(gBrowser, tab, globals);
-  await waitForRememberedUrlbarFocus(tab, globals);
-  captureUrlbarFocusForSelectedTab(gBrowser, globals);
-  return tab;
+  const previouslySelectedTab = gBrowser.selectedTab;
+  if (
+    typeof switching !== "function" &&
+    sameTab(previouslySelectedTab, switching, globals) &&
+    isRecord(browserForTab(gBrowser, switching, globals))
+  ) {
+    return Promise.resolve(switching);
+  }
+
+  const switchWait = armTabSwitchWait(gBrowser, globals);
+  let tab: unknown;
+  try {
+    if (typeof switching === "function") {
+      switching();
+      tab = gBrowser.selectedTab;
+    } else {
+      tab = switching;
+      gBrowser.selectedTab = tab;
+    }
+
+    if (!tab) {
+      throw new Error("BrowserTestUtils.switchTab expected a selected tab");
+    }
+    if (
+      sameTab(previouslySelectedTab, tab, globals) &&
+      isRecord(browserForTab(gBrowser, tab, globals))
+    ) {
+      switchWait.cancel();
+    }
+  } catch (error) {
+    switchWait.cancel();
+    throw error;
+  }
+
+  return (async () => {
+    await switchWait.promise;
+    await waitForCondition(
+      () =>
+        sameTab(gBrowser.selectedTab, tab, globals) &&
+        isRecord(browserForTab(gBrowser, tab, globals)),
+      "BrowserTestUtils expected tab switch",
+    );
+    await waitForRememberedUrlbarFocus(tab, globals);
+    captureUrlbarFocusForSelectedTab(gBrowser, globals);
+    return tab;
+  })();
 }
 
 function createTestUtils(): Record<string, unknown> {

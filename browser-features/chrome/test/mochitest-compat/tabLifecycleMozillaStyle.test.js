@@ -148,6 +148,59 @@ add_task(async function activeSplitViewUsesNativePrivateReceiver() {
   );
 });
 
+add_task(
+  async function browserBug565575PreservesUrlbarFocusAcrossTabSwitches() {
+    await waitForBrowserChromeReady();
+
+    const initialTab = gBrowser.selectedTab;
+    /** @type {XULElement | null} */
+    let openedTab = null;
+    const restoreTabs = async () => {
+      if (openedTab && hasTab(openedTab)) {
+        await BrowserTestUtils.removeTab(openedTab);
+        openedTab = null;
+      }
+      if (
+        initialTab && hasTab(initialTab) &&
+        gBrowser.selectedTab !== initialTab
+      ) {
+        await BrowserTestUtils.switchTab(gBrowser, initialTab);
+      }
+    };
+    registerCleanupFunction(restoreTabs);
+
+    try {
+      const selectedBrowser = /** @type {{ focus(): void }} */ (
+        /** @type {unknown} */ (gBrowser.selectedBrowser)
+      );
+      selectedBrowser.focus();
+
+      openedTab = /** @type {XULElement} */ (
+        await BrowserTestUtils.openNewForegroundTab(
+          gBrowser,
+          () => BrowserCommands.openTab(),
+          false,
+        )
+      );
+      ok(gURLBar.focused, "location bar is focused for a new tab");
+
+      await BrowserTestUtils.switchTab(gBrowser, initialTab);
+      ok(
+        !gURLBar.focused,
+        "location bar isn't focused for the previously selected tab",
+      );
+
+      await BrowserTestUtils.switchTab(gBrowser, openedTab);
+      ok(
+        gURLBar.focused,
+        "location bar is re-focused when selecting the new tab",
+      );
+    } finally {
+      await restoreTabs();
+    }
+  },
+);
+
 add_task(async function openTabAndCloseIt() {
   await waitForBrowserChromeReady();
 

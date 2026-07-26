@@ -154,7 +154,7 @@ const ASSET_NAME = /^[A-Za-z0-9._-]+$/;
 const PREFERENCE_NAME = /^[A-Za-z0-9._-]+$/;
 const REPOSITORY_NAME = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF_NAME = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
-const VERSION = /^\d+\.\d+\.\d+$/;
+const VERSION = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?$/;
 
 function fail(path: string, message: string): never {
   throw new RuntimeLockValidationError(`${path}: ${message}`);
@@ -335,7 +335,7 @@ function buildId(value: unknown, path: string): string {
 function version(value: unknown, path: string): string {
   const candidate = string(value, path);
   if (!VERSION.test(candidate)) {
-    fail(path, "expected a three-component numeric version");
+    fail(path, "expected a canonical two- or three-component numeric version");
   }
   return candidate;
 }

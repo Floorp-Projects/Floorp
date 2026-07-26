@@ -68,7 +68,7 @@ jobs:
           persist-credentials: false
 
       # The tracking checkout is data only. The bounded collector reads only the
-      # 54 locked materials and eight locked tests; nothing is imported or run.
+      # source closure recorded in the Runtime lock; nothing is imported or run.
       - name: Collect locked test projection from tracking ref
         shell: bash
         env:

@@ -34,8 +34,8 @@ and tree and verifies every material path, Git mode, Git blob ID, byte length,
 and SHA-256 before generating wrappers. Candidate inspection must opt in with
 `--candidate`, must explicitly name the lock's `trackingRef`, and verifies that
 the checkout's `HEAD` resolves to that ref. It is a static-only projection of
-the same 54 locked materials and 8 locked tests; it reports drift in that
-reviewed selection and does not claim to discover new upstream tests. An
+the source closure and test set recorded in the Runtime lock; it reports drift
+in that reviewed selection and does not claim to discover new upstream tests. An
 optional `--path-prefix` can narrow this already bounded projection. The prepare
 step rejects every candidate collection. Candidate manifests label this scope as
 `locked-closure`, not as a full browser-chrome inventory.
