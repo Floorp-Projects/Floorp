@@ -24,11 +24,16 @@ const PREFERENCES_DEV_CSP =
 
 function fixture(
   csp: string | null = STRICT_CSP,
-  options: { duplicateMeta?: boolean; scripts?: string } = {},
+  options: {
+    duplicateMeta?: boolean;
+    scripts?: string;
+    contentAttributeName?: string;
+  } = {},
 ): string {
+  const contentAttributeName = options.contentAttributeName ?? "content";
   const meta = csp === null
     ? ""
-    : `<meta http-equiv="Content-Security-Policy" content="${csp}" />`;
+    : `<meta http-equiv="Content-Security-Policy" ${contentAttributeName}="${csp}" />`;
   return `<?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -49,14 +54,16 @@ function preferencesFixture(
     includeCsp?: boolean;
     duplicateCsp?: boolean;
     nonCspFirst?: boolean;
+    contentAttributeName?: string;
   } = {},
 ): string {
   const includeCsp = options.includeCsp ?? true;
+  const contentAttributeName = options.contentAttributeName ?? "content";
   const nonCspMeta = options.nonCspFirst
     ? '<meta name="viewport" content="width=device-width" />'
     : "";
   const cspMeta = includeCsp
-    ? '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'" />'
+    ? `<meta http-equiv="Content-Security-Policy" ${contentAttributeName}="default-src 'none'" />`
     : "";
   return `<?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -103,6 +110,34 @@ Deno.test("browser XHTML dev-to-dev is byte-stable and deduplicates loader origi
   assertEquals(second, first);
   assertEquals(count(first, BROWSER_HTTP_LOADER_ORIGIN), 1);
   assertEquals(first.includes("HTTP://LOCALHOST:5181"), false);
+});
+
+Deno.test("browser XHTML preserves case-variant CSP content attributes", () => {
+  for (const contentAttributeName of ["CONTENT", "Content"]) {
+    const output = transformBrowserXhtml(
+      fixture(STRICT_CSP, { contentAttributeName }),
+      { allowBrowserHttpLoader: true },
+    );
+
+    assertEquals(count(output, `${contentAttributeName}="`), 1);
+    assertEquals(count(output, ' content="'), 0);
+    assertEquals(
+      transformBrowserXhtml(output, { allowBrowserHttpLoader: true }),
+      output,
+    );
+  }
+});
+
+Deno.test("browser XHTML rejects case-variant duplicate attributes", () => {
+  const source = fixture().replace(
+    ' content="',
+    ' CONTENT="shadow" content="',
+  );
+  assertThrows(
+    () => transformBrowserXhtml(source),
+    Error,
+    "duplicate attribute content",
+  );
 });
 
 Deno.test("browser XHTML dev-to-stage removes the origin from the same source", () => {
@@ -266,6 +301,19 @@ Deno.test("development preferences XHTML rewrites the CSP meta after a non-CSP m
   assertEquals(count(output, 'content="width=device-width"'), 1);
   assertEquals(output.includes("default-src 'none'"), false);
   assertEquals(transformPreferencesXhtmlForDev(output), output);
+});
+
+Deno.test("development preferences XHTML preserves case-variant CSP content attributes", () => {
+  for (const contentAttributeName of ["CONTENT", "Content"]) {
+    const output = transformPreferencesXhtmlForDev(
+      preferencesFixture({ contentAttributeName }),
+    );
+
+    assertEquals(count(output, `${contentAttributeName}="`), 1);
+    assertEquals(count(output, ' content="'), 0);
+    assertEquals(count(output, PREFERENCES_DEV_CSP), 1);
+    assertEquals(transformPreferencesXhtmlForDev(output), output);
+  }
 });
 
 Deno.test("development preferences XHTML requires exactly one CSP meta", () => {

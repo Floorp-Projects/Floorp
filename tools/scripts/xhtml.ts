@@ -253,6 +253,20 @@ function getCaseInsensitiveAttribute(
   return matches[0]?.value ?? null;
 }
 
+function setExistingCaseInsensitiveAttribute(
+  element: ParsedElement,
+  name: string,
+  value: string,
+): void {
+  const matches = [...element.attributes].filter((attribute) =>
+    attribute.name.toLowerCase() === name.toLowerCase()
+  );
+  if (matches.length !== 1) {
+    fail(`expected exactly one ${name} attribute, found ${matches.length}`);
+  }
+  element.setAttribute(matches[0].name, value);
+}
+
 function isLoaderOrigin(token: string): boolean {
   return token.toLowerCase() === BROWSER_HTTP_LOADER_ORIGIN;
 }
@@ -373,7 +387,8 @@ export function transformBrowserXhtml(
   const meta = findCspMeta(document);
   const content = getCaseInsensitiveAttribute(meta, "content");
   if (content === null) fail("CSP meta has no content attribute");
-  meta.setAttribute(
+  setExistingCaseInsensitiveAttribute(
+    meta,
     "content",
     rewriteScriptSrcDirective(content, allowBrowserHttpLoader),
   );
@@ -417,7 +432,7 @@ export function transformPreferencesXhtmlForDev(source: string): string {
   assertWellFormedXml(source);
   const document = new DOMParser().parseFromString(source, "text/xml");
   const meta = findCspMeta(document);
-  meta.setAttribute("content", PREFERENCES_DEV_CSP);
+  setExistingCaseInsensitiveAttribute(meta, "content", PREFERENCES_DEV_CSP);
 
   const output = document.toString();
   assertWellFormedXml(output);
