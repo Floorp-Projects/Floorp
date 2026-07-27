@@ -1,11 +1,85 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand } from "../types.ts";
+import type {
+  CommandStepChoice,
+  PaletteCommand,
+  StepChoicesResult,
+} from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 import Workspaces from "#features-chrome/common/workspaces";
+
+export async function loadContainersForOpenUrl(): Promise<StepChoicesResult> {
+  try {
+    const { ContextualIdentityService } = ChromeUtils.importESModule(
+      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+    );
+
+    ContextualIdentityService.ensureDataReady();
+
+    const identities = await ContextualIdentityService.getPublicIdentities();
+
+    const workspaceDefaultId = Workspaces.getCtx()
+      ?.getCurrentWorkspaceUserContextId() ?? 0;
+
+    const workspaceDisplayName = workspaceDefaultId > 0
+      ? (ContextualIdentityService.getUserContextLabel(workspaceDefaultId) || "")
+      : i18next.t("commandPalette.reopenInContainerNoContainer", {
+        defaultValue: "No Container",
+      });
+
+    const workspaceDefault: CommandStepChoice = {
+      label: i18next.t("commandPalette.openUrlContainerWorkspaceDefault", {
+        defaultValue: "Workspace Default",
+      }),
+      value: "workspace",
+      description: i18next.t(
+        "commandPalette.openUrlContainerWorkspaceDefaultDesc",
+        { defaultValue: "Uses the workspace's default context" },
+      ) + (workspaceDisplayName ? ` (${workspaceDisplayName})` : ""),
+    };
+
+    const noContainer: CommandStepChoice = {
+      label: i18next.t("commandPalette.reopenInContainerNoContainer", {
+        defaultValue: "No Container",
+      }),
+      value: "0",
+      description: i18next.t(
+        "commandPalette.reopenInContainerNoContainerDesc",
+        { defaultValue: "Open in the default context" },
+      ),
+    };
+
+    const containerChoices: CommandStepChoice[] = identities
+      .filter(
+        (identity: unknown) =>
+          !(identity as { floorpPrivateContainer?: boolean })
+            .floorpPrivateContainer,
+      )
+      .map((container: unknown) => {
+        const userContextId = (container as { userContextId: number })
+          .userContextId;
+        // getUserContextLabel handles both l10nId (built-in) and name (user-created)
+        const label =
+          ContextualIdentityService.getUserContextLabel(userContextId);
+        return {
+          label: label || "Unknown",
+          value: String(userContextId),
+          description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
+        };
+      });
+
+    return {
+      choices: [workspaceDefault, noContainer, ...containerChoices],
+      defaultIndex: 0,
+    };
+  } catch (e) {
+    console.error("[command-palette] Failed to load containers:", e);
+    return { choices: [], defaultIndex: 0 };
+  }
+}
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -96,6 +170,16 @@ export const openUrlCommand: PaletteCommand = {
         },
       ],
     },
+    {
+      id: "container",
+      label: i18next.t("commandPalette.openUrlContainerStepLabel", {
+        defaultValue: "Open in container",
+      }),
+      placeholder: i18next.t("commandPalette.openUrlContainerStepPlaceholder", {
+        defaultValue: "Choose a container...",
+      }),
+      choicesLoader: loadContainersForOpenUrl,
+    },
   ],
   fn: (_win: Window, args?: Record<string, string>) => {
     const url = args?.url?.trim();
@@ -106,7 +190,14 @@ export const openUrlCommand: PaletteCommand = {
 
     try {
       const principal = globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
-      const userContextId = Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0;
+      const containerChoice = args?.container ?? "workspace";
+      let userContextId: number;
+      if (containerChoice === "workspace") {
+        userContextId = Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0;
+      } else {
+        const parsed = Number.parseInt(containerChoice, 10);
+        userContextId = Number.isNaN(parsed) ? 0 : parsed;
+      }
 
       switch (where) {
         case "current-tab":
