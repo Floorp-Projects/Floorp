@@ -38,3 +38,36 @@ export interface TForm {
 export interface TFormResult {
   [key: string]: string | number;
 }
+
+export const MODAL_TERMINAL_REASONS = [
+  "submit",
+  "cancel",
+  "escape",
+  "backdrop",
+  "hide",
+  "replacement",
+  "timeout",
+  "dead",
+  "actor-error",
+  "remove",
+] as const;
+
+export type ModalTerminalReason = typeof MODAL_TERMINAL_REASONS[number];
+
+export interface ModalRequestIdentity {
+  requestId: string;
+  epoch: number;
+}
+
+export interface ModalShowRequest extends ModalRequestIdentity {
+  form: TForm;
+}
+
+export interface ModalCancelRequest extends ModalRequestIdentity {
+  reason: ModalTerminalReason;
+}
+
+export interface ModalResultEnvelope extends ModalRequestIdentity {
+  reason: ModalTerminalReason;
+  result: TFormResult | null;
+}
