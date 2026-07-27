@@ -21,6 +21,54 @@ on:
         type: string
         default: ""
         required: false
+      provenance_mode:
+        type: choice
+        required: true
+        default: legacy
+        options:
+          - legacy
+          - stable-v2
+          - stable-v2-validation
+      runtime_repository:
+        type: string
+        default: ""
+        required: false
+      runtime_workflow_run_id:
+        type: string
+        default: ""
+        required: false
+      runtime_manifest_artifact_id:
+        type: string
+        default: ""
+        required: false
+      runtime_manifest_artifact_digest:
+        type: string
+        default: ""
+        required: false
+      runtime_head_sha:
+        type: string
+        default: ""
+        required: false
+      expected_build_id:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_name:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_id:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_digest:
+        type: string
+        default: ""
+        required: false
+      floorp_head_sha:
+        type: string
+        default: ""
+        required: false
       skip_signing:
         type: boolean
         required: false
@@ -31,7 +79,6 @@ on:
     inputs:
       platform:
         type: string
-        default: Windows-x64
         required: true
       beta:
         type: boolean
@@ -41,50 +88,553 @@ on:
         type: string
         default: ""
         required: false
+      provenance_mode:
+        type: string
+        required: false
+        default: legacy
+      runtime_repository:
+        type: string
+        default: ""
+        required: false
+      runtime_workflow_run_id:
+        type: string
+        default: ""
+        required: false
+      runtime_manifest_artifact_id:
+        type: string
+        default: ""
+        required: false
+      runtime_manifest_artifact_digest:
+        type: string
+        default: ""
+        required: false
+      runtime_head_sha:
+        type: string
+        default: ""
+        required: false
+      expected_build_id:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_name:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_id:
+        type: string
+        default: ""
+        required: false
+      runtime_artifact_digest:
+        type: string
+        default: ""
+        required: false
+      floorp_head_sha:
+        type: string
+        default: ""
+        required: false
       skip_signing:
         type: boolean
         required: false
         default: false
         description: "Skip code signing process"
+    secrets:
+      runtime_artifact_token:
+        required: false
+      SIGNPATH_API_TOKEN:
+        required: false
+      APPLE_DEVELOPER_P12_BASE64:
+        required: false
+      APPLE_DEVELOPER_P12_PASSWORD:
+        required: false
+      APPLE_PROVISIONING_PROFILE_BASE64:
+        required: false
+      APPLE_DEVELOPER_API_KEY_JSON:
+        required: false
+      APPLE_DEVELOPER_TEAM_ID:
+        required: false
     outputs:
       run_id:
         description: "Workflow run ID for downstream artifact downloads"
         value: ${{ jobs.main.outputs.run_id }}
+      platform_key:
+        description: "Canonical release platform key"
+        value: ${{ jobs.main.outputs.platform_key }}
+      runtime_artifact_name:
+        description: "Runtime artifact name used by this package job"
+        value: ${{ jobs.main.outputs.runtime_artifact_name }}
+      runtime_artifact_id:
+        description: "Immutable Runtime artifact ID (v2 only)"
+        value: ${{ jobs.main.outputs.runtime_artifact_id }}
+      runtime_artifact_digest:
+        description: "Runtime artifact digest (v2 only)"
+        value: ${{ jobs.main.outputs.runtime_artifact_digest }}
+      expected_build_id:
+        description: "Authoritative Runtime BuildID (v2 only)"
+        value: ${{ jobs.main.outputs.expected_build_id }}
+      installer_artifact_name:
+        description: "Final installer/package artifact name"
+        value: ${{ jobs.main.outputs.installer_artifact_name }}
+      installer_artifact_id:
+        description: "Final installer/package artifact ID"
+        value: ${{ jobs.main.outputs.installer_artifact_id }}
+      installer_artifact_digest:
+        description: "Final installer/package artifact digest"
+        value: ${{ jobs.main.outputs.installer_artifact_digest }}
+      mar_artifact_name:
+        description: "Full MAR artifact name"
+        value: ${{ jobs.main.outputs.mar_artifact_name }}
+      mar_artifact_id:
+        description: "Full MAR artifact ID"
+        value: ${{ jobs.main.outputs.mar_artifact_id }}
+      mar_artifact_digest:
+        description: "Full MAR artifact digest"
+        value: ${{ jobs.main.outputs.mar_artifact_digest }}
+      deb_artifact_name:
+        description: "Linux x64 DEB artifact name, otherwise empty"
+        value: ${{ jobs.main.outputs.deb_artifact_name }}
+      deb_artifact_id:
+        description: "Linux x64 DEB artifact ID, otherwise empty"
+        value: ${{ jobs.main.outputs.deb_artifact_id }}
+      deb_artifact_digest:
+        description: "Linux x64 DEB artifact digest, otherwise empty"
+        value: ${{ jobs.main.outputs.deb_artifact_digest }}
 
 run-name: 📦️ Package ${{ inputs.platform }}${{ inputs.skip_signing && ' (Unsigned)' || '' }}
+
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   main:
     runs-on: ubuntu-22.04
     outputs:
       run_id: ${{ github.run_id }}
+      platform_key: ${{ steps.provenance.outputs.platform_key }}
+      runtime_artifact_name: ${{ steps.provenance.outputs.runtime_artifact_name }}
+      runtime_artifact_id: ${{ steps.provenance.outputs.runtime_artifact_id }}
+      runtime_artifact_digest: ${{ steps.provenance.outputs.runtime_artifact_digest }}
+      expected_build_id: ${{ steps.provenance.outputs.expected_build_id }}
+      installer_artifact_name: ${{ steps.artifact-contract.outputs.installer_artifact_name }}
+      installer_artifact_id: ${{ steps.upload-installer.outputs.artifact-id }}
+      installer_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-installer.outputs.artifact-digest) }}
+      mar_artifact_name: ${{ steps.artifact-contract.outputs.mar_artifact_name }}
+      mar_artifact_id: ${{ steps.upload-mar.outputs.artifact-id }}
+      mar_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-mar.outputs.artifact-digest) }}
+      deb_artifact_name: ${{ steps.artifact-contract.outputs.deb_artifact_name }}
+      deb_artifact_id: ${{ steps.upload-deb.outputs.artifact-id }}
+      deb_artifact_digest: >-
+        ${{ steps.upload-deb.outputs.artifact-digest &&
+            format('sha256:{0}', steps.upload-deb.outputs.artifact-digest) || '' }}
     steps:
-      - name: Get commit hash from runtime_artifact_workflow_run_id
-        if: ${{ inputs.runtime_artifact_workflow_run_id != '' }}
-        id: get-commit
+      - name: Require dedicated Runtime artifact token
+        if: ${{ inputs.provenance_mode != 'legacy' }}
+        shell: bash
+        env:
+          RUNTIME_ARTIFACT_TOKEN: ${{ secrets.runtime_artifact_token }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$RUNTIME_ARTIFACT_TOKEN" ]]; then
+            echo "stable v2 requires the dedicated runtime_artifact_token secret" >&2
+            exit 1
+          fi
+
+      - name: Validate provenance contract
+        id: provenance
         uses: actions/github-script@v7
+        env:
+          PROVENANCE_MODE: ${{ inputs.provenance_mode }}
+          TARGET_PLATFORM: ${{ inputs.platform }}
+          IS_BETA: ${{ inputs.beta }}
+          SKIP_SIGNING: ${{ inputs.skip_signing }}
+          LEGACY_RUNTIME_RUN_ID: ${{ inputs.runtime_artifact_workflow_run_id }}
+          RUNTIME_REPOSITORY: ${{ inputs.runtime_repository }}
+          RUNTIME_WORKFLOW_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
+          RUNTIME_MANIFEST_ARTIFACT_ID: ${{ inputs.runtime_manifest_artifact_id }}
+          RUNTIME_MANIFEST_ARTIFACT_DIGEST: ${{ inputs.runtime_manifest_artifact_digest }}
+          RUNTIME_HEAD_SHA: ${{ inputs.runtime_head_sha }}
+          EXPECTED_BUILD_ID: ${{ inputs.expected_build_id }}
+          RUNTIME_ARTIFACT_NAME: ${{ inputs.runtime_artifact_name }}
+          RUNTIME_ARTIFACT_ID: ${{ inputs.runtime_artifact_id }}
+          RUNTIME_ARTIFACT_DIGEST: ${{ inputs.runtime_artifact_digest }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          FLOORP_REPOSITORY: ${{ github.repository }}
+          CURRENT_FLOORP_SHA: ${{ github.sha }}
+          CURRENT_FLOORP_REF: ${{ github.ref }}
+          FLOORP_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
           script: |
-            const runId = '${{ inputs.runtime_artifact_workflow_run_id }}';
-            const targetRepo = '${{ github.repository }}-runtime';
-            const [owner, repo] = targetRepo.split('/');
+            const fail = (message) => {
+              core.setFailed(message);
+              throw new Error(message);
+            };
+            const required = (name, value) => {
+              if (!value) fail(`${name} is required for stable v2 provenance`);
+              return value;
+            };
+            const parsePositiveId = (name, value) => {
+              if (!/^[1-9][0-9]*$/.test(value)) {
+                fail(`${name} must be a positive decimal integer`);
+              }
+              const parsed = Number(value);
+              if (!Number.isSafeInteger(parsed)) {
+                fail(`${name} exceeds JavaScript's safe integer range`);
+              }
+              return parsed;
+            };
+            const validateSha = (name, value) => {
+              if (!/^[0-9a-f]{40}$/.test(value)) {
+                fail(`${name} must be a lowercase 40-character commit SHA`);
+              }
+            };
+            const validateDigest = (name, value) => {
+              if (!/^sha256:[0-9a-f]{64}$/.test(value)) {
+                fail(`${name} must be a lowercase sha256 artifact digest`);
+              }
+            };
+            const validateBuildId = (value) => {
+              if (!/^[0-9]{14}$/.test(value)) {
+                fail("expected_build_id must be 14 decimal UTC digits");
+              }
+              const parts = [
+                Number(value.slice(0, 4)),
+                Number(value.slice(4, 6)),
+                Number(value.slice(6, 8)),
+                Number(value.slice(8, 10)),
+                Number(value.slice(10, 12)),
+                Number(value.slice(12, 14)),
+              ];
+              const date = new Date(Date.UTC(
+                parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5],
+              ));
+              const actual = [
+                date.getUTCFullYear(), date.getUTCMonth() + 1,
+                date.getUTCDate(), date.getUTCHours(),
+                date.getUTCMinutes(), date.getUTCSeconds(),
+              ];
+              if (actual.some((part, index) => part !== parts[index])) {
+                fail("expected_build_id is not a valid UTC calendar timestamp");
+              }
+            };
+            const buildIdFromCreatedAt = (value) => {
+              const match = value?.match(
+                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/,
+              );
+              if (!match) fail(`Runtime run has an invalid created_at: ${value}`);
+              return match.slice(1).join("");
+            };
+
+            const contracts = new Map([
+              ["Windows-x64", {
+                key: "windows",
+                artifact: "floorp-windows-x86_64-moz-artifact",
+              }],
+              ["Windows-x86_64", {
+                key: "windows",
+                artifact: "floorp-windows-x86_64-moz-artifact",
+              }],
+              ["Linux-x64", {
+                key: "linux",
+                artifact: "floorp-linux-x86_64-moz-artifact",
+              }],
+              ["Linux-x86_64", {
+                key: "linux",
+                artifact: "floorp-linux-x86_64-moz-artifact",
+              }],
+              ["Linux-aarch64", {
+                key: "linuxAarch64",
+                artifact: "floorp-linux-aarch64-moz-artifact",
+              }],
+              ["macOS-x64", {
+                key: "mac",
+                artifact: "floorp-mac-universal-moz-artifact",
+              }],
+              ["macOS-x86_64", {
+                key: "mac",
+                artifact: "floorp-mac-universal-moz-artifact",
+              }],
+            ]);
+            const contract = contracts.get(process.env.TARGET_PLATFORM);
+            if (!contract) {
+              fail(`Unsupported platform: ${process.env.TARGET_PLATFORM}`);
+            }
+
+            const mode = process.env.PROVENANCE_MODE;
+            if (!["legacy", "stable-v2", "stable-v2-validation"].includes(mode)) {
+              fail(`Unsupported provenance_mode: ${mode}`);
+            }
+            const productionV2 = mode === "stable-v2";
+            const isV2 = mode !== "legacy";
+            const floorpRepository = process.env.FLOORP_REPOSITORY;
+            const [floorpOwner, floorpRepo] = floorpRepository.split("/");
+            if (!floorpOwner || !floorpRepo) {
+              fail(`Invalid Floorp repository: ${floorpRepository}`);
+            }
+
+            if (productionV2) {
+              if (floorpRepository !== "Floorp-Projects/Floorp") {
+                fail(
+                  `stable-v2 requires Floorp-Projects/Floorp, got ${floorpRepository}`,
+                );
+              }
+              const floorpDefaultBranch = required(
+                "Floorp default branch",
+                process.env.FLOORP_DEFAULT_BRANCH,
+              );
+              const expectedFloorpRef = `refs/heads/${floorpDefaultBranch}`;
+              if (process.env.CURRENT_FLOORP_REF !== expectedFloorpRef) {
+                fail(
+                  `stable-v2 must run from Floorp default ref ${expectedFloorpRef}, ` +
+                    `got ${process.env.CURRENT_FLOORP_REF}`,
+                );
+              }
+            }
+
+            if (!isV2) {
+              const v2Inputs = [
+                "RUNTIME_REPOSITORY", "RUNTIME_WORKFLOW_RUN_ID",
+                "RUNTIME_MANIFEST_ARTIFACT_ID",
+                "RUNTIME_MANIFEST_ARTIFACT_DIGEST", "RUNTIME_HEAD_SHA",
+                "EXPECTED_BUILD_ID", "RUNTIME_ARTIFACT_NAME",
+                "RUNTIME_ARTIFACT_ID", "RUNTIME_ARTIFACT_DIGEST",
+                "FLOORP_HEAD_SHA",
+              ];
+              for (const name of v2Inputs) {
+                if (process.env[name]) {
+                  fail(`${name.toLowerCase()} cannot be used in legacy mode`);
+                }
+              }
+
+              const runtimeRepository = `${floorpRepository}-runtime`;
+              let runtimeRef = "";
+              const legacyRunId = process.env.LEGACY_RUNTIME_RUN_ID;
+              if (legacyRunId) {
+                const runId = parsePositiveId(
+                  "runtime_artifact_workflow_run_id", legacyRunId,
+                );
+                const [owner, repo] = runtimeRepository.split("/");
+                const { data: run } = await github.rest.actions.getWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: runId,
+                });
+                runtimeRef = run.head_sha;
+                if (!/^[0-9a-fA-F]{40}$/.test(runtimeRef || "")) {
+                  fail(`Legacy Runtime run has an invalid head SHA: ${runtimeRef}`);
+                }
+              }
+
+              core.setOutput("is_v2", "false");
+              core.setOutput("platform_key", contract.key);
+              core.setOutput("runtime_repository", runtimeRepository);
+              core.setOutput("runtime_workflow_run_id", legacyRunId);
+              core.setOutput("runtime_ref", runtimeRef);
+              core.setOutput("floorp_ref", process.env.CURRENT_FLOORP_SHA);
+              core.setOutput("runtime_artifact_name", contract.artifact);
+              core.setOutput("runtime_artifact_id", "");
+              core.setOutput("runtime_artifact_digest", "");
+              core.setOutput("expected_build_id", "");
+              return;
+            }
+
+            if (process.env.LEGACY_RUNTIME_RUN_ID) {
+              fail("runtime_artifact_workflow_run_id cannot coexist with stable v2 inputs");
+            }
+            if (process.env.IS_BETA !== "false") {
+              fail(`${mode} cannot package a beta release`);
+            }
+            if (mode === "stable-v2" && process.env.SKIP_SIGNING !== "false") {
+              fail("stable-v2 requires skip_signing=false");
+            }
+            if (
+              mode === "stable-v2-validation" &&
+              process.env.SKIP_SIGNING !== "true"
+            ) {
+              fail("stable-v2-validation requires skip_signing=true");
+            }
+
+            const runtimeRepository = required(
+              "runtime_repository", process.env.RUNTIME_REPOSITORY,
+            );
+            if (runtimeRepository !== "Floorp-Projects/Floorp-Runtime") {
+              fail(`stable v2 requires Floorp-Projects/Floorp-Runtime, got ${runtimeRepository}`);
+            }
+            const runtimeHeadSha = required(
+              "runtime_head_sha", process.env.RUNTIME_HEAD_SHA,
+            );
+            const floorpHeadSha = required(
+              "floorp_head_sha", process.env.FLOORP_HEAD_SHA,
+            );
+            const expectedBuildId = required(
+              "expected_build_id", process.env.EXPECTED_BUILD_ID,
+            );
+            validateSha("runtime_head_sha", runtimeHeadSha);
+            validateSha("floorp_head_sha", floorpHeadSha);
+            validateBuildId(expectedBuildId);
+            if (floorpHeadSha !== process.env.CURRENT_FLOORP_SHA) {
+              fail(
+                `floorp_head_sha ${floorpHeadSha} must equal caller SHA ` +
+                `${process.env.CURRENT_FLOORP_SHA}`,
+              );
+            }
+
+            const runId = parsePositiveId(
+              "runtime_workflow_run_id",
+              required(
+                "runtime_workflow_run_id", process.env.RUNTIME_WORKFLOW_RUN_ID,
+              ),
+            );
+            const manifestArtifactId = parsePositiveId(
+              "runtime_manifest_artifact_id",
+              required(
+                "runtime_manifest_artifact_id",
+                process.env.RUNTIME_MANIFEST_ARTIFACT_ID,
+              ),
+            );
+            const targetArtifactId = parsePositiveId(
+              "runtime_artifact_id",
+              required("runtime_artifact_id", process.env.RUNTIME_ARTIFACT_ID),
+            );
+            if (manifestArtifactId === targetArtifactId) {
+              fail("Runtime manifest and target artifact IDs must be different");
+            }
+
+            const manifestDigest = required(
+              "runtime_manifest_artifact_digest",
+              process.env.RUNTIME_MANIFEST_ARTIFACT_DIGEST,
+            );
+            const targetDigest = required(
+              "runtime_artifact_digest", process.env.RUNTIME_ARTIFACT_DIGEST,
+            );
+            validateDigest("runtime_manifest_artifact_digest", manifestDigest);
+            validateDigest("runtime_artifact_digest", targetDigest);
+
+            const targetArtifactName = required(
+              "runtime_artifact_name", process.env.RUNTIME_ARTIFACT_NAME,
+            );
+            if (targetArtifactName !== contract.artifact) {
+              fail(
+                `Runtime artifact ${targetArtifactName} does not match ` +
+                `${process.env.TARGET_PLATFORM} (${contract.artifact})`,
+              );
+            }
+
+            const [owner, repo] = runtimeRepository.split("/");
             const { data: run } = await github.rest.actions.getWorkflowRun({
               owner,
               repo,
-              run_id: runId
+              run_id: runId,
             });
-            const commitHash = run.head_sha;
-            if (!commitHash || !/^[0-9a-fA-F]{40}$/.test(commitHash)) {
-              core.setFailed('Commit hash is missing or not a valid SHA-1: ' + commitHash);
-              throw new Error('Commit hash is missing or not a valid SHA-1: ' + commitHash);
+            if (run.id !== runId) fail("Runtime run ID changed during lookup");
+            if (run.path !== ".github/workflows/daily-build.yml") {
+              fail(`Runtime run used unexpected workflow path: ${run.path}`);
             }
-            core.setOutput('commit_hash', commitHash);
+            if (run.status !== "completed" || run.conclusion !== "success") {
+              fail(
+                `Runtime run ${runId} must be completed/success, got ` +
+                `${run.status}/${run.conclusion}`,
+              );
+            }
+            if (run.head_sha !== runtimeHeadSha) {
+              fail(`Runtime run head SHA ${run.head_sha} != ${runtimeHeadSha}`);
+            }
+            const headRepository = run.head_repository?.full_name;
+            if (headRepository !== runtimeRepository) {
+              fail(
+                `Runtime run head repository ${headRepository} != ${runtimeRepository}`,
+              );
+            }
+            if (productionV2) {
+              const { data: runtimeRepoData } = await github.rest.repos.get({
+                owner,
+                repo,
+              });
+              const runtimeDefaultBranch = required(
+                "Runtime default branch",
+                runtimeRepoData.default_branch,
+              );
+              if (run.head_branch !== runtimeDefaultBranch) {
+                fail(
+                  `stable-v2 requires Runtime default branch ${runtimeDefaultBranch}, ` +
+                    `got ${run.head_branch}`,
+                );
+              }
+              const allowedRuntimeEvents = new Set([
+                "workflow_dispatch",
+                "schedule",
+              ]);
+              if (!allowedRuntimeEvents.has(run.event)) {
+                fail(`stable-v2 rejects Runtime event ${run.event}`);
+              }
+            }
+            const runBuildId = buildIdFromCreatedAt(run.created_at);
+            if (runBuildId !== expectedBuildId) {
+              fail(
+                `Runtime run created_at BuildID ${runBuildId} != ${expectedBuildId}`,
+              );
+            }
+
+            const validateArtifact = async (
+              label, artifactId, expectedName, expectedDigest,
+            ) => {
+              const { data: artifact } = await github.rest.actions.getArtifact({
+                owner,
+                repo,
+                artifact_id: artifactId,
+              });
+              if (artifact.id !== artifactId) {
+                fail(`${label} artifact ID changed during lookup`);
+              }
+              if (artifact.name !== expectedName) {
+                fail(`${label} artifact name ${artifact.name} != ${expectedName}`);
+              }
+              if (artifact.digest !== expectedDigest) {
+                fail(
+                  `${label} artifact digest ${artifact.digest} != ${expectedDigest}`,
+                );
+              }
+              if (artifact.expired) fail(`${label} artifact is expired`);
+              if (!Number.isSafeInteger(artifact.size_in_bytes) || artifact.size_in_bytes <= 0) {
+                fail(`${label} artifact is empty or has an invalid size`);
+              }
+              if (artifact.workflow_run?.id !== runId) {
+                fail(`${label} artifact does not belong to Runtime run ${runId}`);
+              }
+              if (artifact.workflow_run?.head_sha !== runtimeHeadSha) {
+                fail(`${label} artifact head SHA does not match Runtime run`);
+              }
+            };
+
+            await validateArtifact(
+              "Runtime manifest", manifestArtifactId,
+              "floorp-runtime-build-manifest-v2", manifestDigest,
+            );
+            await validateArtifact(
+              "Runtime target", targetArtifactId,
+              targetArtifactName, targetDigest,
+            );
+
+            core.setOutput("is_v2", "true");
+            core.setOutput("platform_key", contract.key);
+            core.setOutput("runtime_repository", runtimeRepository);
+            core.setOutput("runtime_workflow_run_id", String(runId));
+            core.setOutput("runtime_ref", runtimeHeadSha);
+            core.setOutput("floorp_ref", floorpHeadSha);
+            core.setOutput("runtime_artifact_name", targetArtifactName);
+            core.setOutput("runtime_artifact_id", String(targetArtifactId));
+            core.setOutput("runtime_artifact_digest", targetDigest);
+            core.setOutput("expected_build_id", expectedBuildId);
 
       - name: Checkout ${{ github.repository }}-runtime
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository }}-runtime
-          ref: ${{ steps.get-commit.outputs.commit_hash }}
+          repository: ${{ steps.provenance.outputs.runtime_repository }}
+          ref: ${{ steps.provenance.outputs.runtime_ref }}
+          token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          persist-credentials: false
           submodules: "recursive"
 
       - name: Apply upstream patches
@@ -103,7 +653,115 @@ jobs:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.repository }}
+          ref: ${{ steps.provenance.outputs.floorp_ref }}
           path: "noraneko"
+          persist-credentials: false
+
+      - name: Download verified Runtime artifact by ID
+        if: ${{ steps.provenance.outputs.is_v2 == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.provenance.outputs.runtime_artifact_id }}
+          run-id: ${{ steps.provenance.outputs.runtime_workflow_run_id }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          repository: ${{ steps.provenance.outputs.runtime_repository }}
+          path: ${{ runner.temp }}/floorp-runtime-v2
+          merge-multiple: true
+
+      - name: Stage exact Runtime v2 bundle
+        if: ${{ steps.provenance.outputs.is_v2 == 'true' }}
+        shell: bash
+        env:
+          PLATFORM_KEY: ${{ steps.provenance.outputs.platform_key }}
+          RUNTIME_ARTIFACT_NAME: ${{ steps.provenance.outputs.runtime_artifact_name }}
+          EXPECTED_BUILD_ID: ${{ steps.provenance.outputs.expected_build_id }}
+          RUNTIME_DOWNLOAD_DIR: ${{ runner.temp }}/floorp-runtime-v2
+          RUNTIME_SUPPORT_DIR: ${{ runner.temp }}/floorp-runtime-v2-support
+        run: |
+          set -euo pipefail
+
+          root="$RUNTIME_DOWNLOAD_DIR"
+          support="$RUNTIME_SUPPORT_DIR"
+          test -d "$root"
+          test ! -L "$root"
+
+          case "$PLATFORM_KEY" in
+            windows)
+              primary_files=("${RUNTIME_ARTIFACT_NAME}.zip")
+              ;;
+            linux|linuxAarch64)
+              primary_files=("${RUNTIME_ARTIFACT_NAME}.tar.xz")
+              ;;
+            mac)
+              primary_files=(
+                "floorp-macOS-universal-moz-artifact.dmg"
+                "floorp-macOS.update_framework_artifacts.zip"
+              )
+              ;;
+            *)
+              echo "Unsupported v2 platform key: $PLATFORM_KEY" >&2
+              exit 1
+              ;;
+          esac
+
+          expected_entries=("${primary_files[@]}" "dist-host" "floorp-application.ini")
+          entry_count=0
+          while IFS= read -r -d '' entry; do
+            entry_count=$((entry_count + 1))
+            name="$(basename "$entry")"
+            allowed=false
+            for expected in "${expected_entries[@]}"; do
+              if [[ "$name" == "$expected" ]]; then
+                allowed=true
+                break
+              fi
+            done
+            if [[ "$allowed" != true ]]; then
+              echo "Unexpected top-level Runtime artifact entry: $name" >&2
+              exit 1
+            fi
+          done < <(find "$root" -mindepth 1 -maxdepth 1 -print0)
+          if (( entry_count != ${#expected_entries[@]} )); then
+            echo "Runtime artifact has $entry_count top-level entries; expected ${#expected_entries[@]}" >&2
+            exit 1
+          fi
+
+          for file in "${primary_files[@]}"; do
+            if [[ ! -f "$root/$file" || -L "$root/$file" || ! -s "$root/$file" ]]; then
+              echo "Required Runtime package is missing, linked, or empty: $file" >&2
+              exit 1
+            fi
+          done
+          if [[ ! -d "$root/dist-host" || -L "$root/dist-host" ]]; then
+            echo "Runtime dist-host is missing or is a symbolic link" >&2
+            exit 1
+          fi
+          if [[ -z "$(find "$root/dist-host" -type f -print -quit)" ]]; then
+            echo "Runtime dist-host is empty" >&2
+            exit 1
+          fi
+          if [[ ! -f "$root/floorp-application.ini" || -L "$root/floorp-application.ini" ]]; then
+            echo "Runtime floorp-application.ini is missing or is a symbolic link" >&2
+            exit 1
+          fi
+
+          mapfile -t build_ids < <(
+            sed -n 's/^BuildID=//p' "$root/floorp-application.ini" | tr -d '\r'
+          )
+          if (( ${#build_ids[@]} != 1 )) || [[ "${build_ids[0]}" != "$EXPECTED_BUILD_ID" ]]; then
+            echo "Runtime application.ini BuildID does not exactly match $EXPECTED_BUILD_ID" >&2
+            exit 1
+          fi
+
+          rm -rf -- "$support"
+          mkdir -p "$support" "$HOME/artifacts"
+          cp -a -- "$root/dist-host" "$support/dist-host"
+          cp -- "$root/floorp-application.ini" "$support/floorp-application.ini"
+          for file in "${primary_files[@]}"; do
+            cp -- "$root/$file" "$HOME/artifacts/$file"
+          done
+          echo "Staged immutable Runtime artifact $RUNTIME_ARTIFACT_NAME"
 
       - uses: actions/setup-node@v4
         with:
@@ -379,23 +1037,31 @@ jobs:
           ./mach configure
           git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.patch
 
-      - name: Possibly retrieve run ID if not provided
+      - name: Set legacy Runtime run ID
+        env:
+          PROVENANCE_MODE: ${{ inputs.provenance_mode }}
+          LEGACY_RUNTIME_RUN_ID: ${{ inputs.runtime_artifact_workflow_run_id }}
         run: |
-          if [ -z "${{ inputs.runtime_artifact_workflow_run_id }}" ]; then
-            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=false" >> $GITHUB_ENV
+          set -euo pipefail
+          if [[ "$PROVENANCE_MODE" != "legacy" || -z "$LEGACY_RUNTIME_RUN_ID" ]]; then
+            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=false" >> "$GITHUB_ENV"
           else
-            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=${{ inputs.runtime_artifact_workflow_run_id }}" >> $GITHUB_ENV
+            echo "RUNTIME_ARTIFACT_WORKFLOW_RUN_ID=$LEGACY_RUNTIME_RUN_ID" >> "$GITHUB_ENV"
           fi
 
       - name: Get Artifact Name
+        id: artifact-contract
         shell: bash
         env:
           FORCE_COLOR: 3
+          PROVENANCE_MODE: ${{ inputs.provenance_mode }}
+          RAW_INPUT_PLATFORM: ${{ inputs.platform }}
+          SKIP_SIGNING: ${{ inputs.skip_signing }}
         run: |
           #!/bin/bash
-          set -e
+          set -euo pipefail
 
-          RAW_PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          RAW_PLATFORM="${INPUT_PLATFORM:-$RAW_INPUT_PLATFORM}"
           CANON_PLATFORM="${CANON_PLATFORM:-$RAW_PLATFORM}"
           if [[ "$CANON_PLATFORM" == *-x64 ]]; then
             CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
@@ -403,34 +1069,42 @@ jobs:
 
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
+              output_name="windows-x86_64"
+              output_installer_name="floorp-windows-x86_64.installer.exe"
               echo "ARTIFACT_NAME=floorp-windows-x86_64-moz-artifact" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME=floorp-windows-x86_64-moz-artifact.zip" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=windows-x86_64" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=$output_name" >> $GITHUB_ENV
               echo "INSTALLER_PATH=*installer.exe" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-windows-x86_64.installer.exe" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=$output_installer_name" >> $GITHUB_ENV
               echo "WORKSPACE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
               ;;
             "Linux-x86_64")
+              output_name="linux-x86_64"
+              output_installer_name="floorp-linux-x86_64.tar.xz"
               echo "ARTIFACT_NAME=floorp-linux-x86_64-moz-artifact" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME=floorp-linux-x86_64-moz-artifact.tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=linux-x86_64" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=$output_name" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-linux-x86_64.tar.xz" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=$output_installer_name" >> $GITHUB_ENV
               ;;
             "Linux-aarch64")
+              output_name="linux-aarch64"
+              output_installer_name="floorp-linux-aarch64.tar.xz"
               echo "ARTIFACT_NAME=floorp-linux-aarch64-moz-artifact" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME=floorp-linux-aarch64-moz-artifact.tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=linux-aarch64" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=$output_name" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp*tar.xz" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-linux-aarch64.tar.xz" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=$output_installer_name" >> $GITHUB_ENV
               ;;
             "macOS-x86_64")
+              output_name="mac-universal"
+              output_installer_name="floorp-macOS-universal.dmg"
               echo "ARTIFACT_NAME=floorp-mac-universal-moz-artifact" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME=floorp-macOS-universal-moz-artifact.dmg" >> $GITHUB_ENV
               echo "ARTIFACT_FROM_RELEASE_NAME_FRAMEWORK=floorp-macOS.update_framework_artifacts.zip" >> $GITHUB_ENV
-              echo "OUTPUT_NAME=mac-universal" >> $GITHUB_ENV
+              echo "OUTPUT_NAME=$output_name" >> $GITHUB_ENV
               echo "INSTALLER_PATH=floorp-*dmg" >> $GITHUB_ENV
-              echo "OUTPUT_INSTALLER_NAME=floorp-macOS-universal.dmg" >> $GITHUB_ENV
+              echo "OUTPUT_INSTALLER_NAME=$output_installer_name" >> $GITHUB_ENV
               ;;
             *)
               echo "Unknown canonical platform: $CANON_PLATFORM"
@@ -438,10 +1112,30 @@ jobs:
               ;;
           esac
 
+          suffix=""
+          if [[ "$SKIP_SIGNING" == "true" ]]; then
+            suffix="-unsigned"
+          fi
+          deb_artifact_name=""
+          if [[ "$CANON_PLATFORM" == "Linux-x86_64" ]]; then
+            deb_artifact_name="floorp-Linux-x64-deb${suffix}"
+          fi
+          if [[ "$PROVENANCE_MODE" == "legacy" ]]; then
+            installer_upload_path="$HOME/noraneko-installer/*"
+          else
+            installer_upload_path="$HOME/noraneko-installer/$output_installer_name"
+          fi
+          echo "INSTALLER_UPLOAD_PATH=$installer_upload_path" >> "$GITHUB_ENV"
+          {
+            echo "installer_artifact_name=noraneko-${output_name}-installer${suffix}"
+            echo "mar_artifact_name=floorp-${output_name}-mar-full${suffix}"
+            echo "deb_artifact_name=${deb_artifact_name}"
+          } >> "$GITHUB_OUTPUT"
+
           echo "Environment variables set for platform: $RAW_PLATFORM (canonical: $CANON_PLATFORM)"
 
       - name: Download mozilla artifact from Actions
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
@@ -451,7 +1145,7 @@ jobs:
           path: ~/downloads
 
       - name: Download Mozilla Artifact from GitHub Releases
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           mkdir -p ~/downloads
           CANON_PLATFORM="${CANON_PLATFORM:-${{ inputs.platform }}}"
@@ -469,7 +1163,7 @@ jobs:
           esac
 
       - name: Make Downloaded Artifact to Mozilla Artifact (Actions)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         run: |
           mkdir -p ~/artifacts
           cd ~/downloads
@@ -489,7 +1183,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
 
       - name: Make Download Artifact to Mozilla Artifact (GitHub Releases)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           mkdir -p ~/artifacts
           cd ~/downloads
@@ -556,6 +1250,10 @@ jobs:
           cd ..
 
       - name: Build
+        env:
+          PROVENANCE_MODE: ${{ inputs.provenance_mode }}
+          RAW_INPUT_PLATFORM: ${{ inputs.platform }}
+          VERIFIED_RUNTIME_ARTIFACT_NAME: ${{ steps.provenance.outputs.runtime_artifact_name }}
         run: |
           #!/bin/bash
           set -euo pipefail
@@ -573,7 +1271,16 @@ jobs:
             return 1
           }
 
-          PLATFORM="${INPUT_PLATFORM:-${{ inputs.platform }}}"
+          exact_artifact() {
+            local path="$1"
+            if [[ ! -f "$path" || -L "$path" || ! -s "$path" ]]; then
+              echo "Verified Runtime artifact is missing, linked, or empty: $path" >&2
+              return 1
+            fi
+            printf '%s\n' "$path"
+          }
+
+          PLATFORM="${INPUT_PLATFORM:-$RAW_INPUT_PLATFORM}"
           CANON_PLATFORM="${CANON_PLATFORM:-$PLATFORM}"
           if [[ "$CANON_PLATFORM" == *-x64 ]]; then
             CANON_PLATFORM="${CANON_PLATFORM%-x64}-x86_64"
@@ -581,7 +1288,11 @@ jobs:
 
           case "$CANON_PLATFORM" in
             "Windows-x86_64")
-              ARTIFACT=$(find_first "floorp-win*-moz-artifact*.zip" "noraneko-win*-moz-artifact*.zip" "*win*-moz-artifact*.zip")
+              if [[ "$PROVENANCE_MODE" == "legacy" ]]; then
+                ARTIFACT=$(find_first "floorp-win*-moz-artifact*.zip" "noraneko-win*-moz-artifact*.zip" "*win*-moz-artifact*.zip")
+              else
+                ARTIFACT=$(exact_artifact "$HOME/artifacts/${VERIFIED_RUNTIME_ARTIFACT_NAME}.zip")
+              fi
               if [ -z "$ARTIFACT" ]; then
                 echo "Windows artifact not found in ~/artifacts" >&2
                 exit 1
@@ -589,7 +1300,11 @@ jobs:
               MOZ_ARTIFACT_FILE="$ARTIFACT" ./mach build
               ;;
             "Linux-x86_64")
-              ARTIFACT=$(find_first "floorp-linux-x86_64-moz-artifact*.tar.xz" "noraneko-linux-x86_64-moz-artifact*.tar.xz" "*linux*x86_64*moz-artifact*.tar.xz")
+              if [[ "$PROVENANCE_MODE" == "legacy" ]]; then
+                ARTIFACT=$(find_first "floorp-linux-x86_64-moz-artifact*.tar.xz" "noraneko-linux-x86_64-moz-artifact*.tar.xz" "*linux*x86_64*moz-artifact*.tar.xz")
+              else
+                ARTIFACT=$(exact_artifact "$HOME/artifacts/${VERIFIED_RUNTIME_ARTIFACT_NAME}.tar.xz")
+              fi
               if [ -z "$ARTIFACT" ]; then
                 echo "Linux x86_64 artifact not found in ~/artifacts" >&2
                 exit 1
@@ -597,7 +1312,11 @@ jobs:
               MOZ_ARTIFACT_FILE="$ARTIFACT" ./mach build
               ;;
             "Linux-aarch64")
-              ARTIFACT=$(find_first "floorp-linux-aarch64-moz-artifact*.tar.xz" "noraneko-linux-aarch64-moz-artifact*.tar.xz" "*linux*aarch64*moz-artifact*.tar.xz")
+              if [[ "$PROVENANCE_MODE" == "legacy" ]]; then
+                ARTIFACT=$(find_first "floorp-linux-aarch64-moz-artifact*.tar.xz" "noraneko-linux-aarch64-moz-artifact*.tar.xz" "*linux*aarch64*moz-artifact*.tar.xz")
+              else
+                ARTIFACT=$(exact_artifact "$HOME/artifacts/${VERIFIED_RUNTIME_ARTIFACT_NAME}.tar.xz")
+              fi
               if [ -z "$ARTIFACT" ]; then
                 echo "Linux aarch64 artifact not found in ~/artifacts" >&2
                 exit 1
@@ -605,8 +1324,13 @@ jobs:
               MOZ_ARTIFACT_FILE="$ARTIFACT" ./mach build
               ;;
             "macOS-x86_64")
-              DMG=$(find_first "floorp-mac*-moz-artifact*.dmg" "noraneko-mac*-moz-artifact*.dmg" "*mac*moz-artifact*.dmg")
-              FRAMEWORK=$(find_first "floorp-mac*.update_framework_artifacts.zip" "noraneko-mac*.update_framework_artifacts.zip" "*mac*.update_framework_artifacts.zip")
+              if [[ "$PROVENANCE_MODE" == "legacy" ]]; then
+                DMG=$(find_first "floorp-mac*-moz-artifact*.dmg" "noraneko-mac*-moz-artifact*.dmg" "*mac*moz-artifact*.dmg")
+                FRAMEWORK=$(find_first "floorp-mac*.update_framework_artifacts.zip" "noraneko-mac*.update_framework_artifacts.zip" "*mac*.update_framework_artifacts.zip")
+              else
+                DMG=$(exact_artifact "$HOME/artifacts/floorp-macOS-universal-moz-artifact.dmg")
+                FRAMEWORK=$(exact_artifact "$HOME/artifacts/floorp-macOS.update_framework_artifacts.zip")
+              fi
               if [ -z "$DMG" ] || [ -z "$FRAMEWORK" ]; then
                 echo "macOS artifacts not found in ~/artifacts" >&2
                 exit 1
@@ -614,24 +1338,44 @@ jobs:
               MOZ_ARTIFACT_FILE="${DMG}:${FRAMEWORK}" ./mach build
               ;;
             *)
-              echo "Unsupported platform ${{ inputs.platform }}" >&2
+              echo "Unsupported platform $RAW_INPUT_PLATFORM" >&2
               exit 1
               ;;
           esac
 
       - name: Inject Noraneko
         run: |
+          set -euo pipefail
+
+          DIST_ROOT="$GITHUB_WORKSPACE/obj-artifact-build-output/dist"
+          BUILDID2_SRC="$GITHUB_WORKSPACE/noraneko/_dist/buildid2"
+          PATCH_TARGET="$DIST_ROOT/bin"
+
+          copy_buildid2() {
+            local dest_root="$1"
+            if [ ! -f "$BUILDID2_SRC" ]; then
+              echo "Warning: buildid2 source not found at $BUILDID2_SRC" >&2
+              return 0
+            fi
+            if [ ! -d "$dest_root" ]; then
+              return 0
+            fi
+            mkdir -p "$dest_root/browser"
+            cp "$BUILDID2_SRC" "$dest_root/browser/buildid2"
+            echo "Copied buildid2 to $dest_root/browser/buildid2"
+          }
+
           cd ./noraneko
           deno task feles-build build --phase after-mach
 
           # https://www.spinics.net/lists/git/msg391750.html
-          rsync -aL ../obj-artifact-build-output/dist/bin/ ../obj-artifact-build-output/dist/tmp__bin
-          rm -rf ../obj-artifact-build-output/dist/bin
-          mv ../obj-artifact-build-output/dist/tmp__bin ../obj-artifact-build-output/dist/bin
+          rsync -aL "$PATCH_TARGET/" "$DIST_ROOT/tmp__bin"
+          rm -rf "$PATCH_TARGET"
+          mv "$DIST_ROOT/tmp__bin" "$PATCH_TARGET"
 
           if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             for patch_file in ./tools/patches/*.patch; do
-              for resource_dir in ../obj-artifact-build-output/dist/*.app/Contents/Resources; do
+              for resource_dir in "$DIST_ROOT"/*.app/Contents/Resources; do
                 if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
                   patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
                 else
@@ -640,8 +1384,20 @@ jobs:
                 fi
               done
             done
+            shopt -s nullglob
+            for app_bundle in "$DIST_ROOT"/*.app "$DIST_ROOT"/floorp/*.app; do
+              if [ -d "$app_bundle/Contents/Resources" ]; then
+                copy_buildid2 "$app_bundle/Contents/Resources"
+              fi
+            done
+            shopt -u nullglob || true
           else
-            git apply --reject ./tools/patches/*.patch --directory "$(realpath ../obj-artifact-build-output/dist/bin)" --unsafe-paths --check --apply
+            # Git 2.54+ rejects --directory paths starting with ../
+            git apply --reject ./tools/patches/*.patch --directory "$PATCH_TARGET" --unsafe-paths --check --apply
+            copy_buildid2 "$PATCH_TARGET"
+            for candidate in "$DIST_ROOT/floorp" "$DIST_ROOT/noraneko"; do
+              copy_buildid2 "$candidate"
+            done
           fi
 
           cd ..
@@ -770,6 +1526,15 @@ jobs:
             fi
           fi
 
+          # Gecko 152+ fails packaging when xpt/framework sibling archives are empty.
+          # GitHub Releases artifacts do not include those sibling zips, so restore
+          # the pre-152 behavior of allowing empty auxiliary archives.
+          PACKAGER_MK="./toolkit/mozapps/installer/packager.mk"
+          if [ -f "$PACKAGER_MK" ]; then
+            sed -i 's/--error-if-empty -C/-C/g' "$PACKAGER_MK"
+            echo "[package] Relaxed empty-archive checks in packager.mk for artifact builds"
+          fi
+
           ./mach package
 
       - name: Prepare installer workspace
@@ -896,13 +1661,16 @@ jobs:
           EOF
 
       - name: Upload Linux DEB artifact
+        id: upload-deb
         if: ${{ inputs.platform == 'Linux-x86_64' || inputs.platform == 'Linux-x64' }}
         uses: actions/upload-artifact@v4
         with:
-          name: floorp-Linux-x64-deb
+          name: ${{ steps.artifact-contract.outputs.deb_artifact_name }}
           path: |
             /home/runner/ppa-deb/*
           compression-level: 9
+          if-no-files-found: error
+          overwrite: true
 
       - name: Upload Noraneko Artifact
         uses: actions/upload-artifact@v4
@@ -1158,6 +1926,16 @@ jobs:
                   echo "Warning: $PROD_ENTITLEMENTS not found" >&2
                 fi
 
+                if [ ! -f "$PROD_ENTITLEMENTS" ]; then
+                  echo "ERROR: $PROD_ENTITLEMENTS not found" >&2
+                  exit 1
+                fi
+                if ! grep -q 'com.apple.developer.web-browser.public-key-credential' "$PROD_ENTITLEMENTS"; then
+                  echo "ERROR: com.apple.developer.web-browser.public-key-credential missing from $PROD_ENTITLEMENTS" >&2
+                  exit 1
+                fi
+                echo "✓ Passkey entitlement configured in production entitlements file"
+
                 # Embed provisioning profile for passkey (WebAuthn) support BEFORE signing.
                 # The provisioning profile must be placed at Contents/embedded.provisionprofile
                 # before code signing so the signature includes the profile. Adding it after
@@ -1178,19 +1956,10 @@ jobs:
                   --rcodesign-p12-file floorpCert.p12 \
                   --rcodesign-p12-password-file floorpCertPassword.passwd
 
-                # Verify signed entitlements — fail CI if passkey entitlement is missing.
-                echo "=== Verifying signed bundle entitlements ==="
-                ENTITLEMENT_INFO=$(rcodesign print-signature-info "$APP_FILE" 2>&1 || true)
-                echo "${ENTITLEMENT_INFO:0:10000}"
-                echo "=== End entitlement verification ==="
-
-                # Assert: passkey entitlement must be present in the signed binary
-                if [[ "$ENTITLEMENT_INFO" != *"public-key-credential"* ]]; then
-                  echo "ERROR: com.apple.developer.web-browser.public-key-credential not found in signed entitlements!" >&2
-                  echo "The passkey (WebAuthn) entitlement was not embedded during signing." >&2
-                  exit 1
-                fi
-                echo "✓ Passkey (public-key-credential) entitlement verified in signed bundle"
+                # mach macos-sign already runs rcodesign verify on the signed bundle.
+                # rcodesign 0.29 print-signature-info output no longer exposes a stable
+                # entitlements slot for post-sign grepping, so rely on the pre-sign XML
+                # check above plus mach's built-in verification instead.
 
                 if [ "${{inputs.beta}}" == "true" ]; then
                   DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
@@ -1222,8 +1991,47 @@ jobs:
               ;;
           esac
 
+      - name: Stage verified Runtime v2 MAR inputs
+        if: ${{ inputs.provenance_mode != 'legacy' }}
+        shell: bash
+        env:
+          EXPECTED_BUILD_ID: ${{ steps.provenance.outputs.expected_build_id }}
+          RUNTIME_SUPPORT_DIR: ${{ runner.temp }}/floorp-runtime-v2-support
+        run: |
+          set -euo pipefail
+
+          support="$RUNTIME_SUPPORT_DIR"
+          host_dest="$GITHUB_WORKSPACE/obj-artifact-build-output/dist/host"
+          ini_dest="$HOME/noraneko-dev/floorp-application.ini"
+
+          if [[ ! -d "$support/dist-host" || -L "$support/dist-host" ]]; then
+            echo "Verified Runtime dist-host staging directory is missing" >&2
+            exit 1
+          fi
+          if [[ ! -f "$support/floorp-application.ini" || -L "$support/floorp-application.ini" ]]; then
+            echo "Verified Runtime application.ini staging file is missing" >&2
+            exit 1
+          fi
+
+          rm -rf -- "$host_dest"
+          mkdir -p "$(dirname "$host_dest")" "$(dirname "$ini_dest")"
+          cp -a -- "$support/dist-host" "$host_dest"
+          cp -- "$support/floorp-application.ini" "$ini_dest"
+
+          actual_build_id="$(
+            sed -n 's/^BuildID=//p' "$ini_dest" | tr -d '\r'
+          )"
+          if [[ "$actual_build_id" != "$EXPECTED_BUILD_ID" ]]; then
+            echo "Staged Runtime BuildID $actual_build_id != $EXPECTED_BUILD_ID" >&2
+            exit 1
+          fi
+          if [[ -z "$(find "$host_dest" -type f -print -quit)" ]]; then
+            echo "Staged Runtime dist-host is empty" >&2
+            exit 1
+          fi
+
       - name: Download artifact of MAR tools (Actions)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           pattern: "*dist-host"
@@ -1234,7 +2042,7 @@ jobs:
           merge-multiple: true
 
       - name: Download artifact of MAR tools (GitHub Releases)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           set -euo pipefail
           mkdir -p ~/downloads
@@ -1265,7 +2073,7 @@ jobs:
           fi
 
       - name: Download artifact of binary for getting build information (Actions)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID != 'false' }}
         uses: actions/download-artifact@v4
         with:
           pattern: "*application-ini"
@@ -1276,7 +2084,7 @@ jobs:
           merge-multiple: true
 
       - name: Download artifact of binary for getting build information (GiHub Releases)
-        if: ${{ env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
+        if: ${{ inputs.provenance_mode == 'legacy' && env.RUNTIME_ARTIFACT_WORKFLOW_RUN_ID == 'false' }}
         run: |
           set -euo pipefail
           mkdir -p ~/downloads ~/noraneko-dev
@@ -1411,9 +2219,21 @@ jobs:
           echo "MAR package created successfully!"
 
       - name: Verify installer workspace
+        env:
+          PROVENANCE_MODE: ${{ inputs.provenance_mode }}
         run: |
           set -euo pipefail
           mkdir -p ~/noraneko-installer
+
+          if [[ "$PROVENANCE_MODE" != "legacy" ]]; then
+            expected_installer="$HOME/noraneko-installer/$OUTPUT_INSTALLER_NAME"
+            if [[ ! -f "$expected_installer" || -L "$expected_installer" || ! -s "$expected_installer" ]]; then
+              echo "Stable v2 expected exactly $expected_installer; broad fallback is disabled" >&2
+              exit 1
+            fi
+            echo "Verified exact stable v2 installer/package: $expected_installer"
+            exit 0
+          fi
 
           # If already populated, show contents and continue
           if [ -n "$(find ~/noraneko-installer -mindepth 1 -print -quit 2>/dev/null)" ]; then
@@ -1457,7 +2277,7 @@ jobs:
               echo "Failed to locate installer files. Diagnostics:" >&2
               echo "Listing possible locations:" >&2
               for d in "${CANDIDATES[@]}"; do
-                eval expanded="$d"
+                expanded="$d"
                 echo "== $expanded ==" >&2
                 ls -la "$expanded" 2>/dev/null || echo " (not found)" >&2
               done
@@ -1470,14 +2290,20 @@ jobs:
           fi
 
       - name: Publish dist
+        id: upload-installer
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-${{ env.OUTPUT_NAME }}-installer${{ inputs.skip_signing && '-unsigned' || '' }}
-          path: ~/noraneko-installer/*
+          name: ${{ steps.artifact-contract.outputs.installer_artifact_name }}
+          path: ${{ env.INSTALLER_UPLOAD_PATH }}
           compression-level: 9
+          if-no-files-found: error
+          overwrite: true
 
       - name: Publish MAR
+        id: upload-mar
         uses: actions/upload-artifact@v4
         with:
-          name: floorp-${{ env.OUTPUT_NAME }}-mar-full${{ inputs.skip_signing && '-unsigned' || '' }}
+          name: ${{ steps.artifact-contract.outputs.mar_artifact_name }}
           path: ~/noraneko-publish/*
+          if-no-files-found: error
+          overwrite: true

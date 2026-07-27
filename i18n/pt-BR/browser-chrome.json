@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Aplicativos Web",
       "install-current": "Instalar a página atual como um aplicativo da Web progressivo",
-      "open-installed": "Abrir Aplicativos Web instalados"
+      "open-current": "Abrir aplicativo no recipiente selecionado",
+      "open-installed": "Abrir Aplicativos Web instalados",
+      "container": "Contêiner"
     },
     "page-action": {
       "title": "Abrir aplicativo",
       "install": "Instalar aplicativo",
       "open": "Abrir aplicativo",
       "cancel": "Cancelar",
-      "site-icon": "Ícone do site"
+      "site-icon": "Ícone do site",
+      "container": "Contêiner",
+      "no-container": "Sem contêiner"
+    },
+    "window": {
+      "container-tooltip": "Contêiner: {{name}}",
+      "container-fallback": "Contêiner #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,6 +139,11 @@
       "gecko-forward": "Avançar",
       "gecko-reload": "Atualizar",
       "gecko-close-tab": "Fechar aba",
+      "gecko-close-other-tabs": "Fechar as outras abas",
+      "gecko-close-tabs-to-start": "Fechar abas à esquerda",
+      "gecko-close-tabs-to-start-vertical": "Fechar abas acima",
+      "gecko-close-tabs-to-end": "Fechar abas à direita",
+      "gecko-close-tabs-to-end-vertical": "Fechar abas abaixo",
       "gecko-open-new-tab": "Nova aba",
       "gecko-duplicate-tab": "Duplicar aba",
       "gecko-reload-all-tabs": "Recarregar todas as abas",
@@ -195,6 +208,8 @@
       "gecko-toggle-sidebar": "Mostrar/ocultar barra lateral",
       "gecko-scroll-up": "Rolar para cima",
       "gecko-scroll-down": "Rolar para baixo",
+      "gecko-scroll-line-up": "Rolar para cima",
+      "gecko-scroll-line-down": "Rolar para baixo",
       "gecko-scroll-right": "Rolar à direita",
       "gecko-scroll-left": "Rolar à esquerda",
       "gecko-scroll-to-top": "Voltar ao topo",
@@ -202,19 +217,50 @@
       "gecko-workspace-next": "Mudar para a próximo espaço de trabalho",
       "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior",
       "floorp-toggle-zen-mode": "Ativar/Desativar Modo Zen",
-      "floorp-toggle-command-palette": "Alternar a paleta de comandos"
+      "floorp-toggle-command-palette": "Alternar a paleta de comandos",
+      "floorp-open-settings": "Abrir configurações",
+      "floorp-open-hub": "Abrir o Floorp Hub",
+      "floorp-toggle-share-mode": "Ativar/desativar modo compartilhamento",
+      "floorp-copy-page-url-as-markdown": "Copiar URL da página como markdown",
+      "floorp-split-view-open-left": "Visualização dividida à esquerda",
+      "floorp-split-view-open-right": "Visualização dividida à direita",
+      "floorp-split-view-open-top": "Visualização divida para cima",
+      "floorp-split-view-open-bottom": "Visualização dividida para baixo",
+      "floorp-split-view-close": "Fechar a visualização dividida",
+      "floorp-split-view-swap-panes": "Trocar painéis divididos",
+      "floorp-split-view-cycle-layout": "Leiaute de divisão de ciclo",
+      "floorp-split-view-add-pane": "Adicionar painel à visualização dividida",
+      "floorp-split-view-remove-pane": "Remover painel da visualização dividida"
     },
     "descriptions": {
       "gecko-back": "Voltar para a página anterior",
       "gecko-forward": "Avançar para a próxima página",
       "gecko-reload": "Recarregar a página atual",
       "gecko-close-tab": "Fechar a aba atual",
+      "gecko-close-other-tabs": "Fechar todas as abas exceto a atual",
+      "gecko-close-tabs-to-start": "Fechar todas as abas à esquerda da aba atual",
+      "gecko-close-tabs-to-start-vertical": "Fechar todas as abas acima da aba atual",
+      "gecko-close-tabs-to-end": "Fechar todas as abas à direita da aba atual",
+      "gecko-close-tabs-to-end-vertical": "Fechar todas as abas abaixo da aba atual",
       "gecko-open-new-tab": "Abrir uma nova aba",
       "gecko-duplicate-tab": "Duplicar a aba atual",
       "gecko-reload-all-tabs": "Recarregar todas as abas",
       "gecko-restore-last-tab": "Reabra a última aba fechada",
       "floorp-toggle-zen-mode": "Ativar/desativar o Modo Zen para ocultar todos os elementos de interface do usuário para uma navegação livre de distrações",
-      "floorp-toggle-command-palette": "Abrir ou fechar a paleta de comandos para pesquisar e executar comandos"
+      "floorp-toggle-command-palette": "Abrir ou fechar a paleta de comandos para pesquisar e executar comandos",
+      "floorp-open-settings": "Abre a página de configurações do Floorp",
+      "floorp-open-hub": "Abre a página do Floorp Hub",
+      "floorp-toggle-share-mode": "Alterne o modo de compartilhamento para minimizar a interface do usuário para compartilhamento de tela e apresentações",
+      "floorp-copy-page-url-as-markdown": "Copie o título da página atual e URL como formato de link markdown: [Title](URL)",
+      "floorp-split-view-open-left": "Abra a aba atual em uma visualização dividida no lado esquerdo",
+      "floorp-split-view-open-right": "Abra a aba atual em uma visualização dividida no lado direito",
+      "floorp-split-view-open-top": "Abra a aba atual em uma visualização dividida por cima",
+      "floorp-split-view-open-bottom": "Abra a aba atual em uma visualização dividida por baixo",
+      "floorp-split-view-close": "Fechar a visualização dividida ativa e voltar à visualização de uma única aba",
+      "floorp-split-view-swap-panes": "Trocar as posições dos painéis na visualização dividida ativa",
+      "floorp-split-view-cycle-layout": "Alterne entre os leiautes de tela dividida disponíveis (horizontal, vertical, em grade)",
+      "floorp-split-view-add-pane": "Adicionar um novo painel à visualização dividida ativa",
+      "floorp-split-view-remove-pane": "Remover o último painel da visualização dividida ativa"
     }
   },
   "qrCode": {
@@ -392,12 +438,44 @@
       "grid2x2": "Grade (2×2)",
       "addPane": "Adicionar painel",
       "removePane": "Remover o último painel"
+    },
+    "dropZone": {
+      "newWindow": "Solte aqui para abrir em uma nova janela"
     }
   },
   "zen-mode": {
     "label": "Modo Zen",
     "tooltiptext": "Ativar/Desativar Modo Zen",
     "menu-label": "Ativar/Desativar Modo Zen"
+  },
+  "ipProtection": {
+    "title": "VPN do navegador",
+    "toolbar": {
+      "activeTooltip": "A VPN do navegador está ativada para tráfego de navegação na web no Floorp",
+      "inactiveTooltip": "A VPN do navegador está desativada — o tráfego de navegação na web não está protegido",
+      "excludedTooltip": "A VPN do navegador está desativada para este site — este site não está protegido",
+      "pausedTooltip": "A VPN do navegador está em pausa — o tráfego de navegação na web não está protegido",
+      "errorTooltip": "VPN do navegador — erro de conexão; tráfego de navegação elegível não está protegido",
+      "helpTooltip": "Abrir a página de suporte à VPN do navegador"
+    },
+    "scope": {
+      "summary": "Quando ativo, a VPN do navegador pode proteger o tráfego de navegação elegível no Floorp. Seu escopo não inclui seu sistema operacional ou outros apps.",
+      "fullDisclosure": "Este recurso utiliza uma conta Mozilla e a infraestrutura de serviços da Mozilla. O Floorp é um projeto independente e não é afiliado, endossado nem patrocinado pela Mozilla. A disponibilidade depende da sua região, do status da sua conta e dos requisitos de elegibilidade dos serviços da Mozilla."
+    },
+    "unauthenticated": {
+      "title": "Experimente a VPN do navegador"
+    },
+    "settings": {
+      "promoHeading": "Experimente a VPN do navegador",
+      "promoMessage": "Proteger o tráfego de navegação web elegível no Floorp após entrar e confirmar a disponibilidade do serviço."
+    },
+    "terms": {
+      "prefix": "Ao continuar, você concorda com",
+      "termsOfUse": "Termos de Uso do Mozilla Firefox",
+      "conjunction": " e reconhece ",
+      "privacyNotice": "Aviso de privacidade do Mozilla Firefox",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Paleta de comandos",
@@ -420,9 +498,81 @@
       "workspace": "Espaços de trabalho",
       "floorp": "Floorp",
       "media": "Mídia",
-      "open-tabs": "Abrir abas"
+      "open-tabs": "Abrir abas",
+      "switcher": "Console web",
+      "history-suggestions": "Histórico",
+      "bookmark-suggestions": "Marcadores"
     },
     "noResults": "Nenhum comando encontrado",
-    "noResultsHint": "Experimente um termo de pesquisa diferente."
-  }
+    "noResultsHint": "Experimente um termo de pesquisa diferente.",
+    "stepIndicator": "Etapa {{current}} de {{total}}",
+    "backToCommands": "Voltar aos comandos",
+    "openUrl": "Abrir URL",
+    "openUrlDescription": "Abrir uma URL em uma nova aba",
+    "openUrlStepLabel": "Digite a URL para abrir",
+    "openUrlStepPlaceholder": "https://exemplo.com",
+    "openUrlValidationError": "Por favor, insira uma URL válida",
+    "searchWeb": "Procurar na web",
+    "searchWebDescription": "Pesquise com seu mecanismo de pesquisa padrão",
+    "searchWebStepLabel": "Digite o texto para pesquisa",
+    "searchWebStepPlaceholder": "Pesquisar termos...",
+    "searchWithEngine": "Pesquisar por \"{{query}}\"",
+    "searchWithEngineDescription": "Pesquisar com seu mecanismo de pesquisa padrão",
+    "searchWithEngineNamed": "Pesquisar com {{engine}}",
+    "searchWebValidationError": "Por favor, insira um termo para pesquisa",
+    "searchWebEngineLabel": "Selecionar mecanismo de pesquisa",
+    "searchWebEnginePlaceholder": "Selecione um mecanismo de pesquisa...",
+    "searchEngineDefault": " (padrão)",
+    "searchWebWhereLabel": "Onde abrir os resultados",
+    "searchWebWherePlaceholder": "Selecione onde abrir...",
+    "searchWebWhereNewTab": "Nova aba",
+    "searchWebWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
+    "searchWebWhereBackgroundTab": "Aba de fundo",
+    "searchWebWhereBackgroundTabDesc": "Abrir em nova aba em segundo plano",
+    "searchWebWhereCurrentTab": "Aba atual",
+    "searchWebWhereCurrentTabDesc": "Navegar pela aba atual",
+    "openUrlWhereLabel": "Onde abrir",
+    "openUrlWherePlaceholder": "Selecione onde abrir...",
+    "openUrlWhereNewTab": "Nova aba",
+    "openUrlWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
+    "openUrlWhereBackgroundTab": "Aba de fundo",
+    "openUrlWhereBackgroundTabDesc": "Abrir em nova aba em segundo plano",
+    "openUrlWhereCurrentTab": "Aba atual",
+    "openUrlWhereCurrentTabDesc": "Navegar pela aba atual",
+    "reopenInContainer": "Reabrir no contêiner",
+    "reopenInContainerDescription": "Reabra a aba atual em um contêiner específico",
+    "reopenInContainerStepLabel": "Selecione um contêiner",
+    "reopenInContainerStepPlaceholder": "Escolha um contêiner...",
+    "reopenInContainerNoContainer": "Sem contêiner",
+    "reopenInContainerNoContainerDesc": "Reabrir no contexto padrão",
+    "reopenInContainerCurrentSuffix": "(atual)",
+    "loadingChoices": "Carregando opções...",
+    "tabSwitcher": "Mudar aba",
+    "tabSwitcherDescription": "Mudar para uma aba diferente na janela atual",
+    "tabSwitcherStepLabel": "Selecione uma aba",
+    "tabSwitcherStepPlaceholder": "Escolha uma aba...",
+    "windowSwitcher": "Mudar janela",
+    "windowSwitcherDescription": "Mudar para uma janela aberta diferente",
+    "windowSwitcherStepLabel": "Selecione uma janela",
+    "windowSwitcherStepPlaceholder": "Escolha uma janela...",
+    "windowSwitcherCurrent": "atual",
+    "windowSwitcherTabCount": "{{count}} aba(s)",
+    "closedTabSwitcher": "Reabrir aba fechada",
+    "closedTabSwitcherDescription": "Reabrir uma aba fechada recentemente",
+    "closedTabSwitcherStepLabel": "Selecionar uma aba fechada",
+    "closedTabSwitcherStepPlaceholder": "Escolha uma aba fechada...",
+    "closedWindowSwitcher": "Reabrir aba fechada",
+    "closedWindowSwitcherDescription": "Reabrir uma janela fechada recentemente",
+    "closedWindowSwitcherStepLabel": "Selecionar uma janela fechada",
+    "closedWindowSwitcherStepPlaceholder": "Escolha uma janela fechada...",
+    "historySwitcher": "Histórico de navegação",
+    "historySwitcherDescription": "Abrir uma página do seu histórico de navegação",
+    "historySwitcherStepLabel": "Selecionar um registro do histórico",
+    "historySwitcherStepPlaceholder": "Escolha um registro do histórico...",
+    "bookmarkSwitcher": "Mudar de favorito",
+    "bookmarkSwitcherDescription": "Abrir uma página marcada como favorita",
+    "bookmarkSwitcherStepLabel": "Selecione uma página marcada como favorita",
+    "bookmarkSwitcherStepPlaceholder": "Pesquise ou escolha uma página marcada como favorita..."
+  },
+  "commandPaletteReadings": {}
 }

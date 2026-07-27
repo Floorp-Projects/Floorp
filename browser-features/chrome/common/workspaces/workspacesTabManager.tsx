@@ -25,6 +25,11 @@ import { configStore, enabled } from "./data/config.ts";
 import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
 import type { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
 import { isRight } from "fp-ts/Either";
+import {
+  excludeTrackedReplacement,
+  FirefoxTabReplacementTracker,
+  hasOriginUserContextId,
+} from "./utils/tab-replacement-lifecycle.ts";
 
 interface TabEvent extends Event {
   target: XULElement;
@@ -34,19 +39,13 @@ interface TabEvent extends Event {
 export class WorkspacesTabManager {
   dataManagerCtx: WorkspacesDataManager;
   iconCtx: WorkspaceIcons;
-  // Track recently opened tabs and per-workspace open timestamps to detect
-  // "auto-created replacement tab" right after last-tab close.
-  private recentOpenedAtByTab = new WeakMap<XULElement, number>();
-  private recentOpenedAtPerWorkspace = new Map<TWorkspaceID, number>();
-  // Timestamp (Date.now()) of when the current handleTabClose invocation
-  // started. Used to distinguish tabs created by reopen/container-switch
-  // operations (created BEFORE the close) from Firefox auto-replacement tabs
-  // (created DURING the close). Fixes #2193.
-  private tabCloseStartTime = 0;
   // When true, handleTabClose skips its workspace-empty logic. Used during
   // bulk tab removal (workspace deletion) so that closing tabs one-by-one
   // does not interfere with the deletion flow (fixes #2247).
   private suppressTabCloseHandling = false;
+  private readonly firefoxReplacementTracker = new FirefoxTabReplacementTracker<
+    XULElement
+  >();
   constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
@@ -61,13 +60,19 @@ export class WorkspacesTabManager {
       ).SessionStore.promiseAllWindowsRestored
         .then(() => {
           this.initializeWorkspace();
-          globalThis.addEventListener("TabClose", this.boundHandleTabClose as EventListener);
+          globalThis.addEventListener(
+            "TabClose",
+            this.boundHandleTabClose as EventListener,
+          );
           globalThis.addEventListener("TabOpen", this.boundHandleTabOpen);
         })
         .catch((error: Error) => {
           console.error("Error waiting for windows restore:", error);
           this.initializeWorkspace();
-          globalThis.addEventListener("TabClose", this.boundHandleTabClose as EventListener);
+          globalThis.addEventListener(
+            "TabClose",
+            this.boundHandleTabClose as EventListener,
+          );
           globalThis.addEventListener("TabOpen", this.boundHandleTabOpen);
         });
     };
@@ -205,17 +210,25 @@ export class WorkspacesTabManager {
   private boundHandleTabOpen: (event: Event) => void;
 
   public cleanup() {
-    globalThis.removeEventListener("TabClose", this.boundHandleTabClose as EventListener);
+    globalThis.removeEventListener(
+      "TabClose",
+      this.boundHandleTabClose as EventListener,
+    );
     globalThis.removeEventListener("TabOpen", this.boundHandleTabOpen);
   }
 
   private handleTabClose = (event: TabEvent) => {
+    const tab = event.target as XULElement;
+    // Consume the transaction before any close logic can synchronously create
+    // another tab. This also runs for suppressed closes so their transaction
+    // cannot be revived by a reentrant TabOpen.
+    const trackedReplacement = this.firefoxReplacementTracker.finishTabClose(
+      tab,
+    );
+
     // Skip workspace-empty logic when bulk-removing tabs (e.g. workspace deletion)
     if (this.suppressTabCloseHandling) return;
 
-    this.tabCloseStartTime = Date.now();
-
-    const tab = event.target as XULElement;
     let workspaceId = this.getWorkspaceIdFromAttribute(tab);
 
     // If the tab has no workspace attribute, assign it to the current workspace
@@ -228,67 +241,37 @@ export class WorkspacesTabManager {
         return;
       }
     }
+    if (!workspaceId) return;
+    const closingWorkspaceId = workspaceId;
 
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
-    const isCurrentWorkspace = workspaceId === currentWorkspaceId;
+    const isCurrentWorkspace = closingWorkspaceId === currentWorkspaceId;
     const allTabs = globalThis.gBrowser.tabs as XULElement[];
+    const remainingTabs = allTabs.filter((t) => t !== tab);
+    const replacementTab = trackedReplacement !== null &&
+        remainingTabs.includes(trackedReplacement)
+      ? trackedReplacement
+      : null;
+    const remainingUserTabs = excludeTrackedReplacement(
+      remainingTabs,
+      replacementTab,
+    );
+
     const resolveWorkspaceIdForClose = (
       targetTab: XULElement,
     ): TWorkspaceID => {
       return this.getWorkspaceIdFromAttribute(targetTab) ?? currentWorkspaceId;
     };
-    const workspaceTabs = allTabs.filter((t) => {
-      return t !== tab && resolveWorkspaceIdForClose(t) === workspaceId;
+    const workspaceTabs = remainingUserTabs.filter((t) => {
+      return resolveWorkspaceIdForClose(t) === closingWorkspaceId;
     });
 
-    const now = Date.now();
-    const validWorkspaceTabs = workspaceTabs.filter((t) => {
-      const createdAt = this.recentOpenedAtByTab.get(
-        t as unknown as XULElement,
-      );
-      // If a tab was created extremely recently (< 500ms), it's likely the
-      // auto-generated replacement tab from Firefox's closeWindowWithLastTab=false behavior.
-      // We should ignore it when checking if the workspace is empty.
-      if (createdAt && now - createdAt < 500) {
-        // If the tab was created BEFORE this handleTabClose started, it's from a
-        // reopen/container-switch operation (Floorp code or extension), not a
-        // Firefox auto-replacement tab. Always keep it. Fixes #2193.
-        if (createdAt <= this.tabCloseStartTime) {
-          return true;
-        }
-        try {
-          const browser = globalThis.gBrowser.getBrowserForTab(
-            t as unknown as XULElement,
-          );
-          const url = browser?.currentURI?.spec;
-          // If the tab has a valid URL that is not a blank/newtab page,
-          // it is likely a user-created tab (e.g. "Open Link in New Tab"),
-          // so we should NOT ignore it.
-          const isBlankOrNewTab = !url ||
-            url === "about:blank" ||
-            url === "about:newtab" ||
-            url === "about:home";
-          if (!isBlankOrNewTab) {
-            return true;
-          }
-        } catch (e) {
-          console.error(
-            "WorkspacesTabManager: error checking tab URL in filter",
-            e,
-          );
-        }
-        return false;
-      }
-      return true;
-    });
-
-    if (isCurrentWorkspace && validWorkspaceTabs.length === 0) {
+    if (isCurrentWorkspace && workspaceTabs.length === 0) {
       // Current workspace is becoming empty.
       // Check if there are tabs in OTHER workspaces.
-      const otherWorkspaceTabs = allTabs.filter((t) => {
-        if (t === tab) return false;
+      const otherWorkspaceTabs = remainingUserTabs.filter((t) => {
         const wsId = resolveWorkspaceIdForClose(t);
-        return wsId !== workspaceId;
+        return wsId !== closingWorkspaceId;
       });
 
       if (otherWorkspaceTabs.length > 0) {
@@ -296,6 +279,14 @@ export class WorkspacesTabManager {
         // Check if exitOnLastTabClose is enabled - if not, just create a new tab
         // and switch to another workspace instead of closing the window.
         if (!configStore.exitOnLastTabClose) {
+          if (replacementTab) {
+            this.reuseOrReplaceTrackedReplacement(
+              replacementTab,
+              closingWorkspaceId,
+              false,
+            );
+          }
+
           // Find the first workspace with tabs and switch to it
           const firstOtherTab = otherWorkspaceTabs[0];
           const targetWorkspaceId = this.getWorkspaceIdFromAttribute(
@@ -307,25 +298,16 @@ export class WorkspacesTabManager {
           return;
         }
 
-        // Search for an existing tab (e.g. auto-created by Firefox) to use as replacement
-        // to avoid duplicating tabs on session restore.
-        const remainingTabs = allTabs.filter((t) => t !== tab);
-        let replacement = remainingTabs.find((t) => {
-          const tWsId = this.getWorkspaceIdFromAttribute(t);
-          // Use if it belongs to current workspace (but was filtered as 'recent')
-          // or if it has no workspace assigned yet.
-          return tWsId === workspaceId || !tWsId;
-        });
+        // Reuse only the exact TabOpen object Firefox created for this close,
+        // and only when its browsing context is in the workspace container.
+        const replacement = this.reuseOrReplaceTrackedReplacement(
+          replacementTab,
+          closingWorkspaceId,
+          true,
+        );
 
-        if (!replacement) {
-          replacement = this.createTabForWorkspace(workspaceId, true);
-        } else {
-          this.setWorkspaceIdToAttribute(replacement, workspaceId);
-          globalThis.gBrowser.selectedTab = replacement;
-        }
-
-        replacement.setAttribute(WORKSPACE_LAST_SHOW_ID, workspaceId);
-        this.dataManagerCtx.setCurrentWorkspaceID(workspaceId);
+        replacement.setAttribute(WORKSPACE_LAST_SHOW_ID, closingWorkspaceId);
+        this.dataManagerCtx.setCurrentWorkspaceID(closingWorkspaceId);
         this.updateTabsVisibility();
 
         // Set pending exit pref to collapse duplicates on restart
@@ -343,40 +325,72 @@ export class WorkspacesTabManager {
         // Check if exitOnLastTabClose is enabled - if not, create a new tab
         // instead of closing the window.
         if (!configStore.exitOnLastTabClose) {
-          // Firefox already created a replacement tab due to closeWindowWithLastTab=false,
-          // so we just need to assign it to the current workspace.
-          const remainingTabs = (globalThis.gBrowser.tabs as XULElement[])
-            .filter((t) => t !== tab);
-          if (remainingTabs.length > 0) {
-            const newTab = remainingTabs[0];
-            this.setWorkspaceIdToAttribute(newTab, workspaceId);
-            globalThis.gBrowser.selectedTab = newTab;
-          } else {
-            this.createTabForWorkspace(workspaceId, true);
-          }
+          this.reuseOrReplaceTrackedReplacement(
+            replacementTab,
+            closingWorkspaceId,
+            true,
+          );
+          this.updateTabsVisibility();
           return;
         }
 
-        // We should close the window manually because we force closeWindowWithLastTab=false.
-        Services.prefs.setBoolPref(WORKSPACE_PENDING_EXIT_PREF_NAME, true);
-        setTimeout(() => {
-          globalThis.close();
-        }, 0);
+        // exitOnLastTabClose is true. Only the exact replacement for this
+        // transaction is disposable; Floorp Start, user newtabs, and stale
+        // blank tabs all keep the window alive (#2509).
+        if (remainingUserTabs.length === 0) {
+          if (replacementTab) {
+            this.reuseOrReplaceTrackedReplacement(
+              replacementTab,
+              closingWorkspaceId,
+              true,
+            );
+          }
+          Services.prefs.setBoolPref(WORKSPACE_PENDING_EXIT_PREF_NAME, true);
+          setTimeout(() => {
+            globalThis.close();
+          }, 0);
+        } else {
+          // Remaining user tabs exist (e.g., user just opened a new tab).
+          // Keep any tracked native replacement only after validating its
+          // origin context, then assign the first user tab to the workspace.
+          if (replacementTab) {
+            this.reuseOrReplaceTrackedReplacement(
+              replacementTab,
+              closingWorkspaceId,
+              false,
+            );
+          }
+          const newTab = remainingUserTabs[0];
+          this.setWorkspaceIdToAttribute(newTab, closingWorkspaceId);
+          globalThis.gBrowser.selectedTab = newTab;
+          this.updateTabsVisibility();
+        }
       }
+    } else if (replacementTab) {
+      // A Firefox replacement should normally imply the current workspace is
+      // becoming empty. If visibility or attribution state says otherwise,
+      // still fail closed rather than leaving an unvalidated native tab alive.
+      this.reuseOrReplaceTrackedReplacement(
+        replacementTab,
+        closingWorkspaceId,
+        false,
+      );
+      this.updateTabsVisibility();
     }
   };
 
   private handleTabOpen = (event: Event) => {
     try {
       const tab = (event as CustomEvent).target as XULElement;
-      const now = Date.now();
-      this.recentOpenedAtByTab.set(tab, now);
+      this.firefoxReplacementTracker.observeTabOpen(
+        tab,
+        globalThis.gBrowser.tabs as XULElement[],
+      );
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       if (!this.getWorkspaceIdFromAttribute(tab)) {
         this.setWorkspaceIdToAttribute(tab, wsId);
       }
-      this.recentOpenedAtPerWorkspace.set(wsId, now);
     } catch {
       // ignore tab-open handler error
     }
@@ -427,10 +441,31 @@ export class WorkspacesTabManager {
     // Hide tab groups that have no visible tabs, show those that do
     const tabGroups = globalThis.gBrowser.tabGroups;
     for (const group of tabGroups) {
-      const hasVisibleTabInGroup = (group.tabs as Array<XULElement>).some(
-        (tab) => this.getWorkspaceIdFromAttribute(tab) === currentWorkspaceId,
-      );
+      const hasVisibleTabInGroup = (group.tabs as Array<XULElement>)
+        .some((tab) =>
+          this.getWorkspaceIdFromAttribute(tab) === currentWorkspaceId
+        );
       group.style.display = hasVisibleTabInGroup ? "" : "none";
+    }
+
+    // Hide split view wrappers that have no visible tabs, show those that do
+    const splitViewWrappers = document.querySelectorAll(
+      "tab-split-view-wrapper",
+    );
+    for (const wrapper of splitViewWrappers) {
+      const children = Array.from(wrapper.children) as Element[];
+      const hasVisibleTabInWrapper = children.some(
+        (child) => {
+          if (child.tagName !== "tab") return false;
+          return (
+            this.getWorkspaceIdFromAttribute(child as XULElement) ===
+              currentWorkspaceId
+          );
+        },
+      );
+      (wrapper as HTMLElement).style.display = hasVisibleTabInWrapper
+        ? ""
+        : "none";
     }
   }
 
@@ -468,6 +503,69 @@ export class WorkspacesTabManager {
    */
   setWorkspaceIdToAttribute(tab: XULElement, workspaceId: TWorkspaceID) {
     tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, workspaceId);
+  }
+
+  /**
+   * Reuse a tracked native replacement only when its authoritative browsing
+   * context matches the workspace. A replacement with missing or mismatched
+   * origin attributes is replaced before it is removed, so Firefox never sees
+   * an empty window and creates another keep-alive tab during this handler.
+   */
+  private reuseOrReplaceTrackedReplacement(
+    replacement: XULElement | null,
+    workspaceId: TWorkspaceID,
+    select: boolean,
+  ): XULElement {
+    const expectedUserContextId = this.dataManagerCtx.getRawWorkspace(
+      workspaceId,
+    )?.userContextId ?? 0;
+
+    if (
+      replacement &&
+      this.tabHasOriginUserContextId(replacement, expectedUserContextId)
+    ) {
+      this.setWorkspaceIdToAttribute(replacement, workspaceId);
+      if (select) {
+        globalThis.gBrowser.selectedTab = replacement;
+      }
+      return replacement;
+    }
+
+    const workspaceTab = this.createTabForWorkspace(workspaceId, select);
+    if (!this.tabHasOriginUserContextId(workspaceTab, expectedUserContextId)) {
+      console.error(
+        "[WorkspacesTabManager] Failed to create a tab in the workspace container",
+      );
+      throw new Error("Workspace tab browsing context mismatch");
+    }
+    if (!replacement) {
+      return workspaceTab;
+    }
+
+    const wasSuppressingTabClose = this.suppressTabCloseHandling;
+    this.suppressTabCloseHandling = true;
+    try {
+      globalThis.gBrowser.removeTab(replacement);
+    } finally {
+      this.suppressTabCloseHandling = wasSuppressingTabClose;
+    }
+    return workspaceTab;
+  }
+
+  private tabHasOriginUserContextId(
+    tab: XULElement,
+    expectedUserContextId: number,
+  ): boolean {
+    try {
+      const browser = globalThis.gBrowser.getBrowserForTab(tab);
+      return hasOriginUserContextId(browser, expectedUserContextId);
+    } catch (error) {
+      console.error(
+        "[WorkspacesTabManager] Failed to inspect tab origin attributes",
+        error,
+      );
+      return false;
+    }
   }
 
   /**
@@ -548,12 +646,24 @@ export class WorkspacesTabManager {
   ) {
     const targetURL = url ??
       Services.prefs.getStringPref("browser.startup.homepage");
+
+    // Look up workspace's container to create the tab in the correct context.
+    // Without this, replacement tabs for container workspaces are created in
+    // the default container, causing proxy/VPN tabs to stop working (#2193).
+    const workspace = this.dataManagerCtx.getRawWorkspace(workspaceId);
+    const userContextId = workspace?.userContextId ?? 0;
+
     const tab = globalThis.gBrowser.addTab(targetURL, {
       skipAnimation: true,
       inBackground: false,
+      userContextId: userContextId > 0 ? userContextId : undefined,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     this.setWorkspaceIdToAttribute(tab, workspaceId);
+
+    if (userContextId > 0) {
+      tab.setAttribute("usercontextid", String(userContextId));
+    }
 
     if (select) {
       globalThis.gBrowser.selectedTab = tab;

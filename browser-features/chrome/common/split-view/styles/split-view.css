@@ -813,7 +813,7 @@
   border-radius: 999px;
   border: 1px solid
     color-mix(in srgb, var(--focus-outline-color) 24%, transparent);
-  background: color-mix(in srgb, var(--toolbar-bgcolor) 90%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 90%, transparent);
   box-shadow: 0 1px 3px color-mix(in srgb, black 12%, transparent);
   display: flex;
   align-items: center;
@@ -826,7 +826,7 @@
   > .floorp-pane-drag-grip {
   opacity: 1;
   transform: translateX(-50%) translateY(1px);
-  background: color-mix(in srgb, var(--toolbar-bgcolor) 96%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 96%, transparent);
   box-shadow: 0 2px 6px color-mix(in srgb, black 18%, transparent);
 }
 
@@ -855,7 +855,7 @@
 }
 
 #tabbrowser-tabpanels[data-floorp-dragging="pane-reorder"] > .split-view-panel {
-  background: color-mix(in srgb, var(--toolbar-bgcolor) 10%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 10%, transparent);
 }
 
 #tabbrowser-tabpanels[data-floorp-dragging="pane-reorder"]
@@ -989,7 +989,7 @@
   padding: 28px 36px;
   border: 2px dashed color-mix(in srgb, currentColor 24%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--toolbar-bgcolor) 92%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 92%, transparent);
   display: none;
   flex-direction: column;
   align-items: center;
@@ -1006,7 +1006,7 @@
 #floorp-new-window-drop-zone[drag-hover] {
   border-style: solid;
   border-color: AccentColor;
-  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-bgcolor));
+  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-background-color, var(--toolbar-bgcolor)));
 }
 
 .floorp-new-window-zone-icon {

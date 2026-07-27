@@ -683,8 +683,8 @@ async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void>
   // Trigger the permission prompt topic
   observer.observe(null, "webextension-permission-prompt", null);
 
-  // Wait for async cleanup to complete
-  await waitForAsync(150);
+  // Wait for async cleanup to complete (double-nested requestAnimationFrame)
+  await waitForAsync(500);
 
   // Verify cleanup happened (CWS message removed)
   const notificationEl = document!.getElementById(

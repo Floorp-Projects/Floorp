@@ -43,7 +43,10 @@
       --toolbar-bgimage,
       linear-gradient(transparent, transparent)
     ),
-    linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)),
+    linear-gradient(
+      var(--toolbar-background-color, var(--toolbar-bgcolor)),
+      var(--toolbar-background-color, var(--toolbar-bgcolor))
+    ),
     var(--lwt-header-image, var(--lwt-additional-images)) !important;
 }
 

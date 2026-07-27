@@ -1,0 +1,161 @@
+---
+title: "Browser Features Overview"
+sidebar_label: "Overview"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+# Browser Features Overview
+
+The `browser-features` directory is the central location for Floorp's custom browser functionality built on top of the Firefox base. It is organized into three major subdirectories that correspond to distinct architectural layers: `chrome` for SolidJS-based browser chrome UI, `pages-settings` for React-based full-page settings UI, and `modules` for Firefox ESM system modules and Window Actor registration.
+
+## Architectural Layers
+
+Floorp's browser features sit between the patched Gecko base and the bridge loader that injects them into the browser at runtime. The layers within `browser-features` are:
+
+1. **Chrome UI** — SolidJS browser chrome features discovered by glob from `browser-features/chrome/common/mod.ts`. These features augment the native browser chrome with custom UI components and services.
+2. **Pages** — React/Tailwind full-page browser UIs, such as the settings application, configured via `browser-features/pages-settings/vite.config.ts`.
+3. **ESM Modules** — Firefox ESM modules and Window Actor registration, defined in `browser-features/modules/modules/BrowserGlue.sys.mts`.
+
+The bridge loader is responsible for discovering, filtering, and initializing these features at runtime. The loader entrypoint at `bridge/loader-features/loader/index.ts` imports BrowserGlue, initializes i18n, records loader state, filters enabled modules, and runs module lifecycle hooks. The module registry at `bridge/loader-features/loader/modules.ts` builds common and static module maps from chrome feature entry globs, while `bridge/loader-features/loader/modules-hooks.ts` provides `onModuleLoaded` promises and internal module load-state resolution.
+
+## Chrome Features
+
+The `browser-features/chrome` directory contains Floorp's custom browser chrome features. It is divided into `common` features that are dynamically loaded and `static` features that are initialized at fixed lifecycle points. The overview and utility conventions for these directories are documented in `browser-features/chrome/README.md`.
+
+### Feature Discovery
+
+Chrome features are discovered using a glob pattern. The common module registry at `browser-features/chrome/common/mod.ts` uses the glob pattern `./*/index.ts` to discover all common chrome feature entry points. Static chrome feature discovery is handled separately by `browser-features/chrome/static/mod.ts`.
+
+The loader module registry at `bridge/loader-features/loader/modules.ts` consumes these globs to build the module maps that the loader entrypoint iterates over at runtime.
+
+### Common Chrome Features
+
+Common chrome features are SolidJS-based modules that own individual browser chrome capabilities. Each feature is implemented as a default-exported class with an `init` method, and some features expose additional lifecycle entrypoints such as `initBeforeSessionStoreInit`. The loader filters enabled modules and runs their lifecycle hooks in sequence.
+
+The following common chrome features are discovered and loaded:
+
+| Feature | Source | Summary |
+|---|---|---|
+| addons | `browser-features/chrome/common/addons/index.ts` | Customizes the addon installation confirmation popup to show Chrome extension specific messages when installing from the Chrome Web Store. |
+| browser-share-mode | `browser-features/chrome/common/browser-share-mode/index.ts` | Owns the browser share mode feature and wires the `browser-share-mode` component. |
+| browser-tab-color | `browser-features/chrome/common/browser-tab-color/index.ts` | Owns the browser tab color feature and wires the `tabcolor-manager` component. |
+| chrome-css | `browser-features/chrome/common/chrome-css/index.ts` | Owns the chrome CSS feature and wires the `service` component. |
+| command-palette | `browser-features/chrome/common/command-palette/index.ts` | Owns the command palette feature and wires the `service`, `components/CommandPalette`, and `style.css?inline` resources. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | Owns the context menu feature through the ContextMenu chrome component. |
+| designs | `browser-features/chrome/common/designs/index.ts` | Owns the designs feature and wires the `browser-design-element` component. |
+| external-browser | `browser-features/chrome/common/external-browser/index.ts` | Owns the external browser feature and wires `tab-context-menu` and `link-context-menu` components. |
+| flex-order | `browser-features/chrome/common/flex-order/index.ts` | Owns the flex order feature and wires the `flex-order` component. |
+| hub-panel-menu | `browser-features/chrome/common/hub-panel-menu/index.ts` | Owns the hub panel menu feature and wires the `HubPanelMenu` component. |
+| keyboard-shortcut | `browser-features/chrome/common/keyboard-shortcut/index.ts` | Owns the keyboard shortcut feature and wires `service` and `config` resources. |
+| modal-parent | `browser-features/chrome/common/modal-parent/index.ts` | Owns the modal parent feature and wires `modalManager`, `modalElement`, and `data/data` resources. |
+| mouse-gesture | `browser-features/chrome/common/mouse-gesture/index.ts` | Owns the mouse gesture feature and wires `service`, `config`, and `components/GestureDisplay` resources. |
+| panel-sidebar | `browser-features/chrome/common/panel-sidebar/index.ts` | Owns the panel sidebar feature and wires `components/panel-sidebar`, `components/sidebar`, and `components/sidebar-contextMenu` resources. |
+| private-container | `browser-features/chrome/common/private-container/index.ts` | Owns the private container feature and wires `browser-private-container` and `context-menu` resources. |
+| profile-manager | `browser-features/chrome/common/profile-manager/index.ts` | Owns the profile manager feature and wires the `service` component. |
+| pwa | `browser-features/chrome/common/pwa/index.ts` | Owns the PWA feature and wires `SsbPageAction`, `SsbPanelView`, and `config` resources. |
+| qr-code-generator | `browser-features/chrome/common/qr-code-generator/index.ts` | Owns the QR code generator feature and wires `qr-code-button`, `qr-code-panel`, and `style.css?inline` resources. |
+| reboot-panel-menu | `browser-features/chrome/common/reboot-panel-menu/index.ts` | Owns the reboot panel menu feature and wires the `RebootPanelMenu` component. |
+| reverse-sidebar-position | `browser-features/chrome/common/reverse-sidebar-position/index.ts` | Provides initialization for the reverse sidebar position feature. |
+| split-view | `browser-features/chrome/common/split-view/index.ts` | Owns the split view feature and wires the `split-view-manager` component. |
+| statusbar | `browser-features/chrome/common/statusbar/index.ts` | Owns the statusbar feature and wires `context-menu`, `statusbar`, and `statusbar-manager` resources. |
+| tab | `browser-features/chrome/common/tab/index.ts` | Owns the tab feature and wires `scroll`, `openPosition`, and `sizeSpecification` resources. |
+| tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
+| tabbar | `browser-features/chrome/common/tabbar/index.ts` | Owns the tabbar feature and wires `multirow-tabbar/multirow-tabbar` and `tabbbar-style/tabbar-style` resources. |
+| ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | Owns the UI customization feature and wires `styles/style-manager` and `layout/dom-manipulator` resources. Exposes `init` and `initBeforeSessionStoreInit` entrypoints. |
+| undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | Owns the undo closed tab feature and wires the `styleElem` resource. |
+| workspaces | `browser-features/chrome/common/workspaces/index.ts` | Owns the workspaces feature and wires `workspacesTabManager`, `utils/workspace-icons`, and `workspacesService` resources. |
+| zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | Owns the zen mode feature and wires `zen-mode` and `styleElem` resources. |
+
+### Static Chrome Features
+
+Static chrome features are initialized at fixed lifecycle points rather than through the dynamic common module discovery. They are discovered by `browser-features/chrome/static/mod.ts` and include:
+
+| Feature | Source | Summary |
+|---|---|---|
+| downloadbar | `browser-features/chrome/static/downloadbar/index.ts` | Provides initialization for the downloadbar feature. |
+| overrides | `browser-features/chrome/static/overrides/index.ts` | Provides initialization for the overrides feature. |
+| prefs | `browser-features/chrome/static/prefs/index.ts` | Provides pre-session initialization for the prefs feature. Exposes `init` and `initBeforeSessionStoreInit` entrypoints. |
+
+### Module Lifecycle
+
+The loader entrypoint at `bridge/loader-features/loader/index.ts` orchestrates the module lifecycle. After importing BrowserGlue and initializing i18n, it records the loader state, filters the discovered modules to only those that are enabled, and then runs each module's lifecycle hooks. The `onModuleLoaded` promises provided by `bridge/loader-features/loader/modules-hooks.ts` allow the loader and other components to react to individual module load completion, with internal load-state resolution tracking the progress of each module.
+
+Some features, such as `ui-custom` and `prefs`, expose an `initBeforeSessionStoreInit` entrypoint in addition to the standard `init` method. This allows those features to perform initialization work before the session store has finished restoring state, which is necessary for features that need to manipulate preferences or DOM layout early in the startup sequence.
+
+## Pages: Settings Application
+
+The `browser-features/pages-settings` directory contains a React and Tailwind CSS application that provides Floorp's full-page settings UI. This is a separate build target from the chrome features, with its own Vite configuration at `browser-features/pages-settings/vite.config.ts`.
+
+### Application Entry
+
+The settings application is bootstrapped by `browser-features/pages-settings/src/main.tsx`, which initializes the React app with theme support, i18n, and hash-based routing.
+
+### Settings Routes
+
+The route definitions are in `browser-features/pages-settings/src/App.tsx`. The application uses hash-based routing to navigate between settings sections. The root path `/` redirects to the dashboard. The available routes are:
+
+| Route | Component | Source |
+|---|---|---|
+| `/` | `Navigate` (redirect) | `browser-features/pages-settings/src/App.tsx` |
+| `/search` | `@/app/search/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/overview/home` | `@/app/dashboard/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/design` | `@/app/design/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/design/lepton` | `@/app/design/components/LeptonSettings.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/sidebar` | `@/app/sidebar/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/workspaces` | `@/app/workspaces/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/webapps` | `@/app/pwa/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/floorp-os` | `@/app/floorp-os/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/accounts` | `@/app/accounts/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/gesture` | `@/app/gesture/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/features/shortcuts` | `@/app/keyboard-shortcut/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/about/browser` | `./app/about/noraneko.tsx` | `browser-features/pages-settings/src/App.tsx` |
+| `/about/updates` | `@/app/updates/page.tsx` | `browser-features/pages-settings/src/App.tsx` |
+
+The settings routes correspond to many of the common chrome features. For example, the `/features/sidebar` route provides configuration UI for the panel-sidebar chrome feature, the `/features/workspaces` route configures the workspaces chrome feature, and the `/features/design` and `/features/design/lepton` routes configure the designs chrome feature and Lepton theme settings.
+
+## ESM Modules and Window Actors
+
+The `browser-features/modules` directory contains Firefox ESM system modules that integrate Floorp's features with Firefox's internal module system. The primary module is `browser-features/modules/modules/BrowserGlue.sys.mts`, which handles Window Actor registration.
+
+### Window Actor Registration
+
+Floorp registers its Window Actors using the `ActorManagerParent.addJSWindowActors` API, as called from `browser-features/modules/modules/BrowserGlue.sys.mts`. A total of 22 Window Actors are registered, providing the IPC bridge between parent and child processes for Floorp's custom features. The registered actors are:
+
+| Actor Name | Source |
+|---|---|
+| NRAboutPreferences | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRAppConstants | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRChromeModal | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRChromeWebStore | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRExperimemmt | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRI18n | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRMouseGestureScroll | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NROSAutomotor | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRPanelSidebar | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRPluginStore | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRProfileManager | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRProgressiveWebApp | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRPwaManager | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRRestartBrowser | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRSearchEngine | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRSettings | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRStartPage | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRSyncManager | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRTabManager | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRWebScraper | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRWelcomePage | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| NRWorkspaces | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+
+These actors correspond to many of the common chrome features. For example, `NRPanelSidebar` supports the panel-sidebar chrome feature, `NRWorkspaces` supports the workspaces chrome feature, `NRProfileManager` supports the profile-manager chrome feature, and `NRPwaManager` and `NRProgressiveWebApp` support the PWA chrome feature.
+
+## Relationship with the Bridge Loader
+
+The bridge startup layer at `bridge/startup/src/chrome_root.ts` selects the appropriate loader based on the runtime environment. In development, it uses an HTTP loader served from a Vite dev server; in production, it loads the bundled chrome code. The loader then discovers and initializes the browser features described in this page.
+
+The flow from startup to feature initialization is:
+
+1. The bridge startup at `bridge/startup/src/chrome_root.ts` selects the loader URL based on the environment.
+2. The loader entrypoint at `bridge/loader-features/loader/index.ts` imports BrowserGlue from `browser-features/modules/modules/BrowserGlue.sys.mts`, which registers the Window Actors.
+3. The loader module registry at `bridge/loader-features/loader/modules.ts` builds module maps from the chrome feature entry globs discovered by `browser-features/chrome/common/mod.ts` and `browser-features/chrome/static/mod.ts`.
+4. The loader filters enabled modules and runs their lifecycle hooks, with load-state tracked by `bridge/loader-features/loader/modules-hooks.ts`.
+5. The settings page application at `browser-features/pages-settings/src/main.tsx` is loaded as a separate full-page UI when the user navigates to the settings page.

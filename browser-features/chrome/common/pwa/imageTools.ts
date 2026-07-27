@@ -7,8 +7,9 @@ const { FileUtils } = ChromeUtils.importESModule(
 );
 
 function getShellService() {
-  return ChromeUtils.importESModule("resource:///modules/ShellService.sys.mjs")
-    .ShellService;
+  return ChromeUtils.importESModule(
+    "moz-src:///browser/components/shell/ShellService.sys.mjs",
+  ).ShellService;
 }
 
 const { NetUtil } = ChromeUtils.importESModule(
@@ -297,9 +298,8 @@ function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
   }
 
   const semicolonIndex = metadata.indexOf(";");
-  const mime = semicolonIndex === -1
-    ? metadata
-    : metadata.substring(0, semicolonIndex);
+  const mime =
+    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
 
   if (!mime) {
     return null;

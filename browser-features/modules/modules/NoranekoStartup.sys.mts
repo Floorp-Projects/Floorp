@@ -16,11 +16,50 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+function installFloorpIPProtectionUIEarly(): boolean {
+  try {
+    const { FloorpIPProtectionUI } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/ipprotection/FloorpIPProtectionUI.sys.mjs",
+    );
+    return FloorpIPProtectionUI.installEarly();
+  } catch (error) {
+    console.error(
+      "[FloorpIPProtectionUI] Failed to install the early runtime adapter:",
+      error,
+    );
+    return false;
+  }
+}
+
+const isFloorpIPProtectionUIReady = installFloorpIPProtectionUIEarly();
+
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
 export let isFirstRun = false;
 export let isUpdated = false;
+
+/**
+ * Get nsIComponentRegistrar from Components.manager via QueryInterface.
+ * Components.manager needs explicit QI to access registerFactory.
+ */
+function getComponentRegistrar(): nsIComponentRegistrar | null {
+  try {
+    const cm = Components.manager;
+    if (cm === undefined || cm === null) {
+      return null;
+    }
+    // Components.manager has QueryInterface at runtime but TypeScript defs don't reflect it
+    const maybeQI = (cm as unknown as { QueryInterface?: (iid: nsIID) => unknown }).QueryInterface;
+    if (typeof maybeQI !== "function") {
+      return null;
+    }
+    return maybeQI.call(cm, Ci.nsIComponentRegistrar) as nsIComponentRegistrar;
+  } catch (e) {
+    console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar:", e);
+    return null;
+  }
+}
 
 const executedFunctions = new Set<string>();
 const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
@@ -378,25 +417,9 @@ async function registerCustomAboutPages(): Promise<void> {
       },
     };
 
-    let registrar: nsIComponentRegistrar | null = null;
-    const cm = Components.manager;
-    if (cm !== undefined && cm !== null) {
-      registrar = cm as unknown as nsIComponentRegistrar;
-      // Some environments require explicit QI; do it when available.
-      try {
-        const maybeQI = (
-          cm as unknown as { QueryInterface?: (iid: nsIID) => unknown }
-        ).QueryInterface;
-        if (typeof maybeQI === "function") {
-          // @ts-expect-error: Gecko Components.manager supports QueryInterface at runtime
-          registrar = cm.QueryInterface(Ci.nsIComponentRegistrar);
-        }
-      } catch (e) {
-        console.error("Failed to get nsIComponentRegistrar:", e);
-      }
-    }
+    const registrar = getComponentRegistrar();
     if (!registrar) {
-      console.error("Failed to get nsIComponentRegistrar");
+      console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar");
       continue;
     }
     registrar.registerFactory(
@@ -414,14 +437,53 @@ async function setupBrowserOSComponents(): Promise<void> {
   );
 }
 
+function registerSsbCommandLineHandler(): void {
+  executeOnce("register-ssb-command-line-handler", () => {
+    const { SSBCommandLineHandler } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+    );
+    const contractId = "@noraneko.org/commandlinehandler/general-start-ssb;1";
+    const factory: nsIFactory = {
+      createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
+        return new SSBCommandLineHandler().QueryInterface(iid);
+      },
+    };
+
+    const registrar = getComponentRegistrar();
+    if (!registrar) {
+      console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar for SSB handler");
+      return;
+    }
+    registrar.registerFactory(
+      Services.uuid.generateUUID(),
+      "Floorp SSB command line handler",
+      contractId,
+      factory,
+    );
+    Services.catMan.addCategoryEntry(
+      "command-line-handler",
+      "m-floorp-ssb",
+      contractId,
+      false,
+      true,
+    );
+  });
+}
+
 async function initializeExperiments() {
   const { Experiments } = await ChromeUtils.importESModule(
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
   );
   await Experiments.init();
+
+  const { FloorpIPProtectionGate } = await ChromeUtils.importESModule(
+    "resource://noraneko/modules/ipprotection/FloorpIPProtectionGate.sys.mjs",
+  );
+  FloorpIPProtectionGate.apply(isFloorpIPProtectionUIReady);
 }
 
 (async () => {
+  registerSsbCommandLineHandler();
   await registerCustomAboutPages();
   initializeVersionInfo();
   await initializeExperiments();

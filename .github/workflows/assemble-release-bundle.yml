@@ -1,0 +1,841 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+name: "(P) Assemble immutable release bundle v2"
+
+on:
+  workflow_call:
+    inputs:
+      source_workflow_run_id:
+        description: "Current Floorp workflow run containing every source artifact"
+        type: string
+        required: true
+      floorp_head_sha:
+        description: "Exact lowercase Floorp commit SHA used by every package"
+        type: string
+        required: true
+      validation_only:
+        description: "Assemble an unsigned bundle that cannot be published"
+        type: boolean
+        required: false
+        default: false
+      runtime_context_artifact:
+        description: 'Exact JSON identity: {"name":string,"id":positive integer,"digest":"sha256:<64 lowercase hex>"}'
+        type: string
+        required: true
+      windows_installer_artifact:
+        description: "Exact JSON identity for the Windows installer artifact"
+        type: string
+        required: true
+      windows_mar_artifact:
+        description: "Exact JSON identity for the Windows MAR artifact"
+        type: string
+        required: true
+      linux_installer_artifact:
+        description: "Exact JSON identity for the Linux x86_64 installer artifact"
+        type: string
+        required: true
+      linux_mar_artifact:
+        description: "Exact JSON identity for the Linux x86_64 MAR artifact"
+        type: string
+        required: true
+      linux_deb_artifact:
+        description: "Exact JSON identity for the Linux x86_64 DEB artifact"
+        type: string
+        required: true
+      linux_aarch64_installer_artifact:
+        description: "Exact JSON identity for the Linux aarch64 installer artifact"
+        type: string
+        required: true
+      linux_aarch64_mar_artifact:
+        description: "Exact JSON identity for the Linux aarch64 MAR artifact"
+        type: string
+        required: true
+      mac_installer_artifact:
+        description: "Exact JSON identity for the macOS universal installer artifact"
+        type: string
+        required: true
+      mac_mar_artifact:
+        description: "Exact JSON identity for the macOS universal MAR artifact"
+        type: string
+        required: true
+      verification_windows_x86_64_artifact:
+        description: "Exact JSON identity for the Windows x86_64 verification record"
+        type: string
+        required: true
+      verification_linux_x86_64_artifact:
+        description: "Exact JSON identity for the Linux x86_64 verification record"
+        type: string
+        required: true
+      verification_linux_aarch64_artifact:
+        description: "Exact JSON identity for the Linux aarch64 verification record"
+        type: string
+        required: true
+      verification_mac_x86_64_artifact:
+        description: "Exact JSON identity for the macOS x86_64 verification record"
+        type: string
+        required: true
+      verification_mac_aarch64_artifact:
+        description: "Exact JSON identity for the macOS aarch64 verification record"
+        type: string
+        required: true
+    outputs:
+      artifact_name:
+        description: "Canonical release bundle artifact name"
+        value: ${{ jobs.assemble.outputs.artifact_name }}
+      artifact_id:
+        description: "Immutable release bundle artifact ID"
+        value: ${{ jobs.assemble.outputs.artifact_id }}
+      artifact_digest:
+        description: "Immutable release bundle artifact digest"
+        value: ${{ jobs.assemble.outputs.artifact_digest }}
+      manifest_set_id:
+        description: "Release manifest set identity"
+        value: ${{ jobs.assemble.outputs.manifest_set_id }}
+      firefox_version:
+        description: "Firefox version proven by all native records"
+        value: ${{ jobs.assemble.outputs.firefox_version }}
+      floorp_version:
+        description: "Floorp release version"
+        value: ${{ jobs.assemble.outputs.floorp_version }}
+      release_tag:
+        description: "Canonical Floorp release tag"
+        value: ${{ jobs.assemble.outputs.release_tag }}
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  assemble:
+    name: Validate provenance and assemble the flat release bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      artifact_name: ${{ steps.contract.outputs.artifact-name }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload.outputs.artifact-digest) }}
+      manifest_set_id: ${{ steps.assemble.outputs.manifest-set-id }}
+      firefox_version: ${{ steps.assemble.outputs.firefox-version }}
+      floorp_version: ${{ steps.assemble.outputs.floorp-version }}
+      release_tag: ${{ steps.assemble.outputs.release-tag }}
+    steps:
+      - name: Validate every immutable artifact identity through REST
+        id: contract
+        uses: actions/github-script@v7
+        env:
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+          RUNTIME_CONTEXT_ARTIFACT: ${{ inputs.runtime_context_artifact }}
+          WINDOWS_INSTALLER_ARTIFACT: ${{ inputs.windows_installer_artifact }}
+          WINDOWS_MAR_ARTIFACT: ${{ inputs.windows_mar_artifact }}
+          LINUX_INSTALLER_ARTIFACT: ${{ inputs.linux_installer_artifact }}
+          LINUX_MAR_ARTIFACT: ${{ inputs.linux_mar_artifact }}
+          LINUX_DEB_ARTIFACT: ${{ inputs.linux_deb_artifact }}
+          LINUX_AARCH64_INSTALLER_ARTIFACT: ${{ inputs.linux_aarch64_installer_artifact }}
+          LINUX_AARCH64_MAR_ARTIFACT: ${{ inputs.linux_aarch64_mar_artifact }}
+          MAC_INSTALLER_ARTIFACT: ${{ inputs.mac_installer_artifact }}
+          MAC_MAR_ARTIFACT: ${{ inputs.mac_mar_artifact }}
+          VERIFICATION_WINDOWS_X86_64_ARTIFACT: ${{ inputs.verification_windows_x86_64_artifact }}
+          VERIFICATION_LINUX_X86_64_ARTIFACT: ${{ inputs.verification_linux_x86_64_artifact }}
+          VERIFICATION_LINUX_AARCH64_ARTIFACT: ${{ inputs.verification_linux_aarch64_artifact }}
+          VERIFICATION_MAC_X86_64_ARTIFACT: ${{ inputs.verification_mac_x86_64_artifact }}
+          VERIFICATION_MAC_AARCH64_ARTIFACT: ${{ inputs.verification_mac_aarch64_artifact }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fail = (message) => {
+              core.setFailed(message);
+              throw new Error(message);
+            };
+            const parsePositiveId = (name, value) => {
+              if (!/^[1-9][0-9]*$/.test(value || "")) {
+                fail(`${name} must be a positive decimal integer`);
+              }
+              const result = Number(value);
+              if (!Number.isSafeInteger(result)) {
+                fail(`${name} exceeds JavaScript's safe integer range`);
+              }
+              return result;
+            };
+            const parseIdentity = (environmentName, expectedName) => {
+              let value;
+              try {
+                value = JSON.parse(process.env[environmentName]);
+              } catch (error) {
+                fail(`${environmentName} is not valid JSON: ${error.message}`);
+              }
+              if (
+                value === null || Array.isArray(value) || typeof value !== "object" ||
+                Object.keys(value).sort().join(",") !== "digest,id,name"
+              ) {
+                fail(`${environmentName} must contain exactly name, id, and digest`);
+              }
+              if (value.name !== expectedName) {
+                fail(`${environmentName}.name must be ${expectedName}`);
+              }
+              if (!Number.isSafeInteger(value.id) || value.id < 1) {
+                fail(`${environmentName}.id must be a positive safe integer`);
+              }
+              if (!/^sha256:[0-9a-f]{64}$/.test(value.digest || "")) {
+                fail(`${environmentName}.digest must be a lowercase sha256 digest`);
+              }
+              return value;
+            };
+
+            const sourceRunId = parsePositiveId(
+              "source_workflow_run_id",
+              process.env.SOURCE_WORKFLOW_RUN_ID,
+            );
+            if (sourceRunId !== context.runId) {
+              fail(
+                `Assembly accepts only artifacts from the current run ` +
+                `(${context.runId}), not ${sourceRunId}`,
+              );
+            }
+            const floorpHeadSha = process.env.FLOORP_HEAD_SHA;
+            if (!/^[0-9a-f]{40}$/.test(floorpHeadSha || "")) {
+              fail("floorp_head_sha must be a lowercase 40-character commit SHA");
+            }
+            const validationOnly = process.env.VALIDATION_ONLY === "true";
+            const unsignedSuffix = validationOnly ? "-unsigned" : "";
+            const identities = new Map([
+              ["runtime-context", parseIdentity(
+                "RUNTIME_CONTEXT_ARTIFACT",
+                "floorp-runtime-provenance-v2",
+              )],
+              ["windows-installer", parseIdentity(
+                "WINDOWS_INSTALLER_ARTIFACT",
+                `noraneko-windows-x86_64-installer${unsignedSuffix}`,
+              )],
+              ["windows-mar", parseIdentity(
+                "WINDOWS_MAR_ARTIFACT",
+                `floorp-windows-x86_64-mar-full${unsignedSuffix}`,
+              )],
+              ["linux-installer", parseIdentity(
+                "LINUX_INSTALLER_ARTIFACT",
+                `noraneko-linux-x86_64-installer${unsignedSuffix}`,
+              )],
+              ["linux-mar", parseIdentity(
+                "LINUX_MAR_ARTIFACT",
+                `floorp-linux-x86_64-mar-full${unsignedSuffix}`,
+              )],
+              ["linux-deb", parseIdentity(
+                "LINUX_DEB_ARTIFACT",
+                `floorp-Linux-x64-deb${unsignedSuffix}`,
+              )],
+              ["linux-aarch64-installer", parseIdentity(
+                "LINUX_AARCH64_INSTALLER_ARTIFACT",
+                `noraneko-linux-aarch64-installer${unsignedSuffix}`,
+              )],
+              ["linux-aarch64-mar", parseIdentity(
+                "LINUX_AARCH64_MAR_ARTIFACT",
+                `floorp-linux-aarch64-mar-full${unsignedSuffix}`,
+              )],
+              ["mac-installer", parseIdentity(
+                "MAC_INSTALLER_ARTIFACT",
+                `noraneko-mac-universal-installer${unsignedSuffix}`,
+              )],
+              ["mac-mar", parseIdentity(
+                "MAC_MAR_ARTIFACT",
+                `floorp-mac-universal-mar-full${unsignedSuffix}`,
+              )],
+              ["verification-windows-x86_64", parseIdentity(
+                "VERIFICATION_WINDOWS_X86_64_ARTIFACT",
+                "floorp-native-verification-windows-x86_64-v2",
+              )],
+              ["verification-linux-x86_64", parseIdentity(
+                "VERIFICATION_LINUX_X86_64_ARTIFACT",
+                "floorp-native-verification-linux-x86_64-v2",
+              )],
+              ["verification-linux-aarch64", parseIdentity(
+                "VERIFICATION_LINUX_AARCH64_ARTIFACT",
+                "floorp-native-verification-linux-aarch64-v2",
+              )],
+              ["verification-mac-x86_64", parseIdentity(
+                "VERIFICATION_MAC_X86_64_ARTIFACT",
+                "floorp-native-verification-mac-x86_64-v2",
+              )],
+              ["verification-mac-aarch64", parseIdentity(
+                "VERIFICATION_MAC_AARCH64_ARTIFACT",
+                "floorp-native-verification-mac-aarch64-v2",
+              )],
+            ]);
+            const inputIds = [...identities.values()].map((identity) => identity.id);
+            if (new Set(inputIds).size !== inputIds.length) {
+              fail("Each release input must reference a different artifact ID");
+            }
+
+            const {data: run} = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: sourceRunId,
+            });
+            if (run.id !== sourceRunId || run.repository?.full_name !== context.repo.owner + "/" + context.repo.repo) {
+              fail("Source workflow run repository or ID mismatch");
+            }
+            if (run.head_sha !== floorpHeadSha) {
+              fail(`Source workflow head ${run.head_sha} != ${floorpHeadSha}`);
+            }
+            if (!["queued", "in_progress", "completed"].includes(run.status)) {
+              fail(`Source workflow has an invalid status: ${run.status}`);
+            }
+
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: sourceRunId,
+                per_page: 100,
+              },
+            );
+            for (const [key, expected] of identities) {
+              const idMatches = artifacts.filter((artifact) => artifact.id === expected.id);
+              if (idMatches.length !== 1) {
+                fail(`${key} artifact ID is not unique in source run ${sourceRunId}`);
+              }
+              const nameMatches = artifacts.filter(
+                (artifact) => artifact.name === expected.name && !artifact.expired,
+              );
+              if (nameMatches.length !== 1 || nameMatches[0].id !== expected.id) {
+                fail(`${key} does not uniquely bind its canonical name to its ID`);
+              }
+              const artifact = idMatches[0];
+              if (artifact.name !== expected.name || artifact.digest !== expected.digest) {
+                fail(`${key} REST name or digest does not match its input identity`);
+              }
+              if (artifact.expired || !Number.isInteger(artifact.size_in_bytes) || artifact.size_in_bytes < 1) {
+                fail(`${key} is expired or empty`);
+              }
+              core.setOutput(`${key}-artifact-id`, String(expected.id));
+            }
+            core.setOutput(
+              "artifact-name",
+              validationOnly
+                ? "floorp-release-bundle-v2-validation"
+                : "floorp-release-bundle-v2",
+            );
+
+      - name: Download exact normalized Runtime context
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.runtime-context-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/runtime-context
+          merge-multiple: true
+
+      - name: Download exact Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.windows-installer-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/windows-installer
+          merge-multiple: true
+
+      - name: Download exact Windows MAR
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.windows-mar-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/windows-mar
+          merge-multiple: true
+
+      - name: Download exact Linux x86_64 installer
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.linux-installer-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/linux-installer
+          merge-multiple: true
+
+      - name: Download exact Linux x86_64 MAR
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.linux-mar-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/linux-mar
+          merge-multiple: true
+
+      - name: Download exact Linux x86_64 DEB
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.linux-deb-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/linux-deb
+          merge-multiple: true
+
+      - name: Download exact Linux aarch64 installer
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.linux-aarch64-installer-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/linux-aarch64-installer
+          merge-multiple: true
+
+      - name: Download exact Linux aarch64 MAR
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.linux-aarch64-mar-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/linux-aarch64-mar
+          merge-multiple: true
+
+      - name: Download exact macOS installer
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.mac-installer-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/mac-installer
+          merge-multiple: true
+
+      - name: Download exact macOS MAR
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.mac-mar-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/mac-mar
+          merge-multiple: true
+
+      - name: Download exact Windows x86_64 verification record
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.verification-windows-x86_64-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/verification-windows-x86_64
+          merge-multiple: true
+
+      - name: Download exact Linux x86_64 verification record
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.verification-linux-x86_64-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/verification-linux-x86_64
+          merge-multiple: true
+
+      - name: Download exact Linux aarch64 verification record
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.verification-linux-aarch64-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/verification-linux-aarch64
+          merge-multiple: true
+
+      - name: Download exact macOS x86_64 verification record
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.verification-mac-x86_64-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/verification-mac-x86_64
+          merge-multiple: true
+
+      - name: Download exact macOS aarch64 verification record
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.contract.outputs.verification-mac-aarch64-artifact-id }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release-inputs/verification-mac-aarch64
+          merge-multiple: true
+
+      - name: Checkout the exact Floorp source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.floorp_head_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Resolve the exact inherited Windows stub asset
+        id: stub
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fail = (message) => {
+              core.setFailed(message);
+              throw new Error(message);
+            };
+            const { data: release } = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              headers: { "X-GitHub-Api-Version": "2026-03-10" },
+            });
+            if (
+              !Number.isSafeInteger(release.id) || release.id < 1 ||
+              !/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(release.tag_name || "") ||
+              release.draft || release.prerelease
+            ) {
+              fail("Latest public Floorp release identity is not canonical");
+            }
+            const matches = release.assets.filter(
+              (asset) => asset.name === "floorp-stub.installer.exe",
+            );
+            if (matches.length !== 1) {
+              fail("Latest public Floorp release must contain exactly one stub installer");
+            }
+            const asset = matches[0];
+            if (
+              !Number.isSafeInteger(asset.id) || asset.id < 1 ||
+              !Number.isSafeInteger(asset.size) || asset.size < 1 ||
+              !/^sha256:[0-9a-f]{64}$/.test(asset.digest || "")
+            ) {
+              fail("Latest Floorp stub asset has no immutable digest identity");
+            }
+            core.setOutput("release-id", String(release.id));
+            core.setOutput("release-tag", release.tag_name);
+            core.setOutput("asset-id", String(asset.id));
+            core.setOutput("asset-digest", asset.digest);
+            core.setOutput("asset-size", String(asset.size));
+
+      - name: Download and verify the exact inherited Windows stub asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STUB_RELEASE_ID: ${{ steps.stub.outputs.release-id }}
+          STUB_RELEASE_TAG: ${{ steps.stub.outputs.release-tag }}
+          STUB_ASSET_ID: ${{ steps.stub.outputs.asset-id }}
+          STUB_ASSET_DIGEST: ${{ steps.stub.outputs.asset-digest }}
+          STUB_ASSET_SIZE: ${{ steps.stub.outputs.asset-size }}
+          STUB_DIR: ${{ runner.temp }}/release-inputs/windows-stub
+          STUB_SOURCE_PATH: ${{ runner.temp }}/stub-source-v2.json
+        run: |
+          set -euo pipefail
+          mkdir "$STUB_DIR"
+          stub="$STUB_DIR/floorp-stub.installer.exe"
+          curl --fail --location --silent --show-error \
+            --retry 3 --retry-all-errors \
+            --header "Accept: application/octet-stream" \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases/assets/$STUB_ASSET_ID" \
+            --output "$stub"
+
+          actual_size="$(stat -c%s "$stub")"
+          actual_digest="sha256:$(sha256sum "$stub" | cut -d' ' -f1)"
+          if [[ "$actual_size" != "$STUB_ASSET_SIZE" || "$actual_digest" != "$STUB_ASSET_DIGEST" ]]; then
+            echo "Inherited stub bytes differ from release asset $STUB_ASSET_ID" >&2
+            exit 1
+          fi
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg release_tag "$STUB_RELEASE_TAG" \
+            --argjson release_id "$STUB_RELEASE_ID" \
+            --argjson asset_id "$STUB_ASSET_ID" \
+            --arg asset_name "floorp-stub.installer.exe" \
+            --arg asset_digest "$STUB_ASSET_DIGEST" \
+            --argjson size "$STUB_ASSET_SIZE" \
+            '{
+              repository: $repository,
+              release_tag: $release_tag,
+              release_id: $release_id,
+              asset_id: $asset_id,
+              asset_name: $asset_name,
+              asset_digest: $asset_digest,
+              size: $size
+            }' > "$STUB_SOURCE_PATH"
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Extract fixed release files and assemble metadata
+        id: assemble
+        shell: bash
+        env:
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+          SOURCE_WORKFLOW_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          INPUT_ROOT: ${{ runner.temp }}/release-inputs
+          BUNDLE_DIR: ${{ runner.temp }}/floorp-release-bundle-v2
+          DESCRIPTOR_PATH: ${{ runner.temp }}/assemble-release-v2.json
+          STUB_SOURCE_PATH: ${{ runner.temp }}/stub-source-v2.json
+          WINDOWS_INSTALLER_IDENTITY: ${{ inputs.windows_installer_artifact }}
+          LINUX_INSTALLER_IDENTITY: ${{ inputs.linux_installer_artifact }}
+          LINUX_AARCH64_INSTALLER_IDENTITY: ${{ inputs.linux_aarch64_installer_artifact }}
+          MAC_INSTALLER_IDENTITY: ${{ inputs.mac_installer_artifact }}
+        run: |
+          set -euo pipefail
+
+          require_only_root_file() {
+            local directory="$1"
+            local filename="$2"
+            local expected="$directory/$filename"
+            mapfile -d '' -t files < <(find "$directory" -type f -print0)
+            if (( ${#files[@]} != 1 )) || [[ "${files[0]}" != "$expected" ]]; then
+              echo "Expected exactly the root file $expected" >&2
+              find "$directory" -maxdepth 3 -type f -print >&2 || true
+              exit 1
+            fi
+          }
+
+          require_root_file() {
+            local directory="$1"
+            local filename="$2"
+            if [[ ! -f "$directory/$filename" ]]; then
+              echo "Expected root file $directory/$filename" >&2
+              find "$directory" -maxdepth 2 -type f -print >&2 || true
+              exit 1
+            fi
+          }
+
+          mkdir "$BUNDLE_DIR"
+          floorp_version="$(jq -er '.version | select(type == "string")' package.json)"
+          if [[ ! "$floorp_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Stable release version is not canonical: $floorp_version" >&2
+            exit 1
+          fi
+          release_tag="v$floorp_version"
+          mode=production
+          if [[ "$VALIDATION_ONLY" == true ]]; then
+            mode=validation
+          fi
+
+          require_only_root_file \
+            "$INPUT_ROOT/runtime-context" normalized-runtime-provenance-v2.json
+          for record in \
+            verification-windows-x86_64 \
+            verification-linux-x86_64 \
+            verification-linux-aarch64 \
+            verification-mac-x86_64 \
+            verification-mac-aarch64; do
+            require_only_root_file "$INPUT_ROOT/$record" native-verification.json
+          done
+
+          validate_record_binding() {
+            local record_path="$1"
+            local target_key="$2"
+            local native_arch="$3"
+            local installer_identity="$4"
+            jq -e \
+              --arg target_key "$target_key" \
+              --arg native_arch "$native_arch" \
+              --arg repository "$GITHUB_REPOSITORY" \
+              --arg head_sha "$FLOORP_HEAD_SHA" \
+              --argjson workflow_run_id "$SOURCE_WORKFLOW_RUN_ID" \
+              --argjson installer "$installer_identity" \
+              --argjson unsigned "$VALIDATION_ONLY" '
+                .schema_version == 2 and
+                .target_key == $target_key and
+                .native_arch == $native_arch and
+                .floorp == {
+                  repository: $repository,
+                  head_sha: $head_sha,
+                  workflow_run_id: $workflow_run_id
+                } and
+                .floorp_package == {
+                  artifact_name: $installer.name,
+                  artifact_id: $installer.id,
+                  artifact_digest: $installer.digest,
+                  unsigned: $unsigned
+                }
+              ' "$record_path" >/dev/null
+          }
+
+          validate_record_binding \
+            "$INPUT_ROOT/verification-windows-x86_64/native-verification.json" \
+            windows x86_64 "$WINDOWS_INSTALLER_IDENTITY"
+          validate_record_binding \
+            "$INPUT_ROOT/verification-linux-x86_64/native-verification.json" \
+            linux x86_64 "$LINUX_INSTALLER_IDENTITY"
+          validate_record_binding \
+            "$INPUT_ROOT/verification-linux-aarch64/native-verification.json" \
+            linuxAarch64 aarch64 "$LINUX_AARCH64_INSTALLER_IDENTITY"
+          validate_record_binding \
+            "$INPUT_ROOT/verification-mac-x86_64/native-verification.json" \
+            mac x86_64 "$MAC_INSTALLER_IDENTITY"
+          validate_record_binding \
+            "$INPUT_ROOT/verification-mac-aarch64/native-verification.json" \
+            mac aarch64 "$MAC_INSTALLER_IDENTITY"
+
+          require_root_file \
+            "$INPUT_ROOT/windows-installer" floorp-windows-x86_64.installer.exe
+          require_root_file \
+            "$INPUT_ROOT/windows-mar" floorp-windows-x86_64-full.mar
+          require_root_file \
+            "$INPUT_ROOT/linux-installer" floorp-linux-x86_64.tar.xz
+          require_root_file \
+            "$INPUT_ROOT/linux-mar" floorp-linux-x86_64-full.mar
+          require_root_file \
+            "$INPUT_ROOT/linux-aarch64-installer" floorp-linux-aarch64.tar.xz
+          require_root_file \
+            "$INPUT_ROOT/linux-aarch64-mar" floorp-linux-aarch64-full.mar
+          require_root_file \
+            "$INPUT_ROOT/mac-installer" floorp-macOS-universal.dmg
+          require_root_file \
+            "$INPUT_ROOT/mac-mar" floorp-mac-universal-full.mar
+          require_root_file \
+            "$INPUT_ROOT/linux-deb" "floorp-${floorp_version}.deb"
+          require_only_root_file \
+            "$INPUT_ROOT/windows-stub" floorp-stub.installer.exe
+
+          cp -- "$INPUT_ROOT/windows-installer/floorp-windows-x86_64.installer.exe" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/windows-mar/floorp-windows-x86_64-full.mar" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/linux-installer/floorp-linux-x86_64.tar.xz" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/linux-mar/floorp-linux-x86_64-full.mar" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/linux-aarch64-installer/floorp-linux-aarch64.tar.xz" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/linux-aarch64-mar/floorp-linux-aarch64-full.mar" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/mac-installer/floorp-macOS-universal.dmg" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/mac-mar/floorp-mac-universal-full.mar" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/linux-deb/floorp-${floorp_version}.deb" "$BUNDLE_DIR/"
+          cp -- "$INPUT_ROOT/windows-stub/floorp-stub.installer.exe" "$BUNDLE_DIR/"
+
+          release_base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${release_tag}"
+          mar_entry() {
+            local filename="$1"
+            local path="$BUNDLE_DIR/$filename"
+            jq -n \
+              --arg path "$path" \
+              --arg url "$release_base/$filename" \
+              --arg sha512 "$(sha512sum "$path" | cut -d' ' -f1)" \
+              --argjson size "$(stat -c%s "$path")" \
+              '{path: $path, url: $url, size: $size, sha512: $sha512}'
+          }
+
+          release_file_entry() {
+            local filename="$1"
+            local path="$BUNDLE_DIR/$filename"
+            jq -n \
+              --arg path "$path" \
+              --arg name "$filename" \
+              --arg sha512 "$(sha512sum "$path" | cut -d' ' -f1)" \
+              --argjson size "$(stat -c%s "$path")" \
+              '{path: $path, name: $name, size: $size, sha512: $sha512}'
+          }
+
+          jq -n \
+            --arg mode "$mode" \
+            --arg floorp_version "$floorp_version" \
+            --arg release_tag "$release_tag" \
+            --argjson stub_source "$(cat "$STUB_SOURCE_PATH")" \
+            --arg runtime "$INPUT_ROOT/runtime-context/normalized-runtime-provenance-v2.json" \
+            --arg win_record "$INPUT_ROOT/verification-windows-x86_64/native-verification.json" \
+            --arg linux_record "$INPUT_ROOT/verification-linux-x86_64/native-verification.json" \
+            --arg linux_arm_record "$INPUT_ROOT/verification-linux-aarch64/native-verification.json" \
+            --arg mac_x64_record "$INPUT_ROOT/verification-mac-x86_64/native-verification.json" \
+            --arg mac_arm_record "$INPUT_ROOT/verification-mac-aarch64/native-verification.json" \
+            --argjson windows "$(mar_entry floorp-windows-x86_64-full.mar)" \
+            --argjson linux "$(mar_entry floorp-linux-x86_64-full.mar)" \
+            --argjson linux_arm "$(mar_entry floorp-linux-aarch64-full.mar)" \
+            --argjson mac "$(mar_entry floorp-mac-universal-full.mar)" \
+            --argjson windows_installer "$(release_file_entry floorp-windows-x86_64.installer.exe)" \
+            --argjson windows_stub "$(release_file_entry floorp-stub.installer.exe)" \
+            --argjson linux_installer "$(release_file_entry floorp-linux-x86_64.tar.xz)" \
+            --argjson linux_arm_installer "$(release_file_entry floorp-linux-aarch64.tar.xz)" \
+            --argjson mac_installer "$(release_file_entry floorp-macOS-universal.dmg)" \
+            --argjson linux_deb "$(release_file_entry "floorp-${floorp_version}.deb")" \
+            '{
+              schema_version: 2,
+              mode: $mode,
+              floorp_version: $floorp_version,
+              release_tag: $release_tag,
+              stub_source: $stub_source,
+              runtime_provenance_path: $runtime,
+              native_verification_paths: [
+                $win_record,
+                $linux_record,
+                $linux_arm_record,
+                $mac_x64_record,
+                $mac_arm_record
+              ],
+              mars: {
+                windows: $windows,
+                linux: $linux,
+                linuxAarch64: $linux_arm,
+                mac: $mac
+              },
+              release_files: {
+                windows: $windows_installer,
+                windowsStub: $windows_stub,
+                linux: $linux_installer,
+                linuxAarch64: $linux_arm_installer,
+                mac: $mac_installer,
+                linuxDeb: $linux_deb
+              }
+            }' > "$DESCRIPTOR_PATH"
+
+          deno run --allow-read --allow-write \
+            tools/src/release_provenance.ts \
+            assemble-release \
+            --descriptor "$DESCRIPTOR_PATH" \
+            --output-dir "$BUNDLE_DIR" \
+            --github-output "$GITHUB_OUTPUT"
+
+          jq -e \
+            --arg mode "$mode" \
+            --arg version "$floorp_version" \
+            --arg release_tag "$release_tag" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg head_sha "$FLOORP_HEAD_SHA" \
+            --argjson workflow_run_id "$SOURCE_WORKFLOW_RUN_ID" '
+              .schema_version == 2 and
+              .mode == $mode and
+              .noraneko_version == $version and
+              .floorp == {
+                repository: $repository,
+                head_sha: $head_sha,
+                workflow_run_id: $workflow_run_id,
+                release_tag: $release_tag
+              }
+            ' "$BUNDLE_DIR/release-manifest-set-v2.json" >/dev/null
+
+          expected_files="$RUNNER_TEMP/expected-release-files.txt"
+          actual_files="$RUNNER_TEMP/actual-release-files.txt"
+          cat > "$expected_files" <<EOF
+          floorp-${floorp_version}.deb
+          floorp-linux-aarch64-full.mar
+          floorp-linux-aarch64.tar.xz
+          floorp-linux-x86_64-full.mar
+          floorp-linux-x86_64.tar.xz
+          floorp-mac-universal-full.mar
+          floorp-macOS-universal.dmg
+          floorp-windows-x86_64-full.mar
+          floorp-windows-x86_64.installer.exe
+          floorp-stub.installer.exe
+          hashes.txt
+          linux-aarch64-meta.json
+          linux-meta.json
+          mac-meta.json
+          release-manifest-set-v2.json
+          win-meta.json
+          EOF
+          find "$BUNDLE_DIR" -mindepth 1 -maxdepth 1 -type f -printf '%f\n' | sort > "$actual_files"
+          sort -o "$expected_files" "$expected_files"
+          if ! diff -u "$expected_files" "$actual_files"; then
+            echo "Release bundle is not the exact flat file set" >&2
+            exit 1
+          fi
+          if find "$BUNDLE_DIR" -mindepth 1 ! -type f -print -quit | grep -q .; then
+            echo "Release bundle must contain only root files" >&2
+            exit 1
+          fi
+
+          echo "floorp-version=$floorp_version" >> "$GITHUB_OUTPUT"
+          echo "release-tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable release bundle
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.contract.outputs.artifact-name }}
+          path: ${{ runner.temp }}/floorp-release-bundle-v2/*
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 0

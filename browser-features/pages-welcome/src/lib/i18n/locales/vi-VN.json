@@ -22,8 +22,8 @@
         "openPreferences": "Mở cài đặt (about:preferences)",
         "tip": "Mẹo nè: Trung tâm Floorp cũng có thể được mở từ thanh bên của cài đặt Firefox",
         "features": {
-            "dedicated": "Dedicated Floorp settings center",
-            "accessible": "Accessible from about:hub or Firefox settings",
+            "dedicated": "Trung tâm cài đặt riêng cho Floorp",
+            "accessible": "Có thể truy cập từ about:hub hoặc cài đặt của Firefox",
             "centralized": "Mọi cài đặt Floorp trong 1 chỗ"
         }
     },
@@ -58,20 +58,20 @@
         }
     },
     "finish": {
-        "title": "Setup Complete!",
+        "title": "Thiết lập hoàn tất!",
         "subtitle": "Congratulations! You've completed the Floorp setup. Enjoy a comfortable and secure internet browsing experience.",
         "nextSteps": {
             "title": "Next Steps (Optional)",
-            "setDefault": "Set as Default Browser",
-            "documentation": "Documentation"
+            "setDefault": "Đặt làm trình duyệt mặc định",
+            "documentation": "Tài liệu"
         },
-        "getStarted": "Get Started with Floorp",
+        "getStarted": "Bắt đầu với Floorp",
         "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right."
     },
     "welcomePage": {
         "welcome": "Chào mừng đến Floorp!",
         "description": "Floorp là trình duyệt nhanh và thân thiện người dùng tập trung vào quyền riêng tư và bảo mật. Chúng tôi sẽ dẫn bạn qua những tính năng và cài đặt của Floorp",
-        "readyToStart": "When you're ready, click the below button to proceed.",
+        "readyToStart": "Khi bạn đã sẵn sàng, nhấn nút bên dưới để tiếp tục.",
         "features": "Các tính năng của Floorp",
         "privacy": "Quyền riêng tư",
         "privacyDesc": "Bảo vệ dữ liệu của bạn",
@@ -82,7 +82,7 @@
         "start": "Bắt đầu thôi"
     },
     "localizationPage": {
-        "title": "Floorp speaks your language",
+        "title": "Floorp chung tiếng nói với bạn",
         "subtitle": "Check language settings and change if needed",
         "languageSettings": "Cài đặt ngôn ngữ",
         "languageChanged": "Nói ngôn ngữ của bạn rồi nè!",
@@ -96,37 +96,37 @@
         "languageChangeNotice": "Changing language will apply the new language without restarting Floorp. Some add-ons may not support language changes."
     },
     "featuresPage": {
-        "title": "Main Floorp Features",
-        "subtitle": "Floorp comes with many useful features. Check out the feature overview!",
+        "title": "Cái tinh năng nổi bật của Floorp",
+        "subtitle": "Floorp được trang bị vô vàn tính năng hữu ích. Hãy xem tổng quát về chúng!",
         "panelSidebar": {
-            "title": "Panel Sidebar",
+            "title": "Thanh bên",
             "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
             "features": [
-                "Pin websites to the sidebar",
-                "Quickly take notes with Floorp Notes while browsing",
+                "Ghim các trang vào thanh bên",
+                "Nhanh chóng ghi chú với Ghi Chú Floorp khi duyệt",
                 "Supports containers"
             ]
         },
         "workspaces": {
-            "title": "Workspaces",
+            "title": "Không gian làm việc",
             "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
             "features": [
-                "Categorize by purpose: work, personal, etc.",
+                "Phân loại theo mục đích: công việc, cá nhân, v.v.",
                 "Visually identify with custom icons",
-                "Easily manage tabs"
+                "Quản lý thẻ dễ dàng"
             ]
         },
         "pwa": {
             "title": "Progressive Web Applications Support",
             "description": "On Windows, you can add PWA-compatible sites as desktop applications when you visit them. Regular websites can also be installed.",
             "features": [
-                "Run independently as desktop apps",
+                "Hoạt động độc lập như ứng dụng",
                 "Can be pinned to the taskbar",
                 "Firefox add-ons work too"
             ]
         },
         "mouseGesture": {
-            "title": "Mouse Gestures",
+            "title": "Cử chỉ chuột",
             "description": "Control your browser more intuitively with natively implemented mouse gesture functionality. Execute gestures by holding the right-click button and moving your mouse.",
             "features": [
                 "Operate without keyboard shortcuts",
@@ -135,35 +135,35 @@
             ]
         },
         "notebook": "Notebook",
-        "nextTab": "Go to Next Tab"
+        "nextTab": "Đi tới thẻ tiếp theo"
     },
     "finishPage": {
-        "title": "Setup Complete!",
+        "title": "Thiết lập hoàn tất!",
         "subtitle": "Tuyệt vời! Bạn đã hoàn thành thiết lập Floorp. Tận hưởng cảm giác mượt mà và an toàn khi lướt mạng.",
         "nextSteps": "Next Steps (Optional)",
         "defaultBrowser": "Đặt làm trình duyệt mặc định",
         "support": "Hỗ trợ",
-        "documentation": "Documentation",
+        "documentation": "Tài liệu",
         "getStarted": "Bắt đầu với Floorp",
         "hint": "Nếu cần cài đặt chi tiết hơn, hãy mở Cài đặt từ nút menu ở góc trên bên phải.",
-        "resourcesLabel": "Resources",
-        "defaultBrowserSuccess": "Floorp has been set as your default browser!"
+        "resourcesLabel": "Tài nguyên",
+        "defaultBrowserSuccess": "Floorp đã được đặt làm trình duyệt mặc định của bạn!"
     },
     "whatsNew": {
-        "title": "Welcome to Floorp {{version}}!",
-        "subtitle": "Check out what's new in Floorp!",
+        "title": "Chào mừng tới Floorp {{version}}!",
+        "subtitle": "Xem có gì mới trên Floorp!",
         "tags": {
             "settings": "Cài đặt",
-            "productivity": "Productivity",
+            "productivity": "Năng suất",
             "workspaces": "Không gian làm việc",
             "pwa": "PWA",
             "gestures": "Gestures"
         },
         "footer": {
-            "follow": "Follow",
-            "privacy": "Privacy & Terms",
-            "about": "About Floorp",
-            "copyright": "© {{year}} Floorp Projects. All rights reserved."
+            "follow": "Theo dõi",
+            "privacy": "Điều khoản và chính sách",
+            "about": "Về Floorp",
+            "copyright": "{{year}} Floorp Projects. Bảo lưu mọi quyền."
         }
     }
 }

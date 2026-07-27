@@ -114,7 +114,9 @@ export function upsertGroupLayoutInStore(
   const nextGroups = [...store.groups];
   const idx = nextGroups.findIndex((entry) => entry.groupId === groupId);
   if (idx >= 0) {
-    nextGroups[idx] = { groupId, layout };
+    // Spread the existing entry so that `paneSizes` (and any future fields)
+    // are preserved when only the layout is being updated.
+    nextGroups[idx] = { ...nextGroups[idx]!, groupId, layout };
   } else {
     nextGroups.push({ groupId, layout });
   }

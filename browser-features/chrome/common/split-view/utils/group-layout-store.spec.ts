@@ -122,4 +122,32 @@ import {
   });
 }
 
+// Regression: upsertGroupLayoutInStore must NOT drop paneSizes
+// (bug: divider resets to center on the 2nd switch-back to split view)
+{
+  const start = parseGroupLayoutStore(
+    JSON.stringify({
+      groups: [
+        {
+          groupId: "alpha",
+          layout: "horizontal",
+          paneSizes: {
+            flexRatios: [0.3, 0.7],
+            gridColRatio: 0.3,
+            gridRowRatio: 0.5,
+          },
+        },
+      ],
+    }),
+  );
+  // Simulate applySplitViewSessionMarkersForTabs re-writing the layout
+  const next = upsertGroupLayoutInStore(start, "alpha", "horizontal");
+  // paneSizes must survive the layout upsert
+  assert.deepEqual(
+    getGroupPaneSizesFromStore(next, "alpha"),
+    { flexRatios: [0.3, 0.7], gridColRatio: 0.3, gridRowRatio: 0.5 },
+    "upsertGroupLayoutInStore must preserve paneSizes",
+  );
+}
+
 console.log("group-layout-store.spec: ok");

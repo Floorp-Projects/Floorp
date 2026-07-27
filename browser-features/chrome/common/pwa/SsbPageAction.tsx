@@ -8,6 +8,11 @@ import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService.ts";
 import type { Browser } from "./type.ts";
+import {
+  getUserContextIdForBrowser,
+  isContainerExperimentEnabled,
+} from "./containerUtils.ts";
+import { SsbContainerSelect } from "./SsbContainerSelect.tsx";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { iconUrlParser } from "#features-chrome/utils/iconUrlParser.ts";
@@ -23,7 +28,10 @@ export class SsbPageAction {
   private description = createSignal("");
   private canBeInstallAsPwa = createSignal(false);
   private isInstalled = createSignal(false);
+  private panelIsInstalled = createSignal(false);
+  private selectedContainerId = createSignal(0);
   private shouldShowPageAction = createSignal(false);
+  private containerSelectionInitialized = false;
   private translations = createSignal({
     title: i18next.t("ssb.page-action.title"),
     install: i18next.t("ssb.page-action.install"),
@@ -80,16 +88,47 @@ export class SsbPageAction {
     this.pwaService.updateUIElements(isInstalled);
   }
 
+  private async updatePanelInstallState(
+    browser: Browser,
+    userContextId: number,
+  ) {
+    const installed = await this.pwaService.checkPageIsInstalledForContainer(
+      browser,
+      userContextId,
+    );
+    this.panelIsInstalled[1](installed);
+  }
+
+  private onContainerSelect = (userContextId: number) => {
+    this.selectedContainerId[1](userContextId);
+    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+    void this.updatePanelInstallState(browser, userContextId);
+  };
+
   private onCommand = () => {
+    const selectedContainerId = this.selectedContainerId[0]();
+    console.debug("[PWA:install-launch] SsbPageAction onCommand", {
+      selectedContainerId,
+      pageUrl: globalThis.gBrowser.selectedBrowser?.currentURI?.spec,
+    });
     this.pwaService.installOrRunCurrentPageAsSsb(
       globalThis.gBrowser.selectedBrowser as Browser,
       true,
+      selectedContainerId,
     );
     this.isInstalling[1](true);
   };
 
   private onPopupShowing = async () => {
-    const selectedBrowser = globalThis.gBrowser.selectedBrowser;
+    const selectedBrowser = globalThis.gBrowser.selectedBrowser as Browser;
+
+    if (!this.containerSelectionInitialized) {
+      this.containerSelectionInitialized = true;
+      const tabContainerId = getUserContextIdForBrowser(selectedBrowser);
+      this.selectedContainerId[1](tabContainerId);
+      void this.updatePanelInstallState(selectedBrowser, tabContainerId);
+    }
+
     const icon = await this.pwaService.getIcon(selectedBrowser as Browser);
     this.icon[1](icon);
 
@@ -102,17 +141,39 @@ export class SsbPageAction {
     this.description[1](selectedBrowser.currentURI?.host ?? "");
   };
 
-  private onPopupHiding = () => {
+  private onPopupHiding = (event: Event) => {
+    const panel = event.currentTarget as XULElement;
+    if (panel.id !== "ssb-panel") {
+      return;
+    }
+
+    globalThis.requestAnimationFrame(() => {
+      const ssbPanel = document?.getElementById("ssb-panel") as
+        | (XULElement & { state?: string })
+        | null;
+      const panelState = ssbPanel?.state;
+      if (panelState === "open" || panelState === "showing") {
+        return;
+      }
+
+      this.resetPanelUiState();
+    });
+  };
+
+  private resetPanelUiState() {
+    this.containerSelectionInitialized = false;
     this.isInstalling[1](false);
     this.icon[1]("");
     this.title[1]("");
     this.description[1]("");
-  };
+  }
 
   private closePopup = () => {
-    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
-      hidePopup: () => void;
-    };
+    const panel = document?.getElementById("ssb-panel") as unknown as
+      & XULElement
+      & {
+        hidePopup: () => void;
+      };
     if (panel) {
       panel.hidePopup();
     }
@@ -125,6 +186,8 @@ export class SsbPageAction {
     const [title] = this.title;
     const [description] = this.description;
     const [isInstalled] = this.isInstalled;
+    const [panelIsInstalled] = this.panelIsInstalled;
+    const [selectedContainerId] = this.selectedContainerId;
     const [shouldShowPageAction] = this.shouldShowPageAction;
     const [translations] = this.translations;
 
@@ -144,13 +207,14 @@ export class SsbPageAction {
               id="ssb-panel"
               type="arrow"
               position="bottomright topright"
+              noautofocus
               onPopupShowing={this.onPopupShowing}
               onPopupHiding={this.onPopupHiding}
             >
               <xul:vbox id="ssb-box">
                 <xul:vbox class="panel-header">
                   <h1>
-                    {isInstalled()
+                    {panelIsInstalled()
                       ? translations().open
                       : translations().install}
                   </h1>
@@ -175,6 +239,13 @@ export class SsbPageAction {
                     </xul:description>
                   </xul:vbox>
                 </xul:hbox>
+                {!isInstalling() && isContainerExperimentEnabled() && (
+                  <SsbContainerSelect
+                    selectedId={selectedContainerId}
+                    onSelect={this.onContainerSelect}
+                    menuPopupLevel="parent"
+                  />
+                )}
                 <xul:hbox id="ssb-button-hbox">
                   {isInstalling() && (
                     <xul:vbox id="ssb-installing-vbox">
@@ -192,7 +263,7 @@ export class SsbPageAction {
                         id="ssb-app-install-button"
                         class="panel-button ssb-install-buttons footer-button primary"
                         onClick={this.onCommand}
-                        label={isInstalled()
+                        label={panelIsInstalled()
                           ? translations().open
                           : translations().install}
                       />

@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Aplikasi Web",
       "install-current": "Pasang Halaman Saat Ini sebagai Aplikasi Web Progresif",
-      "open-installed": "Buka Aplikasi Terpasang"
+      "open-current": "Buka aplikasi di kontainer terpilih",
+      "open-installed": "Buka Aplikasi Terpasang",
+      "container": "Kontainer"
     },
     "page-action": {
       "title": "Buka Aplikasi",
       "install": "Pasang Aplikasi",
       "open": "Buka Aplikasi",
       "cancel": "Batal",
-      "site-icon": "Ikon situs"
+      "site-icon": "Ikon situs",
+      "container": "Kontainer",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Kontainer: {{name}}",
+      "container-fallback": "Kontainer #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,6 +139,11 @@
       "gecko-forward": "Maju",
       "gecko-reload": "Muat Ulang",
       "gecko-close-tab": "Tutup Tab",
+      "gecko-close-other-tabs": "Tutup Tab Lain",
+      "gecko-close-tabs-to-start": "Tutup Tab di Kiri",
+      "gecko-close-tabs-to-start-vertical": "Tutup Tab di Atas",
+      "gecko-close-tabs-to-end": "Tutup Tab di Kanan",
+      "gecko-close-tabs-to-end-vertical": "Tutup Tab di Bawah",
       "gecko-open-new-tab": "Tab Baru",
       "gecko-duplicate-tab": "Gandakan Tab",
       "gecko-reload-all-tabs": "Muat Ulang Semua Tab",
@@ -186,7 +199,7 @@
       "gecko-restore-last-session": "Restore Last Session",
       "gecko-search-history": "Search History",
       "gecko-manage-history": "Manage History",
-      "gecko-open-downloads": "Open Downloads",
+      "gecko-open-downloads": "Buka Unduhan",
       "gecko-show-bookmark-sidebar": "Show Bookmark Sidebar",
       "gecko-show-history-sidebar": "Show History Sidebar",
       "gecko-show-synced-tabs-sidebar": "Show Synced Tabs Sidebar",
@@ -195,26 +208,59 @@
       "gecko-toggle-sidebar": "Toggle Sidebar",
       "gecko-scroll-up": "Scroll Up",
       "gecko-scroll-down": "Scroll Down",
-      "gecko-scroll-right": "Scroll Right",
-      "gecko-scroll-left": "Scroll Left",
-      "gecko-scroll-to-top": "Scroll to Top",
-      "gecko-scroll-to-bottom": "Scroll to Bottom",
+      "gecko-scroll-line-up": "Gulir ke Atas",
+      "gecko-scroll-line-down": "Gulir ke Bawah",
+      "gecko-scroll-right": "Gulir ke Kanan",
+      "gecko-scroll-left": "Gulir ke Kiri",
+      "gecko-scroll-to-top": "Gulir ke Atas Halaman",
+      "gecko-scroll-to-bottom": "Gulir ke Bawah Halaman",
       "gecko-workspace-next": "Beralih ke Ruang Kerja Berikutnya",
       "gecko-workspace-previous": "Beralih ke Ruang Kerja Sebelumnya",
       "floorp-toggle-zen-mode": "Toggle Zen Mode",
-      "floorp-toggle-command-palette": "Toggle Command Palette"
+      "floorp-toggle-command-palette": "Toggle Command Palette",
+      "floorp-open-settings": "Buka Pengaturan",
+      "floorp-open-hub": "Buka Floorp Hub",
+      "floorp-toggle-share-mode": "Toggle Share Mode",
+      "floorp-copy-page-url-as-markdown": "Salin URL Halaman sebagai Markdown",
+      "floorp-split-view-open-left": "Split View Left",
+      "floorp-split-view-open-right": "Split View Right",
+      "floorp-split-view-open-top": "Split View Top",
+      "floorp-split-view-open-bottom": "Split View Bottom",
+      "floorp-split-view-close": "Close Split View",
+      "floorp-split-view-swap-panes": "Swap Split Panes",
+      "floorp-split-view-cycle-layout": "Cycle Split Layout",
+      "floorp-split-view-add-pane": "Add Pane to Split View",
+      "floorp-split-view-remove-pane": "Remove Pane from Split View"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
       "gecko-forward": "Navigate forward to the next page",
       "gecko-reload": "Reload the current page",
       "gecko-close-tab": "Close the current tab",
+      "gecko-close-other-tabs": "Tutup semua tab selain yang sedang dibuka",
+      "gecko-close-tabs-to-start": "Tutup semua tab di kiri tab yang sedang dibuka",
+      "gecko-close-tabs-to-start-vertical": "Tutup semua tab di atas tab yang sedang dibuka",
+      "gecko-close-tabs-to-end": "Tutup semua tab di kanan tab yang sedang dibuka",
+      "gecko-close-tabs-to-end-vertical": "Tutup semua tab di bawah tab yang sedang dibuka",
       "gecko-open-new-tab": "Open a new tab",
       "gecko-duplicate-tab": "Duplicate the current tab",
       "gecko-reload-all-tabs": "Reload all tabs",
-      "gecko-restore-last-tab": "Reopen the last closed tab",
+      "gecko-restore-last-tab": "Buka kembali tab yang baru ditutup",
       "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
-      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands",
+      "floorp-open-settings": "Membuka halaman pengaturan Floorp",
+      "floorp-open-hub": "Membuka halaman Floorp Hub",
+      "floorp-toggle-share-mode": "Toggle Share Mode to minimize UI for screen sharing and presentations",
+      "floorp-copy-page-url-as-markdown": "Menyalin judul dan URL halaman saat ini dengan format tautan Markdown: [Judul](URL)",
+      "floorp-split-view-open-left": "Open the current tab in a split view on the left side",
+      "floorp-split-view-open-right": "Open the current tab in a split view on the right side",
+      "floorp-split-view-open-top": "Open the current tab in a split view on the top side",
+      "floorp-split-view-open-bottom": "Open the current tab in a split view on the bottom side",
+      "floorp-split-view-close": "Close the active split view and return to single tab view",
+      "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
+      "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
+      "floorp-split-view-add-pane": "Add a new pane to the active split view",
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
     }
   },
   "qrCode": {
@@ -367,7 +413,7 @@
       "chromeExtensionPrompt": "Do you want to add Chrome extension \"{{name}}\"?",
       "defaultExtensionName": "this extension",
       "chromeBadge": "[Chrome]",
-      "compatibilityWarning": "This Chrome extension has been converted to Firefox compatible format. Some features may not work properly."
+      "compatibilityWarning": "Ekstensi Chrome ini telah dikonversi ke format yang kompatibel dengan Firefox. Beberapa fitur mungkin tidak berfungsi dengan baik."
     }
   },
   "hub": {
@@ -392,6 +438,9 @@
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
+    },
+    "dropZone": {
+      "newWindow": "Seret ke sini untuk membuka di jendela baru"
     }
   },
   "zen-mode": {
@@ -399,30 +448,131 @@
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
   },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
+  },
   "commandPalette": {
     "dialogLabel": "Command Palette",
     "placeholder": "Type a command...",
     "navigateTo": "Go to {{url}}",
     "categories": {
       "recent": "Recently Used",
-      "navigation": "Navigation",
+      "navigation": "Navigasi",
       "tabs": "Tab",
-      "zoom": "Zoom",
+      "zoom": "Zum",
       "bookmarks": "Markah",
-      "page": "Page",
+      "page": "Halaman",
       "search": "Cari",
       "sidebar": "Sidebar",
       "scrolling": "Scrolling",
       "history": "Riwayat",
-      "window": "Window",
-      "tools": "Tools",
+      "window": "Jendela",
+      "tools": "Alat",
       "downloads": "Unduhan",
       "workspace": "Ruang Kerja",
       "floorp": "Floorp",
       "media": "Media",
-      "open-tabs": "Open Tabs"
+      "open-tabs": "Tab Terbuka",
+      "switcher": "Switcher",
+      "history-suggestions": "Riwayat",
+      "bookmark-suggestions": "Markah"
     },
     "noResults": "No commands found",
-    "noResultsHint": "Try a different search term"
-  }
+    "noResultsHint": "Try a different search term",
+    "stepIndicator": "Langkah {{current}} dari {{total}}",
+    "backToCommands": "Kembali ke perintah",
+    "openUrl": "Buka URL",
+    "openUrlDescription": "Buka URL di tab baru",
+    "openUrlStepLabel": "Masukkan URL",
+    "openUrlStepPlaceholder": "https://contoh.com",
+    "openUrlValidationError": "Masukkan URL yang valid",
+    "searchWeb": "Telusuri Web",
+    "searchWebDescription": "Cari menggunakan mesin pencari bawaan",
+    "searchWebStepLabel": "Masukkan kata pencarian",
+    "searchWebStepPlaceholder": "Search terms...",
+    "searchWithEngine": "Search for \"{{query}}\"",
+    "searchWithEngineDescription": "Search with your default search engine",
+    "searchWithEngineNamed": "Search with {{engine}}",
+    "searchWebValidationError": "Silakan masukkan kata kunci pencarian",
+    "searchWebEngineLabel": "Pilih mesin pencari",
+    "searchWebEnginePlaceholder": "Pilih mesin pencari...",
+    "searchEngineDefault": " (bawaan)",
+    "searchWebWhereLabel": "Where to open results",
+    "searchWebWherePlaceholder": "Select where to open...",
+    "searchWebWhereNewTab": "Tab Baru",
+    "searchWebWhereNewTabDesc": "Open in a new foreground tab",
+    "searchWebWhereBackgroundTab": "Background Tab",
+    "searchWebWhereBackgroundTabDesc": "Open in a new background tab",
+    "searchWebWhereCurrentTab": "Tab Saat Ini",
+    "searchWebWhereCurrentTabDesc": "Navigate the current tab",
+    "openUrlWhereLabel": "Where to open",
+    "openUrlWherePlaceholder": "Select where to open...",
+    "openUrlWhereNewTab": "Tab Baru",
+    "openUrlWhereNewTabDesc": "Open in a new foreground tab",
+    "openUrlWhereBackgroundTab": "Background Tab",
+    "openUrlWhereBackgroundTabDesc": "Open in a new background tab",
+    "openUrlWhereCurrentTab": "Current Tab",
+    "openUrlWhereCurrentTabDesc": "Navigate the current tab",
+    "reopenInContainer": "Reopen in Container",
+    "reopenInContainerDescription": "Reopen the current tab in a specific container",
+    "reopenInContainerStepLabel": "Select a container",
+    "reopenInContainerStepPlaceholder": "Choose a container...",
+    "reopenInContainerNoContainer": "Tanpa Kontainer",
+    "reopenInContainerNoContainerDesc": "Reopen in the default context",
+    "reopenInContainerCurrentSuffix": "(saat ini)",
+    "loadingChoices": "Loading options...",
+    "tabSwitcher": "Switch Tab",
+    "tabSwitcherDescription": "Switch to a different tab in the current window",
+    "tabSwitcherStepLabel": "Select a tab",
+    "tabSwitcherStepPlaceholder": "Choose a tab...",
+    "windowSwitcher": "Switch Window",
+    "windowSwitcherDescription": "Switch to a different open window",
+    "windowSwitcherStepLabel": "Select a window",
+    "windowSwitcherStepPlaceholder": "Choose a window...",
+    "windowSwitcherCurrent": "saat ini",
+    "windowSwitcherTabCount": "{{count}} tab(s)",
+    "closedTabSwitcher": "Buka Kembali Tab Tertutup",
+    "closedTabSwitcherDescription": "Reopen a recently closed tab",
+    "closedTabSwitcherStepLabel": "Select a closed tab",
+    "closedTabSwitcherStepPlaceholder": "Choose a closed tab...",
+    "closedWindowSwitcher": "Reopen Closed Window",
+    "closedWindowSwitcherDescription": "Reopen a recently closed window",
+    "closedWindowSwitcherStepLabel": "Select a closed window",
+    "closedWindowSwitcherStepPlaceholder": "Choose a closed window...",
+    "historySwitcher": "Browse History",
+    "historySwitcherDescription": "Open a page from your browsing history",
+    "historySwitcherStepLabel": "Select a history entry",
+    "historySwitcherStepPlaceholder": "Choose a history entry...",
+    "bookmarkSwitcher": "Switch Bookmark",
+    "bookmarkSwitcherDescription": "Open a bookmarked page",
+    "bookmarkSwitcherStepLabel": "Select a bookmark",
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+  },
+  "commandPaletteReadings": {}
 }

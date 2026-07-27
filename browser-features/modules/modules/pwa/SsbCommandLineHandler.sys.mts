@@ -111,6 +111,13 @@ export class SsbRunnerUtils {
     // This excludes PWA windows from session restore and treats them like TaskBarTabs
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
 
+    if (ssb.userContextId && ssb.userContextId > 0) {
+      extraOptions.setPropertyAsAString(
+        "userContextId",
+        String(ssb.userContextId),
+      );
+    }
+
     // Create URL argument
     const url = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString,
@@ -176,7 +183,9 @@ export class SSBCommandLineHandler {
 
       // Start SSB directly (works even without existing browser window)
       // The startSSBFromCmdLine function handles LastWindowClosingSurvivalArea
-      startSSBFromCmdLine(id, !this.isInitialized);
+      void startSSBFromCmdLine(id, !this.isInitialized).catch((error) => {
+        console.error("[SSBCommandLineHandler] Failed to start SSB:", error);
+      });
       this.isInitialized = true;
     }
   }

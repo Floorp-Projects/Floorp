@@ -15,12 +15,27 @@ export class PwaService {
     private dataManager: DataManager,
   ) {}
 
-  installOrRunCurrentPageAsSsb(browser: Browser, asPwa = true) {
-    return this.ssbManager.installOrRunCurrentPageAsSsb(browser, asPwa);
+  installOrRunCurrentPageAsSsb(
+    browser: Browser,
+    asPwa = true,
+    installUserContextId?: number,
+  ) {
+    return this.ssbManager.installOrRunCurrentPageAsSsb(
+      browser,
+      asPwa,
+      installUserContextId,
+    );
   }
 
   checkCurrentPageIsInstalled(browser: Browser) {
     return this.ssbManager.checkCurrentPageIsInstalled(browser);
+  }
+
+  checkPageIsInstalledForContainer(browser: Browser, userContextId: number) {
+    return this.ssbManager.checkPageIsInstalledForContainer(
+      browser,
+      userContextId,
+    );
   }
 
   getIcon(browser: Browser) {
@@ -63,8 +78,8 @@ export class PwaService {
     return this.ssbManager.getSsbObj(id);
   }
 
-  runSsbByUrl(url: string) {
-    return this.ssbManager.runSsbByUrl(url);
+  runSsbByUrl(url: string, userContextId?: number) {
+    return this.ssbManager.runSsbByUrl(url, userContextId);
   }
 
   saveSsbData(manifest: import("./type").Manifest) {

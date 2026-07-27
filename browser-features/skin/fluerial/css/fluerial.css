@@ -14,7 +14,7 @@
   --tab-min-height: 30px;
 
   &[fxastatus="not_configured"] {
-    --avatar-image-url: url("chrome://noraneko/skin/floorp-fluerial/icons/account_circle_FILL0_wght700_GRAD200_opsz48.svg");
+    --avatar-image-url: url("chrome://browser/skin/fxa/avatar-color.svg");
   }
 
   &:not([privatebrowsingmode], [firefoxviewhidden])
@@ -33,6 +33,19 @@
   height: 90%;
   margin: auto;
   margin-left: 3px;
+}
+
+/* Material SVG icons use context-fill; toolbar buttons need these properties */
+:is(
+  #nav-bar .toolbarbutton-1,
+  #unified-extensions-button,
+  #PanelUI-menu-button,
+  #tabs-newtab-button,
+  #alltabs-button,
+  .tabbrowser-tab .tab-content .close-icon
+) {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
 }
 
 #nav-bar {
@@ -140,7 +153,8 @@
     border: 0 !important;
     transition:
       opacity var(--tab-transition-duration) var(--ease-basic),
-      background-color 0s var(--tab-transition-duration) var(--ease-basic) !important;
+      background-color 0s var(--tab-transition-duration) var(--ease-basic)
+      !important;
     opacity: var(--tab-opacity) !important;
     visibility: visible !important;
     box-shadow: none !important;
@@ -155,7 +169,8 @@
       height: 8px !important;
       bottom: 0 !important;
       pointer-events: none !important;
-      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic) !important;
+      transition: box-shadow 0s var(--tab-transition-duration) var(--ease-basic)
+        !important;
       clip-path: inset(0) !important;
     }
 

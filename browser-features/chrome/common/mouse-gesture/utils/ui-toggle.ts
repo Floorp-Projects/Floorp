@@ -8,19 +8,26 @@
  * visibility, then applies it consistently to all children to avoid mixed
  * UI states. When restoring (showing), ensures the navigation bar remains
  * visible if multiple elements are shown.
+ *
+ * Note: `CSSStyleDeclaration` in Gecko type defs omits `display`, so we
+ * use bracket notation (`["display"]`) to access it type-safely.
  */
+// Gecko's CSSStyleDeclaration type defs omit `display`; access it via a cast.
+const styleDisplay = (el: HTMLElement) =>
+  (el.style as unknown as Record<string, string>)["display"];
+const setStyleDisplay = (el: HTMLElement, value: string) => {
+  (el.style as unknown as Record<string, string>)["display"] = value;
+};
+
 export function toggleUserInterface(doc: Document): void {
   try {
     const toolbox = doc.getElementById("navigator-toolbox");
     if (!toolbox) return;
     if (toolbox.children.length === 0) return;
 
-    // Compute a single target state: if any child is shown, hide all.
-    // Otherwise, show all. This avoids mixed UI states.
     let anyShown = false;
     for (const child of toolbox.children) {
-      const el = child as HTMLElement;
-      if (el.style.display !== "none") {
+      if (styleDisplay(child as HTMLElement) !== "none") {
         anyShown = true;
         break;
       }
@@ -28,14 +35,13 @@ export function toggleUserInterface(doc: Document): void {
     const targetDisplay = anyShown ? "none" : "";
 
     for (const child of toolbox.children) {
-      (child as HTMLElement).style.display = targetDisplay;
+      setStyleDisplay(child as HTMLElement, targetDisplay);
     }
 
-    // When restoring, ensure the navigation bar stays visible.
     if (!anyShown && toolbox.children.length >= 2) {
       const navigationBar = toolbox.children[1] as HTMLElement;
-      if (navigationBar?.style.display !== "") {
-        navigationBar.style.display = "";
+      if (navigationBar && styleDisplay(navigationBar) !== "") {
+        setStyleDisplay(navigationBar, "");
       }
     }
   } catch (e) {
@@ -43,14 +49,12 @@ export function toggleUserInterface(doc: Document): void {
   }
 }
 
-/**
- * Toggle visibility of the `#nav-bar` element.
- */
 export function toggleNavigationPanel(doc: Document): void {
   try {
     const navBar = doc.getElementById("nav-bar") as HTMLElement | null;
     if (!navBar) return;
-    navBar.style.display = navBar.style.display ? "" : "none";
+    const current = styleDisplay(navBar);
+    setStyleDisplay(navBar, current ? "" : "none");
   } catch (e) {
     console.error("[ui-toggle] Failed to toggle navigation panel:", e);
   }

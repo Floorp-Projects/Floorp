@@ -4,13 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "../type.ts";
+import { getSsbDisplayName } from "../containerDisplay.sys.mts";
 
 const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
 );
 
 const { ShellService } = ChromeUtils.importESModule(
-  "resource:///modules/ShellService.sys.mjs",
+  "moz-src:///browser/components/shell/ShellService.sys.mjs",
 );
 
 const { setTimeout } = ChromeUtils.importESModule(
@@ -53,19 +54,31 @@ export class WindowsSupport {
 
     const icon = ssb.icon;
     if (icon) {
+      console.debug("[PWA:install-launch] createShortcutForSsb: loadImage");
       const { container } = await ImageTools.loadImage(
         Services.io.newURI(icon),
       );
-      await ShellService.writeShortcutIcon(iconFile, container);
+      console.debug(
+        "[PWA:install-launch] createShortcutForSsb: applyContainerBadge",
+      );
+      const badgedContainer = await ImageTools.applyContainerBadgeToIcon(
+        container,
+        ssb.userContextId ?? 0,
+      );
+      console.debug(
+        "[PWA:install-launch] createShortcutForSsb: writeShortcutIcon",
+      );
+      await ShellService.writeShortcutIcon(iconFile, badgedContainer);
     } else {
       iconFile = null;
     }
 
-    const shortcutName = `${ssb.name}.lnk`;
+    const displayName = getSsbDisplayName(ssb);
+    const shortcutName = `${displayName}.lnk`;
     WindowsSupport.shellService.createShortcut(
       Services.dirsvc.get("XREExeF", Ci.nsIFile),
       ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],
-      ssb.name,
+      displayName,
       iconFile ?? (null as unknown as nsIFile),
       0,
       this.buildGroupId(ssb.id),
@@ -77,7 +90,12 @@ export class WindowsSupport {
   }
 
   async install(ssb: Manifest) {
+    console.debug("[PWA:install-launch] WindowsSupport.install start");
     const shortcutName = await this.createShortcutForSsb(ssb);
+    console.debug(
+      "[PWA:install-launch] WindowsSupport.createShortcutForSsb done",
+      { shortcutName },
+    );
 
     try {
       await WindowsSupport.shellService.pinShortcutToTaskbar(
@@ -89,10 +107,12 @@ export class WindowsSupport {
     } catch (e) {
       console.warn(`[WindowsSupport] Failed to pin PWA to taskbar: ${e}`);
     }
+    console.debug("[PWA:install-launch] WindowsSupport.install finished");
   }
 
   async uninstall(ssb: Manifest) {
-    const shortcutName = `${ssb.name}.lnk`;
+    const displayName = getSsbDisplayName(ssb);
+    const shortcutName = `${displayName}.lnk`;
 
     try {
       WindowsSupport.shellService.unpinShortcutFromTaskbar(
@@ -108,7 +128,7 @@ export class WindowsSupport {
       const startMenu = `${
         Services.dirsvc.get("Home", Ci.nsIFile).path
       }\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\`;
-      await IOUtils.remove(`${startMenu + ssb.name}.lnk`);
+      await IOUtils.remove(`${startMenu + displayName}.lnk`);
     } catch (e) {
       console.error(e);
     }
@@ -126,7 +146,7 @@ export class WindowsSupport {
       aWindow as unknown as mozIDOMWindowProxy,
       this.buildGroupId(ssb.id),
     );
-    const getIcon = async (_size: number) => {
+    const getIcon = async (size: number) => {
       const icon = ssb.icon;
       if (!icon) {
         return null;
@@ -134,7 +154,11 @@ export class WindowsSupport {
 
       try {
         const image = await ImageTools.loadImage(Services.io.newURI(icon));
-        return image.container;
+        return await ImageTools.applyContainerBadgeToIcon(
+          image.container,
+          ssb.userContextId ?? 0,
+          size,
+        );
       } catch (e) {
         console.error(e);
         return null;
@@ -175,7 +199,8 @@ export class WindowsSupport {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const shortcutName = `${ssb.name}.lnk`;
+    const displayName = getSsbDisplayName(ssb);
+    const shortcutName = `${displayName}.lnk`;
 
     try {
       const startMenu = `${

@@ -1,0 +1,79 @@
+---
+title: "Source Inventory"
+sidebar_label: "Source Inventory"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+generated: true
+---
+# Source Inventory
+
+Inventory generated from Floorp commit `1d1a9c886fed24a1d426c981baa3117003d03415`.
+
+## Source Precedence
+
+1. code/config/CI/test scripts
+2. repo docs
+3. external docs
+
+## Architecture Sources
+
+| Area | Source |
+|---|---|
+| Firefox Base | `static/gecko/pref/override.ini` |
+| ESM Modules | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| Bridge | `bridge/startup/src/chrome_root.ts` |
+| Chrome UI | `browser-features/chrome/common/mod.ts` |
+| Pages | `browser-features/pages-settings/vite.config.ts` |
+| Loader entrypoint | `bridge/loader-features/loader/index.ts` |
+| Loader module registry | `bridge/loader-features/loader/modules.ts` |
+| Loader module hooks | `bridge/loader-features/loader/modules-hooks.ts` |
+| Chrome feature overview | `browser-features/chrome/README.md` |
+| Static chrome feature discovery | `browser-features/chrome/static/mod.ts` |
+| Gecko version configuration | `static/gecko/config/README.md` |
+| Settings app entry | `browser-features/pages-settings/src/main.tsx` |
+| Settings routes | `browser-features/pages-settings/src/App.tsx` |
+| Browser test runner | `tools/src/colocated_test_runner.ts` |
+| Browser test result collector | `tools/src/browser_test_collector.ts` |
+| Development inspection CLI | `tools/dev-tool.ts` |
+| Build CLI | `tools/feles-build.ts` |
+| Root Deno tasks | `deno.json` |
+| Chrome feature discovery | `browser-features/chrome/common/mod.ts` |
+| Window Actor registration | `browser-features/modules/modules/BrowserGlue.sys.mts` |
+| Startup bridge loader | `bridge/startup/src/chrome_root.ts` |
+| Loader dev server | `bridge/loader-features/vite.config.ts` |
+| Floorp OS local server | `browser-features/modules/modules/os-server/server.sys.mts` |
+| Floorp OS router | `browser-features/modules/modules/os-server/router.sys.mts` |
+| Floorp OS shared automation routes | `browser-features/modules/modules/os-server/shared/routes.sys.mts` |
+| Floorp OS Automotor manager | `browser-features/modules/modules/os-automotor/OSAutomotor-manager.sys.mts` |
+
+## Command Sources
+
+- Deno tasks: `deno.json` (29 tasks)
+- feles-build CLI: `tools/feles-build.ts` (5 commands)
+
+## Feature Catalog Sources
+
+- Common chrome features: `browser-features/chrome/common` (29 entries)
+- Static chrome features: `browser-features/chrome/static` (3 entries)
+- Settings routes: `browser-features/pages-settings/src/App.tsx` (14 routes)
+- Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts` (22 actors)
+- Floorp OS API routes: `browser-features/modules/modules/os-server` (120 routes)
+
+## CI Sources
+
+- `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
+- `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
+- `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
+- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_release.yml` - triggers: `workflow_call`
+- `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
+- `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

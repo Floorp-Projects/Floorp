@@ -28,6 +28,7 @@ const JS_WINDOW_ACTORS: {
       ),
       events: {
         DOMContentLoaded: {},
+        DOMDocElementInserted: {},
       },
     },
     matches: ["about:preferences*", "about:settings*"],
@@ -192,7 +193,7 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:hub*"],
   },
   NRChromeModal: {
     child: {

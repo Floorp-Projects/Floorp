@@ -6,6 +6,21 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
 import type {} from "solid-styled-jsx";
 
+type StatusBarGlobals = typeof globalThis & {
+  FirefoxViewHandler?: {
+    openToolbarMouseEvent?: (event: MouseEvent) => void;
+  };
+  gTabsPanel?: {
+    showAllTabsPanel?: (event: MouseEvent, anchorId: string) => void;
+  };
+  DownloadsIndicatorView?: {
+    onCommand?: (event: MouseEvent) => void;
+  };
+  PanelUI?: {
+    showSubView?: (viewId: string, anchor: Element) => void;
+  };
+};
+
 export class StatusBarManager {
   _showStatusBar = createSignal(
     Services.prefs.getBoolPref("noraneko.statusbar.enable", false),
@@ -67,6 +82,42 @@ export class StatusBarManager {
     } else {
       appContent.appendChild(statusbarNode);
     }
+
+    // Set up button press handler
+    statusbarNode.addEventListener("mousedown", (event: MouseEvent) => {
+      if (!event.target) {
+        // Event target is null
+        return;
+      }
+
+      const target = event.target as Element;
+      const toolbarButton = target.closest("toolbarbutton");
+
+      if (!toolbarButton) {
+        // No button pressed
+        return;
+      }
+
+      try {
+        const gThis = globalThis as StatusBarGlobals;
+        switch (toolbarButton.id) {
+          case "firefox-view-button":
+            gThis.FirefoxViewHandler?.openToolbarMouseEvent?.(event);
+            break;
+          case "alltabs-button":
+            gThis.gTabsPanel?.showAllTabsPanel?.(event, "alltabs-button");
+            break;
+          case "downloads-button":
+            gThis.DownloadsIndicatorView?.onCommand?.(event);
+            break;
+          case "library-button":
+            gThis.PanelUI?.showSubView?.("appMenu-libraryView", toolbarButton);
+            break;
+        }
+      } catch (e) {
+        console.error("[StatusBarManager] Error handling button press:", e);
+      }
+    });
 
     createEffect(() => {
       const statuspanelLabel = document?.querySelector("#statuspanel-label");

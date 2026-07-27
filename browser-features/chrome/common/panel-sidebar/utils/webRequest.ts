@@ -40,6 +40,23 @@ const httpRequestObserver = {
 
 function getBrowserById(browserId: string): Window | null {
   for (const win of BrowserWindowTracker.orderedWindows) {
+    if (!win.floorpWebPanelWindow) {
+      continue;
+    }
+
+    const contentBrowser = win.floorpWebPanelContentBrowser as
+      | { browserId?: string }
+      | undefined;
+    if (contentBrowser?.browserId === browserId && win.floorpBmsUserAgent) {
+      return win;
+    }
+  }
+
+  for (const win of BrowserWindowTracker.orderedWindows) {
+    if (!win.gBrowser) {
+      continue;
+    }
+
     for (const tab of win.gBrowser.visibleTabs) {
       if (tab.linkedPanel) {
         if (tab.linkedBrowser && tab.linkedBrowser.browserId === browserId) {

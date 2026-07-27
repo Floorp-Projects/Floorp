@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Applications Web",
       "install-current": "Installer la page actuelle en tant que Progressive Web App",
-      "open-installed": "Afficher les applications installées"
+      "open-current": "Ouvrir l'application dans le conteneur sélectionné",
+      "open-installed": "Afficher les applications installées",
+      "container": "Conteneur"
     },
     "page-action": {
       "title": "Ouvrir l'application",
       "install": "Installer l'application",
       "open": "Ouvrir l'application",
       "cancel": "Annuler",
-      "site-icon": "Icône du site"
+      "site-icon": "Icône du site",
+      "container": "Conteneur",
+      "no-container": "Aucun conteneur"
+    },
+    "window": {
+      "container-tooltip": "Conteneur : {{name}}",
+      "container-fallback": "Conteneur #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,6 +139,11 @@
       "gecko-forward": "Suivant",
       "gecko-reload": "Actualiser",
       "gecko-close-tab": "Fermer l'onglet",
+      "gecko-close-other-tabs": "Fermer les autres onglets",
+      "gecko-close-tabs-to-start": "Fermer les onglets à gauche",
+      "gecko-close-tabs-to-start-vertical": "Fermer les onglets ci-dessus",
+      "gecko-close-tabs-to-end": "Fermer les onglets à droite",
+      "gecko-close-tabs-to-end-vertical": "Fermer les onglets ci-dessous",
       "gecko-open-new-tab": "Nouvel onglet",
       "gecko-duplicate-tab": "Dupliquer l'onglet",
       "gecko-reload-all-tabs": "Actualiser tous les onglets",
@@ -195,6 +208,8 @@
       "gecko-toggle-sidebar": "Afficher/masquer la barre latérale",
       "gecko-scroll-up": "Défiler vers le haut",
       "gecko-scroll-down": "Défiler vers le bas",
+      "gecko-scroll-line-up": "Défiler vers le haut",
+      "gecko-scroll-line-down": "Défiler vers le bas",
       "gecko-scroll-right": "Défiler vers la droite",
       "gecko-scroll-left": "Défiler vers la gauche",
       "gecko-scroll-to-top": "Défiler vers le haut",
@@ -202,19 +217,50 @@
       "gecko-workspace-next": "Basculer vers l'espace de travail suivant",
       "gecko-workspace-previous": "Basculer vers l'espace de travail précédent",
       "floorp-toggle-zen-mode": "Permuter le mode Zen",
-      "floorp-toggle-command-palette": "Activer/désactiver la palette de commandes"
+      "floorp-toggle-command-palette": "Activer/désactiver la palette de commandes",
+      "floorp-open-settings": "Ouvrir les paramètres",
+      "floorp-open-hub": "Ouvrir la Plateforme de Floorp",
+      "floorp-toggle-share-mode": "Permuter le mode partage",
+      "floorp-copy-page-url-as-markdown": "Copier l'URL de la page en tant que Markdown",
+      "floorp-split-view-open-left": "Vue fractionnée à gauche",
+      "floorp-split-view-open-right": "Vue fractionnée à droite",
+      "floorp-split-view-open-top": "Vue fractionnée en haut",
+      "floorp-split-view-open-bottom": "Vue fractionnée en bas",
+      "floorp-split-view-close": "Fermer la vue fractionnée",
+      "floorp-split-view-swap-panes": "Permuter les panneaux séparés",
+      "floorp-split-view-cycle-layout": "Disposition fractionnée en cycle",
+      "floorp-split-view-add-pane": "Ajouter le volet à la vue fractionnée",
+      "floorp-split-view-remove-pane": "Retirer le panneau de la vue fractionnée"
     },
     "descriptions": {
       "gecko-back": "Retourner à la page précédente",
       "gecko-forward": "Passer à la page suivante",
       "gecko-reload": "Rafraîchir la page actuelle",
       "gecko-close-tab": "Fermer l'onglet actif",
+      "gecko-close-other-tabs": "Ferme tous les onglets excepté celui en cours",
+      "gecko-close-tabs-to-start": "Fermer tous les onglets à gauche de l'onglet actuel",
+      "gecko-close-tabs-to-start-vertical": "Fermer tous les onglets au-dessus de l'onglet actuel",
+      "gecko-close-tabs-to-end": "Fermer tous les onglets à droite de l'onglet actuel",
+      "gecko-close-tabs-to-end-vertical": "Fermer tous les onglets en dessous de l'onglet actuel",
       "gecko-open-new-tab": "Ouvrir un nouvel onglet",
       "gecko-duplicate-tab": "Dupliquer l'onglet actuel",
       "gecko-reload-all-tabs": "Recharger tous les onglets",
       "gecko-restore-last-tab": "Rouvrir le dernier onglet fermé",
       "floorp-toggle-zen-mode": "Permuter le mode Zen masque tous les éléments de l'interface pour une navigation sans distraction",
-      "floorp-toggle-command-palette": "Ouvrir ou fermer la palette de commandes pour rechercher et exécuter des commandes"
+      "floorp-toggle-command-palette": "Ouvrir ou fermer la palette de commandes pour rechercher et exécuter des commandes",
+      "floorp-open-settings": "Ouvre la page des paramètres de Floorp",
+      "floorp-open-hub": "Ouvre la page du Hub Floorp",
+      "floorp-toggle-share-mode": "Basculer en mode partage en minimisant l'interface utilisateur pour le partage d'écran et les présentations",
+      "floorp-copy-page-url-as-markdown": "Copier le titre de la page actuelle et URL au format de lien Markdown : [Titre](URL)",
+      "floorp-split-view-open-left": "Ouvrez l'onglet actuel dans un affichage divisé sur le côté gauche",
+      "floorp-split-view-open-right": "Ouvrez l'onglet actuel dans un affichage divisé sur le côté droit",
+      "floorp-split-view-open-top": "Ouvrir l'onglet actuel dans un affichage divisé en haut de l'écran",
+      "floorp-split-view-open-bottom": "Ouvrir l'onglet actuel dans une vue divisée en bas de l'écran",
+      "floorp-split-view-close": "Fermer la vue fractionnée active et revenir à la vue à onglet unique",
+      "floorp-split-view-swap-panes": "Permuter les positions des volets dans la vue fractionnée active",
+      "floorp-split-view-cycle-layout": "Parcourir les dispositions disponibles pour l'affichage en mode fractionné (horizontal, vertical, en grille)",
+      "floorp-split-view-add-pane": "Ajouter un nouveau panneau à la vue fractionnée active",
+      "floorp-split-view-remove-pane": "Supprimer le dernier volet de la vue fractionnée active"
     }
   },
   "qrCode": {
@@ -392,12 +438,44 @@
       "grid2x2": "Grille (2×2)",
       "addPane": "Ajouter un volet",
       "removePane": "Supprimer le dernier volet"
+    },
+    "dropZone": {
+      "newWindow": "Déposez ici pour ouvrir dans une nouvelle fenêtre"
     }
   },
   "zen-mode": {
     "label": "Mode Calme",
     "tooltiptext": "Permuter le mode Zen",
     "menu-label": "Permuter le mode Zen"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Palette de commandes",
@@ -420,9 +498,81 @@
       "workspace": "Espaces de travail",
       "floorp": "Floorp",
       "media": "Média",
-      "open-tabs": "Onglets ouverts"
+      "open-tabs": "Onglets ouverts",
+      "switcher": "Commuter",
+      "history-suggestions": "Historique",
+      "bookmark-suggestions": "Marque-pages"
     },
     "noResults": "Aucune commande trouvée",
-    "noResultsHint": "Essayez un autre terme de recherche"
-  }
+    "noResultsHint": "Essayez un autre terme de recherche",
+    "stepIndicator": "Étape {{current}} sur {{total}}",
+    "backToCommands": "Retour aux commandes",
+    "openUrl": "Ouvrir l'URL",
+    "openUrlDescription": "Ouvrir le lien dans un nouvel onglet",
+    "openUrlStepLabel": "Saisir l'URL à ouvrir",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "Veuillez saisir une URL valide",
+    "searchWeb": "Rechercher sur le web",
+    "searchWebDescription": "Rechercher avec votre moteur de recherche par défaut",
+    "searchWebStepLabel": "Saisir la recherche",
+    "searchWebStepPlaceholder": "Termes à rechercher ...",
+    "searchWithEngine": "Recherche pour \"{{query}}\"",
+    "searchWithEngineDescription": "Rechercher avec votre moteur de recherche par défaut",
+    "searchWithEngineNamed": "Recherche avec {{engine}}",
+    "searchWebValidationError": "Veuillez entrer une requête de recherche",
+    "searchWebEngineLabel": "Sélectionner un moteur de recherche",
+    "searchWebEnginePlaceholder": "Sélectionnez un moteur de recherche...",
+    "searchEngineDefault": " (par défaut)",
+    "searchWebWhereLabel": "Où ouvrir les résultats",
+    "searchWebWherePlaceholder": "Sélectionnez l'endroit où ouvrir...",
+    "searchWebWhereNewTab": "Nouvel onglet",
+    "searchWebWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
+    "searchWebWhereBackgroundTab": "Onglet d'arrière-plan",
+    "searchWebWhereBackgroundTabDesc": "Ouvrir dans un nouvel onglet d'arrière-plan",
+    "searchWebWhereCurrentTab": "Onglet actuel",
+    "searchWebWhereCurrentTabDesc": "Naviguer dans l'onglet en cours",
+    "openUrlWhereLabel": "Où ouvrir",
+    "openUrlWherePlaceholder": "Sélectionnez l'endroit où ouvrir...",
+    "openUrlWhereNewTab": "Nouvel onglet",
+    "openUrlWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
+    "openUrlWhereBackgroundTab": "Onglet d'arrière-plan",
+    "openUrlWhereBackgroundTabDesc": "Ouvrir dans un nouvel onglet d'arrière-plan",
+    "openUrlWhereCurrentTab": "Onglet actuel",
+    "openUrlWhereCurrentTabDesc": "Naviguer dans l'onglet en cours",
+    "reopenInContainer": "Réouvrir dans un conteneur",
+    "reopenInContainerDescription": "Rouvrir l'onglet actuel dans un conteneur spécifique",
+    "reopenInContainerStepLabel": "Sélectionner un conteneur",
+    "reopenInContainerStepPlaceholder": "Choisissez un conteneur...",
+    "reopenInContainerNoContainer": "Aucun conteneur",
+    "reopenInContainerNoContainerDesc": "Réouvrir dans le contexte par défaut",
+    "reopenInContainerCurrentSuffix": "(actuel)",
+    "loadingChoices": "Chargement des options...",
+    "tabSwitcher": "Basculer entre les onglets",
+    "tabSwitcherDescription": "Basculer vers un autre onglet dans la fenêtre actuelle",
+    "tabSwitcherStepLabel": "Sélectionnez un onglet",
+    "tabSwitcherStepPlaceholder": "Choisissez un onglet...",
+    "windowSwitcher": "Changer de fenêtre",
+    "windowSwitcherDescription": "Basculer vers une autre fenêtre ouverte",
+    "windowSwitcherStepLabel": "Sélectionner une fenêtre",
+    "windowSwitcherStepPlaceholder": "Choisissez une fenêtre...",
+    "windowSwitcherCurrent": "actuel",
+    "windowSwitcherTabCount": "{{count}} onglet(s)",
+    "closedTabSwitcher": "Rouvrir l'onglet fermé",
+    "closedTabSwitcherDescription": "Rouvrir un onglet récemment fermé",
+    "closedTabSwitcherStepLabel": "Sélectionnez un onglet fermé",
+    "closedTabSwitcherStepPlaceholder": "Choisissez un onglet fermé...",
+    "closedWindowSwitcher": "Rouvrir la fenêtre fermée",
+    "closedWindowSwitcherDescription": "Rouvrir une fenêtre récemment fermée",
+    "closedWindowSwitcherStepLabel": "Sélectionnez une fenêtre fermée",
+    "closedWindowSwitcherStepPlaceholder": "Choisissez une fenêtre fermée...",
+    "historySwitcher": "Parcourir l'histoire",
+    "historySwitcherDescription": "Ouvrir une page depuis votre historique de navigation",
+    "historySwitcherStepLabel": "Sélectionnez un élément de l'historique",
+    "historySwitcherStepPlaceholder": "Sélectionnez un élément de l'historique...",
+    "bookmarkSwitcher": "Changer de marque-page",
+    "bookmarkSwitcherDescription": "Ouvrir une page enregistrée dans les favoris",
+    "bookmarkSwitcherStepLabel": "Sélectionner un favori",
+    "bookmarkSwitcherStepPlaceholder": "Rechercher ou choisir un marque-page..."
+  },
+  "commandPaletteReadings": {}
 }

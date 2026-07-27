@@ -46,7 +46,12 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
   const unitSteps: SmokeStep[] = [
     {
       name: "colocated runner unit tests",
-      args: ["test", "tools/src/colocated_test_runner.test.ts"],
+      args: [
+        "test",
+        "--allow-read",
+        "--allow-write",
+        "tools/src/colocated_test_runner.test.ts",
+      ],
     },
   ];
 
@@ -79,7 +84,16 @@ export function createSmokeSteps(mode: SmokeMode): SmokeStep[] {
         "i18n",
         "libs",
         "bridge",
-        "browser-features/chrome",
+        "browser-features/chrome/@types",
+        "browser-features/chrome/common",
+        "browser-features/chrome/example",
+        "browser-features/chrome/experiment",
+        "browser-features/chrome/static",
+        "browser-features/chrome/test/firefox-imported",
+        "browser-features/chrome/test/mochitest-compat",
+        "browser-features/chrome/test/unit",
+        "browser-features/chrome/test/utils",
+        "browser-features/chrome/utils",
         "static/gecko",
       ],
     },

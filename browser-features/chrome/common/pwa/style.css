@@ -32,6 +32,24 @@
   column-gap: 8px; /* space-x-2 */
 }
 
+.ssb-container-row {
+  margin: 8px 16px 0;
+  gap: 8px;
+}
+
+.ssb-container-label {
+  flex-shrink: 0;
+}
+
+.ssb-container-menu-button {
+  flex: 1;
+  min-width: 0;
+}
+
+.ssb-menu-install-section .ssb-container-row {
+  margin: 8px 12px 4px;
+}
+
 .ssb-app-info-button > .toolbarbutton-icon {
   width: 20px;
 }

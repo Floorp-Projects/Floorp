@@ -8,6 +8,7 @@ import {
   persistPaneSizesForPanelIds,
   resolvePaneSizesForPanelIds,
 } from "../patches/session-restore.js";
+import { forceCleanupDragState } from "../utils/force-cleanup.js";
 
 const log = console.createInstance({ prefix: "nora@split-view-splitters" });
 
@@ -86,6 +87,13 @@ export function clearSplitHandles(): void {
     style.removeProperty("order");
     style.removeProperty("flex");
   }
+  // Safety net: if a splitter/grid drag was interrupted (mouseup lost,
+  // window blurred mid-drag), `data-floorp-dragging` may linger on
+  // tabpanels and apply `pointer-events: none` to web content. The
+  // `activeDragCleanup()` call above only runs when a drag was in flight;
+  // this guarantees a full sweep regardless. Idempotent and a no-op when
+  // nothing is leaked.
+  forceCleanupDragState(log);
 }
 
 export function insertFlexHandles(

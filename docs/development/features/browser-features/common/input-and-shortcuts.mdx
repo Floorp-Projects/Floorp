@@ -1,0 +1,18 @@
+---
+title: "Input & Shortcuts"
+sidebar_label: "Input & Shortcuts"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+generated: true
+---
+# Input & Shortcuts
+
+Keyboard, mouse gesture, context menu, and command palette interaction features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| command-palette | `browser-features/chrome/common/command-palette/index.ts` | `default class CommandPalette`, `init` | Owns the command palette feature through the CommandPalette chrome component and wires `service`, `components/CommandPalette`, `style.css?inline`. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component. |
+| keyboard-shortcut | `browser-features/chrome/common/keyboard-shortcut/index.ts` | `default class KeyboardShortcut`, `init` | Owns the keyboard shortcut feature through the KeyboardShortcut chrome component and wires `service`, `config`. |
+| mouse-gesture | `browser-features/chrome/common/mouse-gesture/index.ts` | `default class MouseGesture`, `init` | Owns the mouse gesture feature through the MouseGesture chrome component and wires `service`, `config`, `components/GestureDisplay`. |

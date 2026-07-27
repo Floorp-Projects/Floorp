@@ -91,7 +91,72 @@
   min-width: 240px;
 }
 
-/* break min-height: var(--urlbar-container-height); */
+#ssb-container-indicator {
+  align-self: center;
+  padding: 4px 10px 4px 8px;
+  margin-inline: 2px 6px;
+  max-width: 160px;
+  border-left: 4px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  opacity: 1;
+  -moz-window-dragging: no-drag;
+}
+
+#ssb-container-indicator[data-container-color="blue"] {
+  border-left-color: var(--identity-color-blue, #0a84ff);
+}
+
+#ssb-container-indicator[data-container-color="turquoise"] {
+  border-left-color: var(--identity-color-turquoise, #00cdf2);
+}
+
+#ssb-container-indicator[data-container-color="green"] {
+  border-left-color: var(--identity-color-green, #30e60b);
+}
+
+#ssb-container-indicator[data-container-color="yellow"] {
+  border-left-color: var(--identity-color-yellow, #ffe900);
+}
+
+#ssb-container-indicator[data-container-color="orange"] {
+  border-left-color: var(--identity-color-orange, #ff9400);
+}
+
+#ssb-container-indicator[data-container-color="red"] {
+  border-left-color: var(--identity-color-red, #ff0039);
+}
+
+#ssb-container-indicator[data-container-color="pink"] {
+  border-left-color: var(--identity-color-pink, #ff4df2);
+}
+
+#ssb-container-indicator[data-container-color="purple"] {
+  border-left-color: var(--identity-color-purple, #9400ff);
+}
+
+#ssb-container-indicator[data-container-color="toolbar"],
+#ssb-container-indicator[data-container-color="white"] {
+  border-left-color: var(--identity-color-toolbar, #ffffff);
+}
+
+#ssb-container-indicator[data-container-color="gray"],
+#ssb-container-indicator[data-container-color="grey"] {
+  border-left-color: var(--identity-color-gray, #9e9e9e);
+}
+
+/* TaskBarTabs */
+:root[taskbartab] #taskbar-tabs-favicon {
+  display: block !important;
+}
+
+#taskbar-tabs-favicon {
+  background: white;
+  border-radius: 5px;
+  padding: 2px;
+  flex-shrink: 0;
+}
 #urlbar-container[breakout] {
   min-height: unset !important;
 }
@@ -169,11 +234,4 @@
 
 #panel-sidebar-splitter {
   display: none !important;
-}
-
-/* TaskBarTabs */
-#taskbar-tabs-favicon {
-  background: white;
-  border-radius: 5px;
-  padding: 2px;
 }

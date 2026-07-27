@@ -5,8 +5,13 @@
 
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
+import { DataManager as DataManagerClass } from "./dataStore.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
+import {
+  getUserContextIdForBrowser,
+  isContainerExperimentEnabled,
+} from "./containerUtils.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -27,6 +32,32 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+}
+
+export function resolveEffectiveUserContextId(
+  browser: Browser,
+  explicitUserContextId: number | undefined,
+  containerExperimentEnabled: boolean,
+  browserUserContextIdResolver: (browser: Browser) => number =
+    getUserContextIdForBrowser,
+): number {
+  if (!containerExperimentEnabled) {
+    return 0;
+  }
+
+  if (explicitUserContextId !== undefined) {
+    return explicitUserContextId;
+  }
+
+  return browserUserContextIdResolver(browser);
+}
+
+function browserStillShowsUrl(browser: Browser, expectedUrl: string): boolean {
+  try {
+    return browser.currentURI.spec === expectedUrl;
+  } catch {
+    return false;
+  }
 }
 
 export class SiteSpecificBrowserManager {
@@ -70,7 +101,9 @@ export class SiteSpecificBrowserManager {
   }
 
   closePopup() {
-    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
+    const panel = document?.getElementById(
+      "ssb-panel",
+    ) as unknown as XULElement & {
       hidePopup: () => void;
     };
     if (panel) {
@@ -93,21 +126,42 @@ export class SiteSpecificBrowserManager {
     return currentTabSsb;
   }
 
-  public async installOrRunCurrentPageAsSsb(browser: Browser, asPwa = true) {
-    const isInstalled = await this.checkCurrentPageIsInstalled(browser);
+  public async installOrRunCurrentPageAsSsb(
+    browser: Browser,
+    asPwa = true,
+    installUserContextId?: number,
+  ) {
+    const effectiveUserContextId = this.getEffectiveUserContextId(
+      browser,
+      installUserContextId,
+    );
+    const currentPageUrl = browser.currentURI.spec;
+
+    const isInstalled = await this.checkPageIsInstalledForContainer(
+      browser,
+      effectiveUserContextId,
+    );
+
+    if (!browserStillShowsUrl(browser, currentPageUrl)) {
+      return;
+    }
 
     if (isInstalled) {
       const currentTabSsb = await this.getCurrentTabSsb(browser);
 
-      if (!currentTabSsb) {
+      if (!currentTabSsb || !browserStillShowsUrl(browser, currentPageUrl)) {
         return;
       }
 
-      const ssbObj = await this.getIdByUrl(currentTabSsb.start_url);
+      const ssbObj = await this.getIdByUrl(
+        currentTabSsb.start_url,
+        effectiveUserContextId,
+      );
 
-      if (ssbObj && globalThis.gBrowser.selectedBrowser.currentURI) {
+      if (ssbObj && browserStillShowsUrl(browser, currentPageUrl)) {
         await this.runSsbByUrl(
-          globalThis.gBrowser.selectedBrowser.currentURI.spec,
+          currentPageUrl,
+          effectiveUserContextId,
         );
       }
     } else {
@@ -115,17 +169,36 @@ export class SiteSpecificBrowserManager {
         useWebManifest: asPwa,
       });
 
-      if (!manifest) {
+      if (!manifest || !browserStillShowsUrl(browser, currentPageUrl)) {
         return;
       }
 
+      manifest.userContextId = effectiveUserContextId;
+
       await this.install(manifest);
 
-      // Installing needs some time to finish
-      globalThis.setTimeout(() => {
-        this.runSsbByUrl(manifest.start_url);
-      }, 3000);
+      if (browserStillShowsUrl(browser, currentPageUrl)) {
+        this.scheduleRunSsbByUrl(manifest.start_url, effectiveUserContextId);
+      }
     }
+  }
+
+  private getEffectiveUserContextId(
+    browser: Browser,
+    explicitUserContextId: number | undefined,
+  ): number {
+    return resolveEffectiveUserContextId(
+      browser,
+      explicitUserContextId,
+      isContainerExperimentEnabled(),
+    );
+  }
+
+  private scheduleRunSsbByUrl(url: string, userContextId: number): void {
+    // Installing needs some time to finish.
+    globalThis.setTimeout(() => {
+      void this.runSsbByUrl(url, userContextId);
+    }, 3000);
   }
 
   public async checkCurrentPageIsInstalled(browser: Browser): Promise<boolean> {
@@ -141,9 +214,39 @@ export class SiteSpecificBrowserManager {
     }
 
     for (const key in ssbData) {
+      const { startUrl } = DataManagerClass.parseKey(key);
       if (
-        key === currentTabSsb.start_url ||
-        currentTabSsb.start_url.startsWith(key)
+        startUrl === currentTabSsb.start_url ||
+        currentTabSsb.start_url.startsWith(startUrl)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public async checkPageIsInstalledForContainer(
+    browser: Browser,
+    userContextId: number,
+  ): Promise<boolean> {
+    if (!this.checkSiteCanBeInstall(browser.currentURI)) {
+      return false;
+    }
+
+    const currentTabSsb = await this.getCurrentTabSsb(browser);
+    const ssbData = await this.dataManager.getCurrentSsbData();
+
+    if (!currentTabSsb) {
+      return false;
+    }
+
+    for (const key in ssbData) {
+      const { startUrl, userContextId: storedCtxId } = DataManagerClass
+        .parseKey(key);
+      if (
+        (startUrl === currentTabSsb.start_url ||
+          currentTabSsb.start_url.startsWith(startUrl)) &&
+        (storedCtxId ?? 0) === userContextId
       ) {
         return true;
       }
@@ -230,7 +333,12 @@ export class SiteSpecificBrowserManager {
       }
     }
 
-    await this.dataManager.removeSsbData(manifest.start_url);
+    await this.dataManager.removeSsbData(
+      DataManagerClass.buildKey(
+        manifest.start_url,
+        manifest.userContextId ?? 0,
+      ),
+    );
   }
 
   public async uninstallById(id: string) {
@@ -241,9 +349,10 @@ export class SiteSpecificBrowserManager {
     await this.uninstall(ssbObj);
   }
 
-  private async getIdByUrl(url: string) {
+  private async getIdByUrl(url: string, userContextId: number = 0) {
     const ssbData = await this.dataManager.getCurrentSsbData();
-    return ssbData[url];
+    const key = DataManagerClass.buildKey(url, userContextId);
+    return ssbData[key];
   }
 
   public async getSsbObj(id: string) {
@@ -256,8 +365,8 @@ export class SiteSpecificBrowserManager {
     return null;
   }
 
-  public async runSsbByUrl(url: string) {
-    await this.ssbRunner.runSsbByUrl(url);
+  public async runSsbByUrl(url: string, userContextId?: number) {
+    await this.ssbRunner.runSsbByUrl(url, userContextId);
   }
 
   private async onCurrentTabChangedOrLoaded() {
@@ -265,10 +374,11 @@ export class SiteSpecificBrowserManager {
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
-    const currentPageHasSsbManifest =
-      await this.manifestProcesser.getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled =
-      await this.checkCurrentPageIsInstalled(browser);
+    const currentPageHasSsbManifest = await this.manifestProcesser
+      .getManifestFromBrowser(browser, true);
+    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
+      browser,
+    );
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
@@ -318,6 +428,50 @@ export class SiteSpecificBrowserManager {
     await this.install(updatedManifest);
 
     return true;
+  }
+
+  public async setContainerForSsb(
+    id: string,
+    userContextId: number,
+  ): Promise<boolean> {
+    try {
+      const { PwaContainerExperiment } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/PwaContainerExperiment.sys.mjs",
+      );
+      if (!PwaContainerExperiment.isEnabled()) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    const ssbObj = await this.getSsbObj(id);
+    if (!ssbObj) {
+      return false;
+    }
+
+    const oldKey = DataManagerClass.buildKey(
+      ssbObj.start_url,
+      ssbObj.userContextId ?? 0,
+    );
+
+    const updatedManifest: Manifest = {
+      ...ssbObj,
+      userContextId: userContextId > 0 ? userContextId : undefined,
+    };
+
+    const newKey = DataManagerClass.buildKey(
+      ssbObj.start_url,
+      userContextId > 0 ? userContextId : 0,
+    );
+    if (newKey !== oldKey) {
+      const currentSsbData = await this.dataManager.getCurrentSsbData();
+      if (currentSsbData[newKey]) {
+        return false;
+      }
+    }
+
+    return await this.dataManager.moveSsbKey(oldKey, updatedManifest);
   }
 
   public useOSIntegration() {

@@ -81,9 +81,23 @@ export class PanelSidebarElem {
 
   private setVerticalTabBgColor() {
     const newValue = Services.prefs.getBoolPref("sidebar.verticalTabs");
+    // Gecko 152 (Project Nova) renamed --toolbox-bgcolor -> --toolbox-background-color
+    // and --toolbar-bgcolor -> --toolbar-background-color.
+    //
+    // FALLBACK ORDERING MATTERS: on Gecko 152 the legacy --toolbar-bgcolor and
+    // the new --toolbar-background-color are NOT guaranteed to hold the same
+    // value (e.g. default-theme dark: --toolbar-bgcolor = #171717 but
+    // --toolbar-background-color = rgb(43,42,51)). Firefox 152 still paints the
+    // selected .tab-background from --toolbar-bgcolor, and Lepton's
+    // color_like_toolbar unsets --tab-selected-bgcolor so the tab resolves to
+    // --toolbar-bgcolor. The panel-sidebar / status bar must track the SAME
+    // token as the selected tab, so the legacy names are preferred and the new
+    // 152 names are kept only as a final fallback.
     this.documentElement?.style.setProperty(
       "--panel-sidebar-background-color",
-      newValue ? "var(--toolbox-bgcolor)" : "var(--toolbar-bgcolor)",
+      newValue
+        ? "var(--toolbox-bgcolor, var(--toolbox-background-color, var(--toolbar-bgcolor, var(--toolbar-background-color))))"
+        : "var(--toolbar-bgcolor, var(--toolbar-background-color))",
     );
   }
 

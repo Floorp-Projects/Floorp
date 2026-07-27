@@ -1,0 +1,1058 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: Verify Final Floorp Release Artifact
+
+"on":
+  workflow_call:
+    inputs:
+      source_workflow_run_id:
+        description: Floorp workflow run containing the final package artifact
+        type: string
+        required: true
+      package_artifact_name:
+        description: Expected final Floorp package artifact name
+        type: string
+        required: true
+      package_artifact_id:
+        description: Immutable final Floorp package artifact ID
+        type: string
+        required: true
+      package_artifact_digest:
+        description: SHA-256 digest reported by upload-artifact
+        type: string
+        required: true
+      runtime_workflow_run_id:
+        description: Successful Floorp-Runtime workflow run ID
+        type: string
+        required: true
+      runtime_head_sha:
+        description: Exact Floorp-Runtime source commit
+        type: string
+        required: true
+      runtime_artifact_name:
+        description: Expected selected Runtime target artifact name
+        type: string
+        required: true
+      runtime_artifact_id:
+        description: Immutable selected Runtime target artifact ID
+        type: string
+        required: true
+      runtime_artifact_digest:
+        description: Selected Runtime target artifact SHA-256 digest
+        type: string
+        required: true
+      runtime_manifest_artifact_id:
+        description: Immutable Runtime manifest artifact ID
+        type: string
+        required: true
+      runtime_manifest_artifact_digest:
+        description: Runtime manifest artifact SHA-256 digest
+        type: string
+        required: true
+      expected_build_id:
+        description: Expected 14-digit application and platform BuildID
+        type: string
+        required: true
+      floorp_head_sha:
+        description: Exact Floorp source commit used by the package jobs
+        type: string
+        required: true
+      platform_key:
+        description: Stable release target key
+        type: string
+        required: true
+      native_arch:
+        description: Architecture of the native verification runner
+        type: string
+        required: true
+      runner:
+        description: Exact GitHub-hosted native runner label
+        type: string
+        required: true
+      validation_only:
+        description: Accept the exact unsigned package artifact contract
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      runtime_artifact_token:
+        description: Token with Actions read access to Floorp-Runtime
+        required: true
+    outputs:
+      record_artifact_name:
+        description: Native verification record artifact name
+        value: ${{ jobs.verify.outputs.record_artifact_name }}
+      record_artifact_id:
+        description: Immutable native verification record artifact ID
+        value: ${{ jobs.verify.outputs.record_artifact_id }}
+      record_artifact_digest:
+        description: Native verification record artifact SHA-256 digest
+        value: ${{ jobs.verify.outputs.record_artifact_digest }}
+      firefox_version:
+        description: Firefox version observed from the packaged executable
+        value: ${{ jobs.verify.outputs.firefox_version }}
+      app_build_id:
+        description: Application BuildID observed from the packaged executable
+        value: ${{ jobs.verify.outputs.app_build_id }}
+      platform_build_id:
+        description: Platform BuildID observed from the packaged executable
+        value: ${{ jobs.verify.outputs.platform_build_id }}
+      build_id2:
+        description: Floorp UUIDv7 identity read from the final package
+        value: ${{ jobs.verify.outputs.build_id2 }}
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify:
+    name: Verify ${{ inputs.platform_key }}/${{ inputs.native_arch }} package
+    # Route only to fixed GitHub-hosted labels. Invalid input still lands on a
+    # hosted Linux runner and is rejected by the first step; it can never select
+    # an arbitrary self-hosted runner before the contract check executes.
+    runs-on: >-
+      ${{
+        inputs.platform_key == 'windows' &&
+          inputs.native_arch == 'x86_64' && 'windows-2025' ||
+        inputs.platform_key == 'linux' &&
+          inputs.native_arch == 'x86_64' && 'ubuntu-24.04' ||
+        inputs.platform_key == 'linuxAarch64' &&
+          inputs.native_arch == 'aarch64' && 'ubuntu-24.04-arm' ||
+        inputs.platform_key == 'mac' &&
+          inputs.native_arch == 'x86_64' && 'macos-15-intel' ||
+        inputs.platform_key == 'mac' &&
+          inputs.native_arch == 'aarch64' && 'macos-14' ||
+        'ubuntu-24.04'
+      }}
+    timeout-minutes: 30
+    outputs:
+      record_artifact_name: ${{ steps.contract.outputs.record-artifact-name }}
+      record_artifact_id: ${{ steps.upload-record.outputs.artifact-id }}
+      record_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-record.outputs.artifact-digest) }}
+      firefox_version: ${{ steps.record.outputs.firefox-version }}
+      app_build_id: ${{ steps.record.outputs.app-build-id }}
+      platform_build_id: ${{ steps.record.outputs.platform-build-id }}
+      build_id2: ${{ steps.record.outputs.build-id2 }}
+    steps:
+      - name: Validate immutable native verifier contract
+        id: contract
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          PACKAGE_ARTIFACT_NAME: ${{ inputs.package_artifact_name }}
+          PACKAGE_ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+          PACKAGE_ARTIFACT_DIGEST: ${{ inputs.package_artifact_digest }}
+          RUNTIME_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
+          RUNTIME_HEAD_SHA: ${{ inputs.runtime_head_sha }}
+          RUNTIME_ARTIFACT_NAME: ${{ inputs.runtime_artifact_name }}
+          RUNTIME_ARTIFACT_ID: ${{ inputs.runtime_artifact_id }}
+          RUNTIME_ARTIFACT_DIGEST: ${{ inputs.runtime_artifact_digest }}
+          RUNTIME_MANIFEST_ARTIFACT_ID: >-
+            ${{ inputs.runtime_manifest_artifact_id }}
+          RUNTIME_MANIFEST_ARTIFACT_DIGEST: >-
+            ${{ inputs.runtime_manifest_artifact_digest }}
+          EXPECTED_BUILD_ID: ${{ inputs.expected_build_id }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          PLATFORM_KEY: ${{ inputs.platform_key }}
+          NATIVE_ARCH: ${{ inputs.native_arch }}
+          TARGET_RUNNER: ${{ inputs.runner }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+        with:
+          script: |
+            const contracts = new Map([
+              ["windows/x86_64", {
+                runner: "windows-2025",
+                artifact: "noraneko-windows-x86_64-installer",
+                file: "floorp-windows-x86_64.installer.exe",
+                record: "floorp-native-verification-windows-x86_64-v2",
+                runtimePlatform: "Windows",
+                runtimeArch: "x86_64",
+                runtimeArtifact: "floorp-windows-x86_64-moz-artifact",
+              }],
+              ["linux/x86_64", {
+                runner: "ubuntu-24.04",
+                artifact: "noraneko-linux-x86_64-installer",
+                file: "floorp-linux-x86_64.tar.xz",
+                record: "floorp-native-verification-linux-x86_64-v2",
+                runtimePlatform: "Linux",
+                runtimeArch: "x86_64",
+                runtimeArtifact: "floorp-linux-x86_64-moz-artifact",
+              }],
+              ["linuxAarch64/aarch64", {
+                runner: "ubuntu-24.04-arm",
+                artifact: "noraneko-linux-aarch64-installer",
+                file: "floorp-linux-aarch64.tar.xz",
+                record: "floorp-native-verification-linux-aarch64-v2",
+                runtimePlatform: "Linux",
+                runtimeArch: "aarch64",
+                runtimeArtifact: "floorp-linux-aarch64-moz-artifact",
+              }],
+              ["mac/x86_64", {
+                runner: "macos-15-intel",
+                artifact: "noraneko-mac-universal-installer",
+                file: "floorp-macOS-universal.dmg",
+                record: "floorp-native-verification-mac-x86_64-v2",
+                runtimePlatform: "Darwin",
+                runtimeArch: "universal",
+                runtimeArtifact: "floorp-mac-universal-moz-artifact",
+              }],
+              ["mac/aarch64", {
+                runner: "macos-14",
+                artifact: "noraneko-mac-universal-installer",
+                file: "floorp-macOS-universal.dmg",
+                record: "floorp-native-verification-mac-aarch64-v2",
+                runtimePlatform: "Darwin",
+                runtimeArch: "universal",
+                runtimeArtifact: "floorp-mac-universal-moz-artifact",
+              }],
+            ]);
+
+            const positiveInteger = /^[1-9][0-9]*$/;
+            for (const [label, value] of [
+              ["source workflow run ID", process.env.SOURCE_RUN_ID],
+              ["package artifact ID", process.env.PACKAGE_ARTIFACT_ID],
+              ["Runtime workflow run ID", process.env.RUNTIME_RUN_ID],
+              ["Runtime artifact ID", process.env.RUNTIME_ARTIFACT_ID],
+              ["Runtime manifest artifact ID", process.env.RUNTIME_MANIFEST_ARTIFACT_ID],
+            ]) {
+              if (!positiveInteger.test(value || "")) {
+                throw new Error(`${label} must be a positive decimal integer`);
+              }
+              if (!Number.isSafeInteger(Number(value))) {
+                throw new Error(`${label} exceeds JavaScript's safe integer range`);
+              }
+            }
+
+            const digestPattern = /^sha256:[0-9a-f]{64}$/;
+            for (const [label, value] of [
+              ["package artifact digest", process.env.PACKAGE_ARTIFACT_DIGEST],
+              ["Runtime artifact digest", process.env.RUNTIME_ARTIFACT_DIGEST],
+              [
+                "Runtime manifest artifact digest",
+                process.env.RUNTIME_MANIFEST_ARTIFACT_DIGEST,
+              ],
+            ]) {
+              if (!digestPattern.test(value || "")) {
+                throw new Error(`${label} must be a lowercase SHA-256 digest`);
+              }
+            }
+
+            const shaPattern = /^[0-9a-f]{40}$/;
+            if (!shaPattern.test(process.env.FLOORP_HEAD_SHA || "")) {
+              throw new Error("Floorp head SHA must be exactly 40 lowercase hex digits");
+            }
+            if (!shaPattern.test(process.env.RUNTIME_HEAD_SHA || "")) {
+              throw new Error("Runtime head SHA must be exactly 40 lowercase hex digits");
+            }
+            if (!/^[0-9]{14}$/.test(process.env.EXPECTED_BUILD_ID || "")) {
+              throw new Error("expected BuildID must be exactly 14 ASCII digits");
+            }
+            if (process.env.SOURCE_RUN_ID !== String(context.runId)) {
+              throw new Error("Floorp package must belong to the current caller run");
+            }
+            if (process.env.FLOORP_HEAD_SHA !== context.sha) {
+              throw new Error("Floorp head SHA does not match the current caller SHA");
+            }
+
+            const key = `${process.env.PLATFORM_KEY}/${process.env.NATIVE_ARCH}`;
+            const contract = contracts.get(key);
+            if (!contract) {
+              throw new Error(`unsupported native verifier target: ${key}`);
+            }
+            if (process.env.TARGET_RUNNER !== contract.runner) {
+              throw new Error(
+                `${key} requires ${contract.runner}, got ${process.env.TARGET_RUNNER}`
+              );
+            }
+            if (process.env.RUNTIME_ARTIFACT_NAME !== contract.runtimeArtifact) {
+              throw new Error(
+                `${key} requires Runtime artifact ${contract.runtimeArtifact}, got ` +
+                  process.env.RUNTIME_ARTIFACT_NAME
+              );
+            }
+            if (process.env.RUNTIME_ARTIFACT_ID ===
+                process.env.RUNTIME_MANIFEST_ARTIFACT_ID) {
+              throw new Error("Runtime target and manifest artifact IDs must differ");
+            }
+            if (process.env.RUNTIME_ARTIFACT_DIGEST ===
+                process.env.RUNTIME_MANIFEST_ARTIFACT_DIGEST) {
+              throw new Error("Runtime target and manifest artifact digests must differ");
+            }
+            if (!["true", "false"].includes(process.env.VALIDATION_ONLY)) {
+              throw new Error("validation_only must be an Actions boolean");
+            }
+            const expectedArtifact = contract.artifact +
+              (process.env.VALIDATION_ONLY === "true" ? "-unsigned" : "");
+            if (process.env.PACKAGE_ARTIFACT_NAME !== expectedArtifact) {
+              throw new Error(
+                `${key} requires package artifact ${expectedArtifact}, got ` +
+                  process.env.PACKAGE_ARTIFACT_NAME
+              );
+            }
+            if (process.env.VALIDATION_ONLY !== "true" &&
+                process.env.PACKAGE_ARTIFACT_NAME.endsWith("-unsigned")) {
+              throw new Error("production verification cannot consume unsigned packages");
+            }
+
+            core.setOutput("package-file-name", contract.file);
+            core.setOutput("record-artifact-name", contract.record);
+            core.setOutput("record-file-name", "native-verification.json");
+            core.setOutput("runtime-platform", contract.runtimePlatform);
+            core.setOutput("runtime-arch", contract.runtimeArch);
+            core.setOutput("runtime-target-artifact", contract.runtimeArtifact);
+
+      - name: Validate Floorp source run and package artifact through REST
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          PACKAGE_ARTIFACT_NAME: ${{ inputs.package_artifact_name }}
+          PACKAGE_ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+          PACKAGE_ARTIFACT_DIGEST: ${{ inputs.package_artifact_digest }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+        with:
+          script: |
+            const floorpRunId = Number(process.env.SOURCE_RUN_ID);
+            const packageArtifactId = Number(process.env.PACKAGE_ARTIFACT_ID);
+            const {data: floorpRun} = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: floorpRunId,
+            });
+            if (floorpRun.id !== floorpRunId ||
+                floorpRun.repository?.full_name !==
+                  `${context.repo.owner}/${context.repo.repo}`) {
+              throw new Error("Floorp REST workflow provenance mismatch");
+            }
+            if (floorpRun.head_sha !== process.env.FLOORP_HEAD_SHA) {
+              throw new Error("Floorp workflow head SHA mismatch");
+            }
+            if (!['queued', 'in_progress', 'completed'].includes(floorpRun.status)) {
+              throw new Error(`unexpected Floorp workflow status: ${floorpRun.status}`);
+            }
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: floorpRunId,
+                per_page: 100,
+              }
+            );
+            const idMatches = artifacts.filter(
+              artifact => artifact.id === packageArtifactId
+            );
+            const nameMatches = artifacts.filter(
+              artifact => artifact.name === process.env.PACKAGE_ARTIFACT_NAME &&
+                !artifact.expired
+            );
+            if (idMatches.length !== 1 || nameMatches.length !== 1 ||
+                nameMatches[0].id !== packageArtifactId) {
+              throw new Error("Floorp package artifact is missing or ambiguous");
+            }
+            const artifact = idMatches[0];
+            if (artifact.expired ||
+                artifact.digest !== process.env.PACKAGE_ARTIFACT_DIGEST ||
+                !Number.isInteger(artifact.size_in_bytes) ||
+                artifact.size_in_bytes < 1) {
+              throw new Error("Floorp package artifact REST provenance mismatch");
+            }
+
+      - name: Validate Runtime run and artifacts through REST
+        id: provenance
+        uses: actions/github-script@v7
+        env:
+          RUNTIME_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
+          RUNTIME_HEAD_SHA: ${{ inputs.runtime_head_sha }}
+          RUNTIME_ARTIFACT_NAME: ${{ inputs.runtime_artifact_name }}
+          RUNTIME_ARTIFACT_ID: ${{ inputs.runtime_artifact_id }}
+          RUNTIME_ARTIFACT_DIGEST: ${{ inputs.runtime_artifact_digest }}
+          RUNTIME_MANIFEST_ARTIFACT_ID: >-
+            ${{ inputs.runtime_manifest_artifact_id }}
+          RUNTIME_MANIFEST_ARTIFACT_DIGEST: >-
+            ${{ inputs.runtime_manifest_artifact_digest }}
+          EXPECTED_BUILD_ID: ${{ inputs.expected_build_id }}
+        with:
+          github-token: ${{ secrets.runtime_artifact_token }}
+          script: |
+            const runtimeRunId = Number(process.env.RUNTIME_RUN_ID);
+            const runtimeArtifactId = Number(process.env.RUNTIME_ARTIFACT_ID);
+            const runtimeManifestArtifactId = Number(
+              process.env.RUNTIME_MANIFEST_ARTIFACT_ID
+            );
+            const runtimeOwner = "Floorp-Projects";
+            const runtimeRepo = "Floorp-Runtime";
+            const {data: runtimeRun} = await github.rest.actions.getWorkflowRun({
+              owner: runtimeOwner,
+              repo: runtimeRepo,
+              run_id: runtimeRunId,
+            });
+            if (runtimeRun.id !== runtimeRunId ||
+                runtimeRun.repository?.full_name !== `${runtimeOwner}/${runtimeRepo}`) {
+              throw new Error("Runtime REST workflow provenance mismatch");
+            }
+            if (!Number.isSafeInteger(runtimeRun.workflow_id) ||
+                runtimeRun.workflow_id < 1) {
+              throw new Error("Runtime workflow ID is malformed");
+            }
+            const {data: runtimeWorkflow} = await github.rest.actions.getWorkflow({
+              owner: runtimeOwner,
+              repo: runtimeRepo,
+              workflow_id: runtimeRun.workflow_id,
+            });
+            if (runtimeWorkflow.path !== ".github/workflows/daily-build.yml") {
+              throw new Error("Runtime run did not use the trusted daily-build workflow");
+            }
+            if (!Number.isInteger(runtimeRun.run_attempt) || runtimeRun.run_attempt < 1 ||
+                !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/.test(
+                  runtimeRun.created_at || ""
+                )) {
+              throw new Error("Runtime workflow attempt or created_at is malformed");
+            }
+            if (runtimeRun.status !== "completed" || runtimeRun.conclusion !== "success") {
+              throw new Error("Runtime workflow must be completed successfully");
+            }
+            if (runtimeRun.head_sha !== process.env.RUNTIME_HEAD_SHA) {
+              throw new Error("Runtime workflow head SHA mismatch");
+            }
+            const derivedBuildId = runtimeRun.created_at.replace(/[-:TZ]/g, "");
+            if (derivedBuildId !== process.env.EXPECTED_BUILD_ID) {
+              throw new Error(
+                `Runtime run BuildID ${derivedBuildId} does not match ` +
+                  process.env.EXPECTED_BUILD_ID
+              );
+            }
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {
+                owner: runtimeOwner,
+                repo: runtimeRepo,
+                run_id: runtimeRunId,
+                per_page: 100,
+              }
+            );
+            function validateArtifact(id, name, digest) {
+              const idMatches = artifacts.filter(artifact => artifact.id === id);
+              const nameMatches = artifacts.filter(
+                artifact => artifact.name === name && !artifact.expired
+              );
+              if (idMatches.length !== 1 || nameMatches.length !== 1 ||
+                  nameMatches[0].id !== id) {
+                throw new Error(`Runtime artifact ${name} is missing or ambiguous`);
+              }
+              const artifact = idMatches[0];
+              if (artifact.expired || artifact.digest !== digest ||
+                  !Number.isInteger(artifact.size_in_bytes) ||
+                  artifact.size_in_bytes < 1) {
+                throw new Error(`Runtime artifact ${name} REST provenance mismatch`);
+              }
+            }
+            validateArtifact(
+              runtimeArtifactId,
+              process.env.RUNTIME_ARTIFACT_NAME,
+              process.env.RUNTIME_ARTIFACT_DIGEST
+            );
+            validateArtifact(
+              runtimeManifestArtifactId,
+              "floorp-runtime-build-manifest-v2",
+              process.env.RUNTIME_MANIFEST_ARTIFACT_DIGEST
+            );
+            core.setOutput("runtime-created-at", runtimeRun.created_at);
+            core.setOutput("runtime-run-attempt", String(runtimeRun.run_attempt));
+
+      - name: Checkout exact Floorp source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.floorp_head_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Download exact Runtime manifest artifact by ID
+        uses: actions/download-artifact@v4
+        with:
+          repository: Floorp-Projects/Floorp-Runtime
+          run-id: ${{ inputs.runtime_workflow_run_id }}
+          artifact-ids: ${{ inputs.runtime_manifest_artifact_id }}
+          path: ${{ runner.temp }}/runtime-manifest
+          merge-multiple: true
+          github-token: ${{ secrets.runtime_artifact_token }}
+
+      - name: Locate exact Runtime manifest
+        id: runtime-manifest
+        shell: pwsh
+        env:
+          MANIFEST_DIR: ${{ runner.temp }}/runtime-manifest
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = Join-Path $env:MANIFEST_DIR 'runtime-build-manifest-v2.json'
+          $files = @(Get-ChildItem -LiteralPath $env:MANIFEST_DIR -Recurse -File)
+          if ($files.Count -ne 1 -or $files[0].FullName -ne $expected) {
+            throw "Expected exactly the root Runtime manifest $expected"
+          }
+          "path=$expected" >> $env:GITHUB_OUTPUT
+
+      - name: Validate selected Runtime target artifact through REST
+        uses: actions/github-script@v7
+        env:
+          RUNTIME_MANIFEST_PATH: ${{ steps.runtime-manifest.outputs.path }}
+          RUNTIME_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
+          RUNTIME_HEAD_SHA: ${{ inputs.runtime_head_sha }}
+          EXPECTED_BUILD_ID: ${{ inputs.expected_build_id }}
+          RUNTIME_CREATED_AT: ${{ steps.provenance.outputs.runtime-created-at }}
+          RUNTIME_RUN_ATTEMPT: ${{ steps.provenance.outputs.runtime-run-attempt }}
+          RUNTIME_TARGET_PLATFORM: ${{ steps.contract.outputs.runtime-platform }}
+          RUNTIME_TARGET_ARCH: ${{ steps.contract.outputs.runtime-arch }}
+          RUNTIME_TARGET_ARTIFACT: >-
+            ${{ steps.contract.outputs.runtime-target-artifact }}
+          RUNTIME_TARGET_ARTIFACT_ID: ${{ inputs.runtime_artifact_id }}
+          RUNTIME_TARGET_ARTIFACT_DIGEST: ${{ inputs.runtime_artifact_digest }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const manifest = JSON.parse(
+              fs.readFileSync(process.env.RUNTIME_MANIFEST_PATH, "utf8")
+            );
+            if (manifest.schema_version !== 2 ||
+                manifest.repository !== "Floorp-Projects/Floorp-Runtime" ||
+                manifest.head_sha !== process.env.RUNTIME_HEAD_SHA ||
+                manifest.workflow_run_id !== Number(process.env.RUNTIME_RUN_ID) ||
+                manifest.expected_build_id !== process.env.EXPECTED_BUILD_ID) {
+              throw new Error("Runtime manifest top-level provenance mismatch");
+            }
+            if (!Array.isArray(manifest.targets)) {
+              throw new Error("Runtime manifest targets must be an array");
+            }
+            const matches = manifest.targets.filter(target =>
+              target?.platform === process.env.RUNTIME_TARGET_PLATFORM &&
+              target?.arch === process.env.RUNTIME_TARGET_ARCH
+            );
+            if (matches.length !== 1) {
+              throw new Error("Runtime manifest must contain exactly one selected target");
+            }
+            const selected = matches[0];
+            if (selected.artifact_name !== process.env.RUNTIME_TARGET_ARTIFACT ||
+                selected.artifact_id !== Number(process.env.RUNTIME_TARGET_ARTIFACT_ID) ||
+                selected.artifact_digest !== process.env.RUNTIME_TARGET_ARTIFACT_DIGEST ||
+                selected.expected_build_id !== process.env.EXPECTED_BUILD_ID ||
+                !Number.isSafeInteger(selected.artifact_id) || selected.artifact_id < 1 ||
+                !/^sha256:[0-9a-f]{64}$/.test(selected.artifact_digest || "")) {
+              throw new Error("Runtime manifest selected target is malformed");
+            }
+            if (manifest.run_created_at !== process.env.RUNTIME_CREATED_AT ||
+                manifest.run_attempt !== Number(process.env.RUNTIME_RUN_ATTEMPT)) {
+              throw new Error("Runtime manifest run creation/attempt mismatch");
+            }
+
+      - name: Download exact final Floorp package artifact by ID
+        uses: actions/download-artifact@v4
+        with:
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_workflow_run_id }}
+          artifact-ids: ${{ inputs.package_artifact_id }}
+          path: ${{ runner.temp }}/floorp-package
+          merge-multiple: true
+          github-token: ${{ github.token }}
+
+      - name: Verify Windows final package natively
+        if: inputs.platform_key == 'windows'
+        shell: pwsh
+        env:
+          PACKAGE_DIR: ${{ runner.temp }}/floorp-package
+          PACKAGE_FILE_NAME: ${{ steps.contract.outputs.package-file-name }}
+          FULL_VERSION_FILE: ${{ runner.temp }}/floorp-full-version.txt
+          BUILD_ID2_FILE: ${{ runner.temp }}/floorp-buildid2
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:RUNNER_ARCH -ne 'X64') {
+            throw "Expected a native X64 runner, got $env:RUNNER_ARCH"
+          }
+
+          $package = Join-Path $env:PACKAGE_DIR $env:PACKAGE_FILE_NAME
+          $files = @(Get-ChildItem -LiteralPath $env:PACKAGE_DIR -Recurse -File)
+          if ($files.Count -ne 1 -or $files[0].FullName -ne $package) {
+            throw "Expected exactly the root final package $package"
+          }
+
+          function Assert-ExpectedAuthenticodeState {
+            param(
+              [Parameter(Mandatory = $true)][string]$Path,
+              [Parameter(Mandatory = $true)][string]$Label
+            )
+            $signature = Get-AuthenticodeSignature -FilePath $Path
+            if ($env:VALIDATION_ONLY -eq 'true') {
+              if ($signature.Status -eq
+                  [System.Management.Automation.SignatureStatus]::Valid) {
+                throw "Validation-only $Label unexpectedly has a valid signature"
+              }
+              if ($signature.Status -ne
+                  [System.Management.Automation.SignatureStatus]::NotSigned) {
+                throw "Validation-only $Label has an invalid signature state: $($signature.Status)"
+              }
+              Write-Host "Observed expected unsigned $Label (NotSigned)"
+            } else {
+              if ($signature.Status -ne
+                  [System.Management.Automation.SignatureStatus]::Valid) {
+                throw "Production $Label Authenticode is not valid: $($signature.Status)"
+              }
+              Write-Host "Verified production $Label Authenticode signature"
+            }
+          }
+          Assert-ExpectedAuthenticodeState -Path $package -Label 'Windows installer'
+
+          $extractDirectory = Join-Path $env:RUNNER_TEMP 'floorp-native-package'
+          New-Item -ItemType Directory -Path $extractDirectory -Force | Out-Null
+          & 7z x -y "-o$extractDirectory" $package
+          if ($LASTEXITCODE -ne 0) {
+            throw "7z failed to extract the final Floorp SFX package"
+          }
+          $binaries = @(
+            Get-ChildItem -LiteralPath $extractDirectory -Recurse -File -Filter 'floorp.exe'
+          )
+          if ($binaries.Count -ne 1) {
+            throw "Expected exactly one final floorp.exe; found $($binaries.Count)"
+          }
+          Assert-ExpectedAuthenticodeState `
+            -Path $binaries[0].FullName `
+            -Label 'floorp.exe'
+
+          $buildId2 = Join-Path $binaries[0].DirectoryName 'browser/buildid2'
+          if (-not (Test-Path -LiteralPath $buildId2 -PathType Leaf)) {
+            throw "Final Floorp package is missing browser/buildid2"
+          }
+          Copy-Item -LiteralPath $buildId2 -Destination $env:BUILD_ID2_FILE
+
+          $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+          $startInfo.FileName = $binaries[0].FullName
+          $startInfo.Arguments = '--full-version'
+          $startInfo.WorkingDirectory = $binaries[0].DirectoryName
+          $startInfo.UseShellExecute = $false
+          $startInfo.RedirectStandardOutput = $true
+          $startInfo.RedirectStandardError = $true
+          $startInfo.CreateNoWindow = $true
+          [void]$startInfo.Environment.Remove('XUL_APP_FILE')
+
+          $process = [System.Diagnostics.Process]::new()
+          $process.StartInfo = $startInfo
+          try {
+            if (-not $process.Start()) {
+              throw 'Failed to start final floorp.exe'
+            }
+            $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+            $stderrTask = $process.StandardError.ReadToEndAsync()
+            if (-not $process.WaitForExit(30000)) {
+              $process.Kill($true)
+              $process.WaitForExit()
+              throw 'Final floorp.exe --full-version timed out after 30 seconds'
+            }
+            $stdout = $stdoutTask.GetAwaiter().GetResult()
+            $stderr = $stderrTask.GetAwaiter().GetResult()
+            if ($process.ExitCode -ne 0) {
+              throw "Final floorp.exe exited with code $($process.ExitCode): $stderr"
+            }
+          } finally {
+            $process.Dispose()
+          }
+
+          Write-Host $stdout
+          if ($stderr) { Write-Host "stderr: $stderr" }
+          [System.IO.File]::WriteAllText(
+            $env:FULL_VERSION_FILE,
+            $stdout,
+            [System.Text.UTF8Encoding]::new($false)
+          )
+
+      - name: Verify Linux final package natively
+        if: inputs.platform_key == 'linux' || inputs.platform_key == 'linuxAarch64'
+        shell: bash
+        env:
+          PACKAGE_DIR: ${{ runner.temp }}/floorp-package
+          PACKAGE_FILE_NAME: ${{ steps.contract.outputs.package-file-name }}
+          FULL_VERSION_FILE: ${{ runner.temp }}/floorp-full-version.txt
+          BUILD_ID2_FILE: ${{ runner.temp }}/floorp-buildid2
+          TARGET_ARCH: ${{ inputs.native_arch }}
+        run: |
+          set -euo pipefail
+          case "$TARGET_ARCH" in
+            x86_64) expected_runner_arch=x86_64 ;;
+            aarch64) expected_runner_arch=aarch64 ;;
+            *) echo "Unsupported Linux architecture: $TARGET_ARCH" >&2; exit 1 ;;
+          esac
+          if [[ "$(uname -m)" != "$expected_runner_arch" ]]; then
+            echo "Expected native $expected_runner_arch runner, got $(uname -m)" >&2
+            exit 1
+          fi
+
+          package="$PACKAGE_DIR/$PACKAGE_FILE_NAME"
+          shopt -s nullglob dotglob
+          package_entries=("$PACKAGE_DIR"/*)
+          if (( ${#package_entries[@]} != 1 )) ||
+             [[ ! -f "${package_entries[0]}" ]] ||
+             [[ "${package_entries[0]}" != "$package" ]]; then
+            echo "Expected exactly the root final package $package" >&2
+            exit 1
+          fi
+
+          extract_dir="$RUNNER_TEMP/floorp-native-package"
+          mkdir -p "$extract_dir"
+          tar -xf "$package" -C "$extract_dir"
+          mapfile -d '' -t binaries < <(
+            find "$extract_dir" -type f -name floorp -perm /111 -print0
+          )
+          if (( ${#binaries[@]} != 1 )); then
+            echo "Expected exactly one final Floorp executable; found ${#binaries[@]}" >&2
+            exit 1
+          fi
+
+          build_id2="$(dirname "${binaries[0]}")/browser/buildid2"
+          if [[ ! -f "$build_id2" ]]; then
+            echo "Final Floorp package is missing browser/buildid2" >&2
+            exit 1
+          fi
+          cp "$build_id2" "$BUILD_ID2_FILE"
+
+          unset XUL_APP_FILE
+          set +e
+          full_version="$(
+            cd "$(dirname "${binaries[0]}")" &&
+              timeout --signal=KILL 30s ./floorp --full-version 2>&1
+          )"
+          status=$?
+          set -e
+          printf '%s\n' "$full_version"
+          if (( status != 0 )); then
+            echo "Final Floorp --full-version failed with exit code $status" >&2
+            exit "$status"
+          fi
+          printf '%s\n' "$full_version" > "$FULL_VERSION_FILE"
+
+      - name: Verify macOS final package natively
+        if: inputs.platform_key == 'mac'
+        shell: bash
+        env:
+          PACKAGE_DIR: ${{ runner.temp }}/floorp-package
+          PACKAGE_FILE_NAME: ${{ steps.contract.outputs.package-file-name }}
+          FULL_VERSION_FILE: ${{ runner.temp }}/floorp-full-version.txt
+          BUILD_ID2_FILE: ${{ runner.temp }}/floorp-buildid2
+          TARGET_ARCH: ${{ inputs.native_arch }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+        run: |
+          set -euo pipefail
+          case "$TARGET_ARCH" in
+            x86_64) expected_runner_arch=x86_64; expected_slice=x86_64 ;;
+            aarch64) expected_runner_arch=arm64; expected_slice=arm64 ;;
+            *) echo "Unsupported macOS architecture: $TARGET_ARCH" >&2; exit 1 ;;
+          esac
+          if [[ "$(uname -m)" != "$expected_runner_arch" ]]; then
+            echo "Expected native $expected_runner_arch runner, got $(uname -m)" >&2
+            exit 1
+          fi
+
+          package="$PACKAGE_DIR/$PACKAGE_FILE_NAME"
+          shopt -s nullglob dotglob
+          package_entries=("$PACKAGE_DIR"/*)
+          if (( ${#package_entries[@]} != 1 )) ||
+             [[ ! -f "${package_entries[0]}" ]] ||
+             [[ "${package_entries[0]}" != "$package" ]]; then
+            echo "Expected exactly the root final package $package" >&2
+            exit 1
+          fi
+
+          mount_plist="$RUNNER_TEMP/floorp-mount.plist"
+          cleanup() {
+            if [[ -s "$mount_plist" ]]; then
+              python3 - "$mount_plist" <<'PY' | while IFS= read -r mount_point; do
+          import plistlib
+          import sys
+
+          try:
+              with open(sys.argv[1], "rb") as source:
+                  payload = plistlib.load(source)
+          except Exception:
+              raise SystemExit(0)
+          for entity in payload.get("system-entities", []):
+              if isinstance(entity, dict) and entity.get("mount-point"):
+                  print(entity["mount-point"])
+          PY
+                hdiutil detach "$mount_point" >/dev/null 2>&1 ||
+                  hdiutil detach -force "$mount_point" >/dev/null 2>&1 || true
+              done
+            fi
+          }
+          trap cleanup EXIT
+          hdiutil attach -readonly -nobrowse -plist "$package" > "$mount_plist"
+
+          mount_point="$(python3 - "$mount_plist" <<'PY'
+          import plistlib
+          import sys
+
+          with open(sys.argv[1], "rb") as source:
+              payload = plistlib.load(source)
+          points = [
+              entity["mount-point"]
+              for entity in payload.get("system-entities", [])
+              if isinstance(entity, dict) and entity.get("mount-point")
+          ]
+          if len(points) != 1:
+              raise SystemExit(f"expected one mounted DMG volume, found {len(points)}")
+          print(points[0])
+          PY
+          )"
+
+          app_bundle="$(python3 - "$mount_point" <<'PY'
+          import pathlib
+          import sys
+
+          matches = [
+              path
+              for path in pathlib.Path(sys.argv[1]).glob("*.app")
+              if path.is_dir()
+          ]
+          if len(matches) != 1:
+              raise SystemExit(f"expected one final Floorp app, found {len(matches)}")
+          print(matches[0])
+          PY
+          )"
+          app_binary="$app_bundle/Contents/MacOS/floorp"
+          if [[ ! -x "$app_binary" ]]; then
+            echo "Final Floorp app is missing its executable" >&2
+            exit 1
+          fi
+          slices="$(lipo -archs "$app_binary")"
+          case " $slices " in
+            *" $expected_slice "*) ;;
+            *) echo "Universal binary lacks $expected_slice slice: $slices" >&2; exit 1 ;;
+          esac
+
+          codesign_log="$RUNNER_TEMP/floorp-codesign-verification.txt"
+          if [[ "$VALIDATION_ONLY" == "true" ]]; then
+            reject_validation_signature() {
+              local message="$1"
+              local code_path="$2"
+              echo "$message: $code_path" >&2
+              exit 1
+            }
+
+            assert_validation_linker_signed_adhoc() {
+              local code_path="$1"
+              cat "$codesign_log"
+              if [[ "$TARGET_ARCH" != "aarch64" ]]; then
+                reject_validation_signature \
+                  "Validation-only Floorp package contains signed code" \
+                  "$code_path"
+              fi
+
+              local signature
+              signature="$(sed -n 's/^Signature=//p' "$codesign_log" | head -n 1)"
+              if [[ "$signature" != "adhoc" ]]; then
+                reject_validation_signature \
+                  "Validation-only signature is not ad-hoc" \
+                  "$code_path"
+              fi
+
+              local team_identifier
+              team_identifier="$(
+                sed -n 's/^TeamIdentifier=//p' "$codesign_log" | head -n 1
+              )"
+              if [[ "$team_identifier" != "not set" ]]; then
+                reject_validation_signature \
+                  "Validation-only signature unexpectedly has a TeamIdentifier" \
+                  "$code_path"
+              fi
+
+              if grep -q '^Authority=' "$codesign_log"; then
+                reject_validation_signature \
+                  "Validation-only package contains certificate-backed signed code" \
+                  "$code_path"
+              fi
+
+              local code_directory
+              code_directory="$(sed -n '/^CodeDirectory /p' "$codesign_log" | head -n 1)"
+              if [[ "$code_directory" != *adhoc* ]] || [[ "$code_directory" != *linker-signed* ]]; then
+                reject_validation_signature \
+                  "Validation-only signature is not linker-generated ad-hoc metadata" \
+                  "$code_path"
+              fi
+
+              echo "Observed expected validation-only ad-hoc linker-signed metadata: $code_path"
+            }
+
+            if codesign --verify --deep --strict --verbose=2 \
+              "$app_bundle" > "$codesign_log" 2>&1; then
+              cat "$codesign_log"
+              echo "Validation-only Floorp app unexpectedly has a valid code signature" >&2
+              exit 1
+            fi
+            signature_metadata="$(
+              find "$app_bundle" -type d -name _CodeSignature -print -quit
+            )"
+            if [[ -n "$signature_metadata" ]]; then
+              echo "Validation-only Floorp app contains signature metadata: $signature_metadata" >&2
+              exit 1
+            fi
+            while IFS= read -r -d '' code_path; do
+              if codesign --display --verbose=4 \
+                "$code_path" > "$codesign_log" 2>&1; then
+                assert_validation_linker_signed_adhoc "$code_path"
+              fi
+            done < <(APP_BUNDLE="$app_bundle" python3 - <<'PY'
+          import os
+          import pathlib
+          import sys
+
+          app = pathlib.Path(os.environ["APP_BUNDLE"])
+          candidates = {app}
+          directory_suffixes = (".app", ".framework", ".xpc", ".appex", ".plugin", ".bundle")
+          file_suffixes = (".dylib", ".so")
+          for root, directories, files in os.walk(app / "Contents", followlinks=False):
+              root_path = pathlib.Path(root)
+              for name in directories:
+                  candidate = root_path / name
+                  if name.endswith(directory_suffixes):
+                      candidates.add(candidate)
+              for name in files:
+                  candidate = root_path / name
+                  if candidate.is_symlink():
+                      continue
+                  if name.endswith(file_suffixes) or os.access(candidate, os.X_OK):
+                      candidates.add(candidate)
+          for candidate in sorted(candidates, key=lambda path: os.fsencode(path)):
+              sys.stdout.buffer.write(os.fsencode(candidate) + b"\0")
+          PY
+            )
+            echo "Observed expected unsigned validation-only Floorp app"
+          else
+            if ! codesign --verify --deep --strict --verbose=2 \
+              "$app_bundle" > "$codesign_log" 2>&1; then
+              cat "$codesign_log" >&2
+              echo "Production Floorp app code signature verification failed" >&2
+              exit 1
+            fi
+            cat "$codesign_log"
+            echo "Verified production Floorp app code signature"
+          fi
+
+          build_id2="$app_bundle/Contents/Resources/browser/buildid2"
+          if [[ ! -f "$build_id2" ]]; then
+            echo "Final Floorp app is missing browser/buildid2" >&2
+            exit 1
+          fi
+          cp "$build_id2" "$BUILD_ID2_FILE"
+
+          unset XUL_APP_FILE
+          APP_BINARY="$app_binary" python3 - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+          import sys
+
+          environment = os.environ.copy()
+          environment.pop("XUL_APP_FILE", None)
+          try:
+              result = subprocess.run(
+                  [os.environ["APP_BINARY"], "--full-version"],
+                  cwd=pathlib.Path(os.environ["APP_BINARY"]).parent,
+                  env=environment,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+                  timeout=30,
+                  check=False,
+              )
+          except subprocess.TimeoutExpired as error:
+              if error.stdout:
+                  sys.stderr.buffer.write(error.stdout)
+              raise SystemExit(
+                  "final Floorp --full-version timed out after 30 seconds"
+              ) from error
+
+          sys.stdout.buffer.write(result.stdout)
+          if result.returncode != 0:
+              raise SystemExit(
+                  f"final Floorp exited with code {result.returncode}"
+              )
+          pathlib.Path(os.environ["FULL_VERSION_FILE"]).write_bytes(result.stdout)
+          PY
+
+      - name: Create strict native verification descriptor
+        id: descriptor
+        uses: actions/github-script@v7
+        env:
+          RUNTIME_MANIFEST_PATH: ${{ steps.runtime-manifest.outputs.path }}
+          FULL_VERSION_FILE: ${{ runner.temp }}/floorp-full-version.txt
+          BUILD_ID2_FILE: ${{ runner.temp }}/floorp-buildid2
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          SOURCE_RUN_ID: ${{ inputs.source_workflow_run_id }}
+          PACKAGE_ARTIFACT_NAME: ${{ inputs.package_artifact_name }}
+          PACKAGE_ARTIFACT_ID: ${{ inputs.package_artifact_id }}
+          PACKAGE_ARTIFACT_DIGEST: ${{ inputs.package_artifact_digest }}
+          PLATFORM_KEY: ${{ inputs.platform_key }}
+          NATIVE_ARCH: ${{ inputs.native_arch }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const descriptorPath = path.join(
+              process.env.RUNNER_TEMP,
+              "floorp-native-verification-descriptor.json"
+            );
+            const descriptor = {
+              schema_version: 2,
+              target_key: process.env.PLATFORM_KEY,
+              native_arch: process.env.NATIVE_ARCH,
+              runtime_manifest_path: process.env.RUNTIME_MANIFEST_PATH,
+              full_version_output_path: process.env.FULL_VERSION_FILE,
+              build_id2_path: process.env.BUILD_ID2_FILE,
+              floorp: {
+                repository: `${context.repo.owner}/${context.repo.repo}`,
+                head_sha: process.env.FLOORP_HEAD_SHA,
+                workflow_run_id: Number(process.env.SOURCE_RUN_ID),
+              },
+              floorp_package: {
+                artifact_name: process.env.PACKAGE_ARTIFACT_NAME,
+                artifact_id: Number(process.env.PACKAGE_ARTIFACT_ID),
+                artifact_digest: process.env.PACKAGE_ARTIFACT_DIGEST,
+                unsigned: process.env.VALIDATION_ONLY === "true",
+              },
+            };
+            fs.writeFileSync(
+              descriptorPath,
+              JSON.stringify(descriptor, null, 2) + "\n",
+              {encoding: "utf8", flag: "wx"}
+            );
+            core.setOutput("path", descriptorPath);
+
+      - name: Generate strict native verification record
+        id: record
+        shell: pwsh
+        env:
+          DESCRIPTOR_PATH: ${{ steps.descriptor.outputs.path }}
+          RECORD_PATH: >-
+            ${{ runner.temp }}/${{ steps.contract.outputs.record-file-name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          deno run --allow-read --allow-write `
+            tools/src/release_provenance.ts `
+            record-native-verification `
+            --descriptor $env:DESCRIPTOR_PATH `
+            --output $env:RECORD_PATH `
+            --github-output $env:GITHUB_OUTPUT
+          if ($LASTEXITCODE -ne 0) {
+            throw 'release_provenance.ts rejected the native package evidence'
+          }
+
+      - name: Upload immutable native verification record
+        id: upload-record
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.contract.outputs.record-artifact-name }}
+          path: ${{ runner.temp }}/${{ steps.contract.outputs.record-file-name }}
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 0

@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "PWA 應用程式",
       "install-current": "將目前頁面安裝為 PWA 應用程式",
-      "open-installed": "開啟已安裝的 PWA 應用程式"
+      "open-current": "Open app in selected container",
+      "open-installed": "開啟已安裝的 PWA 應用程式",
+      "container": "容器"
     },
     "page-action": {
       "title": "開啟應用程式",
       "install": "安裝應用程式",
       "open": "開啟應用程式",
       "cancel": "取消",
-      "site-icon": "網站圖示"
+      "site-icon": "網站圖示",
+      "container": "容器",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,6 +139,11 @@
       "gecko-forward": "前進",
       "gecko-reload": "重新載入",
       "gecko-close-tab": "關閉分頁",
+      "gecko-close-other-tabs": "Close Other Tabs",
+      "gecko-close-tabs-to-start": "Close Tabs to Left",
+      "gecko-close-tabs-to-start-vertical": "Close Tabs Above",
+      "gecko-close-tabs-to-end": "Close Tabs to Right",
+      "gecko-close-tabs-to-end-vertical": "Close Tabs Below",
       "gecko-open-new-tab": "新分頁",
       "gecko-duplicate-tab": "複製分頁",
       "gecko-reload-all-tabs": "重新載入所有的分頁",
@@ -195,6 +208,8 @@
       "gecko-toggle-sidebar": "切換側邊欄",
       "gecko-scroll-up": "向上捲動",
       "gecko-scroll-down": "向下捲動",
+      "gecko-scroll-line-up": "向上捲動",
+      "gecko-scroll-line-down": "向下捲動",
       "gecko-scroll-right": "向右捲動",
       "gecko-scroll-left": "向左捲動",
       "gecko-scroll-to-top": "捲動至頂端",
@@ -202,19 +217,50 @@
       "gecko-workspace-next": "切換到下一個工作空間",
       "gecko-workspace-previous": "切換到上一個工作空間",
       "floorp-toggle-zen-mode": "Toggle Zen Mode",
-      "floorp-toggle-command-palette": "Toggle Command Palette"
+      "floorp-toggle-command-palette": "Toggle Command Palette",
+      "floorp-open-settings": "Open Settings",
+      "floorp-open-hub": "開啟 Floorp Hub",
+      "floorp-toggle-share-mode": "Toggle Share Mode",
+      "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown",
+      "floorp-split-view-open-left": "Split View Left",
+      "floorp-split-view-open-right": "Split View Right",
+      "floorp-split-view-open-top": "Split View Top",
+      "floorp-split-view-open-bottom": "Split View Bottom",
+      "floorp-split-view-close": "Close Split View",
+      "floorp-split-view-swap-panes": "Swap Split Panes",
+      "floorp-split-view-cycle-layout": "Cycle Split Layout",
+      "floorp-split-view-add-pane": "Add Pane to Split View",
+      "floorp-split-view-remove-pane": "Remove Pane from Split View"
     },
     "descriptions": {
       "gecko-back": "返回上一頁",
       "gecko-forward": "前進下一頁",
       "gecko-reload": "重新載入目前頁面",
       "gecko-close-tab": "關閉目前的分頁",
+      "gecko-close-other-tabs": "Close all tabs except the current one",
+      "gecko-close-tabs-to-start": "Close all tabs to the left of the current tab",
+      "gecko-close-tabs-to-start-vertical": "Close all tabs above the current tab",
+      "gecko-close-tabs-to-end": "Close all tabs to the right of the current tab",
+      "gecko-close-tabs-to-end-vertical": "Close all tabs below the current tab",
       "gecko-open-new-tab": "開啟新分頁",
       "gecko-duplicate-tab": "複製目前的分頁",
       "gecko-reload-all-tabs": "重新載入所有的分頁",
       "gecko-restore-last-tab": "重新開啟上次關閉的分頁",
       "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
-      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands",
+      "floorp-open-settings": "Opens the Floorp settings page",
+      "floorp-open-hub": "Opens the Floorp Hub page",
+      "floorp-toggle-share-mode": "Toggle Share Mode to minimize UI for screen sharing and presentations",
+      "floorp-copy-page-url-as-markdown": "Copy the current page title and URL as Markdown link format: [Title](URL)",
+      "floorp-split-view-open-left": "Open the current tab in a split view on the left side",
+      "floorp-split-view-open-right": "Open the current tab in a split view on the right side",
+      "floorp-split-view-open-top": "Open the current tab in a split view on the top side",
+      "floorp-split-view-open-bottom": "Open the current tab in a split view on the bottom side",
+      "floorp-split-view-close": "Close the active split view and return to single tab view",
+      "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
+      "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
+      "floorp-split-view-add-pane": "Add a new pane to the active split view",
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
     }
   },
   "qrCode": {
@@ -392,12 +438,44 @@
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
+    },
+    "dropZone": {
+      "newWindow": "Drop here to open in new window"
     }
   },
   "zen-mode": {
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Command Palette",
@@ -420,9 +498,81 @@
       "workspace": "工作空間",
       "floorp": "Floorp",
       "media": "Media",
-      "open-tabs": "Open Tabs"
+      "open-tabs": "Open Tabs",
+      "switcher": "Switcher",
+      "history-suggestions": "歷史",
+      "bookmark-suggestions": "書籤"
     },
     "noResults": "No commands found",
-    "noResultsHint": "Try a different search term"
-  }
+    "noResultsHint": "Try a different search term",
+    "stepIndicator": "第 {{current}} 步 / 總共 {{total}} 步",
+    "backToCommands": "Back to commands",
+    "openUrl": "Open URL",
+    "openUrlDescription": "Open a URL in a new tab",
+    "openUrlStepLabel": "Enter URL to open",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "請輸入有效的 URL",
+    "searchWeb": "Search the Web",
+    "searchWebDescription": "Search with your default search engine",
+    "searchWebStepLabel": "Enter search query",
+    "searchWebStepPlaceholder": "Search terms...",
+    "searchWithEngine": "Search for \"{{query}}\"",
+    "searchWithEngineDescription": "Search with your default search engine",
+    "searchWithEngineNamed": "Search with {{engine}}",
+    "searchWebValidationError": "Please enter a search query",
+    "searchWebEngineLabel": "Select search engine",
+    "searchWebEnginePlaceholder": "Select a search engine...",
+    "searchEngineDefault": " (default)",
+    "searchWebWhereLabel": "Where to open results",
+    "searchWebWherePlaceholder": "Select where to open...",
+    "searchWebWhereNewTab": "開啟新分頁",
+    "searchWebWhereNewTabDesc": "Open in a new foreground tab",
+    "searchWebWhereBackgroundTab": "Background Tab",
+    "searchWebWhereBackgroundTabDesc": "Open in a new background tab",
+    "searchWebWhereCurrentTab": "Current Tab",
+    "searchWebWhereCurrentTabDesc": "Navigate the current tab",
+    "openUrlWhereLabel": "Where to open",
+    "openUrlWherePlaceholder": "Select where to open...",
+    "openUrlWhereNewTab": "開啟新分頁",
+    "openUrlWhereNewTabDesc": "Open in a new foreground tab",
+    "openUrlWhereBackgroundTab": "Background Tab",
+    "openUrlWhereBackgroundTabDesc": "Open in a new background tab",
+    "openUrlWhereCurrentTab": "Current Tab",
+    "openUrlWhereCurrentTabDesc": "Navigate the current tab",
+    "reopenInContainer": "Reopen in Container",
+    "reopenInContainerDescription": "Reopen the current tab in a specific container",
+    "reopenInContainerStepLabel": "Select a container",
+    "reopenInContainerStepPlaceholder": "Choose a container...",
+    "reopenInContainerNoContainer": "無容器",
+    "reopenInContainerNoContainerDesc": "Reopen in the default context",
+    "reopenInContainerCurrentSuffix": "(目前)",
+    "loadingChoices": "Loading options...",
+    "tabSwitcher": "Switch Tab",
+    "tabSwitcherDescription": "Switch to a different tab in the current window",
+    "tabSwitcherStepLabel": "Select a tab",
+    "tabSwitcherStepPlaceholder": "Choose a tab...",
+    "windowSwitcher": "Switch Window",
+    "windowSwitcherDescription": "Switch to a different open window",
+    "windowSwitcherStepLabel": "Select a window",
+    "windowSwitcherStepPlaceholder": "Choose a window...",
+    "windowSwitcherCurrent": "目前",
+    "windowSwitcherTabCount": "{{count}} tab(s)",
+    "closedTabSwitcher": "恢復先前關閉的分頁",
+    "closedTabSwitcherDescription": "Reopen a recently closed tab",
+    "closedTabSwitcherStepLabel": "Select a closed tab",
+    "closedTabSwitcherStepPlaceholder": "Choose a closed tab...",
+    "closedWindowSwitcher": "Reopen Closed Window",
+    "closedWindowSwitcherDescription": "Reopen a recently closed window",
+    "closedWindowSwitcherStepLabel": "Select a closed window",
+    "closedWindowSwitcherStepPlaceholder": "Choose a closed window...",
+    "historySwitcher": "Browse History",
+    "historySwitcherDescription": "Open a page from your browsing history",
+    "historySwitcherStepLabel": "Select a history entry",
+    "historySwitcherStepPlaceholder": "Choose a history entry...",
+    "bookmarkSwitcher": "Switch Bookmark",
+    "bookmarkSwitcherDescription": "Open a bookmarked page",
+    "bookmarkSwitcherStepLabel": "Select a bookmark",
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+  },
+  "commandPaletteReadings": {}
 }

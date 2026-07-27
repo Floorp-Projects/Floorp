@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "웹 앱",
       "install-current": "현재 페이지를 프로그레시브 웹 앱으로서 설치",
-      "open-installed": "설치된 웹 앱 열기"
+      "open-current": "선택한 컨테이너에서 앱 열기",
+      "open-installed": "설치된 웹 앱 열기",
+      "container": "컨테이너"
     },
     "page-action": {
       "title": "애플리케이션 열기",
       "install": "애플리케이션 설치",
       "open": "애플리케이션 열기",
       "cancel": "취소",
-      "site-icon": "사이트 아이콘"
+      "site-icon": "사이트 아이콘",
+      "container": "컨테이너",
+      "no-container": "컨테이너 없음"
+    },
+    "window": {
+      "container-tooltip": "컨테이너: {{name}}",
+      "container-fallback": "컨테이너 #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,10 +139,15 @@
       "gecko-forward": "앞으로 가기",
       "gecko-reload": "새로 고침",
       "gecko-close-tab": "탭 닫기",
+      "gecko-close-other-tabs": "다른 탭 닫기",
+      "gecko-close-tabs-to-start": "왼쪽 탭 닫기",
+      "gecko-close-tabs-to-start-vertical": "위 탭 닫기",
+      "gecko-close-tabs-to-end": "오른쪽 탭 닫기",
+      "gecko-close-tabs-to-end-vertical": "아래 탭 닫기",
       "gecko-open-new-tab": "새 탭 열기",
       "gecko-duplicate-tab": "탭 복제",
       "gecko-reload-all-tabs": "모든 탭 새로 고침",
-      "gecko-restore-last-tab": "닫힌 탭 다시 열기",
+      "gecko-restore-last-tab": "닫은 탭 다시 열기",
       "gecko-open-new-window": "새 창 열기",
       "gecko-open-new-private-window": "새 사생활 보호 창 열기",
       "gecko-close-window": "창 닫기",
@@ -195,6 +208,8 @@
       "gecko-toggle-sidebar": "사이드바 전환",
       "gecko-scroll-up": "위로 스크롤",
       "gecko-scroll-down": "아래로 스크롤",
+      "gecko-scroll-line-up": "위로 스크롤",
+      "gecko-scroll-line-down": "아래로 스크롤",
       "gecko-scroll-right": "오른쪽으로 스크롤",
       "gecko-scroll-left": "왼쪽으로 스크롤",
       "gecko-scroll-to-top": "맨 위로 스크롤",
@@ -202,19 +217,50 @@
       "gecko-workspace-next": "다음 워크스페이스로 전환",
       "gecko-workspace-previous": "이전 워크스페이스로 전환",
       "floorp-toggle-zen-mode": "Zen 모드 전환",
-      "floorp-toggle-command-palette": "Toggle Command Palette"
+      "floorp-toggle-command-palette": "명령 팔레트 전환",
+      "floorp-open-settings": "설정 열기",
+      "floorp-open-hub": "Floorp Hub 열기",
+      "floorp-toggle-share-mode": "공유 모드 전환",
+      "floorp-copy-page-url-as-markdown": "페이지 URL을 마크다운으로 복사",
+      "floorp-split-view-open-left": "왼쪽에서 분할 화면 열기",
+      "floorp-split-view-open-right": "오른쪽에서 분할 화면 열기",
+      "floorp-split-view-open-top": "위쪽에서 분할 화면 열기",
+      "floorp-split-view-open-bottom": "아래쪽에서 분할 화면 열기",
+      "floorp-split-view-close": "분할 화면 종료",
+      "floorp-split-view-swap-panes": "분할 창 맞바꾸기",
+      "floorp-split-view-cycle-layout": "분할 레이아웃 순환",
+      "floorp-split-view-add-pane": "분할 화면 창에 추가",
+      "floorp-split-view-remove-pane": "분할 화면에서 창 제거"
     },
     "descriptions": {
       "gecko-back": "이전 페이지로 돌아가기",
       "gecko-forward": "다음 페이지로 이동",
       "gecko-reload": "이 페이지 다시 불러오기",
       "gecko-close-tab": "이 탭 닫기",
+      "gecko-close-other-tabs": "현재 탭 제외하고 모두 닫기",
+      "gecko-close-tabs-to-start": "현재 탭의 왼쪽에 있는 탭 모두 닫기",
+      "gecko-close-tabs-to-start-vertical": "현재 탭의 위에 있는 탭 모두 닫기",
+      "gecko-close-tabs-to-end": "현재 탭의 오른쪽에 있는 탭 모두 닫기",
+      "gecko-close-tabs-to-end-vertical": "현재 탭의 아래에 있는 탭 모두 닫기",
       "gecko-open-new-tab": "새 탭 열기",
       "gecko-duplicate-tab": "이 탭을 복제",
       "gecko-reload-all-tabs": "모든 탭 다시 불러오기",
       "gecko-restore-last-tab": "최근 닫은 탭 다시 열기",
-      "floorp-toggle-zen-mode": "Zen 모드를 전환하여 모든 UI 요소를 숨겨 방해받지 않고 브라우징하세요",
-      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
+      "floorp-toggle-zen-mode": "Zen 모드를 전환하여 모든 UI 요소를 숨겨 방해받지 않고 브라우징하기",
+      "floorp-toggle-command-palette": "명령을 검색하고 실행하는 명령 팔레트 여닫기",
+      "floorp-open-settings": "Floorp 설정 페이지 열기",
+      "floorp-open-hub": "Floorp Hub 페이지 열기",
+      "floorp-toggle-share-mode": "공유 모드를 전환하여 화면 공유 및 발표를 위해 UI 최소화하기",
+      "floorp-copy-page-url-as-markdown": "현재 페이지의 제목과 URL을 마크다운 링크 형식으로 복사: [제목](URL)",
+      "floorp-split-view-open-left": "현재 탭을 왼쪽에 분할 화면으로 열기",
+      "floorp-split-view-open-right": "현재 탭을 오른쪽에 분할 화면으로 열기",
+      "floorp-split-view-open-top": "현재 탭을 위쪽에 분할 화면으로 열기",
+      "floorp-split-view-open-bottom": "현재 탭을 아래쪽에 분할 화면으로 열기",
+      "floorp-split-view-close": "현재 분할 화면을 종료하고 단일 탭 화면으로 돌아가기",
+      "floorp-split-view-swap-panes": "현재 분할 화면의 창 위치 맞바꾸기",
+      "floorp-split-view-cycle-layout": "분할 화면 레이아웃 (수평, 수직, 격자) 간 전환하기",
+      "floorp-split-view-add-pane": "현재 분할 화면에 새 창 추가",
+      "floorp-split-view-remove-pane": "현재 분할 화면에서 마지막 창 제거"
     }
   },
   "qrCode": {
@@ -377,7 +423,7 @@
   },
   "splitView": {
     "contextMenu": {
-      "openInSplitView": "분활 화면에서 열기",
+      "openInSplitView": "분할 화면에서 열기",
       "addPane": "분할 화면 창에 추가",
       "moveToPane": "창으로 이동",
       "moveToPaneN": "{{n}} 창 ({{title}})"
@@ -392,6 +438,9 @@
       "grid2x2": "그리드(2×2)",
       "addPane": "창 추가",
       "removePane": "마지막 창 제거"
+    },
+    "dropZone": {
+      "newWindow": "여기에 끌어다 놓아 새 창에서 열기"
     }
   },
   "zen-mode": {
@@ -399,30 +448,131 @@
     "tooltiptext": "Zen 모드 전환",
     "menu-label": "Zen 모드 전환"
   },
+  "ipProtection": {
+    "title": "브라우저 VPN",
+    "toolbar": {
+      "activeTooltip": "Floorp에서 해당하는 웹 브라우징 트래픽에 브라우저 VPN이 켜져 있습니다",
+      "inactiveTooltip": "브라우저 VPN 꺼짐 — 웹 브라우징 트래픽이 보호되지 않습니다",
+      "excludedTooltip": "이 사이트에서 브라우저 VPN 꺼짐 — 이 사이트는 보호되지 않습니다",
+      "pausedTooltip": "브라우저 VPN 중지됨 — 웹 브라우징 트래픽이 보호되지 않습니다",
+      "errorTooltip": "브라우저 VPN — 연결 오류. 해당하는 웹 브라우징 트래픽이 보호되지 않습니다",
+      "helpTooltip": "브라우저 VPN 지원 페이지 열기"
+    },
+    "scope": {
+      "summary": "브라우저 VPN을 켜면, Floorp에서 해당하는 웹 트래픽을 보호할 수 있습니다. 운영 체제나 다른 앱에는 적용되지 않습니다.",
+      "fullDisclosure": "이 기능은 Mozilla 계정과 Mozilla 서비스 인프라를 이용합니다. Floorp는 독립적인 프로젝트이며, Mozilla의 제휴, 승인, 후원을 받지 않습니다. 이용 가능 여부는 사용자의 지역, 계정 상태, Mozilla의 서비스 이용 자격 요건에 따라 달라집니다."
+    },
+    "unauthenticated": {
+      "title": "브라우저 VPN 사용"
+    },
+    "settings": {
+      "promoHeading": "브라우저 VPN 사용",
+      "promoMessage": "로그인하고 서비스 이용 가능 여부를 확인한 뒤, Floorp에서 해당하는 웹 브라우징 트래픽을 보호하세요."
+    },
+    "terms": {
+      "prefix": "계속하면, ",
+      "termsOfUse": "Mozilla Firefox 이용 약관",
+      "conjunction": "에 동의하고, ",
+      "privacyNotice": "Mozilla Firefox 개인정보취급방침",
+      "suffix": "을 확인한 것으로 간주합니다."
+    }
+  },
   "commandPalette": {
-    "dialogLabel": "Command Palette",
-    "placeholder": "Type a command...",
-    "navigateTo": "Go to {{url}}",
+    "dialogLabel": "명령 팔레트",
+    "placeholder": "명령 입력...",
+    "navigateTo": "{{url}} 방문",
     "categories": {
-      "recent": "Recently Used",
-      "navigation": "Navigation",
+      "recent": "최근 사용",
+      "navigation": "탐색",
       "tabs": "탭",
-      "zoom": "Zoom",
+      "zoom": "확대/축소",
       "bookmarks": "북마크",
-      "page": "Page",
+      "page": "페이지",
       "search": "검색",
       "sidebar": "사이드바",
-      "scrolling": "Scrolling",
+      "scrolling": "스크롤",
       "history": "방문 기록",
-      "window": "Window",
-      "tools": "Tools",
+      "window": "창",
+      "tools": "도구",
       "downloads": "다운로드",
       "workspace": "워크스페이스",
       "floorp": "Floorp",
-      "media": "Media",
-      "open-tabs": "Open Tabs"
+      "media": "미디어",
+      "open-tabs": "탭 열기",
+      "switcher": "전환기",
+      "history-suggestions": "방문 기록",
+      "bookmark-suggestions": "북마크"
     },
-    "noResults": "No commands found",
-    "noResultsHint": "Try a different search term"
-  }
+    "noResults": "명령을 찾을 수 없음",
+    "noResultsHint": "다른 검색어를 사용해 보세요",
+    "stepIndicator": "{{current}}/{{total}}단계",
+    "backToCommands": "명령 목록으로 돌아가기",
+    "openUrl": "URL 열기",
+    "openUrlDescription": "새 탭에서 URL 열기",
+    "openUrlStepLabel": "열 URL 입력",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "정확한 URL을 입력해주세요",
+    "searchWeb": "웹 검색",
+    "searchWebDescription": "기본 검색 엔진으로 검색하기",
+    "searchWebStepLabel": "검색어 입력",
+    "searchWebStepPlaceholder": "검색어...",
+    "searchWithEngine": "\"{{query}}\" 검색",
+    "searchWithEngineDescription": "기본 검색 엔진으로 검색하기",
+    "searchWithEngineNamed": "{{engine}}에서 검색",
+    "searchWebValidationError": "검색어를 입력해주세요",
+    "searchWebEngineLabel": "검색 엔진 선택",
+    "searchWebEnginePlaceholder": "검색 엔진 선택...",
+    "searchEngineDefault": " (기본)",
+    "searchWebWhereLabel": "결과를 열 위치",
+    "searchWebWherePlaceholder": "열 위치 선택...",
+    "searchWebWhereNewTab": "새 탭",
+    "searchWebWhereNewTabDesc": "새 포그라운드 탭에서 열기",
+    "searchWebWhereBackgroundTab": "백그라운드 탭",
+    "searchWebWhereBackgroundTabDesc": "새 백그라운드 탭에서 열기",
+    "searchWebWhereCurrentTab": "현재 탭",
+    "searchWebWhereCurrentTabDesc": "현재 탭에서 탐색",
+    "openUrlWhereLabel": "열 위치",
+    "openUrlWherePlaceholder": "열 위치 선택...",
+    "openUrlWhereNewTab": "새 탭 열기",
+    "openUrlWhereNewTabDesc": "새 포그라운드 탭에서 열기",
+    "openUrlWhereBackgroundTab": "백그라운드 탭",
+    "openUrlWhereBackgroundTabDesc": "새 백그라운드 탭에서 열기",
+    "openUrlWhereCurrentTab": "현재 탭",
+    "openUrlWhereCurrentTabDesc": "현재 탭에서 탐색",
+    "reopenInContainer": "컨테이너에서 다시 열기",
+    "reopenInContainerDescription": "현재 탭을 특정 컨테이너에서 다시 열기",
+    "reopenInContainerStepLabel": "컨테이너 선택",
+    "reopenInContainerStepPlaceholder": "컨테이너 선택...",
+    "reopenInContainerNoContainer": "컨테이너 없음",
+    "reopenInContainerNoContainerDesc": "컨테이너 없이 다시 열기",
+    "reopenInContainerCurrentSuffix": "(현재)",
+    "loadingChoices": "옵션 로딩 중...",
+    "tabSwitcher": "탭 전환",
+    "tabSwitcherDescription": "현재 창의 다른 탭으로 전환",
+    "tabSwitcherStepLabel": "탭 선택",
+    "tabSwitcherStepPlaceholder": "탭 선택...",
+    "windowSwitcher": "창 전환",
+    "windowSwitcherDescription": "열려 있는 다른 창으로 전환",
+    "windowSwitcherStepLabel": "창 선택",
+    "windowSwitcherStepPlaceholder": "창 선택...",
+    "windowSwitcherCurrent": "현재",
+    "windowSwitcherTabCount": "탭 {{count}}개",
+    "closedTabSwitcher": "닫은 탭 다시 열기",
+    "closedTabSwitcherDescription": "최근에 닫은 탭 다시 열기",
+    "closedTabSwitcherStepLabel": "닫은 탭 선택",
+    "closedTabSwitcherStepPlaceholder": "닫은 탭 선택...",
+    "closedWindowSwitcher": "닫은 창 다시 열기",
+    "closedWindowSwitcherDescription": "최근에 닫은 창 다시 열기",
+    "closedWindowSwitcherStepLabel": "닫은 창 선택",
+    "closedWindowSwitcherStepPlaceholder": "닫은 창 선택...",
+    "historySwitcher": "기록 탐색",
+    "historySwitcherDescription": "인터넷 사용 기록에서 페이지 열기",
+    "historySwitcherStepLabel": "기록 항목 선택",
+    "historySwitcherStepPlaceholder": "기록 항목 선택...",
+    "bookmarkSwitcher": "북마크 전환",
+    "bookmarkSwitcherDescription": "북마크한 페이지 열기",
+    "bookmarkSwitcherStepLabel": "북마크 선택",
+    "bookmarkSwitcherStepPlaceholder": "북마크를 검색하거나 선택..."
+  },
+  "commandPaletteReadings": {}
 }

@@ -1,4 +1,3 @@
-
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +24,27 @@ export class NRPwaManagerChild extends JSWindowActorChild {
         defineAs: "NRUninstallSsb",
         asAsync: true,
       });
+
+      // Only export container functions when the experiment is enabled
+      try {
+        const { PwaContainerExperiment } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/PwaContainerExperiment.sys.mjs",
+        );
+        if (PwaContainerExperiment.isEnabled()) {
+          Cu.exportFunction(this.NRGetContainers.bind(this), window, {
+            defineAs: "NRGetContainers",
+          });
+          Cu.exportFunction(this.NRSetSsbContainer.bind(this), window, {
+            defineAs: "NRSetSsbContainer",
+            asAsync: true,
+          });
+        }
+      } catch (error) {
+        console.error(
+          "[NRPwaManagerChild] Failed to check container experiment:",
+          error,
+        );
+      }
     }
   }
   NRGetInstalledApps(
@@ -47,12 +67,23 @@ export class NRPwaManagerChild extends JSWindowActorChild {
     this.sendAsyncMessage("PwaManager:UninstallSsb", { id });
   }
 
-  resolveGetInstalledApps:
-    // deno-lint-ignore no-explicit-any
-    | ((installedApps: Record<string, any>) => void)
-    | null = null;
+  NRGetContainers(callback: (containersJson: string) => void = () => {}) {
+    const promise = new Promise<string>((resolve, _reject) => {
+      this.resolveGetContainers = resolve;
+    });
+    this.sendAsyncMessage("PwaManager:GetContainers");
+    promise.then((containersJson) => callback(containersJson));
+  }
+
+  NRSetSsbContainer(id: string, userContextId: number) {
+    this.sendAsyncMessage("PwaManager:SetContainer", { id, userContextId });
+  }
+
+  resolveGetInstalledApps: // deno-lint-ignore no-explicit-any
+    ((installedApps: Record<string, any>) => void) | null = null;
   resolveRenameSsb: ((id: string, newName: string) => void) | null = null;
   resolveUninstallSsb: ((id: string) => void) | null = null;
+  resolveGetContainers: ((containersJson: string) => void) | null = null;
   // deno-lint-ignore require-await
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -72,6 +103,11 @@ export class NRPwaManagerChild extends JSWindowActorChild {
       case "PwaManager:UninstallSsb": {
         this.resolveUninstallSsb?.(message.data.wrappedJSObject.id);
         this.resolveUninstallSsb = null;
+        break;
+      }
+      case "PwaManager:GetContainers": {
+        this.resolveGetContainers?.(message.data);
+        this.resolveGetContainers = null;
         break;
       }
     }

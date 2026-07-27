@@ -1,0 +1,102 @@
+---
+title: "Common Chrome Features"
+sidebar_label: "Common"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+generated: true
+---
+# Common Chrome Features
+
+The `browser-features/chrome/common/` directory contains loader-managed browser chrome features. This page is generated from the common feature inventory and the shared category map, so each discovered feature appears in exactly one category table.
+
+## Discovery And Loading
+
+Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 29 common feature entries.
+
+The bridge loader turns discovered entries into loadable modules, while each feature entrypoint remains responsible for its own component, services, styles, context menus, or lifecycle hooks.
+
+## Lifecycle Conventions
+
+Most entries expose an `init` lifecycle. Entries that include `initBeforeSessionStoreInit` are listed with that entrypoint in the generated tables below. The exact source path for each feature is the authority for its component and wired submodules.
+
+## Feature Categories
+
+### Tabs & Workspaces
+
+Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| split-view | `browser-features/chrome/common/split-view/index.ts` | `default class SplitView`, `init` | Owns the split view feature through the SplitView chrome component and wires `split-view-manager`. |
+| tab | `browser-features/chrome/common/tab/index.ts` | `default class Tab`, `init` | Owns the tab feature through the Tab chrome component and wires `scroll`, `openPosition`, `sizeSpecification`. |
+| tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
+| tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
+| undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |
+| workspaces | `browser-features/chrome/common/workspaces/index.ts` | `default class Workspaces`, `init` | Owns the workspaces feature through the Workspaces chrome component and wires `workspacesTabManager`, `utils/workspace-icons`, `workspacesService`. |
+
+### Sidebar & Panels
+
+Panel sidebar, menu panel, status bar, and sidebar positioning features.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| hub-panel-menu | `browser-features/chrome/common/hub-panel-menu/index.ts` | `default class HubPanelMenuComponent`, `init` | Owns the hub panel menu feature through the HubPanelMenuComponent chrome component and wires `HubPanelMenu`. |
+| panel-sidebar | `browser-features/chrome/common/panel-sidebar/index.ts` | `default class PanelSidebar`, `init` | Owns the panel sidebar feature through the PanelSidebar chrome component and wires `components/panel-sidebar`, `components/sidebar`, `components/sidebar-contextMenu`. |
+| reboot-panel-menu | `browser-features/chrome/common/reboot-panel-menu/index.ts` | `default class RebootPanelMenuComponent`, `init` | Owns the reboot panel menu feature through the RebootPanelMenuComponent chrome component and wires `RebootPanelMenu`. |
+| reverse-sidebar-position | `browser-features/chrome/common/reverse-sidebar-position/index.ts` | `init` | Provides initialization for the reverse sidebar position feature. |
+| statusbar | `browser-features/chrome/common/statusbar/index.ts` | `default class StatusBar`, `init` | Owns the statusbar feature through the StatusBar chrome component and wires `context-menu`, `statusbar`, `statusbar-manager`. |
+
+### Browser UI Customization
+
+Chrome CSS, design, ordering, tab color, UI customization, and focused UI mode features.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| browser-tab-color | `browser-features/chrome/common/browser-tab-color/index.ts` | `default class BrowserTabColor`, `init` | Owns the browser tab color feature through the BrowserTabColor chrome component and wires `tabcolor-manager`. |
+| chrome-css | `browser-features/chrome/common/chrome-css/index.ts` | `default class ChromeCSS`, `init` | Owns the chrome css feature through the ChromeCSS chrome component and wires `service`. |
+| designs | `browser-features/chrome/common/designs/index.ts` | `default class Designs`, `init` | Owns the designs feature through the Designs chrome component and wires `browser-design-element`. |
+| flex-order | `browser-features/chrome/common/flex-order/index.ts` | `default class FlexOrder`, `init` | Owns the flex order feature through the FlexOrder chrome component and wires `flex-order`. |
+| ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |
+| zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | `default class ZenMode`, `init` | Owns the zen mode feature through the ZenMode chrome component and wires `zen-mode`, `styleElem`. |
+
+### Input & Shortcuts
+
+Keyboard, mouse gesture, context menu, and command palette interaction features.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| command-palette | `browser-features/chrome/common/command-palette/index.ts` | `default class CommandPalette`, `init` | Owns the command palette feature through the CommandPalette chrome component and wires `service`, `components/CommandPalette`, `style.css?inline`. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component. |
+| keyboard-shortcut | `browser-features/chrome/common/keyboard-shortcut/index.ts` | `default class KeyboardShortcut`, `init` | Owns the keyboard shortcut feature through the KeyboardShortcut chrome component and wires `service`, `config`. |
+| mouse-gesture | `browser-features/chrome/common/mouse-gesture/index.ts` | `default class MouseGesture`, `init` | Owns the mouse gesture feature through the MouseGesture chrome component and wires `service`, `config`, `components/GestureDisplay`. |
+
+### Web Apps & Integration
+
+PWA, profile, add-on, external browser, share mode, and container integration features.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| addons | `browser-features/chrome/common/addons/index.ts` | `default class Addons`, `init` | Chrome Web Store Install Confirmation UI Customization This module modifies the addon installation confirmation popup to show Chrome extension specific messages when installing from Chrome Web Store. |
+| browser-share-mode | `browser-features/chrome/common/browser-share-mode/index.ts` | `default class BrowserShareMode`, `init` | Owns the browser share mode feature through the BrowserShareMode chrome component and wires `browser-share-mode`. |
+| external-browser | `browser-features/chrome/common/external-browser/index.ts` | `default class ExternalBrowser`, `init` | Owns the external browser feature through the ExternalBrowser chrome component and wires `tab-context-menu`, `link-context-menu`. |
+| private-container | `browser-features/chrome/common/private-container/index.ts` | `default class PrivateContainer`, `init` | Owns the private container feature through the PrivateContainer chrome component and wires `browser-private-container`, `context-menu`. |
+| profile-manager | `browser-features/chrome/common/profile-manager/index.ts` | `default class ProfileManager`, `init` | Owns the profile manager feature through the ProfileManager chrome component and wires `service`. |
+| pwa | `browser-features/chrome/common/pwa/index.ts` | `default class Pwa`, `init` | Owns the PWA feature through the Pwa chrome component and wires `SsbPageAction`, `SsbPanelView`, `config`. |
+
+### Utilities & Actions
+
+Small chrome utilities and action helpers that do not own a broader feature family.
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| modal-parent | `browser-features/chrome/common/modal-parent/index.ts` | `default class ModalParent`, `init` | Owns the modal parent feature through the ModalParent chrome component and wires `modalManager`, `modalElement`, `data/data`. |
+| qr-code-generator | `browser-features/chrome/common/qr-code-generator/index.ts` | `default class QRCodeGenerator`, `init` | Owns the qr code generator feature through the QRCodeGenerator chrome component and wires `qr-code-button`, `qr-code-panel`, `style.css?inline`. |
+
+### Uncategorized
+
+All discovered common chrome features are currently assigned to a generated category.
+
+## Relationship To Other Layers
+
+- Window Actor integration is registered in `browser-features/modules/modules/BrowserGlue.sys.mts:398`.
+- Settings pages may expose user-facing controls for selected common features; use the settings route catalog for route ownership.
+- Static chrome features live in the separate static catalog and are not duplicated in this common-feature directory page.

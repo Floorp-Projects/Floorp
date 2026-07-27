@@ -17,10 +17,14 @@ import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 @noraComponent(import.meta.hot)
 export default class PanelSidebar extends NoraComponentBase {
   init(): void {
+    const webPanelChild = WebsitePanelWindowChild.getInstance();
+    if (webPanelChild.isBmsWindow) {
+      return;
+    }
+
     migratePanelSidebarData();
 
     const ctx = new CPanelSidebar();
-    WebsitePanelWindowChild.getInstance();
     new PanelSidebarElem(ctx);
     new SidebarContextMenuElem(ctx);
     PanelSidebarAddModal.getInstance();

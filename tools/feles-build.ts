@@ -30,8 +30,9 @@ function createReadyPipe(): ReadyPipe {
     }
 
     write(chunk: Uint8Array | string) {
-      const s =
-        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      const s = typeof chunk === "string"
+        ? chunk
+        : new TextDecoder().decode(chunk);
       for (const cb of this.listeners) cb(s);
     }
 
@@ -60,8 +61,11 @@ async function runDev(): Promise<void> {
   const buildid2 = Update.generateUuidV7();
   await Builder.run("dev", buildid2);
   Injector.run("dev");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: true,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -120,8 +124,11 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
 
   // Inject manifests but keep dev-style directory so dev servers and browser use the built assets
   Injector.run("stage");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: false,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: false });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -166,8 +173,11 @@ async function runTest(): Promise<void> {
   const buildid2 = Update.generateUuidV7();
   await Builder.run("test", buildid2);
   Injector.run("dev");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: true,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -211,7 +221,10 @@ async function runBuild(phase?: string): Promise<void> {
     await Builder.run("production", buildid2);
   } else if (optionsPhase === "after-mach") {
     // await Injector.createManifest("production", "_dist/noraneko");
-    await Injector.injectXhtmlFromTs(false, true);
+    await Injector.injectXhtmlFromTs({
+      isCI: true,
+      allowBrowserHttpLoader: false,
+    });
   } else {
     console.error(`Unknown phase: ${optionsPhase}`);
     Deno.exit(1);

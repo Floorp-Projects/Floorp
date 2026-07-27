@@ -1,0 +1,19 @@
+---
+title: "Sidebar & Panels"
+sidebar_label: "Sidebar & Panels"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+generated: true
+---
+# Sidebar & Panels
+
+Panel sidebar, menu panel, status bar, and sidebar positioning features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| hub-panel-menu | `browser-features/chrome/common/hub-panel-menu/index.ts` | `default class HubPanelMenuComponent`, `init` | Owns the hub panel menu feature through the HubPanelMenuComponent chrome component and wires `HubPanelMenu`. |
+| panel-sidebar | `browser-features/chrome/common/panel-sidebar/index.ts` | `default class PanelSidebar`, `init` | Owns the panel sidebar feature through the PanelSidebar chrome component and wires `components/panel-sidebar`, `components/sidebar`, `components/sidebar-contextMenu`. |
+| reboot-panel-menu | `browser-features/chrome/common/reboot-panel-menu/index.ts` | `default class RebootPanelMenuComponent`, `init` | Owns the reboot panel menu feature through the RebootPanelMenuComponent chrome component and wires `RebootPanelMenu`. |
+| reverse-sidebar-position | `browser-features/chrome/common/reverse-sidebar-position/index.ts` | `init` | Provides initialization for the reverse sidebar position feature. |
+| statusbar | `browser-features/chrome/common/statusbar/index.ts` | `default class StatusBar`, `init` | Owns the statusbar feature through the StatusBar chrome component and wires `context-menu`, `statusbar`, `statusbar-manager`. |

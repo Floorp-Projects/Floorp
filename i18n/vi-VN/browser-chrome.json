@@ -110,14 +110,22 @@
     "menu": {
       "webapps": "Ứng dụng Web",
       "install-current": "Cài đặt trang hiện tại như một ứng dụng Web",
-      "open-installed": "Mở các ứng dụng đã cài"
+      "open-current": "Open app in selected container",
+      "open-installed": "Mở các ứng dụng đã cài",
+      "container": "Ngăn chứa"
     },
     "page-action": {
       "title": "Mở ứng dụng",
       "install": "Cài đặt ứng dụng",
       "open": "Mở ứng dụng",
       "cancel": "Hủy",
-      "site-icon": "Site icon"
+      "site-icon": "Site icon",
+      "container": "Ngăn chứa",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
@@ -131,6 +139,11 @@
       "gecko-forward": "Tiến lên",
       "gecko-reload": "Tải lại",
       "gecko-close-tab": "Đóng thẻ",
+      "gecko-close-other-tabs": "Close Other Tabs",
+      "gecko-close-tabs-to-start": "Close Tabs to Left",
+      "gecko-close-tabs-to-start-vertical": "Close Tabs Above",
+      "gecko-close-tabs-to-end": "Close Tabs to Right",
+      "gecko-close-tabs-to-end-vertical": "Close Tabs Below",
       "gecko-open-new-tab": "Thẻ mới",
       "gecko-duplicate-tab": "Nhân đôi thẻ",
       "gecko-reload-all-tabs": "Tải lại mọi thẻ",
@@ -195,6 +208,8 @@
       "gecko-toggle-sidebar": "Đóng mở thanh bên",
       "gecko-scroll-up": "Cuộn lên",
       "gecko-scroll-down": "Cuộn xuống",
+      "gecko-scroll-line-up": "Cuộn lên",
+      "gecko-scroll-line-down": "Cuộn xuống",
       "gecko-scroll-right": "Cuộn phải ",
       "gecko-scroll-left": "Cuộn trái",
       "gecko-scroll-to-top": "Cuộn lên đầu",
@@ -202,19 +217,50 @@
       "gecko-workspace-next": "Switch to Next Workspace",
       "gecko-workspace-previous": "Switch to Previous Workspace",
       "floorp-toggle-zen-mode": "Toggle Zen Mode",
-      "floorp-toggle-command-palette": "Toggle Command Palette"
+      "floorp-toggle-command-palette": "Toggle Command Palette",
+      "floorp-open-settings": "Open Settings",
+      "floorp-open-hub": "Mở Floorp Hub",
+      "floorp-toggle-share-mode": "Toggle Share Mode",
+      "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown",
+      "floorp-split-view-open-left": "Split View Left",
+      "floorp-split-view-open-right": "Split View Right",
+      "floorp-split-view-open-top": "Split View Top",
+      "floorp-split-view-open-bottom": "Split View Bottom",
+      "floorp-split-view-close": "Close Split View",
+      "floorp-split-view-swap-panes": "Swap Split Panes",
+      "floorp-split-view-cycle-layout": "Cycle Split Layout",
+      "floorp-split-view-add-pane": "Add Pane to Split View",
+      "floorp-split-view-remove-pane": "Remove Pane from Split View"
     },
     "descriptions": {
       "gecko-back": "Quay lại trang trước",
       "gecko-forward": "Tiến tới trang sau",
       "gecko-reload": "Tải lại trang hiện tại",
       "gecko-close-tab": "Đóng trang hiện tại",
+      "gecko-close-other-tabs": "Close all tabs except the current one",
+      "gecko-close-tabs-to-start": "Close all tabs to the left of the current tab",
+      "gecko-close-tabs-to-start-vertical": "Close all tabs above the current tab",
+      "gecko-close-tabs-to-end": "Close all tabs to the right of the current tab",
+      "gecko-close-tabs-to-end-vertical": "Close all tabs below the current tab",
       "gecko-open-new-tab": "Mở thẻ mới",
       "gecko-duplicate-tab": "Nhân đôi thẻ hiện tại",
       "gecko-reload-all-tabs": "Tải lại tất cả thẻ",
       "gecko-restore-last-tab": "Mở lại thẻ đóng gần nhất",
       "floorp-toggle-zen-mode": "Toggle Zen Mode to hide all UI elements for distraction-free browsing",
-      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands"
+      "floorp-toggle-command-palette": "Open or close the command palette to search and execute commands",
+      "floorp-open-settings": "Opens the Floorp settings page",
+      "floorp-open-hub": "Opens the Floorp Hub page",
+      "floorp-toggle-share-mode": "Toggle Share Mode to minimize UI for screen sharing and presentations",
+      "floorp-copy-page-url-as-markdown": "Copy the current page title and URL as Markdown link format: [Title](URL)",
+      "floorp-split-view-open-left": "Open the current tab in a split view on the left side",
+      "floorp-split-view-open-right": "Open the current tab in a split view on the right side",
+      "floorp-split-view-open-top": "Open the current tab in a split view on the top side",
+      "floorp-split-view-open-bottom": "Open the current tab in a split view on the bottom side",
+      "floorp-split-view-close": "Close the active split view and return to single tab view",
+      "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
+      "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
+      "floorp-split-view-add-pane": "Add a new pane to the active split view",
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
     }
   },
   "qrCode": {
@@ -392,12 +438,44 @@
       "grid2x2": "Grid (2×2)",
       "addPane": "Add Pane",
       "removePane": "Remove Last Pane"
+    },
+    "dropZone": {
+      "newWindow": "Drop here to open in new window"
     }
   },
   "zen-mode": {
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Command Palette",
@@ -420,9 +498,81 @@
       "workspace": "Không gian làm việc",
       "floorp": "Floorp",
       "media": "Media",
-      "open-tabs": "Open Tabs"
+      "open-tabs": "Open Tabs",
+      "switcher": "Switcher",
+      "history-suggestions": "Lịch sử",
+      "bookmark-suggestions": "Dấu trang"
     },
     "noResults": "No commands found",
-    "noResultsHint": "Try a different search term"
-  }
+    "noResultsHint": "Try a different search term",
+    "stepIndicator": "Step {{current}} of {{total}}",
+    "backToCommands": "Back to commands",
+    "openUrl": "Open URL",
+    "openUrlDescription": "Open a URL in a new tab",
+    "openUrlStepLabel": "Enter URL to open",
+    "openUrlStepPlaceholder": "https://example.com",
+    "openUrlValidationError": "Please enter a valid URL",
+    "searchWeb": "Search the Web",
+    "searchWebDescription": "Search with your default search engine",
+    "searchWebStepLabel": "Enter search query",
+    "searchWebStepPlaceholder": "Search terms...",
+    "searchWithEngine": "Search for \"{{query}}\"",
+    "searchWithEngineDescription": "Search with your default search engine",
+    "searchWithEngineNamed": "Search with {{engine}}",
+    "searchWebValidationError": "Please enter a search query",
+    "searchWebEngineLabel": "Select search engine",
+    "searchWebEnginePlaceholder": "Select a search engine...",
+    "searchEngineDefault": " (default)",
+    "searchWebWhereLabel": "Where to open results",
+    "searchWebWherePlaceholder": "Select where to open...",
+    "searchWebWhereNewTab": "Thẻ mới",
+    "searchWebWhereNewTabDesc": "Open in a new foreground tab",
+    "searchWebWhereBackgroundTab": "Background Tab",
+    "searchWebWhereBackgroundTabDesc": "Open in a new background tab",
+    "searchWebWhereCurrentTab": "Current Tab",
+    "searchWebWhereCurrentTabDesc": "Navigate the current tab",
+    "openUrlWhereLabel": "Where to open",
+    "openUrlWherePlaceholder": "Select where to open...",
+    "openUrlWhereNewTab": "Thẻ mới",
+    "openUrlWhereNewTabDesc": "Open in a new foreground tab",
+    "openUrlWhereBackgroundTab": "Background Tab",
+    "openUrlWhereBackgroundTabDesc": "Open in a new background tab",
+    "openUrlWhereCurrentTab": "Current Tab",
+    "openUrlWhereCurrentTabDesc": "Navigate the current tab",
+    "reopenInContainer": "Reopen in Container",
+    "reopenInContainerDescription": "Reopen the current tab in a specific container",
+    "reopenInContainerStepLabel": "Select a container",
+    "reopenInContainerStepPlaceholder": "Choose a container...",
+    "reopenInContainerNoContainer": "Không ngăn chứa",
+    "reopenInContainerNoContainerDesc": "Reopen in the default context",
+    "reopenInContainerCurrentSuffix": "(hiện tại)",
+    "loadingChoices": "Loading options...",
+    "tabSwitcher": "Switch Tab",
+    "tabSwitcherDescription": "Switch to a different tab in the current window",
+    "tabSwitcherStepLabel": "Select a tab",
+    "tabSwitcherStepPlaceholder": "Choose a tab...",
+    "windowSwitcher": "Switch Window",
+    "windowSwitcherDescription": "Switch to a different open window",
+    "windowSwitcherStepLabel": "Select a window",
+    "windowSwitcherStepPlaceholder": "Choose a window...",
+    "windowSwitcherCurrent": "hiện tại",
+    "windowSwitcherTabCount": "{{count}} tab(s)",
+    "closedTabSwitcher": "Mở lại thẻ dã đóng",
+    "closedTabSwitcherDescription": "Reopen a recently closed tab",
+    "closedTabSwitcherStepLabel": "Select a closed tab",
+    "closedTabSwitcherStepPlaceholder": "Choose a closed tab...",
+    "closedWindowSwitcher": "Reopen Closed Window",
+    "closedWindowSwitcherDescription": "Reopen a recently closed window",
+    "closedWindowSwitcherStepLabel": "Select a closed window",
+    "closedWindowSwitcherStepPlaceholder": "Choose a closed window...",
+    "historySwitcher": "Browse History",
+    "historySwitcherDescription": "Open a page from your browsing history",
+    "historySwitcherStepLabel": "Select a history entry",
+    "historySwitcherStepPlaceholder": "Choose a history entry...",
+    "bookmarkSwitcher": "Switch Bookmark",
+    "bookmarkSwitcherDescription": "Open a bookmarked page",
+    "bookmarkSwitcherStepLabel": "Select a bookmark",
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+  },
+  "commandPaletteReadings": {}
 }

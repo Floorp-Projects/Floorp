@@ -9,6 +9,32 @@ import { createRootHMR, render } from "@nora/solid-xul";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
+type ShowRebootPanelSubViewDeps = {
+  showSubView: (
+    viewId: string,
+    anchor: Element | null,
+  ) => void | Promise<void>;
+  getAnchor: () => Element | null;
+};
+
+type RestartDeps = {
+  quit: (flags: number) => void;
+  forceQuit: number;
+  restart: number;
+};
+
+type RestartWithCacheClearDeps = {
+  invalidateCachesOnRestart: () => void;
+  quit: (flags: number) => void;
+  restart: number;
+  attemptQuit: number;
+};
+
+type RestartInSafeModeDeps = {
+  notifyObservers: (subject: nsISupports, topic: string) => void;
+  subject: nsISupports;
+};
+
 export class RebootPanelMenu {
   private isOpen = createSignal<boolean>(false);
   private isRendered = false;
@@ -70,31 +96,47 @@ export class RebootPanelMenu {
     });
   }
 
-  private static async showRebootPanelSubView() {
-    await globalThis.PanelUI.showSubView(
-      "PanelUI-reboot",
-      document?.getElementById("appMenu-restart-button"),
-    );
+  private static async showRebootPanelSubView(
+    deps: ShowRebootPanelSubViewDeps = {
+      showSubView: (viewId, anchor) =>
+        globalThis.PanelUI.showSubView(viewId, anchor),
+      getAnchor: () => document?.getElementById("appMenu-restart-button"),
+    },
+  ): Promise<void> {
+    await deps.showSubView("PanelUI-reboot", deps.getAnchor());
   }
 
-  private static handleRestart() {
-    Services.startup.quit(
-      Services.startup.eForceQuit! | Services.startup.eRestart!,
-    );
+  private static handleRestart(
+    deps: RestartDeps = {
+      quit: (flags) => Services.startup.quit(flags),
+      forceQuit: Services.startup.eForceQuit!,
+      restart: Services.startup.eRestart!,
+    },
+  ): void {
+    deps.quit(deps.forceQuit | deps.restart);
   }
 
-  private static handleRestartWithCacheClear() {
-    Services.appinfo.invalidateCachesOnRestart();
-    Services.startup.quit(
-      Ci.nsIAppStartup.eRestart! | Ci.nsIAppStartup.eAttemptQuit!,
-    );
+  private static handleRestartWithCacheClear(
+    deps: RestartWithCacheClearDeps = {
+      invalidateCachesOnRestart: () =>
+        Services.appinfo.invalidateCachesOnRestart(),
+      quit: (flags) => Services.startup.quit(flags),
+      restart: Ci.nsIAppStartup.eRestart!,
+      attemptQuit: Ci.nsIAppStartup.eAttemptQuit!,
+    },
+  ): void {
+    deps.invalidateCachesOnRestart();
+    deps.quit(deps.restart | deps.attemptQuit);
   }
 
-  private static handleRestartInSafeMode() {
-    Services.obs.notifyObservers(
-      window as nsISupports,
-      "restart-in-safe-mode",
-    );
+  private static handleRestartInSafeMode(
+    deps: RestartInSafeModeDeps = {
+      notifyObservers: (subject, topic) =>
+        Services.obs.notifyObservers(subject, topic),
+      subject: window as nsISupports,
+    },
+  ): void {
+    deps.notifyObservers(deps.subject, "restart-in-safe-mode");
   }
 
   public static Render(): JSX.Element {

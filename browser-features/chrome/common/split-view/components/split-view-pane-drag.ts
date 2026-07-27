@@ -5,6 +5,7 @@
 
 import { swapPanesByTab } from "../utils/reorder-panes.js";
 import { findTabByPanelIdAuto } from "../utils/find-tab.js";
+import { forceCleanupDragState } from "../utils/force-cleanup.js";
 
 let activeDragCleanup: (() => void) | null = null;
 
@@ -211,4 +212,9 @@ export function destroyPaneDrag(): void {
     el.removeAttribute("data-floorp-drag-source");
     el.removeAttribute("data-floorp-drop-target");
   }
+  // Safety net: a pane-reorder drag interrupted mid-flight (mouseup lost,
+  // window blurred) can leave `data-floorp-dragging="pane-reorder"` on
+  // tabpanels, which applies `pointer-events: none` to web content. Ensure
+  // a full sweep on teardown. Idempotent; no-op when nothing is leaked.
+  forceCleanupDragState(null);
 }

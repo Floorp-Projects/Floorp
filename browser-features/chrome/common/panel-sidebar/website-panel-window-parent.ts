@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { setPanelSidebarData } from "./data/data.ts";
-
-type XULBrowserElement = XULElement & {
-  browsingContext: {
-    associatedWindow: Window;
-  };
-};
+import {
+  getPanelDataById,
+  getWebPanelChromeWindow,
+  getWebPanelContentBrowser,
+  loadUriInWebPanelBrowser,
+  saveZoomLevel,
+  type WebPanelBrowserElement,
+} from "./utils/web-panel-browser.ts";
 
 export class WebsitePanel {
   private static instance: WebsitePanel;
@@ -21,26 +23,18 @@ export class WebsitePanel {
     return WebsitePanel.instance;
   }
 
-  private getWindowByWebpanelId(id: string, parentWindow: Window) {
-    const webpanelBrowserId = `sidebar-panel-${id}`;
-    const webpanelBrowser = parentWindow?.document?.getElementById(
-      webpanelBrowserId,
-    ) as unknown as XULBrowserElement;
-
-    if (!webpanelBrowser) {
-      throw new Error("Target panel window not found");
+  private getContentBrowser(webpanelId: string, parentWindow: Window) {
+    const browser = getWebPanelContentBrowser(webpanelId, parentWindow);
+    if (!browser) {
+      throw new Error("Target panel content browser not found");
     }
-
-    return webpanelBrowser.browsingContext.associatedWindow;
+    return browser;
   }
 
   public toggleMutePanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      const tab = targetPanelWindow.gBrowser.selectedTab;
-
-      const audioMuted = tab.linkedBrowser.audioMuted;
-      tab.linkedBrowser.audioMuted = !audioMuted;
+      const browser = this.getContentBrowser(webpanelId, window);
+      browser.audioMuted = !browser.audioMuted;
     } catch (e) {
       console.error("Failed to toggle mute for webpanel", e);
     }
@@ -48,10 +42,8 @@ export class WebsitePanel {
 
   public reloadPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      const tab = targetPanelWindow.gBrowser.selectedTab;
-
-      tab.linkedBrowser.reload();
+      const browser = this.getContentBrowser(webpanelId, window);
+      browser.reload?.();
     } catch (e) {
       console.error("Failed to reload webpanel", e);
     }
@@ -59,8 +51,8 @@ export class WebsitePanel {
 
   public goForwardPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      targetPanelWindow.gBrowser.selectedTab.linkedBrowser.goForward();
+      const browser = this.getContentBrowser(webpanelId, window);
+      browser.goForward?.();
     } catch (e) {
       console.error("Failed to go forward in webpanel", e);
     }
@@ -68,8 +60,8 @@ export class WebsitePanel {
 
   public goBackPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      targetPanelWindow.gBrowser.selectedTab.linkedBrowser.goBack();
+      const browser = this.getContentBrowser(webpanelId, window);
+      browser.goBack?.();
     } catch (e) {
       console.error("Failed to go back in webpanel", e);
     }
@@ -77,19 +69,21 @@ export class WebsitePanel {
 
   public goIndexPagePanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-      const uri = targetPanelWindow.bmsLoadedURI;
-
-      targetPanelWindow.gBrowser.loadURI(Services.io.newURI(uri), {
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
-      });
+      const browser = this.getContentBrowser(webpanelId, window);
+      const chromeWindow = getWebPanelChromeWindow(webpanelId, window);
+      const uri = chromeWindow?.bmsLoadedURI ??
+        getPanelDataById(webpanelId)?.url ??
+        "";
+      if (!uri) {
+        return;
+      }
+      loadUriInWebPanelBrowser(browser, uri);
     } catch (e) {
       console.error("Failed to go to index page in webpanel", e);
     }
   }
 
-  private saveZoomLevel(webpanelId: string, zoomLevel: number) {
+  private persistZoomLevel(webpanelId: string, zoomLevel: number) {
     setPanelSidebarData((prev) => {
       Object.values(prev).forEach((panel) => {
         if (panel.id === webpanelId) {
@@ -98,15 +92,26 @@ export class WebsitePanel {
       });
       return prev;
     });
+    saveZoomLevel(webpanelId, zoomLevel);
+  }
+
+  private adjustZoom(
+    webpanelId: string,
+    adjust: (browser: WebPanelBrowserElement) => number,
+  ) {
+    const browser = this.getContentBrowser(webpanelId, window);
+    if (typeof browser.fullZoom !== "number") {
+      throw new Error("Browser zoom is unavailable");
+    }
+
+    const newZoomLevel = adjust(browser);
+    browser.fullZoom = newZoomLevel;
+    this.persistZoomLevel(webpanelId, newZoomLevel);
   }
 
   public zoomInPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-
-      targetPanelWindow.ZoomManager.enlarge();
-      const newZoomLevel = targetPanelWindow.ZoomManager.zoom;
-      this.saveZoomLevel(webpanelId, newZoomLevel);
+      this.adjustZoom(webpanelId, (browser) => (browser.fullZoom ?? 1) * 1.1);
     } catch (e) {
       console.error("Failed to zoom in webpanel", e);
     }
@@ -114,11 +119,7 @@ export class WebsitePanel {
 
   public zoomOutPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-
-      targetPanelWindow.ZoomManager.reduce();
-      const newZoomLevel = targetPanelWindow.ZoomManager.zoom;
-      this.saveZoomLevel(webpanelId, newZoomLevel);
+      this.adjustZoom(webpanelId, (browser) => (browser.fullZoom ?? 1) / 1.1);
     } catch (e) {
       console.error("Failed to zoom out webpanel", e);
     }
@@ -126,10 +127,7 @@ export class WebsitePanel {
 
   public resetZoomLevelPanel(webpanelId: string) {
     try {
-      const targetPanelWindow = this.getWindowByWebpanelId(webpanelId, window);
-
-      targetPanelWindow.ZoomManager.zoom = 1;
-      this.saveZoomLevel(webpanelId, 1);
+      this.adjustZoom(webpanelId, () => 1);
     } catch (e) {
       console.error("Failed to reset zoom in webpanel", e);
     }

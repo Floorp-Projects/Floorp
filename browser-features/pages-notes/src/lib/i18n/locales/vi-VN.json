@@ -4,7 +4,7 @@
     },
     "notes": {
         "welcome": "Chào mừng tới Ghi chú {{productName}}!",
-        "welcomeContent": "Chào mừng bạn đến với Ghi chú {{productName}}! Cùng lướt qua cách sử dụng nào.\n\nGhi chú {{productName}} là một tính năng ghi chú có thể được đồng bộ hóa trên nhiều thiết bị. Để bật tính năng đồng bộ hóa, bạn cần đăng nhập vào {{productName}} bằng tài khoản Mozilla.\nGhi chú {{productName}} được lưu trữ trong {{productName}} và được đồng bộ hóa trên nhiều thiết bị bằng Firefox Sync. Firefox Sync mã hóa nội dung đồng bộ hóa bằng mật khẩu tài khoản Mozilla của bạn, do đó không ai có thể biết được nội dung đó.",
+        "welcomeContent": "Chào mừng bạn đến với Ghi chú {{productName}}! Cùng lướt qua cách sử dụng nào.\n\nGhi chú {{productName}} là một tính năng ghi chú có thể được đồng bộ hóa trên nhiều thiết bị. Để bật tính năng đồng bộ hóa, bạn cần đăng nhập vào {{productName}} bằng tài khoản Mozilla.\nGhi chú {{productName}} được lưu trữ trong {{productName}} và được đồng bộ hóa trên nhiều thiết bị bằng Firefox Sync. Firefox Sync mã hóa nội dung đồng bộ bằng mật khẩu tài khoản Mozilla của bạn, do đó không ai có xem được nội dung.",
         "new": "Ghi chú mới",
         "reorder": "Sắp xếp",
         "done": "Xong",
@@ -13,17 +13,17 @@
         "noNotesSelected": "Chọn một ghi chú hoặc tạo mới",
         "createNew": "Tạo ghi chú mới",
         "titlePlaceholder": "Tiêu đề",
-        "loading": "Đang tải ghi chú..",
+        "loading": "Đang tải ghi chú...",
         "delete": "Xoá",
-        "empty": "No notes yet. Click \"New Note\" to create one.",
-        "deleteConfirmTitle": "Delete Note",
-        "deleteConfirmMessage": "Are you sure you want to delete this note? This action cannot be undone.",
+        "empty": "Chưa có ghi chú nào. Nhấp vào \"Ghi chú mới\" để tạo ghi chú.",
+        "deleteConfirmTitle": "Xoá ghi chú",
+        "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa ghi chú này không? Thao tác này không thể hoàn tác.",
         "deleteConfirm": "Xoá",
         "deleteCancel": "Hủy",
-        "noteList": "Notes list",
-        "search": "Search notes",
-        "clearSearch": "Clear search",
-        "noSearchResults": "No notes match your search"
+        "noteList": "Danh sách ghi chú",
+        "search": "Tìm kiếm ghi chú",
+        "clearSearch": "Xóa nội dung tìm kiếm",
+        "noSearchResults": "Không tìm thấy ghi chú nào"
     },
     "editor": {
         "bold": "In đậm",
@@ -39,27 +39,27 @@
         "heading1": "Tiêu đề cấp 1",
         "heading2": "Tiêu đề cấp 2",
         "heading3": "Tiêu đề cấp 3",
-        "undo": "Undo",
-        "redo": "Redo",
+        "undo": "Hoàn tác",
+        "redo": "Làm lại",
         "history": "Lịch sử",
-        "toolbar": "Formatting toolbar",
-        "headings": "Headings",
-        "textFormatting": "Text formatting",
-        "lists": "Lists",
-        "alignment": "Alignment",
-        "contentArea": "Note content",
-        "placeholder": "Start writing...",
-        "image": "Insert image"
+        "toolbar": "Thanh định dạng",
+        "headings": "Tiêu đề",
+        "textFormatting": "Định dạng văn bản",
+        "lists": "Danh sách",
+        "alignment": "Căn chỉnh",
+        "contentArea": "Nội dung ghi chú",
+        "placeholder": "Viết đi...",
+        "image": "Chèn ảnh"
     },
     "common": {
         "close": "Đóng",
-        "confirm": "Confirm",
+        "confirm": "Xác nhận",
         "cancel": "Hủy"
     },
     "save": {
-        "saving": "Saving...",
-        "saved": "Saved",
-        "error": "Save failed"
+        "saving": "Đang lưu...",
+        "saved": "Đã lưu",
+        "error": "Lưu thất bại"
     },
     "error": {
         "loadFailed": "Tải dữ liệu ghi chú thất bại",

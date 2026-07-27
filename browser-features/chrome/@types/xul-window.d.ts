@@ -115,6 +115,7 @@ type TCustomizableUIArea =
 
 // Gecko globals
 declare var gBrowser: GBrowser;
+declare var gURLBar: { focused: boolean };
 declare var TabContextMenu: TabContextMenu;
 declare var PanelUI: PanelUI;
 declare var gFloorp: GFloorp;
@@ -193,6 +194,13 @@ declare namespace globalThis {
   var gFloorpPanelSidebarCurrentPanel: unknown;
   var gFloorpPanelSidebar: unknown;
   var floorpWebPanelWindow: unknown;
+  var floorpWebPanelContentBrowser: XULBrowserElement & {
+    audioMuted?: boolean;
+    fullZoom?: number;
+    reload?: () => void;
+    goBack?: () => void;
+    goForward?: () => void;
+  };
   var floorpSsbWindow: unknown;
   var floorpBmsUserAgent: unknown;
   var gMiddleClickNewTabUsesPasteboard: unknown;
@@ -223,12 +231,9 @@ declare namespace globalThis {
     ): string;
   };
   var E10SUtils: {
+    DEFAULT_REMOTE_TYPE: string;
     EXTENSION_REMOTE_TYPE: string;
     deserializePrincipal(principal: unknown): unknown;
-    getRemoteTypeForURI(uri: string, ...args: unknown[]): string;
-    predictOriginAttributes(
-      options: Record<string, unknown>,
-    ): Record<string, unknown>;
   };
   var UrlbarUtils: { stripUnsafeProtocolOnPaste(text: string): string };
   var E: unknown;

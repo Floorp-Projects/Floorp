@@ -3,11 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, onCleanup } from "solid-js";
+import { createEffect, createMemo, For, onCleanup, Show } from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config } from "./configs.ts";
 import { getCSSFromConfig } from "./utils/css.ts";
+import { TAB_COLOR_LIKE_TOOLBAR_CSS } from "./utils/tab-color-like-toolbar.css.ts";
+// Gecko 152 renamed many CSS variables; Floorp's own components (statusbar,
+// panel-sidebar, workspaces, ...) still reference the pre-152 names. These
+// aliases are injected for every design so the legacy names keep resolving.
+import { GECKO_152_VAR_ALIASES_CSS } from "./utils/gecko-152-var-aliases.css.ts";
 
 const AGENT_SHEET = Ci.nsIStyleSheetService.AGENT_SHEET as number;
 const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
@@ -46,20 +51,10 @@ export function BrowserDesignElement() {
     const registeredURIs: nsIURI[] = [];
 
     if (useTabColorAsToolbarColor === true) {
-      console.log(
-        "[BrowserDesignElement] Applying tab color as toolbar color CSS",
-      );
       if (!tabColorSheetURI) {
-        const css = `
-        .tab-background {
-          &:is([selected], [multiselected]) {
-            background: var(--toolbar-bgcolor) !important;
-          }
-        }
-      `;
         try {
           const dataUri = `data:text/css;charset=utf-8,${
-            encodeURIComponent(css)
+            encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
           }`;
           const uri = Services.io.newURI(dataUri);
           sss.loadAndRegisterSheet(uri, AGENT_SHEET);
@@ -140,32 +135,32 @@ export function BrowserDesignElement() {
     });
   });
 
-  // Compute Chrome-only styles (applied via DOM, not AGENT_SHEET)
-  // These styles only affect the browser UI, not web content
-  const chromeStyleContent = createMemo(() => {
-    const { chromeStyles, chromeStylesRaw, iconBasePath } = getCSS();
+  const chromeStyleUrls = createMemo(() => getCSS().chromeStyles ?? []);
 
-    // Development mode: use raw CSS
-    if (chromeStylesRaw?.length) {
-      return chromeStylesRaw
-        .map((css) => replaceIconPaths(css, iconBasePath))
-        .join("\n");
+  // Inline Chrome-only CSS (dev bundles + production supplementary rules)
+  const chromeInlineStyleContent = createMemo(() => {
+    const { chromeStylesRaw, iconBasePath } = getCSS();
+    if (!chromeStylesRaw?.length) {
+      return "";
     }
-
-    // Production mode: we need to load chrome:// URLs
-    // Since we can't directly embed chrome:// URLs in style tags,
-    // we'll use @import for production
-    if (chromeStyles?.length) {
-      return chromeStyles.map((url) => `@import url("${url}");`).join("\n");
-    }
-
-    return "";
+    return chromeStylesRaw
+      .map((css) => replaceIconPaths(css, iconBasePath))
+      .join("\n");
   });
 
   return (
     <>
       <style>{styleBrowser}</style>
-      <style>{chromeStyleContent()}</style>
+      {/* Gecko 152 variable aliases — Floorp-wide, applied to every design.
+          Keep this BEFORE theme-specific chrome styles so per-theme rules can
+          still override. */}
+      <style>{GECKO_152_VAR_ALIASES_CSS}</style>
+      <For each={chromeStyleUrls()}>
+        {(url) => <link rel="stylesheet" href={url} />}
+      </For>
+      <Show when={chromeInlineStyleContent()}>
+        <style>{chromeInlineStyleContent()}</style>
+      </Show>
     </>
   );
 }

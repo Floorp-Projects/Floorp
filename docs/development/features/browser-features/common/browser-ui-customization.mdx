@@ -1,0 +1,20 @@
+---
+title: "Browser UI Customization"
+sidebar_label: "UI Customization"
+floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+generated: true
+---
+# Browser UI Customization
+
+Chrome CSS, design, ordering, tab color, UI customization, and focused UI mode features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| browser-tab-color | `browser-features/chrome/common/browser-tab-color/index.ts` | `default class BrowserTabColor`, `init` | Owns the browser tab color feature through the BrowserTabColor chrome component and wires `tabcolor-manager`. |
+| chrome-css | `browser-features/chrome/common/chrome-css/index.ts` | `default class ChromeCSS`, `init` | Owns the chrome css feature through the ChromeCSS chrome component and wires `service`. |
+| designs | `browser-features/chrome/common/designs/index.ts` | `default class Designs`, `init` | Owns the designs feature through the Designs chrome component and wires `browser-design-element`. |
+| flex-order | `browser-features/chrome/common/flex-order/index.ts` | `default class FlexOrder`, `init` | Owns the flex order feature through the FlexOrder chrome component and wires `flex-order`. |
+| ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |
+| zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | `default class ZenMode`, `init` | Owns the zen mode feature through the ZenMode chrome component and wires `zen-mode`, `styleElem`. |

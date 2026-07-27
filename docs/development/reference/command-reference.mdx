@@ -1,0 +1,343 @@
+---
+title: "Command Reference"
+sidebar_label: "Commands"
+floorp_commit: "9548e3a8526f2be38c5d9da7fee9429ab4c90cb0"
+generated: true
+---
+# Command Reference
+
+This page is generated directly from `deno.json` and `tools/feles-build.ts` so command names and usage strings stay aligned with the source tree.
+
+## Deno Tasks
+
+### `deno task act`
+
+```bash
+deno task act
+```
+
+Implementation: `deno run -A tools/act/run-package-workflow.ts`
+
+Source: `deno.json:60`
+
+### `deno task dev-tool`
+
+```bash
+deno task dev-tool
+```
+
+Implementation: `deno run -A tools/dev-tool.ts`
+
+Source: `deno.json:61`
+
+### `deno task docs-pipeline`
+
+```bash
+deno task docs-pipeline
+```
+
+Implementation: `deno run --allow-read --allow-write --allow-env --allow-net --allow-run tools/docs-pipeline/mod.ts`
+
+Source: `deno.json:62`
+
+### `deno task docs-pipeline:audit`
+
+```bash
+deno task docs-pipeline:audit
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist --allow-env=DOCS_LLM_BASE_URL,DOCS_LLM_MODEL,DOCS_LLM_API_KEY,DOCS_LLM_TEMPERATURE,DOCS_LLM_RESPONSE_FORMAT,DOCS_AUDIT_LLM_BASE_URL,DOCS_AUDIT_LLM_MODEL,DOCS_AUDIT_LLM_API_KEY,DOCS_AUDIT_LLM_TEMPERATURE,DOCS_AUDIT_LLM_RESPONSE_FORMAT --allow-net tools/docs-pipeline/mod.ts audit`
+
+Source: `deno.json:66`
+
+### `deno task docs-pipeline:audit-verify`
+
+```bash
+deno task docs-pipeline:audit-verify
+```
+
+Implementation: `deno run --allow-read=_dist tools/docs-pipeline/mod.ts audit-verify`
+
+Source: `deno.json:67`
+
+### `deno task docs-pipeline:codex-audit-schema`
+
+```bash
+deno task docs-pipeline:codex-audit-schema
+```
+
+Implementation: `deno run --allow-read tools/docs-pipeline/mod.ts codex-audit-schema`
+
+Source: `deno.json:70`
+
+### `deno task docs-pipeline:codex-audit-verify`
+
+```bash
+deno task docs-pipeline:codex-audit-verify
+```
+
+Implementation: `deno run --allow-read=_dist tools/docs-pipeline/mod.ts codex-audit-verify`
+
+Source: `deno.json:71`
+
+### `deno task docs-pipeline:codex-seed`
+
+```bash
+deno task docs-pipeline:codex-seed
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist,docs tools/docs-pipeline/mod.ts codex-seed`
+
+Source: `deno.json:68`
+
+### `deno task docs-pipeline:codex-seed-docs`
+
+```bash
+deno task docs-pipeline:codex-seed-docs
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist,docs tools/docs-pipeline/mod.ts codex-seed --inventory _dist/docs-pipeline/inventory.json --out docs --prompt-out _dist/docs-pipeline/codex/generate.md`
+
+Source: `deno.json:69`
+
+### `deno task docs-pipeline:collect`
+
+```bash
+deno task docs-pipeline:collect
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist --allow-run=git tools/docs-pipeline/mod.ts collect`
+
+Source: `deno.json:63`
+
+### `deno task docs-pipeline:generate`
+
+```bash
+deno task docs-pipeline:generate
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist,docs --allow-env=DOCS_LLM_BASE_URL,DOCS_LLM_MODEL,DOCS_LLM_API_KEY,DOCS_LLM_TEMPERATURE,DOCS_LLM_RESPONSE_FORMAT --allow-net tools/docs-pipeline/mod.ts generate`
+
+Source: `deno.json:64`
+
+### `deno task docs-pipeline:generate-docs`
+
+```bash
+deno task docs-pipeline:generate-docs
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist,docs --allow-env=DOCS_LLM_BASE_URL,DOCS_LLM_MODEL,DOCS_LLM_API_KEY,DOCS_LLM_TEMPERATURE,DOCS_LLM_RESPONSE_FORMAT --allow-net tools/docs-pipeline/mod.ts generate --inventory _dist/docs-pipeline/inventory.json --out docs`
+
+Source: `deno.json:65`
+
+### `deno task docs-pipeline:verify`
+
+```bash
+deno task docs-pipeline:verify
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist tools/docs-pipeline/mod.ts verify`
+
+Source: `deno.json:72`
+
+### `deno task docs-pipeline:verify-docs`
+
+```bash
+deno task docs-pipeline:verify-docs
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist tools/docs-pipeline/mod.ts verify --inventory _dist/docs-pipeline/inventory.json --docs-dir docs`
+
+Source: `deno.json:73`
+
+### `deno task feles-build`
+
+```bash
+deno task feles-build
+```
+
+Implementation: `deno run -A tools/feles-build.ts`
+
+Source: `deno.json:59`
+
+### `deno task firefox-tests:collect`
+
+```bash
+deno task firefox-tests:collect
+```
+
+Implementation: `deno run --allow-read=floorp-runtime.lock.json --allow-write=_dist --allow-run=git tools/firefox-tests/collect_firefox_tests.ts`
+
+Source: `deno.json:74`
+
+### `deno task firefox-tests:prepare-browser`
+
+```bash
+deno task firefox-tests:prepare-browser
+```
+
+Implementation: `deno run --allow-read --allow-write=browser-features/chrome/test/firefox-downloaded/generated tools/firefox-tests/prepare_firefox_browser_tests.ts`
+
+Source: `deno.json:76`
+
+### `deno task firefox-tests:triage-browser`
+
+```bash
+deno task firefox-tests:triage-browser
+```
+
+Implementation: `deno run --allow-read --allow-write=_dist tools/firefox-tests/triage_firefox_browser_tests.ts`
+
+Source: `deno.json:75`
+
+### `deno task test`
+
+```bash
+deno task test
+```
+
+Implementation: `deno run -A tools/src/colocated_test_runner.ts`
+
+Source: `deno.json:77`
+
+### `deno task test:docs-pipeline`
+
+```bash
+deno task test:docs-pipeline
+```
+
+Implementation: `deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/`
+
+Source: `deno.json:80`
+
+### `deno task test:firefox-tests`
+
+```bash
+deno task test:firefox-tests
+```
+
+Implementation: `deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/`
+
+Source: `deno.json:78`
+
+### `deno task test:host`
+
+```bash
+deno task test:host
+```
+
+Implementation: `deno test --allow-read --allow-write tools/src/`
+
+Source: `deno.json:79`
+
+### `deno task test:integration`
+
+```bash
+deno task test:integration
+```
+
+Implementation: `deno task test && deno task test:os-api --quick`
+
+Source: `deno.json:87`
+
+### `deno task test:os-api`
+
+```bash
+deno task test:os-api
+```
+
+Implementation: `deno run -A tools/os-test/verify_os_server_full.ts`
+
+Source: `deno.json:82`
+
+### `deno task test:os-api:effects`
+
+```bash
+deno task test:os-api:effects
+```
+
+Implementation: `deno run -A tools/os-test/test-enhanced-effects.ts`
+
+Source: `deno.json:86`
+
+### `deno task test:os-api:local-page`
+
+```bash
+deno task test:os-api:local-page
+```
+
+Implementation: `deno run -A tools/os-test/test-with-local-page.ts`
+
+Source: `deno.json:85`
+
+### `deno task test:os-api:network-idle`
+
+```bash
+deno task test:os-api:network-idle
+```
+
+Implementation: `deno run -A tools/os-test/verify_network_idle_rigorous.ts`
+
+Source: `deno.json:84`
+
+### `deno task test:os-api:wrapper`
+
+```bash
+deno task test:os-api:wrapper
+```
+
+Implementation: `deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts`
+
+Source: `deno.json:83`
+
+### `deno task test:smoke`
+
+```bash
+deno task test:smoke
+```
+
+Implementation: `deno run -A tools/src/smoke_runner.ts`
+
+Source: `deno.json:81`
+
+## feles-build Commands
+
+### `build`
+
+```bash
+feles-build build --phase <before-mach|after-mach>
+```
+
+Source: `tools/feles-build.ts:287`
+
+### `dev`
+
+```bash
+feles-build dev
+```
+
+Source: `tools/feles-build.ts:259`
+
+### `misc`
+
+```bash
+feles-build misc patch --action <apply|create|init>
+```
+
+Source: `tools/feles-build.ts:299`
+
+### `stage`
+
+```bash
+feles-build stage [--marionette]
+```
+
+Source: `tools/feles-build.ts:279`
+
+### `test`
+
+```bash
+feles-build test
+```
+
+Source: `tools/feles-build.ts:268`
