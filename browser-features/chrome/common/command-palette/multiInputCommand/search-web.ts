@@ -5,6 +5,7 @@ import type { PaletteCommand, CommandStepChoice } from "#features-chrome/common/
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import Workspaces from "#features-chrome/common/workspaces";
 
 export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {
@@ -181,6 +182,7 @@ export const searchWebCommand: PaletteCommand = {
             }
           ).Services.scriptSecurityManager.getSystemPrincipal();
           const submission = engine.getSubmission(query);
+          const userContextId = Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0;
 
           switch (where) {
             case "current-tab":
@@ -198,6 +200,7 @@ export const searchWebCommand: PaletteCommand = {
               globalThis.gBrowser?.addTab(submission.uri.spec, {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: true,
+                userContextId: userContextId > 0 ? userContextId : undefined,
                 postData: submission.postData,
               } as {
                 skipAnimation?: boolean;
@@ -216,6 +219,7 @@ export const searchWebCommand: PaletteCommand = {
               const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: false,
+                userContextId: userContextId > 0 ? userContextId : undefined,
                 postData: submission.postData,
               } as {
                 skipAnimation?: boolean;

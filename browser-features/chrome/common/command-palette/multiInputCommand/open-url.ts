@@ -5,6 +5,7 @@ import type { PaletteCommand } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import Workspaces from "#features-chrome/common/workspaces";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -105,6 +106,7 @@ export const openUrlCommand: PaletteCommand = {
 
     try {
       const principal = globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
+      const userContextId = Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0;
 
       switch (where) {
         case "current-tab":
@@ -117,6 +119,7 @@ export const openUrlCommand: PaletteCommand = {
           globalThis.gBrowser?.addTab(navUrl, {
             triggeringPrincipal: principal,
             inBackground: true,
+            userContextId: userContextId > 0 ? userContextId : undefined,
           });
           break;
 
@@ -125,6 +128,7 @@ export const openUrlCommand: PaletteCommand = {
           const tab = globalThis.gBrowser?.addTab(navUrl, {
             triggeringPrincipal: principal,
             inBackground: false,
+            userContextId: userContextId > 0 ? userContextId : undefined,
           });
           if (globalThis.gBrowser && tab) {
             globalThis.gBrowser.selectedTab = tab;
