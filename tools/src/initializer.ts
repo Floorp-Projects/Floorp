@@ -34,7 +34,6 @@ const logger = new Logger("initializer");
 const RUNTIME_BASE_URL = "https://dev-assets.floorp.app/floorp-runtime-builds/";
 const RUNTIME_INDEX_URL = `${RUNTIME_BASE_URL}.ftp-deploy-sync-state.json`;
 
-export const LOCKED_RUNTIME_ENV = "FLOORP_RUNTIME_LOCKED";
 export const LOCKED_RUNTIME_GITHUB_TOKEN_ENV = "FLOORP_RUNTIME_GITHUB_TOKEN";
 export const LOCKED_RUNTIME_MARKER = ".floorp-runtime-lock.json";
 
@@ -103,10 +102,8 @@ export interface LockedRuntimeInstallResult {
 }
 
 export interface InitializerRunDependencies {
-  getEnv(name: string): string | undefined;
   loadLock(): Promise<RuntimeLock>;
   installLock(lock: RuntimeLock): Promise<void>;
-  runLegacy(): Promise<void>;
   savePrefs(): void;
 }
 
@@ -133,10 +130,6 @@ interface RuntimeLayout {
   executable: string;
   legacyVersionFile: string;
 }
-
-export const isLockedRuntimeRequested = (
-  value: string | undefined,
-): boolean => value === "1";
 
 export const isEnvironmentPermissionError = (error: unknown): boolean =>
   error instanceof Deno.errors.PermissionDenied ||
@@ -1629,36 +1622,19 @@ export async function run(
   overrides: Partial<InitializerRunDependencies> = {},
 ): Promise<void> {
   const dependencies: InitializerRunDependencies = {
-    getEnv: overrides.getEnv ?? ((name) => Deno.env.get(name)),
     loadLock: overrides.loadLock ?? (() => loadRuntimeLock()),
     installLock: overrides.installLock ??
       (async (lock) => {
         await installLockedRuntime({ lock });
       }),
-    runLegacy: overrides.runLegacy ?? runLegacyInitializer,
     savePrefs: overrides.savePrefs ?? savePrefsForProfile,
   };
-  let lockedRuntimeRequested = false;
-  try {
-    lockedRuntimeRequested = isLockedRuntimeRequested(
-      dependencies.getEnv(LOCKED_RUNTIME_ENV),
-    );
-  } catch (error) {
-    if (!isEnvironmentPermissionError(error)) throw error;
-    // Preserve the historical initializer for callers without env permission.
-  }
-
-  if (lockedRuntimeRequested) {
-    logger.info("Locked Runtime mode enabled by FLOORP_RUNTIME_LOCKED=1.");
-    await dependencies.installLock(await dependencies.loadLock());
-  } else {
-    await dependencies.runLegacy();
-  }
-
+  await dependencies.installLock(await dependencies.loadLock());
   dependencies.savePrefs();
 }
 
-async function runLegacyInitializer(): Promise<void> {
+/** Explicit compatibility entry point for the retired CDN bootstrap. */
+export async function runLegacyInitializerForCompatibility(): Promise<void> {
   const hasVersion = exists(BIN_VERSION);
   const hasBin = exists(BIN_PATH_EXE);
   let needInit = false;
