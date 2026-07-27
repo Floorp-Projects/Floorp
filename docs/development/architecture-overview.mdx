@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "ef70a7ef84573ff3ce46125169750c5a7cad3898"
 generated: true
 ---
 # Architecture Overview
@@ -30,7 +30,7 @@ The loader development server is configured by `bridge/loader-features/vite.conf
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:398`. The current inventory lists 22 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:420`. The current inventory lists 23 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -38,6 +38,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 - `NRChromeWebStore`
 - `NRExperimemmt`
 - `NRI18n`
+- `NRKeyboardShortcutFocus`
 - `NRMouseGestureScroll`
 - `NROSAutomotor`
 - `NRPanelSidebar`
