@@ -5,7 +5,6 @@
 
 import * as t from "io-ts";
 import type { GestureActionRegistration } from "../mouse-gesture/utils/gestures.ts";
-
 export const zModifiers = t.type({
   alt: t.boolean,
   ctrl: t.boolean,
@@ -35,4 +34,12 @@ export const zKeyboardShortcutConfig = t.intersection([
 export type Modifiers = t.TypeOf<typeof zModifiers>;
 export type ShortcutConfig = t.TypeOf<typeof zShortcutConfig>;
 export type KeyboardShortcutConfig = t.TypeOf<typeof zKeyboardShortcutConfig>;
+
+export type KeyboardActionFn = (win: Window) => void;
+
+export interface KeyboardOnlyActionRegistration {
+  name: string;
+  fn: KeyboardActionFn;
+}
+
 export type { GestureActionRegistration };

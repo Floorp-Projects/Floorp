@@ -227,6 +227,16 @@ export type ShortcutModifiers = t.TypeOf<typeof zShortcutModifiers>;
 export type ShortcutConfig = t.TypeOf<typeof zShortcutConfig>;
 export type KeyboardShortcutConfig = t.TypeOf<typeof zKeyboardShortcutConfig>;
 
+export interface KeyboardShortcutActionDefinition {
+  id: string;
+  translationKey: string;
+}
+
+export interface KeyboardShortcutActionOption {
+  id: string;
+  name: string;
+}
+
 export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
 export type KeyboardShortcutFormData = t.TypeOf<
   typeof zKeyboardShortcutFormData

@@ -136,6 +136,11 @@
     "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Private Container"
   },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
+  },
   "mouseGesture": {
     "actions": {
       "gecko-back": "Back",
