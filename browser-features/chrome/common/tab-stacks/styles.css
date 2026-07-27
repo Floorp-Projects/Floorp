@@ -1,0 +1,98 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#floorp-tab-stacks-row {
+  display: flex;
+  align-items: stretch;
+  min-height: var(--tab-min-height, 32px);
+  padding-inline: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  color: var(--toolbar-color, currentColor);
+  background: var(--toolbar-bgcolor);
+  border-block-end: 1px solid
+    var(--chrome-content-separator-color, rgba(0, 0, 0, 0.2));
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-group-meta {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  max-width: 180px;
+  padding-inline: 8px 10px;
+  border-inline-end: 1px solid
+    color-mix(in srgb, currentColor 18%, transparent);
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-group-color {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--floorp-tab-stacks-color, currentColor);
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-group-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-group-count {
+  flex: 0 0 auto;
+  min-width: 1.5em;
+  text-align: center;
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-proxy {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  flex: 0 1 180px;
+  min-width: var(--tab-min-width, 76px);
+  max-width: 220px;
+  margin: 0;
+  padding-inline: 10px;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-inline-end: 1px solid
+    color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 0;
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-proxy:hover {
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-proxy[aria-selected="true"] {
+  background: color-mix(
+    in srgb,
+    var(--floorp-tab-stacks-color, currentColor) 22%,
+    transparent
+  );
+  box-shadow: inset 0 -2px 0 var(--floorp-tab-stacks-color, currentColor);
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-proxy:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--focus-outline-color, #0060df);
+  outline-offset: -2px;
+}
+
+#floorp-tab-stacks-row .floorp-tab-stacks-proxy-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
