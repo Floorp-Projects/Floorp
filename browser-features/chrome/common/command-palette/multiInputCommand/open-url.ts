@@ -12,14 +12,27 @@ import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/comman
 import Workspaces from "#features-chrome/common/workspaces";
 
 export async function loadContainersForOpenUrl(): Promise<StepChoicesResult> {
+  // "No Container" never depends on the identity service, so build it first.
+  const noContainer: CommandStepChoice = {
+    label: i18next.t("commandPalette.reopenInContainerNoContainer", {
+      defaultValue: "No Container",
+    }),
+    value: "0",
+    description: i18next.t(
+      "commandPalette.reopenInContainerNoContainerDesc",
+      { defaultValue: "Open in the default context" },
+    ),
+  };
+
+  // Built in outer scope so it survives an identity-enumeration failure.
+  let workspaceDefault: CommandStepChoice | null = null;
+
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "resource://gre/modules/ContextualIdentityService.sys.mjs",
     );
 
     ContextualIdentityService.ensureDataReady();
-
-    const identities = await ContextualIdentityService.getPublicIdentities();
 
     const workspaceDefaultId = Workspaces.getCtx()
       ?.getCurrentWorkspaceUserContextId() ?? 0;
@@ -30,7 +43,7 @@ export async function loadContainersForOpenUrl(): Promise<StepChoicesResult> {
         defaultValue: "No Container",
       });
 
-    const workspaceDefault: CommandStepChoice = {
+    workspaceDefault = {
       label: i18next.t("commandPalette.openUrlContainerWorkspaceDefault", {
         defaultValue: "Workspace Default",
       }),
@@ -41,16 +54,7 @@ export async function loadContainersForOpenUrl(): Promise<StepChoicesResult> {
       ) + (workspaceDisplayName ? ` (${workspaceDisplayName})` : ""),
     };
 
-    const noContainer: CommandStepChoice = {
-      label: i18next.t("commandPalette.reopenInContainerNoContainer", {
-        defaultValue: "No Container",
-      }),
-      value: "0",
-      description: i18next.t(
-        "commandPalette.reopenInContainerNoContainerDesc",
-        { defaultValue: "Open in the default context" },
-      ),
-    };
+    const identities = await ContextualIdentityService.getPublicIdentities();
 
     const containerChoices: CommandStepChoice[] = identities
       .filter(
@@ -77,7 +81,11 @@ export async function loadContainersForOpenUrl(): Promise<StepChoicesResult> {
     };
   } catch (e) {
     console.error("[command-palette] Failed to load containers:", e);
-    return { choices: [], defaultIndex: 0 };
+    // Preserve the built-in choices that do not require identity enumeration.
+    const preserved = workspaceDefault
+      ? [workspaceDefault, noContainer]
+      : [noContainer];
+    return { choices: preserved, defaultIndex: 0 };
   }
 }
 
@@ -189,7 +197,8 @@ export const openUrlCommand: PaletteCommand = {
     const navUrl = url.includes("://") ? url : `https://${url}`;
 
     try {
-      const principal = globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
+      const sourcePrincipal = globalThis.gBrowser?.selectedBrowser
+        ?.contentPrincipal as nsIPrincipal | undefined;
       const containerChoice = args?.container ?? "workspace";
       let userContextId: number;
       if (containerChoice === "workspace") {
@@ -197,6 +206,24 @@ export const openUrlCommand: PaletteCommand = {
       } else {
         const parsed = Number.parseInt(containerChoice, 10);
         userContextId = Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      // For tabs opened in a specific container, derive a triggering principal
+      // whose origin attributes match the target container (mirrors
+      // reopen-in-container.ts). current-tab keeps the source principal since
+      // its container does not change.
+      let principal = sourcePrincipal;
+      if (where !== "current-tab") {
+        const ssm = Services.scriptSecurityManager;
+        if (
+          !sourcePrincipal ||
+          sourcePrincipal.isNullPrincipal ||
+          sourcePrincipal.isSystemPrincipal
+        ) {
+          principal = ssm.createNullPrincipal({ userContextId });
+        } else if (sourcePrincipal.isContentPrincipal) {
+          principal = ssm.principalWithOA(sourcePrincipal, { userContextId });
+        }
       }
 
       switch (where) {
