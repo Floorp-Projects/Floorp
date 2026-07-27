@@ -303,7 +303,7 @@
         "license": "ライセンス",
         "noraneko": {
             "logoAlt": "ブラウザーのロゴ",
-            "description": "Noraneko は Floorp 12 のテストヘッドとしてのブラウザーです。Floorp は Firefox と Noraneko をベースにしています。",
+            "description": "Noraneko は Floorp 12 のテストベッドとしてのブラウザーです。Floorp は Firefox と Noraneko をベースにしています。",
             "communityCredit": "Noraneko コミュニティにより ❤ で作成",
             "repositoryLabel": "GitHub リポジトリ: Floorp-Projects/Floorp"
         }
