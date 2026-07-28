@@ -10,16 +10,11 @@ import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import Workspaces from "#features-chrome/common/workspaces";
+import { loadContainerChoices } from "#features-chrome/common/command-palette/utils/containerChoices.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
 
 function buildPath(parentPath: string, folderTitle: string): string {
   const fullPath = parentPath ? `${parentPath} > ${folderTitle}` : folderTitle;
@@ -112,18 +107,6 @@ export async function loadBookmarks(): Promise<
   }
 }
 
-function navigateToUrl(win: Window, url: string): void {
-  try {
-    const { gBrowser } = win as unknown as ChromeWindow;
-    const principal = gBrowser?.selectedBrowser?.contentPrincipal;
-    gBrowser?.loadURI?.(Services.io.newURI(url), {
-      triggeringPrincipal: principal,
-    });
-  } catch (e) {
-    console.error("[BookmarkSwitcher] Failed to navigate", e);
-  }
-}
-
 export const bookmarkSwitcherCommand: PaletteCommand = {
   id: "floorp-bookmark-switcher",
   label: i18next.t("commandPalette.bookmarkSwitcher", {
@@ -155,10 +138,125 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
       }),
       choicesLoader: loadBookmarks,
     },
+    {
+      id: "where",
+      label: i18next.t("commandPalette.bookmarkSwitcherWhereLabel", {
+        defaultValue: "Where to open",
+      }),
+      placeholder: i18next.t("commandPalette.bookmarkSwitcherWherePlaceholder", {
+        defaultValue: "Select where to open...",
+      }),
+      choices: [
+        {
+          label: i18next.t("commandPalette.bookmarkSwitcherWhereNewTab", {
+            defaultValue: "New Tab",
+          }),
+          value: "new-tab",
+          description: i18next.t("commandPalette.bookmarkSwitcherWhereNewTabDesc", {
+            defaultValue: "Open in a new foreground tab",
+          }),
+        },
+        {
+          label: i18next.t("commandPalette.bookmarkSwitcherWhereBackgroundTab", {
+            defaultValue: "Background Tab",
+          }),
+          value: "background-tab",
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereBackgroundTabDesc",
+            {
+              defaultValue: "Open in a new background tab",
+            },
+          ),
+        },
+        {
+          label: i18next.t("commandPalette.bookmarkSwitcherWhereCurrentTab", {
+            defaultValue: "Current Tab",
+          }),
+          value: "current-tab",
+          description: i18next.t("commandPalette.bookmarkSwitcherWhereCurrentTabDesc", {
+            defaultValue: "Navigate the current tab",
+          }),
+        },
+      ],
+    },
+    {
+      id: "container",
+      label: i18next.t("commandPalette.bookmarkSwitcherContainerStepLabel", {
+        defaultValue: "Open in container",
+      }),
+      placeholder: i18next.t("commandPalette.bookmarkSwitcherContainerStepPlaceholder", {
+        defaultValue: "Choose a container...",
+      }),
+      choicesLoader: loadContainerChoices,
+    },
   ],
   fn: (_win: Window, args?: Record<string, string>) => {
     const url = args?.bookmark;
     if (!url) return;
-    navigateToUrl(_win, url);
+
+    const where = args?.where ?? "new-tab";
+
+    try {
+      const sourcePrincipal = globalThis.gBrowser?.selectedBrowser
+        ?.contentPrincipal as nsIPrincipal | undefined;
+      const containerChoice = args?.container ?? "workspace";
+      let userContextId: number;
+      if (containerChoice === "workspace") {
+        userContextId = Workspaces.getCtx()
+          ?.getCurrentWorkspaceUserContextId() ?? 0;
+      } else {
+        const parsed = Number.parseInt(containerChoice, 10);
+        userContextId = Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      // For tabs opened in a specific container, derive a triggering principal
+      // whose origin attributes match the target container (mirrors open-url.ts
+      // and reopen-in-container.ts). current-tab keeps the source principal
+      // since its container does not change.
+      let principal = sourcePrincipal;
+      if (where !== "current-tab") {
+        const ssm = Services.scriptSecurityManager;
+        if (
+          !sourcePrincipal ||
+          sourcePrincipal.isNullPrincipal ||
+          sourcePrincipal.isSystemPrincipal
+        ) {
+          principal = ssm.createNullPrincipal({ userContextId });
+        } else if (sourcePrincipal.isContentPrincipal) {
+          principal = ssm.principalWithOA(sourcePrincipal, { userContextId });
+        }
+      }
+
+      switch (where) {
+        case "current-tab":
+          globalThis.gBrowser?.loadURI?.(Services.io.newURI(url), {
+            triggeringPrincipal: principal,
+          });
+          break;
+
+        case "background-tab":
+          globalThis.gBrowser?.addTab(url, {
+            triggeringPrincipal: principal,
+            inBackground: true,
+            userContextId: userContextId > 0 ? userContextId : undefined,
+          });
+          break;
+
+        case "new-tab":
+        default: {
+          const tab = globalThis.gBrowser?.addTab(url, {
+            triggeringPrincipal: principal,
+            inBackground: false,
+            userContextId: userContextId > 0 ? userContextId : undefined,
+          });
+          if (globalThis.gBrowser && tab) {
+            globalThis.gBrowser.selectedTab = tab;
+          }
+          break;
+        }
+      }
+    } catch (e) {
+      console.error("[BookmarkSwitcher] Failed to open bookmark", e);
+    }
   },
 };

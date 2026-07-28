@@ -576,7 +576,17 @@
     "bookmarkSwitcher": "Switch Bookmark",
     "bookmarkSwitcherDescription": "Open a bookmarked page",
     "bookmarkSwitcherStepLabel": "Select a bookmark",
-    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark...",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "Choose a container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Background Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Open in a new background tab",
+    "bookmarkSwitcherWhereCurrentTab": "Current Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navigate the current tab",
+    "bookmarkSwitcherWhereLabel": "Where to open",
+    "bookmarkSwitcherWhereNewTab": "New Tab",
+    "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
+    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
   },
   "commandPaletteReadings": {}
 }
