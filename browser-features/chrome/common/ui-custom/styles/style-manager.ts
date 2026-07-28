@@ -15,6 +15,8 @@ import deleteBorderCSS from "./css/options/delete-border.css?inline";
 import stgLikeFloorpWorkspacesCSS from "./css/options/STG-like-floorp-workspaces.css?inline";
 import multirowTabShowNewtabInTabbarCSS from "./css/options/multirowtab-show-newtab-button-in-tabbar.css?inline";
 import multirowTabShowNewtabAtEndCSS from "./css/options/multirowtab-show-newtab-button-at-end.css?inline";
+import multirowTabLeptonFixCSS from "./css/options/multirowtab-lepton-fix.css?inline";
+import multirowTabMacOSWindowControlsCSS from "./css/options/multirowtab-macos-window-controls.css?inline";
 import bookmarkbarFocusExpandCSS from "./css/options/bookmarkbar_focus_expand.css?inline";
 import bookmarkbarBottomCSS from "./css/options/bookmarkbar_bottom.css?inline";
 
@@ -106,6 +108,18 @@ export class StyleManager {
         "floorp-newtabbuttonatendofmultirowtabbar",
         multirowTabShowNewtabAtEndCSS,
         !newtabInsideEnabled && isMultirowStyle,
+      );
+
+      this.applyStyle(
+        "floorp-multirowtabforlepton",
+        multirowTabLeptonFixCSS,
+        isMultirowStyle,
+      );
+
+      this.applyStyle(
+        "floorp-multirowtabmacoswindowcontrols",
+        multirowTabMacOSWindowControlsCSS,
+        isMultirowStyle,
       );
     });
   }
