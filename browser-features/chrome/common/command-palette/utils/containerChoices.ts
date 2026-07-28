@@ -28,8 +28,22 @@ export async function loadContainerChoices(): Promise<StepChoicesResult> {
     ),
   };
 
-  // Built in outer scope so it survives an identity-enumeration failure.
-  let workspaceDefault: CommandStepChoice | null = null;
+  // Workspace Default is built without the identity service so it survives
+  // import / readiness / label-lookup failures. Its description is enriched
+  // with the resolved container name once identities become available.
+  const workspaceDefaultId = Workspaces.getCtx()
+    ?.getCurrentWorkspaceUserContextId() ?? 0;
+  const baseWorkspaceDesc = i18next.t(
+    "commandPalette.openUrlContainerWorkspaceDefaultDesc",
+    { defaultValue: "Uses the workspace's default context" },
+  );
+  const workspaceDefault: CommandStepChoice = {
+    label: i18next.t("commandPalette.openUrlContainerWorkspaceDefault", {
+      defaultValue: "Workspace Default",
+    }),
+    value: "workspace",
+    description: baseWorkspaceDesc,
+  };
 
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
@@ -38,25 +52,15 @@ export async function loadContainerChoices(): Promise<StepChoicesResult> {
 
     ContextualIdentityService.ensureDataReady();
 
-    const workspaceDefaultId = Workspaces.getCtx()
-      ?.getCurrentWorkspaceUserContextId() ?? 0;
-
+    // Enrich the description with the resolved container name.
     const workspaceDisplayName = workspaceDefaultId > 0
       ? (ContextualIdentityService.getUserContextLabel(workspaceDefaultId) || "")
       : i18next.t("commandPalette.reopenInContainerNoContainer", {
         defaultValue: "No Container",
       });
-
-    workspaceDefault = {
-      label: i18next.t("commandPalette.openUrlContainerWorkspaceDefault", {
-        defaultValue: "Workspace Default",
-      }),
-      value: "workspace",
-      description: i18next.t(
-        "commandPalette.openUrlContainerWorkspaceDefaultDesc",
-        { defaultValue: "Uses the workspace's default context" },
-      ) + (workspaceDisplayName ? ` (${workspaceDisplayName})` : ""),
-    };
+    if (workspaceDisplayName) {
+      workspaceDefault.description = `${baseWorkspaceDesc} (${workspaceDisplayName})`;
+    }
 
     const identities = await ContextualIdentityService.getPublicIdentities();
 
@@ -85,10 +89,8 @@ export async function loadContainerChoices(): Promise<StepChoicesResult> {
     };
   } catch (e) {
     console.error("[command-palette] Failed to load containers:", e);
-    // Preserve the built-in choices that do not require identity enumeration.
-    const preserved = workspaceDefault
-      ? [workspaceDefault, noContainer]
-      : [noContainer];
-    return { choices: preserved, defaultIndex: 0 };
+    // workspaceDefault and noContainer are both service-independent, so both
+    // built-in choices are always available here.
+    return { choices: [workspaceDefault, noContainer], defaultIndex: 0 };
   }
 }
