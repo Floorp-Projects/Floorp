@@ -211,6 +211,20 @@ export class MultirowTabbarClass {
 
 	    .scrollbutton-up, .scrollbutton-down, spacer,
         #scrollbutton-up, #scrollbutton-down {display: none !important}
+	    
+	    #nav-bar {
+        flex-basis: unset !important;
+      }
+	    
+	    @media (-moz-platform: macos) {
+        :root[inFullscreen="true"] #floorp-tabbar-window-manage-container > .titlebar-buttonbox {
+          display: none !important;
+        }
+  
+        #floorp-tabbar-window-manage-container {
+          margin-block: auto !important;
+        }
+      }
 	    `;
 
     style.innerHTML = scrollboxStyle;
