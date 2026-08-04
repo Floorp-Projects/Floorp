@@ -5,7 +5,10 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ShortcutConfig } from "../../../types/pref.ts";
+import {
+    getRecordedShortcutCode,
+    type ShortcutConfig,
+} from "../../../types/pref.ts";
 import { Input } from "@/components/common/input.tsx";
 import { formatModifierLabel, formatModifierSymbol } from "../platform.ts";
 
@@ -52,24 +55,17 @@ export const ShortcutEditor = ({
             e.preventDefault();
             e.stopPropagation();
 
-            if (
-                e.code.startsWith("Alt") ||
-                e.code.startsWith("Control") ||
-                e.code.startsWith("Meta") ||
-                e.code.startsWith("Shift")
-            ) {
+            const code = getRecordedShortcutCode(e);
+            if (!code) {
                 return;
             }
 
-            const code = e.code;
-            const newKey = code.replace(/^(Key|Digit)/, "");
-
             setShortcut((prev) => ({
                 ...prev,
-                key: newKey,
+                key: code,
             }));
             setIsRecording(false);
-            checkDuplicate(newKey);
+            checkDuplicate(code);
         };
 
         if (isOpen && isRecording) {
@@ -251,4 +247,4 @@ export const ShortcutEditor = ({
             </div>
         </div>
     );
-}; 
+};
