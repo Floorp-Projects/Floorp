@@ -91,6 +91,7 @@ function testPagesDefaultConfigIsUnchanged(): void {
   assertEquals(
     JSON.stringify(createDefaultKeyboardShortcutConfig(false)),
     JSON.stringify({
+      schemaVersion: 2,
       enabled: false,
       shortcuts: {
         "floorp-toggle-command-palette": {

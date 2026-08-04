@@ -50,6 +50,16 @@ export const ShortcutEditor = ({
         return code.replace(/^(Key|Digit|Arrow)/, "");
     };
 
+    const normalizeKeyCode = (code: string): string => {
+        if (/^[A-Z]$/.test(code)) {
+            return `Key${code}`;
+        }
+        if (/^[0-9]$/.test(code)) {
+            return `Digit${code}`;
+        }
+        return code;
+    };
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             e.preventDefault();
@@ -80,7 +90,7 @@ export const ShortcutEditor = ({
     const checkDuplicate = (key: string) => {
         const newShortcut = {
             ...shortcut,
-            key,
+            key: normalizeKeyCode(key),
         };
 
         const otherShortcuts = existingShortcuts.filter(
@@ -88,8 +98,9 @@ export const ShortcutEditor = ({
         );
 
         const isDuplicate = otherShortcuts.some((existing) => {
+            const normalizedExistingKey = normalizeKeyCode(existing.key);
             return (
-                existing.key === newShortcut.key &&
+                normalizedExistingKey === newShortcut.key &&
                 existing.modifiers.alt === newShortcut.modifiers.alt &&
                 existing.modifiers.ctrl === newShortcut.modifiers.ctrl &&
                 existing.modifiers.meta === newShortcut.modifiers.meta &&
