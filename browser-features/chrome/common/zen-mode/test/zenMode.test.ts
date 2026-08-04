@@ -1,515 +1,511 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { createRoot } from "solid-js";
+import { render } from "@nora/solid-xul";
 import {
-  initZenModeState,
-  setZenModeEnabled,
-  zenModeEnabled,
+  attachZenModeToWindow,
+  destroyZenModeForWindow,
+  getZenModeController,
+  toggleZenModeForWindow,
+  ZEN_MODE_HIDE_DELAY_MS,
+  ZEN_MODE_PREF,
+  ZEN_MODE_STYLE_ID,
   ZenModeMenuElement,
 } from "../zen-mode.tsx";
-
 import {
   assert,
   assertEquals,
   runTests,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
-import { render } from "@nora/solid-xul";
 
-const ZENMODE_PREF = "floorp.zenmode.enabled";
+type TestWindowBundle = {
+  win: Window;
+  doc: Document;
+  toolbox: Element;
+  dispatchWindowEvent: (event: Event) => boolean;
+};
 
-function temporarilyRemoveElementById(id: string): () => void {
-  const element = document!.getElementById(id);
-  const parent = element?.parentNode ?? null;
-  const nextSibling = element?.nextSibling ?? null;
-  if (!element || !parent) {
-    return () => {};
-  }
+function makeRect(
+  width: number,
+  height: number,
+  left = 0,
+  top = 0,
+): DOMRect {
+  return {
+    x: left,
+    y: top,
+    width,
+    height,
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+    toJSON: () => ({ width, height, left, top }),
+  } as DOMRect;
+}
 
-  parent.removeChild(element);
-  return () => {
-    if (element.parentNode) {
-      return;
-    }
-    parent.insertBefore(
-      element,
-      nextSibling?.parentNode === parent ? nextSibling : null,
-    );
+function setRect(
+  element: Element,
+  width: number,
+  height: number,
+  left = 0,
+  top = 0,
+): void {
+  Object.defineProperty(element, "getBoundingClientRect", {
+    configurable: true,
+    value: () => makeRect(width, height, left, top),
+  });
+}
+
+function createTestWindow(): TestWindowBundle {
+  const doc = document.implementation.createHTMLDocument("Zen test window");
+  const windowEvents = new EventTarget();
+  const toolbox = doc.createElement("div");
+  toolbox.id = "navigator-toolbox";
+  setRect(toolbox, 1000, 100, 0, 0);
+  doc.body!.appendChild(toolbox);
+
+  const hostWindow = window;
+  const win = {
+    document: doc,
+    closed: false,
+    innerWidth: 1000,
+    innerHeight: 800,
+    MutationObserver,
+    ResizeObserver,
+    requestAnimationFrame: hostWindow.requestAnimationFrame.bind(hostWindow),
+    cancelAnimationFrame: hostWindow.cancelAnimationFrame.bind(hostWindow),
+    setTimeout: hostWindow.setTimeout.bind(hostWindow),
+    clearTimeout: hostWindow.clearTimeout.bind(hostWindow),
+    addEventListener: windowEvents.addEventListener.bind(windowEvents),
+    removeEventListener: windowEvents.removeEventListener.bind(windowEvents),
+    gNavToolbox: toolbox,
+  } as unknown as Window;
+
+  return {
+    win,
+    doc,
+    toolbox,
+    dispatchWindowEvent: (event) => windowEvents.dispatchEvent(event),
   };
 }
 
-function testZenModeSignalReadable(): void {
-  const value = zenModeEnabled();
-  assert(typeof value === "boolean", "zenModeEnabled should return a boolean");
-}
-
-function testSetZenModeEnabledToggles(): void {
-  const original = zenModeEnabled();
+async function withSeed<T>(
+  seed: boolean,
+  callback: () => T | Promise<T>,
+): Promise<T> {
+  const hadUserValue = Services.prefs.prefHasUserValue(ZEN_MODE_PREF);
+  const original = Services.prefs.getBoolPref(ZEN_MODE_PREF, false);
+  Services.prefs.setBoolPref(ZEN_MODE_PREF, seed);
   try {
-    setZenModeEnabled(true);
-    assertEquals(
-      zenModeEnabled(),
-      true,
-      "zenModeEnabled should be true after setting true",
-    );
-
-    setZenModeEnabled(false);
-    assertEquals(
-      zenModeEnabled(),
-      false,
-      "zenModeEnabled should be false after setting false",
-    );
+    return await callback();
   } finally {
-    setZenModeEnabled(original);
+    if (hadUserValue) {
+      Services.prefs.setBoolPref(ZEN_MODE_PREF, original);
+    } else {
+      Services.prefs.clearUserPref(ZEN_MODE_PREF);
+    }
   }
 }
 
-function testZenModePrefSync(): void {
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
-
-  try {
-    initZenModeState();
-
-    setZenModeEnabled(true);
-    assertEquals(
-      Services.prefs.getBoolPref(ZENMODE_PREF, false),
-      true,
-      "Pref should be true after setZenModeEnabled(true)",
-    );
-
-    setZenModeEnabled(false);
-    assertEquals(
-      Services.prefs.getBoolPref(ZENMODE_PREF, false),
-      false,
-      "Pref should be false after setZenModeEnabled(false)",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 }
 
-function testZenModeAttributeOnDocumentElement(): void {
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
+const tests: TestCase[] = [
+  {
+    name: "one controller and one owned stylesheet are created per window",
+    async fn() {
+      await withSeed(false, () => {
+        const bundle = createTestWindow();
+        const first = attachZenModeToWindow(bundle.win);
+        const second = attachZenModeToWindow(bundle.win);
+        assert(first !== null, "first controller should be created");
+        assertEquals(second, first, "the window registry should be idempotent");
+        assertEquals(
+          bundle.doc.querySelectorAll(`#${ZEN_MODE_STYLE_ID}`).length,
+          1,
+          "the window should own exactly one Zen stylesheet",
+        );
 
-  try {
-    initZenModeState();
+        const css = bundle.doc.getElementById(ZEN_MODE_STYLE_ID)?.textContent ??
+          "";
+        assert(
+          css.includes("translateY(-100%)"),
+          "toolbox retraction should use its own current height",
+        );
+        assert(
+          css.includes("translateY(100%)"),
+          "statusbar retraction should use its own current height",
+        );
+        assert(
+          css.includes("prefers-reduced-motion: reduce"),
+          "the owned stylesheet should honor reduced motion",
+        );
 
-    setZenModeEnabled(true);
-    assert(
-      document?.documentElement?.hasAttribute("zenmode"),
-      "documentElement should have 'zenmode' attribute when zen mode is enabled",
-    );
+        destroyZenModeForWindow(bundle.win);
+        assertEquals(
+          bundle.doc.getElementById(ZEN_MODE_STYLE_ID),
+          null,
+          "destroy should remove the owned stylesheet",
+        );
+      });
+    },
+  },
+  {
+    name:
+      "existing controllers ignore external pref writes and new ones snapshot them",
+    async fn() {
+      await withSeed(false, () => {
+        const firstWindow = createTestWindow();
+        const first = attachZenModeToWindow(firstWindow.win);
+        assert(first !== null, "first controller should be created");
+        assertEquals(first.enabled(), false, "first window should seed false");
 
-    setZenModeEnabled(false);
-    assert(
-      !document?.documentElement?.hasAttribute("zenmode"),
-      "documentElement should not have 'zenmode' attribute when zen mode is disabled",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-    document?.documentElement?.removeAttribute("zenmode");
-    document?.documentElement?.removeAttribute("zenmode-reveal-top");
-    document?.documentElement?.removeAttribute("zenmode-reveal-bottom");
-    document?.documentElement?.removeAttribute("zenmode-reveal-side");
-  }
-}
+        Services.prefs.setBoolPref(ZEN_MODE_PREF, true);
+        assertEquals(
+          first.enabled(),
+          false,
+          "external writes must not mutate an existing controller",
+        );
 
-function testZenModePrefObserverUpdatesSignal(): void {
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const originalSignal = zenModeEnabled();
+        const secondWindow = createTestWindow();
+        const second = attachZenModeToWindow(secondWindow.win);
+        assert(second !== null, "second controller should be created");
+        assertEquals(second.enabled(), true, "new window should seed true");
 
-  try {
-    initZenModeState();
+        Services.prefs.setBoolPref(ZEN_MODE_PREF, false);
+        assertEquals(
+          first.enabled(),
+          false,
+          "first window should remain false",
+        );
+        assertEquals(
+          second.enabled(),
+          true,
+          "second window should remain true",
+        );
 
-    Services.prefs.setBoolPref(ZENMODE_PREF, true);
-    assertEquals(
-      zenModeEnabled(),
-      true,
-      "Signal should be true after pref set to true externally",
-    );
+        destroyZenModeForWindow(firstWindow.win);
+        destroyZenModeForWindow(secondWindow.win);
+      });
+    },
+  },
+  {
+    name: "explicit target-window toggles persist without changing peers",
+    async fn() {
+      await withSeed(false, () => {
+        const firstWindow = createTestWindow();
+        const secondWindow = createTestWindow();
+        const first = attachZenModeToWindow(firstWindow.win);
+        const second = attachZenModeToWindow(secondWindow.win);
+        assert(first !== null && second !== null, "controllers should exist");
 
-    Services.prefs.setBoolPref(ZENMODE_PREF, false);
-    assertEquals(
-      zenModeEnabled(),
-      false,
-      "Signal should be false after pref set to false externally",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
+        assertEquals(toggleZenModeForWindow(secondWindow.win), true, "toggle");
+        assertEquals(
+          first.enabled(),
+          false,
+          "untargeted window must not change",
+        );
+        assertEquals(second.enabled(), true, "targeted window should change");
+        assertEquals(
+          Services.prefs.getBoolPref(ZEN_MODE_PREF, false),
+          true,
+          "explicit toggle should persist the future-window seed",
+        );
 
-function testMeasureAndSetCSSVariablesSetsToolboxHeight(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
+        destroyZenModeForWindow(firstWindow.win);
+        destroyZenModeForWindow(secondWindow.win);
+      });
+    },
+  },
+  {
+    name: "owning gNavToolbox customization disables locally without restore",
+    async fn() {
+      await withSeed(true, () => {
+        const bundle = createTestWindow();
+        const controller = attachZenModeToWindow(bundle.win);
+        assert(controller !== null, "controller should exist");
+        assertEquals(controller.enabled(), true, "window should seed enabled");
 
-  try {
-    // Create a mock toolbox element
-    const mockToolbox = document!.createElement("div") as unknown as XULElement;
-    mockToolbox.id = "navigator-toolbox";
-    (
-      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
-        string,
-        string
-      >
-    ).height = "100px";
-    document!.body?.appendChild(mockToolbox as unknown as Node);
+        bundle.toolbox.dispatchEvent(new Event("customizationstarting"));
+        assertEquals(
+          controller.enabled(),
+          false,
+          "customization should disable only this controller",
+        );
+        assertEquals(
+          Services.prefs.getBoolPref(ZEN_MODE_PREF, false),
+          true,
+          "customization must not persist the temporary disable",
+        );
 
-    // Enable zen mode and measure
-    setZenModeEnabled(true);
+        bundle.toolbox.dispatchEvent(new Event("aftercustomization"));
+        assertEquals(
+          controller.enabled(),
+          false,
+          "leaving customization must not auto-restore Zen",
+        );
 
-    const root = document!.documentElement as HTMLElement;
-    const toolboxHeight = root.style.getPropertyValue(
-      "--zenmode-toolbox-height",
-    );
+        destroyZenModeForWindow(bundle.win);
+      });
+    },
+  },
+  {
+    name: "late sidebar mounts use only positive rendered measurements",
+    async fn() {
+      await withSeed(true, async () => {
+        const bundle = createTestWindow();
+        const controller = attachZenModeToWindow(bundle.win);
+        assert(controller !== null, "controller should exist");
 
-    assert(
-      toolboxHeight === "100px" || toolboxHeight !== "",
-      "CSS variable --zenmode-toolbox-height should be set after enabling zen mode",
-    );
+        const sidebar = bundle.doc.createElement("div");
+        sidebar.id = "panel-sidebar-box";
+        setRect(sidebar, 284, 600);
+        bundle.doc.body!.appendChild(sidebar);
 
-    document!.body?.removeChild(mockToolbox as unknown as Node);
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
+        const selectBox = bundle.doc.createElement("div");
+        selectBox.id = "panel-sidebar-select-box";
+        setRect(selectBox, 44, 600);
+        bundle.doc.body!.appendChild(selectBox);
 
-function testMeasureAndSetCSSVariablesHandlesMissingToolbox(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-  const restoreToolbox = temporarilyRemoveElementById("navigator-toolbox");
+        const statusbar = bundle.doc.createElement("div");
+        statusbar.id = "nora-statusbar";
+        setRect(statusbar, 1000, 32, 0, 768);
+        bundle.doc.body!.appendChild(statusbar);
 
-  try {
-    // Should not throw when toolbox is missing
-    setZenModeEnabled(true);
+        await wait(0);
+        const root = bundle.doc.documentElement as HTMLElement;
+        assertEquals(
+          root.style.getPropertyValue("--zenmode-sidebar-width"),
+          "284px",
+          "late sidebar should establish a rendered width",
+        );
+        assertEquals(
+          root.style.getPropertyValue("--zenmode-selectbox-width"),
+          "44px",
+          "late select box should establish a rendered width",
+        );
 
-    const root = document!.documentElement as HTMLElement;
-    const toolboxHeight = root.style.getPropertyValue(
-      "--zenmode-toolbox-height",
-    );
+        setRect(sidebar, 0, 0);
+        sidebar.remove();
+        bundle.doc.body!.appendChild(sidebar);
+        await wait(0);
+        assertEquals(
+          root.style.getPropertyValue("--zenmode-sidebar-width"),
+          "284px",
+          "a zero-sized render must not poison the last positive width",
+        );
 
-    // Environment may already have a toolbox or preexisting value; main contract is no throw.
-    assert(
-      typeof toolboxHeight === "string",
-      "CSS variable read should succeed even when toolbox is missing",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-    restoreToolbox();
-  }
-}
+        const css = bundle.doc.getElementById(ZEN_MODE_STYLE_ID)?.textContent ??
+          "";
+        assert(
+          css.includes(":root[zenmode] #nora-statusbar"),
+          "late statusbar should already be covered by owned Zen CSS",
+        );
 
-function testTopEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
+        destroyZenModeForWindow(bundle.win);
+      });
+    },
+  },
+  {
+    name: "sibling mainPopupSet app-menu keeps the owning window revealed",
+    async fn() {
+      await withSeed(true, async () => {
+        const bundle = createTestWindow();
+        const popupSet = bundle.doc.createElement("div");
+        popupSet.id = "mainPopupSet";
+        const appMenu = bundle.doc.createElement("panel");
+        appMenu.setAttribute("open", "true");
+        popupSet.appendChild(appMenu);
+        bundle.doc.body!.appendChild(popupSet);
 
-  try {
-    setZenModeEnabled(true);
+        const controller = attachZenModeToWindow(bundle.win);
+        assert(controller !== null, "controller should exist");
 
-    // Create a mock toolbox
-    const mockToolbox = document!.createElement("div") as unknown as XULElement;
-    mockToolbox.id = "navigator-toolbox";
-    (
-      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
-        string,
-        string
-      >
-    ).height = "100px";
-    (
-      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
-        string,
-        string
-      >
-    ).position = "absolute";
-    (
-      (mockToolbox as unknown as HTMLElement).style as unknown as Record<
-        string,
-        string
-      >
-    ).top = "0px";
-    document!.body?.appendChild(mockToolbox as unknown as Node);
+        bundle.dispatchWindowEvent(
+          new MouseEvent("mousemove", { clientX: 100, clientY: 5 }),
+        );
+        bundle.dispatchWindowEvent(
+          new MouseEvent("mousemove", { clientX: 100, clientY: 200 }),
+        );
+        await wait(ZEN_MODE_HIDE_DELAY_MS + 60);
+        assert(
+          bundle.doc.documentElement!.hasAttribute("zenmode-reveal-top"),
+          "an app-menu in the owning document should hold the reveal open",
+        );
 
-    // Simulate mouse move to top edge
-    const mouseEvent = new MouseEvent("mousemove", {
-      clientX: 100,
-      clientY: 5, // Within EDGE_THRESHOLD (10)
-    });
-    globalThis.dispatchEvent(mouseEvent);
+        appMenu.removeAttribute("open");
+        await wait(ZEN_MODE_HIDE_DELAY_MS + 60);
+        assert(
+          !bundle.doc.documentElement!.hasAttribute("zenmode-reveal-top"),
+          "closing the owning app-menu should allow the reveal to retract",
+        );
 
-    assert(
-      document!.documentElement?.hasAttribute("zenmode-reveal-top"),
-      "zenmode-reveal-top attribute should be set when hovering top edge",
-    );
+        destroyZenModeForWindow(bundle.win);
+      });
+    },
+  },
+  {
+    name: "late urlbar focus and open state preserve the top reveal",
+    async fn() {
+      await withSeed(true, async () => {
+        const bundle = createTestWindow();
+        const controller = attachZenModeToWindow(bundle.win);
+        assert(controller !== null, "controller should exist");
 
-    document!.body?.removeChild(mockToolbox as unknown as Node);
-    document!.documentElement?.removeAttribute("zenmode-reveal-top");
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
+        const urlbar = bundle.doc.createElement("div");
+        urlbar.id = "urlbar";
+        bundle.doc.body!.appendChild(urlbar);
+        urlbar.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+        assert(
+          bundle.doc.documentElement!.hasAttribute("zenmode-reveal-top"),
+          "a late-mounted urlbar should reveal on focus",
+        );
 
-function testBottomEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
+        urlbar.setAttribute("open", "true");
+        urlbar.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+        await wait(ZEN_MODE_HIDE_DELAY_MS + 60);
+        assert(
+          bundle.doc.documentElement!.hasAttribute("zenmode-reveal-top"),
+          "an open urlbar view should hold the reveal open",
+        );
 
-  try {
-    setZenModeEnabled(true);
+        urlbar.removeAttribute("open");
+        await wait(ZEN_MODE_HIDE_DELAY_MS + 60);
+        assert(
+          !bundle.doc.documentElement!.hasAttribute("zenmode-reveal-top"),
+          "closing the urlbar view should allow retraction",
+        );
 
-    // Simulate mouse move to bottom edge
-    const mouseEvent = new MouseEvent("mousemove", {
-      clientX: 100,
-      clientY: globalThis.innerHeight - 5, // Within EDGE_THRESHOLD of bottom
-    });
-    globalThis.dispatchEvent(mouseEvent);
+        destroyZenModeForWindow(bundle.win);
+      });
+    },
+  },
+  {
+    name:
+      "destroy removes attributes variables observers listeners and registry state",
+    async fn() {
+      await withSeed(false, () => {
+        const bundle = createTestWindow();
+        const controller = attachZenModeToWindow(bundle.win);
+        assert(controller !== null, "controller should exist");
+        controller.setEnabledFromUser(true);
 
-    assert(
-      document!.documentElement?.hasAttribute("zenmode-reveal-bottom"),
-      "zenmode-reveal-bottom attribute should be set when hovering bottom edge",
-    );
+        const root = bundle.doc.documentElement as HTMLElement;
+        root.setAttribute("zenmode-reveal-top", "");
+        root.setAttribute("zenmode-reveal-bottom", "");
+        root.setAttribute("zenmode-reveal-side", "");
+        root.setAttribute("zenmode-rebase", "");
+        root.style.setProperty("--zenmode-sidebar-width", "300px");
+        root.style.setProperty("--zenmode-statusbar-height", "30px");
 
-    document!.documentElement?.removeAttribute("zenmode-reveal-bottom");
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
+        destroyZenModeForWindow(bundle.win);
+        for (
+          const attribute of [
+            "zenmode",
+            "zenmode-reveal-top",
+            "zenmode-reveal-bottom",
+            "zenmode-reveal-side",
+            "zenmode-rebase",
+          ]
+        ) {
+          assert(
+            !root.hasAttribute(attribute),
+            `destroy should remove ${attribute}`,
+          );
+        }
+        for (
+          const property of [
+            "--zenmode-toolbox-height",
+            "--zenmode-sidebar-width",
+            "--zenmode-selectbox-width",
+            "--zenmode-statusbar-height",
+          ]
+        ) {
+          assertEquals(
+            root.style.getPropertyValue(property),
+            "",
+            `destroy should remove ${property}`,
+          );
+        }
+        assertEquals(
+          getZenModeController(bundle.win),
+          undefined,
+          "destroy should remove the registry entry",
+        );
+        assertEquals(
+          (bundle.win as unknown as { __floorpZenModeController?: unknown })
+            .__floorpZenModeController,
+          undefined,
+          "destroy should remove the cross-context window marker",
+        );
+        assertEquals(
+          bundle.doc.getElementById(ZEN_MODE_STYLE_ID),
+          null,
+          "destroy should remove Zen CSS",
+        );
 
-function testSideEdgeHoverRevealSetsAttribute(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
+        bundle.dispatchWindowEvent(
+          new MouseEvent("mousemove", { clientX: 100, clientY: 5 }),
+        );
+        bundle.toolbox.dispatchEvent(new Event("customizationstarting"));
+        assert(
+          !root.hasAttribute("zenmode-reveal-top"),
+          "destroyed listeners must not mutate the document",
+        );
+      });
+    },
+  },
+  {
+    name: "menu reflects and toggles its owning window controller",
+    async fn() {
+      await withSeed(false, () => {
+        const controller = attachZenModeToWindow(window);
+        assert(controller !== null, "real window controller should exist");
+        const originalEnabled = controller.enabled();
+        controller.setEnabledFromUser(false);
 
-  try {
-    setZenModeEnabled(true);
+        const container = document.createElement("div");
+        document.body?.appendChild(container);
+        const dispose = createRoot((rootDispose) => {
+          render(
+            () => ZenModeMenuElement({ targetWindow: window }),
+            container,
+          );
+          return rootDispose;
+        });
 
-    // Simulate mouse move to left edge
-    const mouseEvent = new MouseEvent("mousemove", {
-      clientX: 5, // Within EDGE_THRESHOLD
-      clientY: 100,
-    });
-    globalThis.dispatchEvent(mouseEvent);
-
-    assert(
-      document!.documentElement?.hasAttribute("zenmode-reveal-side"),
-      "zenmode-reveal-side attribute should be set when hovering left edge",
-    );
-
-    document!.documentElement?.removeAttribute("zenmode-reveal-side");
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
-
-function testHoverRevealDoesNotTriggerWhenDisabled(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-
-  try {
-    setZenModeEnabled(false);
-
-    // Simulate mouse move to top edge
-    const mouseEvent = new MouseEvent("mousemove", {
-      clientX: 100,
-      clientY: 5,
-    });
-    globalThis.dispatchEvent(mouseEvent);
-
-    assert(
-      !document!.documentElement?.hasAttribute("zenmode-reveal-top"),
-      "zenmode-reveal-top attribute should NOT be set when zen mode is disabled",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
-
-function testZenModeDisablingRemovesAllRevealAttributes(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-
-  try {
-    setZenModeEnabled(true);
-
-    // Manually set all reveal attributes
-    document!.documentElement?.setAttribute("zenmode-reveal-top", "");
-    document!.documentElement?.setAttribute("zenmode-reveal-bottom", "");
-    document!.documentElement?.setAttribute("zenmode-reveal-side", "");
-
-    // Disable zen mode
-    setZenModeEnabled(false);
-
-    assert(
-      !document!.documentElement?.hasAttribute("zenmode-reveal-top"),
-      "zenmode-reveal-top should be removed when zen mode is disabled",
-    );
-    assert(
-      !document!.documentElement?.hasAttribute("zenmode-reveal-bottom"),
-      "zenmode-reveal-bottom should be removed when zen mode is disabled",
-    );
-    assert(
-      !document!.documentElement?.hasAttribute("zenmode-reveal-side"),
-      "zenmode-reveal-side should be removed when zen mode is disabled",
-    );
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
-
-function testZenModeMenuElementHasCorrectId(): void {
-  const container = document!.createElement("div");
-  render(() => ZenModeMenuElement(), container);
-
-  const menuitem = container.querySelector("#toggle_zenmode");
-  assert(
-    menuitem !== null,
-    "ZenModeMenuElement should render a menuitem with id 'toggle_zenmode'",
-  );
-
-  menuitem?.remove();
-}
-
-function testZenModeMenuElementCheckedStateSyncs(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-
-  try {
-    setZenModeEnabled(true);
-
-    const container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
-
-    const menuitem = container.querySelector("#toggle_zenmode");
-    const checked = menuitem?.getAttribute("checked");
-
-    assert(
-      checked === "true" || checked === "",
-      "menuitem checked attribute should be set when zen mode is enabled",
-    );
-
-    menuitem?.remove();
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
-
-function testZenModeMenuElementHasCorrectAccesskey(): void {
-  const container = document!.createElement("div");
-  render(() => ZenModeMenuElement(), container);
-
-  const menuitem = container.querySelector("#toggle_zenmode");
-  const accesskey = menuitem?.getAttribute("accesskey");
-
-  assertEquals(accesskey, "Z", "menuitem should have accesskey 'Z'");
-
-  menuitem?.remove();
-}
-
-function testZenModeMenuElementConditionallyRendersStyle(): void {
-  const originalSignal = zenModeEnabled();
-  const originalPref = Services.prefs.getBoolPref(ZENMODE_PREF, false);
-
-  try {
-    // Test with zen mode disabled
-    setZenModeEnabled(false);
-    let container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
-    let styleElement = container.querySelector("style");
-
-    assert(
-      styleElement === null,
-      "style element should not be rendered when zen mode is disabled",
-    );
-
-    // Test with zen mode enabled
-    setZenModeEnabled(true);
-    container = document!.createElement("div");
-    render(() => ZenModeMenuElement(), container);
-    styleElement = container.querySelector("style");
-
-    assert(
-      styleElement !== null,
-      "style element should be rendered when zen mode is enabled",
-    );
-
-    container.remove();
-  } finally {
-    setZenModeEnabled(originalSignal);
-    Services.prefs.setBoolPref(ZENMODE_PREF, originalPref);
-  }
-}
+        try {
+          const menuitem = container.querySelector("#toggle_zenmode");
+          assert(menuitem !== null, "menu item should render");
+          assertEquals(
+            menuitem.getAttribute("accesskey"),
+            "Z",
+            "menu item should retain its access key",
+          );
+          menuitem.dispatchEvent(new Event("command", { bubbles: true }));
+          assertEquals(
+            controller.enabled(),
+            true,
+            "menu command should toggle its owning window",
+          );
+          assert(
+            menuitem.hasAttribute("checked"),
+            "menu checked state should react to its controller",
+          );
+        } finally {
+          dispose();
+          container.remove();
+          controller.setEnabledFromUser(originalEnabled);
+        }
+      });
+    },
+  },
+];
 
 export async function runAllTests(): Promise<void> {
-  await runTests("zenMode.test.ts", [
-    {
-      name: "zenModeEnabled signal is readable",
-      fn: testZenModeSignalReadable,
-    },
-    {
-      name: "setZenModeEnabled toggles value",
-      fn: testSetZenModeEnabledToggles,
-    },
-    { name: "zen mode pref sync", fn: testZenModePrefSync },
-    {
-      name: "zen mode attribute on documentElement",
-      fn: testZenModeAttributeOnDocumentElement,
-    },
-    {
-      name: "pref observer updates signal",
-      fn: testZenModePrefObserverUpdatesSignal,
-    },
-    {
-      name: "measureAndSetCSSVariables sets toolbox height",
-      fn: testMeasureAndSetCSSVariablesSetsToolboxHeight,
-    },
-    {
-      name: "measureAndSetCSSVariables handles missing toolbox",
-      fn: testMeasureAndSetCSSVariablesHandlesMissingToolbox,
-    },
-    {
-      name: "top edge hover reveal sets attribute",
-      fn: testTopEdgeHoverRevealSetsAttribute,
-    },
-    {
-      name: "bottom edge hover reveal sets attribute",
-      fn: testBottomEdgeHoverRevealSetsAttribute,
-    },
-    {
-      name: "side edge hover reveal sets attribute",
-      fn: testSideEdgeHoverRevealSetsAttribute,
-    },
-    {
-      name: "hover reveal does not trigger when disabled",
-      fn: testHoverRevealDoesNotTriggerWhenDisabled,
-    },
-    {
-      name: "zen mode disabling removes all reveal attributes",
-      fn: testZenModeDisablingRemovesAllRevealAttributes,
-    },
-    {
-      name: "ZenModeMenuElement has correct id",
-      fn: testZenModeMenuElementHasCorrectId,
-    },
-    {
-      name: "ZenModeMenuElement checked state syncs",
-      fn: testZenModeMenuElementCheckedStateSyncs,
-    },
-    {
-      name: "ZenModeMenuElement has correct accesskey",
-      fn: testZenModeMenuElementHasCorrectAccesskey,
-    },
-    {
-      name: "ZenModeMenuElement conditionally renders style",
-      fn: testZenModeMenuElementConditionallyRendersStyle,
-    },
-  ]);
+  await runTests("zenMode.test.ts", tests);
 }
