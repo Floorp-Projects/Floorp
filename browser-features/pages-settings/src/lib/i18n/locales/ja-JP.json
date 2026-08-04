@@ -740,6 +740,14 @@
         "resetToDefaults": "デフォルトにリセット",
         "resetToDefaultsTitle": "外観設定をリセットしますか？",
         "resetToDefaultsConfirm": "大きさ・位置・文字サイズの設定がすべてデフォルト値に戻ります。",
-        "reset": "リセット"
+        "reset": "リセット",
+        "contentSettings": "表示する項目",
+        "contentSettingsDescription": "コマンドパレットに自動的に表示する項目を選択します。",
+        "showTabs": "開いているタブを表示",
+        "showTabsDescription": "現在開いているタブを候補に表示します。",
+        "showHistory": "履歴を表示",
+        "showHistoryDescription": "閲覧履歴のページを候補に表示します。",
+        "showBookmarks": "ブックマークを表示",
+        "showBookmarksDescription": "ブックマークされたページを候補に表示します。"
     }
 }

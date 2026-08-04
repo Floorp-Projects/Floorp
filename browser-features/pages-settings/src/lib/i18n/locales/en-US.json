@@ -746,6 +746,14 @@
         "resetToDefaults": "Reset to defaults",
         "resetToDefaultsTitle": "Reset appearance settings?",
         "resetToDefaultsConfirm": "All size, position, and font size settings will be restored to their default values.",
-        "reset": "Reset"
+        "reset": "Reset",
+        "contentSettings": "Displayed content",
+        "contentSettingsDescription": "Choose which items appear automatically in the command palette.",
+        "showTabs": "Show open tabs",
+        "showTabsDescription": "Show currently open tabs as suggestions.",
+        "showHistory": "Show history",
+        "showHistoryDescription": "Show pages from your browsing history as suggestions.",
+        "showBookmarks": "Show bookmarks",
+        "showBookmarksDescription": "Show bookmarked pages as suggestions."
     }
 }

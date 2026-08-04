@@ -17,6 +17,9 @@ export const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight"
 export const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
 export const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
 export const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
+export const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
+export const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
+export const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -29,6 +32,9 @@ export interface CommandPaletteConfig {
   offsetTop: number;
   horizontalAlign: CommandPaletteHorizontalAlign;
   fontSize: number;
+  showTabs: boolean;
+  showHistory: boolean;
+  showBookmarks: boolean;
 }
 
 export const defaultConfig: CommandPaletteConfig = {
@@ -40,6 +46,9 @@ export const defaultConfig: CommandPaletteConfig = {
   offsetTop: 20,
   horizontalAlign: "center",
   fontSize: 14,
+  showTabs: true,
+  showHistory: true,
+  showBookmarks: true,
 };
 
 // Bounds for the customizable size/position prefs.
@@ -121,6 +130,126 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   });
 
   return [enabled, setEnabled];
+}
+
+function createShowTabs(): [Accessor<boolean>, Setter<boolean>] {
+  const [showTabs, setShowTabs] = createSignal(
+    Services.prefs.getBoolPref(
+      COMMAND_PALETTE_SHOW_TABS_PREF,
+      defaultConfig.showTabs,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setBoolPref(COMMAND_PALETTE_SHOW_TABS_PREF, showTabs());
+    } catch (e) {
+      console.error("[command-palette] Failed to persist showTabs pref", e);
+    }
+  });
+
+  const showTabsObserver = () => {
+    setShowTabs(
+      Services.prefs.getBoolPref(
+        COMMAND_PALETTE_SHOW_TABS_PREF,
+        defaultConfig.showTabs,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_SHOW_TABS_PREF, showTabsObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_SHOW_TABS_PREF,
+      showTabsObserver,
+    );
+  });
+
+  return [showTabs, setShowTabs];
+}
+
+function createShowHistory(): [Accessor<boolean>, Setter<boolean>] {
+  const [showHistory, setShowHistory] = createSignal(
+    Services.prefs.getBoolPref(
+      COMMAND_PALETTE_SHOW_HISTORY_PREF,
+      defaultConfig.showHistory,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setBoolPref(COMMAND_PALETTE_SHOW_HISTORY_PREF, showHistory());
+    } catch (e) {
+      console.error("[command-palette] Failed to persist showHistory pref", e);
+    }
+  });
+
+  const showHistoryObserver = () => {
+    setShowHistory(
+      Services.prefs.getBoolPref(
+        COMMAND_PALETTE_SHOW_HISTORY_PREF,
+        defaultConfig.showHistory,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_SHOW_HISTORY_PREF,
+    showHistoryObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_SHOW_HISTORY_PREF,
+      showHistoryObserver,
+    );
+  });
+
+  return [showHistory, setShowHistory];
+}
+
+function createShowBookmarks(): [Accessor<boolean>, Setter<boolean>] {
+  const [showBookmarks, setShowBookmarks] = createSignal(
+    Services.prefs.getBoolPref(
+      COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+      defaultConfig.showBookmarks,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setBoolPref(
+        COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+        showBookmarks(),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist showBookmarks pref",
+        e,
+      );
+    }
+  });
+
+  const showBookmarksObserver = () => {
+    setShowBookmarks(
+      Services.prefs.getBoolPref(
+        COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+        defaultConfig.showBookmarks,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+    showBookmarksObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+      showBookmarksObserver,
+    );
+  });
+
+  return [showBookmarks, setShowBookmarks];
 }
 
 function createRecentCommands(): [
@@ -532,9 +661,24 @@ export const [_fontSize, _setFontSize] = createRootHMR(
   createFontSize,
   import.meta.hot,
 );
+export const [_showTabs, _setShowTabs] = createRootHMR(
+  createShowTabs,
+  import.meta.hot,
+);
+export const [_showHistory, _setShowHistory] = createRootHMR(
+  createShowHistory,
+  import.meta.hot,
+);
+export const [_showBookmarks, _setShowBookmarks] = createRootHMR(
+  createShowBookmarks,
+  import.meta.hot,
+);
 
 export const getWidth = () => _width();
 export const getMaxHeight = () => _maxHeight();
 export const getOffsetTop = () => _offsetTop();
 export const getHorizontalAlign = () => _horizontalAlign();
 export const getFontSize = () => _fontSize();
+export const getShowTabs = () => _showTabs();
+export const getShowHistory = () => _showHistory();
+export const getShowBookmarks = () => _showBookmarks();

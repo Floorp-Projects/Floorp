@@ -9,12 +9,16 @@ import {
   getRecentCommands,
   incrementFrequency,
   getFrequencies,
+  getShowTabs,
+  getShowHistory,
+  getShowBookmarks,
 } from "./config.ts";
 import {
   getPaletteCommands,
   searchCommands,
   searchHistoryCommands,
   searchBookmarkCommands,
+  isTabCommand,
 } from "./command-registry.ts";
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
 import type {
@@ -703,9 +707,12 @@ export class CommandPaletteController {
       });
     }
 
-    const commandResults = trimmed
+    const rawCommandResults = trimmed
       ? searchCommands(trimmed, this.targetWindow)
       : this.buildInitialCommandList();
+    const commandResults = getShowTabs()
+      ? rawCommandResults
+      : rawCommandResults.filter((c) => !isTabCommand(c.id));
     results.push(...commandResults);
 
     // Show search engine suggestion at the bottom of the list as a fallback.
@@ -801,12 +808,16 @@ export class CommandPaletteController {
     }
 
     if (trimmed && !shareModeEnabled()) {
-      this.bookmarkSearchTimer = setTimeout(() => {
-        this.performBookmarkSearch(trimmed);
-      }, 100);
-      this.historySearchTimer = setTimeout(() => {
-        this.performHistorySearch(trimmed);
-      }, 200);
+      if (getShowBookmarks()) {
+        this.bookmarkSearchTimer = setTimeout(() => {
+          this.performBookmarkSearch(trimmed);
+        }, 100);
+      }
+      if (getShowHistory()) {
+        this.historySearchTimer = setTimeout(() => {
+          this.performHistorySearch(trimmed);
+        }, 200);
+      }
     }
   }
 

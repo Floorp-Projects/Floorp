@@ -7,12 +7,18 @@ const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
 const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
 const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
 const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
+const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
+const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
+const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
 const DEFAULT_OFFSET_TOP = 20;
 const DEFAULT_HORIZONTAL_ALIGN = "center";
 const DEFAULT_FONT_SIZE = 14;
+const DEFAULT_SHOW_TABS = true;
+const DEFAULT_SHOW_HISTORY = true;
+const DEFAULT_SHOW_BOOKMARKS = true;
 
 const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
@@ -88,6 +94,27 @@ export async function saveCommandPaletteSettings(
         clampInt(Number(settings.fontSize), FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
       );
     }
+
+    if (settings.showTabs !== undefined) {
+      await rpc.setBoolPref(
+        COMMAND_PALETTE_SHOW_TABS_PREF,
+        Boolean(settings.showTabs),
+      );
+    }
+
+    if (settings.showHistory !== undefined) {
+      await rpc.setBoolPref(
+        COMMAND_PALETTE_SHOW_HISTORY_PREF,
+        Boolean(settings.showHistory),
+      );
+    }
+
+    if (settings.showBookmarks !== undefined) {
+      await rpc.setBoolPref(
+        COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+        Boolean(settings.showBookmarks),
+      );
+    }
   } catch (error) {
     console.error("[command-palette] Failed to save settings:", error);
   }
@@ -103,6 +130,11 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
     );
     const fontSize = await rpc.getIntPref(COMMAND_PALETTE_FONT_SIZE_PREF);
+    const showTabs = await rpc.getBoolPref(COMMAND_PALETTE_SHOW_TABS_PREF);
+    const showHistory = await rpc.getBoolPref(COMMAND_PALETTE_SHOW_HISTORY_PREF);
+    const showBookmarks = await rpc.getBoolPref(
+      COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
+    );
 
     return {
       enabled: enabled === null ? true : enabled,
@@ -115,6 +147,9 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
         ? (horizontalAlign as string)
         : DEFAULT_HORIZONTAL_ALIGN,
       fontSize: clampInt(fontSize ?? DEFAULT_FONT_SIZE, FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
+      showTabs: showTabs === null ? DEFAULT_SHOW_TABS : showTabs,
+      showHistory: showHistory === null ? DEFAULT_SHOW_HISTORY : showHistory,
+      showBookmarks: showBookmarks === null ? DEFAULT_SHOW_BOOKMARKS : showBookmarks,
     };
   } catch (error) {
     console.error("[command-palette] Failed to load settings:", error);

@@ -3,6 +3,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { AppearanceSettings } from "./components/AppearanceSettings.tsx";
 import { BasicSettings } from "./components/BasicSettings.tsx";
+import { ContentSettings } from "./components/ContentSettings.tsx";
 import {
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
@@ -30,6 +31,9 @@ export default function Page() {
           shouldValidate: true,
         });
         setValue("fontSize", values.fontSize, { shouldValidate: true });
+        setValue("showTabs", values.showTabs, { shouldValidate: true });
+        setValue("showHistory", values.showHistory, { shouldValidate: true });
+        setValue("showBookmarks", values.showBookmarks, { shouldValidate: true });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
       }
@@ -67,6 +71,7 @@ export default function Page() {
           onSubmit={(e) => e.preventDefault()}
         >
           <BasicSettings />
+          <ContentSettings />
           <AppearanceSettings />
         </form>
       </FormProvider>

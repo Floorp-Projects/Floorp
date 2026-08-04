@@ -103,6 +103,9 @@ export const zCommandPaletteFormData = t.type({
   offsetTop: t.number,
   horizontalAlign: t.string,
   fontSize: t.number,
+  showTabs: t.boolean,
+  showHistory: t.boolean,
+  showBookmarks: t.boolean,
 });
 
 export type CommandPaletteFormData = t.TypeOf<typeof zCommandPaletteFormData>;
