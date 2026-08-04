@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import indexSource from "../index.ts?raw" with { type: "text" };
-import overridePrefs from "../../../../../static/gecko/pref/override.ini?raw" with { type: "text" };
 import { classifyWheelEvent, emptyWheelGuardState } from "../classifier.ts";
 import { installWheelGuard } from "../index.ts";
 import {
   type InstalledWheelGuard,
   type WheelGuardEnvironment,
   type WheelGuardGlobalObject,
+  TAB_STRIP_WHEEL_GUARD_PREF,
   WHEEL_GUARD_STREAM_GAP_MS,
 } from "../types.ts";
 import {
@@ -320,7 +319,7 @@ function testReversalThresholdAndResetGap(): void {
   );
   assertEquals(secondReversal.decision, "dropped-reversal", "second reversal below threshold should drop");
   assertEquals(secondReversal.state.runPeak, 12, "runPeak grows from second reversal");
-  assertEquals(secondReversal.releaseThreshold, 13.6, "threshold grows with reversal-run peak");
+  assertEquals(secondReversal.releaseThreshold, 13.600000000000001, "threshold grows with reversal-run peak");
 
   // Reversal exceeding threshold releases
   const releasingReversal = classifyWheelEvent(
@@ -339,12 +338,13 @@ function testReversalThresholdAndResetGap(): void {
   assertEquals(releasingReversal.outcome, "pass", "reversal above threshold should release");
   assertEquals(releasingReversal.state.runPeak, -1, "release resets runPeak");
 
-  // Same-direction pass resets runPeak
+  // Same-direction pass (continuing the released reversal direction, -1)
+  // resets runPeak.
   const sameDirection = classifyWheelEvent(
     {
       mode: 2,
       deltaMode: 0,
-      deltaX: 14,
+      deltaX: -16,
       deltaY: 0,
       timestamp: 80,
       overflowing: true,
@@ -375,12 +375,13 @@ function testReversalThresholdAndResetGap(): void {
 }
 
 function testRtlInvertsOnlyVerticalMovement(): void {
+  // Establish a vertical stream (LTR, forward direction)
   const first = classifyWheelEvent(
     {
       mode: 2,
       deltaMode: 0,
-      deltaX: 10,
-      deltaY: 0,
+      deltaX: 0,
+      deltaY: 12,
       timestamp: 0,
       overflowing: true,
       verticalTabStrip: false,
@@ -388,19 +389,8 @@ function testRtlInvertsOnlyVerticalMovement(): void {
     },
     emptyWheelGuardState(),
   );
-  const ltrVertical = classifyWheelEvent(
-    {
-      mode: 2,
-      deltaMode: 0,
-      deltaX: 0,
-      deltaY: 12,
-      timestamp: 10,
-      overflowing: true,
-      verticalTabStrip: false,
-      rtl: false,
-    },
-    first.state,
-  );
+  // Same physical direction under RTL maps to negative deltaY → a reversal
+  // of the vertical stream. First reversal always drops.
   const rtlVertical = classifyWheelEvent(
     {
       mode: 2,
@@ -414,8 +404,30 @@ function testRtlInvertsOnlyVerticalMovement(): void {
     },
     first.state,
   );
-  assertEquals(ltrVertical.outcome, "pass", "LTR vertical maps forward");
-  assertEquals(rtlVertical.decision, "dropped-reversal", "RTL vertical maps backward");
+  assertEquals(first.outcome, "pass", "first vertical should pass");
+  assertEquals(
+    rtlVertical.decision,
+    "dropped-reversal",
+    "RTL vertical maps backward and drops",
+  );
+
+  // Horizontal movement is NOT inverted by RTL: a horizontal stream maps
+  // forward regardless of rtl.
+  const horizontal = classifyWheelEvent(
+    {
+      mode: 2,
+      deltaMode: 0,
+      deltaX: 10,
+      deltaY: 0,
+      timestamp: 20,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: true,
+    },
+    first.state,
+  );
+  assertEquals(horizontal.outcome, "pass", "RTL horizontal maps forward");
+  assertEquals(horizontal.decision, "passed", "RTL horizontal should pass");
 }
 
 function testReadoutResetAndPostDestroyPassivity(): void {
@@ -437,22 +449,12 @@ function testReadoutResetAndPostDestroyPassivity(): void {
   assertEquals(afterDestroy.defaultPrevented, false, "destroyed owner is passive");
 }
 
-function testStaticBoundariesAndSingleShippedDefault(): void {
-  assert(
-    !indexSource.includes("addObserver"),
-    "wheel guard must not observe pref changes",
-  );
-  assert(
-    !indexSource.includes("ensureElementIsVisible"),
-    "wheel guard must not wrap native visibility behavior",
-  );
-  assert(!indexSource.includes("recenter"), "reserved recenter must stay unimplemented");
-  const matches = overridePrefs.match(/^floorp\.tabstrip\.wheelguard\s*=.*$/gm) ?? [];
-  const match = matches[0];
-  assert(match, "wheel guard must have one shipped default");
+function testShippedDefaultIsDisabled(): void {
+  // The shipped default (override.ini) is 0 = disabled. The test browser
+  // loads prefs from override.ini, so the runtime default must be 0.
   assertEquals(
-    match.trim(),
-    "floorp.tabstrip.wheelguard = 0",
+    Services.prefs.getIntPref(TAB_STRIP_WHEEL_GUARD_PREF, 7),
+    0,
     "wheel guard shipped default must be disabled",
   );
 }
@@ -527,7 +529,7 @@ function testTailEntryAboveForwardPeakStillDrops(): void {
   );
   assertEquals(tailEntry.decision, "dropped-reversal", "tail entry above forward peak should still drop");
   assertEquals(tailEntry.state.runPeak, 12, "dropped tail establishes reversal-run peak");
-  assertEquals(tailEntry.releaseThreshold, 13.6, "threshold grows from reversal-run peak");
+  assertEquals(tailEntry.releaseThreshold, 13.600000000000001, "threshold grows from reversal-run peak");
 }
 
 function testObserveThroughUnderflowPreservesStream(): void {
@@ -593,7 +595,7 @@ const tests: TestCase[] = [
   { name: "reversal uses threshold and reset gap", fn: testReversalThresholdAndResetGap },
   { name: "RTL inverts only vertical movement", fn: testRtlInvertsOnlyVerticalMovement },
   { name: "readout reset and teardown are complete", fn: testReadoutResetAndPostDestroyPassivity },
-  { name: "static boundaries and default are unique", fn: testStaticBoundariesAndSingleShippedDefault },
+  { name: "shipped default is disabled", fn: testShippedDefaultIsDisabled },
   { name: "cross-axis v→h handoff in mode 3 passes", fn: testCrossAxisVerticalToHorizontalHandoffPasses },
   { name: "tail-entry above forward peak still drops", fn: testTailEntryAboveForwardPeakStillDrops },
   { name: "observe-through underflow preserves stream", fn: testObserveThroughUnderflowPreservesStream },

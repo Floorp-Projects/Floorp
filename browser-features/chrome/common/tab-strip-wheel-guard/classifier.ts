@@ -111,34 +111,40 @@ export function classifyWheelEvent(
     state.lastAxis === axis &&
     state.direction !== direction
   ) {
+    // Release only when a reversal-run peak exists (runPeak >= 0) and the
+    // event clears it — a live finger ramping past its own tiny peak.
+    // Otherwise (first reversal of the run, or a decaying tail under the
+    // envelope) drop and grow the peak from the reversal magnitude.
     const releaseThreshold = state.runPeak * 1.05 + 1;
-    if (magnitude < releaseThreshold) {
+    if (state.runPeak >= 0 && magnitude > releaseThreshold) {
       return {
-        outcome: "drop",
-        decision: "dropped-reversal",
+        outcome: "pass",
+        decision: "passed",
         state: {
-          ...state,
           lastTimestamp: input.timestamp,
-          runPeak: Math.max(state.runPeak, magnitude),
+          lastAxis: axis,
+          direction,
+          runPeak: -1,
         },
         axis,
         direction,
         magnitude,
-        releaseThreshold,
       };
     }
+    const grownPeak = Math.max(state.runPeak, magnitude);
     return {
-      outcome: "pass",
-      decision: "passed",
+      outcome: "drop",
+      decision: "dropped-reversal",
       state: {
+        ...state,
         lastTimestamp: input.timestamp,
-        lastAxis: axis,
-        direction,
-        runPeak: -1,
+        runPeak: grownPeak,
       },
       axis,
       direction,
       magnitude,
+      // Threshold the NEXT reversal event must clear to release.
+      releaseThreshold: grownPeak * 1.05 + 1,
     };
   }
 
