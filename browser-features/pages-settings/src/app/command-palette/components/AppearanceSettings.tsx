@@ -9,6 +9,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import { Button } from "@/components/common/button.tsx";
 import { DropDown, type DropDownOption } from "@/components/common/dropdown.tsx";
 import { Seekbar } from "@/components/common/seekbar.tsx";
+import { cn } from "@/lib/utils";
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,7 @@ export function AppearanceSettings() {
   const { t } = useTranslation();
   const { getValues, setValue } = useFormContext<CommandPaletteFormData>();
   const [showResetModal, setShowResetModal] = useState(false);
+  const isDisabled = !getValues("enabled");
 
   const alignOptions: DropDownOption[] = [
     { value: "center", label: t("commandPalette.alignCenter") },
@@ -59,7 +61,7 @@ export function AppearanceSettings() {
             {t("commandPalette.appearanceSettingsDescription")}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className={cn("space-y-4 transition-opacity", isDisabled && "opacity-60")}>
           <Seekbar
             label={t("commandPalette.width")}
             description={t("commandPalette.widthDescription")}
@@ -69,6 +71,7 @@ export function AppearanceSettings() {
             valueSuffix="px"
             value={getValues("width")}
             onChange={(e) => setValue("width", Number(e.target.value))}
+            disabled={isDisabled}
           />
 
           <Seekbar
@@ -80,6 +83,7 @@ export function AppearanceSettings() {
             valueSuffix="px"
             value={getValues("maxHeight")}
             onChange={(e) => setValue("maxHeight", Number(e.target.value))}
+            disabled={isDisabled}
           />
 
           <Seekbar
@@ -91,6 +95,7 @@ export function AppearanceSettings() {
             valueSuffix="vh"
             value={getValues("offsetTop")}
             onChange={(e) => setValue("offsetTop", Number(e.target.value))}
+            disabled={isDisabled}
           />
 
           <Seekbar
@@ -102,6 +107,7 @@ export function AppearanceSettings() {
             valueSuffix="px"
             value={getValues("fontSize")}
             onChange={(e) => setValue("fontSize", Number(e.target.value))}
+            disabled={isDisabled}
           />
 
           <div>
@@ -118,6 +124,7 @@ export function AppearanceSettings() {
               value={getValues("horizontalAlign")}
               options={alignOptions}
               onChange={(e) => setValue("horizontalAlign", e.target.value)}
+              disabled={isDisabled}
             />
           </div>
 
@@ -126,6 +133,7 @@ export function AppearanceSettings() {
               variant="ghost"
               size="sm"
               onClick={() => setShowResetModal(true)}
+              disabled={isDisabled}
             >
               <RotateCcw className="size-4 mr-1" />
               {t("commandPalette.resetToDefaults")}
