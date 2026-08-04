@@ -2,7 +2,9 @@
 // @colocated-env browser
 
 import {
+  applyWorkspaceSnapshotMetadata,
   buildSummary,
+  createArchiveFile,
   filterJsonFiles,
   isRecord,
 } from "../utils/workspaces-archive-service.ts";
@@ -228,6 +230,104 @@ function testBuildSummaryWithMultipleTabs(): void {
   assertEquals(summary.icon, "folder", "should preserve workspace icon");
 }
 
+const makeRawIconSnapshot = (
+  workspace: TWorkspaceSnapshot["workspace"],
+): TWorkspaceSnapshot => ({
+  capturedAt: 1700000000000,
+  workspace,
+  tabs: [],
+});
+
+function testArchiveSummaryPreservesRawIconCategories(): void {
+  const workspaceId = "ws-raw" as unknown as TWorkspaceID;
+  const base = { workspaceId, name: "Raw", userContextId: 0 };
+  const cases: Array<[string, TWorkspaceSnapshot["workspace"]]> = [
+    ["absent", base],
+    ["own undefined", { ...base, icon: undefined }],
+    ["null", { ...base, icon: null }],
+    ["alias", { ...base, icon: "article" }],
+    ["canonical", { ...base, icon: "floorp-icon:v1:article" }],
+    ["opaque", { ...base, icon: "future:value" }],
+    ["URI", { ...base, icon: "https://example.invalid/icon.svg" }],
+  ];
+  for (const [label, workspace] of cases) {
+    const summary = buildSummary("archive", makeRawIconSnapshot(workspace), "/p");
+    assertEquals(
+      Object.hasOwn(summary, "icon"),
+      Object.hasOwn(workspace, "icon"),
+      `${label} summary presence`,
+    );
+    if (Object.hasOwn(workspace, "icon")) {
+      assertEquals(summary.icon, workspace.icon, `${label} summary value`);
+    }
+  }
+}
+
+function testArchiveJsonKeepsVersionAndRawCategories(): void {
+  const workspaceId = "ws-json" as unknown as TWorkspaceID;
+  const base = { workspaceId, name: "JSON", userContextId: 0 };
+  const absent = JSON.parse(
+    JSON.stringify(createArchiveFile(makeRawIconSnapshot(base))),
+  ) as Record<string, unknown>;
+  const ownUndefined = JSON.parse(
+    JSON.stringify(
+      createArchiveFile(
+        makeRawIconSnapshot({ ...base, icon: undefined }),
+      ),
+    ),
+  ) as Record<string, unknown>;
+  const explicitNull = JSON.parse(
+    JSON.stringify(createArchiveFile(makeRawIconSnapshot({ ...base, icon: null }))),
+  ) as Record<string, unknown>;
+  const opaque = JSON.parse(
+    JSON.stringify(
+      createArchiveFile(makeRawIconSnapshot({ ...base, icon: "future:value" })),
+    ),
+  ) as Record<string, unknown>;
+  const getWorkspace = (file: Record<string, unknown>) =>
+    ((file.snapshot as Record<string, unknown>).workspace as Record<string, unknown>);
+  assertEquals(absent.version, 1, "archive schema remains v1");
+  assert(!Object.hasOwn(getWorkspace(absent), "icon"), "absent icon stays absent");
+  assert(
+    !Object.hasOwn(getWorkspace(ownUndefined), "icon"),
+    "undefined icon is omitted, not changed to null",
+  );
+  assertEquals(getWorkspace(explicitNull).icon, null, "null stays explicit");
+  assertEquals(getWorkspace(opaque).icon, "future:value", "opaque stays exact");
+}
+
+function testRestoreReplacesDefaultNullWithExactRawSlot(): void {
+  const workspaceId = "ws-restore" as unknown as TWorkspaceID;
+  const created = {
+    name: "Created",
+    icon: null,
+    userContextId: 0,
+    isSelected: null,
+    isDefault: null,
+  };
+  const base = { workspaceId, name: "Restored", userContextId: 8 };
+  const absent = applyWorkspaceSnapshotMetadata(created, base);
+  assert(!Object.hasOwn(absent, "icon"), "absent snapshot removes created null");
+
+  const ownUndefined = applyWorkspaceSnapshotMetadata(created, {
+    ...base,
+    icon: undefined,
+  });
+  assert(Object.hasOwn(ownUndefined, "icon"), "in-memory undefined stays own");
+  assertEquals(ownUndefined.icon, undefined, "in-memory undefined stays undefined");
+
+  for (const icon of [
+    null,
+    "article",
+    "floorp-icon:v1:article",
+    "future:value",
+    "https://example.invalid/icon.svg",
+  ]) {
+    const restored = applyWorkspaceSnapshotMetadata(created, { ...base, icon });
+    assertEquals(restored.icon, icon, `${String(icon)} restores exactly`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -260,6 +360,18 @@ export function runAllTests(): void {
     {
       name: "buildSummary with multiple tabs",
       fn: testBuildSummaryWithMultipleTabs,
+    },
+    {
+      name: "archive summary preserves raw icon categories",
+      fn: testArchiveSummaryPreservesRawIconCategories,
+    },
+    {
+      name: "archive JSON keeps version and raw categories",
+      fn: testArchiveJsonKeepsVersionAndRawCategories,
+    },
+    {
+      name: "restore replaces default null with exact raw slot",
+      fn: testRestoreReplacesDefaultNullWithExactRawSlot,
     },
   ];
 

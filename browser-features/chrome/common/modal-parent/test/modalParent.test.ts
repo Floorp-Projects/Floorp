@@ -10,6 +10,7 @@ import {
 import ModalParent from "../index.ts";
 import { isModalVisible, setModalVisible } from "../data/data.ts";
 import { attachModalBackdropListener } from "../modalElement.tsx";
+import type { TFormItem } from "../utils/type.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers – save/restore modal visibility state
@@ -201,12 +202,13 @@ function testTFormItemAllTypes(): void {
     "textarea",
     "select",
     "dropdown",
+    "workspace-icon-picker",
     "checkbox",
     "radio",
     "url",
   ] as const;
 
-  assertEquals(types.length, 8, "TFormItem should support 8 types");
+  assertEquals(types.length, 9, "TFormItem should support 9 types");
   for (const t of types) {
     assert(typeof t === "string", `type ${t} should be a string`);
   }
@@ -273,12 +275,52 @@ function testTFormItemAllTypesWithStructure(): void {
     { type: "textarea", appropriateFields: ["rows", "maxLength"] },
     { type: "select", appropriateFields: ["options"] },
     { type: "dropdown", appropriateFields: ["options"] },
+    {
+      type: "workspace-icon-picker",
+      appropriateFields: ["options", "displayValue", "value"],
+    },
     { type: "checkbox", appropriateFields: ["value"] },
     { type: "radio", appropriateFields: ["options"] },
     { type: "url", appropriateFields: ["placeholder"] },
   ];
 
-  assertEquals(types.length, 8, "all 8 types covered");
+  assertEquals(types.length, 9, "all 9 types covered");
+}
+
+function testWorkspaceIconPickerTransportIsCanonicalOnly(): void {
+  const rawStoredValue = "https://example.invalid/raw-workspace-icon.svg";
+  const item: TFormItem = {
+    type: "workspace-icon-picker",
+    id: "icon",
+    label: "Icon",
+    value: "__private_no_change__",
+    displayValue: "floorp-icon:v1:fingerprint",
+    options: [
+      {
+        value: "floorp-icon:v1:fingerprint",
+        label: "Fingerprint",
+        icon: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+        keywords: ["identity", "default"],
+      },
+    ],
+  };
+  const transported = JSON.parse(JSON.stringify(item)) as TFormItem;
+  assertEquals(transported.type, "workspace-icon-picker", "dedicated type");
+  assertEquals(transported.value, "__private_no_change__", "sentinel survives");
+  assertEquals(
+    transported.displayValue,
+    "floorp-icon:v1:fingerprint",
+    "safe display ID survives",
+  );
+  assertEquals(
+    transported.options?.[0].value,
+    "floorp-icon:v1:fingerprint",
+    "only canonical option is transported",
+  );
+  assert(
+    !JSON.stringify(transported).includes(rawStoredValue),
+    "raw stored value is not transported to the child",
+  );
 }
 
 function testTFormResultEmpty(): void {
@@ -499,7 +541,7 @@ const tests: TestCase[] = [
     name: "TForm with submit/cancel labels",
     fn: testTFormWithSubmitCancelLabels,
   },
-  { name: "TFormItem supports 8 types", fn: testTFormItemAllTypes },
+  { name: "TFormItem supports 9 types", fn: testTFormItemAllTypes },
   { name: "TFormResult key-value", fn: testTFormResultKeyValue },
   {
     name: "TFormItem all optional fields",
@@ -509,6 +551,10 @@ const tests: TestCase[] = [
   {
     name: "TFormItem all types with structure",
     fn: testTFormItemAllTypesWithStructure,
+  },
+  {
+    name: "workspace icon picker transport is canonical only",
+    fn: testWorkspaceIconPickerTransportIsCanonicalOnly,
   },
   { name: "TFormResult empty", fn: testTFormResultEmpty },
   { name: "TFormResult multiple fields", fn: testTFormResultMultipleFields },
