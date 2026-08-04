@@ -6,6 +6,11 @@
 import { getConfig, isEnabled, isSafeErrorHandling } from "./config.ts";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 import type { ShortcutConfig } from "./type.ts";
+import {
+  isBarePrintableKeyEvent,
+  isKeyboardShortcutTypingContext,
+  type KeyboardShortcutFocusStoreReader,
+} from "./editable-focus.ts";
 
 export class KeyboardShortcutController {
   private eventListenersAttached = false;
@@ -18,9 +23,14 @@ export class KeyboardShortcutController {
   };
 
   private targetWindow: Window;
+  private remoteFocusStore: KeyboardShortcutFocusStoreReader | null;
 
-  constructor(win: Window = globalThis as unknown as Window) {
+  constructor(
+    win: Window = globalThis as unknown as Window,
+    remoteFocusStore: KeyboardShortcutFocusStoreReader | null = null,
+  ) {
     this.targetWindow = win;
+    this.remoteFocusStore = remoteFocusStore;
     this.init();
   }
 
@@ -34,7 +44,11 @@ export class KeyboardShortcutController {
 
   public destroy(): void {
     if (this.eventListenersAttached) {
-      this.targetWindow.removeEventListener("keydown", this.handleKeyDown, true);
+      this.targetWindow.removeEventListener(
+        "keydown",
+        this.handleKeyDown,
+        true,
+      );
       this.targetWindow.removeEventListener("keyup", this.handleKeyUp, true);
       this.eventListenersAttached = false;
     }
@@ -62,6 +76,19 @@ export class KeyboardShortcutController {
     };
 
     const code = event.code;
+
+    if (
+      isBarePrintableKeyEvent(event) &&
+      isKeyboardShortcutTypingContext(
+        this.targetWindow,
+        this.remoteFocusStore,
+      )
+    ) {
+      // Do not retain a repeated key from before focus entered an editable.
+      this.pressedKeys.delete(code);
+      return;
+    }
+
     this.pressedKeys.add(code);
 
     // Ignore pure modifier key presses. Using startsWith keeps this concise
