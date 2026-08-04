@@ -722,9 +722,11 @@
         "basicSettings": "Basic Settings",
         "enableOrDisable": "Enable/Disable",
         "enable": "Enable command palette",
-        "enableDescription": "When enabled, you can open the command palette with F2.",
+        "enableDescription": "When enabled, you can open the command palette.",
         "launchHintTitle": "How to launch",
         "launchHint": "Press the {{key}} key to open the command palette. You can change the launch key in",
-        "launchShortcutLink": "Keyboard Shortcuts"
+        "launchShortcutLink": "Keyboard Shortcuts",
+        "launchHintNoShortcut": "No keyboard shortcut is set for the command palette. You can assign one in",
+        "needRestartDescriptionForEnable": "Enabling the command palette requires a browser restart to take effect."
     }
 }
