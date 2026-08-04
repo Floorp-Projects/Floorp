@@ -3,12 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
+import {
+  applyWorkspaceIconSelection,
+  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
+  type WorkspaceIcons,
+} from "./utils/workspace-icons.ts";
 import type { TWorkspace, TWorkspaceID } from "./utils/type.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import ModalParent from "../modal-parent/index.ts";
 import type {
   TForm,
+  TFormItem,
   TFormResult,
 } from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
@@ -16,6 +21,46 @@ import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
+
+export {
+  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
+} from "./utils/workspace-icons.ts";
+
+export const createWorkspaceIconPickerFormItem = (
+  workspace: TWorkspace,
+  iconCtx: WorkspaceIcons,
+  getTranslatedIconName: (alias: string) => string,
+  label: string,
+): TFormItem => ({
+  id: "icon",
+  type: "workspace-icon-picker",
+  label,
+  value: WORKSPACE_ICON_NO_CHANGE_SENTINEL,
+  displayValue: iconCtx.getWorkspaceIconCanonicalId(workspace.icon),
+  options: iconCtx.registry.map((entry) => ({
+    value: entry.canonicalId,
+    label: getTranslatedIconName(entry.alias),
+    icon: iconCtx.getWorkspaceIconUrl(entry.canonicalId),
+    keywords: [...entry.keywords],
+  })),
+});
+
+export const applyWorkspaceModalResult = (
+  workspace: TWorkspace,
+  result: TFormResult | null,
+): TWorkspace | null => {
+  if (result === null) {
+    return null;
+  }
+  return applyWorkspaceIconSelection(
+    {
+      ...workspace,
+      name: result.name as string,
+      userContextId: Number(result.userContextId),
+    },
+    result.icon,
+  );
+};
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
   "resource://gre/modules/ContextualIdentityService.sys.mjs",
@@ -136,18 +181,12 @@ export class WorkspaceManageModal {
             })),
           ],
         },
-        {
-          id: "icon",
-          type: "dropdown",
-          label: texts.icon,
-          value: workspace.icon || "fingerprint",
-          required: true,
-          options: this.iconCtx.workspaceIconsArray.map((iconName) => ({
-            value: iconName,
-            label: this.iconTranslationsHandler.getTranslatedIconName(iconName),
-            icon: this.iconCtx.getWorkspaceIconUrl(iconName),
-          })),
-        },
+        createWorkspaceIconPickerFormItem(
+          workspace,
+          this.iconCtx,
+          (alias) => this.iconTranslationsHandler.getTranslatedIconName(alias),
+          texts.icon,
+        ),
       ],
       title: texts.editTitle,
       submitLabel: texts.save,

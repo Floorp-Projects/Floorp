@@ -16,13 +16,19 @@ import type {
 } from "./workspacesDataManagerBase";
 import type { WorkspacesTabManager } from "./workspacesTabManager";
 import type { WorkspaceIcons } from "./utils/workspace-icons";
-import { WorkspaceManageModal } from "./workspace-modal";
+import {
+  applyWorkspaceModalResult,
+  WorkspaceManageModal,
+} from "./workspace-modal";
 import i18next from "i18next";
 import {
   createWorkspaceSnapshot,
   ensureSessionStore,
 } from "./utils/workspace-snapshot";
-import { WorkspacesArchiveService } from "./utils/workspaces-archive-service";
+import {
+  applyWorkspaceSnapshotMetadata,
+  WorkspacesArchiveService,
+} from "./utils/workspaces-archive-service";
 import type { TWorkspaceSnapshotTab } from "./utils/type";
 import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
@@ -319,22 +325,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
+    if (!this.getRawWorkspace(targetWorkspaceID)) return;
     const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
     if (result === null) return;
-    const { name, icon, userContextId } = result;
-    const workspace = this.getRawWorkspace(targetWorkspaceID);
-    if (!workspace) return;
-    const newWorkspace: TWorkspace = {
-      ...workspace,
-      name: name as string,
-      icon: icon as string,
-      userContextId: Number(userContextId),
-    };
+    let didApply = false;
     setWorkspacesDataStore("data", (prev) => {
       const temp = this.cloneWorkspaceMap(prev);
+      const latestWorkspace = temp.get(targetWorkspaceID);
+      if (!latestWorkspace) return prev;
+      const newWorkspace = applyWorkspaceModalResult(latestWorkspace, result);
+      if (!newWorkspace) return prev;
       temp.set(targetWorkspaceID, newWorkspace);
+      didApply = true;
       return temp as unknown as TWorkspacesStoreData["data"];
     });
+    if (!didApply) return;
     this.tabManagerCtx.updateTabsVisibility();
     return result;
   }
@@ -414,11 +419,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       const temp = this.cloneWorkspaceMap(prev);
       const workspace = temp.get(restoredWorkspaceId);
       if (workspace) {
-        temp.set(restoredWorkspaceId, {
-          ...workspace,
-          icon: snapshot.workspace.icon,
-          userContextId: snapshot.workspace.userContextId,
-        });
+        temp.set(
+          restoredWorkspaceId,
+          applyWorkspaceSnapshotMetadata(workspace, snapshot.workspace),
+        );
       }
       return temp as unknown as TWorkspacesStoreData["data"];
     });

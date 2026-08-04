@@ -14,7 +14,7 @@ export interface WorkspaceArchiveSummary {
   archiveId: string;
   workspaceId: TWorkspaceID;
   name: string;
-  icon: string | null;
+  icon?: string | null | undefined;
   userContextId: number;
   capturedAt: number;
   filePath: string;
