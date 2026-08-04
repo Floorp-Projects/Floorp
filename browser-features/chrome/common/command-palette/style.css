@@ -10,7 +10,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 20vh;
+  padding-top: var(--cp-offset-top, 20vh);
   z-index: 1400;
   opacity: 0;
   pointer-events: none;
@@ -22,9 +22,23 @@
   pointer-events: auto;
 }
 
+#command-palette-overlay[data-halign="center"] {
+  justify-content: center;
+}
+
+#command-palette-overlay[data-halign="left"] {
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+
+#command-palette-overlay[data-halign="right"] {
+  justify-content: flex-end;
+  padding-right: 24px;
+}
+
 #command-palette-container {
-  width: min(560px, calc(100vw - 48px));
-  max-height: 400px;
+  width: min(var(--cp-width, 560px), calc(100vw - 48px));
+  max-height: var(--cp-max-height, 400px);
   background: var(--arrowpanel-background, -moz-dialog);
   color: var(--arrowpanel-color, -moz-dialogtext);
   border: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));

@@ -98,6 +98,10 @@ export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
 /* Command Palette */
 export const zCommandPaletteFormData = t.type({
   enabled: t.boolean,
+  width: t.number,
+  maxHeight: t.number,
+  offsetTop: t.number,
+  horizontalAlign: t.string,
 });
 
 export type CommandPaletteFormData = t.TypeOf<typeof zCommandPaletteFormData>;

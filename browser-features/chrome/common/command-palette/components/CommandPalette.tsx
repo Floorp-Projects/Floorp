@@ -9,6 +9,12 @@ import { CommandList } from "./CommandList.tsx";
 import { StepIndicator } from "./StepIndicator.tsx";
 import { StepChoices } from "./StepChoices.tsx";
 import type { PaletteCommand, CommandStepChoice } from "../types.ts";
+import {
+  getWidth,
+  getMaxHeight,
+  getOffsetTop,
+  getHorizontalAlign,
+} from "../config.ts";
 
 function getController() {
   return commandPaletteService.getController(window);
@@ -97,6 +103,12 @@ export function CommandPaletteUI() {
           })}
           data-visible={state.isVisible() ? "true" : undefined}
           data-mode={state.mode()}
+          data-halign={getHorizontalAlign()}
+          style={{
+            "--cp-width": `${getWidth()}px`,
+            "--cp-max-height": `${getMaxHeight()}px`,
+            "--cp-offset-top": `${getOffsetTop()}vh`,
+          }}
           onClick={handleBackdropClick}
           onTransitionEnd={handleTransitionEnd}
         >

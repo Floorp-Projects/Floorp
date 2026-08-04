@@ -12,18 +12,61 @@ import { createRootHMR } from "@nora/solid-xul";
 export const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
 export const COMMAND_PALETTE_RECENT_PREF = "floorp.commandPalette.recentCommands";
 export const COMMAND_PALETTE_FREQUENCY_PREF = "floorp.commandPalette.commandFrequency";
+export const COMMAND_PALETTE_WIDTH_PREF = "floorp.commandPalette.width";
+export const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
+export const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
+export const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
+
+export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
 export interface CommandPaletteConfig {
   enabled: boolean;
   recentCommands: string[];
   maxRecentCommands: number;
+  width: number;
+  maxHeight: number;
+  offsetTop: number;
+  horizontalAlign: CommandPaletteHorizontalAlign;
 }
 
 export const defaultConfig: CommandPaletteConfig = {
   enabled: true,
   recentCommands: [],
   maxRecentCommands: 10,
+  width: 560,
+  maxHeight: 400,
+  offsetTop: 20,
+  horizontalAlign: "center",
 };
+
+// Bounds for the customizable size/position prefs.
+export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
+export const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
+export const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
+export const HORIZONTAL_ALIGN_VALUES: readonly CommandPaletteHorizontalAlign[] = [
+  "center",
+  "left",
+  "right",
+] as const;
+
+export function clampInt(
+  value: number,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (!Number.isFinite(value)) return fallback;
+  const i = Math.round(value);
+  return Math.min(max, Math.max(min, i));
+}
+
+export function normalizeHorizontalAlign(
+  value: string,
+): CommandPaletteHorizontalAlign {
+  return HORIZONTAL_ALIGN_VALUES.includes(value as CommandPaletteHorizontalAlign)
+    ? (value as CommandPaletteHorizontalAlign)
+    : defaultConfig.horizontalAlign;
+}
 
 const parseRecentCommands = (jsonStr: string): string[] => {
   try {
@@ -202,3 +245,233 @@ export function incrementFrequency(id: string) {
   current[id] = (current[id] ?? 0) + 1;
   _setFrequency(current);
 }
+
+function createWidth(): [Accessor<number>, Setter<number>] {
+  const [width, setWidth] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(COMMAND_PALETTE_WIDTH_PREF, defaultConfig.width),
+      WIDTH_BOUNDS.min,
+      WIDTH_BOUNDS.max,
+      defaultConfig.width,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_WIDTH_PREF,
+        clampInt(
+          width(),
+          WIDTH_BOUNDS.min,
+          WIDTH_BOUNDS.max,
+          defaultConfig.width,
+        ),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist width pref", e);
+    }
+  });
+
+  const widthObserver = () => {
+    setWidth(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_WIDTH_PREF,
+          defaultConfig.width,
+        ),
+        WIDTH_BOUNDS.min,
+        WIDTH_BOUNDS.max,
+        defaultConfig.width,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_WIDTH_PREF, widthObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(COMMAND_PALETTE_WIDTH_PREF, widthObserver);
+  });
+
+  return [width, setWidth];
+}
+
+function createMaxHeight(): [Accessor<number>, Setter<number>] {
+  const [maxHeight, setMaxHeight] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_MAX_HEIGHT_PREF,
+        defaultConfig.maxHeight,
+      ),
+      MAX_HEIGHT_BOUNDS.min,
+      MAX_HEIGHT_BOUNDS.max,
+      defaultConfig.maxHeight,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_MAX_HEIGHT_PREF,
+        clampInt(
+          maxHeight(),
+          MAX_HEIGHT_BOUNDS.min,
+          MAX_HEIGHT_BOUNDS.max,
+          defaultConfig.maxHeight,
+        ),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist maxHeight pref", e);
+    }
+  });
+
+  const maxHeightObserver = () => {
+    setMaxHeight(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_MAX_HEIGHT_PREF,
+          defaultConfig.maxHeight,
+        ),
+        MAX_HEIGHT_BOUNDS.min,
+        MAX_HEIGHT_BOUNDS.max,
+        defaultConfig.maxHeight,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_MAX_HEIGHT_PREF, maxHeightObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_MAX_HEIGHT_PREF,
+      maxHeightObserver,
+    );
+  });
+
+  return [maxHeight, setMaxHeight];
+}
+
+function createOffsetTop(): [Accessor<number>, Setter<number>] {
+  const [offsetTop, setOffsetTop] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_OFFSET_TOP_PREF,
+        defaultConfig.offsetTop,
+      ),
+      OFFSET_TOP_BOUNDS.min,
+      OFFSET_TOP_BOUNDS.max,
+      defaultConfig.offsetTop,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_OFFSET_TOP_PREF,
+        clampInt(
+          offsetTop(),
+          OFFSET_TOP_BOUNDS.min,
+          OFFSET_TOP_BOUNDS.max,
+          defaultConfig.offsetTop,
+        ),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist offsetTop pref", e);
+    }
+  });
+
+  const offsetTopObserver = () => {
+    setOffsetTop(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_OFFSET_TOP_PREF,
+          defaultConfig.offsetTop,
+        ),
+        OFFSET_TOP_BOUNDS.min,
+        OFFSET_TOP_BOUNDS.max,
+        defaultConfig.offsetTop,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_OFFSET_TOP_PREF, offsetTopObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_OFFSET_TOP_PREF,
+      offsetTopObserver,
+    );
+  });
+
+  return [offsetTop, setOffsetTop];
+}
+
+function createHorizontalAlign(): [
+  Accessor<CommandPaletteHorizontalAlign>,
+  Setter<CommandPaletteHorizontalAlign>,
+] {
+  const [align, setAlign] = createSignal(
+    normalizeHorizontalAlign(
+      Services.prefs.getStringPref(
+        COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
+        defaultConfig.horizontalAlign,
+      ),
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setStringPref(
+        COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
+        normalizeHorizontalAlign(align()),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist horizontalAlign pref",
+        e,
+      );
+    }
+  });
+
+  const alignObserver = () => {
+    setAlign(
+      normalizeHorizontalAlign(
+        Services.prefs.getStringPref(
+          COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
+          defaultConfig.horizontalAlign,
+        ),
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
+    alignObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
+      alignObserver,
+    );
+  });
+
+  return [align, setAlign];
+}
+
+export const [_width, _setWidth] = createRootHMR(
+  createWidth,
+  import.meta.hot,
+);
+export const [_maxHeight, _setMaxHeight] = createRootHMR(
+  createMaxHeight,
+  import.meta.hot,
+);
+export const [_offsetTop, _setOffsetTop] = createRootHMR(
+  createOffsetTop,
+  import.meta.hot,
+);
+export const [_horizontalAlign, _setHorizontalAlign] = createRootHMR(
+  createHorizontalAlign,
+  import.meta.hot,
+);
+
+export const getWidth = () => _width();
+export const getMaxHeight = () => _maxHeight();
+export const getOffsetTop = () => _offsetTop();
+export const getHorizontalAlign = () => _horizontalAlign();

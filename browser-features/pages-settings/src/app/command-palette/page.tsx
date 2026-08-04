@@ -1,6 +1,7 @@
 import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { AppearanceSettings } from "./components/AppearanceSettings.tsx";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import {
   getCommandPaletteSettings,
@@ -22,6 +23,12 @@ export default function Page() {
         if (!values) return;
 
         setValue("enabled", values.enabled, { shouldValidate: true });
+        setValue("width", values.width, { shouldValidate: true });
+        setValue("maxHeight", values.maxHeight, { shouldValidate: true });
+        setValue("offsetTop", values.offsetTop, { shouldValidate: true });
+        setValue("horizontalAlign", values.horizontalAlign, {
+          shouldValidate: true,
+        });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
       }
@@ -59,6 +66,7 @@ export default function Page() {
           onSubmit={(e) => e.preventDefault()}
         >
           <BasicSettings />
+          <AppearanceSettings />
         </form>
       </FormProvider>
     </div>
