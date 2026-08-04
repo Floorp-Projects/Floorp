@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Categories"
 sidebar_label: "Common Categories"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "89512cb30d94bdc984f14c7d199440b911885dea"
 generated: true
 ---
 # Common Chrome Feature Categories
@@ -18,7 +18,10 @@ This nested catalog is generated from `browser-features/chrome/common`. It group
 | [Input & Shortcuts](./input-and-shortcuts) | 4 | Keyboard, mouse gesture, context menu, and command palette interaction features. |
 | [Web Apps & Integration](./webapps-and-integration) | 6 | PWA, profile, add-on, external browser, share mode, and container integration features. |
 | [Utilities & Actions](./utilities-and-actions) | 2 | Small chrome utilities and action helpers that do not own a broader feature family. |
+| Uncategorized | 1 | Entries discovered from `browser-features/chrome/common` that do not yet have a docs category. |
 
 ## Uncategorized Entries
 
-All discovered common chrome features are currently assigned to a generated category.
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacksFoundation`, `init` | Owns the tab stacks feature through the TabStacksFoundation chrome component and wires `stack-bar`. |

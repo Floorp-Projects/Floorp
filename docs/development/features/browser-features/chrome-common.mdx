@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Catalog"
 sidebar_label: "Common Chrome"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "89512cb30d94bdc984f14c7d199440b911885dea"
 generated: true
 ---
 # Common Chrome Feature Catalog
@@ -37,6 +37,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | tab | `browser-features/chrome/common/tab/index.ts` | `default class Tab`, `init` | Owns the tab feature through the Tab chrome component and wires `scroll`, `openPosition`, `sizeSpecification`. |
 | tab-refresh | `browser-features/chrome/common/tab-refresh/index.ts` | `default class TabRefresh`, `init` | Owns the tab refresh feature through the TabRefresh chrome component and wires `controller`. |
 | tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacksFoundation`, `init` | Owns the tab stacks feature through the TabStacksFoundation chrome component and wires `stack-bar`. |
 | tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
 | ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |
 | undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |

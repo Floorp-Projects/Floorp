@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Features"
 sidebar_label: "Common"
-floorp_commit: "ef70a7ef84573ff3ce46125169750c5a7cad3898"
+floorp_commit: "89512cb30d94bdc984f14c7d199440b911885dea"
 generated: true
 ---
 # Common Chrome Features
@@ -10,7 +10,7 @@ The `browser-features/chrome/common/` directory contains loader-managed browser 
 
 ## Discovery And Loading
 
-Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 30 common feature entries.
+Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 31 common feature entries.
 
 The bridge loader turns discovered entries into loadable modules, while each feature entrypoint remains responsible for its own component, services, styles, context menus, or lifecycle hooks.
 
@@ -94,7 +94,9 @@ Small chrome utilities and action helpers that do not own a broader feature fami
 
 ### Uncategorized
 
-All discovered common chrome features are currently assigned to a generated category.
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacksFoundation`, `init` | Owns the tab stacks feature through the TabStacksFoundation chrome component and wires `stack-bar`. |
 
 ## Relationship To Other Layers
 
