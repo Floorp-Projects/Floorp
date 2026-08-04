@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { KeyboardShortcutConfig, ShortcutConfig } from "./type.ts";
+import {
+  createDefaultConfig,
+  KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+  ZEN_MODE_ACTION,
+} from "./defaults.ts";
 
 const LEGACY_PREF = "floorp.browser.nora.csk.data";
 
@@ -20,6 +25,47 @@ interface LegacyShortcutConfig {
 }
 
 type LegacyConfig = Record<string, LegacyShortcutConfig>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Normalize the current JSON preference to schema version 2.
+ *
+ * Only schema-less/older configurations receive the Zen shortcut. A version 2
+ * configuration without Zen is an intentional user deletion and is preserved.
+ */
+export function migrateConfigToV2(
+  value: unknown,
+  defaults: KeyboardShortcutConfig = createDefaultConfig(),
+): KeyboardShortcutConfig {
+  const source = isRecord(value) ? value : {};
+  const sourceShortcuts = isRecord(source.shortcuts)
+    ? source.shortcuts as Record<string, ShortcutConfig>
+    : null;
+  const shortcuts = sourceShortcuts
+    ? { ...sourceShortcuts }
+    : { ...defaults.shortcuts };
+
+  if (
+    source.schemaVersion !== KEYBOARD_SHORTCUT_SCHEMA_VERSION &&
+    !Object.values(shortcuts).some((shortcut) =>
+      isRecord(shortcut) && shortcut.action === ZEN_MODE_ACTION
+    )
+  ) {
+    shortcuts[ZEN_MODE_ACTION] = defaults.shortcuts[ZEN_MODE_ACTION];
+  }
+
+  return {
+    ...source,
+    schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+    enabled: typeof source.enabled === "boolean"
+      ? source.enabled
+      : defaults.enabled,
+    shortcuts,
+  } as KeyboardShortcutConfig;
+}
 
 export function migrateLegacyConfig(): KeyboardShortcutConfig | null {
   try {

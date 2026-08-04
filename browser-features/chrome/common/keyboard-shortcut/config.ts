@@ -16,63 +16,50 @@ import {
   type ShortcutConfig,
   zKeyboardShortcutConfig,
 } from "./type.ts";
-import { clearLegacyConfig, migrateLegacyConfig } from "./migration.ts";
+import {
+  clearLegacyConfig,
+  migrateConfigToV2,
+  migrateLegacyConfig,
+} from "./migration.ts";
+import { createDefaultConfig } from "./defaults.ts";
 import { isRight } from "fp-ts/Either";
+
+export {
+  COMMAND_PALETTE_ACTION,
+  createDefaultConfig,
+  createDefaultShortcuts,
+  createZenModeShortcut,
+  KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+  ZEN_MODE_ACTION,
+} from "./defaults.ts";
 
 export const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 export const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
 export const KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF =
   "floorp.keyboardshortcut.safeErrorHandling";
 
-/**
- * Returns the default keyboard shortcut map used by the extension.
- *
- * Shape: `Record<string, ShortcutConfig>` where each entry contains
- * `key`, `modifiers`, and `action`.
- *
- * The sole default mapping is the **F2** key for
- * "floorp-toggle-command-palette", with all modifiers set to `false`.
- */
-const createDefaultShortcuts = (): Record<string, ShortcutConfig> => {
-  return {
-    "floorp-toggle-command-palette": {
-      key: "F2",
-      modifiers: { alt: false, ctrl: false, meta: false, shift: false },
-      action: "floorp-toggle-command-palette",
-    },
-  };
-};
-
-export const defaultConfig: KeyboardShortcutConfig = {
-  enabled: true,
-  shortcuts: createDefaultShortcuts(),
-};
+export const defaultConfig: KeyboardShortcutConfig = createDefaultConfig();
 
 export const strDefaultConfig = JSON.stringify(defaultConfig);
 
 const normalizeConfig = (
   config: Record<string, unknown>,
 ): KeyboardShortcutConfig => {
-  return {
-    ...defaultConfig,
-    ...config,
-    shortcuts:
-      (config?.shortcuts as Record<string, ShortcutConfig> | undefined) ??
-      defaultConfig.shortcuts,
-  } as KeyboardShortcutConfig;
+  return migrateConfigToV2(config, defaultConfig);
 };
 
-const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
+export const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
   try {
     const parsed = JSON.parse(jsonStr);
-    const result = zKeyboardShortcutConfig.decode(parsed);
+    const normalized = normalizeConfig(parsed);
+    const result = zKeyboardShortcutConfig.decode(normalized);
     if (isRight(result)) {
-      return normalizeConfig(result.right);
+      return result.right;
     }
     console.warn(
       "Keyboard shortcut configuration validation failed, attempting to recover partial data",
     );
-    return normalizeConfig(parsed);
+    return normalized;
   } catch (e) {
     console.error(
       "Failed to parse keyboard shortcut configuration JSON, using default",
@@ -177,7 +164,8 @@ export const [_config, _setConfig] = createRootHMR(
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
-export const setConfig = (value: KeyboardShortcutConfig) => _setConfig(value);
+export const setConfig = (value: KeyboardShortcutConfig) =>
+  _setConfig(migrateConfigToV2(value, defaultConfig));
 
 /**
  * Experiment "ks_safe_error_handling" — wraps getAction + fn invocation

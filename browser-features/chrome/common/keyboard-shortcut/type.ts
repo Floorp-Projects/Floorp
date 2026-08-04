@@ -24,6 +24,9 @@ const zKeyboardShortcutConfigRequired = t.type({
 
 const zKeyboardShortcutConfigOptional = t.partial({
   enabled: t.boolean,
+  // Optional at the API boundary so callers can still supply a legacy config.
+  // All persisted configurations are normalized to version 2 before storage.
+  schemaVersion: t.literal(2),
 });
 
 export const zKeyboardShortcutConfig = t.intersection([
