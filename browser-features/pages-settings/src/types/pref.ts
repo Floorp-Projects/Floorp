@@ -95,6 +95,13 @@ export const zWorkspacesFormData = t.type({
 
 export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
 
+/* Command Palette */
+export const zCommandPaletteFormData = t.type({
+  enabled: t.boolean,
+});
+
+export type CommandPaletteFormData = t.TypeOf<typeof zCommandPaletteFormData>;
+
 /* About */
 export type ConstantsData = {
   MOZ_APP_VERSION: string;

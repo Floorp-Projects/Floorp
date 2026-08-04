@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "commandPalette": "Command Palette",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -715,5 +716,15 @@
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
         }
+    },
+    "commandPalette": {
+        "description": "Quickly access browser commands, tabs, bookmarks, history, and more from a single search box.",
+        "basicSettings": "Basic Settings",
+        "enableOrDisable": "Enable/Disable",
+        "enable": "Enable command palette",
+        "enableDescription": "When enabled, you can open the command palette with F2.",
+        "launchHintTitle": "How to launch",
+        "launchHint": "Press the {{key}} key to open the command palette. You can change the launch key in",
+        "launchShortcutLink": "Keyboard Shortcuts"
     }
 }

@@ -34,6 +34,7 @@
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
         "keyboardShortcut": "キーボードショートカット",
+        "commandPalette": "コマンドパレット",
         "search": {
             "title": "検索の設定",
             "resultsFor": "[{{query}}] の検索結果",
@@ -709,5 +710,15 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "commandPalette": {
+        "description": "ブラウザーのコマンド、タブ、ブックマーク、履歴などにすばやくアクセスできる検索ボックスです。",
+        "basicSettings": "基本設定",
+        "enableOrDisable": "有効化/無効化",
+        "enable": "コマンドパレットを有効にする",
+        "enableDescription": "有効にすると、F2 キーでコマンドパレットを開けます。",
+        "launchHintTitle": "起動方法",
+        "launchHint": "{{key}} キーを押してコマンドパレットを開きます。起動キーの変更は",
+        "launchShortcutLink": "キーボードショートカット"
     }
 }
