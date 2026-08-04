@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "タブを再読み込み"
+  },
   "undo-closed-tab": {
     "label": "閉じたタブを元に戻す",
     "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"

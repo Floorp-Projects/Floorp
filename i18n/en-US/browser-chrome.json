@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Undo Closed Tab",
     "tooltiptext": "Reopen the last closed tab {{shortcut}}"
