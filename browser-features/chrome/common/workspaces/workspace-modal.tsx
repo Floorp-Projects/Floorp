@@ -21,7 +21,7 @@ import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
 
-const WORKSPACE_ICON_NO_CHANGE_SENTINEL =
+export const WORKSPACE_ICON_NO_CHANGE_SENTINEL =
   "__floorp_workspace_icon_picker_no_change__";
 
 export const createWorkspaceIconPickerFormItem = (

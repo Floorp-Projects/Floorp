@@ -131,21 +131,34 @@ export class WorkspaceIcons {
       eager: true,
     }) as ModuleStrings;
 
+    const normalizeGlobKey = (key: string): string => {
+      return key.split("/").pop()?.replace(/\?raw$/, "") ?? key;
+    };
+
     const registeredAssetPaths = new Set<string>(
-      WORKSPACE_ICON_REGISTRY.map((entry) => entry.assetPath),
+      WORKSPACE_ICON_REGISTRY.map((entry) => normalizeGlobKey(entry.assetPath)),
     );
-    const bundledAssetPaths = Object.keys(moduleStrings);
+    const bundledAssetPaths = new Set(
+      Object.keys(moduleStrings).map(normalizeGlobKey),
+    );
     if (
-      bundledAssetPaths.length !== WORKSPACE_ICON_REGISTRY.length ||
-      bundledAssetPaths.some((path) => !registeredAssetPaths.has(path))
+      bundledAssetPaths.size !== WORKSPACE_ICON_REGISTRY.length ||
+      [...bundledAssetPaths].some((path) => !registeredAssetPaths.has(path))
     ) {
       throw new Error(
         "Bundled workspace SVGs do not match the 34-entry icon registry",
       );
     }
 
+    const moduleStringsByBasename = new Map<string, string>();
+    for (const [key, value] of Object.entries(moduleStrings)) {
+      const basename = normalizeGlobKey(key);
+      moduleStringsByBasename.set(basename, value as string);
+    }
+
     for (const entry of WORKSPACE_ICON_REGISTRY) {
-      const svgContent = moduleStrings[entry.assetPath];
+      const basename = normalizeGlobKey(entry.assetPath);
+      const svgContent = moduleStringsByBasename.get(basename);
       if (typeof svgContent !== "string") {
         throw new Error(`Missing bundled workspace icon: ${entry.assetPath}`);
       }

@@ -9,6 +9,9 @@ import {
 } from "../src/workspaceIconPickerModel.ts";
 import type { TFormOption } from "../../chrome/common/modal-parent/utils/type.ts";
 import {
+  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
+} from "../../chrome/common/workspaces/workspace-modal.tsx";
+import {
   assert,
   assertEquals,
   type TestCase,
@@ -79,7 +82,7 @@ function testFilterUsesLabelSlugAndKeywords(): void {
 }
 
 function testNoChangeAndInvalidSelectionPreserveSentinel(): void {
-  const sentinel = "__private_no_change__";
+  const sentinel = WORKSPACE_ICON_NO_CHANGE_SENTINEL;
   assertEquals(
     selectWorkspaceIconPickerValue(sentinel, "article", options),
     sentinel,
@@ -102,7 +105,7 @@ function testNoChangeAndInvalidSelectionPreserveSentinel(): void {
 }
 
 function testDisplayValueDoesNotChangeFormValue(): void {
-  const sentinel = "__private_no_change__";
+  const sentinel = WORKSPACE_ICON_NO_CHANGE_SENTINEL;
   assertEquals(
     resolveWorkspaceIconPickerDisplayValue(
       sentinel,
@@ -129,7 +132,7 @@ function testDisplayValueDoesNotChangeFormValue(): void {
 }
 
 function testDisplayedFallbackCanBeExplicitlyCanonicalized(): void {
-  const sentinel = "__private_no_change__";
+  const sentinel = WORKSPACE_ICON_NO_CHANGE_SENTINEL;
   const displayValue = resolveWorkspaceIconPickerDisplayValue(
     sentinel,
     "floorp-icon:v1:article",
