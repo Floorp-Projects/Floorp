@@ -721,6 +721,25 @@
         "launchHint": "{{key}} キーを押してコマンドパレットを開きます。起動キーの変更は",
         "launchShortcutLink": "キーボードショートカット",
         "launchHintNoShortcut": "コマンドパレットのキーボードショートカットが設定されていません。起動キーの設定は",
-        "needRestartDescriptionForEnable": "コマンドパレットを有効にするには、ブラウザーの再起動が必要です。"
+        "needRestartDescriptionForEnable": "コマンドパレットを有効にするには、ブラウザーの再起動が必要です。",
+        "appearanceSettings": "外観",
+        "appearanceSettingsDescription": "コマンドパレットの大きさ・位置・文字サイズをカスタマイズします。",
+        "width": "幅",
+        "widthDescription": "パレットの幅（ピクセル単位）。",
+        "maxHeight": "最大高さ",
+        "maxHeightDescription": "パレットの最大の高さ（ピクセル単位）。",
+        "offsetTop": "上からの距離",
+        "offsetTopDescription": "画面上端からの距離（ビューポート高さに対する割合）。",
+        "horizontalAlign": "水平方向の配置",
+        "horizontalAlignDescription": "パレットを左・中央・右のいずれかに配置します。",
+        "alignCenter": "中央",
+        "alignLeft": "左",
+        "alignRight": "右",
+        "fontSize": "文字サイズ",
+        "fontSizeDescription": "パレットの基本文字サイズ。すべてのテキストが連動して拡大・縮小します。",
+        "resetToDefaults": "デフォルトにリセット",
+        "resetToDefaultsTitle": "外観設定をリセットしますか？",
+        "resetToDefaultsConfirm": "大きさ・位置・文字サイズの設定がすべてデフォルト値に戻ります。",
+        "reset": "リセット"
     }
 }
