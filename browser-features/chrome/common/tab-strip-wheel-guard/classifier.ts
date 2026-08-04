@@ -17,7 +17,7 @@ export function emptyWheelGuardState(): WheelGuardState {
     lastTimestamp: null,
     lastAxis: null,
     direction: null,
-    runPeak: 0,
+    runPeak: -1,
   };
 }
 
@@ -79,16 +79,16 @@ export function classifyWheelEvent(
     };
   }
 
+  const state = currentStream(previousState, input.timestamp);
+  const { axis, direction, magnitude } = movement(input);
+
   if (!input.overflowing || input.verticalTabStrip) {
     return {
       outcome: "pass",
       decision: "passed-inactive",
-      state: emptyWheelGuardState(),
+      state: copyState(state),
     };
   }
-
-  const state = currentStream(previousState, input.timestamp);
-  const { axis, direction, magnitude } = movement(input);
 
   if (
     (input.mode & WHEEL_GUARD_AXIS_QUARANTINE) !== 0 &&
@@ -98,7 +98,7 @@ export function classifyWheelEvent(
     return {
       outcome: "drop",
       decision: "dropped-axis",
-      state,
+      state: { ...state, lastTimestamp: input.timestamp },
       axis,
       direction,
       magnitude,
@@ -108,6 +108,7 @@ export function classifyWheelEvent(
   if (
     (input.mode & WHEEL_GUARD_REVERSAL_HOLD) !== 0 &&
     state.direction !== null &&
+    state.lastAxis === axis &&
     state.direction !== direction
   ) {
     const releaseThreshold = state.runPeak * 1.05 + 1;
@@ -115,13 +116,30 @@ export function classifyWheelEvent(
       return {
         outcome: "drop",
         decision: "dropped-reversal",
-        state,
+        state: {
+          ...state,
+          lastTimestamp: input.timestamp,
+          runPeak: Math.max(state.runPeak, magnitude),
+        },
         axis,
         direction,
         magnitude,
         releaseThreshold,
       };
     }
+    return {
+      outcome: "pass",
+      decision: "passed",
+      state: {
+        lastTimestamp: input.timestamp,
+        lastAxis: axis,
+        direction,
+        runPeak: -1,
+      },
+      axis,
+      direction,
+      magnitude,
+    };
   }
 
   return {
@@ -131,9 +149,7 @@ export function classifyWheelEvent(
       lastTimestamp: input.timestamp,
       lastAxis: axis,
       direction,
-      runPeak: state.direction === direction
-        ? Math.max(state.runPeak, magnitude)
-        : magnitude,
+      runPeak: -1,
     },
     axis,
     direction,

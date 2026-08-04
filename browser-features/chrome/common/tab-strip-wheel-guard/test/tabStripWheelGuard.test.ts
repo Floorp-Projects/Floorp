@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import indexSource from "../index.ts?raw";
-import overridePrefs from "../../../../../static/gecko/pref/override.ini?raw";
+import indexSource from "../index.ts?raw" with { type: "text" };
+import overridePrefs from "../../../../../static/gecko/pref/override.ini?raw" with { type: "text" };
 import { classifyWheelEvent, emptyWheelGuardState } from "../classifier.ts";
 import { installWheelGuard } from "../index.ts";
 import {
@@ -283,7 +283,11 @@ function testReversalThresholdAndResetGap(): void {
     },
     emptyWheelGuardState(),
   );
-  const lowReversal = classifyWheelEvent(
+  assertEquals(first.outcome, "pass", "first event should pass");
+  assertEquals(first.state.runPeak, -1, "first pass resets runPeak");
+
+  // First reversal always drops because runPeak was -1 (runPeak >= 0 is false)
+  const firstReversal = classifyWheelEvent(
     {
       mode: 2,
       deltaMode: 0,
@@ -296,38 +300,78 @@ function testReversalThresholdAndResetGap(): void {
     },
     first.state,
   );
-  assertEquals(lowReversal.decision, "dropped-reversal", "low reversal should drop");
-  assertEquals(lowReversal.releaseThreshold, 11.5, "threshold should be peak * 1.05 + 1");
+  assertEquals(firstReversal.decision, "dropped-reversal", "first reversal should drop");
+  assertEquals(firstReversal.state.runPeak, 11.49, "dropped reversal grows runPeak from magnitude");
+  assertEquals(firstReversal.releaseThreshold, 13.0645, "threshold is reversal-run peak * 1.05 + 1");
 
-  const threshold = classifyWheelEvent(
+  // Subsequent reversal below new threshold still drops and grows peak
+  const secondReversal = classifyWheelEvent(
     {
       mode: 2,
       deltaMode: 0,
-      deltaX: -11.5,
+      deltaX: -12,
       deltaY: 0,
-      timestamp: 20,
+      timestamp: 40,
       overflowing: true,
       verticalTabStrip: false,
       rtl: false,
     },
-    first.state,
+    firstReversal.state,
   );
-  assertEquals(threshold.outcome, "pass", "threshold magnitude should release");
+  assertEquals(secondReversal.decision, "dropped-reversal", "second reversal below threshold should drop");
+  assertEquals(secondReversal.state.runPeak, 12, "runPeak grows from second reversal");
+  assertEquals(secondReversal.releaseThreshold, 13.6, "threshold grows with reversal-run peak");
 
+  // Reversal exceeding threshold releases
+  const releasingReversal = classifyWheelEvent(
+    {
+      mode: 2,
+      deltaMode: 0,
+      deltaX: -14,
+      deltaY: 0,
+      timestamp: 60,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    secondReversal.state,
+  );
+  assertEquals(releasingReversal.outcome, "pass", "reversal above threshold should release");
+  assertEquals(releasingReversal.state.runPeak, -1, "release resets runPeak");
+
+  // Same-direction pass resets runPeak
+  const sameDirection = classifyWheelEvent(
+    {
+      mode: 2,
+      deltaMode: 0,
+      deltaX: 14,
+      deltaY: 0,
+      timestamp: 80,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    releasingReversal.state,
+  );
+  assertEquals(sameDirection.outcome, "pass", "same-direction pass should pass");
+  assertEquals(sameDirection.state.runPeak, -1, "same-direction pass resets runPeak");
+
+  // After gap, stream resets
   const afterGap = classifyWheelEvent(
     {
       mode: 2,
       deltaMode: 0,
       deltaX: -1,
       deltaY: 0,
-      timestamp: WHEEL_GUARD_STREAM_GAP_MS + 1,
+      timestamp: 500,
       overflowing: true,
       verticalTabStrip: false,
       rtl: false,
     },
-    first.state,
+    sameDirection.state,
   );
-  assertEquals(afterGap.outcome, "pass", "reversal should pass after stream reset");
+  assertEquals(afterGap.outcome, "pass", "event should pass after stream reset");
+  assertEquals(afterGap.state.runPeak, -1, "gap reset initializes runPeak to -1");
 }
 
 function testRtlInvertsOnlyVerticalMovement(): void {
@@ -404,12 +448,139 @@ function testStaticBoundariesAndSingleShippedDefault(): void {
   );
   assert(!indexSource.includes("recenter"), "reserved recenter must stay unimplemented");
   const matches = overridePrefs.match(/^floorp\.tabstrip\.wheelguard\s*=.*$/gm) ?? [];
-  assertEquals(matches.length, 1, "wheel guard must have one shipped default");
+  const match = matches[0];
+  assert(match, "wheel guard must have one shipped default");
   assertEquals(
-    matches[0].trim(),
+    match.trim(),
     "floorp.tabstrip.wheelguard = 0",
     "wheel guard shipped default must be disabled",
   );
+}
+
+function testCrossAxisVerticalToHorizontalHandoffPasses(): void {
+  // Vertical stream establishes axis
+  const vertical = classifyWheelEvent(
+    {
+      mode: 3,
+      deltaMode: 0,
+      deltaX: 0,
+      deltaY: 10,
+      timestamp: 0,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    emptyWheelGuardState(),
+  );
+  assertEquals(vertical.outcome, "pass", "vertical event should pass");
+  assertEquals(vertical.state.lastAxis, "vertical", "stream should be vertical");
+
+  // Horizontal event after vertical stream: v→h handoff, should pass (not dropped-reversal)
+  const horizontal = classifyWheelEvent(
+    {
+      mode: 3,
+      deltaMode: 0,
+      deltaX: 10,
+      deltaY: 0,
+      timestamp: 20,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    vertical.state,
+  );
+  assertEquals(horizontal.outcome, "pass", "horizontal after vertical should pass");
+  assertEquals(horizontal.decision, "passed", "horizontal handoff should be passed, not dropped-reversal");
+  assertEquals(horizontal.state.lastAxis, "horizontal", "stream should re-latch to horizontal");
+}
+
+function testTailEntryAboveForwardPeakStillDrops(): void {
+  // Forward event establishes stream
+  const forward = classifyWheelEvent(
+    {
+      mode: 2,
+      deltaMode: 0,
+      deltaX: 10,
+      deltaY: 0,
+      timestamp: 0,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    emptyWheelGuardState(),
+  );
+  assertEquals(forward.outcome, "pass", "forward event should pass");
+
+  // Reversal entering at 12: first reversal always drops (runPeak was -1 after forward pass)
+  const tailEntry = classifyWheelEvent(
+    {
+      mode: 2,
+      deltaMode: 0,
+      deltaX: -12,
+      deltaY: 0,
+      timestamp: 20,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    forward.state,
+  );
+  assertEquals(tailEntry.decision, "dropped-reversal", "tail entry above forward peak should still drop");
+  assertEquals(tailEntry.state.runPeak, 12, "dropped tail establishes reversal-run peak");
+  assertEquals(tailEntry.releaseThreshold, 13.6, "threshold grows from reversal-run peak");
+}
+
+function testObserveThroughUnderflowPreservesStream(): void {
+  // Horizontal stream establishes state
+  const first = classifyWheelEvent(
+    {
+      mode: 1,
+      deltaMode: 0,
+      deltaX: 10,
+      deltaY: 0,
+      timestamp: 0,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    emptyWheelGuardState(),
+  );
+  assertEquals(first.outcome, "pass", "first event should pass");
+  assertEquals(first.state.lastAxis, "horizontal", "stream should be horizontal");
+
+  // Underflow event passes but preserves stream state
+  const underflow = classifyWheelEvent(
+    {
+      mode: 1,
+      deltaMode: 0,
+      deltaX: 5,
+      deltaY: 0,
+      timestamp: 10,
+      overflowing: false,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    first.state,
+  );
+  assertEquals(underflow.outcome, "pass", "underflow event should pass");
+  assertEquals(underflow.decision, "passed-inactive", "underflow should be passed-inactive");
+  assertEquals(underflow.state.lastAxis, "horizontal", "underflow should preserve stream axis");
+
+  // Next vertical-dominant event in horizontal stream should still drop (mode 1 axis quarantine)
+  const verticalAfterUnderflow = classifyWheelEvent(
+    {
+      mode: 1,
+      deltaMode: 0,
+      deltaX: 1,
+      deltaY: 2,
+      timestamp: 20,
+      overflowing: true,
+      verticalTabStrip: false,
+      rtl: false,
+    },
+    underflow.state,
+  );
+  assertEquals(verticalAfterUnderflow.decision, "dropped-axis", "vertical after underflow should still drop");
 }
 
 const tests: TestCase[] = [
@@ -423,6 +594,9 @@ const tests: TestCase[] = [
   { name: "RTL inverts only vertical movement", fn: testRtlInvertsOnlyVerticalMovement },
   { name: "readout reset and teardown are complete", fn: testReadoutResetAndPostDestroyPassivity },
   { name: "static boundaries and default are unique", fn: testStaticBoundariesAndSingleShippedDefault },
+  { name: "cross-axis v→h handoff in mode 3 passes", fn: testCrossAxisVerticalToHorizontalHandoffPasses },
+  { name: "tail-entry above forward peak still drops", fn: testTailEntryAboveForwardPeakStillDrops },
+  { name: "observe-through underflow preserves stream", fn: testObserveThroughUnderflowPreservesStream },
 ];
 
 export async function runAllTests(): Promise<void> {
