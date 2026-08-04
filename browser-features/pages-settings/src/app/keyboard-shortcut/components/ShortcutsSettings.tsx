@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { KeyboardShortcutConfig, ShortcutConfig } from "../../../types/pref.ts";
 import { useAvailableActions } from "../../gesture/useAvailableActions.ts";
+import { getKeyboardShortcutActionOptions } from "../actionCatalog.ts";
 import { ShortcutEditor } from "./ShortcutEditor.tsx";
 import {
     Card,
@@ -33,7 +34,11 @@ export const ShortcutsSettings = ({
     deleteShortcut,
 }: ShortcutsSettingsProps) => {
     const { t } = useTranslation();
-    const actions = useAvailableActions();
+    const availableActions = useAvailableActions();
+    const actions = getKeyboardShortcutActionOptions(
+        (key, fallback) => t(key, fallback),
+        availableActions,
+    );
     const [editingAction, setEditingAction] = useState<string | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingShortcut, setEditingShortcut] = useState<ShortcutConfig | null>(null);

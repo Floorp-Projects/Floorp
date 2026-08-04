@@ -9,6 +9,7 @@ import type {
   KeyboardShortcutConfig,
   ShortcutConfig,
 } from "../../types/pref.ts";
+import { createDefaultKeyboardShortcutConfig } from "./actionCatalog.ts";
 
 const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
@@ -33,16 +34,7 @@ export const useKeyboardShortcutConfig = () => {
           enabled = true;
         }
 
-        const defaultConfig: KeyboardShortcutConfig = {
-          enabled,
-          shortcuts: {
-            "floorp-toggle-command-palette": {
-              key: "F2",
-              modifiers: { alt: false, ctrl: false, meta: false, shift: false },
-              action: "floorp-toggle-command-palette",
-            },
-          },
-        };
+        const defaultConfig = createDefaultKeyboardShortcutConfig(enabled);
 
         try {
           const configStr = await rpc.getStringPref(

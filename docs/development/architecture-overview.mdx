@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "89512cb30d94bdc984f14c7d199440b911885dea"
+floorp_commit: "7b6ff3ea8076b5a48575264ff0df6a3a14019280"
 generated: true
 ---
 # Architecture Overview
@@ -58,7 +58,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 
 ## Chrome UI Features
 
-Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 31 common features:
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 32 common features:
 
 - `addons`
 - `browser-share-mode`
@@ -83,6 +83,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `split-view`
 - `statusbar`
 - `tab`
+- `tab-inline-edit`
 - `tab-refresh`
 - `tab-sleep-exclusion`
 - `tab-stacks`

@@ -676,6 +676,9 @@
         "action": "アクション",
         "shortcut": "ショートカット",
         "actions": "アクション",
+        "actionLabels": {
+            "floorp-edit-tab-url": "タブの URL を編集"
+        },
         "notSet": "設定なし",
         "add": "追加",
         "edit": "編集",

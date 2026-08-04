@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { getConfig, isEnabled, isSafeErrorHandling } from "./config.ts";
-import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
+import { getKeyboardShortcutAction } from "./actions.ts";
 import type { ShortcutConfig } from "./type.ts";
 import {
   isBarePrintableKeyEvent,
@@ -163,7 +163,7 @@ export class KeyboardShortcutController {
       // Expanded try-catch covers both getAction() resolution and fn()
       // invocation so callers can always run cleanup.
       try {
-        const fn = gestureActions.getAction(shortcut.action);
+        const fn = getKeyboardShortcutAction(shortcut.action);
         if (fn) {
           fn(this.targetWindow);
         }
@@ -175,7 +175,7 @@ export class KeyboardShortcutController {
       }
     } else {
       // Control: original behaviour (try-catch only around fn call)
-      const fn = gestureActions.getAction(shortcut.action);
+      const fn = getKeyboardShortcutAction(shortcut.action);
       if (fn) {
         try {
           fn(this.targetWindow);

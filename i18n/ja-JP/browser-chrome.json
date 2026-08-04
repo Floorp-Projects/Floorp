@@ -136,6 +136,11 @@
     "reopenInPrivateContainer": "プライベートコンテナーで再度開く",
     "name": "プライベートコンテナー"
   },
+  "tabInlineEdit": {
+    "contextMenu": "タブの URL を編集",
+    "inputLabel": "タブの URL",
+    "keyboardAction": "タブの URL を編集"
+  },
   "mouseGesture": {
     "actions": {
       "gecko-back": "戻る",

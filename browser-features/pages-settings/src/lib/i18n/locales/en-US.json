@@ -676,6 +676,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",
