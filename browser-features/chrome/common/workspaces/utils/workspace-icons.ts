@@ -9,6 +9,14 @@ type ModuleStrings = Record<string, string>;
 
 export const WORKSPACE_ICON_CANONICAL_PREFIX = "floorp-icon:v1:" as const;
 
+/**
+ * Form value used by the workspace modal to signal "keep the current icon".
+ * A pure constant (no modal/component imports) so pages-layer tests can
+ * import it without pulling in chrome components.
+ */
+export const WORKSPACE_ICON_NO_CHANGE_SENTINEL =
+  "__floorp_workspace_icon_picker_no_change__";
+
 export interface WorkspaceIconRegistryEntry {
   readonly slug: string;
   readonly canonicalId: `${typeof WORKSPACE_ICON_CANONICAL_PREFIX}${string}`;

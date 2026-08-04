@@ -5,6 +5,7 @@
 
 import {
   applyWorkspaceIconSelection,
+  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
   type WorkspaceIcons,
 } from "./utils/workspace-icons.ts";
 import type { TWorkspace, TWorkspaceID } from "./utils/type.ts";
@@ -21,8 +22,9 @@ import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
 
-export const WORKSPACE_ICON_NO_CHANGE_SENTINEL =
-  "__floorp_workspace_icon_picker_no_change__";
+export {
+  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
+} from "./utils/workspace-icons.ts";
 
 export const createWorkspaceIconPickerFormItem = (
   workspace: TWorkspace,

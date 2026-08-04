@@ -10,7 +10,7 @@ import {
 import type { TFormOption } from "../../chrome/common/modal-parent/utils/type.ts";
 import {
   WORKSPACE_ICON_NO_CHANGE_SENTINEL,
-} from "../../chrome/common/workspaces/workspace-modal.tsx";
+} from "../../chrome/common/workspaces/utils/workspace-icons.ts";
 import {
   assert,
   assertEquals,
