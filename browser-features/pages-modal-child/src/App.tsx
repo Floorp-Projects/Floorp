@@ -20,6 +20,7 @@ import {
   type ModalPageState,
   type NoraModalSubmitMessage,
 } from "./modalProtocol.ts";
+import { WorkspaceIconPickerField } from "./components/WorkspaceIconPickerField.tsx";
 
 interface FormValues {
   [key: string]: string;
@@ -288,6 +289,22 @@ const FormField = ({ item, control }: FormFieldProps) => {
             )}
           />
         </div>
+      );
+
+    case "workspace-icon-picker":
+      return (
+        <Controller
+          name={item.id}
+          control={control}
+          defaultValue={String(item.value || "")}
+          render={({ field: { onChange, value } }) => (
+            <WorkspaceIconPickerField
+              item={item}
+              value={String(value)}
+              onChange={onChange}
+            />
+          )}
+        />
       );
 
     case "checkbox":
