@@ -67,6 +67,7 @@ export class KeyboardShortcutController {
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
+    if (event.repeat || event.getModifierState?.("AltGraph")) return;
 
     this.pressedModifiers = {
       alt: event.altKey,

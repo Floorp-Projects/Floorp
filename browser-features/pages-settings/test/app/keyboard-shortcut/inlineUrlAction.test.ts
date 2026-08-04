@@ -67,28 +67,47 @@ function testPagesDefaultConfigIsUnchanged(): void {
   const firstEnabledDefault = createDefaultKeyboardShortcutConfig(true);
   const secondEnabledDefault = createDefaultKeyboardShortcutConfig(true);
   assertEquals(
-    JSON.stringify(firstEnabledDefault),
-    JSON.stringify({
-      enabled: true,
-      shortcuts: {
-        "floorp-toggle-command-palette": {
-          key: "F2",
-          modifiers: { alt: false, ctrl: false, meta: false, shift: false },
-          action: "floorp-toggle-command-palette",
-        },
-      },
-    }),
-    "enabled default config should retain the existing F2 binding only",
+    firstEnabledDefault.enabled,
+    true,
+    "enabled default config should be enabled",
+  );
+  assertEquals(
+    Object.keys(firstEnabledDefault.shortcuts).length,
+    2,
+    "enabled default config should have command-palette and Zen shortcuts",
+  );
+  const paletteShortcut = firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
+  assertEquals(
+    paletteShortcut.action,
+    "floorp-toggle-command-palette",
+    "default shortcut action should be floorp-toggle-command-palette",
+  );
+  assertEquals(paletteShortcut.key, "F2", "default shortcut key should be F2");
+  assertEquals(
+    firstEnabledDefault.shortcuts["floorp-toggle-zen-mode"].action,
+    "floorp-toggle-zen-mode",
+    "default config should include Zen mode shortcut",
   );
   assertEquals(
     JSON.stringify(createDefaultKeyboardShortcutConfig(false)),
     JSON.stringify({
+      schemaVersion: 2,
       enabled: false,
       shortcuts: {
         "floorp-toggle-command-palette": {
           key: "F2",
           modifiers: { alt: false, ctrl: false, meta: false, shift: false },
           action: "floorp-toggle-command-palette",
+        },
+        "floorp-toggle-zen-mode": {
+          key: "KeyZ",
+          modifiers: {
+            alt: true,
+            ctrl: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? false : true,
+            meta: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? true : false,
+            shift: false,
+          },
+          action: "floorp-toggle-zen-mode",
         },
       },
     }),

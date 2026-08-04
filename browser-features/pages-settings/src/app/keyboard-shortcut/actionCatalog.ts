@@ -8,6 +8,7 @@ import type {
   KeyboardShortcutActionOption,
   KeyboardShortcutConfig,
 } from "../../types/pref.ts";
+import { createDefaultKeyboardShortcutConfig as createDefaultKeyboardShortcutConfigWithPlatform } from "../../types/pref.ts";
 
 export const INLINE_TAB_URL_ACTION_ID = "floorp-edit-tab-url" as const;
 
@@ -37,14 +38,12 @@ export function getKeyboardShortcutActionOptions(
 export function createDefaultKeyboardShortcutConfig(
   enabled: boolean,
 ): KeyboardShortcutConfig {
-  return {
-    enabled,
-    shortcuts: {
-      "floorp-toggle-command-palette": {
-        key: "F2",
-        modifiers: { alt: false, ctrl: false, meta: false, shift: false },
-        action: "floorp-toggle-command-palette",
-      },
-    },
-  };
+  // Delegate to the single source of truth in pref.ts, which requires a
+  // platform string. Detect platform the same way the settings hook does.
+  const platform = typeof navigator !== "undefined" &&
+      navigator.platform.toUpperCase().includes("MAC")
+    ? "macosx"
+    : "other";
+
+  return createDefaultKeyboardShortcutConfigWithPlatform(enabled, platform);
 }

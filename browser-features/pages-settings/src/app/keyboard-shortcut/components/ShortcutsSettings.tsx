@@ -20,6 +20,10 @@ import { Keyboard } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
 import { formatModifierSymbol } from "../platform.ts";
 
+function formatKeyCode(code: string): string {
+    return code.replace(/^(Key|Digit|Arrow)/, "").toUpperCase();
+}
+
 interface ShortcutsSettingsProps {
     config: KeyboardShortcutConfig;
     addShortcut: (action: string, shortcut: ShortcutConfig) => void;
@@ -94,7 +98,7 @@ export const ShortcutsSettings = ({
                                                     {shortcut.modifiers.ctrl && <span>{formatModifierSymbol("ctrl")}</span>}
                                                     {shortcut.modifiers.meta && <span>{formatModifierSymbol("meta")}</span>}
                                                     {shortcut.modifiers.shift && <span>{formatModifierSymbol("shift")}</span>}
-                                                    <span>{shortcut.key.toUpperCase()}</span>
+                                                    <span>{formatKeyCode(shortcut.key)}</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-base-content/50">
