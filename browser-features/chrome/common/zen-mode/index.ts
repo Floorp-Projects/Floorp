@@ -93,12 +93,15 @@ export default class ZenMode extends NoraComponentBase {
         return;
       }
 
-      let tooltip = targetDocument.getElementById(TOOLBAR_TOOLTIP_ID);
+      let tooltip: Element | null = targetDocument.getElementById(
+        TOOLBAR_TOOLTIP_ID,
+      );
       if (!tooltip) {
-        tooltip = targetDocument.createXULElement("tooltip");
-        tooltip.id = TOOLBAR_TOOLTIP_ID;
-        tooltip.setAttribute("hasbeenopened", "false");
-        popupSet.appendChild(tooltip);
+        const createdTooltip = targetDocument.createXULElement("tooltip");
+        createdTooltip.id = TOOLBAR_TOOLTIP_ID;
+        createdTooltip.setAttribute("hasbeenopened", "false");
+        popupSet.appendChild(createdTooltip);
+        tooltip = createdTooltip;
       }
       tooltip.setAttribute("data-floorp-zen-mode-owned", "true");
       tooltip.setAttribute("label", tooltipText);

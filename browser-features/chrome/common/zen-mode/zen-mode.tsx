@@ -362,7 +362,7 @@ export class ZenModeController {
   private measureCurrentElements(rebase: boolean): void {
     const elements = MEASURED_ELEMENTS.map((measured) =>
       this.document.getElementById(measured.id)
-    ).filter((element): element is Element => element !== null);
+    ).filter((element): element is HTMLElement => element !== null);
     this.applyMeasurements(elements, rebase);
   }
 
