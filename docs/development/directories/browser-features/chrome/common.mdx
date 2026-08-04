@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Features"
 sidebar_label: "Common"
-floorp_commit: "a246c30d65272b03052b6543ea4cd65db6f16239"
+floorp_commit: "ea5bb3140953f994c5295280b4cfd4d52a91245c"
 generated: true
 ---
 # Common Chrome Features
@@ -10,7 +10,7 @@ The `browser-features/chrome/common/` directory contains loader-managed browser 
 
 ## Discovery And Loading
 
-Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 33 common feature entries.
+Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 34 common feature entries.
 
 The bridge loader turns discovered entries into loadable modules, while each feature entrypoint remains responsible for its own component, services, styles, context menus, or lifecycle hooks.
 
@@ -99,6 +99,7 @@ Small chrome utilities and action helpers that do not own a broader feature fami
 | tab-inline-edit | `browser-features/chrome/common/tab-inline-edit/index.ts` | `default class TabInlineEdit`, `init` | Owns the tab inline edit feature through the TabInlineEdit chrome component and wires `controller`. |
 | tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacksFoundation`, `init` | Owns the tab stacks feature through the TabStacksFoundation chrome component and wires `stack-bar`. |
 | tab-strip-wheel-guard | `browser-features/chrome/common/tab-strip-wheel-guard/index.ts` | `default class TabStripWheelGuard`, `init` | Owns the tab strip wheel guard feature through the TabStripWheelGuard chrome component and wires `classifier`. |
+| window-drag | `browser-features/chrome/common/window-drag/index.ts` | `default class WindowDrag`, `init` | Owns the window drag feature through the WindowDrag chrome component and wires `drag-session`. |
 
 ## Relationship To Other Layers
 
