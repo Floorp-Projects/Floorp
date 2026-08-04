@@ -9,6 +9,7 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import ModalParent from "../index.ts";
 import { isModalVisible, setModalVisible } from "../data/data.ts";
+import { attachModalBackdropListener } from "../modalElement.tsx";
 
 // ---------------------------------------------------------------------------
 // Helpers – save/restore modal visibility state
@@ -73,6 +74,54 @@ function testGetInstanceIsSingleton(): void {
   assertEquals(a, b, "getInstance should return the same instance");
 }
 
+function testFirstConstructedInstanceOwnsSingletonManager(): void {
+  const constructorState = ModalParent as unknown as {
+    instance: ModalParent | undefined;
+  };
+  const savedInstance = constructorState.instance;
+  constructorState.instance = undefined;
+
+  let firstManager: { dispose(): void } | null = null;
+  let laterManager: { dispose(): void } | null = null;
+  try {
+    const first = new ModalParent();
+    const firstState = first as unknown as {
+      modalManager: { dispose(): void } | null;
+    };
+    firstManager = firstState.modalManager;
+    assert(
+      firstManager !== null,
+      "base initialization should create a manager",
+    );
+    assertEquals(
+      ModalParent.getInstance(),
+      first,
+      "the first constructed component should become the singleton",
+    );
+
+    first.init();
+    assertEquals(
+      firstState.modalManager,
+      firstManager,
+      "repeated init should preserve the rendered manager owner",
+    );
+
+    const later = new ModalParent();
+    laterManager = (later as unknown as {
+      modalManager: { dispose(): void } | null;
+    }).modalManager;
+    assertEquals(
+      ModalParent.getInstance(),
+      first,
+      "later construction must not replace the singleton owner",
+    );
+  } finally {
+    firstManager?.dispose();
+    laterManager?.dispose();
+    constructorState.instance = savedInstance;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Uninitialized state error tests
 // ---------------------------------------------------------------------------
@@ -92,7 +141,11 @@ async function testShowNoraModalUsesManager(): Promise<void> {
   );
 
   assertEquals(fakeModalCalls.show, showBefore + 1, "manager show called");
-  assertEquals(fakeModalCalls.hide, hideBefore + 1, "manager hide called");
+  assertEquals(
+    fakeModalCalls.hide,
+    hideBefore,
+    "completed wrapper must not unconditionally hide a replacement",
+  );
   assert(callbackCalled, "showNoraModal should invoke the callback");
 }
 
@@ -267,8 +320,58 @@ function testModalParentPublicMethodsAreAvailable(): void {
   );
 }
 
+function testNativeBackdropListenerForwardsAndCleansUp(): void {
+  const targetParent = document.createElement("div");
+  const backdrop = document.createElement("div");
+  const child = document.createElement("button");
+  backdrop.id = "modal-parent-container";
+  backdrop.append(child);
+  targetParent.append(backdrop);
+  const firstReasons: Array<string | undefined> = [];
+  const secondReasons: Array<string | undefined> = [];
+  let currentManager: { hide(reason?: string): void } | null = {
+    hide: (reason) => firstReasons.push(reason),
+  };
+  const detach = attachModalBackdropListener(
+    targetParent,
+    () => currentManager,
+  );
+
+  child.click();
+  assertEquals(
+    firstReasons.length,
+    0,
+    "child clicks should not dismiss the modal",
+  );
+
+  backdrop.click();
+  assertEquals(firstReasons.length, 1, "exact backdrop should dismiss once");
+  assertEquals(
+    firstReasons[0],
+    "backdrop",
+    "backdrop reason should be forwarded",
+  );
+
+  currentManager = {
+    hide: (reason) => secondReasons.push(reason),
+  };
+  backdrop.click();
+  assertEquals(
+    firstReasons.length,
+    1,
+    "manager rebinding should stop calls to the old owner",
+  );
+  assertEquals(secondReasons.length, 1, "rebound manager should receive click");
+  assertEquals(secondReasons[0], "backdrop", "rebound reason should match");
+
+  detach();
+  backdrop.click();
+  assertEquals(secondReasons.length, 1, "cleanup should remove the listener");
+}
+
 async function testShowNoraModalBeforeInit(): Promise<void> {
   const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
   let message = "";
   try {
     await inst.showNoraModal(
@@ -288,6 +391,7 @@ async function testShowNoraModalBeforeInit(): Promise<void> {
 
 function testHideNoraModalBeforeInit(): void {
   const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
   let message = "";
   try {
     inst.hideNoraModal();
@@ -303,6 +407,7 @@ function testHideNoraModalBeforeInit(): void {
 
 function testSetModalSizeBeforeInit(): void {
   const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
   let message = "";
   try {
     inst.setModalSize({ width: 300, height: 400 });
@@ -382,6 +487,10 @@ function testModalParentMethodChaining(): void {
 const tests: TestCase[] = [
   { name: "getInstance returns object", fn: testGetInstanceReturnsObject },
   { name: "getInstance is singleton", fn: testGetInstanceIsSingleton },
+  {
+    name: "first constructed instance owns singleton manager",
+    fn: testFirstConstructedInstanceOwnsSingletonManager,
+  },
   { name: "showNoraModal uses manager", fn: testShowNoraModalUsesManager },
   { name: "hideNoraModal uses manager", fn: testHideNoraModalUsesManager },
   { name: "setModalSize uses manager", fn: testSetModalSizeUsesManager },
@@ -406,6 +515,10 @@ const tests: TestCase[] = [
   {
     name: "ModalParent public methods are available",
     fn: testModalParentPublicMethodsAreAvailable,
+  },
+  {
+    name: "native backdrop listener forwards and cleans up",
+    fn: testNativeBackdropListenerForwardsAndCleansUp,
   },
   {
     name: "showNoraModal before init",

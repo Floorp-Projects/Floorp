@@ -9,16 +9,20 @@ import { createPortal } from "react-dom";
 import type {
   TForm,
   TFormItem,
-} from "../../../common/modal-parent/utils/type.ts";
+} from "../../chrome/common/modal-parent/utils/type.ts";
+import {
+  applyModalInit,
+  applyModalRemove,
+  createModalCancelMessage,
+  createModalSubmitMessage,
+  isNoraModalInitMessage,
+  isNoraModalRemoveMessage,
+  type ModalPageState,
+  type NoraModalSubmitMessage,
+} from "./modalProtocol.ts";
 
 interface FormValues {
   [key: string]: string;
-}
-
-declare global {
-  var buildFormFromConfig: (config: TForm) => void;
-  var sendForm: (data: FormValues | null) => void;
-  var removeForm: () => void;
 }
 
 interface FormFieldProps {
@@ -360,50 +364,15 @@ const FormField = ({ item, control }: FormFieldProps) => {
   }
 };
 
-interface NoraModalInitMessage {
-  type: "nora-modal-init";
-  detail: string | TForm;
-}
-
-interface NoraModalRemoveMessage {
-  type: "nora-modal-remove";
-}
-
-interface NoraModalSubmitMessage {
-  type: "nora-modal-submit";
-  detail: FormValues | null;
-}
-
-type NoraMessage =
-  | NoraModalInitMessage
-  | NoraModalRemoveMessage
-  | NoraModalSubmitMessage;
-
-function isNoraMessage(data: unknown): data is NoraMessage {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "type" in data &&
-    typeof (data as { type: unknown }).type === "string" &&
-    (data as { type: string }).type.startsWith("nora-modal-")
-  );
-}
-
-function postNoraMessage(message: NoraMessage) {
-  // 1. Post to current window (for actor listening on window)
+function postNoraMessage(message: NoraModalSubmitMessage) {
   globalThis.postMessage(message, "*");
-
-  // 2. Post to opener/parent if available
-  if (globalThis.opener || globalThis.parent !== window) {
-    const target = globalThis.opener || globalThis.parent;
-    target.postMessage(message, "*");
-  }
 }
 
 function App() {
   const methods = useForm<FormValues>();
   const { control, watch } = methods;
   const [formConfig, setFormConfig] = useState<TForm | null>(null);
+  const activeStateRef = useRef<ModalPageState | null>(null);
 
   const values = watch();
 
@@ -425,85 +394,54 @@ function App() {
   };
 
   const onSubmit = (data: FormValues) => {
-    postNoraMessage({ type: "nora-modal-submit", detail: data });
-
-    if (typeof globalThis.sendForm === "function") {
-      globalThis.sendForm(data);
+    const current = activeStateRef.current;
+    if (current) {
+      postNoraMessage(createModalSubmitMessage(current, data));
     }
   };
 
   const handleCancel = () => {
-    postNoraMessage({ type: "nora-modal-submit", detail: null });
-
-    if (typeof globalThis.sendForm === "function") {
-      globalThis.sendForm(null);
+    const current = activeStateRef.current;
+    if (current) {
+      postNoraMessage(createModalCancelMessage(current));
     }
   };
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      if (e instanceof CustomEvent) {
-        methods.reset(e.detail);
-      }
-    };
-
     const messageHandler = (e: MessageEvent) => {
-      if (!isNoraMessage(e.data)) {
-        return;
-      }
-
-      const message = e.data;
-
-      if (message.type === "nora-modal-init") {
-        try {
-          const detail = message.detail;
-          const config = typeof detail === "string"
-            ? JSON.parse(detail)
-            : detail;
-
-          if (!config || !config.forms) {
-            console.error("Invalid config received:", config);
-            return;
-          }
-
-          setFormConfig(config);
-          const initialValues: FormValues = {};
-          config.forms.forEach((item: TFormItem) => {
-            initialValues[item.id] = String(item.value || "");
-          });
-          methods.reset(initialValues);
-        } catch (err) {
-          console.error("Failed to parse modal config:", err);
+      if (isNoraModalInitMessage(e.data)) {
+        const current = activeStateRef.current;
+        const next = applyModalInit(current, e.data);
+        if (next === current || next === null) {
+          return;
         }
-      } else if (message.type === "nora-modal-remove") {
+        activeStateRef.current = next;
+        setFormConfig(next.form);
+        const initialValues: FormValues = {};
+        next.form.forms.forEach((item: TFormItem) => {
+          initialValues[item.id] = String(item.value || "");
+        });
+        methods.reset(initialValues);
+      } else if (isNoraModalRemoveMessage(e.data)) {
+        const current = activeStateRef.current;
+        const next = applyModalRemove(current, e.data);
+        if (next === current) {
+          return;
+        }
+        activeStateRef.current = next;
         setFormConfig(null);
       }
     };
 
-    globalThis.addEventListener("form-update", handler);
     globalThis.addEventListener("message", messageHandler);
 
-    // Signal readiness
     document.documentElement.dataset.noraModalReady = "true";
 
     return () => {
-      globalThis.removeEventListener("form-update", handler);
       globalThis.removeEventListener("message", messageHandler);
+      delete document.documentElement.dataset.noraModalReady;
     };
   }, [methods]);
-
-  globalThis.buildFormFromConfig = (config: TForm) => {
-    setFormConfig(config);
-    const initialValues: FormValues = {};
-    config.forms.forEach((item) => {
-      initialValues[item.id] = String(item.value || "");
-    });
-    methods.reset(initialValues);
-  };
-
-  globalThis.removeForm = () => {
-    setFormConfig(null);
-  };
 
   return (
     <>
