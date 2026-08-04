@@ -56,6 +56,11 @@ const {
     _prev?: T,
   ): void => {
     if (node instanceof Element) {
+      if (value === null || value === undefined) {
+        node.removeAttribute(name);
+        return;
+      }
+
       const resultStyleObject = CStyleObject.decode(value);
       if (isEventListener(value)) {
         //? the eventListener name is on~~~
@@ -72,8 +77,6 @@ const {
         node.setAttribute(name, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
         node.setAttribute(name, value.toString());
-      } else if (value === undefined) {
-        node.removeAttribute(name);
       } else {
         throw Error(
           `unreachable! @nora/solid-xul:setProperty the value is not EventListener, style object, string, number, nor boolean | is ${value}`,
