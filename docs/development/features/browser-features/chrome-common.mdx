@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Catalog"
 sidebar_label: "Common Chrome"
-floorp_commit: "a246c30d65272b03052b6543ea4cd65db6f16239"
+floorp_commit: "ea5bb3140953f994c5295280b4cfd4d52a91245c"
 generated: true
 ---
 # Common Chrome Feature Catalog
@@ -43,5 +43,6 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
 | ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |
 | undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |
+| window-drag | `browser-features/chrome/common/window-drag/index.ts` | `default class WindowDrag`, `init` | Owns the window drag feature through the WindowDrag chrome component and wires `drag-session`. |
 | workspaces | `browser-features/chrome/common/workspaces/index.ts` | `default class Workspaces`, `init` | Owns the workspaces feature through the Workspaces chrome component and wires `workspacesTabManager`, `utils/workspace-icons`, `workspacesService`. |
 | zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | `default class ZenMode`, `init` | Owns the zen mode feature through the ZenMode chrome component and wires `zen-mode`, `icon.css?inline`. |
