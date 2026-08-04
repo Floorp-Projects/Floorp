@@ -12,6 +12,7 @@ import {
   WIDTH_BOUNDS,
   MAX_HEIGHT_BOUNDS,
   OFFSET_TOP_BOUNDS,
+  FONT_SIZE_BOUNDS,
 } from "../config.ts";
 
 // ---------------------------------------------------------------------------
@@ -154,6 +155,51 @@ function testClampIntWorksWithRealOffsetTopBounds(): void {
   );
 }
 
+/** Verifies that an in-range font-size value is preserved under FONT_SIZE_BOUNDS. */
+function testClampIntWorksWithRealFontSizeBoundsInRange(): void {
+  assertEquals(
+    clampInt(14, FONT_SIZE_BOUNDS.min, FONT_SIZE_BOUNDS.max, 14),
+    14,
+    "font-size 14 should remain 14 under FONT_SIZE_BOUNDS",
+  );
+}
+
+/** Verifies that a sub-min font-size value clamps up to FONT_SIZE_BOUNDS.min. */
+function testClampIntClampsBelowMinViaFontSizeBounds(): void {
+  assertEquals(
+    clampInt(5, FONT_SIZE_BOUNDS.min, FONT_SIZE_BOUNDS.max, 14),
+    FONT_SIZE_BOUNDS.min,
+    "font-size 5 should clamp to FONT_SIZE_BOUNDS.min (11)",
+  );
+}
+
+/** Verifies that a super-max font-size value clamps down to FONT_SIZE_BOUNDS.max. */
+function testClampIntClampsAboveMaxViaFontSizeBounds(): void {
+  assertEquals(
+    clampInt(40, FONT_SIZE_BOUNDS.min, FONT_SIZE_BOUNDS.max, 14),
+    FONT_SIZE_BOUNDS.max,
+    "font-size 40 should clamp to FONT_SIZE_BOUNDS.max (22)",
+  );
+}
+
+/** Verifies that the exact FONT_SIZE_BOUNDS lower boundary is preserved. */
+function testClampIntKeepsLowerBoundaryViaFontSizeBounds(): void {
+  assertEquals(
+    clampInt(11, FONT_SIZE_BOUNDS.min, FONT_SIZE_BOUNDS.max, 14),
+    FONT_SIZE_BOUNDS.min,
+    "font-size 11 (== min) should stay at FONT_SIZE_BOUNDS.min",
+  );
+}
+
+/** Verifies that the exact FONT_SIZE_BOUNDS upper boundary is preserved. */
+function testClampIntKeepsUpperBoundaryViaFontSizeBounds(): void {
+  assertEquals(
+    clampInt(22, FONT_SIZE_BOUNDS.min, FONT_SIZE_BOUNDS.max, 14),
+    FONT_SIZE_BOUNDS.max,
+    "font-size 22 (== max) should stay at FONT_SIZE_BOUNDS.max",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // normalizeHorizontalAlign
 // ---------------------------------------------------------------------------
@@ -242,6 +288,11 @@ const tests: TestCase[] = [
   { name: "clampInt works with real WIDTH_BOUNDS (560)", fn: testClampIntWorksWithRealWidthBounds },
   { name: "clampInt clamps oversize value via MAX_HEIGHT_BOUNDS", fn: testClampIntWorksWithRealMaxHeightBounds },
   { name: "clampInt clamps negative offsetTop via OFFSET_TOP_BOUNDS", fn: testClampIntWorksWithRealOffsetTopBounds },
+  { name: "clampInt works with real FONT_SIZE_BOUNDS (14 in-range)", fn: testClampIntWorksWithRealFontSizeBoundsInRange },
+  { name: "clampInt clamps below min via FONT_SIZE_BOUNDS (5 -> 11)", fn: testClampIntClampsBelowMinViaFontSizeBounds },
+  { name: "clampInt clamps above max via FONT_SIZE_BOUNDS (40 -> 22)", fn: testClampIntClampsAboveMaxViaFontSizeBounds },
+  { name: "clampInt keeps lower boundary via FONT_SIZE_BOUNDS (11)", fn: testClampIntKeepsLowerBoundaryViaFontSizeBounds },
+  { name: "clampInt keeps upper boundary via FONT_SIZE_BOUNDS (22)", fn: testClampIntKeepsUpperBoundaryViaFontSizeBounds },
   // normalizeHorizontalAlign
   { name: "normalizeHorizontalAlign keeps 'center'", fn: testNormalizeHorizontalAlignCenter },
   { name: "normalizeHorizontalAlign keeps 'left'", fn: testNormalizeHorizontalAlignLeft },

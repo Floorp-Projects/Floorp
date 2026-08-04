@@ -16,6 +16,7 @@ export const COMMAND_PALETTE_WIDTH_PREF = "floorp.commandPalette.width";
 export const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
 export const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
 export const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
+export const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -27,6 +28,7 @@ export interface CommandPaletteConfig {
   maxHeight: number;
   offsetTop: number;
   horizontalAlign: CommandPaletteHorizontalAlign;
+  fontSize: number;
 }
 
 export const defaultConfig: CommandPaletteConfig = {
@@ -37,12 +39,14 @@ export const defaultConfig: CommandPaletteConfig = {
   maxHeight: 400,
   offsetTop: 20,
   horizontalAlign: "center",
+  fontSize: 14,
 };
 
 // Bounds for the customizable size/position prefs.
 export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 export const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
 export const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
+export const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
 export const HORIZONTAL_ALIGN_VALUES: readonly CommandPaletteHorizontalAlign[] = [
   "center",
   "left",
@@ -454,6 +458,60 @@ function createHorizontalAlign(): [
   return [align, setAlign];
 }
 
+function createFontSize(): [Accessor<number>, Setter<number>] {
+  const [fontSize, setFontSize] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_FONT_SIZE_PREF,
+        defaultConfig.fontSize,
+      ),
+      FONT_SIZE_BOUNDS.min,
+      FONT_SIZE_BOUNDS.max,
+      defaultConfig.fontSize,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_FONT_SIZE_PREF,
+        clampInt(
+          fontSize(),
+          FONT_SIZE_BOUNDS.min,
+          FONT_SIZE_BOUNDS.max,
+          defaultConfig.fontSize,
+        ),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist fontSize pref", e);
+    }
+  });
+
+  const fontSizeObserver = () => {
+    setFontSize(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_FONT_SIZE_PREF,
+          defaultConfig.fontSize,
+        ),
+        FONT_SIZE_BOUNDS.min,
+        FONT_SIZE_BOUNDS.max,
+        defaultConfig.fontSize,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_FONT_SIZE_PREF, fontSizeObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_FONT_SIZE_PREF,
+      fontSizeObserver,
+    );
+  });
+
+  return [fontSize, setFontSize];
+}
+
 export const [_width, _setWidth] = createRootHMR(
   createWidth,
   import.meta.hot,
@@ -470,8 +528,13 @@ export const [_horizontalAlign, _setHorizontalAlign] = createRootHMR(
   createHorizontalAlign,
   import.meta.hot,
 );
+export const [_fontSize, _setFontSize] = createRootHMR(
+  createFontSize,
+  import.meta.hot,
+);
 
 export const getWidth = () => _width();
 export const getMaxHeight = () => _maxHeight();
 export const getOffsetTop = () => _offsetTop();
 export const getHorizontalAlign = () => _horizontalAlign();
+export const getFontSize = () => _fontSize();

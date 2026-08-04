@@ -39,6 +39,7 @@
 #command-palette-container {
   width: min(var(--cp-width, 560px), calc(100vw - 48px));
   max-height: var(--cp-max-height, 400px);
+  font-size: var(--cp-font-size, 14px);
   background: var(--arrowpanel-background, -moz-dialog);
   color: var(--arrowpanel-color, -moz-dialogtext);
   border: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
@@ -83,7 +84,7 @@
   border: none;
   background: transparent;
   color: inherit;
-  font-size: 14px;
+  font-size: 1em;
   outline: none;
   box-sizing: border-box;
 }
@@ -100,7 +101,7 @@
 
 .command-palette-category-header {
   padding: 8px 16px 4px;
-  font-size: 11px;
+  font-size: 0.79em;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -140,7 +141,7 @@
 }
 
 .command-palette-item-label {
-  font-size: 13px;
+  font-size: 0.93em;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -148,7 +149,7 @@
 }
 
 .command-palette-item-description {
-  font-size: 11px;
+  font-size: 0.79em;
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
   white-space: nowrap;
   overflow: hidden;
@@ -162,7 +163,7 @@
 
 .command-palette-shortcut-badge {
   font-family: inherit;
-  font-size: 11px;
+  font-size: 0.79em;
   padding: 2px 6px;
   border-radius: 4px;
   background: color-mix(in srgb, currentcolor 8%, transparent);
@@ -177,13 +178,13 @@
 
 .command-palette-empty-title {
   color: var(--arrowpanel-color, -moz-dialogtext);
-  font-size: 14px;
+  font-size: 1em;
   margin-bottom: 4px;
 }
 
 .command-palette-empty-hint {
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
-  font-size: 12px;
+  font-size: 0.86em;
 }
 
 /* Multi-step input mode */
@@ -219,24 +220,24 @@
 }
 
 .command-palette-step-command-name {
-  font-size: 13px;
+  font-size: 0.93em;
   font-weight: 600;
 }
 
 .command-palette-step-breadcrumb {
-  font-size: 11px;
+  font-size: 0.79em;
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
 }
 
 .command-palette-step-label {
-  font-size: 12px;
+  font-size: 0.86em;
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.7));
   margin-top: 2px;
 }
 
 .command-palette-step-error {
   padding: 6px 16px;
-  font-size: 12px;
+  font-size: 0.86em;
   color: #e22850;
   background: color-mix(in srgb, #e22850 8%, transparent);
   border-bottom: 1px solid var(--arrowpanel-border-color, rgba(0, 0, 0, 0.1));
@@ -278,14 +279,14 @@
 }
 
 .command-palette-step-choice-label {
-  font-size: 13px;
+  font-size: 0.93em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .command-palette-step-choice-description {
-  font-size: 11px;
+  font-size: 0.79em;
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
   white-space: nowrap;
   overflow: hidden;
@@ -295,6 +296,6 @@
 .command-palette-step-choices-loading {
   padding: 16px;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.86em;
   color: var(--text-color-deemphasized, rgba(0, 0, 0, 0.5));
 }

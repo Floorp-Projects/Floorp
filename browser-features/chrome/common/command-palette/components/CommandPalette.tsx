@@ -14,6 +14,7 @@ import {
   getMaxHeight,
   getOffsetTop,
   getHorizontalAlign,
+  getFontSize,
 } from "../config.ts";
 
 function getController() {
@@ -108,6 +109,7 @@ export function CommandPaletteUI() {
             "--cp-width": `${getWidth()}px`,
             "--cp-max-height": `${getMaxHeight()}px`,
             "--cp-offset-top": `${getOffsetTop()}vh`,
+            "--cp-font-size": `${getFontSize()}px`,
           }}
           onClick={handleBackdropClick}
           onTransitionEnd={handleTransitionEnd}

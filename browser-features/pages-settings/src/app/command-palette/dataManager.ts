@@ -6,16 +6,27 @@ const COMMAND_PALETTE_WIDTH_PREF = "floorp.commandPalette.width";
 const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
 const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
 const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
+const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
 const DEFAULT_OFFSET_TOP = 20;
 const DEFAULT_HORIZONTAL_ALIGN = "center";
+const DEFAULT_FONT_SIZE = 14;
 
 const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
 const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
+const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
 const VALID_HORIZONTAL_ALIGNS = ["center", "left", "right"] as const;
+
+export const COMMAND_PALETTE_APPEARANCE_DEFAULTS = {
+  width: DEFAULT_WIDTH,
+  maxHeight: DEFAULT_MAX_HEIGHT,
+  offsetTop: DEFAULT_OFFSET_TOP,
+  horizontalAlign: DEFAULT_HORIZONTAL_ALIGN,
+  fontSize: DEFAULT_FONT_SIZE,
+} as const;
 
 function clampInt(
   value: number,
@@ -70,6 +81,13 @@ export async function saveCommandPaletteSettings(
           : DEFAULT_HORIZONTAL_ALIGN,
       );
     }
+
+    if (settings.fontSize !== undefined) {
+      await rpc.setIntPref(
+        COMMAND_PALETTE_FONT_SIZE_PREF,
+        clampInt(Number(settings.fontSize), FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
+      );
+    }
   } catch (error) {
     console.error("[command-palette] Failed to save settings:", error);
   }
@@ -84,6 +102,7 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     const horizontalAlign = await rpc.getStringPref(
       COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF,
     );
+    const fontSize = await rpc.getIntPref(COMMAND_PALETTE_FONT_SIZE_PREF);
 
     return {
       enabled: enabled === null ? true : enabled,
@@ -95,6 +114,7 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       )
         ? (horizontalAlign as string)
         : DEFAULT_HORIZONTAL_ALIGN,
+      fontSize: clampInt(fontSize ?? DEFAULT_FONT_SIZE, FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
     };
   } catch (error) {
     console.error("[command-palette] Failed to load settings:", error);

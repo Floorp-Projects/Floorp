@@ -29,6 +29,7 @@ export default function Page() {
         setValue("horizontalAlign", values.horizontalAlign, {
           shouldValidate: true,
         });
+        setValue("fontSize", values.fontSize, { shouldValidate: true });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
       }
