@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AppearanceSettings } from "./components/AppearanceSettings.tsx";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
+import { DynamicSearchSettings } from "./components/DynamicSearchSettings.tsx";
 import {
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
@@ -77,6 +78,7 @@ export default function Page() {
         >
           <BasicSettings />
           <ContentSettings />
+          <DynamicSearchSettings />
           <AppearanceSettings />
         </form>
       </FormProvider>
