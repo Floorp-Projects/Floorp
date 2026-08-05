@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -6,11 +7,14 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
+import { Button } from "@/components/common/button.tsx";
+import { Separator } from "@/components/common/separator.tsx";
 import { cn } from "@/lib/utils";
 import { ListFilter } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import type { CommandPaletteFormData } from "@/types/pref.ts";
+import { CategoryPriorityModal } from "./CategoryPriorityModal.tsx";
 
 type ContentToggleKey = "showTabs" | "showHistory" | "showBookmarks";
 
@@ -18,6 +22,7 @@ export function ContentSettings() {
   const { t } = useTranslation();
   const { getValues, setValue } = useFormContext<CommandPaletteFormData>();
   const isDisabled = !getValues("enabled");
+  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
 
   const items: Array<{
     id: string;
@@ -62,6 +67,23 @@ export function ContentSettings() {
           isDisabled && "opacity-60",
         )}
       >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span>{t("commandPalette.prioritySettings")}</span>
+            <span className="font-normal text-sm text-base-content/70">
+              {t("commandPalette.prioritySettingsDescription")}
+            </span>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={isDisabled}
+            onClick={() => setIsPriorityModalOpen(true)}
+          >
+            {t("commandPalette.prioritySettingsButton")}
+          </Button>
+        </div>
+        <Separator className="my-2" />
         {items.map((item) => (
           <div
             key={item.id}
@@ -82,6 +104,10 @@ export function ContentSettings() {
           </div>
         ))}
       </CardContent>
+      <CategoryPriorityModal
+        isOpen={isPriorityModalOpen}
+        onClose={() => setIsPriorityModalOpen(false)}
+      />
     </Card>
   );
 }

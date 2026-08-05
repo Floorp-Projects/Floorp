@@ -10,6 +10,7 @@ const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
 const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
 const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
 const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
+const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
@@ -19,6 +20,28 @@ const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_SHOW_TABS = true;
 const DEFAULT_SHOW_HISTORY = true;
 const DEFAULT_SHOW_BOOKMARKS = true;
+
+export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
+  "navigation",
+  "tabs",
+  "zoom",
+  "bookmarks",
+  "page",
+  "search",
+  "sidebar",
+  "scrolling",
+  "history",
+  "window",
+  "tools",
+  "downloads",
+  "workspace",
+  "floorp",
+  "media",
+  "open-tabs",
+  "switcher",
+  "history-suggestions",
+  "bookmark-suggestions",
+] as const;
 
 const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
@@ -42,6 +65,26 @@ function clampInt(
   if (!Number.isFinite(value)) return fallback;
   const i = Math.round(value);
   return Math.min(bounds.max, Math.max(bounds.min, i));
+}
+
+function parseCategoryPriority(raw: string | null): string[] {
+  if (raw === null) return [...DEFAULT_CATEGORY_PRIORITY];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [...DEFAULT_CATEGORY_PRIORITY];
+  }
+  if (!Array.isArray(parsed)) return [...DEFAULT_CATEGORY_PRIORITY];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const entry of parsed) {
+    if (typeof entry === "string" && !seen.has(entry)) {
+      seen.add(entry);
+      result.push(entry);
+    }
+  }
+  return result;
 }
 
 export async function saveCommandPaletteSettings(
@@ -115,6 +158,13 @@ export async function saveCommandPaletteSettings(
         Boolean(settings.showBookmarks),
       );
     }
+
+    if (settings.categoryPriority !== undefined) {
+      await rpc.setStringPref(
+        COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+        JSON.stringify(settings.categoryPriority),
+      );
+    }
   } catch (error) {
     console.error("[command-palette] Failed to save settings:", error);
   }
@@ -135,6 +185,9 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     const showBookmarks = await rpc.getBoolPref(
       COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
     );
+    const categoryPriorityRaw = await rpc.getStringPref(
+      COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+    );
 
     return {
       enabled: enabled === null ? true : enabled,
@@ -150,6 +203,7 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       showTabs: showTabs === null ? DEFAULT_SHOW_TABS : showTabs,
       showHistory: showHistory === null ? DEFAULT_SHOW_HISTORY : showHistory,
       showBookmarks: showBookmarks === null ? DEFAULT_SHOW_BOOKMARKS : showBookmarks,
+      categoryPriority: parseCategoryPriority(categoryPriorityRaw),
     };
   } catch (error) {
     console.error("[command-palette] Failed to load settings:", error);

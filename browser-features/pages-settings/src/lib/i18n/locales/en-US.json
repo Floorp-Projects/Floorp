@@ -754,6 +754,35 @@
         "showHistory": "Show history",
         "showHistoryDescription": "Show pages from your browsing history as suggestions.",
         "showBookmarks": "Show bookmarks",
-        "showBookmarksDescription": "Show bookmarked pages as suggestions."
+        "showBookmarksDescription": "Show bookmarked pages as suggestions.",
+        "categoryNames": {
+            "navigation": "Navigation",
+            "tabs": "Tabs",
+            "zoom": "Zoom",
+            "bookmarks": "Bookmarks",
+            "page": "Page",
+            "search": "Search",
+            "sidebar": "Sidebar",
+            "scrolling": "Scrolling",
+            "history": "History",
+            "window": "Window",
+            "tools": "Tools",
+            "downloads": "Downloads",
+            "workspace": "Workspaces",
+            "floorp": "Floorp",
+            "media": "Media",
+            "open-tabs": "Open Tabs",
+            "switcher": "Switcher",
+            "history-suggestions": "History (Dynamic Search)",
+            "bookmark-suggestions": "Bookmarks (Dynamic Search)"
+        },
+        "prioritySettings": "Category Priority",
+        "prioritySettingsDescription": "Set the display order of command categories in the palette.",
+        "prioritySettingsButton": "Edit Priority",
+        "prioritySettingsButtonHint": "Opens a window to reorder categories by drag and drop.",
+        "priorityModalTitle": "Category Priority",
+        "priorityModalDescription": "Drag and drop to reorder. Categories higher in the list appear first in the command palette.",
+        "priorityModalReset": "Reset to Default",
+        "priorityModalClose": "Close"
     }
 }

@@ -12,6 +12,7 @@ import {
   getShowTabs,
   getShowHistory,
   getShowBookmarks,
+  getCategoryPriority,
 } from "./config.ts";
 import {
   getPaletteCommands,
@@ -21,6 +22,11 @@ import {
   isTabCommand,
 } from "./command-registry.ts";
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
+import { fuzzyScore } from "./fuzzy.ts";
+import {
+  compareByPriority,
+  sortCategoriesByPriority,
+} from "./category-priority.ts";
 import type {
   PaletteCommand,
   CommandStepChoice,
@@ -665,6 +671,118 @@ export class CommandPaletteController {
 
   // --- Search ---
 
+  /**
+   * Reorder command results to match the user's category priority.
+   *
+   * The flat array order produced here MATCHES the grouped display order in
+   * `CommandList.tsx` (priority-major, fuzzy score minor WITHIN each category).
+   * This keeps `selectedIndex` (flat-array space) consistent with the rendered
+   * `getGlobalIndex` (grouped-display space), so arrow-key navigation highlights
+   * the correct item.
+   *
+   * Pseudo-categories:
+   * - `recent` is always pinned to the top regardless of the priority list
+   *   (it is the "recently used" section shown for empty queries).
+   * - `navigation-suggestion` and `search-suggestion` are NOT handled here; they
+   *   are inserted by `doUpdateSearch` at fixed top/bottom positions.
+   */
+  private applyPriorityTiebreak(
+    items: PaletteCommand[],
+    query: string,
+    priorityList: readonly string[],
+  ): PaletteCommand[] {
+    if (items.length <= 1) return items;
+    const trimmed = query.trim();
+
+    // Group by category, preserving insertion order within each group.
+    const groups = new Map<string, PaletteCommand[]>();
+    for (const item of items) {
+      const list = groups.get(item.category);
+      if (list) {
+        list.push(item);
+      } else {
+        groups.set(item.category, [item]);
+      }
+    }
+
+    // For non-empty queries: sort each non-recent group by fuzzy score
+    // descending (stable sort — items with equal scores keep their incoming
+    // relative order).
+    if (trimmed) {
+      for (const [category, list] of groups) {
+        if (category === "recent") continue; // preserve recency/frequency order
+        if (list.length > 1) {
+          list.sort(
+            (a, b) =>
+              (fuzzyScore(trimmed, b) ?? 0) - (fuzzyScore(trimmed, a) ?? 0),
+          );
+        }
+      }
+    }
+
+    // Concatenate: recent first (preserved), then visible categories in
+    // priority order, then unknown categories (priority index =
+    // MAX_SAFE_INTEGER) at the bottom in their incoming order.
+    const recentList = groups.get("recent") ?? [];
+    const otherCategories = [...groups.keys()].filter((c) => c !== "recent");
+    otherCategories.sort((a, b) =>
+      compareByPriority({ category: a }, { category: b }, priorityList),
+    );
+
+    // `recent` is pinned first here; `CommandList.tsx` also places `recent`
+    // before `navigation-suggestion`. The two pseudo-categories never coexist
+    // in practice (recent is empty-query-only, navigation-suggestion is
+    // URL-query-only), which is what keeps the flat/grouped index invariant
+    // sound. See CommandList.tsx for the matching note.
+    const result: PaletteCommand[] = [...recentList];
+    for (const cat of otherCategories) {
+      result.push(...(groups.get(cat) ?? []));
+    }
+    return result;
+  }
+
+  /**
+   * Appends asynchronous bookmark/history suggestion results to the current
+   * filtered list, ordered by the user's category priority.
+   *
+   * Pseudo-categories with fixed positions are preserved:
+   * - `recent` and `navigation-suggestion` stay at the top (in their existing
+   *   order).
+   * - `search-suggestion` stays at the bottom.
+   * All other items (main results + suggestions) are re-sorted by priority.
+   */
+  private appendSuggestionResults(
+    newResults: PaletteCommand[],
+    priorityList: readonly string[],
+  ): void {
+    if (newResults.length === 0) return;
+
+    const currentResults = this.state.filteredCommands();
+    const existingIds = new Set(currentResults.map((c) => c.id));
+    const filteredNew = newResults.filter((c) => !existingIds.has(c.id));
+    if (filteredNew.length === 0) return;
+
+    const PSEUDO_TOP = new Set(["recent", "navigation-suggestion"]);
+    const PSEUDO_BOTTOM = new Set(["search-suggestion"]);
+
+    const topItems: PaletteCommand[] = [];
+    const middleItems: PaletteCommand[] = [];
+    const bottomItems: PaletteCommand[] = [];
+    for (const item of currentResults) {
+      if (PSEUDO_TOP.has(item.category)) topItems.push(item);
+      else if (PSEUDO_BOTTOM.has(item.category)) bottomItems.push(item);
+      else middleItems.push(item);
+    }
+    middleItems.push(...filteredNew);
+
+    const sortedMiddle = sortCategoriesByPriority(middleItems, priorityList);
+    this.state.setFilteredCommands([
+      ...topItems,
+      ...sortedMiddle,
+      ...bottomItems,
+    ]);
+  }
+
   private doUpdateSearch(query: string): void {
     // In input mode, don't search — just update query state
     if (this.state.mode() === "input") {
@@ -710,9 +828,27 @@ export class CommandPaletteController {
     const rawCommandResults = trimmed
       ? searchCommands(trimmed, this.targetWindow)
       : this.buildInitialCommandList();
-    const commandResults = getShowTabs()
+    const filteredByTabs = getShowTabs()
       ? rawCommandResults
       : rawCommandResults.filter((c) => !isTabCommand(c.id));
+    // Reorder commands to match the user's category priority.
+    //
+    // The flat array order produced by `applyPriorityTiebreak` mirrors the
+    // grouped display order consumed by `CommandList` (priority-major, fuzzy
+    // score minor WITHIN each category). This keeps `selectedIndex` (flat-array
+    // space) consistent with the rendered `getGlobalIndex` (grouped-display
+    // space), so arrow-key navigation highlights the correct row.
+    //
+    // `recent` is always pinned to the top inside the helper. The pseudo-
+    // categories `navigation-suggestion` (added below at the top for URL-like
+    // queries) and `search-suggestion` (added at the bottom as a search-engine
+    // fallback) are NOT touched by the helper.
+    const priorityList = getCategoryPriority();
+    const commandResults = this.applyPriorityTiebreak(
+      filteredByTabs,
+      trimmed,
+      priorityList,
+    );
     results.push(...commandResults);
 
     // Show search engine suggestion at the bottom of the list as a fallback.
@@ -826,70 +962,18 @@ export class CommandPaletteController {
       const results = await searchHistoryCommands(query, 10);
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) return;
-
-      const currentResults = this.state.filteredCommands();
-      const existingIds = new Set(currentResults.map((c) => c.id));
-      const newResults = results.filter((c) => !existingIds.has(c.id));
-
-      if (newResults.length > 0) {
-        this.state.setFilteredCommands([...currentResults, ...newResults]);
-      }
+      this.appendSuggestionResults(results, getCategoryPriority());
     } catch (e) {
       console.error("[command-palette] History search failed:", e);
     }
   }
 
   private async performBookmarkSearch(query: string): Promise<void> {
-    console.debug("[command-palette] performBookmarkSearch called");
     try {
       const results = await searchBookmarkCommands(query, 10);
-      console.debug(
-        "[command-palette] Bookmark search returned:",
-        results.length,
-        "results",
-      );
-
       // Only apply if query hasn't changed since we started
-      if (query !== this.currentSearchQuery) {
-        console.debug("[command-palette] Bookmark search stale");
-        return;
-      }
-
-      const currentResults = this.state.filteredCommands();
-      console.debug(
-        "[command-palette] Current filtered commands count:",
-        currentResults.length,
-      );
-      const existingIds = new Set(currentResults.map((c) => c.id));
-      const newResults = results.filter((c) => !existingIds.has(c.id));
-      console.debug(
-        "[command-palette] New bookmark results after dedup:",
-        newResults.length,
-      );
-
-      if (newResults.length > 0) {
-        // Insert bookmark results before history results to maintain display order
-        const nonAsyncResults = currentResults.filter(
-          (c) =>
-            c.category !== "history-suggestions" &&
-            c.category !== "bookmark-suggestions",
-        );
-        const existingBookmarkResults = currentResults.filter(
-          (c) => c.category === "bookmark-suggestions",
-        );
-        const existingHistoryResults = currentResults.filter(
-          (c) => c.category === "history-suggestions",
-        );
-        this.state.setFilteredCommands([
-          ...nonAsyncResults,
-          ...existingBookmarkResults,
-          ...newResults,
-          ...existingHistoryResults,
-        ]);
-        console.debug(
-          "[command-palette] Updated filtered commands with bookmark results",
-        );
-      }
+      if (query !== this.currentSearchQuery) return;
+      this.appendSuggestionResults(results, getCategoryPriority());
     } catch (e) {
       console.error("[command-palette] Bookmark search failed:", e);
     }

@@ -8,6 +8,10 @@ import {
   type Setter,
 } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
+import {
+  DEFAULT_CATEGORY_PRIORITY,
+  parseCategoryPriority,
+} from "./category-priority.ts";
 
 export const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
 export const COMMAND_PALETTE_RECENT_PREF = "floorp.commandPalette.recentCommands";
@@ -20,6 +24,7 @@ export const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
 export const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
 export const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
 export const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
+export const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -35,6 +40,7 @@ export interface CommandPaletteConfig {
   showTabs: boolean;
   showHistory: boolean;
   showBookmarks: boolean;
+  categoryPriority: string[];
 }
 
 export const defaultConfig: CommandPaletteConfig = {
@@ -49,6 +55,7 @@ export const defaultConfig: CommandPaletteConfig = {
   showTabs: true,
   showHistory: true,
   showBookmarks: true,
+  categoryPriority: [...DEFAULT_CATEGORY_PRIORITY],
 };
 
 // Bounds for the customizable size/position prefs.
@@ -298,6 +305,59 @@ function createRecentCommands(): [
   return [recent, setRecent];
 }
 
+function createCategoryPriority(): [
+  Accessor<string[]>,
+  Setter<string[]>,
+] {
+  const defaultJson = JSON.stringify(DEFAULT_CATEGORY_PRIORITY);
+  const [priority, setPriority] = createSignal(
+    parseCategoryPriority(
+      Services.prefs.getStringPref(
+        COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+        defaultJson,
+      ),
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setStringPref(
+        COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+        JSON.stringify(priority()),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist categoryPriority pref",
+        e,
+      );
+    }
+  });
+
+  const observer = () => {
+    setPriority(
+      parseCategoryPriority(
+        Services.prefs.getStringPref(
+          COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+          defaultJson,
+        ),
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+    observer,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
+      observer,
+    );
+  });
+
+  return [priority, setPriority];
+}
+
 export const [_enabled, _setEnabled] = createRootHMR(
   createEnabled,
   import.meta.hot,
@@ -306,10 +366,18 @@ export const [_recentCommands, _setRecentCommands] = createRootHMR(
   createRecentCommands,
   import.meta.hot,
 );
+export const [_categoryPriority, _setCategoryPriority] = createRootHMR(
+  createCategoryPriority,
+  import.meta.hot,
+);
 
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getRecentCommands = () => _recentCommands();
+export const getCategoryPriority = (): readonly string[] => _categoryPriority();
+export const setCategoryPriority = (value: string[]): void => {
+  _setCategoryPriority([...value]);
+};
 
 export function addRecentCommand(id: string) {
   const current = _recentCommands().filter((c) => c !== id);

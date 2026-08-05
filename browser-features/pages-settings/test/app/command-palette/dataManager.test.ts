@@ -8,6 +8,7 @@ import {
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import {
+  DEFAULT_CATEGORY_PRIORITY,
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
 } from "../../../src/app/command-palette/dataManager.ts";
@@ -27,6 +28,7 @@ import {
  */
 
 const PREF = "floorp.commandPalette.enabled";
+const CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 
 // `Services` is a Firefox global available in the browser test environment.
 // deno-lint-ignore no-explicit-any
@@ -43,6 +45,49 @@ function readRawPref(): boolean | null {
 /** True when the pref is currently unset (PREF_INVALID). */
 function isPrefUnset(): boolean {
   return Services.prefs.getPrefType(PREF) === Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw string value of the category-priority pref, or null when unset. */
+function readRawCategoryPriorityPref(): string | null {
+  if (
+    Services.prefs.getPrefType(CATEGORY_PRIORITY_PREF) !==
+    Services.prefs.PREF_STRING
+  ) {
+    return null;
+  }
+  return Services.prefs.getStringPref(CATEGORY_PRIORITY_PREF);
+}
+
+/** True when the category-priority pref is currently unset (PREF_INVALID). */
+function isCategoryPriorityPrefUnset(): boolean {
+  return Services.prefs.getPrefType(CATEGORY_PRIORITY_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/**
+ * Compares two `string[]` values by length then element-by-element.
+ *
+ * The harness `assertEquals` uses `!==` strict equality, so it cannot deep-
+ * compare arrays. This helper throws with an index-specific message on
+ * mismatch.
+ */
+function assertStringArrayEqual(
+  actual: string[],
+  expected: string[],
+  message: string,
+): void {
+  if (actual.length !== expected.length) {
+    throw new Error(
+      `${message}: length mismatch (expected ${expected.length}, got ${actual.length})`,
+    );
+  }
+  for (let i = 0; i < expected.length; i++) {
+    if (actual[i] !== expected[i]) {
+      throw new Error(
+        `${message}: index ${i} mismatch (expected ${expected[i]}, got ${actual[i]})`,
+      );
+    }
+  }
 }
 
 function testGetReturnsNullWhenPrefUnset(): Promise<void> {
@@ -142,6 +187,195 @@ async function testSaveCoercesToBoolean(): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// categoryPriority (DEFAULT_CATEGORY_PRIORITY export + get/save round-trip)
+// ---------------------------------------------------------------------------
+//
+// `parseCategoryPriority` lives privately inside the dataManager module; we
+// exercise it end-to-end through the public `getCommandPaletteSettings` /
+// `saveCommandPaletteSettings` surface by driving the underlying pref.
+//
+// Note: the dataManager's settings-side parser differs slightly from the
+// chrome-side one — it also de-duplicates entries. We assert the documented
+// behavior of the settings-side implementation as it currently exists.
+
+/** Verifies the exported default has the documented shape (19 entries). */
+function testDefaultCategoryPriorityExportShape(): void {
+  assertEquals(
+    DEFAULT_CATEGORY_PRIORITY.length,
+    19,
+    "DEFAULT_CATEGORY_PRIORITY should have 19 entries",
+  );
+  assertEquals(
+    DEFAULT_CATEGORY_PRIORITY[0],
+    "navigation",
+    "first default priority should be 'navigation'",
+  );
+  assertEquals(
+    DEFAULT_CATEGORY_PRIORITY[DEFAULT_CATEGORY_PRIORITY.length - 1],
+    "bookmark-suggestions",
+    "last default priority should be 'bookmark-suggestions'",
+  );
+}
+
+/**
+ * Verifies that an unset categoryPriority pref resolves to the default list.
+ *
+ * Mirrors the existing "no default in pref system" test pattern: clearing the
+ * user pref makes `getPrefType` return PREF_INVALID, which causes the rpc
+ * layer to resolve to `null`, which the dataManager forwards to its private
+ * `parseCategoryPriority` — yielding a copy of `DEFAULT_CATEGORY_PRIORITY`.
+ */
+async function testGetReturnsDefaultCategoryPriorityWhenPrefUnset(): Promise<void> {
+  Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  assert(
+    isCategoryPriorityPrefUnset(),
+    "pref should be unset before the get call",
+  );
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      [...DEFAULT_CATEGORY_PRIORITY],
+      "unset categoryPriority pref should yield DEFAULT_CATEGORY_PRIORITY",
+    );
+    assert(
+      isCategoryPriorityPrefUnset(),
+      "get should not mutate the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies a valid JSON string array pref is parsed into a string[]. */
+async function testGetParsesValidCategoryPriority(): Promise<void> {
+  Services.prefs.setStringPref(
+    CATEGORY_PRIORITY_PREF,
+    '["tabs","navigation","workspace"]',
+  );
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      ["tabs", "navigation", "workspace"],
+      "valid JSON array should be parsed",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies the settings-side parser de-duplicates repeated entries. */
+async function testGetDeduplicatesCategoryPriorityEntries(): Promise<void> {
+  Services.prefs.setStringPref(
+    CATEGORY_PRIORITY_PREF,
+    '["tabs","tabs","navigation"]',
+  );
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      ["tabs", "navigation"],
+      "duplicates should be removed",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies invalid JSON falls back to the default list. */
+async function testGetFallsBackOnInvalidCategoryPriorityJson(): Promise<void> {
+  Services.prefs.setStringPref(CATEGORY_PRIORITY_PREF, "not-json");
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      [...DEFAULT_CATEGORY_PRIORITY],
+      "invalid JSON should fall back to default",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies a valid-JSON non-array falls back to the default list. */
+async function testGetFallsBackOnNonArrayCategoryPriority(): Promise<void> {
+  Services.prefs.setStringPref(CATEGORY_PRIORITY_PREF, '{"a":1}');
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      [...DEFAULT_CATEGORY_PRIORITY],
+      "JSON object should fall back to default",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies an array with non-string elements drops those entries. */
+async function testGetDropsNonStringCategoryPriorityEntries(): Promise<void> {
+  // The settings-side parser silently skips non-string entries rather than
+  // falling back to default — verify that observed behavior.
+  Services.prefs.setStringPref(
+    CATEGORY_PRIORITY_PREF,
+    '["tabs",123,null,"navigation"]',
+  );
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertStringArrayEqual(
+      result!.categoryPriority,
+      ["tabs", "navigation"],
+      "non-string entries should be dropped",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies save writes a JSON.stringify'd array to the pref. */
+async function testSaveCategoryPriorityStringifiesArray(): Promise<void> {
+  Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  try {
+    await saveCommandPaletteSettings({
+      categoryPriority: ["tabs", "navigation"],
+    });
+    assertEquals(
+      readRawCategoryPriorityPref(),
+      '["tabs","navigation"]',
+      "save should JSON.stringify the array into the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  }
+}
+
+/** Verifies that omitting categoryPriority on save leaves the pref untouched. */
+async function testSaveWithoutCategoryPriorityIsNoOp(): Promise<void> {
+  Services.prefs.setStringPref(
+    CATEGORY_PRIORITY_PREF,
+    '["pre-existing"]',
+  );
+  try {
+    await saveCommandPaletteSettings({ enabled: true });
+    assertEquals(
+      readRawCategoryPriorityPref(),
+      '["pre-existing"]',
+      "save without categoryPriority should not touch the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+    Services.prefs.clearUserPref(PREF);
+  }
+}
+
 const tests: TestCase[] = [
   { name: "getCommandPaletteSettings returns null when pref is unset", fn: testGetReturnsNullWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
@@ -151,18 +385,37 @@ const tests: TestCase[] = [
   { name: "saveCommandPaletteSettings({ enabled: true }) sets pref", fn: testSaveSetsEnabledTrue },
   { name: "saveCommandPaletteSettings({ enabled: false }) sets pref", fn: testSaveSetsEnabledFalse },
   { name: "saveCommandPaletteSettings coerces enabled to boolean", fn: testSaveCoercesToBoolean },
+  // categoryPriority
+  { name: "DEFAULT_CATEGORY_PRIORITY is exported with 19 entries", fn: testDefaultCategoryPriorityExportShape },
+  { name: "getCommandPaletteSettings yields DEFAULT_CATEGORY_PRIORITY when pref unset", fn: testGetReturnsDefaultCategoryPriorityWhenPrefUnset },
+  { name: "getCommandPaletteSettings parses a valid JSON array", fn: testGetParsesValidCategoryPriority },
+  { name: "getCommandPaletteSettings de-duplicates categoryPriority entries", fn: testGetDeduplicatesCategoryPriorityEntries },
+  { name: "getCommandPaletteSettings falls back on invalid JSON", fn: testGetFallsBackOnInvalidCategoryPriorityJson },
+  { name: "getCommandPaletteSettings falls back on JSON non-array", fn: testGetFallsBackOnNonArrayCategoryPriority },
+  { name: "getCommandPaletteSettings drops non-string entries (not fall back)", fn: testGetDropsNonStringCategoryPriorityEntries },
+  { name: "saveCommandPaletteSettings JSON.stringify's the array into the pref", fn: testSaveCategoryPriorityStringifiesArray },
+  { name: "saveCommandPaletteSettings without categoryPriority leaves the pref untouched", fn: testSaveWithoutCategoryPriorityIsNoOp },
 ];
 
 export async function runAllTests(): Promise<void> {
-  const original = readRawPref();
+  const originalEnabled = readRawPref();
+  const originalCategoryPriority = readRawCategoryPriorityPref();
   try {
     await runTests("dataManager.test.ts (command-palette)", tests);
   } finally {
     // Restore original pref state so the test suite is hermetic.
-    if (original === null) {
+    if (originalEnabled === null) {
       Services.prefs.clearUserPref(PREF);
     } else {
-      Services.prefs.setBoolPref(PREF, original);
+      Services.prefs.setBoolPref(PREF, originalEnabled);
+    }
+    if (originalCategoryPriority === null) {
+      Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+    } else {
+      Services.prefs.setStringPref(
+        CATEGORY_PRIORITY_PREF,
+        originalCategoryPriority,
+      );
     }
   }
 }

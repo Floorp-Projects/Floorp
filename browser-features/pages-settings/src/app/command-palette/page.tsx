@@ -33,7 +33,12 @@ export default function Page() {
         setValue("fontSize", values.fontSize, { shouldValidate: true });
         setValue("showTabs", values.showTabs, { shouldValidate: true });
         setValue("showHistory", values.showHistory, { shouldValidate: true });
-        setValue("showBookmarks", values.showBookmarks, { shouldValidate: true });
+        setValue("showBookmarks", values.showBookmarks, {
+          shouldValidate: true,
+        });
+        setValue("categoryPriority", values.categoryPriority, {
+          shouldValidate: true,
+        });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
       }

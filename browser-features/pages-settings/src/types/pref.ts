@@ -106,6 +106,7 @@ export const zCommandPaletteFormData = t.type({
   showTabs: t.boolean,
   showHistory: t.boolean,
   showBookmarks: t.boolean,
+  categoryPriority: t.array(t.string),
 });
 
 export type CommandPaletteFormData = t.TypeOf<typeof zCommandPaletteFormData>;

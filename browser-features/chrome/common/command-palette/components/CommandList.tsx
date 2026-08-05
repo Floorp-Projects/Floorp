@@ -5,6 +5,8 @@ import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { CommandItem } from "./CommandItem.tsx";
 import { CategoryHeader } from "./CategoryHeader.tsx";
+import { getCategoryPriority } from "../config.ts";
+import { sortCategoriesByPriority } from "../category-priority.ts";
 
 interface CommandListProps {
   commands: PaletteCommand[];
@@ -39,7 +41,44 @@ export function CommandList(props: CommandListProps) {
       groups.push({ category, commands });
     }
 
-    return groups;
+    // Order groups by the user-defined category priority.
+    //
+    // - `recent` is a runtime pseudo-category that must always stay at the
+    //   very top regardless of the priority list.
+    // - The hidden pseudo-categories (`navigation-suggestion`,
+    //   `search-suggestion`) have no header and their positions are driven by
+    //   the controller (top and bottom of the flat list respectively), so they
+    //   are excluded from the priority sort to preserve that behavior.
+    const recentGroups = groups.filter((g) => g.category === "recent");
+    const navSuggestionGroups = groups.filter(
+      (g) => g.category === "navigation-suggestion",
+    );
+    const searchSuggestionGroups = groups.filter(
+      (g) => g.category === "search-suggestion",
+    );
+    const visibleGroups = groups.filter(
+      (g) =>
+        g.category !== "recent" &&
+        g.category !== "navigation-suggestion" &&
+        g.category !== "search-suggestion",
+    );
+
+    const priorityList = getCategoryPriority();
+    const sortedVisible = sortCategoriesByPriority(visibleGroups, priorityList);
+
+    // NOTE: `recent` (only emitted for empty queries by buildInitialCommandList)
+    // and `navigation-suggestion` (only emitted for URL-like queries) are mutually
+    // exclusive in the controller's flat array, so the order of these two groups
+    // relative to each other does not affect the getGlobalIndex invariant. If a
+    // future change ever causes both to coexist, the flat-array order in
+    // `controller.ts:applyPriorityTiebreak` (recent first) and the display order
+    // here must be reconciled to keep arrow-key navigation correct.
+    return [
+      ...recentGroups,
+      ...navSuggestionGroups,
+      ...sortedVisible,
+      ...searchSuggestionGroups,
+    ];
   });
 
   const getGlobalIndex = (groupIdx: number, itemIdx: number): number => {
