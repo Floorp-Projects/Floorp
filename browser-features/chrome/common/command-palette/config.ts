@@ -374,6 +374,16 @@ export const [_categoryPriority, _setCategoryPriority] = createRootHMR(
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getRecentCommands = () => _recentCommands();
+/**
+ * Returns the current category-priority list.
+ *
+ * NOTE: Returns the signal's INTERNAL array reference (the `readonly string[]`
+ * annotation is compile-time only). Callers MUST NOT mutate the returned
+ * array — doing so would change internal state without triggering reactivity.
+ * `setCategoryPriority` copies on input (`[...value]`); this getter does not
+ * copy on output for perf (the list is read inside sort comparators). This
+ * mirrors the pre-existing `getRecentCommands` pattern.
+ */
 export const getCategoryPriority = (): readonly string[] => _categoryPriority();
 export const setCategoryPriority = (value: string[]): void => {
   _setCategoryPriority([...value]);

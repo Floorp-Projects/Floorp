@@ -709,12 +709,18 @@ export class CommandPaletteController {
     // descending (stable sort — items with equal scores keep their incoming
     // relative order).
     if (trimmed) {
+      // Cache fuzzy scores per item id to avoid O(N log N) recompute inside the
+      // comparator. Items without a score (e.g. recent) are not in the cache.
+      const scores = new Map<string, number>();
       for (const [category, list] of groups) {
         if (category === "recent") continue; // preserve recency/frequency order
+        for (const item of list) {
+          scores.set(item.id, fuzzyScore(trimmed, item) ?? 0);
+        }
         if (list.length > 1) {
           list.sort(
             (a, b) =>
-              (fuzzyScore(trimmed, b) ?? 0) - (fuzzyScore(trimmed, a) ?? 0),
+              (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0),
           );
         }
       }

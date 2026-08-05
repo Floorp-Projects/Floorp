@@ -3,6 +3,12 @@
 /**
  * Default category priority for the command palette, in display order.
  *
+ * NOTE: This list is DUPLICATED in
+ * `browser-features/pages-settings/src/app/command-palette/dataManager.ts`
+ * because the settings app and chrome feature live in separate packages with
+ * different build/i18n systems. If you edit one, edit the other. Both test
+ * files assert length===19 as a partial guard.
+ *
  * `recent` is intentionally absent: it is a runtime pseudo-category that is
  * always pinned to the very top of the list and never participates in priority
  * sorting. Hidden pseudo-categories (`navigation-suggestion`,

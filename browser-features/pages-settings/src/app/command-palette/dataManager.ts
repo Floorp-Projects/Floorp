@@ -21,6 +21,15 @@ const DEFAULT_SHOW_TABS = true;
 const DEFAULT_SHOW_HISTORY = true;
 const DEFAULT_SHOW_BOOKMARKS = true;
 
+/**
+ * Default category priority for the command palette settings UI.
+ *
+ * NOTE: This list is DUPLICATED in
+ * `browser-features/chrome/common/command-palette/category-priority.ts`
+ * (the live palette feature). The two cannot share a module because the
+ * settings app and chrome feature are separate packages. If you edit one,
+ * edit the other. The test in this file asserts length===19 as a partial guard.
+ */
 export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
   "navigation",
   "tabs",
@@ -68,23 +77,22 @@ function clampInt(
 }
 
 function parseCategoryPriority(raw: string | null): string[] {
-  if (raw === null) return [...DEFAULT_CATEGORY_PRIORITY];
+  if (typeof raw !== "string" || raw.length === 0) {
+    return [...DEFAULT_CATEGORY_PRIORITY];
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
     return [...DEFAULT_CATEGORY_PRIORITY];
   }
-  if (!Array.isArray(parsed)) return [...DEFAULT_CATEGORY_PRIORITY];
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const entry of parsed) {
-    if (typeof entry === "string" && !seen.has(entry)) {
-      seen.add(entry);
-      result.push(entry);
-    }
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every((el): el is string => typeof el === "string")
+  ) {
+    return [...DEFAULT_CATEGORY_PRIORITY];
   }
-  return result;
+  return parsed;
 }
 
 export async function saveCommandPaletteSettings(

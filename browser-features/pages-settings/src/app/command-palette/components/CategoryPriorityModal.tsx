@@ -91,25 +91,22 @@ export function CategoryPriorityModal({
     }),
   );
 
-  // Load the current priority from the form whenever the modal opens.
+  // Drive the native <dialog> open/close AND load the current priority from the
+  // form in the same commit, so the first painted frame shows the correct order
+  // (no flash of stale/default state).
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      dialogRef.current?.close();
+      return;
+    }
     const current = getValues("categoryPriority");
     if (Array.isArray(current) && current.length > 0) {
       setOrder([...current]);
     } else {
       setOrder([...DEFAULT_CATEGORY_PRIORITY]);
     }
+    dialogRef.current?.showModal();
   }, [isOpen, getValues]);
-
-  // Drive the native <dialog> element open/close.
-  useEffect(() => {
-    if (isOpen) {
-      dialogRef.current?.showModal();
-    } else {
-      dialogRef.current?.close();
-    }
-  }, [isOpen]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
