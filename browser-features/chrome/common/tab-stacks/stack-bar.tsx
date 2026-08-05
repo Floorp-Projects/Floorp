@@ -3,549 +3,320 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import tabStacksStyles from "./styles.css?inline";
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import styles from "./styles.css?inline";
 
-export const TAB_STACKS_ROW_ID = "floorp-tab-stacks-row";
-export const TAB_STACKS_STYLE_ID = "floorp-tab-stacks-styles";
-export const VERTICAL_TABS_PREF = "sidebar.verticalTabs";
-export const WORKSPACES_CHANGED_TOPIC = "floorp.workspaces.changed";
+/** Drag data type used by row-2 proxy drags (reorder / eject). */
+export const PROXY_DRAG_TYPE = "application/x-floorp-stack-tab";
+/** Attribute stamped on every `tab-group` this feature presents as a stack. */
+export const STACK_ATTR = "data-floorp-stack";
+/** Per-tab drag identity attribute (stable for the tab's whole life). */
+export const TAB_DRAG_ID_ATTR = "data-floorp-tab-id";
 
-export const TAB_STACKS_REBUILD_EVENTS = [
-  "TabGroupUpdate",
-  "TabGrouped",
-  "TabUngrouped",
-  "TabShow",
-  "TabHide",
-  "TabSelect",
-  "TabGroupCreate",
-  "TabGroupRemoved",
-  "TabGroupCollapse",
-  "TabGroupExpand",
-] as const;
-
-type Observer = (
-  subject?: unknown,
-  topic?: string,
-  data?: string,
-) => void;
-
-export interface TabStacksServices {
-  prefs: {
-    getBoolPref(name: string, fallback?: boolean): boolean;
-    addObserver(name: string, observer: Observer): void;
-    removeObserver(name: string, observer: Observer): void;
-  };
-  obs: {
-    addObserver(observer: Observer, topic: string): void;
-    removeObserver(observer: Observer, topic: string): void;
-  };
+export function StackStyleElement() {
+  return <style>{styles}</style>;
 }
 
-export interface TabStacksLogger {
-  debug(message: string): void;
-  info(message: string): void;
-  warn(message: string): void;
-}
-
-export type NativeStackTab = XULElement & {
-  label?: string;
-  linkedPanel?: string;
-  selected?: boolean;
+export type StackTab = XULElement & {
+  label: string;
+  selected: boolean;
+  linkedPanel: string;
+  group: StackGroup | null;
   hidden?: boolean;
   closing?: boolean;
-  splitview?: XULElement | null;
+  multiselected?: boolean;
+  isConnected?: boolean;
+  linkedBrowser?: {
+    currentURI?: { spec?: string };
+  };
 };
 
-export type NativeStackGroup = XULElement & {
+export type StackGroup = XULElement & {
   id: string;
-  label?: string;
-  defaultGroupName: string;
-  color?: string;
-  collapsed?: boolean;
-  tabs: NativeStackTab[];
-  tabsAndSplitViews?: Array<XULElement>;
+  label: string;
+  collapsed: boolean;
+  tabs: StackTab[];
+  addTabs: (tabs: StackTab[]) => void;
+  style: CSSStyleDeclaration;
 };
 
-export interface TabStacksBrowser {
-  tabGroups: NativeStackGroup[];
-  visibleTabs: NativeStackTab[];
-  selectedTab: NativeStackTab;
-}
-
-export interface TabStacksControllerOptions {
-  document: Document;
-  eventTarget: EventTarget;
-  services: TabStacksServices;
-  getBrowser: () => TabStacksBrowser | null;
-  logger?: TabStacksLogger;
-}
-
-export interface ActiveGroupSnapshot {
-  group: NativeStackGroup;
-  groupName: string;
-  eligibleTabs: NativeStackTab[];
-  selectedTab: NativeStackTab;
-}
-
-const noopLogger: TabStacksLogger = {
-  debug: () => {},
-  info: () => {},
-  warn: () => {},
+export type TabBrowser = {
+  tabs: StackTab[];
+  selectedTab: StackTab;
+  tabGroups: StackGroup[];
+  tabContainer: XULElement;
+  tabGroupMenu?: { openEditModal: (group: StackGroup) => void };
+  removeTab: (tab: StackTab, opts?: Record<string, unknown>) => void;
+  removeTabs?: (tabs: StackTab[], opts?: Record<string, unknown>) => void;
+  addTab: (url: string, opts: Record<string, unknown>) => StackTab;
+  ungroupTab?: (tab: StackTab) => void;
+  reloadTab?: (tab: StackTab) => void;
+  moveTabBefore?: (
+    tab: StackTab | StackGroup,
+    target: StackTab | StackGroup,
+  ) => void;
+  moveTabAfter?: (
+    tab: StackTab | StackGroup,
+    target: StackTab | StackGroup,
+  ) => void;
 };
 
-function isSplitViewWrapper(value: Element | null | undefined): boolean {
-  return value?.tagName?.toLowerCase() === "tab-split-view-wrapper";
-}
+export const getGBrowser = (): TabBrowser | null =>
+  (globalThis as unknown as { gBrowser?: TabBrowser }).gBrowser ?? null;
+
+/** Bumped on any tab/group mutation so proxies re-read live tab state. */
+const [version, setVersion] = createSignal(0);
+export const bumpStacksVersion = () => setVersion((v) => v + 1);
+
+const [activeGroup, setActiveGroup] = createSignal<StackGroup | null>(null);
+
+export const getActiveGroup = () => activeGroup();
 
 /**
- * Split View can expose both flattened `group.tabs` and wrapper-preserving
- * `group.tabsAndSplitViews`. A native group containing either representation
- * is intentionally ineligible for this foundation mirror.
+ * The stack bar shows the group of the currently selected tab — but only
+ * groups we own (marked data-floorp-stack). Split-view groups are not ours,
+ * and groups hidden by a workspace (`style.display === "none"`) must never
+ * surface their bar either.
  */
-export function groupContainsSplitView(
-  group: NativeStackGroup,
-): boolean {
-  if (
-    group.tabsAndSplitViews?.some((item) => isSplitViewWrapper(item)) ||
-    Array.from(group.children ?? []).some((item) => isSplitViewWrapper(item)) ||
-    isSplitViewWrapper(group.closest?.("tab-split-view-wrapper"))
-  ) {
-    return true;
-  }
+export const syncActiveGroup = () => {
+  const gb = getGBrowser();
+  const group = gb?.selectedTab?.group ?? null;
+  const isOurs = group &&
+    (group as unknown as Element).getAttribute?.(STACK_ATTR) === "true" &&
+    group.style?.display !== "none";
+  setActiveGroup(isOurs ? group : null);
+};
 
-  return group.tabs.some((tab) => {
-    return Boolean(tab.splitview) ||
-      isSplitViewWrapper(tab.closest?.("tab-split-view-wrapper")) ||
-      tab.hasAttribute?.("floorpSplitViewGroupId") ||
-      tab.hasAttribute?.("floorpsplitviewgroupid") ||
-      tab.hasAttribute?.("data-floorp-split-tab");
+/** Remember the last selected tab per group so chip clicks feel right. */
+const lastSelectedInGroup = new WeakMap<StackGroup, StackTab>();
+
+export const rememberSelection = () => {
+  const gb = getGBrowser();
+  const tab = gb?.selectedTab;
+  const group = tab?.group;
+  if (tab && group) {
+    lastSelectedInGroup.set(group, tab);
+  }
+};
+
+/**
+ * Title shown on an unnamed stack chip: its first REACHABLE tab, as a
+ * stable anchor. Workspaces can park members hidden — never title the chip
+ * after a tab this workspace cannot even see.
+ */
+export const getGroupDisplayTitle = (group: StackGroup): string => {
+  const anchor = group.tabs.find((t) => !t.hidden) ?? group.tabs[0];
+  const label = anchor?.label ?? "";
+  return label.length > 60 ? `${label.slice(0, 60)}…` : label;
+};
+
+export const activateGroup = (group: StackGroup) => {
+  const gb = getGBrowser();
+  if (!gb) return;
+  const remembered = lastSelectedInGroup.get(group);
+  const usable = (t: StackTab | undefined): t is StackTab =>
+    !!t && t.isConnected !== false && t.group === group && !t.hidden;
+  // Never select a workspace-hidden member — that yanks the session into
+  // another workspace's state. First reachable tab is the fallback.
+  const target = usable(remembered)
+    ? remembered
+    : group.tabs.find((t) => usable(t)) ?? null;
+  if (target) {
+    gb.selectedTab = target;
+  }
+};
+
+const DEFAULT_FAVICON = "chrome://global/skin/icons/defaultFavicon.svg";
+
+/**
+ * Stable per-tab drag identity. NOT linkedPanel: that is null until a tab
+ * has a browser attached (lazy/session-restored tabs), so a first drag of
+ * an unloaded tab would carry an empty id. Stamped on demand and good for
+ * the tab's whole life.
+ */
+let dragIdCounter = 0;
+export const getTabDragId = (tab: StackTab): string => {
+  let id = tab.getAttribute(TAB_DRAG_ID_ATTR);
+  if (!id) {
+    id = `dt${++dragIdCounter}`;
+    tab.setAttribute(TAB_DRAG_ID_ATTR, id);
+  }
+  return id;
+};
+
+export const findTabByDragId = (id: string): StackTab | undefined =>
+  getGBrowser()?.tabs.find((t) => t.getAttribute(TAB_DRAG_ID_ATTR) === id);
+
+/** Pixels per wheel/arrow notch for the overflow scroller. */
+const SCROLL_STEP_PX = 48;
+
+function StackTabProxy(props: { tab: StackTab }) {
+  const label = () => {
+    version();
+    return props.tab.label;
+  };
+  const icon = () => {
+    version();
+    return props.tab.getAttribute("image") || DEFAULT_FAVICON;
+  };
+  const selected = () => {
+    version();
+    return props.tab.selected ? "true" : "false";
+  };
+
+  return (
+    <xul:hbox
+      class="floorp-stack-tab"
+      align="center"
+      data-selected={selected()}
+      data-floorp-drag-id={getTabDragId(props.tab)}
+      context="tabContextMenu"
+      draggable="true"
+      onDragStart={(event: DragEvent) => {
+        // Proxies drag with a private type: within the bar to reorder
+        // the stack, up into the tab row to leave it (the real member
+        // tabs are hidden in row 1, so this is the only drag handle).
+        event.dataTransfer?.setData(PROXY_DRAG_TYPE, getTabDragId(props.tab));
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = "move";
+          try {
+            const ghost = document!.createElement("div");
+            ghost.className = "floorpStackDragGhost";
+            ghost.textContent = props.tab.label ?? "";
+            document!.documentElement?.appendChild(ghost);
+            event.dataTransfer.setDragImage(ghost, 12, 14);
+            setTimeout(() => ghost.remove(), 0);
+          } catch {
+            // default drag image
+          }
+        }
+      }}
+      onClick={() => {
+        const gb = getGBrowser();
+        if (gb) {
+          gb.selectedTab = props.tab;
+        }
+      }}
+    >
+      <xul:hbox class="floorp-stack-tab-iconbox" align="center">
+        <xul:image class="floorp-stack-tab-icon" src={icon()} />
+        <xul:toolbarbutton
+          class="floorp-stack-tab-close"
+          tooltiptext="Close tab"
+          onClick={(event: MouseEvent) => {
+            event.stopPropagation();
+            getGBrowser()?.removeTab(props.tab, { animate: false });
+          }}
+        />
+      </xul:hbox>
+      <xul:label class="floorp-stack-tab-label" crop="end">
+        {label()}
+      </xul:label>
+      <xul:image
+        class="floorp-stack-tab-refresh"
+        src="chrome://global/skin/icons/reload.svg"
+        tooltiptext="Reload tab"
+        onMouseDown={(event: MouseEvent) => {
+          event.stopPropagation();
+          event.preventDefault();
+        }}
+        onClick={(event: MouseEvent) => {
+          event.stopPropagation();
+          getGBrowser()?.reloadTab?.(props.tab);
+        }}
+      />
+    </xul:hbox>
+  );
+}
+
+function StackRow() {
+  const tabs = createMemo(() => {
+    version();
+    const group = activeGroup();
+    return group ? [...group.tabs] : [];
   });
-}
 
-function isEligibleVisibleTab(
-  tab: NativeStackTab,
-  visibleTabs: Set<NativeStackTab>,
-): boolean {
-  return visibleTabs.has(tab) &&
-    tab.isConnected !== false &&
-    !tab.hidden &&
-    !tab.closing &&
-    !tab.hasAttribute?.("hidden");
-}
+  const addTabToActiveGroup = () => {
+    const gb = getGBrowser();
+    const group = activeGroup();
+    if (!gb || !group) return;
+    try {
+      const newTabUrl =
+        (globalThis as unknown as { BROWSER_NEW_TAB_URL?: string })
+          .BROWSER_NEW_TAB_URL ?? "about:newtab";
+      const tab = gb.addTab(newTabUrl, {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+        skipAnimation: true,
+      });
+      group.addTabs([tab]);
+      gb.selectedTab = tab;
+    } catch (e) {
+      console.error("[tab-stacks] Failed to add tab to group:", e);
+    }
+  };
 
-/**
- * Resolve the row entirely from current native state. No membership, label,
- * color, collapse, or selection state is persisted by the feature.
- */
-export function getActiveGroupSnapshot(
-  browser: TabStacksBrowser | null,
-): ActiveGroupSnapshot | null {
-  if (!browser?.selectedTab) {
-    return null;
-  }
+  const scrollBy = (dir: number) => () => {
+    const scroller = document?.getElementById("floorp-stack-scroller");
+    scroller?.scrollBy({ left: dir * SCROLL_STEP_PX, behavior: "smooth" });
+  };
 
-  const selectedTab = browser.selectedTab;
-  const group = Array.from(browser.tabGroups ?? []).find((candidate) =>
-    Array.from(candidate.tabs ?? []).includes(selectedTab)
+  // The scroller is overflow-x:auto with a hidden scrollbar; this single
+  // wheel handler drives horizontal scrolling so a vertical wheel over the
+  // bar does not fight the tab strip's own vertical listeners.
+  onMount(() => {
+    const scroller = document?.getElementById("floorp-stack-scroller");
+    if (!scroller) return;
+    const onWheel = (event: WheelEvent) => {
+      if (scroller.scrollWidth - scroller.clientWidth <= 1) return;
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ? event.deltaX
+        : event.deltaY;
+      if (delta === 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      scroller.scrollLeft += delta;
+    };
+    scroller.addEventListener("wheel", onWheel, { passive: false });
+    onCleanup(() => scroller.removeEventListener("wheel", onWheel));
+  });
+
+  return (
+    <xul:hbox id="floorp-stack-bar" align="center">
+      <xul:toolbarbutton
+        id="floorp-stack-scroll-up"
+        class="floorp-stack-scrollbutton"
+        tooltiptext="Scroll tabs left"
+        onClick={scrollBy(-1)}
+      />
+      <xul:hbox id="floorp-stack-scroller">
+        <xul:hbox id="floorp-stack-items" align="center">
+          <For each={tabs()}>{(tab) => <StackTabProxy tab={tab} />}</For>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:toolbarbutton
+        id="floorp-stack-scroll-down"
+        class="floorp-stack-scrollbutton"
+        tooltiptext="Scroll tabs right"
+        onClick={scrollBy(1)}
+      />
+      {/* Outside the scroller and last in the row, which is where row 1
+          keeps the "+" it actually shows: #new-tab-button is a sibling
+          AFTER #tabbrowser-tabs, so it sits past the right arrow and never
+          scrolls away. */}
+      <xul:toolbarbutton
+        id="floorp-stack-newtab"
+        tooltiptext="New tab in stack"
+        onClick={addTabToActiveGroup}
+      />
+    </xul:hbox>
   );
+}
 
-  if (
-    !group ||
-    !group.isConnected ||
-    group.collapsed ||
-    group.hasAttribute?.("collapsed") ||
-    groupContainsSplitView(group)
-  ) {
-    return null;
-  }
-
-  const visibleTabs = new Set(browser.visibleTabs ?? []);
-  const eligibleTabs = Array.from(group.tabs ?? []).filter((tab) =>
-    isEligibleVisibleTab(tab, visibleTabs)
+export function StackBar() {
+  return (
+    <Show when={activeGroup()}>
+      <StackRow />
+    </Show>
   );
-
-  if (
-    eligibleTabs.length < 2 ||
-    !eligibleTabs.includes(selectedTab)
-  ) {
-    return null;
-  }
-
-  return {
-    group,
-    groupName: group.label || group.defaultGroupName,
-    eligibleTabs,
-    selectedTab,
-  };
-}
-
-function createHTMLElement<K extends keyof HTMLElementTagNameMap>(
-  document: Document,
-  name: K,
-): HTMLElementTagNameMap[K] {
-  return document.createElementNS(
-    "http://www.w3.org/1999/xhtml",
-    name,
-  ) as HTMLElementTagNameMap[K];
-}
-
-function getTabLabel(tab: NativeStackTab): string {
-  return tab.label ?? tab.getAttribute?.("label") ?? "";
-}
-
-function getLinkedPanelId(tab: NativeStackTab): string {
-  return tab.linkedPanel ?? tab.getAttribute?.("linkedpanel") ?? "";
-}
-
-export class TabStacksController {
-  private readonly document: Document;
-  private readonly eventTarget: EventTarget;
-  private readonly services: TabStacksServices;
-  private readonly getBrowser: () => TabStacksBrowser | null;
-  private readonly logger: TabStacksLogger;
-  private initialized = false;
-  private row: HTMLElement | null = null;
-  private styleElement: HTMLStyleElement | null = null;
-  private domReadyListening = false;
-  private readonly proxyTargets = new WeakMap<
-    HTMLElement,
-    { group: NativeStackGroup; tab: NativeStackTab }
-  >();
-
-  constructor(options: TabStacksControllerOptions) {
-    this.document = options.document;
-    this.eventTarget = options.eventTarget;
-    this.services = options.services;
-    this.getBrowser = options.getBrowser;
-    this.logger = options.logger ?? noopLogger;
-  }
-
-  init(): void {
-    if (this.initialized) {
-      return;
-    }
-    this.initialized = true;
-
-    for (const type of TAB_STACKS_REBUILD_EVENTS) {
-      this.eventTarget.addEventListener(type, this.onNativeStateChanged);
-    }
-    this.eventTarget.addEventListener("unload", this.onUnload);
-    this.services.prefs.addObserver(
-      VERTICAL_TABS_PREF,
-      this.onVerticalTabsChanged,
-    );
-    this.services.obs.addObserver(
-      this.onWorkspaceChanged,
-      WORKSPACES_CHANGED_TOPIC,
-    );
-
-    if (this.document.readyState === "loading") {
-      this.document.addEventListener("DOMContentLoaded", this.onDomReady);
-      this.domReadyListening = true;
-    }
-
-    this.rebuild();
-  }
-
-  rebuild(): void {
-    if (!this.initialized) {
-      return;
-    }
-
-    if (
-      this.services.prefs.getBoolPref(VERTICAL_TABS_PREF, false)
-    ) {
-      this.destroyPresentation();
-      return;
-    }
-
-    this.ensureStyles();
-    const snapshot = getActiveGroupSnapshot(this.getBrowser());
-    if (!snapshot) {
-      this.destroyRow();
-      return;
-    }
-
-    const toolbox = this.document.getElementById("navigator-toolbox");
-    const navBar = this.document.getElementById("nav-bar");
-    if (!toolbox || !navBar || navBar.parentNode !== toolbox) {
-      this.destroyRow();
-      this.logger.warn(
-        "Tab stacks foundation could not find the horizontal toolbox mount point.",
-      );
-      return;
-    }
-
-    const focusedIndex = this.getFocusedProxyIndex();
-    this.destroyRow();
-
-    const row = createHTMLElement(this.document, "div");
-    row.id = TAB_STACKS_ROW_ID;
-    row.className = "floorp-tab-stacks-row";
-    row.setAttribute("role", "tablist");
-    row.setAttribute("aria-label", snapshot.groupName);
-    row.dataset.groupId = snapshot.group.id ?? "";
-    row.dataset.groupColor = snapshot.group.color ?? "";
-
-    const nativeColor = snapshot.group.style?.getPropertyValue(
-      "--tab-group-color",
-    );
-    if (nativeColor) {
-      row.style.setProperty("--floorp-tab-stacks-color", nativeColor);
-    } else if (snapshot.group.color) {
-      row.style.setProperty(
-        "--floorp-tab-stacks-color",
-        `var(--tab-group-color-${snapshot.group.color})`,
-      );
-    }
-
-    const groupMeta = createHTMLElement(this.document, "div");
-    groupMeta.className = "floorp-tab-stacks-group-meta";
-    groupMeta.setAttribute("aria-hidden", "true");
-
-    const color = createHTMLElement(this.document, "span");
-    color.className = "floorp-tab-stacks-group-color";
-
-    const name = createHTMLElement(this.document, "span");
-    name.className = "floorp-tab-stacks-group-name";
-    name.textContent = snapshot.groupName;
-
-    const count = createHTMLElement(this.document, "span");
-    count.className = "floorp-tab-stacks-group-count";
-    count.textContent = String(snapshot.eligibleTabs.length);
-    count.setAttribute("aria-hidden", "true");
-
-    groupMeta.append(color, name, count);
-    row.appendChild(groupMeta);
-
-    snapshot.eligibleTabs.forEach((tab, index) => {
-      const proxy = createHTMLElement(this.document, "button");
-      const selected = tab === snapshot.selectedTab;
-      proxy.type = "button";
-      proxy.className = "floorp-tab-stacks-proxy";
-      proxy.dataset.proxyIndex = String(index);
-      if (tab.id) {
-        proxy.dataset.nativeTabId = tab.id;
-      }
-      this.proxyTargets.set(proxy, { group: snapshot.group, tab });
-      proxy.setAttribute("role", "tab");
-      proxy.setAttribute("aria-label", getTabLabel(tab));
-      proxy.setAttribute("aria-selected", String(selected));
-      proxy.tabIndex = selected ? 0 : -1;
-
-      const linkedPanelId = getLinkedPanelId(tab);
-      if (linkedPanelId && this.document.getElementById(linkedPanelId)) {
-        proxy.setAttribute("aria-controls", linkedPanelId);
-      }
-
-      const label = createHTMLElement(this.document, "span");
-      label.className = "floorp-tab-stacks-proxy-label";
-      label.setAttribute("aria-hidden", "true");
-      label.textContent = getTabLabel(tab);
-      proxy.appendChild(label);
-      row.appendChild(proxy);
-    });
-
-    row.addEventListener("click", this.onRowClick);
-    row.addEventListener("keydown", this.onRowKeyDown);
-    toolbox.insertBefore(row, navBar);
-    this.row = row;
-
-    if (focusedIndex !== null) {
-      const proxies = this.getProxyElements();
-      const target = proxies[Math.min(focusedIndex, proxies.length - 1)];
-      target?.focus();
-    }
-  }
-
-  destroy(): void {
-    if (!this.initialized) {
-      this.destroyPresentation();
-      return;
-    }
-
-    for (const type of TAB_STACKS_REBUILD_EVENTS) {
-      this.eventTarget.removeEventListener(type, this.onNativeStateChanged);
-    }
-    this.eventTarget.removeEventListener("unload", this.onUnload);
-    this.services.prefs.removeObserver(
-      VERTICAL_TABS_PREF,
-      this.onVerticalTabsChanged,
-    );
-    this.services.obs.removeObserver(
-      this.onWorkspaceChanged,
-      WORKSPACES_CHANGED_TOPIC,
-    );
-
-    if (this.domReadyListening) {
-      this.document.removeEventListener("DOMContentLoaded", this.onDomReady);
-      this.domReadyListening = false;
-    }
-
-    this.destroyPresentation();
-    this.initialized = false;
-  }
-
-  getRowElement(): HTMLElement | null {
-    return this.row;
-  }
-
-  getStyleElement(): HTMLStyleElement | null {
-    return this.styleElement;
-  }
-
-  private readonly onNativeStateChanged = (): void => {
-    this.rebuild();
-  };
-
-  private readonly onWorkspaceChanged: Observer = (): void => {
-    this.rebuild();
-  };
-
-  private readonly onVerticalTabsChanged: Observer = (): void => {
-    if (this.services.prefs.getBoolPref(VERTICAL_TABS_PREF, false)) {
-      this.destroyPresentation();
-      return;
-    }
-    this.rebuild();
-  };
-
-  private readonly onDomReady = (): void => {
-    this.document.removeEventListener("DOMContentLoaded", this.onDomReady);
-    this.domReadyListening = false;
-    this.rebuild();
-  };
-
-  private readonly onUnload = (): void => {
-    this.destroy();
-  };
-
-  private readonly onRowClick = (event: Event): void => {
-    const target = event.target as Element | null;
-    const proxy = target?.closest?.(".floorp-tab-stacks-proxy") as
-      | HTMLElement
-      | null;
-    if (!proxy || !this.row?.contains(proxy)) {
-      return;
-    }
-    this.activateProxy(proxy);
-  };
-
-  private readonly onRowKeyDown = (event: Event): void => {
-    const keyEvent = event as KeyboardEvent;
-    const target = keyEvent.target as Element | null;
-    const proxy = target?.closest?.(".floorp-tab-stacks-proxy") as
-      | HTMLElement
-      | null;
-    if (!proxy || !this.row?.contains(proxy)) {
-      return;
-    }
-
-    const proxies = this.getProxyElements();
-    const currentIndex = proxies.indexOf(proxy);
-    if (currentIndex < 0) {
-      return;
-    }
-
-    let focusIndex: number | null = null;
-    switch (keyEvent.key) {
-      case "ArrowLeft":
-        focusIndex = (currentIndex - 1 + proxies.length) % proxies.length;
-        break;
-      case "ArrowRight":
-        focusIndex = (currentIndex + 1) % proxies.length;
-        break;
-      case "Home":
-        focusIndex = 0;
-        break;
-      case "End":
-        focusIndex = proxies.length - 1;
-        break;
-      case "Enter":
-      case " ":
-      case "Spacebar":
-        keyEvent.preventDefault();
-        this.activateProxy(proxy);
-        return;
-      default:
-        return;
-    }
-
-    keyEvent.preventDefault();
-    proxies[focusIndex]?.focus();
-  };
-
-  private activateProxy(proxy: HTMLElement): void {
-    const target = this.proxyTargets.get(proxy);
-    if (!target) {
-      return;
-    }
-
-    const browser = this.getBrowser();
-    const snapshot = getActiveGroupSnapshot(browser);
-    if (
-      !browser ||
-      !snapshot ||
-      snapshot.group !== target.group ||
-      !snapshot.eligibleTabs.includes(target.tab)
-    ) {
-      this.rebuild();
-      return;
-    }
-
-    // Selecting an existing native tab is the mirror's only product mutation.
-    browser.selectedTab = target.tab;
-  }
-
-  private getProxyElements(): HTMLElement[] {
-    return this.row
-      ? Array.from(
-        this.row.querySelectorAll<HTMLElement>(".floorp-tab-stacks-proxy"),
-      )
-      : [];
-  }
-
-  private getFocusedProxyIndex(): number | null {
-    const active = this.document.activeElement as HTMLElement | null;
-    if (!active || !this.row?.contains(active)) {
-      return null;
-    }
-    const proxy = active.closest?.(".floorp-tab-stacks-proxy") as
-      | HTMLElement
-      | null;
-    const index = Number(proxy?.dataset.proxyIndex);
-    return Number.isInteger(index) && index >= 0 ? index : null;
-  }
-
-  private ensureStyles(): void {
-    if (this.styleElement?.isConnected) {
-      return;
-    }
-    const head = this.document.head;
-    if (!head) {
-      return;
-    }
-
-    const style = this.document.createElement("style");
-    style.id = TAB_STACKS_STYLE_ID;
-    style.textContent = tabStacksStyles;
-    head.appendChild(style);
-    this.styleElement = style;
-  }
-
-  private destroyRow(): void {
-    if (!this.row) {
-      return;
-    }
-    this.row.removeEventListener("click", this.onRowClick);
-    this.row.removeEventListener("keydown", this.onRowKeyDown);
-    this.row.remove();
-    this.row = null;
-  }
-
-  private destroyPresentation(): void {
-    this.destroyRow();
-    this.styleElement?.remove();
-    this.styleElement = null;
-  }
 }

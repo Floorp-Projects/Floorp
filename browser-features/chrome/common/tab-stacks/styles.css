@@ -2,97 +2,505 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#floorp-tab-stacks-row {
+/* ===== Row 1: a stack's member tabs are represented by the chip alone.
+   Everything below is scoped to groups tab-stacks explicitly owns
+   ([data-floorp-stack]); split-view's groups render natively. ===== */
+/* visibility:collapse only removes width in XUL box layout; the strip
+   is flexbox, where it acts like plain hidden and the invisible tabs
+   still claim their flex size (a giant blank gap in sparse strips).
+   Zero every box metric instead — the tabs stay rendered for Firefox's
+   tab machinery but take no space. */
+#tabbrowser-tabs tab-group[data-floorp-stack] > .tabbrowser-tab {
+  visibility: collapse !important;
+  flex: 0 0 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Group chip styled as a normal tab: the stack's current tab title with the
+   count on the right. The native group color stays as the marker. */
+tab-group[data-floorp-stack] .tab-group-label-container {
+  align-items: center !important;
+}
+
+/* tab-group is display:contents — it has no box, so sizing rules on it
+   do nothing and its children participate directly in the strip
+   flexbox. The chip's real box is the label container: give IT a tab's
+   flex weight and width envelope. */
+/* #tabbrowser-tabs prefix is load-bearing: leptonChrome.css carries
+   `#tabbrowser-tabs[orient="horizontal"] .tab-group-label-container
+   { margin-inline-start: 4px !important }` — an id-level !important that
+   outranks a plain tab-group selector, so the chip sat 4px right of the
+   previous tab's background edge. */
+#tabbrowser-tabs tab-group[data-floorp-stack] > .tab-group-label-container {
+  /* Exactly a tab's flex: `flex: 100 100` (basis 0) is what .tabbrowser-tab
+     uses, so the chip grows and shrinks in lockstep with its neighbours. */
+  flex: 100 100 0% !important;
+  min-width: var(--tab-min-width, 76px) !important;
+  /* NO !important on max-width — deliberately. When a drag starts, native
+     freezes every strip cell with an INLINE max-width at its current
+     width, then pulls the dragged tab out of flow. An !important here
+     beat that freeze, making the chip the only cell still free to flex —
+     it absorbed the whole vacated width and ballooned mid-drag. */
+  max-width: var(--tab-max-width, 225px);
+  align-items: stretch !important;
+  /* Vertical seat comes from pack="start" (set in index.ts): XUL layout
+     attributes are presentation hints that author CSS cannot override. */
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+}
+
+/* Close button (injected): absolute overlay at the chip's left edge —
+   same side as the tabs' favicon-hover close, and being out of flow it
+   can never change the chip's size on hover. Closes the whole stack. */
+tab-group[data-floorp-stack] .floorp-stack-close {
+  display: none;
+  position: absolute;
+  /* 6px + the chip's 1px border = the tabs' 7px favicon offset. */
+  inset-inline-start: 6px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+  border-radius: 3px;
+  background-color: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.9));
+  -moz-context-properties: fill;
+  fill: currentColor;
+  cursor: pointer;
+}
+
+/* Chip glyph occupies the X's exact box and yields to it on hover —
+   the same icon<->close swap tabs get. */
+tab-group[data-floorp-stack] .floorp-stack-icon {
+  position: absolute;
+  /* 6px + the chip's 1px border = the tabs' 7px favicon offset. */
+  inset-inline-start: 6px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+  opacity: 0.9;
+  pointer-events: none;
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  /* Stacks have a colour — the chip glyph wears it (same expression as
+     the chip border), instead of plain text colour. */
+  stroke: light-dark(var(--tab-group-color), var(--tab-group-color-invert));
+}
+
+tab-group[data-floorp-stack] .tab-group-label-container:hover .floorp-stack-icon {
+  display: none;
+}
+
+tab-group[data-floorp-stack] .tab-group-label-container:hover .floorp-stack-close {
   display: flex;
-  align-items: stretch;
+}
+
+tab-group[data-floorp-stack] .floorp-stack-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+tab-group[data-floorp-stack] .tab-group-label {
+  /* Hide the native group-name text; our ::before shows name/tab title. */
+  font-size: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border-radius: 4px !important;
+  /* Title clears the (hover-shown) close button at the left edge. */
+  padding: 0 9px 0 25px !important;
+  /* Exactly the tab's selection box, top-aligned. */
   min-height: var(--tab-min-height, 32px);
-  padding-inline: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  color: var(--toolbar-color, currentColor);
-  background: var(--toolbar-bgcolor);
-  border-block-end: 1px solid
-    var(--chrome-content-separator-color, rgba(0, 0, 0, 0.2));
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-group-meta {
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 6px;
-  max-width: 180px;
-  padding-inline: 8px 10px;
-  border-inline-end: 1px solid
-    color-mix(in srgb, currentColor 18%, transparent);
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-group-color {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--floorp-tab-stacks-color, currentColor);
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-group-name {
+  max-height: var(--tab-min-height, 32px);
+  /* Width comes from the group box (which flexes like a tab). */
+  flex: 1 1 auto !important;
   min-width: 0;
+  max-width: none;
+  font-weight: normal !important;
+  cursor: pointer;
+  /* The group color lives in the border only. Fill and text match normal
+     tabs; inner content (title + count) unchanged. */
+  background-color: color-mix(in srgb, currentColor 8%, transparent) !important;
+  color: inherit !important;
+  /* Dim the group-colour border a touch — at full strength it stood out
+     more than the chip needs. */
+  border: 1px solid
+    color-mix(in srgb, var(--tab-group-color-invert, currentColor) 70%, transparent)
+    !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Active stack: the selected tab lives inside this group. Firefox marks
+   the group [hasactivetab], so no JS is needed. Match a selected tab's
+   22% currentColor wash exactly, and brighten the group-colour border. */
+#tabbrowser-tabs tab-group[data-floorp-stack][hasactivetab] .tab-group-label {
+  background-color: color-mix(in srgb, currentColor 22%, transparent) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--tab-group-color-invert, currentColor) 85%,
+    white 15%
+  ) !important;
+}
+
+/* No native 2px group underline beneath the chip. */
+tab-group[data-floorp-stack] .tab-group-label-container::after {
+  display: none !important;
+}
+
+/* No separator lines flanking a stack chip — each tab paints 1px lines
+   at both edges via .tab-stack::before/::after right-borders; next to
+   the chip's colored border they read as doubled lines. */
+.tabbrowser-tab:has(+ tab-group[data-floorp-stack]) .tab-stack::after,
+tab-group[data-floorp-stack] + .tabbrowser-tab .tab-stack::before {
+  border-right: none !important;
+}
+
+tab-group[data-floorp-stack] .tab-group-label::before {
+  content: attr(data-floorp-title);
+  font-size: 12px;
+  flex: 1 1 auto;
+  text-align: start;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
-  font-weight: 600;
+  /* Same overflow treatment as tab labels: fade the tail out. */
+  mask-image: linear-gradient(to left, transparent, black 1em);
 }
 
-#floorp-tab-stacks-row .floorp-tab-stacks-group-count {
-  flex: 0 0 auto;
-  min-width: 1.5em;
-  text-align: center;
-  opacity: 0.72;
-  font-variant-numeric: tabular-nums;
+tab-group[data-floorp-stack] .tab-group-label[data-floorp-count]::after {
+  content: attr(data-floorp-count);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-inline-start: auto;
+  padding-inline-start: 8px;
 }
 
-#floorp-tab-stacks-row .floorp-tab-stacks-proxy {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  flex: 0 1 180px;
-  min-width: var(--tab-min-width, 76px);
-  max-width: 220px;
-  margin: 0;
-  padding-inline: 10px;
-  color: inherit;
-  font: inherit;
-  text-align: start;
+/* ===== Row 2: the stack bar ===== */
+/* Transparent: the toolbox paints the background, so both rows share
+   the exact same colour by construction. The strip stacks above the bar
+   so the slide-in emerges from underneath it. */
+#TabsToolbar {
+  position: relative;
+  z-index: 2;
+}
+
+#floorp-stack-bar {
   background: transparent;
-  border: 0;
-  border-inline-end: 1px solid
-    color-mix(in srgb, currentColor 16%, transparent);
-  border-radius: 0;
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-proxy:hover {
-  background: color-mix(in srgb, currentColor 9%, transparent);
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-proxy[aria-selected="true"] {
-  background: color-mix(
-    in srgb,
-    var(--floorp-tab-stacks-color, currentColor) 22%,
-    transparent
-  );
-  box-shadow: inset 0 -2px 0 var(--floorp-tab-stacks-color, currentColor);
-}
-
-#floorp-tab-stacks-row .floorp-tab-stacks-proxy:focus-visible {
+  border-bottom: 1px solid
+    var(--chrome-content-separator-color, rgba(0, 0, 0, 0.2));
+  /* Match row 1 exactly: a row whose cells are --tab-min-height, leaving
+     the same 1px above/below the top row's tabs have. */
+  min-height: calc(var(--tab-min-height, 32px) + 2px);
+  max-height: calc(var(--tab-min-height, 32px) + 2px);
   position: relative;
   z-index: 1;
-  outline: 2px solid var(--focus-outline-color, #0060df);
-  outline-offset: -2px;
+  animation: floorp-stack-bar-in 0.1s ease-out;
 }
 
-#floorp-tab-stacks-row .floorp-tab-stacks-proxy-label {
+/* The scroller. overflow-x MUST stay hidden, not auto: hidden zeroes the
+   row's user-input scroll range, which keeps Gecko's wheel transaction from
+   ever latching onto this row — a latched transaction retargets EVERY wheel
+   event in the window at its holder for up to 1.5s, which is how this row
+   captured tab-strip and page scrolling when it was overflow-x:auto.
+   Script scrolling is unaffected by hidden; the wheel handler and arrows in
+   stack-bar.tsx own all movement. */
+#floorp-stack-scroller {
+  flex: 1;
   min-width: 0;
+  height: var(--tab-min-height, 32px);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Content box: at least the scroller's width so cells shrink to their floor
+   before anything overflows, and free to grow past it after that. */
+#floorp-stack-items {
+  flex: 0 0 auto;
+  min-width: 100%;
+  height: 100%;
+}
+
+@keyframes floorp-stack-bar-in {
+  from {
+    margin-top: -30px;
+    opacity: 0.4;
+  }
+  to {
+    margin-top: 0;
+    opacity: 1;
+  }
+}
+
+/* ===== Overflow scroll arrows ===== */
+.floorp-stack-scrollbutton {
+  appearance: none;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  padding: 0 8px;
+  margin: 0;
+  height: var(--tab-min-height, 32px);
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--toolbarbutton-icon-fill, currentColor);
+  fill-opacity: 1;
+}
+
+.floorp-stack-scrollbutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.floorp-stack-scrollbutton > .toolbarbutton-text {
+  display: none;
+}
+
+#floorp-stack-scroll-down > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+.floorp-stack-scrollbutton:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+/* ===== Proxies ===== */
+/* Proxies size like top-row tabs: start wide, shrink to the tab floor,
+   and only then overflow into the scroll arrows. The explicit basis
+   matters — with basis auto the cropped labels measure near zero and
+   everything compresses without ever overflowing. */
+.floorp-stack-tab {
+  flex: 0 1 180px !important;
+  min-width: var(--tab-min-width, 76px) !important;
+  max-width: 200px;
+}
+
+/* Rectangular cells like the top row: flush edges, no radius, full row
+   height; the hover paints the whole block. */
+.floorp-stack-tab {
+  border-radius: 0;
+  padding: 0 10px 0 6px;
+  margin-inline-end: 0;
+  /* Same box as a row-1 tab, centred in the row. */
+  align-self: center;
+  height: var(--tab-min-height, 32px);
+  cursor: default;
+  position: relative;
+}
+
+/* The top row's hover grey, as a plain rectangle. */
+.floorp-stack-tab:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+/* Separator lines between cells at the exact boundary, near full
+   height — same as the lines the top row draws between tabs. */
+.floorp-stack-tab::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 4px;
+  inset-block-end: 4px;
+  width: 1px;
+  background: rgba(251, 251, 254, 0.2);
+}
+
+/* No boundary line touching a filled (hovered/selected) cell. */
+.floorp-stack-tab:hover::after,
+.floorp-stack-tab[data-selected="true"]::after,
+.floorp-stack-tab:has(+ .floorp-stack-tab:hover)::after,
+.floorp-stack-tab:has(+ .floorp-stack-tab[data-selected="true"])::after {
+  background: transparent;
+}
+
+/* Drop-position indicator during proxy drags (box-shadow tracks the
+   rounded corners; ::before/::after are taken by the separators). */
+.floorp-stack-tab[data-drop-side="before"] {
+  box-shadow: inset 2px 0 0 var(--focus-outline-color, #0a84ff);
+}
+
+.floorp-stack-tab[data-drop-side="after"] {
+  box-shadow: inset -2px 0 0 var(--focus-outline-color, #0a84ff);
+}
+
+.floorp-stack-tab[data-selected="true"] {
+  background: var(
+    --tab-selected-bgcolor,
+    var(--toolbarbutton-active-background, rgba(128, 128, 128, 0.3))
+  );
+}
+
+/* Favicon swaps to a close button on hover — same manner as row-1 tabs */
+.floorp-stack-tab-iconbox {
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 6px;
+}
+
+.floorp-stack-tab-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.floorp-stack-tab-close {
+  display: none;
+  width: 14px;
+  height: 14px;
+  padding: 1px !important;
+  margin: 1px !important;
+
+  /* The inner toolbarbutton icon renders at its natural 16px unless
+     pinned — same 12px glyph as the top row's X. */
+  & > .toolbarbutton-icon {
+    width: 12px !important;
+    height: 12px !important;
+    padding: 0 !important;
+  }
+  border-radius: 3px;
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  appearance: none !important;
+  border: none !important;
+  background-color: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.9));
+}
+
+.floorp-stack-tab-close:hover {
+  border: none !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.floorp-stack-tab:hover .floorp-stack-tab-icon {
+  display: none;
+}
+
+.floorp-stack-tab:hover .floorp-stack-tab-close {
+  display: flex;
+}
+
+.floorp-stack-tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Hover-to-reload glyph at the right edge — gated on the same root
+   attribute the tab-refresh feature uses for row-1 tabs. */
+.floorp-stack-tab-refresh {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  inset-inline-end: 6px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  padding: 1px;
+  border-radius: 3px;
+  backdrop-filter: blur(8px);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  z-index: 2;
+  transition: opacity 0.18s ease;
+}
+
+:root[floorp-hover-reload] .floorp-stack-tab:hover .floorp-stack-tab-refresh {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.floorp-stack-tab-refresh:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== Row-2 "+": row 1's #new-tab-button glyph, parked past the right
+   arrow at the end of the row instead of scrolling with the cells. ===== */
+#floorp-stack-newtab {
+  appearance: none;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  width: 35px;
+  min-width: 35px;
+  padding: 0;
+  margin: 0;
+  height: var(--tab-min-height, 32px);
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  list-style-image: url("chrome://global/skin/icons/plus.svg");
+  -moz-context-properties: fill;
+  fill: var(--toolbarbutton-icon-fill, currentColor);
+}
+
+#floorp-stack-newtab > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+#floorp-stack-newtab > .toolbarbutton-text {
+  display: none;
+}
+
+#floorp-stack-newtab:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+/* ===== Drag feedback ===== */
+/* Drag ghost for proxy drags (HTML node: snapshotting live XUL inside
+   the strip is flaky). */
+.floorpStackDragGhost {
+  position: fixed;
+  top: -1000px;
+  left: -1000px;
+  box-sizing: border-box;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 10px 0 6px;
+  border: none;
+  border-radius: 0;
+  background: var(--tab-selected-bgcolor, rgba(70, 70, 75, 0.95));
+  color: var(--tab-text-color, #fbfbfe);
+  font-size: 12px;
+  max-width: 200px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Drag-over-chip: light the whole cell ("drop to join this stack") — set
+   by onChipDragOverHighlight in index.ts. Replaces the thin insertion
+   underline for the join gesture. */
+#tabbrowser-tabs tab-group[data-floorp-stack][data-floorp-drop-into]
+  .tab-group-label {
+  background-color: color-mix(
+    in srgb,
+    var(--focus-outline-color, #0a84ff) 35%,
+    transparent
+  ) !important;
+  border-color: var(--focus-outline-color, #0a84ff) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #floorp-stack-bar {
+    animation: none;
+  }
 }
