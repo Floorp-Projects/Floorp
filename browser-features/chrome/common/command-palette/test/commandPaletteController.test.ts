@@ -339,6 +339,147 @@ const shortcutTests: TestCase[] = [
       }
     },
   },
+
+  // --- Args-bearing shortcut: "@s hello" generates args candidate ---
+  {
+    name: "@s hello generates args-bearing shortcut candidate pinned to top",
+    async fn() {
+      setShortcuts([
+        { prefix: "s", commandId: "floorp-search-web" },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s hello");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 1, "should have exactly 1 shortcut row");
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web:args",
+          "id should end with :args",
+        );
+        assertEquals(
+          rows[0].category,
+          "shortcut",
+          "category should be shortcut",
+        );
+        // Must be pinned to top of all filtered results
+        const filtered = ctrl.state.filteredCommands();
+        assert(filtered.length > 0, "filtered list should be non-empty");
+        assertEquals(
+          filtered[0].category,
+          "shortcut",
+          "args shortcut must be pinned to list head",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- Args-bearing shortcut: multi-word args "@s hello world" ---
+  {
+    name: "@s hello world preserves multi-word args in label",
+    async fn() {
+      setShortcuts([
+        { prefix: "s", commandId: "floorp-search-web" },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s hello world");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 1, "should have exactly 1 shortcut row");
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web:args",
+          "id should be args variant",
+        );
+        assert(
+          rows[0].label.includes("hello world"),
+          `label "${rows[0].label}" should contain "hello world"`,
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- "@s" alone (no space) uses plain ranking, not args mode ---
+  {
+    name: "@s alone (no args) uses plain shortcut, not args mode",
+    async fn() {
+      setShortcuts([
+        { prefix: "s", commandId: "floorp-search-web" },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 1, "should have exactly 1 shortcut row");
+        assert(
+          !rows[0].id.endsWith(":args"),
+          `id "${rows[0].id}" should NOT end with :args for plain shortcut`,
+        );
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web",
+          "should be plain shortcut id",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- "@x foo" with non-existent prefix yields zero shortcuts ---
+  {
+    name: "@x foo with non-existent prefix yields zero shortcut rows",
+    async fn() {
+      setShortcuts([
+        { prefix: "s", commandId: "floorp-search-web" },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@x foo");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          0,
+          "no shortcut prefix 'x' exists, so 0 rows",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- Non-step command with args falls back to plain shortcut ---
+  {
+    name: "@gh hello on non-step command falls back to plain shortcut",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@gh hello");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        // KNOWN_ID (floorp-open-settings or similar) has no steps, so the
+        // controller falls back to a plain (args-less) shortcut candidate.
+        assert(rows.length >= 1, "should have at least 1 shortcut row");
+        assert(
+          !rows[0].id.endsWith(":args"),
+          `id "${rows[0].id}" should NOT have :args suffix for non-step command`,
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
 ];
 
 const rawTests: TestCase[] = [

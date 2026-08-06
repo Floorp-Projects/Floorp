@@ -23,6 +23,11 @@ const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResu
 // cannot share a module, so if you edit one side, edit the other.
 //   shortcuts          -> user-editable {prefix, commandId} pairs (read/write)
 //   selectableCommands -> chrome-cached command catalog (read-only here)
+// On first launch the chrome side seeds the default shortcut
+// [{prefix:"s",commandId:"floorp-search-web"}] into the pref via
+// CommandPaletteService.initDefaultShortcuts(). The settings UI does NOT
+// re-seed — it only reads whatever the chrome side persisted (or "[]" once the
+// user clears it), so no default value change is needed here.
 const COMMAND_PALETTE_SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
 const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
   "floorp.commandPalette.selectableCommands";

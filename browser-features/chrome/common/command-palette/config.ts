@@ -85,7 +85,11 @@ export const defaultConfig: CommandPaletteConfig = {
   maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
   maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
   maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
-  shortcuts: [] as CommandPaletteShortcut[],
+  // Default `@s` shortcut → web search. Seeded on first launch by
+  // `CommandPaletteService.initDefaultShortcuts()` so the settings page can
+  // see and manage it. The user may delete it; an empty array is then
+  // persisted and never re-seeded. KEEP IN SYNC with service.ts.
+  shortcuts: [{ prefix: "s", commandId: "floorp-search-web" }],
 };
 
 // Bounds for the customizable size/position prefs.
@@ -564,8 +568,11 @@ function createShortcuts(): [
 ] {
   const [shortcuts, setShortcuts] = createSignal(
     parseShortcuts(
-      Services.prefs.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF, "[]"),
-      [],
+      Services.prefs.getStringPref(
+        COMMAND_PALETTE_SHORTCUTS_PREF,
+        JSON.stringify(defaultConfig.shortcuts),
+      ),
+      defaultConfig.shortcuts,
     ),
   );
 
@@ -583,8 +590,11 @@ function createShortcuts(): [
   const shortcutsObserver = () => {
     setShortcuts(
       parseShortcuts(
-        Services.prefs.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF, "[]"),
-        [],
+        Services.prefs.getStringPref(
+          COMMAND_PALETTE_SHORTCUTS_PREF,
+          JSON.stringify(defaultConfig.shortcuts),
+        ),
+        defaultConfig.shortcuts,
       ),
     );
   };

@@ -819,20 +819,57 @@ export class CommandPaletteController {
   }
 
   /**
-   * Builds the @prefix shortcut result list for a given query (the part after
-   * the leading "@"). Shortcuts are ranked: exact prefix match first, then
-   * prefix (starts-with) matches, then substring matches. An empty `atPrefix`
-   * (i.e. the user typed "@" alone) returns every shortcut in declaration order.
+   * Builds the @prefix shortcut result list. `prefixPart` is the token the
+   * user typed after the leading "@" (no whitespace), and `argsPart` is the
+   * remainder of the query after the first whitespace (already trimmed, or
+   * "" when there is none).
+   *
+   * Two modes:
+   *
+   * 1. `argsPart === ""` (e.g. "@", "@s", "@sh"): ranked list of every
+   *    shortcut that matches — exact prefix match first, then starts-with,
+   *    then substring. "@" alone returns every shortcut in declaration order.
+   *
+   * 2. `argsPart !== ""` (e.g. "@s hello world"): process ONLY the exact
+   *    prefix match. Starts-with/substring matching would be ambiguous once
+   *    the user has committed to a specific shortcut by typing arguments, so
+   *    only a single candidate is produced. If the aliased command has
+   *    `steps`, the candidate carries the args mapped onto the FIRST step's
+   *    id (remaining steps fall back to their defaults — e.g. search-web's
+   *    default engine + new-tab). If the aliased command has no steps, the
+   *    args are ignored and the plain (args-less) candidate is returned as a
+   *    safe fallback. No exact match → empty array (nothing to show).
    *
    * Each shortcut is rendered as a pseudo-`PaletteCommand` whose `fn` resolves
    * and invokes the aliased command. Recent/frequency are recorded under the
    * REAL command id (see `executeCommand`'s `shortcut` guard) so shortcut usage
    * feeds the underlying command's recency.
    */
-  private buildShortcutCommands(atPrefix: string): PaletteCommand[] {
+  private buildShortcutCommands(
+    prefixPart: string,
+    argsPart: string = "",
+  ): PaletteCommand[] {
     const shortcuts = getShortcuts();
     if (shortcuts.length === 0) return [];
 
+    // --- args-bearing mode: "@prefix <args>" ---
+    if (argsPart) {
+      const exactMatch = shortcuts.find((s) => s.prefix === prefixPart);
+      if (!exactMatch) return [];
+
+      const aliased = getCommand(exactMatch.commandId, this.targetWindow);
+      if (!aliased) return [];
+
+      // Non-step aliased command: args don't apply. Fall back to the plain
+      // shortcut candidate so the user still gets a usable row.
+      if (!aliased.steps || aliased.steps.length === 0) {
+        return [this.buildPlainShortcutCommand(exactMatch, aliased)];
+      }
+
+      return [this.buildShortcutArgsCommand(exactMatch, aliased, argsPart)];
+    }
+
+    // --- empty-args mode: original ranking behavior ---
     const exact: CommandPaletteShortcut[] = [];
     const prefixMatch: CommandPaletteShortcut[] = [];
     const substringMatch: CommandPaletteShortcut[] = [];
@@ -842,20 +879,19 @@ export class CommandPaletteController {
     // rendering duplicate `@prefix` rows when a user manually mixes same-prefix /
     // different-commandId entries.
     const seen = new Set<string>();
-    const lowerQuery = atPrefix;
 
     for (const s of shortcuts) {
       if (seen.has(s.prefix)) continue;
       seen.add(s.prefix);
 
-      if (lowerQuery === "") {
+      if (prefixPart === "") {
         // "@" alone — list everything, preserving declaration order.
         exact.push(s);
-      } else if (s.prefix === lowerQuery) {
+      } else if (s.prefix === prefixPart) {
         exact.push(s);
-      } else if (s.prefix.startsWith(lowerQuery)) {
+      } else if (s.prefix.startsWith(prefixPart)) {
         prefixMatch.push(s);
-      } else if (s.prefix.includes(lowerQuery)) {
+      } else if (s.prefix.includes(prefixPart)) {
         substringMatch.push(s);
       }
     }
@@ -875,41 +911,116 @@ export class CommandPaletteController {
           r.aliased !== undefined,
       );
 
-    return resolved.map(({ s, aliased }): PaletteCommand => {
-      return {
-        id: `__shortcut:${s.prefix}:${s.commandId}`,
-        label: i18next.t("commandPalette.shortcutLabel", {
-          defaultValue: `@${s.prefix}`,
-          prefix: s.prefix,
-        }),
-        description: aliased.label,
-        category: "shortcut",
-        keywords: [s.prefix, `@${s.prefix}`],
-        fn: (win) => {
-          const cmd = getCommand(s.commandId, win);
-          if (cmd) {
-            // Record usage under the REAL command id so the aliased command's
-            // recency/frequency grows with shortcut invocations.
-            addRecentCommand(s.commandId);
-            incrementFrequency(s.commandId);
-            try {
-              cmd.fn(win);
-            } catch (e) {
-              console.error(
-                "[command-palette] Shortcut action failed:",
-                s.commandId,
-                e,
-              );
-            }
-          } else {
-            console.warn(
-              "[command-palette] Shortcut target not found:",
+    return resolved.map(({ s, aliased }) =>
+      this.buildPlainShortcutCommand(s, aliased),
+    );
+  }
+
+  /**
+   * Builds the plain (args-less) pseudo-command for a single shortcut. Used
+   * both for the ranked shortcut list (empty-args mode) and as the fallback
+   * for args-bearing queries whose aliased command has no steps.
+   */
+  private buildPlainShortcutCommand(
+    s: CommandPaletteShortcut,
+    aliased: PaletteCommand,
+  ): PaletteCommand {
+    return {
+      id: `__shortcut:${s.prefix}:${s.commandId}`,
+      label: i18next.t("commandPalette.shortcutLabel", {
+        defaultValue: `@${s.prefix}`,
+        prefix: s.prefix,
+      }),
+      description: aliased.label,
+      category: "shortcut",
+      keywords: [s.prefix, `@${s.prefix}`],
+      fn: (win) => {
+        const cmd = getCommand(s.commandId, win);
+        if (cmd) {
+          // Record usage under the REAL command id so the aliased command's
+          // recency/frequency grows with shortcut invocations.
+          addRecentCommand(s.commandId);
+          incrementFrequency(s.commandId);
+          try {
+            cmd.fn(win);
+          } catch (e) {
+            console.error(
+              "[command-palette] Shortcut action failed:",
               s.commandId,
+              e,
             );
           }
-        },
-      };
-    });
+        } else {
+          console.warn(
+            "[command-palette] Shortcut target not found:",
+            s.commandId,
+          );
+        }
+      },
+    };
+  }
+
+  /**
+   * Builds an args-bearing pseudo-command for "@prefix <args>". The aliased
+   * command MUST have `steps` (caller ensures this); `argsPart` is mapped onto
+   * the FIRST step's id, and remaining steps fall back to their defaults
+   * (e.g. search-web: default engine + new tab).
+   *
+   * For `floorp-search-web` specifically, the description is localized as a
+   * "Search \"<query>\"" string to mirror the existing search fallback row.
+   * For any other step command, the aliased command's own label is used as
+   * the description (keeps the row meaningful without command-specific
+   * special-casing beyond search).
+   */
+  private buildShortcutArgsCommand(
+    s: CommandPaletteShortcut,
+    aliased: PaletteCommand,
+    argsPart: string,
+  ): PaletteCommand {
+    return {
+      id: `__shortcut:${s.prefix}:${s.commandId}:args`,
+      label: i18next.t("commandPalette.shortcutWithArgsLabel", {
+        defaultValue: `@${s.prefix} ${argsPart}`,
+        prefix: s.prefix,
+        args: argsPart,
+      }),
+      description: s.commandId === "floorp-search-web"
+        ? i18next.t("commandPalette.searchShortcutDescription", {
+          defaultValue: `Search "${argsPart}"`,
+          query: argsPart,
+        })
+        : aliased.label,
+      category: "shortcut",
+      keywords: [s.prefix, `@${s.prefix}`],
+      fn: (win) => {
+        const cmd = getCommand(s.commandId, win);
+        if (cmd) {
+          addRecentCommand(s.commandId);
+          incrementFrequency(s.commandId);
+          try {
+            // Pass argsPart as the value of the FIRST step. Remaining steps
+            // fall back to their defaults (e.g. search-web: default engine +
+            // new tab).
+            const firstStepId = cmd.steps?.[0]?.id;
+            const args = firstStepId
+              ? { [firstStepId]: argsPart }
+              : undefined;
+            cmd.fn(win, args);
+          } catch (e) {
+            console.error(
+              "[command-palette] Shortcut action failed:",
+              s.commandId,
+              e,
+            );
+          }
+        } else {
+          console.warn(
+            "[command-palette] Shortcut target not found:",
+            s.commandId,
+          );
+        }
+      },
+    };
   }
 
   private doUpdateSearch(query: string): void {
@@ -932,8 +1043,16 @@ export class CommandPaletteController {
     // pseudo-category like `recent`/`navigation-suggestion`; see PSEUDO_TOP in
     // `appendSuggestionResults`).
     if (trimmed.startsWith("@")) {
-      const atPrefix = trimmed.slice(1); // strip "@"
-      const shortcutResults = this.buildShortcutCommands(atPrefix);
+      const afterAt = trimmed.slice(1); // strip "@"
+      // Split "@prefix args": first whitespace separates the prefix token
+      // from the rest (the argument). This lets "@s hello world" resolve to
+      // the "@s" shortcut with "hello world" as the search query. When no
+      // whitespace is present (e.g. "@s" or "@s "), argsPart is "" and the
+      // shortcut list/ranking behavior is unchanged.
+      const spaceIdx = afterAt.search(/\s/);
+      const prefixPart = spaceIdx === -1 ? afterAt : afterAt.slice(0, spaceIdx);
+      const argsPart = spaceIdx === -1 ? "" : afterAt.slice(spaceIdx + 1).trim();
+      const shortcutResults = this.buildShortcutCommands(prefixPart, argsPart);
       if (shortcutResults.length > 0) {
         // Pin shortcut results to top; subsequent pushes append below them.
         results.push(...shortcutResults);

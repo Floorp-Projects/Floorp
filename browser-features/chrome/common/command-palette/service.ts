@@ -13,6 +13,11 @@ export class CommandPaletteService {
   constructor() {
     this.registerAction();
     this.initialize();
+    // Seed the default @s → search-web shortcut BEFORE caching commands so the
+    // pref exists by the time config.ts signals initialize. If the user has
+    // already cleared their shortcuts (empty array persisted), this never
+    // re-seeds — only a truly absent pref (PREF_INVALID) is written.
+    this.initDefaultShortcuts();
     this.cacheSelectableCommands();
 
     createEffect(() => {
@@ -40,6 +45,32 @@ export class CommandPaletteService {
   private initialize(): void {
     if (isEnabled()) {
       this.attachToAllWindows();
+    }
+  }
+
+  /**
+   * Seed the default `@s` → `floorp-search-web` shortcut pref on first launch
+   * so the settings page can see and manage it immediately. If the pref
+   * already exists (including an empty array written by the user to disable
+   * the default), this is a no-op — a cleared shortcut list is never
+   * re-seeded.
+   *
+   * Idempotent and safe to call on every init / HMR reload.
+   */
+  private initDefaultShortcuts(): void {
+    try {
+      const PREF = "floorp.commandPalette.shortcuts";
+      if (Services.prefs.getPrefType(PREF) === Services.prefs.PREF_INVALID) {
+        // First launch: seed the default @s → search-web shortcut so it
+        // shows up in the settings page and is available immediately. If the
+        // user clears it, an empty array is persisted and this never
+        // re-seeds.
+        Services.prefs.setStringPref(PREF, JSON.stringify([
+          { prefix: "s", commandId: "floorp-search-web" },
+        ]));
+      }
+    } catch (e) {
+      console.error("[command-palette] Failed to init default shortcuts", e);
     }
   }
 
