@@ -14,6 +14,9 @@ import {
   getShowBookmarks,
   getCategoryPriority,
   getMaxResultsPerCategory,
+  getMaxBookmarkSuggestions,
+  getMaxHistorySuggestions,
+  getMaxTabsResults,
 } from "./config.ts";
 import {
   getPaletteCommands,
@@ -786,11 +789,25 @@ export class CommandPaletteController {
     const truncatedMiddle = truncateByCategory(
       sortedMiddle,
       getMaxResultsPerCategory(),
+      this.buildCategoryLimitOverrides(),
     );
     this.state.setFilteredCommands([
       ...topItems,
       ...truncatedMiddle,
     ]);
+  }
+
+  /**
+   * Builds a per-category limit override map for `truncateByCategory`.
+   * Dynamic-search categories get their own configurable caps; all other
+   * categories fall back to the global `maxResultsPerCategory`.
+   */
+  private buildCategoryLimitOverrides(): Map<string, number> {
+    const m = new Map<string, number>();
+    m.set("bookmark-suggestions", getMaxBookmarkSuggestions());
+    m.set("history-suggestions", getMaxHistorySuggestions());
+    m.set("open-tabs", getMaxTabsResults());
+    return m;
   }
 
   private doUpdateSearch(query: string): void {
@@ -863,7 +880,7 @@ export class CommandPaletteController {
     // policy in `appendSuggestionResults`.
     const recentItems = sorted.filter((c) => c.category === "recent");
     const nonRecent = sorted.filter((c) => c.category !== "recent");
-    results.push(...recentItems, ...truncateByCategory(nonRecent, maxPerCategory));
+    results.push(...recentItems, ...truncateByCategory(nonRecent, maxPerCategory, this.buildCategoryLimitOverrides()));
 
     // Show search engine suggestion at the bottom of the list as a fallback.
     // Placing it at the bottom keeps the first matched command selected by
@@ -975,7 +992,7 @@ export class CommandPaletteController {
     try {
       const results = await searchHistoryCommands(
         query,
-        getMaxResultsPerCategory(),
+        getMaxHistorySuggestions(),
       );
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) return;
@@ -989,7 +1006,7 @@ export class CommandPaletteController {
     try {
       const results = await searchBookmarkCommands(
         query,
-        getMaxResultsPerCategory(),
+        getMaxBookmarkSuggestions(),
       );
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) return;

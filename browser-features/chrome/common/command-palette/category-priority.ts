@@ -112,31 +112,39 @@ export function sortCategoriesByPriority<T extends { category: string }>(
  * dropped. Stable and non-mutating.
  *
  * A `limit` of 0 or negative is treated as unlimited (defensive — returns a
- * shallow copy of the input). This shouldn't happen in practice because the
+ * shallow copy of the input unless `categoryLimits` is provided, in which case
+ * only the overrides apply). This shouldn't happen in practice because the
  * settings UI clamps to `min: 1`, but the helper is public so it must not
  * return an empty list by accident.
  *
+ * If `categoryLimits` is provided, it overrides the global `limit` for the
+ * specified categories. Categories not in the map fall back to the global
+ * `limit`. This is used to give dynamic-search categories (bookmark/history
+ * suggestions, open tabs) their own configurable caps.
+ *
  * Pseudo-categories are NOT special-cased here. Callers must exempt them
- * explicitly if needed:
- * - `recent`: multi-item (recently-used commands). The controller exempts it
- *   in `doUpdateSearch` and `appendSuggestionResults` so the recents list is
- *   never truncated.
- * - `navigation-suggestion`: only 1 item (URL nav), no practical effect.
- * - `search`: only 1 item (search-engine fallback), no practical effect.
+ * explicitly if needed (e.g. `recent` is exempted at the call site).
  */
 export function truncateByCategory<T extends { category: string }>(
   items: T[],
   limit: number,
+  categoryLimits?: ReadonlyMap<string, number>,
 ): T[] {
   if (!Number.isFinite(limit) || limit <= 0) {
-    return [...items];
+    // When the global limit is unlimited, still respect per-category overrides
+    // if any are provided (they cap specific categories even when the global
+    // is unlimited).
+    if (!categoryLimits || categoryLimits.size === 0) {
+      return [...items];
+    }
   }
   const counts = new Map<string, number>();
   const result: T[] = [];
-  const max = Math.floor(limit);
+  const globalMax = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : Number.MAX_SAFE_INTEGER;
   for (const item of items) {
+    const itemLimit = categoryLimits?.get(item.category) ?? globalMax;
     const count = counts.get(item.category) ?? 0;
-    if (count < max) {
+    if (count < itemLimit) {
       result.push(item);
       counts.set(item.category, count + 1);
     }

@@ -44,6 +44,15 @@ export default function Page() {
         setValue("maxResultsPerCategory", values.maxResultsPerCategory, {
           shouldValidate: true,
         });
+        setValue("maxBookmarkSuggestions", values.maxBookmarkSuggestions, {
+          shouldValidate: true,
+        });
+        setValue("maxHistorySuggestions", values.maxHistorySuggestions, {
+          shouldValidate: true,
+        });
+        setValue("maxTabsResults", values.maxTabsResults, {
+          shouldValidate: true,
+        });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
       }

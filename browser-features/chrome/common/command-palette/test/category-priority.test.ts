@@ -481,6 +481,65 @@ function testTruncateByCategory(): void {
   assertEquals(sc[1].id, 2, "second kept");
 }
 
+/**
+ * Verifies the optional `categoryLimits` (3rd param) override behavior:
+ *
+ * - A per-category entry takes precedence over the global `limit` for that
+ *   category (both higher and lower caps).
+ * - Categories NOT in the map fall back to the global `limit`.
+ * - An empty map is equivalent to omitting the arg (backward compat).
+ * - Omitting the arg entirely preserves the existing behavior.
+ * - The input array is never mutated.
+ */
+function testTruncateByCategoryWithOverrides(): void {
+  // Per-category override takes precedence over global limit
+  const items = [
+    { category: "bookmark-suggestions", id: 1 },
+    { category: "bookmark-suggestions", id: 2 },
+    { category: "bookmark-suggestions", id: 3 },
+    { category: "history-suggestions", id: 4 },
+    { category: "history-suggestions", id: 5 },
+    { category: "navigation", id: 6 },
+    { category: "navigation", id: 7 },
+    { category: "navigation", id: 8 },
+  ];
+
+  // Global limit = 2, but bookmark-suggestions override = 3
+  const overrides = new Map<string, number>([["bookmark-suggestions", 3]]);
+  const result = truncateByCategory(items, 2, overrides);
+
+  // bookmark-suggestions: 3 items (override), history-suggestions: 2 (global), navigation: 2 (global)
+  assertEquals(result.length, 7, "override + global mix");
+  // Verify bookmark-suggestions kept all 3
+  const bookmarks = result.filter((r) => r.category === "bookmark-suggestions");
+  assertEquals(bookmarks.length, 3, "bookmark-suggestions override = 3");
+  // Verify history-suggestions truncated to 2 (global)
+  const history = result.filter((r) => r.category === "history-suggestions");
+  assertEquals(history.length, 2, "history-suggestions global = 2");
+  // Verify navigation truncated to 2 (global)
+  const nav = result.filter((r) => r.category === "navigation");
+  assertEquals(nav.length, 2, "navigation global = 2");
+
+  // Override LOWER than global — override wins (lower cap)
+  const lowerOverrides = new Map<string, number>([["navigation", 1]]);
+  const lowerResult = truncateByCategory(items, 5, lowerOverrides);
+  const lowerNav = lowerResult.filter((r) => r.category === "navigation");
+  assertEquals(lowerNav.length, 1, "navigation override = 1 (lower than global 5)");
+
+  // Empty override map → same as no overrides (backward compat)
+  const emptyOverrides = new Map<string, number>();
+  const emptyResult = truncateByCategory(items, 2, emptyOverrides);
+  const emptyNav = emptyResult.filter((r) => r.category === "navigation");
+  assertEquals(emptyNav.length, 2, "empty override map = global limit applies");
+
+  // No 3rd arg → backward compat (existing behavior unchanged)
+  const noArgResult = truncateByCategory(items, 2);
+  assertEquals(noArgResult.length, 6, "no override arg = global limit for all");
+
+  // Does NOT mutate input
+  assertEquals(items.length, 8, "input not mutated");
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -523,6 +582,7 @@ const tests: TestCase[] = [
   { name: "sortCategoriesByPriority with empty priority list keeps input order", fn: testSortCategoriesByPriorityEmptyPriorityList },
   // truncateByCategory
   { name: "truncateByCategory keeps at most `limit` per category without mutating input", fn: testTruncateByCategory },
+  { name: "truncateByCategory honors per-category overrides (categoryLimits)", fn: testTruncateByCategoryWithOverrides },
 ];
 
 export function runAllTests(): void {

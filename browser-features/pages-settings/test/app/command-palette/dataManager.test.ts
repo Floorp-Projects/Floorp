@@ -13,6 +13,7 @@ import {
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
 } from "../../../src/app/command-palette/dataManager.ts";
+import type { CommandPaletteFormData } from "../../../src/types/pref.ts";
 
 /**
  * Unit tests for command-palette dataManager.
@@ -31,6 +32,9 @@ import {
 const PREF = "floorp.commandPalette.enabled";
 const CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 const MAX_RESULTS_PREF = "floorp.commandPalette.maxResultsPerCategory";
+const MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
+const MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
+const MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
 
 // `Services` is a Firefox global available in the browser test environment.
 // deno-lint-ignore no-explicit-any
@@ -83,6 +87,69 @@ function readRawMaxResultsPref(): number | null {
 /** True when the max-results-per-category pref is currently unset (PREF_INVALID). */
 function isMaxResultsPrefUnset(): boolean {
   return Services.prefs.getPrefType(MAX_RESULTS_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw int value of the max-bookmark-suggestions pref, or null when unset. */
+function readRawMaxBookmarkSuggestionsPref(): number | null {
+  if (
+    Services.prefs.getPrefType(MAX_BOOKMARK_SUGGESTIONS_PREF) ===
+      Services.prefs.PREF_INVALID
+  ) {
+    return null;
+  }
+  try {
+    return Services.prefs.getIntPref(MAX_BOOKMARK_SUGGESTIONS_PREF);
+  } catch {
+    return null;
+  }
+}
+
+/** True when the max-bookmark-suggestions pref is currently unset (PREF_INVALID). */
+function isMaxBookmarkSuggestionsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(MAX_BOOKMARK_SUGGESTIONS_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw int value of the max-history-suggestions pref, or null when unset. */
+function readRawMaxHistorySuggestionsPref(): number | null {
+  if (
+    Services.prefs.getPrefType(MAX_HISTORY_SUGGESTIONS_PREF) ===
+      Services.prefs.PREF_INVALID
+  ) {
+    return null;
+  }
+  try {
+    return Services.prefs.getIntPref(MAX_HISTORY_SUGGESTIONS_PREF);
+  } catch {
+    return null;
+  }
+}
+
+/** True when the max-history-suggestions pref is currently unset (PREF_INVALID). */
+function isMaxHistorySuggestionsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(MAX_HISTORY_SUGGESTIONS_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw int value of the max-tabs-results pref, or null when unset. */
+function readRawMaxTabsResultsPref(): number | null {
+  if (
+    Services.prefs.getPrefType(MAX_TABS_RESULTS_PREF) ===
+      Services.prefs.PREF_INVALID
+  ) {
+    return null;
+  }
+  try {
+    return Services.prefs.getIntPref(MAX_TABS_RESULTS_PREF);
+  } catch {
+    return null;
+  }
+}
+
+/** True when the max-tabs-results pref is currently unset (PREF_INVALID). */
+function isMaxTabsResultsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(MAX_TABS_RESULTS_PREF) ===
     Services.prefs.PREF_INVALID;
 }
 
@@ -541,6 +608,104 @@ async function testSaveWithoutMaxResultsIsNoOp(): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// maxBookmarkSuggestions / maxHistorySuggestions / maxTabsResults
+// (default 5, clamped to [1, 20] via clampInt — same shape as maxResultsPerCategory)
+// ---------------------------------------------------------------------------
+//
+// The three dynamic-search limit prefs share identical semantics with
+// `maxResultsPerCategory`: each defaults to 5 when unset, is clamped into
+// [1, 20] on both read and save, and is always present on the returned
+// object. We parameterize the tests via `testMaxPref` to avoid triplicating
+// the assertions while keeping each pref's read/clamp/save path exercised
+// end-to-end through the public dataManager surface.
+
+/**
+ * Builds the standard 5-test suite for one of the dynamic-search limit prefs:
+ * default-when-unset, read-valid, clamp-above-max, clamp-below-min, and
+ * save-writes-value. Mirrors the `maxResultsPerCategory` test block above.
+ */
+function testMaxPref(
+  prefName: string,
+  fieldName:
+    | "maxBookmarkSuggestions"
+    | "maxHistorySuggestions"
+    | "maxTabsResults",
+  readRaw: () => number | null,
+  isUnset: () => boolean,
+): TestCase[] {
+  return [
+    {
+      name: `${fieldName}: default 5 when unset`,
+      fn: async () => {
+        Services.prefs.clearUserPref(prefName);
+        assert(isUnset(), "pref should be unset before get");
+        try {
+          const result = await getCommandPaletteSettings();
+          assert(result !== null, "result not null");
+          assertEquals(result![fieldName], 5, `${fieldName} default`);
+          assert(isUnset(), "get should not mutate the pref");
+        } finally {
+          Services.prefs.clearUserPref(prefName);
+        }
+      },
+    },
+    {
+      name: `${fieldName}: reads valid value 10`,
+      fn: async () => {
+        Services.prefs.setIntPref(prefName, 10);
+        try {
+          const result = await getCommandPaletteSettings();
+          assert(result !== null, "result not null");
+          assertEquals(result![fieldName], 10, `${fieldName} reads 10`);
+        } finally {
+          Services.prefs.clearUserPref(prefName);
+        }
+      },
+    },
+    {
+      name: `${fieldName}: clamps above max (100→20)`,
+      fn: async () => {
+        Services.prefs.setIntPref(prefName, 100);
+        try {
+          const result = await getCommandPaletteSettings();
+          assert(result !== null, "result not null");
+          assertEquals(result![fieldName], 20, `${fieldName} clamps 100→20`);
+        } finally {
+          Services.prefs.clearUserPref(prefName);
+        }
+      },
+    },
+    {
+      name: `${fieldName}: clamps below min (0→1)`,
+      fn: async () => {
+        Services.prefs.setIntPref(prefName, 0);
+        try {
+          const result = await getCommandPaletteSettings();
+          assert(result !== null, "result not null");
+          assertEquals(result![fieldName], 1, `${fieldName} clamps 0→1`);
+        } finally {
+          Services.prefs.clearUserPref(prefName);
+        }
+      },
+    },
+    {
+      name: `${fieldName}: save writes the value`,
+      fn: async () => {
+        Services.prefs.clearUserPref(prefName);
+        try {
+          const patch: Partial<CommandPaletteFormData> = {};
+          patch[fieldName] = 7;
+          await saveCommandPaletteSettings(patch);
+          assertEquals(readRaw(), 7, `${fieldName} save writes 7`);
+        } finally {
+          Services.prefs.clearUserPref(prefName);
+        }
+      },
+    },
+  ];
+}
+
 const tests: TestCase[] = [
   { name: "getCommandPaletteSettings returns null when pref is unset", fn: testGetReturnsNullWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
@@ -570,12 +735,35 @@ const tests: TestCase[] = [
   { name: "saveCommandPaletteSettings clamps maxResultsPerCategory 99 down to 20", fn: testSaveMaxResultsClampsAboveMax },
   { name: "saveCommandPaletteSettings clamps maxResultsPerCategory 0 up to 1", fn: testSaveMaxResultsClampsBelowMin },
   { name: "saveCommandPaletteSettings without maxResultsPerCategory leaves the pref untouched", fn: testSaveWithoutMaxResultsIsNoOp },
+  // maxBookmarkSuggestions / maxHistorySuggestions / maxTabsResults
+  // (5 parameterized tests each: default, read-valid, clamp-above, clamp-below, save)
+  ...testMaxPref(
+    MAX_BOOKMARK_SUGGESTIONS_PREF,
+    "maxBookmarkSuggestions",
+    readRawMaxBookmarkSuggestionsPref,
+    isMaxBookmarkSuggestionsPrefUnset,
+  ),
+  ...testMaxPref(
+    MAX_HISTORY_SUGGESTIONS_PREF,
+    "maxHistorySuggestions",
+    readRawMaxHistorySuggestionsPref,
+    isMaxHistorySuggestionsPrefUnset,
+  ),
+  ...testMaxPref(
+    MAX_TABS_RESULTS_PREF,
+    "maxTabsResults",
+    readRawMaxTabsResultsPref,
+    isMaxTabsResultsPrefUnset,
+  ),
 ];
 
 export async function runAllTests(): Promise<void> {
   const originalEnabled = readRawPref();
   const originalCategoryPriority = readRawCategoryPriorityPref();
   const originalMaxResults = readRawMaxResultsPref();
+  const originalMaxBookmarkSuggestions = readRawMaxBookmarkSuggestionsPref();
+  const originalMaxHistorySuggestions = readRawMaxHistorySuggestionsPref();
+  const originalMaxTabsResults = readRawMaxTabsResultsPref();
   try {
     await runTests("dataManager.test.ts (command-palette)", tests);
   } finally {
@@ -597,6 +785,27 @@ export async function runAllTests(): Promise<void> {
       Services.prefs.clearUserPref(MAX_RESULTS_PREF);
     } else {
       Services.prefs.setIntPref(MAX_RESULTS_PREF, originalMaxResults);
+    }
+    if (originalMaxBookmarkSuggestions === null) {
+      Services.prefs.clearUserPref(MAX_BOOKMARK_SUGGESTIONS_PREF);
+    } else {
+      Services.prefs.setIntPref(
+        MAX_BOOKMARK_SUGGESTIONS_PREF,
+        originalMaxBookmarkSuggestions,
+      );
+    }
+    if (originalMaxHistorySuggestions === null) {
+      Services.prefs.clearUserPref(MAX_HISTORY_SUGGESTIONS_PREF);
+    } else {
+      Services.prefs.setIntPref(
+        MAX_HISTORY_SUGGESTIONS_PREF,
+        originalMaxHistorySuggestions,
+      );
+    }
+    if (originalMaxTabsResults === null) {
+      Services.prefs.clearUserPref(MAX_TABS_RESULTS_PREF);
+    } else {
+      Services.prefs.setIntPref(MAX_TABS_RESULTS_PREF, originalMaxTabsResults);
     }
   }
 }

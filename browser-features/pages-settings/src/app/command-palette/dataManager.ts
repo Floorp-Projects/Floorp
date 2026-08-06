@@ -12,6 +12,9 @@ const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
 const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF = "floorp.commandPalette.maxResultsPerCategory";
+const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
+const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
+const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
@@ -22,6 +25,9 @@ const DEFAULT_SHOW_TABS = true;
 const DEFAULT_SHOW_HISTORY = true;
 const DEFAULT_SHOW_BOOKMARKS = true;
 const DEFAULT_MAX_RESULTS_PER_CATEGORY = 5;
+const DEFAULT_MAX_BOOKMARK_SUGGESTIONS = 5;
+const DEFAULT_MAX_HISTORY_SUGGESTIONS = 5;
+const DEFAULT_MAX_TABS_RESULTS = 5;
 
 /**
  * Default category priority for the command palette settings UI.
@@ -61,6 +67,12 @@ const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
 // - browser-features/chrome/common/command-palette/config.ts
 // - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
 const MAX_RESULTS_PER_CATEGORY_BOUNDS = { min: 1, max: 20 } as const;
+// KEEP IN SYNC with:
+// - browser-features/chrome/common/command-palette/config.ts
+// - the Seekbar min/max props in DynamicSearchSettings.tsx
+const MAX_BOOKMARK_SUGGESTIONS_BOUNDS = { min: 1, max: 20 } as const;
+const MAX_HISTORY_SUGGESTIONS_BOUNDS = { min: 1, max: 20 } as const;
+const MAX_TABS_RESULTS_BOUNDS = { min: 1, max: 20 } as const;
 const VALID_HORIZONTAL_ALIGNS = ["center", "left", "right"] as const;
 
 export const COMMAND_PALETTE_APPEARANCE_DEFAULTS = {
@@ -189,6 +201,39 @@ export async function saveCommandPaletteSettings(
         ),
       );
     }
+
+    if (settings.maxBookmarkSuggestions !== undefined) {
+      await rpc.setIntPref(
+        COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+        clampInt(
+          settings.maxBookmarkSuggestions,
+          MAX_BOOKMARK_SUGGESTIONS_BOUNDS,
+          DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
+        ),
+      );
+    }
+
+    if (settings.maxHistorySuggestions !== undefined) {
+      await rpc.setIntPref(
+        COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+        clampInt(
+          settings.maxHistorySuggestions,
+          MAX_HISTORY_SUGGESTIONS_BOUNDS,
+          DEFAULT_MAX_HISTORY_SUGGESTIONS,
+        ),
+      );
+    }
+
+    if (settings.maxTabsResults !== undefined) {
+      await rpc.setIntPref(
+        COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+        clampInt(
+          settings.maxTabsResults,
+          MAX_TABS_RESULTS_BOUNDS,
+          DEFAULT_MAX_TABS_RESULTS,
+        ),
+      );
+    }
   } catch (error) {
     console.error("[command-palette] Failed to save settings:", error);
   }
@@ -215,6 +260,15 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     const maxResultsPerCategoryRaw = await rpc.getIntPref(
       COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
     );
+    const maxBookmarkSuggestionsRaw = await rpc.getIntPref(
+      COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+    );
+    const maxHistorySuggestionsRaw = await rpc.getIntPref(
+      COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+    );
+    const maxTabsResultsRaw = await rpc.getIntPref(
+      COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+    );
 
     return {
       enabled: enabled === null ? true : enabled,
@@ -235,6 +289,21 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
         maxResultsPerCategoryRaw ?? DEFAULT_MAX_RESULTS_PER_CATEGORY,
         MAX_RESULTS_PER_CATEGORY_BOUNDS,
         DEFAULT_MAX_RESULTS_PER_CATEGORY,
+      ),
+      maxBookmarkSuggestions: clampInt(
+        maxBookmarkSuggestionsRaw ?? DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
+        MAX_BOOKMARK_SUGGESTIONS_BOUNDS,
+        DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
+      ),
+      maxHistorySuggestions: clampInt(
+        maxHistorySuggestionsRaw ?? DEFAULT_MAX_HISTORY_SUGGESTIONS,
+        MAX_HISTORY_SUGGESTIONS_BOUNDS,
+        DEFAULT_MAX_HISTORY_SUGGESTIONS,
+      ),
+      maxTabsResults: clampInt(
+        maxTabsResultsRaw ?? DEFAULT_MAX_TABS_RESULTS,
+        MAX_TABS_RESULTS_BOUNDS,
+        DEFAULT_MAX_TABS_RESULTS,
       ),
     };
   } catch (error) {

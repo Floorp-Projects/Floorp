@@ -27,6 +27,9 @@ export const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBo
 export const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 export const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF =
   "floorp.commandPalette.maxResultsPerCategory";
+export const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
+export const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
+export const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -44,12 +47,18 @@ export interface CommandPaletteConfig {
   showBookmarks: boolean;
   categoryPriority: string[];
   maxResultsPerCategory: number;
+  maxBookmarkSuggestions: number;
+  maxHistorySuggestions: number;
+  maxTabsResults: number;
 }
 
 // KEEP IN SYNC with:
 // - browser-features/pages-settings/src/app/command-palette/dataManager.ts
 // - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
 export const DEFAULT_MAX_RESULTS_PER_CATEGORY = 5;
+const DEFAULT_MAX_BOOKMARK_SUGGESTIONS = 5;
+const DEFAULT_MAX_HISTORY_SUGGESTIONS = 5;
+const DEFAULT_MAX_TABS_RESULTS = 5;
 
 export const defaultConfig: CommandPaletteConfig = {
   enabled: true,
@@ -65,6 +74,9 @@ export const defaultConfig: CommandPaletteConfig = {
   showBookmarks: true,
   categoryPriority: [...DEFAULT_CATEGORY_PRIORITY],
   maxResultsPerCategory: DEFAULT_MAX_RESULTS_PER_CATEGORY,
+  maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
+  maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
+  maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
 };
 
 // Bounds for the customizable size/position prefs.
@@ -72,7 +84,22 @@ export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 export const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
 export const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
 export const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
+// KEEP IN SYNC with:
+// - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
 export const MAX_RESULTS_PER_CATEGORY_BOUNDS = { min: 1, max: 20 } as const;
+// KEEP IN SYNC with:
+// - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
+export const MAX_BOOKMARK_SUGGESTIONS_BOUNDS = { min: 1, max: 20 } as const;
+// KEEP IN SYNC with:
+// - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
+export const MAX_HISTORY_SUGGESTIONS_BOUNDS = { min: 1, max: 20 } as const;
+// KEEP IN SYNC with:
+// - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
+export const MAX_TABS_RESULTS_BOUNDS = { min: 1, max: 20 } as const;
 export const HORIZONTAL_ALIGN_VALUES: readonly CommandPaletteHorizontalAlign[] = [
   "center",
   "left",
@@ -789,6 +816,186 @@ function createMaxResultsPerCategory(): [Accessor<number>, Setter<number>] {
   return [maxResultsPerCategory, setMaxResultsPerCategory];
 }
 
+function createMaxBookmarkSuggestions(): [Accessor<number>, Setter<number>] {
+  const [maxBookmarkSuggestions, setMaxBookmarkSuggestions] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+        defaultConfig.maxBookmarkSuggestions,
+      ),
+      MAX_BOOKMARK_SUGGESTIONS_BOUNDS.min,
+      MAX_BOOKMARK_SUGGESTIONS_BOUNDS.max,
+      defaultConfig.maxBookmarkSuggestions,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+        clampInt(
+          maxBookmarkSuggestions(),
+          MAX_BOOKMARK_SUGGESTIONS_BOUNDS.min,
+          MAX_BOOKMARK_SUGGESTIONS_BOUNDS.max,
+          defaultConfig.maxBookmarkSuggestions,
+        ),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist maxBookmarkSuggestions pref",
+        e,
+      );
+    }
+  });
+
+  const maxBookmarkSuggestionsObserver = () => {
+    setMaxBookmarkSuggestions(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+          defaultConfig.maxBookmarkSuggestions,
+        ),
+        MAX_BOOKMARK_SUGGESTIONS_BOUNDS.min,
+        MAX_BOOKMARK_SUGGESTIONS_BOUNDS.max,
+        defaultConfig.maxBookmarkSuggestions,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+    maxBookmarkSuggestionsObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF,
+      maxBookmarkSuggestionsObserver,
+    );
+  });
+
+  return [maxBookmarkSuggestions, setMaxBookmarkSuggestions];
+}
+
+function createMaxHistorySuggestions(): [Accessor<number>, Setter<number>] {
+  const [maxHistorySuggestions, setMaxHistorySuggestions] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+        defaultConfig.maxHistorySuggestions,
+      ),
+      MAX_HISTORY_SUGGESTIONS_BOUNDS.min,
+      MAX_HISTORY_SUGGESTIONS_BOUNDS.max,
+      defaultConfig.maxHistorySuggestions,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+        clampInt(
+          maxHistorySuggestions(),
+          MAX_HISTORY_SUGGESTIONS_BOUNDS.min,
+          MAX_HISTORY_SUGGESTIONS_BOUNDS.max,
+          defaultConfig.maxHistorySuggestions,
+        ),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist maxHistorySuggestions pref",
+        e,
+      );
+    }
+  });
+
+  const maxHistorySuggestionsObserver = () => {
+    setMaxHistorySuggestions(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+          defaultConfig.maxHistorySuggestions,
+        ),
+        MAX_HISTORY_SUGGESTIONS_BOUNDS.min,
+        MAX_HISTORY_SUGGESTIONS_BOUNDS.max,
+        defaultConfig.maxHistorySuggestions,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+    maxHistorySuggestionsObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF,
+      maxHistorySuggestionsObserver,
+    );
+  });
+
+  return [maxHistorySuggestions, setMaxHistorySuggestions];
+}
+
+function createMaxTabsResults(): [Accessor<number>, Setter<number>] {
+  const [maxTabsResults, setMaxTabsResults] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+        defaultConfig.maxTabsResults,
+      ),
+      MAX_TABS_RESULTS_BOUNDS.min,
+      MAX_TABS_RESULTS_BOUNDS.max,
+      defaultConfig.maxTabsResults,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+        clampInt(
+          maxTabsResults(),
+          MAX_TABS_RESULTS_BOUNDS.min,
+          MAX_TABS_RESULTS_BOUNDS.max,
+          defaultConfig.maxTabsResults,
+        ),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist maxTabsResults pref",
+        e,
+      );
+    }
+  });
+
+  const maxTabsResultsObserver = () => {
+    setMaxTabsResults(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+          defaultConfig.maxTabsResults,
+        ),
+        MAX_TABS_RESULTS_BOUNDS.min,
+        MAX_TABS_RESULTS_BOUNDS.max,
+        defaultConfig.maxTabsResults,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+    maxTabsResultsObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_MAX_TABS_RESULTS_PREF,
+      maxTabsResultsObserver,
+    );
+  });
+
+  return [maxTabsResults, setMaxTabsResults];
+}
+
 export const [_width, _setWidth] = createRootHMR(
   createWidth,
   import.meta.hot,
@@ -811,6 +1018,18 @@ export const [_fontSize, _setFontSize] = createRootHMR(
 );
 export const [_maxResultsPerCategory, _setMaxResultsPerCategory] = createRootHMR(
   createMaxResultsPerCategory,
+  import.meta.hot,
+);
+export const [_maxBookmarkSuggestions, _setMaxBookmarkSuggestions] = createRootHMR(
+  createMaxBookmarkSuggestions,
+  import.meta.hot,
+);
+export const [_maxHistorySuggestions, _setMaxHistorySuggestions] = createRootHMR(
+  createMaxHistorySuggestions,
+  import.meta.hot,
+);
+export const [_maxTabsResults, _setMaxTabsResults] = createRootHMR(
+  createMaxTabsResults,
   import.meta.hot,
 );
 export const [_showTabs, _setShowTabs] = createRootHMR(
@@ -842,6 +1061,39 @@ export const setMaxResultsPerCategory = (value: number): void => {
       MAX_RESULTS_PER_CATEGORY_BOUNDS.min,
       MAX_RESULTS_PER_CATEGORY_BOUNDS.max,
       defaultConfig.maxResultsPerCategory,
+    ),
+  );
+};
+export const getMaxBookmarkSuggestions = (): number => _maxBookmarkSuggestions();
+export const setMaxBookmarkSuggestions = (value: number): void => {
+  _setMaxBookmarkSuggestions(
+    clampInt(
+      value,
+      MAX_BOOKMARK_SUGGESTIONS_BOUNDS.min,
+      MAX_BOOKMARK_SUGGESTIONS_BOUNDS.max,
+      defaultConfig.maxBookmarkSuggestions,
+    ),
+  );
+};
+export const getMaxHistorySuggestions = (): number => _maxHistorySuggestions();
+export const setMaxHistorySuggestions = (value: number): void => {
+  _setMaxHistorySuggestions(
+    clampInt(
+      value,
+      MAX_HISTORY_SUGGESTIONS_BOUNDS.min,
+      MAX_HISTORY_SUGGESTIONS_BOUNDS.max,
+      defaultConfig.maxHistorySuggestions,
+    ),
+  );
+};
+export const getMaxTabsResults = (): number => _maxTabsResults();
+export const setMaxTabsResults = (value: number): void => {
+  _setMaxTabsResults(
+    clampInt(
+      value,
+      MAX_TABS_RESULTS_BOUNDS.min,
+      MAX_TABS_RESULTS_BOUNDS.max,
+      defaultConfig.maxTabsResults,
     ),
   );
 };
