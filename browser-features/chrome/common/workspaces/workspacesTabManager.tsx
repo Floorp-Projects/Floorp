@@ -690,9 +690,8 @@ export class WorkspacesTabManager {
     //
     // The marker must be unique per workspace: stale markers accumulate when
     // the user switches tabs within the workspace without switching
-    // workspaces (the marker is only refreshed on workspace changes), and
-    // Priority 2 below restores the *first* matching tab in DOM order —
-    // making the restored selection history-dependent and seemingly random
+    // workspaces (the marker is only refreshed on workspace changes), which
+    // made the restored selection history-dependent and seemingly random
     // (Floorp issue #2616). Remove stale markers before persisting the new
     // one, mirroring the remove-then-set pattern in updateTabsVisibility().
     try {
@@ -733,9 +732,13 @@ export class WorkspacesTabManager {
         // already chose the correct tab for this workspace.
       } else {
         // Priority 2: Use the last-shown tab for this workspace.
-        // Pick the most recently persisted marker (last in DOM order) so
-        // the restored tab matches the one the user last had selected,
-        // even if stale markers were left behind (Floorp issue #2616).
+        // The persist step above guarantees at most one marker per
+        // workspace, so this normally matches the user's last-selected tab.
+        // If duplicate markers from older versions remain, pick the last
+        // one in DOM order as a deterministic fallback rather than the
+        // first (which made the selection history-dependent — Floorp issue
+        // #2616). Note: DOM order reflects tab position, not write order;
+        // it is only a deterministic fallback for legacy duplicates.
         const willChangeWorkspaceLastShowTabs = document?.querySelectorAll(
           `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
         );
