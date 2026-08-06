@@ -714,6 +714,9 @@
             "saveDescription": "ショートカットを保存",
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
+        },
+        "actionLabels": {
+            "floorp-edit-tab-url": "タブの URL を編集"
         }
     }
 }
