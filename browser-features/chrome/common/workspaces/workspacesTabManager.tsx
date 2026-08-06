@@ -687,6 +687,14 @@ export class WorkspacesTabManager {
     // previously selected workspace before switching. This ensures we can
     // restore focus when returning to that workspace instead of creating
     // a new tab each time.
+    //
+    // The marker must be unique per workspace: stale markers accumulate when
+    // the user switches tabs within the workspace without switching
+    // workspaces (the marker is only refreshed on workspace changes), and
+    // Priority 2 below restores the *first* matching tab in DOM order —
+    // making the restored selection history-dependent and seemingly random
+    // (Floorp issue #2616). Remove stale markers before persisting the new
+    // one, mirroring the remove-then-set pattern in updateTabsVisibility().
     try {
       const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
       const currentlySelectedTab = globalThis.gBrowser
@@ -696,6 +704,9 @@ export class WorkspacesTabManager {
         this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
           prevWorkspaceId
       ) {
+        document
+          ?.querySelectorAll(`[${WORKSPACE_LAST_SHOW_ID}="${prevWorkspaceId}"]`)
+          .forEach((tab) => tab.removeAttribute(WORKSPACE_LAST_SHOW_ID));
         currentlySelectedTab.setAttribute(
           WORKSPACE_LAST_SHOW_ID,
           prevWorkspaceId,
@@ -722,9 +733,17 @@ export class WorkspacesTabManager {
         // already chose the correct tab for this workspace.
       } else {
         // Priority 2: Use the last-shown tab for this workspace.
-        const willChangeWorkspaceLastShowTab = document?.querySelector(
+        // Pick the most recently persisted marker (last in DOM order) so
+        // the restored tab matches the one the user last had selected,
+        // even if stale markers were left behind (Floorp issue #2616).
+        const willChangeWorkspaceLastShowTabs = document?.querySelectorAll(
           `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
-        ) as XULElement;
+        );
+        const willChangeWorkspaceLastShowTab = willChangeWorkspaceLastShowTabs
+          ? (willChangeWorkspaceLastShowTabs[
+              willChangeWorkspaceLastShowTabs.length - 1
+            ] as XULElement | undefined)
+          : undefined;
 
         if (willChangeWorkspaceLastShowTab) {
           globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;
