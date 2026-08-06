@@ -21,7 +21,10 @@ interface CategorizedCommands {
   commands: PaletteCommand[];
 }
 
-const HIDDEN_CATEGORIES = new Set(["navigation-suggestion"]);
+// `navigation-suggestion` renders inline (the URL itself is the label), and
+// `shortcut` (@prefix results) each carry their own `@prefix` label — neither
+// needs a category header.
+const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "shortcut"]);
 
 export function CommandList(props: CommandListProps) {
   const grouped = createMemo(() => {
@@ -43,36 +46,46 @@ export function CommandList(props: CommandListProps) {
 
     // Order groups by the user-defined category priority.
     //
-    // - `recent` is a runtime pseudo-category that must always stay at the
-    //   very top regardless of the priority list.
-    // - `navigation-suggestion` is a pseudo-category with no header; its
-    //   position is controller-driven (top of the flat list), so it is
-    //   excluded from the priority sort to preserve that behavior.
-    // - All other categories (including `search`, which has the lowest
-    //   priority by default) are sorted via the user's priority list.
-    const recentGroups = groups.filter((g) => g.category === "recent");
+    // - `shortcut` (@prefix results), `recent`, and `navigation-suggestion` are
+    //   pseudo-categories whose positions are controller-driven. They are pinned
+    //   to the top and excluded from the priority sort (see the controller's
+    //   `doUpdateSearch` push order: shortcut → navigation-suggestion → recent →
+    //   others). `shortcut` is intentionally NOT in `DEFAULT_CATEGORY_PRIORITY`
+    //   (doing so would break the `length === 18` invariant in
+    //   `category-priority.test.ts`), so without pinning it here
+    //   `getCategoryPriorityIndex("shortcut")` returns `MAX_SAFE_INTEGER` and
+    //   shortcut results would sink to the bottom — diverging from the flat
+    //   array where they sit at the top.
+    // - All other categories (including `search`, which has the lowest priority
+    //   by default) are sorted via the user's priority list.
+    const shortcutGroups = groups.filter((g) => g.category === "shortcut");
     const navSuggestionGroups = groups.filter(
       (g) => g.category === "navigation-suggestion",
     );
+    const recentGroups = groups.filter((g) => g.category === "recent");
     const visibleGroups = groups.filter(
       (g) =>
-        g.category !== "recent" &&
-        g.category !== "navigation-suggestion",
+        g.category !== "shortcut" &&
+        g.category !== "navigation-suggestion" &&
+        g.category !== "recent",
     );
 
     const priorityList = getCategoryPriority();
     const sortedVisible = sortCategoriesByPriority(visibleGroups, priorityList);
 
-    // NOTE: `recent` (only emitted for empty queries by buildInitialCommandList)
-    // and `navigation-suggestion` (only emitted for URL-like queries) are mutually
-    // exclusive in the controller's flat array, so the order of these two groups
-    // relative to each other does not affect the getGlobalIndex invariant. If a
-    // future change ever causes both to coexist, the flat-array order in
-    // `controller.ts:applyPriorityTiebreak` (recent first) and the display order
-    // here must be reconciled to keep arrow-key navigation correct.
+    // NOTE: the order here mirrors `controller.ts:doUpdateSearch`'s flat-array
+    // push order exactly (shortcut → navigation-suggestion → recent → others).
+    // `recent` (only emitted for empty queries) and `navigation-suggestion`
+    // (only emitted for URL-like queries) are mutually exclusive in practice,
+    // but `shortcut` can coexist with both — e.g. `@g` yields shortcut +
+    // fuzzy-search results, and `@foo.com` yields shortcut + navigation-
+    // suggestion — so the full controller order is reproduced here to keep the
+    // `getGlobalIndex` (display space) ↔ `selectedIndex` (flat-array space)
+    // invariant sound and prevent highlight/execute drift.
     return [
-      ...recentGroups,
+      ...shortcutGroups,
       ...navSuggestionGroups,
+      ...recentGroups,
       ...sortedVisible,
     ];
   });

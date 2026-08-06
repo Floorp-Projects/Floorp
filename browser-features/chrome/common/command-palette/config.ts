@@ -12,6 +12,10 @@ import {
   DEFAULT_CATEGORY_PRIORITY,
   parseCategoryPriority,
 } from "./category-priority.ts";
+import type {
+  CommandPaletteShortcut,
+  SelectableCommand,
+} from "./types.ts";
 
 export const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
 export const COMMAND_PALETTE_RECENT_PREF = "floorp.commandPalette.recentCommands";
@@ -30,6 +34,9 @@ export const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF =
 export const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
 export const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
 export const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
+export const COMMAND_PALETTE_SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
+export const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
+  "floorp.commandPalette.selectableCommands";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -50,6 +57,7 @@ export interface CommandPaletteConfig {
   maxBookmarkSuggestions: number;
   maxHistorySuggestions: number;
   maxTabsResults: number;
+  shortcuts: CommandPaletteShortcut[];
 }
 
 // KEEP IN SYNC with:
@@ -77,6 +85,7 @@ export const defaultConfig: CommandPaletteConfig = {
   maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
   maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
   maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
+  shortcuts: [] as CommandPaletteShortcut[],
 };
 
 // Bounds for the customizable size/position prefs.
@@ -493,6 +502,183 @@ export function incrementFrequency(id: string) {
   current[id] = (current[id] ?? 0) + 1;
   _setFrequency(current);
 }
+
+// --- @prefix shortcuts & selectable command cache ---
+//
+// `shortcuts` is user-editable (written by the settings page): an array of
+// `{ prefix, commandId }` aliases. `selectableCommands` is a chrome-side cache
+// of the command catalogue (id/label/category) that the settings page reads to
+// populate its command picker. Both are JSON strings persisted in prefs.
+
+export function parseShortcuts(
+  jsonStr: string,
+  defaultVal: CommandPaletteShortcut[],
+): CommandPaletteShortcut[] {
+  try {
+    const parsed: unknown = JSON.parse(jsonStr);
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        (el): el is CommandPaletteShortcut =>
+          typeof el === "object" &&
+          el !== null &&
+          typeof (el as { prefix?: unknown }).prefix === "string" &&
+          typeof (el as { commandId?: unknown }).commandId === "string",
+      )
+    ) {
+      return parsed;
+    }
+  } catch {
+    // ignore — fall through to default
+  }
+  return defaultVal;
+}
+
+export function parseSelectableCommands(
+  jsonStr: string,
+): SelectableCommand[] {
+  try {
+    const parsed: unknown = JSON.parse(jsonStr);
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        (el): el is SelectableCommand =>
+          typeof el === "object" &&
+          el !== null &&
+          typeof (el as { id?: unknown }).id === "string" &&
+          typeof (el as { label?: unknown }).label === "string" &&
+          typeof (el as { category?: unknown }).category === "string",
+      )
+    ) {
+      return parsed;
+    }
+  } catch {
+    // ignore — fall through to default
+  }
+  return [];
+}
+
+function createShortcuts(): [
+  Accessor<CommandPaletteShortcut[]>,
+  Setter<CommandPaletteShortcut[]>,
+] {
+  const [shortcuts, setShortcuts] = createSignal(
+    parseShortcuts(
+      Services.prefs.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF, "[]"),
+      [],
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setStringPref(
+        COMMAND_PALETTE_SHORTCUTS_PREF,
+        JSON.stringify(shortcuts()),
+      );
+    } catch (e) {
+      console.error("[command-palette] Failed to persist shortcuts pref", e);
+    }
+  });
+
+  const shortcutsObserver = () => {
+    setShortcuts(
+      parseShortcuts(
+        Services.prefs.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF, "[]"),
+        [],
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(COMMAND_PALETTE_SHORTCUTS_PREF, shortcutsObserver);
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_SHORTCUTS_PREF,
+      shortcutsObserver,
+    );
+  });
+
+  return [shortcuts, setShortcuts];
+}
+
+function createSelectableCommands(): [
+  Accessor<SelectableCommand[]>,
+  Setter<SelectableCommand[]>,
+] {
+  const [selectable, setSelectable] = createSignal(
+    parseSelectableCommands(
+      Services.prefs.getStringPref(
+        COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+        "[]",
+      ),
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setStringPref(
+        COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+        JSON.stringify(selectable()),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist selectableCommands pref",
+        e,
+      );
+    }
+  });
+
+  const selectableObserver = () => {
+    setSelectable(
+      parseSelectableCommands(
+        Services.prefs.getStringPref(
+          COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+          "[]",
+        ),
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+    selectableObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+      selectableObserver,
+    );
+  });
+
+  return [selectable, setSelectable];
+}
+
+export const [_shortcuts, _setShortcuts] = createRootHMR(
+  createShortcuts,
+  import.meta.hot,
+);
+export const [_selectableCommands, _setSelectableCommands] = createRootHMR(
+  createSelectableCommands,
+  import.meta.hot,
+);
+
+/**
+ * Returns the current user-defined @prefix shortcuts.
+ *
+ * NOTE: Returns the signal's INTERNAL array reference (the `readonly` annotation
+ * is compile-time only). Callers MUST NOT mutate the returned array — doing so
+ * would change internal state without triggering reactivity. Mirrors the
+ * `getRecentCommands` / `getCategoryPriority` pattern.
+ */
+export const getShortcuts = (): readonly CommandPaletteShortcut[] =>
+  _shortcuts();
+export const setShortcuts = (value: CommandPaletteShortcut[]): void => {
+  _setShortcuts([...value]);
+};
+export const getSelectableCommands = (): readonly SelectableCommand[] =>
+  _selectableCommands();
+export const setSelectableCommands = (value: SelectableCommand[]): void => {
+  _setSelectableCommands([...value]);
+};
 
 function createWidth(): [Accessor<number>, Setter<number>] {
   const [width, setWidth] = createSignal(

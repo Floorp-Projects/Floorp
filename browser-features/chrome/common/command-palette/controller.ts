@@ -17,9 +17,11 @@ import {
   getMaxBookmarkSuggestions,
   getMaxHistorySuggestions,
   getMaxTabsResults,
+  getShortcuts,
 } from "./config.ts";
 import {
   getPaletteCommands,
+  getCommand,
   searchCommands,
   searchHistoryCommands,
   searchBookmarkCommands,
@@ -36,6 +38,7 @@ import type {
   PaletteCommand,
   CommandStepChoice,
   StepChoicesResult,
+  CommandPaletteShortcut,
 } from "./types.ts";
 
 function looksLikeUrl(query: string): boolean {
@@ -400,8 +403,13 @@ export class CommandPaletteController {
       return;
     }
 
-    addRecentCommand(cmd.id);
-    incrementFrequency(cmd.id);
+    // Shortcut pseudo-commands manage their own recent/frequency using the
+    // underlying command id (not the "__shortcut:..." pseudo-id), so that
+    // shortcut usage contributes to the real command's recency/frequency.
+    if (cmd.category !== "shortcut") {
+      addRecentCommand(cmd.id);
+      incrementFrequency(cmd.id);
+    }
     this.hidePalette();
     try {
       cmd.fn(this.targetWindow);
@@ -775,7 +783,7 @@ export class CommandPaletteController {
     const filteredNew = newResults.filter((c) => !existingIds.has(c.id));
     if (filteredNew.length === 0) return;
 
-    const PSEUDO_TOP = new Set(["recent", "navigation-suggestion"]);
+    const PSEUDO_TOP = new Set(["recent", "navigation-suggestion", "shortcut"]);
 
     const topItems: PaletteCommand[] = [];
     const middleItems: PaletteCommand[] = [];
@@ -810,6 +818,100 @@ export class CommandPaletteController {
     return m;
   }
 
+  /**
+   * Builds the @prefix shortcut result list for a given query (the part after
+   * the leading "@"). Shortcuts are ranked: exact prefix match first, then
+   * prefix (starts-with) matches, then substring matches. An empty `atPrefix`
+   * (i.e. the user typed "@" alone) returns every shortcut in declaration order.
+   *
+   * Each shortcut is rendered as a pseudo-`PaletteCommand` whose `fn` resolves
+   * and invokes the aliased command. Recent/frequency are recorded under the
+   * REAL command id (see `executeCommand`'s `shortcut` guard) so shortcut usage
+   * feeds the underlying command's recency.
+   */
+  private buildShortcutCommands(atPrefix: string): PaletteCommand[] {
+    const shortcuts = getShortcuts();
+    if (shortcuts.length === 0) return [];
+
+    const exact: CommandPaletteShortcut[] = [];
+    const prefixMatch: CommandPaletteShortcut[] = [];
+    const substringMatch: CommandPaletteShortcut[] = [];
+    // Dedup by prefix so the same `@prefix` never appears twice (first declared
+    // wins). The settings UI enforces prefix uniqueness, but the pref is
+    // user-editable, so the controller defensively dedups by prefix to avoid
+    // rendering duplicate `@prefix` rows when a user manually mixes same-prefix /
+    // different-commandId entries.
+    const seen = new Set<string>();
+    const lowerQuery = atPrefix;
+
+    for (const s of shortcuts) {
+      if (seen.has(s.prefix)) continue;
+      seen.add(s.prefix);
+
+      if (lowerQuery === "") {
+        // "@" alone — list everything, preserving declaration order.
+        exact.push(s);
+      } else if (s.prefix === lowerQuery) {
+        exact.push(s);
+      } else if (s.prefix.startsWith(lowerQuery)) {
+        prefixMatch.push(s);
+      } else if (s.prefix.includes(lowerQuery)) {
+        substringMatch.push(s);
+      }
+    }
+
+    const ranked = [...exact, ...prefixMatch, ...substringMatch];
+
+    // Resolve the aliased command once per shortcut and drop any whose target no
+    // longer exists (deleted/renamed command) — emitting a dead pseudo-command
+    // that only warns at run time is worse than omitting it. `aliased` is reused
+    // for the label so `getCommand` is not called twice per entry. The `fn`
+    // re-resolves against the actual target `win` at execution time, since the
+    // command set may differ from the window used to build the list.
+    const resolved = ranked
+      .map((s) => ({ s, aliased: getCommand(s.commandId, this.targetWindow) }))
+      .filter(
+        (r): r is { s: CommandPaletteShortcut; aliased: PaletteCommand } =>
+          r.aliased !== undefined,
+      );
+
+    return resolved.map(({ s, aliased }): PaletteCommand => {
+      return {
+        id: `__shortcut:${s.prefix}:${s.commandId}`,
+        label: i18next.t("commandPalette.shortcutLabel", {
+          defaultValue: `@${s.prefix}`,
+          prefix: s.prefix,
+        }),
+        description: aliased.label,
+        category: "shortcut",
+        keywords: [s.prefix, `@${s.prefix}`],
+        fn: (win) => {
+          const cmd = getCommand(s.commandId, win);
+          if (cmd) {
+            // Record usage under the REAL command id so the aliased command's
+            // recency/frequency grows with shortcut invocations.
+            addRecentCommand(s.commandId);
+            incrementFrequency(s.commandId);
+            try {
+              cmd.fn(win);
+            } catch (e) {
+              console.error(
+                "[command-palette] Shortcut action failed:",
+                s.commandId,
+                e,
+              );
+            }
+          } else {
+            console.warn(
+              "[command-palette] Shortcut target not found:",
+              s.commandId,
+            );
+          }
+        },
+      };
+    });
+  }
+
   private doUpdateSearch(query: string): void {
     // In input mode, don't search — just update query state
     if (this.state.mode() === "input") {
@@ -822,6 +924,21 @@ export class CommandPaletteController {
 
     const trimmed = query.trim();
     const results: PaletteCommand[] = [];
+
+    // @prefix shortcut matching — pinned to the very top, above everything else.
+    // When query starts with "@", show matching shortcuts (exact prefix match
+    // first, then prefix matches). Selecting one executes the aliased command.
+    // Shortcut results bypass priority sorting/truncation entirely (they are a
+    // pseudo-category like `recent`/`navigation-suggestion`; see PSEUDO_TOP in
+    // `appendSuggestionResults`).
+    if (trimmed.startsWith("@")) {
+      const atPrefix = trimmed.slice(1); // strip "@"
+      const shortcutResults = this.buildShortcutCommands(atPrefix);
+      if (shortcutResults.length > 0) {
+        // Pin shortcut results to top; subsequent pushes append below them.
+        results.push(...shortcutResults);
+      }
+    }
 
     // URL navigation suggestion
     if (trimmed && looksLikeUrl(trimmed)) {
@@ -974,7 +1091,11 @@ export class CommandPaletteController {
       this.bookmarkSearchTimer = null;
     }
 
-    if (trimmed && !shareModeEnabled()) {
+    // @prefix shortcut mode is a synchronous, self-contained result set pinned
+    // to the top; bookmark/history async suggestions would only interleave with
+    // (and potentially displace) shortcut results, so skip them entirely for
+    // `@`-prefixed queries.
+    if (trimmed && !trimmed.startsWith("@") && !shareModeEnabled()) {
       if (getShowBookmarks()) {
         this.bookmarkSearchTimer = setTimeout(() => {
           this.performBookmarkSearch(trimmed);

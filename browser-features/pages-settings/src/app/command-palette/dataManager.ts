@@ -16,6 +16,17 @@ const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.max
 const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
 const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
 
+// KEEP IN SYNC with the chrome-side command-palette config:
+// - browser-features/chrome/common/command-palette/config.ts
+// The pref names, JSON shapes, and default values below are DUPLICATED on the
+// chrome side. The settings app and chrome feature are separate packages and
+// cannot share a module, so if you edit one side, edit the other.
+//   shortcuts          -> user-editable {prefix, commandId} pairs (read/write)
+//   selectableCommands -> chrome-cached command catalog (read-only here)
+const COMMAND_PALETTE_SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
+const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
+  "floorp.commandPalette.selectableCommands";
+
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
 const DEFAULT_OFFSET_TOP = 20;
@@ -309,5 +320,151 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
   } catch (error) {
     console.error("[command-palette] Failed to load settings:", error);
     return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// @prefix shortcuts (floorp.commandPalette.shortcuts)
+// ---------------------------------------------------------------------------
+//
+// A user-editable mapping from an `@prefix` (typed without the leading `@`)
+// to an existing command id. The settings UI writes this pref; the live
+// command palette reads it to resolve `@prefix` queries instantly.
+// Pref shape: JSON string of `[{"prefix":"gh","commandId":"floorp-open-hub"}]`.
+// Default: `"[]"` (empty array) when the pref is unset.
+
+/** A single user-defined @prefix → command mapping. */
+export interface CommandPaletteShortcut {
+  prefix: string;
+  commandId: string;
+}
+
+/**
+ * Command catalog entry written by the chrome side and consumed read-only by
+ * the settings UI to populate the command picker. Pref shape:
+ * JSON string of `[{"id":"...","label":"...","category":"..."}]`.
+ */
+export interface SelectableCommand {
+  id: string;
+  label: string;
+  category: string;
+}
+
+/** Type guard for a single shortcut object parsed from pref JSON. */
+function isCommandPaletteShortcut(
+  value: unknown,
+): value is CommandPaletteShortcut {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.prefix === "string" && typeof v.commandId === "string";
+}
+
+/** Type guard for a single selectable-command object parsed from pref JSON. */
+function isSelectableCommand(value: unknown): value is SelectableCommand {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.id === "string" && typeof v.label === "string" &&
+    typeof v.category === "string";
+}
+
+/**
+ * Parses a raw shortcuts pref string into a typed array.
+ *
+ * Falls back to an empty array on any malformed input (non-string, invalid
+ * JSON, non-array, or any element failing the shape guard). A corrupted pref
+ * therefore degrades gracefully — the UI simply shows no shortcuts rather
+ * than throwing.
+ */
+export function parseShortcuts(
+  raw: string | null,
+): CommandPaletteShortcut[] {
+  if (typeof raw !== "string" || raw.length === 0) {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed) || !parsed.every(isCommandPaletteShortcut)) {
+    return [];
+  }
+  return parsed;
+}
+
+/**
+ * Parses a raw selectableCommands pref string into a typed array.
+ *
+ * Falls back to an empty array on any malformed input — including the common
+ * case where the chrome side has not yet populated the pref (e.g. before the
+ * first browser restart). The UI must handle the empty case gracefully.
+ */
+export function parseSelectableCommands(
+  raw: string | null,
+): SelectableCommand[] {
+  if (typeof raw !== "string" || raw.length === 0) {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed) || !parsed.every(isSelectableCommand)) {
+    return [];
+  }
+  return parsed;
+}
+
+/**
+ * Loads the user's @prefix shortcuts from the pref.
+ * Always resolves (never rejects); returns an empty array on any failure.
+ */
+export async function loadShortcuts(): Promise<CommandPaletteShortcut[]> {
+  try {
+    const raw = await rpc.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF);
+    return parseShortcuts(raw);
+  } catch (error) {
+    console.error("[command-palette] Failed to load shortcuts:", error);
+    return [];
+  }
+}
+
+/**
+ * Persists the given shortcuts array to the pref as a JSON string.
+ * Logs (never throws) on failure so the UI can keep functioning.
+ */
+export async function saveShortcuts(
+  shortcuts: CommandPaletteShortcut[],
+): Promise<void> {
+  try {
+    await rpc.setStringPref(
+      COMMAND_PALETTE_SHORTCUTS_PREF,
+      JSON.stringify(shortcuts),
+    );
+  } catch (error) {
+    console.error("[command-palette] Failed to save shortcuts:", error);
+  }
+}
+
+/**
+ * Loads the chrome-cached selectable command catalog from the pref (read-only).
+ * Returns an empty array when the pref is unset (e.g. before first launch) or
+ * malformed; the UI should prompt a restart in that case.
+ */
+export async function loadSelectableCommands(): Promise<SelectableCommand[]> {
+  try {
+    const raw = await rpc.getStringPref(
+      COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF,
+    );
+    return parseSelectableCommands(raw);
+  } catch (error) {
+    console.error(
+      "[command-palette] Failed to load selectable commands:",
+      error,
+    );
+    return [];
   }
 }

@@ -124,3 +124,16 @@ export interface PaletteCommand {
   /** If defined, the palette will prompt the user for each step before executing fn. */
   steps?: CommandStep[];
 }
+
+/** User-defined @prefix shortcut that aliases an existing palette command. */
+export interface CommandPaletteShortcut {
+  prefix: string;
+  commandId: string;
+}
+
+/** Command metadata cached for the settings page's command picker. */
+export interface SelectableCommand {
+  id: string;
+  label: string;
+  category: string;
+}

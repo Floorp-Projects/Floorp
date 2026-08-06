@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { isEnabled } from "./config.ts";
+import { isEnabled, setSelectableCommands } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
+import { getPaletteCommands, isTabCommand } from "./command-registry.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
@@ -12,6 +13,7 @@ export class CommandPaletteService {
   constructor() {
     this.registerAction();
     this.initialize();
+    this.cacheSelectableCommands();
 
     createEffect(() => {
       const enabled = isEnabled();
@@ -38,6 +40,35 @@ export class CommandPaletteService {
   private initialize(): void {
     if (isEnabled()) {
       this.attachToAllWindows();
+    }
+  }
+
+  /**
+   * Cache the win-independent command catalogue (gesture + step commands;
+   * tab commands are excluded because they depend on live window state and
+   * are unsuitable for @prefix shortcut binding) into the
+   * `floorp.commandPalette.selectableCommands` pref. The settings page reads
+   * this (read-only) to populate its shortcut command picker.
+   *
+   * Idempotent — safe to call on every init / HMR reload. Labels reflect the
+   * current i18n locale at cache time; a browser restart refreshes them.
+   */
+  private cacheSelectableCommands(): void {
+    try {
+      const enumerator = Services.wm.getEnumerator("navigator:browser");
+      const win = enumerator.hasMoreElements()
+        ? (enumerator.getNext() as Window)
+        : undefined;
+      const allCommands = getPaletteCommands(win);
+      const selectable = allCommands
+        .filter((c) => !isTabCommand(c.id))
+        .map((c) => ({ id: c.id, label: c.label, category: c.category }));
+      setSelectableCommands(selectable);
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to cache selectable commands",
+        e,
+      );
     }
   }
 

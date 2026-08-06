@@ -793,6 +793,23 @@
         "priorityModalTitle": "Category Priority",
         "priorityModalDescription": "Drag and drop to reorder. Categories higher in the list appear first in the command palette.",
         "priorityModalReset": "Reset to Default",
-        "priorityModalClose": "Close"
+        "priorityModalClose": "Close",
+        "shortcuts": {
+            "title": "Shortcuts",
+            "description": "Type @prefix in the command palette to instantly run a command.",
+            "prefix": "Prefix",
+            "prefixPlaceholder": "e.g. gh",
+            "command": "Command",
+            "commandPlaceholder": "Select a command",
+            "uncategorized": "Other",
+            "add": "Add",
+            "remove": "Remove",
+            "errorEmpty": "Enter a prefix.",
+            "errorAt": "\"@\" cannot be used in a prefix.",
+            "errorDuplicate": "This prefix is already used.",
+            "errorCommandRequired": "Select a command.",
+            "noCommands": "No commands available. Restart the browser to load commands.",
+            "empty": "No shortcuts configured."
+        }
     }
 }

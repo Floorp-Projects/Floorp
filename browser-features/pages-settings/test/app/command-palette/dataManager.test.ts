@@ -11,9 +11,20 @@ import {
 import {
   DEFAULT_CATEGORY_PRIORITY,
   getCommandPaletteSettings,
+  loadSelectableCommands,
+  loadShortcuts,
+  parseSelectableCommands,
+  parseShortcuts,
   saveCommandPaletteSettings,
+  saveShortcuts,
 } from "../../../src/app/command-palette/dataManager.ts";
-import type { CommandPaletteFormData } from "../../../src/types/pref.ts";
+import type {
+  CommandPaletteFormData,
+} from "../../../src/types/pref.ts";
+import type {
+  CommandPaletteShortcut,
+  SelectableCommand,
+} from "../../../src/app/command-palette/dataManager.ts";
 
 /**
  * Unit tests for command-palette dataManager.
@@ -35,6 +46,8 @@ const MAX_RESULTS_PREF = "floorp.commandPalette.maxResultsPerCategory";
 const MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
 const MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
 const MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
+const SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
+const SELECTABLE_COMMANDS_PREF = "floorp.commandPalette.selectableCommands";
 
 // `Services` is a Firefox global available in the browser test environment.
 // deno-lint-ignore no-explicit-any
@@ -150,6 +163,39 @@ function readRawMaxTabsResultsPref(): number | null {
 /** True when the max-tabs-results pref is currently unset (PREF_INVALID). */
 function isMaxTabsResultsPrefUnset(): boolean {
   return Services.prefs.getPrefType(MAX_TABS_RESULTS_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw string value of the shortcuts pref, or null when unset. */
+function readRawShortcutsPref(): string | null {
+  if (
+    Services.prefs.getPrefType(SHORTCUTS_PREF) !== Services.prefs.PREF_STRING
+  ) {
+    return null;
+  }
+  return Services.prefs.getStringPref(SHORTCUTS_PREF);
+}
+
+/** True when the shortcuts pref is currently unset (PREF_INVALID). */
+function isShortcutsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(SHORTCUTS_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw string value of the selectableCommands pref, or null when unset. */
+function readRawSelectableCommandsPref(): string | null {
+  if (
+    Services.prefs.getPrefType(SELECTABLE_COMMANDS_PREF) !==
+      Services.prefs.PREF_STRING
+  ) {
+    return null;
+  }
+  return Services.prefs.getStringPref(SELECTABLE_COMMANDS_PREF);
+}
+
+/** True when the selectableCommands pref is currently unset (PREF_INVALID). */
+function isSelectableCommandsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(SELECTABLE_COMMANDS_PREF) ===
     Services.prefs.PREF_INVALID;
 }
 
@@ -706,6 +752,186 @@ function testMaxPref(
   ];
 }
 
+// ---------------------------------------------------------------------------
+// parseShortcuts — fallback to [] on malformed input
+// ---------------------------------------------------------------------------
+
+/** Valid JSON array of well-formed shortcut objects passes through. */
+function testParseShortcutsValid(): void {
+  const input = JSON.stringify([
+    { prefix: "gh", commandId: "floorp-open-hub" },
+    { prefix: "fb", commandId: "floorp-open-feedback" },
+  ]);
+  const result = parseShortcuts(input);
+  assertEquals(result.length, 2, "valid array should return 2 entries");
+  assertEquals(result[0].prefix, "gh", "first prefix");
+  assertEquals(result[0].commandId, "floorp-open-hub", "first commandId");
+  assertEquals(result[1].prefix, "fb", "second prefix");
+  assertEquals(result[1].commandId, "floorp-open-feedback", "second commandId");
+}
+
+/** null input yields empty array. */
+function testParseShortcutsNull(): void {
+  const result = parseShortcuts(null);
+  assertEquals(result.length, 0, "null should return []");
+}
+
+/** Empty string yields empty array. */
+function testParseShortcutsEmpty(): void {
+  const result = parseShortcuts("");
+  assertEquals(result.length, 0, "empty string should return []");
+}
+
+/** Invalid JSON yields empty array. */
+function testParseShortcutsInvalidJson(): void {
+  const result = parseShortcuts("not-json{{{");
+  assertEquals(result.length, 0, "invalid JSON should return []");
+}
+
+/** Valid JSON non-array yields empty array. */
+function testParseShortcutsNonArray(): void {
+  const result = parseShortcuts('{"a":1}');
+  assertEquals(result.length, 0, "JSON object should return []");
+}
+
+/** Array with a non-object element yields empty array. */
+function testParseShortcutsNonObjectElement(): void {
+  const result = parseShortcuts('["just-a-string"]');
+  assertEquals(result.length, 0, "non-object element should return []");
+}
+
+/** Array with numeric prefix yields empty array. */
+function testParseShortcutsNumericPrefix(): void {
+  const result = parseShortcuts('[{"prefix":123,"commandId":"x"}]');
+  assertEquals(result.length, 0, "numeric prefix should return []");
+}
+
+/** Array with missing commandId yields empty array. */
+function testParseShortcutsMissingCommandId(): void {
+  const result = parseShortcuts('[{"prefix":"gh"}]');
+  assertEquals(result.length, 0, "missing commandId should return []");
+}
+
+// ---------------------------------------------------------------------------
+// parseSelectableCommands — fallback to [] on malformed input
+// ---------------------------------------------------------------------------
+
+/** Valid JSON array of well-formed selectable-command objects passes through. */
+function testParseSelectableCommandsValid(): void {
+  const input = JSON.stringify([
+    { id: "cmd-1", label: "Open Hub", category: "navigation" },
+    { id: "cmd-2", label: "Close Tab", category: "tabs" },
+  ]);
+  const result = parseSelectableCommands(input);
+  assertEquals(result.length, 2, "valid array should return 2 entries");
+  assertEquals(result[0].id, "cmd-1", "first id");
+  assertEquals(result[0].label, "Open Hub", "first label");
+  assertEquals(result[0].category, "navigation", "first category");
+  assertEquals(result[1].id, "cmd-2", "second id");
+}
+
+/** null input yields empty array. */
+function testParseSelectableCommandsNull(): void {
+  assertEquals(parseSelectableCommands(null).length, 0, "null → []");
+}
+
+/** Empty string yields empty array. */
+function testParseSelectableCommandsEmpty(): void {
+  assertEquals(parseSelectableCommands("").length, 0, "empty → []");
+}
+
+/** Invalid JSON yields empty array. */
+function testParseSelectableCommandsInvalidJson(): void {
+  assertEquals(parseSelectableCommands("bad").length, 0, "bad JSON → []");
+}
+
+/** Valid JSON non-array yields empty array. */
+function testParseSelectableCommandsNonArray(): void {
+  assertEquals(parseSelectableCommands("{}").length, 0, "object → []");
+}
+
+/** Array with missing category yields empty array. */
+function testParseSelectableCommandsMissingCategory(): void {
+  assertEquals(
+    parseSelectableCommands('[{"id":"x","label":"y"}]').length,
+    0,
+    "missing category → []",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// loadShortcuts / saveShortcuts round-trip
+// ---------------------------------------------------------------------------
+
+/** loadShortcuts returns [] when pref is unset. */
+async function testLoadShortcutsEmpty(): Promise<void> {
+  Services.prefs.clearUserPref(SHORTCUTS_PREF);
+  assert(isShortcutsPrefUnset(), "pref should be unset");
+  try {
+    const result = await loadShortcuts();
+    assertEquals(result.length, 0, "unset pref should yield []");
+  } finally {
+    Services.prefs.clearUserPref(SHORTCUTS_PREF);
+  }
+}
+
+/** saveShortcuts → loadShortcuts round-trip. */
+async function testSaveAndLoadShortcutsRoundTrip(): Promise<void> {
+  const shortcuts: CommandPaletteShortcut[] = [
+    { prefix: "gh", commandId: "floorp-open-hub" },
+  ];
+  try {
+    await saveShortcuts(shortcuts);
+    assertEquals(
+      readRawShortcutsPref(),
+      JSON.stringify(shortcuts),
+      "pref should contain JSON string",
+    );
+    const loaded = await loadShortcuts();
+    assertEquals(loaded.length, 1, "loaded should have 1 entry");
+    assertEquals(loaded[0].prefix, "gh", "loaded prefix");
+    assertEquals(loaded[0].commandId, "floorp-open-hub", "loaded commandId");
+  } finally {
+    Services.prefs.clearUserPref(SHORTCUTS_PREF);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// loadSelectableCommands
+// ---------------------------------------------------------------------------
+
+/** loadSelectableCommands returns [] when pref is unset. */
+async function testLoadSelectableCommandsEmpty(): Promise<void> {
+  Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
+  assert(isSelectableCommandsPrefUnset(), "pref should be unset");
+  try {
+    const result = await loadSelectableCommands();
+    assertEquals(result.length, 0, "unset pref should yield []");
+  } finally {
+    Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
+  }
+}
+
+/** loadSelectableCommands parses a valid pref. */
+async function testLoadSelectableCommandsParsesValid(): Promise<void> {
+  const commands: SelectableCommand[] = [
+    { id: "cmd-1", label: "Open Hub", category: "navigation" },
+  ];
+  Services.prefs.setStringPref(
+    SELECTABLE_COMMANDS_PREF,
+    JSON.stringify(commands),
+  );
+  try {
+    const result = await loadSelectableCommands();
+    assertEquals(result.length, 1, "should have 1 entry");
+    assertEquals(result[0].id, "cmd-1", "id");
+    assertEquals(result[0].label, "Open Hub", "label");
+    assertEquals(result[0].category, "navigation", "category");
+  } finally {
+    Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
+  }
+}
+
 const tests: TestCase[] = [
   { name: "getCommandPaletteSettings returns null when pref is unset", fn: testGetReturnsNullWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
@@ -755,6 +981,28 @@ const tests: TestCase[] = [
     readRawMaxTabsResultsPref,
     isMaxTabsResultsPrefUnset,
   ),
+  // parseShortcuts
+  { name: "parseShortcuts: valid array passes through", fn: testParseShortcutsValid },
+  { name: "parseShortcuts: null → []", fn: testParseShortcutsNull },
+  { name: "parseShortcuts: empty string → []", fn: testParseShortcutsEmpty },
+  { name: "parseShortcuts: invalid JSON → []", fn: testParseShortcutsInvalidJson },
+  { name: "parseShortcuts: JSON object → []", fn: testParseShortcutsNonArray },
+  { name: "parseShortcuts: non-object element → []", fn: testParseShortcutsNonObjectElement },
+  { name: "parseShortcuts: numeric prefix → []", fn: testParseShortcutsNumericPrefix },
+  { name: "parseShortcuts: missing commandId → []", fn: testParseShortcutsMissingCommandId },
+  // parseSelectableCommands
+  { name: "parseSelectableCommands: valid array passes through", fn: testParseSelectableCommandsValid },
+  { name: "parseSelectableCommands: null → []", fn: testParseSelectableCommandsNull },
+  { name: "parseSelectableCommands: empty string → []", fn: testParseSelectableCommandsEmpty },
+  { name: "parseSelectableCommands: invalid JSON → []", fn: testParseSelectableCommandsInvalidJson },
+  { name: "parseSelectableCommands: JSON object → []", fn: testParseSelectableCommandsNonArray },
+  { name: "parseSelectableCommands: missing category → []", fn: testParseSelectableCommandsMissingCategory },
+  // loadShortcuts / saveShortcuts
+  { name: "loadShortcuts returns [] when pref unset", fn: testLoadShortcutsEmpty },
+  { name: "saveShortcuts → loadShortcuts round-trip", fn: testSaveAndLoadShortcutsRoundTrip },
+  // loadSelectableCommands
+  { name: "loadSelectableCommands returns [] when pref unset", fn: testLoadSelectableCommandsEmpty },
+  { name: "loadSelectableCommands parses a valid pref", fn: testLoadSelectableCommandsParsesValid },
 ];
 
 export async function runAllTests(): Promise<void> {
@@ -764,6 +1012,8 @@ export async function runAllTests(): Promise<void> {
   const originalMaxBookmarkSuggestions = readRawMaxBookmarkSuggestionsPref();
   const originalMaxHistorySuggestions = readRawMaxHistorySuggestionsPref();
   const originalMaxTabsResults = readRawMaxTabsResultsPref();
+  const originalShortcuts = readRawShortcutsPref();
+  const originalSelectableCommands = readRawSelectableCommandsPref();
   try {
     await runTests("dataManager.test.ts (command-palette)", tests);
   } finally {
@@ -806,6 +1056,19 @@ export async function runAllTests(): Promise<void> {
       Services.prefs.clearUserPref(MAX_TABS_RESULTS_PREF);
     } else {
       Services.prefs.setIntPref(MAX_TABS_RESULTS_PREF, originalMaxTabsResults);
+    }
+    if (originalShortcuts === null) {
+      Services.prefs.clearUserPref(SHORTCUTS_PREF);
+    } else {
+      Services.prefs.setStringPref(SHORTCUTS_PREF, originalShortcuts);
+    }
+    if (originalSelectableCommands === null) {
+      Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
+    } else {
+      Services.prefs.setStringPref(
+        SELECTABLE_COMMANDS_PREF,
+        originalSelectableCommands,
+      );
     }
   }
 }

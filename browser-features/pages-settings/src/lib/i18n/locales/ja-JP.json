@@ -787,6 +787,23 @@
         "priorityModalTitle": "カテゴリの優先度",
         "priorityModalDescription": "ドラッグ＆ドロップで並び替えてください。リストの上位にあるカテゴリほど、コマンドパレットで先に表示されます。",
         "priorityModalReset": "デフォルトに戻す",
-        "priorityModalClose": "閉じる"
+        "priorityModalClose": "閉じる",
+        "shortcuts": {
+            "title": "ショートカット",
+            "description": "コマンドパレットで @prefix を入力すると、コマンドをすぐに実行できます。",
+            "prefix": "プレフィックス",
+            "prefixPlaceholder": "例: gh",
+            "command": "コマンド",
+            "commandPlaceholder": "コマンドを選択",
+            "uncategorized": "その他",
+            "add": "追加",
+            "remove": "削除",
+            "errorEmpty": "プレフィックスを入力してください。",
+            "errorAt": "プレフィックスに「@」は使用できません。",
+            "errorDuplicate": "このプレフィックスは既に使用されています。",
+            "errorCommandRequired": "コマンドを選択してください。",
+            "noCommands": "コマンドがありません。ブラウザを再起動してください。",
+            "empty": "ショートカットが設定されていません。"
+        }
     }
 }

@@ -6,6 +6,7 @@ import { BasicSettings } from "./components/BasicSettings.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { DynamicSearchSettings } from "./components/DynamicSearchSettings.tsx";
 import { ResultLimitSettings } from "./components/ResultLimitSettings.tsx";
+import { ShortcutList } from "./components/ShortcutList.tsx";
 import {
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
@@ -96,6 +97,10 @@ export default function Page() {
           <AppearanceSettings />
         </form>
       </FormProvider>
+
+      <div className="pl-6">
+        <ShortcutList />
+      </div>
     </div>
   );
 }

@@ -9,6 +9,11 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import { CommandPaletteController } from "../controller.ts";
 import type { PaletteCommand, CommandStep } from "#features-chrome/common/command-palette/types.ts";
+import {
+  getPaletteCommands,
+  isTabCommand,
+} from "#features-chrome/common/command-palette/command-registry.ts";
+import { setShortcuts } from "#features-chrome/common/command-palette/config.ts";
 
 function makeStepCommand(steps: CommandStep[], fn?: PaletteCommand["fn"]): PaletteCommand {
   return {
@@ -78,6 +83,263 @@ const STEP_COMMAND_CAPTURE_ARGS: PaletteCommand = makeStepCommand(
 function createController(): CommandPaletteController {
   return new CommandPaletteController(window);
 }
+
+// ---------------------------------------------------------------------------
+// @prefix shortcut tests
+// ---------------------------------------------------------------------------
+//
+// The shortcut feature aliases a user-chosen `@prefix` to an existing palette
+// command id (stored in the `floorp.commandPalette.shortcuts` pref). Typing
+// `@` lists every shortcut at the top of the palette; `@xxx` filters by
+// exact-prefix > starts-with > includes. Each shortcut renders as a pseudo
+// `PaletteCommand` with `category: "shortcut"` and a synthetic id
+// `__shortcut:<prefix>:<commandId>`. Shortcuts whose target command no longer
+// exists are silently dropped, and duplicate prefixes are deduped (first
+// declared wins).
+//
+// `updateSearch("@")` routes through a 30ms debounce (non-empty query), so
+// every shortcut test must await a short tick before asserting on
+// `filteredCommands()`. Cleanup via `setShortcuts([])` in `finally` keeps the
+// shared pref hermetic across the suite.
+
+/**
+ * Resolves two stable, non-tab command ids from the live registry. Prefers
+ * `floorp-open-settings` / `floorp-open-hub` (top-level Floorp actions
+ * registered unconditionally); otherwise falls back to the first two non-tab
+ * commands discovered at module load. Used so the shortcut tests can build
+ * shortcuts whose targets definitely resolve in the test window.
+ */
+function resolveKnownCommandIds(): [string, string] {
+  const preferred = ["floorp-open-settings", "floorp-open-hub"];
+  const present = new Set(getPaletteCommands(window).map((c) => c.id));
+  const found = preferred.filter((id) => present.has(id));
+  if (found.length >= 2) return [found[0], found[1]];
+  const fallback = getPaletteCommands(window)
+    .filter((c) => !isTabCommand(c.id))
+    .map((c) => c.id);
+  return [fallback[0] ?? "__no-command__", fallback[1] ?? "__no-command-2__"];
+}
+
+const [KNOWN_ID, KNOWN_ID_2] = resolveKnownCommandIds();
+
+/** Wait long enough for the 30ms debounced updateSearch to flush. */
+function flushDebounce(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 60));
+}
+
+/** Returns only the pseudo shortcut rows from a filtered list. */
+function shortcutRows(commands: PaletteCommand[]): PaletteCommand[] {
+  return commands.filter((c) => c.category === "shortcut");
+}
+
+const shortcutTests: TestCase[] = [
+  // --- "@" alone lists every shortcut in declaration order ---
+  {
+    name: "@ alone lists all shortcuts in declaration order",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gp", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 2, "should list both declared shortcuts");
+        assertEquals(
+          rows[0].id,
+          `__shortcut:gh:${KNOWN_ID}`,
+          "first row should be 'gh' (declaration order)",
+        );
+        assertEquals(
+          rows[1].id,
+          `__shortcut:gp:${KNOWN_ID_2}`,
+          "second row should be 'gp' (declaration order)",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- "@gh" exact match pins to top ---
+  {
+    name: "@<exact> pins the exact-prefix shortcut to the top",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gp", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@gh");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assert(rows.length >= 1, "should have at least one shortcut row");
+        assertEquals(
+          rows[0].id,
+          `__shortcut:gh:${KNOWN_ID}`,
+          "exact 'gh' match should be first",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- "@g" prefix match ranks both gh and gp (exact-first, then startsWith) ---
+  {
+    name: "@<partial> ranks exact > startsWith for prefix matches",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gp", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@g");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 2, "both 'gh' and 'gp' start with 'g'");
+        assertEquals(
+          rows[0].id,
+          `__shortcut:gh:${KNOWN_ID}`,
+          "'gh' should rank before 'gp' (declaration order among startsWith)",
+        );
+        assertEquals(
+          rows[1].id,
+          `__shortcut:gp:${KNOWN_ID_2}`,
+          "'gp' should come second",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- "@xyz" with no match yields zero shortcut rows ---
+  {
+    name: "@<no-match> yields zero shortcut rows",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gp", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@xyz");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(rows.length, 0, "no shortcut prefix matches 'xyz'");
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- Critical #1 regression: shortcut pinned to list head ---
+  {
+    name: "CRITICAL#1: shortcut is pinned to filteredCommands[0] when present",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const filtered = ctrl.state.filteredCommands();
+        assert(filtered.length > 0, "filtered list should be non-empty");
+        assertEquals(
+          filtered[0].category,
+          "shortcut",
+          "shortcut must occupy index 0 (list-head pinning)",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- Major #4 regression: duplicate prefix dedups (first declared wins) ---
+  {
+    name: "MAJOR#4: duplicate prefix dedups to first declared (1 row)",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gh", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "duplicate prefix should collapse to a single row",
+        );
+        assertEquals(
+          rows[0].id,
+          `__shortcut:gh:${KNOWN_ID}`,
+          "first-declared commandId should win",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- Minor #5 regression: dead commandId is filtered out ---
+  {
+    name: "MINOR#5: shortcut with non-existent commandId is dropped",
+    async fn() {
+      setShortcuts([
+        { prefix: "dead", commandId: "__nonexistent_command__" },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@dead");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          0,
+          "shortcut whose target does not resolve must be omitted",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+
+  // --- non-@ query regression: shortcuts never leak into normal search ---
+  {
+    name: "non-@ query yields zero shortcut rows (normal search untouched)",
+    async fn() {
+      setShortcuts([
+        { prefix: "gh", commandId: KNOWN_ID },
+        { prefix: "gp", commandId: KNOWN_ID_2 },
+      ]);
+      try {
+        const ctrl = createController();
+        // Use a fragment that is unlikely to coincide with a prefix so the
+        // assertion isolates the shortcut-leak guard.
+        ctrl.updateSearch("tab");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          0,
+          "no shortcut rows should appear for a non-@ query",
+        );
+      } finally {
+        setShortcuts([]);
+      }
+    },
+  },
+];
 
 const rawTests: TestCase[] = [
   // --- Controller instantiation ---
@@ -232,5 +494,5 @@ const rawTests: TestCase[] = [
 ];
 
 export function runAllTests(): void {
-  runTests("commandPaletteController.test.ts", rawTests);
+  runTests("commandPaletteController.test.ts", [...rawTests, ...shortcutTests]);
 }
