@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { isEnabled, setSelectableCommands } from "./config.ts";
+import { isEnabled, setSelectableCommands, defaultConfig } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
 import { getPaletteCommands, isTabCommand } from "./command-registry.ts";
 import { createRootHMR } from "@nora/solid-xul";
@@ -61,13 +61,14 @@ export class CommandPaletteService {
     try {
       const PREF = "floorp.commandPalette.shortcuts";
       if (Services.prefs.getPrefType(PREF) === Services.prefs.PREF_INVALID) {
-        // First launch: seed the default @s → search-web shortcut so it
-        // shows up in the settings page and is available immediately. If the
-        // user clears it, an empty array is persisted and this never
-        // re-seeds.
-        Services.prefs.setStringPref(PREF, JSON.stringify([
-          { prefix: "s", commandId: "floorp-search-web" },
-        ]));
+        // First launch: seed the default shortcuts (defined once in
+        // `defaultConfig.shortcuts`) so they show up in the settings page and
+        // are available immediately. If the user clears them, an empty array
+        // is persisted and this never re-seeds.
+        Services.prefs.setStringPref(
+          PREF,
+          JSON.stringify(defaultConfig.shortcuts),
+        );
       }
     } catch (e) {
       console.error("[command-palette] Failed to init default shortcuts", e);

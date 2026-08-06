@@ -966,11 +966,11 @@ export class CommandPaletteController {
    * the FIRST step's id, and remaining steps fall back to their defaults
    * (e.g. search-web: default engine + new tab).
    *
-   * For `floorp-search-web` specifically, the description is localized as a
+   * For any `search`-category command, the description is localized as a
    * "Search \"<query>\"" string to mirror the existing search fallback row.
    * For any other step command, the aliased command's own label is used as
    * the description (keeps the row meaningful without command-specific
-   * special-casing beyond search).
+   * special-casing beyond the search category).
    */
   private buildShortcutArgsCommand(
     s: CommandPaletteShortcut,
@@ -984,7 +984,7 @@ export class CommandPaletteController {
         prefix: s.prefix,
         args: argsPart,
       }),
-      description: s.commandId === "floorp-search-web"
+      description: aliased.category === "search"
         ? i18next.t("commandPalette.searchShortcutDescription", {
           defaultValue: `Search "${argsPart}"`,
           query: argsPart,
@@ -995,13 +995,29 @@ export class CommandPaletteController {
       fn: (win) => {
         const cmd = getCommand(s.commandId, win);
         if (cmd) {
+          // Validate the args against the first step's validator (if any).
+          // This prevents e.g. `@u javascript:alert(1)` from bypassing
+          // open-url's URL validation. Returns `true` to pass, or an error
+          // message string.
+          const firstStep = cmd.steps?.[0];
+          if (firstStep?.validate) {
+            const validateResult = firstStep.validate(argsPart);
+            if (validateResult !== true) {
+              console.warn(
+                "[command-palette] Shortcut args rejected by step validation:",
+                s.commandId,
+                validateResult,
+              );
+              return;
+            }
+          }
           addRecentCommand(s.commandId);
           incrementFrequency(s.commandId);
           try {
             // Pass argsPart as the value of the FIRST step. Remaining steps
             // fall back to their defaults (e.g. search-web: default engine +
             // new tab).
-            const firstStepId = cmd.steps?.[0]?.id;
+            const firstStepId = firstStep?.id;
             const args = firstStepId
               ? { [firstStepId]: argsPart }
               : undefined;
