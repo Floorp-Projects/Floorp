@@ -13,6 +13,7 @@ import {
   getShowHistory,
   getShowBookmarks,
   getCategoryPriority,
+  getMaxResultsPerCategory,
 } from "./config.ts";
 import {
   getPaletteCommands,
@@ -26,6 +27,7 @@ import { fuzzyScore } from "./fuzzy.ts";
 import {
   compareByPriority,
   sortCategoriesByPriority,
+  truncateByCategory,
 } from "./category-priority.ts";
 import type {
   PaletteCommand,
@@ -782,9 +784,13 @@ export class CommandPaletteController {
     middleItems.push(...filteredNew);
 
     const sortedMiddle = sortCategoriesByPriority(middleItems, priorityList);
+    const truncatedMiddle = truncateByCategory(
+      sortedMiddle,
+      getMaxResultsPerCategory(),
+    );
     this.state.setFilteredCommands([
       ...topItems,
-      ...sortedMiddle,
+      ...truncatedMiddle,
       ...bottomItems,
     ]);
   }
@@ -850,12 +856,15 @@ export class CommandPaletteController {
     // queries) and `search-suggestion` (added at the bottom as a search-engine
     // fallback) are NOT touched by the helper.
     const priorityList = getCategoryPriority();
-    const commandResults = this.applyPriorityTiebreak(
-      filteredByTabs,
-      trimmed,
-      priorityList,
-    );
-    results.push(...commandResults);
+    const maxPerCategory = getMaxResultsPerCategory();
+    const sorted = this.applyPriorityTiebreak(filteredByTabs, trimmed, priorityList);
+    // `recent` is a multi-item pseudo-category (recently-used commands shown on
+    // empty query). Exempt it from per-category truncation so users always see
+    // their full recents list regardless of the limit. Mirrors the PSEUDO_TOP
+    // policy in `appendSuggestionResults`.
+    const recentItems = sorted.filter((c) => c.category === "recent");
+    const nonRecent = sorted.filter((c) => c.category !== "recent");
+    results.push(...recentItems, ...truncateByCategory(nonRecent, maxPerCategory));
 
     // Show search engine suggestion at the bottom of the list as a fallback.
     // Placing it at the bottom keeps the first matched command selected by
@@ -965,7 +974,10 @@ export class CommandPaletteController {
 
   private async performHistorySearch(query: string): Promise<void> {
     try {
-      const results = await searchHistoryCommands(query, 10);
+      const results = await searchHistoryCommands(
+        query,
+        getMaxResultsPerCategory(),
+      );
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) return;
       this.appendSuggestionResults(results, getCategoryPriority());
@@ -976,7 +988,10 @@ export class CommandPaletteController {
 
   private async performBookmarkSearch(query: string): Promise<void> {
     try {
-      const results = await searchBookmarkCommands(query, 10);
+      const results = await searchBookmarkCommands(
+        query,
+        getMaxResultsPerCategory(),
+      );
       // Only apply if query hasn't changed since we started
       if (query !== this.currentSearchQuery) return;
       this.appendSuggestionResults(results, getCategoryPriority());

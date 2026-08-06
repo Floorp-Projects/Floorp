@@ -25,6 +25,8 @@ export const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
 export const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
 export const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 export const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
+export const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF =
+  "floorp.commandPalette.maxResultsPerCategory";
 
 export type CommandPaletteHorizontalAlign = "center" | "left" | "right";
 
@@ -41,7 +43,13 @@ export interface CommandPaletteConfig {
   showHistory: boolean;
   showBookmarks: boolean;
   categoryPriority: string[];
+  maxResultsPerCategory: number;
 }
+
+// KEEP IN SYNC with:
+// - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
+export const DEFAULT_MAX_RESULTS_PER_CATEGORY = 5;
 
 export const defaultConfig: CommandPaletteConfig = {
   enabled: true,
@@ -56,6 +64,7 @@ export const defaultConfig: CommandPaletteConfig = {
   showHistory: true,
   showBookmarks: true,
   categoryPriority: [...DEFAULT_CATEGORY_PRIORITY],
+  maxResultsPerCategory: DEFAULT_MAX_RESULTS_PER_CATEGORY,
 };
 
 // Bounds for the customizable size/position prefs.
@@ -63,6 +72,7 @@ export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 export const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
 export const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
 export const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
+export const MAX_RESULTS_PER_CATEGORY_BOUNDS = { min: 1, max: 20 } as const;
 export const HORIZONTAL_ALIGN_VALUES: readonly CommandPaletteHorizontalAlign[] = [
   "center",
   "left",
@@ -719,6 +729,66 @@ function createFontSize(): [Accessor<number>, Setter<number>] {
   return [fontSize, setFontSize];
 }
 
+function createMaxResultsPerCategory(): [Accessor<number>, Setter<number>] {
+  const [maxResultsPerCategory, setMaxResultsPerCategory] = createSignal(
+    clampInt(
+      Services.prefs.getIntPref(
+        COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+        defaultConfig.maxResultsPerCategory,
+      ),
+      MAX_RESULTS_PER_CATEGORY_BOUNDS.min,
+      MAX_RESULTS_PER_CATEGORY_BOUNDS.max,
+      defaultConfig.maxResultsPerCategory,
+    ),
+  );
+
+  createEffect(() => {
+    try {
+      Services.prefs.setIntPref(
+        COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+        clampInt(
+          maxResultsPerCategory(),
+          MAX_RESULTS_PER_CATEGORY_BOUNDS.min,
+          MAX_RESULTS_PER_CATEGORY_BOUNDS.max,
+          defaultConfig.maxResultsPerCategory,
+        ),
+      );
+    } catch (e) {
+      console.error(
+        "[command-palette] Failed to persist maxResultsPerCategory pref",
+        e,
+      );
+    }
+  });
+
+  const maxResultsPerCategoryObserver = () => {
+    setMaxResultsPerCategory(
+      clampInt(
+        Services.prefs.getIntPref(
+          COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+          defaultConfig.maxResultsPerCategory,
+        ),
+        MAX_RESULTS_PER_CATEGORY_BOUNDS.min,
+        MAX_RESULTS_PER_CATEGORY_BOUNDS.max,
+        defaultConfig.maxResultsPerCategory,
+      ),
+    );
+  };
+
+  Services.prefs.addObserver(
+    COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+    maxResultsPerCategoryObserver,
+  );
+  onCleanup(() => {
+    Services.prefs.removeObserver(
+      COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+      maxResultsPerCategoryObserver,
+    );
+  });
+
+  return [maxResultsPerCategory, setMaxResultsPerCategory];
+}
+
 export const [_width, _setWidth] = createRootHMR(
   createWidth,
   import.meta.hot,
@@ -737,6 +807,10 @@ export const [_horizontalAlign, _setHorizontalAlign] = createRootHMR(
 );
 export const [_fontSize, _setFontSize] = createRootHMR(
   createFontSize,
+  import.meta.hot,
+);
+export const [_maxResultsPerCategory, _setMaxResultsPerCategory] = createRootHMR(
+  createMaxResultsPerCategory,
   import.meta.hot,
 );
 export const [_showTabs, _setShowTabs] = createRootHMR(
@@ -760,3 +834,14 @@ export const getFontSize = () => _fontSize();
 export const getShowTabs = () => _showTabs();
 export const getShowHistory = () => _showHistory();
 export const getShowBookmarks = () => _showBookmarks();
+export const getMaxResultsPerCategory = (): number => _maxResultsPerCategory();
+export const setMaxResultsPerCategory = (value: number): void => {
+  _setMaxResultsPerCategory(
+    clampInt(
+      value,
+      MAX_RESULTS_PER_CATEGORY_BOUNDS.min,
+      MAX_RESULTS_PER_CATEGORY_BOUNDS.max,
+      defaultConfig.maxResultsPerCategory,
+    ),
+  );
+};

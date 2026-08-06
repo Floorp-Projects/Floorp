@@ -30,6 +30,7 @@ import {
 
 const PREF = "floorp.commandPalette.enabled";
 const CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
+const MAX_RESULTS_PREF = "floorp.commandPalette.maxResultsPerCategory";
 
 // `Services` is a Firefox global available in the browser test environment.
 // deno-lint-ignore no-explicit-any
@@ -62,6 +63,26 @@ function readRawCategoryPriorityPref(): string | null {
 /** True when the category-priority pref is currently unset (PREF_INVALID). */
 function isCategoryPriorityPrefUnset(): boolean {
   return Services.prefs.getPrefType(CATEGORY_PRIORITY_PREF) ===
+    Services.prefs.PREF_INVALID;
+}
+
+/** Reads the raw int value of the max-results-per-category pref, or null when unset. */
+function readRawMaxResultsPref(): number | null {
+  if (
+    Services.prefs.getPrefType(MAX_RESULTS_PREF) === Services.prefs.PREF_INVALID
+  ) {
+    return null;
+  }
+  try {
+    return Services.prefs.getIntPref(MAX_RESULTS_PREF);
+  } catch {
+    return null;
+  }
+}
+
+/** True when the max-results-per-category pref is currently unset (PREF_INVALID). */
+function isMaxResultsPrefUnset(): boolean {
+  return Services.prefs.getPrefType(MAX_RESULTS_PREF) ===
     Services.prefs.PREF_INVALID;
 }
 
@@ -362,6 +383,164 @@ async function testSaveWithoutCategoryPriorityIsNoOp(): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// maxResultsPerCategory (default 5, clamped to [1, 20] via clampInt)
+// ---------------------------------------------------------------------------
+//
+// `clampInt` rounds, then clamps into the bounds. Out-of-range values on read
+// AND on save are clamped, so a corrupted pref cannot break the palette. The
+// field is always present on the returned object (it has a numeric default),
+// unlike `enabled` which defaults only when the pref is unset.
+
+/** Verifies the default (5) is returned when the pref is unset. */
+async function testGetReturnsDefaultMaxResultsWhenPrefUnset(): Promise<void> {
+  Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  assert(
+    isMaxResultsPrefUnset(),
+    "pref should be unset before the get call",
+  );
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertEquals(
+      result!.maxResultsPerCategory,
+      5,
+      "unset maxResultsPerCategory pref should yield the default 5",
+    );
+    assert(
+      isMaxResultsPrefUnset(),
+      "get should not mutate the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies a valid int value is read through unchanged. */
+async function testGetReadsValidMaxResults(): Promise<void> {
+  Services.prefs.setIntPref(MAX_RESULTS_PREF, 10);
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertEquals(
+      result!.maxResultsPerCategory,
+      10,
+      "valid int 10 should be returned as-is",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies a value below the min (1) is clamped up to 1. */
+async function testGetClampsMaxResultsBelowMin(): Promise<void> {
+  Services.prefs.setIntPref(MAX_RESULTS_PREF, 0);
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertEquals(
+      result!.maxResultsPerCategory,
+      1,
+      "0 should be clamped up to the min (1)",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies a negative value is clamped up to the min (1). */
+async function testGetClampsMaxResultsNegative(): Promise<void> {
+  Services.prefs.setIntPref(MAX_RESULTS_PREF, -5);
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertEquals(
+      result!.maxResultsPerCategory,
+      1,
+      "-5 should be clamped up to the min (1)",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies a value above the max (20) is clamped down to 20. */
+async function testGetClampsMaxResultsAboveMax(): Promise<void> {
+  Services.prefs.setIntPref(MAX_RESULTS_PREF, 100);
+  try {
+    const result = await getCommandPaletteSettings();
+    assert(result !== null, "result should not be null");
+    assertEquals(
+      result!.maxResultsPerCategory,
+      20,
+      "100 should be clamped down to the max (20)",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies save writes the in-range value through to the pref. */
+async function testSaveMaxResultsWritesValue(): Promise<void> {
+  Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  try {
+    await saveCommandPaletteSettings({ maxResultsPerCategory: 7 });
+    assertEquals(
+      readRawMaxResultsPref(),
+      7,
+      "save should persist 7 into the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies save clamps an above-max value before persisting. */
+async function testSaveMaxResultsClampsAboveMax(): Promise<void> {
+  Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  try {
+    await saveCommandPaletteSettings({ maxResultsPerCategory: 99 });
+    assertEquals(
+      readRawMaxResultsPref(),
+      20,
+      "save should clamp 99 down to the max (20) before persisting",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies save clamps a below-min value before persisting. */
+async function testSaveMaxResultsClampsBelowMin(): Promise<void> {
+  Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  try {
+    await saveCommandPaletteSettings({ maxResultsPerCategory: 0 });
+    assertEquals(
+      readRawMaxResultsPref(),
+      1,
+      "save should clamp 0 up to the min (1) before persisting",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  }
+}
+
+/** Verifies that omitting maxResultsPerCategory on save leaves the pref untouched. */
+async function testSaveWithoutMaxResultsIsNoOp(): Promise<void> {
+  Services.prefs.setIntPref(MAX_RESULTS_PREF, 13);
+  try {
+    await saveCommandPaletteSettings({ enabled: true });
+    assertEquals(
+      readRawMaxResultsPref(),
+      13,
+      "save without maxResultsPerCategory should not touch the pref",
+    );
+  } finally {
+    Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+    Services.prefs.clearUserPref(PREF);
+  }
+}
+
 const tests: TestCase[] = [
   { name: "getCommandPaletteSettings returns null when pref is unset", fn: testGetReturnsNullWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
@@ -381,11 +560,22 @@ const tests: TestCase[] = [
   { name: "getCommandPaletteSettings falls back on non-string entry (strict)", fn: testGetFallsBackOnNonStringCategoryPriorityEntry },
   { name: "saveCommandPaletteSettings JSON.stringify's the array into the pref", fn: testSaveCategoryPriorityStringifiesArray },
   { name: "saveCommandPaletteSettings without categoryPriority leaves the pref untouched", fn: testSaveWithoutCategoryPriorityIsNoOp },
+  // maxResultsPerCategory
+  { name: "getCommandPaletteSettings yields 5 for maxResultsPerCategory when pref unset", fn: testGetReturnsDefaultMaxResultsWhenPrefUnset },
+  { name: "getCommandPaletteSettings reads a valid maxResultsPerCategory int", fn: testGetReadsValidMaxResults },
+  { name: "getCommandPaletteSettings clamps maxResultsPerCategory 0 up to 1", fn: testGetClampsMaxResultsBelowMin },
+  { name: "getCommandPaletteSettings clamps negative maxResultsPerCategory up to 1", fn: testGetClampsMaxResultsNegative },
+  { name: "getCommandPaletteSettings clamps maxResultsPerCategory 100 down to 20", fn: testGetClampsMaxResultsAboveMax },
+  { name: "saveCommandPaletteSettings writes maxResultsPerCategory into the pref", fn: testSaveMaxResultsWritesValue },
+  { name: "saveCommandPaletteSettings clamps maxResultsPerCategory 99 down to 20", fn: testSaveMaxResultsClampsAboveMax },
+  { name: "saveCommandPaletteSettings clamps maxResultsPerCategory 0 up to 1", fn: testSaveMaxResultsClampsBelowMin },
+  { name: "saveCommandPaletteSettings without maxResultsPerCategory leaves the pref untouched", fn: testSaveWithoutMaxResultsIsNoOp },
 ];
 
 export async function runAllTests(): Promise<void> {
   const originalEnabled = readRawPref();
   const originalCategoryPriority = readRawCategoryPriorityPref();
+  const originalMaxResults = readRawMaxResultsPref();
   try {
     await runTests("dataManager.test.ts (command-palette)", tests);
   } finally {
@@ -402,6 +592,11 @@ export async function runAllTests(): Promise<void> {
         CATEGORY_PRIORITY_PREF,
         originalCategoryPriority,
       );
+    }
+    if (originalMaxResults === null) {
+      Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+    } else {
+      Services.prefs.setIntPref(MAX_RESULTS_PREF, originalMaxResults);
     }
   }
 }

@@ -105,3 +105,41 @@ export function sortCategoriesByPriority<T extends { category: string }>(
 ): T[] {
   return [...items].sort((a, b) => compareByPriority(a, b, priorityList));
 }
+
+/**
+ * Returns a NEW array containing at most `limit` items per category, preserving
+ * the incoming order within each category. Items beyond the per-category cap are
+ * dropped. Stable and non-mutating.
+ *
+ * A `limit` of 0 or negative is treated as unlimited (defensive — returns a
+ * shallow copy of the input). This shouldn't happen in practice because the
+ * settings UI clamps to `min: 1`, but the helper is public so it must not
+ * return an empty list by accident.
+ *
+ * Pseudo-categories are NOT special-cased here. Callers must exempt them
+ * explicitly if needed:
+ * - `recent`: multi-item (recently-used commands). The controller exempts it
+ *   in `doUpdateSearch` and `appendSuggestionResults` so the recents list is
+ *   never truncated.
+ * - `navigation-suggestion`, `search-suggestion`: each has only 1 item, so the
+ *   limit has no practical effect.
+ */
+export function truncateByCategory<T extends { category: string }>(
+  items: T[],
+  limit: number,
+): T[] {
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return [...items];
+  }
+  const counts = new Map<string, number>();
+  const result: T[] = [];
+  const max = Math.floor(limit);
+  for (const item of items) {
+    const count = counts.get(item.category) ?? 0;
+    if (count < max) {
+      result.push(item);
+      counts.set(item.category, count + 1);
+    }
+  }
+  return result;
+}

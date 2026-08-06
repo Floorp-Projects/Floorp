@@ -11,6 +11,7 @@ const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
 const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
 const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
+const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF = "floorp.commandPalette.maxResultsPerCategory";
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
@@ -20,6 +21,7 @@ const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_SHOW_TABS = true;
 const DEFAULT_SHOW_HISTORY = true;
 const DEFAULT_SHOW_BOOKMARKS = true;
+const DEFAULT_MAX_RESULTS_PER_CATEGORY = 5;
 
 /**
  * Default category priority for the command palette settings UI.
@@ -56,6 +58,10 @@ const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;
 const MAX_HEIGHT_BOUNDS = { min: 300, max: 800 } as const;
 const OFFSET_TOP_BOUNDS = { min: 0, max: 60 } as const;
 const FONT_SIZE_BOUNDS = { min: 11, max: 22 } as const;
+// KEEP IN SYNC with:
+// - browser-features/chrome/common/command-palette/config.ts
+// - the Seekbar min/max props in browser-features/pages-settings/src/app/command-palette/components/ResultLimitSettings.tsx
+const MAX_RESULTS_PER_CATEGORY_BOUNDS = { min: 1, max: 20 } as const;
 const VALID_HORIZONTAL_ALIGNS = ["center", "left", "right"] as const;
 
 export const COMMAND_PALETTE_APPEARANCE_DEFAULTS = {
@@ -173,6 +179,17 @@ export async function saveCommandPaletteSettings(
         JSON.stringify(settings.categoryPriority),
       );
     }
+
+    if (settings.maxResultsPerCategory !== undefined) {
+      await rpc.setIntPref(
+        COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+        clampInt(
+          settings.maxResultsPerCategory,
+          MAX_RESULTS_PER_CATEGORY_BOUNDS,
+          DEFAULT_MAX_RESULTS_PER_CATEGORY,
+        ),
+      );
+    }
   } catch (error) {
     console.error("[command-palette] Failed to save settings:", error);
   }
@@ -196,6 +213,9 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     const categoryPriorityRaw = await rpc.getStringPref(
       COMMAND_PALETTE_CATEGORY_PRIORITY_PREF,
     );
+    const maxResultsPerCategoryRaw = await rpc.getIntPref(
+      COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF,
+    );
 
     return {
       enabled: enabled === null ? true : enabled,
@@ -212,6 +232,11 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       showHistory: showHistory === null ? DEFAULT_SHOW_HISTORY : showHistory,
       showBookmarks: showBookmarks === null ? DEFAULT_SHOW_BOOKMARKS : showBookmarks,
       categoryPriority: parseCategoryPriority(categoryPriorityRaw),
+      maxResultsPerCategory: clampInt(
+        maxResultsPerCategoryRaw ?? DEFAULT_MAX_RESULTS_PER_CATEGORY,
+        MAX_RESULTS_PER_CATEGORY_BOUNDS,
+        DEFAULT_MAX_RESULTS_PER_CATEGORY,
+      ),
     };
   } catch (error) {
     console.error("[command-palette] Failed to load settings:", error);

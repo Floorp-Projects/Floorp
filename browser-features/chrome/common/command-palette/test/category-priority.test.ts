@@ -14,6 +14,7 @@ import {
   getCategoryPriorityIndex,
   parseCategoryPriority,
   sortCategoriesByPriority,
+  truncateByCategory,
 } from "../category-priority.ts";
 
 /**
@@ -372,6 +373,98 @@ function testSortCategoriesByPriorityEmptyPriorityList(): void {
 }
 
 // ---------------------------------------------------------------------------
+// truncateByCategory
+// ---------------------------------------------------------------------------
+
+/**
+ * Verifies the per-category truncation behavior: keeps at most `limit` items
+ * per category, preserves incoming order, never mutates the input, and treats
+ * non-finite / non-positive limits as unlimited (defensive).
+ */
+function testTruncateByCategory(): void {
+  // Basic truncation: 3 categories with varying counts, limit=2
+  const items = [
+    { category: "a", id: 1 },
+    { category: "a", id: 2 },
+    { category: "a", id: 3 }, // dropped (3rd in "a")
+    { category: "b", id: 4 },
+    { category: "b", id: 5 },
+    { category: "b", id: 6 }, // dropped (3rd in "b")
+    { category: "b", id: 7 }, // dropped (4th in "b")
+    { category: "c", id: 8 }, // kept (only 1 in "c")
+  ];
+  const truncated = truncateByCategory(items, 2);
+  // Expected: a,a,b,b,c (5 items), ids 1,2,4,5,8
+  assertEquals(truncated.length, 5, "should drop items beyond limit per category");
+  assertEquals(truncated[0].id, 1, "first a kept");
+  assertEquals(truncated[1].id, 2, "second a kept");
+  assertEquals(truncated[2].id, 4, "first b kept");
+  assertEquals(truncated[3].id, 5, "second b kept");
+  assertEquals(truncated[4].id, 8, "only c kept");
+
+  // Does NOT mutate the input
+  assertEquals(items.length, 8, "input not mutated");
+  assertEquals(items[2].id, 3, "input items unchanged");
+
+  // Order preservation within each category (incoming order kept)
+  const ordered = [
+    { category: "x", n: "first" },
+    { category: "y", n: "alpha" },
+    { category: "x", n: "second" },
+    { category: "y", n: "beta" },
+    { category: "x", n: "third" },
+  ];
+  const t1 = truncateByCategory(ordered, 1);
+  assertEquals(t1.length, 2, "limit=1 keeps 1 per category");
+  assertEquals(t1[0].n, "first", "first x by incoming order");
+  assertEquals(t1[1].n, "alpha", "first y by incoming order");
+
+  // Limit larger than any category → no truncation
+  const small = [
+    { category: "a", id: 1 },
+    { category: "b", id: 2 },
+  ];
+  const noTrunc = truncateByCategory(small, 100);
+  assertEquals(noTrunc.length, 2, "limit > max category size: no items dropped");
+
+  // Empty input → empty output
+  assertEquals(truncateByCategory([], 5).length, 0, "empty input");
+
+  // limit = 0 → unlimited (returns shallow copy)
+  const zero = truncateByCategory(items, 0);
+  assertEquals(zero.length, items.length, "limit=0 unlimited");
+  assert(zero !== items, "limit=0 still returns a new array");
+
+  // limit negative → unlimited (defensive)
+  const neg = truncateByCategory(items, -3);
+  assertEquals(neg.length, items.length, "negative limit unlimited");
+
+  // limit = NaN → unlimited (defensive, Number.isFinite check)
+  const nan = truncateByCategory(items, NaN);
+  assertEquals(nan.length, items.length, "NaN limit unlimited");
+
+  // limit = Infinity → effectively unlimited
+  const inf = truncateByCategory(items, Infinity);
+  assertEquals(inf.length, items.length, "Infinity limit unlimited");
+
+  // limit fractional (e.g. 2.9) → floored to 2
+  const frac = truncateByCategory(items, 2.9);
+  assertEquals(frac.length, 5, "fractional limit floored");
+
+  // Single category, all dropped beyond limit
+  const singleCat = [
+    { category: "only", id: 1 },
+    { category: "only", id: 2 },
+    { category: "only", id: 3 },
+    { category: "only", id: 4 },
+  ];
+  const sc = truncateByCategory(singleCat, 2);
+  assertEquals(sc.length, 2, "single category truncated");
+  assertEquals(sc[0].id, 1, "first kept");
+  assertEquals(sc[1].id, 2, "second kept");
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -410,6 +503,8 @@ const tests: TestCase[] = [
   { name: "sortCategoriesByPriority is stable for equal-priority items", fn: testSortCategoriesByPriorityIsStable },
   { name: "sortCategoriesByPriority([]) returns []", fn: testSortCategoriesByPriorityEmptyInput },
   { name: "sortCategoriesByPriority with empty priority list keeps input order", fn: testSortCategoriesByPriorityEmptyPriorityList },
+  // truncateByCategory
+  { name: "truncateByCategory keeps at most `limit` per category without mutating input", fn: testTruncateByCategory },
 ];
 
 export function runAllTests(): void {

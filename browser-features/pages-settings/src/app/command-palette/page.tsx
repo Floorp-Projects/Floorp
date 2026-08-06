@@ -5,6 +5,7 @@ import { AppearanceSettings } from "./components/AppearanceSettings.tsx";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { DynamicSearchSettings } from "./components/DynamicSearchSettings.tsx";
+import { ResultLimitSettings } from "./components/ResultLimitSettings.tsx";
 import {
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
@@ -38,6 +39,9 @@ export default function Page() {
           shouldValidate: true,
         });
         setValue("categoryPriority", values.categoryPriority, {
+          shouldValidate: true,
+        });
+        setValue("maxResultsPerCategory", values.maxResultsPerCategory, {
           shouldValidate: true,
         });
       } catch (error) {
@@ -79,6 +83,7 @@ export default function Page() {
           <BasicSettings />
           <ContentSettings />
           <DynamicSearchSettings />
+          <ResultLimitSettings />
           <AppearanceSettings />
         </form>
       </FormProvider>
