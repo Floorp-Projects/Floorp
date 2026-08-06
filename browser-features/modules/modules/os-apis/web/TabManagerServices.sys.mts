@@ -299,11 +299,11 @@ class TabManager {
       // Gecko 153 it can transiently be null (e.g. during process swaps or
       // for panel windows), and deleting the instance here would permanently
       // orphan it, breaking every subsequent per-instance operation
-      // (Floorp issue #2608). Use the element's connectedness instead: a
-      // closed tab is removed from the tab strip, so `isConnected` is the
+      // (Floorp issue #2608). Use the tab element's connectedness instead: a
+      // closed tab is removed from the tab strip, so `tab.isConnected` is the
       // reliable liveness signal.
       const browser = entry.tab.linkedBrowser;
-      if (!browser || !browser.isConnected) {
+      if (!browser || !entry.tab.isConnected) {
         this._browserInstances.delete(instanceId);
         this._tabToInstanceId.delete(entry.tab);
         TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
@@ -572,7 +572,7 @@ class TabManager {
     const currentBrowser = tab.linkedBrowser;
     if (
       !currentBrowser ||
-      !currentBrowser.isConnected ||
+      !tab.isConnected ||
       (currentBrowser.ownerGlobal as Window | null)?.closed
     ) {
       throw new Error("Tab was closed during load");
