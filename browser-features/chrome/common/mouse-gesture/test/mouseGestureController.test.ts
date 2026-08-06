@@ -259,7 +259,7 @@ async function testWheelGestureSuppressesPostMouseUpContextMenu(): Promise<
   });
 }
 
-async function testWheelGestureIsExactOnceAndConsumesResidualWheel(): Promise<
+async function testWheelGestureChainsWhileHeldAndConsumesResidualWheel(): Promise<
   void
 > {
   await withTrackedActions(async (counts) => {
@@ -268,6 +268,8 @@ async function testWheelGestureIsExactOnceAndConsumesResidualWheel(): Promise<
       dispatchMouse(win, "mousedown", 2);
       const firstWheel = dispatchWheel(win, 120);
       dispatchMouse(win, "mousemove", 0, 100, 0);
+      // While the right button is held, each wheel notch switches tabs
+      // (Floorp issue #2586 regression from the #2559 exact-once latch).
       const heldResidualWheel = dispatchWheel(win, -120);
       dispatchMouse(win, "mouseup", 2);
       const postMouseUpResidualWheel = dispatchWheel(win, 120);
@@ -291,12 +293,12 @@ async function testWheelGestureIsExactOnceAndConsumesResidualWheel(): Promise<
       assertEquals(
         counts[NEXT_TAB_ACTION],
         1,
-        "next-tab action should fire once",
+        "first wheel should execute next-tab once",
       );
       assertEquals(
         counts[PREVIOUS_TAB_ACTION],
-        0,
-        "opposite residual wheel must not execute another action",
+        1,
+        "a subsequent wheel while held must execute its own action (multi-tab switching)",
       );
       assertEquals(
         counts[DRAWN_RIGHT_ACTION],
@@ -710,8 +712,8 @@ const tests: TestCase[] = [
     fn: testWheelGestureSuppressesPostMouseUpContextMenu,
   },
   {
-    name: "wheel gesture is exact-once and consumes residual wheel",
-    fn: testWheelGestureIsExactOnceAndConsumesResidualWheel,
+    name: "wheel gesture chains while held and consumes residual wheel",
+    fn: testWheelGestureChainsWhileHeldAndConsumesResidualWheel,
   },
   {
     name: "normal right click remains allowed",
