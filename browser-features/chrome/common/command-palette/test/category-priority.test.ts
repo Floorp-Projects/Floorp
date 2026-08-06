@@ -34,8 +34,8 @@ import {
 function testDefaultCategoryPriorityShape(): void {
   assertEquals(
     DEFAULT_CATEGORY_PRIORITY.length,
-    19,
-    "DEFAULT_CATEGORY_PRIORITY should have 19 entries",
+    18,
+    "DEFAULT_CATEGORY_PRIORITY should have 18 entries",
   );
   assertEquals(
     DEFAULT_CATEGORY_PRIORITY[0],
@@ -46,6 +46,23 @@ function testDefaultCategoryPriorityShape(): void {
     DEFAULT_CATEGORY_PRIORITY[DEFAULT_CATEGORY_PRIORITY.length - 1],
     "bookmark-suggestions",
     "last default priority should be 'bookmark-suggestions'",
+  );
+}
+
+/**
+ * Verifies that `search` is intentionally excluded from the default priority
+ * list so it is NOT user-reorderable in the priority modal — it always sinks
+ * to the bottom (lowest priority) via `MAX_SAFE_INTEGER`.
+ */
+function testSearchCategoryIsExcludedFromDefaultPriority(): void {
+  assert(
+    !DEFAULT_CATEGORY_PRIORITY.includes("search"),
+    "search should NOT be in the default priority list (non-editable, always lowest)",
+  );
+  assertEquals(
+    getCategoryPriorityIndex("search", DEFAULT_CATEGORY_PRIORITY),
+    Number.MAX_SAFE_INTEGER,
+    "search returns MAX_SAFE_INTEGER (sinks to bottom)",
   );
 }
 
@@ -78,8 +95,8 @@ function testGetCategoryPriorityIndexReturnsLastIndexForTail(): void {
 function testGetCategoryPriorityIndexReturnsMidPosition(): void {
   assertEquals(
     getCategoryPriorityIndex("workspace", DEFAULT_CATEGORY_PRIORITY),
-    12,
-    "'workspace' should sit at index 12 in the default list",
+    11,
+    "'workspace' should sit at index 11 in the default list",
   );
 }
 
@@ -470,7 +487,8 @@ function testTruncateByCategory(): void {
 
 const tests: TestCase[] = [
   // DEFAULT_CATEGORY_PRIORITY shape
-  { name: "DEFAULT_CATEGORY_PRIORITY has 19 entries with correct bookends", fn: testDefaultCategoryPriorityShape },
+  { name: "DEFAULT_CATEGORY_PRIORITY has 18 entries with correct bookends", fn: testDefaultCategoryPriorityShape },
+  { name: "search is excluded from DEFAULT_CATEGORY_PRIORITY and sinks to bottom", fn: testSearchCategoryIsExcludedFromDefaultPriority },
   // getCategoryPriorityIndex
   { name: "getCategoryPriorityIndex returns 0 for the head category", fn: testGetCategoryPriorityIndexReturnsZeroForHead },
   { name: "getCategoryPriorityIndex returns length-1 for the tail category", fn: testGetCategoryPriorityIndexReturnsLastIndexForTail },

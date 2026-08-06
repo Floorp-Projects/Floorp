@@ -30,7 +30,7 @@ const DEFAULT_MAX_RESULTS_PER_CATEGORY = 5;
  * `browser-features/chrome/common/command-palette/category-priority.ts`
  * (the live palette feature). The two cannot share a module because the
  * settings app and chrome feature are separate packages. If you edit one,
- * edit the other. The test in this file asserts length===19 as a partial guard.
+ * edit the other. The test in this file asserts length===18 as a partial guard.
  */
 export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
   "navigation",
@@ -38,7 +38,6 @@ export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
   "zoom",
   "bookmarks",
   "page",
-  "search",
   "sidebar",
   "scrolling",
   "history",

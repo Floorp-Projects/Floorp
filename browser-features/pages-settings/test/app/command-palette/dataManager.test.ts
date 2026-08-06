@@ -197,12 +197,12 @@ async function testSaveCoercesToBoolean(): Promise<void> {
 // nonsensical for priority order and the priority-index lookup returns the
 // first match anyway.
 
-/** Verifies the exported default has the documented shape (19 entries). */
+/** Verifies the exported default has the documented shape (18 entries). */
 function testDefaultCategoryPriorityExportShape(): void {
   assertEquals(
     DEFAULT_CATEGORY_PRIORITY.length,
-    19,
-    "DEFAULT_CATEGORY_PRIORITY should have 19 entries",
+    18,
+    "DEFAULT_CATEGORY_PRIORITY should have 18 entries",
   );
   assertEquals(
     DEFAULT_CATEGORY_PRIORITY[0],
@@ -551,7 +551,7 @@ const tests: TestCase[] = [
   { name: "saveCommandPaletteSettings({ enabled: false }) sets pref", fn: testSaveSetsEnabledFalse },
   { name: "saveCommandPaletteSettings coerces enabled to boolean", fn: testSaveCoercesToBoolean },
   // categoryPriority
-  { name: "DEFAULT_CATEGORY_PRIORITY is exported with 19 entries", fn: testDefaultCategoryPriorityExportShape },
+  { name: "DEFAULT_CATEGORY_PRIORITY is exported with 18 entries", fn: testDefaultCategoryPriorityExportShape },
   { name: "getCommandPaletteSettings yields DEFAULT_CATEGORY_PRIORITY when pref unset", fn: testGetReturnsDefaultCategoryPriorityWhenPrefUnset },
   { name: "getCommandPaletteSettings parses a valid JSON array", fn: testGetParsesValidCategoryPriority },
   { name: "getCommandPaletteSettings preserves duplicate categoryPriority entries (no de-dupe)", fn: testGetPreservesDuplicateCategoryPriorityEntries },

@@ -21,7 +21,7 @@ interface CategorizedCommands {
   commands: PaletteCommand[];
 }
 
-const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "search-suggestion"]);
+const HIDDEN_CATEGORIES = new Set(["navigation-suggestion"]);
 
 export function CommandList(props: CommandListProps) {
   const grouped = createMemo(() => {
@@ -45,22 +45,19 @@ export function CommandList(props: CommandListProps) {
     //
     // - `recent` is a runtime pseudo-category that must always stay at the
     //   very top regardless of the priority list.
-    // - The hidden pseudo-categories (`navigation-suggestion`,
-    //   `search-suggestion`) have no header and their positions are driven by
-    //   the controller (top and bottom of the flat list respectively), so they
-    //   are excluded from the priority sort to preserve that behavior.
+    // - `navigation-suggestion` is a pseudo-category with no header; its
+    //   position is controller-driven (top of the flat list), so it is
+    //   excluded from the priority sort to preserve that behavior.
+    // - All other categories (including `search`, which has the lowest
+    //   priority by default) are sorted via the user's priority list.
     const recentGroups = groups.filter((g) => g.category === "recent");
     const navSuggestionGroups = groups.filter(
       (g) => g.category === "navigation-suggestion",
     );
-    const searchSuggestionGroups = groups.filter(
-      (g) => g.category === "search-suggestion",
-    );
     const visibleGroups = groups.filter(
       (g) =>
         g.category !== "recent" &&
-        g.category !== "navigation-suggestion" &&
-        g.category !== "search-suggestion",
+        g.category !== "navigation-suggestion",
     );
 
     const priorityList = getCategoryPriority();
@@ -77,7 +74,6 @@ export function CommandList(props: CommandListProps) {
       ...recentGroups,
       ...navSuggestionGroups,
       ...sortedVisible,
-      ...searchSuggestionGroups,
     ];
   });
 

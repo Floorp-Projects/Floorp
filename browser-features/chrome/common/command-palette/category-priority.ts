@@ -7,13 +7,14 @@
  * `browser-features/pages-settings/src/app/command-palette/dataManager.ts`
  * because the settings app and chrome feature live in separate packages with
  * different build/i18n systems. If you edit one, edit the other. Both test
- * files assert length===19 as a partial guard.
+ * files assert length===18 as a partial guard.
  *
  * `recent` is intentionally absent: it is a runtime pseudo-category that is
  * always pinned to the very top of the list and never participates in priority
- * sorting. Hidden pseudo-categories (`navigation-suggestion`,
- * `search-suggestion`) are also absent; their positions are controller-driven
- * (top and bottom of the flat command list respectively).
+ * sorting. `navigation-suggestion` is also absent (controller-driven, pinned
+ * to the top). The `search` category (search-engine fallback) is intentionally
+ * absent so it is NOT user-reorderable in the priority modal — it sinks to the
+ * bottom automatically via `MAX_SAFE_INTEGER` from `getCategoryPriorityIndex`.
  */
 export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
   "navigation",
@@ -21,7 +22,6 @@ export const DEFAULT_CATEGORY_PRIORITY: readonly string[] = [
   "zoom",
   "bookmarks",
   "page",
-  "search",
   "sidebar",
   "scrolling",
   "history",
@@ -121,8 +121,8 @@ export function sortCategoriesByPriority<T extends { category: string }>(
  * - `recent`: multi-item (recently-used commands). The controller exempts it
  *   in `doUpdateSearch` and `appendSuggestionResults` so the recents list is
  *   never truncated.
- * - `navigation-suggestion`, `search-suggestion`: each has only 1 item, so the
- *   limit has no practical effect.
+ * - `navigation-suggestion`: only 1 item (URL nav), no practical effect.
+ * - `search`: only 1 item (search-engine fallback), no practical effect.
  */
 export function truncateByCategory<T extends { category: string }>(
   items: T[],

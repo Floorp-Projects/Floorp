@@ -685,8 +685,11 @@ export class CommandPaletteController {
    * Pseudo-categories:
    * - `recent` is always pinned to the top regardless of the priority list
    *   (it is the "recently used" section shown for empty queries).
-   * - `navigation-suggestion` and `search-suggestion` are NOT handled here; they
-   *   are inserted by `doUpdateSearch` at fixed top/bottom positions.
+   * - `navigation-suggestion` is NOT handled here; it is inserted by
+   *   `doUpdateSearch` at a fixed top position. The `search` category (search-
+   *   engine fallback) is also NOT special-cased here; it flows through normal
+   *   priority sorting and naturally sinks to the bottom because it is absent
+   *   from `DEFAULT_CATEGORY_PRIORITY` (returns `MAX_SAFE_INTEGER`).
    */
   private applyPriorityTiebreak(
     items: PaletteCommand[],
@@ -753,11 +756,10 @@ export class CommandPaletteController {
    * Appends asynchronous bookmark/history suggestion results to the current
    * filtered list, ordered by the user's category priority.
    *
-   * Pseudo-categories with fixed positions are preserved:
-   * - `recent` and `navigation-suggestion` stay at the top (in their existing
-   *   order).
-   * - `search-suggestion` stays at the bottom.
-   * All other items (main results + suggestions) are re-sorted by priority.
+   * Pseudo-category `recent` and `navigation-suggestion` are pinned to the top
+   * (in their existing order). All other items (main results + suggestions,
+   * including the `search` category which has the lowest priority) are
+   * re-sorted by priority via `middleItems`.
    */
   private appendSuggestionResults(
     newResults: PaletteCommand[],
@@ -771,14 +773,11 @@ export class CommandPaletteController {
     if (filteredNew.length === 0) return;
 
     const PSEUDO_TOP = new Set(["recent", "navigation-suggestion"]);
-    const PSEUDO_BOTTOM = new Set(["search-suggestion"]);
 
     const topItems: PaletteCommand[] = [];
     const middleItems: PaletteCommand[] = [];
-    const bottomItems: PaletteCommand[] = [];
     for (const item of currentResults) {
       if (PSEUDO_TOP.has(item.category)) topItems.push(item);
-      else if (PSEUDO_BOTTOM.has(item.category)) bottomItems.push(item);
       else middleItems.push(item);
     }
     middleItems.push(...filteredNew);
@@ -791,7 +790,6 @@ export class CommandPaletteController {
     this.state.setFilteredCommands([
       ...topItems,
       ...truncatedMiddle,
-      ...bottomItems,
     ]);
   }
 
@@ -853,8 +851,9 @@ export class CommandPaletteController {
     //
     // `recent` is always pinned to the top inside the helper. The pseudo-
     // categories `navigation-suggestion` (added below at the top for URL-like
-    // queries) and `search-suggestion` (added at the bottom as a search-engine
-    // fallback) are NOT touched by the helper.
+    // queries) and the `search` category (search-engine fallback, added at the
+    // bottom — `search` is absent from DEFAULT_CATEGORY_PRIORITY so it sinks to
+    // the lowest priority automatically) are NOT touched by the helper.
     const priorityList = getCategoryPriority();
     const maxPerCategory = getMaxResultsPerCategory();
     const sorted = this.applyPriorityTiebreak(filteredByTabs, trimmed, priorityList);
@@ -887,7 +886,7 @@ export class CommandPaletteController {
           query: trimmed,
         }),
         description: descriptionText,
-        category: "search-suggestion",
+        category: "search",
         keywords: [],
         fn: (_win) => {
           try {
