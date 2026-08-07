@@ -1,0 +1,8 @@
+# Floorp Notes Sync G6 approval trust anchors.
+#
+# Format: ssh-keygen -Y sign -n floorp-notes-sync (ed25519 keys).
+# One line per approved role signer: <principal> <keytype> <base64 key>.
+# Role owners register their keys here before any G6 signature is accepted;
+# the syncPrerequisites validator rejects empty or placeholder entries.
+#
+# PENDING_ROLE_OWNER ssh-ed25519 AAAA_PENDING_OWNER_APPROVAL

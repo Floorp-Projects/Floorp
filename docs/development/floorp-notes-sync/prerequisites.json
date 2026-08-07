@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "adr": "docs/development/floorp-notes-sync/ADR-001-floorp-notes-sync-contract.md",
+  "engine_authority": {
+    "repository": "Floorp-Projects/application-services",
+    "commit": "d588863894e9b3ce58b05a964a7694ab00e28054",
+    "component": "components/floorp-prefs-sync"
+  },
+  "runtime_pin": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "tag": "daily-998",
+    "commit": "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+    "tree": "e555a371e1a24f18c8085058461f92c06e0b997d"
+  },
+  "desktop_release": {
+    "repository": "Floorp-Projects/Floorp",
+    "tag": "v12.16.4",
+    "commit": "811a5b821e1d9d47b40f22aee6df5db2254a54b1"
+  },
+  "staging_environment": {
+    "status": "pending_owner_approval",
+    "note": "Approved non-production FxA/Sync endpoint IDs are never guessed. The architecture owner must supply the staging endpoint GUIDs and test-account policy approval; until then dependent sync work stays blocked.",
+    "fxa_endpoint_id": "PENDING_OWNER_APPROVAL",
+    "sync_endpoint_id": "PENDING_OWNER_APPROVAL",
+    "wire": "sync15",
+    "application_record_id": "PENDING_MEASUREMENT_FROM_SIGNED_DESKTOP_BUILD",
+    "account_isolation": "two ephemeral staging accounts, revoked after the matrix"
+  },
+  "test_account_policy": {
+    "secrets_source": "CI secret environment variables only; never arguments, logs, or artifacts",
+    "cleanup": "revoke both accounts and erase simulator keychains even on failure",
+    "proxy_trace": "host/URL metadata only; no content, token, or key bytes"
+  },
+  "role_registry": [
+    {
+      "role": "architecture-owner",
+      "login": "PENDING_ROLE_OWNER",
+      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
+      "authority": "approves the contract, staging environment IDs, and trust anchors"
+    },
+    {
+      "role": "security-reviewer",
+      "login": "PENDING_ROLE_OWNER",
+      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
+      "authority": "approves engine, transport, and secret-handling evidence"
+    },
+    {
+      "role": "privacy-reviewer",
+      "login": "PENDING_ROLE_OWNER",
+      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
+      "authority": "approves account isolation and proxy-trace privacy evidence"
+    },
+    {
+      "role": "retention-reviewer",
+      "login": "PENDING_ROLE_OWNER",
+      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
+      "authority": "approves retention and account-revocation evidence"
+    },
+    {
+      "role": "rollout-approver",
+      "login": "PENDING_ROLE_OWNER",
+      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
+      "authority": "approves rollout and migration evidence"
+    }
+  ],
+  "fixture": {
+    "path": "sync-fixtures/floorp-notes/floorp-notes-merge-v1.json",
+    "sha256": "2597e5311c7c4ea4bb9d6a806ffa183aae3b3bd7380893b664b02ac829d665fd",
+    "required_cases": [
+      "concurrent-edits-preserve-deterministic-loser",
+      "equal-timestamp-has-commutative-bytewise-winner",
+      "first-sync-same-id-preserves-both-versions",
+      "one-sided-remote-reorder-wins",
+      "one-sided-deletion-wins",
+      "delete-versus-edit-keeps-edit-in-both-directions",
+      "concurrent-reorder-prefers-local-and-appends-remote-new",
+      "conflict-probe-skips-unrelated-collision",
+      "conflict-candidate-conflict-winner-is-reused",
+      "rich-unknown-content-is-byte-preserved",
+      "uploaded-then-local-commit-failure-retry-is-idempotent",
+      "duplicate-local-id-fails-closed"
+    ]
+  },
+  "policies": {
+    "fxa": "FxA/Application Services sync15 path only; never direct Sync REST or raw tokens in app code",
+    "e2ee": "encrypted by the sync15 engine; content never leaves the encrypted record in plaintext",
+    "retention": "staging accounts and traces deleted after each matrix run; artifacts retained 7 days",
+    "reset": "reset flows go through the engine authority; never destructive local deletion without explicit user action",
+    "rollout": "staging-only; production enablement is a separate post-plan authorization",
+    "migration": "fixture-driven migration; unknown payload fields preserved byte-for-byte"
+  },
+  "g6": {
+    "signatures": [],
+    "max_age_days": 90,
+    "allowed_signers_path": "docs/development/floorp-notes-sync/allowed-signers",
+    "revocations_path": "docs/development/floorp-notes-sync/revocations.json"
+  }
+}
