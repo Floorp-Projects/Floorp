@@ -1,9 +1,5 @@
 import { rpc } from "./rpc/rpc.ts";
-import {
-  mergeNotesThreeWay,
-  type MergeResult,
-  type NoteSnapshot,
-} from "./merge.ts";
+import type { NoteSnapshot } from "./merge.ts";
 import type { Note } from "../types/note.ts";
 
 export {
