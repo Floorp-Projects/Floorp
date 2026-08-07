@@ -11,10 +11,12 @@ import {
 import {
   DEFAULT_CATEGORY_PRIORITY,
   getCommandPaletteSettings,
+  isReservedShortcutPrefix,
   loadSelectableCommands,
   loadShortcuts,
   parseSelectableCommands,
   parseShortcuts,
+  RESERVED_SHORTCUT_PREFIXES,
   saveCommandPaletteSettings,
   saveShortcuts,
 } from "../../../src/app/command-palette/dataManager.ts";
@@ -753,6 +755,78 @@ function testMaxPref(
 }
 
 // ---------------------------------------------------------------------------
+// isReservedShortcutPrefix / RESERVED_SHORTCUT_PREFIXES
+// ---------------------------------------------------------------------------
+//
+// Prefixes "s" (@s = built-in web search) and "t" (@t = built-in open-tabs
+// search) are reserved for built-in command palette behavior: the settings UI
+// must reject user shortcuts that use them. Matching is case-sensitive, so
+// uppercase variants are NOT reserved.
+//
+// KEEP IN SYNC with the chrome-side RESERVED_SHORTCUT_PREFIXES in
+// browser-features/chrome/common/command-palette/config.ts — if one side
+// changes, the other must change too.
+
+/** "s" (@s web search) is reserved. */
+function testReservedPrefixS(): void {
+  assertEquals(
+    isReservedShortcutPrefix("s"),
+    true,
+    "'s' (@s web search) should be reserved",
+  );
+}
+
+/** "t" (@t open-tabs search) is reserved. */
+function testReservedPrefixT(): void {
+  assertEquals(
+    isReservedShortcutPrefix("t"),
+    true,
+    "'t' (@t open-tabs search) should be reserved",
+  );
+}
+
+/** Unreserved prefixes are rejected. */
+function testReservedPrefixNonReserved(): void {
+  assertEquals(
+    isReservedShortcutPrefix("gh"),
+    false,
+    "unreserved prefix 'gh' should not be reserved",
+  );
+}
+
+/** The empty string is not a reserved prefix. */
+function testReservedPrefixEmpty(): void {
+  assertEquals(
+    isReservedShortcutPrefix(""),
+    false,
+    "empty prefix should not be reserved",
+  );
+}
+
+/** Matching is case-sensitive — uppercase is NOT reserved. */
+function testReservedPrefixCaseSensitive(): void {
+  assertEquals(
+    isReservedShortcutPrefix("S"),
+    false,
+    "uppercase 'S' should NOT be reserved (case-sensitive match)",
+  );
+}
+
+/** The exported list has exactly the documented shape ["s", "t"]. */
+function testReservedPrefixesExport(): void {
+  assertEquals(
+    RESERVED_SHORTCUT_PREFIXES.length,
+    2,
+    "RESERVED_SHORTCUT_PREFIXES should have exactly 2 entries",
+  );
+  assertStringArrayEqual(
+    [...RESERVED_SHORTCUT_PREFIXES],
+    ["s", "t"],
+    "RESERVED_SHORTCUT_PREFIXES must equal ['s', 't']",
+  );
+}
+
+// ---------------------------------------------------------------------------
 // parseShortcuts — fallback to [] on malformed input
 // ---------------------------------------------------------------------------
 
@@ -981,6 +1055,13 @@ const tests: TestCase[] = [
     readRawMaxTabsResultsPref,
     isMaxTabsResultsPrefUnset,
   ),
+  // isReservedShortcutPrefix / RESERVED_SHORTCUT_PREFIXES
+  { name: "isReservedShortcutPrefix('s') is true (@s web search)", fn: testReservedPrefixS },
+  { name: "isReservedShortcutPrefix('t') is true (@t open-tabs search)", fn: testReservedPrefixT },
+  { name: "isReservedShortcutPrefix('gh') is false", fn: testReservedPrefixNonReserved },
+  { name: "isReservedShortcutPrefix('') is false", fn: testReservedPrefixEmpty },
+  { name: "isReservedShortcutPrefix('S') is false (case-sensitive)", fn: testReservedPrefixCaseSensitive },
+  { name: "RESERVED_SHORTCUT_PREFIXES equals ['s', 't']", fn: testReservedPrefixesExport },
   // parseShortcuts
   { name: "parseShortcuts: valid array passes through", fn: testParseShortcutsValid },
   { name: "parseShortcuts: null → []", fn: testParseShortcutsNull },

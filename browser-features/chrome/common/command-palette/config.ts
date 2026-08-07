@@ -85,12 +85,22 @@ export const defaultConfig: CommandPaletteConfig = {
   maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
   maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
   maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
-  // Default `@s` shortcut → web search. Seeded on first launch by
-  // `CommandPaletteService.initDefaultShortcuts()` so the settings page can
-  // see and manage it. The user may delete it; an empty array is then
-  // persisted and never re-seeded. KEEP IN SYNC with service.ts.
-  shortcuts: [{ prefix: "s", commandId: "floorp-search-web" }],
+  // @s and @t are built-in reserved prefixes handled directly by the
+  // controller — no pref entry needed. The shortcuts pref is for
+  // user-defined @prefix aliases only (default: empty).
+  shortcuts: [],
 };
+
+/**
+ * Prefixes reserved for built-in command palette behavior. These cannot be
+ * used for user-defined @prefix shortcuts:
+ * - "s" — @s is the built-in web search shortcut (floorp-search-web)
+ * - "t" — @t is the built-in open-tabs search mode
+ *
+ * KEEP IN SYNC with:
+ * - browser-features/pages-settings/src/app/command-palette/dataManager.ts
+ */
+export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = ["s", "t"];
 
 // Bounds for the customizable size/position prefs.
 export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;

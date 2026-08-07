@@ -28,7 +28,8 @@ import {
   isTabCommand,
 } from "./command-registry.ts";
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
-import { fuzzyScore } from "./fuzzy.ts";
+import { fuzzyScore, fuzzySearch } from "./fuzzy.ts";
+import { getTabCommands } from "./tab-provider.ts";
 import {
   compareByPriority,
   sortCategoriesByPriority,
@@ -1068,6 +1069,63 @@ export class CommandPaletteController {
       const spaceIdx = afterAt.search(/\s/);
       const prefixPart = spaceIdx === -1 ? afterAt : afterAt.slice(0, spaceIdx);
       const argsPart = spaceIdx === -1 ? "" : afterAt.slice(spaceIdx + 1).trim();
+
+      // @t — built-in open-tabs search mode. The "t" prefix is reserved (see
+      // RESERVED_SHORTCUT_PREFIXES in config.ts) and always wins over any
+      // user-defined shortcut with the same prefix. Typing "@t" lists every open
+      // tab; "@t <query>" filters them by title/URL with the same fuzzy scoring
+      // used across the palette. Enter executes the tab command, which switches
+      // to that tab. All tabs are shown without the per-category limit so the
+      // list behaves like a dedicated fzf-style tab switcher. Unlike normal
+      // search — where the `showTabs` pref excludes tab commands when it is off
+      // — @t is an explicit tab-search mode, so it ignores the pref and always
+      // shows every open tab (intentional).
+      if (prefixPart === "t") {
+        const tabCommands = getTabCommands(this.targetWindow);
+        const filtered = argsPart
+          ? fuzzySearch(argsPart, tabCommands, tabCommands.length)
+          : tabCommands;
+        results.push(...filtered);
+        this.state.setHighlightQuery(argsPart);
+        this.state.setFilteredCommands(results);
+        this.state.setSelectedIndex(0);
+        return; // Skip URL navigation, command search, search-engine fallback and async suggestions
+      }
+
+      // @s — built-in web search (reserved prefix, always wins over any user-defined
+      // shortcut with the same prefix). Mirrors the settings UI's "reserved" row:
+      // "@s" always resolves to floorp-search-web regardless of the user shortcuts
+      // pref, which may be empty or contain a stale "s" entry from before the prefix
+      // was reserved. "@s <query>" maps the query to the first step and executes the
+      // search directly; "@s" alone resolves to the plain (args-less) pseudo-command,
+      // which calls search-web's fn with no args — search-web's fn early-returns when
+      // query is absent, so this is a silent no-op (not a step-input entry).
+      if (prefixPart === "s") {
+        const searchCmd = getCommand("floorp-search-web", this.targetWindow);
+        if (searchCmd) {
+          // Guard: args-bearing mode requires steps (buildShortcutArgsCommand
+          // assumes the caller verified steps exist). Fall back to the plain
+          // shortcut when steps are missing — mirrors buildShortcutCommands'
+          // existing guard at the non-reserved args path.
+          results.push(
+            argsPart && searchCmd.steps?.length
+              ? this.buildShortcutArgsCommand(
+                { prefix: "s", commandId: "floorp-search-web" },
+                searchCmd,
+                argsPart,
+              )
+              : this.buildPlainShortcutCommand(
+                { prefix: "s", commandId: "floorp-search-web" },
+                searchCmd,
+              ),
+          );
+        }
+        this.state.setHighlightQuery(argsPart);
+        this.state.setFilteredCommands(results);
+        this.state.setSelectedIndex(0);
+        return; // Same as @t: skip URL navigation, command search, search fallback and async suggestions
+      }
+
       const shortcutResults = this.buildShortcutCommands(prefixPart, argsPart);
       if (shortcutResults.length > 0) {
         // Pin shortcut results to top; subsequent pushes append below them.
@@ -1212,6 +1270,9 @@ export class CommandPaletteController {
       });
     }
 
+    // Keep the highlight query in sync with the full query for all paths that
+    // fall through here (@t mode early-returns above, so it is unaffected).
+    this.state.setHighlightQuery(trimmed);
     this.state.setFilteredCommands(results);
     this.state.setSelectedIndex(0);
 

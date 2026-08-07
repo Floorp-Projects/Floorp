@@ -137,7 +137,7 @@ export function CommandPaletteUI() {
               <CommandList
                 commands={state.filteredCommands()}
                 selectedIndex={state.selectedIndex()}
-                query={state.query()}
+                query={state.highlightQuery()}
                 onCommandSelect={handleCommandSelect}
                 onCommandExecute={handleCommandExecute}
               />

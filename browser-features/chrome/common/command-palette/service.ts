@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { isEnabled, setSelectableCommands, defaultConfig } from "./config.ts";
+import { isEnabled, setSelectableCommands } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
 import { getPaletteCommands, isTabCommand } from "./command-registry.ts";
 import { createRootHMR } from "@nora/solid-xul";
@@ -13,11 +13,6 @@ export class CommandPaletteService {
   constructor() {
     this.registerAction();
     this.initialize();
-    // Seed the default @s → search-web shortcut BEFORE caching commands so the
-    // pref exists by the time config.ts signals initialize. If the user has
-    // already cleared their shortcuts (empty array persisted), this never
-    // re-seeds — only a truly absent pref (PREF_INVALID) is written.
-    this.initDefaultShortcuts();
     this.cacheSelectableCommands();
 
     createEffect(() => {
@@ -45,33 +40,6 @@ export class CommandPaletteService {
   private initialize(): void {
     if (isEnabled()) {
       this.attachToAllWindows();
-    }
-  }
-
-  /**
-   * Seed the default `@s` → `floorp-search-web` shortcut pref on first launch
-   * so the settings page can see and manage it immediately. If the pref
-   * already exists (including an empty array written by the user to disable
-   * the default), this is a no-op — a cleared shortcut list is never
-   * re-seeded.
-   *
-   * Idempotent and safe to call on every init / HMR reload.
-   */
-  private initDefaultShortcuts(): void {
-    try {
-      const PREF = "floorp.commandPalette.shortcuts";
-      if (Services.prefs.getPrefType(PREF) === Services.prefs.PREF_INVALID) {
-        // First launch: seed the default shortcuts (defined once in
-        // `defaultConfig.shortcuts`) so they show up in the settings page and
-        // are available immediately. If the user clears them, an empty array
-        // is persisted and this never re-seeds.
-        Services.prefs.setStringPref(
-          PREF,
-          JSON.stringify(defaultConfig.shortcuts),
-        );
-      }
-    } catch (e) {
-      console.error("[command-palette] Failed to init default shortcuts", e);
     }
   }
 

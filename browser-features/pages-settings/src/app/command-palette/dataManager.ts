@@ -23,14 +23,27 @@ const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResu
 // cannot share a module, so if you edit one side, edit the other.
 //   shortcuts          -> user-editable {prefix, commandId} pairs (read/write)
 //   selectableCommands -> chrome-cached command catalog (read-only here)
-// On first launch the chrome side seeds the default shortcut
-// [{prefix:"s",commandId:"floorp-search-web"}] into the pref via
-// CommandPaletteService.initDefaultShortcuts(). The settings UI does NOT
-// re-seed — it only reads whatever the chrome side persisted (or "[]" once the
-// user clears it), so no default value change is needed here.
+// The shortcuts pref defaults to "[]" (empty). @s and @t are built-in reserved
+// prefixes handled directly by the controller — no pref entry is needed.
+// `loadShortcuts()` migrates away any stale "s" or "t" entries that linger
+// from before the prefixes were reserved.
 const COMMAND_PALETTE_SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
 const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
   "floorp.commandPalette.selectableCommands";
+
+/**
+ * Prefixes reserved for built-in command palette behavior. The settings UI
+ * must not allow users to create or remove shortcuts with these prefixes
+ * (@s = web search, @t = open-tabs search).
+ *
+ * KEEP IN SYNC with:
+ * - browser-features/chrome/common/command-palette/config.ts
+ */
+export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = ["s", "t"];
+
+export function isReservedShortcutPrefix(prefix: string): boolean {
+  return RESERVED_SHORTCUT_PREFIXES.includes(prefix);
+}
 
 const DEFAULT_WIDTH = 560;
 const DEFAULT_MAX_HEIGHT = 400;
@@ -430,7 +443,17 @@ export function parseSelectableCommands(
 export async function loadShortcuts(): Promise<CommandPaletteShortcut[]> {
   try {
     const raw = await rpc.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF);
-    return parseShortcuts(raw);
+    const parsed = parseShortcuts(raw);
+    // Migration: drop reserved prefixes (s, t) that may linger from before
+    // they were reserved. They are invisible in the settings UI and cannot be
+    // removed there, so cleaning them here keeps the pref consistent with the
+    // reserved display. @s and @t are built-in and need no pref entry.
+    const cleaned = parsed.filter((s) => !isReservedShortcutPrefix(s.prefix));
+    if (cleaned.length !== parsed.length) {
+      // Best-effort; failures are logged by saveShortcuts itself.
+      saveShortcuts(cleaned);
+    }
+    return cleaned;
   } catch (error) {
     console.error("[command-palette] Failed to load shortcuts:", error);
     return [];

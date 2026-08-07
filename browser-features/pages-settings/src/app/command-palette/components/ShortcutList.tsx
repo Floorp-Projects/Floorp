@@ -13,6 +13,7 @@ import {
   loadSelectableCommands,
   loadShortcuts,
   saveShortcuts,
+  isReservedShortcutPrefix,
   type CommandPaletteShortcut,
   type SelectableCommand,
 } from "../dataManager.ts";
@@ -72,6 +73,17 @@ export function ShortcutList() {
 
   const grouped = useMemo(() => groupByCategory(selectable), [selectable]);
 
+  /** Built-in shortcuts that cannot be changed or removed from this UI. */
+  const reservedRows = [
+    { prefix: "s", commandLabel: t("commandPalette.shortcuts.reservedWebSearch") },
+    { prefix: "t", commandLabel: t("commandPalette.shortcuts.reservedTabSearch") },
+  ];
+
+  /** User-defined shortcuts, excluding reserved prefixes. */
+  const userShortcuts = shortcuts.filter(
+    (s) => !isReservedShortcutPrefix(s.prefix),
+  );
+
   /** Resolves a command id to its human-readable label, falling back to the id. */
   const labelFor = (commandId: string): string => {
     const found = selectable.find((command) => command.id === commandId);
@@ -96,6 +108,13 @@ export function ShortcutList() {
     // `@` is the palette's input delimiter, never part of a stored prefix.
     if (prefix.includes("@")) {
       setError(t("commandPalette.shortcuts.errorAt"));
+      return;
+    }
+    // Reserved check comes before the duplicate check: when a stale reserved
+    // entry ("s"/"t") lingers in the pref (invisible in this UI), the reserved
+    // error must surface instead of a misleading duplicate error.
+    if (isReservedShortcutPrefix(prefix)) {
+      setError(t("commandPalette.shortcuts.errorReserved"));
       return;
     }
     if (shortcuts.some((shortcut) => shortcut.prefix === prefix)) {
@@ -152,9 +171,36 @@ export function ShortcutList() {
         </CardTitle>
         <CardDescription>
           {t("commandPalette.shortcuts.description")}
+          <p className="mt-1">
+            {t("commandPalette.shortcuts.reservedDescription")}
+          </p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Reserved shortcuts section */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">
+            {t("commandPalette.shortcuts.reservedTitle")}
+          </h3>
+          {reservedRows.map((row) => (
+            <div
+              key={row.prefix}
+              className="flex items-center justify-between bg-muted/40 hover:bg-muted/60 px-3 py-2.5 rounded-md transition-colors"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <code className="text-sm font-mono shrink-0">
+                  @{row.prefix}
+                </code>
+                <span className="text-muted-foreground shrink-0">→</span>
+                <span className="text-sm truncate">{row.commandLabel}</span>
+              </div>
+              <span className="text-xs shrink-0 rounded bg-muted px-2 py-0.5 text-muted-foreground">
+                {t("commandPalette.shortcuts.reservedBadge")}
+              </span>
+            </div>
+          ))}
+        </div>
+
         {/* Add form */}
         {canAdd
           ? (
@@ -240,10 +286,10 @@ export function ShortcutList() {
           )}
 
         {/* Registered shortcuts list */}
-        {shortcuts.length > 0
+        {userShortcuts.length > 0
           ? (
             <div className="space-y-2">
-              {shortcuts.map((shortcut) => (
+              {userShortcuts.map((shortcut) => (
                 <div
                   key={shortcut.prefix}
                   className="group flex items-center justify-between bg-muted/40 hover:bg-muted/60 px-3 py-2.5 rounded-md transition-colors"

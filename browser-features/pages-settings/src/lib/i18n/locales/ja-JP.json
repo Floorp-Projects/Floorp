@@ -803,7 +803,13 @@
             "errorDuplicate": "このプレフィックスは既に使用されています。",
             "errorCommandRequired": "コマンドを選択してください。",
             "noCommands": "コマンドがありません。ブラウザを再起動してください。",
-            "empty": "ショートカットが設定されていません。"
+            "empty": "ショートカットが設定されていません。",
+            "reservedTitle": "予約済みショートカット",
+            "reservedDescription": "@s（ウェブ検索）と @t（タブ検索）は予約済みの組み込みショートカットのため、変更・削除できません。",
+            "reservedBadge": "予約済み",
+            "reservedWebSearch": "ウェブ検索",
+            "reservedTabSearch": "開いているタブを検索",
+            "errorReserved": "このプレフィックスは予約済みのため使用できません。"
         }
     }
 }

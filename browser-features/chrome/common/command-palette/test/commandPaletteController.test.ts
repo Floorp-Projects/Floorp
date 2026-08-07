@@ -10,10 +10,12 @@ import {
 import { CommandPaletteController } from "../controller.ts";
 import type { PaletteCommand, CommandStep } from "#features-chrome/common/command-palette/types.ts";
 import {
+  getCommand,
   getPaletteCommands,
   isTabCommand,
 } from "#features-chrome/common/command-palette/command-registry.ts";
 import { setShortcuts } from "#features-chrome/common/command-palette/config.ts";
+import { getTabCommands } from "#features-chrome/common/command-palette/tab-provider.ts";
 
 function makeStepCommand(steps: CommandStep[], fn?: PaletteCommand["fn"]): PaletteCommand {
   return {
@@ -99,8 +101,10 @@ function createController(): CommandPaletteController {
 //
 // `updateSearch("@")` routes through a 30ms debounce (non-empty query), so
 // every shortcut test must await a short tick before asserting on
-// `filteredCommands()`. Cleanup via `setShortcuts([])` in `finally` keeps the
-// shared pref hermetic across the suite.
+// `filteredCommands()`. Every test snapshots the `floorp.commandPalette.shortcuts`
+// pref before mutating it and restores the snapshot in `finally` (see
+// `snapshotShortcutsPref` / `restoreShortcutsPref` above), keeping the shared
+// pref hermetic across the suite — and across real dev profiles.
 
 /**
  * Resolves two stable, non-tab command ids from the live registry. Prefers
@@ -122,6 +126,42 @@ function resolveKnownCommandIds(): [string, string] {
 
 const [KNOWN_ID, KNOWN_ID_2] = resolveKnownCommandIds();
 
+// ---------------------------------------------------------------------------
+// Shortcuts-pref snapshot / restore
+// ---------------------------------------------------------------------------
+//
+// `setShortcuts(...)` persists through the config module's effect, which writes
+// the new value into the `floorp.commandPalette.shortcuts` pref. A test that
+// only calls `setShortcuts([])` in its `finally` therefore leaves the pref
+// overwritten with "[]" — destroying a real user's shortcuts in a dev profile.
+// Every test that mutates the shortcuts pref therefore snapshots the raw pref
+// value BEFORE mutating and restores it in `finally`. Setting (or clearing) the
+// pref fires the config module's pref observer, which resyncs the in-memory
+// shortcuts signal, so the restore fully undoes the mutation.
+
+const SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
+
+interface ShortcutsPrefSnapshot {
+  hadUserValue: boolean;
+  value: string | null;
+}
+
+function snapshotShortcutsPref(): ShortcutsPrefSnapshot {
+  const hadUserValue = Services.prefs.prefHasUserValue(SHORTCUTS_PREF);
+  return {
+    hadUserValue,
+    value: hadUserValue ? Services.prefs.getStringPref(SHORTCUTS_PREF) : null,
+  };
+}
+
+function restoreShortcutsPref(snapshot: ShortcutsPrefSnapshot): void {
+  if (snapshot.hadUserValue && snapshot.value !== null) {
+    Services.prefs.setStringPref(SHORTCUTS_PREF, snapshot.value);
+  } else if (Services.prefs.prefHasUserValue(SHORTCUTS_PREF)) {
+    Services.prefs.clearUserPref(SHORTCUTS_PREF);
+  }
+}
+
 /** Wait long enough for the 30ms debounced updateSearch to flush. */
 function flushDebounce(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 60));
@@ -137,6 +177,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@ alone lists all shortcuts in declaration order",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gp", commandId: KNOWN_ID_2 },
@@ -158,7 +199,7 @@ const shortcutTests: TestCase[] = [
           "second row should be 'gp' (declaration order)",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -167,6 +208,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@<exact> pins the exact-prefix shortcut to the top",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gp", commandId: KNOWN_ID_2 },
@@ -183,7 +225,7 @@ const shortcutTests: TestCase[] = [
           "exact 'gh' match should be first",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -192,6 +234,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@<partial> ranks exact > startsWith for prefix matches",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gp", commandId: KNOWN_ID_2 },
@@ -213,7 +256,7 @@ const shortcutTests: TestCase[] = [
           "'gp' should come second",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -222,6 +265,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@<no-match> yields zero shortcut rows",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gp", commandId: KNOWN_ID_2 },
@@ -233,7 +277,7 @@ const shortcutTests: TestCase[] = [
         const rows = shortcutRows(ctrl.state.filteredCommands());
         assertEquals(rows.length, 0, "no shortcut prefix matches 'xyz'");
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -242,6 +286,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "CRITICAL#1: shortcut is pinned to filteredCommands[0] when present",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
       ]);
@@ -257,7 +302,7 @@ const shortcutTests: TestCase[] = [
           "shortcut must occupy index 0 (list-head pinning)",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -266,6 +311,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "MAJOR#4: duplicate prefix dedups to first declared (1 row)",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gh", commandId: KNOWN_ID_2 },
@@ -286,7 +332,7 @@ const shortcutTests: TestCase[] = [
           "first-declared commandId should win",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -295,6 +341,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "MINOR#5: shortcut with non-existent commandId is dropped",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "dead", commandId: "__nonexistent_command__" },
       ]);
@@ -309,7 +356,7 @@ const shortcutTests: TestCase[] = [
           "shortcut whose target does not resolve must be omitted",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -318,6 +365,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "non-@ query yields zero shortcut rows (normal search untouched)",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
         { prefix: "gp", commandId: KNOWN_ID_2 },
@@ -335,7 +383,7 @@ const shortcutTests: TestCase[] = [
           "no shortcut rows should appear for a non-@ query",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -344,6 +392,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@s hello generates args-bearing shortcut candidate pinned to top",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "s", commandId: "floorp-search-web" },
       ]);
@@ -372,7 +421,7 @@ const shortcutTests: TestCase[] = [
           "args shortcut must be pinned to list head",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -381,6 +430,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@s hello world preserves multi-word args in label",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "s", commandId: "floorp-search-web" },
       ]);
@@ -400,7 +450,7 @@ const shortcutTests: TestCase[] = [
           `label "${rows[0].label}" should contain "hello world"`,
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -409,6 +459,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@s alone (no args) uses plain shortcut, not args mode",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "s", commandId: "floorp-search-web" },
       ]);
@@ -428,7 +479,7 @@ const shortcutTests: TestCase[] = [
           "should be plain shortcut id",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -437,6 +488,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@x foo with non-existent prefix yields zero shortcut rows",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "s", commandId: "floorp-search-web" },
       ]);
@@ -451,7 +503,7 @@ const shortcutTests: TestCase[] = [
           "no shortcut prefix 'x' exists, so 0 rows",
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -460,6 +512,7 @@ const shortcutTests: TestCase[] = [
   {
     name: "@gh hello on non-step command falls back to plain shortcut",
     async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "gh", commandId: KNOWN_ID },
       ]);
@@ -476,7 +529,402 @@ const shortcutTests: TestCase[] = [
           `id "${rows[0].id}" should NOT have :args suffix for non-step command`,
         );
       } finally {
-        setShortcuts([]);
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- @s built-in web search (reserved prefix, independent of the pref) ---
+  //
+  // "@s" is a BUILT-IN reserved prefix (see RESERVED_SHORTCUT_PREFIXES in
+  // config.ts): the controller resolves `floorp-search-web` directly, so it
+  // works even when the shortcuts pref is empty, and it always beats any
+  // user-defined "s" shortcut (e.g. a stale entry persisted before the prefix
+  // was reserved). These tests are skipped when `floorp-search-web` is not
+  // registered in the test window.
+  {
+    name: "@s lists floorp-search-web even with an empty shortcuts pref",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "built-in @s should yield exactly one shortcut row",
+        );
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web",
+          "built-in @s should resolve to floorp-search-web",
+        );
+        assertEquals(
+          rows[0].category,
+          "shortcut",
+          "category should be shortcut",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  {
+    name: "@s hello enters args mode with an empty shortcuts pref (built-in)",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s hello");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "built-in @s with args should yield exactly one shortcut row",
+        );
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web:args",
+          "@s <query> should produce the args-bearing row",
+        );
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "hello",
+          "@s <query> should highlight only the args part",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  {
+    name: "@s built-in wins over a stale user-defined 's' shortcut",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      // A stale user "s" entry pointing at a DIFFERENT command must be ignored.
+      setShortcuts([{ prefix: "s", commandId: KNOWN_ID }]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "built-in @s should yield exactly one shortcut row",
+        );
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web",
+          "built-in @s must beat a stale user 's' shortcut",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+];
+
+// ---------------------------------------------------------------------------
+// @t tab-search tests
+// ---------------------------------------------------------------------------
+//
+// "@t" is the built-in open-tabs search mode: typing "@t" lists every open tab
+// (id `__tab__<id>`, category "open-tabs"), and "@t <query>" fuzzy-filters them
+// by title/URL with no per-category limit. The "t" prefix is reserved
+// (RESERVED_SHORTCUT_PREFIXES in config.ts) and always wins over user-defined
+// shortcuts, so @t must work even when NO user shortcuts exist — every test
+// therefore pins `setShortcuts([])` to prove the built-in path is independent
+// of user shortcuts (and restores the real pref via `restoreShortcutsPref`).
+//
+// `updateSearch("@t ...")` routes through the 30ms debounce (non-empty query),
+// so every test awaits `flushDebounce()` before asserting on
+// `filteredCommands()`. Tab titles/URLs are environment-dependent, so queries
+// are derived dynamically from `getTabCommands(window)` instead of being
+// hard-coded.
+
+const tabSearchTests: TestCase[] = [
+  // --- "@t" alone lists every open tab, and nothing else ---
+  {
+    name: "@t lists only open-tab commands (all categories 'open-tabs')",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t");
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+        const expectedCount = getTabCommands(window).length;
+        assertEquals(
+          results.length,
+          expectedCount,
+          "@t should list every open tab, no more no less",
+        );
+        for (const cmd of results) {
+          assert(
+            isTabCommand(cmd.id),
+            `id "${cmd.id}" should be a tab command`,
+          );
+          assertEquals(cmd.category, "open-tabs", "category should be open-tabs");
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@t <query>" fuzzy-filters tabs by title/URL ---
+  {
+    name: "@t <query> fuzzy-filters tabs by title/URL",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const tabs = getTabCommands(window);
+        if (tabs.length === 0) return; // nothing to filter — trivially passes
+        // Derive the query dynamically from the first tab that has any
+        // searchable text (title preferred, URL as fallback).
+        const first = tabs.find((t) => t.label.trim().length > 0) ??
+          tabs.find((t) => t.description.trim().length > 0);
+        if (!first) return; // all tabs have empty label+URL — cannot filter
+        const source = first.label.trim() || first.description;
+        const query = source.slice(0, Math.min(6, source.length));
+        const originalIds = new Set(tabs.map((t) => t.id));
+
+        const ctrl = createController();
+        ctrl.updateSearch(`@t ${query}`);
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+
+        assert(results.length > 0, "filtered tab list should be non-empty");
+        for (const cmd of results) {
+          assert(
+            originalIds.has(cmd.id),
+            `result id "${cmd.id}" must be one of the open tabs`,
+          );
+        }
+        assert(
+          results.some((c) => c.id === first.id),
+          "the tab matching the query must be present in the results",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@t <no-match>" yields an empty list ---
+  {
+    name: "@t <no-match> returns an empty list",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t zzqxv-not-a-real-tab-zzqxv");
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+        // With zero open tabs this is trivially empty; with one or more tabs it
+        // proves the fuzzy filter rejects queries matching no title/URL AND that
+        // @t early-returns (no command-search / search-engine fallback rows leak
+        // into the list).
+        assertEquals(
+          results.length,
+          0,
+          "non-matching @t query should yield an empty list",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- highlightQuery: @t highlights only the args part ---
+  {
+    name: "@t mode sets highlightQuery to the args part (normal queries sync)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t foo");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "foo",
+          "@t <query> should highlight only the args part",
+        );
+        ctrl.updateSearch("@t");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "",
+          "@t alone should highlight nothing",
+        );
+        ctrl.updateSearch("hello");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "hello",
+          "normal queries keep highlightQuery in sync with the full query",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- Enter on an @t result switches to that tab ---
+  {
+    name: "executing an @t result switches to that tab (restored afterwards)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      const gb = (window as unknown as { gBrowser: GBrowser }).gBrowser;
+      if (!gb || gb.tabs.length < 2) return; // need a non-selected tab to switch to
+      const originalTab = gb.selectedTab;
+      const targetTab = gb.tabs.find((t) => t !== originalTab);
+      assert(targetTab !== undefined, "a non-selected tab must exist");
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t");
+        await flushDebounce();
+        const filtered = ctrl.state.filteredCommands();
+        // Match the command id the same way tab-provider builds it
+        // (`tab.tabId ?? tab._tPos`).
+        const tabId = (targetTab as unknown as { tabId?: number }).tabId ??
+          (targetTab as unknown as { _tPos?: number })._tPos;
+        const targetCmd = filtered.find((c) => c.id === `__tab__${tabId}`);
+        assert(
+          targetCmd !== undefined,
+          `tab command "__tab__${tabId}" should be in the @t list`,
+        );
+        ctrl.executeCommand(targetCmd);
+        assertEquals(
+          gb.selectedTab,
+          targetTab,
+          "executing the tab command should select the target tab",
+        );
+      } finally {
+        // Side effect is heavy: always restore the originally selected tab.
+        gb.selectedTab = originalTab;
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- @t vs a user-defined "t" shortcut: the built-in always wins ---
+  {
+    name: "@t wins over a user-defined 't' shortcut (reserved prefix)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      // Even with a user "t" shortcut pointing at a different command, the
+      // built-in @t branch runs first and the user shortcut must never appear.
+      setShortcuts([{ prefix: "t", commandId: KNOWN_ID }]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t");
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+        assertEquals(
+          shortcutRows(results).length,
+          0,
+          "user-defined 't' shortcut must be ignored by built-in @t",
+        );
+        for (const cmd of results) {
+          assert(
+            isTabCommand(cmd.id),
+            `id "${cmd.id}" should be a tab command (built-in @t wins)`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@t " (trailing space) still lists every open tab ---
+  {
+    name: "@t with a trailing space lists all open tabs",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@t ");
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+        const expectedCount = getTabCommands(window).length;
+        assertEquals(
+          results.length,
+          expectedCount,
+          "@t<space> should list every open tab, no more no less",
+        );
+        for (const cmd of results) {
+          assert(
+            isTabCommand(cmd.id),
+            `id "${cmd.id}" should be a tab command`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@T" (uppercase) is NOT tab mode; it falls through to shortcuts ---
+  //
+  // The built-in @t branch only triggers on the lowercase prefix ("t"). Prefix
+  // matching for user shortcuts is case-sensitive (`s.prefix === prefixPart`),
+  // so a user-defined "T" shortcut stays reachable via "@T" — proving the @t
+  // branch was skipped entirely.
+  {
+    name: "@T (uppercase) does not enter tab mode (falls through to shortcuts)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([{ prefix: "T", commandId: KNOWN_ID }]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@T");
+        await flushDebounce();
+        const results = ctrl.state.filteredCommands();
+        // In @t mode highlightQuery would be the args part ("" here); the
+        // fall-through path syncs it to the full trimmed query instead.
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@T",
+          "uppercase @T must NOT enter tab mode (highlightQuery stays the full query)",
+        );
+        const rows = shortcutRows(results);
+        assert(
+          rows.some((r) => r.id === `__shortcut:T:${KNOWN_ID}`),
+          `user "T" shortcut row "__shortcut:T:${KNOWN_ID}" should appear via the shortcut mechanism`,
+        );
+        // Shortcut rows are pushed first in the @-prefix path, so the list head
+        // is the "T" shortcut row (not a tab command).
+        assert(
+          results.length > 0 && results[0].category === "shortcut",
+          "the 'T' shortcut row should be pinned to the top of the results",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
       }
     },
   },
@@ -635,5 +1083,9 @@ const rawTests: TestCase[] = [
 ];
 
 export function runAllTests(): void {
-  runTests("commandPaletteController.test.ts", [...rawTests, ...shortcutTests]);
+  runTests("commandPaletteController.test.ts", [
+    ...rawTests,
+    ...shortcutTests,
+    ...tabSearchTests,
+  ]);
 }

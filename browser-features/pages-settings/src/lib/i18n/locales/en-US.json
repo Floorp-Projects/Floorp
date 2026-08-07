@@ -809,7 +809,13 @@
             "errorDuplicate": "This prefix is already used.",
             "errorCommandRequired": "Select a command.",
             "noCommands": "No commands available. Restart the browser to load commands.",
-            "empty": "No shortcuts configured."
+            "empty": "No shortcuts configured.",
+            "reservedTitle": "Reserved Shortcuts",
+            "reservedDescription": "@s (web search) and @t (open-tabs search) are reserved built-in shortcuts and cannot be changed or removed.",
+            "reservedBadge": "Reserved",
+            "reservedWebSearch": "Search the Web",
+            "reservedTabSearch": "Search Open Tabs",
+            "errorReserved": "This prefix is reserved and cannot be used."
         }
     }
 }
