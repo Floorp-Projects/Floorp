@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Urungkan Tutup Tab",
     "tooltiptext": "Buka kembali tab yang baru saja ditutup {{shortcut}}"
@@ -133,6 +136,11 @@
     "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Kontainer Pribadi"
   },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
+  },
   "mouseGesture": {
     "actions": {
       "gecko-back": "Kembali",
@@ -192,7 +200,7 @@
       "gecko-open-containers-preferences": "Open Containers Preferences",
       "gecko-open-search-preferences": "Open Search Preferences",
       "gecko-open-sync-preferences": "Open Sync Preferences",
-      "gecko-open-task-manager": "Open Task Manager",
+      "gecko-open-task-manager": "Buka Pengelola Tugas",
       "gecko-forget-history": "Forget History",
       "gecko-quick-forget-history": "Quick Forget History",
       "gecko-clear-recent-history": "Clear Recent History",
@@ -449,31 +457,31 @@
     "menu-label": "Toggle Zen Mode"
   },
   "ipProtection": {
-    "title": "Browser VPN",
+    "title": "VPN Peramban",
     "toolbar": {
-      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
-      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
-      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
-      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
-      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
-      "helpTooltip": "Open Browser VPN support page"
+      "activeTooltip": "VPN Peramban aktif untuk lalin penjelajahan web tertentu di Floorp",
+      "inactiveTooltip": "VPN Peramban nonaktif — lalin penjelajahan web tak terlindungi",
+      "excludedTooltip": "VPN Peramban nonaktif untuk situs ini — situs ini tak terlindungi",
+      "pausedTooltip": "VPN Peramban dijeda — lalin penjelajahan web tak terlindungi",
+      "errorTooltip": "VPN Peramban — galat koneksi; lalin penjelajahan web yang memenuhi syarat tak terlindungi",
+      "helpTooltip": "Buka halaman dukungan VPN Peramban"
     },
     "scope": {
-      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
-      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+      "summary": "Ketika aktif, VPN Peramban dapat melindungi lalu lintas penjelajahan web di Floorp. VPN ini tidak mencakup operasi sistem Anda atau aplikasi lain.",
+      "fullDisclosure": "Fitur ini menggunakan akun Mozilla dan infrastruktur layanan Mozilla. Floorp adalah proyek independen yang tidak berafiliasi dengan, didukung oleh, atau disponsori oleh Mozilla. Ketersediaan layanan bergantung pada wilayah, status akun, dan persyaratan kelayakan layanan Mozilla."
     },
     "unauthenticated": {
-      "title": "Try Browser VPN"
+      "title": "Coba VPN Peramban"
     },
     "settings": {
-      "promoHeading": "Try Browser VPN",
-      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+      "promoHeading": "Coba VPN Peramban",
+      "promoMessage": "Lindungi lalu lintas penjelajahan web di Floorp setelah masuk dan memastikan ketersediaan layanan."
     },
     "terms": {
-      "prefix": "By continuing, you agree to ",
-      "termsOfUse": "Mozilla Firefox Terms of Use",
-      "conjunction": " and acknowledge ",
-      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "prefix": "Dengan melanjutkan, Anda menyetujui ",
+      "termsOfUse": "Ketentuan Penggunaan Mozilla Firefox",
+      "conjunction": " dan mengakui ",
+      "privacyNotice": "Pernyataan Privasi Mozilla Firefox",
       "suffix": "."
     }
   },

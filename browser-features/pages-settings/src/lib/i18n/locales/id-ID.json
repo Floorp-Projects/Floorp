@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} adalah perangkat lunak sumber terbuka di bawah Lisensi Publik Mozilla 2.0, yang dimungkinkan oleh proyek sumber terbuka Firefox dan perangkat lunak sumber terbuka lainnya.",
         "openSourceLicenseNotice": "Lisensi Sumber Terbuka",
         "versionInfo": "Versi",
-        "license": "Lisensi"
+        "license": "Lisensi",
+        "noraneko": {
+            "logoAlt": "Logo Peramban",
+            "description": "Noraneko adalah peramban sebagai tempat pengujian Floorp 12. Floorp dikembangkan berdasarkan Firefox dan Noraneko.",
+            "communityCredit": "Dibuat oleh komunitas Noraneko dengan ❤",
+            "repositoryLabel": "Repositori GitHub: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Pembaruan & Eksperimen",
@@ -670,6 +676,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",

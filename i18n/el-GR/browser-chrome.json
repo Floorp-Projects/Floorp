@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Αναίρεση κλεισίματος καρτέλας",
     "tooltiptext": "Άνοιγμα της τελευταίας κλεισμένης καρτέλας {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "Άνοιγμα σε ιδιωτικό περιέκτη",
     "reopenInPrivateContainer": "Επανάνοιγμα σε ιδιωτικό περιέκτη",
     "name": "Ιδιωτικός περιέκτης"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {

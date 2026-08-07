@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} är en programvara med öppen källkod som är tillgänglig under Mozilla Public License 2.0, vilket möjliggörs av Firefox-projektet med öppen källkod och annan programvara med öppen källkod.",
         "openSourceLicenseNotice": "Öppen källkod licens",
         "versionInfo": "Version",
-        "license": "Licens"
+        "license": "Licens",
+        "noraneko": {
+            "logoAlt": "Webbläsarens logotyp",
+            "description": "Noraneko är en webbläsare som används som testmiljö för Floorp 12. Floorp bygger på Firefox och Noraneko.",
+            "communityCredit": "Skapad av Noraneko gemenskapen med ❤",
+            "repositoryLabel": "GitHub-arkiv: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Uppdateringar och experiment",
@@ -670,6 +676,9 @@
         "action": "Åtgärd",
         "shortcut": "Genväg",
         "actions": "Åtgärder",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Inte anget",
         "add": "Lägg till",
         "edit": "Redigera",

@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} 는 Mozilla Public License 2.0에 따라 제공되는 오픈 소스 소프트웨어로, Firefox 오픈 소스 프로젝트 및 기타 오픈 소스 소프트웨어에 의해 만들어졌습니다.",
         "openSourceLicenseNotice": "오픈 소스 라이센스",
         "versionInfo": "버전",
-        "license": "라이센스"
+        "license": "라이센스",
+        "noraneko": {
+            "logoAlt": "브라우저 로고",
+            "description": "Noraneko는 Floorp 12의 테스트 브라우저입니다. Floorp는 Firefox와 Noraneko를 기반으로 합니다.",
+            "communityCredit": "Noraneko 커뮤니티에서 ❤을 담아 개발",
+            "repositoryLabel": "GitHub 저장소: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "업데이트 및 실험",
@@ -670,6 +676,9 @@
         "action": "동작",
         "shortcut": "단축키",
         "actions": "동작",
+        "actionLabels": {
+            "floorp-edit-tab-url": "탭 URL 편집"
+        },
         "notSet": "설정되지 않음",
         "add": "추가",
         "edit": "수정",
