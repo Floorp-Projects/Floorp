@@ -574,7 +574,10 @@
     "bookmarkSwitcherStepLabel": "Select a bookmark",
     "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark...",
     "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
-    "searchShortcutDescription": "Search \"{{query}}\""
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs"
+    }
   },
   "commandPaletteReadings": {}
 }

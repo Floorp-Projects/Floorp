@@ -574,7 +574,10 @@
     "bookmarkSwitcherStepLabel": "ブックマークを選択",
     "bookmarkSwitcherStepPlaceholder": "ブックマークを検索または選択...",
     "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
-    "searchShortcutDescription": "「{{query}}」を検索"
+    "searchShortcutDescription": "「{{query}}」を検索",
+    "shortcuts": {
+      "reservedTabSearch": "開いているタブを検索"
+    }
   },
   "commandPaletteReadings": {}
 }

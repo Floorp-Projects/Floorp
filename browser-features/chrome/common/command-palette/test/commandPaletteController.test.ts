@@ -930,6 +930,281 @@ const tabSearchTests: TestCase[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Reserved built-in shortcut list tests ("@" alone)
+// ---------------------------------------------------------------------------
+//
+// "@" alone shows the reserved built-in shortcut rows (`__reserved:s` for web
+// search, `__reserved:t` for tab search) at the very top of the candidate list
+// — above any user-defined shortcuts, and even when the shortcuts pref is
+// empty. `__reserved:s` is only present when `floorp-search-web` is registered
+// in the test window (same guard as the existing @s tests). Selecting a
+// reserved row transitions into its mode by replacing the query (`@s ` /
+// `@t `) WITHOUT hiding the palette: `mode` stays "command" and the palette
+// stays visible, so the user lands directly in the next mode instead of
+// re-opening the palette.
+//
+// `updateSearch("@")` routes through the 30ms debounce (non-empty query), so
+// every test awaits `flushDebounce()` before asserting on
+// `filteredCommands()`. All tests snapshot/restore the shortcuts pref to stay
+// hermetic. `setIsVisible(true)` simulates an open palette so the
+// "stays visible" invariant is meaningful (the palette starts hidden).
+
+const reservedListTests: TestCase[] = [
+  // --- "@" alone shows the reserved rows even with an empty shortcuts pref ---
+  {
+    name: "@ alone lists reserved rows (__reserved:s/__reserved:t) with empty pref",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const hasSearchWeb =
+          getCommand("floorp-search-web", window) !== undefined;
+        const reservedS = rows.find((r) => r.id === "__reserved:s");
+        const reservedT = rows.find((r) => r.id === "__reserved:t");
+        if (hasSearchWeb) {
+          assert(
+            reservedS !== undefined,
+            "__reserved:s row should be present when floorp-search-web is registered",
+          );
+        }
+        assert(
+          reservedT !== undefined,
+          "__reserved:t row should always be present",
+        );
+        for (const row of rows) {
+          if (row.id.startsWith("__reserved:")) {
+            assertEquals(
+              row.category,
+              "shortcut",
+              `reserved row "${row.id}" should have category "shortcut"`,
+            );
+          }
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@" alone pins the reserved rows ABOVE user-defined shortcuts ---
+  {
+    name: "@ alone pins reserved rows above user-defined shortcuts",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([{ prefix: "gh", commandId: KNOWN_ID }]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const filtered = ctrl.state.filteredCommands();
+        assert(filtered.length > 0, "filtered list should be non-empty");
+        const hasSearchWeb =
+          getCommand("floorp-search-web", window) !== undefined;
+        const reservedCount = hasSearchWeb ? 2 : 1;
+        for (let i = 0; i < reservedCount; i++) {
+          assert(
+            filtered[i].id.startsWith("__reserved:"),
+            `filtered[${i}] should be a reserved row (got "${filtered[i].id}")`,
+          );
+        }
+        if (hasSearchWeb) {
+          assertEquals(
+            filtered[0].id,
+            "__reserved:s",
+            "first row should be __reserved:s",
+          );
+          assertEquals(
+            filtered[1].id,
+            "__reserved:t",
+            "second row should be __reserved:t",
+          );
+        } else {
+          assertEquals(
+            filtered[0].id,
+            "__reserved:t",
+            "first row should be __reserved:t",
+          );
+        }
+        // The user-defined shortcut row follows right after the reserved rows.
+        const userShortcut = filtered[reservedCount];
+        assert(
+          userShortcut !== undefined &&
+            userShortcut.id === `__shortcut:gh:${KNOWN_ID}`,
+          `row after reserved rows should be the user 'gh' shortcut (got "${
+            userShortcut ? userShortcut.id : "undefined"
+          }")`,
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@" alone excludes stale reserved-prefix entries from user shortcuts ---
+  //
+  // A stale "s" entry (persisted before the prefix was reserved) must be
+  // filtered out of the user shortcut list by buildShortcutCommands, otherwise
+  // it would duplicate the built-in __reserved:s row. A normal user-defined
+  // shortcut ("gh") must be unaffected. The __reserved:s assertion is skipped
+  // when floorp-search-web is not registered in the test window (same guard as
+  // the other reserved tests).
+  {
+    name: "@ alone excludes stale reserved-prefix entries from user shortcuts",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([
+        { prefix: "s", commandId: KNOWN_ID },
+        { prefix: "gh", commandId: KNOWN_ID },
+      ]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const hasSearchWeb =
+          getCommand("floorp-search-web", window) !== undefined;
+        if (hasSearchWeb) {
+          assert(
+            rows.some((r) => r.id === "__reserved:s"),
+            "__reserved:s row should be present when floorp-search-web is registered",
+          );
+        }
+        assertEquals(
+          rows.filter((r) => r.id.startsWith("__shortcut:s:")).length,
+          0,
+          "stale 's' shortcut entry must be excluded from the @ list",
+        );
+        assert(
+          rows.some((r) => r.id === `__shortcut:gh:${KNOWN_ID}`),
+          `user 'gh' shortcut "__shortcut:gh:${KNOWN_ID}" should still be listed`,
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- Selecting __reserved:s transitions into @s mode without hiding the palette ---
+  {
+    name: "executing __reserved:s transitions to @s mode (palette stays open)",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const reservedS = rows.find((r) => r.id === "__reserved:s");
+        assert(
+          reservedS !== undefined,
+          "__reserved:s row should be in the @ list",
+        );
+        // Simulate an open palette so the "stays visible" invariant is meaningful.
+        ctrl.state.setIsVisible(true);
+        ctrl.executeCommand(reservedS);
+        assertEquals(
+          ctrl.state.mode(),
+          "command",
+          "mode should stay 'command' (no input mode, no close)",
+        );
+        assertEquals(
+          ctrl.state.isVisible(),
+          true,
+          "palette should stay visible (reserved rows must not hide it)",
+        );
+        assertEquals(
+          ctrl.state.query(),
+          "@s ",
+          "query should transition to '@s '",
+        );
+        // The reserved fn re-runs updateSearch (debounced) — flush it and check
+        // the resolved @s shortcut row appears (args-less plain form).
+        await flushDebounce();
+        const filtered = ctrl.state.filteredCommands();
+        const sRow = filtered.find(
+          (c) => c.id === "__shortcut:s:floorp-search-web",
+        );
+        assert(
+          sRow !== undefined,
+          "resolved '__shortcut:s:floorp-search-web' row should be listed after the transition",
+        );
+        assert(
+          !sRow.id.endsWith(":args"),
+          `id "${sRow.id}" should be the plain (args-less) shortcut row`,
+        );
+        assertEquals(sRow.category, "shortcut", "category should be shortcut");
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- Selecting __reserved:t transitions into @t tab mode without hiding the palette ---
+  {
+    name: "executing __reserved:t transitions to @t tab mode (palette stays open)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      const expectedTabs = getTabCommands(window);
+      if (expectedTabs.length === 0) return; // nothing to list — trivially passes
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const reservedT = rows.find((r) => r.id === "__reserved:t");
+        assert(
+          reservedT !== undefined,
+          "__reserved:t row should be in the @ list",
+        );
+        ctrl.state.setIsVisible(true);
+        ctrl.executeCommand(reservedT);
+        assertEquals(
+          ctrl.state.mode(),
+          "command",
+          "mode should stay 'command' (no input mode, no close)",
+        );
+        assertEquals(
+          ctrl.state.isVisible(),
+          true,
+          "palette should stay visible (reserved rows must not hide it)",
+        );
+        assertEquals(
+          ctrl.state.query(),
+          "@t ",
+          "query should transition to '@t '",
+        );
+        // The reserved fn re-runs updateSearch (debounced) — flush it and check
+        // every open tab is listed, exactly like a direct "@t" query.
+        await flushDebounce();
+        const filtered = ctrl.state.filteredCommands();
+        assertEquals(
+          filtered.length,
+          expectedTabs.length,
+          "@t after transition should list every open tab, no more no less",
+        );
+        for (const cmd of filtered) {
+          assert(
+            isTabCommand(cmd.id),
+            `id "${cmd.id}" should be a tab command`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+];
+
 const rawTests: TestCase[] = [
   // --- Controller instantiation ---
   {
@@ -1087,5 +1362,6 @@ export function runAllTests(): void {
     ...rawTests,
     ...shortcutTests,
     ...tabSearchTests,
+    ...reservedListTests,
   ]);
 }

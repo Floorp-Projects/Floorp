@@ -18,6 +18,7 @@ import {
   getMaxHistorySuggestions,
   getMaxTabsResults,
   getShortcuts,
+  RESERVED_SHORTCUT_PREFIXES,
 } from "./config.ts";
 import {
   getPaletteCommands,
@@ -401,6 +402,17 @@ export class CommandPaletteController {
     // If the command has steps, enter input mode instead of executing immediately
     if (cmd.steps && cmd.steps.length > 0) {
       this.enterInputMode(cmd);
+      return;
+    }
+
+    // Reserved shortcut rows ("__reserved:s" / "__reserved:t") transition into
+    // their mode by replacing the query without hiding the palette.
+    if (cmd.id.startsWith("__reserved:")) {
+      try {
+        cmd.fn(this.targetWindow);
+      } catch (e) {
+        console.error(`[command-palette] Action failed: ${cmd.id}`, e);
+      }
       return;
     }
 
@@ -850,7 +862,13 @@ export class CommandPaletteController {
     prefixPart: string,
     argsPart: string = "",
   ): PaletteCommand[] {
-    const shortcuts = getShortcuts();
+    // Filter out stale reserved-prefix entries (e.g. old "s"/"t" single-char
+    // shortcuts left over from before the prefix was reserved). These would
+    // otherwise duplicate the built-in __reserved:s / __reserved:t rows in
+    // the "@" alone list.
+    const shortcuts = getShortcuts().filter(
+      (s) => !RESERVED_SHORTCUT_PREFIXES.includes(s.prefix),
+    );
     if (shortcuts.length === 0) return [];
 
     // --- args-bearing mode: "@prefix <args>" ---
@@ -1040,6 +1058,56 @@ export class CommandPaletteController {
     };
   }
 
+  /**
+   * Rows shown when the query is exactly "@": the reserved built-in shortcuts.
+   * Selecting one transitions into its mode by replacing the query (e.g. "@s ")
+   * without hiding the palette — see the "__reserved:" branch in executeCommand.
+   */
+  private buildReservedShortcutCommands(): PaletteCommand[] {
+    const reserved: PaletteCommand[] = [];
+
+    // @s — built-in web search
+    const searchCmd = getCommand("floorp-search-web", this.targetWindow);
+    if (searchCmd) {
+      reserved.push({
+        id: "__reserved:s",
+        label: i18next.t("commandPalette.shortcutLabel", {
+          defaultValue: "@s",
+          prefix: "s",
+        }),
+        description: searchCmd.label,
+        category: "shortcut",
+        keywords: ["s", "@s"],
+        fn: (_win) => {
+          this.state.setQuery("@s ");
+          this.state.setHighlightQuery("");
+          this.updateSearch("@s ");
+        },
+      });
+    }
+
+    // @t — built-in tab search
+    reserved.push({
+      id: "__reserved:t",
+      label: i18next.t("commandPalette.shortcutLabel", {
+        defaultValue: "@t",
+        prefix: "t",
+      }),
+      description: i18next.t("commandPalette.shortcuts.reservedTabSearch", {
+        defaultValue: "Search Open Tabs",
+      }),
+      category: "shortcut",
+      keywords: ["t", "@t"],
+      fn: (_win) => {
+        this.state.setQuery("@t ");
+        this.state.setHighlightQuery("");
+        this.updateSearch("@t ");
+      },
+    });
+
+    return reserved;
+  }
+
   private doUpdateSearch(query: string): void {
     // In input mode, don't search — just update query state
     if (this.state.mode() === "input") {
@@ -1130,6 +1198,11 @@ export class CommandPaletteController {
       if (shortcutResults.length > 0) {
         // Pin shortcut results to top; subsequent pushes append below them.
         results.push(...shortcutResults);
+      }
+
+      // "@" alone: show the reserved built-in shortcuts first, then user-defined ones.
+      if (prefixPart === "") {
+        results.unshift(...this.buildReservedShortcutCommands());
       }
     }
 
