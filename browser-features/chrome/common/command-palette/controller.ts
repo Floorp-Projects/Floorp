@@ -1138,6 +1138,7 @@ export class CommandPaletteController {
       return;
     }
 
+    const hasTrailingSpace = /\s$/.test(query);
     const trimmed = query.trim();
     const results: PaletteCommand[] = [];
 
@@ -1151,9 +1152,10 @@ export class CommandPaletteController {
       const afterAt = trimmed.slice(1); // strip "@"
       // Split "@prefix args": first whitespace separates the prefix token
       // from the rest (the argument). This lets "@s hello world" resolve to
-      // the "@s" shortcut with "hello world" as the search query. When no
-      // whitespace is present (e.g. "@s" or "@s "), argsPart is "" and the
-      // shortcut list/ranking behavior is unchanged.
+      // the "@s" shortcut with "hello world" as the search query. "@s" exactly
+      // (no trailing whitespace) enters the reserved shortcut branch (shows
+      // __reserved:s + user-defined matches); "@s " (trailing whitespace) or
+      // "@s <query>" commits to the dedicated web-search mode.
       const spaceIdx = afterAt.search(/\s/);
       const prefixPart = spaceIdx === -1 ? afterAt : afterAt.slice(0, spaceIdx);
       const argsPart = spaceIdx === -1 ? "" : afterAt.slice(spaceIdx + 1).trim();
@@ -1169,6 +1171,24 @@ export class CommandPaletteController {
       // — @t is an explicit tab-search mode, so it ignores the pref and always
       // shows every open tab (intentional).
       if (prefixPart === "t") {
+        // "@t" exactly (no args, no trailing space): don't commit to the
+        // dedicated tab-search mode yet. Show the reserved @t row plus any
+        // user-defined shortcuts starting with "@t" so typing continues to
+        // narrow the list (fzf-style). "@t " (trailing space) or "@t <query>"
+        // commits to tab-search mode below.
+        if (!argsPart && !hasTrailingSpace) {
+          results.push(
+            ...this.buildReservedShortcutCommands().filter(
+              (c) => c.id === "__reserved:t",
+            ),
+          );
+          results.push(...this.buildShortcutCommands("t", ""));
+          this.state.setHighlightQuery(trimmed);
+          this.state.setFilteredCommands(results);
+          this.state.setSelectedIndex(0);
+          return; // Skip URL navigation, command search, search-engine fallback and async suggestions
+        }
+
         const tabCommands = getTabCommands(this.targetWindow);
         const filtered = argsPart
           ? fuzzySearch(argsPart, tabCommands, tabCommands.length)
@@ -1189,6 +1209,25 @@ export class CommandPaletteController {
       // which calls search-web's fn with no args — search-web's fn early-returns when
       // query is absent, so this is a silent no-op (not a step-input entry).
       if (prefixPart === "s") {
+        // "@s" exactly (no args, no trailing space): don't commit to the
+        // dedicated web-search mode yet. Show the reserved @s row (when
+        // floorp-search-web is registered) plus any user-defined shortcuts
+        // starting with "@s" so typing continues to narrow the list
+        // (fzf-style). "@s " (trailing space) or "@s <query>" commits to
+        // web-search mode below.
+        if (!argsPart && !hasTrailingSpace) {
+          results.push(
+            ...this.buildReservedShortcutCommands().filter(
+              (c) => c.id === "__reserved:s",
+            ),
+          );
+          results.push(...this.buildShortcutCommands("s", ""));
+          this.state.setHighlightQuery(trimmed);
+          this.state.setFilteredCommands(results);
+          this.state.setSelectedIndex(0);
+          return; // Same as @t: skip URL navigation, command search, search fallback and async suggestions
+        }
+
         const searchCmd = getCommand("floorp-search-web", this.targetWindow);
         if (searchCmd) {
           // Guard: args-bearing mode requires steps (buildShortcutArgsCommand

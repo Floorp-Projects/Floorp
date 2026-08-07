@@ -455,10 +455,18 @@ const shortcutTests: TestCase[] = [
     },
   },
 
-  // --- "@s" alone (no space) uses plain ranking, not args mode ---
+  // --- "@s" alone (no trailing space) shows the reserved row, not the plain shortcut ---
+  //
+  // With the trailing-space check, "@s" exactly no longer commits to web-search
+  // mode: it shows the reserved __reserved:s row (plus any user-defined
+  // shortcuts starting with "@s") so typing continues to narrow the list.
+  // "@s " (trailing space) is what commits to the plain floorp-search-web row.
   {
-    name: "@s alone (no args) uses plain shortcut, not args mode",
+    name: "@s alone (no trailing space) shows the reserved __reserved:s row",
     async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([
         { prefix: "s", commandId: "floorp-search-web" },
@@ -468,15 +476,18 @@ const shortcutTests: TestCase[] = [
         ctrl.updateSearch("@s");
         await flushDebounce();
         const rows = shortcutRows(ctrl.state.filteredCommands());
-        assertEquals(rows.length, 1, "should have exactly 1 shortcut row");
-        assert(
-          !rows[0].id.endsWith(":args"),
-          `id "${rows[0].id}" should NOT end with :args for plain shortcut`,
-        );
+        assert(rows.length >= 1, "should have at least 1 shortcut row");
         assertEquals(
           rows[0].id,
-          "__shortcut:s:floorp-search-web",
-          "should be plain shortcut id",
+          "__reserved:s",
+          `"@s" alone should lead with the reserved row (got "${rows[0].id}")`,
+        );
+        // The user "s" entry is a reserved prefix, so it must NOT leak a second
+        // plain row below the reserved one.
+        assertEquals(
+          rows.filter((r) => r.id.startsWith("__shortcut:s:")).length,
+          0,
+          "reserved-prefix user entry must not appear as a plain shortcut row",
         );
       } finally {
         restoreShortcutsPref(shortcutsPrefSnapshot);
@@ -543,7 +554,7 @@ const shortcutTests: TestCase[] = [
   // was reserved). These tests are skipped when `floorp-search-web` is not
   // registered in the test window.
   {
-    name: "@s lists floorp-search-web even with an empty shortcuts pref",
+    name: "@s alone lists the reserved row even with an empty shortcuts pref",
     async fn() {
       if (!getCommand("floorp-search-web", window)) {
         return; // floorp-search-web not registered in this environment — skip
@@ -562,8 +573,8 @@ const shortcutTests: TestCase[] = [
         );
         assertEquals(
           rows[0].id,
-          "__shortcut:s:floorp-search-web",
-          "built-in @s should resolve to floorp-search-web",
+          "__reserved:s",
+          "built-in @s should resolve to the reserved __reserved:s row",
         );
         assertEquals(
           rows[0].category,
@@ -631,8 +642,91 @@ const shortcutTests: TestCase[] = [
         );
         assertEquals(
           rows[0].id,
-          "__shortcut:s:floorp-search-web",
+          "__reserved:s",
           "built-in @s must beat a stale user 's' shortcut",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@s" alone (no trailing space) also lists user shortcuts starting with "@s" ---
+  //
+  // The reserved branch does not early-commit to web-search mode: it appends
+  // `buildShortcutCommands("s", "")`, so user-defined shortcuts whose prefix
+  // starts with "s" (e.g. "@st") remain visible below the reserved row while
+  // the user keeps typing to narrow the list (fzf-style).
+  {
+    name: "@s alone lists user shortcuts starting with @s (e.g. @st) below __reserved:s",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([{ prefix: "st", commandId: KNOWN_ID }]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          2,
+          "expected __reserved:s + user '@st' shortcut",
+        );
+        assertEquals(
+          rows[0].id,
+          "__reserved:s",
+          "the reserved row should be pinned to the top",
+        );
+        assertEquals(
+          rows[1].id,
+          `__shortcut:st:${KNOWN_ID}`,
+          "user shortcut starting with @s should follow the reserved row",
+        );
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@s",
+          "highlightQuery should stay the full query while narrowing",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@s " (trailing space) commits to the plain floorp-search-web row ---
+  //
+  // The trailing space is what commits "@s" to web-search mode: the plain
+  // (args-less) `__shortcut:s:floorp-search-web` row appears, matching the
+  // pre-change behavior for "@s " and "@s <query>".
+  {
+    name: "@s with a trailing space lists the plain floorp-search-web row",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@s ");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "@s<space> should yield exactly one shortcut row",
+        );
+        assertEquals(
+          rows[0].id,
+          "__shortcut:s:floorp-search-web",
+          "@s<space> should resolve to the plain floorp-search-web row",
+        );
+        assert(
+          !rows[0].id.endsWith(":args"),
+          `id "${rows[0].id}" should be the plain (args-less) shortcut row`,
         );
       } finally {
         restoreShortcutsPref(shortcutsPrefSnapshot);
@@ -660,9 +754,14 @@ const shortcutTests: TestCase[] = [
 // hard-coded.
 
 const tabSearchTests: TestCase[] = [
-  // --- "@t" alone lists every open tab, and nothing else ---
+  // --- "@t" alone (no trailing space) shows the reserved row, not tabs ---
+  //
+  // With the trailing-space check, "@t" exactly no longer commits to tab mode:
+  // it shows the reserved __reserved:t row (plus any user-defined shortcuts
+  // starting with "@t") so typing continues to narrow the list. "@t "
+  // (trailing space) or "@t <query>" commits to the tab list below.
   {
-    name: "@t lists only open-tab commands (all categories 'open-tabs')",
+    name: "@t alone (no trailing space) shows only the reserved __reserved:t row",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([]);
@@ -671,19 +770,26 @@ const tabSearchTests: TestCase[] = [
         ctrl.updateSearch("@t");
         await flushDebounce();
         const results = ctrl.state.filteredCommands();
-        const expectedCount = getTabCommands(window).length;
         assertEquals(
           results.length,
-          expectedCount,
-          "@t should list every open tab, no more no less",
+          1,
+          "@t alone should yield exactly the __reserved:t row (no tabs yet)",
         );
-        for (const cmd of results) {
-          assert(
-            isTabCommand(cmd.id),
-            `id "${cmd.id}" should be a tab command`,
-          );
-          assertEquals(cmd.category, "open-tabs", "category should be open-tabs");
-        }
+        assertEquals(
+          results[0].id,
+          "__reserved:t",
+          "@t alone should show the reserved tab-search row",
+        );
+        assertEquals(
+          results[0].category,
+          "shortcut",
+          "category should be shortcut",
+        );
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@t",
+          "highlightQuery should stay the full query while narrowing",
+        );
       } finally {
         restoreShortcutsPref(shortcutsPrefSnapshot);
       }
@@ -775,8 +881,8 @@ const tabSearchTests: TestCase[] = [
         await flushDebounce();
         assertEquals(
           ctrl.state.highlightQuery(),
-          "",
-          "@t alone should highlight nothing",
+          "@t",
+          "@t alone should keep the full query as the highlight (narrowing list)",
         );
         ctrl.updateSearch("hello");
         await flushDebounce();
@@ -804,7 +910,9 @@ const tabSearchTests: TestCase[] = [
       assert(targetTab !== undefined, "a non-selected tab must exist");
       try {
         const ctrl = createController();
-        ctrl.updateSearch("@t");
+        // Trailing space commits "@t " to tab-search mode; bare "@t" would only
+        // show the reserved __reserved:t row with no tab commands to execute.
+        ctrl.updateSearch("@t ");
         await flushDebounce();
         const filtered = ctrl.state.filteredCommands();
         // Match the command id the same way tab-provider builds it
@@ -837,10 +945,12 @@ const tabSearchTests: TestCase[] = [
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       // Even with a user "t" shortcut pointing at a different command, the
       // built-in @t branch runs first and the user shortcut must never appear.
+      // "@t " (trailing space) commits to tab mode; bare "@t" would show only
+      // the reserved row, which would not exercise the tab listing at all.
       setShortcuts([{ prefix: "t", commandId: KNOWN_ID }]);
       try {
         const ctrl = createController();
-        ctrl.updateSearch("@t");
+        ctrl.updateSearch("@t ");
         await flushDebounce();
         const results = ctrl.state.filteredCommands();
         assertEquals(
