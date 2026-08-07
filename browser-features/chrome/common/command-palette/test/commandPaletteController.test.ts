@@ -1203,6 +1203,84 @@ const reservedListTests: TestCase[] = [
       }
     },
   },
+
+  // --- Selecting a reserved row mirrors the query into the DOM input ---
+  //
+  // The SolidJS controlled value binding is unreliable in Firefox/XUL, so the
+  // reserved fn also writes the query directly into `#command-palette-search`
+  // via DOM manipulation (see buildReservedShortcutCommands): the fn receives
+  // the controller's target window and sets
+  // `win.document.getElementById("command-palette-search").value`.
+  //
+  // In the headless Marionette test environment there is no guarantee that the
+  // SolidJS overlay (and its input) is actually mounted, so relying on the UI
+  // mounting would silently skip this test. Instead, this test creates the
+  // input manually and inserts it into the document before executing the
+  // reserved rows — `executeCommand` passes `this.targetWindow === window`, so
+  // the fn's DOM write lands on the manually-inserted input regardless of
+  // whether the UI is mounted. The inserted input is removed in `finally` so
+  // the test leaves the document as it found it.
+  {
+    name: "__reserved:s/__reserved:t mirror query into #command-palette-search input",
+    async fn() {
+      if (!getCommand("floorp-search-web", window)) {
+        return; // floorp-search-web not registered in this environment — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      const doc = window.document;
+      if (!doc) {
+        return; // no document in this environment — skip
+      }
+      // The chrome/XUL document may not have `document.body`; append to the
+      // root element instead. Drop any pre-existing element with the same id
+      // first so getElementById resolves to the element we insert.
+      const existing = doc.getElementById("command-palette-search");
+      existing?.remove();
+      const input = doc.createElement("input");
+      input.id = "command-palette-search";
+      const container = doc.documentElement ?? doc.body;
+      if (!container) {
+        return; // no insertion point in this environment — skip
+      }
+      container.appendChild(input);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const reservedS = rows.find((r) => r.id === "__reserved:s");
+        const reservedT = rows.find((r) => r.id === "__reserved:t");
+        assert(
+          reservedS !== undefined,
+          "__reserved:s row should be in the @ list",
+        );
+        assert(
+          reservedT !== undefined,
+          "__reserved:t row should be in the @ list",
+        );
+
+        // The reserved fn sets `input.value` directly via DOM manipulation —
+        // verify it actually landed, independent of any UI mounting.
+        ctrl.executeCommand(reservedS);
+        assertEquals(
+          input.value,
+          "@s ",
+          "input.value should be '@s ' after executing __reserved:s",
+        );
+
+        ctrl.executeCommand(reservedT);
+        assertEquals(
+          input.value,
+          "@t ",
+          "input.value should be '@t ' after executing __reserved:t",
+        );
+      } finally {
+        input.remove();
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
 ];
 
 const rawTests: TestCase[] = [

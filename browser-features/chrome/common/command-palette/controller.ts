@@ -1078,10 +1078,20 @@ export class CommandPaletteController {
         description: searchCmd.label,
         category: "shortcut",
         keywords: ["s", "@s"],
-        fn: (_win) => {
+        fn: (win) => {
           this.state.setQuery("@s ");
           this.state.setHighlightQuery("");
           this.updateSearch("@s ");
+          // The SolidJS controlled value binding does not reliably update the
+          // input's displayed value in Firefox/XUL, so mirror focusSearchInput
+          // and sync the input's value with state.query() via direct DOM
+          // manipulation.
+          const input = win.document?.getElementById(
+            "command-palette-search",
+          ) as HTMLInputElement | null;
+          if (input) {
+            input.value = "@s ";
+          }
         },
       });
     }
@@ -1098,10 +1108,20 @@ export class CommandPaletteController {
       }),
       category: "shortcut",
       keywords: ["t", "@t"],
-      fn: (_win) => {
+      fn: (win) => {
         this.state.setQuery("@t ");
         this.state.setHighlightQuery("");
         this.updateSearch("@t ");
+        // The SolidJS controlled value binding does not reliably update the
+        // input's displayed value in Firefox/XUL, so mirror focusSearchInput
+        // and sync the input's value with state.query() via direct DOM
+        // manipulation.
+        const input = win.document?.getElementById(
+          "command-palette-search",
+        ) as HTMLInputElement | null;
+        if (input) {
+          input.value = "@t ";
+        }
       },
     });
 
