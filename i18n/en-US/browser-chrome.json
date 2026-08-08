@@ -576,7 +576,9 @@
     "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
     "searchShortcutDescription": "Search \"{{query}}\"",
     "shortcuts": {
-      "reservedTabSearch": "Search Open Tabs"
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Search History"
     }
   },
   "commandPaletteReadings": {}

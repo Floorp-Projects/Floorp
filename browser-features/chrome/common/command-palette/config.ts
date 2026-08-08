@@ -85,8 +85,8 @@ export const defaultConfig: CommandPaletteConfig = {
   maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
   maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
   maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
-  // @s and @t are built-in reserved prefixes handled directly by the
-  // controller — no pref entry needed. The shortcuts pref is for
+  // @s, @t, @b and @h are built-in reserved prefixes handled directly by
+  // the controller — no pref entry needed. The shortcuts pref is for
   // user-defined @prefix aliases only (default: empty).
   shortcuts: [],
 };
@@ -96,11 +96,18 @@ export const defaultConfig: CommandPaletteConfig = {
  * used for user-defined @prefix shortcuts:
  * - "s" — @s is the built-in web search shortcut (floorp-search-web)
  * - "t" — @t is the built-in open-tabs search mode
+ * - "b" — @b is the built-in bookmark search mode
+ * - "h" — @h is the built-in history search mode
  *
  * KEEP IN SYNC with:
  * - browser-features/pages-settings/src/app/command-palette/dataManager.ts
  */
-export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = ["s", "t"];
+export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = [
+  "s",
+  "t",
+  "b",
+  "h",
+];
 
 // Bounds for the customizable size/position prefs.
 export const WIDTH_BOUNDS = { min: 400, max: 1000 } as const;

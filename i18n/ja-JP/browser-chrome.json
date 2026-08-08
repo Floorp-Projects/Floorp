@@ -576,7 +576,9 @@
     "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
     "searchShortcutDescription": "「{{query}}」を検索",
     "shortcuts": {
-      "reservedTabSearch": "開いているタブを検索"
+      "reservedTabSearch": "開いているタブを検索",
+      "reservedBookmarkSearch": "ブックマークを検索",
+      "reservedHistorySearch": "履歴を検索"
     }
   },
   "commandPaletteReadings": {}

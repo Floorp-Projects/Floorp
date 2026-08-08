@@ -31,6 +31,8 @@ import {
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
 import { fuzzyScore, fuzzySearch } from "./fuzzy.ts";
 import { getTabCommands } from "./tab-provider.ts";
+import { searchBookmarks } from "./bookmark-provider.ts";
+import { searchHistory } from "./history-provider.ts";
 import {
   compareByPriority,
   sortCategoriesByPriority,
@@ -1125,6 +1127,64 @@ export class CommandPaletteController {
       },
     });
 
+    // @b — built-in bookmark search
+    reserved.push({
+      id: "__reserved:b",
+      label: i18next.t("commandPalette.shortcutLabel", {
+        defaultValue: "@b",
+        prefix: "b",
+      }),
+      description: i18next.t("commandPalette.shortcuts.reservedBookmarkSearch", {
+        defaultValue: "Search Bookmarks",
+      }),
+      category: "shortcut",
+      keywords: ["b", "@b"],
+      fn: (win) => {
+        this.state.setQuery("@b ");
+        this.state.setHighlightQuery("");
+        this.updateSearch("@b ");
+        // The SolidJS controlled value binding does not reliably update the
+        // input's displayed value in Firefox/XUL, so mirror focusSearchInput
+        // and sync the input's value with state.query() via direct DOM
+        // manipulation.
+        const input = win.document?.getElementById(
+          "command-palette-search",
+        ) as HTMLInputElement | null;
+        if (input) {
+          input.value = "@b ";
+        }
+      },
+    });
+
+    // @h — built-in history search
+    reserved.push({
+      id: "__reserved:h",
+      label: i18next.t("commandPalette.shortcutLabel", {
+        defaultValue: "@h",
+        prefix: "h",
+      }),
+      description: i18next.t("commandPalette.shortcuts.reservedHistorySearch", {
+        defaultValue: "Search History",
+      }),
+      category: "shortcut",
+      keywords: ["h", "@h"],
+      fn: (win) => {
+        this.state.setQuery("@h ");
+        this.state.setHighlightQuery("");
+        this.updateSearch("@h ");
+        // The SolidJS controlled value binding does not reliably update the
+        // input's displayed value in Firefox/XUL, so mirror focusSearchInput
+        // and sync the input's value with state.query() via direct DOM
+        // manipulation.
+        const input = win.document?.getElementById(
+          "command-palette-search",
+        ) as HTMLInputElement | null;
+        if (input) {
+          input.value = "@h ";
+        }
+      },
+    });
+
     return reserved;
   }
 
@@ -1251,6 +1311,113 @@ export class CommandPaletteController {
         this.state.setFilteredCommands(results);
         this.state.setSelectedIndex(0);
         return; // Same as @t: skip URL navigation, command search, search fallback and async suggestions
+      }
+
+      // @b — built-in bookmark search mode / @h — built-in history search mode
+      // (reserved prefixes, always win over any user-defined shortcut with the
+      // same prefix). "@b"/"@h" exactly (no args, no trailing space): don't
+      // commit to the dedicated search mode yet — show the reserved row plus
+      // any user-defined shortcuts starting with the prefix so typing
+      // continues to narrow the list (fzf-style). "@b " / "@h " (trailing
+      // space) or "@b <query>" / "@h <query>" commits to the dedicated
+      // bookmark/history search mode below.
+      if (prefixPart === "b" || prefixPart === "h") {
+        const isBookmark = prefixPart === "b";
+        const reservedId = isBookmark ? "__reserved:b" : "__reserved:h";
+        if (!argsPart && !hasTrailingSpace) {
+          // Clear any in-flight or debounced @b/@h search from a previous
+          // committed query (e.g. "@b foo" deleted back to "@b"): the async
+          // Places result or armed debounce timer of the old query must not
+          // leak into this fzf-style narrowing list. Same clearing pattern
+          // as hidePalette.
+          this.currentSearchQuery = "";
+          if (this.bookmarkSearchTimer) {
+            clearTimeout(this.bookmarkSearchTimer);
+            this.bookmarkSearchTimer = null;
+          }
+          if (this.historySearchTimer) {
+            clearTimeout(this.historySearchTimer);
+            this.historySearchTimer = null;
+          }
+          results.push(
+            ...this.buildReservedShortcutCommands().filter(
+              (c) => c.id === reservedId,
+            ),
+          );
+          results.push(...this.buildShortcutCommands(prefixPart, ""));
+          this.state.setHighlightQuery(trimmed);
+          this.state.setFilteredCommands(results);
+          this.state.setSelectedIndex(0);
+          return; // Same as @t/@s: skip URL navigation, command search, search fallback and async suggestions
+        }
+
+        // Committed bookmark/history search mode: the result list is populated
+        // asynchronously (Places) using the same debounce + stale-query
+        // protection as the dynamic search below. The empty-args case ("@b " /
+        // "@h ") lists the most recent entries up to the configured limit;
+        // args-bearing queries search by term.
+        //
+        // Unlike dynamic suggestions — which respect getShowBookmarks() /
+        // getShowHistory() / shareModeEnabled() — @b/@h is an explicit
+        // bookmark/history search mode, so those settings are intentionally
+        // ignored: users who disabled bookmark/history suggestions in settings
+        // can still use @b/@h for explicit searches (same rationale as @t
+        // ignoring the `showTabs` pref, documented above).
+        this.currentSearchQuery = trimmed;
+        if (this.historySearchTimer) {
+          clearTimeout(this.historySearchTimer);
+          this.historySearchTimer = null;
+        }
+        if (this.bookmarkSearchTimer) {
+          clearTimeout(this.bookmarkSearchTimer);
+          this.bookmarkSearchTimer = null;
+        }
+
+        const runSearch = async (): Promise<void> => {
+          let suggestions: PaletteCommand[] = [];
+          try {
+            if (isBookmark) {
+              suggestions = argsPart
+                ? await searchBookmarkCommands(
+                  argsPart,
+                  getMaxBookmarkSuggestions(),
+                )
+                : await searchBookmarks("", getMaxBookmarkSuggestions());
+            } else {
+              suggestions = argsPart
+                ? await searchHistoryCommands(
+                  argsPart,
+                  getMaxHistorySuggestions(),
+                )
+                : await searchHistory("", getMaxHistorySuggestions());
+            }
+          } catch (e) {
+            console.error(
+              `[command-palette] ${
+                isBookmark ? "Bookmark" : "History"
+              } search failed:`,
+              e,
+            );
+          }
+          // Only apply if the query hasn't changed since we started.
+          if (trimmed !== this.currentSearchQuery) return;
+          this.appendSuggestionResults(suggestions, getCategoryPriority());
+        };
+
+        if (isBookmark) {
+          this.bookmarkSearchTimer = setTimeout(() => {
+            void runSearch();
+          }, 100);
+        } else {
+          this.historySearchTimer = setTimeout(() => {
+            void runSearch();
+          }, 200);
+        }
+
+        this.state.setHighlightQuery(argsPart);
+        this.state.setFilteredCommands(results);
+        this.state.setSelectedIndex(0);
+        return; // Same as @t/@s: skip URL navigation, command search, search fallback and async suggestions
       }
 
       const shortcutResults = this.buildShortcutCommands(prefixPart, argsPart);

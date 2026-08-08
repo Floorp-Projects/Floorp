@@ -37,9 +37,14 @@ import type {
  * We therefore drive `Services.prefs` to set up known state, invoke the
  * dataManager functions, and assert the observed behavior.
  *
- * The pref `floorp.commandPalette.enabled` has no default value defined in
- * the pref `.ini` files, so `clearUserPref` reliably makes `getPrefType`
- * return PREF_INVALID, which causes `rpc.getBoolPref` to resolve to `null`.
+ * NOTE: these prefs have no default values in the pref `.ini` files, but the
+ * chrome-side command-palette config
+ * (`browser-features/chrome/common/command-palette/config.ts`) registers pref
+ * observers that re-seed each pref with its default value the moment
+ * `clearUserPref` runs, so a pref can no longer be reliably observed as
+ * PREF_INVALID in a live browser. The tests below therefore assert the
+ * observable contract — default / seeded values are returned — rather than
+ * relying on the pref being physically unset.
  */
 
 const PREF = "floorp.commandPalette.enabled";
@@ -63,11 +68,6 @@ function readRawPref(): boolean | null {
   return Services.prefs.getBoolPref(PREF);
 }
 
-/** True when the pref is currently unset (PREF_INVALID). */
-function isPrefUnset(): boolean {
-  return Services.prefs.getPrefType(PREF) === Services.prefs.PREF_INVALID;
-}
-
 /** Reads the raw string value of the category-priority pref, or null when unset. */
 function readRawCategoryPriorityPref(): string | null {
   if (
@@ -77,12 +77,6 @@ function readRawCategoryPriorityPref(): string | null {
     return null;
   }
   return Services.prefs.getStringPref(CATEGORY_PRIORITY_PREF);
-}
-
-/** True when the category-priority pref is currently unset (PREF_INVALID). */
-function isCategoryPriorityPrefUnset(): boolean {
-  return Services.prefs.getPrefType(CATEGORY_PRIORITY_PREF) ===
-    Services.prefs.PREF_INVALID;
 }
 
 /** Reads the raw int value of the max-results-per-category pref, or null when unset. */
@@ -178,12 +172,6 @@ function readRawShortcutsPref(): string | null {
   return Services.prefs.getStringPref(SHORTCUTS_PREF);
 }
 
-/** True when the shortcuts pref is currently unset (PREF_INVALID). */
-function isShortcutsPrefUnset(): boolean {
-  return Services.prefs.getPrefType(SHORTCUTS_PREF) ===
-    Services.prefs.PREF_INVALID;
-}
-
 /** Reads the raw string value of the selectableCommands pref, or null when unset. */
 function readRawSelectableCommandsPref(): string | null {
   if (
@@ -195,17 +183,60 @@ function readRawSelectableCommandsPref(): string | null {
   return Services.prefs.getStringPref(SELECTABLE_COMMANDS_PREF);
 }
 
-/** True when the selectableCommands pref is currently unset (PREF_INVALID). */
-function isSelectableCommandsPrefUnset(): boolean {
-  return Services.prefs.getPrefType(SELECTABLE_COMMANDS_PREF) ===
-    Services.prefs.PREF_INVALID;
-}
-
-function testGetReturnsNullWhenPrefUnset(): Promise<void> {
+function testGetReturnsDefaultsWhenPrefUnset(): Promise<void> {
+  // The chrome-side config observers re-seed this pref with its default
+  // value the moment it is cleared, and `getCommandPaletteSettings` fills in
+  // defaults for any pref that resolves to null — so the observable contract
+  // is a full defaulted settings object, never null.
   Services.prefs.clearUserPref(PREF);
   return getCommandPaletteSettings().then((result) => {
-    assertEquals(result, null, "should return null when pref is not set");
-    assert(isPrefUnset(), "pref should remain unset after get");
+    assert(result !== null, "result should not be null when pref is unset");
+    assertEquals(result!.enabled, true, "enabled should default to true");
+    assertEquals(result!.width, 560, "width should default to 560");
+    assertEquals(result!.maxHeight, 400, "maxHeight should default to 400");
+    assertEquals(result!.offsetTop, 20, "offsetTop should default to 20");
+    assertEquals(
+      result!.horizontalAlign,
+      "center",
+      "horizontalAlign should default to 'center'",
+    );
+    assertEquals(result!.fontSize, 14, "fontSize should default to 14");
+    assertEquals(result!.showTabs, true, "showTabs should default to true");
+    assertEquals(
+      result!.showHistory,
+      true,
+      "showHistory should default to true",
+    );
+    assertEquals(
+      result!.showBookmarks,
+      true,
+      "showBookmarks should default to true",
+    );
+    assertEquals(
+      result!.maxResultsPerCategory,
+      5,
+      "maxResultsPerCategory should default to 5",
+    );
+    assertEquals(
+      result!.maxBookmarkSuggestions,
+      5,
+      "maxBookmarkSuggestions should default to 5",
+    );
+    assertEquals(
+      result!.maxHistorySuggestions,
+      5,
+      "maxHistorySuggestions should default to 5",
+    );
+    assertEquals(
+      result!.maxTabsResults,
+      5,
+      "maxTabsResults should default to 5",
+    );
+    assertStringArrayEqual(
+      [...result!.categoryPriority],
+      [...DEFAULT_CATEGORY_PRIORITY],
+      "categoryPriority should default to DEFAULT_CATEGORY_PRIORITY",
+    );
   });
 }
 
@@ -233,14 +264,22 @@ function testGetReturnsEnabledFalse(): Promise<void> {
   }
 }
 
-function testGetReturnsNullOnRethrownPrefTypeMismatch(): Promise<void> {
+function testGetReturnsDefaultsOnEnabledPrefTypeMismatch(): Promise<void> {
   // Setting the pref as a STRING makes getPrefType !== PREF_BOOL, so the rpc
-  // layer resolves to null and the dataManager forwards that null without
-  // throwing — verifying the defensive guard.
+  // layer resolves to null and the dataManager defaults the field to true —
+  // the full settings object is returned, never null.
   Services.prefs.setStringPref(PREF, "not-a-bool");
   try {
     return getCommandPaletteSettings().then((result) => {
-      assertEquals(result, null, "should return null on pref type mismatch");
+      assert(
+        result !== null,
+        "result should not be null on pref type mismatch",
+      );
+      assertEquals(
+        result!.enabled,
+        true,
+        "enabled should default to true on pref type mismatch",
+      );
     });
   } finally {
     Services.prefs.clearUserPref(PREF);
@@ -332,30 +371,25 @@ function testDefaultCategoryPriorityExportShape(): void {
 }
 
 /**
- * Verifies that an unset categoryPriority pref resolves to the default list.
+ * Verifies that an unset (or default-seeded) categoryPriority pref resolves
+ * to the default list.
  *
- * Mirrors the existing "no default in pref system" test pattern: clearing the
- * user pref makes `getPrefType` return PREF_INVALID, which causes the rpc
- * layer to resolve to `null`, which the dataManager forwards to its private
- * `parseCategoryPriority` — yielding a copy of `DEFAULT_CATEGORY_PRIORITY`.
+ * The chrome-side config observers re-seed this pref with the default JSON
+ * the moment it is cleared, so the "pref should be unset" precondition no
+ * longer holds in a live browser. The observable contract is unchanged:
+ * whether the pref is unset (rpc resolves to null) or holds the seeded
+ * default JSON, `getCommandPaletteSettings` yields a copy of
+ * `DEFAULT_CATEGORY_PRIORITY`.
  */
 async function testGetReturnsDefaultCategoryPriorityWhenPrefUnset(): Promise<void> {
   Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
-  assert(
-    isCategoryPriorityPrefUnset(),
-    "pref should be unset before the get call",
-  );
   try {
     const result = await getCommandPaletteSettings();
     assert(result !== null, "result should not be null");
     assertStringArrayEqual(
       result!.categoryPriority,
       [...DEFAULT_CATEGORY_PRIORITY],
-      "unset categoryPriority pref should yield DEFAULT_CATEGORY_PRIORITY",
-    );
-    assert(
-      isCategoryPriorityPrefUnset(),
-      "get should not mutate the pref",
+      "unset or default-seeded categoryPriority pref should yield DEFAULT_CATEGORY_PRIORITY",
     );
   } finally {
     Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
@@ -758,7 +792,8 @@ function testMaxPref(
 // isReservedShortcutPrefix / RESERVED_SHORTCUT_PREFIXES
 // ---------------------------------------------------------------------------
 //
-// Prefixes "s" (@s = built-in web search) and "t" (@t = built-in open-tabs
+// Prefixes "s" (@s = built-in web search), "t" (@t = built-in open-tabs
+// search), "b" (@b = built-in bookmark search) and "h" (@h = built-in history
 // search) are reserved for built-in command palette behavior: the settings UI
 // must reject user shortcuts that use them. Matching is case-sensitive, so
 // uppercase variants are NOT reserved.
@@ -782,6 +817,24 @@ function testReservedPrefixT(): void {
     isReservedShortcutPrefix("t"),
     true,
     "'t' (@t open-tabs search) should be reserved",
+  );
+}
+
+/** "b" (@b bookmark search) is reserved. */
+function testReservedPrefixB(): void {
+  assertEquals(
+    isReservedShortcutPrefix("b"),
+    true,
+    "'b' (@b bookmark search) should be reserved",
+  );
+}
+
+/** "h" (@h history search) is reserved. */
+function testReservedPrefixH(): void {
+  assertEquals(
+    isReservedShortcutPrefix("h"),
+    true,
+    "'h' (@h history search) should be reserved",
   );
 }
 
@@ -812,17 +865,17 @@ function testReservedPrefixCaseSensitive(): void {
   );
 }
 
-/** The exported list has exactly the documented shape ["s", "t"]. */
+/** The exported list has exactly the documented shape ["s", "t", "b", "h"]. */
 function testReservedPrefixesExport(): void {
   assertEquals(
     RESERVED_SHORTCUT_PREFIXES.length,
-    2,
-    "RESERVED_SHORTCUT_PREFIXES should have exactly 2 entries",
+    4,
+    "RESERVED_SHORTCUT_PREFIXES should have exactly 4 entries",
   );
   assertStringArrayEqual(
     [...RESERVED_SHORTCUT_PREFIXES],
-    ["s", "t"],
-    "RESERVED_SHORTCUT_PREFIXES must equal ['s', 't']",
+    ["s", "t", "b", "h"],
+    "RESERVED_SHORTCUT_PREFIXES must equal ['s', 't', 'b', 'h']",
   );
 }
 
@@ -937,13 +990,19 @@ function testParseSelectableCommandsMissingCategory(): void {
 // loadShortcuts / saveShortcuts round-trip
 // ---------------------------------------------------------------------------
 
-/** loadShortcuts returns [] when pref is unset. */
+/**
+ * loadShortcuts returns [] when no user shortcuts are configured.
+ *
+ * The chrome-side config observers re-seed the shortcuts pref with "[]" the
+ * moment it is cleared, so the "pref should be unset" precondition no longer
+ * holds in a live browser. The observable contract is unchanged: with no user
+ * shortcuts configured, loadShortcuts() yields [].
+ */
 async function testLoadShortcutsEmpty(): Promise<void> {
   Services.prefs.clearUserPref(SHORTCUTS_PREF);
-  assert(isShortcutsPrefUnset(), "pref should be unset");
   try {
     const result = await loadShortcuts();
-    assertEquals(result.length, 0, "unset pref should yield []");
+    assertEquals(result.length, 0, "no configured shortcuts should yield []");
   } finally {
     Services.prefs.clearUserPref(SHORTCUTS_PREF);
   }
@@ -974,13 +1033,19 @@ async function testSaveAndLoadShortcutsRoundTrip(): Promise<void> {
 // loadSelectableCommands
 // ---------------------------------------------------------------------------
 
-/** loadSelectableCommands returns [] when pref is unset. */
+/**
+ * loadSelectableCommands returns [] when no command catalog is cached.
+ *
+ * The chrome-side config observers re-seed this pref (with "[]") the moment
+ * it is cleared, so the "pref should be unset" precondition no longer holds
+ * in a live browser. The observable contract is unchanged: with no cached
+ * catalog, loadSelectableCommands() yields [].
+ */
 async function testLoadSelectableCommandsEmpty(): Promise<void> {
   Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
-  assert(isSelectableCommandsPrefUnset(), "pref should be unset");
   try {
     const result = await loadSelectableCommands();
-    assertEquals(result.length, 0, "unset pref should yield []");
+    assertEquals(result.length, 0, "no cached catalog should yield []");
   } finally {
     Services.prefs.clearUserPref(SELECTABLE_COMMANDS_PREF);
   }
@@ -1007,17 +1072,17 @@ async function testLoadSelectableCommandsParsesValid(): Promise<void> {
 }
 
 const tests: TestCase[] = [
-  { name: "getCommandPaletteSettings returns null when pref is unset", fn: testGetReturnsNullWhenPrefUnset },
+  { name: "getCommandPaletteSettings returns full defaults when pref is unset", fn: testGetReturnsDefaultsWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
   { name: "getCommandPaletteSettings returns { enabled: false }", fn: testGetReturnsEnabledFalse },
-  { name: "getCommandPaletteSettings returns null on pref type mismatch", fn: testGetReturnsNullOnRethrownPrefTypeMismatch },
+  { name: "getCommandPaletteSettings returns full defaults on pref type mismatch", fn: testGetReturnsDefaultsOnEnabledPrefTypeMismatch },
   { name: "saveCommandPaletteSettings({}) is a no-op", fn: testSaveEmptyObjectIsNoOp },
   { name: "saveCommandPaletteSettings({ enabled: true }) sets pref", fn: testSaveSetsEnabledTrue },
   { name: "saveCommandPaletteSettings({ enabled: false }) sets pref", fn: testSaveSetsEnabledFalse },
   { name: "saveCommandPaletteSettings coerces enabled to boolean", fn: testSaveCoercesToBoolean },
   // categoryPriority
   { name: "DEFAULT_CATEGORY_PRIORITY is exported with 18 entries", fn: testDefaultCategoryPriorityExportShape },
-  { name: "getCommandPaletteSettings yields DEFAULT_CATEGORY_PRIORITY when pref unset", fn: testGetReturnsDefaultCategoryPriorityWhenPrefUnset },
+  { name: "getCommandPaletteSettings yields DEFAULT_CATEGORY_PRIORITY when pref unset or default-seeded", fn: testGetReturnsDefaultCategoryPriorityWhenPrefUnset },
   { name: "getCommandPaletteSettings parses a valid JSON array", fn: testGetParsesValidCategoryPriority },
   { name: "getCommandPaletteSettings preserves duplicate categoryPriority entries (no de-dupe)", fn: testGetPreservesDuplicateCategoryPriorityEntries },
   { name: "getCommandPaletteSettings falls back on invalid JSON", fn: testGetFallsBackOnInvalidCategoryPriorityJson },
@@ -1058,10 +1123,12 @@ const tests: TestCase[] = [
   // isReservedShortcutPrefix / RESERVED_SHORTCUT_PREFIXES
   { name: "isReservedShortcutPrefix('s') is true (@s web search)", fn: testReservedPrefixS },
   { name: "isReservedShortcutPrefix('t') is true (@t open-tabs search)", fn: testReservedPrefixT },
+  { name: "isReservedShortcutPrefix('b') is true (@b bookmark search)", fn: testReservedPrefixB },
+  { name: "isReservedShortcutPrefix('h') is true (@h history search)", fn: testReservedPrefixH },
   { name: "isReservedShortcutPrefix('gh') is false", fn: testReservedPrefixNonReserved },
   { name: "isReservedShortcutPrefix('') is false", fn: testReservedPrefixEmpty },
   { name: "isReservedShortcutPrefix('S') is false (case-sensitive)", fn: testReservedPrefixCaseSensitive },
-  { name: "RESERVED_SHORTCUT_PREFIXES equals ['s', 't']", fn: testReservedPrefixesExport },
+  { name: "RESERVED_SHORTCUT_PREFIXES equals ['s', 't', 'b', 'h']", fn: testReservedPrefixesExport },
   // parseShortcuts
   { name: "parseShortcuts: valid array passes through", fn: testParseShortcutsValid },
   { name: "parseShortcuts: null → []", fn: testParseShortcutsNull },
@@ -1079,10 +1146,10 @@ const tests: TestCase[] = [
   { name: "parseSelectableCommands: JSON object → []", fn: testParseSelectableCommandsNonArray },
   { name: "parseSelectableCommands: missing category → []", fn: testParseSelectableCommandsMissingCategory },
   // loadShortcuts / saveShortcuts
-  { name: "loadShortcuts returns [] when pref unset", fn: testLoadShortcutsEmpty },
+  { name: "loadShortcuts returns [] when no shortcuts configured", fn: testLoadShortcutsEmpty },
   { name: "saveShortcuts → loadShortcuts round-trip", fn: testSaveAndLoadShortcutsRoundTrip },
   // loadSelectableCommands
-  { name: "loadSelectableCommands returns [] when pref unset", fn: testLoadSelectableCommandsEmpty },
+  { name: "loadSelectableCommands returns [] when no catalog cached", fn: testLoadSelectableCommandsEmpty },
   { name: "loadSelectableCommands parses a valid pref", fn: testLoadSelectableCommandsParsesValid },
 ];
 

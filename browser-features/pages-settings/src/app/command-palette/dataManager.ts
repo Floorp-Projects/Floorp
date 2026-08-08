@@ -23,10 +23,10 @@ const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResu
 // cannot share a module, so if you edit one side, edit the other.
 //   shortcuts          -> user-editable {prefix, commandId} pairs (read/write)
 //   selectableCommands -> chrome-cached command catalog (read-only here)
-// The shortcuts pref defaults to "[]" (empty). @s and @t are built-in reserved
-// prefixes handled directly by the controller — no pref entry is needed.
-// `loadShortcuts()` migrates away any stale "s" or "t" entries that linger
-// from before the prefixes were reserved.
+// The shortcuts pref defaults to "[]" (empty). @s, @t, @b and @h are
+// built-in reserved prefixes handled directly by the controller — no pref
+// entry is needed. `loadShortcuts()` migrates away any stale "s" or "t"
+// entries that linger from before the prefixes were reserved.
 const COMMAND_PALETTE_SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
 const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
   "floorp.commandPalette.selectableCommands";
@@ -34,12 +34,18 @@ const COMMAND_PALETTE_SELECTABLE_COMMANDS_PREF =
 /**
  * Prefixes reserved for built-in command palette behavior. The settings UI
  * must not allow users to create or remove shortcuts with these prefixes
- * (@s = web search, @t = open-tabs search).
+ * (@s = web search, @t = open-tabs search, @b = bookmark search, @h =
+ * history search).
  *
  * KEEP IN SYNC with:
  * - browser-features/chrome/common/command-palette/config.ts
  */
-export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = ["s", "t"];
+export const RESERVED_SHORTCUT_PREFIXES: readonly string[] = [
+  "s",
+  "t",
+  "b",
+  "h",
+];
 
 export function isReservedShortcutPrefix(prefix: string): boolean {
   return RESERVED_SHORTCUT_PREFIXES.includes(prefix);
@@ -444,10 +450,11 @@ export async function loadShortcuts(): Promise<CommandPaletteShortcut[]> {
   try {
     const raw = await rpc.getStringPref(COMMAND_PALETTE_SHORTCUTS_PREF);
     const parsed = parseShortcuts(raw);
-    // Migration: drop reserved prefixes (s, t) that may linger from before
-    // they were reserved. They are invisible in the settings UI and cannot be
-    // removed there, so cleaning them here keeps the pref consistent with the
-    // reserved display. @s and @t are built-in and need no pref entry.
+    // Migration: drop reserved prefixes (s, t, b, h) that may linger from
+    // before they were reserved. They are invisible in the settings UI and
+    // cannot be removed there, so cleaning them here keeps the pref consistent
+    // with the reserved display. @s, @t, @b and @h are built-in and need no
+    // pref entry.
     const cleaned = parsed.filter((s) => !isReservedShortcutPrefix(s.prefix));
     if (cleaned.length !== parsed.length) {
       // Best-effort; failures are logged by saveShortcuts itself.

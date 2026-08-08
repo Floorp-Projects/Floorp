@@ -1045,14 +1045,15 @@ const tabSearchTests: TestCase[] = [
 // ---------------------------------------------------------------------------
 //
 // "@" alone shows the reserved built-in shortcut rows (`__reserved:s` for web
-// search, `__reserved:t` for tab search) at the very top of the candidate list
+// search, `__reserved:t` for tab search, `__reserved:b` for bookmark search,
+// `__reserved:h` for history search) at the very top of the candidate list
 // — above any user-defined shortcuts, and even when the shortcuts pref is
 // empty. `__reserved:s` is only present when `floorp-search-web` is registered
 // in the test window (same guard as the existing @s tests). Selecting a
 // reserved row transitions into its mode by replacing the query (`@s ` /
-// `@t `) WITHOUT hiding the palette: `mode` stays "command" and the palette
-// stays visible, so the user lands directly in the next mode instead of
-// re-opening the palette.
+// `@t ` / `@b ` / `@h `) WITHOUT hiding the palette: `mode` stays "command"
+// and the palette stays visible, so the user lands directly in the next mode
+// instead of re-opening the palette.
 //
 // `updateSearch("@")` routes through the 30ms debounce (non-empty query), so
 // every test awaits `flushDebounce()` before asserting on
@@ -1115,29 +1116,22 @@ const reservedListTests: TestCase[] = [
         assert(filtered.length > 0, "filtered list should be non-empty");
         const hasSearchWeb =
           getCommand("floorp-search-web", window) !== undefined;
-        const reservedCount = hasSearchWeb ? 2 : 1;
+        // Reserved rows in declaration order: __reserved:s (only when
+        // floorp-search-web is registered), then __reserved:t, __reserved:b,
+        // __reserved:h.
+        const reservedCount = hasSearchWeb ? 4 : 3;
+        const expectedIds = hasSearchWeb
+          ? ["__reserved:s", "__reserved:t", "__reserved:b", "__reserved:h"]
+          : ["__reserved:t", "__reserved:b", "__reserved:h"];
         for (let i = 0; i < reservedCount; i++) {
           assert(
             filtered[i].id.startsWith("__reserved:"),
             `filtered[${i}] should be a reserved row (got "${filtered[i].id}")`,
           );
-        }
-        if (hasSearchWeb) {
           assertEquals(
-            filtered[0].id,
-            "__reserved:s",
-            "first row should be __reserved:s",
-          );
-          assertEquals(
-            filtered[1].id,
-            "__reserved:t",
-            "second row should be __reserved:t",
-          );
-        } else {
-          assertEquals(
-            filtered[0].id,
-            "__reserved:t",
-            "first row should be __reserved:t",
+            filtered[i].id,
+            expectedIds[i],
+            `filtered[${i}] should be "${expectedIds[i]}"`,
           );
         }
         // The user-defined shortcut row follows right after the reserved rows.
@@ -1393,6 +1387,688 @@ const reservedListTests: TestCase[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// @b / @h bookmark & history search tests
+// ---------------------------------------------------------------------------
+//
+// "b" (@b = bookmark search) and "h" (@h = history search) are built-in
+// reserved prefixes (see RESERVED_SHORTCUT_PREFIXES in config.ts), mirroring
+// the @s/@t modes. Typing "@b" / "@h" exactly (no trailing space) shows the
+// reserved __reserved:b / __reserved:h row plus any user-defined shortcuts
+// starting with the prefix, so typing continues to narrow the list
+// (fzf-style). "@b " / "@h " (trailing space) or "@b <query>" / "@h <query>"
+// commits to the dedicated search mode: the result list is populated
+// asynchronously from Places via the same debounce + stale-query guard as the
+// dynamic bookmark/history suggestions — a 100ms (bookmark) / 200ms
+// (history) timer, then the Places lookup, and results are only appended when
+// the query hasn't changed in the meantime.
+//
+// The committed-mode result rows carry category "bookmark-suggestions" /
+// "history-suggestions" (NOT "shortcut"), so these tests assert on the full
+// `filteredCommands()` list, never `shortcutRows()`. Places is available in
+// the browser test environment (see providers.test.ts), so the end-to-end
+// tests insert a temporary bookmark / history visit to verify results
+// deterministically; the insertion is skipped (test returns early) when
+// Places cannot write in the current profile. The structural tests below
+// never depend on the profile having data: an empty result list still
+// verifies that the committed branch was entered (highlightQuery = args
+// part) and that every row shown is a bookmark/history suggestion row.
+
+/** Wait a fixed number of milliseconds. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Wait long enough for the committed @b/@h mode's async search to complete:
+ * 30ms updateSearch debounce + 100ms (bookmark) / 200ms (history) timer +
+ * Places lookup + margin.
+ */
+function flushAsyncSearch(): Promise<void> {
+  return sleep(800);
+}
+
+const bookmarkHistorySearchTests: TestCase[] = [
+  // --- "@b" exactly shows the reserved row (no commit yet) ---
+  {
+    name: "@b alone (no trailing space) shows the reserved __reserved:b row",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@b");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "@b alone should yield exactly the __reserved:b row (no search yet)",
+        );
+        assertEquals(
+          rows[0].id,
+          "__reserved:b",
+          "@b alone should show the reserved bookmark-search row",
+        );
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@b",
+          "highlightQuery should stay the full query while narrowing",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@h" exactly shows the reserved row (no commit yet) ---
+  {
+    name: "@h alone (no trailing space) shows the reserved __reserved:h row",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@h");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        assertEquals(
+          rows.length,
+          1,
+          "@h alone should yield exactly the __reserved:h row (no search yet)",
+        );
+        assertEquals(
+          rows[0].id,
+          "__reserved:h",
+          "@h alone should show the reserved history-search row",
+        );
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@h",
+          "highlightQuery should stay the full query while narrowing",
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@b " (trailing space) commits to async bookmark search ---
+  {
+    name: "@b with a trailing space commits to async bookmark search (recent bookmarks)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@b ");
+        await flushDebounce();
+        // Committed mode highlights only the (empty) args part — this proves
+        // the dedicated @b branch was entered rather than the generic
+        // shortcut path (which would highlight the full trimmed query).
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "",
+          "@b<space> should highlight the (empty) args part",
+        );
+        await flushAsyncSearch();
+        // Empty profiles yield an empty list (trivially passes); any rows
+        // present must be bookmark suggestions from the async search.
+        for (const cmd of ctrl.state.filteredCommands()) {
+          assertEquals(
+            cmd.category,
+            "bookmark-suggestions",
+            `row "${cmd.id}" should be a bookmark suggestion`,
+          );
+          assert(
+            cmd.id.startsWith("__bookmark__"),
+            `row "${cmd.id}" should carry the __bookmark__ id prefix`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@b <query>" searches bookmarks by term ---
+  {
+    name: "@b <query> commits to async bookmark search by term",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@b test");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "test",
+          "@b <query> should highlight only the args part",
+        );
+        await flushAsyncSearch();
+        for (const cmd of ctrl.state.filteredCommands()) {
+          assertEquals(
+            cmd.category,
+            "bookmark-suggestions",
+            `row "${cmd.id}" should be a bookmark suggestion`,
+          );
+          assert(
+            cmd.id.startsWith("__bookmark__"),
+            `row "${cmd.id}" should carry the __bookmark__ id prefix`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@h " (trailing space) commits to async history search ---
+  {
+    name: "@h with a trailing space commits to async history search (recent visits)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@h ");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "",
+          "@h<space> should highlight the (empty) args part",
+        );
+        await flushAsyncSearch();
+        for (const cmd of ctrl.state.filteredCommands()) {
+          assertEquals(
+            cmd.category,
+            "history-suggestions",
+            `row "${cmd.id}" should be a history suggestion`,
+          );
+          assert(
+            cmd.id.startsWith("__history__"),
+            `row "${cmd.id}" should carry the __history__ id prefix`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- "@h <query>" searches history by term ---
+  {
+    name: "@h <query> commits to async history search by term",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@h test");
+        await flushDebounce();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "test",
+          "@h <query> should highlight only the args part",
+        );
+        await flushAsyncSearch();
+        for (const cmd of ctrl.state.filteredCommands()) {
+          assertEquals(
+            cmd.category,
+            "history-suggestions",
+            `row "${cmd.id}" should be a history suggestion`,
+          );
+          assert(
+            cmd.id.startsWith("__history__"),
+            `row "${cmd.id}" should carry the __history__ id prefix`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- @b end-to-end: a freshly inserted bookmark is findable via @b ---
+  //
+  // Inserts a temporary bookmark into Places (unique title + URL), then
+  // verifies both committed paths surface it: "@b " (recent bookmarks) and
+  // "@b <title>" (term search). The bookmark is removed in `finally`. If
+  // Places cannot write in the current profile the insert throws and the
+  // test returns early (result verification skipped, structural tests above
+  // still cover the branch).
+  {
+    name: "@b finds a bookmark inserted into Places (end-to-end)",
+    async fn() {
+      const marker = `cp-bm-test-${Date.now()}`;
+      const url = `https://command-palette-test-${Date.now()}.example/`;
+      const mod = ChromeUtils.importESModule(
+        "resource://gre/modules/PlacesUtils.sys.mjs",
+      ) as unknown as {
+        PlacesUtils: {
+          bookmarks: {
+            insert(info: {
+              parentGuid: string;
+              title: string;
+              url: string;
+            }): Promise<{ guid: string }>;
+            remove(guid: string): Promise<void>;
+            unfiledGuid: string;
+          };
+        };
+      };
+      let guid: string | null = null;
+      try {
+        const inserted = await mod.PlacesUtils.bookmarks.insert({
+          parentGuid: mod.PlacesUtils.bookmarks.unfiledGuid,
+          title: marker,
+          url,
+        });
+        guid = inserted.guid;
+      } catch (e) {
+        console.error(
+          "[command-palette] @b end-to-end insert skipped (Places not writable):",
+          e,
+        );
+        return; // cannot verify results — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        // Recent-bookmarks path ("@b ").
+        ctrl.updateSearch("@b ");
+        await flushDebounce();
+        await flushAsyncSearch();
+        assert(
+          ctrl.state.filteredCommands().some((c) => c.description === url),
+          `"@b " should list the inserted bookmark (${url})`,
+        );
+        // Term-search path ("@b <title>").
+        ctrl.updateSearch(`@b ${marker}`);
+        await flushDebounce();
+        await flushAsyncSearch();
+        assert(
+          ctrl.state.filteredCommands().some((c) => c.description === url),
+          `"@b <title>" should surface the inserted bookmark (${url})`,
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+        if (guid !== null) {
+          try {
+            await mod.PlacesUtils.bookmarks.remove(guid);
+          } catch (e) {
+            console.error(
+              "[command-palette] @b end-to-end cleanup failed:",
+              e,
+            );
+          }
+        }
+      }
+    },
+  },
+
+  // --- @h end-to-end: a freshly inserted visit is findable via @h ---
+  //
+  // Inserts a temporary history visit (unique URL, timestamp = now) and
+  // verifies the committed "@h " path (recent visits, last 7 days, newest
+  // first) surfaces it. The visit is removed in `finally`. If Places cannot
+  // write in the current profile the insert throws and the test returns
+  // early.
+  {
+    name: "@h finds a history visit inserted into Places (end-to-end)",
+    async fn() {
+      const url = `https://command-palette-history-test-${Date.now()}.example/`;
+      const mod = ChromeUtils.importESModule(
+        "resource://gre/modules/PlacesUtils.sys.mjs",
+      ) as unknown as {
+        PlacesUtils: {
+          history: {
+            insert(info: {
+              url: string;
+              visits: { transition: number; date: Date }[];
+            }): Promise<unknown>;
+            remove(url: string): Promise<void>;
+          };
+        };
+      };
+      try {
+        await mod.PlacesUtils.history.insert({
+          url,
+          visits: [{ transition: 1, date: new Date() }],
+        });
+      } catch (e) {
+        console.error(
+          "[command-palette] @h end-to-end insert skipped (Places not writable):",
+          e,
+        );
+        return; // cannot verify results — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@h ");
+        await flushDebounce();
+        await flushAsyncSearch();
+        assert(
+          ctrl.state.filteredCommands().some((c) => c.description === url),
+          `"@h " should list the inserted visit (${url})`,
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+        try {
+          await mod.PlacesUtils.history.remove(url);
+        } catch (e) {
+          console.error(
+            "[command-palette] @h end-to-end cleanup failed:",
+            e,
+          );
+        }
+      }
+    },
+  },
+
+  // --- Stale-query guard: an old query's results never override the latest ---
+  //
+  // The committed @b mode debounces (100ms) then asynchronously queries
+  // Places; the in-flight lookup is guarded by `currentSearchQuery` so a
+  // slow result for an outdated query is discarded. This test changes the
+  // query while the first lookup may still be in flight (or right after it
+  // resolved — either way doUpdateSearch clears/overrides the state) and
+  // verifies the final list contains only results for the LATEST query.
+  //
+  // A category check alone would be false confidence: stale rows from the
+  // superseded query are still "bookmark-suggestions", so a broken guard
+  // would pass. A marker bookmark is therefore inserted into Places whose
+  // title AND url contain ONLY the first query's term ("foo") — the first
+  // lookup can return it, the second ("bar") never can. The final assertion
+  // "marker absent from the list" then fails exactly when a stale first-query
+  // result leaks through the guard. If Places cannot write in the current
+  // profile the insert throws and the test returns early (the structural
+  // assertions in the other @b tests still cover the branch).
+  {
+    name: "@b stale async results are discarded when the query changes",
+    async fn() {
+      const markerUrl = `https://stale-foo-${Date.now()}.example/`;
+      const markerTitle = `cp-stale-foo-${Date.now()}`;
+      const mod = ChromeUtils.importESModule(
+        "resource://gre/modules/PlacesUtils.sys.mjs",
+      ) as unknown as {
+        PlacesUtils: {
+          bookmarks: {
+            insert(info: {
+              parentGuid: string;
+              title: string;
+              url: string;
+            }): Promise<{ guid: string }>;
+            remove(guid: string): Promise<void>;
+            unfiledGuid: string;
+          };
+        };
+      };
+      let guid: string | null = null;
+      try {
+        const inserted = await mod.PlacesUtils.bookmarks.insert({
+          parentGuid: mod.PlacesUtils.bookmarks.unfiledGuid,
+          title: markerTitle,
+          url: markerUrl,
+        });
+        guid = inserted.guid;
+      } catch (e) {
+        console.error(
+          "[command-palette] @b stale insert skipped (Places not writable):",
+          e,
+        );
+        return; // cannot verify results — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        // First committed search: 30ms debounce + 100ms timer. Wait past the
+        // timer so the Places lookup starts before we move on, but keep the
+        // gap short so the first lookup is likely still in flight when the
+        // second query lands (that is the stale-leak window the guard closes).
+        ctrl.updateSearch("@b foo");
+        await flushDebounce();
+        await sleep(90);
+        // New query while the first lookup is in flight.
+        ctrl.updateSearch("@b bar");
+        await flushDebounce();
+        await flushAsyncSearch();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "bar",
+          "highlight should reflect the latest args",
+        );
+        const finalList = ctrl.state.filteredCommands();
+        // The marker matches ONLY "foo", so if the stale guard is broken the
+        // first query's in-flight lookup appends it on top of the second
+        // query's results — its presence here is exactly the leak to catch.
+        assert(
+          !finalList.some((c) => c.description === markerUrl),
+          `stale marker bookmark (${markerUrl}) must not appear in the final list`,
+        );
+        // Any rows present must be bookmark suggestions for the latest query;
+        // the committed mode clears the list on every query, so the final
+        // list is exactly the second search's output (possibly empty).
+        for (const cmd of finalList) {
+          assertEquals(
+            cmd.category,
+            "bookmark-suggestions",
+            `row "${cmd.id}" should be a bookmark suggestion`,
+          );
+        }
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+        if (guid !== null) {
+          try {
+            await mod.PlacesUtils.bookmarks.remove(guid);
+          } catch (e) {
+            console.error(
+              "[command-palette] @b stale cleanup failed:",
+              e,
+            );
+          }
+        }
+      }
+    },
+  },
+
+  // --- Stale-query guard (fzf branch): deleting back to "@b" clears pending work ---
+  //
+  // A committed "@b foo" arms a 100ms timer; if the user then deletes back to
+  // "@b" (no args, no trailing space), the fzf narrowing branch MUST clear
+  // that timer AND currentSearchQuery. Without the clearing, the armed timer
+  // fires after the branch already rendered the reserved row and the stale
+  // "foo" results are appended on top of the narrowing list — the guard check
+  // inside runSearch passes trivially in that case because currentSearchQuery
+  // was never reset, so "trimmed === currentSearchQuery" still holds.
+  //
+  // Unlike the committed→committed race above, this leak is deterministic:
+  // the timer is armed but un-fired when "@b" is typed (flushDebounce leaves
+  // ~70ms of the 100ms timer), so a removed clear would always leak the
+  // marker. The same marker pattern is used: title/url contain "foo" only.
+  {
+    name: "@b <query> deleted back to @b clears the pending search (no stale leak)",
+    async fn() {
+      const markerUrl = `https://stale-foo-${Date.now()}.example/`;
+      const markerTitle = `cp-stale-foo-${Date.now()}`;
+      const mod = ChromeUtils.importESModule(
+        "resource://gre/modules/PlacesUtils.sys.mjs",
+      ) as unknown as {
+        PlacesUtils: {
+          bookmarks: {
+            insert(info: {
+              parentGuid: string;
+              title: string;
+              url: string;
+            }): Promise<{ guid: string }>;
+            remove(guid: string): Promise<void>;
+            unfiledGuid: string;
+          };
+        };
+      };
+      let guid: string | null = null;
+      try {
+        const inserted = await mod.PlacesUtils.bookmarks.insert({
+          parentGuid: mod.PlacesUtils.bookmarks.unfiledGuid,
+          title: markerTitle,
+          url: markerUrl,
+        });
+        guid = inserted.guid;
+      } catch (e) {
+        console.error(
+          "[command-palette] @b fzf-stale insert skipped (Places not writable):",
+          e,
+        );
+        return; // cannot verify results — skip
+      }
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        // Phase A: the committed search DOES surface the marker, proving the
+        // marker actually matches "foo" (otherwise the absence assertion
+        // below would be vacuous).
+        ctrl.updateSearch("@b foo");
+        await flushDebounce();
+        await flushAsyncSearch();
+        assert(
+          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          `"@b foo" should surface the marker bookmark (${markerUrl})`,
+        );
+        // Phase B: re-arm the committed search, then delete back to "@b"
+        // while its 100ms timer is still pending (flushDebounce leaves the
+        // timer armed for ~70ms).
+        ctrl.updateSearch("@b foo");
+        await flushDebounce();
+        ctrl.updateSearch("@b");
+        await flushDebounce();
+        await flushAsyncSearch();
+        assertEquals(
+          ctrl.state.highlightQuery(),
+          "@b",
+          "deleting back to @b should enter the narrowing branch",
+        );
+        const rows = ctrl.state.filteredCommands();
+        assertEquals(
+          rows.length,
+          1,
+          "narrowing list should contain only the __reserved:b row",
+        );
+        assertEquals(
+          rows[0].id,
+          "__reserved:b",
+          "the sole row should be the reserved bookmark-search row",
+        );
+        assert(
+          !rows.some((c) => c.description === markerUrl),
+          `stale marker bookmark (${markerUrl}) must not leak into the narrowing list`,
+        );
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+        if (guid !== null) {
+          try {
+            await mod.PlacesUtils.bookmarks.remove(guid);
+          } catch (e) {
+            console.error(
+              "[command-palette] @b fzf-stale cleanup failed:",
+              e,
+            );
+          }
+        }
+      }
+    },
+  },
+
+  // --- Selecting __reserved:b transitions into @b mode without hiding the palette ---
+  {
+    name: "executing __reserved:b transitions to @b mode (palette stays open)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const reservedB = rows.find((r) => r.id === "__reserved:b");
+        assert(
+          reservedB !== undefined,
+          "__reserved:b row should be in the @ list",
+        );
+        ctrl.state.setIsVisible(true);
+        ctrl.executeCommand(reservedB);
+        assertEquals(
+          ctrl.state.mode(),
+          "command",
+          "mode should stay 'command' (no input mode, no close)",
+        );
+        assertEquals(
+          ctrl.state.isVisible(),
+          true,
+          "palette should stay visible (reserved rows must not hide it)",
+        );
+        assertEquals(
+          ctrl.state.query(),
+          "@b ",
+          "query should transition to '@b '",
+        );
+        // The reserved fn re-runs updateSearch (debounced) which arms the
+        // async bookmark search — let it complete harmlessly.
+        await flushDebounce();
+        await flushAsyncSearch();
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+
+  // --- Selecting __reserved:h transitions into @h mode without hiding the palette ---
+  {
+    name: "executing __reserved:h transitions to @h mode (palette stays open)",
+    async fn() {
+      const shortcutsPrefSnapshot = snapshotShortcutsPref();
+      setShortcuts([]);
+      try {
+        const ctrl = createController();
+        ctrl.updateSearch("@");
+        await flushDebounce();
+        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const reservedH = rows.find((r) => r.id === "__reserved:h");
+        assert(
+          reservedH !== undefined,
+          "__reserved:h row should be in the @ list",
+        );
+        ctrl.state.setIsVisible(true);
+        ctrl.executeCommand(reservedH);
+        assertEquals(
+          ctrl.state.mode(),
+          "command",
+          "mode should stay 'command' (no input mode, no close)",
+        );
+        assertEquals(
+          ctrl.state.isVisible(),
+          true,
+          "palette should stay visible (reserved rows must not hide it)",
+        );
+        assertEquals(
+          ctrl.state.query(),
+          "@h ",
+          "query should transition to '@h '",
+        );
+        await flushDebounce();
+        await flushAsyncSearch();
+      } finally {
+        restoreShortcutsPref(shortcutsPrefSnapshot);
+      }
+    },
+  },
+];
+
 const rawTests: TestCase[] = [
   // --- Controller instantiation ---
   {
@@ -1551,5 +2227,6 @@ export function runAllTests(): void {
     ...shortcutTests,
     ...tabSearchTests,
     ...reservedListTests,
+    ...bookmarkHistorySearchTests,
   ]);
 }

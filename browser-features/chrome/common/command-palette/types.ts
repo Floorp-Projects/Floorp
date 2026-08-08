@@ -15,6 +15,7 @@ export interface BookmarkItem {
 
 export interface PlacesBookmarks {
   search(query: string): Promise<BookmarkItem[]>;
+  getRecent(numberOfItems: number): Promise<BookmarkItem[]>;
   TYPE_BOOKMARK: number;
 }
 
