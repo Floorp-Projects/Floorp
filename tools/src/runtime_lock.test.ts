@@ -62,7 +62,7 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "nora-0.2.0");
+  assertEquals(canonicalLock.source.ref, "daily-998");
   assertEquals(
     canonicalLock.source.commit,
     "ca3d0003976321fd67061d463ab56958b0f38cd9",
