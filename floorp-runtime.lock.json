@@ -4,15 +4,15 @@
     "repository": "Floorp-Projects/Floorp-Runtime",
     "trackingRef": "nora-0.2.0",
     "ref": "daily-998",
-    "commit": "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
-    "tree": "e555a371e1a24f18c8085058461f92c06e0b997d",
+    "commit": "ca3d0003976321fd67061d463ab56958b0f38cd9",
+    "tree": "a524742367f62767f607764cb5944ec3d613a77c",
     "release": {
       "id": 359773143,
       "immutable": false
     },
     "materials": {
-      "count": 53,
-      "totalBytes": 220264,
+      "count": 58,
+      "totalBytes": 250737,
       "entries": [
         {
           "path": "browser/base/content/test/caps/browser.toml",
@@ -431,6 +431,46 @@
           "sha256": "9ee35758add99d9dd20c8d20ec26baffa1787401876e205a436015e6d9f00b57"
         },
         {
+          "path": "services/sync/tests/tps/test_floorp_notes.js",
+          "role": "test",
+          "bytes": 2641,
+          "mode": "100644",
+          "gitBlob": "ce928fb13957b688974eef6d14b09543e3d10b5d",
+          "sha256": "7a24eea46d9a418b9089d0f4e6a99ed99d9aaa872682761a403de44932b90ef7"
+        },
+        {
+          "path": "services/sync/tests/tps/tps-floorp-notes.toml",
+          "role": "manifest",
+          "bytes": 736,
+          "mode": "100644",
+          "gitBlob": "895fc3fd7f2b6181438b3eece5c1b517463c1c86",
+          "sha256": "c5b20254de2c5fce8c0dec655a425dbe304bb906dcd293f079d928779a0820a2"
+        },
+        {
+          "path": "services/sync/tests/unit/floorp-notes-merge-v1.json",
+          "role": "support",
+          "bytes": 17256,
+          "mode": "100644",
+          "gitBlob": "fef8f5a0e0e303a3f9106e3ac5ac36a7a67cc6ad",
+          "sha256": "2597e5311c7c4ea4bb9d6a806ffa183aae3b3bd7380893b664b02ac829d665fd"
+        },
+        {
+          "path": "services/sync/tests/unit/test_floorp_notes_prefs.js",
+          "role": "test",
+          "bytes": 9403,
+          "mode": "100644",
+          "gitBlob": "14f2188dad5ae0ca88042800d147839ec552f73c",
+          "sha256": "5a27903dcd166458f0134f61d2ec48cf7322f94d07bc22a3933a96f79d4f5dec"
+        },
+        {
+          "path": "services/sync/tests/unit/xpcshell-floorp-notes.toml",
+          "role": "manifest",
+          "bytes": 437,
+          "mode": "100644",
+          "gitBlob": "881f3e3018af6c05d33e99b92fdebc0b90f51e6b",
+          "sha256": "04439bd4cd0253331e291023ba2bbffead1f15d6104c5ebe6ea5108f4f82d929"
+        },
+        {
           "path": "toolkit/content/tests/browser/common/mockTransfer.js",
           "role": "support",
           "bytes": 2765,
@@ -441,9 +481,9 @@
       ]
     },
     "tests": {
-      "count": 8,
-      "totalTasks": 15,
-      "supportDependencyEdges": 93,
+      "count": 10,
+      "totalTasks": 23,
+      "supportDependencyEdges": 94,
       "entries": [
         {
           "path": "browser/base/content/test/caps/browser_principalSerialization_version1.js",
@@ -498,6 +538,20 @@
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
           "manifest": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
           "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "services/sync/tests/tps/test_floorp_notes.js",
+          "manifest": "services/sync/tests/tps/tps-floorp-notes.toml",
+          "expectedTasks": 3,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "services/sync/tests/unit/test_floorp_notes_prefs.js",
+          "manifest": "services/sync/tests/unit/xpcshell-floorp-notes.toml",
+          "expectedTasks": 5,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         }
@@ -648,6 +702,18 @@
           "supportPaths": [
             "browser/components/urlbar/tests/browser-UrlbarInput/head.js",
             "browser/components/urlbar/tests/browser/head-common.js"
+          ]
+        },
+        {
+          "path": "services/sync/tests/tps/tps-floorp-notes.toml",
+          "preferences": [],
+          "supportPaths": []
+        },
+        {
+          "path": "services/sync/tests/unit/xpcshell-floorp-notes.toml",
+          "preferences": [],
+          "supportPaths": [
+            "services/sync/tests/unit/floorp-notes-merge-v1.json"
           ]
         }
       ]
