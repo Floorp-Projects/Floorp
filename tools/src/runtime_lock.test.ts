@@ -65,30 +65,30 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.source.ref, "daily-998");
   assertEquals(
     canonicalLock.source.commit,
-    "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+    "ca3d0003976321fd67061d463ab56958b0f38cd9",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "e555a371e1a24f18c8085058461f92c06e0b997d",
+    "a524742367f62767f607764cb5944ec3d613a77c",
   );
   assertEquals(canonicalLock.source.release, {
     id: 359773143,
     immutable: false,
   });
-  assertEquals(canonicalLock.source.materials.count, 53);
-  assertEquals(canonicalLock.source.materials.totalBytes, 220264);
-  assertEquals(canonicalLock.source.tests.count, 8);
-  assertEquals(canonicalLock.source.tests.totalTasks, 15);
-  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
+  assertEquals(canonicalLock.source.materials.count, 58);
+  assertEquals(canonicalLock.source.materials.totalBytes, 250737);
+  assertEquals(canonicalLock.source.tests.count, 10);
+  assertEquals(canonicalLock.source.tests.totalTasks, 23);
+  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 94);
 
   const roleCounts = Object.groupBy(
     canonicalLock.source.materials.entries,
     (entry) => entry.role,
   );
-  assertEquals(roleCounts.test?.length, 8);
-  assertEquals(roleCounts.manifest?.length, 6);
+  assertEquals(roleCounts.test?.length, 10);
+  assertEquals(roleCounts.manifest?.length, 8);
   assertEquals(roleCounts["head-support"]?.length, 5);
-  assertEquals(roleCounts.support?.length, 34);
+  assertEquals(roleCounts.support?.length, 35);
 
   assertEquals(
     Object.fromEntries(
@@ -110,6 +110,8 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
       "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js":
         1,
       "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js": 1,
+      "services/sync/tests/tps/test_floorp_notes.js": 3,
+      "services/sync/tests/unit/test_floorp_notes_prefs.js": 5,
     },
   );
 });
