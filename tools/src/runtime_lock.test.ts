@@ -46,6 +46,20 @@ Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
     },
     "browser-chrome manifest",
   );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "browser/base/content/test/caps/test_not_browser_chrome.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "browser/base/content/test/caps/xpcshell.toml";
+    },
+    "browser-chrome manifest",
+  );
 });
 
 function artifact(

@@ -208,7 +208,7 @@ tests.push({
           updatedAt: 1,
         }],
         [],
-        [],
+        {},
       );
     } catch (error: unknown) {
       captured = error;
