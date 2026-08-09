@@ -262,7 +262,7 @@ const tests: TestCase[] = [];
 
 tests.push({
   name: "shipped prerequisites bind the approved production authority",
-  fn: async () => {
+  fn: () => {
     const prerequisites = prerequisitesDocument as Prerequisites;
     const errors = validateProductionAuthority(prerequisites);
     assert(
