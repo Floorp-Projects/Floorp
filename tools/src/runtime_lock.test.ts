@@ -96,11 +96,11 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.source.ref, "daily-998");
   assertEquals(
     canonicalLock.source.commit,
-    "ca3d0003976321fd67061d463ab56958b0f38cd9",
+    "3bf9399564e59be32f92dcc1b044094881b4fb6a",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "a524742367f62767f607764cb5944ec3d613a77c",
+    "533f9fdca9bdccb7f3d2a13842be7e2375160ae5",
   );
   assertEquals(canonicalLock.source.release, {
     id: 359773143,
