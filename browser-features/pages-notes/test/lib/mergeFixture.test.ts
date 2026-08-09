@@ -107,8 +107,8 @@ for (const mergeCase of fixture.mergeCases) {
         toNotes(mergeCase.remote),
         toSnapshots(mergeCase.base),
       );
-      const expectedKeys = mergeCase.expectedNotes.map(noteKey).sort();
-      const actualKeys = result.merged.map(noteKey).sort();
+      const expectedKeys = mergeCase.expectedNotes.map(noteKey);
+      const actualKeys = result.merged.map(noteKey);
       assertEquals(
         JSON.stringify(actualKeys),
         JSON.stringify(expectedKeys),
@@ -144,8 +144,8 @@ for (const sequenceCase of fixture.sequenceCases ?? []) {
           toNotes(step.remote),
           toSnapshots(step.base),
         );
-        const expectedKeys = step.expectedNotes.map(noteKey).sort();
-        const actualKeys = result.merged.map(noteKey).sort();
+        const expectedKeys = step.expectedNotes.map(noteKey);
+        const actualKeys = result.merged.map(noteKey);
         assertEquals(
           JSON.stringify(actualKeys),
           JSON.stringify(expectedKeys),
@@ -193,6 +193,30 @@ for (const errorCase of fixture.errorCases ?? []) {
     },
   });
 }
+
+tests.push({
+  name: "whitespace-only note IDs fail closed",
+  fn: () => {
+    let captured: unknown;
+    try {
+      mergeNotesThreeWay(
+        [{
+          id: "   ",
+          title: "Blank",
+          content: "",
+          createdAt: 1,
+          updatedAt: 1,
+        }],
+        [],
+        [],
+      );
+    } catch (error: unknown) {
+      captured = error;
+    }
+    assert(captured instanceof NotesMergeError, "blank ID must fail closed");
+    assertEquals(captured.code, "blank-note-id", "blank ID error code");
+  },
+});
 
 tests.push({
   name: "fixture digest matches the approved contract",

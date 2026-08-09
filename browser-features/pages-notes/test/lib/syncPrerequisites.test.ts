@@ -22,6 +22,7 @@ import prerequisitesDocument from "../../../../docs/development/floorp-notes-syn
 import revocationsDocument from "../../../../docs/development/floorp-notes-sync/revocations.json" with {
   type: "json",
 };
+import allowedSignersDocument from "../../../../docs/development/floorp-notes-sync/allowed-signers?raw";
 
 interface Prerequisites {
   schema_version: number;
@@ -35,6 +36,9 @@ interface Prerequisites {
   production_environment?: {
     status: string;
     authorization: string;
+    oauth_client_id: string;
+    oauth_redirect_uri: string;
+    oauth_authority: string;
     fxa_configuration: string;
     fxa_hosts: string[];
     sync_hosts: string[];
@@ -42,6 +46,10 @@ interface Prerequisites {
     application_record_id: string;
     endpoint_policy_sha256: string;
   };
+}
+
+interface RevocationsDocument {
+  revocations: { fingerprint?: string; key_fingerprint?: string }[];
 }
 
 const EXPECTED_RUNTIME_COMMIT = "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d";
@@ -52,6 +60,11 @@ const EXPECTED_ENDPOINT_POLICY_DIGEST =
   "af96437acde3d05eb8f18dc9cc81450aa9d61703579c092b962922de8934c9ca";
 const EXPECTED_PREFS_RECORD_ID =
   "e2VjODAzMGY3LWMyMGEtNDY0Zi05YjBlLTEzYTNhOWU5NzM4NH0";
+const EXPECTED_OAUTH_CLIENT_ID = "1b1a3e44c54fbb58";
+const EXPECTED_OAUTH_REDIRECT_URI =
+  "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel";
+const EXPECTED_OAUTH_AUTHORITY =
+  "existing Floorp iOS FxA release path; Notes requests no new OAuth scopes and receives no token";
 const EXPECTED_FXA_HOSTS = [
   "accounts.firefox.com",
   "api.accounts.firefox.com",
@@ -79,7 +92,9 @@ const REQUIRED_CASES = [
   "duplicate-local-id-fails-closed",
 ];
 
-export function validatePrerequisites(prerequisites: Prerequisites): string[] {
+export async function validatePrerequisites(
+  prerequisites: Prerequisites,
+): Promise<string[]> {
   const errors: string[] = [];
   if (prerequisites.schema_version !== 1) errors.push("schema_version");
   if (!prerequisites.adr) errors.push("adr");
@@ -102,15 +117,52 @@ export function validatePrerequisites(prerequisites: Prerequisites): string[] {
   }
   if ((prerequisites.g6?.signatures?.length ?? 0) > 0) {
     errors.push("g6_signatures_exist");
+    errors.push(...await validateG6SignerRegistry(prerequisites));
   }
   return errors;
 }
 
-export function validateG6SignerRegistry(
+async function allowedSignerFingerprints(
+  allowedSigners: string,
+): Promise<Map<string, Set<string>>> {
+  const fingerprints = new Map<string, Set<string>>();
+  for (const rawLine of allowedSigners.split("\n")) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const [principal, keyType, encodedKey] = line.split(/\s+/, 3);
+    if (!principal || keyType !== "ssh-ed25519" || !encodedKey) continue;
+    const bytes = Uint8Array.from(
+      atob(encodedKey),
+      (value) => value.charCodeAt(0),
+    );
+    const digest = new Uint8Array(
+      await crypto.subtle.digest("SHA-256", bytes),
+    );
+    const fingerprint = `SHA256:${
+      btoa(String.fromCharCode(...digest)).replace(/=+$/, "")
+    }`;
+    const principalFingerprints = fingerprints.get(principal) ?? new Set();
+    principalFingerprints.add(fingerprint);
+    fingerprints.set(principal, principalFingerprints);
+  }
+  return fingerprints;
+}
+
+export async function validateG6SignerRegistry(
   prerequisites: Prerequisites,
-): string[] {
+  allowedSigners = allowedSignersDocument,
+  revocations = revocationsDocument as RevocationsDocument,
+): Promise<string[]> {
   const errors: string[] = [];
   const roles = prerequisites.role_registry ?? [];
+  const trusted = await allowedSignerFingerprints(allowedSigners);
+  const revoked = new Set(
+    (revocations.revocations ?? []).flatMap((entry) =>
+      [entry.fingerprint, entry.key_fingerprint].filter(
+        (value): value is string => Boolean(value),
+      )
+    ),
+  );
   const namedRoles = new Set(roles.map((r) => r.role));
   for (
     const requiredRole of [
@@ -131,6 +183,13 @@ export function validateG6SignerRegistry(
     }
     if (!role.key_fingerprint || role.key_fingerprint.startsWith("PENDING_")) {
       errors.push(`role_fingerprint:${role.role}`);
+      continue;
+    }
+    if (!trusted.get(role.login)?.has(role.key_fingerprint)) {
+      errors.push(`untrusted_fingerprint:${role.role}`);
+    }
+    if (revoked.has(role.key_fingerprint)) {
+      errors.push(`revoked_fingerprint:${role.role}`);
     }
   }
   return errors;
@@ -155,8 +214,20 @@ export function validateProductionAuthority(
   ) {
     errors.push("fxa_configuration");
   }
+  if (!production || production.oauth_client_id !== EXPECTED_OAUTH_CLIENT_ID) {
+    errors.push("oauth_client_id");
+  }
+  if (
+    !production || production.oauth_redirect_uri !== EXPECTED_OAUTH_REDIRECT_URI
+  ) {
+    errors.push("oauth_redirect_uri");
+  }
+  if (!production || production.oauth_authority !== EXPECTED_OAUTH_AUTHORITY) {
+    errors.push("oauth_authority");
+  }
   if (
     !production ||
+    !Array.isArray(production.fxa_hosts) ||
     JSON.stringify([...production.fxa_hosts].sort()) !==
       JSON.stringify(EXPECTED_FXA_HOSTS)
   ) {
@@ -164,6 +235,7 @@ export function validateProductionAuthority(
   }
   if (
     !production ||
+    !Array.isArray(production.sync_hosts) ||
     JSON.stringify([...production.sync_hosts].sort()) !==
       JSON.stringify(EXPECTED_SYNC_HOSTS)
   ) {
@@ -190,7 +262,7 @@ const tests: TestCase[] = [];
 
 tests.push({
   name: "shipped prerequisites bind the approved production authority",
-  fn: () => {
+  fn: async () => {
     const prerequisites = prerequisitesDocument as Prerequisites;
     const errors = validateProductionAuthority(prerequisites);
     assert(
@@ -202,9 +274,9 @@ tests.push({
 
 tests.push({
   name: "shipped prerequisites pass G1 production contract validation",
-  fn: () => {
+  fn: async () => {
     const prerequisites = prerequisitesDocument as Prerequisites;
-    const errors = validatePrerequisites(prerequisites);
+    const errors = await validatePrerequisites(prerequisites);
     assert(
       errors.length === 0,
       `approved production prerequisites must pass: ${errors.join(",")}`,
@@ -214,9 +286,9 @@ tests.push({
 
 tests.push({
   name: "G6 remains pending until independent role keys are registered",
-  fn: () => {
+  fn: async () => {
     const prerequisites = prerequisitesDocument as Prerequisites;
-    const errors = validateG6SignerRegistry(prerequisites);
+    const errors = await validateG6SignerRegistry(prerequisites);
     assert(
       errors.includes("role_fingerprint:security-reviewer"),
       "production authority must not synthesize a security-reviewer key",
@@ -234,7 +306,7 @@ tests.push({
 
 tests.push({
   name: "fully approved fixture passes",
-  fn: () => {
+  fn: async () => {
     const approved: Prerequisites = {
       schema_version: 1,
       adr: "ADR-001",
@@ -247,6 +319,9 @@ tests.push({
       production_environment: {
         status: "approved",
         authorization: "product-owner-explicit-2026-08-09",
+        oauth_client_id: EXPECTED_OAUTH_CLIENT_ID,
+        oauth_redirect_uri: EXPECTED_OAUTH_REDIRECT_URI,
+        oauth_authority: EXPECTED_OAUTH_AUTHORITY,
         fxa_configuration: "FxAConfig.Server.release",
         fxa_hosts: EXPECTED_FXA_HOSTS,
         sync_hosts: EXPECTED_SYNC_HOSTS,
@@ -287,14 +362,14 @@ tests.push({
       },
       g6: { signatures: [] },
     };
-    const errors = validatePrerequisites(approved);
+    const errors = await validatePrerequisites(approved);
     assert(errors.length === 0, `approved fixture errors: ${errors.join(",")}`);
   },
 });
 
 tests.push({
   name: "wrong runtime SHA and fixture digest are rejected",
-  fn: () => {
+  fn: async () => {
     const base = {
       schema_version: 1,
       adr: "ADR-001",
@@ -304,6 +379,9 @@ tests.push({
       production_environment: {
         status: "approved",
         authorization: "product-owner-explicit-2026-08-09",
+        oauth_client_id: EXPECTED_OAUTH_CLIENT_ID,
+        oauth_redirect_uri: EXPECTED_OAUTH_REDIRECT_URI,
+        oauth_authority: EXPECTED_OAUTH_AUTHORITY,
         fxa_configuration: "FxAConfig.Server.release",
         fxa_hosts: EXPECTED_FXA_HOSTS,
         sync_hosts: EXPECTED_SYNC_HOSTS,
@@ -329,7 +407,7 @@ tests.push({
       fixture: { sha256: "0".repeat(64), required_cases: REQUIRED_CASES },
       g6: { signatures: [] },
     };
-    const errors = validatePrerequisites(base);
+    const errors = await validatePrerequisites(base);
     assert(
       errors.includes("runtime_commit"),
       "wrong runtime SHA must be rejected",
@@ -343,7 +421,7 @@ tests.push({
 
 tests.push({
   name: "wrong production authority and missing case are rejected",
-  fn: () => {
+  fn: async () => {
     const base = {
       schema_version: 1,
       adr: "ADR-001",
@@ -356,6 +434,9 @@ tests.push({
       production_environment: {
         status: "unapproved",
         authorization: "missing",
+        oauth_client_id: "wrong-client",
+        oauth_redirect_uri: "https://example.invalid/callback",
+        oauth_authority: "new scopes allowed",
         fxa_configuration: "FxAConfig.Server.stage",
         fxa_hosts: [],
         sync_hosts: [],
@@ -372,7 +453,7 @@ tests.push({
       },
       g6: { signatures: [] },
     };
-    const errors = validatePrerequisites(base);
+    const errors = await validatePrerequisites(base);
     assert(
       errors.includes("production_approval"),
       "unapproved production use must be rejected",
@@ -381,11 +462,57 @@ tests.push({
       errors.includes("fxa_configuration"),
       "stage configuration must be rejected",
     );
+    assert(errors.includes("oauth_client_id"), "wrong OAuth client must fail");
+    assert(
+      errors.includes("oauth_redirect_uri"),
+      "wrong OAuth redirect must fail",
+    );
+    assert(
+      errors.includes("oauth_authority"),
+      "expanded OAuth authority must fail",
+    );
     assert(
       errors.includes(
         "missing_case:concurrent-edits-preserve-deterministic-loser",
       ),
       "missing case must be rejected",
+    );
+  },
+});
+
+tests.push({
+  name: "malformed production host fields return validation errors",
+  fn: () => {
+    const malformed = structuredClone(
+      prerequisitesDocument,
+    ) as unknown as Prerequisites;
+    if (!malformed.production_environment) throw new Error("missing fixture");
+    malformed.production_environment.fxa_hosts = null as unknown as string[];
+    malformed.production_environment.sync_hosts =
+      "not-an-array" as unknown as string[];
+    const errors = validateProductionAuthority(malformed);
+    assert(errors.includes("fxa_hosts"), "malformed FxA hosts must fail");
+    assert(errors.includes("sync_hosts"), "malformed Sync hosts must fail");
+  },
+});
+
+tests.push({
+  name: "registered G6 fingerprints must come from allowed signers",
+  fn: async () => {
+    const approved = structuredClone(prerequisitesDocument) as Prerequisites;
+    approved.role_registry = approved.role_registry.map((entry) => ({
+      ...entry,
+      login: "Ryosuke-Asano",
+      key_fingerprint: "SHA256:not-registered",
+    }));
+    const errors = await validateG6SignerRegistry(
+      approved,
+      allowedSignersDocument,
+      revocationsDocument,
+    );
+    assert(
+      errors.some((error) => error.startsWith("untrusted_fingerprint:")),
+      "unregistered signer fingerprints must fail",
     );
   },
 });

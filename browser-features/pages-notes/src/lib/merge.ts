@@ -452,7 +452,7 @@ export function mergeNotesThreeWay(
 function validateNoteIDs(source: NotesMergeSource, noteIDs: string[]): void {
   const seen = new Set<string>();
   for (const noteID of noteIDs) {
-    if (noteID.length === 0) {
+    if (noteID.trim().length === 0) {
       throw new NotesMergeError("blank-note-id", source, noteID);
     }
     if (seen.has(noteID)) {
