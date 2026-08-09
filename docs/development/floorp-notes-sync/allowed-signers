@@ -5,4 +5,6 @@
 # Role owners register their keys here before any G6 signature is accepted;
 # the syncPrerequisites validator rejects empty or placeholder entries.
 #
-# PENDING_ROLE_OWNER ssh-ed25519 AAAA_PENDING_OWNER_APPROVAL
+Ryosuke-Asano ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIICMvsg10b9W8VOdv/3HaksNTWcMY1EEaoHpmCW50jid
+Ryosuke-Asano ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOSxSKaPXsY/bV72WB+wiohOGj1Njd3LvbILfuSdvWL7
+# Security, privacy, and retention role owners still register their keys before G6.

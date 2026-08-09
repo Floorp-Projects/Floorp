@@ -10,16 +10,18 @@
  */
 
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
   type TestCase,
 } from "../../../chrome/test/utils/test_harness.ts";
 import {
   mergeNotesThreeWay,
   type Note,
+  NotesMergeError,
   type NoteSnapshot,
 } from "../../src/lib/merge.ts";
+import fixtureRaw from "../fixtures/floorp-notes-merge-v1.json?raw";
 
 interface FixtureNote {
   id: string;
@@ -47,14 +49,16 @@ interface Fixture {
   requiredCaseNames: string[];
   mergeCases: MergeCase[];
   sequenceCases: SequenceCase[];
-  errorCases: { name: string }[];
+  errorCases: {
+    name: string;
+    base: FixtureNote[];
+    local: FixtureNote[];
+    remote: FixtureNote[];
+    expectedError: { code: string; source: string; id: string };
+  }[];
 }
 
-const fixtureUrl = new URL(
-  "../fixtures/floorp-notes-merge-v1.json",
-  import.meta.url,
-);
-const fixture: Fixture = JSON.parse(await Deno.readTextFile(fixtureUrl));
+const fixture: Fixture = JSON.parse(fixtureRaw);
 
 const EXPECTED_DIGEST =
   "2597e5311c7c4ea4bb9d6a806ffa183aae3b3bd7380893b664b02ac829d665fd";
@@ -105,11 +109,19 @@ for (const mergeCase of fixture.mergeCases) {
       );
       const expectedKeys = mergeCase.expectedNotes.map(noteKey).sort();
       const actualKeys = result.merged.map(noteKey).sort();
-      assertEquals(actualKeys, expectedKeys, `notes for ${mergeCase.name}`);
+      assertEquals(
+        JSON.stringify(actualKeys),
+        JSON.stringify(expectedKeys),
+        `notes for ${mergeCase.name}`,
+      );
 
       for (const conflict of mergeCase.expectedConflicts) {
-        const original = result.merged.find((n) => n.id === conflict.originalNoteID);
-        const copy = result.merged.find((n) => n.id === conflict.conflictCopyID);
+        const original = result.merged.find((n) =>
+          n.id === conflict.originalNoteID
+        );
+        const copy = result.merged.find((n) =>
+          n.id === conflict.conflictCopyID
+        );
         assert(original, `original ${conflict.originalNoteID} missing`);
         assert(copy, `conflict copy ${conflict.conflictCopyID} missing`);
       }
@@ -134,7 +146,11 @@ for (const sequenceCase of fixture.sequenceCases ?? []) {
         );
         const expectedKeys = step.expectedNotes.map(noteKey).sort();
         const actualKeys = result.merged.map(noteKey).sort();
-        assertEquals(actualKeys, expectedKeys, `notes for ${step.name}`);
+        assertEquals(
+          JSON.stringify(actualKeys),
+          JSON.stringify(expectedKeys),
+          `notes for ${step.name}`,
+        );
         assertEquals(
           result.conflictCount,
           step.expectedConflicts.length,
@@ -145,10 +161,43 @@ for (const sequenceCase of fixture.sequenceCases ?? []) {
   }
 }
 
+for (const errorCase of fixture.errorCases ?? []) {
+  tests.push({
+    name: `error ${errorCase.name}`,
+    fn: () => {
+      let captured: unknown;
+      try {
+        mergeNotesThreeWay(
+          toNotes(errorCase.local),
+          toNotes(errorCase.remote),
+          toSnapshots(errorCase.base),
+        );
+      } catch (error: unknown) {
+        captured = error;
+      }
+      assert(
+        captured instanceof NotesMergeError,
+        "merge must fail with NotesMergeError",
+      );
+      assertEquals(captured.code, errorCase.expectedError.code, "error code");
+      assertEquals(
+        captured.source,
+        errorCase.expectedError.source,
+        "error source",
+      );
+      assertEquals(
+        captured.noteID,
+        errorCase.expectedError.id,
+        "error note ID",
+      );
+    },
+  });
+}
+
 tests.push({
   name: "fixture digest matches the approved contract",
   fn: async () => {
-    const bytes = await Deno.readFile(fixtureUrl);
+    const bytes = new TextEncoder().encode(fixtureRaw);
     const digest = await crypto.subtle.digest("SHA-256", bytes);
     const hex = [...new Uint8Array(digest)]
       .map((b) => b.toString(16).padStart(2, "0"))
@@ -160,7 +209,11 @@ tests.push({
 tests.push({
   name: "all required case names are covered",
   fn: () => {
-    const covered = new Set(fixture.mergeCases.map((c) => c.name));
+    const covered = new Set([
+      ...fixture.mergeCases.map((c) => c.name),
+      ...fixture.sequenceCases.map((c) => c.name),
+      ...fixture.errorCases.map((c) => c.name),
+    ]);
     for (const required of fixture.requiredCaseNames) {
       assert(covered.has(required), `required case missing: ${required}`);
     }
