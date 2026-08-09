@@ -31,6 +31,23 @@ function expectInvalid(
   );
 }
 
+Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "services/sync/tests/unit/test_floorp_notes_prefs.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "services/sync/tests/unit/xpcshell-floorp-notes.toml";
+    },
+    "browser-chrome manifest",
+  );
+});
+
 function artifact(
   lock: RuntimeLock,
   platform: RuntimeArtifact["platform"],
@@ -75,20 +92,20 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
     id: 359773143,
     immutable: false,
   });
-  assertEquals(canonicalLock.source.materials.count, 58);
-  assertEquals(canonicalLock.source.materials.totalBytes, 250737);
-  assertEquals(canonicalLock.source.tests.count, 10);
-  assertEquals(canonicalLock.source.tests.totalTasks, 23);
-  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 94);
+  assertEquals(canonicalLock.source.materials.count, 53);
+  assertEquals(canonicalLock.source.materials.totalBytes, 220264);
+  assertEquals(canonicalLock.source.tests.count, 8);
+  assertEquals(canonicalLock.source.tests.totalTasks, 15);
+  assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
 
   const roleCounts = Object.groupBy(
     canonicalLock.source.materials.entries,
     (entry) => entry.role,
   );
-  assertEquals(roleCounts.test?.length, 10);
-  assertEquals(roleCounts.manifest?.length, 8);
+  assertEquals(roleCounts.test?.length, 8);
+  assertEquals(roleCounts.manifest?.length, 6);
   assertEquals(roleCounts["head-support"]?.length, 5);
-  assertEquals(roleCounts.support?.length, 35);
+  assertEquals(roleCounts.support?.length, 34);
 
   assertEquals(
     Object.fromEntries(
@@ -110,8 +127,6 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
       "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js":
         1,
       "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js": 1,
-      "services/sync/tests/tps/test_floorp_notes.js": 3,
-      "services/sync/tests/unit/test_floorp_notes_prefs.js": 5,
     },
   );
 });
