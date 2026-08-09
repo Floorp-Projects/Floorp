@@ -17,26 +17,44 @@
     "tag": "v12.16.4",
     "commit": "811a5b821e1d9d47b40f22aee6df5db2254a54b1"
   },
-  "staging_environment": {
-    "status": "pending_owner_approval",
-    "note": "Approved non-production FxA/Sync endpoint IDs are never guessed. The architecture owner must supply the staging endpoint GUIDs and test-account policy approval; until then dependent sync work stays blocked.",
-    "fxa_endpoint_id": "PENDING_OWNER_APPROVAL",
-    "sync_endpoint_id": "PENDING_OWNER_APPROVAL",
+  "production_environment": {
+    "status": "approved",
+    "authorization": "product-owner-explicit-2026-08-09",
+    "note": "Floorp has no separate FxA/Sync staging environment. The product owner explicitly approved production-service validation and mobile Notes Sync enablement before public iOS distribution. No endpoint GUID is invented: authority is the existing release configuration and pinned endpoint policy.",
+    "fxa_configuration": "FxAConfig.Server.release",
+    "fxa_hosts": [
+      "accounts.firefox.com",
+      "api.accounts.firefox.com",
+      "oauth.accounts.firefox.com",
+      "profile.accounts.firefox.com",
+      "static.accounts.firefox.com"
+    ],
+    "sync_hosts": [
+      "event-sync.services.mozilla.com",
+      "sync.services.mozilla.com",
+      "token.services.mozilla.com"
+    ],
     "wire": "sync15",
-    "application_record_id": "PENDING_MEASUREMENT_FROM_SIGNED_DESKTOP_BUILD",
-    "account_isolation": "two ephemeral staging accounts, revoked after the matrix"
+    "application_record_id": "e2VjODAzMGY3LWMyMGEtNDY0Zi05YjBlLTEzYTNhOWU5NzM4NH0",
+    "application_record_authority": "Floorp-Projects/application-services components/floorp-prefs-sync README.md and engine.rs at b6d29804c391a573ecc0db6c1c4491b3e07a6693; matches Desktop getPrefsGUIDForTest coverage in Floorp-Runtime ca3d0003976321fd67061d463ab56958b0f38cd9",
+    "endpoint_policy_source": "Floorp-Projects/floorp-ios@330870f9d6db91433afe1024ac8200f81d260a42:docs/floorp-release-endpoints.json",
+    "endpoint_policy_sha256": "af96437acde3d05eb8f18dc9cc81450aa9d61703579c092b962922de8934c9ca",
+    "oauth_client_id": "1b1a3e44c54fbb58",
+    "oauth_redirect_uri": "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
+    "oauth_authority": "existing Floorp iOS FxA release path; Notes requests no new OAuth scopes and receives no token",
+    "account_isolation": "two dedicated production QA accounts with no unrelated Sync data"
   },
   "test_account_policy": {
     "secrets_source": "CI secret environment variables only; never arguments, logs, or artifacts",
-    "cleanup": "revoke both accounts and erase simulator keychains even on failure",
+    "cleanup": "disconnect both QA accounts, reset their Notes Sync state, and erase simulator keychains even on failure; account deletion is recorded when authority permits it",
     "proxy_trace": "host/URL metadata only; no content, token, or key bytes"
   },
   "role_registry": [
     {
       "role": "architecture-owner",
-      "login": "PENDING_ROLE_OWNER",
-      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
-      "authority": "approves the contract, staging environment IDs, and trust anchors"
+      "login": "Ryosuke-Asano",
+      "key_fingerprint": "SHA256:LZmR2WViVB4EV+iar0SYgN2QeZKqkjsCCC7skTazHDY",
+      "authority": "approved the production service contract, mobile enablement scope, and rollback requirement on 2026-08-09"
     },
     {
       "role": "security-reviewer",
@@ -58,9 +76,9 @@
     },
     {
       "role": "rollout-approver",
-      "login": "PENDING_ROLE_OWNER",
-      "key_fingerprint": "PENDING_KEY_FINGERPRINT",
-      "authority": "approves rollout and migration evidence"
+      "login": "Ryosuke-Asano",
+      "key_fingerprint": "SHA256:LZmR2WViVB4EV+iar0SYgN2QeZKqkjsCCC7skTazHDY",
+      "authority": "approved production-capable implementation before public iOS distribution; final G6 signature remains required"
     }
   ],
   "fixture": {
@@ -84,13 +102,14 @@
   "policies": {
     "fxa": "FxA/Application Services sync15 path only; never direct Sync REST or raw tokens in app code",
     "e2ee": "encrypted by the sync15 engine; content never leaves the encrypted record in plaintext",
-    "retention": "staging accounts and traces deleted after each matrix run; artifacts retained 7 days",
+    "retention": "production QA accounts contain no unrelated Sync data; traces omit bodies/credentials and are retained 7 days; account cleanup is mandatory after the matrix",
     "reset": "reset flows go through the engine authority; never destructive local deletion without explicit user action",
-    "rollout": "staging-only; production enablement is a separate post-plan authorization",
+    "rollout": "production service and mobile enablement explicitly authorized on 2026-08-09; QA-account validation, runtime kill switch, G1-G6, and rollback evidence remain mandatory before default-on release",
     "migration": "fixture-driven migration; unknown payload fields preserved byte-for-byte"
   },
   "g6": {
     "signatures": [],
+    "signer_registry_status": "pending_security_privacy_retention_keys",
     "max_age_days": 90,
     "allowed_signers_path": "docs/development/floorp-notes-sync/allowed-signers",
     "revocations_path": "docs/development/floorp-notes-sync/revocations.json"
