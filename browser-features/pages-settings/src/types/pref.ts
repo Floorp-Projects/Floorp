@@ -183,6 +183,11 @@ export const zRockerActions = t.type({
   rightLeft: t.string,
 });
 
+export const zWheelActions = t.type({
+  scrollUp: t.string,
+  scrollDown: t.string,
+});
+
 export const zMouseGestureConfig = t.type({
   enabled: t.boolean,
   rockerGesturesEnabled: t.boolean,
@@ -195,6 +200,7 @@ export const zMouseGestureConfig = t.type({
   contextMenu: zMouseGestureContextMenu,
   actions: t.array(zGestureAction),
   rockerActions: zRockerActions,
+  wheelActions: zWheelActions,
 });
 
 export type GestureAction = t.TypeOf<typeof zGestureAction>;

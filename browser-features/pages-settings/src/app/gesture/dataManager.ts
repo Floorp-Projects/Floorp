@@ -52,6 +52,10 @@ export const useMouseGestureConfig = () => {
             leftRight: "gecko-forward",
             rightLeft: "gecko-back",
           },
+          wheelActions: {
+            scrollUp: "gecko-show-previous-tab",
+            scrollDown: "gecko-show-next-tab",
+          },
         };
 
         try {
@@ -137,6 +141,15 @@ export const useMouseGestureConfig = () => {
     });
   };
 
+  const updateWheelAction = (wheelType: "scrollUp" | "scrollDown", action: string) => {
+    return updateConfig({
+      wheelActions: {
+        ...config.wheelActions,
+        [wheelType]: action,
+      },
+    });
+  };
+
   return {
     config,
     loading,
@@ -147,6 +160,7 @@ export const useMouseGestureConfig = () => {
     updateAction,
     deleteAction,
     updateRockerAction,
+    updateWheelAction,
   };
 };
 

@@ -520,9 +520,9 @@ export class MouseGestureController {
 
     let action: string | null = null;
     if (event.deltaY < 0) {
-      action = "gecko-show-previous-tab";
+      action = config.wheelActions.scrollUp;
     } else if (event.deltaY > 0) {
-      action = "gecko-show-next-tab";
+      action = config.wheelActions.scrollDown;
     }
 
     if (action) {

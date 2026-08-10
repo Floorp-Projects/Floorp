@@ -26,6 +26,10 @@ interface GeneralSettingsProps {
     rockerType: "leftRight" | "rightLeft",
     action: string,
   ) => Promise<boolean>;
+  updateWheelAction: (
+    wheelType: "scrollUp" | "scrollDown",
+    action: string,
+  ) => Promise<boolean>;
 }
 
 export function GeneralSettings({
@@ -33,6 +37,7 @@ export function GeneralSettings({
   toggleEnabled,
   updateConfig,
   updateRockerAction,
+  updateWheelAction,
 }: GeneralSettingsProps) {
   const { t } = useTranslation();
   const availableActions = useAvailableActions();
@@ -210,6 +215,59 @@ export function GeneralSettings({
                 disabled={!config.enabled}
               />
             </div>
+
+            {/* Wheel Actions - only show when enabled */}
+            {config.wheelGesturesEnabled && (
+              <>
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.wheelScrollUp")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.wheelScrollUpDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    value={config.wheelActions.scrollUp}
+                    onChange={(e) =>
+                      updateWheelAction("scrollUp", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {availableActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.wheelScrollDown")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.wheelScrollDownDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    value={config.wheelActions.scrollDown}
+                    onChange={(e) =>
+                      updateWheelAction("scrollDown", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {availableActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="divider" />

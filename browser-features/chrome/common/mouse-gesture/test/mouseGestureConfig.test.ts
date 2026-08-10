@@ -418,6 +418,7 @@ function testDefaultConfigHasAllBaseFields(): void {
   assert(config.contextMenu !== undefined, "contextMenu should exist");
   assert(config.actions !== undefined, "actions should exist");
   assert(config.rockerActions !== undefined, "rockerActions should exist");
+  assert(config.wheelActions !== undefined, "wheelActions should exist");
 }
 
 // ---------------------------------------------------------------------------
@@ -436,6 +437,10 @@ function testConfigCodecValidMinimal(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["left"], action: "back" }],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(result._tag === "Right", "valid config should pass validation");
@@ -454,6 +459,10 @@ function testConfigCodecValidWithOptionalEnabled(): void {
     contextMenu: { minDistance: 10, preventionTimeout: 500 },
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(
@@ -474,6 +483,10 @@ function testConfigCodecValidEmptyActions(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(validConfig);
   assert(result._tag === "Right", "empty actions array should be valid");
@@ -503,6 +516,10 @@ function testConfigCodecInvalidSensitivityType(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -523,6 +540,10 @@ function testConfigCodecInvalidActionPattern(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["invalid-direction"], action: "test" }],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -543,6 +564,10 @@ function testConfigCodecInvalidTrailWidthType(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -563,6 +588,10 @@ function testConfigCodecInvalidShowTrailType(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(result._tag === "Left", "wrong showTrail type should fail validation");
@@ -580,6 +609,10 @@ function testConfigCodecInvalidContextMenuStructure(): void {
     contextMenu: { minDistance: "five" }, // Should be number, missing preventionTimeout
     actions: [],
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(
@@ -600,6 +633,10 @@ function testConfigCodecInvalidActionMissingAction(): void {
     contextMenu: { minDistance: 5, preventionTimeout: 200 },
     actions: [{ pattern: ["left"] }], // Missing "action" field
     rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
   };
   const result = MouseGestureConfigCodec.decode(invalidConfig);
   assert(

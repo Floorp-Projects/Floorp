@@ -44,6 +44,7 @@ interface TestConfigOptions {
   enabled?: boolean;
   wheelGesturesEnabled?: boolean;
   preventionTimeout?: number;
+  wheelActions?: MouseGestureConfig["wheelActions"];
 }
 
 function createFakeWindow(): FakeWindowHarness {
@@ -123,6 +124,7 @@ function createTestConfig(options: TestConfigOptions): MouseGestureConfig {
       action: action.action,
     })),
     rockerActions: { ...defaultConfig.rockerActions },
+    wheelActions: options.wheelActions ?? { ...defaultConfig.wheelActions },
   };
 }
 
@@ -706,6 +708,49 @@ async function testRockerGestureCannotBecomeWheelGesture(): Promise<void> {
   });
 }
 
+async function testWheelGestureUsesConfiguredActions(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController(
+      {
+        wheelActions: {
+          scrollUp: ROCKER_RIGHT_LEFT_ACTION,
+          scrollDown: DRAWN_RIGHT_ACTION,
+        },
+      },
+      ({ win }) => {
+        dispatchMouse(win, "mousedown", 2);
+        dispatchWheel(win, -120);
+        dispatchWheel(win, 120);
+        dispatchMouse(win, "mouseup", 2);
+
+        assertEquals(
+          counts[ROCKER_RIGHT_LEFT_ACTION],
+          1,
+          "scroll-up should run the configured action instead of the " +
+            "hardcoded previous-tab action",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          1,
+          "scroll-down should run the configured action instead of the " +
+            "hardcoded next-tab action",
+        );
+        assertEquals(
+          counts[PREVIOUS_TAB_ACTION],
+          0,
+          "the hardcoded previous-tab action must not run once configured " +
+            "away",
+        );
+        assertEquals(
+          counts[NEXT_TAB_ACTION],
+          0,
+          "the hardcoded next-tab action must not run once configured away",
+        );
+      },
+    );
+  });
+}
+
 const tests: TestCase[] = [
   {
     name: "wheel gesture suppresses post-mouseup contextmenu",
@@ -762,6 +807,10 @@ const tests: TestCase[] = [
   {
     name: "rocker gesture cannot become wheel gesture",
     fn: testRockerGestureCannotBecomeWheelGesture,
+  },
+  {
+    name: "wheel gesture uses configured actions",
+    fn: testWheelGestureUsesConfiguredActions,
   },
 ];
 
