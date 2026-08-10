@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { rpc } from "../../lib/rpc/rpc.ts";
 import type {
   GestureAction,
@@ -18,6 +18,18 @@ export const useMouseGestureConfig = () => {
   const [config, setConfig] = useState<MouseGestureConfig>(
     {} as MouseGestureConfig,
   );
+  // Every updater below reads its "current" config from this ref, not from
+  // `config` directly. Two rapid updates (e.g. changing both wheel-action
+  // selectors before the first async save resolves) would otherwise both
+  // build on the same stale `config` closure, and whichever save resolves
+  // last would silently discard the other's change. The ref is updated
+  // synchronously in `applyConfig`, before any await, so each subsequent
+  // call always builds on the latest requested config.
+  const configRef = useRef<MouseGestureConfig>(config);
+  const applyConfig = (newConfig: MouseGestureConfig) => {
+    configRef.current = newConfig;
+    setConfig(newConfig);
+  };
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +75,7 @@ export const useMouseGestureConfig = () => {
           if (configStr) {
             const parsedConfig = JSON.parse(configStr);
             // Merge defaults with parsed config
-            setConfig({
+            applyConfig({
               ...defaultConfig,
               ...parsedConfig,
               contextMenu: {
@@ -73,11 +85,11 @@ export const useMouseGestureConfig = () => {
               enabled,
             });
           } else {
-            setConfig(defaultConfig);
+            applyConfig(defaultConfig);
           }
         } catch (parseError) {
           console.error("Failed to parse configuration", parseError);
-          setConfig(defaultConfig);
+          applyConfig(defaultConfig);
         }
       } catch (error) {
         console.error("Failed to load configuration", error);
@@ -102,7 +114,12 @@ export const useMouseGestureConfig = () => {
         JSON.stringify(configWithoutEnabled),
       );
 
-      setConfig(newConfig);
+      // If a newer update has already advanced configRef past this call's
+      // snapshot (e.g. this save resolved after a later one, out of order),
+      // committing newConfig to state now would revert that newer change.
+      if (configRef.current === newConfig) {
+        setConfig(newConfig);
+      }
       return true;
     } catch (error) {
       console.error("Failed to save configuration", error);
@@ -111,23 +128,25 @@ export const useMouseGestureConfig = () => {
   };
 
   const updateConfig = (partialConfig: Partial<MouseGestureConfig>) => {
-    const newConfig = { ...config, ...partialConfig };
+    const newConfig = { ...configRef.current, ...partialConfig };
+    configRef.current = newConfig;
     return saveConfig(newConfig);
   };
 
-  const toggleEnabled = () => updateConfig({ enabled: !config.enabled });
+  const toggleEnabled = () =>
+    updateConfig({ enabled: !configRef.current.enabled });
 
   const addAction = (action: GestureAction) =>
-    updateConfig({ actions: [...config.actions, action] });
+    updateConfig({ actions: [...configRef.current.actions, action] });
 
   const updateAction = (index: number, action: GestureAction) => {
-    const newActions = [...config.actions];
+    const newActions = [...configRef.current.actions];
     newActions[index] = action;
     return updateConfig({ actions: newActions });
   };
 
   const deleteAction = (index: number) => {
-    const newActions = [...config.actions];
+    const newActions = [...configRef.current.actions];
     newActions.splice(index, 1);
     return updateConfig({ actions: newActions });
   };
@@ -135,7 +154,7 @@ export const useMouseGestureConfig = () => {
   const updateRockerAction = (rockerType: "leftRight" | "rightLeft", action: string) => {
     return updateConfig({
       rockerActions: {
-        ...config.rockerActions,
+        ...configRef.current.rockerActions,
         [rockerType]: action,
       },
     });
@@ -144,7 +163,7 @@ export const useMouseGestureConfig = () => {
   const updateWheelAction = (wheelType: "scrollUp" | "scrollDown", action: string) => {
     return updateConfig({
       wheelActions: {
-        ...config.wheelActions,
+        ...configRef.current.wheelActions,
         [wheelType]: action,
       },
     });

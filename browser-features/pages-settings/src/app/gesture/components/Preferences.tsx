@@ -163,6 +163,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.rockerLeftRight")}
                     value={config.rockerActions.leftRight}
                     onChange={(e) =>
                       updateRockerAction("leftRight", e.target.value)}
@@ -187,6 +188,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.rockerRightLeft")}
                     value={config.rockerActions.rightLeft}
                     onChange={(e) =>
                       updateRockerAction("rightLeft", e.target.value)}
@@ -230,6 +232,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.wheelScrollUp")}
                     value={config.wheelActions.scrollUp}
                     onChange={(e) =>
                       updateWheelAction("scrollUp", e.target.value)}
@@ -254,6 +257,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.wheelScrollDown")}
                     value={config.wheelActions.scrollDown}
                     onChange={(e) =>
                       updateWheelAction("scrollDown", e.target.value)}

@@ -645,6 +645,96 @@ function testConfigCodecInvalidActionMissingAction(): void {
   );
 }
 
+function testConfigCodecInvalidMissingWheelActions(): void {
+  const invalidConfig = {
+    rockerGesturesEnabled: true,
+    wheelGesturesEnabled: true,
+    sensitivity: 40,
+    showTrail: true,
+    showLabel: true,
+    trailColor: "#fff",
+    trailWidth: 3,
+    contextMenu: { minDistance: 5, preventionTimeout: 200 },
+    actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    // wheelActions omitted entirely
+  };
+  const result = MouseGestureConfigCodec.decode(invalidConfig);
+  assert(
+    result._tag === "Left",
+    "missing wheelActions should fail validation",
+  );
+}
+
+function testConfigCodecInvalidWheelActionsWrongType(): void {
+  const invalidConfig = {
+    rockerGesturesEnabled: true,
+    wheelGesturesEnabled: true,
+    sensitivity: 40,
+    showTrail: true,
+    showLabel: true,
+    trailColor: "#fff",
+    trailWidth: 3,
+    contextMenu: { minDistance: 5, preventionTimeout: 200 },
+    actions: [],
+    rockerActions: { leftRight: "gecko-forward", rightLeft: "gecko-back" },
+    wheelActions: { scrollUp: 42, scrollDown: "gecko-show-next-tab" }, // scrollUp should be a string
+  };
+  const result = MouseGestureConfigCodec.decode(invalidConfig);
+  assert(
+    result._tag === "Left",
+    "non-string wheelActions.scrollUp should fail validation",
+  );
+}
+
+function testConfigCodecInvalidMissingRockerActions(): void {
+  const invalidConfig = {
+    rockerGesturesEnabled: true,
+    wheelGesturesEnabled: true,
+    sensitivity: 40,
+    showTrail: true,
+    showLabel: true,
+    trailColor: "#fff",
+    trailWidth: 3,
+    contextMenu: { minDistance: 5, preventionTimeout: 200 },
+    actions: [],
+    // rockerActions omitted entirely
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
+  };
+  const result = MouseGestureConfigCodec.decode(invalidConfig);
+  assert(
+    result._tag === "Left",
+    "missing rockerActions should fail validation",
+  );
+}
+
+function testConfigCodecInvalidRockerActionsWrongType(): void {
+  const invalidConfig = {
+    rockerGesturesEnabled: true,
+    wheelGesturesEnabled: true,
+    sensitivity: 40,
+    showTrail: true,
+    showLabel: true,
+    trailColor: "#fff",
+    trailWidth: 3,
+    contextMenu: { minDistance: 5, preventionTimeout: 200 },
+    actions: [],
+    rockerActions: { leftRight: "gecko-forward" }, // missing rightLeft
+    wheelActions: {
+      scrollUp: "gecko-show-previous-tab",
+      scrollDown: "gecko-show-next-tab",
+    },
+  };
+  const result = MouseGestureConfigCodec.decode(invalidConfig);
+  assert(
+    result._tag === "Left",
+    "rockerActions missing 'rightLeft' should fail validation",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Pref constants tests
 // ---------------------------------------------------------------------------
@@ -891,6 +981,22 @@ const tests: TestCase[] = [
   {
     name: "ConfigCodec invalid action missing action field",
     fn: testConfigCodecInvalidActionMissingAction,
+  },
+  {
+    name: "ConfigCodec invalid missing wheelActions",
+    fn: testConfigCodecInvalidMissingWheelActions,
+  },
+  {
+    name: "ConfigCodec invalid wheelActions wrong type",
+    fn: testConfigCodecInvalidWheelActionsWrongType,
+  },
+  {
+    name: "ConfigCodec invalid missing rockerActions",
+    fn: testConfigCodecInvalidMissingRockerActions,
+  },
+  {
+    name: "ConfigCodec invalid rockerActions wrong type",
+    fn: testConfigCodecInvalidRockerActionsWrongType,
   },
   // pref constants
   { name: "pref constants", fn: testPrefConstants },
