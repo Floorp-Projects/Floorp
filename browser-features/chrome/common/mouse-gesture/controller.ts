@@ -285,7 +285,7 @@ export class MouseGestureController {
 
     // A fresh right-button mousedown proves that the previous physical button
     // cycle ended, even if its mouseup was lost while focus was changing.
-    if (event.button === 2 && this.isWheelGestureFired) {
+    if (event.button === 2 && (this.isWheelGestureFired || this.isGestureActive)) {
       this.resetGestureState();
     }
 
