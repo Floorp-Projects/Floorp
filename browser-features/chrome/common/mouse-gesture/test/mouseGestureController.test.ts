@@ -44,6 +44,7 @@ interface TestConfigOptions {
   enabled?: boolean;
   wheelGesturesEnabled?: boolean;
   preventionTimeout?: number;
+  actions?: MouseGestureConfig["actions"];
 }
 
 function createFakeWindow(): FakeWindowHarness {
@@ -99,6 +100,21 @@ function dispatchMouse(
   return event;
 }
 
+// Mirrors buildLineTrail in mouseGestureRecognizer.test.ts: enough steps and
+// distance per step to clear both the 1.5px move-noise filter and the
+// default 5px activation distance.
+function dispatchDrag(
+  win: Window,
+  endX: number,
+  endY: number,
+  steps = 16,
+): void {
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    dispatchMouse(win, "mousemove", 0, endX * t, endY * t);
+  }
+}
+
 function dispatchWheel(win: Window, deltaY: number): WheelEvent {
   const event = new WheelEvent("wheel", {
     deltaY,
@@ -118,7 +134,7 @@ function createTestConfig(options: TestConfigOptions): MouseGestureConfig {
       ...defaultConfig.contextMenu,
       preventionTimeout: options.preventionTimeout ?? 200,
     },
-    actions: defaultConfig.actions.map((action) => ({
+    actions: (options.actions ?? defaultConfig.actions).map((action) => ({
       pattern: [...action.pattern],
       action: action.action,
     })),
@@ -706,6 +722,133 @@ async function testRockerGestureCannotBecomeWheelGesture(): Promise<void> {
   });
 }
 
+async function testRecognizedGestureExecutesSynchronously(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      dispatchMouse(win, "mousedown", 2);
+      dispatchDrag(win, 200, 0);
+      const mouseUp = dispatchMouse(win, "mouseup", 2);
+
+      // No harness.runAllTimers() call: the action must already have run.
+      // The old code deferred execution behind a 100ms setTimeout, so this
+      // assertion would fail against that version.
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "recognized gesture should execute its action synchronously on mouseup",
+      );
+      assertEquals(
+        mouseUp.defaultPrevented,
+        true,
+        "recognized gesture's mouseup should be consumed",
+      );
+    });
+  });
+}
+
+async function testUnrecognizedMovedGestureConsumesMouseUp(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController(
+      { actions: [{ pattern: ["right"], action: DRAWN_RIGHT_ACTION }] },
+      ({ win }) => {
+        dispatchMouse(win, "mousedown", 2);
+        // Moves past the activation distance but does not match the only
+        // configured pattern ("right"), so no gesture is recognized.
+        dispatchDrag(win, 0, 200);
+        const mouseUp = dispatchMouse(win, "mouseup", 2);
+        const contextMenu = dispatchMouse(win, "contextmenu", 2);
+
+        assertEquals(
+          mouseUp.defaultPrevented,
+          true,
+          "an unrecognized but moved gesture should still consume its mouseup",
+        );
+        assertEquals(
+          contextMenu.defaultPrevented,
+          true,
+          "context menu should stay suppressed after an unrecognized gesture",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          0,
+          "no action should run for an unrecognized gesture",
+        );
+      },
+    );
+  });
+}
+
+async function testGenuineInterruptionResetsActiveDrawnGesture(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      dispatchMouse(win, "mousedown", 2);
+      dispatchDrag(win, 100, 0);
+
+      // The fake window can never equal Services.focus.activeWindow, so this
+      // exercises the "genuine interruption" branch (as opposed to the
+      // same-window internal-focus-churn case the fix now ignores).
+      win.dispatchEvent(new Event("blur"));
+
+      const mouseUp = dispatchMouse(win, "mouseup", 2);
+      const contextMenu = dispatchMouse(win, "contextmenu", 2);
+
+      assertEquals(
+        mouseUp.defaultPrevented,
+        false,
+        "mouseup after a genuine interruption should be passive",
+      );
+      assertEquals(
+        contextMenu.defaultPrevented,
+        false,
+        "context menu should be allowed after a genuine interruption",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        0,
+        "an interrupted drawn gesture must not execute",
+      );
+    });
+  });
+}
+
+async function testNewRightMouseDownRecoversFromStaleDrawnGesture(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      // Start a drawn gesture and lose its mouseup entirely (never
+      // dispatched) - simulates the mouseup being dropped mid-drag, e.g. by
+      // the same tab-close/focus churn that motivated ignoring same-window
+      // blur. Without the fix, isGestureActive stays stuck true forever and
+      // every future right-button mousedown is silently swallowed.
+      dispatchMouse(win, "mousedown", 2);
+      dispatchDrag(win, 100, 0);
+
+      const nextMouseDown = dispatchMouse(win, "mousedown", 2);
+      dispatchDrag(win, 200, 0);
+      const nextMouseUp = dispatchMouse(win, "mouseup", 2);
+
+      assertEquals(
+        nextMouseDown.defaultPrevented,
+        false,
+        "a fresh right-button mousedown is not itself prevented",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "the recovered cycle should still recognize and execute its gesture",
+      );
+      assertEquals(
+        nextMouseUp.defaultPrevented,
+        true,
+        "the recovered cycle's recognized mouseup should be consumed",
+      );
+    });
+  });
+}
+
 const tests: TestCase[] = [
   {
     name: "wheel gesture suppresses post-mouseup contextmenu",
@@ -762,6 +905,22 @@ const tests: TestCase[] = [
   {
     name: "rocker gesture cannot become wheel gesture",
     fn: testRockerGestureCannotBecomeWheelGesture,
+  },
+  {
+    name: "recognized gesture executes synchronously on mouseup",
+    fn: testRecognizedGestureExecutesSynchronously,
+  },
+  {
+    name: "unrecognized but moved gesture consumes its mouseup",
+    fn: testUnrecognizedMovedGestureConsumesMouseUp,
+  },
+  {
+    name: "a genuine interruption still resets an active drawn gesture",
+    fn: testGenuineInterruptionResetsActiveDrawnGesture,
+  },
+  {
+    name: "a new right mousedown recovers from a stale drawn gesture",
+    fn: testNewRightMouseDownRecoversFromStaleDrawnGesture,
   },
 ];
 
