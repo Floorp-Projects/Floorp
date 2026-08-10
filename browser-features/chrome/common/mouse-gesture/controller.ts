@@ -237,7 +237,18 @@ export class MouseGestureController {
     this.pressedButtons.clear();
   }
 
-  private handleInteractionInterrupted = (): void => {
+  private handleInteractionInterrupted = (event: Event): void => {
+    // Gecko fires a top-level "blur" on this window as a side effect of
+    // focus moving between browser elements during a tab close/switch (most
+    // visibly when the closed tab is replaced by a differently-privileged
+    // empty/new-tab page), even though the OS-level window focus never
+    // actually left the browser. Only treat this as a genuine interruption
+    // (alt-tab, switching to another application/window) when the OS focus
+    // really did leave — otherwise this wipes a gesture the user just
+    // started mid-drag.
+    if (event.type === "blur" && Services.focus.activeWindow === this.targetWindow) {
+      return;
+    }
     this.isContextMenuPrevented = false;
     this.clearPreventionTimeout();
     this.resetGestureState();
@@ -468,14 +479,11 @@ export class MouseGestureController {
 
       if (actionInfo) {
         this.display.updateActionName(actionInfo.displayName);
-
-        // Execute the action after a brief display delay
-        this.targetWindow.setTimeout(() => {
-          executeGestureAction(actionInfo.action, this.targetWindow);
-          this.resetGestureState();
-          this.scheduleContextMenuPreventionRelease(preventionTimeout);
-        }, 100);
-
+        executeGestureAction(actionInfo.action, this.targetWindow);
+        this.resetGestureState();
+        this.scheduleContextMenuPreventionRelease(preventionTimeout);
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
     }
@@ -483,6 +491,8 @@ export class MouseGestureController {
     // No gesture recognized - prevent context menu and reset
     this.resetGestureState();
     this.scheduleContextMenuPreventionRelease(preventionTimeout);
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   private handleMouseWheel = (event: WheelEvent): void => {
