@@ -769,6 +769,7 @@ async function testRockerGestureConsumesMouseMoveWhileHeld(): Promise<void> {
       // Releasing only the right button doesn't end the cycle - the left
       // button is still physically held, so movement must stay consumed.
       dispatchMouse(win, "mouseup", 2);
+      const moveAfterRightRelease = dispatchMouse(win, "mousemove", 0, 55, 0);
       dispatchMouse(win, "mouseup", 0);
       const moveAfterRelease = dispatchMouse(win, "mousemove", 0, 60, 0);
 
@@ -782,6 +783,12 @@ async function testRockerGestureConsumesMouseMoveWhileHeld(): Promise<void> {
         true,
         "mousemove while a rocker action is active must not leak through " +
           "to the page (it would extend a native selection drag)",
+      );
+      assertEquals(
+        moveAfterRightRelease.defaultPrevented,
+        true,
+        "mousemove must stay consumed after only the right button releases " +
+          "- the left button is still held, so the cycle isn't over yet",
       );
       assertEquals(
         moveAfterRelease.defaultPrevented,
@@ -810,9 +817,18 @@ async function testMouseDownCaptureSurvivesContentStopPropagation(): Promise<
       contentEl.addEventListener("mousedown", (event) => {
         event.stopPropagation();
       });
+      contentEl.addEventListener("mousemove", (event) => {
+        event.stopPropagation();
+      });
 
       dispatchMouseFrom(contentEl, "mousedown", 2);
       dispatchMouseFrom(contentEl, "mousedown", 0);
+      // Content also stops propagation on its own mousemove. A regression
+      // that moved the mousemove listener back to bubble phase would still
+      // pass every other assertion here, since rocker detection itself only
+      // depends on mousedown - this is what actually exercises capture-phase
+      // mousemove suppression.
+      const moveWhileHeld = dispatchMouseFrom(contentEl, "mousemove", 0, 5, 0);
       dispatchMouseFrom(contentEl, "mouseup", 2);
       dispatchMouseFrom(contentEl, "mouseup", 0);
 
@@ -821,6 +837,12 @@ async function testMouseDownCaptureSurvivesContentStopPropagation(): Promise<
         1,
         "rocker gesture should still be detected even when content stops " +
           "propagation on its own mousedown",
+      );
+      assertEquals(
+        moveWhileHeld.defaultPrevented,
+        true,
+        "mousemove while a rocker action is active should stay consumed " +
+          "even when content stops propagation on its own mousemove",
       );
     });
   });
@@ -863,6 +885,49 @@ async function testLeftRightRockerLetsLeftMouseUpThrough(): Promise<void> {
         counts[DRAWN_RIGHT_ACTION],
         1,
         "leftRight rocker action should fire once",
+      );
+    });
+  });
+}
+
+async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      // Mirror of the leftRight case above, but for the opposite order:
+      // right pressed first starts the normal drawn-gesture path (also
+      // unprevented, but right-click doesn't anchor a native selection
+      // drag), and the left mousedown that completes the combo *is*
+      // prevented. Unlike leftRight, there's no unblocked native default
+      // here for the left mouseup to terminate, so it should stay
+      // suppressed like every other button in this cleanup path - letting
+      // it through would leave the page with an unmatched mouseup that
+      // never had a corresponding unprevented mousedown.
+      dispatchMouse(win, "mousedown", 2);
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0);
+      const rightMouseUp = dispatchMouse(win, "mouseup", 2);
+      const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+
+      assertEquals(
+        leftMouseDown.defaultPrevented,
+        true,
+        "the rocker-completing mousedown should be consumed",
+      );
+      assertEquals(
+        rightMouseUp.defaultPrevented,
+        true,
+        "the right button's mouseup should stay consumed",
+      );
+      assertEquals(
+        leftMouseUp.defaultPrevented,
+        true,
+        "the left button's mouseup should stay consumed too - its own " +
+          "mousedown was already prevented, so there's no native default " +
+          "left to terminate",
+      );
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        1,
+        "rightLeft rocker action should fire once",
       );
     });
   });
@@ -936,6 +1001,10 @@ const tests: TestCase[] = [
   {
     name: "leftRight rocker lets the left mouseup through",
     fn: testLeftRightRockerLetsLeftMouseUpThrough,
+  },
+  {
+    name: "rightLeft rocker suppresses the left mouseup",
+    fn: testRightLeftRockerSuppressesLeftMouseUp,
   },
 ];
 

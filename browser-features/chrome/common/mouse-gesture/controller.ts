@@ -455,20 +455,26 @@ export class MouseGestureController {
 
     // Handle rocker gesture cleanup
     if (this.isRockerGestureFired) {
+      // For a leftRight rocker (left pressed first), the left mousedown is
+      // never prevented - a lone left click must still behave normally - so
+      // the browser already started real native selection-drag tracking on
+      // press. That tracking only ends once the page actually receives the
+      // matching left mouseup, so it must be let through. `isGestureActive`
+      // is exactly the signal for which case this is: it's still true here
+      // only for a rightLeft rocker (right pressed first, which does start
+      // the normal drawn-gesture path), where the left mousedown *was*
+      // already prevented when it completed the combo - so unlike leftRight,
+      // there's no unblocked native default for that mouseup to terminate,
+      // and it should stay suppressed like every other button. Captured
+      // before resetGestureState() below clears it.
+      const shouldSuppressMouseUp = event.button !== 0 || this.isGestureActive;
       if (this.pressedButtons.size === 0) {
         this.resetGestureState();
         this.scheduleContextMenuPreventionRelease(
           getConfig().contextMenu.preventionTimeout,
         );
       }
-      // The left button's own mousedown is never prevented (a lone left
-      // click must still behave normally), so for a leftRight rocker the
-      // browser already started real native selection-drag tracking on
-      // press. That tracking only ends once the page actually receives the
-      // matching left mouseup - swallowing it here like every other button
-      // leaves the page thinking the button is still held, with selection
-      // mode stuck "on" until an unrelated future left click resets it.
-      if (event.button !== 0) {
+      if (shouldSuppressMouseUp) {
         event.preventDefault();
         event.stopPropagation();
       }
