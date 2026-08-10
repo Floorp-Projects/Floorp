@@ -30,6 +30,13 @@ export const useMouseGestureConfig = () => {
     configRef.current = newConfig;
     setConfig(newConfig);
   };
+  // Persistence writes (rpc.setBoolPref/setStringPref) are queued through
+  // this ref-backed promise chain so they always land in invocation order.
+  // Without it, two saves in flight could complete out of order, and an
+  // older save resolving last would overwrite a newer wheel/rocker-action
+  // choice in the actual persisted pref - silently reverting it on the next
+  // page load, even though in-memory state briefly showed the newer value.
+  const saveQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -129,8 +136,13 @@ export const useMouseGestureConfig = () => {
 
   const updateConfig = (partialConfig: Partial<MouseGestureConfig>) => {
     const newConfig = { ...configRef.current, ...partialConfig };
-    configRef.current = newConfig;
-    return saveConfig(newConfig);
+    // Apply optimistically so the UI reflects the choice immediately,
+    // rather than lagging until the save round-trip completes.
+    applyConfig(newConfig);
+
+    const queuedSave = saveQueueRef.current.then(() => saveConfig(newConfig));
+    saveQueueRef.current = queuedSave;
+    return queuedSave;
   };
 
   const toggleEnabled = () =>
