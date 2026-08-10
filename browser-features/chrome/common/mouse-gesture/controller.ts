@@ -56,11 +56,22 @@ export class MouseGestureController {
       return;
     }
 
-    this.targetWindow.addEventListener("mousedown", this.handleMouseDown);
-    this.targetWindow.addEventListener("mousemove", this.handleMouseMove);
-    // Capture-phase mouseup: content scripts (e.g. video players) may call
-    // stopPropagation() on mouseup, which would prevent the wheel-gesture
-    // cleanup / context-menu suppression from starting (Floorp issue #2586).
+    // Capture-phase mousedown/mousemove/mouseup: content scripts (e.g. video
+    // players, or any page that stops propagation on its own mouse handlers)
+    // may call stopPropagation(), which would otherwise prevent rocker- and
+    // drawn-gesture detection from ever running, and would prevent the
+    // wheel-gesture cleanup / context-menu suppression from starting
+    // (Floorp issue #2586).
+    this.targetWindow.addEventListener(
+      "mousedown",
+      this.handleMouseDown,
+      true,
+    );
+    this.targetWindow.addEventListener(
+      "mousemove",
+      this.handleMouseMove,
+      true,
+    );
     this.targetWindow.addEventListener("mouseup", this.handleMouseUp, true);
     this.targetWindow.addEventListener(
       "contextmenu",
@@ -83,8 +94,16 @@ export class MouseGestureController {
 
   public destroy(): void {
     if (this.eventListenersAttached) {
-      this.targetWindow.removeEventListener("mousedown", this.handleMouseDown);
-      this.targetWindow.removeEventListener("mousemove", this.handleMouseMove);
+      this.targetWindow.removeEventListener(
+        "mousedown",
+        this.handleMouseDown,
+        true,
+      );
+      this.targetWindow.removeEventListener(
+        "mousemove",
+        this.handleMouseMove,
+        true,
+      );
       this.targetWindow.removeEventListener(
         "mouseup",
         this.handleMouseUp,
@@ -338,6 +357,18 @@ export class MouseGestureController {
       return;
     }
 
+    // A rocker action already owns this button cycle. Left unhandled, these
+    // movement events pass straight through to the page and let its native
+    // text-selection drag keep extending for as long as both buttons stay
+    // down (visibly so if the rocker action scrolls the page underneath the
+    // still-held cursor) - selecting the page instead of just running the
+    // gesture.
+    if (this.isRockerGestureFired) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     // Wheel gestures are discrete and must not fall through to drawn gesture
     // recognition if the pointer moves before the right button is released.
     if (!this.isGestureActive || this.isWheelGestureFired) return;
@@ -430,8 +461,17 @@ export class MouseGestureController {
           getConfig().contextMenu.preventionTimeout,
         );
       }
-      event.preventDefault();
-      event.stopPropagation();
+      // The left button's own mousedown is never prevented (a lone left
+      // click must still behave normally), so for a leftRight rocker the
+      // browser already started real native selection-drag tracking on
+      // press. That tracking only ends once the page actually receives the
+      // matching left mouseup - swallowing it here like every other button
+      // leaves the page thinking the button is still held, with selection
+      // mode stuck "on" until an unrelated future left click resets it.
+      if (event.button !== 0) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       return;
     }
 

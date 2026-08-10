@@ -46,11 +46,12 @@ interface TestConfigOptions {
   preventionTimeout?: number;
 }
 
-function createFakeWindow(): FakeWindowHarness {
-  const eventTarget = new EventTarget();
+function attachTimerShim<T extends EventTarget>(
+  target: T,
+): FakeWindowHarness {
   const timers = new Map<number, () => void>();
   let nextTimerId = 1;
-  const fakeWindow = eventTarget as EventTarget & {
+  const fakeWindow = target as T & {
     setTimeout(callback: () => void, delay?: number): number;
     clearTimeout(timerId?: number): void;
   };
@@ -79,8 +80,26 @@ function createFakeWindow(): FakeWindowHarness {
   };
 }
 
-function dispatchMouse(
-  win: Window,
+function createFakeWindow(): FakeWindowHarness {
+  return attachTimerShim(new EventTarget());
+}
+
+// A bare EventTarget has no ancestor/descendant relationship, so it cannot
+// exercise capture-vs-bubble ordering. This harness uses a real (detached)
+// DOM parent/child pair instead, so a "content" node can stopPropagation()
+// its own mousedown the way a page's own JS might, letting tests verify the
+// window-level listener still runs because it's registered on capture.
+function createFakeWindowWithContent(): FakeWindowHarness & {
+  contentEl: HTMLElement;
+} {
+  const container = document.createElement("div");
+  const contentEl = document.createElement("div");
+  container.appendChild(contentEl);
+  return { ...attachTimerShim(container), contentEl };
+}
+
+function dispatchMouseFrom(
+  target: EventTarget,
   type: "mousedown" | "mouseup" | "mousemove" | "contextmenu",
   button: number,
   clientX = 0,
@@ -95,8 +114,18 @@ function dispatchMouse(
     bubbles: true,
     cancelable: true,
   });
-  win.dispatchEvent(event);
+  target.dispatchEvent(event);
   return event;
+}
+
+function dispatchMouse(
+  win: Window,
+  type: "mousedown" | "mouseup" | "mousemove" | "contextmenu",
+  button: number,
+  clientX = 0,
+  clientY = 0,
+): MouseEvent {
+  return dispatchMouseFrom(win, type, button, clientX, clientY);
 }
 
 function dispatchWheel(win: Window, deltaY: number): WheelEvent {
@@ -205,6 +234,24 @@ async function withTrackedActions(
       }
     }
   }
+}
+
+async function withControllerAndContent(
+  options: TestConfigOptions,
+  fn: (
+    harness: FakeWindowHarness & { contentEl: HTMLElement },
+    controller: MouseGestureController,
+  ) => void | Promise<void>,
+): Promise<void> {
+  await withTestConfig(options, async () => {
+    const harness = createFakeWindowWithContent();
+    const controller = new MouseGestureController(harness.win);
+    try {
+      await fn(harness, controller);
+    } finally {
+      controller.destroy();
+    }
+  });
 }
 
 async function withController(
@@ -706,6 +753,121 @@ async function testRockerGestureCannotBecomeWheelGesture(): Promise<void> {
   });
 }
 
+async function testRockerGestureConsumesMouseMoveWhileHeld(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      // Left-then-right ("leftRight") rocker: the left mousedown anchors a
+      // native text-selection drag before the combo can be detected (a lone
+      // left click must still behave normally). Once the right mousedown
+      // completes the combo, every mousemove while both buttons stay down
+      // must be consumed - left unhandled, it would let that selection keep
+      // extending as the rocker's action (e.g. scrolling) moves content
+      // under the still-held cursor.
+      dispatchMouse(win, "mousedown", 0);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
+      const moveWhileHeld = dispatchMouse(win, "mousemove", 0, 50, 0);
+      // Releasing only the right button doesn't end the cycle - the left
+      // button is still physically held, so movement must stay consumed.
+      dispatchMouse(win, "mouseup", 2);
+      dispatchMouse(win, "mouseup", 0);
+      const moveAfterRelease = dispatchMouse(win, "mousemove", 0, 60, 0);
+
+      assertEquals(
+        rightMouseDown.defaultPrevented,
+        true,
+        "the rocker-completing mousedown should be consumed",
+      );
+      assertEquals(
+        moveWhileHeld.defaultPrevented,
+        true,
+        "mousemove while a rocker action is active must not leak through " +
+          "to the page (it would extend a native selection drag)",
+      );
+      assertEquals(
+        moveAfterRelease.defaultPrevented,
+        false,
+        "mousemove after the rocker cycle ends should be passive again",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "leftRight rocker action should fire once",
+      );
+    });
+  });
+}
+
+async function testMouseDownCaptureSurvivesContentStopPropagation(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withControllerAndContent({}, ({ contentEl }) => {
+      // Simulate a page (e.g. an image gallery, map, or editor) that stops
+      // propagation on its own mousedown. Before mousedown was capture-phase,
+      // this would prevent the gesture controller - registered on the window
+      // ancestor - from ever seeing the event, silently breaking rocker
+      // detection on that page.
+      contentEl.addEventListener("mousedown", (event) => {
+        event.stopPropagation();
+      });
+
+      dispatchMouseFrom(contentEl, "mousedown", 2);
+      dispatchMouseFrom(contentEl, "mousedown", 0);
+      dispatchMouseFrom(contentEl, "mouseup", 2);
+      dispatchMouseFrom(contentEl, "mouseup", 0);
+
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        1,
+        "rocker gesture should still be detected even when content stops " +
+          "propagation on its own mousedown",
+      );
+    });
+  });
+}
+
+async function testLeftRightRockerLetsLeftMouseUpThrough(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      // The left button's own mousedown is never prevented (a lone left
+      // click must still behave normally), so the browser already started
+      // real native selection-drag tracking for it once pressed. That
+      // tracking only ends once the page actually receives the matching
+      // left mouseup. If the rocker cleanup swallowed every button's
+      // mouseup indiscriminately, the page would never find out the left
+      // button was released, leaving native selection mode stuck "on" -
+      // even with zero mouse movement during the whole sequence.
+      dispatchMouse(win, "mousedown", 0);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
+      const rightMouseUp = dispatchMouse(win, "mouseup", 2);
+      const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+
+      assertEquals(
+        rightMouseDown.defaultPrevented,
+        true,
+        "the rocker-completing mousedown should be consumed",
+      );
+      assertEquals(
+        rightMouseUp.defaultPrevented,
+        true,
+        "the right button's mouseup should stay consumed (suppresses its " +
+          "context menu)",
+      );
+      assertEquals(
+        leftMouseUp.defaultPrevented,
+        false,
+        "the left button's own mouseup must reach the page so native " +
+          "selection-drag tracking can terminate",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "leftRight rocker action should fire once",
+      );
+    });
+  });
+}
+
 const tests: TestCase[] = [
   {
     name: "wheel gesture suppresses post-mouseup contextmenu",
@@ -762,6 +924,18 @@ const tests: TestCase[] = [
   {
     name: "rocker gesture cannot become wheel gesture",
     fn: testRockerGestureCannotBecomeWheelGesture,
+  },
+  {
+    name: "rocker gesture consumes mousemove while held",
+    fn: testRockerGestureConsumesMouseMoveWhileHeld,
+  },
+  {
+    name: "mousedown capture survives content stopPropagation",
+    fn: testMouseDownCaptureSurvivesContentStopPropagation,
+  },
+  {
+    name: "leftRight rocker lets the left mouseup through",
+    fn: testLeftRightRockerLetsLeftMouseUpThrough,
   },
 ];
 
