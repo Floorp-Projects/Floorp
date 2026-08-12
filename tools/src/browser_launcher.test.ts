@@ -37,6 +37,10 @@ function mockProcessControl(
     capture(child, _launch, platform) {
       return Promise.resolve({ platform, rootPid: child.pid });
     },
+    abort(child) {
+      child.kill("SIGTERM");
+      return Promise.resolve();
+    },
     stop(child) {
       return stop(child);
     },
@@ -231,11 +235,15 @@ Deno.test("isolated Windows browser normalizes safe environment names and delega
   const running = await startIsolatedBrowser(launch, {
     environment: {
       ComSpec: "C:\\Windows\\System32\\cmd.exe",
+      DISPLAY: ":99",
       FLOORP_FXA_TEST_SECRET: "must-not-reach-browser",
       HTTP_PROXY: "http://must-not-reach-browser.invalid",
       Path: "C:\\Windows\\System32",
       SystemRoot: "C:\\Windows",
       UNRELATED: "must-not-reach-browser",
+      WAYLAND_DISPLAY: "wayland-0",
+      XAUTHORITY: "/tmp/floorp-xauthority",
+      XDG_RUNTIME_DIR: "/tmp/floorp-runtime",
     },
     platform: "windows",
     processControl: mockProcessControl((child) => {
@@ -260,8 +268,12 @@ Deno.test("isolated Windows browser normalizes safe environment names and delega
   try {
     assertEquals(capturedEnvironment, {
       COMSPEC: "C:\\Windows\\System32\\cmd.exe",
+      DISPLAY: ":99",
       PATH: "C:\\Windows\\System32",
       SYSTEMROOT: "C:\\Windows",
+      WAYLAND_DISPLAY: "wayland-0",
+      XAUTHORITY: "/tmp/floorp-xauthority",
+      XDG_RUNTIME_DIR: "/tmp/floorp-runtime",
     });
     await running.stop();
     assertEquals(terminatedPIDs, [43]);
@@ -301,6 +313,44 @@ Deno.test("isolated browser retains its profile when the owned process cannot be
   }
 });
 
+Deno.test("isolated browser retries a failed verified stop", async () => {
+  const launch = createIsolatedBrowserLaunch({
+    binaryPath: "/opt/floorp/Floorp",
+    port: 28302,
+  });
+  let stopAttempts = 0;
+  const running = await startIsolatedBrowser(launch, {
+    environment: {},
+    processControl: mockProcessControl(() => {
+      stopAttempts += 1;
+      return stopAttempts === 1
+        ? Promise.reject(new Error("first verified stop failed"))
+        : Promise.resolve();
+    }),
+    spawn: () => ({
+      pid: 47,
+      kill: () => undefined,
+      status: new Promise<Deno.CommandStatus>(() => undefined),
+    }),
+  });
+  try {
+    await assertRejects(
+      () => running.stop(),
+      Error,
+      "first verified stop failed",
+    );
+    assertEquals(Deno.lstatSync(launch.profilePath).isDirectory, true);
+    await running.stop();
+    assertEquals(stopAttempts, 2);
+    assertThrows(
+      () => Deno.lstatSync(launch.profilePath),
+      Deno.errors.NotFound,
+    );
+  } finally {
+    removeProfileForTest(launch.profilePath);
+  }
+});
+
 Deno.test("isolated browser retains its profile when ownership capture fails after spawn", async () => {
   const launch = createIsolatedBrowserLaunch({
     binaryPath: "/opt/floorp/Floorp",
@@ -309,6 +359,10 @@ Deno.test("isolated browser retains its profile when ownership capture fails aft
   const killed: string[] = [];
   const processControl: IsolatedBrowserProcessControl = {
     capture: () => Promise.reject(new Error("could not capture owned process")),
+    abort: (child) => {
+      child.kill("SIGTERM");
+      return Promise.reject(new Error("could not abort owned process"));
+    },
     stop: () => Promise.resolve(),
   };
   try {
@@ -333,6 +387,45 @@ Deno.test("isolated browser retains its profile when ownership capture fails aft
   }
 });
 
+Deno.test("isolated browser cleans its profile when capture abort is verified", async () => {
+  const launch = createIsolatedBrowserLaunch({
+    binaryPath: "/opt/floorp/Floorp",
+    port: 28305,
+  });
+  const abortedPIDs: number[] = [];
+  const processControl: IsolatedBrowserProcessControl = {
+    capture: () => Promise.reject(new Error("could not capture owned process")),
+    abort: (child) => {
+      abortedPIDs.push(child.pid);
+      return Promise.resolve();
+    },
+    stop: () => Promise.resolve(),
+  };
+  try {
+    await assertRejects(
+      () =>
+        startIsolatedBrowser(launch, {
+          environment: {},
+          processControl,
+          spawn: () => ({
+            pid: 48,
+            kill: () => undefined,
+            status: new Promise<Deno.CommandStatus>(() => undefined),
+          }),
+        }),
+      Error,
+      "could not capture",
+    );
+    assertEquals(abortedPIDs, [48]);
+    assertThrows(
+      () => Deno.lstatSync(launch.profilePath),
+      Deno.errors.NotFound,
+    );
+  } finally {
+    removeProfileForTest(launch.profilePath);
+  }
+});
+
 Deno.test("isolated browser prevents external profile cleanup after spawn", async () => {
   const launch = createIsolatedBrowserLaunch({
     binaryPath: "/opt/floorp/Floorp",
@@ -346,6 +439,7 @@ Deno.test("isolated browser prevents external profile cleanup after spawn", asyn
       new Promise((resolve) => {
         resolveCapture = resolve;
       }),
+    abort: () => Promise.resolve(),
     stop: () => Promise.resolve(),
   };
   const starting = startIsolatedBrowser(launch, {
@@ -460,6 +554,59 @@ Deno.test("isolated browser pair attempts both stops and retains only an unverif
   }
 });
 
+Deno.test("isolated browser pair retries after one verified stop fails", async () => {
+  const commands: string[][] = [];
+  let firstStopAttempts = 0;
+  const pair = await startIsolatedBrowserPair(
+    {
+      first: {
+        binaryPath: "/opt/floorp/Floorp",
+        port: 28303,
+      },
+      second: {
+        binaryPath: "/opt/floorp/Floorp",
+        port: 28304,
+      },
+    },
+    {
+      environment: {},
+      processControl: mockProcessControl((child) => {
+        if (child.pid === 1) {
+          firstStopAttempts += 1;
+          return firstStopAttempts === 1
+            ? Promise.reject(new Error("first pair stop failed"))
+            : Promise.resolve();
+        }
+        return Promise.resolve();
+      }),
+      spawn: (command) => {
+        commands.push([...command]);
+        return {
+          pid: commands.length,
+          kill: () => undefined,
+          status: new Promise<Deno.CommandStatus>(() => undefined),
+        };
+      },
+    },
+  );
+  try {
+    await assertRejects(() => pair.stop(), AggregateError, "Failed to stop");
+    await pair.stop();
+    assertEquals(firstStopAttempts, 2);
+    assertThrows(
+      () => Deno.lstatSync(commands[0][2]),
+      Deno.errors.NotFound,
+    );
+    assertThrows(
+      () => Deno.lstatSync(commands[1][2]),
+      Deno.errors.NotFound,
+    );
+  } finally {
+    removeProfileForTest(pair.first.launch.profilePath);
+    removeProfileForTest(pair.second.launch.profilePath);
+  }
+});
+
 Deno.test("isolated browser pair retains a profile whose ownership capture fails", async () => {
   const commands: string[][] = [];
   const processControl: IsolatedBrowserProcessControl = {
@@ -468,6 +615,8 @@ Deno.test("isolated browser pair retains a profile whose ownership capture fails
         ? Promise.reject(new Error("could not capture second owned process"))
         : Promise.resolve({ platform, rootPid: child.pid });
     },
+    abort: () =>
+      Promise.reject(new Error("could not abort second owned process")),
     stop: () => Promise.resolve(),
   };
   await assertRejects(

@@ -98,10 +98,16 @@ export interface IsolatedBrowserProcessOwnership {
 }
 
 /**
- * The controller owns process identity capture and must resolve `stop` only
- * after it has verified the owned root/tree and Marionette port are gone.
+ * The controller owns process identity capture and must resolve `stop` or
+ * `abort` only after it has verified the owned root/tree and Marionette port
+ * are gone.
  */
 export interface IsolatedBrowserProcessControl {
+  abort(
+    child: IsolatedBrowserChild,
+    launch: IsolatedBrowserLaunchView,
+    dependencies: IsolatedBrowserSpawnDependencies,
+  ): Promise<void>;
   capture(
     child: IsolatedBrowserChild,
     launch: IsolatedBrowserLaunchView,
@@ -130,6 +136,7 @@ export interface RunningIsolatedBrowserPair {
 const ISOLATED_BROWSER_ENV_ALLOWLIST = new Set([
   "APPDATA",
   "COMSPEC",
+  "DISPLAY",
   "HOME",
   "LANG",
   "LC_ALL",
@@ -141,7 +148,10 @@ const ISOLATED_BROWSER_ENV_ALLOWLIST = new Set([
   "TMP",
   "TMPDIR",
   "USERPROFILE",
+  "WAYLAND_DISPLAY",
   "WINDIR",
+  "XAUTHORITY",
+  "XDG_RUNTIME_DIR",
   "__CF_USER_TEXT_ENCODING",
 ]);
 
@@ -430,13 +440,20 @@ export async function startIsolatedBrowser(
   let ownership: IsolatedBrowserProcessOwnership;
   try {
     ownership = await processControl.capture(child, launchView, platform);
-  } catch (error) {
+  } catch (captureError) {
     try {
-      child.kill("SIGTERM");
-    } catch {
-      // The process may have exited before ownership capture failed.
+      await processControl.abort(child, launchView, dependencies);
+      cleanupIsolatedBrowserLaunch(launch, true);
+    } catch (abortError) {
+      const captureMessage = captureError instanceof Error
+        ? `: ${captureError.message}`
+        : "";
+      throw new AggregateError(
+        [captureError, abortError],
+        `Failed to capture isolated browser ownership and abort its process${captureMessage}`,
+      );
     }
-    throw error;
+    throw captureError;
   }
 
   let stopPromise: Promise<void> | undefined;
@@ -445,10 +462,16 @@ export async function startIsolatedBrowser(
     pid: child.pid,
     stop: () => {
       if (stopPromise === undefined) {
-        stopPromise = (async () => {
+        const attempt = (async () => {
           await processControl.stop(child, launchView, ownership, dependencies);
           cleanupIsolatedBrowserLaunch(launch, true);
         })();
+        stopPromise = attempt;
+        void attempt.catch(() => {
+          if (stopPromise === attempt) {
+            stopPromise = undefined;
+          }
+        });
       }
       return stopPromise;
     },
@@ -473,7 +496,7 @@ export async function startIsolatedBrowserPair(
       second,
       stop: () => {
         if (stopPromise === undefined) {
-          stopPromise = (async () => {
+          const attempt = (async () => {
             const results = await Promise.allSettled([
               runningFirst.stop(),
               second.stop(),
@@ -488,6 +511,12 @@ export async function startIsolatedBrowserPair(
               );
             }
           })();
+          stopPromise = attempt;
+          void attempt.catch(() => {
+            if (stopPromise === attempt) {
+              stopPromise = undefined;
+            }
+          });
         }
         return stopPromise;
       },
