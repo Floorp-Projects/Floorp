@@ -24,8 +24,12 @@ function completeFacts(): G5BoundaryFacts {
   };
 }
 
+function assessFacts(facts: unknown) {
+  return assessG5ExecutionBoundary(JSON.stringify(facts));
+}
+
 Deno.test("G5 boundary admits a GitHub-hosted macOS candidate only for independent verification", () => {
-  const assessment = assessG5ExecutionBoundary({
+  const assessment = assessFacts({
     ...completeFacts(),
     host: "github-hosted-macos",
   });
@@ -38,7 +42,7 @@ Deno.test("G5 boundary admits a GitHub-hosted macOS candidate only for independe
 
 Deno.test("G5 boundary requires a nonblank executor-instance correlation ID", () => {
   for (const executorInstanceId of ["", "  "]) {
-    const assessment = assessG5ExecutionBoundary({
+    const assessment = assessFacts({
       ...completeFacts(),
       executorInstanceId,
     });
@@ -67,7 +71,7 @@ Deno.test("G5 boundary rejects malformed runtime facts without coercion", () => 
   ];
 
   for (const facts of malformed) {
-    const assessment = assessG5ExecutionBoundary(facts);
+    const assessment = assessFacts(facts);
     assertEquals(assessment.trustedExecutorVerification, "blocked");
     assertEquals(assessment.trustedExecutorVerificationBlockers, [
       "malformed-boundary-facts",
@@ -81,7 +85,7 @@ Deno.test("G5 boundary fails closed rather than throwing for a revoked Proxy", (
   const { proxy, revoke } = Proxy.revocable(completeFacts(), {});
   revoke();
 
-  const assessment = assessG5ExecutionBoundary(proxy);
+  const assessment = assessG5ExecutionBoundary(proxy as unknown as string);
   assertEquals(assessment.trustedExecutorVerification, "blocked");
   assertEquals(assessment.trustedExecutorVerificationBlockers, [
     "malformed-boundary-facts",
@@ -90,8 +94,120 @@ Deno.test("G5 boundary fails closed rather than throwing for a revoked Proxy", (
   assertEquals(assessment.g5Result, "not-assessed");
 });
 
+Deno.test("G5 boundary rejects a live Proxy that forges complete ownership facts", () => {
+  const blockedFacts = {
+    ...completeFacts(),
+    host: "persistent-host",
+    supervision: {
+      descendants: "escaped-or-unprovable",
+      eventStream: "lost-or-unknown",
+      kind: "polling-only",
+      pidGeneration: "coarse-or-unknown",
+    },
+  };
+  let proxyTrapTouched = false;
+  const forgedFacts = new Proxy(blockedFacts, {
+    get(_target, key) {
+      proxyTrapTouched = true;
+      if (key === "host") return "github-hosted-macos";
+      if (key === "supervision") return completeFacts().supervision;
+      return Reflect.get(_target, key);
+    },
+    getOwnPropertyDescriptor(_target, key) {
+      proxyTrapTouched = true;
+      if (key === "host" || key === "supervision") {
+        return {
+          configurable: true,
+          enumerable: true,
+          value: key === "host"
+            ? "github-hosted-macos"
+            : completeFacts().supervision,
+          writable: true,
+        };
+      }
+      return Reflect.getOwnPropertyDescriptor(_target, key);
+    },
+  });
+
+  const assessment = assessG5ExecutionBoundary(
+    forgedFacts as unknown as string,
+  );
+  assertEquals(assessment.trustedExecutorVerification, "blocked");
+  assertEquals(assessment.trustedExecutorVerificationBlockers, [
+    "malformed-boundary-facts",
+  ]);
+  assertEquals(proxyTrapTouched, false);
+});
+
+Deno.test("G5 boundary rejects duplicate JSON keys at every accepted object layer", () => {
+  const rootDuplicate = JSON.stringify(completeFacts()).replace(
+    '"host":"disposable-macos-vm"',
+    '"host":"persistent-host","host":"github-hosted-macos"',
+  );
+  const supervisionDuplicate = JSON.stringify(completeFacts()).replace(
+    '"kind":"launch-bound-event-supervisor"',
+    '"kind":"polling-only","kind":"launch-bound-event-supervisor"',
+  );
+
+  const escapedRootDuplicate = JSON.stringify(completeFacts()).replace(
+    '"host":"disposable-macos-vm"',
+    '"host":"persistent-host","\\u0068ost":"github-hosted-macos"',
+  );
+
+  for (
+    const factsJson of [
+      rootDuplicate,
+      supervisionDuplicate,
+      escapedRootDuplicate,
+    ]
+  ) {
+    const assessment = assessG5ExecutionBoundary(factsJson);
+    assertEquals(assessment.trustedExecutorVerification, "blocked");
+    assertEquals(assessment.trustedExecutorVerificationBlockers, [
+      "malformed-boundary-facts",
+    ]);
+  }
+});
+
+Deno.test("G5 boundary rejects every noncanonical representation independently", () => {
+  const canonical = JSON.stringify(completeFacts());
+  const whitespace = canonical.replace(
+    '"host":"disposable-macos-vm"',
+    '"host" : "disposable-macos-vm"',
+  );
+  const reorderedRoot = JSON.stringify({
+    executorInstanceId: EXECUTOR_INSTANCE_ID,
+    host: "disposable-macos-vm",
+    runId: RUN_ID,
+    supervision: completeFacts().supervision,
+  });
+  const reorderedSupervision = canonical.replace(
+    '"descendants":"causally-complete","eventStream":"complete","kind":"launch-bound-event-supervisor","pidGeneration":"high-resolution"',
+    '"kind":"launch-bound-event-supervisor","eventStream":"complete","descendants":"causally-complete","pidGeneration":"high-resolution"',
+  );
+  const escapedHost = canonical.replace(
+    '"host":"disposable-macos-vm"',
+    '"\\u0068ost":"disposable-macos-vm"',
+  );
+
+  for (
+    const factsJson of [
+      whitespace,
+      reorderedRoot,
+      reorderedSupervision,
+      escapedHost,
+    ]
+  ) {
+    const assessment = assessG5ExecutionBoundary(factsJson);
+    assertEquals(assessment.trustedExecutorVerification, "blocked");
+    assertEquals(assessment.trustedExecutorVerificationBlockers, [
+      "malformed-boundary-facts",
+    ]);
+  }
+});
+
 Deno.test("G5 boundary freezes every returned assessment surface", () => {
-  const assessment = assessG5ExecutionBoundary(completeFacts());
+  const assessment = assessFacts(completeFacts());
 
   assert(Object.isFrozen(assessment));
   assert(Object.isFrozen(assessment.cleanupBlockers));
@@ -158,7 +274,7 @@ Deno.test("G5 boundary blocks every incomplete local ownership proof", () => {
   ];
 
   for (const { facts, blocker } of cases) {
-    const assessment = assessG5ExecutionBoundary(facts);
+    const assessment = assessFacts(facts);
     assertEquals(assessment.trustedExecutorVerification, "blocked", blocker);
     assertEquals(assessment.trustedExecutorVerificationBlockers, [blocker]);
     assertEquals(assessment.cleanupBoundary, "not-established");
@@ -178,7 +294,7 @@ Deno.test("G5 boundary blocks absent or blank run and executor-instance identiti
       { ...completeFacts(), executorInstanceId: "  " },
     ]
   ) {
-    const assessment = assessG5ExecutionBoundary(facts);
+    const assessment = assessFacts(facts);
     assertEquals(assessment.trustedExecutorVerification, "blocked");
     assertEquals(assessment.trustedExecutorVerificationBlockers, [
       "run-or-executor-instance-identity-absent",
@@ -189,7 +305,7 @@ Deno.test("G5 boundary blocks absent or blank run and executor-instance identiti
 });
 
 Deno.test("G5 boundary requires an independent verifier before execution", () => {
-  const assessment = assessG5ExecutionBoundary(completeFacts());
+  const assessment = assessFacts(completeFacts());
 
   assertEquals(assessment.trustedExecutorVerification, "required");
   assertEquals(assessment.trustedExecutorVerificationBlockers, []);
@@ -201,7 +317,7 @@ Deno.test("G5 boundary requires an independent verifier before execution", () =>
 });
 
 Deno.test("G5 boundary reports every independent ownership failure", () => {
-  const assessment = assessG5ExecutionBoundary({
+  const assessment = assessFacts({
     host: "persistent-host",
     runId: RUN_ID,
     supervision: {
@@ -226,7 +342,7 @@ Deno.test("G5 boundary reports every independent ownership failure", () => {
 });
 
 Deno.test("G5 boundary blocks unrecognized runtime facts", () => {
-  const assessment = assessG5ExecutionBoundary({
+  const assessment = assessFacts({
     host: "unrecognized-host",
     runId: RUN_ID,
     supervision: {
@@ -263,8 +379,15 @@ Deno.test("G5 boundary policy accepts no raw destruction attestation or process 
       "destroyedAt",
       'execution: "eligible"',
       "executionBlockers",
+      "Reflect.ownKeys",
+      "Object.getOwnPropertyDescriptor",
     ]
   ) {
     assertEquals(source.includes(forbidden), false, forbidden);
   }
+  assertEquals(
+    source.includes("factsJson: string"),
+    true,
+    "boundary accepts only serialized JSON facts",
+  );
 });
