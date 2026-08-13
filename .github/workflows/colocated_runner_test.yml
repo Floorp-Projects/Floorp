@@ -108,6 +108,12 @@ jobs:
           deno run -A tools/runtime-lock/runtime_lock_cli.ts
           validate-native --out _dist/runtime-validation
 
+      - name: Verify macOS G5 lifecycle helper foundation
+        if: matrix.platform == 'macos'
+        run: >-
+          deno test --allow-read --allow-write --allow-run
+          tools/src/g5_macos_lifecycle_helper.test.ts
+
       - name: Install locked Runtime for browser suite
         if: matrix.browser_suite == true
         run: >-
