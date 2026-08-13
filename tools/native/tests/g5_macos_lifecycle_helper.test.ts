@@ -4,7 +4,7 @@ import { assert, assertEquals, assertMatch } from "@std/assert";
 import * as path from "@std/path";
 
 const sourcePath = path.fromFileUrl(
-  new URL("../native/g5_macos_lifecycle_helper.c", import.meta.url),
+  new URL("../g5_macos_lifecycle_helper.c", import.meta.url),
 );
 
 function commandOutput(command: string, args: readonly string[]) {
@@ -21,7 +21,7 @@ function decode(bytes: Uint8Array): string {
 
 Deno.test({
   name:
-    "macOS G5 lifecycle helper creates an exclusive session with a high-resolution generation",
+    "macOS G5 lifecycle helper reads a session with a high-resolution generation",
   sanitizeOps: false,
   sanitizeResources: false,
   fn() {
@@ -54,8 +54,8 @@ Deno.test({
         unknown
       >;
       assert(typeof record.pid === "number" && record.pid > 0);
-      assertEquals(record.pid, record.pgid);
-      assertEquals(record.pid, record.sid);
+      assert(typeof record.pgid === "number" && record.pgid > 0);
+      assert(typeof record.sid === "number" && record.sid > 0);
       assert(typeof record.start_abstime === "string");
       assertMatch(record.start_abstime, /^[1-9][0-9]{8,}$/u);
       assertEquals(
@@ -72,57 +72,7 @@ Deno.test({
 
 Deno.test({
   name:
-    "macOS G5 lifecycle helper exec mode preserves the tracked root PID in an exclusive process group",
-  sanitizeOps: false,
-  sanitizeResources: false,
-  async fn() {
-    if (Deno.build.os !== "darwin") return;
-    const temporaryDirectory = Deno.makeTempDirSync({
-      prefix: "floorp-g5-lifecycle-helper-test-",
-    });
-    const helperPath = path.join(
-      temporaryDirectory,
-      "g5-macos-lifecycle-helper",
-    );
-    try {
-      const compile = commandOutput("/usr/bin/cc", [
-        "-std=c17",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        sourcePath,
-        "-o",
-        helperPath,
-      ]);
-      assertEquals(decode(compile.stderr), "");
-      assert(compile.success);
-
-      const child = new Deno.Command(helperPath, {
-        args: [
-          "exec",
-          "--",
-          "/bin/sh",
-          "-c",
-          "ps -o pid=,pgid= -p $$; /bin/kill -0 -$$",
-        ],
-        stderr: "piped",
-        stdout: "piped",
-      }).spawn();
-      const expectedRootPid = child.pid;
-      const output = await child.output();
-      assertEquals(decode(output.stderr), "");
-      assert(output.success);
-      const values = decode(output.stdout).trim().split(/\s+/u).map(Number);
-      assertEquals(values, [expectedRootPid, expectedRootPid]);
-    } finally {
-      Deno.removeSync(temporaryDirectory, { recursive: true });
-    }
-  },
-});
-
-Deno.test({
-  name:
-    "macOS G5 lifecycle helper probes a process that is already a session leader",
+    "macOS G5 lifecycle helper rejects launch mode instead of executing a command",
   sanitizeOps: false,
   sanitizeResources: false,
   fn() {
@@ -147,21 +97,13 @@ Deno.test({
       assertEquals(decode(compile.stderr), "");
       assert(compile.success);
 
-      const probe = commandOutput(helperPath, [
+      const rejected = commandOutput(helperPath, [
         "launch",
         "--",
-        helperPath,
-        "probe-session",
+        "/usr/bin/true",
       ]);
-      assertEquals(decode(probe.stderr), "");
-      assert(probe.success);
-      const record = JSON.parse(decode(probe.stdout)) as Record<
-        string,
-        unknown
-      >;
-      assertEquals(record.pid, record.pgid);
-      assertEquals(record.pid, record.sid);
-      assertMatch(record.start_abstime as string, /^[1-9][0-9]{8,}$/u);
+      assertEquals(rejected.code, 64);
+      assertEquals(decode(rejected.stdout), "");
     } finally {
       Deno.removeSync(temporaryDirectory, { recursive: true });
     }
@@ -170,7 +112,7 @@ Deno.test({
 
 Deno.test({
   name:
-    "macOS G5 lifecycle helper launches a command in the helper-owned session",
+    "macOS G5 lifecycle helper rejects every mode except exact probe-session",
   sanitizeOps: false,
   sanitizeResources: false,
   fn() {
@@ -195,19 +137,58 @@ Deno.test({
       assertEquals(decode(compile.stderr), "");
       assert(compile.success);
 
-      const launch = commandOutput(helperPath, [
-        "launch",
-        "--",
-        "/bin/sh",
-        "-c",
-        "ps -o pid=,pgid= -p $$; /bin/kill -0 -$$",
+      for (const args of [
+        [] as readonly string[],
+        ["unknown"],
+        ["launch", "--", "/usr/bin/true"],
+        ["exec", "--", "/usr/bin/true"],
+        ["probe-session", "unexpected"],
+      ]) {
+        const rejected = commandOutput(helperPath, args);
+        assertEquals(rejected.code, 64);
+        assertEquals(decode(rejected.stdout), "");
+        assertMatch(decode(rejected.stderr), /^usage: .* probe-session\n$/u);
+      }
+    } finally {
+      Deno.removeSync(temporaryDirectory, { recursive: true });
+    }
+  },
+});
+
+Deno.test({
+  name:
+    "macOS G5 lifecycle helper rejects exec mode instead of executing a command",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn() {
+    if (Deno.build.os !== "darwin") return;
+    const temporaryDirectory = Deno.makeTempDirSync({
+      prefix: "floorp-g5-lifecycle-helper-test-",
+    });
+    const helperPath = path.join(
+      temporaryDirectory,
+      "g5-macos-lifecycle-helper",
+    );
+    try {
+      const compile = commandOutput("/usr/bin/cc", [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        sourcePath,
+        "-o",
+        helperPath,
       ]);
-      assertEquals(decode(launch.stderr), "");
-      assert(launch.success);
-      const values = decode(launch.stdout).trim().split(/\s+/u).map(Number);
-      assertEquals(values.length, 2);
-      assert(values.every((value) => Number.isSafeInteger(value) && value > 0));
-      assertEquals(values[0], values[1]);
+      assertEquals(decode(compile.stderr), "");
+      assert(compile.success);
+
+      const rejected = commandOutput(helperPath, [
+        "exec",
+        "--",
+        "/usr/bin/true",
+      ]);
+      assertEquals(rejected.code, 64);
+      assertEquals(decode(rejected.stdout), "");
     } finally {
       Deno.removeSync(temporaryDirectory, { recursive: true });
     }

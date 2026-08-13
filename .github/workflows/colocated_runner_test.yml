@@ -112,7 +112,7 @@ jobs:
         if: matrix.platform == 'macos'
         run: >-
           deno test --allow-read --allow-write --allow-run
-          tools/src/g5_macos_lifecycle_helper.test.ts
+          tools/native/tests/g5_macos_lifecycle_helper.test.ts
 
       - name: Install locked Runtime for browser suite
         if: matrix.browser_suite == true
