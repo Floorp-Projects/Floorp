@@ -137,13 +137,15 @@ Deno.test({
       assertEquals(decode(compile.stderr), "");
       assert(compile.success);
 
-      for (const args of [
-        [] as readonly string[],
-        ["unknown"],
-        ["launch", "--", "/usr/bin/true"],
-        ["exec", "--", "/usr/bin/true"],
-        ["probe-session", "unexpected"],
-      ]) {
+      for (
+        const args of [
+          [] as readonly string[],
+          ["unknown"],
+          ["launch", "--", "/usr/bin/true"],
+          ["exec", "--", "/usr/bin/true"],
+          ["probe-session", "unexpected"],
+        ]
+      ) {
         const rejected = commandOutput(helperPath, args);
         assertEquals(rejected.code, 64);
         assertEquals(decode(rejected.stdout), "");
