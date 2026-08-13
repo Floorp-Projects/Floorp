@@ -10,12 +10,24 @@ import type {
 import {
   createG5DesktopProcessController,
   type G5DesktopCaptureRequest,
+  type G5DesktopPlatform,
   type G5DesktopTerminationRequest,
 } from "./g5_desktop_process_controller.ts";
 
 const RUN_ID = "g5-run-20260814-001";
 const EXECUTOR_INSTANCE_ID = "g5-executor-20260814-001";
 const PROCESS_GENERATION = "pid-4201-generation-987654321";
+const G5_DESKTOP_PLATFORM_TYPE_FIXTURE = {
+  aix: "aix",
+  darwin: "darwin",
+  freebsd: "freebsd",
+  linux: "linux",
+  netbsd: "netbsd",
+  solaris: "solaris",
+  windows: "windows",
+} satisfies Record<G5DesktopPlatform, G5DesktopPlatform>;
+// @ts-expect-error Android is intentionally not a supported Desktop runner.
+const UNSUPPORTED_G5_DESKTOP_PLATFORM: G5DesktopPlatform = "android";
 
 function child(pid = 4_201): IsolatedBrowserChild {
   return {
@@ -375,23 +387,12 @@ Deno.test("G5 desktop controller requires non-secret opaque run and executor ide
   }
 });
 
-Deno.test("G5 desktop controller derives its platform type from one explicit Deno subset", async () => {
-  const source = await Deno.readTextFile(
-    new URL("./g5_desktop_process_controller.ts", import.meta.url),
-  );
-
+Deno.test("G5 desktop controller has an exact compile-time desktop platform contract", () => {
   assertEquals(
-    source.includes(
-      "as const satisfies readonly (typeof Deno.build.os)[]",
-    ),
-    true,
+    Object.values(G5_DESKTOP_PLATFORM_TYPE_FIXTURE).sort(),
+    ["aix", "darwin", "freebsd", "linux", "netbsd", "solaris", "windows"],
   );
-  assertEquals(
-    source.includes(
-      "export type G5DesktopPlatform = (typeof G5_DESKTOP_PLATFORM_VALUES)[number];",
-    ),
-    true,
-  );
+  assertEquals(UNSUPPORTED_G5_DESKTOP_PLATFORM, "android");
 });
 
 Deno.test("G5 desktop controller rejects unsupported Deno targets before requesting capture proof", async () => {
