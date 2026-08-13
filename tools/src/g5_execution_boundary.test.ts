@@ -169,6 +169,43 @@ Deno.test("G5 boundary rejects duplicate JSON keys at every accepted object laye
   }
 });
 
+Deno.test("G5 boundary rejects every noncanonical representation independently", () => {
+  const canonical = JSON.stringify(completeFacts());
+  const whitespace = canonical.replace(
+    '"host":"disposable-macos-vm"',
+    '"host" : "disposable-macos-vm"',
+  );
+  const reorderedRoot = JSON.stringify({
+    executorInstanceId: EXECUTOR_INSTANCE_ID,
+    host: "disposable-macos-vm",
+    runId: RUN_ID,
+    supervision: completeFacts().supervision,
+  });
+  const reorderedSupervision = canonical.replace(
+    '"descendants":"causally-complete","eventStream":"complete","kind":"launch-bound-event-supervisor","pidGeneration":"high-resolution"',
+    '"kind":"launch-bound-event-supervisor","eventStream":"complete","descendants":"causally-complete","pidGeneration":"high-resolution"',
+  );
+  const escapedHost = canonical.replace(
+    '"host":"disposable-macos-vm"',
+    '"\\u0068ost":"disposable-macos-vm"',
+  );
+
+  for (
+    const factsJson of [
+      whitespace,
+      reorderedRoot,
+      reorderedSupervision,
+      escapedHost,
+    ]
+  ) {
+    const assessment = assessG5ExecutionBoundary(factsJson);
+    assertEquals(assessment.trustedExecutorVerification, "blocked");
+    assertEquals(assessment.trustedExecutorVerificationBlockers, [
+      "malformed-boundary-facts",
+    ]);
+  }
+});
+
 Deno.test("G5 boundary freezes every returned assessment surface", () => {
   const assessment = assessFacts(completeFacts());
 
