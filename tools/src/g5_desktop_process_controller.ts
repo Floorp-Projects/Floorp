@@ -8,14 +8,17 @@ import type {
   IsolatedBrowserSpawnDependencies,
 } from "./browser_launcher.ts";
 
-type G5DesktopPlatform =
-  | "aix"
-  | "darwin"
-  | "freebsd"
-  | "linux"
-  | "netbsd"
-  | "solaris"
-  | "windows";
+const G5_DESKTOP_PLATFORM_VALUES = [
+  "aix",
+  "darwin",
+  "freebsd",
+  "linux",
+  "netbsd",
+  "solaris",
+  "windows",
+] as const satisfies readonly (typeof Deno.build.os)[];
+
+export type G5DesktopPlatform = (typeof G5_DESKTOP_PLATFORM_VALUES)[number];
 
 export interface G5DesktopCaptureRequest {
   readonly executorInstanceId: string;
@@ -145,10 +148,8 @@ function isMarionettePort(value: unknown): value is number {
     value >= 1_024 && value <= 65_535;
 }
 
-function isPlatform(value: unknown): value is G5DesktopPlatform {
-  return value === "aix" || value === "darwin" || value === "freebsd" ||
-    value === "linux" || value === "netbsd" || value === "solaris" ||
-    value === "windows";
+function isPlatform(value: typeof Deno.build.os): value is G5DesktopPlatform {
+  return G5_DESKTOP_PLATFORM_VALUES.includes(value as G5DesktopPlatform);
 }
 
 function isHighResolutionGeneration(
@@ -398,7 +399,7 @@ export function createG5DesktopProcessController(
     async capture(
       child: IsolatedBrowserChild,
       launch: IsolatedBrowserLaunchView,
-      platform: G5DesktopPlatform,
+      platform: typeof Deno.build.os,
     ): Promise<IsolatedBrowserProcessOwnership> {
       const input = captureInput(child, launch);
       if (

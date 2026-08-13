@@ -375,6 +375,44 @@ Deno.test("G5 desktop controller requires non-secret opaque run and executor ide
   }
 });
 
+Deno.test("G5 desktop controller derives its platform type from one explicit Deno subset", async () => {
+  const source = await Deno.readTextFile(
+    new URL("./g5_desktop_process_controller.ts", import.meta.url),
+  );
+
+  assertEquals(
+    source.includes(
+      "as const satisfies readonly (typeof Deno.build.os)[]",
+    ),
+    true,
+  );
+  assertEquals(
+    source.includes(
+      "export type G5DesktopPlatform = (typeof G5_DESKTOP_PLATFORM_VALUES)[number];",
+    ),
+    true,
+  );
+});
+
+Deno.test("G5 desktop controller rejects unsupported Deno targets before requesting capture proof", async () => {
+  let captureCalls = 0;
+  const controller = createController({
+    capture(request) {
+      captureCalls += 1;
+      return Promise.resolve(captureProof(request));
+    },
+  });
+
+  for (const platform of ["android", "illumos"] as const) {
+    await assertRejects(
+      () => controller.capture(child(), launch(), platform),
+      Error,
+      "G5 desktop capture input was rejected",
+    );
+  }
+  assertEquals(captureCalls, 0);
+});
+
 Deno.test("G5 desktop controller is a pure injected lifecycle adapter", async () => {
   const source = await Deno.readTextFile(
     new URL("./g5_desktop_process_controller.ts", import.meta.url),
