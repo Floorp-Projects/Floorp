@@ -89,33 +89,25 @@ function exactDataProperties(
   value: unknown,
   expectedKeys: readonly string[],
 ): Record<string, unknown> | undefined {
-  if (typeof value !== "object" || value === null) {
+  if (
+    typeof value !== "object" || value === null || Array.isArray(value)
+  ) {
     return undefined;
   }
-  try {
-    if (Array.isArray(value)) return undefined;
-    const record = value as Record<string, unknown>;
-    const keys = Reflect.ownKeys(record);
-    if (
-      keys.length !== expectedKeys.length ||
-      !keys.every((key) =>
-        typeof key === "string" && expectedKeys.includes(key)
-      )
-    ) {
-      return undefined;
-    }
-    const copied: Record<string, unknown> = {};
-    for (const key of expectedKeys) {
-      const descriptor = Object.getOwnPropertyDescriptor(record, key);
-      if (descriptor === undefined || !("value" in descriptor)) {
-        return undefined;
-      }
-      copied[key] = descriptor.value;
-    }
-    return copied;
-  } catch {
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  if (
+    keys.length !== expectedKeys.length ||
+    !keys.every((key) => expectedKeys.includes(key))
+  ) {
     return undefined;
   }
+  const copied: Record<string, unknown> = {};
+  for (const key of expectedKeys) {
+    if (!Object.hasOwn(record, key)) return undefined;
+    copied[key] = record[key];
+  }
+  return copied;
 }
 
 function parseFacts(value: unknown): G5BoundaryFacts | undefined {
@@ -154,6 +146,39 @@ function parseFacts(value: unknown): G5BoundaryFacts | undefined {
     },
     executorInstanceId: facts.executorInstanceId,
   };
+}
+
+function parseFactsJson(value: string): G5BoundaryFacts | undefined {
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+  const facts = parseFacts(decoded);
+  if (facts === undefined || value !== canonicalFactsJson(facts)) {
+    return undefined;
+  }
+  return facts;
+}
+
+/**
+ * Accept only the single canonical spelling generated for trusted boundary
+ * facts. This rejects duplicate member names, alternate escapes, whitespace,
+ * and key-order ambiguity before the assessment can become `required`.
+ */
+function canonicalFactsJson(facts: G5BoundaryFacts): string {
+  return JSON.stringify({
+    host: facts.host,
+    runId: facts.runId,
+    supervision: {
+      descendants: facts.supervision.descendants,
+      eventStream: facts.supervision.eventStream,
+      kind: facts.supervision.kind,
+      pidGeneration: facts.supervision.pidGeneration,
+    },
+    executorInstanceId: facts.executorInstanceId,
+  });
 }
 
 function evaluateExecutionBlockers(
@@ -211,11 +236,17 @@ function assessment(
  * `required` is not an execution authorization. It only means the supplied
  * facts have no local policy blockers and must still be independently verified
  * by the trusted executor before it launches anything.
+ *
+ * The input is JSON text rather than an arbitrary JavaScript object. The
+ * policy must not trust caller-controlled getters or Proxy traps at this
+ * boundary; non-string inputs and malformed JSON fail closed.
  */
 export function assessG5ExecutionBoundary(
-  facts: unknown,
+  factsJson: string,
 ): G5BoundaryAssessment {
-  const parsed = parseFacts(facts);
+  const parsed = typeof factsJson === "string"
+    ? parseFactsJson(factsJson)
+    : undefined;
   return assessment(
     parsed === undefined
       ? ["malformed-boundary-facts"]
