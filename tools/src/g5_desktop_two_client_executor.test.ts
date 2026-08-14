@@ -13,6 +13,10 @@ const RUN_ID = "g5-run-20260814-003";
 const EXECUTOR_INSTANCE_ID = "g5-executor-20260814-003";
 const PAIR_ID = "g5-pair-20260814-003";
 const FIXTURE_SCHEMA = "floorp-g5-desktop-two-client-offline-fixture-v2";
+const MODULE_DECLARATION =
+  /^\s*(?:import|export)\s+((?:(?!;)[\s\S])*?)\s+from\s+["']([^"']+)["']\s*;/gmu;
+const TYPE_ONLY_NAMED_SPECIFIER =
+  /^type\s+[A-Za-z_$][\w$]*(?:\s+as\s+[A-Za-z_$][\w$]*)?$/u;
 
 interface MutableClientFixture {
   captureProofId: string;
@@ -104,6 +108,27 @@ function legacyClientKeyOrderJson(value: MutableFixture = fixture()): string {
     runId: value.runId,
     schemaVersion: value.schemaVersion,
   });
+}
+
+function isTypeOnlyModuleClause(clause: string): boolean {
+  const normalized = clause.replace(/\s+/gu, " ").trim();
+  if (normalized.startsWith("type ")) return true;
+  if (!normalized.startsWith("{") || !normalized.endsWith("}")) {
+    return false;
+  }
+  const namedSpecifiers = normalized.slice(1, -1).split(",").map((specifier) =>
+    specifier.trim()
+  ).filter((specifier) => specifier.length > 0);
+  return namedSpecifiers.length > 0 &&
+    namedSpecifiers.every((specifier) =>
+      TYPE_ONLY_NAMED_SPECIFIER.test(specifier)
+    );
+}
+
+function runtimeModuleSources(source: string): string[] {
+  return [...source.matchAll(MODULE_DECLARATION)].filter((match) =>
+    !isTypeOnlyModuleClause(match[1])
+  ).map((match) => match[2]);
 }
 
 Deno.test("offline fixture accepts exactly two fictional data clients and only returns a withheld G5 result", () => {
@@ -353,18 +378,37 @@ Deno.test("offline fixture is single-use", () => {
   );
 });
 
+Deno.test("offline fixture source scanner ignores type-only modules but retains runtime modules", () => {
+  const moduleSource = [
+    'import { RuntimeValue } from "./runtime.ts";',
+    'import type { TypeOnly } from "./types.ts";',
+    'import type DefaultType from "./default-type.ts";',
+    'import { type InlineType } from "./inline-types.ts";',
+    'export type { ExportedType } from "./export-types.ts";',
+    'export { type InlineExportedType } from "./inline-export-types.ts";',
+    'import { type InlineType, RuntimeValue } from "./mixed.ts";',
+    'export { type InlineExportedType, RuntimeValue } from "./mixed-export.ts";',
+    'export * from "./star.ts";',
+  ].join("\n");
+
+  assertEquals(
+    runtimeModuleSources(moduleSource),
+    [
+      "./runtime.ts",
+      "./mixed.ts",
+      "./mixed-export.ts",
+      "./star.ts",
+    ],
+  );
+});
+
 Deno.test("offline fixture has no executable imports, capabilities, or live surface", async () => {
   const source = await Deno.readTextFile(
     new URL("./g5_desktop_two_client_executor.ts", import.meta.url),
   );
 
-  const runtimeModuleSources = [
-    ...source.matchAll(
-      /^\s*(?:import|export)\s+(?!type\b)[\s\S]*?\sfrom\s+["']([^"']+)["'];/gmu,
-    ),
-  ].map((match) => match[1]);
   assertEquals(
-    runtimeModuleSources,
+    runtimeModuleSources(source),
     ["./g5_desktop_two_client_lifecycle_contract.ts"],
   );
   assertEquals(/^\s*import\s+["'][^"']+["'];/mu.test(source), false);
