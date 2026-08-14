@@ -1,93 +1,42 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  assessG5ExecutionBoundary,
-  type G5BoundaryAssessment,
-} from "./g5_execution_boundary.ts";
-import {
-  createG5DesktopProcessController,
-  type G5DesktopLaunchSupervisor,
-} from "./g5_desktop_process_controller.ts";
-import {
   assessG5DesktopTwoClientLifecycleEvidence,
-  type G5DesktopTwoClientLifecycleAssessment,
+  FLOORP_G5_TWO_CLIENT_LIFECYCLE_SCHEMA,
 } from "./g5_desktop_two_client_lifecycle_contract.ts";
-import type {
-  IsolatedBrowserChild,
-  IsolatedBrowserLaunchView,
-  IsolatedBrowserProcessControl,
-  IsolatedBrowserProcessOwnership,
-} from "./browser_launcher.ts";
 
 export const G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY =
-  "offline-fake-only-v1" as const;
+  "offline-fictional-fixture-v2" as const;
 
-export interface G5DesktopOfflineFakeClientPlan {
+export interface G5DesktopOfflineFakeResult {
+  readonly evidenceJson: string;
+  readonly execution_authorization: "not-granted";
+  readonly g5_result: "not-assessed";
+}
+
+export interface G5DesktopOfflineFakeTwoClientExecutor {
+  consumeFixture(): G5DesktopOfflineFakeResult;
+}
+
+interface ParsedClientFixture {
   readonly captureProofId: string;
   readonly clientInstanceId: string;
+  readonly profileToken: string;
+  readonly port: number;
+  readonly rootPid: number;
   readonly rootProcessGeneration: string;
   readonly terminationProofId: string;
 }
 
-export interface G5DesktopOfflineFakeStartRequest {
-  readonly client: G5DesktopOfflineFakeClientPlan;
-  readonly executorInstanceId: string;
-  readonly pairId: string;
-  readonly runId: string;
-  readonly slot: "first" | "second";
-}
-
-export interface G5DesktopOfflineFakeClientSession {
-  readonly child: IsolatedBrowserChild;
-  readonly launch: IsolatedBrowserLaunchView;
-}
-
-export interface G5DesktopOfflineFakeDependencies {
-  readonly startClient: (
-    request: G5DesktopOfflineFakeStartRequest,
-  ) => Promise<unknown>;
-  readonly supervisor: G5DesktopLaunchSupervisor;
-}
-
-export interface G5DesktopOfflineFakeTwoClientExecutor {
-  readonly runFakeLifecycle: () => Promise<G5DesktopOfflineFakeResult>;
-}
-
-export interface G5DesktopOfflineFakeResult {
-  readonly boundary: G5BoundaryAssessment;
-  readonly execution_authorization: "not-granted";
-  readonly g5_result: "not-assessed";
-  readonly lifecycle: G5DesktopTwoClientLifecycleAssessment;
-  readonly mode: typeof G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY;
-}
-
-interface ParsedOptions {
-  readonly clients: readonly [
-    G5DesktopOfflineFakeClientPlan,
-    G5DesktopOfflineFakeClientPlan,
-  ];
-  readonly dependencies: G5DesktopOfflineFakeDependencies;
+interface ParsedFixture {
+  readonly clients: readonly [ParsedClientFixture, ParsedClientFixture];
   readonly executorInstanceId: string;
   readonly pairId: string;
   readonly runId: string;
 }
 
-interface ParsedFakeClientSession {
-  readonly child: IsolatedBrowserChild;
-  readonly launch: IsolatedBrowserLaunchView;
-}
-
-interface StartedFakeClient {
-  readonly plan: G5DesktopOfflineFakeClientPlan;
-  readonly session: ParsedFakeClientSession;
-}
-
-interface CapturedFakeClient extends StartedFakeClient {
-  readonly ownership: IsolatedBrowserProcessOwnership;
-}
-
+const FIXTURE_SCHEMA = "floorp-g5-desktop-two-client-offline-fixture-v2";
 const OPAQUE_IDENTIFIER = /^[a-z0-9][a-z0-9._:-]{0,127}$/iu;
-const INERT_SPAWN_DEPENDENCIES = Object.freeze({});
 
 function exactDataProperties(
   value: unknown,
@@ -98,30 +47,18 @@ function exactDataProperties(
   ) {
     return undefined;
   }
-  try {
-    const record = value as Record<string, unknown>;
-    if (Object.getPrototypeOf(record) !== Object.prototype) return undefined;
-    const keys = Reflect.ownKeys(record);
-    if (
-      keys.length !== expectedKeys.length ||
-      !keys.every((key) =>
-        typeof key === "string" && expectedKeys.includes(key)
-      )
-    ) {
-      return undefined;
-    }
-    const copied: Record<string, unknown> = {};
-    for (const key of expectedKeys) {
-      const descriptor = Object.getOwnPropertyDescriptor(record, key);
-      if (descriptor === undefined || !("value" in descriptor)) {
-        return undefined;
-      }
-      copied[key] = descriptor.value;
-    }
-    return copied;
-  } catch {
-    return undefined;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  if (keys.length !== expectedKeys.length) return undefined;
+  for (const key of keys) {
+    if (!expectedKeys.includes(key)) return undefined;
   }
+  const copied: Record<string, unknown> = {};
+  for (const key of expectedKeys) {
+    if (!Object.hasOwn(record, key)) return undefined;
+    copied[key] = record[key];
+  }
+  return copied;
 }
 
 function isOpaqueIdentifier(value: unknown): value is string {
@@ -145,366 +82,217 @@ function isHighResolutionGeneration(
     new RegExp(`^pid-${rootPid}-generation-[0-9]{9,}$`, "u").test(value);
 }
 
-function parseClientPlan(
-  value: unknown,
-): G5DesktopOfflineFakeClientPlan | undefined {
-  const plan = exactDataProperties(value, [
+function parseClientFixture(value: unknown): ParsedClientFixture | undefined {
+  const client = exactDataProperties(value, [
     "captureProofId",
     "clientInstanceId",
+    "fictional",
+    "profileToken",
+    "port",
+    "rootPid",
     "rootProcessGeneration",
     "terminationProofId",
   ]);
   if (
-    plan === undefined || !isOpaqueIdentifier(plan.captureProofId) ||
-    !isOpaqueIdentifier(plan.clientInstanceId) ||
-    !isOpaqueIdentifier(plan.rootProcessGeneration) ||
-    !isOpaqueIdentifier(plan.terminationProofId)
+    client === undefined || client.fictional !== true ||
+    !isOpaqueIdentifier(client.captureProofId) ||
+    !isOpaqueIdentifier(client.clientInstanceId) ||
+    !isOpaqueIdentifier(client.profileToken) || !isPort(client.port) ||
+    !isRootPid(client.rootPid) ||
+    !isHighResolutionGeneration(
+      client.rootProcessGeneration,
+      client.rootPid,
+    ) || !isOpaqueIdentifier(client.terminationProofId)
   ) {
     return undefined;
   }
-  return Object.freeze({
-    captureProofId: plan.captureProofId,
-    clientInstanceId: plan.clientInstanceId,
-    rootProcessGeneration: plan.rootProcessGeneration,
-    terminationProofId: plan.terminationProofId,
-  });
+  return {
+    captureProofId: client.captureProofId,
+    clientInstanceId: client.clientInstanceId,
+    profileToken: client.profileToken,
+    port: client.port,
+    rootPid: client.rootPid,
+    rootProcessGeneration: client.rootProcessGeneration,
+    terminationProofId: client.terminationProofId,
+  };
 }
 
-function parseSupervisor(
-  value: unknown,
-): G5DesktopLaunchSupervisor | undefined {
-  const supervisor = exactDataProperties(value, ["abort", "capture", "stop"]);
-  if (
-    supervisor === undefined || typeof supervisor.abort !== "function" ||
-    typeof supervisor.capture !== "function" ||
-    typeof supervisor.stop !== "function"
-  ) {
-    return undefined;
-  }
-  return Object.freeze({
-    abort: supervisor.abort as G5DesktopLaunchSupervisor["abort"],
-    capture: supervisor.capture as G5DesktopLaunchSupervisor["capture"],
-    stop: supervisor.stop as G5DesktopLaunchSupervisor["stop"],
-  });
-}
-
-function parseOptions(value: unknown): ParsedOptions | undefined {
-  const options = exactDataProperties(value, [
+function parseFixture(value: unknown): ParsedFixture | undefined {
+  const fixture = exactDataProperties(value, [
     "clients",
-    "dependencies",
     "executorInstanceId",
     "mode",
     "pairId",
     "runId",
+    "schemaVersion",
   ]);
   if (
-    options === undefined ||
-    options.mode !== G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY ||
-    !isOpaqueIdentifier(options.executorInstanceId) ||
-    !isOpaqueIdentifier(options.pairId) || !isOpaqueIdentifier(options.runId) ||
-    !Array.isArray(options.clients) || options.clients.length !== 2
+    fixture === undefined ||
+    fixture.mode !== G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY ||
+    fixture.schemaVersion !== FIXTURE_SCHEMA ||
+    !isOpaqueIdentifier(fixture.executorInstanceId) ||
+    !isOpaqueIdentifier(fixture.pairId) || !isOpaqueIdentifier(fixture.runId) ||
+    !Array.isArray(fixture.clients) || fixture.clients.length !== 2
   ) {
     return undefined;
   }
-  const first = parseClientPlan(options.clients[0]);
-  const second = parseClientPlan(options.clients[1]);
-  const dependencies = exactDataProperties(options.dependencies, [
-    "startClient",
-    "supervisor",
-  ]);
-  const supervisor = dependencies === undefined
-    ? undefined
-    : parseSupervisor(dependencies.supervisor);
-  if (
-    first === undefined || second === undefined || dependencies === undefined ||
-    typeof dependencies.startClient !== "function" || supervisor === undefined
-  ) {
-    return undefined;
-  }
-  return Object.freeze({
-    clients: Object.freeze([first, second]) as readonly [
-      G5DesktopOfflineFakeClientPlan,
-      G5DesktopOfflineFakeClientPlan,
-    ],
-    dependencies: Object.freeze({
-      startClient: dependencies.startClient as G5DesktopOfflineFakeDependencies[
-        "startClient"
-      ],
-      supervisor,
-    }),
-    executorInstanceId: options.executorInstanceId,
-    pairId: options.pairId,
-    runId: options.runId,
-  });
-}
-
-function hasDistinctIdentityBindings(options: ParsedOptions): boolean {
-  const [first, second] = options.clients;
-  const identifiers = [
-    options.executorInstanceId,
-    options.pairId,
-    options.runId,
+  const first = parseClientFixture(fixture.clients[0]);
+  const second = parseClientFixture(fixture.clients[1]);
+  if (first === undefined || second === undefined) return undefined;
+  const strings = [
+    fixture.executorInstanceId,
+    fixture.pairId,
+    fixture.runId,
     first.captureProofId,
     first.clientInstanceId,
+    first.profileToken,
+    first.rootProcessGeneration,
     first.terminationProofId,
     second.captureProofId,
     second.clientInstanceId,
+    second.profileToken,
+    second.rootProcessGeneration,
     second.terminationProofId,
   ];
-  return first.clientInstanceId < second.clientInstanceId &&
-    new Set(identifiers).size === identifiers.length;
-}
-
-function parseFakeClientSession(
-  value: unknown,
-): ParsedFakeClientSession | undefined {
-  const session = exactDataProperties(value, ["child", "launch"]);
-  const fakeChild = session === undefined
-    ? undefined
-    : exactDataProperties(session.child, ["kill", "pid", "status"]);
-  const fakeLaunch = session === undefined
-    ? undefined
-    : exactDataProperties(session.launch, ["command", "port", "profilePath"]);
+  const numbers = [first.port, first.rootPid, second.port, second.rootPid];
   if (
-    session === undefined || fakeChild === undefined ||
-    fakeLaunch === undefined ||
-    typeof fakeChild.kill !== "function" || !isRootPid(fakeChild.pid) ||
-    !Array.isArray(fakeLaunch.command) ||
-    !fakeLaunch.command.every((argument) => typeof argument === "string") ||
-    !isPort(fakeLaunch.port) || typeof fakeLaunch.profilePath !== "string"
+    first.clientInstanceId >= second.clientInstanceId ||
+    new Set(strings).size !== strings.length ||
+    new Set(numbers).size !== numbers.length
   ) {
     return undefined;
   }
-  return Object.freeze({
-    child: session.child as IsolatedBrowserChild,
-    launch: session.launch as IsolatedBrowserLaunchView,
-  });
+  return {
+    clients: [first, second],
+    executorInstanceId: fixture.executorInstanceId,
+    pairId: fixture.pairId,
+    runId: fixture.runId,
+  };
 }
 
-function assertSessionMatchesPlan(
-  session: ParsedFakeClientSession,
-  plan: G5DesktopOfflineFakeClientPlan,
-): void {
-  if (
-    !isHighResolutionGeneration(plan.rootProcessGeneration, session.child.pid)
-  ) {
-    throw new Error("G5 offline fake client session was rejected");
-  }
+function canonicalClientFixture(
+  client: ParsedClientFixture,
+): Record<string, unknown> {
+  return {
+    captureProofId: client.captureProofId,
+    clientInstanceId: client.clientInstanceId,
+    fictional: true,
+    profileToken: client.profileToken,
+    port: client.port,
+    rootPid: client.rootPid,
+    rootProcessGeneration: client.rootProcessGeneration,
+    terminationProofId: client.terminationProofId,
+  };
 }
 
-function blockedBoundary(
-  runId: string,
-  executorInstanceId: string,
-): G5BoundaryAssessment {
-  return assessG5ExecutionBoundary(JSON.stringify({
-    host: "unknown",
-    runId,
-    supervision: {
-      descendants: "escaped-or-unprovable",
-      eventStream: "lost-or-unknown",
-      kind: "unknown",
-      pidGeneration: "coarse-or-unknown",
-    },
-    executorInstanceId,
-  }));
-}
-
-function lifecycleJson(
-  options: ParsedOptions,
-  clients: readonly [CapturedFakeClient, CapturedFakeClient],
-): string {
+function canonicalFixtureJson(fixture: ParsedFixture): string {
   return JSON.stringify({
-    clients: clients.map(({ plan, session }) => ({
-      captureProof: {
-        clientInstanceId: plan.clientInstanceId,
-        descendantOwnership: "causally-complete",
-        eventStream: "complete",
-        executorInstanceId: options.executorInstanceId,
-        marionettePort: session.launch.port,
-        operation: "capture",
-        pairId: options.pairId,
-        pidGeneration: "high-resolution",
-        proofId: plan.captureProofId,
-        rootPid: session.child.pid,
-        rootProcessGeneration: plan.rootProcessGeneration,
-        runId: options.runId,
-      },
-      terminationProof: {
-        captureProofId: plan.captureProofId,
-        clientInstanceId: plan.clientInstanceId,
-        descendantOwnership: "causally-complete",
-        eventStream: "complete",
-        executorInstanceId: options.executorInstanceId,
-        marionettePort: session.launch.port,
-        marionettePortState: "absent",
-        operation: "stop",
-        operationResult: "stopped",
-        ownedTree: "absent",
-        pairId: options.pairId,
-        pidGeneration: "high-resolution",
-        proofId: plan.terminationProofId,
-        rootPid: session.child.pid,
-        rootProcessGeneration: plan.rootProcessGeneration,
-        runId: options.runId,
-      },
-    })),
-    executorInstanceId: options.executorInstanceId,
-    pairId: options.pairId,
-    runId: options.runId,
-    schemaVersion: "floorp-g5-desktop-two-client-lifecycle-v1",
+    clients: [
+      canonicalClientFixture(fixture.clients[0]),
+      canonicalClientFixture(fixture.clients[1]),
+    ],
+    executorInstanceId: fixture.executorInstanceId,
+    mode: G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY,
+    pairId: fixture.pairId,
+    runId: fixture.runId,
+    schemaVersion: FIXTURE_SCHEMA,
   });
 }
 
-async function abortStartedClients(
-  controller: IsolatedBrowserProcessControl,
-  clients: readonly StartedFakeClient[],
-): Promise<readonly unknown[]> {
-  const results = await Promise.allSettled(
-    [...clients].reverse().map(({ session }) =>
-      controller.abort(
-        session.child,
-        session.launch,
-        INERT_SPAWN_DEPENDENCIES,
-      )
-    ),
-  );
-  return results.flatMap((result) =>
-    result.status === "rejected" ? [result.reason] : []
-  );
+function parseCanonicalFixtureJson(value: unknown): ParsedFixture | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const fixture = parseFixture(JSON.parse(value));
+    return fixture === undefined || value !== canonicalFixtureJson(fixture)
+      ? undefined
+      : fixture;
+  } catch {
+    return undefined;
+  }
 }
 
-async function startAndCapture(
-  options: ParsedOptions,
-  controller: IsolatedBrowserProcessControl,
-  plan: G5DesktopOfflineFakeClientPlan,
-  slot: "first" | "second",
-  started: StartedFakeClient[],
-): Promise<CapturedFakeClient> {
-  const rawSession = await options.dependencies.startClient(Object.freeze({
-    client: plan,
-    executorInstanceId: options.executorInstanceId,
-    pairId: options.pairId,
-    runId: options.runId,
-    slot,
-  }));
-  const session = parseFakeClientSession(rawSession);
-  if (session === undefined) {
-    throw new Error("G5 offline fake client session was rejected");
-  }
-  assertSessionMatchesPlan(session, plan);
-  const startedClient = Object.freeze({ plan, session });
-  started.push(startedClient);
-  const ownership = await controller.capture(
-    session.child,
-    session.launch,
-    "darwin",
-  );
-  return Object.freeze({ ...startedClient, ownership });
+function canonicalClientLifecycle(
+  fixture: ParsedFixture,
+  client: ParsedClientFixture,
+): Record<string, unknown> {
+  return {
+    captureProof: {
+      clientInstanceId: client.clientInstanceId,
+      descendantOwnership: "causally-complete",
+      eventStream: "complete",
+      executorInstanceId: fixture.executorInstanceId,
+      marionettePort: client.port,
+      operation: "capture",
+      pairId: fixture.pairId,
+      pidGeneration: "high-resolution",
+      proofId: client.captureProofId,
+      rootPid: client.rootPid,
+      rootProcessGeneration: client.rootProcessGeneration,
+      runId: fixture.runId,
+    },
+    terminationProof: {
+      captureProofId: client.captureProofId,
+      clientInstanceId: client.clientInstanceId,
+      descendantOwnership: "causally-complete",
+      eventStream: "complete",
+      executorInstanceId: fixture.executorInstanceId,
+      marionettePort: client.port,
+      marionettePortState: "absent",
+      operation: "stop",
+      operationResult: "stopped",
+      ownedTree: "absent",
+      pairId: fixture.pairId,
+      pidGeneration: "high-resolution",
+      proofId: client.terminationProofId,
+      rootPid: client.rootPid,
+      rootProcessGeneration: client.rootProcessGeneration,
+      runId: fixture.runId,
+    },
+  };
 }
 
-async function stopCapturedClients(
-  controller: IsolatedBrowserProcessControl,
-  clients: readonly [CapturedFakeClient, CapturedFakeClient],
-): Promise<void> {
-  const results = await Promise.allSettled(
-    clients.map(({ ownership, session }) =>
-      controller.stop(
-        session.child,
-        session.launch,
-        ownership,
-        INERT_SPAWN_DEPENDENCIES,
-      )
-    ),
-  );
-  const failures = results.flatMap((result) =>
-    result.status === "rejected" ? [result.reason] : []
-  );
-  if (failures.length > 0) {
-    throw new AggregateError(
-      failures,
-      "Failed to stop offline fake G5 desktop clients",
-    );
-  }
+function canonicalLifecycleEvidenceJson(fixture: ParsedFixture): string {
+  return JSON.stringify({
+    clients: [
+      canonicalClientLifecycle(fixture, fixture.clients[0]),
+      canonicalClientLifecycle(fixture, fixture.clients[1]),
+    ],
+    executorInstanceId: fixture.executorInstanceId,
+    pairId: fixture.pairId,
+    runId: fixture.runId,
+    schemaVersion: FLOORP_G5_TWO_CLIENT_LIFECYCLE_SCHEMA,
+  });
 }
 
 /**
- * Creates a single-use, data-only lifecycle exercise. Its only interactions
- * are the supplied fake callbacks; it has no built-in execution capability.
+ * Accepts canonical JSON only, validates a fictional two-client fixture at
+ * construction, and exposes one irreversible data-only consumption step.
  */
 export function createOfflineFakeG5DesktopTwoClientExecutor(
-  options: unknown,
+  fixtureJson: unknown,
 ): G5DesktopOfflineFakeTwoClientExecutor {
-  const parsed = parseOptions(options);
-  if (parsed === undefined) {
-    throw new Error(
-      "G5 offline fake two-client executor configuration is invalid",
-    );
+  const fixture = parseCanonicalFixtureJson(fixtureJson);
+  if (fixture === undefined) {
+    throw new Error("G5 offline fixture input was rejected");
   }
-  if (!hasDistinctIdentityBindings(parsed)) {
-    throw new Error(
-      "G5 offline fake two-client identity invariants were rejected",
-    );
+  const evidenceJson = canonicalLifecycleEvidenceJson(fixture);
+  const lifecycle = assessG5DesktopTwoClientLifecycleEvidence(evidenceJson);
+  if (
+    lifecycle.lifecycle_validation !== "accepted" ||
+    lifecycle.execution_authorization !== "not-granted" ||
+    lifecycle.g5_result !== "not-assessed"
+  ) {
+    throw new Error("G5 offline fixture lifecycle data was rejected");
   }
-  const controller = createG5DesktopProcessController({
-    executorInstanceId: parsed.executorInstanceId,
-    runId: parsed.runId,
-    supervisor: parsed.dependencies.supervisor,
-  });
   let consumed = false;
-
   return Object.freeze({
-    async runFakeLifecycle(): Promise<G5DesktopOfflineFakeResult> {
-      if (consumed) {
-        throw new Error("G5 offline fake two-client executor is single-use");
-      }
+    consumeFixture(): G5DesktopOfflineFakeResult {
+      if (consumed) throw new Error("G5 offline fixture is single-use");
       consumed = true;
-      const boundary = blockedBoundary(parsed.runId, parsed.executorInstanceId);
-      const started: StartedFakeClient[] = [];
-      let first: CapturedFakeClient;
-      let second: CapturedFakeClient;
-      try {
-        first = await startAndCapture(
-          parsed,
-          controller,
-          parsed.clients[0],
-          "first",
-          started,
-        );
-        second = await startAndCapture(
-          parsed,
-          controller,
-          parsed.clients[1],
-          "second",
-          started,
-        );
-      } catch (startupFailure) {
-        const cleanupFailures = await abortStartedClients(controller, started);
-        if (cleanupFailures.length > 0) {
-          throw new AggregateError(
-            [startupFailure, ...cleanupFailures],
-            "Failed to clean up offline fake G5 desktop startup",
-          );
-        }
-        throw startupFailure;
-      }
-
-      const clients: readonly [CapturedFakeClient, CapturedFakeClient] = [
-        first,
-        second,
-      ];
-      await stopCapturedClients(controller, clients);
-      const lifecycle = assessG5DesktopTwoClientLifecycleEvidence(
-        lifecycleJson(parsed, clients),
-      );
-      if (lifecycle.lifecycle_validation !== "accepted") {
-        throw new Error("G5 offline fake lifecycle data was rejected");
-      }
       return Object.freeze({
-        boundary,
+        evidenceJson,
         execution_authorization: "not-granted" as const,
         g5_result: "not-assessed" as const,
-        lifecycle,
-        mode: G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY,
       });
     },
   });

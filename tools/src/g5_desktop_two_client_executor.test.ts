@@ -1,346 +1,324 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
-import type {
-  IsolatedBrowserChild,
-  IsolatedBrowserLaunchView,
-} from "./browser_launcher.ts";
-import type {
-  G5DesktopCaptureRequest,
-  G5DesktopLaunchSupervisor,
-  G5DesktopTerminationRequest,
-} from "./g5_desktop_process_controller.ts";
+import { assertEquals, assertThrows } from "@std/assert";
+import {
+  assessG5DesktopTwoClientLifecycleEvidence,
+} from "./g5_desktop_two_client_lifecycle_contract.ts";
 import {
   createOfflineFakeG5DesktopTwoClientExecutor,
   G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY,
 } from "./g5_desktop_two_client_executor.ts";
 
-const RUN_ID = "g5-run-20260814-002";
-const EXECUTOR_INSTANCE_ID = "g5-executor-20260814-002";
-const PAIR_ID = "g5-pair-20260814-002";
+const RUN_ID = "g5-run-20260814-003";
+const EXECUTOR_INSTANCE_ID = "g5-executor-20260814-003";
+const PAIR_ID = "g5-pair-20260814-003";
+const FIXTURE_SCHEMA = "floorp-g5-desktop-two-client-offline-fixture-v2";
 
-interface FakeClientPlan {
-  readonly captureProofId: string;
-  readonly clientInstanceId: string;
-  readonly rootProcessGeneration: string;
-  readonly terminationProofId: string;
+interface MutableClientFixture {
+  captureProofId: string;
+  clientInstanceId: string;
+  fictional: boolean;
+  profileToken: string;
+  port: number;
+  rootPid: number;
+  rootProcessGeneration: string;
+  terminationProofId: string;
 }
 
-interface FakeClientSession {
-  readonly child: IsolatedBrowserChild;
-  readonly launch: IsolatedBrowserLaunchView;
+interface MutableFixture {
+  clients: [MutableClientFixture, MutableClientFixture];
+  executorInstanceId: string;
+  mode: string;
+  pairId: string;
+  runId: string;
+  schemaVersion: string;
 }
 
-interface FakeExecutorFixture {
-  readonly abortRequests: G5DesktopTerminationRequest[];
-  readonly captureRequests: G5DesktopCaptureRequest[];
-  readonly executor: ReturnType<
-    typeof createOfflineFakeG5DesktopTwoClientExecutor
-  >;
-  readonly startSlots: string[];
-  readonly stopRequests: G5DesktopTerminationRequest[];
-}
-
-function generationFor(pid: number): string {
-  return `pid-${pid}-generation-987654321`;
-}
-
-function child(pid: number): IsolatedBrowserChild {
-  return Object.freeze({
-    kill() {},
-    pid,
-    status: Promise.resolve({ code: 0, signal: null, success: true }),
-  });
-}
-
-function launch(port: number): IsolatedBrowserLaunchView {
-  return Object.freeze({
-    command: Object.freeze(["/opt/floorp/Floorp"]),
-    port,
-    profilePath: `/private/fake-profile-${port}`,
-  });
-}
-
-function clientPlan(
+function client(
   clientInstanceId: string,
-  pid: number,
+  rootPid: number,
+  port: number,
+  profileToken: string,
   captureProofId: string,
   terminationProofId: string,
-): FakeClientPlan {
+): MutableClientFixture {
   return {
     captureProofId,
     clientInstanceId,
-    rootProcessGeneration: generationFor(pid),
+    fictional: true,
+    profileToken,
+    port,
+    rootPid,
+    rootProcessGeneration: `pid-${rootPid}-generation-987654321`,
     terminationProofId,
   };
 }
 
-function captureProof(
-  request: G5DesktopCaptureRequest,
-): Record<string, unknown> {
+function fixture(): MutableFixture {
   return {
-    descendantOwnership: "causally-complete",
-    eventStream: "complete",
-    executorInstanceId: request.executorInstanceId,
-    marionettePort: request.marionettePort,
-    operation: "capture",
-    pidGeneration: "high-resolution",
-    rootPid: request.rootPid,
-    rootProcessGeneration: generationFor(request.rootPid),
-    runId: request.runId,
+    clients: [
+      client(
+        "g5-client-a",
+        4_201,
+        28_291,
+        "g5-profile-token-a",
+        "g5-capture-proof-a",
+        "g5-termination-proof-a",
+      ),
+      client(
+        "g5-client-b",
+        4_202,
+        28_292,
+        "g5-profile-token-b",
+        "g5-capture-proof-b",
+        "g5-termination-proof-b",
+      ),
+    ],
+    executorInstanceId: EXECUTOR_INSTANCE_ID,
+    mode: G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY,
+    pairId: PAIR_ID,
+    runId: RUN_ID,
+    schemaVersion: FIXTURE_SCHEMA,
   };
 }
 
-function terminationProof(
-  request: G5DesktopTerminationRequest,
-): Record<string, unknown> {
-  return {
-    capturedRootProcessGeneration: request.capturedRootProcessGeneration,
-    descendantOwnership: "causally-complete",
-    eventStream: "complete",
-    executorInstanceId: request.executorInstanceId,
-    marionettePort: request.marionettePort,
-    marionettePortState: "absent",
-    operation: request.operation,
-    operationResult: request.operation === "abort" ? "aborted" : "stopped",
-    ownedTree: "absent",
-    pidGeneration: "high-resolution",
-    rootPid: request.rootPid,
-    rootProcessGeneration: request.capturedRootProcessGeneration ??
-      generationFor(request.rootPid),
-    runId: request.runId,
-  };
+function fixtureJson(value: MutableFixture = fixture()): string {
+  return JSON.stringify(value);
 }
 
-function createFixture(overrides: {
-  readonly clients?: readonly [FakeClientPlan, FakeClientPlan];
-  readonly pairId?: string;
-  readonly startClient?: (
-    slot: "first" | "second",
-  ) => Promise<FakeClientSession>;
-  readonly supervisor?: Partial<G5DesktopLaunchSupervisor>;
-} = {}): FakeExecutorFixture {
-  const captureRequests: G5DesktopCaptureRequest[] = [];
-  const abortRequests: G5DesktopTerminationRequest[] = [];
-  const stopRequests: G5DesktopTerminationRequest[] = [];
-  const startSlots: string[] = [];
-  const sessions = {
-    first: { child: child(4_201), launch: launch(28_291) },
-    second: { child: child(4_202), launch: launch(28_292) },
-  } as const;
-  const supervisor: G5DesktopLaunchSupervisor = Object.freeze({
-    abort(request: G5DesktopTerminationRequest) {
-      abortRequests.push(request);
-      return overrides.supervisor?.abort?.(request) ??
-        Promise.resolve(terminationProof(request));
-    },
-    capture(request: G5DesktopCaptureRequest) {
-      captureRequests.push(request);
-      return overrides.supervisor?.capture?.(request) ??
-        Promise.resolve(captureProof(request));
-    },
-    stop(request: G5DesktopTerminationRequest) {
-      stopRequests.push(request);
-      return overrides.supervisor?.stop?.(request) ??
-        Promise.resolve(terminationProof(request));
-    },
-  });
-  const startClient = async (
-    { slot }: { readonly slot: "first" | "second" },
-  ) => {
-    startSlots.push(slot);
-    return await overrides.startClient?.(slot) ?? sessions[slot];
-  };
-  return {
-    abortRequests,
-    captureRequests,
-    executor: createOfflineFakeG5DesktopTwoClientExecutor({
-      clients: overrides.clients ?? [
-        clientPlan(
-          "g5-client-a",
-          4_201,
-          "g5-capture-proof-a",
-          "g5-termination-proof-a",
-        ),
-        clientPlan(
-          "g5-client-b",
-          4_202,
-          "g5-capture-proof-b",
-          "g5-termination-proof-b",
-        ),
-      ],
-      dependencies: { startClient, supervisor },
-      executorInstanceId: EXECUTOR_INSTANCE_ID,
-      mode: G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY,
-      pairId: overrides.pairId ?? PAIR_ID,
-      runId: RUN_ID,
-    }),
-    startSlots,
-    stopRequests,
-  };
-}
+Deno.test("offline fixture accepts exactly two fictional data clients and only returns a withheld G5 result", () => {
+  const executor = createOfflineFakeG5DesktopTwoClientExecutor(fixtureJson());
 
-Deno.test("offline fake executor binds a distinct pair and permanently withholds a G5 result", async () => {
-  const fixture = createFixture();
+  const result = executor.consumeFixture();
 
-  const result = await fixture.executor.runFakeLifecycle();
-
-  assertEquals(fixture.startSlots, ["first", "second"]);
-  assertEquals(
-    fixture.captureRequests.map((request) => [
-      request.rootPid,
-      request.marionettePort,
-    ]),
-    [[4_201, 28_291], [4_202, 28_292]],
-  );
-  assertEquals(fixture.stopRequests.length, 2);
-  assertEquals(fixture.abortRequests, []);
-  assertEquals(result.mode, G5_DESKTOP_TWO_CLIENT_OFFLINE_FAKE_ONLY);
   assertEquals(result.execution_authorization, "not-granted");
   assertEquals(result.g5_result, "not-assessed");
-  assertEquals(result.boundary.g5Result, "not-assessed");
-  assertEquals(result.boundary.trustedExecutorVerification, "blocked");
-  assertEquals(result.lifecycle.execution_authorization, "not-granted");
-  assertEquals(result.lifecycle.g5_result, "not-assessed");
-  assertEquals(result.lifecycle.lifecycle_validation, "accepted");
-});
-
-Deno.test("offline fake executor rejects overlapping pair, client, and proof identities before starting", () => {
-  const invalidOverrides: ReadonlyArray<{
-    readonly clients?: readonly [FakeClientPlan, FakeClientPlan];
-    readonly pairId?: string;
-  }> = [
-    { pairId: RUN_ID },
-    {
-      clients: [
-        clientPlan(
-          "g5-client-a",
-          4_201,
-          "g5-capture-proof-a",
-          "g5-termination-proof-a",
-        ),
-        clientPlan(
-          "g5-client-a",
-          4_202,
-          "g5-capture-proof-b",
-          "g5-termination-proof-b",
-        ),
-      ],
-    },
-    {
-      clients: [
-        clientPlan(
-          "g5-client-a",
-          4_201,
-          "g5-capture-proof-a",
-          "g5-termination-proof-a",
-        ),
-        clientPlan(
-          "g5-client-b",
-          4_202,
-          "g5-capture-proof-a",
-          "g5-termination-proof-b",
-        ),
-      ],
-    },
-  ];
-
-  for (const overrides of invalidOverrides) {
-    let startCalls = 0;
-    assertThrows(
-      () =>
-        createFixture({
-          ...overrides,
-          startClient(slot) {
-            startCalls += 1;
-            return Promise.resolve(
-              slot === "first"
-                ? { child: child(4_201), launch: launch(28_291) }
-                : { child: child(4_202), launch: launch(28_292) },
-            );
-          },
-        }),
-      Error,
-      "G5 offline fake two-client identity invariants were rejected",
-    );
-    assertEquals(startCalls, 0);
-  }
-});
-
-Deno.test("offline fake executor aborts its first fake client when second startup fails", async () => {
-  const fixture = createFixture({
-    startClient(slot) {
-      if (slot === "second") {
-        return Promise.reject(new Error("second fake startup failed"));
-      }
-      return Promise.resolve({ child: child(4_201), launch: launch(28_291) });
-    },
-  });
-
-  await assertRejects(
-    () => fixture.executor.runFakeLifecycle(),
-    Error,
-    "second fake startup failed",
-  );
-  assertEquals(fixture.startSlots, ["first", "second"]);
-  assertEquals(fixture.abortRequests.length, 1);
-  assertEquals(fixture.abortRequests[0].rootPid, 4_201);
-  assertEquals(fixture.stopRequests, []);
-});
-
-Deno.test("offline fake executor propagates cleanup failure after second startup failure", async () => {
-  const fixture = createFixture({
-    startClient(slot) {
-      if (slot === "second") {
-        return Promise.reject(new Error("second fake startup failed"));
-      }
-      return Promise.resolve({ child: child(4_201), launch: launch(28_291) });
-    },
-    supervisor: {
-      abort() {
-        return Promise.reject(new Error("first fake cleanup failed"));
-      },
-    },
-  });
-
-  let failure: unknown;
-  try {
-    await fixture.executor.runFakeLifecycle();
-  } catch (error) {
-    failure = error;
-  }
-
-  assert(failure instanceof AggregateError);
   assertEquals(
-    failure.errors.map((error) =>
-      error instanceof Error ? error.message : error
-    ),
-    ["second fake startup failed", "G5 desktop supervisor operation failed"],
+    assessG5DesktopTwoClientLifecycleEvidence(result.evidenceJson),
+    {
+      blockers: [],
+      execution_authorization: "not-granted",
+      g5_result: "not-assessed",
+      lifecycle_validation: "accepted",
+    },
   );
-  assertEquals(fixture.abortRequests.length, 1);
 });
 
-Deno.test("offline fake executor does not contain a live execution path", async () => {
+Deno.test("offline fixture rejects arbitrary functions without invoking them", () => {
+  let invoked = false;
+  const arbitraryFunction = () => {
+    invoked = true;
+    return fixtureJson();
+  };
+  const functionProperty = {
+    value() {
+      invoked = true;
+      return fixtureJson();
+    },
+  };
+
+  for (const input of [arbitraryFunction, functionProperty]) {
+    assertThrows(
+      () => createOfflineFakeG5DesktopTwoClientExecutor(input),
+      Error,
+      "G5 offline fixture input was rejected",
+    );
+  }
+  assertEquals(invoked, false);
+});
+
+Deno.test("offline fixture rejects getters, Proxies, and foreign prototypes without observing them", () => {
+  let getterTouched = false;
+  const getterInput = Object.create(null) as Record<string, unknown>;
+  Object.defineProperty(getterInput, "fixture", {
+    enumerable: true,
+    get() {
+      getterTouched = true;
+      return fixtureJson();
+    },
+  });
+
+  let proxyTouched = false;
+  const proxyInput = new Proxy({}, {
+    get() {
+      proxyTouched = true;
+      return undefined;
+    },
+    getOwnPropertyDescriptor() {
+      proxyTouched = true;
+      return undefined;
+    },
+    getPrototypeOf() {
+      proxyTouched = true;
+      return null;
+    },
+    ownKeys() {
+      proxyTouched = true;
+      return [];
+    },
+  });
+
+  let foreignTouched = false;
+  const foreignInput = Object.create({
+    toJSON() {
+      foreignTouched = true;
+      return fixture();
+    },
+  });
+
+  for (const input of [getterInput, proxyInput, foreignInput]) {
+    assertThrows(
+      () => createOfflineFakeG5DesktopTwoClientExecutor(input),
+      Error,
+      "G5 offline fixture input was rejected",
+    );
+  }
+  assertEquals(getterTouched, false);
+  assertEquals(proxyTouched, false);
+  assertEquals(foreignTouched, false);
+});
+
+Deno.test("offline fixture rejects duplicate identity, proof, PID, port, generation, and profile data before use", () => {
+  const duplicateCases: MutableFixture[] = [];
+
+  const duplicateClientId = fixture();
+  duplicateClientId.clients[1].clientInstanceId =
+    duplicateClientId.clients[0].clientInstanceId;
+  duplicateCases.push(duplicateClientId);
+
+  const duplicateCaptureProof = fixture();
+  duplicateCaptureProof.clients[1].captureProofId =
+    duplicateCaptureProof.clients[0].captureProofId;
+  duplicateCases.push(duplicateCaptureProof);
+
+  const duplicateTerminationProof = fixture();
+  duplicateTerminationProof.clients[1].terminationProofId =
+    duplicateTerminationProof.clients[0].terminationProofId;
+  duplicateCases.push(duplicateTerminationProof);
+
+  const duplicatePid = fixture();
+  duplicatePid.clients[1].rootPid = duplicatePid.clients[0].rootPid;
+  duplicatePid.clients[1].rootProcessGeneration =
+    duplicatePid.clients[0].rootProcessGeneration;
+  duplicateCases.push(duplicatePid);
+
+  const duplicatePort = fixture();
+  duplicatePort.clients[1].port = duplicatePort.clients[0].port;
+  duplicateCases.push(duplicatePort);
+
+  const duplicateGeneration = fixture();
+  duplicateGeneration.clients[1].rootProcessGeneration =
+    duplicateGeneration.clients[0].rootProcessGeneration;
+  duplicateCases.push(duplicateGeneration);
+
+  const duplicateProfileToken = fixture();
+  duplicateProfileToken.clients[1].profileToken =
+    duplicateProfileToken.clients[0].profileToken;
+  duplicateCases.push(duplicateProfileToken);
+
+  const overlappingPairIdentity = fixture();
+  overlappingPairIdentity.pairId = RUN_ID;
+  duplicateCases.push(overlappingPairIdentity);
+
+  for (const value of duplicateCases) {
+    assertThrows(
+      () => createOfflineFakeG5DesktopTwoClientExecutor(fixtureJson(value)),
+      Error,
+      "G5 offline fixture input was rejected",
+    );
+  }
+});
+
+Deno.test("offline fixture rejects noncanonical or non-fictional input before construction", () => {
+  const oneClient = fixture();
+  const oneClientJson = JSON.stringify({
+    ...oneClient,
+    clients: [oneClient.clients[0]],
+  });
+  const threeClients = fixture();
+  const threeClientJson = JSON.stringify({
+    ...threeClients,
+    clients: [
+      ...threeClients.clients,
+      client(
+        "g5-client-c",
+        4_203,
+        28_293,
+        "g5-profile-token-c",
+        "g5-capture-proof-c",
+        "g5-termination-proof-c",
+      ),
+    ],
+  });
+  const nonFictional = fixture();
+  nonFictional.clients[1].fictional = false;
+  const whitespaceVariant = ` ${fixtureJson()}`;
+
+  for (
+    const input of [
+      oneClientJson,
+      threeClientJson,
+      fixtureJson(nonFictional),
+      whitespaceVariant,
+    ]
+  ) {
+    assertThrows(
+      () => createOfflineFakeG5DesktopTwoClientExecutor(input),
+      Error,
+      "G5 offline fixture input was rejected",
+    );
+  }
+});
+
+Deno.test("offline fixture is single-use", () => {
+  const executor = createOfflineFakeG5DesktopTwoClientExecutor(fixtureJson());
+
+  executor.consumeFixture();
+  assertThrows(
+    () => executor.consumeFixture(),
+    Error,
+    "G5 offline fixture is single-use",
+  );
+});
+
+Deno.test("offline fixture has no executable imports, capabilities, or live surface", async () => {
   const source = await Deno.readTextFile(
     new URL("./g5_desktop_two_client_executor.ts", import.meta.url),
   );
 
+  assertEquals(
+    source.match(/from\s+"[^"]+"/gu),
+    ['from "./g5_desktop_two_client_lifecycle_contract.ts"'],
+  );
   for (
     const forbidden of [
-      "Deno.Command",
-      ".spawn(",
-      "Deno.env",
-      "Deno.connect",
-      "Deno.listen",
+      "./browser_launcher.ts",
+      "./g5_desktop_process_controller.ts",
+      "createG5DesktopProcessController",
+      "G5DesktopLaunchSupervisor",
+      "Deno.",
+      "async ",
+      "await ",
+      "Promise",
+      "=>",
+      "import(",
+      "eval(",
+      "Function(",
       "fetch(",
       "WebSocket",
+      "child_process",
       "startIsolatedBrowser",
       "createIsolatedBrowserLaunch",
-      "Marionette",
+      "supervisor",
+      "callback",
+      "dependencies",
+      "session",
+      "browser",
       "FxA",
       "Sync",
       "credential",
       "password",
+      "test-accounts",
       "process.env",
     ]
   ) {
