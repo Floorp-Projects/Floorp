@@ -21,8 +21,8 @@ export interface G5DesktopOfflineFakeTwoClientExecutor {
 interface ParsedClientFixture {
   readonly captureProofId: string;
   readonly clientInstanceId: string;
-  readonly profileToken: string;
   readonly port: number;
+  readonly profileToken: string;
   readonly rootPid: number;
   readonly rootProcessGeneration: string;
   readonly terminationProofId: string;
@@ -37,6 +37,7 @@ interface ParsedFixture {
 
 const FIXTURE_SCHEMA = "floorp-g5-desktop-two-client-offline-fixture-v2";
 const OPAQUE_IDENTIFIER = /^[a-z0-9][a-z0-9._:-]{0,127}$/iu;
+const HIGH_RESOLUTION_GENERATION = /^pid-([1-9][0-9]*)-generation-[0-9]{9,}$/u;
 
 function exactDataProperties(
   value: unknown,
@@ -78,8 +79,9 @@ function isHighResolutionGeneration(
   value: unknown,
   rootPid: number,
 ): value is string {
-  return typeof value === "string" &&
-    new RegExp(`^pid-${rootPid}-generation-[0-9]{9,}$`, "u").test(value);
+  if (typeof value !== "string") return false;
+  const match = HIGH_RESOLUTION_GENERATION.exec(value);
+  return match !== null && match[1] === String(rootPid);
 }
 
 function parseClientFixture(value: unknown): ParsedClientFixture | undefined {
@@ -87,8 +89,8 @@ function parseClientFixture(value: unknown): ParsedClientFixture | undefined {
     "captureProofId",
     "clientInstanceId",
     "fictional",
-    "profileToken",
     "port",
+    "profileToken",
     "rootPid",
     "rootProcessGeneration",
     "terminationProofId",
@@ -97,7 +99,7 @@ function parseClientFixture(value: unknown): ParsedClientFixture | undefined {
     client === undefined || client.fictional !== true ||
     !isOpaqueIdentifier(client.captureProofId) ||
     !isOpaqueIdentifier(client.clientInstanceId) ||
-    !isOpaqueIdentifier(client.profileToken) || !isPort(client.port) ||
+    !isPort(client.port) || !isOpaqueIdentifier(client.profileToken) ||
     !isRootPid(client.rootPid) ||
     !isHighResolutionGeneration(
       client.rootProcessGeneration,
@@ -109,8 +111,8 @@ function parseClientFixture(value: unknown): ParsedClientFixture | undefined {
   return {
     captureProofId: client.captureProofId,
     clientInstanceId: client.clientInstanceId,
-    profileToken: client.profileToken,
     port: client.port,
+    profileToken: client.profileToken,
     rootPid: client.rootPid,
     rootProcessGeneration: client.rootProcessGeneration,
     terminationProofId: client.terminationProofId,
@@ -154,11 +156,13 @@ function parseFixture(value: unknown): ParsedFixture | undefined {
     second.rootProcessGeneration,
     second.terminationProofId,
   ];
-  const numbers = [first.port, first.rootPid, second.port, second.rootPid];
+  const ports = [first.port, second.port];
+  const rootPids = [first.rootPid, second.rootPid];
   if (
     first.clientInstanceId >= second.clientInstanceId ||
     new Set(strings).size !== strings.length ||
-    new Set(numbers).size !== numbers.length
+    new Set(ports).size !== ports.length ||
+    new Set(rootPids).size !== rootPids.length
   ) {
     return undefined;
   }
@@ -177,8 +181,8 @@ function canonicalClientFixture(
     captureProofId: client.captureProofId,
     clientInstanceId: client.clientInstanceId,
     fictional: true,
-    profileToken: client.profileToken,
     port: client.port,
+    profileToken: client.profileToken,
     rootPid: client.rootPid,
     rootProcessGeneration: client.rootProcessGeneration,
     terminationProofId: client.terminationProofId,

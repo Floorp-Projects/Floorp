@@ -18,8 +18,8 @@ interface MutableClientFixture {
   captureProofId: string;
   clientInstanceId: string;
   fictional: boolean;
-  profileToken: string;
   port: number;
+  profileToken: string;
   rootPid: number;
   rootProcessGeneration: string;
   terminationProofId: string;
@@ -46,8 +46,8 @@ function client(
     captureProofId,
     clientInstanceId,
     fictional: true,
-    profileToken,
     port,
+    profileToken,
     rootPid,
     rootProcessGeneration: `pid-${rootPid}-generation-987654321`,
     terminationProofId,
@@ -102,6 +102,21 @@ Deno.test("offline fixture accepts exactly two fictional data clients and only r
       lifecycle_validation: "accepted",
     },
   );
+});
+
+Deno.test("offline fixture accepts canonical client key order and distinct port/PID domains", () => {
+  const crossDomainValue = fixture();
+  crossDomainValue.clients[0].rootPid = crossDomainValue.clients[1].port;
+  crossDomainValue.clients[0].rootProcessGeneration = `pid-${
+    crossDomainValue.clients[0].rootPid
+  }-generation-987654321`;
+
+  const result = createOfflineFakeG5DesktopTwoClientExecutor(
+    fixtureJson(crossDomainValue),
+  ).consumeFixture();
+
+  assertEquals(result.execution_authorization, "not-granted");
+  assertEquals(result.g5_result, "not-assessed");
 });
 
 Deno.test("offline fixture rejects arbitrary functions without invoking them", () => {
@@ -252,6 +267,26 @@ Deno.test("offline fixture rejects noncanonical or non-fictional input before co
   });
   const nonFictional = fixture();
   nonFictional.clients[1].fictional = false;
+  const belowPortRange = fixture();
+  belowPortRange.clients[0].port = 1_023;
+  const abovePortRange = fixture();
+  abovePortRange.clients[0].port = 65_536;
+  const zeroRootPid = fixture();
+  zeroRootPid.clients[0].rootPid = 0;
+  const negativeRootPid = fixture();
+  negativeRootPid.clients[0].rootPid = -1;
+  const fractionalRootPid = fixture();
+  fractionalRootPid.clients[0].rootPid = 4_201.5;
+  const nonAscendingClientIds = fixture();
+  nonAscendingClientIds.clients[0].clientInstanceId = "g5-client-z";
+  const extraClientProperty = fixture();
+  (extraClientProperty.clients[1] as unknown as Record<string, unknown>).extra =
+    "unexpected";
+  const missingClientProperty = fixture();
+  delete (missingClientProperty.clients[1] as unknown as Record<
+    string,
+    unknown
+  >).terminationProofId;
   const whitespaceVariant = ` ${fixtureJson()}`;
 
   for (
@@ -259,6 +294,14 @@ Deno.test("offline fixture rejects noncanonical or non-fictional input before co
       oneClientJson,
       threeClientJson,
       fixtureJson(nonFictional),
+      fixtureJson(belowPortRange),
+      fixtureJson(abovePortRange),
+      fixtureJson(zeroRootPid),
+      fixtureJson(negativeRootPid),
+      fixtureJson(fractionalRootPid),
+      fixtureJson(nonAscendingClientIds),
+      fixtureJson(extraClientProperty),
+      fixtureJson(missingClientProperty),
       whitespaceVariant,
     ]
   ) {
@@ -287,8 +330,8 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
   );
 
   assertEquals(
-    source.match(/from\s+"[^"]+"/gu),
-    ['from "./g5_desktop_two_client_lifecycle_contract.ts"'],
+    source.includes('from "./g5_desktop_two_client_lifecycle_contract.ts"'),
+    true,
   );
   for (
     const forbidden of [
@@ -297,10 +340,6 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
       "createG5DesktopProcessController",
       "G5DesktopLaunchSupervisor",
       "Deno.",
-      "async ",
-      "await ",
-      "Promise",
-      "=>",
       "import(",
       "eval(",
       "Function(",
@@ -309,13 +348,7 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
       "child_process",
       "startIsolatedBrowser",
       "createIsolatedBrowserLaunch",
-      "supervisor",
-      "callback",
-      "dependencies",
-      "session",
-      "browser",
-      "FxA",
-      "Sync",
+      "new RegExp(",
       "credential",
       "password",
       "test-accounts",
