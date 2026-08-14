@@ -86,6 +86,26 @@ function fixtureJson(value: MutableFixture = fixture()): string {
   return JSON.stringify(value);
 }
 
+function legacyClientKeyOrderJson(value: MutableFixture = fixture()): string {
+  return JSON.stringify({
+    clients: value.clients.map((client) => ({
+      captureProofId: client.captureProofId,
+      clientInstanceId: client.clientInstanceId,
+      fictional: client.fictional,
+      profileToken: client.profileToken,
+      port: client.port,
+      rootPid: client.rootPid,
+      rootProcessGeneration: client.rootProcessGeneration,
+      terminationProofId: client.terminationProofId,
+    })),
+    executorInstanceId: value.executorInstanceId,
+    mode: value.mode,
+    pairId: value.pairId,
+    runId: value.runId,
+    schemaVersion: value.schemaVersion,
+  });
+}
+
 Deno.test("offline fixture accepts exactly two fictional data clients and only returns a withheld G5 result", () => {
   const executor = createOfflineFakeG5DesktopTwoClientExecutor(fixtureJson());
 
@@ -267,6 +287,12 @@ Deno.test("offline fixture rejects noncanonical or non-fictional input before co
   });
   const nonFictional = fixture();
   nonFictional.clients[1].fictional = false;
+  const shortGeneration = fixture();
+  shortGeneration.clients[0].rootProcessGeneration =
+    "pid-4201-generation-12345678";
+  const mismatchedGeneration = fixture();
+  mismatchedGeneration.clients[0].rootProcessGeneration =
+    "pid-4202-generation-987654321";
   const belowPortRange = fixture();
   belowPortRange.clients[0].port = 1_023;
   const abovePortRange = fixture();
@@ -293,7 +319,10 @@ Deno.test("offline fixture rejects noncanonical or non-fictional input before co
     const input of [
       oneClientJson,
       threeClientJson,
+      legacyClientKeyOrderJson(),
       fixtureJson(nonFictional),
+      fixtureJson(shortGeneration),
+      fixtureJson(mismatchedGeneration),
       fixtureJson(belowPortRange),
       fixtureJson(abovePortRange),
       fixtureJson(zeroRootPid),
@@ -329,10 +358,17 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
     new URL("./g5_desktop_two_client_executor.ts", import.meta.url),
   );
 
+  const runtimeModuleSources = [
+    ...source.matchAll(
+      /^\s*(?:import|export)\s+(?!type\b)[\s\S]*?\sfrom\s+["']([^"']+)["'];/gmu,
+    ),
+  ].map((match) => match[1]);
   assertEquals(
-    source.includes('from "./g5_desktop_two_client_lifecycle_contract.ts"'),
-    true,
+    runtimeModuleSources,
+    ["./g5_desktop_two_client_lifecycle_contract.ts"],
   );
+  assertEquals(/^\s*import\s+["'][^"']+["'];/mu.test(source), false);
+  assertEquals(/\bimport\s*\(/u.test(source), false);
   for (
     const forbidden of [
       "./browser_launcher.ts",
@@ -340,12 +376,12 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
       "createG5DesktopProcessController",
       "G5DesktopLaunchSupervisor",
       "Deno.",
-      "import(",
       "eval(",
       "Function(",
       "fetch(",
       "WebSocket",
       "child_process",
+      "require(",
       "startIsolatedBrowser",
       "createIsolatedBrowserLaunch",
       "new RegExp(",
