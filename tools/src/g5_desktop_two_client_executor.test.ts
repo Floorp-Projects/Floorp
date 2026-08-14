@@ -13,10 +13,26 @@ const RUN_ID = "g5-run-20260814-003";
 const EXECUTOR_INSTANCE_ID = "g5-executor-20260814-003";
 const PAIR_ID = "g5-pair-20260814-003";
 const FIXTURE_SCHEMA = "floorp-g5-desktop-two-client-offline-fixture-v2";
-const MODULE_DECLARATION =
-  /^\s*(?:import|export)\s+((?:(?!;)[\s\S])*?)\s+from\s+["']([^"']+)["']\s*;/gmu;
+const DYNAMIC_IMPORT_TOKEN =
+  /\bimport\b(?:(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*)*)\(/u;
 const TYPE_ONLY_NAMED_SPECIFIER =
   /^type\s+[A-Za-z_$][\w$]*(?:\s+as\s+[A-Za-z_$][\w$]*)?$/u;
+
+interface ModuleImportScan {
+  readonly dynamicImport: boolean;
+  readonly runtimeSources: readonly string[];
+}
+
+interface ParsedFromModule {
+  readonly clause: string;
+  readonly next: number;
+  readonly source: string | undefined;
+}
+
+interface ParsedStringLiteral {
+  readonly next: number;
+  readonly value: string;
+}
 
 interface MutableClientFixture {
   captureProofId: string;
@@ -111,7 +127,8 @@ function legacyClientKeyOrderJson(value: MutableFixture = fixture()): string {
 }
 
 function isTypeOnlyModuleClause(clause: string): boolean {
-  const normalized = clause.replace(/\s+/gu, " ").trim();
+  const normalized = clause.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/gu, " ")
+    .replace(/\s+/gu, " ").trim();
   if (normalized.startsWith("type ")) return true;
   if (!normalized.startsWith("{") || !normalized.endsWith("}")) {
     return false;
@@ -125,10 +142,220 @@ function isTypeOnlyModuleClause(clause: string): boolean {
     );
 }
 
-function runtimeModuleSources(source: string): string[] {
-  return [...source.matchAll(MODULE_DECLARATION)].filter((match) =>
-    !isTypeOnlyModuleClause(match[1])
-  ).map((match) => match[2]);
+function isIdentifierPart(value: string | undefined): boolean {
+  return value !== undefined && /[A-Za-z0-9_$]/u.test(value);
+}
+
+function hasKeywordAt(source: string, index: number, keyword: string): boolean {
+  return source.startsWith(keyword, index) &&
+    !isIdentifierPart(source[index - 1]) &&
+    !isIdentifierPart(source[index + keyword.length]);
+}
+
+function skipTrivia(source: string, index: number): number {
+  let cursor = index;
+  while (cursor < source.length) {
+    if (/\s/u.test(source[cursor])) {
+      cursor += 1;
+      continue;
+    }
+    if (source.startsWith("//", cursor)) {
+      const newline = source.indexOf("\n", cursor + 2);
+      cursor = newline === -1 ? source.length : newline + 1;
+      continue;
+    }
+    if (source.startsWith("/*", cursor)) {
+      const end = source.indexOf("*/", cursor + 2);
+      cursor = end === -1 ? source.length : end + 2;
+      continue;
+    }
+    return cursor;
+  }
+  return cursor;
+}
+
+function parseStringLiteral(
+  source: string,
+  index: number,
+): ParsedStringLiteral | undefined {
+  const quote = source[index];
+  if (quote !== '"' && quote !== "'") return undefined;
+  let cursor = index + 1;
+  while (cursor < source.length) {
+    if (source[cursor] === "\\") {
+      cursor += 2;
+      continue;
+    }
+    if (source[cursor] === quote) {
+      return {
+        next: cursor + 1,
+        value: source.slice(index + 1, cursor),
+      };
+    }
+    cursor += 1;
+  }
+  return undefined;
+}
+
+function skipTemplateLiteral(source: string, index: number): number {
+  let cursor = index + 1;
+  while (cursor < source.length) {
+    if (source[cursor] === "\\") {
+      cursor += 2;
+      continue;
+    }
+    if (source[cursor] === "`") return cursor + 1;
+    cursor += 1;
+  }
+  return source.length;
+}
+
+function parseFromModule(source: string, index: number): ParsedFromModule {
+  let braceDepth = 0;
+  let cursor = index;
+  while (cursor < source.length) {
+    const next = skipTrivia(source, cursor);
+    if (next !== cursor) {
+      cursor = next;
+      continue;
+    }
+    if (source[cursor] === "{") {
+      braceDepth += 1;
+      cursor += 1;
+      continue;
+    }
+    if (source[cursor] === "}") {
+      braceDepth = Math.max(0, braceDepth - 1);
+      cursor += 1;
+      continue;
+    }
+    if (source[cursor] === ";") {
+      return {
+        clause: source.slice(index, cursor),
+        next: cursor + 1,
+        source: undefined,
+      };
+    }
+    if (braceDepth === 0 && hasKeywordAt(source, cursor, "from")) {
+      const moduleStart = skipTrivia(source, cursor + "from".length);
+      const module = parseStringLiteral(source, moduleStart);
+      return {
+        clause: source.slice(index, cursor),
+        next: module?.next ?? moduleStart + 1,
+        source: module?.value,
+      };
+    }
+    if (source[cursor] === '"' || source[cursor] === "'") {
+      const literal = parseStringLiteral(source, cursor);
+      return {
+        clause: source.slice(index, cursor),
+        next: literal?.next ?? cursor + 1,
+        source: undefined,
+      };
+    }
+    if (source[cursor] === "`") {
+      return {
+        clause: source.slice(index, cursor),
+        next: skipTemplateLiteral(source, cursor),
+        source: undefined,
+      };
+    }
+    cursor += 1;
+  }
+  return {
+    clause: source.slice(index),
+    next: source.length,
+    source: undefined,
+  };
+}
+
+function scanModuleImports(source: string): ModuleImportScan {
+  let dynamicImport = false;
+  const runtimeSources: string[] = [];
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const next = skipTrivia(source, cursor);
+    if (next !== cursor) {
+      cursor = next;
+      continue;
+    }
+    if (source[cursor] === '"' || source[cursor] === "'") {
+      cursor = parseStringLiteral(source, cursor)?.next ?? cursor + 1;
+      continue;
+    }
+    if (source[cursor] === "`") {
+      cursor = skipTemplateLiteral(source, cursor);
+      continue;
+    }
+    if (source[cursor - 1] === ".") {
+      cursor += 1;
+      continue;
+    }
+    if (hasKeywordAt(source, cursor, "import")) {
+      const declarationStart = skipTrivia(source, cursor + "import".length);
+      if (source[declarationStart] === "(") {
+        dynamicImport = true;
+        cursor = declarationStart + 1;
+        continue;
+      }
+      const sideEffect = parseStringLiteral(source, declarationStart);
+      if (sideEffect !== undefined) {
+        runtimeSources.push(sideEffect.value);
+        cursor = sideEffect.next;
+        continue;
+      }
+      if (source[declarationStart] === ".") {
+        cursor = declarationStart + 1;
+        continue;
+      }
+      const parsed = parseFromModule(source, declarationStart);
+      if (parsed.source === undefined) {
+        runtimeSources.push("<unparseable-runtime-import>");
+      } else if (
+        !hasKeywordAt(source, declarationStart, "type") &&
+        !isTypeOnlyModuleClause(parsed.clause)
+      ) {
+        runtimeSources.push(parsed.source);
+      }
+      cursor = parsed.next;
+      continue;
+    }
+    if (hasKeywordAt(source, cursor, "export")) {
+      const exportStart = skipTrivia(source, cursor + "export".length);
+      const typeOnly = hasKeywordAt(source, exportStart, "type");
+      const declarationStart = typeOnly
+        ? skipTrivia(source, exportStart + "type".length)
+        : exportStart;
+      if (
+        source[declarationStart] !== "{" && source[declarationStart] !== "*"
+      ) {
+        cursor = declarationStart + 1;
+        continue;
+      }
+      const parsed = parseFromModule(source, exportStart);
+      if (
+        parsed.source !== undefined && !typeOnly &&
+        !isTypeOnlyModuleClause(parsed.clause)
+      ) {
+        runtimeSources.push(parsed.source);
+      }
+      cursor = parsed.next;
+      continue;
+    }
+    cursor += 1;
+  }
+
+  return { dynamicImport, runtimeSources };
+}
+
+function runtimeModuleSources(source: string): readonly string[] {
+  return scanModuleImports(source).runtimeSources;
+}
+
+function hasDynamicModuleImport(source: string): boolean {
+  return scanModuleImports(source).dynamicImport ||
+    DYNAMIC_IMPORT_TOKEN.test(source);
 }
 
 Deno.test("offline fixture accepts exactly two fictional data clients and only returns a withheld G5 result", () => {
@@ -402,6 +629,43 @@ Deno.test("offline fixture source scanner ignores type-only modules but retains 
   );
 });
 
+Deno.test("offline fixture source scanner rejects runtime imports despite trivia or semicolon evasions", () => {
+  const moduleSource = [
+    'import { RuntimeWithoutSemicolon } from "./named-without-semicolon.ts"',
+    'import /* side-effect */ "./side-effect-without-semicolon.ts"',
+    'import { RuntimeWithFromComment } from /* source */ "./from-comment.ts";',
+    'import RuntimeWithAttributes from "./attributes.json" with { type: "json" };',
+    'import /* dynamic */ ("./dynamic-comment.ts");',
+    'import type * as TypeNamespace from "./type-namespace.ts";',
+    'export type * as ExportedTypeNamespace from "./export-type-namespace.ts";',
+    'import { /* comment */ type InlineType as InlineAlias } from "./commented-inline-type.ts";',
+    'export { /* comment */ type InlineExportedType as InlineExportedAlias } from "./commented-inline-export-type.ts";',
+    'import { type InlineType, RuntimeValue } from "./mixed.ts";',
+    'export { type InlineExportedType, RuntimeValue } from "./mixed-export.ts";',
+    'export * from "./star.ts";',
+  ].join("\n");
+
+  assertEquals(
+    runtimeModuleSources(moduleSource),
+    [
+      "./named-without-semicolon.ts",
+      "./side-effect-without-semicolon.ts",
+      "./from-comment.ts",
+      "./attributes.json",
+      "./mixed.ts",
+      "./mixed-export.ts",
+      "./star.ts",
+    ],
+  );
+  assertEquals(hasDynamicModuleImport(moduleSource), true);
+  assertEquals(
+    hasDynamicModuleImport(
+      'const templateDynamic = `${import /* dynamic */("./template-dynamic.ts")}`;',
+    ),
+    true,
+  );
+});
+
 Deno.test("offline fixture has no executable imports, capabilities, or live surface", async () => {
   const source = await Deno.readTextFile(
     new URL("./g5_desktop_two_client_executor.ts", import.meta.url),
@@ -412,7 +676,7 @@ Deno.test("offline fixture has no executable imports, capabilities, or live surf
     ["./g5_desktop_two_client_lifecycle_contract.ts"],
   );
   assertEquals(/^\s*import\s+["'][^"']+["'];/mu.test(source), false);
-  assertEquals(/\bimport\s*\(/u.test(source), false);
+  assertEquals(hasDynamicModuleImport(source), false);
   for (
     const forbidden of [
       "./browser_launcher.ts",
