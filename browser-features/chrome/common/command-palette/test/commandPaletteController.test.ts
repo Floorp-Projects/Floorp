@@ -82,8 +82,15 @@ const STEP_COMMAND_CAPTURE_ARGS: PaletteCommand = makeStepCommand(
   },
 );
 
+// Controllers attach a window-capture keydown listener in their constructor.
+// Track every instance so runAllTests can destroy them — leaked instances
+// with isVisible()===true swallow later Escape keydowns in OTHER test files.
+const liveControllers: CommandPaletteController[] = [];
+
 function createController(): CommandPaletteController {
-  return new CommandPaletteController(window);
+  const ctrl = new CommandPaletteController(window);
+  liveControllers.push(ctrl);
+  return ctrl;
 }
 
 // ---------------------------------------------------------------------------
@@ -2248,11 +2255,17 @@ const rawTests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  await runTests("commandPaletteController.test.ts", [
-    ...rawTests,
-    ...shortcutTests,
-    ...tabSearchTests,
-    ...reservedListTests,
-    ...bookmarkHistorySearchTests,
-  ]);
+  try {
+    await runTests("commandPaletteController.test.ts", [
+      ...rawTests,
+      ...shortcutTests,
+      ...tabSearchTests,
+      ...reservedListTests,
+      ...bookmarkHistorySearchTests,
+    ]);
+  } finally {
+    for (const ctrl of liveControllers.splice(0)) {
+      ctrl.destroy();
+    }
+  }
 }
