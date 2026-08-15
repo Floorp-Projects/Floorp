@@ -30,9 +30,19 @@ export default function Page() {
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
-      // Capture the save-chain state and form values when the refresh starts
-      // so the fetched settings can be discarded if the user edits the form
-      // or a save is queued while the refresh is pending.
+      // Await any in-flight save before reading prefs: a save that settles
+      // does not change the save chain's promise identity, so the post-read
+      // guard alone would miss a save that was already queued when this
+      // refresh started and could read a torn (half-written) pref state.
+      // Re-check the chain after each wait so saves queued while waiting
+      // are awaited as well, until the chain is stable.
+      for (;;) {
+        const pendingSave = saveChainRef.current;
+        await pendingSave.catch(() => {});
+        if (saveChainRef.current === pendingSave) break;
+      }
+      // Capture the save-chain state and form values only after the wait,
+      // so anything queued or edited from here on is detected below.
       const saveChainAtStart = saveChainRef.current;
       const formAtStart = getValues();
       try {
