@@ -101,7 +101,7 @@ export const zCommandPaletteFormData = t.type({
   width: t.number,
   maxHeight: t.number,
   offsetTop: t.number,
-  horizontalAlign: t.string,
+  horizontalAlign: t.keyof({ center: null, left: null, right: null }),
   fontSize: t.number,
   showTabs: t.boolean,
   showHistory: t.boolean,

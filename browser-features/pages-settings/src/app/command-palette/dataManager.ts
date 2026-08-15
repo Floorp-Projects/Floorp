@@ -118,6 +118,29 @@ export const COMMAND_PALETTE_APPEARANCE_DEFAULTS = {
   fontSize: DEFAULT_FONT_SIZE,
 } as const;
 
+/**
+ * Default values for the whole command-palette settings form. Used as the
+ * react-hook-form `defaultValues` so reads before the initial async pref
+ * load still resolve defined values. `categoryPriority` is copied so callers
+ * can never mutate `DEFAULT_CATEGORY_PRIORITY` through this object.
+ */
+export const COMMAND_PALETTE_DEFAULT_VALUES: CommandPaletteFormData = {
+  enabled: true,
+  width: DEFAULT_WIDTH,
+  maxHeight: DEFAULT_MAX_HEIGHT,
+  offsetTop: DEFAULT_OFFSET_TOP,
+  horizontalAlign: DEFAULT_HORIZONTAL_ALIGN,
+  fontSize: DEFAULT_FONT_SIZE,
+  showTabs: DEFAULT_SHOW_TABS,
+  showHistory: DEFAULT_SHOW_HISTORY,
+  showBookmarks: DEFAULT_SHOW_BOOKMARKS,
+  categoryPriority: [...DEFAULT_CATEGORY_PRIORITY],
+  maxResultsPerCategory: DEFAULT_MAX_RESULTS_PER_CATEGORY,
+  maxBookmarkSuggestions: DEFAULT_MAX_BOOKMARK_SUGGESTIONS,
+  maxHistorySuggestions: DEFAULT_MAX_HISTORY_SUGGESTIONS,
+  maxTabsResults: DEFAULT_MAX_TABS_RESULTS,
+};
+
 function clampInt(
   value: number,
   bounds: { min: number; max: number },
@@ -155,10 +178,12 @@ export async function saveCommandPaletteSettings(
   }
 
   try {
-    await rpc.setBoolPref(
-      COMMAND_PALETTE_ENABLED_PREF,
-      Boolean(settings.enabled),
-    );
+    if (settings.enabled !== undefined) {
+      await rpc.setBoolPref(
+        COMMAND_PALETTE_ENABLED_PREF,
+        Boolean(settings.enabled),
+      );
+    }
 
     if (settings.width !== undefined) {
       await rpc.setIntPref(
@@ -313,7 +338,7 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       horizontalAlign: (VALID_HORIZONTAL_ALIGNS as readonly string[]).includes(
         horizontalAlign ?? DEFAULT_HORIZONTAL_ALIGN,
       )
-        ? (horizontalAlign as string)
+        ? (horizontalAlign as CommandPaletteFormData["horizontalAlign"])
         : DEFAULT_HORIZONTAL_ALIGN,
       fontSize: clampInt(fontSize ?? DEFAULT_FONT_SIZE, FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
       showTabs: showTabs === null ? DEFAULT_SHOW_TABS : showTabs,

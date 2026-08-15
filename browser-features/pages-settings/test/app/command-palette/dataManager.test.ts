@@ -48,6 +48,7 @@ import type {
  */
 
 const PREF = "floorp.commandPalette.enabled";
+const WIDTH_PREF = "floorp.commandPalette.width";
 const CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
 const MAX_RESULTS_PREF = "floorp.commandPalette.maxResultsPerCategory";
 const MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
@@ -321,19 +322,44 @@ async function testSaveSetsEnabledFalse(): Promise<void> {
 }
 
 async function testSaveCoercesToBoolean(): Promise<void> {
-  // Boolean(undefined) === false; the dataManager wraps with Boolean() before
-  // delegating to setBoolPref, so this must persist as a real boolean false.
+  // Patch-safe contract: `enabled` must only be written when present in the
+  // patch, so saving another field (e.g. width) cannot disable the palette.
+  // When a non-boolean `enabled` IS provided, the dataManager still coerces
+  // it via Boolean() before delegating to setBoolPref.
+  const widthPrefHadValue = Services.prefs.getPrefType(WIDTH_PREF) ===
+    Services.prefs.PREF_INT;
+  const originalWidth = widthPrefHadValue
+    ? Services.prefs.getIntPref(WIDTH_PREF)
+    : null;
   Services.prefs.setBoolPref(PREF, true);
   try {
-    // deno-lint-ignore no-explicit-any
-    await saveCommandPaletteSettings({ enabled: undefined } as any);
+    await saveCommandPaletteSettings({ width: 600 });
+    assertEquals(
+      readRawPref(),
+      true,
+      "save must not write enabled when it is absent from the patch",
+    );
+
+    await saveCommandPaletteSettings({ enabled: 1 as unknown as boolean });
+    assertEquals(
+      readRawPref(),
+      true,
+      "save should coerce a truthy non-boolean enabled to boolean true",
+    );
+
+    await saveCommandPaletteSettings({ enabled: 0 as unknown as boolean });
     assertEquals(
       readRawPref(),
       false,
-      "save should coerce missing enabled to boolean false",
+      "save should coerce a falsy non-boolean enabled to boolean false",
     );
   } finally {
     Services.prefs.clearUserPref(PREF);
+    if (originalWidth === null) {
+      Services.prefs.clearUserPref(WIDTH_PREF);
+    } else {
+      Services.prefs.setIntPref(WIDTH_PREF, originalWidth);
+    }
   }
 }
 

@@ -794,6 +794,7 @@
         "priorityModalDescription": "Drag and drop to reorder. Categories higher in the list appear first in the command palette.",
         "priorityModalReset": "Reset to Default",
         "priorityModalClose": "Close",
+        "dragToReorder": "Drag to reorder {{displayName}}",
         "shortcuts": {
             "title": "Shortcuts",
             "description": "Type @prefix in the command palette to instantly run a command.",

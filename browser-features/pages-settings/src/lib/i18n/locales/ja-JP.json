@@ -788,6 +788,7 @@
         "priorityModalDescription": "ドラッグ＆ドロップで並び替えてください。リストの上位にあるカテゴリほど、コマンドパレットで先に表示されます。",
         "priorityModalReset": "デフォルトに戻す",
         "priorityModalClose": "閉じる",
+        "dragToReorder": "{{displayName}} をドラッグして並べ替える",
         "shortcuts": {
             "title": "ショートカット",
             "description": "コマンドパレットで @prefix を入力すると、コマンドをすぐに実行できます。",

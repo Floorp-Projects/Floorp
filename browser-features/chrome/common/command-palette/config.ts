@@ -552,7 +552,8 @@ export function parseShortcuts(
   } catch {
     // ignore — fall through to default
   }
-  return defaultVal;
+  // Copy so callers cannot mutate (and corrupt) the shared default.
+  return [...defaultVal];
 }
 
 export function parseSelectableCommands(

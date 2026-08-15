@@ -785,7 +785,9 @@ export class CommandPaletteController {
    * Pseudo-category `recent` and `navigation-suggestion` are pinned to the top
    * (in their existing order). All other items (main results + suggestions,
    * including the `search` category which has the lowest priority) are
-   * re-sorted by priority via `middleItems`.
+   * re-sorted by priority via `middleItems`. The highlighted command is
+   * preserved across the re-sort (selection follows the same command id, or is
+   * clamped if it fell out of the list).
    */
   private appendSuggestionResults(
     newResults: PaletteCommand[],
@@ -797,6 +799,9 @@ export class CommandPaletteController {
     const existingIds = new Set(currentResults.map((c) => c.id));
     const filteredNew = newResults.filter((c) => !existingIds.has(c.id));
     if (filteredNew.length === 0) return;
+
+    const prevIndex = this.state.selectedIndex();
+    const prevId = currentResults[prevIndex]?.id;
 
     const PSEUDO_TOP = new Set(["recent", "navigation-suggestion", "shortcut"]);
 
@@ -814,10 +819,24 @@ export class CommandPaletteController {
       getMaxResultsPerCategory(),
       this.buildCategoryLimitOverrides(),
     );
-    this.state.setFilteredCommands([
+    const newList: PaletteCommand[] = [
       ...topItems,
       ...truncatedMiddle,
-    ]);
+    ];
+    this.state.setFilteredCommands(newList);
+
+    // Keep the highlight on the same command across the re-sort; if it was
+    // truncated out, clamp the index into the new list's range.
+    const restoredIndex = prevId === undefined
+      ? -1
+      : newList.findIndex((c) => c.id === prevId);
+    if (restoredIndex !== -1) {
+      this.state.setSelectedIndex(restoredIndex);
+    } else {
+      this.state.setSelectedIndex(
+        Math.max(0, Math.min(prevIndex, newList.length - 1)),
+      );
+    }
   }
 
   /**
@@ -921,12 +940,17 @@ export class CommandPaletteController {
 
     // Resolve the aliased command once per shortcut and drop any whose target no
     // longer exists (deleted/renamed command) — emitting a dead pseudo-command
-    // that only warns at run time is worse than omitting it. `aliased` is reused
-    // for the label so `getCommand` is not called twice per entry. The `fn`
-    // re-resolves against the actual target `win` at execution time, since the
-    // command set may differ from the window used to build the list.
+    // that only warns at run time is worse than omitting it. The command
+    // catalogue is built ONCE into a Map (getPaletteCommands rebuilds the full
+    // array per call, so a per-shortcut lookup would be O(n×m)) and each
+    // shortcut resolves against it by id. `aliased` is reused for the label.
+    // The `fn` re-resolves against the actual target `win` at execution time,
+    // since the command set may differ from the window used to build the list.
+    const commandsById = new Map(
+      getPaletteCommands(this.targetWindow).map((c) => [c.id, c] as const),
+    );
     const resolved = ranked
-      .map((s) => ({ s, aliased: getCommand(s.commandId, this.targetWindow) }))
+      .map((s) => ({ s, aliased: commandsById.get(s.commandId) }))
       .filter(
         (r): r is { s: CommandPaletteShortcut; aliased: PaletteCommand } =>
           r.aliased !== undefined,

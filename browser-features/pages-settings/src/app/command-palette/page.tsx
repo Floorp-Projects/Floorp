@@ -8,6 +8,7 @@ import { DynamicSearchSettings } from "./components/DynamicSearchSettings.tsx";
 import { ResultLimitSettings } from "./components/ResultLimitSettings.tsx";
 import { ShortcutList } from "./components/ShortcutList.tsx";
 import {
+  COMMAND_PALETTE_DEFAULT_VALUES,
   getCommandPaletteSettings,
   saveCommandPaletteSettings,
 } from "./dataManager.ts";
@@ -15,10 +16,17 @@ import type { CommandPaletteFormData } from "@/types/pref.ts";
 
 export default function Page() {
   const { t } = useTranslation();
-  const methods = useForm<CommandPaletteFormData>({});
+  const methods = useForm<CommandPaletteFormData>({
+    defaultValues: COMMAND_PALETTE_DEFAULT_VALUES,
+  });
 
   const { control, setValue } = methods;
   const watchAll = useWatch({ control });
+
+  // Skip saves until the initial pref load has populated the form, and
+  // serialize saves so an older snapshot can never finish after a newer one.
+  const initialLoadDoneRef = React.useRef(false);
+  const saveChainRef = React.useRef<Promise<void>>(Promise.resolve());
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
@@ -56,6 +64,8 @@ export default function Page() {
         });
       } catch (error) {
         console.error("[command-palette] Failed to load settings:", error);
+      } finally {
+        initialLoadDoneRef.current = true;
       }
     };
 
@@ -67,13 +77,17 @@ export default function Page() {
   }, [setValue]);
 
   React.useEffect(() => {
+    if (!initialLoadDoneRef.current) return;
     if (Object.keys(watchAll).length === 0) return;
 
-    try {
-      saveCommandPaletteSettings(watchAll);
-    } catch (error) {
-      console.error("[command-palette] Failed to save settings:", error);
-    }
+    const snapshot = { ...watchAll };
+    saveChainRef.current = saveChainRef.current
+      .then(async () => {
+        await saveCommandPaletteSettings(snapshot);
+      })
+      .catch((error: unknown) => {
+        console.error("[command-palette] Failed to save settings:", error);
+      });
   }, [watchAll]);
 
   return (

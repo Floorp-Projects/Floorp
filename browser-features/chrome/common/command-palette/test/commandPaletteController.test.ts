@@ -2221,8 +2221,8 @@ const rawTests: TestCase[] = [
   },
 ];
 
-export function runAllTests(): void {
-  runTests("commandPaletteController.test.ts", [
+export async function runAllTests(): Promise<void> {
+  await runTests("commandPaletteController.test.ts", [
     ...rawTests,
     ...shortcutTests,
     ...tabSearchTests,

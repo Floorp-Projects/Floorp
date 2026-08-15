@@ -33,12 +33,14 @@ interface SortableCategoryRowProps {
   category: string;
   ordinal: number;
   displayName: string;
+  dragLabel: string;
 }
 
 const SortableCategoryRow = ({
   category,
   ordinal,
   displayName,
+  dragLabel,
 }: SortableCategoryRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: category });
@@ -63,7 +65,7 @@ const SortableCategoryRow = ({
       <button
         type="button"
         className="cursor-grab active:cursor-grabbing text-base-content/50 hover:text-base-content touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
-        aria-label={`Drag to reorder ${displayName}`}
+        aria-label={dragLabel}
         {...attributes}
         {...listeners}
       >
@@ -157,14 +159,20 @@ export function CategoryPriorityModal({
               items={order}
               strategy={verticalListSortingStrategy}
             >
-              {order.map((category, index) => (
-                <SortableCategoryRow
-                  key={category}
-                  category={category}
-                  ordinal={index + 1}
-                  displayName={getDisplayName(category)}
-                />
-              ))}
+              {order.map((category, index) => {
+                const displayName = getDisplayName(category);
+                return (
+                  <SortableCategoryRow
+                    key={category}
+                    category={category}
+                    ordinal={index + 1}
+                    displayName={displayName}
+                    dragLabel={t("commandPalette.dragToReorder", {
+                      displayName,
+                    })}
+                  />
+                );
+              })}
             </SortableContext>
           </DndContext>
         </div>

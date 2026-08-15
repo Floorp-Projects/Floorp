@@ -123,7 +123,11 @@ export function AppearanceSettings() {
               className="max-w-xs"
               value={getValues("horizontalAlign")}
               options={alignOptions}
-              onChange={(e) => setValue("horizontalAlign", e.target.value)}
+              onChange={(e) =>
+                setValue(
+                  "horizontalAlign",
+                  e.target.value as CommandPaletteFormData["horizontalAlign"],
+                )}
               disabled={isDisabled}
             />
           </div>
