@@ -172,6 +172,17 @@ function shortcutRows(commands: PaletteCommand[]): PaletteCommand[] {
   return commands.filter((c) => c.category === "shortcut");
 }
 
+/**
+ * Returns only user-declared shortcut rows; reserved built-in rows
+ * (`__reserved:s/t/b/h`) are pinned separately and excluded so length/order
+ * assertions see only user-declared shortcuts.
+ */
+function userShortcutRows(commands: PaletteCommand[]): PaletteCommand[] {
+  return commands.filter(
+    (c) => c.category === "shortcut" && !c.id.startsWith("__reserved:"),
+  );
+}
+
 const shortcutTests: TestCase[] = [
   // --- "@" alone lists every shortcut in declaration order ---
   {
@@ -186,7 +197,7 @@ const shortcutTests: TestCase[] = [
         const ctrl = createController();
         ctrl.updateSearch("@");
         await flushDebounce();
-        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const rows = userShortcutRows(ctrl.state.filteredCommands());
         assertEquals(rows.length, 2, "should list both declared shortcuts");
         assertEquals(
           rows[0].id,
@@ -320,7 +331,7 @@ const shortcutTests: TestCase[] = [
         const ctrl = createController();
         ctrl.updateSearch("@");
         await flushDebounce();
-        const rows = shortcutRows(ctrl.state.filteredCommands());
+        const rows = userShortcutRows(ctrl.state.filteredCommands());
         assertEquals(
           rows.length,
           1,
@@ -2090,7 +2101,9 @@ const rawTests: TestCase[] = [
       assertEquals(ctrl.state.mode(), "input", "mode should be input");
       assertEquals(ctrl.state.activeCommand()?.id, "__test-step-command__", "active command should be set");
       assertEquals(ctrl.state.currentStepIndex(), 0, "step index should be 0");
-      assertEquals(ctrl.state.stepInputs(), {}, "step inputs should be empty");
+      // assertEquals compares objects by reference, so assert emptiness
+      // structurally instead of against a fresh `{}`.
+      assertEquals(Object.keys(ctrl.state.stepInputs()).length, 0, "step inputs should be empty");
       assertEquals(ctrl.state.stepError(), null, "step error should be null");
     },
   },
@@ -2098,10 +2111,13 @@ const rawTests: TestCase[] = [
   // --- advanceStep progression ---
   {
     name: "advanceStep progresses through steps",
-    fn() {
+    async fn() {
       const ctrl = createController();
       ctrl.executeCommand(STEP_COMMAND_NO_VALIDATE_2);
       ctrl.updateSearch("value1");
+      // Non-empty queries are debounced; flush before advancing so the step
+      // input captures "value1".
+      await flushDebounce();
       ctrl.advanceStep();
       assertEquals(ctrl.state.currentStepIndex(), 1, "should advance to step 1");
       assertEquals(ctrl.state.stepInputs().step1, "value1", "step1 input should be saved");
@@ -2109,11 +2125,14 @@ const rawTests: TestCase[] = [
   },
   {
     name: "advanceStep at last step executes fn with collected args",
-    fn() {
+    async fn() {
       capturedArgs = undefined;
       const ctrl = createController();
       ctrl.executeCommand(STEP_COMMAND_CAPTURE_ARGS);
       ctrl.updateSearch("final value");
+      // Non-empty queries are debounced; flush before advancing so the fn
+      // receives "final value" as the collected arg.
+      await flushDebounce();
       ctrl.advanceStep();
       assertEquals((capturedArgs as unknown as Record<string, string>)?.input, "final value", "fn should receive collected args");
     },
@@ -2133,13 +2152,16 @@ const rawTests: TestCase[] = [
   },
   {
     name: "advanceStep with validation pass clears error",
-    fn() {
+    async fn() {
       const ctrl = createController();
       ctrl.executeCommand(STEP_COMMAND_WITH_VALIDATE);
       ctrl.updateSearch("   ");
       ctrl.advanceStep();
       assert(ctrl.state.stepError() !== null, "should have error after empty input");
       ctrl.updateSearch("valid");
+      // "valid" is non-empty so it is debounced; flush before advancing so
+      // validation sees the new value and clears the error.
+      await flushDebounce();
       ctrl.advanceStep();
       assertEquals(ctrl.state.stepError(), null, "error should be cleared after valid input");
     },
@@ -2199,21 +2221,25 @@ const rawTests: TestCase[] = [
   // --- updateStepChoices filtering ---
   {
     name: "updateSearch filters choices in input mode",
-    fn() {
+    async fn() {
       const ctrl = createController();
       ctrl.executeCommand(STEP_COMMAND_WITH_CHOICES);
       assertEquals(ctrl.state.filteredStepChoices().length, 3, "should start with 3 choices");
       ctrl.updateSearch("alp");
+      // Non-empty queries are debounced; flush before asserting the filter.
+      await flushDebounce();
       assertEquals(ctrl.state.filteredStepChoices().length, 1, "should filter to 1 choice");
       assertEquals(ctrl.state.filteredStepChoices()[0].value, "a", "filtered choice should be Alpha");
     },
   },
   {
     name: "empty query restores all choices",
-    fn() {
+    async fn() {
       const ctrl = createController();
       ctrl.executeCommand(STEP_COMMAND_WITH_CHOICES);
       ctrl.updateSearch("alp");
+      // Non-empty queries are debounced; flush before asserting the filter.
+      await flushDebounce();
       assertEquals(ctrl.state.filteredStepChoices().length, 1, "should be filtered");
       ctrl.updateSearch("");
       assertEquals(ctrl.state.filteredStepChoices().length, 3, "should restore all choices");
