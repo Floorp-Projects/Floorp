@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Herstel gesloten tabblad",
     "tooltiptext": "Heropen het laatst gesloten tabblad {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "Openen in Privécontainer",
     "reopenInPrivateContainer": "Heropenen in Privécontainer",
     "name": "Privécontainer"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {

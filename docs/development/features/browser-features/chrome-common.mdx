@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Catalog"
 sidebar_label: "Common Chrome"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
 generated: true
 ---
 # Common Chrome Feature Catalog
@@ -35,9 +35,14 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | split-view | `browser-features/chrome/common/split-view/index.ts` | `default class SplitView`, `init` | Owns the split view feature through the SplitView chrome component and wires `split-view-manager`. |
 | statusbar | `browser-features/chrome/common/statusbar/index.ts` | `default class StatusBar`, `init` | Owns the statusbar feature through the StatusBar chrome component and wires `context-menu`, `statusbar`, `statusbar-manager`. |
 | tab | `browser-features/chrome/common/tab/index.ts` | `default class Tab`, `init` | Owns the tab feature through the Tab chrome component and wires `scroll`, `openPosition`, `sizeSpecification`. |
+| tab-inline-edit | `browser-features/chrome/common/tab-inline-edit/index.ts` | `default class TabInlineEdit`, `init` | Owns the tab inline edit feature through the TabInlineEdit chrome component and wires `controller`. |
+| tab-refresh | `browser-features/chrome/common/tab-refresh/index.ts` | `default class TabRefresh`, `init` | Owns the tab refresh feature through the TabRefresh chrome component and wires `controller`. |
 | tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacks`, `init` | Owns the tab stacks feature through the TabStacks chrome component and wires `stack-bar`. |
+| tab-strip-wheel-guard | `browser-features/chrome/common/tab-strip-wheel-guard/index.ts` | `default class TabStripWheelGuard`, `init` | Owns the tab strip wheel guard feature through the TabStripWheelGuard chrome component and wires `classifier`. |
 | tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
 | ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |
 | undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |
+| window-drag | `browser-features/chrome/common/window-drag/index.ts` | `default class WindowDrag`, `init` | Owns the window drag feature through the WindowDrag chrome component and wires `drag-session`. |
 | workspaces | `browser-features/chrome/common/workspaces/index.ts` | `default class Workspaces`, `init` | Owns the workspaces feature through the Workspaces chrome component and wires `workspacesTabManager`, `utils/workspace-icons`, `workspacesService`. |
-| zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | `default class ZenMode`, `init` | Owns the zen mode feature through the ZenMode chrome component and wires `zen-mode`, `styleElem`. |
+| zen-mode | `browser-features/chrome/common/zen-mode/index.ts` | `default class ZenMode`, `init` | Owns the zen mode feature through the ZenMode chrome component and wires `zen-mode`, `icon.css?inline`. |

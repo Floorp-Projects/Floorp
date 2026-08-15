@@ -53,6 +53,7 @@ const COMMON_FEATURE_CATEGORIES: CommonFeatureCategory[] = [
     names: [
       "split-view",
       "tab",
+      "tab-refresh",
       "tab-sleep-exclusion",
       "tabbar",
       "undo-closed-tab",

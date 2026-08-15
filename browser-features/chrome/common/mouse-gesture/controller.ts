@@ -58,7 +58,10 @@ export class MouseGestureController {
 
     this.targetWindow.addEventListener("mousedown", this.handleMouseDown);
     this.targetWindow.addEventListener("mousemove", this.handleMouseMove);
-    this.targetWindow.addEventListener("mouseup", this.handleMouseUp);
+    // Capture-phase mouseup: content scripts (e.g. video players) may call
+    // stopPropagation() on mouseup, which would prevent the wheel-gesture
+    // cleanup / context-menu suppression from starting (Floorp issue #2586).
+    this.targetWindow.addEventListener("mouseup", this.handleMouseUp, true);
     this.targetWindow.addEventListener(
       "contextmenu",
       this.handleContextMenu,
@@ -82,7 +85,11 @@ export class MouseGestureController {
     if (this.eventListenersAttached) {
       this.targetWindow.removeEventListener("mousedown", this.handleMouseDown);
       this.targetWindow.removeEventListener("mousemove", this.handleMouseMove);
-      this.targetWindow.removeEventListener("mouseup", this.handleMouseUp);
+      this.targetWindow.removeEventListener(
+        "mouseup",
+        this.handleMouseUp,
+        true,
+      );
       this.targetWindow.removeEventListener(
         "contextmenu",
         this.handleContextMenu,
@@ -484,10 +491,12 @@ export class MouseGestureController {
       return;
     }
 
-    // After the first wheel action, consume all remaining wheel events in this
-    // cycle (including momentum/residual events after mouseup) without firing a
-    // second action.
-    if (this.isWheelGestureFired || this.isWheelGestureSuppressionActive) {
+    // Consume residual wheel events only while post-mouseup suppression is
+    // active (momentum / touchpad residual events). While the right button is
+    // still held, each wheel notch must keep switching tabs — the exact-once
+    // latch introduced in #2559 made only a single tab switch possible per
+    // right-button cycle (Floorp issue #2586).
+    if (this.isWheelGestureSuppressionActive) {
       event.preventDefault();
       event.stopPropagation();
       return;
@@ -517,8 +526,10 @@ export class MouseGestureController {
     }
 
     if (action) {
-      // Set the exact-once latch before executing the action so synchronous
-      // re-entrancy cannot execute another wheel action.
+      // Mark the cycle as a wheel gesture so the mouseup handler can start
+      // the context-menu suppression window. This does not latch: subsequent
+      // wheel events while the button is held execute further actions
+      // (multi-tab switching, Floorp issue #2586).
       this.isWheelGestureFired = true;
       this.isContextMenuPrevented = false;
       this.clearPreventionTimeout();

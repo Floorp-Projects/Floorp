@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "タブを再読み込み"
+  },
   "undo-closed-tab": {
     "label": "閉じたタブを元に戻す",
     "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "プライベートコンテナーで開く",
     "reopenInPrivateContainer": "プライベートコンテナーで再度開く",
     "name": "プライベートコンテナー"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "タブの URL を編集",
+    "inputLabel": "タブの URL",
+    "keyboardAction": "タブの URL を編集"
   },
   "mouseGesture": {
     "actions": {

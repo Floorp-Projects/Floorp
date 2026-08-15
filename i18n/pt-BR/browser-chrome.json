@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Recarregar aba"
+  },
   "undo-closed-tab": {
     "label": "Reabrir aba",
     "tooltiptext": "Reabra a última aba fechada {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "Abrir em um contêiner privado",
     "reopenInPrivateContainer": "Reabrir em um contêiner privado",
     "name": "Contêiner privado"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Editar URL da aba",
+    "inputLabel": "URL da aba",
+    "keyboardAction": "Editar URL da aba"
   },
   "mouseGesture": {
     "actions": {

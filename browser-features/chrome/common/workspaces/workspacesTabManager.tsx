@@ -687,6 +687,13 @@ export class WorkspacesTabManager {
     // previously selected workspace before switching. This ensures we can
     // restore focus when returning to that workspace instead of creating
     // a new tab each time.
+    //
+    // The marker must be unique per workspace: stale markers accumulate when
+    // the user switches tabs within the workspace without switching
+    // workspaces (the marker is only refreshed on workspace changes), which
+    // made the restored selection history-dependent and seemingly random
+    // (Floorp issue #2616). Remove stale markers before persisting the new
+    // one, mirroring the remove-then-set pattern in updateTabsVisibility().
     try {
       const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
       const currentlySelectedTab = globalThis.gBrowser
@@ -696,6 +703,9 @@ export class WorkspacesTabManager {
         this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
           prevWorkspaceId
       ) {
+        document
+          ?.querySelectorAll(`[${WORKSPACE_LAST_SHOW_ID}="${prevWorkspaceId}"]`)
+          .forEach((tab) => tab.removeAttribute(WORKSPACE_LAST_SHOW_ID));
         currentlySelectedTab.setAttribute(
           WORKSPACE_LAST_SHOW_ID,
           prevWorkspaceId,
@@ -722,9 +732,21 @@ export class WorkspacesTabManager {
         // already chose the correct tab for this workspace.
       } else {
         // Priority 2: Use the last-shown tab for this workspace.
-        const willChangeWorkspaceLastShowTab = document?.querySelector(
+        // The persist step above guarantees at most one marker per
+        // workspace, so this normally matches the user's last-selected tab.
+        // If duplicate markers from older versions remain, pick the last
+        // one in DOM order as a deterministic fallback rather than the
+        // first (which made the selection history-dependent — Floorp issue
+        // #2616). Note: DOM order reflects tab position, not write order;
+        // it is only a deterministic fallback for legacy duplicates.
+        const willChangeWorkspaceLastShowTabs = document?.querySelectorAll(
           `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
-        ) as XULElement;
+        );
+        const willChangeWorkspaceLastShowTab = willChangeWorkspaceLastShowTabs
+          ? (willChangeWorkspaceLastShowTabs[
+              willChangeWorkspaceLastShowTabs.length - 1
+            ] as XULElement | undefined)
+          : undefined;
 
         if (willChangeWorkspaceLastShowTab) {
           globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;

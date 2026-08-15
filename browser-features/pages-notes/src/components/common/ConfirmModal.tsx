@@ -59,6 +59,7 @@ export function ConfirmModal({
           <button
             type="button"
             className={`btn ${confirmVariant}`}
+            data-testid="notes-delete-confirm"
             onClick={handleConfirm}
           >
             {resolvedConfirmText}
