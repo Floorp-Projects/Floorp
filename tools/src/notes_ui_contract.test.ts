@@ -12,6 +12,7 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
     Deno.readTextFile(new URL("components/notes/NoteItem.tsx", root)),
     Deno.readTextFile(new URL("components/notes/NoteSearch.tsx", root)),
     Deno.readTextFile(new URL("components/editor/RichTextEditor.tsx", root)),
+    Deno.readTextFile(new URL("components/common/ConfirmModal.tsx", root)),
   ]);
   const combined = sources.join("\n");
   for (
@@ -22,6 +23,7 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
       "notes-body",
       "notes-row",
       "notes-delete",
+      "notes-delete-confirm",
     ]
   ) {
     assertStringIncludes(combined, `data-testid=\"${hook}\"`);
