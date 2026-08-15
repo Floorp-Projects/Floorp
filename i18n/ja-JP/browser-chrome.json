@@ -508,8 +508,8 @@
       "media": "メディア",
       "open-tabs": "タブを開く",
       "switcher": "スイッチャー",
-      "history-suggestions": "履歴",
-      "bookmark-suggestions": "ブックマーク"
+      "history-suggestions": "履歴（動的検索）",
+      "bookmark-suggestions": "ブックマーク（動的検索）"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語句をお試しください",
@@ -580,7 +580,14 @@
     "bookmarkSwitcher": "ブックマークを開く",
     "bookmarkSwitcherDescription": "ブックマークしたページを開きます",
     "bookmarkSwitcherStepLabel": "ブックマークを選択",
-    "bookmarkSwitcherStepPlaceholder": "ブックマークを検索または選択..."
+    "bookmarkSwitcherStepPlaceholder": "ブックマークを検索または選択...",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "「{{query}}」を検索",
+    "shortcuts": {
+      "reservedTabSearch": "開いているタブを検索",
+      "reservedBookmarkSearch": "ブックマークを検索",
+      "reservedHistorySearch": "履歴を検索"
+    }
   },
   "commandPaletteReadings": {}
 }

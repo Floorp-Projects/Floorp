@@ -15,6 +15,7 @@ export interface BookmarkItem {
 
 export interface PlacesBookmarks {
   search(query: string): Promise<BookmarkItem[]>;
+  getRecent(numberOfItems: number): Promise<BookmarkItem[]>;
   TYPE_BOOKMARK: number;
 }
 
@@ -123,4 +124,17 @@ export interface PaletteCommand {
   fn: (win: Window, args?: Record<string, string>) => void;
   /** If defined, the palette will prompt the user for each step before executing fn. */
   steps?: CommandStep[];
+}
+
+/** User-defined @prefix shortcut that aliases an existing palette command. */
+export interface CommandPaletteShortcut {
+  prefix: string;
+  commandId: string;
+}
+
+/** Command metadata cached for the settings page's command picker. */
+export interface SelectableCommand {
+  id: string;
+  label: string;
+  category: string;
 }

@@ -78,6 +78,9 @@ export class KeyboardShortcutController {
 
     const code = event.code;
 
+    // Synthetic events may lack a code; real key events always carry one.
+    if (!code) return;
+
     if (
       isBarePrintableKeyEvent(event) &&
       isKeyboardShortcutTypingContext(
@@ -103,7 +106,7 @@ export class KeyboardShortcutController {
       return;
     }
 
-    if (this.checkAndExecuteShortcut()) {
+    if (this.checkAndExecuteShortcut(code)) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -123,12 +126,12 @@ export class KeyboardShortcutController {
     };
   };
 
-  private checkAndExecuteShortcut(): boolean {
+  private checkAndExecuteShortcut(code: string): boolean {
     const config = getConfig();
     const shortcuts = config.shortcuts;
 
     for (const [_id, shortcut] of Object.entries(shortcuts)) {
-      if (this.isShortcutMatch(shortcut)) {
+      if (this.isShortcutMatch(shortcut, code)) {
         this.executeShortcut(shortcut);
         this.resetState();
         return true;
@@ -138,7 +141,7 @@ export class KeyboardShortcutController {
     return false;
   }
 
-  private isShortcutMatch(shortcut: ShortcutConfig): boolean {
+  private isShortcutMatch(shortcut: ShortcutConfig, currentCode: string): boolean {
     if (
       shortcut.modifiers.alt !== this.pressedModifiers.alt ||
       shortcut.modifiers.ctrl !== this.pressedModifiers.ctrl ||
@@ -155,7 +158,14 @@ export class KeyboardShortcutController {
       key = `Digit${key}`;
     }
 
-    return this.pressedKeys.has(key);
+    if (!key) return false;
+
+    // Missed keyups (or synthetic events dispatched without keyups) can leave
+    // stale codes in pressedKeys. A shortcut — bare or modifier — must fire
+    // only on its own keydown, never because a stale code happens to sit in
+    // the set. The keydown handler always passes the event's own code, so
+    // matching currentCode is sufficient and immune to stale state.
+    return currentCode === key;
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {
