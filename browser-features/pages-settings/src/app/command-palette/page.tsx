@@ -20,7 +20,7 @@ export default function Page() {
     defaultValues: COMMAND_PALETTE_DEFAULT_VALUES,
   });
 
-  const { control, setValue } = methods;
+  const { control, getValues, setValue } = methods;
   const watchAll = useWatch({ control });
 
   // Skip saves until the initial pref load has populated the form, and
@@ -30,9 +30,22 @@ export default function Page() {
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
+      // Capture the save-chain state and form values when the refresh starts
+      // so the fetched settings can be discarded if the user edits the form
+      // or a save is queued while the refresh is pending.
+      const saveChainAtStart = saveChainRef.current;
+      const formAtStart = getValues();
       try {
         const values = await getCommandPaletteSettings();
         if (!values) return;
+        if (
+          saveChainRef.current !== saveChainAtStart ||
+          JSON.stringify(getValues()) !== JSON.stringify(formAtStart)
+        ) {
+          // The form changed (or a save was queued) while the refresh was in
+          // flight — applying the fetched values would clobber the edit.
+          return;
+        }
 
         setValue("enabled", values.enabled, { shouldValidate: true });
         setValue("width", values.width, { shouldValidate: true });
@@ -74,7 +87,7 @@ export default function Page() {
     return () => {
       globalThis.removeEventListener("focus", fetchDefaultValues);
     };
-  }, [setValue]);
+  }, [getValues, setValue]);
 
   React.useEffect(() => {
     if (!initialLoadDoneRef.current) return;

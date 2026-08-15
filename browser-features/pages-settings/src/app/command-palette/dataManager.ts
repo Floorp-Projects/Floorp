@@ -335,9 +335,10 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
       width: clampInt(width ?? DEFAULT_WIDTH, WIDTH_BOUNDS, DEFAULT_WIDTH),
       maxHeight: clampInt(maxHeight ?? DEFAULT_MAX_HEIGHT, MAX_HEIGHT_BOUNDS, DEFAULT_MAX_HEIGHT),
       offsetTop: clampInt(offsetTop ?? DEFAULT_OFFSET_TOP, OFFSET_TOP_BOUNDS, DEFAULT_OFFSET_TOP),
-      horizontalAlign: (VALID_HORIZONTAL_ALIGNS as readonly string[]).includes(
-        horizontalAlign ?? DEFAULT_HORIZONTAL_ALIGN,
-      )
+      horizontalAlign: horizontalAlign !== null &&
+          (VALID_HORIZONTAL_ALIGNS as readonly string[]).includes(
+            horizontalAlign,
+          )
         ? (horizontalAlign as CommandPaletteFormData["horizontalAlign"])
         : DEFAULT_HORIZONTAL_ALIGN,
       fontSize: clampInt(fontSize ?? DEFAULT_FONT_SIZE, FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),

@@ -56,6 +56,13 @@ const MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestion
 const MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
 const SHORTCUTS_PREF = "floorp.commandPalette.shortcuts";
 const SELECTABLE_COMMANDS_PREF = "floorp.commandPalette.selectableCommands";
+const MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
+const OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
+const HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
+const FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
+const SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
+const SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
+const SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
 
 // `Services` is a Firefox global available in the browser test environment.
 // deno-lint-ignore no-explicit-any
@@ -189,7 +196,22 @@ function testGetReturnsDefaultsWhenPrefUnset(): Promise<void> {
   // value the moment it is cleared, and `getCommandPaletteSettings` fills in
   // defaults for any pref that resolves to null — so the observable contract
   // is a full defaulted settings object, never null.
+  // Clear every pref whose default this test asserts, so the result cannot
+  // depend on state left behind by previously-run tests.
   Services.prefs.clearUserPref(PREF);
+  Services.prefs.clearUserPref(WIDTH_PREF);
+  Services.prefs.clearUserPref(MAX_HEIGHT_PREF);
+  Services.prefs.clearUserPref(OFFSET_TOP_PREF);
+  Services.prefs.clearUserPref(HORIZONTAL_ALIGN_PREF);
+  Services.prefs.clearUserPref(FONT_SIZE_PREF);
+  Services.prefs.clearUserPref(SHOW_TABS_PREF);
+  Services.prefs.clearUserPref(SHOW_HISTORY_PREF);
+  Services.prefs.clearUserPref(SHOW_BOOKMARKS_PREF);
+  Services.prefs.clearUserPref(CATEGORY_PRIORITY_PREF);
+  Services.prefs.clearUserPref(MAX_RESULTS_PREF);
+  Services.prefs.clearUserPref(MAX_BOOKMARK_SUGGESTIONS_PREF);
+  Services.prefs.clearUserPref(MAX_HISTORY_SUGGESTIONS_PREF);
+  Services.prefs.clearUserPref(MAX_TABS_RESULTS_PREF);
   return getCommandPaletteSettings().then((result) => {
     assert(result !== null, "result should not be null when pref is unset");
     assertEquals(result!.enabled, true, "enabled should default to true");

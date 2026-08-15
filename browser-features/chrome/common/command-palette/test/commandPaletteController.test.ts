@@ -920,12 +920,12 @@ const tabSearchTests: TestCase[] = [
     name: "executing an @t result switches to that tab (restored afterwards)",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
-      setShortcuts([]);
       const gb = (window as unknown as { gBrowser: GBrowser }).gBrowser;
       if (!gb || gb.tabs.length < 2) return; // need a non-selected tab to switch to
       const originalTab = gb.selectedTab;
       const targetTab = gb.tabs.find((t) => t !== originalTab);
       assert(targetTab !== undefined, "a non-selected tab must exist");
+      setShortcuts([]);
       try {
         const ctrl = createController();
         // Trailing space commits "@t " to tab-search mode; bare "@t" would only
@@ -1275,9 +1275,9 @@ const reservedListTests: TestCase[] = [
     name: "executing __reserved:t transitions to @t tab mode (palette stays open)",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
-      setShortcuts([]);
       const expectedTabs = getTabCommands(window);
       if (expectedTabs.length === 0) return; // nothing to list — trivially passes
+      setShortcuts([]);
       try {
         const ctrl = createController();
         ctrl.updateSearch("@");
@@ -1349,7 +1349,6 @@ const reservedListTests: TestCase[] = [
         return; // floorp-search-web not registered in this environment — skip
       }
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
-      setShortcuts([]);
       const doc = window.document;
       if (!doc) {
         return; // no document in this environment — skip
@@ -1366,6 +1365,7 @@ const reservedListTests: TestCase[] = [
         return; // no insertion point in this environment — skip
       }
       container.appendChild(input);
+      setShortcuts([]);
       try {
         const ctrl = createController();
         ctrl.updateSearch("@");

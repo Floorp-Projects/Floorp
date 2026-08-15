@@ -161,17 +161,11 @@ export class KeyboardShortcutController {
     if (!key) return false;
 
     // Missed keyups (or synthetic events dispatched without keyups) can leave
-    // stale codes in pressedKeys. A bare shortcut must fire only on its own
-    // keydown, never because a stale code happens to sit in the set.
-    const bareShortcut =
-      !shortcut.modifiers.alt &&
-      !shortcut.modifiers.ctrl &&
-      !shortcut.modifiers.meta &&
-      !shortcut.modifiers.shift;
-    if (bareShortcut) {
-      return currentCode === key;
-    }
-    return this.pressedKeys.has(key);
+    // stale codes in pressedKeys. A shortcut — bare or modifier — must fire
+    // only on its own keydown, never because a stale code happens to sit in
+    // the set. The keydown handler always passes the event's own code, so
+    // matching currentCode is sufficient and immune to stale state.
+    return currentCode === key;
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {
