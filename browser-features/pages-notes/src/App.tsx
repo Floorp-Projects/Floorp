@@ -420,6 +420,7 @@ function App() {
             ref={createButtonRef}
             type="button"
             className="btn btn-xs btn-primary"
+            data-testid="notes-add"
             onClick={createNewNote}
           >
             {t("notes.new")}
@@ -490,6 +491,7 @@ function App() {
                           ref={titleInputRef}
                           type="text"
                           className="input input-sm input-bordered w-full mb-1.5 focus:outline-none focus:border-primary/30"
+                          data-testid="notes-title"
                           placeholder={t("notes.titlePlaceholder")}
                           aria-label={t("notes.titlePlaceholder")}
                           value={title}
