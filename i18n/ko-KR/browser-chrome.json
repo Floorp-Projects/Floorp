@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "탭 새로 고침"
+  },
   "undo-closed-tab": {
     "label": "닫은 탭 되돌리기",
     "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "사생활 보호 컨테이너으로 열기",
     "reopenInPrivateContainer": "비공개 컨테이너 다시 열기",
     "name": "사생활 보호 컨테이너"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "탭 URL 편집",
+    "inputLabel": "탭 URL",
+    "keyboardAction": "탭 URL 편집"
   },
   "mouseGesture": {
     "actions": {

@@ -300,7 +300,13 @@
         "openSourceLicense": "Το {{productName}} είναι λογισμικό ανοιχτού κώδικα που διατίθεται υπό την Mozilla Public License 2.0, που καθίσταται δυνατή από το έργο ανοικτού κώδικα Firefox και άλλο λογισμικό ανοιχτού κώδικα.",
         "openSourceLicenseNotice": "Άδεια Ανοικτού Κώδικα",
         "versionInfo": "Έκδοση",
-        "license": "Άδεια"
+        "license": "Άδεια",
+        "noraneko": {
+            "logoAlt": "Browser Logo",
+            "description": "Noraneko is a browser as testhead of Floorp 12. Floorp is based on Firefox & Noraneko.",
+            "communityCredit": "Made by Noraneko Community with ❤",
+            "repositoryLabel": "GitHub Repository: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Ενημερώσεις & Πειράματα",
@@ -670,6 +676,9 @@
         "action": "Δράση",
         "shortcut": "Συντόμευση",
         "actions": "Δράσεις",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Δεν ορίστηκε",
         "add": "Προσθήκη",
         "edit": "Επεξεργασία",

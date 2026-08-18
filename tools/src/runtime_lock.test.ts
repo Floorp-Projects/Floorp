@@ -31,6 +31,37 @@ function expectInvalid(
   );
 }
 
+Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "services/sync/tests/unit/test_floorp_notes_prefs.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "services/sync/tests/unit/xpcshell-floorp-notes.toml";
+    },
+    "browser-chrome manifest",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "browser/base/content/test/caps/test_not_browser_chrome.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "browser/base/content/test/caps/xpcshell.toml";
+    },
+    "browser-chrome manifest",
+  );
+});
+
 function artifact(
   lock: RuntimeLock,
   platform: RuntimeArtifact["platform"],
@@ -65,11 +96,11 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.source.ref, "daily-998");
   assertEquals(
     canonicalLock.source.commit,
-    "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+    "3bf9399564e59be32f92dcc1b044094881b4fb6a",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "e555a371e1a24f18c8085058461f92c06e0b997d",
+    "533f9fdca9bdccb7f3d2a13842be7e2375160ae5",
   );
   assertEquals(canonicalLock.source.release, {
     id: 359773143,

@@ -703,6 +703,14 @@ function sampleInventory(): DocsInventory {
     features: {
       chromeCommon: [
         {
+          name: "tab-refresh",
+          source: {
+            path: "browser-features/chrome/common/tab-refresh/index.ts",
+          },
+          summary: "Adds an opt-in hover-to-reload control for tabs.",
+          entrypoints: ["default class TabRefresh", "init"],
+        },
+        {
           name: "workspaces",
           source: {
             path: "browser-features/chrome/common/workspaces/index.ts",
@@ -1305,6 +1313,12 @@ Deno.test("writeGeneratedDocs generates nested feature and actor catalogs from i
 
     const tabsCatalog = await Deno.readTextFile(
       `${dir}/development/features/browser-features/common/tabs-and-workspaces.mdx`,
+    );
+    assert(tabsCatalog.includes("tab-refresh"));
+    assert(
+      tabsCatalog.includes(
+        "browser-features/chrome/common/tab-refresh/index.ts",
+      ),
     );
     assert(tabsCatalog.includes("workspaces"));
     assert(

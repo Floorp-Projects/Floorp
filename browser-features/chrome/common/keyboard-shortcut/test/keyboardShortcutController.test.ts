@@ -79,6 +79,8 @@ function dispatchKeyEvent(
     ctrlKey?: boolean;
     metaKey?: boolean;
     shiftKey?: boolean;
+    repeat?: boolean;
+    altGraph?: boolean;
   },
 ): KeyboardEvent {
   const event = new KeyboardEvent(type, {
@@ -88,9 +90,16 @@ function dispatchKeyEvent(
     ctrlKey: options.ctrlKey ?? false,
     metaKey: options.metaKey ?? false,
     shiftKey: options.shiftKey ?? false,
+    repeat: options.repeat ?? false,
     bubbles: true,
     cancelable: true,
   });
+  if (options.altGraph) {
+    Object.defineProperty(event, "getModifierState", {
+      configurable: true,
+      value: (modifier: string) => modifier === "AltGraph",
+    });
+  }
   target.dispatchEvent(event);
   return event;
 }
@@ -1369,6 +1378,84 @@ function testCapturePhaseBlocksBubbleListener(): void {
   });
 }
 
+function testPhysicalCodeMatchesNonLatinKey(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-physical-code": {
+          key: "KeyZ",
+          modifiers: { alt: true, ctrl: true, meta: false, shift: false },
+          action: "test-physical-code",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      key: "я",
+      code: "KeyZ",
+      ctrlKey: true,
+      altKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "matching uses physical KeyboardEvent.code instead of the layout key",
+    );
+    controller.destroy();
+  });
+}
+
+function testRepeatIsIgnored(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+      repeat: true,
+    });
+
+    assertEquals(event.defaultPrevented, false, "repeat keydown is ignored");
+    controller.destroy();
+  });
+}
+
+function testAltGraphIsNotCtrlAlt(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-alt-z": {
+          key: "KeyZ",
+          modifiers: { alt: true, ctrl: true, meta: false, shift: false },
+          action: "test-ctrl-alt-z",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyZ",
+      ctrlKey: true,
+      altKey: true,
+      altGraph: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "AltGraph must not execute a Ctrl+Alt shortcut",
+    );
+    controller.destroy();
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -1564,6 +1651,12 @@ export async function runAllTests(): Promise<void> {
       name: "capture phase blocks bubble listener",
       fn: testCapturePhaseBlocksBubbleListener,
     },
+    {
+      name: "physical code matches non-Latin key",
+      fn: testPhysicalCodeMatchesNonLatinKey,
+    },
+    { name: "repeat keydown is ignored", fn: testRepeatIsIgnored },
+    { name: "AltGraph is not Ctrl+Alt", fn: testAltGraphIsNotCtrlAlt },
   ];
 
   await runTests("keyboardShortcutController.test.ts", tests);

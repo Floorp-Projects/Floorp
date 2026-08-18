@@ -14,8 +14,10 @@ export function disableCspInDevPlugin(isDev: boolean) {
     enforce: "post",
     transformIndexHtml(html: string, ctx) {
       // Replace restrictive CSP with a permissive one for dev mode
+      // (tolerates `<meta http-equiv="Content-Security-Policy" content="...">`,
+      // the self-closing `...\" />` form, and attributes split across lines)
       let transformed = html.replace(
-        /<meta http-equiv="Content-Security-Policy" content="[^"]*">/i,
+        /<meta\s+http-equiv="Content-Security-Policy"\s+content="[^"]*"\s*\/?>/i,
         "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;\">",
       );
 
