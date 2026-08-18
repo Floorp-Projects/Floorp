@@ -1,4 +1,4 @@
-import { rpc } from "@/lib/rpc/rpc.ts";
+import { rpc } from "../../lib/rpc/rpc.ts";
 
 export const OPEN_NEW_WINDOW_PREF = "browser.link.open_newwindow";
 export const TASKBAR_PREVIEWS_PREF = "browser.taskbar.previews.enable";
