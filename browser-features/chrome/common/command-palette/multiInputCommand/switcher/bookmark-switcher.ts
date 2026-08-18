@@ -2,16 +2,20 @@
 
 import i18next from "i18next";
 import type {
-  PaletteCommand,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "../../types.ts";
 import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
-import Workspaces from "#features-chrome/common/workspaces";
 import { loadContainerChoices } from "#features-chrome/common/command-palette/utils/containerChoices.ts";
+import {
+  createTriggeringPrincipal,
+  parseUserContextChoice,
+  resolvePaletteTarget,
+} from "#features-chrome/common/command-palette/utils/targetContext.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
@@ -86,19 +90,19 @@ export async function loadBookmarks(): Promise<
       hasMore,
       loadMore: hasMore
         ? (): Promise<{
-            choices: CommandStepChoice[];
-            hasMore: boolean;
-          }> => {
-            const nextBatch = snapshot.slice(
-              offset,
-              offset + PAGE_SIZE,
-            );
-            offset += nextBatch.length;
-            return Promise.resolve({
-              choices: nextBatch,
-              hasMore: offset < snapshot.length,
-            });
-          }
+          choices: CommandStepChoice[];
+          hasMore: boolean;
+        }> => {
+          const nextBatch = snapshot.slice(
+            offset,
+            offset + PAGE_SIZE,
+          );
+          offset += nextBatch.length;
+          return Promise.resolve({
+            choices: nextBatch,
+            hasMore: offset < snapshot.length,
+          });
+        }
         : undefined,
     };
   } catch (err) {
@@ -124,8 +128,14 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     "favorite",
     "favourite",
     ...getJapaneseReadings("floorp-bookmark-switcher"),
-    ...getEnglishStepCommandKeywords("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.bookmarkSwitcher",
+      "commandPalette.bookmarkSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.bookmarkSwitcher",
+      "commandPalette.bookmarkSwitcherDescription",
+    ),
   ],
   steps: [
     {
@@ -143,23 +153,32 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
       label: i18next.t("commandPalette.bookmarkSwitcherWhereLabel", {
         defaultValue: "Where to open",
       }),
-      placeholder: i18next.t("commandPalette.bookmarkSwitcherWherePlaceholder", {
-        defaultValue: "Select where to open...",
-      }),
+      placeholder: i18next.t(
+        "commandPalette.bookmarkSwitcherWherePlaceholder",
+        {
+          defaultValue: "Select where to open...",
+        },
+      ),
       choices: [
         {
           label: i18next.t("commandPalette.bookmarkSwitcherWhereNewTab", {
             defaultValue: "New Tab",
           }),
           value: "new-tab",
-          description: i18next.t("commandPalette.bookmarkSwitcherWhereNewTabDesc", {
-            defaultValue: "Open in a new foreground tab",
-          }),
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereNewTabDesc",
+            {
+              defaultValue: "Open in a new foreground tab",
+            },
+          ),
         },
         {
-          label: i18next.t("commandPalette.bookmarkSwitcherWhereBackgroundTab", {
-            defaultValue: "Background Tab",
-          }),
+          label: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereBackgroundTab",
+            {
+              defaultValue: "Background Tab",
+            },
+          ),
           value: "background-tab",
           description: i18next.t(
             "commandPalette.bookmarkSwitcherWhereBackgroundTabDesc",
@@ -173,9 +192,12 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
             defaultValue: "Current Tab",
           }),
           value: "current-tab",
-          description: i18next.t("commandPalette.bookmarkSwitcherWhereCurrentTabDesc", {
-            defaultValue: "Navigate the current tab",
-          }),
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereCurrentTabDesc",
+            {
+              defaultValue: "Navigate the current tab",
+            },
+          ),
         },
       ],
     },
@@ -184,74 +206,79 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
       label: i18next.t("commandPalette.bookmarkSwitcherContainerStepLabel", {
         defaultValue: "Open in container",
       }),
-      placeholder: i18next.t("commandPalette.bookmarkSwitcherContainerStepPlaceholder", {
-        defaultValue: "Choose a container...",
-      }),
+      placeholder: i18next.t(
+        "commandPalette.bookmarkSwitcherContainerStepPlaceholder",
+        {
+          defaultValue: "Choose a container...",
+        },
+      ),
       choicesLoader: loadContainerChoices,
+      shouldInclude: (inputs) => inputs.where !== "current-tab",
     },
   ],
-  fn: (_win: Window, args?: Record<string, string>) => {
+  fn: (targetWindow: Window, args?: Record<string, string>) => {
     const url = args?.bookmark;
     if (!url) return;
 
     const where = args?.where ?? "new-tab";
+    if (where === "current-tab" && args?.container !== undefined) {
+      console.error(
+        "[BookmarkSwitcher] Rejected a container override for the current tab",
+      );
+      return;
+    }
 
     try {
-      const sourcePrincipal = globalThis.gBrowser?.selectedBrowser
-        ?.contentPrincipal as nsIPrincipal | undefined;
-      const containerChoice = args?.container ?? "workspace";
-      let userContextId: number;
-      if (containerChoice === "workspace") {
-        userContextId = Workspaces.getCtx()
-          ?.getCurrentWorkspaceUserContextId() ?? 0;
-      } else {
-        const parsed = Number.parseInt(containerChoice, 10);
-        userContextId = Number.isNaN(parsed) ? 0 : parsed;
+      const target = resolvePaletteTarget(targetWindow);
+      if (!target) {
+        console.error("[BookmarkSwitcher] Target is unavailable");
+        return;
       }
 
-      // For tabs opened in a specific container, derive a triggering principal
-      // whose origin attributes match the target container (mirrors open-url.ts
-      // and reopen-in-container.ts). current-tab keeps the source principal
-      // since its container does not change.
-      let principal = sourcePrincipal;
-      if (where !== "current-tab") {
-        const ssm = Services.scriptSecurityManager;
-        if (
-          !sourcePrincipal ||
-          sourcePrincipal.isNullPrincipal ||
-          sourcePrincipal.isSystemPrincipal
-        ) {
-          principal = ssm.createNullPrincipal({ userContextId });
-        } else if (sourcePrincipal.isContentPrincipal) {
-          principal = ssm.principalWithOA(sourcePrincipal, { userContextId });
-        }
+      const containerChoice = args?.container ?? "workspace";
+      const contextChoice = parseUserContextChoice(
+        containerChoice,
+        target.workspaces?.getCurrentWorkspaceUserContextId() ?? 0,
+      );
+      if (!contextChoice) {
+        console.error("[BookmarkSwitcher] Container is invalid");
+        return;
       }
+
+      const { explicit, userContextId } = contextChoice;
+      const principal = where === "current-tab"
+        ? target.principal
+        : createTriggeringPrincipal(target, userContextId);
+      const addTab = (inBackground: boolean): XULElement => {
+        const createTab = () =>
+          target.gBrowser.addTab(url, {
+            triggeringPrincipal: principal,
+            inBackground,
+            userContextId,
+          });
+        return explicit && target.workspaces
+          ? target.workspaces.withExplicitTabUserContext(
+            userContextId,
+            createTab,
+          )
+          : createTab();
+      };
 
       switch (where) {
         case "current-tab":
-          globalThis.gBrowser?.loadURI?.(Services.io.newURI(url), {
+          target.browser.loadURI?.(Services.io.newURI(url), {
             triggeringPrincipal: principal,
           });
           break;
 
         case "background-tab":
-          globalThis.gBrowser?.addTab(url, {
-            triggeringPrincipal: principal,
-            inBackground: true,
-            userContextId: userContextId > 0 ? userContextId : undefined,
-          });
+          addTab(true);
           break;
 
         case "new-tab":
         default: {
-          const tab = globalThis.gBrowser?.addTab(url, {
-            triggeringPrincipal: principal,
-            inBackground: false,
-            userContextId: userContextId > 0 ? userContextId : undefined,
-          });
-          if (globalThis.gBrowser && tab) {
-            globalThis.gBrowser.selectedTab = tab;
-          }
+          const tab = addTab(false);
+          target.gBrowser.selectedTab = tab;
           break;
         }
       }

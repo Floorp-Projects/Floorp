@@ -6,7 +6,11 @@ import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
 import { loadContainerChoices } from "#features-chrome/common/command-palette/utils/containerChoices.ts";
-import Workspaces from "#features-chrome/common/workspaces";
+import {
+  createTriggeringPrincipal,
+  parseUserContextChoice,
+  resolvePaletteTarget,
+} from "#features-chrome/common/command-palette/utils/targetContext.ts";
 
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
@@ -22,8 +26,14 @@ export const openUrlCommand: PaletteCommand = {
     "open page",
     "url",
     ...getJapaneseReadings("floorp-open-url"),
-    ...getEnglishStepCommandKeywords("commandPalette.openUrl", "commandPalette.openUrlDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.openUrl", "commandPalette.openUrlDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    ),
   ],
   steps: [
     {
@@ -42,12 +52,11 @@ export const openUrlCommand: PaletteCommand = {
           });
         }
         // Accept scheme-prefixed URLs, domain-like patterns, and localhost
-        const looksValid =
-          /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) ||      // has scheme
-          /^[^\s]+\.[a-z]{2,}/i.test(trimmed) ||                  // domain-like
-          /^localhost(:\d+)?$/i.test(trimmed) ||                   // localhost
-          /^about:/.test(trimmed) ||                               // about: pages
-          /^floorp:\/\//.test(trimmed);                            // floorp:// pages
+        const looksValid = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) || // has scheme
+          /^[^\s]+\.[a-z]{2,}/i.test(trimmed) || // domain-like
+          /^localhost(:\d+)?$/i.test(trimmed) || // localhost
+          /^about:/.test(trimmed) || // about: pages
+          /^floorp:\/\//.test(trimmed); // floorp:// pages
         if (!looksValid) {
           return i18next.t("commandPalette.openUrlValidationError", {
             defaultValue: "Please enter a valid URL",
@@ -106,70 +115,73 @@ export const openUrlCommand: PaletteCommand = {
         defaultValue: "Choose a container...",
       }),
       choicesLoader: loadContainerChoices,
+      shouldInclude: (inputs) => inputs.where !== "current-tab",
     },
   ],
-  fn: (_win: Window, args?: Record<string, string>) => {
+  fn: (targetWindow: Window, args?: Record<string, string>) => {
     const url = args?.url?.trim();
     if (!url) return;
 
     const where = args?.where ?? "new-tab";
+    if (where === "current-tab" && args?.container !== undefined) {
+      console.error(
+        "[command-palette] Open URL rejected a container override for the current tab",
+      );
+      return;
+    }
     const navUrl = url.includes("://") ? url : `https://${url}`;
 
     try {
-      const sourcePrincipal = globalThis.gBrowser?.selectedBrowser
-        ?.contentPrincipal as nsIPrincipal | undefined;
-      const containerChoice = args?.container ?? "workspace";
-      let userContextId: number;
-      if (containerChoice === "workspace") {
-        userContextId = Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0;
-      } else {
-        const parsed = Number.parseInt(containerChoice, 10);
-        userContextId = Number.isNaN(parsed) ? 0 : parsed;
+      const target = resolvePaletteTarget(targetWindow);
+      if (!target) {
+        console.error("[command-palette] Open URL target is unavailable");
+        return;
       }
 
-      // For tabs opened in a specific container, derive a triggering principal
-      // whose origin attributes match the target container (mirrors
-      // reopen-in-container.ts). current-tab keeps the source principal since
-      // its container does not change.
-      let principal = sourcePrincipal;
-      if (where !== "current-tab") {
-        const ssm = Services.scriptSecurityManager;
-        if (
-          !sourcePrincipal ||
-          sourcePrincipal.isNullPrincipal ||
-          sourcePrincipal.isSystemPrincipal
-        ) {
-          principal = ssm.createNullPrincipal({ userContextId });
-        } else if (sourcePrincipal.isContentPrincipal) {
-          principal = ssm.principalWithOA(sourcePrincipal, { userContextId });
-        }
+      const containerChoice = args?.container ?? "workspace";
+      const contextChoice = parseUserContextChoice(
+        containerChoice,
+        target.workspaces?.getCurrentWorkspaceUserContextId() ?? 0,
+      );
+      if (!contextChoice) {
+        console.error("[command-palette] Open URL container is invalid");
+        return;
       }
+
+      const { explicit, userContextId } = contextChoice;
+      const principal = where === "current-tab"
+        ? target.principal
+        : createTriggeringPrincipal(target, userContextId);
+      const addTab = (inBackground: boolean): XULElement => {
+        const createTab = () =>
+          target.gBrowser.addTab(navUrl, {
+            triggeringPrincipal: principal,
+            inBackground,
+            userContextId,
+          });
+        return explicit && target.workspaces
+          ? target.workspaces.withExplicitTabUserContext(
+            userContextId,
+            createTab,
+          )
+          : createTab();
+      };
 
       switch (where) {
         case "current-tab":
-          globalThis.gBrowser?.loadURI?.(Services.io.newURI(navUrl), {
+          target.browser.loadURI?.(Services.io.newURI(navUrl), {
             triggeringPrincipal: principal,
           });
           break;
 
         case "background-tab":
-          globalThis.gBrowser?.addTab(navUrl, {
-            triggeringPrincipal: principal,
-            inBackground: true,
-            userContextId: userContextId > 0 ? userContextId : undefined,
-          });
+          addTab(true);
           break;
 
         case "new-tab":
         default: {
-          const tab = globalThis.gBrowser?.addTab(navUrl, {
-            triggeringPrincipal: principal,
-            inBackground: false,
-            userContextId: userContextId > 0 ? userContextId : undefined,
-          });
-          if (globalThis.gBrowser && tab) {
-            globalThis.gBrowser.selectedTab = tab;
-          }
+          const tab = addTab(false);
+          target.gBrowser.selectedTab = tab;
           break;
         }
       }

@@ -93,8 +93,8 @@ const rawTests: TestCase[] = [
       const result = await loadHistory();
 
       // Should be a StepChoicesResult object (has "choices" property)
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       assert(isResultObject, "result should be a StepChoicesResult object");
 
       if (isResultObject) {
@@ -144,8 +144,8 @@ const rawTests: TestCase[] = [
     name: "loadHistory choices have valid URLs",
     async fn() {
       const result = await loadHistory();
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       if (!isResultObject) return;
 
       const stepResult = result as {
@@ -179,8 +179,8 @@ const rawTests: TestCase[] = [
     name: "loadMore returns additional results when hasMore is true",
     async fn() {
       const result = await loadHistory();
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       if (!isResultObject) return;
 
       const stepResult = result as {
@@ -229,6 +229,6 @@ const rawTests: TestCase[] = [
   },
 ];
 
-export function runAllTests() {
-  runTests("historySwitcher.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("historySwitcher.test.ts", rawTests);
 }
