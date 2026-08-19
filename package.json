@@ -1,6 +1,6 @@
 {
   "name": "noraneko-bin",
-  "version": "12.16.4",
+  "version": "12.17.0",
   "description": "",
   "main": "index.js",
   "type": "module",
