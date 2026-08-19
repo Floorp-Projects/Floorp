@@ -12,6 +12,7 @@ import { Tab } from "@/app/design/components/Tab.tsx";
 import { UICustomization } from "@/app/design/components/UICustomization.tsx";
 import { TabSleepExclusion } from "@/app/design/components/TabSleepExclusion.tsx";
 import { TabWindowBehavior } from "@/app/design/components/TabWindowBehavior.tsx";
+import { TabStacks } from "@/app/design/components/TabStacks.tsx";
 import type { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
@@ -127,6 +128,7 @@ export default function Page() {
           <Tabbar />
           <Tab />
           <TabWindowBehavior />
+          <TabStacks />
           <TabSleepExclusion />
           <UICustomization />
         </form>
