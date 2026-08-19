@@ -2,7 +2,7 @@ import { rpc } from "@/lib/rpc/rpc.ts";
 import type { DesignFormData } from "@/types/pref.ts";
 
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
-const DEFAULT_SPLIT_VIEW_DND_CREATE = true;
+const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
 
 // Lepton Settings Interface
 export interface LeptonFormData {
@@ -269,8 +269,8 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,
-    bookmarkBarFocusExpand:
-      data.uiCustomization.bookmarkBar?.focusExpand ?? false,
+    bookmarkBarFocusExpand: data.uiCustomization.bookmarkBar?.focusExpand ??
+      false,
     bookmarkBarPosition: data.uiCustomization.bookmarkBar?.position ?? "top",
     disableQRCodeButton: data.uiCustomization.qrCode?.disableButton ?? false,
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
@@ -291,7 +291,9 @@ const DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS: TabSleepExclusionSettings = {
   patterns: [],
 };
 
-export async function getTabSleepExclusionSettings(): Promise<TabSleepExclusionSettings> {
+export async function getTabSleepExclusionSettings(): Promise<
+  TabSleepExclusionSettings
+> {
   try {
     const result = await rpc.getStringPref(TAB_SLEEP_EXCLUSION_PREF);
     if (!result) {
