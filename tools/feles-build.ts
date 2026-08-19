@@ -53,7 +53,9 @@ async function runDev(): Promise<void> {
   logger.info("Starting development environment...");
 
   // Initial setup
-  await Initializer.run();
+  // The canonical lock points at the PGO/Release channel. Dev requires the
+  // separate Debug Runtime published to the Runtime FTP channel.
+  await Initializer.run({ distribution: "debug" });
   Patcher.run("apply");
   Pref.run();
   Symlinker.run();
