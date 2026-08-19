@@ -33,8 +33,6 @@
  * collapsed to one color. Every rule below now either:
  *   - sets a value ONLY when none is provided (a guarded alias, no
  *     `!important`), or
- *   - puts an LWT fallback in a low-priority cascade layer so a theme-provided
- *     value wins, or
  *   - narrows the selector to the no-theme case (`:root:not([lwtheme])`)
  *     so a loaded LWT is never touched.
  *
@@ -82,23 +80,13 @@ export const GECKO_152_COLOR_FIX_CSS = `
     --in-content-page-background: rgb(31, 30, 38);
   }
 }
-/* LWT in-content surface — use a safe, content-appropriate token.
- * The previous revision read --lwt-accent-color directly, which is the
- * *frame* color (XP Modern: rgb(9,96,224) blue). Painting that onto
- * in-content surfaces made Customize Floorp solid blue (#2503) and, when the
- * accent was missing/transparent, left dialogs black (#2403/#2502).
- * Prefer a content canvas / toolbar value instead. The fallback is in a
- * low-priority layer so a theme rule that legitimately sets its own
- * --in-content-page-background still wins, even though this sheet is loaded
- * after the theme's sheets. */
-@layer floorp-compat {
-  :root:is(:-moz-lwtheme, [lwtheme]),
-  :root:is(:-moz-lwtheme, [lwtheme]) dialog {
-    --in-content-page-background: var(
-      --background-color-canvas,
-      var(--toolbar-background-color, Canvas)
-    );
-  }
+/* An LWT-provided accent wins for in-content surfaces — but ONLY when the
+ * theme actually sets one. var(..., <keep>) via @property is not available
+ * cross-version, so guard by scoping to the LWT selector and reading the
+ * accent directly. No !important: this is equal-specificity source-order. */
+:root:is(:-moz-lwtheme, [lwtheme]),
+:root:is(:-moz-lwtheme, [lwtheme]) dialog {
+  --in-content-page-background: var(--lwt-accent-color);
 }
 
 /*= Panel background default (the "transparent panel" symptom) ==============
@@ -332,7 +320,8 @@ export const FLOORP_ICON_PATCHES = `
  * Combined Lepton-family stylesheet: color fix + Lepton-specific compat +
  * Floorp icon patches. Injected after Lepton's own sheets.
  */
-export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS +
+export const LEPTON_COMPAT_CSS =
+  GECKO_152_COLOR_FIX_CSS +
   "\n" +
   LEPTON_COMPAT_152_CSS +
   "\n" +
