@@ -353,3 +353,54 @@ add_task(function directTabbrowserCallerReceivesASanitizedPlaceholder() {
     }
   }
 });
+
+add_task(async function reusedSelectedTabClearsAbsentFloorpMetadata() {
+  Services.prefs.setStringPref(WORKSPACE_STORE_PREF, "{not-json");
+  const selectedTab = /** @type {SessionRestoreTab} */ (
+    /** @type {unknown} */ (
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank")
+    )
+  );
+  selectedTab.setAttribute("floorpWorkspaceId", "stale-workspace");
+  selectedTab.setAttribute(
+    "floorpWorkspaceLastShowId",
+    "stale-last-show-workspace",
+  );
+  selectedTab.setAttribute("floorpSSB", "stale-ssb");
+
+  const sessionRestoreBrowser = /** @type {SessionRestoreGBrowser} */ (
+    /** @type {unknown} */ (gBrowser)
+  );
+  const tabs = sessionRestoreBrowser.createTabsForSessionRestore(
+    true,
+    1,
+    [
+      makeTabState("about:blank", {
+        userContextId: selectedTab.userContextId,
+      }),
+    ],
+    [],
+    [],
+  );
+
+  try {
+    is(tabs[0], selectedTab, "the existing selected tab should be reused");
+    for (
+      const attribute of [
+        "floorpWorkspaceId",
+        "floorpWorkspaceLastShowId",
+        "floorpSSB",
+      ]
+    ) {
+      ok(
+        !selectedTab.hasAttribute(attribute),
+        `${attribute} should be removed when it is absent from restored state`,
+      );
+    }
+  } finally {
+    selectedTab.removeAttribute("floorpWorkspaceId");
+    selectedTab.removeAttribute("floorpWorkspaceLastShowId");
+    selectedTab.removeAttribute("floorpSSB");
+    BrowserTestUtils.removeTab(selectedTab);
+  }
+});

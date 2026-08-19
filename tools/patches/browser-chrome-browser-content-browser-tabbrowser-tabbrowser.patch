@@ -46,7 +46,7 @@ index c42b1a1..38630a5 100644
          let userContextId = tabData.userContextId;
          let select = i == selectTab - 1;
          let tab;
-@@ -4502,6 +4539,30 @@
+@@ -4502,6 +4539,36 @@
          ) {
            tabWasReused = true;
            tab = this.selectedTab;
@@ -57,6 +57,8 @@ index c42b1a1..38630a5 100644
 +           */
 +          if (floorpWorkspaceId) {
 +            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++          } else {
++            tab.removeAttribute("floorpWorkspaceId");
 +          }
 +
 +          if (floorpLastShowWorkspaceId) {
@@ -64,10 +66,14 @@ index c42b1a1..38630a5 100644
 +              "floorpWorkspaceLastShowId",
 +              floorpLastShowWorkspaceId
 +            );
++          } else {
++            tab.removeAttribute("floorpWorkspaceLastShowId");
 +          }
 +
 +          if (floorpSSB) {
 +            tab.setAttribute("floorpSSB", floorpSSB);
++          } else {
++            tab.removeAttribute("floorpSSB");
 +          }
 +          /**
 +           * * NORANEKO PATCH - 0.1.19
@@ -77,7 +83,7 @@ index c42b1a1..38630a5 100644
            if (!tabData.pinned) {
              this.unpinTab(tab);
            } else {
-@@ -4547,6 +4608,31 @@
+@@ -4547,6 +4614,37 @@
              preferredRemoteType,
            });
  
@@ -88,6 +94,8 @@ index c42b1a1..38630a5 100644
 +           */
 +          if (floorpWorkspaceId) {
 +            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++          } else {
++            tab.removeAttribute("floorpWorkspaceId");
 +          }
 +
 +          if (floorpLastShowWorkspaceId) {
@@ -95,10 +103,14 @@ index c42b1a1..38630a5 100644
 +              "floorpWorkspaceLastShowId",
 +              floorpLastShowWorkspaceId
 +            );
++          } else {
++            tab.removeAttribute("floorpWorkspaceLastShowId");
 +          }
 +
 +          if (floorpSSB) {
 +            tab.setAttribute("floorpSSB", floorpSSB);
++          } else {
++            tab.removeAttribute("floorpSSB");
 +          }
 +          /**
 +           * * NORANEKO PATCH - 0.1.19
