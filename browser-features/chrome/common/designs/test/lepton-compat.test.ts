@@ -464,7 +464,7 @@ function testLwtDialogFallbackDoesNotOverrideThemeValue(): void {
  * whose accent is the XP Modern blue (rgb(9,96,224)), in-content surfaces
  * must NOT paint that frame accent. The compat sheet's `@layer floorp-compat`
  * fallback (canvas/toolbar token) must win, and a theme that provides its own
- * `--in-content-page-background` must keep its value.
+ * `--in-content-page-background` on the root must keep its value on dialogs.
  */
 function testLwtFallbackInRealBrowser(): void {
   const root = document.documentElement;
@@ -475,13 +475,16 @@ function testLwtFallbackInRealBrowser(): void {
     "--in-content-page-background",
     "rgb(200, 100, 50)",
   );
+  const probeWithRootThemeValue = document.createElement("dialog");
 
   root.setAttribute("lwtheme", "true");
   root.style.setProperty("--lwt-accent-color", "rgb(9, 96, 224)");
+  root.style.setProperty("--in-content-page-background", "rgb(200, 100, 50)");
   styleEl.textContent = GECKO_152_COLOR_FIX_CSS;
   document.head.appendChild(styleEl);
   root.appendChild(probe);
   root.appendChild(probeWithThemeValue);
+  root.appendChild(probeWithRootThemeValue);
 
   try {
     const fallbackStyle = globalThis.getComputedStyle(probe);
@@ -507,11 +510,27 @@ function testLwtFallbackInRealBrowser(): void {
       `a theme-provided --in-content-page-background must win over the ` +
         `low-priority fallback; got: "${themeColor}"`,
     );
+
+    const rootThemeStyle = globalThis.getComputedStyle(probeWithRootThemeValue);
+    assert(
+      rootThemeStyle,
+      "computed style for the root-themed probe must exist",
+    );
+    const rootThemeColor = rootThemeStyle.getPropertyValue(
+      "--in-content-page-background",
+    );
+    assert(
+      rootThemeColor.includes("200, 100, 50"),
+      `a root-scoped theme --in-content-page-background must reach dialogs; ` +
+        `got: "${rootThemeColor}"`,
+    );
   } finally {
     root.removeAttribute("lwtheme");
     root.style.removeProperty("--lwt-accent-color");
+    root.style.removeProperty("--in-content-page-background");
     probe.remove();
     probeWithThemeValue.remove();
+    probeWithRootThemeValue.remove();
     styleEl.remove();
   }
 }

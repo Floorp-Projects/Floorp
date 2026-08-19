@@ -91,12 +91,19 @@ export const GECKO_152_COLOR_FIX_CSS = `
  * low-priority layer so a theme rule that legitimately sets its own
  * --in-content-page-background still wins, even though this sheet is loaded
  * after the theme's sheets. */
+/* Capture the effective root value unlayered so a theme-provided value is
+ * carried onto dialogs; the dialog override below then references it. */
+:root:is(:-moz-lwtheme, [lwtheme]) {
+  --floorp-lwt-in-content-page-background: var(
+    --in-content-page-background,
+    var(--background-color-canvas, var(--toolbar-background-color, Canvas))
+  );
+}
 @layer floorp-compat {
-  :root:is(:-moz-lwtheme, [lwtheme]),
   :root:is(:-moz-lwtheme, [lwtheme]) dialog {
     --in-content-page-background: var(
-      --background-color-canvas,
-      var(--toolbar-background-color, Canvas)
+      --floorp-lwt-in-content-page-background,
+      var(--background-color-canvas, Canvas)
     );
   }
 }
