@@ -285,6 +285,13 @@ export class MouseGestureController {
     return { x: event.clientX, y: event.clientY };
   }
 
+  private preventFollowingClick(event: MouseEvent): void {
+    const geckoEvent = event as MouseEvent & {
+      preventClickEvent?: () => void;
+    };
+    geckoEvent.preventClickEvent?.();
+  }
+
   private handleMouseDown = (event: MouseEvent): void => {
     if (!isEnabled()) {
       this.resetDisabledState();
@@ -326,6 +333,7 @@ export class MouseGestureController {
       }
 
       if (action) {
+        this.preventFollowingClick(event);
         executeGestureAction(action, this.targetWindow);
         event.preventDefault();
         event.stopPropagation();
@@ -455,6 +463,8 @@ export class MouseGestureController {
 
     // Handle rocker gesture cleanup
     if (this.isRockerGestureFired) {
+      this.preventFollowingClick(event);
+
       // For a leftRight rocker (left pressed first), the left mousedown is
       // never prevented - a lone left click must still behave normally - so
       // the browser already started real native selection-drag tracking on

@@ -859,10 +859,17 @@ async function testLeftRightRockerLetsLeftMouseUpThrough(): Promise<void> {
       // mouseup indiscriminately, the page would never find out the left
       // button was released, leaving native selection mode stuck "on" -
       // even with zero mouse movement during the whole sequence.
-      dispatchMouse(win, "mousedown", 0);
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0);
       const rightMouseDown = dispatchMouse(win, "mousedown", 2);
       const rightMouseUp = dispatchMouse(win, "mouseup", 2);
       const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+
+      assertEquals(
+        leftMouseDown.clickEventPrevented(),
+        false,
+        "the ordinary left mousedown must not suppress its click before a " +
+          "rocker is confirmed",
+      );
 
       assertEquals(
         rightMouseDown.defaultPrevented,
@@ -876,15 +883,55 @@ async function testLeftRightRockerLetsLeftMouseUpThrough(): Promise<void> {
           "context menu)",
       );
       assertEquals(
+        rightMouseDown.clickEventPrevented(),
+        true,
+        "the rocker-completing mousedown should suppress its auxclick",
+      );
+      assertEquals(
+        rightMouseUp.clickEventPrevented(),
+        true,
+        "the rocker-owned right mouseup should suppress its auxclick",
+      );
+      assertEquals(
         leftMouseUp.defaultPrevented,
         false,
         "the left button's own mouseup must reach the page so native " +
           "selection-drag tracking can terminate",
       );
       assertEquals(
+        leftMouseUp.clickEventPrevented(),
+        true,
+        "the forwarded left mouseup must not synthesize a page click",
+      );
+      assertEquals(
         counts[DRAWN_RIGHT_ACTION],
         1,
         "leftRight rocker action should fire once",
+      );
+
+      const nextLeftMouseDown = dispatchMouse(win, "mousedown", 0);
+      const nextLeftMouseUp = dispatchMouse(win, "mouseup", 0);
+      const nextRightMouseDown = dispatchMouse(win, "mousedown", 2);
+      const nextRightMouseUp = dispatchMouse(win, "mouseup", 2);
+      assertEquals(
+        nextLeftMouseDown.clickEventPrevented(),
+        false,
+        "click suppression must not leak into the next left mousedown",
+      );
+      assertEquals(
+        nextLeftMouseUp.clickEventPrevented(),
+        false,
+        "click suppression must not leak into the next left mouseup",
+      );
+      assertEquals(
+        nextRightMouseDown.clickEventPrevented(),
+        false,
+        "click suppression must not leak into the next right mousedown",
+      );
+      assertEquals(
+        nextRightMouseUp.clickEventPrevented(),
+        false,
+        "click suppression must not leak into the next right mouseup",
       );
     });
   });
@@ -902,10 +949,17 @@ async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
       // suppressed like every other button in this cleanup path - letting
       // it through would leave the page with an unmatched mouseup that
       // never had a corresponding unprevented mousedown.
-      dispatchMouse(win, "mousedown", 2);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
       const leftMouseDown = dispatchMouse(win, "mousedown", 0);
       const rightMouseUp = dispatchMouse(win, "mouseup", 2);
       const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+
+      assertEquals(
+        rightMouseDown.clickEventPrevented(),
+        false,
+        "the ordinary right mousedown must not suppress its click before a " +
+          "rocker is confirmed",
+      );
 
       assertEquals(
         leftMouseDown.defaultPrevented,
@@ -913,9 +967,19 @@ async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
         "the rocker-completing mousedown should be consumed",
       );
       assertEquals(
+        leftMouseDown.clickEventPrevented(),
+        true,
+        "the rocker-completing left mousedown should suppress its click",
+      );
+      assertEquals(
         rightMouseUp.defaultPrevented,
         true,
         "the right button's mouseup should stay consumed",
+      );
+      assertEquals(
+        rightMouseUp.clickEventPrevented(),
+        true,
+        "the rocker-owned right mouseup should suppress its auxclick",
       );
       assertEquals(
         leftMouseUp.defaultPrevented,
@@ -923,6 +987,11 @@ async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
         "the left button's mouseup should stay consumed too - its own " +
           "mousedown was already prevented, so there's no native default " +
           "left to terminate",
+      );
+      assertEquals(
+        leftMouseUp.clickEventPrevented(),
+        true,
+        "the rocker-owned left mouseup should suppress its click",
       );
       assertEquals(
         counts[ROCKER_RIGHT_LEFT_ACTION],
