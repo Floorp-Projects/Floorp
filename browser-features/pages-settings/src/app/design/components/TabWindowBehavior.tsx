@@ -49,6 +49,7 @@ export function TabWindowBehavior() {
   const handleOpenNewWindowChange = async (
     event: ChangeEvent<HTMLSelectElement>,
   ) => {
+    const previous = settings?.openNewWindow;
     const value = Number(event.target.value) as OpenNewWindowValue;
     setSettings((current) =>
       current ? { ...current, openNewWindow: value } : current
@@ -57,12 +58,16 @@ export function TabWindowBehavior() {
       await setOpenNewWindow(value);
     } catch (error) {
       console.error("Failed to save link opening behavior", error);
+      setSettings((current) =>
+        current ? { ...current, openNewWindow: previous } : current
+      );
     }
   };
 
   const handleTaskbarPreviewsChange = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
+    const previous = settings?.taskbarPreviews;
     const enabled = event.target.checked;
     setSettings((current) =>
       current ? { ...current, taskbarPreviews: enabled } : current
@@ -71,6 +76,9 @@ export function TabWindowBehavior() {
       await setTaskbarPreviews(enabled);
     } catch (error) {
       console.error("Failed to save taskbar preview behavior", error);
+      setSettings((current) =>
+        current ? { ...current, taskbarPreviews: previous } : current
+      );
     }
   };
 
