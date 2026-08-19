@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
 generated: true
 ---
 # Architecture Overview
@@ -30,7 +30,7 @@ The loader development server is configured by `bridge/loader-features/vite.conf
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:398`. The current inventory lists 22 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:420`. The current inventory lists 23 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -38,6 +38,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 - `NRChromeWebStore`
 - `NRExperimemmt`
 - `NRI18n`
+- `NRKeyboardShortcutFocus`
 - `NRMouseGestureScroll`
 - `NROSAutomotor`
 - `NRPanelSidebar`
@@ -57,7 +58,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 
 ## Chrome UI Features
 
-Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 29 common features:
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 34 common features:
 
 - `addons`
 - `browser-share-mode`
@@ -82,10 +83,15 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `split-view`
 - `statusbar`
 - `tab`
+- `tab-inline-edit`
+- `tab-refresh`
 - `tab-sleep-exclusion`
+- `tab-stacks`
+- `tab-strip-wheel-guard`
 - `tabbar`
 - `ui-custom`
 - `undo-closed-tab`
+- `window-drag`
 - `workspaces`
 - `zen-mode`
 

@@ -26,11 +26,13 @@ export default class Workspaces extends NoraComponentBase {
   static windowWorkspacesMap: WeakMap<Window, WorkspacesService> =
     new WeakMap();
 
-  static getCtx(): WorkspacesService | null {
-    if (!window || !enabled()) {
+  static getCtx(targetWindow?: Window): WorkspacesService | null {
+    const requestedWindow = targetWindow ??
+      (typeof window !== "undefined" ? window : null);
+    if (!requestedWindow || !enabled()) {
       return null;
     }
-    return this.windowWorkspacesMap.get(window) || null;
+    return this.windowWorkspacesMap.get(requestedWindow) || null;
   }
 
   init(): void {
