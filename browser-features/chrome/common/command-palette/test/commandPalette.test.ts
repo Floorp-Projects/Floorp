@@ -7,11 +7,13 @@ import {
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
+import i18next from "i18next";
 import { fuzzyScore, fuzzySearch } from "../fuzzy.ts";
 import type { FuzzyTarget } from "../fuzzy.ts";
 import {
   getCommand,
   getPaletteCommands,
+  invalidateCache,
   searchCommands,
 } from "../command-registry.ts";
 import { getHighlightSegments } from "../utils/highlight.ts";
@@ -46,6 +48,72 @@ const makeTarget = (
   category,
   keywords,
 });
+
+const I18N_NAMESPACE = "browser-chrome";
+const ENGLISH_KEYWORD_RESOURCE_KEYS = [
+  "mouseGesture.actions.gecko-back",
+  "mouseGesture.descriptions.gecko-back",
+  "commandPalette.openUrl",
+  "commandPalette.openUrlDescription",
+] as const;
+
+function assertI18nextLanguageReady(language: "en-US" | "ja-JP"): void {
+  assert(
+    i18next.language === language || i18next.resolvedLanguage === language,
+    `i18next should switch to ${language}`,
+  );
+  assert(
+    i18next.hasResourceBundle(language, I18N_NAMESPACE),
+    `${language} ${I18N_NAMESPACE} resource bundle should be registered`,
+  );
+  for (const key of ENGLISH_KEYWORD_RESOURCE_KEYS) {
+    const value = i18next.getResource(language, I18N_NAMESPACE, key);
+    assert(
+      typeof value === "string" && value.length > 0,
+      `${language} should register ${key}`,
+    );
+  }
+}
+
+async function withI18nextLanguage(
+  language: "en-US" | "ja-JP",
+  fn: () => void | Promise<void>,
+): Promise<void> {
+  const originalLanguage = i18next.language;
+  await i18next.changeLanguage(language);
+  invalidateCache();
+  assertI18nextLanguageReady(language);
+  try {
+    await fn();
+  } finally {
+    try {
+      await i18next.changeLanguage(originalLanguage || "en-US");
+    } finally {
+      invalidateCache();
+    }
+  }
+}
+
+function assertKeywordTokens(
+  keywords: string[],
+  expectedTokens: string[],
+  context: string,
+): void {
+  assert(keywords.length > 0, `${context} should return keywords`);
+  for (const keyword of keywords) {
+    assert(
+      typeof keyword === "string",
+      `${context}: keyword should be a string`,
+    );
+    assert(keyword.length > 0, `${context}: keyword should not be empty`);
+  }
+  for (const token of expectedTokens) {
+    assert(
+      keywords.includes(token),
+      `${context}: expected token '${token}'`,
+    );
+  }
+}
 
 async function testAsyncFailurePropagation(): Promise<void> {
   let rejected = false;
@@ -129,32 +197,54 @@ function testOpenUrlRejectsCurrentTabContainerOverride(): void {
   assertEquals(loadCalls, 0, "should not navigate with an ignored override");
 }
 
-/** Verifies that getEnglishGestureKeywords returns an array of strings for all gesture command keys. */
-function testGetEnglishGestureKeywordsReturnsStrings(): void {
-  const keywords = getEnglishGestureKeywords("gecko-back");
-  assert(
-    keywords.length > 0,
-    "English keywords should return at least one item for gecko-back",
-  );
-  for (const kw of keywords) {
-    assert(typeof kw === "string", "All keywords should be strings");
-    assert(kw.length > 0, "Empty strings should not be included");
-  }
+/** Verifies that getEnglishGestureKeywords is locale-sensitive. */
+async function testGetEnglishGestureKeywordsLocaleBehavior(): Promise<void> {
+  await withI18nextLanguage("en-US", () => {
+    const keywords = getEnglishGestureKeywords("gecko-back");
+    assertEquals(
+      keywords.length,
+      0,
+      "en-US should not add duplicate English keywords for gecko-back",
+    );
+  });
+
+  await withI18nextLanguage("ja-JP", () => {
+    const keywords = getEnglishGestureKeywords("gecko-back");
+    assertKeywordTokens(
+      keywords,
+      ["back", "navigate", "previous", "page"],
+      "ja-JP gecko-back English keywords",
+    );
+  });
 }
 
-/** Verifies that getEnglishStepCommandKeywords returns an array of strings for all step command keys. */
-function testGetEnglishStepCommandKeywordsReturnsStrings(): void {
-  const keywords = getEnglishStepCommandKeywords(
-    "commandPalette.openUrl",
-    "commandPalette.openUrlDescription",
-  );
-  assert(
-    keywords.length > 0,
-    "English keywords should return at least one item for openUrl",
-  );
-  for (const kw of keywords) {
-    assert(typeof kw === "string", "All keywords should be strings");
-  }
+/** Verifies that getEnglishStepCommandKeywords is locale-sensitive. */
+async function testGetEnglishStepCommandKeywordsLocaleBehavior(): Promise<
+  void
+> {
+  await withI18nextLanguage("en-US", () => {
+    const keywords = getEnglishStepCommandKeywords(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    );
+    assertEquals(
+      keywords.length,
+      0,
+      "en-US should not add duplicate English keywords for openUrl",
+    );
+  });
+
+  await withI18nextLanguage("ja-JP", () => {
+    const keywords = getEnglishStepCommandKeywords(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    );
+    assertKeywordTokens(
+      keywords,
+      ["open url", "open", "url", "new", "tab"],
+      "ja-JP openUrl English keywords",
+    );
+  });
 }
 
 /** Verifies that getEnglishStepCommandKeywords returns an empty array for unrecognized i18n keys instead of throwing. */
@@ -894,12 +984,12 @@ const rawTests: TestCase[] = [
   },
 
   {
-    name: "getEnglishGestureKeywords returns strings",
-    fn: testGetEnglishGestureKeywordsReturnsStrings,
+    name: "getEnglishGestureKeywords respects current locale",
+    fn: testGetEnglishGestureKeywordsLocaleBehavior,
   },
   {
-    name: "getEnglishStepCommandKeywords returns strings",
-    fn: testGetEnglishStepCommandKeywordsReturnsStrings,
+    name: "getEnglishStepCommandKeywords respects current locale",
+    fn: testGetEnglishStepCommandKeywordsLocaleBehavior,
   },
   {
     name: "getEnglishKeywords graceful failure for missing keys",
