@@ -273,9 +273,9 @@ async function testQueueRecoversAfterFailure(): Promise<void> {
   const persistence = createGestureConfigPersistence(
     createDefaultMouseGestureConfig(false),
     {
-      writeEnabled: async () => {
+      writeEnabled: () => {
         operations.push("enabled");
-        throw new Error("bool failed");
+        return Promise.reject(new Error("bool failed"));
       },
       writeConfig: (serialized) => {
         operations.push("config");
@@ -324,9 +324,9 @@ async function testBoolUpdateRecoversAfterConfigFailure(): Promise<void> {
         boolWrites.push(enabled);
         return Promise.resolve();
       },
-      writeConfig: async () => {
+      writeConfig: () => {
         operations.push("config");
-        throw new Error("json failed");
+        return Promise.reject(new Error("json failed"));
       },
     },
   );
