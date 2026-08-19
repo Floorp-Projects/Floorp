@@ -242,6 +242,10 @@ export class MouseGestureController {
   }
 
   private resetDisabledState(): void {
+    this.resetInteractionState();
+  }
+
+  private resetInteractionState(): void {
     this.isContextMenuPrevented = false;
     this.clearPreventionTimeout();
     this.resetGestureState();
@@ -270,9 +274,7 @@ export class MouseGestureController {
     ) {
       return;
     }
-    this.isContextMenuPrevented = false;
-    this.clearPreventionTimeout();
-    this.resetGestureState();
+    this.resetInteractionState();
   };
 
   private getViewportPointFromEvent(event: MouseEvent): {
@@ -305,10 +307,28 @@ export class MouseGestureController {
     geckoEvent.preventClickEvent?.();
   }
 
+  private isSecondaryButtonPhysicallyDown(event: MouseEvent): boolean {
+    return (event.buttons & 2) !== 0;
+  }
+
   private handleMouseDown = (event: MouseEvent): void => {
     if (!isEnabled()) {
       this.resetDisabledState();
       return;
+    }
+
+    // A stale drawn gesture can survive same-window focus churn if its physical
+    // right-button mouseup was lost. Reconcile the stored state with Gecko's
+    // physical button bit before rocker detection so the user's next ordinary
+    // left click cannot be misread as a rightLeft rocker.
+    if (
+      this.isGestureActive &&
+      !this.isWheelGestureFired &&
+      !this.isRockerGestureFired &&
+      event.button !== 2 &&
+      !this.isSecondaryButtonPhysicallyDown(event)
+    ) {
+      this.resetInteractionState();
     }
 
     // A fresh right-button mousedown proves that the previous physical button
@@ -316,7 +336,7 @@ export class MouseGestureController {
     if (
       event.button === 2 && (this.isWheelGestureFired || this.isGestureActive)
     ) {
-      this.resetGestureState();
+      this.resetInteractionState();
     }
 
     this.pressedButtons.add(event.button);
@@ -389,6 +409,18 @@ export class MouseGestureController {
     if (this.isRockerGestureFired) {
       event.preventDefault();
       event.stopPropagation();
+      return;
+    }
+
+    // The controller may have missed the physical right-button mouseup while
+    // the active browser window was replacing or closing a tab. A later move
+    // with no secondary-button bit proves the stored trail is stale.
+    if (
+      this.isGestureActive &&
+      !this.isWheelGestureFired &&
+      !this.isSecondaryButtonPhysicallyDown(event)
+    ) {
+      this.resetInteractionState();
       return;
     }
 
@@ -538,21 +570,27 @@ export class MouseGestureController {
       const actionInfo = this.patternActionMap.get(result.patternName);
 
       if (actionInfo) {
+        const action = actionInfo.action;
         this.display.updateActionName(actionInfo.displayName);
-        executeGestureAction(actionInfo.action, this.targetWindow);
-        this.resetGestureState();
-        this.scheduleContextMenuPreventionRelease(preventionTimeout);
+
+        // Prevent Gecko's trusted follow-up auxclick and make the controller
+        // non-reentrant before tab-closing actions can spin a nested event loop.
+        this.preventFollowingClick(event);
         event.preventDefault();
         event.stopPropagation();
+        this.resetGestureState();
+        this.scheduleContextMenuPreventionRelease(preventionTimeout);
+        executeGestureAction(action, this.targetWindow);
         return;
       }
     }
 
     // No gesture recognized - prevent context menu and reset
-    this.resetGestureState();
-    this.scheduleContextMenuPreventionRelease(preventionTimeout);
+    this.preventFollowingClick(event);
     event.preventDefault();
     event.stopPropagation();
+    this.resetGestureState();
+    this.scheduleContextMenuPreventionRelease(preventionTimeout);
   };
 
   private handleMouseWheel = (event: WheelEvent): void => {
@@ -613,6 +651,17 @@ export class MouseGestureController {
     if (!isEnabled()) {
       this.resetDisabledState();
       return;
+    }
+
+    // Keyboard context-menu input (or any other event with no physical right
+    // button) must not remain blocked by a drawn gesture whose mouseup was lost.
+    if (
+      this.isGestureActive &&
+      !this.isWheelGestureFired &&
+      !this.isRockerGestureFired &&
+      !this.isSecondaryButtonPhysicallyDown(event)
+    ) {
+      this.resetInteractionState();
     }
 
     if (

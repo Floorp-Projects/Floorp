@@ -105,11 +105,13 @@ function dispatchMouseFrom(
   button: number,
   clientX = 0,
   clientY = 0,
+  buttons = 0,
 ): MouseEvent {
   // Firefox's chrome test context treats these pointer-derived messages as
   // trusted and asserts if they are created with MouseEvent (Bug 1675848).
   const event = new PointerEvent(type, {
     button,
+    buttons,
     clientX,
     clientY,
     bubbles: true,
@@ -125,8 +127,9 @@ function dispatchMouse(
   button: number,
   clientX = 0,
   clientY = 0,
+  buttons = 0,
 ): MouseEvent {
-  return dispatchMouseFrom(win, type, button, clientX, clientY);
+  return dispatchMouseFrom(win, type, button, clientX, clientY, buttons);
 }
 
 // Mirrors buildLineTrail in mouseGestureRecognizer.test.ts: enough steps and
@@ -140,7 +143,7 @@ function dispatchDrag(
 ): void {
   for (let i = 1; i <= steps; i++) {
     const t = i / steps;
-    dispatchMouse(win, "mousemove", 0, endX * t, endY * t);
+    dispatchMouse(win, "mousemove", 0, endX * t, endY * t, 2);
   }
 }
 
@@ -384,6 +387,11 @@ async function testNormalRightClickRemainsAllowed(): Promise<void> {
       "normal mouseup should be allowed",
     );
     assertEquals(
+      mouseUp.clickEventPrevented(),
+      false,
+      "normal right mouseup should not suppress its follow-up auxclick",
+    );
+    assertEquals(
       contextMenu.defaultPrevented,
       false,
       "normal right click should still open the context menu",
@@ -490,7 +498,7 @@ async function testWheelSuppressionExpiresWithoutExtending(): Promise<void> {
         "suppression timeout should not start while the right button is held",
       );
       assertEquals(
-        dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+        dispatchMouse(win, "contextmenu", 2, 0, 0, 2).defaultPrevented,
         true,
         "contextmenu should be suppressed while the wheel gesture is active",
       );
@@ -721,9 +729,9 @@ async function testDestroyClearsWheelSuppressionTimer(): Promise<void> {
 async function testWheelGestureCannotBecomeRockerGesture(): Promise<void> {
   await withTrackedActions(async (counts) => {
     await withController({}, ({ win }) => {
-      dispatchMouse(win, "mousedown", 2);
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
       dispatchWheel(win, 120);
-      const leftMouseDown = dispatchMouse(win, "mousedown", 0);
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0, 0, 0, 3);
       dispatchMouse(win, "mouseup", 2);
 
       assertEquals(
@@ -744,8 +752,8 @@ async function testWheelGestureCannotBecomeRockerGesture(): Promise<void> {
 async function testRockerGestureCannotBecomeWheelGesture(): Promise<void> {
   await withTrackedActions(async (counts) => {
     await withController({}, ({ win }) => {
-      dispatchMouse(win, "mousedown", 2);
-      dispatchMouse(win, "mousedown", 0);
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchMouse(win, "mousedown", 0, 0, 0, 3);
       const wheel = dispatchWheel(win, 120);
       dispatchMouse(win, "mouseup", 2);
       dispatchMouse(win, "mouseup", 0);
@@ -789,6 +797,11 @@ async function testRecognizedGestureExecutesSynchronously(): Promise<void> {
         true,
         "recognized gesture's mouseup should be consumed",
       );
+      assertEquals(
+        mouseUp.clickEventPrevented(),
+        true,
+        "recognized gesture should suppress its follow-up auxclick",
+      );
     });
   });
 }
@@ -809,6 +822,11 @@ async function testUnrecognizedMovedGestureConsumesMouseUp(): Promise<void> {
           mouseUp.defaultPrevented,
           true,
           "an unrecognized but moved gesture should still consume its mouseup",
+        );
+        assertEquals(
+          mouseUp.clickEventPrevented(),
+          true,
+          "an unrecognized moved gesture should suppress its follow-up auxclick",
         );
         assertEquals(
           contextMenu.defaultPrevented,
@@ -896,6 +914,181 @@ async function testNewRightMouseDownRecoversFromStaleDrawnGesture(): Promise<
   });
 }
 
+async function testStaleDrawnGestureDoesNotBecomeRockerOnLeftClick(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchDrag(win, 100, 0);
+
+      // The physical right button was released without a delivered mouseup.
+      // Gecko's buttons bit proves this is a fresh ordinary left click, not a
+      // real rightLeft rocker chord.
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0, 0, 0, 1);
+      const leftMouseUp = dispatchMouse(win, "mouseup", 0, 0, 0, 0);
+      const keyboardContextMenu = dispatchMouse(
+        win,
+        "contextmenu",
+        0,
+        0,
+        0,
+        0,
+      );
+
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        0,
+        "a stale drawn gesture must not turn the next left click into Back",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        0,
+        "the abandoned drawn gesture must not execute",
+      );
+      assertEquals(
+        leftMouseDown.defaultPrevented,
+        false,
+        "the next ordinary left mousedown must remain passive",
+      );
+      assertEquals(
+        leftMouseDown.clickEventPrevented(),
+        false,
+        "stale recovery must not suppress the ordinary left click",
+      );
+      assertEquals(
+        leftMouseUp.defaultPrevented,
+        false,
+        "the matching ordinary left mouseup must remain passive",
+      );
+      assertEquals(
+        keyboardContextMenu.defaultPrevented,
+        false,
+        "stale recovery must not leave keyboard contextmenu blocked",
+      );
+    });
+  });
+}
+
+async function testPhysicalButtonMismatchClearsStaleDrawnState(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchDrag(win, 100, 0);
+      const staleMove = dispatchMouse(win, "mousemove", 0, 120, 0, 0);
+      const staleMouseUp = dispatchMouse(win, "mouseup", 2, 0, 0, 0);
+
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchDrag(win, 100, 0);
+      const staleContextMenu = dispatchMouse(
+        win,
+        "contextmenu",
+        0,
+        0,
+        0,
+        0,
+      );
+      const secondStaleMouseUp = dispatchMouse(win, "mouseup", 2, 0, 0, 0);
+
+      assertEquals(
+        staleMove.defaultPrevented,
+        false,
+        "mousemove with no physical right button should clear stale state passively",
+      );
+      assertEquals(
+        staleMouseUp.defaultPrevented,
+        false,
+        "mouseup after stale move recovery should remain passive",
+      );
+      assertEquals(
+        staleContextMenu.defaultPrevented,
+        false,
+        "keyboard contextmenu should clear stale state and remain passive",
+      );
+      assertEquals(
+        secondStaleMouseUp.defaultPrevented,
+        false,
+        "mouseup after contextmenu recovery should remain passive",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        0,
+        "neither abandoned gesture should execute",
+      );
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        0,
+        "stale recovery should not execute a rocker action",
+      );
+    });
+  });
+}
+
+async function testRecognizedGestureNeutralizesStateBeforeAction(): Promise<
+  void
+> {
+  await withTrackedActions(async (counts) => {
+    await withController({}, ({ win }) => {
+      const nestedInput: { mouseDown?: MouseEvent; mouseUp?: MouseEvent } = {};
+      gestureActions.registerAction({
+        name: DRAWN_RIGHT_ACTION,
+        fn: () => {
+          counts[DRAWN_RIGHT_ACTION] += 1;
+          nestedInput.mouseDown = dispatchMouse(
+            win,
+            "mousedown",
+            0,
+            0,
+            0,
+            1,
+          );
+          nestedInput.mouseUp = dispatchMouse(win, "mouseup", 0, 0, 0, 0);
+        },
+      });
+
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchDrag(win, 200, 0);
+      const mouseUp = dispatchMouse(win, "mouseup", 2, 0, 0, 0);
+
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "recognized action should execute exactly once",
+      );
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        0,
+        "nested left input must not reenter the stale rightLeft rocker",
+      );
+      assert(
+        nestedInput.mouseDown,
+        "the action should synchronously dispatch nested input",
+      );
+      assert(
+        nestedInput.mouseUp,
+        "the action should complete its nested input",
+      );
+      assertEquals(
+        nestedInput.mouseDown.defaultPrevented,
+        false,
+        "nested left mousedown should observe neutral gesture state",
+      );
+      assertEquals(
+        nestedInput.mouseUp.defaultPrevented,
+        false,
+        "nested left mouseup should observe neutral gesture state",
+      );
+      assertEquals(
+        mouseUp.clickEventPrevented(),
+        true,
+        "the triggering drawn mouseup should suppress its follow-up auxclick",
+      );
+    });
+  });
+}
+
 async function testRockerGestureConsumesMouseMoveWhileHeld(): Promise<void> {
   await withTrackedActions(async (counts) => {
     await withController({}, ({ win }) => {
@@ -906,15 +1099,22 @@ async function testRockerGestureConsumesMouseMoveWhileHeld(): Promise<void> {
       // must be consumed - left unhandled, it would let that selection keep
       // extending as the rocker's action (e.g. scrolling) moves content
       // under the still-held cursor.
-      dispatchMouse(win, "mousedown", 0);
-      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
-      const moveWhileHeld = dispatchMouse(win, "mousemove", 0, 50, 0);
+      dispatchMouse(win, "mousedown", 0, 0, 0, 1);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2, 0, 0, 3);
+      const moveWhileHeld = dispatchMouse(win, "mousemove", 0, 50, 0, 3);
       // Releasing only the right button doesn't end the cycle - the left
       // button is still physically held, so movement must stay consumed.
-      dispatchMouse(win, "mouseup", 2);
-      const moveAfterRightRelease = dispatchMouse(win, "mousemove", 0, 55, 0);
-      dispatchMouse(win, "mouseup", 0);
-      const moveAfterRelease = dispatchMouse(win, "mousemove", 0, 60, 0);
+      dispatchMouse(win, "mouseup", 2, 0, 0, 1);
+      const moveAfterRightRelease = dispatchMouse(
+        win,
+        "mousemove",
+        0,
+        55,
+        0,
+        1,
+      );
+      dispatchMouse(win, "mouseup", 0, 0, 0, 0);
+      const moveAfterRelease = dispatchMouse(win, "mousemove", 0, 60, 0, 0);
 
       assertEquals(
         rightMouseDown.defaultPrevented,
@@ -964,8 +1164,8 @@ async function testMouseDownCaptureSurvivesContentStopPropagation(): Promise<
         event.stopPropagation();
       });
 
-      dispatchMouseFrom(contentEl, "mousedown", 2);
-      dispatchMouseFrom(contentEl, "mousedown", 0);
+      dispatchMouseFrom(contentEl, "mousedown", 2, 0, 0, 2);
+      dispatchMouseFrom(contentEl, "mousedown", 0, 0, 0, 3);
       // Content also stops propagation on its own mousemove. A regression
       // that moved the mousemove listener back to bubble phase would still
       // pass every other assertion here, since rocker detection itself only
@@ -1002,10 +1202,10 @@ async function testLeftRightRockerLetsLeftMouseUpThrough(): Promise<void> {
       // mouseup indiscriminately, the page would never find out the left
       // button was released, leaving native selection mode stuck "on" -
       // even with zero mouse movement during the whole sequence.
-      const leftMouseDown = dispatchMouse(win, "mousedown", 0);
-      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
-      const rightMouseUp = dispatchMouse(win, "mouseup", 2);
-      const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0, 0, 0, 1);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2, 0, 0, 3);
+      const rightMouseUp = dispatchMouse(win, "mouseup", 2, 0, 0, 1);
+      const leftMouseUp = dispatchMouse(win, "mouseup", 0, 0, 0, 0);
 
       assertEquals(
         leftMouseDown.clickEventPrevented(),
@@ -1092,10 +1292,10 @@ async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
       // suppressed like every other button in this cleanup path - letting
       // it through would leave the page with an unmatched mouseup that
       // never had a corresponding unprevented mousedown.
-      const rightMouseDown = dispatchMouse(win, "mousedown", 2);
-      const leftMouseDown = dispatchMouse(win, "mousedown", 0);
-      const rightMouseUp = dispatchMouse(win, "mouseup", 2);
-      const leftMouseUp = dispatchMouse(win, "mouseup", 0);
+      const rightMouseDown = dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      const leftMouseDown = dispatchMouse(win, "mousedown", 0, 0, 0, 3);
+      const rightMouseUp = dispatchMouse(win, "mouseup", 2, 0, 0, 1);
+      const leftMouseUp = dispatchMouse(win, "mouseup", 0, 0, 0, 0);
 
       assertEquals(
         rightMouseDown.clickEventPrevented(),
@@ -1217,6 +1417,18 @@ const tests: TestCase[] = [
   {
     name: "a new right mousedown recovers from a stale drawn gesture",
     fn: testNewRightMouseDownRecoversFromStaleDrawnGesture,
+  },
+  {
+    name: "a stale drawn gesture does not become a rocker on left click",
+    fn: testStaleDrawnGestureDoesNotBecomeRockerOnLeftClick,
+  },
+  {
+    name: "physical button mismatch clears stale drawn state",
+    fn: testPhysicalButtonMismatchClearsStaleDrawnState,
+  },
+  {
+    name: "recognized gesture neutralizes state before action",
+    fn: testRecognizedGestureNeutralizesStateBeforeAction,
   },
   {
     name: "rocker gesture consumes mousemove while held",
