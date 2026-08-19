@@ -32,7 +32,7 @@ export function loadTabs(): Promise<
     } | null = null;
     try {
       const { ContextualIdentityService } = ChromeUtils.importESModule(
-        "resource://gre/modules/ContextualIdentityService.sys.mjs",
+        "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
       );
       ContextualIdentityService.ensureDataReady();
       contextualIdentityService = ContextualIdentityService;

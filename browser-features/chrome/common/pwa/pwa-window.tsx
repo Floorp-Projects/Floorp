@@ -276,7 +276,7 @@ export class PwaWindowSupport {
 
   private applyUserContext(userContextId: number): void {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
-      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
     const containers = ContextualIdentityService.getPublicIdentities();
     const exists = containers.some(

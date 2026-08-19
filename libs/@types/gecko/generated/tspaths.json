@@ -5468,7 +5468,7 @@
       "resource://gre/modules/ContentRelevancyManager.sys.mjs": [
         "toolkit/components/contentrelevancy/ContentRelevancyManager.sys.mjs"
       ],
-      "resource://gre/modules/ContextualIdentityService.sys.mjs": [
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs": [
         "toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs"
       ],
       "resource://gre/modules/CoveragePing.sys.mjs": [
@@ -5861,7 +5861,7 @@
       "resource://gre/modules/KeywordUtils.sys.mjs": [
         "toolkit/modules/KeywordUtils.sys.mjs"
       ],
-      "resource://gre/modules/LangPackMatcher.sys.mjs": [
+      "moz-src:///intl/locale/LangPackMatcher.sys.mjs": [
         "intl/locale/LangPackMatcher.sys.mjs"
       ],
       "resource://gre/modules/LayoutUtils.sys.mjs": [
@@ -5933,10 +5933,10 @@
       "resource://gre/modules/ManifestIcons.sys.mjs": [
         "dom/manifest/ManifestIcons.sys.mjs"
       ],
-      "resource://gre/modules/ManifestObtainer.sys.mjs": [
+      "moz-src:///dom/manifest/ManifestObtainer.sys.mjs": [
         "dom/manifest/ManifestObtainer.sys.mjs"
       ],
-      "resource://gre/modules/ManifestProcessor.sys.mjs": [
+      "moz-src:///dom/manifest/ManifestProcessor.sys.mjs": [
         "dom/manifest/ManifestProcessor.sys.mjs"
       ],
       "resource://gre/modules/MatchURLFilters.sys.mjs": [

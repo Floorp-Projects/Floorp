@@ -491,7 +491,7 @@ export interface LazyModules {
   "resource://gre/modules/ContentDOMReference.sys.mjs": typeof import("resource://gre/modules/ContentDOMReference.sys.mjs");
   "resource://gre/modules/ContentPrefUtils.sys.mjs": typeof import("resource://gre/modules/ContentPrefUtils.sys.mjs");
   "resource://gre/modules/ContentRelevancyManager.sys.mjs": typeof import("resource://gre/modules/ContentRelevancyManager.sys.mjs");
-  "resource://gre/modules/ContextualIdentityService.sys.mjs": typeof import("resource://gre/modules/ContextualIdentityService.sys.mjs");
+  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs": typeof import("moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs");
   "resource://gre/modules/CoveragePing.sys.mjs": typeof import("resource://gre/modules/CoveragePing.sys.mjs");
   "resource://gre/modules/CrashMonitor.sys.mjs": typeof import("resource://gre/modules/CrashMonitor.sys.mjs");
   "resource://gre/modules/CrashService.sys.mjs": typeof import("resource://gre/modules/CrashService.sys.mjs");
@@ -601,7 +601,7 @@ export interface LazyModules {
   "resource://gre/modules/JSONFile.sys.mjs": typeof import("resource://gre/modules/JSONFile.sys.mjs");
   "resource://gre/modules/JsonSchema.sys.mjs": typeof import("resource://gre/modules/JsonSchema.sys.mjs");
   "resource://gre/modules/KeywordUtils.sys.mjs": typeof import("resource://gre/modules/KeywordUtils.sys.mjs");
-  "resource://gre/modules/LangPackMatcher.sys.mjs": typeof import("resource://gre/modules/LangPackMatcher.sys.mjs");
+  "moz-src:///intl/locale/LangPackMatcher.sys.mjs": typeof import("moz-src:///intl/locale/LangPackMatcher.sys.mjs");
   "resource://gre/modules/LayoutUtils.sys.mjs": typeof import("resource://gre/modules/LayoutUtils.sys.mjs");
   "resource://gre/modules/LightweightThemeConsumer.sys.mjs": typeof import("resource://gre/modules/LightweightThemeConsumer.sys.mjs");
   "resource://gre/modules/LightweightThemeManager.sys.mjs": typeof import("resource://gre/modules/LightweightThemeManager.sys.mjs");
@@ -620,7 +620,7 @@ export interface LazyModules {
   "resource://gre/modules/LoginStore.sys.mjs": typeof import("resource://gre/modules/LoginStore.sys.mjs");
   "resource://gre/modules/ManifestFinder.sys.mjs": typeof import("resource://gre/modules/ManifestFinder.sys.mjs");
   "resource://gre/modules/ManifestIcons.sys.mjs": typeof import("resource://gre/modules/ManifestIcons.sys.mjs");
-  "resource://gre/modules/ManifestObtainer.sys.mjs": typeof import("resource://gre/modules/ManifestObtainer.sys.mjs");
+  "moz-src:///dom/manifest/ManifestObtainer.sys.mjs": typeof import("moz-src:///dom/manifest/ManifestObtainer.sys.mjs");
   "resource://gre/modules/MatchURLFilters.sys.mjs": typeof import("resource://gre/modules/MatchURLFilters.sys.mjs");
   "resource://gre/modules/MediaUtils.sys.mjs": typeof import("resource://gre/modules/MediaUtils.sys.mjs");
   "resource://gre/modules/MessageManagerProxy.sys.mjs": typeof import("resource://gre/modules/MessageManagerProxy.sys.mjs");

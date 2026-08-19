@@ -39,6 +39,14 @@ const JS_WINDOW_ACTORS: {
     },
     child: {
       esModuleURI: localPathToResourceURI("../actors/NRSettingsChild.sys.mts"),
+      // Vite dev pages run in a webIsolated remote type (e.g.
+      // "webIsolated=http://localhost"); without this the actor is never
+      // instantiated and window.NRSettingsRegisterReceiveCallback is never
+      // exported (see rpc.ts:56 "is not a function").
+      remoteTypes: [
+        "webIsolated=http://localhost",
+        "webIsolated=https://localhost",
+      ],
       events: {
         /**
          * actorCreated seems to require any of events for init
