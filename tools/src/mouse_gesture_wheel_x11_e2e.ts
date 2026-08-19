@@ -10,7 +10,11 @@ const SAFE_SCROLL_DOWN_ACTION = "gecko-zoom-out";
 const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
-const SETTINGS_URL = "chrome://noraneko-settings/content#/features/gesture";
+const SETTINGS_ORIGIN = "http://localhost:5183";
+const SETTINGS_ROUTE = "#/features/gesture";
+const SETTINGS_URL = `${SETTINGS_ORIGIN}/${SETTINGS_ROUTE}`;
+const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
+const WINDOW_DISCOVERY_INTERVAL_MS = 100;
 const REPEAT_SAFE_WHEEL_ACTIONS = [
   "gecko-show-previous-tab",
   "gecko-show-next-tab",
@@ -182,7 +186,7 @@ function parseWindowGeometry(id: string, output: string): WindowGeometry {
   };
 }
 
-async function findSoleVisibleFloorpWindow(
+async function inspectSoleVisibleFloorpWindow(
   processId: number,
 ): Promise<WindowGeometry> {
   const ids = parseWindowIds(
@@ -220,6 +224,30 @@ async function findSoleVisibleFloorpWindow(
     `X11 window ${id} does not have the Floorp test title: ${title}`,
   );
   return parseWindowGeometry(id, geometry);
+}
+
+async function findSoleVisibleFloorpWindow(
+  processId: number,
+): Promise<WindowGeometry> {
+  const startedAt = Date.now();
+  let lastError: unknown;
+
+  while (Date.now() - startedAt < WINDOW_DISCOVERY_TIMEOUT_MS) {
+    try {
+      return await inspectSoleVisibleFloorpWindow(processId);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) =>
+        setTimeout(resolve, WINDOW_DISCOVERY_INTERVAL_MS)
+      );
+    }
+  }
+
+  throw new Error(
+    `Timed out after ${WINDOW_DISCOVERY_TIMEOUT_MS}ms waiting for exactly one visible Floorp window for PID ${processId}: ${
+      lastError instanceof Error ? lastError.message : String(lastError)
+    }`,
+  );
 }
 
 const client = await MarionetteClient.connect();
@@ -319,7 +347,7 @@ async function resetZoom(): Promise<number> {
   return await readZoom();
 }
 
-async function readWheelActionsFromPref(): Promise<WheelActions> {
+async function readWheelActionsFromPref(): Promise<WheelActions | null> {
   await client.setContext("chrome");
   const raw = await client.executeScript(`
     const config = JSON.parse(
@@ -327,7 +355,19 @@ async function readWheelActionsFromPref(): Promise<WheelActions> {
     );
     return JSON.stringify(config.wheelActions ?? null);
   `);
-  return JSON.parse(raw) as WheelActions;
+  const parsed: unknown = JSON.parse(raw);
+  if (
+    parsed === null ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed)
+  ) {
+    return null;
+  }
+  const candidate = parsed as Record<string, unknown>;
+  return typeof candidate.scrollUp === "string" &&
+      typeof candidate.scrollDown === "string"
+    ? candidate as unknown as WheelActions
+    : null;
 }
 
 async function waitForWheelActions(
@@ -449,9 +489,49 @@ async function setWheelActionsThroughSettings(): Promise<void> {
   `);
 }
 
+async function assertTestSettingsEnvironment(): Promise<void> {
+  await client.setContext("chrome");
+  const raw = await client.executeScript(`
+    return JSON.stringify({
+      startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
+      allowHttpLoader: Services.prefs.getBoolPref(
+        "nora.dev.allow_http_loader",
+        false,
+      ),
+    });
+  `);
+  const environment = JSON.parse(raw) as {
+    startupMode: string;
+    allowHttpLoader: boolean;
+  };
+  assert(
+    environment.startupMode === "test" && environment.allowHttpLoader,
+    `Refusing settings HTTP E2E outside the expected test loader: ${
+      JSON.stringify(environment)
+    }`,
+  );
+}
+
+async function assertSettingsRoute(): Promise<void> {
+  await client.setContext("content");
+  const raw = await client.executeScript(`
+    return JSON.stringify({
+      origin: location.origin,
+      hash: location.hash,
+    });
+  `);
+  const location = JSON.parse(raw) as { origin: string; hash: string };
+  assert(
+    location.origin === SETTINGS_ORIGIN && location.hash === SETTINGS_ROUTE,
+    `Unexpected settings route: ${JSON.stringify(location)}`,
+  );
+}
+
 async function assertSettingsPersistence(): Promise<void> {
+  await assertTestSettingsEnvironment();
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
+  await assertSettingsRoute();
   const initial = await waitForWheelSettings();
   assertWheelSettingsContract(initial);
 
@@ -468,6 +548,7 @@ async function assertSettingsPersistence(): Promise<void> {
   // recreated from stored preferences rather than retaining local state.
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
+  await assertSettingsRoute();
   const reloaded = await waitForWheelSettings([
     SAFE_SCROLL_UP_ACTION,
     SAFE_SCROLL_DOWN_ACTION,
