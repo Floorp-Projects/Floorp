@@ -324,6 +324,11 @@ async function testWheelGestureSuppressesPostMouseUpContextMenu(): Promise<
         "right mouseup should be consumed",
       );
       assertEquals(
+        mouseUp.clickEventPrevented(),
+        true,
+        "wheel-owned right mouseup should suppress its follow-up auxclick",
+      );
+      assertEquals(
         contextMenu.defaultPrevented,
         true,
         "post-mouseup contextmenu should remain suppressed",
@@ -736,6 +741,11 @@ async function testLostWheelReleaseRecoveryMatrix(): Promise<void> {
         "fresh left mouseup after a stale wheel cycle should be passive",
       );
       assertEquals(
+        staleWheelLeftUp.clickEventPrevented(),
+        false,
+        "stale wheel recovery must not suppress the fresh left mouseup click",
+      );
+      assertEquals(
         staleWheelContextMenu.defaultPrevented,
         false,
         "left-click stale recovery must allow keyboard contextmenu",
@@ -937,37 +947,73 @@ async function testWheelGestureUsesConfiguredActions(): Promise<void> {
     await withController(
       {
         wheelActions: {
-          scrollUp: ROCKER_RIGHT_LEFT_ACTION,
-          scrollDown: DRAWN_RIGHT_ACTION,
+          scrollUp: NEXT_TAB_ACTION,
+          scrollDown: PREVIOUS_TAB_ACTION,
         },
       },
       ({ win }) => {
+        // A safe custom mapping reverses the two defaults. Exercise each
+        // direction independently so hardcoded defaults cannot satisfy the
+        // assertions by coincidence.
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchWheel(win, -120, 2);
+        dispatchMouse(win, "mouseup", 2, 0, 0, 0);
+
+        assertEquals(
+          counts[NEXT_TAB_ACTION],
+          1,
+          "scroll-up should run its safe custom next-tab action",
+        );
+        assertEquals(
+          counts[PREVIOUS_TAB_ACTION],
+          0,
+          "scroll-up must not run the previous-tab default once configured away",
+        );
+
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchWheel(win, 120, 2);
+        dispatchMouse(win, "mouseup", 2, 0, 0, 0);
+
+        assertEquals(
+          counts[PREVIOUS_TAB_ACTION],
+          1,
+          "scroll-down should run its safe custom previous-tab action",
+        );
+
+        // Bypass setConfig's normalizer by mutating the live test object. The
+        // controller's execution boundary must still reject destructive or
+        // otherwise non-repeat-safe values and use direction-specific defaults.
+        const liveWheelActions = getConfig().wheelActions as unknown as {
+          scrollUp: string;
+          scrollDown: string;
+        };
+        liveWheelActions.scrollUp = ROCKER_RIGHT_LEFT_ACTION;
+        liveWheelActions.scrollDown = DRAWN_RIGHT_ACTION;
+
         dispatchMouse(win, "mousedown", 2, 0, 0, 2);
         dispatchWheel(win, -120, 2);
         dispatchWheel(win, 120, 2);
         dispatchMouse(win, "mouseup", 2, 0, 0, 0);
 
         assertEquals(
-          counts[ROCKER_RIGHT_LEFT_ACTION],
-          1,
-          "scroll-up should run the configured action instead of the " +
-            "hardcoded previous-tab action",
-        );
-        assertEquals(
-          counts[DRAWN_RIGHT_ACTION],
-          1,
-          "scroll-down should run the configured action instead of the " +
-            "hardcoded next-tab action",
-        );
-        assertEquals(
           counts[PREVIOUS_TAB_ACTION],
-          0,
-          "the hardcoded previous-tab action must not run once configured away",
+          2,
+          "forbidden scroll-up should fall back to previous-tab",
         );
         assertEquals(
           counts[NEXT_TAB_ACTION],
+          2,
+          "forbidden scroll-down should fall back to next-tab",
+        );
+        assertEquals(
+          counts[ROCKER_RIGHT_LEFT_ACTION],
           0,
-          "the hardcoded next-tab action must not run once configured away",
+          "forbidden scroll-up action must never execute",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          0,
+          "forbidden scroll-down action must never execute",
         );
       },
     );

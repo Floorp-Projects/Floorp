@@ -2,23 +2,35 @@
 // @colocated-env browser
 
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import {
-  patternToString,
-  stringToPattern,
   defaultConfig,
-  strDefaultConfig,
-  MOUSE_GESTURE_ENABLED_PREF,
-  MOUSE_GESTURE_CONFIG_PREF,
-  MouseGestureConfigCodec,
-  GestureDirectionCodec,
   GestureActionCodec,
+  GestureDirectionCodec,
+  getConfig,
+  MOUSE_GESTURE_CONFIG_PREF,
+  MOUSE_GESTURE_ENABLED_PREF,
+  MouseGestureConfigCodec,
+  patternToString,
+  setConfig,
+  strDefaultConfig,
+  stringToPattern,
 } from "../config.ts";
-import type { GestureDirection, GesturePattern } from "../config.ts";
+import type {
+  GestureDirection,
+  GesturePattern,
+  MouseGestureConfig,
+} from "../config.ts";
+import {
+  DEFAULT_WHEEL_ACTIONS,
+  isRepeatSafeWheelAction,
+  normalizeWheelActions,
+  REPEAT_SAFE_WHEEL_ACTIONS,
+} from "../wheel-action-policy.ts";
 
 // ---------------------------------------------------------------------------
 // patternToString / stringToPattern tests
@@ -376,7 +388,7 @@ function testDefaultConfigNineActions(): void {
 
 function testDefaultConfigActionPatternsUnique(): void {
   const patternStrings = defaultConfig.actions.map((a) =>
-    patternToString(a.pattern),
+    patternToString(a.pattern)
   );
   const uniquePatterns = new Set(patternStrings);
   assertEquals(
@@ -735,6 +747,206 @@ function testConfigCodecInvalidRockerActionsWrongType(): void {
   );
 }
 
+function testRepeatSafeWheelActionPolicy(): void {
+  const expected = [
+    "gecko-show-previous-tab",
+    "gecko-show-next-tab",
+    "gecko-scroll-line-up",
+    "gecko-scroll-line-down",
+    "gecko-scroll-up",
+    "gecko-scroll-down",
+    "gecko-scroll-left",
+    "gecko-scroll-right",
+    "gecko-scroll-to-top",
+    "gecko-scroll-to-bottom",
+    "gecko-zoom-in",
+    "gecko-zoom-out",
+    "gecko-reset-zoom",
+    "gecko-workspace-next",
+    "gecko-workspace-previous",
+    "gecko-show-next-search-result",
+    "gecko-show-previous-search-result",
+  ] as const;
+
+  assertEquals(
+    REPEAT_SAFE_WHEEL_ACTIONS.length,
+    expected.length,
+    "wheel allowlist should contain exactly the approved actions",
+  );
+  for (let index = 0; index < expected.length; index++) {
+    assertEquals(
+      REPEAT_SAFE_WHEEL_ACTIONS[index],
+      expected[index],
+      `wheel allowlist entry ${index}`,
+    );
+    assert(
+      isRepeatSafeWheelAction(expected[index]),
+      `approved wheel action should be repeat-safe: ${expected[index]}`,
+    );
+  }
+
+  for (
+    const forbidden of [
+      "gecko-close-tab",
+      "gecko-close-window",
+      "gecko-quit-from-application",
+      "unknown-action",
+      "",
+      42,
+      null,
+      undefined,
+    ]
+  ) {
+    assert(
+      !isRepeatSafeWheelAction(forbidden),
+      `non-allowlisted value should be rejected: ${String(forbidden)}`,
+    );
+  }
+  assertEquals(
+    DEFAULT_WHEEL_ACTIONS.scrollUp,
+    "gecko-show-previous-tab",
+    "scroll-up default",
+  );
+  assertEquals(
+    DEFAULT_WHEEL_ACTIONS.scrollDown,
+    "gecko-show-next-tab",
+    "scroll-down default",
+  );
+}
+
+function testNormalizeWheelActions(): void {
+  const missing = normalizeWheelActions(undefined);
+  assertEquals(
+    missing.scrollUp,
+    DEFAULT_WHEEL_ACTIONS.scrollUp,
+    "missing scroll-up should use its default",
+  );
+  assertEquals(
+    missing.scrollDown,
+    DEFAULT_WHEEL_ACTIONS.scrollDown,
+    "missing scroll-down should use its default",
+  );
+
+  const partial = normalizeWheelActions({ scrollUp: "gecko-zoom-in" });
+  assertEquals(
+    partial.scrollUp,
+    "gecko-zoom-in",
+    "safe partial scroll-up should be preserved",
+  );
+  assertEquals(
+    partial.scrollDown,
+    DEFAULT_WHEEL_ACTIONS.scrollDown,
+    "missing partial scroll-down should use its own default",
+  );
+
+  const unsafe = normalizeWheelActions({
+    scrollUp: "unknown-action",
+    scrollDown: "gecko-close-tab",
+    extra: "gecko-zoom-out",
+  });
+  assertEquals(
+    unsafe.scrollUp,
+    DEFAULT_WHEEL_ACTIONS.scrollUp,
+    "unknown scroll-up should use its own default",
+  );
+  assertEquals(
+    unsafe.scrollDown,
+    DEFAULT_WHEEL_ACTIONS.scrollDown,
+    "forbidden scroll-down should use its own default",
+  );
+  assertEquals(
+    Object.keys(unsafe).length,
+    2,
+    "normalization should discard unrecognized fields",
+  );
+
+  const safe = normalizeWheelActions({
+    scrollUp: "gecko-workspace-previous",
+    scrollDown: "gecko-show-next-search-result",
+  });
+  assertEquals(
+    safe.scrollUp,
+    "gecko-workspace-previous",
+    "safe scroll-up should survive normalization",
+  );
+  assertEquals(
+    safe.scrollDown,
+    "gecko-show-next-search-result",
+    "safe scroll-down should survive normalization",
+  );
+}
+
+function testCoreConfigNormalizesWheelActions(): void {
+  const previousConfig = getConfig();
+  const hadConfigPref = Services.prefs.prefHasUserValue(
+    MOUSE_GESTURE_CONFIG_PREF,
+  );
+  const previousConfigPref = hadConfigPref
+    ? Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF)
+    : null;
+
+  const applyRawWheelActions = (wheelActions: unknown): void => {
+    const rawConfig = { ...previousConfig } as Record<string, unknown>;
+    if (wheelActions === undefined) {
+      delete rawConfig.wheelActions;
+    } else {
+      rawConfig.wheelActions = wheelActions;
+    }
+    setConfig(rawConfig as unknown as MouseGestureConfig);
+  };
+
+  try {
+    applyRawWheelActions(undefined);
+    assertEquals(
+      getConfig().wheelActions.scrollUp,
+      DEFAULT_WHEEL_ACTIONS.scrollUp,
+      "core config should recover a missing scroll-up default",
+    );
+    assertEquals(
+      getConfig().wheelActions.scrollDown,
+      DEFAULT_WHEEL_ACTIONS.scrollDown,
+      "core config should recover a missing scroll-down default",
+    );
+
+    applyRawWheelActions({ scrollUp: "gecko-zoom-in" });
+    assertEquals(
+      getConfig().wheelActions.scrollUp,
+      "gecko-zoom-in",
+      "core config should preserve a safe partial binding",
+    );
+    assertEquals(
+      getConfig().wheelActions.scrollDown,
+      DEFAULT_WHEEL_ACTIONS.scrollDown,
+      "core config should fill a partial binding independently",
+    );
+
+    applyRawWheelActions({
+      scrollUp: "unknown-action",
+      scrollDown: "gecko-close-tab",
+    });
+    assertEquals(
+      getConfig().wheelActions.scrollUp,
+      DEFAULT_WHEEL_ACTIONS.scrollUp,
+      "core config should replace an unknown binding",
+    );
+    assertEquals(
+      getConfig().wheelActions.scrollDown,
+      DEFAULT_WHEEL_ACTIONS.scrollDown,
+      "core config should replace a forbidden binding",
+    );
+  } finally {
+    setConfig(previousConfig);
+    if (previousConfigPref !== null) {
+      Services.prefs.setStringPref(
+        MOUSE_GESTURE_CONFIG_PREF,
+        previousConfigPref,
+      );
+    } else {
+      Services.prefs.clearUserPref(MOUSE_GESTURE_CONFIG_PREF);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Pref constants tests
 // ---------------------------------------------------------------------------
@@ -997,6 +1209,18 @@ const tests: TestCase[] = [
   {
     name: "ConfigCodec invalid rockerActions wrong type",
     fn: testConfigCodecInvalidRockerActionsWrongType,
+  },
+  {
+    name: "repeat-safe wheel action policy",
+    fn: testRepeatSafeWheelActionPolicy,
+  },
+  {
+    name: "normalize wheel actions",
+    fn: testNormalizeWheelActions,
+  },
+  {
+    name: "core config normalizes wheel actions",
+    fn: testCoreConfigNormalizesWheelActions,
   },
   // pref constants
   { name: "pref constants", fn: testPrefConstants },
