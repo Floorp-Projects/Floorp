@@ -3,6 +3,7 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
+  debugRuntimeArchiveName,
   filterRuntimeEntries,
   type InitializerRunDependencies,
   installLockedRuntime,
@@ -14,6 +15,7 @@ import {
   run,
   runtimeLayoutFor,
   scoreRuntimeEntry,
+  selectDebugRuntimeEntry,
   validateLockedRuntimeArtifact,
   validateLockedRuntimeReleaseMetadata,
 } from "./initializer.ts";
@@ -171,6 +173,40 @@ Deno.test("pickRuntimeEntry returns first entry when no strong match", () => {
     format: "tar.xz",
   });
   assertEquals(picked.name, "unknown-file.dat");
+});
+
+Deno.test("Debug Runtime selection requires the exact FTP platform bundle", () => {
+  const entries = [
+    {
+      type: "file",
+      name: "linux-x86_64-artifacts.zip",
+      size: 10,
+      hash: "a".repeat(64),
+    },
+    {
+      type: "file",
+      name: "windows-x86_64-artifacts.zip",
+      size: 11,
+      hash: "b".repeat(64),
+    },
+  ];
+  const archive = {
+    filename: "floorp-linux-x86_64-moz-artifact.tar.xz",
+    format: "tar.xz" as const,
+    platform: "linux" as const,
+    architecture: "x86_64" as const,
+  };
+  assertEquals(debugRuntimeArchiveName(archive), "linux-x86_64-artifacts.zip");
+  assertEquals(selectDebugRuntimeEntry(entries, archive), entries[0]);
+  assertThrows(
+    () =>
+      selectDebugRuntimeEntry(
+        entries.filter((entry) => entry.name !== "linux-x86_64-artifacts.zip"),
+        archive,
+      ),
+    Error,
+    "Expected exactly one Debug Runtime FTP asset",
+  );
 });
 
 const MAIN_SHA256 = "1".repeat(64);
@@ -465,12 +501,13 @@ interface RunProbe {
   calls: {
     loadLock: number;
     installLock: number;
+    installDebug: number;
     savePrefs: number;
   };
 }
 
 function runProbe(): RunProbe {
-  const calls = { loadLock: 0, installLock: 0, savePrefs: 0 };
+  const calls = { loadLock: 0, installLock: 0, installDebug: 0, savePrefs: 0 };
   return {
     calls,
     dependencies: {
@@ -480,6 +517,10 @@ function runProbe(): RunProbe {
       },
       installLock: () => {
         calls.installLock += 1;
+        return Promise.resolve();
+      },
+      installDebug: () => {
+        calls.installDebug += 1;
         return Promise.resolve();
       },
       savePrefs: () => {
@@ -495,6 +536,18 @@ Deno.test("run uses locked initialization by default", async () => {
   assertEquals(probe.calls, {
     loadLock: 1,
     installLock: 1,
+    installDebug: 0,
+    savePrefs: 1,
+  });
+});
+
+Deno.test("run selects the Debug FTP initializer without loading the Release lock", async () => {
+  const probe = runProbe();
+  await run({ ...probe.dependencies, distribution: "debug" });
+  assertEquals(probe.calls, {
+    loadLock: 0,
+    installLock: 0,
+    installDebug: 1,
     savePrefs: 1,
   });
 });
@@ -531,6 +584,7 @@ Deno.test("run ignores legacy environment and initializer hooks", async () => {
     assertEquals(probe.calls, {
       loadLock: 1,
       installLock: 1,
+      installDebug: 0,
       savePrefs: 1,
     });
   }
@@ -550,6 +604,7 @@ Deno.test("run does not save preferences when locked installation fails", async 
   assertEquals(probe.calls, {
     loadLock: 1,
     installLock: 1,
+    installDebug: 0,
     savePrefs: 0,
   });
 });
@@ -568,6 +623,7 @@ Deno.test("run does not install or save when the Runtime lock fails to load", as
   assertEquals(probe.calls, {
     loadLock: 1,
     installLock: 0,
+    installDebug: 0,
     savePrefs: 0,
   });
 });

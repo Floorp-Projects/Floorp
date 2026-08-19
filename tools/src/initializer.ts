@@ -104,7 +104,15 @@ export interface LockedRuntimeInstallResult {
 export interface InitializerRunDependencies {
   loadLock(): Promise<RuntimeLock>;
   installLock(lock: RuntimeLock): Promise<void>;
+  installDebug?(): Promise<void>;
   savePrefs(): void;
+}
+
+export type RuntimeDistribution = "release" | "debug";
+
+export interface InitializerRunOptions
+  extends Partial<InitializerRunDependencies> {
+  distribution?: RuntimeDistribution;
 }
 
 interface LockedRuntimeMarker {
@@ -129,6 +137,20 @@ interface RuntimeLayout {
   applicationIni: string;
   executable: string;
   legacyVersionFile: string;
+}
+
+export const DEBUG_RUNTIME_MARKER = ".floorp-runtime-debug.json";
+
+interface DebugRuntimeMarker {
+  schemaVersion: 1;
+  distribution: "debug";
+  platform: RuntimePlatform;
+  architecture: RuntimeArtifact["architecture"];
+  artifactName: string;
+  artifactSize: number;
+  artifactSha256: string;
+  version: string;
+  buildId: string;
 }
 
 export const isEnvironmentPermissionError = (error: unknown): boolean =>
@@ -961,6 +983,132 @@ async function findSingleApplicationIni(root: string): Promise<string> {
   return matches[0];
 }
 
+function debugRuntimeVersionPath(binRootDir: string): string {
+  if (PLATFORM !== "darwin") {
+    return path.join(binRootDir, BRANDING.base_name, "nora.version.txt");
+  }
+  return path.join(
+    binRootDir,
+    BRANDING.base_name,
+    `${BRANDING.display_name}.app`,
+    "Contents",
+    "Resources",
+    "nora.version.txt",
+  );
+}
+
+function debugRuntimeExecutablePath(binRootDir: string): string {
+  return path.join(binRootDir, path.relative(BIN_ROOT_DIR, BIN_PATH_EXE));
+}
+
+async function assertDebugRuntimeTree(binRootDir: string): Promise<{
+  version: string;
+  buildId: string;
+}> {
+  const executable = await Deno.lstat(debugRuntimeExecutablePath(binRootDir));
+  if (!executable.isFile || executable.size <= 0) {
+    throw new Error(
+      `Debug Runtime executable is missing or empty under ${binRootDir}.`,
+    );
+  }
+
+  const applicationIni = await findSingleApplicationIni(binRootDir);
+  const parsed = parseApplicationIni(await Deno.readTextFile(applicationIni));
+  if (parsed.name && parsed.name !== BRANDING.display_name) {
+    throw new Error(
+      `Debug Runtime application name mismatch: ${parsed.name} !== ${BRANDING.display_name}.`,
+    );
+  }
+  return parsed;
+}
+
+function debugRuntimeMarkerFields(
+  marker: DebugRuntimeMarker,
+): Record<string, unknown> {
+  return {
+    schemaVersion: marker.schemaVersion,
+    distribution: marker.distribution,
+    platform: marker.platform,
+    architecture: marker.architecture,
+    artifactName: marker.artifactName,
+    artifactSize: marker.artifactSize,
+    artifactSha256: marker.artifactSha256,
+  };
+}
+
+async function isMatchingDebugRuntime(
+  binRootDir: string,
+  entry: RuntimeDeployEntry,
+  target: NativeRuntimeTarget,
+): Promise<boolean> {
+  try {
+    const marker = JSON.parse(
+      await Deno.readTextFile(path.join(binRootDir, DEBUG_RUNTIME_MARKER)),
+    ) as unknown;
+    const expected: DebugRuntimeMarker = {
+      schemaVersion: 1,
+      distribution: "debug",
+      platform: target.platform,
+      architecture: target.architecture,
+      artifactName: entry.name,
+      artifactSize: entry.size!,
+      artifactSha256: normalizeSha256(entry.hash!),
+      version: "",
+      buildId: "",
+    };
+    if (!isRecord(marker)) return false;
+    for (
+      const [key, value] of Object.entries(debugRuntimeMarkerFields(expected))
+    ) {
+      if (marker[key] !== value) return false;
+    }
+    await assertDebugRuntimeTree(binRootDir);
+    return true;
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.warn(`Existing Debug Runtime needs replacement: ${message}`);
+    }
+    return false;
+  }
+}
+
+async function assertRuntimeDeployEntry(
+  filePath: string,
+  entry: RuntimeDeployEntry,
+): Promise<void> {
+  const size = entry.size;
+  if (
+    typeof size !== "number" ||
+    !Number.isSafeInteger(size) ||
+    size <= 0 ||
+    typeof entry.hash !== "string" ||
+    !/^[0-9a-f]{64}$/i.test(entry.hash)
+  ) {
+    throw new Error(
+      `Debug Runtime FTP asset ${entry.name} is missing a valid size or SHA-256 hash.`,
+    );
+  }
+  const info = await Deno.stat(filePath);
+  if (!info.isFile) {
+    throw new Error(
+      `Debug Runtime FTP asset is not a regular file: ${filePath}`,
+    );
+  }
+  if (info.size !== size) {
+    throw new Error(
+      `Debug Runtime FTP asset size mismatch for ${entry.name}: ${info.size} !== ${size}.`,
+    );
+  }
+  const actualSha256 = normalizeSha256(await sha256File(filePath));
+  const expectedSha256 = normalizeSha256(entry.hash);
+  if (actualSha256 !== expectedSha256) {
+    throw new Error(
+      `Debug Runtime FTP SHA-256 mismatch for ${entry.name}: ${actualSha256} !== ${expectedSha256}.`,
+    );
+  }
+}
+
 async function assertCompanionApplicationIni(
   root: string,
   artifact: RuntimeArtifact,
@@ -1490,7 +1638,7 @@ export async function installLockedRuntime(
   }
 }
 
-interface RuntimeDeployEntry {
+export interface RuntimeDeployEntry {
   type: string;
   name: string;
   size?: number;
@@ -1515,6 +1663,45 @@ const ARCH_KEYWORDS: Record<BinArchive["architecture"], string[]> = {
   aarch64: ["aarch64", "arm64"],
   universal: ["universal"],
 };
+
+export function debugRuntimeArchiveName(binArchive: BinArchive): string {
+  if (binArchive.platform === "windows") {
+    return "windows-x86_64-artifacts.zip";
+  }
+  if (binArchive.platform === "linux") {
+    return `${
+      binArchive.architecture === "aarch64" ? "linux-aarch64" : "linux-x86_64"
+    }-artifacts.zip`;
+  }
+  return "mac-universal-artifacts.zip";
+}
+
+export function selectDebugRuntimeEntry(
+  entries: RuntimeDeployEntry[],
+  binArchive: BinArchive,
+): RuntimeDeployEntry {
+  const expectedName = debugRuntimeArchiveName(binArchive);
+  const matches = entries.filter((entry) => entry.name === expectedName);
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one Debug Runtime FTP asset ${expectedName}; found ${matches.length}.`,
+    );
+  }
+  const entry = matches[0];
+  const size = entry.size;
+  if (
+    typeof size !== "number" ||
+    !Number.isSafeInteger(size) ||
+    size <= 0 ||
+    typeof entry.hash !== "string" ||
+    !/^[0-9a-f]{64}$/i.test(entry.hash)
+  ) {
+    throw new Error(
+      `Debug Runtime FTP asset ${expectedName} is missing a valid size or SHA-256 hash.`,
+    );
+  }
+  return entry;
+}
 
 const normalizeName = (value: string): string => value.toLowerCase();
 
@@ -1615,11 +1802,109 @@ const fetchRuntimeIndex = async (): Promise<RuntimeDeployIndex> => {
   throw lastError ?? new Error("Failed to fetch runtime index");
 };
 
+async function installDebugRuntime(): Promise<void> {
+  const binArchive = getBinArchive();
+  const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+  const index = await fetchRuntimeIndex();
+  const entry = selectDebugRuntimeEntry(
+    filterRuntimeEntries(index),
+    binArchive,
+  );
+
+  if (await isMatchingDebugRuntime(BIN_ROOT_DIR, entry, target)) {
+    logger.info(
+      `Debug Runtime ${entry.name} (${entry.hash}) is already installed.`,
+    );
+    return;
+  }
+
+  const nonce = crypto.randomUUID();
+  const distRoot = path.dirname(BIN_ROOT_DIR);
+  const stageRoot = path.join(distRoot, `.runtime-debug-staging-${nonce}`);
+  const backupRoot = path.join(distRoot, `.runtime-debug-backup-${nonce}`);
+  const failedRoot = path.join(distRoot, `.runtime-debug-failed-${nonce}`);
+  const downloadRoot = path.join(
+    distRoot,
+    `.runtime-debug-download-${nonce}`,
+  );
+  const archivePath = path.join(downloadRoot, binArchive.filename);
+  let transactionStarted = false;
+
+  try {
+    for (
+      const transactionPath of [
+        stageRoot,
+        backupRoot,
+        failedRoot,
+        downloadRoot,
+      ]
+    ) {
+      if (await pathExists(transactionPath)) {
+        throw new Error(
+          `Refusing to reuse an existing Debug Runtime transaction path: ${transactionPath}.`,
+        );
+      }
+    }
+    transactionStarted = true;
+    await Deno.mkdir(stageRoot, { recursive: true });
+    await Deno.mkdir(downloadRoot, { recursive: true });
+    await downloadBin(binArchive.filename, entry, archivePath);
+    await decompressBin(stageRoot, archivePath);
+    await assertSafeFilesystemTree(stageRoot);
+    const identity = await assertDebugRuntimeTree(stageRoot);
+    const marker: DebugRuntimeMarker = {
+      schemaVersion: 1,
+      distribution: "debug",
+      platform: target.platform,
+      architecture: target.architecture,
+      artifactName: entry.name,
+      artifactSize: entry.size!,
+      artifactSha256: normalizeSha256(entry.hash!),
+      version: identity.version,
+      buildId: identity.buildId,
+    };
+    await Deno.writeTextFile(
+      path.join(stageRoot, DEBUG_RUNTIME_MARKER),
+      `${JSON.stringify(marker, null, 2)}\n`,
+      { createNew: true },
+    );
+
+    const backupPath = await swapLockedRuntime(
+      stageRoot,
+      BIN_ROOT_DIR,
+      backupRoot,
+      failedRoot,
+      (from, to) => Deno.rename(from, to),
+    );
+    if (backupPath) await removeIfPresent(backupPath);
+    logger.success(
+      `Installed Debug Runtime ${identity.version}/${identity.buildId} from ${entry.name}.`,
+    );
+  } finally {
+    if (transactionStarted) {
+      for (const transactionPath of [stageRoot, downloadRoot]) {
+        try {
+          await removeIfPresent(transactionPath);
+        } catch (error) {
+          const message = error instanceof Error
+            ? error.message
+            : String(error);
+          logger.warn(
+            `Could not clean Debug Runtime transaction path ${transactionPath}: ${message}`,
+          );
+        }
+      }
+    }
+  }
+}
+
 /**
- * Entry point: ensure binary is present and preferences saved.
+ * Entry point: ensure the selected Runtime distribution is present and
+ * preferences are saved. Release is the default and uses the canonical lock;
+ * development explicitly selects the Debug FTP distribution.
  */
 export async function run(
-  overrides: Partial<InitializerRunDependencies> = {},
+  overrides: InitializerRunOptions = {},
 ): Promise<void> {
   const dependencies: InitializerRunDependencies = {
     loadLock: overrides.loadLock ?? (() => loadRuntimeLock()),
@@ -1627,9 +1912,14 @@ export async function run(
       (async (lock) => {
         await installLockedRuntime({ lock });
       }),
+    installDebug: overrides.installDebug ?? installDebugRuntime,
     savePrefs: overrides.savePrefs ?? savePrefsForProfile,
   };
-  await dependencies.installLock(await dependencies.loadLock());
+  if ((overrides.distribution ?? "release") === "debug") {
+    await dependencies.installDebug!();
+  } else {
+    await dependencies.installLock(await dependencies.loadLock());
+  }
   dependencies.savePrefs();
 }
 
@@ -1705,31 +1995,11 @@ async function extractNestedZip(
   outerZipPath: string,
   extractToDir: string,
 ): Promise<void> {
-  const tempDir = "_dist/temp_extract_" + Date.now();
-  await Deno.mkdir(tempDir);
+  const tempDir = await Deno.makeTempDir({ prefix: "nora-runtime-outer-" });
 
   try {
     logger.info("Extracting outer zip...");
-
-    // Extract outer zip to temp directory
-    switch (PLATFORM) {
-      case "windows":
-        try {
-          runCommand("tar", ["-xf", outerZipPath, "-C", tempDir]);
-        } catch {
-          runCommand("powershell", [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            `Expand-Archive -LiteralPath '${outerZipPath}' -DestinationPath '${tempDir}' -Force`,
-          ]);
-        }
-        break;
-      case "darwin":
-      case "linux":
-        runCommand("unzip", ["-q", outerZipPath, "-d", tempDir]);
-        break;
-    }
+    await extractZipSafely(outerZipPath, tempDir);
 
     // Find the inner zip file
     let innerZipPath: string | null = null;
@@ -1745,26 +2015,7 @@ async function extractNestedZip(
     }
 
     logger.info("Extracting inner zip...");
-
-    // Extract inner zip to final destination
-    switch (PLATFORM) {
-      case "windows":
-        try {
-          runCommand("tar", ["-xf", innerZipPath, "-C", extractToDir]);
-        } catch {
-          runCommand("powershell", [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            `Expand-Archive -LiteralPath '${innerZipPath}' -DestinationPath '${extractToDir}' -Force`,
-          ]);
-        }
-        break;
-      case "darwin":
-      case "linux":
-        runCommand("unzip", ["-q", innerZipPath, "-d", extractToDir]);
-        break;
-    }
+    await extractZipSafely(innerZipPath, extractToDir, BRANDING.base_name);
 
     // Set proper permissions on Unix-like systems
     if (PLATFORM !== "windows") {
@@ -1777,18 +2028,23 @@ async function extractNestedZip(
   } finally {
     // Clean up temp directory
     try {
-      Deno.removeSync(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true });
     } catch {
       // Ignore cleanup errors
     }
   }
 }
 
-export async function decompressBin(): Promise<void> {
+export async function decompressBin(
+  destinationRoot = BIN_ROOT_DIR,
+  archivePathOverride?: string,
+): Promise<void> {
   const binArchive = getBinArchive();
-  let archivePath = path.resolve(binArchive.filename);
+  let archivePath = archivePathOverride
+    ? path.resolve(archivePathOverride)
+    : path.resolve(binArchive.filename);
 
-  if (!exists(archivePath)) {
+  if (!archivePathOverride && !exists(archivePath)) {
     const cwd = Deno.cwd();
     const expectedExt = binArchive.format === "tar.xz"
       ? ".tar.xz"
@@ -1813,9 +2069,10 @@ export async function decompressBin(): Promise<void> {
   }
 
   try {
+    Deno.mkdirSync(destinationRoot, { recursive: true });
     // Handle nested zip extraction
     if (binArchive.filename.endsWith(".zip")) {
-      await extractNestedZip(archivePath, BIN_ROOT_DIR);
+      await extractNestedZip(archivePath, destinationRoot);
     } else {
       // Handle other archive formats (DMG, tar.xz, etc.)
       switch (PLATFORM) {
@@ -1836,7 +2093,7 @@ export async function decompressBin(): Promise<void> {
               mountPoint,
               archivePath,
             ]);
-            const subdir = path.join(BIN_ROOT_DIR, BRANDING.base_name);
+            const subdir = path.join(destinationRoot, BRANDING.base_name);
             Deno.mkdirSync(subdir, { recursive: true });
             runCommand("cp", ["-a", `${mountPoint}/.`, subdir]);
 
@@ -1854,11 +2111,11 @@ export async function decompressBin(): Promise<void> {
             }
 
             try {
-              runCommand("xattr", ["-rc", BIN_ROOT_DIR]);
+              runCommand("xattr", ["-rc", destinationRoot]);
             } catch {
               // xattr might not be present; ignore
             }
-            runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
+            runCommand("chmod", ["-R", "755", destinationRoot]);
             // Patch Info.plist to inject developer repo/obj path equal to
             // the extracted directory so GetRepoDir can find it without
             // editing C++ sources.
@@ -1880,8 +2137,11 @@ export async function decompressBin(): Promise<void> {
         }
 
         case "linux": {
-          runCommand("tar", ["-xJf", archivePath, "-C", BIN_ROOT_DIR]);
-          runCommand("chmod", ["-R", "755", BIN_ROOT_DIR]);
+          await extractTarXzSafely(
+            archivePath,
+            destinationRoot,
+            BRANDING.base_name,
+          );
           break;
         }
 
@@ -1890,27 +2150,37 @@ export async function decompressBin(): Promise<void> {
       }
     }
 
-    Deno.writeTextFileSync(BIN_VERSION, VERSION);
+    const versionPath = debugRuntimeVersionPath(destinationRoot);
+    Deno.mkdirSync(path.dirname(versionPath), { recursive: true });
+    Deno.writeTextFileSync(versionPath, VERSION);
     logger.success("Extraction complete!");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     logger.error(`Error during extraction: ${msg}`);
-    Deno.exit(1);
+    throw e;
   }
 }
 
-export async function downloadBin(filename: string): Promise<void> {
+export async function downloadBin(
+  filename: string,
+  selectedEntry?: RuntimeDeployEntry,
+  outputPath?: string,
+): Promise<RuntimeDeployEntry> {
   const binArchive = getBinArchive();
-  const index = await fetchRuntimeIndex();
-  const entries = filterRuntimeEntries(index);
-
-  if (!entries.length) {
-    throw new Error(
-      "Runtime build index does not contain any downloadable file entries.",
-    );
+  let picked = selectedEntry;
+  if (!picked) {
+    const index = await fetchRuntimeIndex();
+    const entries = filterRuntimeEntries(index);
+    if (!entries.length) {
+      throw new Error(
+        "Runtime build index does not contain any downloadable file entries.",
+      );
+    }
+    picked = pickRuntimeEntry(entries, binArchive);
   }
-
-  const picked = pickRuntimeEntry(entries, binArchive);
+  if (!isPlainLockedRuntimeAssetName(picked.name)) {
+    throw new Error(`Debug Runtime FTP asset name is unsafe: ${picked.name}`);
+  }
   const downloadUrl = buildRuntimeUrl(picked.name);
   logger.info(
     `Downloading runtime artifact '${picked.name}' for ${binArchive.platform}/${binArchive.architecture}`,
@@ -2002,28 +2272,37 @@ export async function downloadBin(filename: string): Promise<void> {
 
   // If the expected target is a .zip, save as-is (nested unzip is handled later).
   const isZipExpected = filename.toLowerCase().endsWith(".zip");
+  const destinationPath = path.resolve(outputPath ?? filename);
   if (isZipExpected) {
     await streamToFile(
       resp,
-      path.resolve(filename),
+      destinationPath,
       "Downloading artifact",
       true,
     );
+    await assertRuntimeDeployEntry(destinationPath, picked);
     logger.success(`Downloaded artifact zip to ${filename}`);
-    return;
+    return picked;
   }
 
   // Non-zip expected (e.g., .tar.xz, .dmg): extract inner file from the downloaded zip.
   const tmpZipPath = path.resolve(
-    `_dist/runtime_artifact_${Date.now()}_${picked.name}`,
+    path.join(
+      path.dirname(destinationPath),
+      `runtime_artifact_${Date.now()}_${path.basename(picked.name)}`,
+    ),
   );
-  const tmpExtractDir = `_dist/runtime_artifact_extract_${Date.now()}`;
+  const tmpExtractDir = path.join(
+    path.dirname(destinationPath),
+    `runtime_artifact_extract_${Date.now()}`,
+  );
   try {
     await Deno.mkdir(path.dirname(tmpZipPath), { recursive: true });
   } catch {
     // ignore
   }
   await streamToFile(resp, tmpZipPath, "Downloading artifact", true);
+  await assertRuntimeDeployEntry(tmpZipPath, picked);
   await Deno.mkdir(tmpExtractDir);
 
   try {
@@ -2082,13 +2361,12 @@ export async function downloadBin(filename: string): Promise<void> {
     }
 
     // Move/copy to requested filename at CWD
-    const destPath = path.resolve(filename);
     try {
-      Deno.copyFileSync(pickedInner, destPath);
+      Deno.copyFileSync(pickedInner, destinationPath);
     } catch {
       // fallback to read/write
       const data = Deno.readFileSync(pickedInner);
-      Deno.writeFileSync(destPath, data);
+      Deno.writeFileSync(destinationPath, data);
     }
     logger.success(`Downloaded binary to ${filename}`);
   } finally {
@@ -2104,4 +2382,5 @@ export async function downloadBin(filename: string): Promise<void> {
       // ignore
     }
   }
+  return picked;
 }
