@@ -352,6 +352,10 @@ jobs:
             --allow-net=127.0.0.1 \
             --allow-read=_dist \
             tools/src/mouse_gesture_rocker_w3c_e2e.ts
+          deno run \
+            --allow-net=127.0.0.1 \
+            --allow-read=_dist \
+            tools/src/mouse_gesture_drawn_w3c_e2e.ts
 
       - name: Verify downloaded Firefox execution coverage
         if: matrix.browser_suite == true
