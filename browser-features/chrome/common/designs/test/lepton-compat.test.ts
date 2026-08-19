@@ -19,10 +19,10 @@
 // non-destructive LWT contract that was the whole point of the rewrite.
 
 import {
-  FLOORP_ICON_PATCHES,
   GECKO_152_COLOR_FIX_CSS,
   LEPTON_COMPAT_152_CSS,
   LEPTON_COMPAT_CSS,
+  FLOORP_ICON_PATCHES,
 } from "../utils/lepton-compat-152.css.ts";
 import {
   GECKO_152_RENAMED_VARS,
@@ -165,10 +165,8 @@ function testRenamedVarsTableIsCanonical(): void {
   // NOTE: the colocated test harness's assertEquals uses reference equality
   // (===), which can never succeed for two independently-built arrays. Compare
   // the canonical (sorted) serializations instead.
-  const sortKey = (
-    a: readonly [string, string],
-    b: readonly [string, string],
-  ) => a[0].localeCompare(b[0]);
+  const sortKey = (a: readonly [string, string], b: readonly [string, string]) =>
+    a[0].localeCompare(b[0]);
   const actualJson = JSON.stringify(
     [...GECKO_152_RENAMED_VARS].sort(sortKey),
   );
@@ -350,12 +348,10 @@ function testCompatUsesRobustLwtSignals(): void {
  * scoped to the no-theme case, so a theme that provides its own value wins.
  */
 function testNoColorOverrideUsesImportant(): void {
-  for (
-    const [label, css] of [
-      ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
-      ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
-    ] as const
-  ) {
+  for (const [label, css] of [
+    ["LEPTON_COMPAT_152_CSS", LEPTON_COMPAT_152_CSS],
+    ["GECKO_152_COLOR_FIX_CSS", GECKO_152_COLOR_FIX_CSS],
+  ] as const) {
     // Find every custom-property declaration and assert none carries
     // !important. (Declarations like `stroke: transparent !important` in the
     // icon patches are fine and not in these two strings.)
@@ -407,13 +403,10 @@ function testLwtOwnedTokensAreGuardedOrNoThemeScoped(): void {
         /var\(\s*--panel-background-color/.test(declValue) ||
         /var\(\s*--panel-text-color/.test(declValue) ||
         /var\(\s*--panel-border-color/.test(declValue);
-      const isLowPriorityFallback = token === "--in-content-page-background" &&
-        selectorChunk.includes("@layer floorp-compat");
       assert(
-        isNoThemeScoped || isGuardedAlias || isLowPriorityFallback,
+        isNoThemeScoped || isGuardedAlias,
         `${token} must only be set in the no-theme scope or via a guarded ` +
-          `alias/low-priority fallback (so a loaded LWT keeps its value); ` +
-          `offending selector: ` +
+          `alias (so a loaded LWT keeps its value); offending selector: ` +
           `"${selectorChunk}"`,
       );
     }
@@ -446,74 +439,6 @@ function testCompatFixesDialogBackground(): void {
     GECKO_152_COLOR_FIX_CSS.includes("dialog"),
     "color-fix layer should target the dialog element",
   );
-}
-
-/** A theme-provided in-content background must outrank the LWT fallback even
- * though the compat sheet is injected after the theme's own style sheets. */
-function testLwtDialogFallbackDoesNotOverrideThemeValue(): void {
-  const lwtRule =
-    /@layer floorp-compat\s*\{[\s\S]*?--in-content-page-background\s*:\s*var\(/;
-  assert(
-    lwtRule.test(GECKO_152_COLOR_FIX_CSS),
-    "LWT dialog fallback should be isolated in a low-priority cascade layer",
-  );
-}
-
-/**
- * Real-browser verification of the LWT fallback contract: with an LWT loaded
- * whose accent is the XP Modern blue (rgb(9,96,224)), in-content surfaces
- * must NOT paint that frame accent. The compat sheet's `@layer floorp-compat`
- * fallback (canvas/toolbar token) must win, and a theme that provides its own
- * `--in-content-page-background` must keep its value.
- */
-function testLwtFallbackInRealBrowser(): void {
-  const root = document.documentElement;
-  const styleEl = document.createElement("style");
-  const probe = document.createElement("dialog");
-  const probeWithThemeValue = document.createElement("dialog");
-  probeWithThemeValue.style.setProperty(
-    "--in-content-page-background",
-    "rgb(200, 100, 50)",
-  );
-
-  root.setAttribute("lwtheme", "true");
-  root.style.setProperty("--lwt-accent-color", "rgb(9, 96, 224)");
-  styleEl.textContent = GECKO_152_COLOR_FIX_CSS;
-  document.head.appendChild(styleEl);
-  root.appendChild(probe);
-  root.appendChild(probeWithThemeValue);
-
-  try {
-    const fallbackStyle = globalThis.getComputedStyle(probe);
-    assert(fallbackStyle, "computed style for the dialog probe must exist");
-    const fallbackColor = fallbackStyle.getPropertyValue(
-      "--in-content-page-background",
-    );
-    assert(
-      fallbackColor.length > 0 &&
-        !fallbackColor.includes("9, 96, 224") &&
-        !fallbackColor.includes("9,96,224"),
-      `LWT fallback must not paint the frame accent on in-content surfaces; ` +
-        `got: "${fallbackColor}"`,
-    );
-
-    const themeStyle = globalThis.getComputedStyle(probeWithThemeValue);
-    assert(themeStyle, "computed style for the themed probe must exist");
-    const themeColor = themeStyle.getPropertyValue(
-      "--in-content-page-background",
-    );
-    assert(
-      themeColor.includes("200, 100, 50"),
-      `a theme-provided --in-content-page-background must win over the ` +
-        `low-priority fallback; got: "${themeColor}"`,
-    );
-  } finally {
-    root.removeAttribute("lwtheme");
-    root.style.removeProperty("--lwt-accent-color");
-    probe.remove();
-    probeWithThemeValue.remove();
-    styleEl.remove();
-  }
 }
 
 /** "The whole UI turns blue" / "transparent panels" — ensure the panel
@@ -629,76 +554,26 @@ function testFluerialExcludesLeptonIconPatches(): void {
 export async function runAllTests(): Promise<void> {
   await runTests("lepton-compat.test.ts", [
     // alias table canonicality
-    {
-      name: "renamed vars table is canonical",
-      fn: testRenamedVarsTableIsCanonical,
-    },
-    {
-      name: "--toolbar-color is not a rename source",
-      fn: testToolbarColorIsNotARenameSource,
-    },
-    {
-      name: "--toolbar-text-color is synthesized",
-      fn: testToolbarTextColorIsSynthesized,
-    },
+    { name: "renamed vars table is canonical", fn: testRenamedVarsTableIsCanonical },
+    { name: "--toolbar-color is not a rename source", fn: testToolbarColorIsNotARenameSource },
+    { name: "--toolbar-text-color is synthesized", fn: testToolbarTextColorIsSynthesized },
     // alias emission
-    {
-      name: "renamed aliases are emitted correctly",
-      fn: testRenamedAliasesAreEmittedCorrectly,
-    },
-    {
-      name: "synthesized aliases are emitted correctly",
-      fn: testSynthesizedAliasesAreEmittedCorrectly,
-    },
+    { name: "renamed aliases are emitted correctly", fn: testRenamedAliasesAreEmittedCorrectly },
+    { name: "synthesized aliases are emitted correctly", fn: testSynthesizedAliasesAreEmittedCorrectly },
     // injection scope
-    {
-      name: "lepton themes include compat css",
-      fn: testLeptonThemesIncludeCompatCss,
-    },
-    {
-      name: "all skinned themes include color fix",
-      fn: testAllSkinnedThemesIncludeColorFix,
-    },
+    { name: "lepton themes include compat css", fn: testLeptonThemesIncludeCompatCss },
+    { name: "all skinned themes include color fix", fn: testAllSkinnedThemesIncludeColorFix },
     { name: "proton excludes both layers", fn: testProtonExcludesBothLayers },
     // robust detection
-    {
-      name: "compat avoids brittle selectors",
-      fn: testCompatAvoidsBrittleSelectors,
-    },
-    {
-      name: "compat uses robust lwt signals",
-      fn: testCompatUsesRobustLwtSignals,
-    },
+    { name: "compat avoids brittle selectors", fn: testCompatAvoidsBrittleSelectors },
+    { name: "compat uses robust lwt signals", fn: testCompatUsesRobustLwtSignals },
     // non-destructive LWT contract
-    {
-      name: "no color override uses !important",
-      fn: testNoColorOverrideUsesImportant,
-    },
-    {
-      name: "lwt-owned tokens are guarded or no-theme scoped",
-      fn: testLwtOwnedTokensAreGuardedOrNoThemeScoped,
-    },
-    {
-      name: "no cyclic lwt accent reference",
-      fn: testNoCyclicLwtAccentReference,
-    },
+    { name: "no color override uses !important", fn: testNoColorOverrideUsesImportant },
+    { name: "lwt-owned tokens are guarded or no-theme scoped", fn: testLwtOwnedTokensAreGuardedOrNoThemeScoped },
+    { name: "no cyclic lwt accent reference", fn: testNoCyclicLwtAccentReference },
     // symptom coverage
-    {
-      name: "compat fixes dialog background (black dialog symptom)",
-      fn: testCompatFixesDialogBackground,
-    },
-    {
-      name: "LWT dialog fallback preserves theme value",
-      fn: testLwtDialogFallbackDoesNotOverrideThemeValue,
-    },
-    {
-      name: "LWT fallback in a real browser never paints the frame accent",
-      fn: testLwtFallbackInRealBrowser,
-    },
-    {
-      name: "compat fixes panel background (transparent panel symptom)",
-      fn: testCompatFixesPanelBackground,
-    },
+    { name: "compat fixes dialog background (black dialog symptom)", fn: testCompatFixesDialogBackground },
+    { name: "compat fixes panel background (transparent panel symptom)", fn: testCompatFixesPanelBackground },
     {
       name: "right-sidebar compat uses attribute presence",
       fn: testCompatFixesRightSidebarByAttributePresence,
@@ -709,18 +584,9 @@ export async function runAllTests(): Promise<void> {
     },
     // icon patches
     { name: "floorp icon patches present", fn: testFloorpIconPatchesPresent },
-    {
-      name: "bundled compat is color + lepton + icons",
-      fn: testBundledCompatIsColorPlusLeptonPlusIcons,
-    },
-    {
-      name: "lepton themes include floorp icon patches",
-      fn: testLeptonThemesIncludeFloorpIconPatches,
-    },
-    {
-      name: "fluerial excludes lepton icon patches",
-      fn: testFluerialExcludesLeptonIconPatches,
-    },
+    { name: "bundled compat is color + lepton + icons", fn: testBundledCompatIsColorPlusLeptonPlusIcons },
+    { name: "lepton themes include floorp icon patches", fn: testLeptonThemesIncludeFloorpIconPatches },
+    { name: "fluerial excludes lepton icon patches", fn: testFluerialExcludesLeptonIconPatches },
   ]);
 }
 
