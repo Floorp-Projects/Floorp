@@ -333,9 +333,8 @@ add_task(function directTabbrowserCallerReceivesASanitizedPlaceholder() {
     );
     ok(!tabs[0].pinned, "private pinned state must not be retained");
     is(tabs[0].userContextId, 0, "private container identity must be removed");
-    isnot(
-      tabs[0].getAttribute("floorpWorkspaceId"),
-      "private-workspace",
+    ok(
+      !tabs[0].hasAttribute("floorpWorkspaceId"),
       "the private workspace identity must not be retained",
     );
     ok(

@@ -2,10 +2,11 @@ diff --git a/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js b/b
 index c42b1a1..38630a5 100644
 --- ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
 +++ ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-@@ -4485,6 +4485,43 @@
+@@ -4485,6 +4485,45 @@
        for (var i = 0; i < tabDataList.length; i++) {
          let tabData = tabDataList[i];
  
++        let isPrivateContainerPlaceholder = false;
 +        /**
 +         * * NORANEKO PATCH - 0.1.19
 +         * * [WORKSPACES]
@@ -15,6 +16,7 @@ index c42b1a1..38630a5 100644
 +          tabData.floorpDisableHistory === true ||
 +          tabData.floorpDisableHistory === "true"
 +        ) {
++          isPrivateContainerPlaceholder = true;
 +          let sanitizedTabData = { entries: [] };
 +          for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
 +            if (property in tabData) {
@@ -28,7 +30,7 @@ index c42b1a1..38630a5 100644
 +        let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
 +        let floorpSSB = tabData.floorpSSB;
 +
-+        if (!floorpWorkspaceId) {
++        if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
 +          try {
 +            floorpWorkspaceId = JSON.parse(
 +              Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
@@ -46,7 +48,7 @@ index c42b1a1..38630a5 100644
          let userContextId = tabData.userContextId;
          let select = i == selectTab - 1;
          let tab;
-@@ -4502,6 +4539,36 @@
+@@ -4502,6 +4541,36 @@
          ) {
            tabWasReused = true;
            tab = this.selectedTab;
@@ -83,7 +85,7 @@ index c42b1a1..38630a5 100644
            if (!tabData.pinned) {
              this.unpinTab(tab);
            } else {
-@@ -4547,6 +4614,37 @@
+@@ -4547,6 +4616,37 @@
              preferredRemoteType,
            });
  
