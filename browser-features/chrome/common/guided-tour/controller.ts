@@ -168,7 +168,7 @@ export class TourController {
               "[GuidedTour] target did not appear:",
               step.waitForSelector,
             );
-            this.setStatus("error");
+            this.stop();
             return;
           }
         }
@@ -183,7 +183,7 @@ export class TourController {
         : null;
       if (step.selector && !this.targetElement) {
         console.error("[GuidedTour] target not found:", step.selector);
-        this.setStatus("error");
+        this.stop();
         return;
       }
 
@@ -194,7 +194,7 @@ export class TourController {
       this.setStepReady(true);
     } catch (e) {
       console.error("[GuidedTour]", e, "showing step", index);
-      if (gen === this.generation) this.setStatus("error");
+      if (gen === this.generation) this.stop();
     }
   }
 

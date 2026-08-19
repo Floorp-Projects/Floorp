@@ -21,13 +21,15 @@ export default class GuidedTour extends NoraComponentBase {
       document.head?.appendChild(styleEl);
     }
 
-    const controller = new TourController();
-
     const mainWindow = document.getElementById("main-window");
-    if (mainWindow) {
-      render(createTourOverlay(controller), mainWindow, {
-        hotCtx: import.meta.hot,
-      });
+    if (!mainWindow) {
+      console.error("[GuidedTour] #main-window not found; tour disabled");
+      return;
     }
+
+    const controller = new TourController();
+    render(createTourOverlay(controller), mainWindow, {
+      hotCtx: import.meta.hot,
+    });
   }
 }

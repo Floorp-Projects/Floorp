@@ -13,7 +13,11 @@ export default function FeaturesPage() {
 
     const handleStartWorkspacesTour = useCallback(async () => {
         const payload = JSON.stringify({ tourId: "workspaces" });
-        await rpc.setStringPref("floorp.guidedTour.request", payload);
+        try {
+            await rpc.setStringPref("floorp.guidedTour.request", payload);
+        } catch (error) {
+            console.error("[FeaturesPage] Failed to start tour", error);
+        }
     }, []);
 
     const panelSidebarImage = (

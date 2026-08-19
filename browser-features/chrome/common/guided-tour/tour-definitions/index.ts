@@ -8,7 +8,9 @@ const tourRegistry: Record<string, TourDefinition> = {
 };
 
 export function getTourById(tourId: string): TourDefinition | undefined {
-  return tourRegistry[tourId];
+  return Object.hasOwn(tourRegistry, tourId)
+    ? tourRegistry[tourId]
+    : undefined;
 }
 
 export function getAllTours(): TourDefinition[] {

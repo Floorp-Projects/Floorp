@@ -53,6 +53,14 @@ export function createTourOverlay(controller: TourController) {
     const contentReady = () => tourActive() && controller.stepReady();
 
     const step = () => controller.currentStep();
+    const stepTitle = createMemo(() => {
+      void texts();
+      return i18next.t(step()?.titleKey ?? "");
+    });
+    const stepDescription = createMemo(() => {
+      void texts();
+      return i18next.t(step()?.descriptionKey ?? "");
+    });
 
     const spotlight = createMemo<TargetRect | null>(() => {
       const rect = controller.targetRect();
@@ -197,17 +205,21 @@ export function createTourOverlay(controller: TourController) {
                 class="floorp-guided-tour-tooltip"
                 role="dialog"
                 aria-modal="false"
+                aria-labelledby="floorp-guided-tour-title"
                 style={{
                   left: `${tooltipPos().left}px`,
                   top: `${tooltipPos().top}px`,
                 }}
               >
                 <div class="floorp-guided-tour-progress">{progressText()}</div>
-                <h2 class="floorp-guided-tour-title">
-                  {i18next.t(step()?.titleKey ?? "")}
+                <h2
+                  id="floorp-guided-tour-title"
+                  class="floorp-guided-tour-title"
+                >
+                  {stepTitle()}
                 </h2>
                 <p class="floorp-guided-tour-description">
-                  {i18next.t(step()?.descriptionKey ?? "")}
+                  {stepDescription()}
                 </p>
                 <Show when={step()?.passthrough}>
                   <p class="floorp-guided-tour-tryit">{texts().tryIt}</p>
