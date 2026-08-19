@@ -1,7 +1,8 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+index 8ae8059..3e8dc05 100644
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -250,6 +250,14 @@ var gBrowserInit = {
+@@ -252,6 +252,14 @@ var gBrowserInit = {
    },
  
    onDOMContentLoaded() {
@@ -16,7 +17,7 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -307,6 +315,13 @@ var gBrowserInit = {
+@@ -309,6 +317,13 @@ var gBrowserInit = {
    },
  
    onLoad() {
@@ -30,8 +31,8 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      gBrowser.addEventListener("DOMUpdateBlockedPopups", e =>
        PopupAndRedirectBlockerObserver.handleEvent(e)
      );
-@@ -1308,17 +1323,22 @@ var gBrowserInit = {
-       PanelUI.uninit();
+@@ -1249,17 +1264,22 @@ var gBrowserInit = {
+       );
      }
  
 -    BrowserUtils.callModulesFromCategory(
