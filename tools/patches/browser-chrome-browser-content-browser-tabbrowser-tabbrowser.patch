@@ -1,33 +1,41 @@
 diff --git a/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js b/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-index ce68c33..47ccc30 100644
+index c42b1a1..38630a5 100644
 --- ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
 +++ ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-@@ -3377,6 +3377,35 @@
-         let tab;
-         let tabWasReused = false;
+@@ -4485,6 +4485,43 @@
+       for (var i = 0; i < tabDataList.length; i++) {
+         let tabData = tabDataList[i];
  
 +        /**
 +         * * NORANEKO PATCH - 0.1.19
 +         * * [WORKSPACES]
 +         * * START
 +         */
-+        if (tabData.floorpDisableHistory) {
-+          continue;
++        if (
++          tabData.floorpDisableHistory === true ||
++          tabData.floorpDisableHistory === "true"
++        ) {
++          let sanitizedTabData = { entries: [] };
++          for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
++            if (property in tabData) {
++              sanitizedTabData[property] = tabData[property];
++            }
++          }
++          tabDataList[i] = tabData = sanitizedTabData;
 +        }
 +
-+        let floorpWorkspaceId,
-+          floorpLastShowWorkspaceId,
-+          floorpSSB;
++        let floorpWorkspaceId = tabData.floorpWorkspaceId;
++        let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
++        let floorpSSB = tabData.floorpSSB;
 +
-+        floorpWorkspaceId = tabData.floorpWorkspaceId
-+          ? tabData.floorpWorkspaceId
-+          : JSON.parse(Services.prefs.getStringPref("floorp.workspaces.v4.store"))
-+              .defaultID;
-+        floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
-+        floorpSSB = tabData.floorpSSB;
-+
-+        if (floorpSSB) {
-+          window.close();
++        if (!floorpWorkspaceId) {
++          try {
++            floorpWorkspaceId = JSON.parse(
++              Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
++            ).defaultID;
++          } catch {
++            console.warn("Floorp: failed to parse the workspace store");
++          }
 +        }
 +        /**
 +         * * NORANEKO PATCH - 0.1.19
@@ -35,10 +43,10 @@ index ce68c33..47ccc30 100644
 +         * * END
 +         */
 +
-         // Re-use existing selected tab if possible to avoid the overhead of
-         // selecting a new tab. For now, we only do this for horizontal tabs;
-         // we'll let tabs.js handle pinning for vertical tabs until we unify
-@@ -3389,6 +3418,30 @@
+         let userContextId = tabData.userContextId;
+         let select = i == selectTab - 1;
+         let tab;
+@@ -4502,6 +4539,30 @@
          ) {
            tabWasReused = true;
            tab = this.selectedTab;
@@ -69,7 +77,7 @@ index ce68c33..47ccc30 100644
            if (!tabData.pinned) {
              this.unpinTab(tab);
            } else {
-@@ -3438,6 +3491,31 @@
+@@ -4547,6 +4608,31 @@
              preferredRemoteType,
            });
  
