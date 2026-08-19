@@ -279,6 +279,10 @@ try {
       });
     `),
   ) as BrowserSetup;
+  assert(
+    setup.oneStepZoom !== setup.baselineZoom,
+    `Zoom action precondition failed: enlarge kept zoom at ${setup.baselineZoom}`,
+  );
 
   await client.setContext("content");
   const fixture = `<!doctype html>
