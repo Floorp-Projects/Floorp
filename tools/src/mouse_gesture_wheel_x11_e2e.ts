@@ -10,6 +10,26 @@ const SAFE_SCROLL_DOWN_ACTION = "gecko-zoom-out";
 const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
+const SETTINGS_URL = "chrome://noraneko-settings/content#/features/gesture";
+const REPEAT_SAFE_WHEEL_ACTIONS = [
+  "gecko-show-previous-tab",
+  "gecko-show-next-tab",
+  "gecko-scroll-line-up",
+  "gecko-scroll-line-down",
+  "gecko-scroll-up",
+  "gecko-scroll-down",
+  "gecko-scroll-left",
+  "gecko-scroll-right",
+  "gecko-scroll-to-top",
+  "gecko-scroll-to-bottom",
+  "gecko-zoom-in",
+  "gecko-zoom-out",
+  "gecko-reset-zoom",
+  "gecko-workspace-next",
+  "gecko-workspace-previous",
+  "gecko-show-next-search-result",
+  "gecko-show-previous-search-result",
+] as const;
 
 if (Deno.build.os !== "linux") {
   throw new Error("Mouse gesture native X11 E2E requires Linux");
@@ -67,6 +87,14 @@ interface PageState {
     deltaY: number | null;
     defaultPrevented: boolean;
   }>;
+}
+
+interface WheelSettingsSnapshot {
+  allSelectCount: number;
+  wheelSelectCount: number;
+  selectedValues: string[];
+  disabled: boolean[];
+  optionValues: string[][];
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -320,6 +348,136 @@ async function waitForWheelActions(
   throw new Error(
     `${label}: expected wheel actions ${JSON.stringify(expected)}, got ${
       JSON.stringify(observed)
+    }`,
+  );
+}
+
+async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
+  await client.setContext("content");
+  const raw = await client.executeScript(`
+    const allowed = ${JSON.stringify(REPEAT_SAFE_WHEEL_ACTIONS)};
+    const sortedAllowed = [...allowed].sort();
+    const selects = [...document.querySelectorAll("select")];
+    const wheelSelects = selects.filter((select) => {
+      const values = [...select.options].map((option) => option.value).sort();
+      return values.length === sortedAllowed.length &&
+        values.every((value, index) => value === sortedAllowed[index]);
+    });
+    return JSON.stringify({
+      allSelectCount: selects.length,
+      wheelSelectCount: wheelSelects.length,
+      selectedValues: wheelSelects.map((select) => select.value),
+      disabled: wheelSelects.map((select) => select.disabled),
+      optionValues: wheelSelects.map((select) =>
+        [...select.options].map((option) => option.value)
+      ),
+    });
+  `);
+  return JSON.parse(raw) as WheelSettingsSnapshot;
+}
+
+async function waitForWheelSettings(
+  expectedValues?: [string, string],
+): Promise<WheelSettingsSnapshot> {
+  let observed: WheelSettingsSnapshot | null = null;
+  for (let attempt = 0; attempt < 120; attempt++) {
+    observed = await readWheelSettingsSnapshot();
+    const valuesMatch = !expectedValues ||
+      observed.selectedValues[0] === expectedValues[0] &&
+        observed.selectedValues[1] === expectedValues[1];
+    if (
+      observed.wheelSelectCount === 2 &&
+      observed.disabled.every((disabled) => !disabled) &&
+      valuesMatch
+    ) {
+      return observed;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(
+    `Mouse gesture settings did not become ready: ${JSON.stringify(observed)}`,
+  );
+}
+
+function assertWheelSettingsContract(snapshot: WheelSettingsSnapshot): void {
+  assert(
+    snapshot.wheelSelectCount === 2,
+    `Expected exactly two wheel action selects, got ${snapshot.wheelSelectCount} among ${snapshot.allSelectCount} selects`,
+  );
+  for (const [index, values] of snapshot.optionValues.entries()) {
+    assert(
+      values.length === REPEAT_SAFE_WHEEL_ACTIONS.length,
+      `Wheel select ${index} has ${values.length} options, expected ${REPEAT_SAFE_WHEEL_ACTIONS.length}`,
+    );
+    assert(
+      !values.includes(FORBIDDEN_ACTION),
+      `Wheel select ${index} exposes forbidden ${FORBIDDEN_ACTION}`,
+    );
+  }
+}
+
+async function setWheelActionsThroughSettings(): Promise<void> {
+  await client.setContext("content");
+  await client.executeScript(`
+    const allowed = ${JSON.stringify(REPEAT_SAFE_WHEEL_ACTIONS)};
+    const sortedAllowed = [...allowed].sort();
+    const wheelSelects = [...document.querySelectorAll("select")].filter(
+      (select) => {
+        const values = [...select.options].map((option) => option.value).sort();
+        return values.length === sortedAllowed.length &&
+          values.every((value, index) => value === sortedAllowed[index]);
+      },
+    );
+    if (wheelSelects.length !== 2) {
+      throw new Error(
+        "Expected exactly two wheel action selects, got " +
+          wheelSelects.length,
+      );
+    }
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(
+      HTMLSelectElement.prototype,
+      "value",
+    ).set;
+    const nextValues = [
+      ${JSON.stringify(SAFE_SCROLL_UP_ACTION)},
+      ${JSON.stringify(SAFE_SCROLL_DOWN_ACTION)},
+    ];
+    wheelSelects.forEach((select, index) => {
+      nativeValueSetter.call(select, nextValues[index]);
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  `);
+}
+
+async function assertSettingsPersistence(): Promise<void> {
+  await client.setContext("content");
+  await client.navigate(SETTINGS_URL);
+  const initial = await waitForWheelSettings();
+  assertWheelSettingsContract(initial);
+
+  await setWheelActionsThroughSettings();
+  await waitForWheelActions(
+    {
+      scrollUp: SAFE_SCROLL_UP_ACTION,
+      scrollDown: SAFE_SCROLL_DOWN_ACTION,
+    },
+    "settings wheel action update",
+  );
+
+  // Re-navigate to the exact route so the React tree and persistence hook are
+  // recreated from stored preferences rather than retaining local state.
+  await client.setContext("content");
+  await client.navigate(SETTINGS_URL);
+  const reloaded = await waitForWheelSettings([
+    SAFE_SCROLL_UP_ACTION,
+    SAFE_SCROLL_DOWN_ACTION,
+  ]);
+  assertWheelSettingsContract(reloaded);
+  assert(
+    reloaded.selectedValues[0] === SAFE_SCROLL_UP_ACTION &&
+      reloaded.selectedValues[1] === SAFE_SCROLL_DOWN_ACTION,
+    `Wheel action settings did not persist after reload: ${
+      JSON.stringify(reloaded.selectedValues)
     }`,
   );
 }
@@ -608,10 +766,6 @@ try {
         ...(config.contextMenu ?? {}),
         preventionTimeout: ${PREVENTION_TIMEOUT_MS},
       };
-      config.wheelActions = {
-        scrollUp: ${JSON.stringify(SAFE_SCROLL_UP_ACTION)},
-        scrollDown: ${JSON.stringify(SAFE_SCROLL_DOWN_ACTION)},
-      };
       Services.prefs.setStringPref(configPref, JSON.stringify(config));
       Services.prefs.setBoolPref(enabledPref, true);
 
@@ -650,13 +804,8 @@ try {
       setup.zoomAfterTwoReductions === setup.baselineZoom,
     `Zoom action precondition failed: ${JSON.stringify(setup)}`,
   );
-  await waitForWheelActions(
-    {
-      scrollUp: SAFE_SCROLL_UP_ACTION,
-      scrollDown: SAFE_SCROLL_DOWN_ACTION,
-    },
-    "safe wheel mapping",
-  );
+
+  await assertSettingsPersistence();
 
   await client.setContext("content");
   const fixture = `<!doctype html>
