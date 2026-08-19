@@ -484,9 +484,11 @@ function testLwtFallbackInRealBrowser(): void {
   root.appendChild(probeWithThemeValue);
 
   try {
-    const fallbackColor = globalThis
-      .getComputedStyle(probe)
-      .getPropertyValue("--in-content-page-background");
+    const fallbackStyle = globalThis.getComputedStyle(probe);
+    assert(fallbackStyle, "computed style for the dialog probe must exist");
+    const fallbackColor = fallbackStyle.getPropertyValue(
+      "--in-content-page-background",
+    );
     assert(
       fallbackColor.length > 0 &&
         !fallbackColor.includes("9, 96, 224") &&
@@ -495,9 +497,11 @@ function testLwtFallbackInRealBrowser(): void {
         `got: "${fallbackColor}"`,
     );
 
-    const themeColor = globalThis
-      .getComputedStyle(probeWithThemeValue)
-      .getPropertyValue("--in-content-page-background");
+    const themeStyle = globalThis.getComputedStyle(probeWithThemeValue);
+    assert(themeStyle, "computed style for the themed probe must exist");
+    const themeColor = themeStyle.getPropertyValue(
+      "--in-content-page-background",
+    );
     assert(
       themeColor.includes("200, 100, 50"),
       `a theme-provided --in-content-page-background must win over the ` +
