@@ -209,17 +209,34 @@ export class MouseGestureController {
       return;
     }
 
-    this.targetWindow.clearTimeout(this.preventionTimeoutId);
+    const timeoutId = this.preventionTimeoutId;
     this.preventionTimeoutId = null;
+    try {
+      this.targetWindow.clearTimeout(timeoutId);
+    } catch {
+      // A gesture action can synchronously close its browser window. There is
+      // no timeout left to clear once that window's timer APIs are unavailable.
+    }
   }
 
   private scheduleContextMenuPreventionRelease(timeout: number): void {
     this.clearPreventionTimeout();
     this.isContextMenuPrevented = true;
-    this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
+    try {
+      if (!this.eventListenersAttached || this.targetWindow.closed) {
+        this.isContextMenuPrevented = false;
+        return;
+      }
+      this.preventionTimeoutId = this.targetWindow.setTimeout(() => {
+        this.isContextMenuPrevented = false;
+        this.preventionTimeoutId = null;
+      }, timeout);
+    } catch {
+      // A closed window can reject new timers. Do not leave a permanent
+      // suppression latch behind when a bounded release cannot be scheduled.
       this.isContextMenuPrevented = false;
       this.preventionTimeoutId = null;
-    }, timeout);
+    }
   }
 
   private clearWheelGestureState(): void {
@@ -317,14 +334,14 @@ export class MouseGestureController {
       return;
     }
 
-    // A stale drawn gesture can survive same-window focus churn if its physical
-    // right-button mouseup was lost. Reconcile the stored state with Gecko's
-    // physical button bit before rocker detection so the user's next ordinary
-    // left click cannot be misread as a rightLeft rocker.
+    // A stale gesture can survive same-window focus churn if its physical
+    // releases were lost. Reconcile the stored state with Gecko's physical
+    // right-button bit before rocker detection so the user's next ordinary
+    // left click cannot be swallowed or misread as another rocker action.
     if (
-      this.isGestureActive &&
-      !this.isWheelGestureFired &&
-      !this.isRockerGestureFired &&
+      (this.isGestureActive ||
+        this.isWheelGestureFired ||
+        this.isRockerGestureFired) &&
       event.button !== 2 &&
       !this.isSecondaryButtonPhysicallyDown(event)
     ) {
@@ -334,7 +351,10 @@ export class MouseGestureController {
     // A fresh right-button mousedown proves that the previous physical button
     // cycle ended, even if its mouseup was lost while focus was changing.
     if (
-      event.button === 2 && (this.isWheelGestureFired || this.isGestureActive)
+      event.button === 2 &&
+      (this.isWheelGestureFired ||
+        this.isGestureActive ||
+        (this.isRockerGestureFired && (event.buttons & 1) === 0))
     ) {
       this.resetInteractionState();
     }
@@ -400,7 +420,15 @@ export class MouseGestureController {
       return;
     }
 
-    // A rocker action already owns this button cycle. Left unhandled, these
+    // A rocker action already owns this button cycle. A move with no physical
+    // buttons proves that all of its releases were lost; clear it passively.
+    // With one side still held, preserve ownership until the final release.
+    if (this.isRockerGestureFired && event.buttons === 0) {
+      this.resetInteractionState();
+      return;
+    }
+
+    // Left unhandled, these
     // movement events pass straight through to the page and let its native
     // text-selection drag keep extending for as long as both buttons stay
     // down (visibly so if the rocker action scrolls the page underneath the
@@ -525,7 +553,10 @@ export class MouseGestureController {
       // and it should stay suppressed like every other button. Captured
       // before resetGestureState() below clears it.
       const shouldSuppressMouseUp = event.button !== 0 || this.isGestureActive;
-      if (this.pressedButtons.size === 0) {
+      // `buttons` is the authoritative post-release physical state. This also
+      // completes cleanup if an earlier release was lost and therefore remains
+      // stale in pressedButtons.
+      if (event.buttons === 0) {
         this.resetGestureState();
         this.scheduleContextMenuPreventionRelease(
           getConfig().contextMenu.preventionTimeout,
@@ -579,8 +610,17 @@ export class MouseGestureController {
         event.preventDefault();
         event.stopPropagation();
         this.resetGestureState();
-        this.scheduleContextMenuPreventionRelease(preventionTimeout);
-        executeGestureAction(action, this.targetWindow);
+
+        // Keep suppression active throughout the synchronous action. Closing
+        // a tab/window may run nested timers and dispatch contextmenu before
+        // the action returns; starting the release timer beforehand lets that
+        // nested loop expire the latch too early.
+        this.isContextMenuPrevented = true;
+        try {
+          executeGestureAction(action, this.targetWindow);
+        } finally {
+          this.scheduleContextMenuPreventionRelease(preventionTimeout);
+        }
         return;
       }
     }
@@ -607,6 +647,25 @@ export class MouseGestureController {
     if (this.isWheelGestureSuppressionActive) {
       event.preventDefault();
       event.stopPropagation();
+      return;
+    }
+
+    // A wheel/drawn cycle cannot remain active without the physical right
+    // button. Treat a residual wheel after a lost mouseup as evidence that the
+    // cycle ended; it must be passive and must not execute another action.
+    if (
+      (this.isGestureActive || this.isWheelGestureFired) &&
+      !this.isRockerGestureFired &&
+      !this.isSecondaryButtonPhysicallyDown(event)
+    ) {
+      this.resetInteractionState();
+      return;
+    }
+
+    // A leftRight rocker can legitimately continue with only the left button
+    // held. Only a no-buttons wheel proves that the entire rocker cycle ended.
+    if (this.isRockerGestureFired && event.buttons === 0) {
+      this.resetInteractionState();
       return;
     }
 
@@ -654,12 +713,12 @@ export class MouseGestureController {
     }
 
     // Keyboard context-menu input (or any other event with no physical right
-    // button) must not remain blocked by a drawn gesture whose mouseup was lost.
+    // button) must not remain blocked by a gesture whose releases were lost.
     if (
-      this.isGestureActive &&
-      !this.isWheelGestureFired &&
-      !this.isRockerGestureFired &&
-      !this.isSecondaryButtonPhysicallyDown(event)
+      ((this.isGestureActive || this.isWheelGestureFired) &&
+        !this.isRockerGestureFired &&
+        !this.isSecondaryButtonPhysicallyDown(event)) ||
+      (this.isRockerGestureFired && event.buttons === 0)
     ) {
       this.resetInteractionState();
     }
