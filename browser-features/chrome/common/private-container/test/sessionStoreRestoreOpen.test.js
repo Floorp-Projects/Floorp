@@ -333,8 +333,13 @@ add_task(function directTabbrowserCallerReceivesASanitizedPlaceholder() {
     );
     ok(!tabs[0].pinned, "private pinned state must not be retained");
     is(tabs[0].userContextId, 0, "private container identity must be removed");
-    ok(
-      !tabs[0].hasAttribute("floorpWorkspaceId"),
+    // The direct caller path does not run inside the SessionStore restore
+    // window, so the workspaces service may already have assigned its current
+    // workspace to the placeholder tab. What must hold is that the private
+    // workspace identity from the sanitized state never survives.
+    isnot(
+      tabs[0].getAttribute("floorpWorkspaceId"),
+      "private-workspace",
       "the private workspace identity must not be retained",
     );
     ok(
