@@ -12,6 +12,12 @@ import {
   resolvePaletteTarget,
 } from "#features-chrome/common/command-palette/utils/targetContext.ts";
 
+const EXPLICIT_SCHEME_PATTERN = /^(?:[a-zA-Z][a-zA-Z0-9+.-]*:\/\/|about:)/;
+
+function hasExplicitScheme(value: string): boolean {
+  return EXPLICIT_SCHEME_PATTERN.test(value);
+}
+
 export const openUrlCommand: PaletteCommand = {
   id: "floorp-open-url",
   label: i18next.t("commandPalette.openUrl", { defaultValue: "Open URL" }),
@@ -52,11 +58,9 @@ export const openUrlCommand: PaletteCommand = {
           });
         }
         // Accept scheme-prefixed URLs, domain-like patterns, and localhost
-        const looksValid = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed) || // has scheme
+        const looksValid = hasExplicitScheme(trimmed) || // has scheme
           /^[^\s]+\.[a-z]{2,}/i.test(trimmed) || // domain-like
-          /^localhost(:\d+)?$/i.test(trimmed) || // localhost
-          /^about:/.test(trimmed) || // about: pages
-          /^floorp:\/\//.test(trimmed); // floorp:// pages
+          /^localhost(:\d+)?$/i.test(trimmed); // localhost
         if (!looksValid) {
           return i18next.t("commandPalette.openUrlValidationError", {
             defaultValue: "Please enter a valid URL",
@@ -129,7 +133,7 @@ export const openUrlCommand: PaletteCommand = {
       );
       return;
     }
-    const navUrl = url.includes("://") ? url : `https://${url}`;
+    const navUrl = hasExplicitScheme(url) ? url : `https://${url}`;
 
     try {
       const target = resolvePaletteTarget(targetWindow);

@@ -197,6 +197,90 @@ function testOpenUrlRejectsCurrentTabContainerOverride(): void {
   assertEquals(loadCalls, 0, "should not navigate with an ignored override");
 }
 
+function createOpenUrlNavigationTarget(): {
+  targetWindow: Window;
+  addedUrls: string[];
+  createdTab: XULElement;
+  getLoadedUrl: () => string | null;
+  getSelectedTab: () => XULElement;
+} {
+  const sourcePrincipal = Services.scriptSecurityManager.createNullPrincipal(
+    {},
+  );
+  const targetTab = { isConnected: true } as XULElement;
+  const createdTab = { isConnected: true } as XULElement;
+  const addedUrls: string[] = [];
+  let loadedUrl: string | null = null;
+  let selectedTab = targetTab;
+  const targetBrowser = {
+    contentPrincipal: sourcePrincipal,
+    browsingContext: {
+      originAttributes: { ...sourcePrincipal.originAttributes },
+    },
+    loadURI(uri: nsIURI) {
+      loadedUrl = uri.spec;
+    },
+  };
+  const gBrowser = {
+    get selectedTab() {
+      return selectedTab;
+    },
+    set selectedTab(tab: XULElement) {
+      selectedTab = tab;
+    },
+    getBrowserForTab(tab: XULElement) {
+      return tab === targetTab ? targetBrowser : null;
+    },
+    addTab(url: string) {
+      addedUrls.push(url);
+      return createdTab;
+    },
+  } as unknown as GBrowser;
+
+  return {
+    targetWindow: { closed: false, gBrowser } as unknown as Window,
+    addedUrls,
+    createdTab,
+    getLoadedUrl: () => loadedUrl,
+    getSelectedTab: () => selectedTab,
+  };
+}
+
+function testOpenUrlPreservesExplicitScheme(): void {
+  const target = createOpenUrlNavigationTarget();
+
+  openUrlCommand.fn(target.targetWindow, {
+    url: "about:config",
+    where: "current-tab",
+  });
+
+  assertEquals(
+    target.getLoadedUrl(),
+    "about:config",
+    "scheme-only URLs should be passed to loadURI unchanged",
+  );
+  assertEquals(target.addedUrls.length, 0, "current-tab should not add a tab");
+}
+
+function testOpenUrlPrependsHttpsForBareHostname(): void {
+  const target = createOpenUrlNavigationTarget();
+
+  openUrlCommand.fn(target.targetWindow, {
+    url: "example.com",
+    where: "new-tab",
+  });
+
+  assertEquals(
+    target.addedUrls[0],
+    "https://example.com",
+    "bare hostnames should receive the HTTPS scheme",
+  );
+  assert(
+    target.getSelectedTab() === target.createdTab,
+    "the newly opened foreground tab should be selected",
+  );
+}
+
 /** Verifies that getEnglishGestureKeywords is locale-sensitive. */
 async function testGetEnglishGestureKeywordsLocaleBehavior(): Promise<void> {
   await withI18nextLanguage("en-US", () => {
@@ -756,6 +840,27 @@ const rawTests: TestCase[] = [
     },
   },
   {
+    name: "open-url validate accepts about URLs",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      assertEquals(
+        validate("about:config"),
+        true,
+        "about URLs should remain valid without ://",
+      );
+    },
+  },
+  {
+    name: "open-url validate rejects unsupported scheme-only URLs",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      assert(
+        typeof validate("javascript:alert(1)") === "string",
+        "unsupported scheme-only URLs should be rejected",
+      );
+    },
+  },
+  {
     name: "search-web validate rejects empty input",
     fn() {
       const validate = searchWebCommand.steps![0].validate!;
@@ -1027,6 +1132,14 @@ const rawTests: TestCase[] = [
   {
     name: "open URL rejects current-tab container overrides",
     fn: testOpenUrlRejectsCurrentTabContainerOverride,
+  },
+  {
+    name: "open URL preserves explicit schemes",
+    fn: testOpenUrlPreservesExplicitScheme,
+  },
+  {
+    name: "open URL prepends HTTPS for bare hostnames",
+    fn: testOpenUrlPrependsHttpsForBareHostname,
   },
 ];
 
