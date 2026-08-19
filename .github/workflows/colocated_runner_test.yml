@@ -108,6 +108,12 @@ jobs:
           deno run -A tools/runtime-lock/runtime_lock_cli.ts
           validate-native --out _dist/runtime-validation
 
+      - name: Verify macOS G5 lifecycle helper foundation
+        if: matrix.platform == 'macos'
+        run: >-
+          deno test --allow-read --allow-write --allow-run
+          tools/native/tests/g5_macos_lifecycle_helper.test.ts
+
       - name: Install locked Runtime for browser suite
         if: matrix.browser_suite == true
         run: >-
@@ -342,6 +348,10 @@ jobs:
           fi
 
           wait "$TEST_PID"
+          deno run \
+            --allow-net=127.0.0.1 \
+            --allow-read=_dist \
+            tools/src/mouse_gesture_rocker_w3c_e2e.ts
 
       - name: Verify downloaded Firefox execution coverage
         if: matrix.browser_suite == true
