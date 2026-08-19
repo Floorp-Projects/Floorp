@@ -7,8 +7,8 @@ import {
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
-import { searchHistory, isHistoryCommand } from "../history-provider.ts";
-import { searchBookmarks, isBookmarkCommand } from "../bookmark-provider.ts";
+import { isHistoryCommand, searchHistory } from "../history-provider.ts";
+import { isBookmarkCommand, searchBookmarks } from "../bookmark-provider.ts";
 
 const REQUIRED_COMMAND_FIELDS = [
   "id",
@@ -26,7 +26,9 @@ function assertHasCommandFields(
   for (const field of REQUIRED_COMMAND_FIELDS) {
     assert(
       field in cmd,
-      `${prefix} missing required field "${field}", got keys: ${Object.keys(cmd).join(", ")}`,
+      `${prefix} missing required field "${field}", got keys: ${
+        Object.keys(cmd).join(", ")
+      }`,
     );
   }
   assert(
@@ -186,11 +188,14 @@ const rawTests: TestCase[] = [
       for (let i = 0; i < results.length; i++) {
         assert(
           typeof results[i].label === "string",
-          `bookmark result[${i}] label should be string, got ${typeof results[i].label}`,
+          `bookmark result[${i}] label should be string, got ${typeof results[i]
+            .label}`,
         );
         assert(
           typeof results[i].description === "string",
-          `bookmark result[${i}] description should be string, got ${typeof results[i].description}`,
+          `bookmark result[${i}] description should be string, got ${typeof results[
+            i
+          ].description}`,
         );
       }
     },
@@ -255,6 +260,6 @@ const rawTests: TestCase[] = [
   },
 ];
 
-export function runAllTests() {
-  runTests("providers.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("providers.test.ts", rawTests);
 }

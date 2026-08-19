@@ -11,6 +11,7 @@ import { Tabbar } from "@/app/design/components/Tabbar.tsx";
 import { Tab } from "@/app/design/components/Tab.tsx";
 import { UICustomization } from "@/app/design/components/UICustomization.tsx";
 import { TabSleepExclusion } from "@/app/design/components/TabSleepExclusion.tsx";
+import { TabWindowBehavior } from "@/app/design/components/TabWindowBehavior.tsx";
 import type { DesignFormData } from "@/types/pref.ts";
 
 export default function Page() {
@@ -125,6 +126,7 @@ export default function Page() {
           {isLeptonCompatible && <LeptonSettingsButton />}
           <Tabbar />
           <Tab />
+          <TabWindowBehavior />
           <TabSleepExclusion />
           <UICustomization />
         </form>

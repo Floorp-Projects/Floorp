@@ -18,7 +18,11 @@ const rawTests: TestCase[] = [
   {
     name: "bookmarkSwitcherCommand has correct id",
     fn() {
-      assertEquals(bookmarkSwitcherCommand.id, "floorp-bookmark-switcher", "id should be floorp-bookmark-switcher");
+      assertEquals(
+        bookmarkSwitcherCommand.id,
+        "floorp-bookmark-switcher",
+        "id should be floorp-bookmark-switcher",
+      );
     },
   },
   {
@@ -49,17 +53,36 @@ const rawTests: TestCase[] = [
   {
     name: "bookmarkSwitcherCommand has correct category",
     fn() {
-      assertEquals(bookmarkSwitcherCommand.category, "switcher", "category should be switcher");
+      assertEquals(
+        bookmarkSwitcherCommand.category,
+        "switcher",
+        "category should be switcher",
+      );
     },
   },
   {
-    name: "bookmarkSwitcherCommand has one step",
+    name: "bookmarkSwitcherCommand has three possible steps",
     fn() {
       assert(
         Array.isArray(bookmarkSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(bookmarkSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
+      assertEquals(
+        bookmarkSwitcherCommand.steps!.length,
+        3,
+        "should define exactly 3 steps",
+      );
+      const containerStep = bookmarkSwitcherCommand.steps![2];
+      assertEquals(
+        containerStep.shouldInclude?.({ where: "current-tab" }, window),
+        false,
+        "current-tab should skip the container step",
+      );
+      assertEquals(
+        containerStep.shouldInclude?.({ where: "new-tab" }, window),
+        true,
+        "new-tab should include the container step",
+      );
     },
   },
   {
@@ -101,12 +124,38 @@ const rawTests: TestCase[] = [
     },
   },
   {
+    name: "bookmarkSwitcherCommand rejects current-tab container overrides",
+    fn() {
+      let addTabCalls = 0;
+      let loadCalls = 0;
+      const targetWindow = {
+        gBrowser: {
+          addTab() {
+            addTabCalls++;
+            return {};
+          },
+          loadURI() {
+            loadCalls++;
+          },
+        },
+      } as unknown as Window;
+
+      bookmarkSwitcherCommand.fn(targetWindow, {
+        bookmark: "https://example.com",
+        where: "current-tab",
+        container: "3",
+      });
+      assertEquals(addTabCalls, 0, "should not open a replacement tab");
+      assertEquals(loadCalls, 0, "should not navigate the current tab");
+    },
+  },
+  {
     name: "loadBookmarks returns a result",
     async fn() {
       const result = await loadBookmarks();
       const isArray = Array.isArray(result);
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       assert(
         isArray || isResultObject,
         "result should be an array or StepChoicesResult",
@@ -120,7 +169,7 @@ const rawTests: TestCase[] = [
       const choices = Array.isArray(result)
         ? result
         : (result as { choices: Array<{ label: string; value: string }> })
-            .choices;
+          .choices;
       for (const item of choices) {
         assert(
           typeof item.label === "string",
@@ -156,6 +205,6 @@ function assertDoesNotThrow(fn: () => void): void {
   }
 }
 
-export function runAllTests() {
-  runTests("bookmark-switcher.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("bookmark-switcher.test.ts", rawTests);
 }
