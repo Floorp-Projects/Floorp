@@ -43,10 +43,6 @@ const JS_WINDOW_ACTORS: {
       // "webIsolated=http://localhost"); without this the actor is never
       // instantiated and window.NRSettingsRegisterReceiveCallback is never
       // exported (see rpc.ts:56 "is not a function").
-      remoteTypes: [
-        "webIsolated=http://localhost",
-        "webIsolated=https://localhost",
-      ],
       events: {
         /**
          * actorCreated seems to require any of events for init
