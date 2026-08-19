@@ -1,4 +1,60 @@
 // SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+// @ts-check
+/// <reference path="../../../@types/mochitest-compat.d.ts" />
+
+/**
+ * @typedef {{
+ *   entries: Array<{ url: string }>;
+ *   index: number;
+ *   lastAccessed: number;
+ *   pinned?: boolean;
+ *   [key: string]: unknown;
+ * }} SessionTabState
+ */
+
+/**
+ * @typedef {{
+ *   id: number;
+ *   numberOfTabs: number;
+ * }} SplitViewState
+ */
+
+/**
+ * @typedef {{
+ *   id: string;
+ *   [key: string]: unknown;
+ * }} TabGroupState
+ */
+
+/**
+ * @typedef {{
+ *   tabs: SessionTabState[];
+ *   selected: number;
+ *   groups: TabGroupState[];
+ *   splitViews: SplitViewState[];
+ * }} SessionWindowState
+ */
+
+/**
+ * @typedef {XULElement & {
+ *   pinned: boolean;
+ *   selected: boolean;
+ *   userContextId: number;
+ * }} SessionRestoreTab
+ */
+
+/**
+ * @typedef {GBrowser & {
+ *   createTabsForSessionRestore: (
+ *     restoreTabsLazily: boolean,
+ *     selectTab: number,
+ *     tabDataList: SessionTabState[],
+ *     tabGroupDataList: TabGroupState[],
+ *     splitViewDataList: SplitViewState[],
+ *   ) => SessionRestoreTab[];
+ * }} SessionRestoreGBrowser
+ */
 
 const { SessionStore } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/SessionStore.sys.mjs",
@@ -11,9 +67,16 @@ const NORMAL_C = "data:text/plain,floorp-sessionstore-normal-c";
 const PRIVATE_URL = "data:text/plain,floorp-sessionstore-private";
 
 const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+/** @type {unknown} */
 let originalWindowState;
+/** @type {string | undefined} */
 let originalWorkspacePref;
 
+/**
+ * @param {string} url
+ * @param {Record<string, unknown>} [extra]
+ * @returns {SessionTabState}
+ */
 function makeTabState(url, extra = {}) {
   return {
     entries: [{ url }],
@@ -23,6 +86,7 @@ function makeTabState(url, extra = {}) {
   };
 }
 
+/** @param {unknown} state */
 async function restoreWindowState(state) {
   const restored = BrowserTestUtils.waitForEvent(
     browserWindow,
@@ -32,8 +96,11 @@ async function restoreWindowState(state) {
   await restored;
 }
 
+/** @returns {SessionWindowState} */
 function currentWindowState() {
-  return SessionStore.getWindowState(browserWindow).windows[0];
+  return /** @type {SessionWindowState} */ (
+    SessionStore.getWindowState(browserWindow).windows[0]
+  );
 }
 
 function restoredUrls() {
@@ -116,9 +183,9 @@ add_task(async function mixedRestoreKeepsNormalTabsAndMetadataConsistent() {
   );
   is(state.selected, 1, "selection should fall back to the preceding tab");
   ok(state.tabs[0].pinned, "a normal pinned tab should stay pinned");
-  ok(!browserWindow.closed, "restoring an SSB tab must not close the window");
+  ok(!window.closed, "restoring an SSB tab must not close the window");
   is(
-    browserWindow.gBrowser.tabs[0].getAttribute("floorpSSB"),
+    gBrowser.tabs[0].getAttribute("floorpSSB"),
     "true",
     "the SSB marker should still be restored as a tab attribute",
   );
@@ -168,7 +235,7 @@ add_task(async function allPrivateRestoreKeepsTheExistingBlankTab() {
     ],
   });
 
-  is(browserWindow.gBrowser.tabs.length, 1, "one startup tab should remain");
+  is(gBrowser.tabs.length, 1, "one startup tab should remain");
   is(restoredUrls()[0], "about:blank", "the remaining tab should be blank");
   ok(
     !JSON.stringify(currentWindowState()).includes(PRIVATE_URL),
@@ -218,7 +285,7 @@ add_task(async function privateOnlyWindowIsDroppedWhenANormalWindowSurvives() {
   );
 });
 
-add_task(async function directTabbrowserCallerReceivesASanitizedPlaceholder() {
+add_task(function directTabbrowserCallerReceivesASanitizedPlaceholder() {
   const tabDataList = [
     makeTabState(PRIVATE_URL, {
       floorpDisableHistory: "true",
@@ -231,7 +298,10 @@ add_task(async function directTabbrowserCallerReceivesASanitizedPlaceholder() {
     }),
     makeTabState(NORMAL_B),
   ];
-  const tabs = browserWindow.gBrowser.createTabsForSessionRestore(
+  const sessionRestoreBrowser = /** @type {SessionRestoreGBrowser} */ (
+    /** @type {unknown} */ (gBrowser)
+  );
+  const tabs = sessionRestoreBrowser.createTabsForSessionRestore(
     true,
     1,
     tabDataList,

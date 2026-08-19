@@ -1,4 +1,38 @@
 // SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+// @ts-check
+/// <reference path="../../../@types/mochitest-compat.d.ts" />
+
+/**
+ * @typedef {{
+ *   entries: Array<{ url: string }>;
+ *   index: number;
+ *   lastAccessed: number;
+ *   [key: string]: unknown;
+ * }} SessionTabState
+ */
+
+/**
+ * @typedef {{
+ *   state: SessionTabState;
+ *   title: string;
+ *   pos: number;
+ *   closedAt: number;
+ * }} ClosedTabState
+ */
+
+/**
+ * @typedef {{
+ *   id: string;
+ *   name: string;
+ *   color: string;
+ *   collapsed: boolean;
+ *   closedAt: number;
+ *   sourceWindowId: string;
+ *   tabs: ClosedTabState[];
+ *   splitViews: unknown[];
+ * }} ClosedGroupState
+ */
 
 const { SessionStore } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/SessionStore.sys.mjs",
@@ -9,8 +43,14 @@ const PRIVATE_URL = "data:text/plain,floorp-sessionstore-closed-private";
 const LIVE_PRIVATE_URL = "about:mozilla";
 
 const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+/** @type {unknown} */
 let originalWindowState;
 
+/**
+ * @param {string} url
+ * @param {Record<string, unknown>} [extra]
+ * @returns {SessionTabState}
+ */
 function makeTabState(url, extra = {}) {
   return {
     entries: [{ url }],
@@ -20,6 +60,11 @@ function makeTabState(url, extra = {}) {
   };
 }
 
+/**
+ * @param {string} url
+ * @param {Record<string, unknown>} [extra]
+ * @returns {ClosedTabState}
+ */
 function makeClosedTab(url, extra = {}) {
   return {
     state: makeTabState(url, extra),
@@ -29,6 +74,11 @@ function makeClosedTab(url, extra = {}) {
   };
 }
 
+/**
+ * @param {string} id
+ * @param {ClosedTabState[]} tabs
+ * @returns {ClosedGroupState}
+ */
 function makeClosedGroup(id, tabs) {
   return {
     id,
@@ -42,6 +92,7 @@ function makeClosedGroup(id, tabs) {
   };
 }
 
+/** @param {unknown} state */
 async function restoreWindowState(state) {
   const restored = BrowserTestUtils.waitForEvent(
     browserWindow,
@@ -60,10 +111,8 @@ registerCleanupFunction(async function restoreOriginalState() {
 add_task(async function closedPrivateContainerTabIsNotRecorded() {
   originalWindowState = SessionStore.getWindowState(browserWindow);
   const before = SessionStore.getClosedTabCountForWindow(browserWindow);
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    browserWindow.gBrowser,
-    LIVE_PRIVATE_URL,
-    true,
+  const tab = /** @type {XULElement} */ (
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, LIVE_PRIVATE_URL, true)
   );
   tab.setAttribute("floorp-disablehistory", "true");
   BrowserTestUtils.removeTab(tab);
