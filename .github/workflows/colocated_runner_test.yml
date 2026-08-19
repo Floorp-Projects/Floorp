@@ -247,9 +247,18 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq xvfb
+          sudo apt-get install -y -qq xvfb xdotool
+          export DISPLAY=:99
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
           Xvfb :99 -screen 0 1280x1024x24 &
+          for i in {1..50}; do
+            if xdotool getdisplaygeometry >/dev/null 2>&1; then
+              break
+            fi
+            sleep 0.1
+          done
+          xdotool getdisplaygeometry
+          xdotool version
 
       - name: Run combined browser test suite against locked Runtime
         if: matrix.browser_suite == true
@@ -356,6 +365,11 @@ jobs:
             --allow-net=127.0.0.1 \
             --allow-read=_dist \
             tools/src/mouse_gesture_drawn_w3c_e2e.ts
+          deno run \
+            --allow-net=127.0.0.1 \
+            --allow-read=_dist \
+            --allow-run=xdotool \
+            tools/src/mouse_gesture_wheel_x11_e2e.ts
 
       - name: Verify downloaded Firefox execution coverage
         if: matrix.browser_suite == true

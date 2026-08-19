@@ -5,6 +5,7 @@
 
 import { getConfig, isEnabled, patternToString } from "./config.ts";
 import { GestureDisplay } from "./components/GestureDisplay.tsx";
+import { normalizeWheelActions } from "./wheel-action-policy.ts";
 import {
   executeGestureAction,
   getActionDisplayName,
@@ -523,6 +524,8 @@ export class MouseGestureController {
     // alive long enough to cover Firefox's post-mouseup contextmenu event and
     // any residual wheel events, but does not permit another action.
     if (this.isWheelGestureFired) {
+      this.preventFollowingClick(event);
+
       if (event.button === 2) {
         const preventionTimeout = getConfig().contextMenu.preventionTimeout;
         this.isContextMenuPrevented = false;
@@ -685,11 +688,15 @@ export class MouseGestureController {
       return;
     }
 
+    // Defend the execution boundary as well as preference parsing. Tests,
+    // extensions, or future callers can update the in-memory config directly;
+    // none may turn repeatable wheel input into a destructive action.
+    const wheelActions = normalizeWheelActions(config.wheelActions);
     let action: string | null = null;
     if (event.deltaY < 0) {
-      action = "gecko-show-previous-tab";
+      action = wheelActions.scrollUp;
     } else if (event.deltaY > 0) {
-      action = "gecko-show-next-tab";
+      action = wheelActions.scrollDown;
     }
 
     if (action) {
