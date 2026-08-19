@@ -25,6 +25,7 @@ interface WebScraperActor {
 // Type for browser tab element
 interface BrowserTab {
   linkedBrowser: XULBrowserElement & { browserId: number };
+  readonly isConnected: boolean;
   label: string;
   selected: boolean;
   pinned: boolean;
