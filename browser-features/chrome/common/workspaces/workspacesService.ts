@@ -36,6 +36,7 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
+import { ExplicitTabUserContextOperations } from "./utils/explicit-tab-user-context.ts";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
   dataManagerCtx: WorkspacesDataManager;
@@ -43,6 +44,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   iconCtx: WorkspaceIcons;
   modalCtx: WorkspaceManageModal;
   archiveService: WorkspacesArchiveService;
+
+  private explicitTabUserContextOperations =
+    new ExplicitTabUserContextOperations();
+
+  /**
+   * Opens one tab without replacing an explicitly selected container with the
+   * current workspace's default container. gBrowser.addTab dispatches TabOpen
+   * synchronously, so this operation only exists for the duration of openTab.
+   */
+  withExplicitTabUserContext<T>(
+    userContextId: number,
+    openTab: () => T,
+  ): T {
+    return this.explicitTabUserContextOperations.run(userContextId, openTab);
+  }
 
   private cloneWorkspaceMap(source: unknown): Map<TWorkspaceID, TWorkspace> {
     if (source instanceof Map) {
@@ -73,9 +89,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       return fromOrder;
     }
 
-    for (const id of (
-      workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>
-    ).keys()) {
+    for (
+      const id of (
+        workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>
+      ).keys()
+    ) {
       if (id !== excludeId) {
         return id;
       }
@@ -221,8 +239,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       workspaceID,
       fallbackWorkspaceID ?? undefined,
     );
-    setWorkspacesDataStore("order", (prev) =>
-      prev.filter((v) => v !== workspaceID),
+    setWorkspacesDataStore(
+      "order",
+      (prev) => prev.filter((v) => v !== workspaceID),
     );
     this.dataManagerCtx.deleteWorkspace(workspaceID);
   }
@@ -459,9 +478,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     try {
       const gBrowser = globalThis.gBrowser as
         | {
-            tabs: XULElement[];
-            showTab: (tab: XULElement) => void;
-          }
+          tabs: XULElement[];
+          showTab: (tab: XULElement) => void;
+        }
         | undefined;
 
       if (gBrowser?.tabs) {
@@ -499,8 +518,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         skipAnimation: true,
         inBackground: true,
         userContextId: tabSnapshot.userContextId,
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       });
 
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, workspaceId);
@@ -520,7 +539,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           const clonedState = structuredClone(tabSnapshot.state);
           const attributes =
             (clonedState.attributes as Record<string, unknown> | undefined) ??
-            {};
+              {};
           attributes[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
           if (tabSnapshot.lastShownWorkspaceId) {
             attributes[WORKSPACE_LAST_SHOW_ID] =
@@ -541,8 +560,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           globalThis.gBrowser
             .getBrowserForTab(tab)
             .loadURI(Services.io.newURI(tabSnapshot.url), {
-              triggeringPrincipal:
-                Services.scriptSecurityManager.getSystemPrincipal(),
+              triggeringPrincipal: Services.scriptSecurityManager
+                .getSystemPrincipal(),
             });
         } catch (error) {
           console.error("WorkspacesService: failed to load tab URL", error);
@@ -602,6 +621,25 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // If tab doesn't have a workspace ID, assign it to current workspace
     if (!workspaceId) {
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
+    }
+
+    const explicitUserContextId = this.explicitTabUserContextOperations
+      .consumeNext();
+    if (explicitUserContextId !== null) {
+      const openedTabUserContextId = Number.parseInt(
+        tab.getAttribute("usercontextid") || "0",
+        10,
+      );
+      if (openedTabUserContextId !== explicitUserContextId) {
+        console.error(
+          "WorkspacesService: Explicit tab container did not match TabOpen",
+          {
+            expectedUserContextId: explicitUserContextId,
+            openedTabUserContextId,
+          },
+        );
+      }
+      return;
     }
 
     // Get the workspace ID that should be used (either existing or current)
