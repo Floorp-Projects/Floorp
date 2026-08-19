@@ -10,36 +10,29 @@ import type {
   GestureDirection,
   MouseGestureConfig,
 } from "../../types/pref.ts";
-
-const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
-const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
+import {
+  createDefaultMouseGestureConfig,
+  createGestureConfigPersistence,
+  type GestureConfigPersistence,
+  MOUSE_GESTURE_CONFIG_PREF,
+  MOUSE_GESTURE_ENABLED_PREF,
+  type MouseGestureConfigUpdate,
+  parseMouseGestureConfig,
+} from "./configPersistence.ts";
 
 export const useMouseGestureConfig = () => {
   const [config, setConfig] = useState<MouseGestureConfig>(
-    {} as MouseGestureConfig,
+    () => createDefaultMouseGestureConfig(false),
   );
-  // Every updater below reads its "current" config from this ref, not from
-  // `config` directly. Two rapid updates (e.g. changing both wheel-action
-  // selectors before the first async save resolves) would otherwise both
-  // build on the same stale `config` closure, and whichever save resolves
-  // last would silently discard the other's change. The ref is updated
-  // synchronously in `applyConfig`, before any await, so each subsequent
-  // call always builds on the latest requested config.
-  const configRef = useRef<MouseGestureConfig>(config);
-  const applyConfig = (newConfig: MouseGestureConfig) => {
-    configRef.current = newConfig;
-    setConfig(newConfig);
-  };
-  // Persistence writes (rpc.setBoolPref/setStringPref) are queued through
-  // this ref-backed promise chain so they always land in invocation order.
-  // Without it, two saves in flight could complete out of order, and an
-  // older save resolving last would overwrite a newer wheel/rocker-action
-  // choice in the actual persisted pref - silently reverting it on the next
-  // page load, even though in-memory state briefly showed the newer value.
-  const saveQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const persistenceRef = useRef<GestureConfigPersistence | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+    let unsubscribe: (() => void) | null = null;
+
     const loadConfig = async () => {
       try {
         setLoading(true);
@@ -53,138 +46,99 @@ export const useMouseGestureConfig = () => {
           enabled = false;
         }
 
-        const defaultConfig: MouseGestureConfig = {
-          enabled,
-          rockerGesturesEnabled: true,
-          wheelGesturesEnabled: true,
-          sensitivity: 40,
-          showTrail: true,
-          showLabel: true,
-          trailColor: "#37ff00",
-          trailWidth: 6,
-          contextMenu: {
-            minDistance: 12,
-            preventionTimeout: 200,
-          },
-          actions: [],
-          rockerActions: {
-            leftRight: "gecko-forward",
-            rightLeft: "gecko-back",
-          },
-          wheelActions: {
-            scrollUp: "gecko-show-previous-tab",
-            scrollDown: "gecko-show-next-tab",
-          },
-        };
-
+        let loadedConfig = createDefaultMouseGestureConfig(enabled);
         try {
           const configStr = await rpc.getStringPref(MOUSE_GESTURE_CONFIG_PREF);
-          if (configStr) {
-            const parsedConfig = JSON.parse(configStr);
-            // Merge defaults with parsed config
-            applyConfig({
-              ...defaultConfig,
-              ...parsedConfig,
-              contextMenu: {
-                ...defaultConfig.contextMenu,
-                ...parsedConfig.contextMenu,
-              },
-              enabled,
-            });
-          } else {
-            applyConfig(defaultConfig);
-          }
+          loadedConfig = parseMouseGestureConfig(configStr, enabled);
         } catch (parseError) {
-          console.error("Failed to parse configuration", parseError);
-          applyConfig(defaultConfig);
+          console.error("Failed to load configuration", parseError);
         }
+
+        if (cancelled) return;
+        const persistence = createGestureConfigPersistence(loadedConfig, {
+          writeEnabled: (nextEnabled) =>
+            rpc.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, nextEnabled),
+          writeConfig: (serializedConfig) =>
+            rpc.setStringPref(
+              MOUSE_GESTURE_CONFIG_PREF,
+              serializedConfig,
+            ),
+        });
+        persistenceRef.current = persistence;
+        unsubscribe = persistence.subscribe((snapshot) => {
+          if (cancelled) return;
+          setConfig(snapshot.config);
+          setPending(snapshot.pending);
+          setError(snapshot.error);
+        });
       } catch (error) {
         console.error("Failed to load configuration", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadConfig();
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+      persistenceRef.current = null;
+    };
   }, []);
 
-  const saveConfig = async (newConfig: MouseGestureConfig) => {
-    console.log("saveConfig", newConfig);
-    try {
-      await rpc.setBoolPref(MOUSE_GESTURE_ENABLED_PREF, newConfig.enabled);
-      const configToSave = { ...newConfig };
-      // deno-lint-ignore no-unused-vars
-      const { enabled, ...configWithoutEnabled } = configToSave;
-      console.log("Saving configWithoutEnabled", configWithoutEnabled);
-      await rpc.setStringPref(
-        MOUSE_GESTURE_CONFIG_PREF,
-        JSON.stringify(configWithoutEnabled),
-      );
-
-      // If a newer update has already advanced configRef past this call's
-      // snapshot (e.g. this save resolved after a later one, out of order),
-      // committing newConfig to state now would revert that newer change.
-      if (configRef.current === newConfig) {
-        setConfig(newConfig);
-      }
-      return true;
-    } catch (error) {
-      console.error("Failed to save configuration", error);
-      return false;
-    }
-  };
-
-  const updateConfig = (partialConfig: Partial<MouseGestureConfig>) => {
-    const newConfig = { ...configRef.current, ...partialConfig };
-    // Apply optimistically so the UI reflects the choice immediately,
-    // rather than lagging until the save round-trip completes.
-    applyConfig(newConfig);
-
-    const queuedSave = saveQueueRef.current.then(() => saveConfig(newConfig));
-    saveQueueRef.current = queuedSave;
-    return queuedSave;
-  };
+  const updateConfig = (update: MouseGestureConfigUpdate) =>
+    persistenceRef.current?.updateConfig(update) ?? Promise.resolve(false);
 
   const toggleEnabled = () =>
-    updateConfig({ enabled: !configRef.current.enabled });
+    persistenceRef.current?.updateEnabled((enabled) => !enabled) ??
+      Promise.resolve(false);
 
   const addAction = (action: GestureAction) =>
-    updateConfig({ actions: [...configRef.current.actions, action] });
+    updateConfig((current) => ({
+      actions: [...current.actions, action],
+    }));
 
-  const updateAction = (index: number, action: GestureAction) => {
-    const newActions = [...configRef.current.actions];
-    newActions[index] = action;
-    return updateConfig({ actions: newActions });
-  };
+  const updateAction = (index: number, action: GestureAction) =>
+    updateConfig((current) => {
+      const actions = [...current.actions];
+      actions[index] = action;
+      return { actions };
+    });
 
-  const deleteAction = (index: number) => {
-    const newActions = [...configRef.current.actions];
-    newActions.splice(index, 1);
-    return updateConfig({ actions: newActions });
-  };
+  const deleteAction = (index: number) =>
+    updateConfig((current) => ({
+      actions: current.actions.filter((_, actionIndex) =>
+        actionIndex !== index
+      ),
+    }));
 
-  const updateRockerAction = (rockerType: "leftRight" | "rightLeft", action: string) => {
-    return updateConfig({
+  const updateRockerAction = (
+    rockerType: "leftRight" | "rightLeft",
+    action: string,
+  ) =>
+    updateConfig((current) => ({
       rockerActions: {
-        ...configRef.current.rockerActions,
+        ...current.rockerActions,
         [rockerType]: action,
       },
-    });
-  };
+    }));
 
-  const updateWheelAction = (wheelType: "scrollUp" | "scrollDown", action: string) => {
-    return updateConfig({
+  const updateWheelAction = (
+    wheelType: "scrollUp" | "scrollDown",
+    action: string,
+  ) =>
+    updateConfig((current) => ({
       wheelActions: {
-        ...configRef.current.wheelActions,
+        ...current.wheelActions,
         [wheelType]: action,
       },
-    });
-  };
+    }));
 
   return {
     config,
     loading,
-    saveConfig,
+    pending,
+    error,
     updateConfig,
     toggleEnabled,
     addAction,

@@ -10,6 +10,8 @@ import { Switch } from "@/components/common/switch.tsx";
 import { Seekbar } from "@/components/common/seekbar.tsx";
 import type { MouseGestureConfig } from "@/types/pref.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
+import type { MouseGestureConfigUpdate } from "../configPersistence.ts";
+import { REPEAT_SAFE_WHEEL_ACTIONS } from "#features-chrome/common/mouse-gesture/wheel-action-policy.ts";
 import {
   Card,
   CardContent,
@@ -21,7 +23,7 @@ import {
 interface GeneralSettingsProps {
   config: MouseGestureConfig;
   toggleEnabled: () => Promise<boolean>;
-  updateConfig: (config: Partial<MouseGestureConfig>) => Promise<boolean>;
+  updateConfig: (update: MouseGestureConfigUpdate) => Promise<boolean>;
   updateRockerAction: (
     rockerType: "leftRight" | "rightLeft",
     action: string,
@@ -41,14 +43,16 @@ export function GeneralSettings({
 }: GeneralSettingsProps) {
   const { t } = useTranslation();
   const availableActions = useAvailableActions();
+  const wheelActions = useAvailableActions(REPEAT_SAFE_WHEEL_ACTIONS);
 
   const toggleShowTrail = async () => {
-    await updateConfig({ showTrail: !config.showTrail });
+    await updateConfig((current) => ({ showTrail: !current.showTrail }));
   };
 
   const toggleShowLabel = async () => {
-    const current = config.showLabel ?? true;
-    await updateConfig({ showLabel: !current });
+    await updateConfig((current) => ({
+      showLabel: !(current.showLabel ?? true),
+    }));
   };
 
   const handleSensitivityChange = async (
@@ -78,12 +82,12 @@ export function GeneralSettings({
   ) => {
     const target = e.target;
     const value = Number.parseInt(target.value);
-    await updateConfig({
+    await updateConfig((current) => ({
       contextMenu: {
-        ...config.contextMenu,
+        ...current.contextMenu,
         minDistance: value,
       },
-    });
+    }));
   };
 
   const handlePreventionTimeoutChange = async (
@@ -91,12 +95,12 @@ export function GeneralSettings({
   ) => {
     const target = e.target;
     const value = Number.parseInt(target.value);
-    await updateConfig({
+    await updateConfig((current) => ({
       contextMenu: {
-        ...config.contextMenu,
+        ...current.contextMenu,
         preventionTimeout: value,
       },
-    });
+    }));
   };
 
   return (
@@ -141,10 +145,10 @@ export function GeneralSettings({
               <Switch
                 checked={config.rockerGesturesEnabled ?? true}
                 onChange={() =>
-                  updateConfig({
+                  updateConfig((current) => ({
                     rockerGesturesEnabled:
-                      !(config.rockerGesturesEnabled ?? true),
-                  })}
+                      !(current.rockerGesturesEnabled ?? true),
+                  }))}
                 disabled={!config.enabled}
               />
             </div>
@@ -211,9 +215,10 @@ export function GeneralSettings({
               <Switch
                 checked={config.wheelGesturesEnabled ?? true}
                 onChange={() =>
-                  updateConfig({
-                    wheelGesturesEnabled: !(config.wheelGesturesEnabled ?? true),
-                  })}
+                  updateConfig((current) => ({
+                    wheelGesturesEnabled:
+                      !(current.wheelGesturesEnabled ?? true),
+                  }))}
                 disabled={!config.enabled}
               />
             </div>
@@ -238,7 +243,7 @@ export function GeneralSettings({
                       updateWheelAction("scrollUp", e.target.value)}
                     disabled={!config.enabled}
                   >
-                    {availableActions.map((action) => (
+                    {wheelActions.map((action) => (
                       <option key={action.id} value={action.id}>
                         {action.name}
                       </option>
@@ -263,7 +268,7 @@ export function GeneralSettings({
                       updateWheelAction("scrollDown", e.target.value)}
                     disabled={!config.enabled}
                   >
-                    {availableActions.map((action) => (
+                    {wheelActions.map((action) => (
                       <option key={action.id} value={action.id}>
                         {action.name}
                       </option>
