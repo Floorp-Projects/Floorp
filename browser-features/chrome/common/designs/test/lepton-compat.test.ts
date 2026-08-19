@@ -459,6 +459,59 @@ function testLwtDialogFallbackDoesNotOverrideThemeValue(): void {
   );
 }
 
+/**
+ * Real-browser verification of the LWT fallback contract: with an LWT loaded
+ * whose accent is the XP Modern blue (rgb(9,96,224)), in-content surfaces
+ * must NOT paint that frame accent. The compat sheet's `@layer floorp-compat`
+ * fallback (canvas/toolbar token) must win, and a theme that provides its own
+ * `--in-content-page-background` must keep its value.
+ */
+function testLwtFallbackInRealBrowser(): void {
+  const root = document.documentElement;
+  const styleEl = document.createElement("style");
+  const probe = document.createElement("dialog");
+  const probeWithThemeValue = document.createElement("dialog");
+  probeWithThemeValue.style.setProperty(
+    "--in-content-page-background",
+    "rgb(200, 100, 50)",
+  );
+
+  root.setAttribute("lwtheme", "true");
+  root.style.setProperty("--lwt-accent-color", "rgb(9, 96, 224)");
+  styleEl.textContent = GECKO_152_COLOR_FIX_CSS;
+  document.head.appendChild(styleEl);
+  root.appendChild(probe);
+  root.appendChild(probeWithThemeValue);
+
+  try {
+    const fallbackColor = globalThis
+      .getComputedStyle(probe)
+      .getPropertyValue("--in-content-page-background");
+    assert(
+      fallbackColor.length > 0 &&
+        !fallbackColor.includes("9, 96, 224") &&
+        !fallbackColor.includes("9,96,224"),
+      `LWT fallback must not paint the frame accent on in-content surfaces; ` +
+        `got: "${fallbackColor}"`,
+    );
+
+    const themeColor = globalThis
+      .getComputedStyle(probeWithThemeValue)
+      .getPropertyValue("--in-content-page-background");
+    assert(
+      themeColor.includes("200, 100, 50"),
+      `a theme-provided --in-content-page-background must win over the ` +
+        `low-priority fallback; got: "${themeColor}"`,
+    );
+  } finally {
+    root.removeAttribute("lwtheme");
+    root.style.removeProperty("--lwt-accent-color");
+    probe.remove();
+    probeWithThemeValue.remove();
+    styleEl.remove();
+  }
+}
+
 /** "The whole UI turns blue" / "transparent panels" — ensure the panel
  *  background gets a safe default for the no-theme case. */
 function testCompatFixesPanelBackground(): void {
@@ -633,6 +686,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "LWT dialog fallback preserves theme value",
       fn: testLwtDialogFallbackDoesNotOverrideThemeValue,
+    },
+    {
+      name: "LWT fallback in a real browser never paints the frame accent",
+      fn: testLwtFallbackInRealBrowser,
     },
     {
       name: "compat fixes panel background (transparent panel symptom)",
