@@ -1,11 +1,11 @@
-# Welcome to Noraneko Contributing Guidelines
+# Welcome to Floorp Contributing Guidelines
 
-Thank you for interest!
+Thank you for your interest!
 
-First, please ask "how to contribute" in GitHub Issues or [Ablaze Community Discord](https://aka.ablaze.one/discord) \
+First, please ask "how to contribute" in [GitHub Discussions](https://github.com/Floorp-Projects/Floorp/discussions/new?category=q-a) or [Floorp Projects Discord](https://floorp.app/discord) \
 It can be helpful if you are stuck, or for communication to start contributing.
 
-When you ask, make an issue and make pull request, please use 5W1H as a reference for description.
+When you ask, make a discussion and make pull request, please use 5W1H as a reference for description.
 
 1. Who
 2. When
@@ -25,3 +25,5 @@ e.g.
 Please add MPL 2.0 headers to new files you submit, where appropriate. For example, a PNG or JPEG would not require an individual notice. A sample of some headers is available at: https://www.mozilla.org/en-US/MPL/headers/.
 
 Thank you for reading. Have a nice day!
+
+*Updated from the original Noraneko Contribution Guidelines.*
