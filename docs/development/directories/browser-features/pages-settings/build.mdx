@@ -1,0 +1,116 @@
+---
+title: "Settings Pages Build"
+sidebar_label: "Build"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+# Settings Pages Build
+
+The Floorp settings UI is a standalone React application built with Vite and Tailwind, distinct from the SolidJS browser chrome features. It is packaged as a full-page browser UI and loaded in production through `chrome://` resources. This page describes the build configuration, entry points, route map, and how the settings app integrates with the broader Floorp build pipeline.
+
+## Architecture Layer
+
+The settings application belongs to the **Pages** layer of Floorp's architecture, which is described as React/Tailwind full-page browser UIs (`browser-features/pages-settings/vite.config.ts`). This layer sits above the patched Gecko base and ESM modules, and alongside the SolidJS Chrome UI layer. Unlike chrome features discovered by glob under `browser-features/chrome/common/mod.ts`, the settings app is a single Vite project with its own entry point and route table.
+
+## Vite Build Configuration
+
+The settings app is built using a dedicated Vite configuration at `browser-features/pages-settings/vite.config.ts`. This configuration defines the project root, build output, and plugin setup for the React and Tailwind toolchain. Because the Pages layer is a full-page UI rather than a chrome overlay, the Vite config targets browser-internal resource URLs rather than the dev loader used by chrome features.
+
+## Application Entry Point
+
+The settings app bootstraps from `browser-features/pages-settings/src/main.tsx`, which initializes the React application with theme support, internationalization, and hash-based routing. This entry point is what Vite uses as its input module when building the production bundle. The hash-based routing approach means settings navigation works within a single loaded document, which is important for how the app is served from `chrome://` resources in production.
+
+## Route Map
+
+Routes are defined in `browser-features/pages-settings/src/App.tsx`. The following table lists every registered route and its component:
+
+| Route | Component |
+|---|---|
+| `/` | `Navigate` (redirect) |
+| `/search` | `@/app/search/page.tsx` |
+| `/overview/home` | `@/app/dashboard/page.tsx` |
+| `/features/design` | `@/app/design/page.tsx` |
+| `/features/design/lepton` | `@/app/design/components/LeptonSettings.tsx` |
+| `/features/sidebar` | `@/app/sidebar/page.tsx` |
+| `/features/workspaces` | `@/app/workspaces/page.tsx` |
+| `/features/webapps` | `@/app/pwa/page.tsx` |
+| `/features/floorp-os` | `@/app/floorp-os/page.tsx` |
+| `/features/accounts` | `@/app/accounts/page.tsx` |
+| `/features/gesture` | `@/app/gesture/page.tsx` |
+| `/features/shortcuts` | `@/app/keyboard-shortcut/page.tsx` |
+| `/about/browser` | `./app/about/noraneko.tsx` |
+| `/about/updates` | `@/app/updates/page.tsx` |
+
+The root route `/` redirects via a `Navigate` component, meaning the settings app does not render a blank page on initial load. The route paths map to feature areas that correspond to chrome features elsewhere in the codebase, such as sidebar, workspaces, PWA, keyboard shortcuts, and gestures.
+
+## Relationship to Chrome Features
+
+Several settings routes correspond directly to chrome feature modules registered under `browser-features/chrome/common/`. For example:
+
+- The `/features/sidebar` route configures the panel sidebar feature, whose chrome component is owned by `browser-features/chrome/common/panel-sidebar/index.ts`.
+- The `/features/workspaces` route maps to the workspaces feature owned by `browser-features/chrome/common/workspaces/index.ts`.
+- The `/features/webapps` route corresponds to the PWA feature owned by `browser-features/chrome/common/pwa/index.ts`.
+- The `/features/shortcuts` route relates to the keyboard shortcut feature owned by `browser-features/chrome/common/keyboard-shortcut/index.ts`.
+- The `/features/gesture` route relates to the mouse gesture feature owned by `browser-features/chrome/common/mouse-gesture/index.ts`.
+
+The settings app provides the user-facing configuration UI, while the chrome feature modules implement the browser-side behavior. Communication between the settings page and chrome features flows through Window Actors registered in `browser-features/modules/modules/BrowserGlue.sys.mts`, such as `NRSettings` and `NRPanelSidebar`.
+
+## Build Pipeline Integration
+
+### Feles Build CLI
+
+The Floorp build process is orchestrated by the `feles-build` CLI defined in `tools/feles-build.ts`. The build command accepts a phase argument:
+
+```
+Usage: feles-build build --phase <before-mach|after-mach>
+```
+
+This two-phase design separates preparation steps that must occur before the Mozilla `mach` build from post-build packaging steps. The settings Vite build is part of this pipeline, producing the bundled resources that get placed into the browser's chrome directory.
+
+The `feles-build` CLI also provides a `dev` command (`Usage: feles-build dev`) for local development, which starts the necessary dev servers including the loader dev server.
+
+### Deno Task Entry
+
+The `feles-build` CLI is invoked through a Deno task defined in `deno.json`:
+
+```
+deno task feles-build
+```
+
+This task runs `deno run -A tools/feles-build.ts`, which then dispatches to the appropriate subcommand. Developers working on the settings app use this task as the primary entry point for building and staging.
+
+### Dev Server
+
+During development, the loader dev server runs on port 5181 as configured in `bridge/loader-features/vite.config.ts`. The bridge startup logic in `bridge/startup/src/chrome_root.ts` selects between dev/test HTTP loaders and production `chrome://` code. In development, the settings app is served through the dev server infrastructure, while production builds package the Vite output into chrome-accessible resources.
+
+## Production Loading
+
+In production, the settings page is loaded through `chrome://` URLs. The bridge startup in `bridge/startup/src/chrome_root.ts` defines the production loader path as `chrome://noraneko/content/core.js`. The Vite build output from `browser-features/pages-settings/vite.config.ts` is placed into the browser's content directory so that the settings page can be accessed via its chrome URL at runtime.
+
+## Window Actor Bridge
+
+The settings page communicates with browser-side logic through Window Actors registered in `browser-features/modules/modules/BrowserGlue.sys.mts`. The registration uses `ActorManagerParent.addJSWindowActors` with 22 actors total. Key actors for settings functionality include:
+
+- `NRSettings` — general settings communication
+- `NRPanelSidebar` — sidebar configuration
+- `NRWorkspaces` — workspace settings
+- `NRProgressiveWebApp` and `NRPwaManager` — PWA settings
+- `NRProfileManager` — profile management settings
+- `NRI18n` — internationalization support used by the settings app
+
+These actors provide the message-passing bridge between the React settings UI and the Gecko-side services that implement the configured behavior.
+
+## CI Build Context
+
+In CI, the build is invoked as part of the packaging workflow. The package workflow in `.github/workflows/package.yml` runs `deno task feles-build build --phase after-mach` to complete post-mach build steps. The workflow also runs `deno task feles-build misc writeVersion` to write version information that the settings about page reads. The settings app's `/about/browser` route (`./app/about/noraneko.tsx`) displays this version information to users.
+
+## Development Workflow
+
+To build or develop the settings pages locally:
+
+1. Use `deno task feles-build dev` to start the development environment, which launches the dev server on port 5181.
+2. The settings app entry at `browser-features/pages-settings/src/main.tsx` is served through the dev loader, with hot module replacement handled by Vite.
+3. For a production-style build, use `deno task feles-build build --phase before-mach` followed by `deno task feles-build build --phase after-mach`.
+4. Use `deno task feles-build stage` to stage the built output into a runnable browser profile for testing.
+
+The `dev-tool` CLI (`deno task dev-tool`, defined in `tools/dev-tool.ts`) provides additional inspection capabilities during development, including Marionette-backed status checks, eval, console output, screenshots, navigation, and DOM inspection commands that can verify settings page rendering.

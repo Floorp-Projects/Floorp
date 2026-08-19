@@ -8,6 +8,10 @@ import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
 import type { Browser, Manifest } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
+import {
+  getUserContextIdForBrowser,
+  isContainerExperimentEnabled,
+} from "./containerUtils.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -28,6 +32,32 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+}
+
+export function resolveEffectiveUserContextId(
+  browser: Browser,
+  explicitUserContextId: number | undefined,
+  containerExperimentEnabled: boolean,
+  browserUserContextIdResolver: (browser: Browser) => number =
+    getUserContextIdForBrowser,
+): number {
+  if (!containerExperimentEnabled) {
+    return 0;
+  }
+
+  if (explicitUserContextId !== undefined) {
+    return explicitUserContextId;
+  }
+
+  return browserUserContextIdResolver(browser);
+}
+
+function browserStillShowsUrl(browser: Browser, expectedUrl: string): boolean {
+  try {
+    return browser.currentURI.spec === expectedUrl;
+  } catch {
+    return false;
+  }
 }
 
 export class SiteSpecificBrowserManager {
@@ -101,36 +131,36 @@ export class SiteSpecificBrowserManager {
     asPwa = true,
     installUserContextId?: number,
   ) {
-    // Normalize: when experiment is disabled, ignore container ID
-    let effectiveUserContextId = installUserContextId;
-    try {
-      const { PwaContainerExperiment } = ChromeUtils.importESModule(
-        "resource://noraneko/modules/pwa/PwaContainerExperiment.sys.mjs",
-      );
-      if (!PwaContainerExperiment.isEnabled()) {
-        effectiveUserContextId = undefined;
-      }
-    } catch {
-      effectiveUserContextId = undefined;
-    }
+    const effectiveUserContextId = this.getEffectiveUserContextId(
+      browser,
+      installUserContextId,
+    );
+    const currentPageUrl = browser.currentURI.spec;
 
-    const isInstalled = await this.checkCurrentPageIsInstalled(browser);
+    const isInstalled = await this.checkPageIsInstalledForContainer(
+      browser,
+      effectiveUserContextId,
+    );
+
+    if (!browserStillShowsUrl(browser, currentPageUrl)) {
+      return;
+    }
 
     if (isInstalled) {
       const currentTabSsb = await this.getCurrentTabSsb(browser);
 
-      if (!currentTabSsb) {
+      if (!currentTabSsb || !browserStillShowsUrl(browser, currentPageUrl)) {
         return;
       }
 
       const ssbObj = await this.getIdByUrl(
         currentTabSsb.start_url,
-        effectiveUserContextId ?? 0,
+        effectiveUserContextId,
       );
 
-      if (ssbObj && globalThis.gBrowser.selectedBrowser.currentURI) {
+      if (ssbObj && browserStillShowsUrl(browser, currentPageUrl)) {
         await this.runSsbByUrl(
-          globalThis.gBrowser.selectedBrowser.currentURI.spec,
+          currentPageUrl,
           effectiveUserContextId,
         );
       }
@@ -139,21 +169,36 @@ export class SiteSpecificBrowserManager {
         useWebManifest: asPwa,
       });
 
-      if (!manifest) {
+      if (!manifest || !browserStillShowsUrl(browser, currentPageUrl)) {
         return;
       }
 
-      if (effectiveUserContextId && effectiveUserContextId > 0) {
-        manifest.userContextId = effectiveUserContextId;
-      }
+      manifest.userContextId = effectiveUserContextId;
 
       await this.install(manifest);
 
-      // Installing needs some time to finish
-      globalThis.setTimeout(() => {
-        this.runSsbByUrl(manifest.start_url, effectiveUserContextId);
-      }, 3000);
+      if (browserStillShowsUrl(browser, currentPageUrl)) {
+        this.scheduleRunSsbByUrl(manifest.start_url, effectiveUserContextId);
+      }
     }
+  }
+
+  private getEffectiveUserContextId(
+    browser: Browser,
+    explicitUserContextId: number | undefined,
+  ): number {
+    return resolveEffectiveUserContextId(
+      browser,
+      explicitUserContextId,
+      isContainerExperimentEnabled(),
+    );
+  }
+
+  private scheduleRunSsbByUrl(url: string, userContextId: number): void {
+    // Installing needs some time to finish.
+    globalThis.setTimeout(() => {
+      void this.runSsbByUrl(url, userContextId);
+    }, 3000);
   }
 
   public async checkCurrentPageIsInstalled(browser: Browser): Promise<boolean> {
@@ -196,8 +241,8 @@ export class SiteSpecificBrowserManager {
     }
 
     for (const key in ssbData) {
-      const { startUrl, userContextId: storedCtxId } =
-        DataManagerClass.parseKey(key);
+      const { startUrl, userContextId: storedCtxId } = DataManagerClass
+        .parseKey(key);
       if (
         (startUrl === currentTabSsb.start_url ||
           currentTabSsb.start_url.startsWith(startUrl)) &&
@@ -329,10 +374,11 @@ export class SiteSpecificBrowserManager {
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
-    const currentPageHasSsbManifest =
-      await this.manifestProcesser.getManifestFromBrowser(browser, true);
-    const currentPageIsInstalled =
-      await this.checkCurrentPageIsInstalled(browser);
+    const currentPageHasSsbManifest = await this.manifestProcesser
+      .getManifestFromBrowser(browser, true);
+    const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
+      browser,
+    );
 
     if (
       (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&

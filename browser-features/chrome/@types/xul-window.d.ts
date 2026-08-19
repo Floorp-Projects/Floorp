@@ -115,6 +115,7 @@ type TCustomizableUIArea =
 
 // Gecko globals
 declare var gBrowser: GBrowser;
+declare var gURLBar: { focused: boolean };
 declare var TabContextMenu: TabContextMenu;
 declare var PanelUI: PanelUI;
 declare var gFloorp: GFloorp;
@@ -155,13 +156,14 @@ declare namespace globalThis {
     undoCloseTab(aIndex?: number): XULElement;
     undoCloseWindow?(aIndex?: number): unknown;
     setWindowState(window: Window, state: string, overwrite?: boolean): void;
-    getWindowState(window: Window): string;
+    getWindowState(window: Window): { windows: unknown[] };
     getBrowserState(): string;
     setBrowserState(state: string): void;
     getClosedTabCount(window?: Window): number;
     getClosedTabData(window?: Window): unknown[];
     promiseInitialized: Promise<void>;
-    persistTabAttribute(attrName: string): void;
+    /** Removed in Firefox 152 — feature-detect before calling. */
+    persistTabAttribute?(attrName: string): void;
   };
   var DownloadsPanel: {
     show(): Promise<void>;
@@ -233,10 +235,6 @@ declare namespace globalThis {
     DEFAULT_REMOTE_TYPE: string;
     EXTENSION_REMOTE_TYPE: string;
     deserializePrincipal(principal: unknown): unknown;
-    getRemoteTypeForURI(uri: string, ...args: unknown[]): string;
-    predictOriginAttributes(
-      options: Record<string, unknown>,
-    ): Record<string, unknown>;
   };
   var UrlbarUtils: { stripUnsafeProtocolOnPaste(text: string): string };
   var E: unknown;

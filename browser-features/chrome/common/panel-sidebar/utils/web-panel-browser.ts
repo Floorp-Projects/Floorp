@@ -81,17 +81,8 @@ export function loadUriInWebPanelBrowser(
   url: string,
 ): void {
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
-  const oa = globalThis.E10SUtils.predictOriginAttributes({ browser });
   const loadURIOptions = {
     triggeringPrincipal: principal,
-    remoteType: globalThis.E10SUtils.getRemoteTypeForURI(
-      url,
-      true,
-      false,
-      globalThis.E10SUtils.DEFAULT_REMOTE_TYPE,
-      null,
-      oa,
-    ),
   };
 
   if (typeof browser.loadURI !== "function") {

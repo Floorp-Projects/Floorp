@@ -6,6 +6,21 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
 import type {} from "solid-styled-jsx";
 
+type StatusBarGlobals = typeof globalThis & {
+  FirefoxViewHandler?: {
+    openToolbarMouseEvent?: (event: MouseEvent) => void;
+  };
+  gTabsPanel?: {
+    showAllTabsPanel?: (event: MouseEvent, anchorId: string) => void;
+  };
+  DownloadsIndicatorView?: {
+    onCommand?: (event: MouseEvent) => void;
+  };
+  PanelUI?: {
+    showSubView?: (viewId: string, anchor: Element) => void;
+  };
+};
+
 export class StatusBarManager {
   _showStatusBar = createSignal(
     Services.prefs.getBoolPref("noraneko.statusbar.enable", false),
@@ -69,7 +84,7 @@ export class StatusBarManager {
     }
 
     // Set up button press handler
-    statusbarNode.addEventListener("mousedown", (event) => {
+    statusbarNode.addEventListener("mousedown", (event: MouseEvent) => {
       if (!event.target) {
         // Event target is null
         return;
@@ -84,8 +99,7 @@ export class StatusBarManager {
       }
 
       try {
-        // deno-lint-ignore no-explicit-any
-        const gThis = globalThis as any;
+        const gThis = globalThis as StatusBarGlobals;
         switch (toolbarButton.id) {
           case "firefox-view-button":
             gThis.FirefoxViewHandler?.openToolbarMouseEvent?.(event);
@@ -100,7 +114,7 @@ export class StatusBarManager {
             gThis.PanelUI?.showSubView?.("appMenu-libraryView", toolbarButton);
             break;
         }
-      } catch(e) {
+      } catch (e) {
         console.error("[StatusBarManager] Error handling button press:", e);
       }
     });

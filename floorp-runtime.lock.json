@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "trackingRef": "nora-0.2.0",
+    "ref": "daily-998",
+    "commit": "3bf9399564e59be32f92dcc1b044094881b4fb6a",
+    "tree": "533f9fdca9bdccb7f3d2a13842be7e2375160ae5",
+    "release": {
+      "id": 359773143,
+      "immutable": false
+    },
+    "materials": {
+      "count": 53,
+      "totalBytes": 220264,
+      "entries": [
+        {
+          "path": "browser/base/content/test/caps/browser.toml",
+          "role": "manifest",
+          "bytes": 339,
+          "mode": "100644",
+          "gitBlob": "2afb307d4e81a112894b39334c759be75ef8c8be",
+          "sha256": "c6863e7d9cd86c10610c681c27d5ab8038d5685dcf4f42ea379ba353de8b5386"
+        },
+        {
+          "path": "browser/base/content/test/caps/browser_principalSerialization_version1.js",
+          "role": "test",
+          "bytes": 5783,
+          "mode": "100644",
+          "gitBlob": "6c4a41e9117a5d64637fb5d50d601e655fc7729f",
+          "sha256": "27b510b3b9a7ed2bb42b60422b30ca3ea96adb5a1798e77041109d469fa3144c"
+        },
+        {
+          "path": "browser/base/content/test/general/app_bug575561.html",
+          "role": "support",
+          "bytes": 849,
+          "mode": "100644",
+          "gitBlob": "00644efc3e027cfdc02c5962464cda2d7106620f",
+          "sha256": "8f6dc2206eb20859c3f6005ae320f34e6011f749ca6b5973b0fb2f1a9a7dabda"
+        },
+        {
+          "path": "browser/base/content/test/general/app_subframe_bug575561.html",
+          "role": "support",
+          "bytes": 297,
+          "mode": "100644",
+          "gitBlob": "8690497ffb2239b0eac838d922f890d382a40b32",
+          "sha256": "8939ee73a609d40177b30a8e2ecdf1d08904faa8264867afee0ceca2d137505d"
+        },
+        {
+          "path": "browser/base/content/test/general/audio.ogg",
+          "role": "support",
+          "bytes": 14293,
+          "mode": "100644",
+          "gitBlob": "477544875d28a2005ae730b5caced8c24ae12631",
+          "sha256": "b4e9c7a042279e7ed7873aab3e19fae9768a9a378b17e9eff889460836eb44fe"
+        },
+        {
+          "path": "browser/base/content/test/general/browser.toml",
+          "role": "manifest",
+          "bytes": 15559,
+          "mode": "100644",
+          "gitBlob": "540454b11e3c05233ba2de2d44c6caa8673eb891",
+          "sha256": "2e2ada657aa50be187c641273d17800529bfa5f1d9ba20963263900b06a09ced"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug479408_sample.html",
+          "role": "support",
+          "bytes": 226,
+          "mode": "100644",
+          "gitBlob": "f83f02bb9d7c7f6a59d87037263134115ac53a7c",
+          "sha256": "8603c4530d3d41c4d6c1a91471e349eed53240bf8e7790d55cb9a00a5652ceae"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug537474.js",
+          "role": "test",
+          "bytes": 492,
+          "mode": "100644",
+          "gitBlob": "b890bf2feab960dc47cb823f9908e3953c793082",
+          "sha256": "3c29e602d4bd8c215877ffb93167245f3a34925273689cfd8e40ac5f88beedd7"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug565575.js",
+          "role": "test",
+          "bytes": 587,
+          "mode": "100644",
+          "gitBlob": "b974b17205fb1bfd86652f13cc93d31564b26b23",
+          "sha256": "0862a3b48bda9889f7f5c2761084a0eedae790461d488f3fae4dd09e45018c64"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug596687.js",
+          "role": "test",
+          "bytes": 716,
+          "mode": "100644",
+          "gitBlob": "8c68cd5a03e4087c6b2c217466ac08f532dae2f7",
+          "sha256": "aa530beacaf77747680b82186f84bf9af40d094566ac2a83938b2d6350d9e350"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_star_hsts.sjs",
+          "role": "support",
+          "bytes": 598,
+          "mode": "100644",
+          "gitBlob": "64c4235288c3c05e6c22d77f8fe9c031a0fa0f27",
+          "sha256": "ca86bdb49b7ebbea0b601eabff8c6317e552f17fd6cf85c3162145368cdd5771"
+        },
+        {
+          "path": "browser/base/content/test/general/bug792517-2.html",
+          "role": "support",
+          "bytes": 82,
+          "mode": "100644",
+          "gitBlob": "bfc24d817f7cc79de06cb9cc1f34a41cd252ef8c",
+          "sha256": "2a088667cdb55d3ca84951c852409a60b43d40546e06e693c3cd114c8d59812c"
+        },
+        {
+          "path": "browser/base/content/test/general/bug792517.html",
+          "role": "support",
+          "bytes": 59,
+          "mode": "100644",
+          "gitBlob": "e7c040bf1f02bd8e6803c43d70dc998f4d7414b4",
+          "sha256": "09330c210007e21a72eb3bea2231c41dcc38522167f21b5be63447e97f4ba739"
+        },
+        {
+          "path": "browser/base/content/test/general/bug792517.sjs",
+          "role": "support",
+          "bytes": 397,
+          "mode": "100644",
+          "gitBlob": "c1f2b282fb8ba554a9c880c71bd6dd9c156dcdbe",
+          "sha256": "7a19a62a0f8c246eb58ac2498935e8337e5f2ed19d8b274c31db06102fe1e955"
+        },
+        {
+          "path": "browser/base/content/test/general/clipboard_pastefile.html",
+          "role": "support",
+          "bytes": 1276,
+          "mode": "100644",
+          "gitBlob": "055cc67905f70d0be0cb4d8c5368cfcea121d191",
+          "sha256": "cbb492b3b9a9cdd16fa4555dd02df8489ad952a8a7d671cf29509907b20eaf81"
+        },
+        {
+          "path": "browser/base/content/test/general/download_page.html",
+          "role": "support",
+          "bytes": 4116,
+          "mode": "100644",
+          "gitBlob": "625ff46aab1c76e33c8cf151e15de41be4043bba",
+          "sha256": "cd3ed02504cb3401ce8ad18d5830819daabf4473a445ea00e820f5e07b1a58eb"
+        },
+        {
+          "path": "browser/base/content/test/general/download_page_1.txt",
+          "role": "support",
+          "bytes": 30,
+          "mode": "100644",
+          "gitBlob": "404b2da2ad0ed152fbe02ddbf409070a4a7ed20f",
+          "sha256": "4b8638268292723e7e1def06ee8808e321b908c7170d8e56468bd8f887cac542"
+        },
+        {
+          "path": "browser/base/content/test/general/download_page_2.txt",
+          "role": "support",
+          "bytes": 5,
+          "mode": "100644",
+          "gitBlob": "9daeafb9864cf43055ae93beb0afd6c7d144bfa4",
+          "sha256": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
+        },
+        {
+          "path": "browser/base/content/test/general/download_with_content_disposition_header.sjs",
+          "role": "support",
+          "bytes": 696,
+          "mode": "100644",
+          "gitBlob": "26be6c44b7fa842fd0e84f6dc28207f74dfc8d63",
+          "sha256": "f1fba454b6d44e71b98eb8b27f3b63dcb254bbd781b2ca6b9586cfc39a0e1ecf"
+        },
+        {
+          "path": "browser/base/content/test/general/dummy_page.html",
+          "role": "support",
+          "bytes": 173,
+          "mode": "100644",
+          "gitBlob": "1a87e28408d0b41fb179a6369f443602dc5cae20",
+          "sha256": "6af11adcf7fa48aab2632f1b45cae4124905e52e77e881b90b730b931601b6fa"
+        },
+        {
+          "path": "browser/base/content/test/general/file_documentnavigation_frameset.html",
+          "role": "support",
+          "bytes": 658,
+          "mode": "100644",
+          "gitBlob": "beb01addfc56fecd8ce8882f0bec55199e9d2429",
+          "sha256": "470e15c540cb680d8ff05eb5778096ba265186f40787e88174e928f5e6edef20"
+        },
+        {
+          "path": "browser/base/content/test/general/file_fullscreen-window-open.html",
+          "role": "support",
+          "bytes": 634,
+          "mode": "100644",
+          "gitBlob": "44ac3196a06bd40371b96b594713ead05e8522a8",
+          "sha256": "775b12a885b99262f5774cec1dc8c72f69b56089f545dc06b17c3056ac71baad"
+        },
+        {
+          "path": "browser/base/content/test/general/file_with_link_to_http.html",
+          "role": "support",
+          "bytes": 195,
+          "mode": "100644",
+          "gitBlob": "4c1a766a3a91bced759eb4e4bffae6dc7f835960",
+          "sha256": "26ebb16f6c59174c1bd16611e9c6cb96e459fb770efcebb92789cd4076ee6bc5"
+        },
+        {
+          "path": "browser/base/content/test/general/head.js",
+          "role": "head-support",
+          "bytes": 7578,
+          "mode": "100644",
+          "gitBlob": "52539bb41921eab79853b7bb013509ffe02d4344",
+          "sha256": "847a7a34d1a12958de6908b4c11d863a79e0a95be5497b896191ae2f382babc0"
+        },
+        {
+          "path": "browser/base/content/test/general/moz.png",
+          "role": "support",
+          "bytes": 580,
+          "mode": "100644",
+          "gitBlob": "769c636340e11f9d2a0b7eb6a84d574dd9563f0c",
+          "sha256": "3f9341cbddc0eb4a89680f30d61ca5758f21a5b0b9801adbf7507c0ede708832"
+        },
+        {
+          "path": "browser/base/content/test/general/navigating_window_with_download.html",
+          "role": "support",
+          "bytes": 262,
+          "mode": "100644",
+          "gitBlob": "6b0918941f7883e759279c8d9886ee123a9a20e8",
+          "sha256": "484069f056c1be30e93f5e54ae15e34f3351ef3423edfb16541a69c940233ff5"
+        },
+        {
+          "path": "browser/base/content/test/general/test_bug462673.html",
+          "role": "support",
+          "bytes": 235,
+          "mode": "100644",
+          "gitBlob": "d864990e4f5851733dd3567abc7e67f0a6231e9c",
+          "sha256": "2aa3a76842aa87351cca49689903a4d5a89c9fa1746a2c10c16b29d4e67df1db"
+        },
+        {
+          "path": "browser/base/content/test/general/test_bug628179.html",
+          "role": "support",
+          "bytes": 213,
+          "mode": "100644",
+          "gitBlob": "1136048d36a715bc71bade2e7c7c61da5176ea70",
+          "sha256": "0cb0aa12c2b4694b6885a5b81fe9ca6b415c7b6b1a3fbbfbdbcf1d8493022875"
+        },
+        {
+          "path": "browser/base/content/test/general/title_test.svg",
+          "role": "support",
+          "bytes": 1805,
+          "mode": "100644",
+          "gitBlob": "80390a3ccaa0f277e022718fee4d5f8c5eae79a1",
+          "sha256": "f9b7025eb284b218bcaf7a161fd0e34000bb2982c981780ee9fbcac5dcf52118"
+        },
+        {
+          "path": "browser/base/content/test/general/unknownContentType_file.pif",
+          "role": "support",
+          "bytes": 60,
+          "mode": "100644",
+          "gitBlob": "9353d1312661f65261c55910595e3282c7cf176c",
+          "sha256": "df37e3a4e0cafaca8c6d5454492b93218ac6acd787f3f8059009b4cd0783d907"
+        },
+        {
+          "path": "browser/base/content/test/general/unknownContentType_file.pif^headers^",
+          "role": "support",
+          "bytes": 39,
+          "mode": "100644",
+          "gitBlob": "09b22facc04df40f8f4a4692e4d2dbe9b233c480",
+          "sha256": "d0d5af566f4c23510cdb75d63ca18baa11b155c32b281e2b6cb1669d168bbdaa"
+        },
+        {
+          "path": "browser/base/content/test/performance/browser.toml",
+          "role": "manifest",
+          "bytes": 3167,
+          "mode": "100644",
+          "gitBlob": "f05df6845218cfadf923ddb0af6580b689532e32",
+          "sha256": "52cc42f5d99d7f6bba0708305e205b6d1c9fa3f53578de1aae60133d06320a2d"
+        },
+        {
+          "path": "browser/base/content/test/performance/browser_hiddenwindow_existence.js",
+          "role": "test",
+          "bytes": 459,
+          "mode": "100644",
+          "gitBlob": "cbd327d88c8ef97f1f4ef2f14471d51ee733df05",
+          "sha256": "1bb1b457fe97d23a3b767fbefe4e9333427a67259255475c11b3ccd888f332dd"
+        },
+        {
+          "path": "browser/base/content/test/performance/head.js",
+          "role": "head-support",
+          "bytes": 40530,
+          "mode": "100644",
+          "gitBlob": "6f9a2ef1ed673b637d5a00d7603ec47b8bc7fe73",
+          "sha256": "568a1fefb2967c7c491db6049e2d6ee9cc8126e0b15bcf4c33720d7f8e3a8eea"
+        },
+        {
+          "path": "browser/components/customizableui/test/browser.toml",
+          "role": "manifest",
+          "bytes": 12190,
+          "mode": "100644",
+          "gitBlob": "b135494fc4cbdc37a159fbf1ef457512b37b5cf2",
+          "sha256": "b99dfdc2918037dd3eb0240857d4478a877ad77e4d52c603e7347403d62bc737"
+        },
+        {
+          "path": "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
+          "role": "test",
+          "bytes": 3758,
+          "mode": "100644",
+          "gitBlob": "7d8ea591509db1f31fd2dca71bd7cbdd8d0b99f1",
+          "sha256": "9efb87abe945f33fdf75e8941b966e76f36545170aaa21ea6ee410dfe0c11262"
+        },
+        {
+          "path": "browser/components/customizableui/test/head.js",
+          "role": "head-support",
+          "bytes": 18211,
+          "mode": "100644",
+          "gitBlob": "cec0a8673929b932a645a5b85b9e973711830320",
+          "sha256": "846f2350bda553bc4c1f0ba07c4dd5c5b8710a1ebc132e33d95066b3d8cb6868"
+        },
+        {
+          "path": "browser/components/customizableui/test/support/test_967000_charEncoding_page.html",
+          "role": "support",
+          "bytes": 153,
+          "mode": "100644",
+          "gitBlob": "7932b16f1288a642124c92d4fccbf0d2e4ba7d78",
+          "sha256": "171d05406d852ccfd306db987b824eb3065f7f768321078c2df03fa60337e17d"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/audio.ogg",
+          "role": "support",
+          "bytes": 14293,
+          "mode": "100644",
+          "gitBlob": "477544875d28a2005ae730b5caced8c24ae12631",
+          "sha256": "b4e9c7a042279e7ed7873aab3e19fae9768a9a378b17e9eff889460836eb44fe"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+          "role": "manifest",
+          "bytes": 20818,
+          "mode": "100644",
+          "gitBlob": "9f16c7d9d9a70fb7dd2651ad9dcea7d019b4b804",
+          "sha256": "f1681a433aba3f2f20f8d31363394f1d52179f782bcc4a8c7f9f21821f868bd9"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
+          "role": "test",
+          "bytes": 1428,
+          "mode": "100644",
+          "gitBlob": "534da1a47bedd641e1a3fe24d30b301b7c6617e7",
+          "sha256": "5bc78e66de058422927898d0ba6f47f0ef143142150edb18ea8c3a73476bb488"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/dummy_page.html",
+          "role": "support",
+          "bytes": 173,
+          "mode": "100644",
+          "gitBlob": "1a87e28408d0b41fb179a6369f443602dc5cae20",
+          "sha256": "6af11adcf7fa48aab2632f1b45cae4124905e52e77e881b90b730b931601b6fa"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/file_about_srcdoc.html",
+          "role": "support",
+          "bytes": 140,
+          "mode": "100644",
+          "gitBlob": "0a8d0d74bf2f9d6592f7e8e087534a10a196d5b1",
+          "sha256": "8690bbfe28b4ef0bf85f18d210165d5e80620afec54c42143fe5c004f27dd7dc"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/file_mediaPlayback.html",
+          "role": "support",
+          "bytes": 54,
+          "mode": "100644",
+          "gitBlob": "a6979287e2de28ca02f82cd076a27ead76188531",
+          "sha256": "d979f978c97ca54e59e35ed3a531f673b89d70d44fdea661f33c737e4543aea4"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/file_reader_mode_article.html",
+          "role": "support",
+          "bytes": 3151,
+          "mode": "100644",
+          "gitBlob": "d5be07d8eb6d2c8a7a16aa065fab7b06912dd0b8",
+          "sha256": "ab2e8a00a5514fa879438161f8dedf7590ee45c63cbe16ce7d360154840559cd"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/head.js",
+          "role": "head-support",
+          "bytes": 13824,
+          "mode": "100644",
+          "gitBlob": "f41127a5e7df4cd97508ff507d4f4a8d6fe52ebe",
+          "sha256": "f0ecea4edc453dee25a35214ced9affede6203ea7c6d770b364a090a2fc9318c"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/helper_origin_attrs_testing.js",
+          "role": "support",
+          "bytes": 5405,
+          "mode": "100644",
+          "gitBlob": "dcf77270244a80d20257f7a532a58e7d5497b831",
+          "sha256": "711f5fa658650ec7172ac086b29b71ae4ba4b1ac4a902a63b9681e6c1f36fc8b"
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
+          "role": "manifest",
+          "bytes": 2288,
+          "mode": "100644",
+          "gitBlob": "21ac6f611e8d7620b3a7099842bb013479b9b264",
+          "sha256": "6130180f731702e6e38731f469c4edd287ec85868f574332b2649d146699503e"
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
+          "role": "test",
+          "bytes": 664,
+          "mode": "100644",
+          "gitBlob": "f7c8c08eaa592a84aa403d0ac81358feb71bf0fc",
+          "sha256": "d3d283aab943a0ee185609422e322dfb8405eb20c43c3c7354d9d416faeab6b4"
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser-UrlbarInput/head.js",
+          "role": "head-support",
+          "bytes": 2939,
+          "mode": "100644",
+          "gitBlob": "2e7804e1cd0fd0c44c1972a3146e2b2c95f81fc8",
+          "sha256": "e0f4020ed0c1cf3dc6780e656b644374f86a7b7db7f89a87dcb9c72fb8574ad0"
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser/head-common.js",
+          "role": "support",
+          "bytes": 12277,
+          "mode": "100644",
+          "gitBlob": "727e52c0fe82f3f87e40f7278f655f08639b8b3b",
+          "sha256": "da88ae8093fa4b3677649329d8e547bbc731a6c81816038130329d0e90008df0"
+        },
+        {
+          "path": "image/test/mochitest/blue.png",
+          "role": "support",
+          "bytes": 2745,
+          "mode": "100644",
+          "gitBlob": "8df58f3a5fc71ed2fc8d76cbe4e2629527b8292f",
+          "sha256": "9ee35758add99d9dd20c8d20ec26baffa1787401876e205a436015e6d9f00b57"
+        },
+        {
+          "path": "toolkit/content/tests/browser/common/mockTransfer.js",
+          "role": "support",
+          "bytes": 2765,
+          "mode": "100644",
+          "gitBlob": "b68ce24dc3792de14450aec556c8691aa636f9ee",
+          "sha256": "77b9748bfe4328af1c66f2ed87590c5c7bfa91d29821323af549bf29d4969f40"
+        }
+      ]
+    },
+    "tests": {
+      "count": 8,
+      "totalTasks": 15,
+      "supportDependencyEdges": 93,
+      "entries": [
+        {
+          "path": "browser/base/content/test/caps/browser_principalSerialization_version1.js",
+          "manifest": "browser/base/content/test/caps/browser.toml",
+          "expectedTasks": 2,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug537474.js",
+          "manifest": "browser/base/content/test/general/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug565575.js",
+          "manifest": "browser/base/content/test/general/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/base/content/test/general/browser_bug596687.js",
+          "manifest": "browser/base/content/test/general/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/base/content/test/performance/browser_hiddenwindow_existence.js",
+          "manifest": "browser/base/content/test/performance/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
+          "manifest": "browser/components/customizableui/test/browser.toml",
+          "expectedTasks": 7,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
+          "manifest": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
+          "manifest": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
+          "expectedTasks": 1,
+          "headPolicy": "harness-replaced",
+          "supportPolicy": "locked-not-loaded"
+        }
+      ],
+      "manifests": [
+        {
+          "path": "browser/base/content/test/caps/browser.toml",
+          "preferences": [],
+          "supportPaths": []
+        },
+        {
+          "path": "browser/base/content/test/general/browser.toml",
+          "preferences": [],
+          "supportPaths": [
+            "browser/base/content/test/general/app_bug575561.html",
+            "browser/base/content/test/general/app_subframe_bug575561.html",
+            "browser/base/content/test/general/audio.ogg",
+            "browser/base/content/test/general/browser_bug479408_sample.html",
+            "browser/base/content/test/general/browser_star_hsts.sjs",
+            "browser/base/content/test/general/bug792517-2.html",
+            "browser/base/content/test/general/bug792517.html",
+            "browser/base/content/test/general/bug792517.sjs",
+            "browser/base/content/test/general/clipboard_pastefile.html",
+            "browser/base/content/test/general/download_page.html",
+            "browser/base/content/test/general/download_page_1.txt",
+            "browser/base/content/test/general/download_page_2.txt",
+            "browser/base/content/test/general/download_with_content_disposition_header.sjs",
+            "browser/base/content/test/general/dummy_page.html",
+            "browser/base/content/test/general/file_documentnavigation_frameset.html",
+            "browser/base/content/test/general/file_fullscreen-window-open.html",
+            "browser/base/content/test/general/file_with_link_to_http.html",
+            "browser/base/content/test/general/head.js",
+            "browser/base/content/test/general/moz.png",
+            "browser/base/content/test/general/navigating_window_with_download.html",
+            "browser/base/content/test/general/test_bug462673.html",
+            "browser/base/content/test/general/test_bug628179.html",
+            "browser/base/content/test/general/title_test.svg",
+            "browser/base/content/test/general/unknownContentType_file.pif",
+            "browser/base/content/test/general/unknownContentType_file.pif^headers^",
+            "image/test/mochitest/blue.png",
+            "toolkit/content/tests/browser/common/mockTransfer.js"
+          ]
+        },
+        {
+          "path": "browser/base/content/test/performance/browser.toml",
+          "preferences": [
+            {
+              "name": "browser.chrome.disableRemoteControlCueForTests",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.migration.version",
+              "type": "integer",
+              "value": 9999999
+            },
+            {
+              "name": "browser.startup.record",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "extensions.formautofill.addresses.available",
+              "type": "string",
+              "value": "on"
+            },
+            {
+              "name": "gfx.canvas.willReadFrequently.enable",
+              "type": "boolean",
+              "value": true
+            }
+          ],
+          "supportPaths": [
+            "browser/base/content/test/performance/head.js"
+          ]
+        },
+        {
+          "path": "browser/components/customizableui/test/browser.toml",
+          "preferences": [
+            {
+              "name": "browser.sessionstore.closedTabsFromAllWindows",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.sessionstore.closedTabsFromClosedWindows",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.tabs.groups.alternateMenu",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.toolbars.share-button.enabled",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.urlbar.trustPanel.featureGate",
+              "type": "boolean",
+              "value": false
+            },
+            {
+              "name": "sidebar.revamp",
+              "type": "boolean",
+              "value": false
+            }
+          ],
+          "supportPaths": [
+            "browser/components/customizableui/test/head.js",
+            "browser/components/customizableui/test/support/test_967000_charEncoding_page.html"
+          ]
+        },
+        {
+          "path": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+          "preferences": [
+            {
+              "name": "browser.sessionstore.closedTabsFromAllWindows",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "browser.sessionstore.closedTabsFromClosedWindows",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "sidebar.verticalTabs.dragToPinPromo.dismissed",
+              "type": "boolean",
+              "value": true
+            }
+          ],
+          "supportPaths": [
+            "browser/components/tabbrowser/test/browser/tabs/audio.ogg",
+            "browser/components/tabbrowser/test/browser/tabs/dummy_page.html",
+            "browser/components/tabbrowser/test/browser/tabs/file_about_srcdoc.html",
+            "browser/components/tabbrowser/test/browser/tabs/file_mediaPlayback.html",
+            "browser/components/tabbrowser/test/browser/tabs/file_reader_mode_article.html",
+            "browser/components/tabbrowser/test/browser/tabs/head.js",
+            "browser/components/tabbrowser/test/browser/tabs/helper_origin_attrs_testing.js"
+          ]
+        },
+        {
+          "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
+          "preferences": [],
+          "supportPaths": [
+            "browser/components/urlbar/tests/browser-UrlbarInput/head.js",
+            "browser/components/urlbar/tests/browser/head-common.js"
+          ]
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "platform": "linux",
+      "architecture": "aarch64",
+      "format": "tar.xz",
+      "extractionPolicy": "tar-xz-floorp",
+      "asset": {
+        "id": 489491168,
+        "name": "floorp-linux-aarch64-moz-artifact.tar.xz",
+        "size": 71744816,
+        "sha256": "89506cb64f9b4b717d683ecd4e4623c529e67466b89c0b722d64c0a52d9b3df4"
+      },
+      "applicationIniAsset": {
+        "id": 489491163,
+        "name": "linux-aarch64-application-ini.zip",
+        "size": 535,
+        "sha256": "64d53c8d58efe71ede5db1d8608c42b435eaf7b01e00aa03a1e1a517446e0bdc"
+      },
+      "version": "153.0",
+      "buildId": "20260725075208"
+    },
+    {
+      "platform": "linux",
+      "architecture": "x86_64",
+      "format": "tar.xz",
+      "extractionPolicy": "tar-xz-floorp",
+      "asset": {
+        "id": 489491173,
+        "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
+        "size": 82741760,
+        "sha256": "5bdfca2b437e884929bef19ebf1093598cabaf6fe70ee84bac8883e4c2a9392b"
+      },
+      "applicationIniAsset": {
+        "id": 489491164,
+        "name": "linux-x86_64-application-ini.zip",
+        "size": 535,
+        "sha256": "fa6e0eb6867331244ae9de01859f28f77079bc44c2d96cdf7f9ec1790e09def4"
+      },
+      "version": "153.0",
+      "buildId": "20260725075208"
+    },
+    {
+      "platform": "macos",
+      "architecture": "universal",
+      "format": "dmg",
+      "extractionPolicy": "dmg-floorp-app",
+      "asset": {
+        "id": 489491167,
+        "name": "floorp-macOS-universal-moz-artifact.dmg",
+        "size": 176824587,
+        "sha256": "899f43aee0da04209bbddf5afab8473cad9ddc5785ce428c1feee5a96fbfa391"
+      },
+      "applicationIniAsset": {
+        "id": 489491175,
+        "name": "macOS-universal-application-ini.zip",
+        "size": 535,
+        "sha256": "3a943f943967fbe4af72e5781a41377ded486ec299a2e778bb654cc67d8c252c"
+      },
+      "version": "153.0",
+      "buildId": "20260725075208"
+    },
+    {
+      "platform": "windows",
+      "architecture": "x86_64",
+      "format": "zip",
+      "extractionPolicy": "zip-direct-floorp",
+      "asset": {
+        "id": 489491165,
+        "name": "floorp-windows-x86_64-moz-artifact.zip",
+        "size": 133135974,
+        "sha256": "d5c3cbcb3c7c3f0852d36047f45fcf98c10fdb3b9160316b1cd242e9119bbe8c"
+      },
+      "applicationIniAsset": {
+        "id": 489491166,
+        "name": "windows-x86_64-application-ini.zip",
+        "size": 535,
+        "sha256": "49a78a5484e97e2ce80b1341522da6e1616aa878cf163e2964cd3c7863b90ae4"
+      },
+      "version": "153.0",
+      "buildId": "20260725075208"
+    }
+  ]
+}

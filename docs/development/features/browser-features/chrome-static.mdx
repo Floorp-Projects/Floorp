@@ -1,0 +1,17 @@
+---
+title: "Static Chrome Feature Catalog"
+sidebar_label: "Static Chrome"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+generated: true
+---
+# Static Chrome Feature Catalog
+
+Static chrome features are discovered from `browser-features/chrome/static/mod.ts`. They still participate in the loader registry, but they are for browser chrome code that should not be hot-reloaded.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| downloadbar | `browser-features/chrome/static/downloadbar/index.ts` | `init` | Provides initialization for the downloadbar feature. |
+| overrides | `browser-features/chrome/static/overrides/index.ts` | `init` | Provides initialization for the overrides feature. |
+| prefs | `browser-features/chrome/static/prefs/index.ts` | `init`, `initBeforeSessionStoreInit` | Provides pre-session initialization for the prefs feature. |

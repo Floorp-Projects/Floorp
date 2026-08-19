@@ -12,6 +12,7 @@ const r = (dir: string) => {
 };
 
 export default defineConfig({
+  cacheDir: "../../node_modules/.vite/loader-features",
   publicDir: r("public"),
   server: {
     port: 5181,
@@ -152,6 +153,8 @@ export default defineConfig({
 
   // 既存の設定...
   optimizeDeps: {
+    ignoreOutdatedRequests: true,
+    noDiscovery: true,
     include: [
       "./node_modules/@nora",
       "solid-js",
@@ -198,6 +201,10 @@ export default defineConfig({
       {
         find: "#features-pages",
         replacement: r("../../browser-features"),
+      },
+      {
+        find: "#firefox-tests",
+        replacement: r("../../_dist/firefox-tests/files"),
       },
       {
         find: "#libs",

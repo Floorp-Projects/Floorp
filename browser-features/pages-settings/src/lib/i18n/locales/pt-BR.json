@@ -124,6 +124,7 @@
             "openNext": "Abrir ao lado da aba atual",
             "other": "Outras configurações de abas",
             "doubleClickToClose": "Fechar aba com clique duplo",
+            "tabDragToSplitCreate": "Permitir visualização dividida arrastando as abas",
             "minWidth": "Largura mínima da aba",
             "minWidthError": "A largura da aba deve estar entre {{min}} e {{max}} pixels.",
             "minHeight": "Altura mínima da aba",
@@ -299,7 +300,13 @@
         "openSourceLicense": "{{productName}} é um software de código aberto disponível sob a Mozilla Public License 2.0, possibilitado pelo projeto de código aberto do Firefox e por outros softwares de código aberto.",
         "openSourceLicenseNotice": "Licença de código aberto",
         "versionInfo": "Versão",
-        "license": "Licença"
+        "license": "Licença",
+        "noraneko": {
+            "logoAlt": "Logotipo do navegador",
+            "description": "O Noraneko é um navegador utilizado como ambiente de teste do Floorp 12. O Floorp é baseado no Firefox e no Noraneko.",
+            "communityCredit": "Feito pela Comunidade Noraneko com ❤️",
+            "repositoryLabel": "Repositório GitHub: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Atualizações e testes",
@@ -448,8 +455,17 @@
         "uninstallConfirmation": "Desinstalar o aplicativo da Web",
         "uninstallWarning": "Tem certeza de que deseja desinstalar o \"{{name}}\"?",
         "cancel": "Cancelar",
+        "close": "Fechar",
         "rename": "Renomear",
-        "uninstall": "Desinstalar"
+        "uninstall": "Desinstalar",
+        "container": "Contêiner",
+        "noContainer": "Sem contêiner",
+        "setContainer": "Definir contêiner",
+        "containerDescription": "Escolha em qual contêiner do Firefox este aplicativo será aberto. Os contêineres isolam os cookies e os dados dos sites.",
+        "containerDeleted": "Contêiner excluído",
+        "resetContainer": "Redefinir",
+        "save": "Salvar",
+        "errorSettingContainer": "Falha ao definir contêiner"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -607,7 +623,25 @@
             "gecko-workspace-next": "Mudar para o próximo espaço de trabalho",
             "gecko-workspace-previous": "Mudar para o espaço de trabalho anterior",
             "floorp-toggle-zen-mode": "Ativar/Desativar Modo Zen",
-            "floorp-toggle-command-palette": "Alternar a paleta de comandos"
+            "gecko-close-other-tabs": "Fechar as outras abas",
+            "gecko-close-tabs-to-start": "Fechar abas à esquerda",
+            "gecko-close-tabs-to-end": "Fechar abas à direita",
+            "gecko-scroll-line-up": "Rolar para cima",
+            "gecko-scroll-line-down": "Rolar para baixo",
+            "floorp-toggle-command-palette": "Alternar a paleta de comandos",
+            "floorp-open-settings": "Abrir configurações",
+            "floorp-open-hub": "Abrir o Floorp Hub",
+            "floorp-toggle-share-mode": "Ativar/desativar modo compartilhamento",
+            "floorp-copy-page-url-as-markdown": "Copiar URL da página como markdown",
+            "floorp-split-view-open-left": "Visualização dividida à esquerda",
+            "floorp-split-view-open-right": "Visualização dividida à direita",
+            "floorp-split-view-open-top": "Visualização divida para cima",
+            "floorp-split-view-open-bottom": "Visualização dividida para baixo",
+            "floorp-split-view-close": "Fechar a visualização dividida",
+            "floorp-split-view-swap-panes": "Trocar painéis divididos",
+            "floorp-split-view-cycle-layout": "Leiaute de divisão de ciclo",
+            "floorp-split-view-add-pane": "Adicionar painel à visualização dividida",
+            "floorp-split-view-remove-pane": "Remover painel da visualização dividida"
         },
         "edit": "Editar",
         "duplicate": "Duplicar",
@@ -642,6 +676,9 @@
         "action": "Ação",
         "shortcut": "Atalho",
         "actions": "Ações",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Editar URL da aba"
+        },
         "notSet": "Não definido",
         "add": "Adicionar",
         "edit": "Editar",

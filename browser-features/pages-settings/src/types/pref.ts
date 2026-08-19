@@ -65,6 +65,7 @@ export const zDesignFormData = t.type({
   tabScrollReverse: t.boolean,
   tabScrollWrap: t.boolean,
   tabDubleClickToClose: t.boolean,
+  tabDragToSplitCreate: t.boolean,
 
   // UI customization
   navbarPosition: t.union([t.literal("top"), t.literal("bottom")]),
@@ -182,6 +183,11 @@ export const zRockerActions = t.type({
   rightLeft: t.string,
 });
 
+export const zWheelActions = t.type({
+  scrollUp: t.string,
+  scrollDown: t.string,
+});
+
 export const zMouseGestureConfig = t.type({
   enabled: t.boolean,
   rockerGesturesEnabled: t.boolean,
@@ -194,6 +200,7 @@ export const zMouseGestureConfig = t.type({
   contextMenu: zMouseGestureContextMenu,
   actions: t.array(zGestureAction),
   rockerActions: zRockerActions,
+  wheelActions: zWheelActions,
 });
 
 export type GestureAction = t.TypeOf<typeof zGestureAction>;
@@ -218,6 +225,7 @@ export const zShortcutConfig = t.type({
 });
 
 export const zKeyboardShortcutConfig = t.type({
+  schemaVersion: t.literal(2),
   enabled: t.boolean,
   shortcuts: t.record(t.string, zShortcutConfig),
 });
@@ -225,6 +233,133 @@ export const zKeyboardShortcutConfig = t.type({
 export type ShortcutModifiers = t.TypeOf<typeof zShortcutModifiers>;
 export type ShortcutConfig = t.TypeOf<typeof zShortcutConfig>;
 export type KeyboardShortcutConfig = t.TypeOf<typeof zKeyboardShortcutConfig>;
+
+export interface KeyboardShortcutActionDefinition {
+  id: string;
+  translationKey: string;
+}
+
+export interface KeyboardShortcutActionOption {
+  id: string;
+  name: string;
+}
+
+export const KEYBOARD_SHORTCUT_SCHEMA_VERSION = 2 as const;
+export const ZEN_MODE_ACTION = "floorp-toggle-zen-mode";
+
+function isKeyboardShortcutRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function createDefaultKeyboardShortcutConfig(
+  enabled: boolean,
+  platform: string,
+): KeyboardShortcutConfig {
+  const isMac = platform === "macosx";
+
+  return {
+    schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+    enabled,
+    shortcuts: {
+      "floorp-toggle-command-palette": {
+        key: "F2",
+        modifiers: { alt: false, ctrl: false, meta: false, shift: false },
+        action: "floorp-toggle-command-palette",
+      },
+      [ZEN_MODE_ACTION]: {
+        key: "KeyZ",
+        modifiers: {
+          alt: true,
+          ctrl: !isMac,
+          meta: isMac,
+          shift: false,
+        },
+        action: ZEN_MODE_ACTION,
+      },
+    },
+  };
+}
+
+export function migrateKeyboardShortcutConfig(
+  value: unknown,
+  enabled: boolean,
+  platform: string,
+): KeyboardShortcutConfig {
+  const defaults = createDefaultKeyboardShortcutConfig(enabled, platform);
+  const source = isKeyboardShortcutRecord(value) ? value : {};
+  const sourceShortcuts = isKeyboardShortcutRecord(source.shortcuts)
+    ? source.shortcuts as Record<string, ShortcutConfig>
+    : null;
+  const shortcuts = sourceShortcuts
+    ? { ...sourceShortcuts }
+    : { ...defaults.shortcuts };
+
+  if (
+    source.schemaVersion !== KEYBOARD_SHORTCUT_SCHEMA_VERSION &&
+    !Object.values(shortcuts).some((shortcut) =>
+      isKeyboardShortcutRecord(shortcut) &&
+      shortcut.action === ZEN_MODE_ACTION
+    )
+  ) {
+    shortcuts[ZEN_MODE_ACTION] = defaults.shortcuts[ZEN_MODE_ACTION];
+  }
+
+  return {
+    ...source,
+    schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+    enabled,
+    shortcuts,
+  } as KeyboardShortcutConfig;
+}
+
+export function parseKeyboardShortcutConfig(
+  value: string | null,
+  enabled: boolean,
+  platform: string,
+): KeyboardShortcutConfig {
+  if (!value) {
+    return createDefaultKeyboardShortcutConfig(enabled, platform);
+  }
+
+  try {
+    return migrateKeyboardShortcutConfig(JSON.parse(value), enabled, platform);
+  } catch (error) {
+    console.error("Failed to parse configuration", error);
+    return createDefaultKeyboardShortcutConfig(enabled, platform);
+  }
+}
+
+export function serializeKeyboardShortcutConfig(
+  config: KeyboardShortcutConfig,
+): string {
+  const normalized = {
+    ...config,
+    schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+  };
+  const { enabled: _, ...configWithoutEnabled } = normalized;
+  return JSON.stringify(configWithoutEnabled);
+}
+
+export function getRecordedShortcutCode(
+  event: Pick<KeyboardEvent, "code" | "repeat" | "getModifierState">,
+): string | null {
+  if (event.repeat || event.getModifierState("AltGraph")) {
+    return null;
+  }
+
+  if (
+    event.code.startsWith("Alt") ||
+    event.code.startsWith("Control") ||
+    event.code.startsWith("Meta") ||
+    event.code.startsWith("Shift")
+  ) {
+    return null;
+  }
+
+  return event.code || null;
+}
 
 export const zKeyboardShortcutFormData = zKeyboardShortcutConfig;
 export type KeyboardShortcutFormData = t.TypeOf<

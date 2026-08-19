@@ -1,5 +1,6 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import { toggleZenModeForWindow } from "#features-chrome/common/zen-mode/zen-mode.tsx";
 import {
   setPersistedGroupLayout,
   getSplitViewGroupIdForTabs,
@@ -507,11 +508,8 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-toggle-zen-mode",
-    fn: (_win) => {
-      Services.prefs.setBoolPref(
-        "floorp.zenmode.enabled",
-        !Services.prefs.getBoolPref("floorp.zenmode.enabled", false),
-      );
+    fn: (win) => {
+      toggleZenModeForWindow(win);
     },
   },
   {

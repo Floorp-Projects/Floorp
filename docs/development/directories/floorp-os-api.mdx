@@ -1,0 +1,223 @@
+---
+title: "Floorp OS API Layer"
+sidebar_label: "Floorp OS API"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+generated: true
+---
+# Floorp OS API Layer
+
+Floorp OS API is documented as a special integration layer for local applications, MCP servers, and other automation clients that need controlled access to Floorp browser state. It is not a normal settings page or chrome UI feature. The source inventory backs the local HTTP/JSON boundary, route namespaces, browser automation behavior, OS Automotor manager, and settings surface.
+
+## Ownership And Source Boundaries
+
+- Local HTTP server: `browser-features/modules/modules/os-server/server.sys.mts:6`
+- Router abstraction: `browser-features/modules/modules/os-server/router.sys.mts:49`
+- Shared browser automation routes: `browser-features/modules/modules/os-server/shared/routes.sys.mts:156`
+- OS Automotor process manager: `browser-features/modules/modules/os-automotor/OSAutomotor-manager.sys.mts:6`
+- Settings page entry: `browser-features/pages-settings/src/app/floorp-os/page.tsx:44`
+
+The server, router, shared automation route registry, OS Automotor manager, and settings page are separate source boundaries. The inventory uses these boundaries to describe where local HTTP handling, route matching, browser automation, process management, and settings UI integration live.
+
+## Integration Boundary
+
+From the source inventory, Floorp OS API should be treated as a privileged local integration boundary rather than a web page feature. The route namespaces below describe the browser-facing surface that local clients can use. MCP-server usage is a docs requirement for this layer, but the current inventory does not define MCP packaging, authentication storage, or startup policy.
+
+Source-backed implementation boundaries:
+
+- HTTP server behavior is owned by `browser-features/modules/modules/os-server/server.sys.mts:6`.
+- Route registration and path matching are owned by `browser-features/modules/modules/os-server/router.sys.mts:49`.
+- Shared tab and scraper automation routes are owned by `browser-features/modules/modules/os-server/shared/routes.sys.mts:156`.
+- Floorp OS process management is owned by `browser-features/modules/modules/os-automotor/OSAutomotor-manager.sys.mts:6`.
+- The settings surface is owned by `browser-features/pages-settings/src/app/floorp-os/page.tsx:44`.
+
+## Route Namespaces
+
+The generated inventory currently lists 120 concrete route rows across 7 route namespaces. Counts by namespace: server: 1, browser: 5, tabs: 7, scraper: 3, workspaces: 5, tabs shared automation: 50, scraper shared automation: 49.
+
+### server
+
+Source: `browser-features/modules/modules/os-server/server.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/health` | Reports local OS server health. |
+
+### browser
+
+Source: `browser-features/modules/modules/os-server/browser/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/browser/context` | Returns recent browser context for local tools. |
+| GET | `/browser/downloads` | Reads browser tabs, history, downloads, or browser event state. |
+| GET | `/browser/events` | Streams browser-side events such as workspace changes. |
+| GET | `/browser/history` | Reads browser tabs, history, downloads, or browser event state. |
+| GET | `/browser/tabs` | Reads browser tabs, history, downloads, or browser event state. |
+
+### tabs
+
+Source: `browser-features/modules/modules/os-server/tabs/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/tabs/attach` | Controls visible tab automation instances. |
+| POST | `/tabs/instances` | Mutates or drives a managed browser automation instance. |
+| DELETE | `/tabs/instances/:id` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/close` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/exists` | Controls visible tab automation instances. |
+| GET | `/tabs/list` | Controls visible tab automation instances. |
+
+### scraper
+
+Source: `browser-features/modules/modules/os-server/scraper/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/scraper/instances` | Mutates or drives a managed browser automation instance. |
+| DELETE | `/scraper/instances/:id` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/exists` | Controls headless scraper automation instances. |
+
+### workspaces
+
+Source: `browser-features/modules/modules/os-server/workspaces/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/workspaces` | Reads or switches Floorp workspace state. |
+| POST | `/workspaces/:id/switch` | Reads or switches Floorp workspace state. |
+| GET | `/workspaces/current` | Reads or switches Floorp workspace state. |
+| POST | `/workspaces/next` | Reads or switches Floorp workspace state. |
+| POST | `/workspaces/previous` | Reads or switches Floorp workspace state. |
+
+### tabs shared automation
+
+Source: `browser-features/modules/modules/os-server/shared/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/tabs/instances/:id/acceptAlert` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/article` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/attribute` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/ax-tree` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/clearEffects` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/clearInput` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/click` | Performs browser interaction against a managed instance. |
+| POST | `/tabs/instances/:id/cookie` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/cookies` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/dismissAlert` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/dispatchEvent` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/dispatchTextInput` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/doubleClick` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/dragAndDrop` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/element` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/elementByText` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/elements` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/elementScreenshot` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/elementText` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/elementTextContent` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/evaluate` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/fillForm` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/focus` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/fullPageScreenshot` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/hover` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/html` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/input` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/isEnabled` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/isVisible` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/navigate` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/pressKey` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/regionScreenshot` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/resolveFingerprint` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/rightClick` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/screenshot` | Captures browser content for automation clients. |
+| POST | `/tabs/instances/:id/scrollTo` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/selectOption` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/setChecked` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/setInnerHTML` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/setTextContent` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/submit` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/text` | Extracts page or element text for automation clients. |
+| POST | `/tabs/instances/:id/text` | Extracts page or element text for automation clients. |
+| GET | `/tabs/instances/:id/title` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/uploadFile` | Mutates or drives a managed browser automation instance. |
+| GET | `/tabs/instances/:id/uri` | Controls visible tab automation instances. |
+| GET | `/tabs/instances/:id/value` | Controls visible tab automation instances. |
+| POST | `/tabs/instances/:id/waitForElement` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/waitForNetworkIdle` | Mutates or drives a managed browser automation instance. |
+| POST | `/tabs/instances/:id/waitForReady` | Mutates or drives a managed browser automation instance. |
+
+### scraper shared automation
+
+Source: `browser-features/modules/modules/os-server/shared/routes.sys.mts`
+
+| Method | Route | Purpose |
+|---|---|---|
+| POST | `/scraper/instances/:id/acceptAlert` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/article` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/attribute` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/ax-tree` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/clearEffects` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/clearInput` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/click` | Performs browser interaction against a managed instance. |
+| POST | `/scraper/instances/:id/cookie` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/cookies` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/dismissAlert` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/dispatchEvent` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/dispatchTextInput` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/doubleClick` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/dragAndDrop` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/elementByText` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/elements` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/elementScreenshot` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/elementText` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/elementTextContent` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/evaluate` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/fillForm` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/focus` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/fullPageScreenshot` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/hover` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/html` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/input` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/isEnabled` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/isVisible` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/navigate` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/pressKey` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/regionScreenshot` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/resolveFingerprint` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/rightClick` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/screenshot` | Captures browser content for automation clients. |
+| POST | `/scraper/instances/:id/scrollTo` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/selectOption` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/setChecked` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/setInnerHTML` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/setTextContent` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/submit` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/text` | Extracts page or element text for automation clients. |
+| POST | `/scraper/instances/:id/text` | Extracts page or element text for automation clients. |
+| GET | `/scraper/instances/:id/title` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/uploadFile` | Mutates or drives a managed browser automation instance. |
+| GET | `/scraper/instances/:id/uri` | Controls headless scraper automation instances. |
+| GET | `/scraper/instances/:id/value` | Controls headless scraper automation instances. |
+| POST | `/scraper/instances/:id/waitForElement` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/waitForNetworkIdle` | Mutates or drives a managed browser automation instance. |
+| POST | `/scraper/instances/:id/waitForReady` | Mutates or drives a managed browser automation instance. |
+
+## Client And MCP Integration Shape
+
+The generated inventory supports the following high-level client shape without prescribing authentication storage, startup policy, or MCP server packaging details:
+
+1. Use `GET /health` to check the local server namespace.
+2. Use browser context routes such as `/browser/context`, `/browser/tabs`, `/browser/history`, or `/browser/downloads` when the client needs passive browser context.
+3. Use `/tabs/instances` plus shared `/tabs/instances/:id/*` routes when the client needs user-visible tab automation.
+4. Use `/scraper/instances` plus shared `/scraper/instances/:id/*` routes when the client needs scraper-style automation.
+
+Visible tab automation and scraper automation intentionally share many route names. Tool authors should choose `/tabs` when user-visible browser state matters and `/scraper` when an isolated automation instance is more appropriate.
+
+## Verification Sources
+
+- `tools/os-test/verify_os_server_full.ts`
+- `tools/os-test/run_verify_os_server_full_wrapper.ts`
+- `tools/dev-tool.ts`
+
+The full OS API verifier exercises real local HTTP calls against a running Floorp OS server. Use those verification sources when changing route behavior, browser automation semantics, or MCP integration assumptions.

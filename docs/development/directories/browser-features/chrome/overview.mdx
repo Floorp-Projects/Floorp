@@ -1,0 +1,168 @@
+---
+title: "Chrome Features Overview"
+sidebar_label: "Overview"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+# Chrome Features Overview
+
+The `browser-features/chrome/` directory contains Floorp's browser chrome features, organized into `common` and `static` subdirectories. These features implement UI and behavior customizations that run within the browser chrome context, built primarily with SolidJS and discovered automatically through glob-based module resolution.
+
+## Directory Structure
+
+The chrome features directory is divided into two main categories, documented in `browser-features/chrome/README.md`:
+
+- **`common/`** — SolidJS browser chrome features that are discovered by glob and loaded dynamically during the browser session. Each feature lives in its own subdirectory with an `index.ts` entrypoint.
+- **`static/`** — Runtime-oriented chrome features that provide static initialization logic, such as preference setup and UI overrides, executed at specific lifecycle phases.
+
+## Feature Discovery
+
+Chrome features are discovered automatically using a glob pattern. The common module registry in `browser-features/chrome/common/mod.ts` uses the glob pattern `./*/index.ts` (line 4) to discover all feature entrypoints within the `common/` directory. Similarly, `browser-features/chrome/static/mod.ts` provides static chrome feature entry discovery.
+
+This glob-based approach means that adding a new feature only requires creating a new subdirectory with an `index.ts` file; no manual registration in a central list is needed.
+
+## Loader Integration
+
+The loader subsystem consumes the discovered chrome feature modules and manages their lifecycle. The module registry in `bridge/loader-features/loader/modules.ts` builds common and static module maps from chrome feature entry globs. The main loader entrypoint in `bridge/loader-features/loader/index.ts` imports BrowserGlue, initializes i18n, records loader state, filters enabled modules, and runs module lifecycle hooks.
+
+Module load-state resolution is handled by `bridge/loader-features/loader/modules-hooks.ts`, which provides `onModuleLoaded` promises and internal module load-state resolution. This allows features to depend on the load completion of other features when ordering matters.
+
+## Common Features
+
+Each common feature exports a default class and an `init` method that serves as the primary entrypoint. Some features also export additional lifecycle methods such as `initBeforeSessionStoreInit`. The following features are present in `browser-features/chrome/common/`:
+
+### Addons
+
+The addons feature, defined in `browser-features/chrome/common/addons/index.ts`, modifies the addon installation confirmation popup to show Chrome extension specific messages when installing from the Chrome Web Store. It exports a default `Addons` class and an `init` method.
+
+### Browser Share Mode
+
+Defined in `browser-features/chrome/common/browser-share-mode/index.ts`, this feature owns the browser share mode functionality through the `BrowserShareMode` chrome component and wires the `browser-share-mode` element.
+
+### Browser Tab Color
+
+The browser tab color feature, located at `browser-features/chrome/common/browser-tab-color/index.ts`, manages tab coloring through the `BrowserTabColor` chrome component and wires the `tabcolor-manager` element.
+
+### Chrome CSS
+
+The chrome CSS feature, found in `browser-features/chrome/common/chrome-css/index.ts`, manages custom CSS injection through the `ChromeCSS` chrome component and wires a `service` element.
+
+### Command Palette
+
+Defined in `browser-features/chrome/common/command-palette/index.ts`, the command palette feature provides a quick-command interface through the `CommandPalette` chrome component. It wires a `service`, a `components/CommandPalette` component, and an inline `style.css` stylesheet.
+
+### Context Menu
+
+The context menu feature, located at `browser-features/chrome/common/context-menu/index.ts`, owns context menu customizations through the `ContextMenu` chrome component.
+
+### Designs
+
+The designs feature, found in `browser-features/chrome/common/designs/index.ts`, manages browser design themes through the `Designs` chrome component and wires the `browser-design-element`.
+
+### External Browser
+
+Defined in `browser-features/chrome/common/external-browser/index.ts`, this feature enables opening links or tabs in an external browser through the `ExternalBrowser` chrome component. It wires `tab-context-menu` and `link-context-menu` elements.
+
+### Flex Order
+
+The flex order feature, located at `browser-features/chrome/common/flex-order/index.ts`, controls flexbox ordering of chrome UI elements through the `FlexOrder` chrome component and wires the `flex-order` element.
+
+### Hub Panel Menu
+
+Defined in `browser-features/chrome/common/hub-panel-menu/index.ts`, this feature provides a hub panel menu through the `HubPanelMenuComponent` chrome component and wires the `HubPanelMenu` element.
+
+### Keyboard Shortcut
+
+The keyboard shortcut feature, found in `browser-features/chrome/common/keyboard-shortcut/index.ts`, manages custom keyboard shortcuts through the `KeyboardShortcut` chrome component. It wires a `service` and a `config` element.
+
+### Modal Parent
+
+Defined in `browser-features/chrome/common/modal-parent/index.ts`, this feature manages modal dialogs through the `ModalParent` chrome component. It wires `modalManager`, `modalElement`, and `data/data` elements.
+
+### Mouse Gesture
+
+The mouse gesture feature, located at `browser-features/chrome/common/mouse-gesture/index.ts`, provides mouse gesture recognition through the `MouseGesture` chrome component. It wires a `service`, a `config`, and a `components/GestureDisplay` component.
+
+### Panel Sidebar
+
+Defined in `browser-features/chrome/common/panel-sidebar/index.ts`, the panel sidebar feature provides a customizable sidebar panel system through the `PanelSidebar` chrome component. It wires `components/panel-sidebar`, `components/sidebar`, and `components/sidebar-contextMenu` components.
+
+### Private Container
+
+The private container feature, found in `browser-features/chrome/common/private-container/index.ts`, manages private browsing containers through the `PrivateContainer` chrome component. It wires `browser-private-container` and `context-menu` elements.
+
+### Profile Manager
+
+Defined in `browser-features/chrome/common/profile-manager/index.ts`, this feature provides profile management through the `ProfileManager` chrome component and wires a `service` element.
+
+### PWA
+
+The PWA feature, located at `browser-features/chrome/common/pwa/index.ts`, manages Progressive Web App installation and lifecycle through the `Pwa` chrome component. It wires `SsbPageAction`, `SsbPanelView`, and `config` elements.
+
+### QR Code Generator
+
+Defined in `browser-features/chrome/common/qr-code-generator/index.ts`, this feature provides QR code generation through the `QRCodeGenerator` chrome component. It wires `qr-code-button`, `qr-code-panel`, and an inline `style.css` stylesheet.
+
+### Reboot Panel Menu
+
+The reboot panel menu feature, found in `browser-features/chrome/common/reboot-panel-menu/index.ts`, provides a reboot option in the panel menu through the `RebootPanelMenuComponent` chrome component and wires the `RebootPanelMenu` element.
+
+### Reverse Sidebar Position
+
+Defined in `browser-features/chrome/common/reverse-sidebar-position/index.ts`, this feature provides initialization for reversing the sidebar position. Unlike most common features, it exports only an `init` function rather than a default class.
+
+### Split View
+
+The split view feature, located at `browser-features/chrome/common/split-view/index.ts`, enables split-screen tab viewing through the `SplitView` chrome component and wires the `split-view-manager` element.
+
+### Statusbar
+
+Defined in `browser-features/chrome/common/statusbar/index.ts`, the statusbar feature provides a customizable status bar through the `StatusBar` chrome component. It wires `context-menu`, `statusbar`, and `statusbar-manager` elements.
+
+### Tab
+
+The tab feature, found in `browser-features/chrome/common/tab/index.ts`, manages tab behavior through the `Tab` chrome component. It wires `scroll`, `openPosition`, and `sizeSpecification` elements.
+
+### Tab Sleep Exclusion
+
+Defined in `browser-features/chrome/common/tab-sleep-exclusion/index.ts`, this feature manages tab sleep exclusion rules through the `TabSleepExclusion` chrome component.
+
+### Tabbar
+
+The tabbar feature, located at `browser-features/chrome/common/tabbar/index.ts`, customizes the tab bar through the `TabBar` chrome component. It wires `multirow-tabbar/multirow-tabbar` and `tabbbar-style/tabbar-style` elements.
+
+### UI Custom
+
+The UI custom feature, found in `browser-features/chrome/common/ui-custom/index.ts`, provides UI customization capabilities through the `UICustomization` chrome component. It wires `styles/style-manager` and `layout/dom-manipulator` elements. This feature is notable for exporting an additional `initBeforeSessionStoreInit` lifecycle method alongside the standard `init` method, indicating it needs to run before the session store initializes.
+
+### Undo Closed Tab
+
+Defined in `browser-features/chrome/common/undo-closed-tab/index.ts`, this feature provides undo functionality for closed tabs through the `UndoClosedTab` chrome component and wires a `styleElem` element.
+
+### Workspaces
+
+The workspaces feature, located at `browser-features/chrome/common/workspaces/index.ts`, manages workspace organization through the `Workspaces` chrome component. It wires `workspacesTabManager`, `utils/workspace-icons`, and `workspacesService` elements.
+
+### Zen Mode
+
+Defined in `browser-features/chrome/common/zen-mode/index.ts`, the zen mode feature provides a distraction-free browsing mode through the `ZenMode` chrome component. It wires `zen-mode` and `styleElem` elements.
+
+## Static Features
+
+Static features in `browser-features/chrome/static/` provide initialization logic that runs at specific lifecycle phases. These features typically export `init` and sometimes `initBeforeSessionStoreInit` methods rather than default classes.
+
+### Downloadbar
+
+The downloadbar feature, defined in `browser-features/chrome/static/downloadbar/index.ts`, provides initialization for the download bar feature.
+
+### Overrides
+
+The overrides feature, located at `browser-features/chrome/static/overrides/index.ts`, provides initialization for chrome UI overrides.
+
+### Prefs
+
+The prefs feature, found in `browser-features/chrome/static/prefs/index.ts`, provides pre-session initialization for preferences. It exports both `init` and `initBeforeSessionStoreInit` methods, indicating that some preference initialization must occur before the session store is initialized.
+
+## Architecture Context
+
+The chrome features directory sits within the broader Floorp architecture as the "Chrome UI" layer. This layer sits above the patched Gecko base and ESM modules, and is loaded by the bridge layer. The bridge startup in `bridge/startup/src/chrome_root.ts` selects between dev/test HTTP loaders and production `chrome://` code, determining how chrome features are loaded at runtime. In development, the loader dev server runs on port 5181 as configured in `bridge/loader-features/vite.config.ts`, serving the loader entrypoint that discovers and initializes chrome feature modules.

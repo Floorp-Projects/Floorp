@@ -2,10 +2,7 @@
 // @colocated-env host
 
 import { TAB_COLOR_LIKE_TOOLBAR_CSS } from "../utils/tab-color-like-toolbar.css.ts";
-import {
-  assert,
-  runTests,
-} from "../../../test/utils/test_harness.ts";
+import { assert, runTests } from "../../../test/utils/test_harness.ts";
 
 function testContainsTabSelectedBgcolorUnset(): void {
   assert(
@@ -27,6 +24,14 @@ function testUsesToolbarBackgroundColor(): void {
   assert(
     TAB_COLOR_LIKE_TOOLBAR_CSS.includes("--toolbar-background-color"),
     "should use Gecko 152 --toolbar-background-color",
+  );
+}
+
+function testPrefersLegacyToolbarBgcolor(): void {
+  assert(
+    /var\(\s*--toolbar-bgcolor\s*,\s*var\(\s*--toolbar-background-color\s*\)\s*\)/
+      .test(TAB_COLOR_LIKE_TOOLBAR_CSS),
+    "should prefer legacy --toolbar-bgcolor before Gecko 152 --toolbar-background-color",
   );
 }
 
@@ -57,6 +62,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "uses toolbar-background-color",
       fn: testUsesToolbarBackgroundColor,
+    },
+    {
+      name: "prefers toolbar-bgcolor fallback order",
+      fn: testPrefersLegacyToolbarBgcolor,
     },
     {
       name: "targets selected tab-content",

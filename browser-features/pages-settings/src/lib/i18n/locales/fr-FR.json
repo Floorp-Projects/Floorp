@@ -124,6 +124,7 @@
             "openNext": "Ouvrir à côté de l'onglet en cours",
             "other": "Autres paramètres d'onglets",
             "doubleClickToClose": "Fermer l'onglet en double-cliquant",
+            "tabDragToSplitCreate": "Permettre la création d'une vue scindée en faisant glisser les onglets",
             "minWidth": "Largeur minimale des onglets",
             "minWidthError": "La largeur de l'onglet doit être comprise entre {{min}} et {{max}} pixels.",
             "minHeight": "Hauteur minimale de l'onglet",
@@ -299,7 +300,13 @@
         "openSourceLicense": "{{productName}} est un logiciel libre disponible sous la licence publique Mozilla 2.0, rendu possible par le projet open-source Firefox et d'autres logiciels libres.",
         "openSourceLicenseNotice": "Licences Open Source",
         "versionInfo": "Version",
-        "license": "Licence"
+        "license": "Licence",
+        "noraneko": {
+            "logoAlt": "Logo du navigateur",
+            "description": "Noraneko est un navigateur servant de tête de test pour Floorp 12. Floorp repose sur Firefox et Noraneko.",
+            "communityCredit": "Réalisé par la communauté Noraneko avec ❤",
+            "repositoryLabel": "Dépôt GitHub : Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Mises à jour et expérimentations",
@@ -448,8 +455,17 @@
         "uninstallConfirmation": "Désinstaller l'application web",
         "uninstallWarning": "Êtes-vous sûr de vouloir désinstaller {name}?",
         "cancel": "Annuler",
+        "close": "Fermer",
         "rename": "Renommer",
-        "uninstall": "Désinstaller"
+        "uninstall": "Désinstaller",
+        "container": "Conteneur",
+        "noContainer": "Aucun conteneur",
+        "setContainer": "Définir le conteneur",
+        "containerDescription": "Choisissez dans quel conteneur Firefox cette application s'ouvre. Les conteneurs isolent les cookies et les données des sites.",
+        "containerDeleted": "Conteneur supprimé",
+        "resetContainer": "Réinitialiser",
+        "save": "Enregistrer",
+        "errorSettingContainer": "Échec de la définition du conteneur"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -607,7 +623,25 @@
             "gecko-workspace-next": "Basculer vers l'espace de travail suivant",
             "gecko-workspace-previous": "Basculer vers l'espace de travail précédent",
             "floorp-toggle-zen-mode": "Permuter le mode Zen",
-            "floorp-toggle-command-palette": "Activer/désactiver la palette de commandes"
+            "gecko-close-other-tabs": "Fermer les autres onglets",
+            "gecko-close-tabs-to-start": "Fermer les onglets à gauche",
+            "gecko-close-tabs-to-end": "Fermer les onglets à droite",
+            "gecko-scroll-line-up": "Défiler vers le haut",
+            "gecko-scroll-line-down": "Défiler vers le bas",
+            "floorp-toggle-command-palette": "Activer/désactiver la palette de commandes",
+            "floorp-open-settings": "Ouvrir les paramètres",
+            "floorp-open-hub": "Ouvrir la Plateforme de Floorp",
+            "floorp-toggle-share-mode": "Permuter le mode partage",
+            "floorp-copy-page-url-as-markdown": "Copier l'URL de la page en tant que Markdown",
+            "floorp-split-view-open-left": "Vue fractionnée à gauche",
+            "floorp-split-view-open-right": "Vue fractionnée à droite",
+            "floorp-split-view-open-top": "Vue fractionnée en haut",
+            "floorp-split-view-open-bottom": "Vue fractionnée en bas",
+            "floorp-split-view-close": "Fermer la vue fractionnée",
+            "floorp-split-view-swap-panes": "Permuter les panneaux séparés",
+            "floorp-split-view-cycle-layout": "Disposition fractionnée en cycle",
+            "floorp-split-view-add-pane": "Ajouter le volet à la vue fractionnée",
+            "floorp-split-view-remove-pane": "Retirer le panneau de la vue fractionnée"
         },
         "edit": "Modifier",
         "duplicate": "Dupliquer",
@@ -642,6 +676,9 @@
         "action": "Action",
         "shortcut": "Raccourci",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Non défini",
         "add": "Ajouter",
         "edit": "Éditer",

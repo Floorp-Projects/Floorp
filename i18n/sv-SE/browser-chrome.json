@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Ångra stängd flik",
     "tooltiptext": "Öppna den senaste stängda fliken {{shortcut}}"
@@ -110,20 +113,33 @@
     "menu": {
       "webapps": "Webbappar",
       "install-current": "Installera nuvarande sida som progressiv webbapp",
-      "open-installed": "Öppna installerade appar"
+      "open-current": "Öppna app i vald behållare",
+      "open-installed": "Öppna installerade appar",
+      "container": "Behållare"
     },
     "page-action": {
       "title": "Öppna program",
       "install": "Installera program",
       "open": "Öppna program",
       "cancel": "Avbryt",
-      "site-icon": "Webbplatsikon"
+      "site-icon": "Webbplatsikon",
+      "container": "Behållare",
+      "no-container": "Ingen behållare"
+    },
+    "window": {
+      "container-tooltip": "Behållare: {{name}}",
+      "container-fallback": "Behållare #{{id}}"
     }
   },
   "privateContainer": {
     "openInPrivateContainer": "Öppna i privat behållare",
     "reopenInPrivateContainer": "Återöppna i privat behållare",
     "name": "Privat behållare"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {
@@ -198,8 +214,8 @@
       "gecko-reverse-sidebar": "Omvänd sidofältets position",
       "gecko-hide-sidebar": "Dölj sidofält",
       "gecko-toggle-sidebar": "Växla sidofält",
-      "gecko-scroll-up": "Sida upp",
-      "gecko-scroll-down": "Sida ned",
+      "gecko-scroll-up": "Scrolla uppåt",
+      "gecko-scroll-down": "Scrolla ner",
       "gecko-scroll-line-up": "Scrolla uppåt",
       "gecko-scroll-line-down": "Scrolla ner",
       "gecko-scroll-right": "Scrolla höger",
@@ -439,6 +455,35 @@
     "label": "Zen läge",
     "tooltiptext": "Växla zenläge",
     "menu-label": "Växla zenläge"
+  },
+  "ipProtection": {
+    "title": "VPN i webbläsaren",
+    "toolbar": {
+      "activeTooltip": "VPN i webbläsaren är på för berättigad webbsurfnings trafik i Floorp",
+      "inactiveTooltip": "VPN i webbläsaren är avstängt — webbtrafiken är inte skyddad",
+      "excludedTooltip": "VPN i webbläsaren är inaktiverat för den här webbplatsen – webbplatsen är inte skyddad",
+      "pausedTooltip": "VPN i webbläsaren är pausad — webbtrafiken är inte skyddad",
+      "errorTooltip": "VPN i webbläsaren – anslutningsfel; den webbtrafik som omfattas av tjänsten är inte skyddad",
+      "helpTooltip": "Öppna supportsida för VPN i webbläsaren"
+    },
+    "scope": {
+      "summary": "När den är aktiv, kan VPN i webbläsaren skydda berättigad surfnings trafik i Floorp. Dess omfattning inkluderar inte ditt operativsystem eller andra program.",
+      "fullDisclosure": "Denna funktion använder ett Mozilla-konto och Mozillas tjänsteinfrastruktur. Floorp är ett självständigt projekt och har varken någon anknytning till, stöd från eller sponsring av Mozilla. Tillgängligheten beror på din region, ditt kontostatus och Mozillas behörighetskrav för tjänsten."
+    },
+    "unauthenticated": {
+      "title": "Prova VPN i webbläsaren"
+    },
+    "settings": {
+      "promoHeading": "Prova VPN i webbläsaren",
+      "promoMessage": "Skydda berättigad webbtrafik i Floorp efter att du har loggat in och bekräftat att tjänsten är tillgänglig."
+    },
+    "terms": {
+      "prefix": "Genom att fortsätta godkänner du ",
+      "termsOfUse": "Användarvillkor för Mozilla Firefox",
+      "conjunction": " och bekräftar ",
+      "privacyNotice": "Mozilla Firefox – Integritetspolicy",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Kommandopalett",

@@ -1,0 +1,38 @@
+---
+title: "Settings Pages Routing"
+sidebar_label: "Routing"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Overview
+
+The Floorp settings interface is implemented as a React-based single-page application. Its routing system maps URL paths to specific React components, allowing users to navigate different configuration sections such as design, sidebar, workspaces, and updates.
+
+## Application Bootstrap
+
+The settings application is bootstrapped with theme support, internationalization (i18n), and hash-based routing (`browser-features/pages-settings/src/main.tsx`). The build process for this interface is managed by Vite, which configures it as a React/Tailwind full-page browser UI (`browser-features/pages-settings/vite.config.ts`).
+
+## Route Definitions
+
+Routing logic is centralized in the main application component (`browser-features/pages-settings/src/App.tsx`). The following routes are defined:
+
+- `/`: Redirects the user using the `Navigate` component (`browser-features/pages-settings/src/App.tsx`).
+- `/search`: Renders the search page component (`browser-features/pages-settings/src/App.tsx`).
+- `/overview/home`: Renders the dashboard page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/design`: Renders the design page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/design/lepton`: Renders the Lepton settings component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/sidebar`: Renders the sidebar page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/workspaces`: Renders the workspaces page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/webapps`: Renders the PWA page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/floorp-os`: Renders the Floorp OS page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/accounts`: Renders the accounts page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/gesture`: Renders the gesture page component (`browser-features/pages-settings/src/App.tsx`).
+- `/features/shortcuts`: Renders the keyboard shortcut page component (`browser-features/pages-settings/src/App.tsx`).
+- `/about/browser`: Renders the about browser component (`browser-features/pages-settings/src/App.tsx`).
+- `/about/updates`: Renders the updates page component (`browser-features/pages-settings/src/App.tsx`).
+
+## Browser Integration
+
+The settings pages operate within the broader Floorp browser architecture. During startup, a bridge component selects either development/test HTTP loaders or `chrome://` production code to load the application (`bridge/startup/src/chrome_root.ts`).
+
+To communicate with the underlying browser backend, the settings interface relies on Window Actors. The `NRSettings` actor, which is registered in the browser glue module, facilitates these interactions (`browser-features/modules/modules/BrowserGlue.sys.mts`).

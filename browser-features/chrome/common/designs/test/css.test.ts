@@ -149,9 +149,9 @@ function testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar(): void {
 
 /**
  * Regression for Issue #2489: under a third-party LWT the nav-bar /
- * PersonalToolbar must follow the TOOLBAR color, not the (often lighter)
- * selected-tab color — otherwise the bar "floats" off the toolbar. The
- * navBar CSS must therefore branch on the LWT signal.
+ * PersonalToolbar must not follow the (often lighter) selected-tab color —
+ * otherwise the bar "floats" off the toolbar. The navBar CSS must therefore
+ * branch on the LWT signal.
  *
  * The signal is the `[lwtheme]` ATTRIBUTE only. Gecko 152 silently drops any
  * selector that places the `:-moz-lwtheme` pseudo-class inside `:not()` —
@@ -194,27 +194,33 @@ function testNavBarCssIsLwtAware(): void {
     `navBar CSS must not use :not(:-moz-lwtheme) — Gecko 152 drops the whole rule`,
   );
 
-  // The LWT branch must scope the nav-bar/PersonalToolbar to the toolbar
-  // surface color via the [lwtheme] attribute.
+  // The LWT branch must expose the toolbar surface token via the [lwtheme]
+  // attribute without forcing an opaque fill on the toolbar elements. LWT
+  // background artwork is drawn on <body>, so #nav-bar / #PersonalToolbar must
+  // keep Firefox's native translucent toolbar painting.
   assert(
-    /:root\[lwtheme\]\s+#nav-bar/.test(css),
-    `navBar CSS must scope #nav-bar to the toolbar color under LWT`,
+    /:root\[lwtheme\]\s*\{/.test(css),
+    `navBar CSS must expose a root-scoped toolbar surface token under LWT`,
   );
   assert(
-    /:root\[lwtheme\]\s+#PersonalToolbar/.test(css),
-    `navBar CSS must scope #PersonalToolbar to the toolbar color under LWT`,
+    !/:root\[lwtheme\]\s+#(?:nav-bar|PersonalToolbar)/.test(css),
+    `LWT navBar CSS must not force an opaque fill on #nav-bar or #PersonalToolbar`,
   );
 
   // The LWT branch must read the toolbar color, NOT --tab-selected-bgcolor.
-  // The LWT rules form one selector group:
-  //   `:root[lwtheme] #nav-bar, :root[lwtheme] #PersonalToolbar { ... }`.
+  // The LWT rule is root-scoped:
+  //   `:root[lwtheme] { --floorp-chrome-surface-color: ... }`.
   const lwtBlockMatch = css.match(
-    /:root\[lwtheme\]\s+#nav-bar,[\s\S]*?\}/,
+    /:root\[lwtheme\]\s*\{[\s\S]*?\}/,
   );
   const lwtBlock = lwtBlockMatch ? lwtBlockMatch[0] : "";
   assert(
     lwtBlock !== "",
-    `navBar CSS must have an [lwtheme]-scoped selector group for #nav-bar`,
+    `navBar CSS must have a root-scoped [lwtheme] token block`,
+  );
+  assert(
+    lwtBlock.includes("--floorp-chrome-surface-color"),
+    `LWT navBar branch must expose --floorp-chrome-surface-color for downstream consumers`,
   );
   assert(
     lwtBlock.includes("--toolbar-bgcolor"),
@@ -402,7 +408,10 @@ export async function runAllTests(): Promise<void> {
       name: "lepton no useTabColorAsToolbarColor",
       fn: testLeptonNoUseTabColorAsToolbarColor,
     },
-    { name: "lepton has expected style entries", fn: testLeptonHasExpectedStyleEntries },
+    {
+      name: "lepton has expected style entries",
+      fn: testLeptonHasExpectedStyleEntries,
+    },
     {
       name: "lepton/photon/protonfix navBar CSS includes PersonalToolbar",
       fn: testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar,

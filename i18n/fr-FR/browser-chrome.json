@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Annuler l'onglet fermé",
     "tooltiptext": "Rouvrir le dernier onglet fermé {{shortcut}}"
@@ -110,20 +113,33 @@
     "menu": {
       "webapps": "Applications Web",
       "install-current": "Installer la page actuelle en tant que Progressive Web App",
-      "open-installed": "Afficher les applications installées"
+      "open-current": "Ouvrir l'application dans le conteneur sélectionné",
+      "open-installed": "Afficher les applications installées",
+      "container": "Conteneur"
     },
     "page-action": {
       "title": "Ouvrir l'application",
       "install": "Installer l'application",
       "open": "Ouvrir l'application",
       "cancel": "Annuler",
-      "site-icon": "Icône du site"
+      "site-icon": "Icône du site",
+      "container": "Conteneur",
+      "no-container": "Aucun conteneur"
+    },
+    "window": {
+      "container-tooltip": "Conteneur : {{name}}",
+      "container-fallback": "Conteneur #{{id}}"
     }
   },
   "privateContainer": {
     "openInPrivateContainer": "Ouvrir dans un conteneur privé",
     "reopenInPrivateContainer": "Réouvrir dans un conteneur privé",
     "name": "Conteneur privé"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {
@@ -198,8 +214,8 @@
       "gecko-reverse-sidebar": "Inverser la position de la barre latérale",
       "gecko-hide-sidebar": "Masquer la barre latérale",
       "gecko-toggle-sidebar": "Afficher/masquer la barre latérale",
-      "gecko-scroll-up": "Haut de page",
-      "gecko-scroll-down": "Bas de page",
+      "gecko-scroll-up": "Défiler vers le haut",
+      "gecko-scroll-down": "Défiler vers le bas",
       "gecko-scroll-line-up": "Défiler vers le haut",
       "gecko-scroll-line-down": "Défiler vers le bas",
       "gecko-scroll-right": "Défiler vers la droite",
@@ -439,6 +455,35 @@
     "label": "Mode Calme",
     "tooltiptext": "Permuter le mode Zen",
     "menu-label": "Permuter le mode Zen"
+  },
+  "ipProtection": {
+    "title": "Floorp VPN",
+    "toolbar": {
+      "activeTooltip": "Floorp VPN est activé pour le trafic web dans Floorp",
+      "inactiveTooltip": "Floorp VPN est désactivé - le trafic web dans Floorp n'est pas protégé",
+      "excludedTooltip": "Floorp VPN est désactivé pour ce site - le trafic web vers ce site n'est pas protégé",
+      "pausedTooltip": "Floorp VPN est suspendu - le trafic web dans Floorp n'est pas protégé",
+      "errorTooltip": "Floorp VPN - erreur de connexion ; le trafic web dans Floorp n'est pas protégé",
+      "helpTooltip": "Ouvrir la page de support de Floorp VPN"
+    },
+    "scope": {
+      "summary": "Lorsqu'il est activé,  Floorp VPN peut protéger le trafic web de Floorp. Son champ d'application n'inclut pas votre système d'exploitation ni les autres applications.",
+      "fullDisclosure": "Cette fonctionnalité utilise un compte Mozilla et l'infrastructure des services Mozilla. Floorp est un projet indépendant qui n'est ni affilié à Mozilla, ni approuvé ni parrainé par cette dernière. Sa disponibilité dépend de votre région, de l'état de votre compte et des conditions d'éligibilité aux services de Mozilla."
+    },
+    "unauthenticated": {
+      "title": "Essayez le VPN intégré à Floorp"
+    },
+    "settings": {
+      "promoHeading": "Essayez le VPN intégré à Floorp",
+      "promoMessage": "Protégez le trafic web dans Floorp après vous être connecté et avoir vérifié la disponibilité du service."
+    },
+    "terms": {
+      "prefix": "En poursuivant, vous acceptez de ",
+      "termsOfUse": "Conditions d'utilisation de Mozilla Firefox",
+      "conjunction": " et reconnaissez ",
+      "privacyNotice": "Politique de confidentialité de Mozilla Firefox",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Palette de commandes",

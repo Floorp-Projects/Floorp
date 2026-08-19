@@ -56,6 +56,11 @@ const {
     _prev?: T,
   ): void => {
     if (node instanceof Element) {
+      if (value === null || value === undefined) {
+        node.removeAttribute(name);
+        return;
+      }
+
       const resultStyleObject = CStyleObject.decode(value);
       if (isEventListener(value)) {
         //? the eventListener name is on~~~
@@ -72,8 +77,6 @@ const {
         node.setAttribute(name, value);
       } else if (typeof value === "number" || typeof value === "boolean") {
         node.setAttribute(name, value.toString());
-      } else if (value === undefined) {
-        node.removeAttribute(name);
       } else {
         throw Error(
           `unreachable! @nora/solid-xul:setProperty the value is not EventListener, style object, string, number, nor boolean | is ${value}`,
@@ -153,13 +156,48 @@ export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
     if (hotCtx) {
       hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), disposer]);
       console.debug("register disposer to hotCtx in createRoot");
-      hotCtx.dispose(() => {
-        hotCtxMap.get(hotCtx)?.forEach((v) => v());
-        hotCtxMap.delete(hotCtx);
-      });
+      if (
+        !hotCtx.data.__solidXulExternalDisposeOwner &&
+        !hotCtx.data.__solidXulDisposeRegistered
+      ) {
+        hotCtx.data.__solidXulDisposeRegistered = true;
+        hotCtx.dispose(() => {
+          try {
+            disposeRoot(hotCtx);
+          } finally {
+            hotCtx.data.__solidXulDisposeRegistered = false;
+          }
+        });
+      }
     }
     return ret;
   });
+}
+
+/**
+ * Manually dispose all Solid roots registered for the given hot context.
+ *
+ * Vite's `import.meta.hot.dispose` only retains the **last** registered
+ * callback (see https://github.com/vitejs/vite/issues/16283), so when a module
+ * creates multiple reactive roots under the same `hotCtx`, earlier dispose
+ * registrations get overwritten and their cleanups never run.
+ *
+ * This function provides an explicit escape hatch: callers can drain all
+ * disposers for a hot context on demand — independent of Vite's internal
+ * dispose scheduling.
+ */
+export function disposeRoot(hotCtx: ViteHotContext): void {
+  const disposers = hotCtxMap.get(hotCtx);
+  if (disposers) {
+    for (const dispose of disposers) {
+      try {
+        dispose();
+      } catch (e) {
+        console.error("[nora@solid-xul] disposeRoot error:", e);
+      }
+    }
+    hotCtxMap.delete(hotCtx);
+  }
 }
 
 export {

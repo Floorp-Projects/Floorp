@@ -14,11 +14,13 @@ import {
   WEB_PANEL_CONTENT_BROWSER_ID,
   type WebPanelBrowserElement,
 } from "./utils/web-panel-browser.ts";
+import { WebPanelFindController } from "./utils/web-panel-find-controller.ts";
 
 const PANEL_SIDEBAR_DATA_PREF_NAME = "floorp.panelSidebar.data";
 
 export class WebsitePanelWindowChild {
   private static instance: WebsitePanelWindowChild;
+  private findController: WebPanelFindController | null = null;
   static getInstance() {
     if (!WebsitePanelWindowChild.instance) {
       WebsitePanelWindowChild.instance = new WebsitePanelWindowChild();
@@ -171,7 +173,7 @@ export class WebsitePanelWindowChild {
         min-height: 100% !important;
       }
     `;
-    document.documentElement.appendChild(style);
+    document.documentElement?.appendChild(style);
   }
 
   private getContentContainer(): HTMLElement {
@@ -274,6 +276,11 @@ export class WebsitePanelWindowChild {
     );
 
     const browser = this.createContentBrowser();
+    if (!this.findController) {
+      this.findController = new WebPanelFindController(browser);
+    }
+    this.findController.init();
+
     globalThis.requestAnimationFrame(() => {
       loadUriInWebPanelBrowser(browser, loadURL);
       this.setZoomLevel(browser);

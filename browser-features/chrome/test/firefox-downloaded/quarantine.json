@@ -1,0 +1,12 @@
+[
+  {
+    "path": "browser/base/content/test/general/browser_bug484315.js",
+    "classification": "quarantined",
+    "reason": "Popup-window creation blocks in some Floorp test profiles, while OpenBrowserWindow changes the original Firefox popup semantics.",
+    "requiredApis": [
+      "OpenBrowserWindow"
+    ],
+    "sourceRef": "nora-0.2.0",
+    "lastObserved": "2026-06-30"
+  }
+]

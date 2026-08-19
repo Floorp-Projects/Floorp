@@ -28,6 +28,7 @@ const JS_WINDOW_ACTORS: {
       ),
       events: {
         DOMContentLoaded: {},
+        DOMDocElementInserted: {},
       },
     },
     matches: ["about:preferences*", "about:settings*"],
@@ -377,6 +378,28 @@ const JS_WINDOW_ACTORS: {
       "*://localhost/*",
       "*://127.0.0.1/*",
     ],
+  },
+  NRKeyboardShortcutFocus: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRKeyboardShortcutFocusParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRKeyboardShortcutFocusChild.sys.mts",
+      ),
+      events: {
+        DOMContentLoaded: {},
+        focusin: { capture: true },
+        focusout: { capture: true },
+        blur: { capture: true },
+        pageshow: {},
+        pagehide: {},
+      },
+    },
+    matches: ["http://*/*", "https://*/*", "file:///*", "about:*"],
+    allFrames: true,
   },
   NRMouseGestureScroll: {
     parent: {

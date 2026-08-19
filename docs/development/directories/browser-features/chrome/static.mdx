@@ -1,0 +1,48 @@
+---
+title: "Static Chrome Features"
+sidebar_label: "Static"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Overview
+
+The `browser-features/chrome/static` directory contains Floorp chrome features that are initialized once during browser startup, before the main session is fully interactive. Unlike the feature modules under `browser-features/chrome/common`, which are discovered and wired as SolidJS-oriented chrome components, the static features are focused on early bootstrap concerns such as preference application, download bar setup, and built-in overrides.
+
+The directory is documented alongside the common and runtime-oriented chrome feature directories in `browser-features/chrome/README.md`, which describes the conventions for organizing chrome feature entry points.
+
+## Directory Layout and Discovery
+
+Static chrome features are discovered through a dedicated entry module at `browser-features/chrome/static/mod.ts`. This module provides static chrome feature entry discovery, mirroring the glob-based pattern used for common chrome features where each feature lives in its own subdirectory with an `index.ts` entry point.
+
+The loader builds common and static module maps from chrome feature entry globs, as implemented in `bridge/loader-features/loader/modules.ts`. This means the static feature set is collected and made available to the loader alongside the common feature set, but the loader treats them as a distinct map so that static initialization can be sequenced appropriately during startup.
+
+## Feature Modules
+
+### downloadbar
+
+The downloadbar feature is owned by `browser-features/chrome/static/downloadbar/index.ts`. It provides initialization for the downloadbar feature and exposes an `init` entrypoint. Because it is a static feature, its `init` runs during the early chrome bootstrap phase rather than after the session store has initialized.
+
+### overrides
+
+The overrides feature is owned by `browser-features/chrome/static/overrides/index.ts`. It provides initialization for the overrides feature and exposes an `init` entrypoint. This module is responsible for applying built-in overrides that must be in place before the rest of the chrome UI is constructed.
+
+### prefs
+
+The prefs feature is owned by `browser-features/chrome/static/prefs/index.ts`. It provides pre-session initialization for the prefs feature and exposes two entrypoints:
+
+- `init` — standard initialization invoked during the normal static feature lifecycle.
+- `initBeforeSessionStoreInit` — a specialized hook that runs before the session store has initialized, allowing preference-related state to be applied early enough that subsequent session restoration and chrome feature initialization observe the correct values.
+
+The `initBeforeSessionStoreInit` hook distinguishes `prefs` from the other static features, which only expose `init`. This reflects the requirement that preference handling must happen before session store initialization to avoid races between restored session state and Floorp-specific preference defaults.
+
+## Lifecycle and Loader Integration
+
+The loader entrypoint at `bridge/loader-features/loader/index.ts` imports BrowserGlue, initializes i18n, records loader state, filters enabled modules, and runs module lifecycle hooks. Static features participate in this lifecycle as part of the filtered module set, and their `init` (and, where present, `initBeforeSessionStoreInit`) functions are invoked through the hook machinery.
+
+Module load-state resolution and `onModuleLoaded` promises are provided by `bridge/loader-features/loader/modules-hooks.ts`. This allows other parts of the chrome layer to await the completion of a static feature's initialization before depending on its effects, which is particularly important for `prefs` and `overrides` since downstream common features may rely on the state they establish.
+
+## Relationship to Common Chrome Features
+
+Static features are intentionally separated from the common chrome features under `browser-features/chrome/common`. The common layer, discovered via the glob pattern `./*/index.ts` as documented in `browser-features/chrome/common/mod.ts`, contains feature modules that own browser chrome components and wire services, components, and stylesheets. Static features, by contrast, are concerned with early bootstrap and preference state rather than interactive UI components.
+
+Both layers are ultimately consumed by the same loader infrastructure in `bridge/loader-features/loader/modules.ts`, but the separation into static and common maps allows the loader to sequence initialization so that preference and override state is established before common chrome components begin their own initialization.

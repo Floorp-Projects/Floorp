@@ -4,24 +4,29 @@ import i18next from "i18next";
 import { debounce } from "@solid-primitives/scheduled";
 import { createPaletteState, type PaletteState } from "./data/state.ts";
 import {
-  isEnabled,
   addRecentCommand,
+  getFrequencies,
   getRecentCommands,
   incrementFrequency,
-  getFrequencies,
+  isEnabled,
 } from "./config.ts";
 import {
   getPaletteCommands,
+  searchBookmarkCommands,
   searchCommands,
   searchHistoryCommands,
-  searchBookmarkCommands,
 } from "./command-registry.ts";
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
 import type {
-  PaletteCommand,
+  CommandStep,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "./types.ts";
+import {
+  isPaletteTargetAvailable,
+  resolvePaletteTarget,
+} from "./utils/targetContext.ts";
 
 function looksLikeUrl(query: string): boolean {
   if (query.startsWith("http://") || query.startsWith("https://")) return true;
@@ -53,6 +58,7 @@ export class CommandPaletteController {
   }
 
   public destroy(): void {
+    this.stepChoicesLoadGeneration++;
     if (this.eventListenersAttached) {
       this.targetWindow.removeEventListener(
         "keydown",
@@ -345,8 +351,10 @@ export class CommandPaletteController {
   private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
   private bookmarkSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private currentSearchQuery: string = "";
+  private stepChoicesLoadGeneration = 0;
 
   public hidePalette(): void {
+    this.stepChoicesLoadGeneration++;
     this.state.setIsAnimatingOut(true);
     this.state.setIsVisible(false);
     this.debouncedUpdateSearch.clear();
@@ -397,10 +405,110 @@ export class CommandPaletteController {
 
   // --- Multi-step input mode ---
 
+  private shouldIncludeStep(
+    step: CommandStep,
+    args: Readonly<Record<string, string>>,
+  ): boolean {
+    try {
+      return step.shouldInclude?.(args, this.targetWindow) ?? true;
+    } catch (e) {
+      console.error(
+        `[command-palette] Failed to evaluate step condition: ${step.id}`,
+        e,
+      );
+      return true;
+    }
+  }
+
+  private findIncludedStepIndex(
+    cmd: PaletteCommand,
+    startIndex: number,
+    direction: 1 | -1,
+    args: Readonly<Record<string, string>>,
+  ): number | null {
+    const steps = cmd.steps ?? [];
+    for (
+      let index = startIndex;
+      index >= 0 && index < steps.length;
+      index += direction
+    ) {
+      if (this.shouldIncludeStep(steps[index], args)) return index;
+    }
+    return null;
+  }
+
+  private pruneExcludedInputs(
+    cmd: PaletteCommand,
+    inputs: Record<string, string>,
+  ): Record<string, string> {
+    const steps = cmd.steps ?? [];
+    const pruned = { ...inputs };
+
+    // Repeat because removing one stale value may make another conditional
+    // step ineligible on the next pass.
+    for (let pass = 0; pass < steps.length; pass++) {
+      let changed = false;
+      for (const step of steps) {
+        if (
+          Object.hasOwn(pruned, step.id) &&
+          !this.shouldIncludeStep(step, pruned)
+        ) {
+          delete pruned[step.id];
+          changed = true;
+        }
+      }
+      if (!changed) break;
+    }
+
+    return pruned;
+  }
+
+  private isStepChoicesRequestCurrent(
+    generation: number,
+    command: PaletteCommand,
+    step: CommandStep,
+    stepIndex: number,
+    targetWindow: Window,
+  ): boolean {
+    return (
+      generation === this.stepChoicesLoadGeneration &&
+      this.targetWindow === targetWindow &&
+      this.state.mode() === "input" &&
+      this.state.activeCommand() === command &&
+      this.state.currentStepIndex() === stepIndex &&
+      command.steps?.[stepIndex] === step
+    );
+  }
+
+  public getStepProgress(): { current: number; total: number } {
+    const cmd = this.state.activeCommand();
+    const steps = cmd?.steps;
+    if (!cmd || !steps) return { current: 0, total: 0 };
+
+    const inputs = this.pruneExcludedInputs(cmd, this.state.stepInputs());
+    const includedIndices = steps.flatMap((step, index) =>
+      this.shouldIncludeStep(step, inputs) ? [index] : []
+    );
+    const ordinal = includedIndices.indexOf(this.state.currentStepIndex());
+
+    return {
+      current: ordinal >= 0 ? ordinal + 1 : 0,
+      total: includedIndices.length,
+    };
+  }
+
   private loadStepChoices(stepIndex: number, restoreValue?: string): void {
     const cmd = this.state.activeCommand();
     const step = cmd?.steps?.[stepIndex];
     if (!step) return;
+
+    const generation = ++this.stepChoicesLoadGeneration;
+    const targetWindow = this.targetWindow;
+    const args = { ...this.state.stepInputs() };
+
+    this.state.setHasMoreChoices(false);
+    this.state.setLoadMoreCallback(null);
+    this.state.setLoadingMore(false);
 
     // Static choices take priority
     if (step.choices && step.choices.length > 0) {
@@ -412,9 +520,6 @@ export class CommandPaletteController {
         if (idx >= 0) this.state.setSelectedChoiceIndex(idx);
       }
       this.state.setStepChoicesLoading(false);
-      this.state.setHasMoreChoices(false);
-      this.state.setLoadMoreCallback(null);
-      this.state.setLoadingMore(false);
       return;
     }
 
@@ -422,12 +527,38 @@ export class CommandPaletteController {
     if (step.choicesLoader) {
       this.state.setStepChoicesBase([]);
       this.state.setFilteredStepChoices([]);
+      this.state.setSelectedChoiceIndex(0);
       this.state.setStepChoicesLoading(true);
-      step
-        .choicesLoader()
+      let choicesPromise: Promise<CommandStepChoice[] | StepChoicesResult>;
+      try {
+        choicesPromise = step.choicesLoader(targetWindow, args);
+      } catch (e) {
+        console.error("[command-palette] Failed to load step choices:", e);
+        if (
+          this.isStepChoicesRequestCurrent(
+            generation,
+            cmd,
+            step,
+            stepIndex,
+            targetWindow,
+          )
+        ) {
+          this.state.setStepChoicesLoading(false);
+        }
+        return;
+      }
+
+      choicesPromise
         .then((result) => {
-          // Only update if we're still on the same step
-          if (this.state.currentStepIndex() === stepIndex) {
+          if (
+            this.isStepChoicesRequestCurrent(
+              generation,
+              cmd,
+              step,
+              stepIndex,
+              targetWindow,
+            )
+          ) {
             const isResultObject = (v: unknown): v is StepChoicesResult =>
               typeof v === "object" && v !== null && "choices" in v;
             const choices = isResultObject(result)
@@ -463,8 +594,16 @@ export class CommandPaletteController {
           }
         })
         .catch((e) => {
-          console.error("[command-palette] Failed to load step choices:", e);
-          if (this.state.currentStepIndex() === stepIndex) {
+          if (
+            this.isStepChoicesRequestCurrent(
+              generation,
+              cmd,
+              step,
+              stepIndex,
+              targetWindow,
+            )
+          ) {
+            console.error("[command-palette] Failed to load step choices:", e);
             this.state.setStepChoicesBase([]);
             this.state.setFilteredStepChoices([]);
             this.state.setStepChoicesLoading(false);
@@ -479,25 +618,33 @@ export class CommandPaletteController {
     this.state.setStepChoicesBase([]);
     this.state.setFilteredStepChoices([]);
     this.state.setStepChoicesLoading(false);
-    this.state.setHasMoreChoices(false);
-    this.state.setLoadMoreCallback(null);
-    this.state.setLoadingMore(false);
   }
 
   private loadMoreChoices(): void {
     const loadMore = this.state.loadMoreCallback();
-    if (!loadMore || this.state.loadingMore() || !this.state.hasMoreChoices())
+    if (!loadMore || this.state.loadingMore() || !this.state.hasMoreChoices()) {
       return;
+    }
 
-    const stepSnapshot = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
+    const command = this.state.activeCommand();
+    const stepIndex = this.state.currentStepIndex();
+    const step = command?.steps?.[stepIndex];
+    if (!command || !step) return;
+
+    const generation = this.stepChoicesLoadGeneration;
+    const targetWindow = this.targetWindow;
     this.state.setLoadingMore(true);
     loadMore()
       .then(({ choices: newChoices, hasMore }) => {
-        const currentStepId = this.state.activeCommand()?.steps?.[this.state.currentStepIndex()]?.id;
-        if (currentStepId !== stepSnapshot) {
-          this.state.setLoadingMore(false);
-          return;
-        }
+        if (
+          !this.isStepChoicesRequestCurrent(
+            generation,
+            command,
+            step,
+            stepIndex,
+            targetWindow,
+          )
+        ) return;
 
         this.state.setHasMoreChoices(hasMore);
 
@@ -525,6 +672,15 @@ export class CommandPaletteController {
         this.state.setLoadingMore(false);
       })
       .catch((e) => {
+        if (
+          !this.isStepChoicesRequestCurrent(
+            generation,
+            command,
+            step,
+            stepIndex,
+            targetWindow,
+          )
+        ) return;
         console.error("[command-palette] Failed to load more choices:", e);
         this.state.setLoadingMore(false);
       });
@@ -538,8 +694,14 @@ export class CommandPaletteController {
     this.state.setStepError(null);
     this.state.setQuery("");
 
-    // Initialize choices for the first step if available
-    this.loadStepChoices(0);
+    const firstIndex = this.findIncludedStepIndex(cmd, 0, 1, {});
+    if (firstIndex === null) {
+      this.executeWithArgs(cmd, {});
+      return;
+    }
+
+    this.state.setCurrentStepIndex(firstIndex);
+    this.loadStepChoices(firstIndex);
 
     this.focusSearchInput();
   }
@@ -554,8 +716,8 @@ export class CommandPaletteController {
 
     // Determine the value: use selected choice if available, otherwise use typed query
     let value: string;
-    const stepHasChoices =
-      (!!step.choices && step.choices.length > 0) || !!step.choicesLoader;
+    const stepHasChoices = (!!step.choices && step.choices.length > 0) ||
+      !!step.choicesLoader;
     if (stepHasChoices) {
       const filteredChoices = this.state.filteredStepChoices();
       const choiceIdx = this.state.selectedChoiceIndex();
@@ -584,12 +746,19 @@ export class CommandPaletteController {
     this.state.setStepError(null);
 
     // Save the input for this step
-    const inputs = { ...this.state.stepInputs(), [step.id]: value };
+    const inputs = this.pruneExcludedInputs(cmd, {
+      ...this.state.stepInputs(),
+      [step.id]: value,
+    });
     this.state.setStepInputs(inputs);
 
-    // Check if there are more steps
-    const nextIndex = stepIndex + 1;
-    if (nextIndex < cmd.steps.length) {
+    const nextIndex = this.findIncludedStepIndex(
+      cmd,
+      stepIndex + 1,
+      1,
+      inputs,
+    );
+    if (nextIndex !== null) {
       this.state.setCurrentStepIndex(nextIndex);
       this.state.setQuery("");
 
@@ -604,18 +773,30 @@ export class CommandPaletteController {
   }
 
   public goBackStep(): void {
+    const cmd = this.state.activeCommand();
+    if (!cmd?.steps) {
+      this.exitInputMode();
+      return;
+    }
+
     const stepIndex = this.state.currentStepIndex();
-    if (stepIndex > 0) {
+    const inputs = this.pruneExcludedInputs(cmd, this.state.stepInputs());
+    this.state.setStepInputs(inputs);
+    const prevIndex = this.findIncludedStepIndex(
+      cmd,
+      stepIndex - 1,
+      -1,
+      inputs,
+    );
+
+    if (prevIndex !== null) {
       // Go to previous step and restore its input
-      const prevIndex = stepIndex - 1;
-      const cmd = this.state.activeCommand();
-      const stepId = cmd?.steps?.[prevIndex]?.id;
-      const inputs = this.state.stepInputs();
+      const stepId = cmd.steps[prevIndex]?.id;
 
       this.state.setCurrentStepIndex(prevIndex);
       // Restore the display label (not the internal value) for steps with choices
       const prevValue = stepId ? (inputs[stepId] ?? "") : "";
-      const prevStep = cmd?.steps?.[prevIndex];
+      const prevStep = cmd.steps[prevIndex];
       const choiceLabel = prevStep?.choices?.find(
         (c) => c.value === prevValue,
       )?.label;
@@ -633,6 +814,7 @@ export class CommandPaletteController {
   }
 
   private exitInputMode(): void {
+    this.stepChoicesLoadGeneration++;
     this.state.setMode("command");
     this.state.setActiveCommand(null);
     this.state.setCurrentStepIndex(0);
@@ -686,15 +868,15 @@ export class CommandPaletteController {
         description: url,
         category: "navigation-suggestion",
         keywords: [],
-        fn: (_win) => {
+        fn: (win) => {
           try {
             const navUrl = trimmed.includes("://")
               ? trimmed
               : `https://${trimmed}`;
-            const principal =
-              globalThis.gBrowser?.selectedBrowser?.contentPrincipal;
-            globalThis.gBrowser.loadURI?.(Services.io.newURI(navUrl), {
-              triggeringPrincipal: principal,
+            const target = resolvePaletteTarget(win);
+            if (!target) return;
+            target.browser.loadURI?.(Services.io.newURI(navUrl), {
+              triggeringPrincipal: target.principal,
             });
           } catch (e) {
             console.error("[command-palette] Navigation failed", e);
@@ -715,12 +897,12 @@ export class CommandPaletteController {
       const engineName = this.defaultEngineName;
       const descriptionText = engineName
         ? i18next.t("commandPalette.searchWithEngineNamed", {
-            defaultValue: "Search with {{engine}}",
-            engine: engineName,
-          })
+          defaultValue: "Search with {{engine}}",
+          engine: engineName,
+        })
         : i18next.t("commandPalette.searchWithEngineDescription", {
-            defaultValue: "Search with your default search engine",
-          });
+          defaultValue: "Search with your default search engine",
+        });
 
       results.push({
         id: "__search-engine-fallback",
@@ -731,13 +913,15 @@ export class CommandPaletteController {
         description: descriptionText,
         category: "search-suggestion",
         keywords: [],
-        fn: (_win) => {
+        fn: (win) => {
           try {
+            const target = resolvePaletteTarget(win);
+            if (!target) return;
             const { SearchService } = ChromeUtils.importESModule(
               "moz-src:///toolkit/components/search/SearchService.sys.mjs",
             );
             const timeoutPromise = new Promise((_, reject) => {
-              globalThis.setTimeout(
+              win.setTimeout(
                 () => reject(new Error("Search engine timeout")),
                 2000,
               );
@@ -745,6 +929,12 @@ export class CommandPaletteController {
             Promise.race([SearchService.getDefault(), timeoutPromise])
               .then((engine) => {
                 if (engine) {
+                  if (!isPaletteTargetAvailable(target)) {
+                    console.error(
+                      "[command-palette] Search suggestion target changed before execution",
+                    );
+                    return;
+                  }
                   const sysPrincipal = (
                     globalThis as typeof globalThis & {
                       Services: {
@@ -755,22 +945,18 @@ export class CommandPaletteController {
                     }
                   ).Services.scriptSecurityManager.getSystemPrincipal();
                   const submission = engine.getSubmission(trimmed);
-                  const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+                  const tab = target.gBrowser.addTab(submission.uri.spec, {
                     triggeringPrincipal: sysPrincipal,
                     inBackground: false,
+                    userContextId: target.workspaceUserContextId,
                     postData: submission.postData,
                   } as {
-                    skipAnimation?: boolean;
                     inBackground?: boolean;
-                    userContextId?: number;
-                    triggeringPrincipal?: unknown;
-                    pinned?: boolean;
-                    index?: number;
                     postData?: unknown;
+                    triggeringPrincipal?: unknown;
+                    userContextId?: number;
                   });
-                  if (globalThis.gBrowser && tab) {
-                    globalThis.gBrowser.selectedTab = tab;
-                  }
+                  target.gBrowser.selectedTab = tab;
                 }
               })
               .catch((e) => {
@@ -889,6 +1075,13 @@ export class CommandPaletteController {
   }, 30);
 
   public updateSearch(query: string): void {
+    // Step values must be current when Enter is pressed immediately after an
+    // input event; command search is the only path that needs debouncing.
+    if (this.state.mode() === "input") {
+      this.doUpdateSearch(query);
+      return;
+    }
+
     if (query.trim()) {
       this.debouncedUpdateSearch(query);
     } else {

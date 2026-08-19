@@ -17,9 +17,9 @@
  *      symptoms — they hit any chrome component that reads `--lwt-accent-color`
  *      / `--in-content-page-background` / `--arrowpanel-background` once the
  *      built-in-theme block stops matching.
- *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases and
- *      palette restoration that mirrors Lepton's intended colors. Applied
- *      only to the `lepton` / `photon` / `protonfix` designs.
+ *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases,
+ *      palette restoration, and native-sidebar positioning compatibility.
+ *      Applied only to the `lepton` / `photon` / `protonfix` designs.
  *   3. `FLOORP_ICON_PATCHES` — Floorp-only icon rules extracted from the
  *      vendored leptonChrome.css so the daily upstream sync cannot delete
  *      them. Lepton-family only (the IDs are Lepton-scoped).
@@ -201,6 +201,21 @@ export const LEPTON_COMPAT_152_CSS = `
   --in-content-primary-button-background: var(--blue-60, #0060df);
   --in-content-primary-button-background-hover: var(--blue-50, #0a84ff);
   --in-content-primary-button-background-active: var(--blue-40, #4595ff);
+}
+
+/*= Right-positioned native sidebar (Issue #2556) ============================
+ * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the
+ * presence-only [sidebar-positionend] attribute. Vendored Lepton still keys
+ * its overlap layout's direction flip to the former [positionend] attribute,
+ * so its inline-start offset is applied on the wrong side and pushes a right
+ * sidebar partly outside the window.
+ *
+ * Keep the legacy attribute in the selector for older Gecko versions. These
+ * are boolean presence attributes, so intentionally do not match a value. */
+@media -moz-pref("userChrome.sidebar.overlap") {
+  #sidebar-box:is([positionend], [sidebar-positionend]) {
+    direction: rtl;
+  }
 }
 `;
 

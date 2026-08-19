@@ -13,9 +13,6 @@ import { waitForActor } from "./shared/waitForActor.sys.mts";
 import { CookieHelper } from "./shared/CookieHelper.sys.mts";
 import { NetworkIdleHelper } from "./shared/NetworkIdleHelper.sys.mts";
 
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs",
-);
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -28,6 +25,7 @@ interface WebScraperActor {
 // Type for browser tab element
 interface BrowserTab {
   linkedBrowser: XULBrowserElement & { browserId: number };
+  readonly isConnected: boolean;
   label: string;
   selected: boolean;
   pinned: boolean;
@@ -297,9 +295,23 @@ class TabManager {
     }
 
     if (entry) {
-      // Verify tab is still alive and in a window
+      // Verify tab is still alive.
+      // NOTE: a null `ownerGlobal` is NOT treated as "tab closed" — on
+      // Gecko 153 it can transiently be null (e.g. during process swaps or
+      // for panel windows), and deleting the instance here would permanently
+      // orphan it, breaking every subsequent per-instance operation
+      // (Floorp issue #2608). Use the tab element's connectedness instead: a
+      // closed tab is removed from the tab strip, so `tab.isConnected` is the
+      // reliable liveness signal.
       const browser = entry.tab.linkedBrowser;
-      if (!browser || !browser.ownerGlobal || browser.ownerGlobal.closed) {
+      if (!browser || !entry.tab.isConnected) {
+        this._browserInstances.delete(instanceId);
+        this._tabToInstanceId.delete(entry.tab);
+        TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
+        return null;
+      }
+      const ownerWin = browser.ownerGlobal;
+      if (ownerWin?.closed) {
         this._browserInstances.delete(instanceId);
         this._tabToInstanceId.delete(entry.tab);
         TAB_MANAGER_ACTOR_SETS.delete(entry.browser);
@@ -560,8 +572,9 @@ class TabManager {
     // Check tab is still alive (user may have closed it during load)
     const currentBrowser = tab.linkedBrowser;
     if (
-      !currentBrowser?.ownerGlobal ||
-      (currentBrowser.ownerGlobal as Window).closed
+      !currentBrowser ||
+      !tab.isConnected ||
+      (currentBrowser.ownerGlobal as Window | null)?.closed
     ) {
       throw new Error("Tab was closed during load");
     }
@@ -767,17 +780,8 @@ class TabManager {
     const { browser } = this._getInstance(instanceId);
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
 
-    const oa = E10SUtils.predictOriginAttributes({ browser });
     const loadURIOptions = {
       triggeringPrincipal: principal,
-      remoteType: E10SUtils.getRemoteTypeForURI(
-        url,
-        true,
-        false,
-        E10SUtils.DEFAULT_REMOTE_TYPE,
-        null,
-        oa,
-      ),
     };
 
     // Check if browser.loadURI is defined before calling it

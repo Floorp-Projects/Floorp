@@ -13,6 +13,15 @@ const MENU_ID = "context_openLinkInExternalBrowser";
 const MENU_POPUP_ID = "context_openLinkInExternalBrowser_popup";
 const LINK_OPEN_MENU_ID = "context-openlink";
 
+type UnloadTarget = Pick<
+  EventTarget,
+  "addEventListener" | "removeEventListener"
+>;
+
+export type ExternalBrowserLinkContextMenuOptions = {
+  unloadTarget?: UnloadTarget;
+};
+
 // Helper function for i18n translation
 const t = (key: string): string => (i18next.t as (k: string) => string)(key);
 
@@ -24,8 +33,12 @@ export class ExternalBrowserLinkContextMenu {
   private observer: MutationObserver | null = null;
   private readonly contentContextMenu: XULElement | null = null;
   private readonly boundUpdateVisibility = () => this.updateVisibility();
+  private readonly unloadTarget: UnloadTarget;
+  private readonly boundCleanup = () => this.cleanup();
 
-  constructor() {
+  constructor(options: ExternalBrowserLinkContextMenuOptions = {}) {
+    this.unloadTarget = options.unloadTarget ?? globalThis;
+
     if (typeof document === "undefined") {
       return;
     }
@@ -73,11 +86,9 @@ export class ExternalBrowserLinkContextMenu {
       this.boundUpdateVisibility,
     );
 
-    globalThis.addEventListener(
+    this.unloadTarget.addEventListener(
       "unload",
-      () => {
-        this.cleanup();
-      },
+      this.boundCleanup,
       { once: true },
     );
 
@@ -87,6 +98,7 @@ export class ExternalBrowserLinkContextMenu {
   }
 
   private cleanup(): void {
+    this.unloadTarget.removeEventListener("unload", this.boundCleanup);
     this.observer?.disconnect();
     this.observer = null;
     this.contentContextMenu?.removeEventListener(

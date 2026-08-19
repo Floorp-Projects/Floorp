@@ -1,0 +1,21 @@
+---
+title: "Tabs & Workspaces"
+sidebar_label: "Tabs & Workspaces"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+generated: true
+---
+# Tabs & Workspaces
+
+Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| split-view | `browser-features/chrome/common/split-view/index.ts` | `default class SplitView`, `init` | Owns the split view feature through the SplitView chrome component and wires `split-view-manager`. |
+| tab | `browser-features/chrome/common/tab/index.ts` | `default class Tab`, `init` | Owns the tab feature through the Tab chrome component and wires `scroll`, `openPosition`, `sizeSpecification`. |
+| tab-refresh | `browser-features/chrome/common/tab-refresh/index.ts` | `default class TabRefresh`, `init` | Owns the tab refresh feature through the TabRefresh chrome component and wires `controller`. |
+| tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
+| tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
+| undo-closed-tab | `browser-features/chrome/common/undo-closed-tab/index.ts` | `default class UndoClosedTab`, `init` | Owns the undo closed tab feature through the UndoClosedTab chrome component and wires `styleElem`. |
+| workspaces | `browser-features/chrome/common/workspaces/index.ts` | `default class Workspaces`, `init` | Owns the workspaces feature through the Workspaces chrome component and wires `workspacesTabManager`, `utils/workspace-icons`, `workspacesService`. |

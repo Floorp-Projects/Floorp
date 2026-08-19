@@ -113,6 +113,17 @@ export function Tab() {
         </div>
 
         <div className="flex items-center justify-between gap-2">
+          <label htmlFor="split-view-dnd-create">
+            {t("design.tab.tabDragToSplitCreate")}
+          </label>
+          <Switch
+            id="split-view-dnd-create"
+            checked={!!getValues("tabDragToSplitCreate")}
+            onChange={(e) => setValue("tabDragToSplitCreate", e.target.checked)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
           <label htmlFor="double-click-close">
             {t("design.tab.doubleClickToClose")}
           </label>

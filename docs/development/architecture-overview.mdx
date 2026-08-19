@@ -1,0 +1,146 @@
+---
+title: "Architecture Overview"
+sidebar_label: "Architecture"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+generated: true
+---
+# Architecture Overview
+
+Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the startup bridge, browser chrome features, full-page settings UI, and the Floorp OS API into one browser application. This overview is generated from the docs inventory so counts and source paths stay aligned with the repository.
+
+## Layer Map
+
+| Layer | Source | Role |
+|---|---|---|
+| Firefox Base | `static/gecko/pref/override.ini` | Patched Gecko and pref overrides. |
+| ESM Modules | `browser-features/modules/modules/BrowserGlue.sys.mts` | Firefox ESM modules and Window Actor registration. |
+| Bridge | `bridge/startup/src/chrome_root.ts` | Startup bridge that selects dev/test HTTP loaders or chrome:// production code. |
+| Chrome UI | `browser-features/chrome/common/mod.ts` | SolidJS browser chrome features discovered by glob. |
+| Pages | `browser-features/pages-settings/vite.config.ts` | React/Tailwind full-page browser UIs. |
+
+## Startup And Loader Flow
+
+The startup bridge is owned by `bridge/startup/src/chrome_root.ts:61`. It selects these loader entry points from the inventory:
+
+- Development: `http://localhost:5181/loader/index.ts`
+- Test: `http://localhost:5181/loader/test/index.ts`
+- Production: `chrome://noraneko/content/core.js`
+
+The loader development server is configured by `bridge/loader-features/vite.config.ts:18` on port 5181.
+
+## Privileged Modules And Window Actors
+
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:420`. The current inventory lists 23 actors:
+
+- `NRAboutPreferences`
+- `NRAppConstants`
+- `NRChromeModal`
+- `NRChromeWebStore`
+- `NRExperimemmt`
+- `NRI18n`
+- `NRKeyboardShortcutFocus`
+- `NRMouseGestureScroll`
+- `NROSAutomotor`
+- `NRPanelSidebar`
+- `NRPluginStore`
+- `NRProfileManager`
+- `NRProgressiveWebApp`
+- `NRPwaManager`
+- `NRRestartBrowser`
+- `NRSearchEngine`
+- `NRSettings`
+- `NRStartPage`
+- `NRSyncManager`
+- `NRTabManager`
+- `NRWebScraper`
+- `NRWelcomePage`
+- `NRWorkspaces`
+
+## Chrome UI Features
+
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 34 common features:
+
+- `addons`
+- `browser-share-mode`
+- `browser-tab-color`
+- `chrome-css`
+- `command-palette`
+- `context-menu`
+- `designs`
+- `external-browser`
+- `flex-order`
+- `hub-panel-menu`
+- `keyboard-shortcut`
+- `modal-parent`
+- `mouse-gesture`
+- `panel-sidebar`
+- `private-container`
+- `profile-manager`
+- `pwa`
+- `qr-code-generator`
+- `reboot-panel-menu`
+- `reverse-sidebar-position`
+- `split-view`
+- `statusbar`
+- `tab`
+- `tab-inline-edit`
+- `tab-refresh`
+- `tab-sleep-exclusion`
+- `tab-stacks`
+- `tab-strip-wheel-guard`
+- `tabbar`
+- `ui-custom`
+- `undo-closed-tab`
+- `window-drag`
+- `workspaces`
+- `zen-mode`
+
+Static chrome features are discovered from `browser-features/chrome/static/mod.ts`. The current inventory lists 3 static features:
+
+- `downloadbar`
+- `overrides`
+- `prefs`
+
+## Settings Pages
+
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 14 collected routes. Use the generated settings catalog for route-to-component ownership.
+
+## Floorp OS API
+
+The Floorp OS API route inventory is rooted at `browser-features/modules/modules/os-server/server.sys.mts` and `browser-features/modules/modules/os-server/router.sys.mts`. The current inventory lists 120 concrete route rows across 7 route namespaces.
+
+| Namespace | Routes | Source |
+|---|---:|---|
+| server | 1 | `browser-features/modules/modules/os-server/server.sys.mts` |
+| browser | 5 | `browser-features/modules/modules/os-server/browser/routes.sys.mts` |
+| tabs | 7 | `browser-features/modules/modules/os-server/tabs/routes.sys.mts` |
+| scraper | 3 | `browser-features/modules/modules/os-server/scraper/routes.sys.mts` |
+| workspaces | 5 | `browser-features/modules/modules/os-server/workspaces/routes.sys.mts` |
+| tabs shared automation | 50 | `browser-features/modules/modules/os-server/shared/routes.sys.mts` |
+| scraper shared automation | 49 | `browser-features/modules/modules/os-server/shared/routes.sys.mts` |
+
+The docs pipeline treats Floorp OS API as a special integration layer for local applications, MCP servers, and other automation clients. Source-backed route behavior remains owned by the server, router, shared routes, OS Automotor manager, and settings page sources listed in the Floorp OS API page.
+
+## Commands And CI
+
+Deno task inventory comes from `deno.json` and currently lists 29 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+
+CI workflows recorded in the docs inventory:
+
+- `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
+- `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
+- `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
+- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_release.yml` - triggers: `workflow_call`
+- `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
+- `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

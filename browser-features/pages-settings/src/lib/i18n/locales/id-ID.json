@@ -33,7 +33,7 @@
         "updates": "Pembaruan & Eksperimen",
         "debug": "Awakutu",
         "mouseGesture": "Gestur Tetikus",
-        "keyboardShortcut": "Keyboard Shortcuts",
+        "keyboardShortcut": "Pintasan Kibor",
         "search": {
             "title": "Telusuri Pengaturan",
             "resultsFor": "Hasil pencarian untuk \"{{query}}\"",
@@ -124,6 +124,7 @@
             "openNext": "Buka di samping tab saat ini",
             "other": "Pengaturan Tab Lainnya",
             "doubleClickToClose": "Tutup tab dengan klik ganda",
+            "tabDragToSplitCreate": "Allow creating split view by dragging tabs",
             "minWidth": "Lebar tab minimal",
             "minWidthError": "Lebar tab harus di antara {{min}} dan {{max}} piksel.",
             "minHeight": "Tinggi tab minimal",
@@ -299,7 +300,13 @@
         "openSourceLicense": "{{productName}} adalah perangkat lunak sumber terbuka di bawah Lisensi Publik Mozilla 2.0, yang dimungkinkan oleh proyek sumber terbuka Firefox dan perangkat lunak sumber terbuka lainnya.",
         "openSourceLicenseNotice": "Lisensi Sumber Terbuka",
         "versionInfo": "Versi",
-        "license": "Lisensi"
+        "license": "Lisensi",
+        "noraneko": {
+            "logoAlt": "Logo Peramban",
+            "description": "Noraneko adalah peramban sebagai tempat pengujian Floorp 12. Floorp dikembangkan berdasarkan Firefox dan Noraneko.",
+            "communityCredit": "Dibuat oleh komunitas Noraneko dengan ❤",
+            "repositoryLabel": "Repositori GitHub: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Pembaruan & Eksperimen",
@@ -448,8 +455,17 @@
         "uninstallConfirmation": "Copot pemasangan Aplikasi Web",
         "uninstallWarning": "Yakin ingin mencopot \"{{name}}\"?",
         "cancel": "Batal",
+        "close": "Tutup",
         "rename": "Ganti nama",
-        "uninstall": "Copot"
+        "uninstall": "Copot",
+        "container": "Kontainer",
+        "noContainer": "Tanpa Kontainer",
+        "setContainer": "Set Container",
+        "containerDescription": "Pilih Kontainer Firefox untuk membuka aplikasi ini. Kontainer memisahkan kuki dan data situs.",
+        "containerDeleted": "Kontainer dihapus",
+        "resetContainer": "Setel Ulang",
+        "save": "Simpan",
+        "errorSettingContainer": "Gagal mengatur kontainer"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -525,7 +541,7 @@
         "action": "Tindakan",
         "actionDescription": "Deskripsi gestur",
         "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesDescription": "Klik kanan dan geser ke kiri untuk kembali, klik kanan dan geser ke kanan untuk maju. (Fitur percobaan)",
         "rockerLeftRight": "Left → Right",
         "rockerLeftRightDescription": "Hold left button, then click right button",
         "rockerRightLeft": "Right → Left",
@@ -607,7 +623,25 @@
             "gecko-workspace-next": "Switch to Next Workspace",
             "gecko-workspace-previous": "Switch to Previous Workspace",
             "floorp-toggle-zen-mode": "Toggle Zen Mode",
-            "floorp-toggle-command-palette": "Toggle Command Palette"
+            "gecko-close-other-tabs": "Tutup Tab Lain",
+            "gecko-close-tabs-to-start": "Tutup Tab di Kiri",
+            "gecko-close-tabs-to-end": "Tutup Tab di Kanan",
+            "gecko-scroll-line-up": "Gulir ke Atas",
+            "gecko-scroll-line-down": "Gulir ke Bawah",
+            "floorp-toggle-command-palette": "Toggle Command Palette",
+            "floorp-open-settings": "Buka Pengaturan",
+            "floorp-open-hub": "Buka Floorp Hub",
+            "floorp-toggle-share-mode": "Toggle Share Mode",
+            "floorp-copy-page-url-as-markdown": "Salin URL Halaman sebagai Markdown",
+            "floorp-split-view-open-left": "Split View Left",
+            "floorp-split-view-open-right": "Split View Right",
+            "floorp-split-view-open-top": "Split View Top",
+            "floorp-split-view-open-bottom": "Split View Bottom",
+            "floorp-split-view-close": "Close Split View",
+            "floorp-split-view-swap-panes": "Swap Split Panes",
+            "floorp-split-view-cycle-layout": "Cycle Split Layout",
+            "floorp-split-view-add-pane": "Add Pane to Split View",
+            "floorp-split-view-remove-pane": "Remove Pane from Split View"
         },
         "edit": "Sunting",
         "duplicate": "Gandakan",
@@ -642,6 +676,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",

@@ -1,0 +1,20 @@
+---
+title: "Web Apps & Integration"
+sidebar_label: "Web Apps"
+floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+generated: true
+---
+# Web Apps & Integration
+
+PWA, profile, add-on, external browser, share mode, and container integration features. This page is generated from the common chrome feature inventory rooted at `browser-features/chrome/common`.
+
+## Feature Entries
+
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| addons | `browser-features/chrome/common/addons/index.ts` | `default class Addons`, `init` | Chrome Web Store Install Confirmation UI Customization This module modifies the addon installation confirmation popup to show Chrome extension specific messages when installing from Chrome Web Store. |
+| browser-share-mode | `browser-features/chrome/common/browser-share-mode/index.ts` | `default class BrowserShareMode`, `init` | Owns the browser share mode feature through the BrowserShareMode chrome component and wires `browser-share-mode`. |
+| external-browser | `browser-features/chrome/common/external-browser/index.ts` | `default class ExternalBrowser`, `init` | Owns the external browser feature through the ExternalBrowser chrome component and wires `tab-context-menu`, `link-context-menu`. |
+| private-container | `browser-features/chrome/common/private-container/index.ts` | `default class PrivateContainer`, `init` | Owns the private container feature through the PrivateContainer chrome component and wires `browser-private-container`, `context-menu`. |
+| profile-manager | `browser-features/chrome/common/profile-manager/index.ts` | `default class ProfileManager`, `init` | Owns the profile manager feature through the ProfileManager chrome component and wires `service`. |
+| pwa | `browser-features/chrome/common/pwa/index.ts` | `default class Pwa`, `init` | Owns the PWA feature through the Pwa chrome component and wires `SsbPageAction`, `SsbPanelView`, `config`. |

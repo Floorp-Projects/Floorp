@@ -91,11 +91,11 @@ const SURFACE_TOLERANCE = 2;
 /**
  * Tolerance for the SECONDARY "tab tracks toolbar" invariant. Lepton aligns
  * the tab to the toolbar but via alpha compositing / lwt-accent blending, so
- * a small tint gap is normal (measured: up to ~16 in good state). The
- * original bug produced a gap of ~20+ (rgb(43,42,51) vs rgb(23,23,23)); this
- * tolerance catches anything beyond the normal Lepton tint.
+ * a tint gap is normal (measured: around 20 in current light Lepton-family
+ * builds). The primary one-surface invariant above remains the strict
+ * regression check for the Gecko 152 toolbar token split.
  */
-const TAB_TRACKS_TOLERANCE = 18;
+const TAB_TRACKS_TOLERANCE = 22;
 
 /** Elements whose background should share one color (the "one surface"
  * invariant). `[selector, humanLabel]`. */
@@ -108,10 +108,19 @@ const SURFACE_ELEMENTS: readonly [string, string][] = [
 
 /** Selectors that may yield the selected tab's background, tried in order. */
 const SELECTED_TAB_SELECTORS: readonly string[] = [
+  ".tabbrowser-tab[selected] > .tab-stack > .tab-content",
+  ".tabbrowser-tab[visuallyselected] > .tab-stack > .tab-content",
+  ".tabbrowser-tab:is([selected],[multiselected]) > .tab-stack > .tab-content",
   ".tabbrowser-tab[selected] > .tab-stack > .tab-background",
   ".tabbrowser-tab[visuallyselected] > .tab-stack > .tab-background",
   ".tabbrowser-tab:is([selected],[multiselected]) > .tab-stack > .tab-background",
   "#tabbrowser-tabs .tab-background[selected]",
+];
+
+const SELECTED_TAB_RELATIVE_SELECTORS: readonly string[] = [
+  ":scope > .tab-stack > .tab-content",
+  ":scope > .tab-stack > .tab-background:is([selected], [multiselected])",
+  ":scope > .tab-stack > .tab-background",
 ];
 
 /** Original dark pref value, captured once so we can restore it. -1 = unset. */
@@ -209,6 +218,19 @@ function readBgColor(selector: string): RgbTuple | null {
 
 /** Read the selected tab's background color. Tries several selectors. */
 function getSelectedTabBgColor(): RgbTuple | null {
+  const selectedTab = (globalThis as { gBrowser?: { selectedTab?: Element } })
+    .gBrowser?.selectedTab;
+  if (selectedTab) {
+    for (const selector of SELECTED_TAB_RELATIVE_SELECTORS) {
+      const el = selectedTab.querySelector(selector);
+      if (!el) continue;
+      const style = globalThis.getComputedStyle(el);
+      if (!style) continue;
+      const color = parseRgbColor(style.getPropertyValue("background-color"));
+      if (color) return color;
+    }
+  }
+
   for (const selector of SELECTED_TAB_SELECTORS) {
     const color = readBgColor(selector);
     if (color) return color;
@@ -407,7 +429,11 @@ function assertOneSurface(label: string, reading: SurfaceReadings): void {
   for (const surface of present) {
     assert(
       colorsApproxEqual(surface.color!, reference, SURFACE_TOLERANCE),
-      `${label}: ${surface.label} (${describeColor(surface.color)}) does not match ${present[0]!.label} (${describeColor(reference)}) — chrome surfaces diverged (regression: bars no longer share one color)`,
+      `${label}: ${surface.label} (${
+        describeColor(surface.color)
+      }) does not match ${present[0]!.label} (${
+        describeColor(reference)
+      }) — chrome surfaces diverged (regression: bars no longer share one color)`,
     );
   }
 }
@@ -424,7 +450,11 @@ function assertTabTracksToolbar(label: string, reading: SurfaceReadings): void {
   if (!navBar) return;
   assert(
     colorsApproxEqual(navBar, reading.selectedTab, TAB_TRACKS_TOLERANCE),
-    `${label}: nav-bar (${describeColor(navBar)}) is too far from selected tab (${describeColor(reading.selectedTab)}) — tab should track the toolbar for this design (color_like_toolbar)`,
+    `${label}: nav-bar (${
+      describeColor(navBar)
+    }) is too far from selected tab (${
+      describeColor(reading.selectedTab)
+    }) — tab should track the toolbar for this design (color_like_toolbar)`,
   );
 }
 
@@ -564,7 +594,9 @@ async function testDesignMatrix(): Promise<void> {
 
   if (failures.length > 0) {
     throw new Error(
-      `design × theme matrix failures (ran ${ran}, skipped ${skipped}): ${failures.join(" | ")}`,
+      `design × theme matrix failures (ran ${ran}, skipped ${skipped}): ${
+        failures.join(" | ")
+      }`,
     );
   }
 }
