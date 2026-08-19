@@ -73,7 +73,8 @@ export function BasicSettings() {
           </CardTitle>
           <CardDescription>
             <a
-              href="https://docs.floorp.app/docs/features/how-to-use-workspaces"
+              href="https://docs.floorp.app/docs/features/workspaces"
+              target="_blank"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >
               {t("workspaces.howToUseAndCustomize")}
