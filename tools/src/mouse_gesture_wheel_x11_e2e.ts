@@ -256,6 +256,47 @@ let testHandle: string | null = null;
 let originalState: OriginalState | null = null;
 let secondaryButtonHeld = false;
 
+async function withContentContext<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  await client.setContext("content");
+  return await operation();
+}
+
+async function getContentWindowHandle(): Promise<string> {
+  return extractHandle(
+    await withContentContext(() =>
+      client.send("WebDriver:GetWindowHandle", {})
+    ),
+  );
+}
+
+async function getContentWindowHandles(): Promise<string[]> {
+  return extractHandles(
+    await withContentContext(() =>
+      client.send("WebDriver:GetWindowHandles", {})
+    ),
+  );
+}
+
+async function newContentTab(): Promise<string> {
+  return extractHandle(
+    await withContentContext(() =>
+      client.send("WebDriver:NewWindow", { type: "tab" })
+    ),
+  );
+}
+
+async function switchToContentWindow(handle: string): Promise<void> {
+  await withContentContext(() =>
+    client.send("WebDriver:SwitchToWindow", { handle })
+  );
+}
+
+async function closeContentWindow(): Promise<void> {
+  await withContentContext(() => client.send("WebDriver:CloseWindow", {}));
+}
+
 async function moveNativePointer(x: number, y: number): Promise<void> {
   await runXdotool(["mousemove", "--sync", String(x), String(y)]);
   await new Promise((resolve) => setTimeout(resolve, 50));
@@ -727,12 +768,12 @@ async function assertForbiddenMappingFailsSafe(
     "forbidden manual mapping normalization",
   );
 
-  const handlesBefore = extractHandles(
-    await client.send("WebDriver:GetWindowHandles", {}),
-  );
+  const handlesBefore = await getContentWindowHandles();
   assert(
     testHandle !== null && handlesBefore.includes(testHandle),
-    "forbidden mapping precondition: disposable test tab is missing",
+    `forbidden mapping precondition: disposable test tab is missing: ${
+      JSON.stringify({ originalHandle, testHandle, handlesBefore })
+    }`,
   );
 
   // If close-tab escapes normalization or the controller's execution-boundary
@@ -741,9 +782,7 @@ async function assertForbiddenMappingFailsSafe(
     await sendNativeWheel(4);
   });
 
-  const handlesAfter = extractHandles(
-    await client.send("WebDriver:GetWindowHandles", {}),
-  );
+  const handlesAfter = await getContentWindowHandles();
   assert(
     handlesAfter.length === handlesBefore.length &&
       testHandle !== null &&
@@ -754,7 +793,7 @@ async function assertForbiddenMappingFailsSafe(
   );
 
   // The normalized previous-tab action may select the original tab.
-  await client.send("WebDriver:SwitchToWindow", { handle: testHandle });
+  await switchToContentWindow(testHandle);
   assert(
     await readZoom() === setup.baselineZoom,
     "forbidden mapping must not execute the requested close-tab or zoom",
@@ -804,13 +843,9 @@ async function restoreOriginalState(
 let failure: unknown = null;
 
 try {
-  originalHandle = extractHandle(
-    await client.send("WebDriver:GetWindowHandle", {}),
-  );
-  testHandle = extractHandle(
-    await client.send("WebDriver:NewWindow", { type: "tab" }),
-  );
-  await client.send("WebDriver:SwitchToWindow", { handle: testHandle });
+  originalHandle = await getContentWindowHandle();
+  testHandle = await newContentTab();
+  await switchToContentWindow(testHandle);
 
   await client.setContext("chrome");
   originalState = JSON.parse(
@@ -982,9 +1017,7 @@ if (secondaryButtonHeld) {
 
 let handles: string[] = [];
 try {
-  handles = extractHandles(
-    await client.send("WebDriver:GetWindowHandles", {}),
-  );
+  handles = await getContentWindowHandles();
 } catch (error) {
   cleanupErrors.push(error);
 }
@@ -998,9 +1031,7 @@ const restorationHandle = testHandleExists
 
 if (restorationHandle) {
   try {
-    await client.send("WebDriver:SwitchToWindow", {
-      handle: restorationHandle,
-    });
+    await switchToContentWindow(restorationHandle);
     if (originalState) {
       await restoreOriginalState(originalState, testHandleExists);
     }
@@ -1015,8 +1046,8 @@ if (restorationHandle) {
 
 if (testHandleExists && testHandle) {
   try {
-    await client.send("WebDriver:SwitchToWindow", { handle: testHandle });
-    await client.send("WebDriver:CloseWindow", {});
+    await switchToContentWindow(testHandle);
+    await closeContentWindow();
   } catch (error) {
     cleanupErrors.push(error);
   }
@@ -1024,9 +1055,7 @@ if (testHandleExists && testHandle) {
 
 if (originalHandle && handles.includes(originalHandle)) {
   try {
-    await client.send("WebDriver:SwitchToWindow", {
-      handle: originalHandle,
-    });
+    await switchToContentWindow(originalHandle);
   } catch (error) {
     cleanupErrors.push(error);
   }
