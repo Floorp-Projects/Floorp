@@ -63,6 +63,9 @@ const JS_WINDOW_ACTORS: {
     // Vite dev pages use a webIsolated process. Keep the allowed process
     // prefixes explicit while retaining the packaged chrome route.
     remoteTypes: ["web", "webIsolated", "privilegedabout", "parent"],
+    // The locked Runtime enables the safe-for-untrusted-web-process gate for
+    // webIsolated pages. The URL matches above keep this bridge loopback-only.
+    safeForUntrustedWebProcess: true,
   },
   NRExperimemmt: {
     parent: {
