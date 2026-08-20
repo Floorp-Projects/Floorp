@@ -13,6 +13,8 @@ const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
 const SETTINGS_ORIGIN = "http://127.0.0.1:5183";
 const SETTINGS_ROUTE = "#/features/gesture";
 const SETTINGS_URL = `${SETTINGS_ORIGIN}/${SETTINGS_ROUTE}`;
+const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
+const SETTINGS_WAIT_INTERVAL_MS = 100;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
 const WINDOW_DISCOVERY_INTERVAL_MS = 100;
 const REPEAT_SAFE_WHEEL_ACTIONS = [
@@ -94,6 +96,11 @@ interface PageState {
 }
 
 interface WheelSettingsSnapshot {
+  url: string;
+  title: string;
+  readyState: string;
+  bodyText: string;
+  rootChildCount: number;
   allSelectCount: number;
   wheelSelectCount: number;
   selectedValues: string[];
@@ -453,6 +460,11 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
         values.every((value, index) => value === sortedAllowed[index]);
     });
     return JSON.stringify({
+      url: location.href,
+      title: document.title,
+      readyState: document.readyState,
+      bodyText: document.body?.innerText?.slice(0, 240) ?? "",
+      rootChildCount: document.querySelector("#root")?.childElementCount ?? 0,
       allSelectCount: selects.length,
       wheelSelectCount: wheelSelects.length,
       selectedValues: wheelSelects.map((select) => select.value),
@@ -473,7 +485,10 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
 
 async function waitForSettingsTogglesEnabled(): Promise<void> {
   let observed: WheelSettingsSnapshot | null = null;
-  for (let attempt = 0; attempt < 120; attempt++) {
+  const attempts = Math.ceil(
+    SETTINGS_WAIT_TIMEOUT_MS / SETTINGS_WAIT_INTERVAL_MS,
+  );
+  for (let attempt = 0; attempt < attempts; attempt++) {
     observed = await readWheelSettingsSnapshot();
     if (observed.enabled === true && observed.wheelEnabled === true) {
       return;
@@ -501,7 +516,9 @@ async function waitForSettingsTogglesEnabled(): Promise<void> {
         }
       `);
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) =>
+      setTimeout(resolve, SETTINGS_WAIT_INTERVAL_MS)
+    );
   }
   throw new Error(
     `Mouse gesture settings toggles did not become enabled: ${
