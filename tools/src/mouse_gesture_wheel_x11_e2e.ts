@@ -11,7 +11,8 @@ const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
 const SETTINGS_ROUTE = "#/features/gesture";
-const SETTINGS_URL = `chrome://noraneko-settings/content${SETTINGS_ROUTE}`;
+const SETTINGS_URL =
+  `chrome://noraneko-settings/content/index.html${SETTINGS_ROUTE}`;
 const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
 const SETTINGS_WAIT_INTERVAL_MS = 100;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
@@ -648,7 +649,7 @@ async function assertSettingsRoute(): Promise<void> {
   assert(
     location.protocol === "chrome:" &&
       location.host === "noraneko-settings" &&
-      location.pathname === "/content" &&
+      location.pathname === "/content/index.html" &&
       location.hash === SETTINGS_ROUTE,
     `Unexpected settings route: ${JSON.stringify(location)}`,
   );
