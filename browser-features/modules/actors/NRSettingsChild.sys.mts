@@ -56,7 +56,10 @@ export class NRSettingsChild extends JSWindowActorChild {
     if (this.installPageApi() || attempt >= 20) {
       return;
     }
-    globalThis.setTimeout(() => this.retryInstallPageApi(attempt + 1), 50);
+    this.contentWindow?.setTimeout(
+      () => this.retryInstallPageApi(attempt + 1),
+      50,
+    );
   }
 
   actorCreated() {
