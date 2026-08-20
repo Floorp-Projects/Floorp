@@ -60,6 +60,9 @@ const JS_WINDOW_ACTORS: {
       // The packaged settings chrome route remains available for production.
       "chrome://noraneko-settings/*",
     ],
+    // Vite dev pages use a webIsolated process. Keep the allowed process
+    // prefixes explicit while retaining the packaged chrome route.
+    remoteTypes: ["web", "webIsolated", "privilegedabout", "parent"],
   },
   NRExperimemmt: {
     parent: {

@@ -673,9 +673,10 @@ async function assertSettingsRoute(): Promise<void> {
 async function ensureSettingsActor(): Promise<void> {
   await client.setContext("chrome");
   const raw = await client.executeScript(`
+    let browser;
     try {
       const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      const browser = browserWindow?.gBrowser?.selectedBrowser;
+      browser = browserWindow?.gBrowser?.selectedBrowser;
       if (!browser) {
         return JSON.stringify({
           actor: false,
