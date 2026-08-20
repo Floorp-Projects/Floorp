@@ -670,11 +670,59 @@ async function assertSettingsRoute(): Promise<void> {
   );
 }
 
+async function ensureSettingsActor(): Promise<void> {
+  await client.setContext("chrome");
+  const raw = await client.executeScript(`
+    try {
+      const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      const browser = browserWindow?.gBrowser?.selectedBrowser;
+      if (!browser) {
+        return JSON.stringify({
+          actor: false,
+          url: "",
+          remoteType: "",
+          error: "The most recent browser window has no selected browser",
+        });
+      }
+      const windowGlobal = browser.browsingContext?.currentWindowGlobal;
+      // JSWindowActors are lazy. Explicitly requesting the actor after the
+      // test runner has finished guarantees that the child-side bridge is
+      // created for this fresh settings document before the page polls it.
+      const actor = windowGlobal?.getActor("NRSettings");
+      return JSON.stringify({
+        actor: Boolean(actor),
+        url: browser.currentURI?.spec ?? "",
+        remoteType: browser.remoteType ?? "",
+      });
+    } catch (error) {
+      return JSON.stringify({
+        actor: false,
+        url: browser.currentURI?.spec ?? "",
+        remoteType: browser.remoteType ?? "",
+        error: String(error),
+      });
+    }
+  `);
+  const observed = JSON.parse(raw) as {
+    actor: boolean;
+    url: string;
+    remoteType: string;
+    error?: string;
+  };
+  assert(
+    observed.actor,
+    `NRSettings actor was not available for settings route: ${
+      JSON.stringify(observed)
+    }`,
+  );
+}
+
 async function assertSettingsPersistence(): Promise<void> {
   await assertTestSettingsEnvironment();
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await ensureSettingsActor();
   await waitForSettingsTogglesEnabled();
   const initial = await waitForWheelSettings();
   assertWheelSettingsContract(initial);
@@ -693,6 +741,7 @@ async function assertSettingsPersistence(): Promise<void> {
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await ensureSettingsActor();
   await waitForSettingsTogglesEnabled();
   const reloaded = await waitForWheelSettings([
     SAFE_SCROLL_UP_ACTION,

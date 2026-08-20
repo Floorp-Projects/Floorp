@@ -57,9 +57,8 @@ const JS_WINDOW_ACTORS: {
       "*://127.0.0.1/*",
       // Keep settings actor matching limited to loopback development pages.
       // Ordinary HTTP pages must not instantiate this privileged bridge.
-      // The chrome/about routes remain available for packaged settings.
+      // The packaged settings chrome route remains available for production.
       "chrome://noraneko-settings/*",
-      "about:*",
     ],
   },
   NRExperimemmt: {
