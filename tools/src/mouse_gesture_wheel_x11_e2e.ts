@@ -101,6 +101,9 @@ interface WheelSettingsSnapshot {
   readyState: string;
   bodyText: string;
   rootChildCount: number;
+  nrSettingsSend: string;
+  nrSettingsRegisterReceiveCallback: string;
+  nrSPing: string;
   allSelectCount: number;
   wheelSelectCount: number;
   selectedValues: string[];
@@ -465,6 +468,10 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
       readyState: document.readyState,
       bodyText: document.body?.innerText?.slice(0, 240) ?? "",
       rootChildCount: document.querySelector("#root")?.childElementCount ?? 0,
+      nrSettingsSend: typeof globalThis.NRSettingsSend,
+      nrSettingsRegisterReceiveCallback:
+        typeof globalThis.NRSettingsRegisterReceiveCallback,
+      nrSPing: typeof globalThis.NRSPing,
       allSelectCount: selects.length,
       wheelSelectCount: wheelSelects.length,
       selectedValues: wheelSelects.map((select) => select.value),

@@ -7,7 +7,6 @@ import type {
 
 export class NRSettingsChild extends JSWindowActorChild {
   rpc: ReturnType<typeof createBirpc> | null = null;
-  private pageApiInstalled = false;
   constructor() {
     super();
   }
@@ -50,12 +49,11 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
-    this.pageApiInstalled = true;
     return true;
   }
 
   private retryInstallPageApi(attempt = 0): void {
-    if (this.pageApiInstalled || this.installPageApi() || attempt >= 20) {
+    if (this.installPageApi() || attempt >= 20) {
       return;
     }
     globalThis.setTimeout(() => this.retryInstallPageApi(attempt + 1), 50);
