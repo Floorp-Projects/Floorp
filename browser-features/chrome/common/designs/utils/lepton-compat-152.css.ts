@@ -94,16 +94,13 @@ export const GECKO_152_COLOR_FIX_CSS = `
 /* Capture the effective root value unlayered so a theme-provided value is
  * carried onto dialogs; the dialog override below then references it. */
 :root:is(:-moz-lwtheme, [lwtheme]) {
-  --floorp-lwt-in-content-page-background: var(
-    --in-content-page-background,
-    var(--background-color-canvas, var(--toolbar-background-color, Canvas))
-  );
+  --floorp-lwt-in-content-page-background: var(--in-content-page-background);
 }
 @layer floorp-compat {
   :root:is(:-moz-lwtheme, [lwtheme]) dialog {
     --in-content-page-background: var(
       --floorp-lwt-in-content-page-background,
-      var(--background-color-canvas, Canvas)
+      var(--background-color-canvas, var(--toolbar-background-color, Canvas))
     );
   }
 }
@@ -207,6 +204,21 @@ export const LEPTON_COMPAT_152_CSS = `
  * #navigator-toolbox an opaque accent fill hides the entire theme background,
  * which is the bug we are fixing. The toolbox itself stays transparent; the
  * token alias above is enough for any Lepton rule that reads the accent. */
+
+/* Customize Floorp is a content surface, not the theme frame. Gecko paints
+ * LWT header images on the chrome document body, while Lepton leaves the
+ * customization container transparent. With a theme such as Windows XP
+ * Modern that exposes a blue frame accent, that transparency lets the frame
+ * color fill the entire customization page. Keep the toolbox transparent so
+ * the theme still paints its tabs and toolbar, but give the customization
+ * surface the theme's content-safe toolbar/panel color. */
+:root:is(:-moz-lwtheme, [lwtheme])[customizing] #customization-container {
+  background-color: var(
+    --toolbar-background-color,
+    var(--panel-background-color, -moz-dialog)
+  ) !important;
+  background-image: none !important;
+}
 
 /*= Primary button accent (Lepton blue) =====================================
  * Lepton declares these inside the built-in-theme block that no longer

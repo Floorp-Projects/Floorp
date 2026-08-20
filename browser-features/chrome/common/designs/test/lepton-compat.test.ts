@@ -469,68 +469,88 @@ function testLwtDialogFallbackDoesNotOverrideThemeValue(): void {
 function testLwtFallbackInRealBrowser(): void {
   const root = document.documentElement;
   const styleEl = document.createElement("style");
-  const probe = document.createElement("dialog");
-  const probeWithThemeValue = document.createElement("dialog");
-  probeWithThemeValue.style.setProperty(
-    "--in-content-page-background",
-    "rgb(200, 100, 50)",
-  );
-  const probeWithRootThemeValue = document.createElement("dialog");
+  const hasRgb = (value: string, rgb: string): boolean =>
+    value.includes(rgb) || value.includes(rgb.replaceAll(", ", ","));
+  const readPageBackground = (probe: HTMLElement): string => {
+    root.appendChild(probe);
+    try {
+      const computedStyle = globalThis.getComputedStyle(probe);
+      assert(computedStyle, "computed style for the dialog probe must exist");
+      return computedStyle.getPropertyValue(
+        "--in-content-page-background",
+      );
+    } finally {
+      probe.remove();
+    }
+  };
 
   root.setAttribute("lwtheme", "true");
   root.style.setProperty("--lwt-accent-color", "rgb(9, 96, 224)");
-  root.style.setProperty("--in-content-page-background", "rgb(200, 100, 50)");
-  styleEl.textContent = GECKO_152_COLOR_FIX_CSS;
   document.head.appendChild(styleEl);
-  root.appendChild(probe);
-  root.appendChild(probeWithThemeValue);
-  root.appendChild(probeWithRootThemeValue);
 
   try {
-    const fallbackStyle = globalThis.getComputedStyle(probe);
-    assert(fallbackStyle, "computed style for the dialog probe must exist");
-    const fallbackColor = fallbackStyle.getPropertyValue(
-      "--in-content-page-background",
+    // Case 1: with no root-provided page background, evaluate the fallback on
+    // the dialog so a dialog-local canvas token is preserved.
+    root.style.setProperty("--in-content-page-background", "initial");
+    root.style.setProperty(
+      "--background-color-canvas",
+      "rgb(240, 240, 240)",
     );
+    styleEl.textContent = GECKO_152_COLOR_FIX_CSS;
+    const fallbackProbe = document.createElement("dialog");
+    fallbackProbe.style.setProperty(
+      "--background-color-canvas",
+      "rgb(40, 50, 60)",
+    );
+    const fallbackColor = readPageBackground(fallbackProbe);
     assert(
-      fallbackColor.length > 0 &&
-        !fallbackColor.includes("9, 96, 224") &&
-        !fallbackColor.includes("9,96,224"),
-      `LWT fallback must not paint the frame accent on in-content surfaces; ` +
+      hasRgb(fallbackColor, "40, 50, 60"),
+      `dialog-local --background-color-canvas should be used by the fallback; ` +
         `got: "${fallbackColor}"`,
     );
 
-    const themeStyle = globalThis.getComputedStyle(probeWithThemeValue);
-    assert(themeStyle, "computed style for the themed probe must exist");
-    const themeColor = themeStyle.getPropertyValue(
-      "--in-content-page-background",
-    );
+    // Case 2: an unlayered dialog rule must outrank the compatibility layer.
+    styleEl.textContent = `
+      .theme-value {
+        --in-content-page-background: rgb(200, 100, 50);
+      }
+      ${GECKO_152_COLOR_FIX_CSS}
+    `;
+    const themedProbe = document.createElement("dialog");
+    themedProbe.className = "theme-value";
+    const themeColor = readPageBackground(themedProbe);
     assert(
-      themeColor.includes("200, 100, 50"),
+      hasRgb(themeColor, "200, 100, 50"),
       `a theme-provided --in-content-page-background must win over the ` +
         `low-priority fallback; got: "${themeColor}"`,
     );
 
-    const rootThemeStyle = globalThis.getComputedStyle(probeWithRootThemeValue);
-    assert(
-      rootThemeStyle,
-      "computed style for the root-themed probe must exist",
+    // Case 3: an unlayered root theme value must be carried onto dialogs.
+    root.style.removeProperty("--in-content-page-background");
+    root.setAttribute("data-floorp-test-root-theme", "true");
+    styleEl.textContent = `
+      :root[lwtheme][data-floorp-test-root-theme] {
+        --in-content-page-background: rgb(200, 100, 50);
+      }
+      ${GECKO_152_COLOR_FIX_CSS}
+    `;
+    const rootThemeProbe = document.createElement("dialog");
+    rootThemeProbe.style.setProperty(
+      "--background-color-canvas",
+      "rgb(40, 50, 60)",
     );
-    const rootThemeColor = rootThemeStyle.getPropertyValue(
-      "--in-content-page-background",
-    );
+    const rootThemeColor = readPageBackground(rootThemeProbe);
     assert(
-      rootThemeColor.includes("200, 100, 50"),
+      hasRgb(rootThemeColor, "200, 100, 50"),
       `a root-scoped theme --in-content-page-background must reach dialogs; ` +
         `got: "${rootThemeColor}"`,
     );
   } finally {
     root.removeAttribute("lwtheme");
+    root.removeAttribute("data-floorp-test-root-theme");
     root.style.removeProperty("--lwt-accent-color");
     root.style.removeProperty("--in-content-page-background");
-    probe.remove();
-    probeWithThemeValue.remove();
-    probeWithRootThemeValue.remove();
+    root.style.removeProperty("--background-color-canvas");
     styleEl.remove();
   }
 }
@@ -542,6 +562,67 @@ function testCompatFixesPanelBackground(): void {
     GECKO_152_COLOR_FIX_CSS.includes("--arrowpanel-background"),
     "color-fix layer should provide a default --arrowpanel-background",
   );
+}
+
+/** A lightweight theme's frame accent must not fill Customize Floorp. */
+function testCompatKeepsLwtCustomizationSurfaceContentSafe(): void {
+  assert(
+    /\[customizing\][^{}]*#customization-container/.test(
+      LEPTON_COMPAT_152_CSS,
+    ),
+    "LWT customization compat should target #customization-container only " +
+      "while Customize Floorp is active",
+  );
+  assert(
+    LEPTON_COMPAT_152_CSS.includes("--toolbar-background-color") &&
+      LEPTON_COMPAT_152_CSS.includes("background-image: none"),
+    "LWT customization compat should use a content-safe background and hide " +
+      "the frame image from the customization surface",
+  );
+}
+
+/** Real-browser coverage for the XP Modern customization regression. */
+function testLwtCustomizationSurfaceInRealBrowser(): void {
+  const root = document.documentElement;
+  const styleEl = document.createElement("style");
+  const container = document.createElement("div");
+  const hasRgb = (value: string, rgb: string): boolean =>
+    value.includes(rgb) || value.includes(rgb.replaceAll(", ", ","));
+
+  root.setAttribute("lwtheme", "true");
+  root.setAttribute("customizing", "true");
+  root.style.setProperty("--lwt-accent-color", "rgb(9, 96, 224)");
+  root.style.setProperty(
+    "--toolbar-background-color",
+    "rgb(236, 233, 216)",
+  );
+  root.appendChild(styleEl);
+  container.id = "customization-container";
+  root.appendChild(container);
+
+  try {
+    styleEl.textContent = LEPTON_COMPAT_152_CSS;
+    const computedStyle = globalThis.getComputedStyle(container);
+    if (!computedStyle) {
+      throw new Error("computed style for the customization probe is missing");
+    }
+    assert(
+      hasRgb(computedStyle.backgroundColor, "236, 233, 216"),
+      "LWT customization surface should use the theme toolbar background, " +
+        `got: "${computedStyle.backgroundColor}"`,
+    );
+    assert(
+      computedStyle.backgroundImage === "none",
+      "LWT customization surface should not inherit the theme header image",
+    );
+  } finally {
+    container.remove();
+    styleEl.remove();
+    root.removeAttribute("lwtheme");
+    root.removeAttribute("customizing");
+    root.style.removeProperty("--lwt-accent-color");
+    root.style.removeProperty("--toolbar-background-color");
+  }
 }
 
 /** Gecko 152 uses [sidebar-positionend] as a boolean presence attribute. The
@@ -713,6 +794,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "LWT fallback in a real browser never paints the frame accent",
       fn: testLwtFallbackInRealBrowser,
+    },
+    {
+      name: "LWT customization surface stays content-safe",
+      fn: testCompatKeepsLwtCustomizationSurfaceContentSafe,
+    },
+    {
+      name: "LWT customization surface in a real browser stays content-safe",
+      fn: testLwtCustomizationSurfaceInRealBrowser,
     },
     {
       name: "compat fixes panel background (transparent panel symptom)",
