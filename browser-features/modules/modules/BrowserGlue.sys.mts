@@ -44,6 +44,7 @@ const JS_WINDOW_ACTORS: {
          * actorCreated seems to require any of events for init
          */
         DOMDocElementInserted: {},
+        DOMContentLoaded: {},
       },
     },
     //* port seems to not be supported

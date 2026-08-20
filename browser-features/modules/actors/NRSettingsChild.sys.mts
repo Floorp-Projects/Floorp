@@ -10,24 +10,35 @@ export class NRSettingsChild extends JSWindowActorChild {
   constructor() {
     super();
   }
-  actorCreated() {
-    console.debug("NRSettingsChild created!");
+
+  private installPageApi(): void {
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
-      window?.location.port === "5186" ||
-      window?.location.port === "5187" ||
-      window?.location.port === "5188" ||
-      window?.location.href.startsWith("chrome://") ||
-      window?.location.href.startsWith("about:")
+      !window ||
+      !(
+        window.location.port === "5183" ||
+        window.location.port === "5186" ||
+        window.location.port === "5187" ||
+        window.location.port === "5188" ||
+        window.location.href.startsWith("chrome://") ||
+        window.location.href.startsWith("about:")
+      )
     ) {
-      console.debug("NRSettingsChild 5183 ! or Chrome Page!");
+      return;
+    }
+
+    const page = window as unknown as Record<string, unknown>;
+    if (typeof page.NRSPing !== "function") {
       Cu.exportFunction(this.NRSPing.bind(this), window, {
         defineAs: "NRSPing",
       });
+    }
+    if (typeof page.NRSettingsSend !== "function") {
       Cu.exportFunction(this.NRSettingsSend.bind(this), window, {
         defineAs: "NRSettingsSend",
       });
+    }
+    if (typeof page.NRSettingsRegisterReceiveCallback !== "function") {
       Cu.exportFunction(
         this.NRSettingsRegisterReceiveCallback.bind(this),
         window,
@@ -36,6 +47,11 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
+  }
+
+  actorCreated() {
+    console.debug("NRSettingsChild created!");
+    this.installPageApi();
   }
   NRSPing() {
     return true;
@@ -151,6 +167,9 @@ export class NRSettingsChild extends JSWindowActorChild {
     }
   }
   handleEvent(_event: Event): void {
-    // No-op
+    // actorCreated can run before the final document URL is available. Retry
+    // after the document insertion/DOMContentLoaded events so HTTP-loaded
+    // settings pages always receive their RPC bridge.
+    this.installPageApi();
   }
 }
