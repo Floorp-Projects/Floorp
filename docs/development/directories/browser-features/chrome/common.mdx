@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Features"
 sidebar_label: "Common"
-floorp_commit: "92463afd2e9fa2550eb60fe4afdba954c4bad6d9"
+floorp_commit: "9535e9442a09c63ed308b559ad13b0209f58ad8e"
 generated: true
 ---
 # Common Chrome Features
@@ -10,7 +10,7 @@ The `browser-features/chrome/common/` directory contains loader-managed browser 
 
 ## Discovery And Loading
 
-Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 34 common feature entries.
+Common features are discovered by `browser-features/chrome/common/mod.ts:4` using the glob pattern `./*/index.ts`. The current inventory contains 35 common feature entries.
 
 The bridge loader turns discovered entries into loadable modules, while each feature entrypoint remains responsible for its own component, services, styles, context menus, or lifecycle hooks.
 
@@ -96,6 +96,7 @@ Small chrome utilities and action helpers that do not own a broader feature fami
 
 | Feature | Source | Entrypoints | Description |
 |---|---|---|---|
+| guided-tour | `browser-features/chrome/common/guided-tour/index.ts` | `default class GuidedTour`, `init` | Owns the guided tour feature through the GuidedTour chrome component and wires `controller`, `components/TourOverlay`, `workspace-panel-guard`. |
 | tab-inline-edit | `browser-features/chrome/common/tab-inline-edit/index.ts` | `default class TabInlineEdit`, `init` | Owns the tab inline edit feature through the TabInlineEdit chrome component and wires `controller`. |
 | tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacks`, `init` | Owns the tab stacks feature through the TabStacks chrome component and wires `stack-bar`. |
 | tab-strip-wheel-guard | `browser-features/chrome/common/tab-strip-wheel-guard/index.ts` | `default class TabStripWheelGuard`, `init` | Owns the tab strip wheel guard feature through the TabStripWheelGuard chrome component and wires `classifier`. |

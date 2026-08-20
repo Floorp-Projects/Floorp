@@ -1,5 +1,7 @@
+import { useCallback } from "react";
 import Navigation from "../../components/Navigation";
 import { useTranslation } from "react-i18next";
+import { rpc } from "../../lib/rpc/rpc.ts";
 import panelSidebarSvg from "./assets/panelsidebar.svg";
 import workspacesSvg from "./assets/workspaces.svg";
 import pwaSvg from "./assets/pwa.svg";
@@ -8,6 +10,15 @@ import { PanelLeft, LayoutGrid, Globe, MousePointer } from "lucide-react";
 
 export default function FeaturesPage() {
     const { t } = useTranslation();
+
+    const handleStartWorkspacesTour = useCallback(async () => {
+        const payload = JSON.stringify({ tourId: "workspaces" });
+        try {
+            await rpc.setStringPref("floorp.guidedTour.request", payload);
+        } catch (error) {
+            console.error("[FeaturesPage] Failed to start tour", error);
+        }
+    }, []);
 
     const panelSidebarImage = (
         <div className="w-full h-full flex items-center justify-center">
@@ -102,6 +113,13 @@ export default function FeaturesPage() {
                                         <li key={index}>{feature}</li>
                                     ))}
                                 </ul>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary btn-sm mt-4"
+                                    onClick={handleStartWorkspacesTour}
+                                >
+                                    {t("featuresPage.workspaces.startTour")}
+                                </button>
                             </div>
                             <div className="md:w-1/2">
                                 {workspaceImage}
