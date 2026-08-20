@@ -14,6 +14,7 @@ const SETTINGS_ROUTE = "#/features/gesture";
 const SETTINGS_URL = `http://localhost:5183/${SETTINGS_ROUTE}`;
 const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
 const SETTINGS_WAIT_INTERVAL_MS = 100;
+const STARTUP_WAIT_TIMEOUT_MS = 180_000;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
 const WINDOW_DISCOVERY_INTERVAL_MS = 100;
 const REPEAT_SAFE_WHEEL_ACTIONS = [
@@ -608,22 +609,37 @@ async function setWheelActionsThroughSettings(): Promise<void> {
 
 async function assertTestSettingsEnvironment(): Promise<void> {
   await client.setContext("chrome");
-  const raw = await client.executeScript(`
-    return JSON.stringify({
-      startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
-      allowHttpLoader: Services.prefs.getBoolPref(
-        "nora.dev.allow_http_loader",
-        false,
-      ),
-    });
-  `);
-  const environment = JSON.parse(raw) as {
+  const startedAt = Date.now();
+  type TestSettingsEnvironment = {
     startupMode: string;
-    allowHttpLoader: boolean;
+    startupLoader: string;
+    startupTest: string;
+    startupError: string;
   };
-  assert(
-    environment.startupMode === "test",
-    `Refusing settings E2E outside the expected test loader: ${
+  let environment: TestSettingsEnvironment | null = null;
+  while (Date.now() - startedAt < STARTUP_WAIT_TIMEOUT_MS) {
+    const raw = await client.executeScript(`
+      return JSON.stringify({
+        startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
+        startupLoader: Services.prefs.getStringPref("nora.startup.loader", ""),
+        startupTest: Services.prefs.getStringPref("nora.startup.test", ""),
+        startupError: Services.prefs.getStringPref("nora.startup.error", ""),
+      });
+    `);
+    const observed = JSON.parse(raw) as TestSettingsEnvironment;
+    environment = observed;
+    if (
+      observed.startupMode === "test" &&
+      observed.startupLoader === "loaded" &&
+      observed.startupTest === "loaded" &&
+      observed.startupError === ""
+    ) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(
+    `Refusing settings E2E before the expected test loader is ready: ${
       JSON.stringify(environment)
     }`,
   );
