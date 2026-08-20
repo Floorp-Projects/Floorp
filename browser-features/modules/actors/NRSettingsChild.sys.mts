@@ -7,11 +7,12 @@ import type {
 
 export class NRSettingsChild extends JSWindowActorChild {
   rpc: ReturnType<typeof createBirpc> | null = null;
+  private pageApiInstalled = false;
   constructor() {
     super();
   }
 
-  private installPageApi(): void {
+  private installPageApi(): boolean {
     const document = this.document;
     const window = this.contentWindow;
     if (
@@ -26,7 +27,7 @@ export class NRSettingsChild extends JSWindowActorChild {
         document.location.href.startsWith("about:")
       )
     ) {
-      return;
+      return false;
     }
 
     const page = window as unknown as Record<string, unknown>;
@@ -49,11 +50,20 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
+    this.pageApiInstalled = true;
+    return true;
+  }
+
+  private retryInstallPageApi(attempt = 0): void {
+    if (this.pageApiInstalled || this.installPageApi() || attempt >= 20) {
+      return;
+    }
+    globalThis.setTimeout(() => this.retryInstallPageApi(attempt + 1), 50);
   }
 
   actorCreated() {
     console.debug("NRSettingsChild created!");
-    this.installPageApi();
+    this.retryInstallPageApi();
   }
   NRSPing() {
     return true;
@@ -172,6 +182,6 @@ export class NRSettingsChild extends JSWindowActorChild {
     // actorCreated can run before the final document URL is available. Retry
     // after the document insertion/DOMContentLoaded events so HTTP-loaded
     // settings pages always receive their RPC bridge.
-    this.installPageApi();
+    this.retryInstallPageApi();
   }
 }
