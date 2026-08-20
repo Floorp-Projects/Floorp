@@ -128,6 +128,7 @@ export function GeneralSettings({
                 </p>
               </div>
               <Switch
+                data-setting="mouse-gesture-enabled"
                 checked={config.enabled}
                 onChange={() => toggleEnabled()}
               />
@@ -213,6 +214,7 @@ export function GeneralSettings({
                 {t("mouseGesture.wheelGesturesEnabled")}
               </span>
               <Switch
+                data-setting="mouse-gesture-wheel-enabled"
                 checked={config.wheelGesturesEnabled ?? true}
                 onChange={() =>
                   updateConfig((current) => ({

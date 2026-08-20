@@ -99,6 +99,8 @@ interface WheelSettingsSnapshot {
   selectedValues: string[];
   disabled: boolean[];
   optionValues: string[][];
+  enabled: boolean | null;
+  wheelEnabled: boolean | null;
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -439,6 +441,12 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
     const allowed = ${JSON.stringify(REPEAT_SAFE_WHEEL_ACTIONS)};
     const sortedAllowed = [...allowed].sort();
     const selects = [...document.querySelectorAll("select")];
+    const enabledToggle = document.querySelector(
+      '[data-setting="mouse-gesture-enabled"]',
+    );
+    const wheelToggle = document.querySelector(
+      '[data-setting="mouse-gesture-wheel-enabled"]',
+    );
     const wheelSelects = selects.filter((select) => {
       const values = [...select.options].map((option) => option.value).sort();
       return values.length === sortedAllowed.length &&
@@ -452,9 +460,54 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
       optionValues: wheelSelects.map((select) =>
         [...select.options].map((option) => option.value)
       ),
+      enabled: enabledToggle instanceof HTMLInputElement
+        ? enabledToggle.checked
+        : null,
+      wheelEnabled: wheelToggle instanceof HTMLInputElement
+        ? wheelToggle.checked
+        : null,
     });
   `);
   return JSON.parse(raw) as WheelSettingsSnapshot;
+}
+
+async function waitForSettingsTogglesEnabled(): Promise<void> {
+  let observed: WheelSettingsSnapshot | null = null;
+  for (let attempt = 0; attempt < 120; attempt++) {
+    observed = await readWheelSettingsSnapshot();
+    if (observed.enabled === true && observed.wheelEnabled === true) {
+      return;
+    }
+
+    if (observed.enabled === false || observed.wheelEnabled === false) {
+      await client.setContext("content");
+      await client.executeScript(`
+        const enabledToggle = document.querySelector(
+          '[data-setting="mouse-gesture-enabled"]',
+        );
+        const wheelToggle = document.querySelector(
+          '[data-setting="mouse-gesture-wheel-enabled"]',
+        );
+        if (
+          enabledToggle instanceof HTMLInputElement &&
+          !enabledToggle.checked
+        ) {
+          enabledToggle.click();
+        } else if (
+          wheelToggle instanceof HTMLInputElement &&
+          !wheelToggle.checked
+        ) {
+          wheelToggle.click();
+        }
+      `);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(
+    `Mouse gesture settings toggles did not become enabled: ${
+      JSON.stringify(observed)
+    }`,
+  );
 }
 
 async function waitForWheelSettings(
@@ -573,6 +626,7 @@ async function assertSettingsPersistence(): Promise<void> {
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await waitForSettingsTogglesEnabled();
   const initial = await waitForWheelSettings();
   assertWheelSettingsContract(initial);
 
@@ -590,6 +644,7 @@ async function assertSettingsPersistence(): Promise<void> {
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await waitForSettingsTogglesEnabled();
   const reloaded = await waitForWheelSettings([
     SAFE_SCROLL_UP_ACTION,
     SAFE_SCROLL_DOWN_ACTION,
