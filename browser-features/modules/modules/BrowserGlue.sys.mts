@@ -45,6 +45,7 @@ const JS_WINDOW_ACTORS: {
          */
         DOMDocElementInserted: {},
         DOMContentLoaded: {},
+        load: {},
         pageshow: {},
       },
     },

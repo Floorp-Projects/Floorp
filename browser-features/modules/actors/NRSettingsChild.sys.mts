@@ -6,6 +6,9 @@ import type {
 } from "../common/defines.ts";
 
 export class NRSettingsChild extends JSWindowActorChild {
+  private static readonly MAX_INSTALL_ATTEMPTS = 200;
+  private static readonly INSTALL_RETRY_DELAY_MS = 50;
+
   rpc: ReturnType<typeof createBirpc> | null = null;
   constructor() {
     super();
@@ -53,12 +56,15 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
 
   private retryInstallPageApi(attempt = 0): void {
-    if (this.installPageApi() || attempt >= 20) {
+    if (
+      this.installPageApi() ||
+      attempt >= NRSettingsChild.MAX_INSTALL_ATTEMPTS
+    ) {
       return;
     }
     this.contentWindow?.setTimeout(
       () => this.retryInstallPageApi(attempt + 1),
-      50,
+      NRSettingsChild.INSTALL_RETRY_DELAY_MS,
     );
   }
 
