@@ -12,16 +12,18 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
 
   private installPageApi(): void {
+    const document = this.document;
     const window = this.contentWindow;
     if (
+      !document ||
       !window ||
       !(
-        window.location.port === "5183" ||
-        window.location.port === "5186" ||
-        window.location.port === "5187" ||
-        window.location.port === "5188" ||
-        window.location.href.startsWith("chrome://") ||
-        window.location.href.startsWith("about:")
+        document.location.port === "5183" ||
+        document.location.port === "5186" ||
+        document.location.port === "5187" ||
+        document.location.port === "5188" ||
+        document.location.href.startsWith("chrome://") ||
+        document.location.href.startsWith("about:")
       )
     ) {
       return;
