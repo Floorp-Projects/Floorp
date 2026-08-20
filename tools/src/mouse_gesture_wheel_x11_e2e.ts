@@ -11,7 +11,7 @@ const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
 const SETTINGS_ROUTE = "#/features/gesture";
-const SETTINGS_URL = `http://127.0.0.1:5183/${SETTINGS_ROUTE}`;
+const SETTINGS_URL = `http://localhost:5183/${SETTINGS_ROUTE}`;
 const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
 const SETTINGS_WAIT_INTERVAL_MS = 100;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
@@ -647,7 +647,7 @@ async function assertSettingsRoute(): Promise<void> {
   };
   assert(
     location.protocol === "http:" &&
-      location.host === "127.0.0.1:5183" &&
+      location.host === "localhost:5183" &&
       location.pathname === "/" &&
       location.hash === SETTINGS_ROUTE,
     `Unexpected settings route: ${JSON.stringify(location)}`,
