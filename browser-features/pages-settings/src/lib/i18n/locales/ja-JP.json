@@ -130,18 +130,6 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
-        "tabWindowBehavior": {
-            "title": "タブとウィンドウの動作",
-            "description": "リンクの開き先と、Windows のタスクバーに表示されるタブプレビューの動作を設定します。",
-            "openLinks": "新しいウィンドウを要求するリンクの開き先",
-            "openLinksDescription": "新しいウィンドウを要求するリンクを、現在のウィンドウ、新しいウィンドウ、新しいタブのいずれで開くかを選択します。",
-            "openCurrentWindowOrTab": "現在のウィンドウまたはタブ",
-            "openNewWindow": "新しいウィンドウ",
-            "openNewTab": "新しいタブ",
-            "taskbarPreviews": "タスクバーにタブのプレビューを表示",
-            "taskbarPreviewsDescription": "この設定は Windows のタスクバー表示のみを変更し、ブラウザのウィンドウを新たに作成しません。",
-            "taskbarPreviewsUnavailable": "この項目は Windows でのみ利用できます。"
-        },
         "lepton-preferences": {
             "title": "Lepton の設定",
             "description": "Lepton テーマの高度な設定を変更します",
@@ -214,14 +202,6 @@
             "exampleDomain": "このドメインを含む URL に反応",
             "exampleWildcard": "google.com のすべてのサブドメインに反応",
             "exampleFullUrl": "Gmail の URL のみに反応"
-        },
-        "tabStacks": {
-            "title": "タブスタック",
-            "description": "タブをスタックとしてグループ化し、タブバーにチップとして表示するとともに、その下にスタックされたタブの2段目を表示します。",
-            "enableOrDisable": "有効化/無効化",
-            "enableTabStacks": "タブスタック機能を有効にする",
-            "enableTabStacksDescription": "タブスタックは、グループ化されたタブをタブバーのチップとして表示します。この設定を変更した後は {{productName}} の再起動が必要です。",
-            "needRestartDescriptionForEnableAndDisable": "タブスタック機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。"
         },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
