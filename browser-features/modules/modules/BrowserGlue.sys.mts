@@ -54,7 +54,7 @@ const JS_WINDOW_ACTORS: {
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
     matches: [
       "*://localhost/*",
-      "*://127.0.0.1/*",
+      "http://127.0.0.1/*",
       "chrome://noraneko-settings/*",
       "about:*",
     ],
