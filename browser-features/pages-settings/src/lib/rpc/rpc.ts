@@ -41,7 +41,9 @@ function waitForSettingsBridge(): Promise<Window> {
   });
 }
 
-const isLocalhost5183 = import.meta.url?.includes("localhost:5183");
+const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
+  import.meta.url ?? "",
+);
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
