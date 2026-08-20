@@ -10,9 +10,8 @@ const SAFE_SCROLL_DOWN_ACTION = "gecko-zoom-out";
 const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
-const SETTINGS_ORIGIN = "http://127.0.0.1:5183";
 const SETTINGS_ROUTE = "#/features/gesture";
-const SETTINGS_URL = `${SETTINGS_ORIGIN}/${SETTINGS_ROUTE}`;
+const SETTINGS_URL = `chrome://noraneko-settings/content${SETTINGS_ROUTE}`;
 const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
 const SETTINGS_WAIT_INTERVAL_MS = 100;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
@@ -623,8 +622,8 @@ async function assertTestSettingsEnvironment(): Promise<void> {
     allowHttpLoader: boolean;
   };
   assert(
-    environment.startupMode === "test" && environment.allowHttpLoader,
-    `Refusing settings HTTP E2E outside the expected test loader: ${
+    environment.startupMode === "test",
+    `Refusing settings E2E outside the expected test loader: ${
       JSON.stringify(environment)
     }`,
   );
@@ -634,13 +633,23 @@ async function assertSettingsRoute(): Promise<void> {
   await client.setContext("content");
   const raw = await client.executeScript(`
     return JSON.stringify({
-      origin: location.origin,
+      protocol: location.protocol,
+      host: location.host,
+      pathname: location.pathname,
       hash: location.hash,
     });
   `);
-  const location = JSON.parse(raw) as { origin: string; hash: string };
+  const location = JSON.parse(raw) as {
+    protocol: string;
+    host: string;
+    pathname: string;
+    hash: string;
+  };
   assert(
-    location.origin === SETTINGS_ORIGIN && location.hash === SETTINGS_ROUTE,
+    location.protocol === "chrome:" &&
+      location.host === "noraneko-settings" &&
+      location.pathname === "/content" &&
+      location.hash === SETTINGS_ROUTE,
     `Unexpected settings route: ${JSON.stringify(location)}`,
   );
 }

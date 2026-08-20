@@ -54,9 +54,10 @@ const JS_WINDOW_ACTORS: {
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
     matches: [
       "*://localhost/*",
-      ...(Services.prefs.getBoolPref("nora.dev.allow_http_loader", false)
-        ? ["http://*/*"]
-        : []),
+      "http://127.0.0.1/*",
+      // Keep settings actor matching limited to loopback development pages.
+      // Ordinary HTTP pages must not instantiate this privileged bridge.
+      // The chrome/about routes remain available for packaged settings.
       "chrome://noraneko-settings/*",
       "about:*",
     ],
