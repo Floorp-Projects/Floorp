@@ -590,13 +590,25 @@ jobs:
                 repo: "Floorp-Updates",
                 run_id: runId,
               });
+              if (run.id !== runId) {
+                throw new Error("Returned Updates run ID does not match the dispatched request");
+              }
               if (
-                run.id !== runId || run.event !== "workflow_dispatch" ||
+                run.event !== "workflow_dispatch" ||
                 run.head_branch !== "main" ||
                 run.path !== ".github/workflows/update-stable-updatexml-files-v2.yml" ||
                 run.display_title !== expectedTitle
               ) {
-                throw new Error("Returned Updates run does not match the dispatched request");
+                // GitHub's workflow-run record can briefly expose incomplete
+                // identity fields immediately after dispatch. Keep polling
+                // the exact returned run instead of failing on that transient
+                // state; a permanently mismatched run still fails closed at
+                // the timeout below.
+                if (attempt === 180) {
+                  throw new Error("Returned Updates run did not match the dispatched request");
+                }
+                await new Promise((resolve) => setTimeout(resolve, 10000));
+                continue;
               }
               if (run.status === "completed") {
                 if (run.conclusion !== "success") {
