@@ -25,9 +25,10 @@ export function ModalBrowser() {
           : "none",
         "max-height": modalSize().maxHeight
           ? `${modalSize().maxHeight}px`
-          : "none",
+          : "calc(100vh - 32px)",
         "position": "fixed",
-        "top": "125px",
+        "top": "50%",
+        "transform": "translateY(-50%)",
         "border-radius": "10px",
       }}
     />

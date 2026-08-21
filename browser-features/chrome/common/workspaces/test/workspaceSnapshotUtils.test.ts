@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { toNumber, extractUrlFromState } from "../utils/workspace-snapshot.ts";
 import {
+  createWorkspaceSnapshotMetadata,
+  extractUrlFromState,
+  toNumber,
+} from "../utils/workspace-snapshot.ts";
+import type { TWorkspaceID } from "../utils/type.ts";
+import {
+  assert,
   assertEquals,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
@@ -172,6 +178,44 @@ function testExtractUrlComplexEntries(): void {
   );
 }
 
+function testSnapshotMetadataPreservesRawIconCategories(): void {
+  const workspaceId = "00000000-0000-4000-8000-000000000001" as TWorkspaceID;
+  const base = { name: "Snapshot", userContextId: 7 };
+  const cases: Array<
+    [string, { name: string; userContextId: number; icon?: string | null }]
+  > = [
+    ["absent", base],
+    ["own undefined", { ...base, icon: undefined }],
+    ["null", { ...base, icon: null }],
+    ["alias", { ...base, icon: "article" }],
+    ["canonical", { ...base, icon: "floorp-icon:v1:article" }],
+    ["opaque", { ...base, icon: "future:value" }],
+    ["URI", { ...base, icon: "https://example.invalid/icon.svg" }],
+  ];
+  for (const [label, workspace] of cases) {
+    const metadata = createWorkspaceSnapshotMetadata(workspaceId, workspace);
+    assertEquals(
+      Object.hasOwn(metadata, "icon"),
+      Object.hasOwn(workspace, "icon"),
+      `${label} presence`,
+    );
+    if (Object.hasOwn(workspace, "icon")) {
+      assertEquals(metadata.icon, workspace.icon, `${label} value`);
+    }
+    assertEquals(metadata.userContextId, 7, `${label} user context`);
+  }
+
+  const ownUndefined = createWorkspaceSnapshotMetadata(workspaceId, {
+    ...base,
+    icon: undefined,
+  });
+  const json = JSON.parse(JSON.stringify(ownUndefined)) as Record<string, unknown>;
+  assert(
+    !Object.hasOwn(json, "icon"),
+    "snapshot JSON omits own undefined instead of producing null",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -199,6 +243,10 @@ export function runAllTests(): void {
     { name: "extractUrl null entries", fn: testExtractUrlNullEntries },
     { name: "extractUrl entry with null URL", fn: testExtractUrlEntryWithNullUrl },
     { name: "extractUrl complex entries", fn: testExtractUrlComplexEntries },
+    {
+      name: "snapshot metadata preserves raw icon categories",
+      fn: testSnapshotMetadataPreservesRawIconCategories,
+    },
   ];
 
   const failures: string[] = [];

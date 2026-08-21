@@ -480,9 +480,22 @@ function parseTest(value: unknown, path: string): RuntimeTest {
     ],
     path,
   );
+  const testPath = safePath(source.path, `${path}.path`);
+  const manifestPath = safePath(source.manifest, `${path}.manifest`);
+  if (
+    !testPath.startsWith("browser/") || !/\/browser[^/]*\.js$/.test(testPath)
+  ) {
+    fail(`${path}.path`, `not a browser-chrome test path: ${testPath}`);
+  }
+  if (
+    !manifestPath.startsWith("browser/") ||
+    !/\/browser[^/]*\.toml$/.test(manifestPath)
+  ) {
+    fail(`${path}.manifest`, `not a browser-chrome manifest: ${manifestPath}`);
+  }
   return {
-    path: safePath(source.path, `${path}.path`),
-    manifest: safePath(source.manifest, `${path}.manifest`),
+    path: testPath,
+    manifest: manifestPath,
     expectedTasks: safeInteger(
       source.expectedTasks,
       `${path}.expectedTasks`,
@@ -521,8 +534,15 @@ function parseTestManifest(
   );
   assertStrictlySorted(supportPaths, `${path}.supportPaths`);
   assertCaseInsensitiveUnique(supportPaths, `${path}.supportPaths`);
+  const manifestPath = safePath(source.path, `${path}.path`);
+  if (
+    !manifestPath.startsWith("browser/") ||
+    !/\/browser[^/]*\.toml$/.test(manifestPath)
+  ) {
+    fail(`${path}.path`, `not a browser-chrome manifest: ${manifestPath}`);
+  }
   return {
-    path: safePath(source.path, `${path}.path`),
+    path: manifestPath,
     preferences,
     supportPaths,
   };

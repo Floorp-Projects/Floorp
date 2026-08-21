@@ -124,7 +124,7 @@
             "openNext": "Ouvrir à côté de l'onglet en cours",
             "other": "Autres paramètres d'onglets",
             "doubleClickToClose": "Fermer l'onglet en double-cliquant",
-            "tabDragToSplitCreate": "Allow creating split view by dragging tabs",
+            "tabDragToSplitCreate": "Permettre la création d'une vue scindée en faisant glisser les onglets",
             "minWidth": "Largeur minimale des onglets",
             "minWidthError": "La largeur de l'onglet doit être comprise entre {{min}} et {{max}} pixels.",
             "minHeight": "Hauteur minimale de l'onglet",
@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} est un logiciel libre disponible sous la licence publique Mozilla 2.0, rendu possible par le projet open-source Firefox et d'autres logiciels libres.",
         "openSourceLicenseNotice": "Licences Open Source",
         "versionInfo": "Version",
-        "license": "Licence"
+        "license": "Licence",
+        "noraneko": {
+            "logoAlt": "Logo du navigateur",
+            "description": "Noraneko est un navigateur servant de tête de test pour Floorp 12. Floorp repose sur Firefox et Noraneko.",
+            "communityCredit": "Réalisé par la communauté Noraneko avec ❤",
+            "repositoryLabel": "Dépôt GitHub : Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Mises à jour et expérimentations",
@@ -670,6 +676,9 @@
         "action": "Action",
         "shortcut": "Raccourci",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Non défini",
         "add": "Ajouter",
         "edit": "Éditer",

@@ -31,6 +31,37 @@ function expectInvalid(
   );
 }
 
+Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "services/sync/tests/unit/test_floorp_notes_prefs.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "services/sync/tests/unit/xpcshell-floorp-notes.toml";
+    },
+    "browser-chrome manifest",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.entries[0].path =
+        "browser/base/content/test/caps/test_not_browser_chrome.js";
+    },
+    "browser-chrome test path",
+  );
+  expectInvalid(
+    (lock) => {
+      lock.source.tests.manifests[0].path =
+        "browser/base/content/test/caps/xpcshell.toml";
+    },
+    "browser-chrome manifest",
+  );
+});
+
 function artifact(
   lock: RuntimeLock,
   platform: RuntimeArtifact["platform"],
@@ -62,21 +93,21 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-998");
+  assertEquals(canonicalLock.source.ref, "daily-1029");
   assertEquals(
     canonicalLock.source.commit,
-    "2d38da4d11be1e0e615f4ddd785ad5e77c95e18d",
+    "a34aa5dc40c4c36a5b608872ab7d557b54c3e1e1",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "e555a371e1a24f18c8085058461f92c06e0b997d",
+    "6544e641efb98b9addfc5f72b8a5eb54a981c7fa",
   );
   assertEquals(canonicalLock.source.release, {
-    id: 359773143,
+    id: 372407375,
     immutable: false,
   });
   assertEquals(canonicalLock.source.materials.count, 53);
-  assertEquals(canonicalLock.source.materials.totalBytes, 220264);
+  assertEquals(canonicalLock.source.materials.totalBytes, 221339);
   assertEquals(canonicalLock.source.tests.count, 8);
   assertEquals(canonicalLock.source.tests.totalTasks, 15);
   assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
@@ -118,51 +149,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       tuple: "linux/aarch64",
-      assetId: 489491168,
-      assetSize: 71744816,
+      assetId: 519550922,
+      assetSize: 73114556,
       assetSha:
-        "89506cb64f9b4b717d683ecd4e4623c529e67466b89c0b722d64c0a52d9b3df4",
-      iniId: 489491163,
-      iniSize: 535,
+        "bb34ccbd3807663b31fb1ac73fab020026a6c4858e047f1b9f6ea0b6ee47c0a5",
+      iniId: 519550929,
+      iniSize: 534,
       iniSha:
-        "64d53c8d58efe71ede5db1d8608c42b435eaf7b01e00aa03a1e1a517446e0bdc",
-      buildId: "20260725075208",
+        "3a53633db7f3bff918034d26b440736a9b638220f9d7739eebc85cf53230a395",
+      buildId: "20260818062758",
     },
     {
       tuple: "linux/x86_64",
-      assetId: 489491173,
-      assetSize: 82741760,
+      assetId: 519550920,
+      assetSize: 84177852,
       assetSha:
-        "5bdfca2b437e884929bef19ebf1093598cabaf6fe70ee84bac8883e4c2a9392b",
-      iniId: 489491164,
-      iniSize: 535,
+        "1371dd852a32935feeb834cf41e570c5f4b10174f1bccafb3a7d8c0f13293328",
+      iniId: 519550924,
+      iniSize: 534,
       iniSha:
-        "fa6e0eb6867331244ae9de01859f28f77079bc44c2d96cdf7f9ec1790e09def4",
-      buildId: "20260725075208",
+        "ab6ba7395b01664f6b4a2ce08d8a6dc4dc765e6ca0a1b46c4c64c5ba90381e8a",
+      buildId: "20260818062758",
     },
     {
       tuple: "macos/universal",
-      assetId: 489491167,
-      assetSize: 176824587,
+      assetId: 519550931,
+      assetSize: 182356546,
       assetSha:
-        "899f43aee0da04209bbddf5afab8473cad9ddc5785ce428c1feee5a96fbfa391",
-      iniId: 489491175,
-      iniSize: 535,
+        "70332eed562ae563c3231469db83b45972fefac7ed61386ac83202e2dbb36ceb",
+      iniId: 519550923,
+      iniSize: 534,
       iniSha:
-        "3a943f943967fbe4af72e5781a41377ded486ec299a2e778bb654cc67d8c252c",
-      buildId: "20260725075208",
+        "be37e72e1eed0cb5df44658a46347d2ddf1e5c3f5f8d8ad0df682b46c4120341",
+      buildId: "20260818062758",
     },
     {
       tuple: "windows/x86_64",
-      assetId: 489491165,
-      assetSize: 133135974,
+      assetId: 519550918,
+      assetSize: 136081012,
       assetSha:
-        "d5c3cbcb3c7c3f0852d36047f45fcf98c10fdb3b9160316b1cd242e9119bbe8c",
-      iniId: 489491166,
-      iniSize: 535,
+        "851b83faa43fc1732093e18ed81bed3665b6a1998f8e582e2e9ec6fac0e477f6",
+      iniId: 519550926,
+      iniSize: 534,
       iniSha:
-        "49a78a5484e97e2ce80b1341522da6e1616aa878cf163e2964cd3c7863b90ae4",
-      buildId: "20260725075208",
+        "0c30b164240148fb9452c2cc286be61d0d238cc9ba4efdce8ed0b082d44d88ec",
+      buildId: "20260818062758",
     },
   ];
 
@@ -181,7 +212,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["153.0", "153.0", "153.0", "153.0"],
+    ["154.0", "154.0", "154.0", "154.0"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,

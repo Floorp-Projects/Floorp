@@ -5,13 +5,42 @@
 
 import { useEffect, useState } from "react";
 import { rpc } from "../../lib/rpc/rpc.ts";
-import type {
-  KeyboardShortcutConfig,
-  ShortcutConfig,
+import {
+  createDefaultKeyboardShortcutConfig,
+  KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+  parseKeyboardShortcutConfig,
+  serializeKeyboardShortcutConfig,
+  type KeyboardShortcutConfig,
+  type ShortcutConfig,
 } from "../../types/pref.ts";
+
+declare const ChromeUtils:
+  | {
+    importESModule: (uri: string) => {
+      AppConstants: { platform: string };
+    };
+  }
+  | undefined;
 
 const KEYBOARD_SHORTCUT_ENABLED_PREF = "floorp.keyboardshortcut.enabled";
 const KEYBOARD_SHORTCUT_CONFIG_PREF = "floorp.keyboardshortcut.config";
+
+export function getKeyboardShortcutPlatform(): string {
+  try {
+    if (typeof ChromeUtils !== "undefined") {
+      return ChromeUtils.importESModule(
+        "resource://gre/modules/AppConstants.sys.mjs",
+      ).AppConstants.platform;
+    }
+  } catch (error) {
+    console.error("Failed to read AppConstants.platform", error);
+  }
+
+  return typeof navigator !== "undefined" &&
+      navigator.platform.toUpperCase().includes("MAC")
+    ? "macosx"
+    : "other";
+}
 
 export const useKeyboardShortcutConfig = () => {
   const [config, setConfig] = useState<KeyboardShortcutConfig>(
@@ -33,34 +62,35 @@ export const useKeyboardShortcutConfig = () => {
           enabled = true;
         }
 
-        const defaultConfig: KeyboardShortcutConfig = {
-          enabled,
-          shortcuts: {
-            "floorp-toggle-command-palette": {
-              key: "F2",
-              modifiers: { alt: false, ctrl: false, meta: false, shift: false },
-              action: "floorp-toggle-command-palette",
-            },
-          },
-        };
-
         try {
+          const platform = getKeyboardShortcutPlatform();
           const configStr = await rpc.getStringPref(
             KEYBOARD_SHORTCUT_CONFIG_PREF,
           );
-          if (configStr) {
-            const parsedConfig = JSON.parse(configStr);
-            setConfig({
-              ...defaultConfig,
-              ...parsedConfig,
-              enabled,
-            });
-          } else {
-            setConfig(defaultConfig);
+          const loadedConfig = parseKeyboardShortcutConfig(
+            configStr,
+            enabled,
+            platform,
+          );
+          const serializedConfig = serializeKeyboardShortcutConfig(
+            loadedConfig,
+          );
+
+          if (configStr !== serializedConfig) {
+            await rpc.setStringPref(
+              KEYBOARD_SHORTCUT_CONFIG_PREF,
+              serializedConfig,
+            );
           }
+          setConfig(loadedConfig);
         } catch (parseError) {
-          console.error("Failed to parse configuration", parseError);
-          setConfig(defaultConfig);
+          console.error("Failed to load configuration", parseError);
+          setConfig(
+            createDefaultKeyboardShortcutConfig(
+              enabled,
+              getKeyboardShortcutPlatform(),
+            ),
+          );
         }
       } catch (error) {
         console.error("Failed to load configuration", error);
@@ -74,15 +104,20 @@ export const useKeyboardShortcutConfig = () => {
 
   const saveConfig = async (newConfig: KeyboardShortcutConfig) => {
     try {
-      await rpc.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, newConfig.enabled);
-      const configToSave = { ...newConfig };
-      const { enabled: _, ...configWithoutEnabled } = configToSave;
+      const normalizedConfig: KeyboardShortcutConfig = {
+        ...newConfig,
+        schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+      };
+      await rpc.setBoolPref(
+        KEYBOARD_SHORTCUT_ENABLED_PREF,
+        normalizedConfig.enabled,
+      );
       await rpc.setStringPref(
         KEYBOARD_SHORTCUT_CONFIG_PREF,
-        JSON.stringify(configWithoutEnabled),
+        serializeKeyboardShortcutConfig(normalizedConfig),
       );
 
-      setConfig(newConfig);
+      setConfig(normalizedConfig);
       return true;
     } catch (error) {
       console.error("Failed to save configuration", error);

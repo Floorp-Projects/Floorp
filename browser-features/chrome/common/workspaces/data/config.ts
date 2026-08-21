@@ -20,7 +20,6 @@ import {
   createStore,
   type SetStoreFunction,
   type Store,
-  unwrap,
 } from "solid-js/store";
 import {
   WORKSPACE_ENABLED_PREF_NAME,
@@ -95,9 +94,17 @@ function createConfig(): [
   const [configStore, setConfigStore] = createStore(finalConfig);
 
   createEffect(() => {
+    // Spread, not unwrap(): unwrap() returns the raw target object, so the
+    // effect tracked no dependencies and fired exactly once at startup —
+    // setConfigStore() writes were never persisted. Masked historically
+    // because the settings UI writes this pref directly and the observer
+    // below feeds the store from the pref. The spread reads every top-level
+    // key through the proxy (the config object is flat), registering them
+    // all as dependencies. data.ts already does this correctly by calling
+    // trackStore() before its unwrap().
     Services.prefs.setStringPref(
       WORKSPACED_CONFIG_PREF_NAME,
-      JSON.stringify(unwrap(configStore)),
+      JSON.stringify({ ...configStore }),
     );
   });
 

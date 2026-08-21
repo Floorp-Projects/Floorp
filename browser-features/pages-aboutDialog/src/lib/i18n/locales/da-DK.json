@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "About Floorp",
+    "version": "Version",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Check for updates",
+      "checking": "Checking for updates…",
+      "checkFailed": "Couldn't check for updates. Try again later.",
+      "upToDate": "You're up to date.",
+      "downloading": "Downloading update… {{progress}}",
+      "applying": "Installing update…",
+      "readyToRestart": "Update ready — restart to apply.",
+      "restarting": "Restarting…",
+      "policyDisabled": "Updates are managed by your organisation.",
+      "downloadFailed": "Download failed. Please try again.",
+      "noUpdater": "Updates are managed externally.",
+      "available": "Download update {{version}}",
+      "tryAgain": "Try again",
+      "restartToApply": "Restart to apply update"
+    },
+    "community": {
+      "title": "Join the Community"
+    },
+    "help": {
+      "title": "Help & Support",
+      "support": "Support"
+    },
+    "sponsor": {
+      "title": "Support the Project",
+      "button": "Become a Sponsor"
+    },
+    "links": {
+      "releaseNotes": "Release Notes",
+      "help": "Floorp Help",
+      "feedback": "Submit Feedback",
+      "licensing": "Licens",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    },
+    "trademark": "The name Floorp is a trademark in Japan."
+  }
+}

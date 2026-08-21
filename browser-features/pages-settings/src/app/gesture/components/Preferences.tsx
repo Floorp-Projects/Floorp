@@ -10,6 +10,8 @@ import { Switch } from "@/components/common/switch.tsx";
 import { Seekbar } from "@/components/common/seekbar.tsx";
 import type { MouseGestureConfig } from "@/types/pref.ts";
 import { useAvailableActions } from "../useAvailableActions.ts";
+import type { MouseGestureConfigUpdate } from "../configPersistence.ts";
+import { REPEAT_SAFE_WHEEL_ACTIONS } from "#features-chrome/common/mouse-gesture/wheel-action-policy.ts";
 import {
   Card,
   CardContent,
@@ -21,9 +23,13 @@ import {
 interface GeneralSettingsProps {
   config: MouseGestureConfig;
   toggleEnabled: () => Promise<boolean>;
-  updateConfig: (config: Partial<MouseGestureConfig>) => Promise<boolean>;
+  updateConfig: (update: MouseGestureConfigUpdate) => Promise<boolean>;
   updateRockerAction: (
     rockerType: "leftRight" | "rightLeft",
+    action: string,
+  ) => Promise<boolean>;
+  updateWheelAction: (
+    wheelType: "scrollUp" | "scrollDown",
     action: string,
   ) => Promise<boolean>;
 }
@@ -33,17 +39,20 @@ export function GeneralSettings({
   toggleEnabled,
   updateConfig,
   updateRockerAction,
+  updateWheelAction,
 }: GeneralSettingsProps) {
   const { t } = useTranslation();
   const availableActions = useAvailableActions();
+  const wheelActions = useAvailableActions(REPEAT_SAFE_WHEEL_ACTIONS);
 
   const toggleShowTrail = async () => {
-    await updateConfig({ showTrail: !config.showTrail });
+    await updateConfig((current) => ({ showTrail: !current.showTrail }));
   };
 
   const toggleShowLabel = async () => {
-    const current = config.showLabel ?? true;
-    await updateConfig({ showLabel: !current });
+    await updateConfig((current) => ({
+      showLabel: !(current.showLabel ?? true),
+    }));
   };
 
   const handleSensitivityChange = async (
@@ -73,12 +82,12 @@ export function GeneralSettings({
   ) => {
     const target = e.target;
     const value = Number.parseInt(target.value);
-    await updateConfig({
+    await updateConfig((current) => ({
       contextMenu: {
-        ...config.contextMenu,
+        ...current.contextMenu,
         minDistance: value,
       },
-    });
+    }));
   };
 
   const handlePreventionTimeoutChange = async (
@@ -86,12 +95,12 @@ export function GeneralSettings({
   ) => {
     const target = e.target;
     const value = Number.parseInt(target.value);
-    await updateConfig({
+    await updateConfig((current) => ({
       contextMenu: {
-        ...config.contextMenu,
+        ...current.contextMenu,
         preventionTimeout: value,
       },
-    });
+    }));
   };
 
   return (
@@ -119,6 +128,7 @@ export function GeneralSettings({
                 </p>
               </div>
               <Switch
+                data-setting="mouse-gesture-enabled"
                 checked={config.enabled}
                 onChange={() => toggleEnabled()}
               />
@@ -136,10 +146,10 @@ export function GeneralSettings({
               <Switch
                 checked={config.rockerGesturesEnabled ?? true}
                 onChange={() =>
-                  updateConfig({
+                  updateConfig((current) => ({
                     rockerGesturesEnabled:
-                      !(config.rockerGesturesEnabled ?? true),
-                  })}
+                      !(current.rockerGesturesEnabled ?? true),
+                  }))}
                 disabled={!config.enabled}
               />
             </div>
@@ -158,6 +168,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.rockerLeftRight")}
                     value={config.rockerActions.leftRight}
                     onChange={(e) =>
                       updateRockerAction("leftRight", e.target.value)}
@@ -182,6 +193,7 @@ export function GeneralSettings({
                   </div>
                   <select
                     className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.rockerRightLeft")}
                     value={config.rockerActions.rightLeft}
                     onChange={(e) =>
                       updateRockerAction("rightLeft", e.target.value)}
@@ -202,14 +214,71 @@ export function GeneralSettings({
                 {t("mouseGesture.wheelGesturesEnabled")}
               </span>
               <Switch
+                data-setting="mouse-gesture-wheel-enabled"
                 checked={config.wheelGesturesEnabled ?? true}
                 onChange={() =>
-                  updateConfig({
-                    wheelGesturesEnabled: !(config.wheelGesturesEnabled ?? true),
-                  })}
+                  updateConfig((current) => ({
+                    wheelGesturesEnabled:
+                      !(current.wheelGesturesEnabled ?? true),
+                  }))}
                 disabled={!config.enabled}
               />
             </div>
+
+            {/* Wheel Actions - only show when enabled */}
+            {config.wheelGesturesEnabled && (
+              <>
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.wheelScrollUp")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.wheelScrollUpDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.wheelScrollUp")}
+                    value={config.wheelActions.scrollUp}
+                    onChange={(e) =>
+                      updateWheelAction("scrollUp", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {wheelActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between py-2 pl-4">
+                  <div className="flex-1">
+                    <span className="text-base-content/90 font-medium">
+                      {t("mouseGesture.wheelScrollDown")}
+                    </span>
+                    <p className="text-sm text-base-content/60">
+                      {t("mouseGesture.wheelScrollDownDescription")}
+                    </p>
+                  </div>
+                  <select
+                    className="select select-bordered w-64 max-w-xs text-sm"
+                    aria-label={t("mouseGesture.wheelScrollDown")}
+                    value={config.wheelActions.scrollDown}
+                    onChange={(e) =>
+                      updateWheelAction("scrollDown", e.target.value)}
+                    disabled={!config.enabled}
+                  >
+                    {wheelActions.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="divider" />

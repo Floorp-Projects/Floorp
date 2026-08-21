@@ -130,6 +130,18 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
+        "tabWindowBehavior": {
+            "title": "タブとウィンドウの動作",
+            "description": "リンクの開き先と、Windows のタスクバーに表示されるタブプレビューの動作を設定します。",
+            "openLinks": "新しいウィンドウを要求するリンクの開き先",
+            "openLinksDescription": "新しいウィンドウを要求するリンクを、現在のウィンドウ、新しいウィンドウ、新しいタブのいずれで開くかを選択します。",
+            "openCurrentWindowOrTab": "現在のウィンドウまたはタブ",
+            "openNewWindow": "新しいウィンドウ",
+            "openNewTab": "新しいタブ",
+            "taskbarPreviews": "タスクバーにタブのプレビューを表示",
+            "taskbarPreviewsDescription": "この設定は Windows のタスクバー表示のみを変更し、ブラウザのウィンドウを新たに作成しません。",
+            "taskbarPreviewsUnavailable": "この項目は Windows でのみ利用できます。"
+        },
         "lepton-preferences": {
             "title": "Lepton の設定",
             "description": "Lepton テーマの高度な設定を変更します",
@@ -300,7 +312,13 @@
         "openSourceLicense": "{{productName}} は、 Mozilla Public License 2.0 の下で利用可能なオープンソースソフトウェアです。 Firefox オープンソースプロジェクトやその他のオープンソースソフトウェアによって実現されています。",
         "openSourceLicenseNotice": "オープンソースライセンス",
         "versionInfo": "バージョン",
-        "license": "ライセンス"
+        "license": "ライセンス",
+        "noraneko": {
+            "logoAlt": "ブラウザーのロゴ",
+            "description": "Noraneko は Floorp 12 のテストヘッドブラウザーです。Floorp は Firefox と Noraneko をベースにしています。",
+            "communityCredit": "Noraneko コミュニティより ❤ を込めて制作",
+            "repositoryLabel": "GitHub リポジトリ: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "更新と実験",
@@ -670,6 +688,9 @@
         "action": "アクション",
         "shortcut": "ショートカット",
         "actions": "アクション",
+        "actionLabels": {
+            "floorp-edit-tab-url": "タブの URL を編集"
+        },
         "notSet": "設定なし",
         "add": "追加",
         "edit": "編集",

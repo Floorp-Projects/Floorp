@@ -1,7 +1,7 @@
 ---
 title: "Window Actor Categories"
 sidebar_label: "Actor Categories"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "b625ae5110e4e6efaf3cc6f65e041974aed7312c"
 generated: true
 ---
 # Window Actor Categories
@@ -15,7 +15,10 @@ This nested catalog is generated from the `JS_WINDOW_ACTORS` table in `browser-f
 | [Settings & Internal Page Actors](./settings-and-internal-pages-actors) | 13 | Actors used by settings, internal pages, localization, browser constants, restart, modal, search, and tab-manager surfaces. |
 | [Web Content & Store Actors](./web-content-and-store-actors) | 5 | Actors that connect browser chrome with web content, scraping, automation, plugin-store, chrome-web-store, and scroll gesture behavior. |
 | [PWA, Workspaces & Profile Actors](./pwa-workspaces-profile-actors) | 4 | Actors that support PWA windows, workspace state, PWA management, and profile management. |
+| Uncategorized | 1 | Actors discovered in `browser-features/modules/modules/BrowserGlue.sys.mts` that do not yet have a docs category. |
 
 ## Uncategorized Entries
 
-All discovered Window Actors are currently assigned to a generated category.
+| Actor | Source |
+|---|---|
+| NRKeyboardShortcutFocus | `browser-features/modules/modules/BrowserGlue.sys.mts:402` |

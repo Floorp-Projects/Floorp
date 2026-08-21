@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}}, Mozilla Kamu Lisansı 2.0 kapsamıda bulunan Firefox açık kaynak projesi ve diğer açık kaynak yazılımlar sayesinde mümkün kılınan açık kaynaklı bir yazılımdır.",
         "openSourceLicenseNotice": "Açık Kaynak Lisansı",
         "versionInfo": "Sürüm",
-        "license": "Lisans"
+        "license": "Lisans",
+        "noraneko": {
+            "logoAlt": "Browser Logo",
+            "description": "Noraneko is a browser as testhead of Floorp 12. Floorp is based on Firefox & Noraneko.",
+            "communityCredit": "Made by Noraneko Community with ❤",
+            "repositoryLabel": "GitHub Repository: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "Güncellemeler & Deneyler",
@@ -670,6 +676,9 @@
         "action": "Eylem",
         "shortcut": "Kısayol",
         "actions": "Eylemler",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Ayarlanmadı",
         "add": "Ekle",
         "edit": "Düzenle",

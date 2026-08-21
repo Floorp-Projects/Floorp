@@ -114,7 +114,10 @@ const t = (key: string, opts?: Record<string, string>): string =>
   (i18next.t as (k: string, o?: Record<string, string>) => string)(key, opts);
 
 export function isTabDragToSplitCreationEnabled(): boolean {
-  return Services.prefs.getBoolPref(PREF_SPLIT_VIEW_DND_CREATION_ENABLED, true);
+  return Services.prefs.getBoolPref(
+    PREF_SPLIT_VIEW_DND_CREATION_ENABLED,
+    false,
+  );
 }
 
 function getTabpanels(): HTMLElement | null {

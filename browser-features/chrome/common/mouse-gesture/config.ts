@@ -13,6 +13,11 @@ import {
 import { createRootHMR } from "@nora/solid-xul";
 import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";
+import {
+  DEFAULT_WHEEL_ACTIONS,
+  normalizeWheelActions,
+  type WheelActions as PolicyWheelActions,
+} from "./wheel-action-policy.ts";
 
 export const MOUSE_GESTURE_ENABLED_PREF = "floorp.mousegesture.enabled";
 export const MOUSE_GESTURE_CONFIG_PREF = "floorp.mousegesture.config";
@@ -53,6 +58,12 @@ const RockerActionsCodec = t.type({
 });
 export type RockerActions = t.TypeOf<typeof RockerActionsCodec>;
 
+const WheelActionsCodec = t.type({
+  scrollUp: t.string,
+  scrollDown: t.string,
+});
+export type WheelActions = PolicyWheelActions;
+
 const MouseGestureConfigRequired = t.type({
   rockerGesturesEnabled: t.boolean,
   wheelGesturesEnabled: t.boolean,
@@ -64,6 +75,7 @@ const MouseGestureConfigRequired = t.type({
   contextMenu: ContextMenuCodec,
   actions: t.array(GestureActionCodec),
   rockerActions: RockerActionsCodec,
+  wheelActions: WheelActionsCodec,
 });
 
 const MouseGestureConfigOptional = t.partial({
@@ -109,9 +121,12 @@ const BASE_DEFAULT_CONFIG: MouseGestureConfig = {
     leftRight: "gecko-forward",
     rightLeft: "gecko-back",
   },
+  wheelActions: { ...DEFAULT_WHEEL_ACTIONS },
 };
 
-const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig => {
+const normalizeConfig = (
+  config: Record<string, unknown>,
+): MouseGestureConfig => {
   const sensitivity = clamp(
     Number.isFinite(config?.sensitivity)
       ? (config.sensitivity as number)
@@ -135,6 +150,8 @@ const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig =>
     ...(config?.rockerActions as Record<string, unknown> | undefined),
   };
 
+  const wheelActions = normalizeWheelActions(config?.wheelActions);
+
   return {
     ...BASE_DEFAULT_CONFIG,
     ...config,
@@ -144,6 +161,7 @@ const normalizeConfig = (config: Record<string, unknown>): MouseGestureConfig =>
       ? (config.actions as GestureAction[])
       : BASE_DEFAULT_CONFIG.actions,
     rockerActions,
+    wheelActions,
   } as MouseGestureConfig;
 };
 
@@ -152,7 +170,10 @@ export const strDefaultConfig = JSON.stringify(defaultConfig);
 
 function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   const [enabled, setEnabled] = createSignal(
-    Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
+    Services.prefs.getBoolPref(
+      MOUSE_GESTURE_ENABLED_PREF,
+      defaultConfig.enabled,
+    ),
   );
 
   createEffect(() => {
@@ -161,7 +182,10 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
 
   const enabledObserver = () => {
     setEnabled(
-      Services.prefs.getBoolPref(MOUSE_GESTURE_ENABLED_PREF, defaultConfig.enabled),
+      Services.prefs.getBoolPref(
+        MOUSE_GESTURE_ENABLED_PREF,
+        defaultConfig.enabled,
+      ),
     );
   };
 
@@ -173,7 +197,10 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
   return [enabled, setEnabled];
 }
 
-function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfig>] {
+function createConfig(): [
+  Accessor<MouseGestureConfig>,
+  Setter<MouseGestureConfig>,
+] {
   const parseConfig = (jsonStr: string): MouseGestureConfig => {
     try {
       const parsed = JSON.parse(jsonStr);
@@ -181,7 +208,9 @@ function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfi
       if (isRight(result)) {
         return normalizeConfig(result.right);
       }
-      console.warn("Mouse gesture config validation failed, recovering partial data");
+      console.warn(
+        "Mouse gesture config validation failed, recovering partial data",
+      );
       return normalizeConfig(parsed);
     } catch (e) {
       console.error("Failed to parse mouse gesture config, using default", e);
@@ -196,14 +225,20 @@ function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfi
   );
 
   createEffect(() => {
-    Services.prefs.setStringPref(MOUSE_GESTURE_CONFIG_PREF, JSON.stringify(config()));
+    Services.prefs.setStringPref(
+      MOUSE_GESTURE_CONFIG_PREF,
+      JSON.stringify(config()),
+    );
   });
 
   const configObserver = () => {
     try {
       setConfig(
         parseConfig(
-          Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF, strDefaultConfig),
+          Services.prefs.getStringPref(
+            MOUSE_GESTURE_CONFIG_PREF,
+            strDefaultConfig,
+          ),
         ),
       );
     } catch (e) {
@@ -221,13 +256,20 @@ function createConfig(): [Accessor<MouseGestureConfig>, Setter<MouseGestureConfi
   return [config, setConfig];
 }
 
-export const [_enabled, _setEnabled] = createRootHMR(createEnabled, import.meta.hot);
-export const [_config, _setConfig] = createRootHMR(createConfig, import.meta.hot);
+export const [_enabled, _setEnabled] = createRootHMR(
+  createEnabled,
+  import.meta.hot,
+);
+export const [_config, _setConfig] = createRootHMR(
+  createConfig,
+  import.meta.hot,
+);
 
 export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
-export const setConfig = (value: MouseGestureConfig) => _setConfig(normalizeConfig(value));
+export const setConfig = (value: MouseGestureConfig) =>
+  _setConfig(normalizeConfig(value));
 
 export function patternToString(pattern: GesturePattern): string {
   return pattern.join("-");

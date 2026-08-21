@@ -8,7 +8,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
     switch (message.name) {
       case "WelcomePage:getLocaleInfo": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const localeInfo = LangPackMatcher.getAppAndSystemLocaleInfo();
@@ -40,7 +40,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
       case "WelcomePage:setAppLocale": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const { locale } = message.data;
@@ -66,7 +66,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
       case "WelcomePage:installLangPack": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const { langPack } = message.data;

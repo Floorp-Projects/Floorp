@@ -243,4 +243,4 @@ Notice: If you are a maintainer of any listed component and your name or license
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Floorp-Projects/Floorp&type=date&legend=top-left)](https://www.star-history.com/#Floorp-Projects/Floorp&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=Floorp-Projects/Floorp&type=date&legend=top-left)](https://star-history.dera.page/#Floorp-Projects/Floorp&type=date&legend=top-left)

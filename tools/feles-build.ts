@@ -53,7 +53,9 @@ async function runDev(): Promise<void> {
   logger.info("Starting development environment...");
 
   // Initial setup
-  await Initializer.run();
+  // The canonical lock points at the PGO/Release channel. Dev requires the
+  // separate Debug Runtime published to the Runtime FTP channel.
+  await Initializer.run({ distribution: "debug" });
   Patcher.run("apply");
   Pref.run();
   Symlinker.run();
@@ -79,10 +81,18 @@ async function runDev(): Promise<void> {
   pipe.on("data", (chunk: string) => {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
-      // Launch browser
-      // deno-lint-ignore no-explicit-any
-      BrowserLauncher.run().catch((e: any) => {
+      // Launch browser; when it exits (or fails to launch), take the dev
+      // servers down with it — otherwise they keep listening on their
+      // ports and the next run dies with "port already in use".
+      BrowserLauncher.run().then(() => {
+        logger.info("Browser closed — shutting down dev servers.");
+        DevServer.shutdown();
+        Deno.exit(0);
+        // deno-lint-ignore no-explicit-any
+      }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+        DevServer.shutdown();
+        Deno.exit(1);
       });
     }
   });
@@ -94,11 +104,6 @@ async function runDev(): Promise<void> {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
-
-  // Wait until browser finishes; the BrowserLauncher.run call above is async but we don't await here
-  // After browser closed, shut down servers
-  // Simple polling to detect when ready was received and browser process done is not trivial here.
-  // Keep process alive until SIGINT or process termination from BrowserLauncher path
 }
 
 async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
@@ -142,10 +147,19 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   pipe.on("data", (chunk: string) => {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
-      // Launch browser
-      // deno-lint-ignore no-explicit-any
-      BrowserLauncher.run({ marionette }).catch((e: any) => {
+      // Launch browser; when it exits (or fails to launch), take the dev
+      // servers down with it — otherwise ~9 vite servers keep listening
+      // on 5170-5190 after "Browser Closed" and the next stage run fails
+      // with "Port 5181 is already in use".
+      BrowserLauncher.run({ marionette }).then(() => {
+        logger.info("Browser closed — shutting down dev servers.");
+        DevServer.shutdown();
+        Deno.exit(0);
+        // deno-lint-ignore no-explicit-any
+      }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+        DevServer.shutdown();
+        Deno.exit(1);
       });
     }
   });
@@ -157,8 +171,6 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
-
-  // Keep process alive until SIGINT or browser termination like runDev
 }
 
 async function runTest(): Promise<void> {

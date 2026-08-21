@@ -300,7 +300,13 @@
         "openSourceLicense": "{{productName}} 是根据 Mozilla Public License 2.0 提供的开源软件，由 Firefox 开源项目和其他开源软件实现。",
         "openSourceLicenseNotice": "开源许可",
         "versionInfo": "版本",
-        "license": "许可协议"
+        "license": "许可协议",
+        "noraneko": {
+            "logoAlt": "浏览器徽标",
+            "description": "Noraneko 是 Floorp 12 的测试版浏览器。Floorp 基于 Firefox 和 Noraneko 开发。",
+            "communityCredit": "由Noraneko社区用心制作 ❤",
+            "repositoryLabel": "GitHub 仓库：Floorp-Projects/Floorp"
+        }
     },
     "updates": {
         "title": "更新与实验",
@@ -670,6 +676,9 @@
         "action": "动作",
         "shortcut": "快捷键",
         "actions": "操作",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "未设置",
         "add": "添加",
         "edit": "编辑",

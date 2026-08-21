@@ -156,13 +156,14 @@ declare namespace globalThis {
     undoCloseTab(aIndex?: number): XULElement;
     undoCloseWindow?(aIndex?: number): unknown;
     setWindowState(window: Window, state: string, overwrite?: boolean): void;
-    getWindowState(window: Window): string;
+    getWindowState(window: Window): { windows: unknown[] };
     getBrowserState(): string;
     setBrowserState(state: string): void;
     getClosedTabCount(window?: Window): number;
     getClosedTabData(window?: Window): unknown[];
     promiseInitialized: Promise<void>;
-    persistTabAttribute(attrName: string): void;
+    /** Removed in Firefox 152 — feature-detect before calling. */
+    persistTabAttribute?(attrName: string): void;
   };
   var DownloadsPanel: {
     show(): Promise<void>;

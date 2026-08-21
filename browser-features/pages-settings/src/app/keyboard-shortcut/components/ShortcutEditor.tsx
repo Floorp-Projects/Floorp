@@ -5,7 +5,10 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ShortcutConfig } from "../../../types/pref.ts";
+import {
+    getRecordedShortcutCode,
+    type ShortcutConfig,
+} from "../../../types/pref.ts";
 import { Input } from "@/components/common/input.tsx";
 import { formatModifierLabel, formatModifierSymbol } from "../platform.ts";
 
@@ -47,29 +50,32 @@ export const ShortcutEditor = ({
         return code.replace(/^(Key|Digit|Arrow)/, "");
     };
 
+    const normalizeKeyCode = (code: string): string => {
+        if (/^[A-Z]$/.test(code)) {
+            return `Key${code}`;
+        }
+        if (/^[0-9]$/.test(code)) {
+            return `Digit${code}`;
+        }
+        return code;
+    };
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             e.preventDefault();
             e.stopPropagation();
 
-            if (
-                e.code.startsWith("Alt") ||
-                e.code.startsWith("Control") ||
-                e.code.startsWith("Meta") ||
-                e.code.startsWith("Shift")
-            ) {
+            const code = getRecordedShortcutCode(e);
+            if (!code) {
                 return;
             }
 
-            const code = e.code;
-            const newKey = code.replace(/^(Key|Digit)/, "");
-
             setShortcut((prev) => ({
                 ...prev,
-                key: newKey,
+                key: code,
             }));
             setIsRecording(false);
-            checkDuplicate(newKey);
+            checkDuplicate(code);
         };
 
         if (isOpen && isRecording) {
@@ -84,7 +90,7 @@ export const ShortcutEditor = ({
     const checkDuplicate = (key: string) => {
         const newShortcut = {
             ...shortcut,
-            key,
+            key: normalizeKeyCode(key),
         };
 
         const otherShortcuts = existingShortcuts.filter(
@@ -92,8 +98,9 @@ export const ShortcutEditor = ({
         );
 
         const isDuplicate = otherShortcuts.some((existing) => {
+            const normalizedExistingKey = normalizeKeyCode(existing.key);
             return (
-                existing.key === newShortcut.key &&
+                normalizedExistingKey === newShortcut.key &&
                 existing.modifiers.alt === newShortcut.modifiers.alt &&
                 existing.modifiers.ctrl === newShortcut.modifiers.ctrl &&
                 existing.modifiers.meta === newShortcut.modifiers.meta &&
@@ -251,4 +258,4 @@ export const ShortcutEditor = ({
             </div>
         </div>
     );
-}; 
+};

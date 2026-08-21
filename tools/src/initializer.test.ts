@@ -3,10 +3,10 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
+  debugRuntimeArchiveName,
   filterRuntimeEntries,
   type InitializerRunDependencies,
   installLockedRuntime,
-  isLockedRuntimeRequested,
   type LockedReleaseMetadata,
   lockedReleasePublicDownloadUrl,
   type LockedRuntimeOperations,
@@ -15,6 +15,7 @@ import {
   run,
   runtimeLayoutFor,
   scoreRuntimeEntry,
+  selectDebugRuntimeEntry,
   validateLockedRuntimeArtifact,
   validateLockedRuntimeReleaseMetadata,
 } from "./initializer.ts";
@@ -172,6 +173,40 @@ Deno.test("pickRuntimeEntry returns first entry when no strong match", () => {
     format: "tar.xz",
   });
   assertEquals(picked.name, "unknown-file.dat");
+});
+
+Deno.test("Debug Runtime selection requires the exact FTP platform bundle", () => {
+  const entries = [
+    {
+      type: "file",
+      name: "linux-x86_64-artifacts.zip",
+      size: 10,
+      hash: "a".repeat(64),
+    },
+    {
+      type: "file",
+      name: "windows-x86_64-artifacts.zip",
+      size: 11,
+      hash: "b".repeat(64),
+    },
+  ];
+  const archive = {
+    filename: "floorp-linux-x86_64-moz-artifact.tar.xz",
+    format: "tar.xz" as const,
+    platform: "linux" as const,
+    architecture: "x86_64" as const,
+  };
+  assertEquals(debugRuntimeArchiveName(archive), "linux-x86_64-artifacts.zip");
+  assertEquals(selectDebugRuntimeEntry(entries, archive), entries[0]);
+  assertThrows(
+    () =>
+      selectDebugRuntimeEntry(
+        entries.filter((entry) => entry.name !== "linux-x86_64-artifacts.zip"),
+        archive,
+      ),
+    Error,
+    "Expected exactly one Debug Runtime FTP asset",
+  );
 });
 
 const MAIN_SHA256 = "1".repeat(64);
@@ -461,29 +496,21 @@ async function writeOldRuntime(binRoot: string): Promise<void> {
   await Deno.writeTextFile(`${binRoot}/applied_patches/marker`, "old-patch");
 }
 
-Deno.test("locked Runtime opt-in accepts only the literal value 1", () => {
-  assert(isLockedRuntimeRequested("1"));
-  for (const value of [undefined, "", "true", "yes", "01", " 1 "]) {
-    assertEquals(isLockedRuntimeRequested(value), false);
-  }
-});
-
 interface RunProbe {
   dependencies: InitializerRunDependencies;
   calls: {
-    legacy: number;
     loadLock: number;
     installLock: number;
+    installDebug: number;
     savePrefs: number;
   };
 }
 
-function runProbe(getEnv: InitializerRunDependencies["getEnv"]): RunProbe {
-  const calls = { legacy: 0, loadLock: 0, installLock: 0, savePrefs: 0 };
+function runProbe(): RunProbe {
+  const calls = { loadLock: 0, installLock: 0, installDebug: 0, savePrefs: 0 };
   return {
     calls,
     dependencies: {
-      getEnv,
       loadLock: () => {
         calls.loadLock += 1;
         return Promise.resolve(lockedRuntime());
@@ -492,8 +519,8 @@ function runProbe(getEnv: InitializerRunDependencies["getEnv"]): RunProbe {
         calls.installLock += 1;
         return Promise.resolve();
       },
-      runLegacy: () => {
-        calls.legacy += 1;
+      installDebug: () => {
+        calls.installDebug += 1;
         return Promise.resolve();
       },
       savePrefs: () => {
@@ -503,9 +530,32 @@ function runProbe(getEnv: InitializerRunDependencies["getEnv"]): RunProbe {
   };
 }
 
-Deno.test("run falls back to legacy initialization when env access is unavailable", async () => {
-  const getters: InitializerRunDependencies["getEnv"][] = [
+Deno.test("run uses locked initialization by default", async () => {
+  const probe = runProbe();
+  await run(probe.dependencies);
+  assertEquals(probe.calls, {
+    loadLock: 1,
+    installLock: 1,
+    installDebug: 0,
+    savePrefs: 1,
+  });
+});
+
+Deno.test("run selects the Debug FTP initializer without loading the Release lock", async () => {
+  const probe = runProbe();
+  await run({ ...probe.dependencies, distribution: "debug" });
+  assertEquals(probe.calls, {
+    loadLock: 0,
+    installLock: 0,
+    installDebug: 1,
+    savePrefs: 1,
+  });
+});
+
+Deno.test("run ignores legacy environment and initializer hooks", async () => {
+  const environmentReaders = [
     () => undefined,
+    () => "1",
     () => {
       throw new Deno.errors.PermissionDenied("injected permission denial");
     },
@@ -513,44 +563,79 @@ Deno.test("run falls back to legacy initialization when env access is unavailabl
       throw new Deno.errors.NotCapable("injected env capability denial");
     },
   ];
-  for (const getEnv of getters) {
-    const probe = runProbe(getEnv);
-    await run(probe.dependencies);
+  for (const readEnvironment of environmentReaders) {
+    const probe = runProbe();
+    let environmentReads = 0;
+    let legacyRuns = 0;
+    const legacyDependencies = {
+      ...probe.dependencies,
+      getEnv: () => {
+        environmentReads += 1;
+        return readEnvironment();
+      },
+      runLegacy: () => {
+        legacyRuns += 1;
+        return Promise.resolve();
+      },
+    };
+    await run(legacyDependencies);
+    assertEquals(environmentReads, 0);
+    assertEquals(legacyRuns, 0);
     assertEquals(probe.calls, {
-      legacy: 1,
-      loadLock: 0,
-      installLock: 0,
+      loadLock: 1,
+      installLock: 1,
+      installDebug: 0,
       savePrefs: 1,
     });
   }
 });
 
-Deno.test("run uses locked initialization only for the literal opt-in", async () => {
-  const probe = runProbe(() => "1");
-  await run(probe.dependencies);
+Deno.test("run does not save preferences when locked installation fails", async () => {
+  const probe = runProbe();
+  probe.dependencies.installLock = () => {
+    probe.calls.installLock += 1;
+    return Promise.reject(new Error("injected locked installation failure"));
+  };
+  await assertRejects(
+    () => run(probe.dependencies),
+    Error,
+    "injected locked installation failure",
+  );
   assertEquals(probe.calls, {
-    legacy: 0,
     loadLock: 1,
     installLock: 1,
-    savePrefs: 1,
+    installDebug: 0,
+    savePrefs: 0,
   });
 });
 
-Deno.test("run rethrows unrelated environment errors", async () => {
-  const probe = runProbe(() => {
-    throw new TypeError("injected unrelated error");
-  });
+Deno.test("run does not install or save when the Runtime lock fails to load", async () => {
+  const probe = runProbe();
+  probe.dependencies.loadLock = () => {
+    probe.calls.loadLock += 1;
+    return Promise.reject(new Error("injected Runtime lock load failure"));
+  };
   await assertRejects(
     () => run(probe.dependencies),
-    TypeError,
-    "injected unrelated error",
+    Error,
+    "injected Runtime lock load failure",
   );
   assertEquals(probe.calls, {
-    legacy: 0,
-    loadLock: 0,
+    loadLock: 1,
     installLock: 0,
+    installDebug: 0,
     savePrefs: 0,
   });
+});
+
+Deno.test("combined browser workflow does not require a Runtime opt-in", async () => {
+  const workflow = await Deno.readTextFile(
+    new URL(
+      "../../.github/workflows/colocated_runner_test.yml",
+      import.meta.url,
+    ),
+  );
+  assertEquals(workflow.includes("FLOORP_RUNTIME_LOCKED"), false);
 });
 
 Deno.test("locked Runtime native target mapping fails closed", () => {

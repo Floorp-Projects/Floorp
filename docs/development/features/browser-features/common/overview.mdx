@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Categories"
 sidebar_label: "Common Categories"
-floorp_commit: "1d1a9c886fed24a1d426c981baa3117003d03415"
+floorp_commit: "ffe216bfcbc633efe070cb7b78a02b2b5f4f6fbc"
 generated: true
 ---
 # Common Chrome Feature Categories
@@ -12,13 +12,19 @@ This nested catalog is generated from `browser-features/chrome/common`. It group
 
 | Category | Entries | Scope |
 |---|---:|---|
-| [Tabs & Workspaces](./tabs-and-workspaces) | 6 | Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features. |
+| [Tabs & Workspaces](./tabs-and-workspaces) | 7 | Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features. |
 | [Sidebar & Panels](./sidebar-and-panels) | 5 | Panel sidebar, menu panel, status bar, and sidebar positioning features. |
 | [Browser UI Customization](./browser-ui-customization) | 6 | Chrome CSS, design, ordering, tab color, UI customization, and focused UI mode features. |
 | [Input & Shortcuts](./input-and-shortcuts) | 4 | Keyboard, mouse gesture, context menu, and command palette interaction features. |
 | [Web Apps & Integration](./webapps-and-integration) | 6 | PWA, profile, add-on, external browser, share mode, and container integration features. |
 | [Utilities & Actions](./utilities-and-actions) | 2 | Small chrome utilities and action helpers that do not own a broader feature family. |
+| Uncategorized | 4 | Entries discovered from `browser-features/chrome/common` that do not yet have a docs category. |
 
 ## Uncategorized Entries
 
-All discovered common chrome features are currently assigned to a generated category.
+| Feature | Source | Entrypoints | Description |
+|---|---|---|---|
+| tab-inline-edit | `browser-features/chrome/common/tab-inline-edit/index.ts` | `default class TabInlineEdit`, `init` | Owns the tab inline edit feature through the TabInlineEdit chrome component and wires `controller`. |
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacks`, `init` | Owns the tab stacks feature through the TabStacks chrome component and wires `stack-bar`. |
+| tab-strip-wheel-guard | `browser-features/chrome/common/tab-strip-wheel-guard/index.ts` | `default class TabStripWheelGuard`, `init` | Owns the tab strip wheel guard feature through the TabStripWheelGuard chrome component and wires `classifier`. |
+| window-drag | `browser-features/chrome/common/window-drag/index.ts` | `default class WindowDrag`, `init` | Owns the window drag feature through the WindowDrag chrome component and wires `drag-session`. |

@@ -81,6 +81,7 @@ export default function Page() {
           <CardFooter>
             <a
               href="https://docs.floorp.app/docs/features/"
+              target="_blank"
               className="flex items-center gap-2"
             >
               <Button>
@@ -107,6 +108,7 @@ export default function Page() {
           <CardFooter>
             <a
               href="https://support.mozilla.org/kb/enhanced-tracking-protection-firefox-desktop"
+              target="_blank"
               className="flex items-center gap-2"
             >
               <Button>
@@ -132,6 +134,7 @@ export default function Page() {
           <CardFooter>
             <a
               href="https://accounts.ablaze.one/signin"
+              target="_blank"
               className="flex items-center gap-2"
             >
               <Button>
@@ -155,7 +158,7 @@ export default function Page() {
             </p>
           </CardContent>
           <CardFooter>
-            <a href="about:addons" className="flex items-center gap-2">
+            <a href="about:addons" target="_blank" className="flex items-center gap-2">
               <Button>
                 {t("home.manageExtensions.footerLinkText")}
                 <ExternalLink className="size-4" />
@@ -179,6 +182,7 @@ export default function Page() {
           <CardFooter>
             <a
               href="https://docs.floorp.app/docs/features/"
+              target="_blank"
               className="flex items-center gap-2"
             >
               <Button>
