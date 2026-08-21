@@ -10,9 +10,11 @@ const SAFE_SCROLL_DOWN_ACTION = "gecko-zoom-out";
 const FORBIDDEN_ACTION = "gecko-close-tab";
 const NORMALIZED_SCROLL_UP_ACTION = "gecko-show-previous-tab";
 const WINDOW_TITLE_MARKER = "Floorp wheel native X11 E2E";
-const SETTINGS_ORIGIN = "http://localhost:5183";
 const SETTINGS_ROUTE = "#/features/gesture";
-const SETTINGS_URL = `${SETTINGS_ORIGIN}/${SETTINGS_ROUTE}`;
+const SETTINGS_URL = `http://localhost:5183/${SETTINGS_ROUTE}`;
+const SETTINGS_WAIT_TIMEOUT_MS = 60_000;
+const SETTINGS_WAIT_INTERVAL_MS = 100;
+const STARTUP_WAIT_TIMEOUT_MS = 180_000;
 const WINDOW_DISCOVERY_TIMEOUT_MS = 10_000;
 const WINDOW_DISCOVERY_INTERVAL_MS = 100;
 const REPEAT_SAFE_WHEEL_ACTIONS = [
@@ -94,11 +96,21 @@ interface PageState {
 }
 
 interface WheelSettingsSnapshot {
+  url: string;
+  title: string;
+  readyState: string;
+  bodyText: string;
+  rootChildCount: number;
+  nrSettingsSend: string;
+  nrSettingsRegisterReceiveCallback: string;
+  nrSPing: string;
   allSelectCount: number;
   wheelSelectCount: number;
   selectedValues: string[];
   disabled: boolean[];
   optionValues: string[][];
+  enabled: boolean | null;
+  wheelEnabled: boolean | null;
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -439,12 +451,27 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
     const allowed = ${JSON.stringify(REPEAT_SAFE_WHEEL_ACTIONS)};
     const sortedAllowed = [...allowed].sort();
     const selects = [...document.querySelectorAll("select")];
+    const enabledToggle = document.querySelector(
+      '[data-setting="mouse-gesture-enabled"]',
+    );
+    const wheelToggle = document.querySelector(
+      '[data-setting="mouse-gesture-wheel-enabled"]',
+    );
     const wheelSelects = selects.filter((select) => {
       const values = [...select.options].map((option) => option.value).sort();
       return values.length === sortedAllowed.length &&
         values.every((value, index) => value === sortedAllowed[index]);
     });
     return JSON.stringify({
+      url: location.href,
+      title: document.title,
+      readyState: document.readyState,
+      bodyText: document.body?.innerText?.slice(0, 240) ?? "",
+      rootChildCount: document.querySelector("#root")?.childElementCount ?? 0,
+      nrSettingsSend: typeof globalThis.NRSettingsSend,
+      nrSettingsRegisterReceiveCallback:
+        typeof globalThis.NRSettingsRegisterReceiveCallback,
+      nrSPing: typeof globalThis.NRSPing,
       allSelectCount: selects.length,
       wheelSelectCount: wheelSelects.length,
       selectedValues: wheelSelects.map((select) => select.value),
@@ -452,9 +479,59 @@ async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
       optionValues: wheelSelects.map((select) =>
         [...select.options].map((option) => option.value)
       ),
+      enabled: enabledToggle instanceof HTMLInputElement
+        ? enabledToggle.checked
+        : null,
+      wheelEnabled: wheelToggle instanceof HTMLInputElement
+        ? wheelToggle.checked
+        : null,
     });
   `);
   return JSON.parse(raw) as WheelSettingsSnapshot;
+}
+
+async function waitForSettingsTogglesEnabled(): Promise<void> {
+  let observed: WheelSettingsSnapshot | null = null;
+  const attempts = Math.ceil(
+    SETTINGS_WAIT_TIMEOUT_MS / SETTINGS_WAIT_INTERVAL_MS,
+  );
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    observed = await readWheelSettingsSnapshot();
+    if (observed.enabled === true && observed.wheelEnabled === true) {
+      return;
+    }
+
+    if (observed.enabled === false || observed.wheelEnabled === false) {
+      await client.setContext("content");
+      await client.executeScript(`
+        const enabledToggle = document.querySelector(
+          '[data-setting="mouse-gesture-enabled"]',
+        );
+        const wheelToggle = document.querySelector(
+          '[data-setting="mouse-gesture-wheel-enabled"]',
+        );
+        if (
+          enabledToggle instanceof HTMLInputElement &&
+          !enabledToggle.checked
+        ) {
+          enabledToggle.click();
+        } else if (
+          wheelToggle instanceof HTMLInputElement &&
+          !wheelToggle.checked
+        ) {
+          wheelToggle.click();
+        }
+      `);
+    }
+    await new Promise((resolve) =>
+      setTimeout(resolve, SETTINGS_WAIT_INTERVAL_MS)
+    );
+  }
+  throw new Error(
+    `Mouse gesture settings toggles did not become enabled: ${
+      JSON.stringify(observed)
+    }`,
+  );
 }
 
 async function waitForWheelSettings(
@@ -532,22 +609,37 @@ async function setWheelActionsThroughSettings(): Promise<void> {
 
 async function assertTestSettingsEnvironment(): Promise<void> {
   await client.setContext("chrome");
-  const raw = await client.executeScript(`
-    return JSON.stringify({
-      startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
-      allowHttpLoader: Services.prefs.getBoolPref(
-        "nora.dev.allow_http_loader",
-        false,
-      ),
-    });
-  `);
-  const environment = JSON.parse(raw) as {
+  const startedAt = Date.now();
+  type TestSettingsEnvironment = {
     startupMode: string;
-    allowHttpLoader: boolean;
+    startupLoader: string;
+    startupTest: string;
+    startupError: string;
   };
-  assert(
-    environment.startupMode === "test" && environment.allowHttpLoader,
-    `Refusing settings HTTP E2E outside the expected test loader: ${
+  let environment: TestSettingsEnvironment | null = null;
+  while (Date.now() - startedAt < STARTUP_WAIT_TIMEOUT_MS) {
+    const raw = await client.executeScript(`
+      return JSON.stringify({
+        startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
+        startupLoader: Services.prefs.getStringPref("nora.startup.loader", ""),
+        startupTest: Services.prefs.getStringPref("nora.startup.test", ""),
+        startupError: Services.prefs.getStringPref("nora.startup.error", ""),
+      });
+    `);
+    const observed = JSON.parse(raw) as TestSettingsEnvironment;
+    environment = observed;
+    if (
+      observed.startupMode === "test" &&
+      observed.startupLoader === "loaded" &&
+      observed.startupTest === "loaded" &&
+      observed.startupError === ""
+    ) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(
+    `Refusing settings E2E before the expected test loader is ready: ${
       JSON.stringify(environment)
     }`,
   );
@@ -557,14 +649,72 @@ async function assertSettingsRoute(): Promise<void> {
   await client.setContext("content");
   const raw = await client.executeScript(`
     return JSON.stringify({
-      origin: location.origin,
+      protocol: location.protocol,
+      host: location.host,
+      pathname: location.pathname,
       hash: location.hash,
     });
   `);
-  const location = JSON.parse(raw) as { origin: string; hash: string };
+  const location = JSON.parse(raw) as {
+    protocol: string;
+    host: string;
+    pathname: string;
+    hash: string;
+  };
   assert(
-    location.origin === SETTINGS_ORIGIN && location.hash === SETTINGS_ROUTE,
+    location.protocol === "http:" &&
+      location.host === "localhost:5183" &&
+      location.pathname === "/" &&
+      location.hash === SETTINGS_ROUTE,
     `Unexpected settings route: ${JSON.stringify(location)}`,
+  );
+}
+
+async function ensureSettingsActor(): Promise<void> {
+  await client.setContext("chrome");
+  const raw = await client.executeScript(`
+    let browser;
+    try {
+      const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      browser = browserWindow?.gBrowser?.selectedBrowser;
+      if (!browser) {
+        return JSON.stringify({
+          actor: false,
+          url: "",
+          remoteType: "",
+          error: "The most recent browser window has no selected browser",
+        });
+      }
+      const windowGlobal = browser.browsingContext?.currentWindowGlobal;
+      // JSWindowActors are lazy. Explicitly requesting the actor after the
+      // test runner has finished guarantees that the child-side bridge is
+      // created for this fresh settings document before the page polls it.
+      const actor = windowGlobal?.getActor("NRSettings");
+      return JSON.stringify({
+        actor: Boolean(actor),
+        url: browser.currentURI?.spec ?? "",
+        remoteType: browser.remoteType ?? "",
+      });
+    } catch (error) {
+      return JSON.stringify({
+        actor: false,
+        url: browser.currentURI?.spec ?? "",
+        remoteType: browser.remoteType ?? "",
+        error: String(error),
+      });
+    }
+  `);
+  const observed = JSON.parse(raw) as {
+    actor: boolean;
+    url: string;
+    remoteType: string;
+    error?: string;
+  };
+  assert(
+    observed.actor,
+    `NRSettings actor was not available for settings route: ${
+      JSON.stringify(observed)
+    }`,
   );
 }
 
@@ -573,6 +723,8 @@ async function assertSettingsPersistence(): Promise<void> {
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await ensureSettingsActor();
+  await waitForSettingsTogglesEnabled();
   const initial = await waitForWheelSettings();
   assertWheelSettingsContract(initial);
 
@@ -590,6 +742,8 @@ async function assertSettingsPersistence(): Promise<void> {
   await client.setContext("content");
   await client.navigate(SETTINGS_URL);
   await assertSettingsRoute();
+  await ensureSettingsActor();
+  await waitForSettingsTogglesEnabled();
   const reloaded = await waitForWheelSettings([
     SAFE_SCROLL_UP_ACTION,
     SAFE_SCROLL_DOWN_ACTION,

@@ -48,12 +48,28 @@ const JS_WINDOW_ACTORS: {
          * actorCreated seems to require any of events for init
          */
         DOMDocElementInserted: {},
+        DOMContentLoaded: {},
+        load: {},
+        pageshow: {},
       },
     },
     //* port seems to not be supported
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/JSWindowActor.webidl#99
     //https://searchfox.org/mozilla-central/rev/3966e5534ddf922b186af4777051d579fd052bad/dom/chrome-webidl/MatchPattern.webidl#17
-    matches: ["*://localhost/*", "chrome://noraneko-settings/*", "about:*"],
+    matches: [
+      "*://localhost/*",
+      "*://127.0.0.1/*",
+      // Keep settings actor matching limited to loopback development pages.
+      // Ordinary HTTP pages must not instantiate this privileged bridge.
+      // The packaged settings chrome route remains available for production.
+      "chrome://noraneko-settings/*",
+    ],
+    // Vite dev pages use a webIsolated process. Keep the allowed process
+    // prefixes explicit while retaining the packaged chrome route.
+    remoteTypes: ["web", "webIsolated", "privilegedabout", "parent"],
+    // The locked Runtime enables the safe-for-untrusted-web-process gate for
+    // webIsolated pages. The URL matches above keep this bridge loopback-only.
+    safeForUntrustedWebProcess: true,
   },
   NRExperimemmt: {
     parent: {
