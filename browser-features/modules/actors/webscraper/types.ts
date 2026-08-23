@@ -29,7 +29,8 @@ export interface NRWebScraperMessageData {
   eventOptions?: { bubbles?: boolean; cancelable?: boolean };
   typingMode?: boolean;
   typingDelayMs?: number;
-  filePath?: string;
+  fileData?: number[];
+  fileName?: string;
   key?: string;
   cookieString?: string;
   cookieName?: string;
@@ -118,9 +119,10 @@ export interface XrayWrapped<T> {
 /**
  * Content window with wrappedJSObject access
  */
-export type ContentWindow = Window &
-  typeof globalThis &
-  Partial<XrayWrapped<RawContentWindow>>;
+export type ContentWindow =
+  & Window
+  & typeof globalThis
+  & Partial<XrayWrapped<RawContentWindow>>;
 
 /**
  * Raw content window (unwrapped) with native constructors
@@ -143,8 +145,9 @@ export interface RawContentWindow extends Window {
 /**
  * Element with optional wrappedJSObject
  */
-export type XrayElement<T extends Element = Element> = T &
-  Partial<XrayWrapped<T>>;
+export type XrayElement<T extends Element = Element> =
+  & T
+  & Partial<XrayWrapped<T>>;
 
 /**
  * HTMLElement with optional wrappedJSObject
