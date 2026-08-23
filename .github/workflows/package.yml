@@ -659,6 +659,7 @@ jobs:
           persist-credentials: false
 
       - name: Apply Floorp custom browser icons
+        if: ${{ steps.provenance.outputs.platform_key == 'windows' }}
         shell: bash
         run: |
           set -euo pipefail

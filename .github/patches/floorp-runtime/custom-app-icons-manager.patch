@@ -1,8 +1,10 @@
+diff --git a/browser/components/shell/CustomIconManager.sys.mjs b/browser/components/shell/CustomIconManager.sys.mjs
+index e1cb1e9e688..7da7aea6fc4 100644
 --- a/browser/components/shell/CustomIconManager.sys.mjs
 +++ b/browser/components/shell/CustomIconManager.sys.mjs
 @@ -8,89 +8,51 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  const PREF_ICON_ID = "browser.shell.customIcon.id";
- 
+
  /**
 - * Inlined catalog of selectable icons. Each entry has:
 + * Floorp's selectable browser icons.
@@ -125,7 +127,7 @@
 +  floorpUguisu: Object.freeze({ preview: "chrome://browser/content/icons/floorp-uguisu.png", l10nId: "appearance-browser-icon-uguisu" }),
 +  floorpWave: Object.freeze({ preview: "chrome://browser/content/icons/floorp-wave.png", l10nId: "appearance-browser-icon-wave" }),
  });
- 
+
  /**
 @@ -100,22 +62,22 @@ export const ICON_CATALOG = Object.freeze({
   *
@@ -137,7 +139,7 @@
  function resolveVariant(entry, scheme) {
    return entry.variants ? entry.variants[scheme] : entry;
  }
- 
+
  /**
 - * The embedded resource ID to apply for an entry, given the OS color scheme.
 - * Exported for tests; the manager itself resolves against the OS taskbar theme.
@@ -152,7 +154,7 @@
 -  return resolveVariant(entry, scheme).iconResourceId;
 +  return resolveVariant(entry, scheme).iconResourceId || 0;
  }
- 
+
  /**
 @@ -139,13 +101,24 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
      Ci.nsIWindowsShellService,
@@ -160,7 +162,7 @@
    WinTaskbar: ["@mozilla.org/windows-taskbar;1", Ci.nsIWinTaskbar],
 +  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", Ci.nsIWindowsUIUtils],
  });
- 
+
  ChromeUtils.defineESModuleGetters(lazy, {
    SelectableProfileService:
      "resource:///modules/profiles/SelectableProfileService.sys.mjs",
@@ -169,7 +171,7 @@
 +  TaskbarTabsUtils:
 +    "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
  });
- 
+
 +ChromeUtils.defineLazyGetter(lazy, "ShellServiceModule", () =>
 +  ChromeUtils.importESModule(
 +    "moz-src:///browser/components/shell/ShellService.sys.mjs"
@@ -179,26 +181,26 @@
  ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
    return console.createInstance({
      prefix: "CustomIconManager",
-@@ -158,18 +131,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
-   });
+@@ -159,10 +132,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  });
- 
--/**
+
+ /**
 - * Absolute path to the currently running browser executable. Custom icons are
 - * embedded as resources in this executable, so it is both the icon source for
 - * applying a custom icon and (with index 0) the default-icon source when
 - * reverting Windows shortcuts.
-- *
-- * @returns {string}
-- */
--function browserExePath() {
--  return Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
--}
--
++ * Absolute path to the currently running browser executable.
+  *
+  * @returns {string}
+  */
+@@ -171,19 +141,16 @@ function browserExePath() {
+ }
+
  /**
-  * Apply the given executable icon to every Windows .lnk file that this install
+- * Apply the given executable icon to every Windows .lnk file that this install
++ * Apply the given icon source to every Windows .lnk file that this install
   * owns (taskbar pin, per-user Desktop, per-user Start Menu).
-@@ -177,13 +138,10 @@ function browserExePath() {
+  *
   * Per-shortcut failures are logged but do not abort the rest of the
   * iteration; partial success is permitted.
   *
@@ -206,7 +208,7 @@
 - * @param {number} iconResourceId Resource ID of the icon within iconPath (e.g.
 - *        1100 for IDI_CUSTOM_RETRO2004), or 0 for the executable's default icon.
 - *        setShortcutsIcon owns the Win32 encoding of this reference.
-+ * @param {string} iconPath Absolute path to a profile-local .ico file.
++ * @param {string} iconPath Absolute path to an .ico file or executable.
   * @returns {Promise<boolean>} True if at least one shortcut was updated.
   */
 -async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
@@ -214,7 +216,7 @@
    let aumid = lazy.WinTaskbar.defaultGroupId;
    let shortcuts = [];
    try {
-@@ -210,7 +168,7 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
+@@ -210,7 +177,7 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
      await lazy.ShellService.setShortcutsIcon(
        shortcuts,
        iconPath,
@@ -223,9 +225,9 @@
      );
    } catch (ex) {
      if (ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-@@ -225,28 +183,114 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
+@@ -225,28 +192,131 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
    }
- 
+
    lazy.logConsole.debug(
 -    `Set icon resource ${iconResourceId} from "${iconPath}" on ` +
 +    `Set icon from "${iconPath}" on ` +
@@ -233,7 +235,7 @@
    );
    return true;
  }
- 
+
  /**
 - * Push the runtime icon override to every top-level Windows window in this
 - * process (excepting private browsing windows and web application windows).
@@ -259,20 +261,23 @@
 +/**
 + * Decode the bundled preview image for an icon. The image is kept as an
 + * imgIContainer so it can be used both for WM_SETICON and for .ico encoding.
-  *
-- * @param {number} iconResourceId Win32 resource ID of an icon embedded in the
-- *        executable, or 0 to clear.
++ *
 + * @param {string} id Catalog id.
 + * @param {"dark"|"light"} scheme OS color scheme.
 + * @returns {Promise<imgIContainer>}
-  */
--function applyRuntimeWindowsIcon(iconResourceId) {
++ */
 +async function iconImage(id, scheme) {
 +  let cacheKey = `${id}:${scheme}`;
 +  if (!gImageCache.has(cacheKey)) {
 +    let entry = ICON_CATALOG[id] || ICON_CATALOG.default;
 +    let uri = Services.io.newURI(resolvePreview(entry, scheme));
-+    gImageCache.set(cacheKey, lazy.TaskbarTabsUtils._imageFromLocalURI(uri));
++    let promise = lazy.TaskbarTabsUtils._imageFromLocalURI(uri).catch(ex => {
++      if (gImageCache.get(cacheKey) === promise) {
++        gImageCache.delete(cacheKey);
++      }
++      throw ex;
++    });
++    gImageCache.set(cacheKey, promise);
 +  }
 +  return gImageCache.get(cacheKey);
 +}
@@ -280,11 +285,14 @@
 +/**
 + * Write an image to a profile-local .ico file. This avoids requiring the
 + * Runtime executable to be relinked with additional Win32 resources.
-+ *
+  *
+- * @param {number} iconResourceId Win32 resource ID of an icon embedded in the
+- *        executable, or 0 to clear.
 + * @param {string} id Catalog id.
 + * @param {imgIContainer} image Decoded icon image.
 + * @returns {Promise<nsIFile>}
-+ */
+  */
+-function applyRuntimeWindowsIcon(iconResourceId) {
 +async function writeProfileIcon(id, image) {
 +  let file = profileIconFile(id);
 +  await lazy.ShellServiceModule.ShellService.writeShortcutIcon(file, image);
@@ -317,7 +325,7 @@
 +    lazy.logConsole.warn("setWindowIcon failed", ex);
    }
  }
- 
+
 +/**
 + * Push the decoded image to all currently open browser windows.
 + *
@@ -330,6 +338,17 @@
 +  let windows = Services.wm.getEnumerator(null);
 +  while (windows.hasMoreElements()) {
 +    applyWindowIcon(windows.getNext(), image);
++  }
++}
++
++/**
++ * Clear the custom runtime icon and restore the executable's native icon.
++ */
++function revertRuntimeWindowsIcon() {
++  try {
++    lazy.WinTaskbar.setAllWindowIcons(0);
++  } catch (ex) {
++    lazy.logConsole.error("Restoring the default runtime icon failed", ex);
 +  }
 +}
 +
@@ -347,14 +366,31 @@
  // Values of the Personalize\SystemUsesLightTheme registry value (the OS "Windows
  // mode" that governs the taskbar). Exported so tests can drive osColorScheme().
  export const OS_LIGHT = 1;
-@@ -345,12 +389,10 @@ export const CustomIconManager = {
+@@ -312,8 +382,8 @@ export const CustomIconManager = {
+    * Make the icon identified by `id` the active custom icon for this
+    * install. On Windows this:
+    *
+-   *   1. Updates every per-user .lnk this install owns to reference the
+-   *      embedded icon resource (firefox.exe,-<resource-id>).
++   *   1. Encodes the bundled image as a profile-local .ico and updates every
++   *      per-user .lnk this install owns to reference it.
+    *   2. Records the choice in a pref.
+    *   3. Pushes the icon to live windows via WM_SETICON.
+    *
+@@ -340,17 +410,14 @@ export const CustomIconManager = {
+     }
+
+     // Captured before the pref is written so re-applies of the already-active
+-    // icon (the theme observer, the startup reconcile) can be distinguished
+-    // from a genuine change to a different icon.
++    // icon can be distinguished from a genuine change to a different icon.
      let previousId = this.currentId;
- 
+
      let scheme = osColorScheme();
 -    let iconResourceId = resolveResourceId(entry, scheme);
 +    let image = await iconImage(id, scheme);
 +    let iconFile = await writeProfileIcon(id, image);
- 
+
 -    let updated = await applyIconToWindowsShortcuts(
 -      browserExePath(),
 -      iconResourceId
@@ -363,59 +399,67 @@
      if (!updated) {
        lazy.logConsole.warn(
          `apply("${id}"): no Windows shortcuts were updated. The running ` +
-@@ -360,7 +402,8 @@ export const CustomIconManager = {
+@@ -360,7 +427,8 @@ export const CustomIconManager = {
      }
- 
+
      Services.prefs.setStringPref(PREF_ICON_ID, id);
 -    applyRuntimeWindowsIcon(iconResourceId);
 +    await applyRuntimeWindowsIcon(id, scheme);
 +    this.refreshTaskbarButtons();
      gLastAppliedScheme = scheme;
- 
+
      if (id !== previousId) {
-@@ -383,10 +426,15 @@ export const CustomIconManager = {
- 
+@@ -383,10 +451,12 @@ export const CustomIconManager = {
+
      let previousId = this.currentId;
- 
+
 -    await applyIconToWindowsShortcuts(browserExePath(), 0);
-+    let scheme = osColorScheme();
-+    let image = await iconImage("default", scheme);
-+    let iconFile = await writeProfileIcon("default", image);
-+    await applyIconToWindowsShortcuts(iconFile.path);
- 
++    await applyIconToWindowsShortcuts(browserExePath());
+
      Services.prefs.clearUserPref(PREF_ICON_ID);
 -    applyRuntimeWindowsIcon(0);
-+    await applyRuntimeWindowsIcon("default", scheme);
++    revertRuntimeWindowsIcon();
 +    this.refreshTaskbarButtons();
-+    gLastAppliedScheme = scheme;
- 
++    gLastAppliedScheme = null;
+
      // Reverting is a change to the "default" icon, recorded only when a real
      // (catalog-known, non-default) custom icon was active. This excludes both a
-@@ -403,9 +451,9 @@ export const CustomIconManager = {
-    * are created, so that the first window picks up the custom icon at
-    * construction time rather than flashing the default icon.
-    *
+@@ -399,13 +469,11 @@ export const CustomIconManager = {
+   },
+
+   /**
+-   * Eagerly register the runtime icon override before any browser windows
+-   * are created, so that the first window picks up the custom icon at
+-   * construction time rather than flashing the default icon.
+-   *
 -   * Synchronous and does no I/O: reads the pref, resolves it against the
 -   * catalog, and pushes the resource ID to WinTaskbar. If the id is no longer
 -   * in the catalog, ensureAppliedOrRevert() reconciles later.
-+   * Registers observers early and asynchronously reapplies the selected image
-+   * once the browser UI is ready. If the id is no longer in the catalog,
-+   * ensureAppliedOrRevert() reconciles later.
++   * Register observers before browser windows are created and begin decoding
++   * the selected image. Existing windows receive the image immediately when
++   * decoding completes; the delayed-startup observer handles new windows.
++   * This path intentionally does not rewrite profile files or shortcuts.
++   * Unknown ids are reconciled later by ensureAppliedOrRevert().
     *
     * Intended to be called from a browser-before-ui-startup hook.
     */
-@@ -420,7 +468,9 @@ export const CustomIconManager = {
+@@ -420,7 +488,14 @@ export const CustomIconManager = {
      if (!entry) {
        return;
      }
 -    applyRuntimeWindowsIcon(resolveResourceId(entry, osColorScheme()));
-+    this.apply(this.currentId).catch(ex =>
-+      lazy.logConsole.error("Applying startup custom icon failed", ex)
-+    );
++    let scheme = osColorScheme();
++    applyRuntimeWindowsIcon(this.currentId, scheme)
++      .then(() => {
++        gLastAppliedScheme = scheme;
++      })
++      .catch(ex =>
++        lazy.logConsole.error("Applying startup custom icon failed", ex)
++      );
    },
- 
+
    /**
-@@ -434,6 +484,7 @@ export const CustomIconManager = {
+@@ -434,6 +509,7 @@ export const CustomIconManager = {
      }
      lazy.logConsole.debug("Adding observers");
      Services.obs.addObserver(this, "look-and-feel-changed");
@@ -423,7 +467,7 @@
      Services.obs.addObserver(this, "xpcom-shutdown");
      Services.obs.addObserver(this, "sps-profiles-updated");
      gObserversRegistered = true;
-@@ -449,6 +500,7 @@ export const CustomIconManager = {
+@@ -449,6 +525,7 @@ export const CustomIconManager = {
      }
      lazy.logConsole.debug("Removing observers");
      Services.obs.removeObserver(this, "look-and-feel-changed");
@@ -431,22 +475,13 @@
      Services.obs.removeObserver(this, "xpcom-shutdown");
      Services.obs.removeObserver(this, "sps-profiles-updated");
      gObserversRegistered = false;
-@@ -463,7 +515,7 @@ export const CustomIconManager = {
-       }
-       case "look-and-feel-changed": {
-         let entry = ICON_CATALOG[this.currentId];
--        if (entry?.variants && osColorScheme() !== gLastAppliedScheme) {
-+        if (entry && osColorScheme() !== gLastAppliedScheme) {
-           this.apply(this.currentId).catch(ex =>
-             lazy.logConsole.error(
-               "Re-applying icon after theme change failed",
-@@ -473,6 +525,15 @@ export const CustomIconManager = {
+@@ -473,6 +550,15 @@ export const CustomIconManager = {
          }
          break;
        }
 +      case "browser-delayed-startup-finished": {
-+        let id = this.currentId || "default";
-+        if (ICON_CATALOG[id]) {
++        let id = this.currentId;
++        if (id && ICON_CATALOG[id]) {
 +          applyRuntimeWindowIcon(_subject, id, osColorScheme()).catch(ex =>
 +            lazy.logConsole.error("Applying icon to a new window failed", ex)
 +          );
@@ -456,21 +491,21 @@
        case "sps-profiles-updated": {
          // The selectable profiles issued an update, which might mean that our icon
          // needs to change. If the writer is remote, then re-evaluate which icon
-@@ -529,7 +590,9 @@ export const CustomIconManager = {
+@@ -529,7 +615,9 @@ export const CustomIconManager = {
          // a remote profile cleared it. In that case, we can assume that the other
          // profile did most of the reversion work, but we'll go ahead and update
          // the icon we're setting for windows at runtime to the default.
 -        applyRuntimeWindowsIcon(0);
-+        this.revert().catch(ex =>
-+          lazy.logConsole.error("Reverting custom icon failed", ex)
-+        );
++        revertRuntimeWindowsIcon();
++        this.refreshTaskbarButtons();
++        gLastAppliedScheme = null;
        }
        return;
      }
-@@ -541,15 +604,9 @@ export const CustomIconManager = {
+@@ -541,15 +629,11 @@ export const CustomIconManager = {
        return;
      }
- 
+
 -    if (entry.variants) {
 -      // The OS theme may have flipped while the browser was closed, so re-apply
 -      // the matching variant to shortcuts + runtime, and start watching for
@@ -480,10 +515,11 @@
 -    }
 -
 -    applyRuntimeWindowsIcon(resolveResourceId(entry, osColorScheme()));
-+    // Re-apply the image to shortcuts and live windows. This also handles an
-+    // icon selected by another profile or a color-scheme change while closed.
-+    await this.apply(id);
++    // Shortcut state was persisted when the icon was selected. Startup and
++    // remote-profile reconciliation only need to update this process's windows.
++    let scheme = osColorScheme();
++    await applyRuntimeWindowsIcon(id, scheme);
++    gLastAppliedScheme = scheme;
    },
- 
-   /**
 
+   /**
