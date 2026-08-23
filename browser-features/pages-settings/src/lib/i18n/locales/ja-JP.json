@@ -130,18 +130,6 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
-        "tabWindowBehavior": {
-            "title": "タブとウィンドウの動作",
-            "description": "リンクの開き先と、Windows のタスクバーに表示されるタブプレビューの動作を設定します。",
-            "openLinks": "新しいウィンドウを要求するリンクの開き先",
-            "openLinksDescription": "新しいウィンドウを要求するリンクを、現在のウィンドウ、新しいウィンドウ、新しいタブのいずれで開くかを選択します。",
-            "openCurrentWindowOrTab": "現在のウィンドウまたはタブ",
-            "openNewWindow": "新しいウィンドウ",
-            "openNewTab": "新しいタブ",
-            "taskbarPreviews": "タスクバーにタブのプレビューを表示",
-            "taskbarPreviewsDescription": "この設定は Windows のタスクバー表示のみを変更し、ブラウザのウィンドウを新たに作成しません。",
-            "taskbarPreviewsUnavailable": "この項目は Windows でのみ利用できます。"
-        },
         "lepton-preferences": {
             "title": "Lepton の設定",
             "description": "Lepton テーマの高度な設定を変更します",
