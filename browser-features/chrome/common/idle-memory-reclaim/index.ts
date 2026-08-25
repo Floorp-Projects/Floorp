@@ -465,9 +465,11 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   /**
    * Runs a reclaim when the current state calls for one.
    *
-   * The feature is instantiated per window, so lastRunAt in the stats pref acts
-   * as a cross-window lock: claiming it before the work starts keeps concurrent
-   * reclaims from piling up.
+   * Two guards keep concurrent reclaims apart. Within a window, the
+   * `reclaiming` flag is claimed synchronously here. Across windows - the
+   * feature is instantiated per browser window - lastRunAt in the stats pref
+   * is written before the work starts, so the other windows bail at their own
+   * throttle check.
    *
    * @param verifyIdle re-check that the user is still away once the snapshot
    *   has been gathered. Automatic triggers set this; an explicit request over
@@ -475,10 +477,25 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
    *   the reclaim regardless of idle state.
    */
   async reclaimIfNeeded(verifyIdle = false): Promise<void> {
+    // Claimed synchronously, before any await. The idle notification and the
+    // poll tick can fire within the same interval, and if the flag were only
+    // set after the snapshot resolved both would pass this check, run
+    // minimizeMemoryUsage() twice, and write stats computed from the same stale
+    // value - losing one of the two updates.
     if (this.reclaiming || this.disposed) {
       return;
     }
+    this.reclaiming = true;
 
+    try {
+      await this.runReclaimAttempt(verifyIdle);
+    } finally {
+      this.reclaiming = false;
+    }
+  }
+
+  /** The body of a reclaim attempt; the caller owns the `reclaiming` flag. */
+  private async runReclaimAttempt(verifyIdle: boolean): Promise<void> {
     const snapshot = await this.takeSnapshot();
     if (!snapshot || this.disposed) {
       return;
@@ -497,8 +514,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
       return;
     }
 
-    this.reclaiming = true;
-    // Claim the slot first so other windows bail out at their own check.
+    // Claim the slot for the other windows too; they bail at their own check.
     this.saveStats({ ...stats, lastRunAt: now });
 
     try {
@@ -525,8 +541,6 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
       );
     } catch (error) {
       console.error("[IdleMemoryReclaim] Reclaim failed:", error);
-    } finally {
-      this.reclaiming = false;
     }
   }
 
