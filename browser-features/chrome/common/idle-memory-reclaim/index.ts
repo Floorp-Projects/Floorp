@@ -448,11 +448,13 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     }
 
     const intervalMs = Math.round(this.settings.pollIntervalSec) * 1000;
+    // Cast because the ambient Node typings win here and describe a Timeout,
+    // while the chrome window this runs in returns a numeric handle.
     this.pollTimerId = globalThis.setInterval(() => {
       if (this.isStillIdle()) {
         void this.reclaimIfNeeded(true);
       }
-    }, intervalMs);
+    }, intervalMs) as unknown as number;
   }
 
   private clearPollTimer(): void {
