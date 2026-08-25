@@ -164,6 +164,23 @@ export function shouldReclaim(
 }
 
 /**
+ * Whether the user has been away long enough for an automatic reclaim.
+ *
+ * Checked again right before the work starts, because gathering the memory
+ * snapshot is asynchronous and the user may well have come back during it.
+ *
+ * @param idleTimeMs milliseconds since the last user input
+ * @param settings normalized settings
+ * @returns true when the idle threshold is still met
+ */
+export function isIdleEnough(
+  idleTimeMs: number,
+  settings: IdleMemoryReclaimSettings,
+): boolean {
+  return idleTimeMs >= settings.idleThresholdSec * 1000;
+}
+
+/**
  * Runs an explicit memory reclaim while the user is not interacting.
  *
  * Firefox schedules GC/CC lazily off an idle timer and jemalloc keeps freed
@@ -183,6 +200,8 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   private pollTimerId: number | null = null;
   /** Guards against a reclaim starting while one is already running. */
   private reclaiming = false;
+  /** Set on teardown so work awaiting a snapshot stops instead of resuming. */
+  private disposed = false;
 
   init(): void {
     this.settings = this.loadSettings();
@@ -284,6 +303,23 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     }
   }
 
+  /**
+   * Whether the user is still away. Treated as "not idle" when the idle service
+   * cannot be reached, so an unreadable state never triggers a reclaim.
+   */
+  private isStillIdle(): boolean {
+    const idleService = this.getIdleService();
+    if (!idleService) {
+      return false;
+    }
+    try {
+      return isIdleEnough(idleService.idleTime, this.settings);
+    } catch (error) {
+      console.error("[IdleMemoryReclaim] Failed to read idleTime:", error);
+      return false;
+    }
+  }
+
   /** Takes a memory snapshot, or returns null when it cannot be read. */
   private async takeSnapshot(): Promise<MemorySnapshot | null> {
     const manager = this.getMemoryManager();
@@ -336,10 +372,12 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
     const observer: nsIObserver = {
       observe: (_subject: nsISupports, topic: string, _data: string) => {
-        // "idle" means the threshold was reached; RECLAIM_REQUEST_TOPIC is an
-        // explicit request.
-        if (topic === "idle" || topic === RECLAIM_REQUEST_TOPIC) {
-          void this.reclaimIfNeeded();
+        // "idle" means the threshold was reached, so re-verify it later; an
+        // explicit RECLAIM_REQUEST_TOPIC runs regardless of idle state.
+        if (topic === "idle") {
+          void this.reclaimIfNeeded(true);
+        } else if (topic === RECLAIM_REQUEST_TOPIC) {
+          void this.reclaimIfNeeded(false);
         }
       },
     };
@@ -411,17 +449,8 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
     const intervalMs = Math.round(this.settings.pollIntervalSec) * 1000;
     this.pollTimerId = globalThis.setInterval(() => {
-      const idleService = this.getIdleService();
-      if (!idleService) {
-        return;
-      }
-      try {
-        // idleTime is milliseconds since the last user input.
-        if (idleService.idleTime >= this.settings.idleThresholdSec * 1000) {
-          void this.reclaimIfNeeded();
-        }
-      } catch (error) {
-        console.error("[IdleMemoryReclaim] Idle poll failed:", error);
+      if (this.isStillIdle()) {
+        void this.reclaimIfNeeded(true);
       }
     }, intervalMs);
   }
@@ -439,14 +468,26 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
    * The feature is instantiated per window, so lastRunAt in the stats pref acts
    * as a cross-window lock: claiming it before the work starts keeps concurrent
    * reclaims from piling up.
+   *
+   * @param verifyIdle re-check that the user is still away once the snapshot
+   *   has been gathered. Automatic triggers set this; an explicit request over
+   *   RECLAIM_REQUEST_TOPIC deliberately does not, since the caller asked for
+   *   the reclaim regardless of idle state.
    */
-  async reclaimIfNeeded(): Promise<void> {
-    if (this.reclaiming) {
+  async reclaimIfNeeded(verifyIdle = false): Promise<void> {
+    if (this.reclaiming || this.disposed) {
       return;
     }
 
     const snapshot = await this.takeSnapshot();
-    if (!snapshot) {
+    if (!snapshot || this.disposed) {
+      return;
+    }
+
+    // Gathering the snapshot is asynchronous, so the user may have returned in
+    // the meantime. Reclaiming now would stall the browser for a second or more
+    // right as they resume, which is exactly what this feature exists to avoid.
+    if (verifyIdle && !this.isStillIdle()) {
       return;
     }
 
@@ -513,6 +554,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
   /** Removes observers when the window goes away or on HMR. */
   private teardown(): void {
+    this.disposed = true;
     this.clearPollTimer();
     this.unregisterIdleObserver();
 
