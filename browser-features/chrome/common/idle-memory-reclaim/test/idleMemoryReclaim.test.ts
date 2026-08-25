@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import {
+  isIdleEnough,
   type MemorySnapshot,
   sanitizeSettings,
   sanitizeStats,
@@ -297,6 +298,33 @@ function testShouldReclaimSurvivesClockRollback(): void {
   assert(decision, "a future lastRunAt must not block reclaim forever");
 }
 
+// ---------------------------------------------------------------------------
+// isIdleEnough
+// ---------------------------------------------------------------------------
+
+function testIsIdleEnoughBelowThreshold(): void {
+  const settings = makeSettings({ idleThresholdSec: 60 });
+  assert(
+    !isIdleEnough(59_999, settings),
+    "just under the threshold must not count as idle",
+  );
+}
+
+function testIsIdleEnoughAtThreshold(): void {
+  const settings = makeSettings({ idleThresholdSec: 60 });
+  assert(isIdleEnough(60_000, settings), "the threshold itself is inclusive");
+}
+
+function testIsIdleEnoughAfterUserReturns(): void {
+  // The user coming back resets idleTime to roughly zero. Gathering the memory
+  // snapshot is asynchronous, so this is re-checked before the reclaim starts.
+  const settings = makeSettings({ idleThresholdSec: 60 });
+  assert(
+    !isIdleEnough(0, settings),
+    "a returning user must cancel the pending reclaim",
+  );
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     // SANITIZE SETTINGS
@@ -375,6 +403,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "shouldReclaim throttle beats ghost windows",
       fn: testShouldReclaimThrottleBeatsGhostWindows,
+    },
+    {
+      name: "isIdleEnough below threshold",
+      fn: testIsIdleEnoughBelowThreshold,
+    },
+    {
+      name: "isIdleEnough at exact threshold",
+      fn: testIsIdleEnoughAtThreshold,
+    },
+    {
+      name: "isIdleEnough after the user returns",
+      fn: testIsIdleEnoughAfterUserReturns,
     },
     {
       name: "shouldReclaim survives clock rollback",
