@@ -531,8 +531,10 @@ const JS_WINDOW_ACTORS: {
     },
     matches: ["http://*/*", "https://*/*", "file:///*", "about:*"],
     remoteTypes: WEB_FILE_AND_ABOUT_REMOTE_TYPES,
-    safeForUntrustedWebProcess: true,
     allFrames: true,
+    // This actor only performs validated DOM scrolling in content. Runtime
+    // 154 rejects actors without this opt-in from web/webIsolated processes.
+    safeForUntrustedWebProcess: true,
   },
 };
 
