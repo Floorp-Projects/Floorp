@@ -520,7 +520,10 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     try {
       await this.runMinimizeMemoryUsage();
 
-      const after = await this.takeSnapshot();
+      // If the window went away mid-flight, skip the follow-up measurement but
+      // still record the run: lastRunAt was already written above, so bailing
+      // out here would leave the throttle armed with runCount never incremented.
+      const after = this.disposed ? null : await this.takeSnapshot();
       const freed = after ? snapshot.residentBytes - after.residentBytes : 0;
 
       this.saveStats({
