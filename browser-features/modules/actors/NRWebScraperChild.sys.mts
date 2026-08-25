@@ -17,9 +17,9 @@
  */
 
 import type {
+  EvaluateResult,
   NRWebScraperMessageData,
   WebScraperContext,
-  EvaluateResult,
 } from "./webscraper/types.ts";
 import { DOMOperations } from "./webscraper/DOMOperations.ts";
 import { FormOperations } from "./webscraper/FormOperations.ts";
@@ -169,8 +169,12 @@ export class NRWebScraperChild extends JSWindowActorChild {
             mode: textOpts.mode as "full" | "scoped" | "visible",
             selector: textOpts.selector as string | undefined,
             viewportMargin: textOpts.viewportMargin as number | undefined,
-            enableFingerprints: textOpts.enableFingerprints as boolean | undefined,
-            includeSelectorMap: textOpts.includeSelectorMap as boolean | undefined,
+            enableFingerprints: textOpts.enableFingerprints as
+              | boolean
+              | undefined,
+            includeSelectorMap: textOpts.includeSelectorMap as
+              | boolean
+              | undefined,
           });
         }
         // Legacy boolean
@@ -401,10 +405,15 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
         break;
       case "WebScraper:UploadFile":
-        if (message.data?.selector && message.data?.filePath) {
+        if (
+          message.data?.selector &&
+          Array.isArray(message.data?.fileData) &&
+          message.data?.fileName
+        ) {
           return domOps.uploadFile(
             message.data.selector,
-            message.data.filePath,
+            message.data.fileData,
+            message.data.fileName,
           );
         }
         break;
@@ -417,9 +426,11 @@ export class NRWebScraperChild extends JSWindowActorChild {
           );
         }
         break;
-     case "WebScraper:DispatchTextInput": {
+      case "WebScraper:DispatchTextInput": {
         const text = (
-          message.data as (NRWebScraperMessageData & { text?: string }) | undefined
+          message.data as
+            | (NRWebScraperMessageData & { text?: string })
+            | undefined
         )?.text;
         if (message.data?.selector && typeof text === "string") {
           return domOps.dispatchTextInput(message.data.selector, text);
@@ -437,7 +448,6 @@ export class NRWebScraperChild extends JSWindowActorChild {
           return this._evaluateScript(message.data.script);
         }
         break;
-
     }
     return null;
   }
@@ -471,10 +481,10 @@ export class NRWebScraperChild extends JSWindowActorChild {
       const resultType = Array.isArray(raw)
         ? "array"
         : raw instanceof win.Element
-          ? "element"
-          : raw instanceof win.NodeList
-            ? "nodelist"
-            : typeof raw;
+        ? "element"
+        : raw instanceof win.NodeList
+        ? "nodelist"
+        : typeof raw;
 
       // Try JSON round-trip; fall back to String() for non-serializable values
       let result: unknown;

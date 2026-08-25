@@ -658,6 +658,19 @@ jobs:
           path: "noraneko"
           persist-credentials: false
 
+      - name: Apply Floorp custom browser icons
+        if: ${{ steps.provenance.outputs.platform_key == 'windows' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p browser/components/shell/icons
+          cp -f noraneko/static/gecko/custom-app-icons/*.png browser/components/shell/icons/
+          for patch in noraneko/.github/patches/floorp-runtime/*.patch; do
+            [ -e "$patch" ] || continue
+            echo "Applying Floorp patch: $(basename "$patch")"
+            git apply --verbose "$patch"
+          done
+
       - name: Download verified Runtime artifact by ID
         if: ${{ steps.provenance.outputs.is_v2 == 'true' }}
         uses: actions/download-artifact@v4
