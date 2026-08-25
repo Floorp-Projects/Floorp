@@ -197,7 +197,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   private idleObserver: nsIObserver | null = null;
   private prefObserver: nsIObserver | null = null;
   /** Timer that re-evaluates idle state periodically. */
-  private pollTimerId: number | null = null;
+  private pollTimerId: ReturnType<typeof setInterval> | null = null;
   /** Guards against a reclaim starting while one is already running. */
   private reclaiming = false;
   /** Set on teardown so work awaiting a snapshot stops instead of resuming. */
@@ -448,18 +448,16 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     }
 
     const intervalMs = Math.round(this.settings.pollIntervalSec) * 1000;
-    // Cast because the ambient Node typings win here and describe a Timeout,
-    // while the chrome window this runs in returns a numeric handle.
-    this.pollTimerId = globalThis.setInterval(() => {
+    this.pollTimerId = setInterval(() => {
       if (this.isStillIdle()) {
         void this.reclaimIfNeeded(true);
       }
-    }, intervalMs) as unknown as number;
+    }, intervalMs);
   }
 
   private clearPollTimer(): void {
     if (this.pollTimerId !== null) {
-      globalThis.clearInterval(this.pollTimerId);
+      clearInterval(this.pollTimerId);
       this.pollTimerId = null;
     }
   }
