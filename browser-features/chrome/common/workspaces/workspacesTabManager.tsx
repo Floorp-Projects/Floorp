@@ -32,7 +32,7 @@ import {
 } from "./utils/tab-replacement-lifecycle.ts";
 import {
   hasAnyWindowWithHiddenTabToPreserve,
-  hasHiddenTabToPreserve,
+  shouldCloseWindowForLastTabReplacement,
 } from "./utils/workspace-last-tab-policy.ts";
 
 const BROWSER_WINDOW_CLOSED_TOPIC = "domwindowclosed";
@@ -275,7 +275,11 @@ export class WorkspacesTabManager {
 
     if (
       replacementTab &&
-      !hasHiddenTabToPreserve(allTabs, tab)
+      shouldCloseWindowForLastTabReplacement(
+        allTabs,
+        tab,
+        configStore.exitOnLastTabClose,
+      )
     ) {
       // Another window can require the profile-wide pref to stay false. Gecko
       // then creates a replacement here even though this window has no hidden

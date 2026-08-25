@@ -22,6 +22,23 @@ export function hasHiddenTabToPreserve<T extends TabWithHiddenAttribute>(
 }
 
 /**
+ * When another window keeps Firefox's profile-wide last-tab preference off,
+ * Firefox creates a replacement tab in this window. Take the native window
+ * close path only when the Workspace exit setting permits it and this window
+ * has no hidden tab to preserve.
+ */
+export function shouldCloseWindowForLastTabReplacement<
+  T extends TabWithHiddenAttribute,
+>(
+  tabs: Iterable<T>,
+  closingTab: T,
+  exitOnLastTabClose: boolean,
+): boolean {
+  return exitOnLastTabClose &&
+    !hasHiddenTabToPreserve(tabs, closingTab);
+}
+
+/**
  * The close-with-last-tab preference is profile-wide, so native closing is
  * safe only when no browser window contains a hidden tab that must survive.
  */

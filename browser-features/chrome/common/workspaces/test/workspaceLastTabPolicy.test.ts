@@ -4,6 +4,7 @@
 import {
   hasAnyWindowWithHiddenTabToPreserve,
   hasHiddenTabToPreserve,
+  shouldCloseWindowForLastTabReplacement,
 } from "../utils/workspace-last-tab-policy.ts";
 import {
   assertEquals,
@@ -80,6 +81,40 @@ function testGlobalPolicyIncludesEveryBrowserWindow(): void {
   );
 }
 
+function testCrossWindowReplacementRespectsExitOnLastTabPolicy(): void {
+  const closingTab = makeTab(false);
+  const replacementTab = makeTab(false);
+  const currentWindow = [closingTab, replacementTab];
+  const otherWindow = [makeTab(false), makeTab(true)];
+
+  assertEquals(
+    hasAnyWindowWithHiddenTabToPreserve(
+      [currentWindow, otherWindow],
+      closingTab,
+    ),
+    true,
+    "another window keeps the profile-wide last-tab preference disabled",
+  );
+  assertEquals(
+    shouldCloseWindowForLastTabReplacement(
+      currentWindow,
+      closingTab,
+      false,
+    ),
+    false,
+    "the replacement keeps this window open when Workspace exit is disabled",
+  );
+  assertEquals(
+    shouldCloseWindowForLastTabReplacement(
+      currentWindow,
+      closingTab,
+      true,
+    ),
+    true,
+    "the replacement can use native window close when Workspace exit is enabled",
+  );
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -93,6 +128,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "global policy includes every browser window",
       fn: testGlobalPolicyIncludesEveryBrowserWindow,
+    },
+    {
+      name: "cross-window replacement respects exit-on-last-tab policy",
+      fn: testCrossWindowReplacementRespectsExitOnLastTabPolicy,
     },
   ];
 
