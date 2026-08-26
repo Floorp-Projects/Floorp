@@ -1,0 +1,39 @@
+{
+  "title": {
+    "default": "{{productName}} Clips"
+  },
+  "clips": {
+    "loading": "クリップを読み込んでいます...",
+    "empty": "まだ何もありません。リンクやテキスト、画像やファイルを置いておけます。",
+    "noPinned": "ピン留めされたクリップはまだありません。",
+    "pinnedOnly": "ピン留めのみ",
+    "showAll": "すべて表示",
+    "pin": "ピン留め",
+    "unpin": "ピン留めを解除",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "delete": "削除",
+    "openLink": "新しいタブで開く",
+    "addCurrentTab": "このタブを追加",
+    "attach": "画像やファイルを添付",
+    "inputPlaceholder": "テキストまたは URL",
+    "add": "追加",
+    "dropHere": "ドロップしてクリップ",
+    "file": "ファイル",
+    "cleanup": "クリーンアップ",
+    "deleteConfirmTitle": "クリップを削除",
+    "deleteConfirmMessage": "このクリップを削除しますか？ この操作は元に戻せません。",
+    "cleanupConfirmTitle": "クリップをクリーンアップ",
+    "cleanupConfirmMessage": "ピン留めしていないクリップをすべて削除しますか？ この操作は元に戻せません。",
+    "imageFailed": "この画像はクリップできませんでした。",
+    "fileGone": "そのファイルは元の場所にありません。プレビューだけが残っています。",
+    "revealFile": "ファイルマネージャーで表示",
+    "launchFile": "既定のアプリで開く",
+    "notSynced_other": "古いクリップ {{count}} 件はこの端末に残ります（同期できる大きさを超えました）。"
+  },
+  "common": {
+    "confirm": "OK",
+    "cancel": "キャンセル",
+    "close": "閉じる"
+  }
+}

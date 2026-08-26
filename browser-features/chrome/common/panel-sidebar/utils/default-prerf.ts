@@ -62,6 +62,17 @@ const defaultData: PanelSidebarData = {
       extensionId: undefined,
     },
     {
+      id: "default-panel-clips",
+      url: "floorp//clips",
+      width: 0,
+      type: "static",
+      icon: undefined,
+      userContextId: undefined,
+      zoomLevel: undefined,
+      userAgent: undefined,
+      extensionId: undefined,
+    },
+    {
       id: "default-panel-translate-google-com",
       url: "https://translate.google.com",
       width: 0,

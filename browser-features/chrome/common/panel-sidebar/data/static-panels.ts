@@ -20,6 +20,14 @@ const osIconRaw = import.meta.glob("../icons/os.svg", {
 
 const osIcon = svgToDataUrl(Object.values(osIconRaw)[0]);
 
+const clipsIconRaw = import.meta.glob("../icons/clips.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as { [key: string]: string };
+
+const clipsIcon = svgToDataUrl(Object.values(clipsIconRaw)[0]);
+
 export type StaticPanelConfig = {
   url: string;
   icon: string;
@@ -68,6 +76,15 @@ const BASE_STATIC_PANEL_DATA: StaticPanelData = {
     icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2IiBmaWxsPSJjb250ZXh0LWZpbGwiPgogIDxwYXRoIGQ9Ik0xNC4zNTQsMi4zNTMgTDEzLjY0NiwxLjY0NiBDMTIuODYzNDEzNSwwLjg2OTA3NzIwMyAxMS42MDA1ODY1LDAuODY5MDc3MjAzIDEwLjgxOCwxLjY0NiBMMTAuNDM5LDIuMDI1IEMxMC4yNDM4MDksMi4yMjAyNDk5MyAxMC4yNDM4MDksMi41MzY3NTAwNyAxMC40MzksMi43MzIgTDEzLjI2OCw1LjU2MSBDMTMuNDYzMjQ5OSw1Ljc1NjE5MDk3IDEzLjc3OTc1MDEsNS43NTYxOTA5NyAxMy45NzUsNS41NjEgTDE0LjM1NCw1LjE4MiBDMTUuMTMxMDM5Miw0LjM5OTA3MTU2IDE1LjEzMTAzOTIsMy4xMzU5Mjg0NCAxNC4zNTQsMi4zNTMgTDE0LjM1NCwyLjM1MyBaIE05LjczMiwzLjQzOSBDOS41MzY3NTAwNywzLjI0MzgwOTAzIDkuMjIwMjQ5OTMsMy4yNDM4MDkwMyA5LjAyNSwzLjQzOSBMMy4yNDYsOS4yMTggQzMuMDQ2MDk3ODgsOS40MjAyMzcyIDIuODkxOTU2MjYsOS42NjMwNDQzNiAyLjc5NCw5LjkzIEwxLjAzOCwxNC4zMiBDMC45Nzg5Mzc5NjgsMTQuNDczMDQxOCAwLjk5ODcwMzY2OCwxNC42NDUzMiAxLjA5MDg5MjExLDE0Ljc4MTAwODYgQzEuMTgzMDgwNTQsMTQuOTE2Njk3MiAxLjMzNTk2MzU1LDE0Ljk5ODUzNCAxLjUsMTUgQzEuNTY0NDY1OTMsMTQuOTk5OTAxNiAxLjYyODMwNDU1LDE0Ljk4NzMzNzYgMS42ODgsMTQuOTYzIEw2LjA3LDEzLjIxMSBDNi4zMzg4NDQ2MSwxMy4xMTM1NDA2IDYuNTgzMTkxOTgsMTIuOTU4NjA1MiA2Ljc4NiwxMi43NTcgTDEyLjU2NSw2Ljk3OSBDMTIuNzYwMTkxLDYuNzgzNzUwMDcgMTIuNzYwMTkxLDYuNDY3MjQ5OTMgMTIuNTY1LDYuMjcyIEw5LjczMiwzLjQzOSBaIE01LjE2MSwxMi41IEwyLjYxMiwxMy41MiBDMi41NzQ4NTM4MywxMy41MzQ4Njg3IDIuNTMyNDIwNTIsMTMuNTI2MTY0MiAyLjUwNDEyODE0LDEzLjQ5Nzg3MTkgQzIuNDc1ODM1NzcsMTMuNDY5NTc5NSAyLjQ2NzEzMTI3LDEzLjQyNzE0NjIgMi40ODIsMTMuMzkgTDMuNSwxMC44MzEgQzMuNTEzNDAwNjIsMTAuODAxNTQgMy41NDAyMzAzMiwxMC43ODAzODcgMy41NzIwMDQxLDEwLjc3NDIzMDggQzMuNjAzNzc3ODcsMTAuNzY4MDc0NiAzLjYzNjU2NjMzLDEwLjc3NzY3NjYgMy42NiwxMC44IEw1LjIsMTIuMzM1IEM1LjIyNDIyNTgxLDEyLjM1OTUwODggNS4yMzQxMjUzMiwxMi4zOTQ3NjQ0IDUuMjI2MTk4MzgsMTIuNDI4MzAxNCBDNS4yMTgyNzE0MywxMi40NjE4Mzg1IDUuMTkzNjM1MSwxMi40ODg5MzEgNS4xNjEsMTIuNSBMNS4xNjEsMTIuNSBaIi8+Cjwvc3ZnPg==",
     l10n: "notes-sidebar",
     defaultWidth: 550,
+  },
+
+  "floorp//clips": {
+    url: import.meta.env.DEV
+      ? "http://localhost:5189"
+      : "chrome://noraneko-clips/content/index.html",
+    icon: clipsIcon,
+    l10n: "clips-sidebar",
+    defaultWidth: 400,
   },
 };
 

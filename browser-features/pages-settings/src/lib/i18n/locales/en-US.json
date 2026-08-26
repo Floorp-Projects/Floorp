@@ -25,6 +25,7 @@
         "home": "Home",
         "tabAndAppearance": "Tab & Appearance",
         "browserSidebar": "Panel Sidebar",
+        "clips": "Clips",
         "workspaces": "Workspaces",
         "keyboardShortcuts": "Keyboard Shortcuts",
         "webApps": "Web Apps",
@@ -434,7 +435,8 @@
             "bookmarks": "Bookmarks",
             "history": "History",
             "downloads": "Downloads",
-            "notes": "Notes"
+            "notes": "Notes",
+            "clips": "Clips"
         },
         "url": "URL",
         "untitled": "Untitled",
@@ -744,5 +746,32 @@
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
         }
+    },
+    "clips": {
+        "title": "Clips",
+        "description": "A place to set things aside while you browse — links, text, images, files — and pick them up again later.",
+        "mode": "How Clips behaves",
+        "modes": {
+            "local": "Local",
+            "sync": "Sync",
+            "clipboard": "Clipboard history"
+        },
+        "modeDescriptions": {
+            "local": "Everything stays on this device. Nothing is sent anywhere.",
+            "sync": "Clips travel between your devices through Firefox Sync, like Notes.",
+            "clipboard": "While the Clips panel is open, whatever you copy is added. Stays on this device."
+        },
+        "syncPathWarning": "File paths travel too, but a path from another device may not lead anywhere here.",
+        "modeSwitchTitle": "Switch mode",
+        "modeSwitchWarning": "Switching modes deletes every clip that is not pinned. Pinned clips are kept.",
+        "modeSwitchConfirm": "Switch",
+        "modeSwitchCancel": "Cancel",
+        "otherSettings": "Other settings",
+        "maxItems": "How many clips to keep",
+        "maxItemsDescription": "When there are more than this, the oldest go first. Pinned clips are not counted.",
+        "clearOnExit": "Delete unpinned clips when Floorp closes",
+        "fileAction": "Opening a file clip",
+        "fileActionReveal": "Show it in the file manager",
+        "fileActionLaunch": "Open it with the default app"
     }
 }

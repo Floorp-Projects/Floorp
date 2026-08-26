@@ -177,6 +177,18 @@ const JS_WINDOW_ACTORS: {
     ],
     ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },
+  NRClips: {
+    parent: {
+      esModuleURI: localPathToResourceURI("../actors/NRClipsParent.sys.mts"),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRClipsChild.sys.mts"),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["*://localhost/*", "chrome://noraneko-clips/*"],
+  },
   NRAppConstants: {
     parent: {
       esModuleURI: localPathToResourceURI(

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
   Briefcase,
+  Clipboard,
   Cpu,
   Grip,
   House,
@@ -68,6 +69,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.browserSidebar"),
       url: "/features/sidebar",
       icon: PanelLeft,
+    },
+    {
+      title: t("pages.clips"),
+      url: "/features/clips",
+      icon: Clipboard,
     },
     {
       title: t("pages.mouseGesture"),
