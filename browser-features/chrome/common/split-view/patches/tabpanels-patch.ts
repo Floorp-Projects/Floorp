@@ -443,13 +443,9 @@ export function patchTabpanels(
     origShowSplitViewPanels = gBrowser.showSplitViewPanels.bind(gBrowser);
     gBrowser.showSplitViewPanels = (tabs: SplitViewTab[]) => {
       if (isSessionRestoreInProgress()) {
-        try {
-          origShowSplitViewPanels!(tabs);
-        } catch (e) {
-          logger.error(
-            `[patch:showSplitViewPanels] original threw during session restore: ${e}`,
-          );
-        }
+        logger.debug(
+          `[patch:showSplitViewPanels] skipped during session restore: ${tabs.length} tab(s)`,
+        );
         return;
       }
 
