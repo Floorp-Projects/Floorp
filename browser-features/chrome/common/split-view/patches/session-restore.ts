@@ -43,63 +43,18 @@ function getSessionStore(): SessionStoreWin | null {
   return g.SessionStore ?? null;
 }
 
-let sessionRestoreInProgress = false;
-let sessionRestoreListenersAttached = false;
-const pendingSessionRestoreCallbacks: Array<() => void> = [];
-
-const onSessionRestoreStart = (): void => {
-  sessionRestoreInProgress = true;
-};
-
-const onSessionRestoreEnd = (): void => {
-  sessionRestoreInProgress = false;
-  const callbacks = pendingSessionRestoreCallbacks.splice(0);
-  for (const callback of callbacks) {
-    queueMicrotask(callback);
-  }
-};
-
-function ensureSessionRestoreListeners(): void {
-  if (sessionRestoreListenersAttached) {
-    return;
-  }
-  globalThis.addEventListener("SSWindowRestoring", onSessionRestoreStart);
-  globalThis.addEventListener("SSWindowRestored", onSessionRestoreEnd);
-  sessionRestoreListenersAttached = true;
-}
-
-export function cleanupSessionRestoreCoordinator(): void {
-  if (sessionRestoreListenersAttached) {
-    globalThis.removeEventListener("SSWindowRestoring", onSessionRestoreStart);
-    globalThis.removeEventListener("SSWindowRestored", onSessionRestoreEnd);
-    sessionRestoreListenersAttached = false;
-  }
-  sessionRestoreInProgress = false;
-  pendingSessionRestoreCallbacks.length = 0;
-}
-
 /**
  * SessionStore can invoke native split-view hooks while a window is still
  * being restored. Defer Floorp's stateful follow-up work until all windows
  * have settled so it cannot re-enter the native restore path.
  */
 export function runAfterSessionRestore(callback: () => void): void {
-  ensureSessionRestoreListeners();
-  if (sessionRestoreInProgress) {
-    pendingSessionRestoreCallbacks.push(callback);
-    return;
-  }
-
   const promise = getSessionStore()?.promiseAllWindowsRestored;
   if (promise) {
-    const schedule = (): void => {
-      if (sessionRestoreInProgress) {
-        pendingSessionRestoreCallbacks.push(callback);
-      } else {
-        queueMicrotask(callback);
-      }
-    };
-    void promise.then(schedule, schedule);
+    void promise.then(
+      () => callback(),
+      () => callback(),
+    );
     return;
   }
 
@@ -719,7 +674,6 @@ export function initSessionRestore(logger: ConsoleInstance): void {
     } catch (e) {
       logger.debug(`[session-restore] removeObserver: ${e}`);
     }
-    cleanupSessionRestoreCoordinator();
   });
 
   logger.debug(
