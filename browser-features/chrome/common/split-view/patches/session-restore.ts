@@ -623,7 +623,6 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
 }
 
 export function initSessionRestore(logger: ConsoleInstance): void {
-  ensureSessionRestoreListeners();
   const tabContainer = getGBrowser()?.tabContainer;
   if (!tabContainer) {
     logger.warn("[session-restore] init skip: no tabContainer");
