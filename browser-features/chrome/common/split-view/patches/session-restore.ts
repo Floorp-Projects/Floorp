@@ -55,7 +55,7 @@ const onSessionRestoreEnd = (): void => {
   sessionRestoreInProgress = false;
   const callbacks = pendingSessionRestoreCallbacks.splice(0);
   for (const callback of callbacks) {
-    queueMicrotask(callback);
+    setTimeout(callback, 0);
   }
 };
 
