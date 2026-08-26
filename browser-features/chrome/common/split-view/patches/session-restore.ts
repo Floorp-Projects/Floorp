@@ -43,6 +43,24 @@ function getSessionStore(): SessionStoreWin | null {
   return g.SessionStore ?? null;
 }
 
+/**
+ * SessionStore can invoke native split-view hooks while a window is still
+ * being restored. Defer Floorp's stateful follow-up work until all windows
+ * have settled so it cannot re-enter the native restore path.
+ */
+export function runAfterSessionRestore(callback: () => void): void {
+  const promise = getSessionStore()?.promiseAllWindowsRestored;
+  if (promise) {
+    void promise.then(
+      () => callback(),
+      () => callback(),
+    );
+    return;
+  }
+
+  queueMicrotask(callback);
+}
+
 const SESSION_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 
 function initSessionStoreSplitPersistence(
@@ -417,7 +435,9 @@ function onTabSplitViewActivate(logger: ConsoleInstance, e: Event): void {
   if (!Array.isArray(tabs) || tabs.length < 2) {
     return;
   }
-  applySplitViewSessionMarkersForTabs(logger, tabs, "TabSplitViewActivate");
+  runAfterSessionRestore(() => {
+    applySplitViewSessionMarkersForTabs(logger, tabs, "TabSplitViewActivate");
+  });
 }
 
 function onTabSplitViewDeactivate(logger: ConsoleInstance): void {
@@ -581,7 +601,7 @@ export function initSessionRestore(logger: ConsoleInstance): void {
     onTabSplitViewActivate(logger, e);
   };
   const onDeactivate = (): void => {
-    onTabSplitViewDeactivate(logger);
+    runAfterSessionRestore(() => onTabSplitViewDeactivate(logger));
   };
 
   tabContainer.addEventListener("TabSplitViewActivate", onActivate);
