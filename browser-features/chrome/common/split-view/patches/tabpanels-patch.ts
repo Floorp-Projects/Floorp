@@ -11,7 +11,6 @@ import type { PatchState } from "./patch-state.js";
 import {
   applySplitViewSessionMarkersForTabs,
   resolveLayoutForPanelIds,
-  runAfterSessionRestore,
 } from "./session-restore.js";
 import {
   ensureSplitPanelsActiveClassFromState,
@@ -506,24 +505,22 @@ export function patchTabpanels(
       state.inShowSplitViewPanels = true;
       try {
         origShowSplitViewPanels!(validTabs);
-        runAfterSessionRestore(() => {
-          syncSplitTabMarkerAttrs();
-          applySplitViewSessionMarkersForTabs(
-            logger,
-            validTabs,
-            "showSplitViewPanels",
-          );
-          scheduleSplitPaneWarmRetries(logger);
-          const bumpSplitViewUi = (): void => {
-            ensureSplitPaneTabBrowsersAreWarmed(logger);
-            ensureSplitPanelsActiveClassFromState();
-            refreshActiveSplitPaneIndicator();
-          };
+        syncSplitTabMarkerAttrs();
+        applySplitViewSessionMarkersForTabs(
+          logger,
+          validTabs,
+          "showSplitViewPanels",
+        );
+        scheduleSplitPaneWarmRetries(logger);
+        const bumpSplitViewUi = (): void => {
+          ensureSplitPaneTabBrowsersAreWarmed(logger);
+          ensureSplitPanelsActiveClassFromState();
+          refreshActiveSplitPaneIndicator();
+        };
+        bumpSplitViewUi();
+        requestAnimationFrame(() => {
           bumpSplitViewUi();
-          requestAnimationFrame(() => {
-            bumpSplitViewUi();
-            requestAnimationFrame(() => bumpSplitViewUi());
-          });
+          requestAnimationFrame(() => bumpSplitViewUi());
         });
       } catch (e) {
         logger.error(`[patch:showSplitViewPanels] original threw: ${e}`);
