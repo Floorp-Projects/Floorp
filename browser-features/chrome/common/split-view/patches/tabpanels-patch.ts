@@ -10,7 +10,6 @@ import { clearGridStyles } from "../layout.js";
 import type { PatchState } from "./patch-state.js";
 import {
   applySplitViewSessionMarkersForTabs,
-  isSessionRestoreInProgress,
   resolveLayoutForPanelIds,
   runAfterSessionRestore,
 } from "./session-restore.js";
@@ -442,17 +441,6 @@ export function patchTabpanels(
   if (typeof gBrowser.showSplitViewPanels === "function") {
     origShowSplitViewPanels = gBrowser.showSplitViewPanels.bind(gBrowser);
     gBrowser.showSplitViewPanels = (tabs: SplitViewTab[]) => {
-      if (isSessionRestoreInProgress()) {
-        try {
-          origShowSplitViewPanels!(tabs);
-        } catch (e) {
-          logger.error(
-            `[patch:showSplitViewPanels] original threw during session restore: ${e}`,
-          );
-        }
-        return;
-      }
-
       if (state.inShowSplitViewPanels) {
         logger.warn(
           `[patch:showSplitViewPanels] skipped (re-entrant); argTabs=${tabs.length} ` +

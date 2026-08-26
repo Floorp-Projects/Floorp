@@ -106,11 +106,6 @@ export function runAfterSessionRestore(callback: () => void): void {
   queueMicrotask(callback);
 }
 
-export function isSessionRestoreInProgress(): boolean {
-  ensureSessionRestoreListeners();
-  return sessionRestoreInProgress;
-}
-
 const SESSION_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 
 function initSessionStoreSplitPersistence(
