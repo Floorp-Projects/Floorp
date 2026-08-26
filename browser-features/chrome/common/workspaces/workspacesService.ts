@@ -47,6 +47,17 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   private explicitTabUserContextOperations =
     new ExplicitTabUserContextOperations();
+  // SessionStore removes and recreates tabs during restore. Do not let the
+  // workspace listeners treat those internal changes as user actions.
+  private sessionRestoreInProgress = false;
+
+  private handleSessionRestoreStart = () => {
+    this.sessionRestoreInProgress = true;
+  };
+
+  private handleSessionRestoreEnd = () => {
+    this.sessionRestoreInProgress = false;
+  };
 
   /**
    * Opens one tab without replacing an explicitly selected container with the
@@ -112,6 +123,14 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     this.dataManagerCtx = dataManagerCtx;
     this.modalCtx = new WorkspaceManageModal(this, this.iconCtx);
     this.archiveService = new WorkspacesArchiveService();
+    globalThis.addEventListener(
+      "SSWindowRestoring",
+      this.handleSessionRestoreStart,
+    );
+    globalThis.addEventListener(
+      "SSWindowRestored",
+      this.handleSessionRestoreEnd,
+    );
     // deno-lint-ignore no-explicit-any
     (globalThis as any).workspacesFuncs = {
       createNoNameWorkspace: this.createNoNameWorkspace.bind(this),
@@ -195,6 +214,14 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       globalThis.gBrowser.tabContainer.removeEventListener(
         "TabOpen",
         this.boundHandleTabOpen,
+      );
+      globalThis.removeEventListener(
+        "SSWindowRestoring",
+        this.handleSessionRestoreStart,
+      );
+      globalThis.removeEventListener(
+        "SSWindowRestored",
+        this.handleSessionRestoreEnd,
       );
     });
   }
@@ -597,6 +624,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
      * @returns void
      */
     onLocationChange: () => {
+      if (this.sessionRestoreInProgress) return;
       this.tabManagerCtx.updateTabsVisibility();
     },
   };
@@ -608,6 +636,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * This ensures tabs opened from bookmarks, external links, etc. use the current workspace's container.
    */
   private handleTabOpen = (event: Event) => {
+    if (this.sessionRestoreInProgress) return;
     const tabEvent = event as CustomEvent;
     const tab = (tabEvent.target || tabEvent.detail) as XULElement;
     if (!tab) {

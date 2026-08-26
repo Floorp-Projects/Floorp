@@ -62,6 +62,15 @@ export class WorkspacesTabManager {
   // bulk tab removal (workspace deletion) so that closing tabs one-by-one
   // does not interfere with the deletion flow (fixes #2247).
   private suppressTabCloseHandling = false;
+  // SessionStore removes and recreates tabs during restore. Do not let the
+  // workspace listeners treat those internal changes as user actions.
+  private sessionRestoreInProgress = false;
+  private handleSessionRestoreStart = () => {
+    this.sessionRestoreInProgress = true;
+  };
+  private handleSessionRestoreEnd = () => {
+    this.sessionRestoreInProgress = false;
+  };
   private readonly firefoxReplacementTracker = new FirefoxTabReplacementTracker<
     XULElement
   >();
@@ -78,6 +87,14 @@ export class WorkspacesTabManager {
     this.dataManagerCtx = dataManagerCtx;
     this.boundHandleTabClose = this.handleTabClose.bind(this);
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
+    globalThis.addEventListener(
+      "SSWindowRestoring",
+      this.handleSessionRestoreStart,
+    );
+    globalThis.addEventListener(
+      "SSWindowRestored",
+      this.handleSessionRestoreEnd,
+    );
     Services.obs.addObserver(
       this.browserWindowClosedObserver,
       BROWSER_WINDOW_CLOSED_TOPIC,
@@ -226,6 +243,14 @@ export class WorkspacesTabManager {
       this.boundHandleTabClose as EventListener,
     );
     globalThis.removeEventListener("TabOpen", this.boundHandleTabOpen);
+    globalThis.removeEventListener(
+      "SSWindowRestoring",
+      this.handleSessionRestoreStart,
+    );
+    globalThis.removeEventListener(
+      "SSWindowRestored",
+      this.handleSessionRestoreEnd,
+    );
     Services.obs.removeObserver(
       this.browserWindowClosedObserver,
       BROWSER_WINDOW_CLOSED_TOPIC,
@@ -233,6 +258,7 @@ export class WorkspacesTabManager {
   }
 
   private handleTabClose = (event: TabEvent) => {
+    if (this.sessionRestoreInProgress) return;
     const tab = event.target as XULElement;
     // Consume the transaction before any close logic can synchronously create
     // another tab. This also runs for suppressed closes so their transaction
@@ -418,6 +444,7 @@ export class WorkspacesTabManager {
   };
 
   private handleTabOpen = (event: Event) => {
+    if (this.sessionRestoreInProgress) return;
     try {
       const tab = (event as CustomEvent).target as XULElement;
       this.firefoxReplacementTracker.observeTabOpen(
@@ -436,6 +463,7 @@ export class WorkspacesTabManager {
   };
 
   public updateTabsVisibility() {
+    if (this.sessionRestoreInProgress) return;
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const selectedTab = globalThis.gBrowser.selectedTab;
     if (
