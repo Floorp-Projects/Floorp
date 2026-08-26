@@ -352,7 +352,9 @@ add_task(function directTabbrowserCallerReceivesASanitizedPlaceholder() {
       "normal direct-caller state should stay in its original slot",
     );
   } finally {
-    for (const tab of tabs) {
+    // A browser window must keep one tab alive. The last returned tab is
+    // therefore intentionally left for the next task/cleanup to replace.
+    for (const tab of tabs.slice(0, -1)) {
       BrowserTestUtils.removeTab(tab);
     }
   }
