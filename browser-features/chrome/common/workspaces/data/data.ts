@@ -22,21 +22,12 @@ import {
 import { trackStore } from "@solid-primitives/deep";
 import { isRight } from "fp-ts/Either";
 
-function readStoredWorkspaces(): unknown {
-  try {
-    return JSON.parse(
-      Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
-      (k, v) => (k == "data" ? new Map(v) : v),
-    );
-  } catch (error) {
-    console.warn("[Workspaces] failed to parse stored workspace data", error);
-    return null;
-  }
-}
-
 function getDefaultStore() {
   const result = zWorkspacesServicesStoreData.decode(
-    readStoredWorkspaces(),
+    JSON.parse(
+      Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
+      (k, v) => (k == "data" ? new Map(v) : v),
+    ),
   );
   if (isRight(result)) {
     return result.right;
@@ -74,7 +65,10 @@ function createWorkspacesData(): [
 
   const observer = () => {
     const result = zWorkspacesServicesStoreData.decode(
-      readStoredWorkspaces(),
+      JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME, "{}"),
+        (k, v) => (k == "data" ? new Map(v) : v),
+      ),
     );
     if (isRight(result)) {
       const _storedData = result.right;
