@@ -667,6 +667,12 @@ jobs:
           cp -f noraneko/static/gecko/custom-app-icons/*.png browser/components/shell/icons/
           for patch in noraneko/.github/patches/floorp-runtime/*.patch; do
             [ -e "$patch" ] || continue
+            case "$(basename "$patch")" in
+              *-tests.patch)
+                echo "Skipping test-only Floorp patch: $(basename "$patch")"
+                continue
+                ;;
+            esac
             echo "Applying Floorp patch: $(basename "$patch")"
             git apply --verbose "$patch"
           done
