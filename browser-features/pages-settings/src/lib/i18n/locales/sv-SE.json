@@ -130,6 +130,18 @@
             "minHeight": "Minsta flikhöjd",
             "minHeightError": "Flikens höjd måste vara mellan {{min}} och {{max}} pixlar."
         },
+        "tabWindowBehavior": {
+            "title": "Flik och fönster beteende",
+            "description": "Kontrollera var länkar öppna och skilja webbläsarfönster från Windows Aktivitetsfältet flikförhandsvisningar.",
+            "openLinks": "Öppna länkar som vill ha ett nytt fönster",
+            "openLinksDescription": "Välj om länkar som begär ett nytt fönster öppnas i det aktuella fönstret, ett nytt fönster eller en ny flik.",
+            "openCurrentWindowOrTab": "Nuvarande fönster eller flik",
+            "openNewWindow": "Nytt fönster",
+            "openNewTab": "Ny flik",
+            "taskbarPreviews": "Visa flikförhandsvisningar i aktivitetsfältet",
+            "taskbarPreviewsDescription": "Detta ändrar bara hur Windows aktivitetsfältet visas. Det skapar inte ytterligare webbläsarfönster.",
+            "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
+        },
         "lepton-preferences": {
             "title": "Lepton inställningar",
             "description": "Konfigurera avancerade Lepton temainställningar",
@@ -202,6 +214,14 @@
             "exampleDomain": "Matchar alla URL: er som innehåller denna domän",
             "exampleWildcard": "Matchar alla underdomäner till google.com",
             "exampleFullUrl": "Matchar endast Gmail-URL: er"
+        },
+        "tabStacks": {
+            "title": "Flikstaplar",
+            "description": "Gruppera flikar i staplar, vilket visas som en ikon i flikfältet med en andra rad av staplade flikar under.",
+            "enableOrDisable": "Aktivera/inaktivera",
+            "enableTabStacks": "Aktivera flikstaplar",
+            "enableTabStacksDescription": "Flikstaplar visar grupperade flikar som en ruta i flikfältet. Du måste starta om {{productName}} efter att du har ändrat denna inställning.",
+            "needRestartDescriptionForEnableAndDisable": "Du måste starta om {{productName}} för att helt aktivera eller inaktivera funktionen för flikstaplar."
         },
         "uiCustomization": {
             "title": "Anpassning av användargränssnitt",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Kontrollera din webbläsare med musrörelser.",
+        "saving": "Sparar inställningar för musgester…",
+        "saveError": "Inställningarna för musgester kunde inte sparas. Dina tidigare inställningar gäller fortfarande.",
         "generalSettings": "Allmänna inställningar",
         "generalSettingsDescription": "Grundläggande inställningar för musgester",
         "enabled": "Aktivera musgester",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Höger → Vänster",
         "rockerRightLeftDescription": "Håll in höger knapp och klicka sedan på vänster knapp",
         "wheelGesturesEnabled": "Aktivera scrollhjuls gester",
+        "wheelScrollUp": "Scrolla uppåt",
+        "wheelScrollUpDescription": "Åtgärd när man rullar hjulet uppåt samtidigt som man håller ned höger knapp",
+        "wheelScrollDown": "Scrolla ner",
+        "wheelScrollDownDescription": "Åtgärd när man rullar hjulet nedåt samtidigt som man håller ned höger knapp",
         "actions": {
             "gecko-back": "Gå tillbaka",
             "gecko-forward": "Gå framåt",
@@ -677,7 +703,7 @@
         "shortcut": "Genväg",
         "actions": "Åtgärder",
         "actionLabels": {
-            "floorp-edit-tab-url": "Edit Tab URL"
+            "floorp-edit-tab-url": "Redigera flikens URL"
         },
         "notSet": "Inte anget",
         "add": "Lägg till",

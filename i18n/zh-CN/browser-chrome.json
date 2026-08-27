@@ -516,6 +516,10 @@
     "stepIndicator": "第 {{current}} 步 / 总 {{total}} 步",
     "backToCommands": "返回命令列表",
     "openUrl": "打开网址",
+    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepPlaceholder": "选择一个身份……",
+    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "在新标签中打开网址",
     "openUrlStepLabel": "输入要打开的网址",
     "openUrlStepPlaceholder": "https://example.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "切换书签",
     "bookmarkSwitcherDescription": "打开已收藏的页面",
     "bookmarkSwitcherStepLabel": "选择书签",
-    "bookmarkSwitcherStepPlaceholder": "搜索或选择一个书签……"
+    "bookmarkSwitcherStepPlaceholder": "搜索或选择一个书签……",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "选择一个身份……",
+    "bookmarkSwitcherWhereBackgroundTab": "后台标签页",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "在新建的后台标签页中打开",
+    "bookmarkSwitcherWhereCurrentTab": "当前标签页",
+    "bookmarkSwitcherWhereCurrentTabDesc": "在当前标签页中打开",
+    "bookmarkSwitcherWhereLabel": "打开位置",
+    "bookmarkSwitcherWhereNewTab": "新标签页",
+    "bookmarkSwitcherWhereNewTabDesc": "在新建的前台标签页中打开",
+    "bookmarkSwitcherWherePlaceholder": "选择打开位置……"
   },
   "commandPaletteReadings": {}
 }

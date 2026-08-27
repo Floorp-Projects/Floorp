@@ -130,6 +130,18 @@
             "minHeight": "Ελάχιστο ύψος καρτέλας",
             "minHeightError": "Το ύψος της καρτέλας πρέπει να είναι μεταξύ {{min}} και {{max}} pixels."
         },
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
         "lepton-preferences": {
             "title": "Ρυθμίσεις Lepton",
             "description": "Ρύθμιση των προηγμένων προτιμήσεων του θέματος Lepton",
@@ -202,6 +214,14 @@
             "exampleDomain": "Ταιριάζει με οποιοδήποτε URL που περιέχει αυτόν τον τομέα",
             "exampleWildcard": "Ταιριάζει με όλα τα υποπεδία του google.com",
             "exampleFullUrl": "Ταιριάζει μόνο με διευθύνσεις URL του Gmail"
+        },
+        "tabStacks": {
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "Ενεργοποίηση/Απενεργοποίηση",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "Προσαρμογή UI",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Ελέγξτε το πρόγραμμα περιήγησής σας με κινήσεις του ποντικιού.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "Γενικές ρυθμίσεις",
         "generalSettingsDescription": "Βασικές ρυθμίσεις χειρονομιών ποντικιού",
         "enabled": "Ενεργοποίηση χειρονομιών ποντικιού",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Right → Left",
         "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Ενεργοποίηση χειρονομιών τροχού ποντικιού",
+        "wheelScrollUp": "Κύλιση προς τα επάνω",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Κύλιση προς τα κάτω",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Μετάβαση πίσω",
             "gecko-forward": "Μετάβαση εμπρός",

@@ -130,6 +130,18 @@
             "minHeight": "Tinggi tab minimal",
             "minHeightError": "Tinggi tab harus di antara {{min}} dan {{max}} piksel."
         },
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
         "lepton-preferences": {
             "title": "Pengaturan Lepton",
             "description": "Atur preferensi lanjutan tema Lepton",
@@ -202,6 +214,14 @@
             "exampleDomain": "Matches any URL containing this domain",
             "exampleWildcard": "Matches all subdomains of google.com",
             "exampleFullUrl": "Matches Gmail URLs only"
+        },
+        "tabStacks": {
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "(Non)Aktifkan",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "Kustomisasi UI",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Kendalikan peramban Anda dengan gerakan tetikus.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "Pengaturan Umum",
         "generalSettingsDescription": "Pengaturan gestur tetikus dasar",
         "enabled": "Aktifkan gestur tetikus",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Right → Left",
         "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Aktifkan gestur roda tetikus",
+        "wheelScrollUp": "Gulir ke Atas",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Gulir ke Bawah",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",

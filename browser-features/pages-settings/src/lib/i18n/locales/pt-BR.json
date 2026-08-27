@@ -130,6 +130,18 @@
             "minHeight": "Altura mínima da aba",
             "minHeightError": "A altura da aba deve estar entre {{min}} e {{max}} pixels."
         },
+        "tabWindowBehavior": {
+            "title": "Comportamento das abas e janelas",
+            "description": "Controle onde os links são abertos e diferencie as janelas do navegador das visualizações das abas na barra de tarefas do Windows.",
+            "openLinks": "Abrir links que solicitem uma nova janela",
+            "openLinksDescription": "Escolha se os links que abrem em uma nova janela devem ser exibidos na janela atual, em uma nova janela ou em uma nova aba.",
+            "openCurrentWindowOrTab": "Janela ou aba atual",
+            "openNewWindow": "Nova janela",
+            "openNewTab": "Nova aba",
+            "taskbarPreviews": "Mostrar pré-visualizações das abas na barra de tarefas",
+            "taskbarPreviewsDescription": "Isso altera apenas a exibição da barra de tarefas do Windows. Não cria janelas adicionais do navegador.",
+            "taskbarPreviewsUnavailable": "Essa opção está disponível apenas no Windows."
+        },
         "lepton-preferences": {
             "title": "Configurações do Lepton",
             "description": "Configurar as preferências avançadas do tema Lepton",
@@ -202,6 +214,14 @@
             "exampleDomain": "Corresponder a qualquer URL que contenha esse domínio",
             "exampleWildcard": "Corresponder a todos os subdomínios de google.com",
             "exampleFullUrl": "Corresponder apenas a URLs do Gmail"
+        },
+        "tabStacks": {
+            "title": "Pilhas de abas",
+            "description": "Agrupe as abas em pilhas, exibidas como um ícone na barra de abas, com uma segunda fileira de abas empilhadas logo abaixo.",
+            "enableOrDisable": "Ativar/Desativar",
+            "enableTabStacks": "Habilitar pilhas de abas",
+            "enableTabStacksDescription": "As pilhas de abas exibem abas agrupadas como um ícone na barra de abas. É necessário reiniciar o {{productName}} após alterar essa configuração.",
+            "needRestartDescriptionForEnableAndDisable": "É necessário reiniciar o {{productName}} para ativar ou desativar completamente o recurso de pilhas de abas."
         },
         "uiCustomization": {
             "title": "Personalização da interface do usuário",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Controle o navegador com movimentos do mouse.",
+        "saving": "Salvando configurações de gesto do mouse…",
+        "saveError": "Não foi possível salvar as configurações de gestos do mouse. Suas configurações anteriores continuam ativas.",
         "generalSettings": "Configurações gerais",
         "generalSettingsDescription": "Configurações básicas de gestos do mouse",
         "enabled": "Ativar os gestos do mouse",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Direita → Esquerda",
         "rockerRightLeftDescription": "Mantenha pressionado o botão direito e clique no botão esquerdo",
         "wheelGesturesEnabled": "Ativar gestos com a roda do mouse",
+        "wheelScrollUp": "Rolar para cima",
+        "wheelScrollUpDescription": "Ação ao girar a roda para cima enquanto mantém pressionado o botão direito",
+        "wheelScrollDown": "Rolar para baixo",
+        "wheelScrollDownDescription": "Ação ao girar a roda para baixo enquanto mantém pressionado o botão direito",
         "actions": {
             "gecko-back": "Voltar",
             "gecko-forward": "Avançar",

@@ -130,6 +130,18 @@
             "minHeight": "Minimale Tab-Höhe",
             "minHeightError": "Die Tab-Höhe muss zwischen {{min}} und {{max}} Pixeln liegen."
         },
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
         "lepton-preferences": {
             "title": "Lepton-Einstellungen",
             "description": "Erweiterte Einstellungen für das Lepton-Theme konfigurieren",
@@ -202,6 +214,14 @@
             "exampleDomain": "Trifft auf jede URL zu, die diese Domain enthält",
             "exampleWildcard": "Trifft auf alle Subdomains von google.com zu",
             "exampleFullUrl": "Trifft nur auf Gmail-URLs zu"
+        },
+        "tabStacks": {
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "Aktivieren/Deaktivieren",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "Oberflächen-Anpassung",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Steuere deinen Browser mit Mausbewegungen.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "Allgemeine Einstellungen",
         "generalSettingsDescription": "Grundlegende Einstellungen für Mausgesten",
         "enabled": "Mausgesten aktivieren",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Rechts → Links",
         "rockerRightLeftDescription": "Rechte Taste gedrückt halten, dann linke Taste klicken",
         "wheelGesturesEnabled": "Mausrad-Gesten aktivieren",
+        "wheelScrollUp": "Nach oben scrollen",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Nach unten scrollen",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Zurück",
             "gecko-forward": "Vorwärts",

@@ -130,6 +130,18 @@
             "minHeight": "Hauteur minimale de l'onglet",
             "minHeightError": "La hauteur de l'onglet doit être comprise entre {{min}} et {{max}} pixels."
         },
+        "tabWindowBehavior": {
+            "title": "Comportement des onglets et des fenêtres",
+            "description": "Contrôlez l'emplacement d'ouverture des liens et distinguez les fenêtres du navigateur des aperçus des onglets dans la barre des tâches de Windows.",
+            "openLinks": "Ouvrir les liens qui demandent une nouvelle fenêtre",
+            "openLinksDescription": "Choisissez si les liens qui ouvrent une nouvelle fenêtre doivent s'ouvrir dans la fenêtre actuelle, dans une nouvelle fenêtre ou dans un nouvel onglet.",
+            "openCurrentWindowOrTab": "Fenêtre ou onglet actuel",
+            "openNewWindow": "Nouvelle fenêtre",
+            "openNewTab": "Nouvel onglet",
+            "taskbarPreviews": "Afficher les aperçus des onglets dans la barre des tâches",
+            "taskbarPreviewsDescription": "Cela ne change que l'affichage de la barre des tâches de Windows. Il ne crée pas de fenêtres de navigateur additionnelles.",
+            "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
+        },
         "lepton-preferences": {
             "title": "Paramètres de Lepton…",
             "description": "Configurer les préférences avancées du thème Lepton",
@@ -202,6 +214,14 @@
             "exampleDomain": "Correspond à toute URL contenant ce domaine",
             "exampleWildcard": "Fait correspondre à tous les sous-domaines de google.com",
             "exampleFullUrl": "Correspond uniquement aux URL de Gmail"
+        },
+        "tabStacks": {
+            "title": "Piles d'onglets",
+            "description": "Regroupez les onglets dans des piles, représentées sous la forme d'une icône dans la barre d'onglets, avec une deuxième rangée d'onglets empilés en dessous.",
+            "enableOrDisable": "Activer/Désactiver",
+            "enableTabStacks": "Activer les piles d'onglets",
+            "enableTabStacksDescription": "Les piles d’onglets présentent les onglets regroupés sous forme de vignettes dans la barre d’onglets. Un redémarrage de {{productName}} est nécessaire après avoir modifié ce paramètre.",
+            "needRestartDescriptionForEnableAndDisable": "Un redémarrage de {{productName}} est nécessaire pour activer ou désactiver complètement la fonction de pile d'onglet."
         },
         "uiCustomization": {
             "title": "Personnalisation de l'interface utilisateur",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "Contrôlez votre navigateur à l'aide des mouvements de la souris.",
+        "saving": "Enregistrement des paramètres de gestes de la souris…",
+        "saveError": "Les paramètres des gestes de souris n'ont pas pu être enregistrés. Vos paramètres précédents sont toujours actifs.",
         "generalSettings": "Paramètres généraux",
         "generalSettingsDescription": "Paramètres de base des gestes de la souris",
         "enabled": "Activer les mouvements de la souris",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "Droite → Gauche",
         "rockerRightLeftDescription": "Maintenir le bouton droit enfoncé, puis cliquer sur le bouton gauche",
         "wheelGesturesEnabled": "Activer les gestes de la molette",
+        "wheelScrollUp": "Défiler vers le haut",
+        "wheelScrollUpDescription": "Action déclenchée en faisant défiler la molette vers le haut tout en maintenant le bouton droit enfoncé",
+        "wheelScrollDown": "Défiler vers le bas",
+        "wheelScrollDownDescription": "Action déclenchée lorsque l'on fait défiler la molette vers le bas tout en maintenant le bouton droit enfoncé",
         "actions": {
             "gecko-back": "Précédent",
             "gecko-forward": "Suivant",
@@ -677,7 +703,7 @@
         "shortcut": "Raccourci",
         "actions": "Actions",
         "actionLabels": {
-            "floorp-edit-tab-url": "Edit Tab URL"
+            "floorp-edit-tab-url": "Modifier l'URL de l'onglet"
         },
         "notSet": "Non défini",
         "add": "Ajouter",

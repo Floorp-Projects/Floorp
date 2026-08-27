@@ -516,6 +516,10 @@
     "stepIndicator": "Schritt {{current}} von {{total}}",
     "backToCommands": "Zurück zu den Befehlen",
     "openUrl": "URL öffnen",
+    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepPlaceholder": "Wähle einen Container...",
+    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "URL in einem neuen Tab öffnen",
     "openUrlStepLabel": "URL zum Öffnen eingeben",
     "openUrlStepPlaceholder": "https://example.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "Lesezeichen wechseln",
     "bookmarkSwitcherDescription": "Eine mit Lesezeichen versehene Seite öffnen",
     "bookmarkSwitcherStepLabel": "Lesezeichen auswählen",
-    "bookmarkSwitcherStepPlaceholder": "Lesezeichen suchen oder auswählen..."
+    "bookmarkSwitcherStepPlaceholder": "Lesezeichen suchen oder auswählen...",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "Wähle einen Container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Hintergrund-Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "In einem neuen Hintergrund-Tab öffnen",
+    "bookmarkSwitcherWhereCurrentTab": "Aktueller Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Im aktuellen Tab öffnen",
+    "bookmarkSwitcherWhereLabel": "Ort zum Öffnen",
+    "bookmarkSwitcherWhereNewTab": "Neuer Tab",
+    "bookmarkSwitcherWhereNewTabDesc": "In einem neuen Vordergrund-Tab öffnen",
+    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen..."
   },
   "commandPaletteReadings": {}
 }

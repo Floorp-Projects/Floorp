@@ -130,6 +130,18 @@
             "minHeight": "최소 탭 높이",
             "minHeightError": "탭 높이는 {{min}} ~ {{max}} 픽셀 사이여야 합니다."
         },
+        "tabWindowBehavior": {
+            "title": "탭 및 창 동작",
+            "description": "링크가 열리는 위치를 제어하고 브라우저 창과 Windows 작업 표시줄의 탭 미리보기를 구별할 수 있습니다.",
+            "openLinks": "새 창을 요청하는 링크 열기",
+            "openLinksDescription": "새 창에서 열기를 요청하는 링크를 현재 창에서 열지, 새 창에서 열지, 새 탭에서 열지 선택합니다.",
+            "openCurrentWindowOrTab": "현재 창 또는 탭",
+            "openNewWindow": "새 창",
+            "openNewTab": "새 탭",
+            "taskbarPreviews": "작업 표시줄에 탭 미리보기 표시",
+            "taskbarPreviewsDescription": "이 설정은 Windows 작업 표시줄의 표시 방식만 변경합니다. 별도의 브라우저 창을 더 만들지는 않습니다.",
+            "taskbarPreviewsUnavailable": "이 설정은 Windows에서만 이용할 수 있습니다."
+        },
         "lepton-preferences": {
             "title": "Lepton 설정",
             "description": "고급 Lepton 테마 환경 설정 구성",
@@ -202,6 +214,14 @@
             "exampleDomain": "이 도메인이 포함된 모든 URL과 일치합니다.",
             "exampleWildcard": "google.com의 모든 하위 도메인과 일치합니다.",
             "exampleFullUrl": "Gmail URL만 일치"
+        },
+        "tabStacks": {
+            "title": "탭 쌓기",
+            "description": "탭을 묶어 쌓습니다. 탭 표시줄의 칩 아래 두 번째 행에 쌓인 탭이 나타납니다.",
+            "enableOrDisable": "활성화/비활성화",
+            "enableTabStacks": "탭 쌓기 활성화",
+            "enableTabStacksDescription": "탭을 쌓으면 탭 그룹을 탭 표시줄의 칩으로 나타냅니다. 이 설정을 변경한 뒤에는 {{productName}}를 다시 시작해야 합니다.",
+            "needRestartDescriptionForEnableAndDisable": "탭 쌓기 기능을 완전히 활성화 또는 비활성화하려면 {{productName}}를 다시 시작해야 합니다."
         },
         "uiCustomization": {
             "title": "UI 맞춤 설정",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "마우스를 움직여 브라우저를 제어하세요.",
+        "saving": "마우스 제스처 설정 저장 중…",
+        "saveError": "마우스 제스처 설정을 저장할 수 없습니다. 여전히 이전 설정을 적용합니다.",
         "generalSettings": "일반 설정",
         "generalSettingsDescription": "기본 마우스 제스처 설정",
         "enabled": "마우스 제스처 사용",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "우 → 좌",
         "rockerRightLeftDescription": "오른쪽 버튼을 누른 채, 좌클릭합니다.",
         "wheelGesturesEnabled": "휠 제스처 활성화",
+        "wheelScrollUp": "위로 스크롤",
+        "wheelScrollUpDescription": "오른쪽 버튼을 누른 채로 휠을 위로 스크롤할 때의 동작",
+        "wheelScrollDown": "아래로 스크롤",
+        "wheelScrollDownDescription": "오른쪽 버튼을 누른 채로 휠을 아래로 스크롤할 때의 동작",
         "actions": {
             "gecko-back": "뒤로",
             "gecko-forward": "앞으로",

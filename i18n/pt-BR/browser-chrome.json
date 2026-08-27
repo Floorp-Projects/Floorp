@@ -516,6 +516,10 @@
     "stepIndicator": "Etapa {{current}} de {{total}}",
     "backToCommands": "Voltar aos comandos",
     "openUrl": "Abrir URL",
+    "openUrlContainerStepLabel": "Abrir no contêiner",
+    "openUrlContainerStepPlaceholder": "Escolha um contêiner...",
+    "openUrlContainerWorkspaceDefault": "Espaço de trabalho padrão",
+    "openUrlContainerWorkspaceDefaultDesc": "Utiliza o contexto padrão do espaço de trabalho",
     "openUrlDescription": "Abrir uma URL em uma nova aba",
     "openUrlStepLabel": "Digite a URL para abrir",
     "openUrlStepPlaceholder": "https://exemplo.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "Mudar de favorito",
     "bookmarkSwitcherDescription": "Abrir uma página marcada como favorita",
     "bookmarkSwitcherStepLabel": "Selecione uma página marcada como favorita",
-    "bookmarkSwitcherStepPlaceholder": "Pesquise ou escolha uma página marcada como favorita..."
+    "bookmarkSwitcherStepPlaceholder": "Pesquise ou escolha uma página marcada como favorita...",
+    "bookmarkSwitcherContainerStepLabel": "Abrir no contêiner",
+    "bookmarkSwitcherContainerStepPlaceholder": "Escolha um contêiner...",
+    "bookmarkSwitcherWhereBackgroundTab": "Aba de fundo",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Abrir em nova aba em segundo plano",
+    "bookmarkSwitcherWhereCurrentTab": "Aba atual",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navegar pela aba atual",
+    "bookmarkSwitcherWhereLabel": "Onde abrir",
+    "bookmarkSwitcherWhereNewTab": "Nova aba",
+    "bookmarkSwitcherWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
+    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir..."
   },
   "commandPaletteReadings": {}
 }

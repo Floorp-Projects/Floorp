@@ -130,6 +130,18 @@
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
+        "tabWindowBehavior": {
+            "title": "タブとウインドウの動作",
+            "description": "リンクを開く場所を制御したり、ブラウザーウインドウと Windows タスクバーのタブプレビューを区別できます。",
+            "openLinks": "新規ウインドウで開くことを求めるリンク",
+            "openLinksDescription": "新規ウインドウで開くよう求めてくるリンクを、現在のウインドウ、新規ウインドウ、新規タブのどれで開くかを選択します。",
+            "openCurrentWindowOrTab": "現在のウインドウまたはタブ",
+            "openNewWindow": "新規ウインドウ",
+            "openNewTab": "新規タブ",
+            "taskbarPreviews": "タスクバーにタブのプレビューを表示",
+            "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウインドウは作成されません。",
+            "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
+        },
         "lepton-preferences": {
             "title": "Lepton の設定",
             "description": "Lepton テーマの高度な設定を変更します",
@@ -202,6 +214,14 @@
             "exampleDomain": "このドメインを含む URL に反応",
             "exampleWildcard": "google.com のすべてのサブドメインに反応",
             "exampleFullUrl": "Gmail の URL のみに反応"
+        },
+        "tabStacks": {
+            "title": "タブスタック",
+            "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
+            "enableOrDisable": "有効化/無効化",
+            "enableTabStacks": "タブスタックを有効にする",
+            "enableTabStacksDescription": "タブスタックは、グループ化されたタブをタブバー上のチップとして表示します。この設定を変更した後は、 {{productName}} の再起動が必要です。",
+            "needRestartDescriptionForEnableAndDisable": "タブスタック機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。"
         },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "マウス操作でブラウザーをコントロールします。",
+        "saving": "マウスジェスチャーの設定を保存中…",
+        "saveError": "マウスジェスチャーの設定を保存できませんでした。以前の設定を保持します。",
         "generalSettings": "一般設定",
         "generalSettingsDescription": "マウスジェスチャーの基本設定",
         "enabled": "マウスジェスチャーを有効にする",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "右 → 左",
         "rockerRightLeftDescription": "右ボタンを押したまま、左ボタンをクリック",
         "wheelGesturesEnabled": "ホイールジェスチャーを有効にする",
+        "wheelScrollUp": "上にスクロール",
+        "wheelScrollUpDescription": "右ボタンを押したままホイールを上にスクロールしたときのアクション",
+        "wheelScrollDown": "下にスクロール",
+        "wheelScrollDownDescription": "右ボタンを押したままホイールを下にスクロールしたときのアクション",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",

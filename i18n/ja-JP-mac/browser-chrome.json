@@ -516,6 +516,10 @@
     "stepIndicator": "ステップ {{current}} / {{total}}",
     "backToCommands": "コマンド一覧に戻る",
     "openUrl": "URL を開く",
+    "openUrlContainerStepLabel": "コンテナーで開く",
+    "openUrlContainerStepPlaceholder": "コンテナーを選択...",
+    "openUrlContainerWorkspaceDefault": "ワークスペースのデフォルト",
+    "openUrlContainerWorkspaceDefaultDesc": "このワークスペースにおけるデフォルトを使用します",
     "openUrlDescription": "URL を新規タブで開きます",
     "openUrlStepLabel": "開く URL を入力",
     "openUrlStepPlaceholder": "https://example.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "ブックマークを開く",
     "bookmarkSwitcherDescription": "ブックマークしたページを開きます",
     "bookmarkSwitcherStepLabel": "ブックマークを選択",
-    "bookmarkSwitcherStepPlaceholder": "ブックマークを検索または選択..."
+    "bookmarkSwitcherStepPlaceholder": "ブックマークを検索または選択...",
+    "bookmarkSwitcherContainerStepLabel": "コンテナーで開く",
+    "bookmarkSwitcherContainerStepPlaceholder": "コンテナーを選択...",
+    "bookmarkSwitcherWhereBackgroundTab": "バックグラウンドのタブ",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "現在のタブを表示したまま新しいタブで開く",
+    "bookmarkSwitcherWhereCurrentTab": "現在のタブ",
+    "bookmarkSwitcherWhereCurrentTabDesc": "現在のタブのまま移動",
+    "bookmarkSwitcherWhereLabel": "開く場所",
+    "bookmarkSwitcherWhereNewTab": "新規タブ",
+    "bookmarkSwitcherWhereNewTabDesc": "新しいタブに切り替えて開く",
+    "bookmarkSwitcherWherePlaceholder": "開く場所を選択..."
   },
   "commandPaletteReadings": {}
 }

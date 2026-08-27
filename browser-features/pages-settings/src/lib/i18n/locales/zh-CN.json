@@ -130,6 +130,18 @@
             "minHeight": "最小标签宽度",
             "minHeightError": "标签高度必须在 {{min}} 和 {{max}} 像素之间。"
         },
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
         "lepton-preferences": {
             "title": "Lepton 设置",
             "description": "配置 Lepton 主题高级首选项",
@@ -202,6 +214,14 @@
             "exampleDomain": "匹配包含该域名的任何 URL",
             "exampleWildcard": "匹配 google.com 的所有子域名",
             "exampleFullUrl": "仅匹配 Gmail 网址"
+        },
+        "tabStacks": {
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "启用/禁用",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "自定义界面",
@@ -511,6 +531,8 @@
     },
     "mouseGesture": {
         "description": "使用鼠标手势控制浏览器。",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "基本设置",
         "generalSettingsDescription": "鼠标手势基本设置",
         "enabled": "启用鼠标手势",
@@ -547,6 +569,10 @@
         "rockerRightLeft": "右 → 左",
         "rockerRightLeftDescription": "按住右键，然后点击左键",
         "wheelGesturesEnabled": "启用滚轮手势",
+        "wheelScrollUp": "向上滚动",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "向下滚动",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "转到上一页",
             "gecko-forward": "转到下一页",

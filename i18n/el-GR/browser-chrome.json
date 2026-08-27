@@ -516,6 +516,10 @@
     "stepIndicator": "Βήμα {{current}} από {{total}}",
     "backToCommands": "Back to commands",
     "openUrl": "Open URL",
+    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepPlaceholder": "Choose a container...",
+    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "Open a URL in a new tab",
     "openUrlStepLabel": "Enter URL to open",
     "openUrlStepPlaceholder": "https://example.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "Switch Bookmark",
     "bookmarkSwitcherDescription": "Open a bookmarked page",
     "bookmarkSwitcherStepLabel": "Select a bookmark",
-    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark...",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "Choose a container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Background Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Open in a new background tab",
+    "bookmarkSwitcherWhereCurrentTab": "Current Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navigate the current tab",
+    "bookmarkSwitcherWhereLabel": "Where to open",
+    "bookmarkSwitcherWhereNewTab": "Νέα καρτέλα",
+    "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
+    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
   },
   "commandPaletteReadings": {}
 }
