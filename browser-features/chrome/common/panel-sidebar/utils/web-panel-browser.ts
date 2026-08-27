@@ -19,12 +19,15 @@ export type WebPanelBrowserElement = XULBrowserElement & {
   goForward?: () => void;
 };
 
+type WebPanelChromeWindow = Window & {
+  floorpWebPanelContentBrowser?: WebPanelBrowserElement;
+  gBrowser?: { selectedBrowser?: WebPanelBrowserElement };
+  bmsLoadedURI?: string;
+};
+
 type XULSidebarBrowserElement = XULElement & {
   browsingContext: {
-    associatedWindow: Window & {
-      floorpWebPanelContentBrowser?: WebPanelBrowserElement;
-      bmsLoadedURI?: string;
-    };
+    associatedWindow: WebPanelChromeWindow;
   };
 };
 
@@ -46,7 +49,7 @@ export function getPanelDataById(panelId: string): Panel | null {
 export function getWebPanelChromeWindow(
   webpanelId: string,
   parentWindow: Window = globalThis as unknown as Window,
-): (Window & { floorpWebPanelContentBrowser?: WebPanelBrowserElement }) | null {
+): WebPanelChromeWindow | null {
   const sidebarBrowser = parentWindow.document?.getElementById(
     `sidebar-panel-${webpanelId}`,
   ) as XULSidebarBrowserElement | null;
@@ -70,6 +73,7 @@ export function getWebPanelContentBrowser(
 
   return (
     chromeWindow.floorpWebPanelContentBrowser ??
+      chromeWindow.gBrowser?.selectedBrowser ??
       (chromeWindow.document?.getElementById(
         WEB_PANEL_CONTENT_BROWSER_ID,
       ) as WebPanelBrowserElement | null)

@@ -11,16 +11,52 @@ import {
 import {
   applySavedZoomLevel,
   loadUriInWebPanelBrowser,
-  WEB_PANEL_CONTENT_BROWSER_ID,
   type WebPanelBrowserElement,
 } from "./utils/web-panel-browser.ts";
-import { WebPanelFindController } from "./utils/web-panel-find-controller.ts";
 
 const PANEL_SIDEBAR_DATA_PREF_NAME = "floorp.panelSidebar.data";
 
+interface WebPanelTabBrowser {
+  selectedTab: XULElement;
+  readonly selectedBrowser: WebPanelBrowserElement;
+  addTab(
+    url: string,
+    options: {
+      userContextId: number;
+      triggeringPrincipal: nsIPrincipal;
+      skipAnimation: boolean;
+    },
+  ): XULElement;
+  removeTab(tab: XULElement): void;
+}
+
+export function prepareWebPanelTab(
+  tabBrowser: WebPanelTabBrowser,
+  userContextId: number,
+): WebPanelBrowserElement {
+  const initialTab = tabBrowser.selectedTab;
+  const initialUserContextId = Number(
+    initialTab.getAttribute("usercontextid") || 0,
+  );
+
+  if (initialUserContextId !== userContextId) {
+    const triggeringPrincipal = Services.scriptSecurityManager
+      .createNullPrincipal({ userContextId });
+    const replacementTab = tabBrowser.addTab("about:blank", {
+      userContextId,
+      triggeringPrincipal,
+      skipAnimation: true,
+    });
+    tabBrowser.selectedTab = replacementTab;
+    tabBrowser.removeTab(initialTab);
+  }
+
+  tabBrowser.selectedTab.setAttribute("BMS-webpanel-tab", "true");
+  return tabBrowser.selectedBrowser;
+}
+
 export class WebsitePanelWindowChild {
   private static instance: WebsitePanelWindowChild;
-  private findController: WebPanelFindController | null = null;
   static getInstance() {
     if (!WebsitePanelWindowChild.instance) {
       WebsitePanelWindowChild.instance = new WebsitePanelWindowChild();
@@ -114,12 +150,15 @@ export class WebsitePanelWindowChild {
     for (let attempt = 0; attempt < 100; attempt++) {
       if (
         document.getElementById("main-window") &&
-        document.getElementById("browser")
+        document.getElementById("browser") &&
+        globalThis.gBrowser?.selectedBrowser
       ) {
         return;
       }
       await new Promise((resolve) => globalThis.setTimeout(resolve, 50));
     }
+
+    throw new Error("The web panel tabbrowser was not initialized");
   }
 
   private hideChromeUi(): void {
@@ -167,83 +206,15 @@ export class WebsitePanelWindowChild {
         flex: 1 !important;
         min-height: 100%;
       }
-      #floorp-webpanel-content-browser {
-        flex: 1 !important;
-        width: 100% !important;
-        min-height: 100% !important;
-      }
     `;
     document.documentElement?.appendChild(style);
   }
 
-  private getContentContainer(): HTMLElement {
-    const browserBox = document?.getElementById("browser") as
-      | HTMLElement
-      | null;
-    const tabPanels = document?.getElementById("tabbrowser-tabpanels") as
-      | HTMLElement
-      | null;
-    const container = tabPanels ?? browserBox ??
-      (document?.documentElement as HTMLElement);
-
-    container.style.setProperty("display", "flex");
-    container.style.setProperty("flex-direction", "column");
-    container.style.setProperty("flex", "1");
-    container.style.setProperty("min-height", "100%");
-    container.style.setProperty("width", "100%");
-
-    if (browserBox) {
-      browserBox.style.setProperty("flex", "1");
-      browserBox.style.setProperty("min-height", "100%");
-    }
-
-    const tabBox = document?.getElementById("tabbrowser-tabbox") as
-      | HTMLElement
-      | null;
-    if (tabBox) {
-      tabBox.style.setProperty("flex", "1");
-      tabBox.style.setProperty("min-height", "100%");
-      tabBox.removeAttribute("hidden");
-    }
-
-    return container;
-  }
-
-  private createContentBrowser(): WebPanelBrowserElement {
-    const existing = document?.getElementById(
-      WEB_PANEL_CONTENT_BROWSER_ID,
-    ) as WebPanelBrowserElement | null;
-    if (existing) {
-      return existing;
-    }
-
-    const browser = document!.createXULElement(
-      "browser",
-    ) as WebPanelBrowserElement;
-    browser.id = WEB_PANEL_CONTENT_BROWSER_ID;
-    browser.setAttribute("type", "content");
-    browser.setAttribute("remote", "true");
-    browser.setAttribute("maychangeremoteness", "true");
-    browser.setAttribute("flex", "1");
-    browser.setAttribute("disablehistory", "true");
-    browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("messagemanagergroup", "browsers");
-    browser.setAttribute("manualactiveness", "true");
-    browser.style.setProperty("flex", "1");
-    browser.style.setProperty("width", "100%");
-    browser.style.setProperty("min-height", "100%");
-
-    if (this.userContextId > 0) {
-      browser.setAttribute("usercontextid", String(this.userContextId));
-    }
-
-    const container = this.getContentContainer();
-    container.appendChild(browser);
-    browser.docShellIsActive = true;
-    if (browser.browsingContext) {
-      browser.browsingContext.allowJavascript = true;
-    }
-
+  private getContentBrowser(): WebPanelBrowserElement {
+    const browser = prepareWebPanelTab(
+      globalThis.gBrowser as unknown as WebPanelTabBrowser,
+      this.userContextId,
+    );
     globalThis.floorpWebPanelContentBrowser = browser;
     return browser;
   }
@@ -275,11 +246,7 @@ export class WebsitePanelWindowChild {
       "toolbar menubar directories extrachrome",
     );
 
-    const browser = this.createContentBrowser();
-    if (!this.findController) {
-      this.findController = new WebPanelFindController(browser);
-    }
-    this.findController.init();
+    const browser = this.getContentBrowser();
 
     globalThis.requestAnimationFrame(() => {
       loadUriInWebPanelBrowser(browser, loadURL);
