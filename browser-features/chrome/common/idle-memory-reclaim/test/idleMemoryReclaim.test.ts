@@ -14,6 +14,7 @@ import {
   DEFAULT_STATS,
   type IdleMemoryReclaimSettings,
   type IdleMemoryReclaimStats,
+  MAX_POLL_INTERVAL_SEC,
   MIN_IDLE_THRESHOLD_SEC,
   MIN_POLL_INTERVAL_SEC,
   MIN_RECLAIM_INTERVAL_SEC,
@@ -137,6 +138,37 @@ function testSanitizeSettingsClampsPollInterval(): void {
     result.pollIntervalSec,
     MIN_POLL_INTERVAL_SEC,
     "poll interval below the floor should be clamped",
+  );
+}
+
+function testSanitizeSettingsClampsPollIntervalCeiling(): void {
+  // setInterval takes a signed 32-bit timeout. One second past the ceiling the
+  // millisecond value wraps negative, and a negative delay is clamped to 0ms —
+  // so an unbounded value would turn the least frequent poll into the busiest.
+  const overflowing = MAX_POLL_INTERVAL_SEC + 1;
+  assert(
+    (Math.round(overflowing) * 1000 | 0) < 0,
+    "the test input must actually overflow, or this guards nothing",
+  );
+
+  const result = sanitizeSettings({ pollIntervalSec: overflowing });
+  assertEquals(
+    result.pollIntervalSec,
+    MAX_POLL_INTERVAL_SEC,
+    "poll interval above the ceiling should be clamped",
+  );
+  assert(
+    Math.round(result.pollIntervalSec) * 1000 <= 0x7fffffff,
+    "the clamped value must still fit a signed 32-bit timeout",
+  );
+}
+
+function testSanitizeSettingsKeepsPollIntervalAtCeiling(): void {
+  const result = sanitizeSettings({ pollIntervalSec: MAX_POLL_INTERVAL_SEC });
+  assertEquals(
+    result.pollIntervalSec,
+    MAX_POLL_INTERVAL_SEC,
+    "the ceiling itself should pass through unchanged",
   );
 }
 
@@ -352,6 +384,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "sanitizeSettings clamps poll interval",
       fn: testSanitizeSettingsClampsPollInterval,
+    },
+    {
+      name: "sanitizeSettings clamps poll interval at the 32-bit ceiling",
+      fn: testSanitizeSettingsClampsPollIntervalCeiling,
+    },
+    {
+      name: "sanitizeSettings keeps poll interval at the ceiling",
+      fn: testSanitizeSettingsKeepsPollIntervalAtCeiling,
     },
     {
       name: "sanitizeSettings rejects NaN and Infinity",
