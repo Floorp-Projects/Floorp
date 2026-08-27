@@ -1,9 +1,13 @@
 diff --git a/moz-src/browser/components/shell/CustomIconManager.sys.mjs b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
-index e1cb1e9e688..7da7aea6fc4 100644
+index 9a89d2b669a..f38cdc13cf9 100644
 --- a/moz-src/browser/components/shell/CustomIconManager.sys.mjs
 +++ b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
-@@ -8,89 +8,51 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+@@ -8,93 +8,55 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  const PREF_ICON_ID = "browser.shell.customIcon.id";
+ const PREF_ENABLED = "browser.shell.customIcon.enabled";
+ // True once we have ever created the shortcut.
+ const PREF_PER_USER_START_MENU_SHORTCUT_CREATED =
+   "browser.shell.customIcon.perUserStartMenuShortcutCreated";
 
  /**
 - * Inlined catalog of selectable icons. Each entry has:
