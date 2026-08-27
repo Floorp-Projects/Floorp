@@ -1,7 +1,7 @@
-diff --git a/moz-src/browser/components/shell/CustomIconManager.sys.mjs b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
+diff --git a/browser/components/shell/CustomIconManager.sys.mjs b/browser/components/shell/CustomIconManager.sys.mjs
 index 9a89d2b669a..f38cdc13cf9 100644
---- a/moz-src/browser/components/shell/CustomIconManager.sys.mjs
-+++ b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
+--- a/browser/components/shell/CustomIconManager.sys.mjs
++++ b/browser/components/shell/CustomIconManager.sys.mjs
 @@ -8,93 +8,55 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  const PREF_ICON_ID = "browser.shell.customIcon.id";
  const PREF_ENABLED = "browser.shell.customIcon.enabled";

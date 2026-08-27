@@ -25,7 +25,7 @@ const PATCH_PAIRS = [
     sourcePatch: "custom-app-icons-manager.patch",
     runtimePatch: "custom-app-icons-manager.windows.patch",
     sourcePath: "browser/components/shell/CustomIconManager.sys.mjs",
-    runtimePath: "moz-src/browser/components/shell/CustomIconManager.sys.mjs",
+    runtimePath: "browser/components/shell/CustomIconManager.sys.mjs",
   },
 ] as const;
 
