@@ -84,21 +84,34 @@ interface TabInstanceInfo {
 // Global sets to prevent garbage collection of active components
 const TAB_MANAGER_ACTOR_SETS: Set<XULBrowserElement> = new Set();
 
+function isWebPanelWindow(win: Window): boolean {
+  if (
+    (win as Window & { floorpWebPanelWindow?: boolean }).floorpWebPanelWindow
+  ) {
+    return true;
+  }
+
+  try {
+    return new URL(win.location.href).searchParams.has("floorpWebPanelId");
+  } catch {
+    return false;
+  }
+}
+
 /**
  * A utility function to get the most recent browser window.
  * @returns The browser window.
  */
 function getBrowserWindow() {
-  // Panel windows (floorpWebPanelId) are navigator:browser windows but don't
-  // have gBrowser initialized (browser-init.patch skips init for them).
-  // Enumerate all windows and return the first one with gBrowser defined.
+  // An embedded web panel now has its own gBrowser so WebExtensions can attach
+  // to its content. It must not become the primary OS automation window.
   try {
     const enumerator = Services.wm.getEnumerator(
       "navigator:browser",
     ) as nsISimpleEnumerator;
     while (enumerator?.hasMoreElements?.()) {
       const win = enumerator.getNext() as Window & { gBrowser: GBrowser };
-      if (win && !win.closed && win.gBrowser) {
+      if (win && !win.closed && win.gBrowser && !isWebPanelWindow(win)) {
         return win;
       }
     }
@@ -119,8 +132,7 @@ function getBrowserWindows(): Array<Window & { gBrowser: GBrowser }> {
     ) as nsISimpleEnumerator;
     while (enumerator?.hasMoreElements?.()) {
       const win = enumerator.getNext() as Window & { gBrowser: GBrowser };
-      // Skip panel windows (floorpWebPanelId) — they don't have gBrowser.
-      if (win && !win.closed && win.gBrowser) {
+      if (win && !win.closed && win.gBrowser && !isWebPanelWindow(win)) {
         windows.push(win);
       }
     }
@@ -180,6 +192,7 @@ class TabManager {
             "load",
             () => {
               if (
+                !isWebPanelWindow(win) &&
                 (win as unknown as { gBrowser?: GBrowser }).gBrowser
                   ?.tabContainer
               ) {
