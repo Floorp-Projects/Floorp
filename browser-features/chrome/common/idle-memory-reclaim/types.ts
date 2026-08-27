@@ -84,4 +84,15 @@ export const MIN_IDLE_THRESHOLD_SEC = 15;
 export const MIN_RECLAIM_INTERVAL_SEC = 30;
 export const MIN_POLL_INTERVAL_SEC = 15;
 
+/**
+ * Ceiling for pollIntervalSec.
+ *
+ * The value is turned into milliseconds and handed to setInterval, whose
+ * timeout is a signed 32-bit integer. Past this it wraps negative, and the
+ * timer implementation clamps a negative delay to 0ms — so asking for a very
+ * infrequent poll would produce the busiest one possible. Cap it at the largest
+ * whole second that still fits, roughly 24.8 days.
+ */
+export const MAX_POLL_INTERVAL_SEC = Math.floor(0x7fffffff / 1000);
+
 export const BYTES_PER_MB = 1024 * 1024;

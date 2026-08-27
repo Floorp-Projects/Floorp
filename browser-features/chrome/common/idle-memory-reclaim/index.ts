@@ -13,6 +13,7 @@ import {
   IDLE_MEMORY_RECLAIM_STATS_PREF,
   type IdleMemoryReclaimSettings,
   type IdleMemoryReclaimStats,
+  MAX_POLL_INTERVAL_SEC,
   MEMORY_REPORTER_MANAGER_CONTRACT_ID,
   MIN_IDLE_THRESHOLD_SEC,
   MIN_POLL_INTERVAL_SEC,
@@ -46,11 +47,16 @@ function readBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
-function readNumber(value: unknown, fallback: number, min: number): number {
+function readNumber(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max = Number.POSITIVE_INFINITY,
+): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
   }
-  return Math.max(min, value);
+  return Math.min(max, Math.max(min, value));
 }
 
 /**
@@ -79,6 +85,7 @@ export function sanitizeSettings(raw: unknown): IdleMemoryReclaimSettings {
       source.pollIntervalSec,
       DEFAULT_SETTINGS.pollIntervalSec,
       MIN_POLL_INTERVAL_SEC,
+      MAX_POLL_INTERVAL_SEC,
     ),
     minIntervalSec: readNumber(
       source.minIntervalSec,
