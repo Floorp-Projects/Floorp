@@ -1,46 +1,46 @@
 {
   "aboutDialog": {
-    "ariaLabel": "About Floorp",
-    "version": "Version",
+    "ariaLabel": "Over Floorp",
+    "version": "Versie",
     "channel": {
-      "nightly": "Nightly",
+      "nightly": "Nachtelijke",
       "esr": "ESR"
     },
     "update": {
-      "idle": "Check for updates",
-      "checking": "Checking for updates…",
-      "checkFailed": "Couldn't check for updates. Try again later.",
-      "upToDate": "You're up to date.",
-      "downloading": "Downloading update… {{progress}}",
-      "applying": "Installing update…",
-      "readyToRestart": "Update ready — restart to apply.",
-      "restarting": "Restarting…",
-      "policyDisabled": "Updates are managed by your organisation.",
-      "downloadFailed": "Download failed. Please try again.",
-      "noUpdater": "Updates are managed externally.",
-      "available": "Download update {{version}}",
-      "tryAgain": "Try again",
-      "restartToApply": "Restart to apply update"
+      "idle": "Controleer op updates",
+      "checking": "Controleren op updates…",
+      "checkFailed": "Kan niet controleren op updates. Probeer het later nog eens.",
+      "upToDate": "Helemaal up-to-date.",
+      "downloading": "Update wordt gedownload… {{progress}}",
+      "applying": "Update wordt geïnstalleerd…",
+      "readyToRestart": "Update klaar — start opnieuw op om deze toe te passen.",
+      "restarting": "Herstarten…",
+      "policyDisabled": "Updates worden beheerd door uw organisatie.",
+      "downloadFailed": "Download is mislukt. Probeer opnieuw.",
+      "noUpdater": "Updates worden extern beheerd.",
+      "available": "Update {{version}} downloaden",
+      "tryAgain": "Probeer opnieuw",
+      "restartToApply": "Start opnieuw om de update toe te passen"
     },
     "community": {
-      "title": "Join the Community"
+      "title": "Word lid van de groep"
     },
     "help": {
-      "title": "Help & Support",
-      "support": "Support"
+      "title": "Help & Ondersteuning",
+      "support": "Ondersteuning"
     },
     "sponsor": {
-      "title": "Support the Project",
-      "button": "Become a Sponsor"
+      "title": "Steun het Project",
+      "button": "Wordt Sponsor"
     },
     "links": {
-      "releaseNotes": "Release Notes",
+      "releaseNotes": "Versie-informatie",
       "help": "Floorp Help",
-      "feedback": "Submit Feedback",
-      "licensing": "License",
-      "terms": "Terms of Service",
-      "privacy": "Privacy Policy"
+      "feedback": "Feedback geven",
+      "licensing": "Licentie",
+      "terms": "Gebruiksvoorwaarden",
+      "privacy": "Privacy Beleid"
     },
-    "trademark": "The name Floorp is a trademark in Japan."
+    "trademark": "Floorp is een handelsmerk in Japan."
   }
 }

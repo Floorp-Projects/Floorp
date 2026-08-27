@@ -1,6 +1,6 @@
 {
   "tab-refresh": {
-    "reload": "Reload tab"
+    "reload": "Ladda om flik"
   },
   "undo-closed-tab": {
     "label": "Ångra stängd flik",
@@ -137,9 +137,9 @@
     "name": "Privat behållare"
   },
   "tabInlineEdit": {
-    "contextMenu": "Edit Tab URL",
-    "inputLabel": "Tab URL",
-    "keyboardAction": "Edit Tab URL"
+    "contextMenu": "Redigera flikens URL",
+    "inputLabel": "Flikens URL",
+    "keyboardAction": "Redigera flikens URL"
   },
   "mouseGesture": {
     "actions": {
@@ -516,6 +516,10 @@
     "stepIndicator": "Steg {{current}} av {{total}}",
     "backToCommands": "Tillbaka till kommandon",
     "openUrl": "Öppna URL",
+    "openUrlContainerStepLabel": "Öppna i behållare",
+    "openUrlContainerStepPlaceholder": "Välj en behållare...",
+    "openUrlContainerWorkspaceDefault": "Arbetsyta Standard",
+    "openUrlContainerWorkspaceDefaultDesc": "Använder arbetsytans standardkontext",
     "openUrlDescription": "Öppna en URL i ny flik",
     "openUrlStepLabel": "Ange URL för att öppna",
     "openUrlStepPlaceholder": "https://exempel.com",
@@ -580,7 +584,17 @@
     "bookmarkSwitcher": "Växla bokmärke",
     "bookmarkSwitcherDescription": "Öppna en bokmärkt sida",
     "bookmarkSwitcherStepLabel": "Välj ett bokmärke",
-    "bookmarkSwitcherStepPlaceholder": "Sök eller välj ett bokmärke..."
+    "bookmarkSwitcherStepPlaceholder": "Sök eller välj ett bokmärke...",
+    "bookmarkSwitcherContainerStepLabel": "Öppna i behållare",
+    "bookmarkSwitcherContainerStepPlaceholder": "Välj en behållare...",
+    "bookmarkSwitcherWhereBackgroundTab": "Bakgrundsflik",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Öppna i ny bakgrundsflik",
+    "bookmarkSwitcherWhereCurrentTab": "Nuvarande flik",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navigera nuvarande flik",
+    "bookmarkSwitcherWhereLabel": "Var att öppna",
+    "bookmarkSwitcherWhereNewTab": "Ny flik",
+    "bookmarkSwitcherWhereNewTabDesc": "Öppna i en ny förgrundsflik",
+    "bookmarkSwitcherWherePlaceholder": "Välj var du vill öppna..."
   },
   "commandPaletteReadings": {}
 }

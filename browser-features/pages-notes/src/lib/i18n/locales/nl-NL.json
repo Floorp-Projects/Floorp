@@ -15,15 +15,15 @@
         "titlePlaceholder": "Titel",
         "loading": "Notities laden...",
         "delete": "Verwijderen",
-        "empty": "No notes yet. Click \"New Note\" to create one.",
-        "deleteConfirmTitle": "Delete Note",
-        "deleteConfirmMessage": "Are you sure you want to delete this note? This action cannot be undone.",
+        "empty": "Nog geen notities. Klik op \"Nieuwe notitie\" om er een aan te maken.",
+        "deleteConfirmTitle": "Notitie verwijderen",
+        "deleteConfirmMessage": "Weet je zeker dat je deze nota wilt verwijderen? Deze handeling kan niet ongedaan worden gemaakt.",
         "deleteConfirm": "Verwijderen",
         "deleteCancel": "Annuleren",
-        "noteList": "Notes list",
-        "search": "Search notes",
-        "clearSearch": "Clear search",
-        "noSearchResults": "No notes match your search"
+        "noteList": "Notitielijst",
+        "search": "Doorzoek notities",
+        "clearSearch": "Zoekopdracht wissen",
+        "noSearchResults": "Er komen geen notities overeen met uw zoekopdracht"
     },
     "editor": {
         "bold": "Dikgedrukt",
@@ -39,27 +39,27 @@
         "heading1": "Koptekst 1",
         "heading2": "Koptekst 2",
         "heading3": "Koptekst 3",
-        "undo": "Undo",
-        "redo": "Redo",
-        "history": "History",
-        "toolbar": "Formatting toolbar",
-        "headings": "Headings",
-        "textFormatting": "Text formatting",
-        "lists": "Lists",
-        "alignment": "Alignment",
-        "contentArea": "Note content",
-        "placeholder": "Start writing...",
-        "image": "Insert image"
+        "undo": "Ongedaan maken",
+        "redo": "Opnieuw uitvoeren",
+        "history": "Geschiedenis",
+        "toolbar": "Werkbalk voor opmaak",
+        "headings": "Koppen",
+        "textFormatting": "Tekstopmaak",
+        "lists": "Lijsten",
+        "alignment": "Uitlijning",
+        "contentArea": "Notitie inhoud",
+        "placeholder": "Begin met schrijven...",
+        "image": "Afbeelding invoegen"
     },
     "common": {
         "close": "Sluiten",
-        "confirm": "Confirm",
+        "confirm": "Bevestigen",
         "cancel": "Annuleren"
     },
     "save": {
-        "saving": "Saving...",
-        "saved": "Saved",
-        "error": "Save failed"
+        "saving": "Opslaan...",
+        "saved": "Opgeslagen",
+        "error": "Opslaan mislukt"
     },
     "error": {
         "loadFailed": "Notitiegegevens laden mislukt",

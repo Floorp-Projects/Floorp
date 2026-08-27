@@ -70,28 +70,28 @@
     "rust": {
         "success": {
             "downloaded_dev_mode": "Floorp-installer is gedownload (ontwikkelmodus)",
-            "installation_complete": "Floorp installation completed successfully."
+            "installation_complete": "De installatie van Floorp is succesvol voltooid."
         },
         "errors": {
-            "installer_not_found": "Failed to retrieve Floorp installer.",
-            "download_failed": "An error occurred during download: {{0}}",
-            "signature_verification_failed": "Installer signature verification failed. Execution aborted for security reasons.",
-            "signature_verification_error": "An error occurred during signature verification: {{0}}",
-            "installer_exit_code": "Installer exited with code {{0}}.",
-            "installer_execution": "An error occurred while running the installer: {{0}}",
-            "browser_not_found": "Floorp browser not found. Installation was successful, but the browser executable could not be found.",
-            "browser_launch_failed": "Failed to launch browser: {{0}}",
-            "file_not_found": "File not found: {{0}}",
-            "not_a_file": "Path is not a file: {{0}}",
-            "admin_rights_denied": "Administrator rights were denied. You selected the administrator rights mode, but permission was denied.",
-            "exit_code_not_found": "Could not get the installer's exit code. Administrator rights may have been denied.",
-            "powershell_script_creation": "Failed to create PowerShell script: {{0}}",
-            "powershell_process": "Failed to start PowerShell process: {{0}}",
-            "admin_install_failed": "Installation with administrator rights failed. Exit code: {{0}}",
-            "user_installer_launch": "Failed to launch installer process with user rights: {{0}}",
-            "user_installer_execution": "An issue occurred while running the installer with user rights: {{0}}",
-            "cpu_not_supported": "This device's CPU does not support SSE4.1. Floorp requires a processor with SSE4.1 support.",
-            "cpu_check_failed": "Failed to verify CPU requirements. Please check system requirements."
+            "installer_not_found": "Ophalen Floorp-installatieprogramma mislukt.",
+            "download_failed": "Fout tijdens downloaden: {{0}}",
+            "signature_verification_failed": "Handtekeningcontrole mislukt. Uitvoering afgebroken wegens veiligheid.",
+            "signature_verification_error": "Fout tijdens handtekeningcontrole: {{0}}",
+            "installer_exit_code": "Installatieprogramma gestopt met code {{0}}",
+            "installer_execution": "Fout bij uitvoeren installatieprogramma: {{0}}",
+            "browser_not_found": "Floorp-browser niet gevonden. De installatie is succesvol voltooid, maar het uitvoerbare bestand van de browser kan niet worden gevonden.",
+            "browser_launch_failed": "Browser starten mislukt: {{0}}",
+            "file_not_found": "Bestand niet gevonden: {{0}}",
+            "not_a_file": "Path is geen bestand: {{0}}",
+            "admin_rights_denied": "Beheerdersrechten zijn geweigerd. Je hebt de modus voor beheerdersrechten geselecteerd, maar er is geen toestemming verleend.",
+            "exit_code_not_found": "Kon de exit-code van het installatieprogramma niet ophalen. Mogelijk zijn de beheerdersrechten geweigerd.",
+            "powershell_script_creation": "Aanmaken PowerShell-script mislukt: {{0}}",
+            "powershell_process": "Starten PowerShell-proces mislukt: {{0}}",
+            "admin_install_failed": "Installatie met beheerdersrechten mislukt. Exit-code: {{0}}",
+            "user_installer_launch": "Starten installatieproces met gebruikersrechten mislukt: {{0}}",
+            "user_installer_execution": "Er is een fout opgetreden tijdens het uitvoeren van het installatieprogramma met gebruikersrechten: {{0}}",
+            "cpu_not_supported": "CPU ondersteunt geen SSE4.1. Processor met SSE4.1-ondersteuning vereist voor Floorp.",
+            "cpu_check_failed": "Controle CPU-vereisten mislukt. Controleer systeemvereisten."
         }
     }
 }
