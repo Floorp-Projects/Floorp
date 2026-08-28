@@ -3,8 +3,12 @@
 
 import {
   baseFromClips,
-  mergeClips,
+  baseOf,
+  GONE_KEPT_MS,
   MAX_SYNC_BYTES,
+  mergeClips,
+  nextSyncState,
+  parseSyncState,
   selectForSync,
 } from "../../src/lib/sync.ts";
 import type { Clip } from "../../src/types/clip.ts";
@@ -33,7 +37,7 @@ function ids(clips: Clip[]): string {
 function testNewOnEitherSideIsKept(): void {
   const local = [clip("a", 1)];
   const remote = [clip("b", 2)];
-  assertEquals(ids(mergeClips(local, remote, {})), "a,b");
+  assertEquals(ids(mergeClips(local, remote, {})), "a,b", "both are kept");
 }
 
 function testDeletionOnTheOtherSideIsRespected(): void {
@@ -41,7 +45,11 @@ function testDeletionOnTheOtherSideIsRespected(): void {
   const local = [clip("a", 1)];
   const base = baseFromClips([clip("a", 1)]);
   const remote = [clip("b", 1)];
-  assertEquals(ids(mergeClips(local, remote, base)), "b");
+  assertEquals(
+    ids(mergeClips(local, remote, base)),
+    "b",
+    "the deleted one is let go",
+  );
 }
 
 function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
@@ -49,21 +57,77 @@ function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
   const local = [clip("old", 1), clip("new", 100)];
   const base = baseFromClips(local);
   const remote = [clip("new", 100)];
-  assertEquals(ids(mergeClips(local, remote, base)), "new,old");
+  assertEquals(
+    ids(mergeClips(local, remote, base)),
+    "new,old",
+    "the older one stays",
+  );
 }
 
 function testPinChangeWinsByTime(): void {
   const local = [clip("a", 1, { updatedAt: 5 })];
   const remote = [clip("a", 1, { updatedAt: 9, pinned: true })];
   const merged = mergeClips(local, remote, baseFromClips([clip("a", 1)]));
-  assertEquals(merged.length, 1);
-  assertEquals(merged[0].pinned, true);
+  assertEquals(merged.length, 1, "still one clip");
+  assertEquals(merged[0].pinned, true, "the later pin wins");
 }
 
 function testLocalEditSurvivesARemoteDeletion(): void {
   const local = [clip("a", 1, { updatedAt: 50, pinned: true })];
   const base = { a: 1 };
-  assertEquals(ids(mergeClips(local, [], base)), "a");
+  assertEquals(ids(mergeClips(local, [], base)), "a", "the edit keeps it here");
+}
+
+function testADeletedClipDoesNotComeBack(): void {
+  // We published a and b, then deleted a. The other device had not heard yet
+  // and sends both back: without the record of a leaving, a looks new.
+  const published = [clip("a", 1), clip("b", 2)];
+  const state = nextSyncState(
+    { clips: baseFromClips(published), gone: {} },
+    [clip("b", 2)],
+    100,
+  );
+  assertEquals(state.gone.a, 100, "a is remembered as having left");
+  assertEquals(
+    ids(mergeClips([clip("b", 2)], published, baseOf(state))),
+    "b",
+    "a does not come home",
+  );
+}
+
+function testTheOtherDeviceEditingWinsOverOurDeletion(): void {
+  // Same deletion, but there the clip was pinned after we let it go.
+  const published = [clip("a", 1)];
+  const state = nextSyncState(
+    { clips: baseFromClips(published), gone: {} },
+    [],
+    100,
+  );
+  const remote = [clip("a", 1, { updatedAt: 200, pinned: true })];
+  assertEquals(
+    ids(mergeClips([], remote, baseOf(state))),
+    "a",
+    "the edit brings it back",
+  );
+}
+
+function testARecordOfLeavingIsLetGoEventually(): void {
+  const state = nextSyncState(
+    { clips: {}, gone: { a: 1 } },
+    [],
+    1 + GONE_KEPT_MS + 1,
+  );
+  assertEquals("a" in state.gone, false, "the record is let go");
+}
+
+function testAStateWrittenBeforeThoseRecordsStillReads(): void {
+  const state = parseSyncState(JSON.stringify({ a: 5 }));
+  assertEquals(state.clips.a, 5, "the bare map reads as published clips");
+  assertEquals(
+    Object.keys(state.gone).length,
+    0,
+    "nothing is remembered as having left",
+  );
 }
 
 function testSelectionStaysUnderTheCap(): void {
@@ -74,9 +138,13 @@ function testSelectionStaysUnderTheCap(): void {
   );
   const { payload, dropped } = selectForSync(many);
   const size = new TextEncoder().encode(JSON.stringify(payload)).length;
-  assertEquals(size <= MAX_SYNC_BYTES, true);
-  assertEquals(dropped > 0, true);
-  assertEquals(payload.floor > 0, true);
+  assertEquals(size <= MAX_SYNC_BYTES, true, "the payload fits");
+  assertEquals(dropped > 0, true, "some clips did not fit");
+  assertEquals(
+    payload.floor > 0,
+    true,
+    "a floor is set once something is dropped",
+  );
 }
 
 function testPinnedClipsTravelFirst(): void {
@@ -87,13 +155,17 @@ function testPinnedClipsTravelFirst(): void {
     clip("plain-newer", 10, { text: big }),
   ];
   const { payload } = selectForSync(clips);
-  assertEquals(payload.clips.some((c) => c.id === "pinned-old"), true);
+  assertEquals(
+    payload.clips.some((c) => c.id === "pinned-old"),
+    true,
+    "the pinned clip travels",
+  );
 }
 
 function testNothingDroppedMeansNoFloor(): void {
   const { payload, dropped } = selectForSync([clip("a", 1), clip("b", 2)]);
-  assertEquals(dropped, 0);
-  assertEquals(payload.floor, 0);
+  assertEquals(dropped, 0, "nothing dropped");
+  assertEquals(payload.floor, 0, "no floor");
 }
 
 export async function runAllTests(): Promise<void> {
@@ -112,9 +184,31 @@ export async function runAllTests(): Promise<void> {
       name: "local edit survives a remote deletion",
       fn: testLocalEditSurvivesARemoteDeletion,
     },
-    { name: "selection stays under the cap", fn: testSelectionStaysUnderTheCap },
+    {
+      name: "a deleted clip does not come back",
+      fn: testADeletedClipDoesNotComeBack,
+    },
+    {
+      name: "the other device editing wins over our deletion",
+      fn: testTheOtherDeviceEditingWinsOverOurDeletion,
+    },
+    {
+      name: "a record of leaving is let go eventually",
+      fn: testARecordOfLeavingIsLetGoEventually,
+    },
+    {
+      name: "a state written before those records still reads",
+      fn: testAStateWrittenBeforeThoseRecordsStillReads,
+    },
+    {
+      name: "selection stays under the cap",
+      fn: testSelectionStaysUnderTheCap,
+    },
     { name: "pinned clips travel first", fn: testPinnedClipsTravelFirst },
-    { name: "nothing dropped means no floor", fn: testNothingDroppedMeansNoFloor },
+    {
+      name: "nothing dropped means no floor",
+      fn: testNothingDroppedMeansNoFloor,
+    },
   ];
 
   await runTests("sync.test.ts", tests);

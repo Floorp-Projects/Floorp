@@ -1,12 +1,14 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
 import { DATA_PREF, SYNC_STATE_PREF } from "@/lib/settings.ts";
 import {
-  baseFromClips,
+  baseOf,
   mergeClips,
-  parseBase,
+  nextSyncState,
   parsePayload,
+  parseSyncState,
   selectForSync,
   serializePayload,
+  serializeSyncState,
 } from "@/lib/sync.ts";
 import type { Clip } from "@/types/clip.ts";
 
@@ -27,8 +29,8 @@ export async function pullAndMerge(local: Clip[]): Promise<Clip[] | null> {
   try {
     const payload = parsePayload(await rpc.getStringPref(DATA_PREF));
     if (!payload) return null;
-    const base = parseBase(await rpc.getStringPref(SYNC_STATE_PREF));
-    return mergeClips(local, payload.clips, base);
+    const state = parseSyncState(await rpc.getStringPref(SYNC_STATE_PREF));
+    return mergeClips(local, payload.clips, baseOf(state));
   } catch (e) {
     console.error("[Floorp Clips] Failed to read the synced clips:", e);
     return null;
@@ -43,12 +45,13 @@ export async function pullAndMerge(local: Clip[]): Promise<Clip[] | null> {
  */
 export async function push(clips: Clip[]): Promise<number> {
   const { payload, dropped } = selectForSync(clips);
-  writing = true;
   try {
+    const previous = parseSyncState(await rpc.getStringPref(SYNC_STATE_PREF));
+    writing = true;
     await rpc.setStringPref(DATA_PREF, serializePayload(payload));
     await rpc.setStringPref(
       SYNC_STATE_PREF,
-      JSON.stringify(baseFromClips(payload.clips)),
+      serializeSyncState(nextSyncState(previous, payload.clips)),
     );
   } catch (e) {
     console.error("[Floorp Clips] Failed to publish the clips:", e);

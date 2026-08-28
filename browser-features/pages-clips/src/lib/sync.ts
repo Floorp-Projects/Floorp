@@ -23,6 +23,31 @@ export interface SyncPayload {
 /** The last-synced state: what each id looked like when we last agreed. */
 export type SyncBase = Record<string, number>;
 
+/**
+ * How long a clip that left the payload is remembered.
+ *
+ * Long enough for a device that was shut away in a drawer to come back and
+ * still hear about the deletion, short enough that the record does not grow
+ * without end — it rides in a preference too.
+ */
+export const GONE_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** What we published last time, and what stopped being published. */
+export interface SyncState {
+  /** `updatedAt` of each clip in the last payload we sent. */
+  clips: SyncBase;
+  /**
+   * Ids that were in an earlier payload and are not any more, and when they
+   * left.
+   *
+   * A deleted clip has to leave something behind. A device that has not heard
+   * about the deletion yet keeps sending the clip back, and with nothing to
+   * read it against it looks new — so it comes home, and the deletion never
+   * sticks. These records are what it is read against.
+   */
+  gone: SyncBase;
+}
+
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
 }
@@ -90,16 +115,63 @@ export function baseFromClips(clips: Clip[]): SyncBase {
   return base;
 }
 
-export function parseBase(raw: string | null): SyncBase {
-  if (!raw) return {};
+function asBase(value: unknown): SyncBase {
+  return typeof value === "object" && value !== null ? value as SyncBase : {};
+}
+
+/**
+ * Read the stored state. Profiles written before there were `gone` records
+ * hold the bare map, so read that as the published clips.
+ */
+export function parseSyncState(raw: string | null): SyncState {
+  if (!raw) return { clips: {}, gone: {} };
   try {
-    const parsed = JSON.parse(raw) as unknown;
-    return typeof parsed === "object" && parsed !== null
-      ? parsed as SyncBase
-      : {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof parsed !== "object" || parsed === null) {
+      return { clips: {}, gone: {} };
+    }
+    if (typeof parsed.clips === "object" && parsed.clips !== null) {
+      return { clips: asBase(parsed.clips), gone: asBase(parsed.gone) };
+    }
+    return { clips: asBase(parsed), gone: {} };
   } catch {
-    return {};
+    return { clips: {}, gone: {} };
   }
+}
+
+export function serializeSyncState(state: SyncState): string {
+  return JSON.stringify(state);
+}
+
+/** The one map `mergeClips` reads against: what was published, and what left. */
+export function baseOf(state: SyncState): SyncBase {
+  return { ...state.gone, ...state.clips };
+}
+
+/**
+ * The state to record after publishing `published`.
+ *
+ * An id that was in the last payload and is not in this one has left: it is
+ * remembered, stamped with now, until it is old enough to let go. A clip that
+ * only left because it did not fit under the cap is remembered too — the
+ * remote floor is what speaks for those, and it still does.
+ */
+export function nextSyncState(
+  previous: SyncState,
+  published: Clip[],
+  now: number = Date.now(),
+): SyncState {
+  const clips = baseFromClips(published);
+  const gone: SyncBase = {};
+  for (const [id, at] of Object.entries(previous.gone)) {
+    if (id in clips) continue;
+    if (now - at <= GONE_KEPT_MS) gone[id] = at;
+  }
+  for (const id of Object.keys(previous.clips)) {
+    if (id in clips || id in gone) continue;
+    gone[id] = now;
+  }
+  return { clips, gone };
 }
 
 /**

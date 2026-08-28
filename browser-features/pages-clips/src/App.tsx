@@ -261,7 +261,17 @@ function App() {
 
       const doomed = clipsRef.current.filter((c) => !c.pinned).map((c) => c.id);
       await deleteClips(doomed);
-      const kept = clipsRef.current.filter((c) => c.pinned);
+      let kept = clipsRef.current.filter((c) => c.pinned);
+      // Switching into sync mode meets whatever the other devices already put
+      // there. Take that in first, the same way first load does — publishing
+      // what is only here would write over them.
+      if (loaded.mode === "sync") {
+        const merged = await pullAndMerge(kept);
+        if (merged) {
+          await replaceAll(merged);
+          kept = merged;
+        }
+      }
       setClips(kept);
       clipsRef.current = kept;
       const sessionStart = await clipsRpc.getSessionStartTime().catch(() => 0);
