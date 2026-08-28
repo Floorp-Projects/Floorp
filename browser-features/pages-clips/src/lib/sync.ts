@@ -11,19 +11,22 @@ export const MAX_SYNC_BYTES = 512 * 1024;
 export interface SyncPayload {
   clips: Clip[];
   /**
-   * The `createdAt` of the newest clip that did not fit, or 0 if they all did.
+   * The ids of the clips that stayed home because there was no room.
    *
    * Without it, "this clip is not in the payload" would be indistinguishable
    * from "someone deleted it", and a device holding the rest would keep losing
-   * them. The payload only speaks for clips newer than the floor: a deletion
-   * is believed there and nowhere else, and 0 means it speaks for all of them.
+   * them. Naming them says exactly which absences mean nothing; every other
+   * absence is a deletion, and can be believed.
    *
-   * It has to be read off the clips that stayed home, not off the oldest one
-   * that travelled. Pinned clips go first, so an old pinned note can travel
-   * while a newer clip stays — and then the oldest that travelled is far below
-   * the one that did not, and says the payload is complete where it is not.
+   * This used to be one timestamp, a water line under which the payload said
+   * nothing. But pinned clips travel first, so what stays home is not simply
+   * the older end — the line sat below clips that had stayed, and called the
+   * payload complete where it was not. Drawn high enough to cover them, it
+   * then buried every real deletion under it for as long as one clip too big
+   * to ever travel sat there. Names have neither problem, and cost a few
+   * bytes each.
    */
-  floor: number;
+  stayed: string[];
 }
 
 /** The last-synced state: what each id looked like when we last agreed. */
@@ -73,39 +76,45 @@ export function selectForSync(
     return b.createdAt - a.createdAt;
   });
 
-  // A payload is the wrapper, each clip's own JSON, and a comma between them,
-  // so each clip can be measured once instead of writing the whole payload out
-  // again for every candidate. Stepping over what does not fit means walking
-  // the whole list, and that is a lot of writing to do twice over.
-  const wrapper = byteLength(JSON.stringify({ clips: [], floor: 0 }));
+  // A payload is the wrapper, each carried clip's own JSON, each stayed-home
+  // name, and a comma between siblings — so each clip can be measured once
+  // instead of writing the whole payload out again for every candidate.
+  // Every clip is one or the other, so the room for all the names is put aside
+  // before the walk begins and the walk just spends what is left. That puts
+  // aside a little more than is needed, which is the price of one pass.
+  const wrapper = byteLength(JSON.stringify({ clips: [], stayed: [] }));
+  const namesRoom = clips.reduce(
+    (room, c) => room + byteLength(JSON.stringify(c.id)) + 1,
+    0,
+  );
+  const room = MAX_SYNC_BYTES - wrapper - namesRoom;
 
   const kept: Clip[] = [];
-  const stayed: Clip[] = [];
-  let used = wrapper;
+  const stayed: string[] = [];
+  let used = 0;
   for (const clip of ordered) {
     const cost = byteLength(JSON.stringify(clip)) + (kept.length > 0 ? 1 : 0);
-    if (used + cost > MAX_SYNC_BYTES) {
-      stayed.push(clip);
+    if (used + cost > room) {
+      stayed.push(clip.id);
       continue;
     }
     used += cost;
     kept.push(clip);
   }
 
-  return {
-    payload: {
-      clips: kept,
-      floor: stayed.reduce((newest, c) => Math.max(newest, c.createdAt), 0),
-    },
-    dropped: stayed.length,
-  };
+  return { payload: { clips: kept, stayed }, dropped: stayed.length };
 }
 
 export function serializePayload(payload: SyncPayload): string {
   return JSON.stringify(payload);
 }
 
-export function parsePayload(raw: string | null): SyncPayload | null {
+/** A payload as it was read: `stayed` is null when it did not say. */
+export type ReadPayload = Omit<SyncPayload, "stayed"> & {
+  stayed: string[] | null;
+};
+
+export function parsePayload(raw: string | null): ReadPayload | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -115,10 +124,15 @@ export function parsePayload(raw: string | null): SyncPayload | null {
     ) {
       return null;
     }
-    const payload = parsed as SyncPayload;
+    const stayed = (parsed as { stayed?: unknown }).stayed;
     return {
-      clips: payload.clips,
-      floor: typeof payload.floor === "number" ? payload.floor : 0,
+      clips: (parsed as SyncPayload).clips,
+      // A payload from before there were names does not say which absences
+      // meant nothing, so it is read as saying nothing about any of them. It
+      // sorts itself out the next time that device publishes.
+      stayed: Array.isArray(stayed)
+        ? stayed.filter((id): id is string => typeof id === "string")
+        : null,
     };
   } catch (e) {
     console.warn("[Floorp Clips] Could not read the synced payload:", e);
@@ -202,15 +216,13 @@ export function nextSyncState(
  *
  * The base is what the two sides last agreed on, so a clip missing from one
  * side can be read properly: gone from a side that had it means deleted;
- * missing from a side that never had it means new. A clip at or below the
- * remote floor is never read as deleted — the other device may simply not
- * have had room for it.
+ * missing from a side that never had it means new. A clip the other device
+ * named as having stayed home is never read as deleted — it simply did not
+ * have room for it, and is saying so.
  *
- * The floor has to come from the payload, which is the only thing that knows
- * what stayed home: the oldest clip that arrived says nothing about that, and
- * reading it as the floor loses a clip that only could not travel and keeps
- * one the other device really did delete. Zero means the payload speaks for
- * every clip, so every absence is a deletion.
+ * `stayedThere` is null for a payload that does not say which absences meant
+ * nothing. Nothing there can be read as a deletion, which is the safe way to
+ * be unsure.
  *
  * When both sides changed the same clip, the later `updatedAt` wins. That only
  * ever decides a pin, so there is nothing to lose either way.
@@ -219,10 +231,11 @@ export function mergeClips(
   local: Clip[],
   remote: Clip[],
   base: SyncBase,
-  remoteFloor: number,
+  stayedThere: readonly string[] | null,
 ): Clip[] {
   const localById = new Map(local.map((c) => [c.id, c]));
   const remoteById = new Map(remote.map((c) => [c.id, c]));
+  const couldNotTravel = stayedThere === null ? null : new Set(stayedThere);
 
   const merged: Clip[] = [];
   for (const id of new Set([...localById.keys(), ...remoteById.keys()])) {
@@ -236,11 +249,11 @@ export function mergeClips(
 
     if (mine) {
       const wasShared = id in base;
-      // At or below the remote floor the other device is not saying anything
-      // about this clip, so keep it.
-      const belowFloor = remoteFloor > 0 && mine.createdAt <= remoteFloor;
+      // Named as having stayed home, or from a payload that does not say:
+      // the other device is not telling us anything about this clip.
+      const unspoken = couldNotTravel === null || couldNotTravel.has(id);
       const changedSinceSync = mine.updatedAt > (base[id] ?? 0);
-      if (!wasShared || belowFloor || changedSinceSync) merged.push(mine);
+      if (!wasShared || unspoken || changedSinceSync) merged.push(mine);
       continue;
     }
 

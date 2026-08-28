@@ -30,7 +30,7 @@ export async function pullAndMerge(local: Clip[]): Promise<Clip[] | null> {
     const payload = parsePayload(await rpc.getStringPref(DATA_PREF));
     if (!payload) return null;
     const state = parseSyncState(await rpc.getStringPref(SYNC_STATE_PREF));
-    return mergeClips(local, payload.clips, baseOf(state), payload.floor);
+    return mergeClips(local, payload.clips, baseOf(state), payload.stayed);
   } catch (e) {
     console.error("[Floorp Clips] Failed to read the synced clips:", e);
     return null;

@@ -8,6 +8,7 @@ import {
   MAX_SYNC_BYTES,
   mergeClips,
   nextSyncState,
+  parsePayload,
   parseSyncState,
   selectForSync,
 } from "../../src/lib/sync.ts";
@@ -37,7 +38,7 @@ function ids(clips: Clip[]): string {
 function testNewOnEitherSideIsKept(): void {
   const local = [clip("a", 1)];
   const remote = [clip("b", 2)];
-  assertEquals(ids(mergeClips(local, remote, {}, 0)), "a,b", "both are kept");
+  assertEquals(ids(mergeClips(local, remote, {}, [])), "a,b", "both are kept");
 }
 
 function testDeletionOnTheOtherSideIsRespected(): void {
@@ -46,29 +47,28 @@ function testDeletionOnTheOtherSideIsRespected(): void {
   const base = baseFromClips([clip("a", 1)]);
   const remote = [clip("b", 1)];
   assertEquals(
-    ids(mergeClips(local, remote, base, 0)),
+    ids(mergeClips(local, remote, base, [])),
     "b",
     "the deleted one is let go",
   );
 }
 
-function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
-  // Remote could not carry "old", and its floor says so: it speaks for
-  // nothing at or below t=1.
+function testAClipNamedAsStayedHomeIsNotADeletion(): void {
+  // Remote could not carry "old", and says so by name.
   const local = [clip("old", 1), clip("new", 100)];
   const base = baseFromClips(local);
   const remote = [clip("new", 100)];
   assertEquals(
-    ids(mergeClips(local, remote, base, 1)),
+    ids(mergeClips(local, remote, base, ["old"])),
     "new,old",
-    "the older one stays",
+    "the one it could not carry stays",
   );
 }
 
 function testPinChangeWinsByTime(): void {
   const local = [clip("a", 1, { updatedAt: 5 })];
   const remote = [clip("a", 1, { updatedAt: 9, pinned: true })];
-  const merged = mergeClips(local, remote, baseFromClips([clip("a", 1)]), 0);
+  const merged = mergeClips(local, remote, baseFromClips([clip("a", 1)]), []);
   assertEquals(merged.length, 1, "still one clip");
   assertEquals(merged[0].pinned, true, "the later pin wins");
 }
@@ -77,7 +77,7 @@ function testLocalEditSurvivesARemoteDeletion(): void {
   const local = [clip("a", 1, { updatedAt: 50, pinned: true })];
   const base = { a: 1 };
   assertEquals(
-    ids(mergeClips(local, [], base, 0)),
+    ids(mergeClips(local, [], base, [])),
     "a",
     "the edit keeps it here",
   );
@@ -95,7 +95,7 @@ function testADeletedClipDoesNotComeBack(): void {
   );
   assertEquals(state.gone.a, 100, "a is remembered as having left");
   assertEquals(
-    ids(mergeClips([clip("b", 2)], published, baseOf(state), 0)),
+    ids(mergeClips([clip("b", 2)], published, baseOf(state), [])),
     "b",
     "a does not come home",
   );
@@ -112,7 +112,7 @@ function testTheOtherDeviceEditingWinsOverOurDeletion(): void {
   );
   const remote = [clip("a", 1, { updatedAt: 200, pinned: true })];
   assertEquals(
-    ids(mergeClips([], remote, baseOf(state), 0)),
+    ids(mergeClips([], remote, baseOf(state), [])),
     "a",
     "the edit brings it back",
   );
@@ -138,17 +138,43 @@ function testAStateWrittenBeforeThoseRecordsStillReads(): void {
   );
 }
 
-function testAnOlderDeletionIsBelievedWhenNothingWasDropped(): void {
-  // Remote carries every clip it has — floor 0 — and the old one is not among
-  // them, so it was deleted. Reading the oldest arrival as the floor would
-  // have kept it here forever.
+function testAnOlderDeletionIsBelievedWhenNothingStayedHome(): void {
+  // Remote carries every clip it has and names nothing as stayed home, so the
+  // old one's absence is a deletion.
   const local = [clip("old", 1), clip("new", 100)];
   const base = baseFromClips(local);
   const remote = [clip("new", 100)];
   assertEquals(
-    ids(mergeClips(local, remote, base, 0)),
+    ids(mergeClips(local, remote, base, [])),
     "new",
     "the old one is let go",
+  );
+}
+
+function testADeletionIsBelievedWhileSomethingElseStayedHome(): void {
+  // The other device is holding a clip too big to ever travel, and separately
+  // deleted an older shared one. Naming what stayed home says exactly that;
+  // a water line drawn above the big one would have buried the deletion.
+  const local = [clip("old", 1), clip("huge", 500), clip("new", 900)];
+  const base = baseFromClips(local);
+  const remote = [clip("new", 900)];
+  assertEquals(
+    ids(mergeClips(local, remote, base, ["huge"])),
+    "huge,new",
+    "the big one stays and the deletion is believed",
+  );
+}
+
+function testAPayloadThatDoesNotSayIsNotReadAsDeletions(): void {
+  const read = parsePayload(
+    JSON.stringify({ clips: [clip("new", 100)], floor: 0 }),
+  );
+  assertEquals(read?.stayed, null, "it does not say");
+  const local = [clip("old", 1), clip("new", 100)];
+  assertEquals(
+    ids(mergeClips(local, read!.clips, baseFromClips(local), read!.stayed)),
+    "new,old",
+    "nothing is let go on a payload that does not say",
   );
 }
 
@@ -177,7 +203,7 @@ function testTooBigIsSteppedOver(): void {
   const { payload, dropped } = selectForSync([huge, clip("small", 2)]);
   assertEquals(ids(payload.clips), "small", "the small one still travels");
   assertEquals(dropped, 1, "only the big one stayed");
-  assertEquals(payload.floor, 1, "the floor is the one that stayed");
+  assertEquals(payload.stayed.join(","), "huge", "and it is named");
 }
 
 function testNothingFitsWhenEveryClipIsTooBig(): void {
@@ -201,12 +227,12 @@ function testAClipThatCouldNotTravelIsNotADeletion(): void {
     clip("recent", 500, { text: big }),
   ]);
   assertEquals(ids(payload.clips), "pinned-old", "only the pinned one fitted");
-  assertEquals(payload.floor, 500, "the floor is the one that stayed");
+  assertEquals(payload.stayed.join(","), "recent", "and the other is named");
 
   const local = [clip("recent", 500)];
   const base = baseFromClips(local);
   assertEquals(
-    ids(mergeClips(local, payload.clips, base, payload.floor)),
+    ids(mergeClips(local, payload.clips, base, payload.stayed)),
     "pinned-old,recent",
     "the one that could not travel stays",
   );
@@ -221,12 +247,8 @@ function testSelectionStaysUnderTheCap(): void {
   const { payload, dropped } = selectForSync(many);
   const size = new TextEncoder().encode(JSON.stringify(payload)).length;
   assertEquals(size <= MAX_SYNC_BYTES, true, "the payload fits");
+  assertEquals(payload.stayed.length, dropped, "what stayed is all named");
   assertEquals(dropped > 0, true, "some clips did not fit");
-  assertEquals(
-    payload.floor > 0,
-    true,
-    "a floor is set once something is dropped",
-  );
 }
 
 function testPinnedClipsTravelFirst(): void {
@@ -244,10 +266,10 @@ function testPinnedClipsTravelFirst(): void {
   );
 }
 
-function testNothingDroppedMeansNoFloor(): void {
+function testNothingDroppedMeansNothingNamed(): void {
   const { payload, dropped } = selectForSync([clip("a", 1), clip("b", 2)]);
   assertEquals(dropped, 0, "nothing dropped");
-  assertEquals(payload.floor, 0, "no floor");
+  assertEquals(payload.stayed.length, 0, "and nothing named");
 }
 
 export async function runAllTests(): Promise<void> {
@@ -258,8 +280,8 @@ export async function runAllTests(): Promise<void> {
       fn: testDeletionOnTheOtherSideIsRespected,
     },
     {
-      name: "missing below the remote floor is not a deletion",
-      fn: testMissingBelowTheRemoteFloorIsNotADeletion,
+      name: "a clip named as stayed home is not a deletion",
+      fn: testAClipNamedAsStayedHomeIsNotADeletion,
     },
     { name: "pin change wins by time", fn: testPinChangeWinsByTime },
     {
@@ -283,8 +305,16 @@ export async function runAllTests(): Promise<void> {
       fn: testAStateWrittenBeforeThoseRecordsStillReads,
     },
     {
-      name: "an older deletion is believed when nothing was dropped",
-      fn: testAnOlderDeletionIsBelievedWhenNothingWasDropped,
+      name: "an older deletion is believed when nothing stayed home",
+      fn: testAnOlderDeletionIsBelievedWhenNothingStayedHome,
+    },
+    {
+      name: "a deletion is believed while something else stayed home",
+      fn: testADeletionIsBelievedWhileSomethingElseStayedHome,
+    },
+    {
+      name: "a payload that does not say is not read as deletions",
+      fn: testAPayloadThatDoesNotSayIsNotReadAsDeletions,
     },
     { name: "not fitting is not leaving", fn: testNotFittingIsNotLeaving },
     { name: "too big is stepped over", fn: testTooBigIsSteppedOver },
@@ -302,8 +332,8 @@ export async function runAllTests(): Promise<void> {
     },
     { name: "pinned clips travel first", fn: testPinnedClipsTravelFirst },
     {
-      name: "nothing dropped means no floor",
-      fn: testNothingDroppedMeansNoFloor,
+      name: "nothing dropped means nothing named",
+      fn: testNothingDroppedMeansNothingNamed,
     },
   ];
 
