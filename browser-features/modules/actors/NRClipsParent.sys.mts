@@ -100,15 +100,17 @@ export class NRClipsParent extends JSWindowActorParent {
       // what reading the global clipboard from here is.
       trans.init(null as unknown as nsILoadContext);
       trans.addDataFlavor("text/plain");
-      Services.clipboard.getData(
-        trans,
-        Ci.nsIClipboard.kGlobalClipboard,
-        this.browsingContext?.currentWindowContext as WindowContext | undefined,
-      );
+      // No requesting window: with the page's WindowContext attached, the
+      // read counts as a content paste and is refused without a user
+      // gesture — silently, once a second. This is the feature reading the
+      // clipboard on the user's behalf, with the parent's own privilege.
+      Services.clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
       const result = { value: null as unknown as nsISupports };
       trans.getTransferData("text/plain", result);
-      // The text/plain flavor always comes back as an nsISupportsString.
-      const text = (result.value as unknown as nsISupportsString).data;
+      // The text/plain flavor comes back as an nsISupportsString, but the
+      // JS wrapper only shows `.data` after QueryInterface — without it the
+      // read is silently undefined, and clipboard-history mode never adds.
+      const text = result.value.QueryInterface(Ci.nsISupportsString).data;
       return typeof text === "string" && text.length > 0 ? text : null;
     } catch (e) {
       // An empty clipboard, or one holding something that is not text, throws.

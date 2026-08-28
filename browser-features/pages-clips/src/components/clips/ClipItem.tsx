@@ -115,9 +115,13 @@ export const ClipItem = memo(function ClipItem({
     }
   };
 
-  /** Open a file clip the way the settings say to. */
+  /**
+   * Open a file clip the way the settings say to. A path that no longer
+   * leads anywhere is an error up front, not a file manager pointed at
+   * nothing.
+   */
   const handleOpenFile = async () => {
-    if (!clip.filePath) {
+    if (!clip.filePath || !(await clipsRpc.fileExists(clip.filePath))) {
       onError(t("clips.fileGone"));
       return;
     }
