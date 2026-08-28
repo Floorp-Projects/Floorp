@@ -187,7 +187,10 @@ const JS_WINDOW_ACTORS: {
         DOMDocElementInserted: {},
       },
     },
-    matches: ["*://localhost/*", "chrome://noraneko-clips/*"],
+    // Same shape as NRSettings: in dev the page is a loopback Vite page in
+    // a webIsolated process, and the actor is never created without these.
+    matches: [...DEVELOPMENT_LOOPBACK_MATCHES, "chrome://noraneko-clips/*"],
+    ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },
   NRAppConstants: {
     parent: {

@@ -100,10 +100,28 @@ export async function clipsFromFiles(
 }
 
 /** The first web URL inside a text clip, if there is one. */
-export function firstUrl(text: string | undefined): string | null {
-  if (!text) return null;
-  const match = text.match(/https?:\/\/[^\s<>"']+/);
-  return match ? match[0] : null;
+/** What counts as a URL inside a clip. Japanese punctuation ends one too. */
+export const URL_PATTERN = /https?:\/\/[^\s<>"'。、]+/;
+
+/**
+ * An image dragged off a web page arrives without a File: Firefox hands over
+ * the page's HTML for the drag, with the image's URL in it. Fetch that and
+ * make the File ourselves. The URL itself is not kept — the picture is the
+ * clip, not its address.
+ */
+export async function imageFromHtml(html: string): Promise<File | null> {
+  const src = html.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1];
+  if (!src) return null;
+  try {
+    const blob = await (await fetch(src)).blob();
+    if (!blob.type.startsWith("image/")) return null;
+    const last = new URL(src, location.href).pathname.split("/").pop() ?? "";
+    const name = decodeURIComponent(last) || "image";
+    return new File([blob], name, { type: blob.type });
+  } catch (e) {
+    console.error("[Floorp Clips] Could not fetch the dragged image:", e);
+    return null;
+  }
 }
 
 /** Human-readable byte size, for file clips. */

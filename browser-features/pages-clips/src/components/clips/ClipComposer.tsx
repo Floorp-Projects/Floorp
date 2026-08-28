@@ -57,9 +57,8 @@ export function ClipComposer({ onAddText, onAddFiles }: ClipComposerProps) {
           onClick={() => onAddText(`${tab.title}\n${tab.url}`.trim())}
         >
           <Plus className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            {tab.title || tab.url}
-          </span>
+          <span className="shrink-0">{t("clips.addCurrentTab")}</span>
+          <span className="truncate text-base-content/60">{tab.url}</span>
         </button>
       )}
 

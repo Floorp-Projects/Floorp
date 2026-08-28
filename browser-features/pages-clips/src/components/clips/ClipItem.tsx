@@ -1,7 +1,6 @@
 import { memo, useMemo, useState } from "react";
 import {
   Copy,
-  ExternalLink,
   File as FileIcon,
   Pin,
   PinOff,
@@ -9,7 +8,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Clip } from "@/types/clip.ts";
-import { firstUrl, formatSize } from "@/lib/intake.ts";
+import { formatSize, URL_PATTERN } from "@/lib/intake.ts";
 import { clips as clipsRpc, localFile, openLinkInTab } from "@/lib/rpc/rpc.ts";
 import type { FileAction } from "@/lib/settings.ts";
 
@@ -20,6 +19,36 @@ interface ClipItemProps {
   onDelete: (id: string) => void;
   onZoom: (clip: Clip) => void;
   onError: (message: string | null) => void;
+}
+
+/**
+ * The text with its URLs turned into links. A click opens the URL in a normal
+ * tab rather than inside the panel; the href is still there so the link
+ * reads, hovers, and drags like one.
+ */
+function withLinks(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of text.matchAll(new RegExp(URL_PATTERN.source, "g"))) {
+    const url = m[0];
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(
+      <a
+        key={m.index}
+        href={url}
+        className="link link-primary break-all"
+        onClick={(e) => {
+          e.preventDefault();
+          void openLinkInTab(url);
+        }}
+      >
+        {url}
+      </a>,
+    );
+    last = m.index + url.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
 }
 
 /** What gets copied when the copy button is pressed. */
@@ -73,11 +102,6 @@ export const ClipItem = memo(function ClipItem({
       return new Date(clip.createdAt).toLocaleString();
     }
   }, [clip.createdAt, i18n.language]);
-
-  const url = useMemo(
-    () => (clip.kind === "text" ? firstUrl(clip.text) : null),
-    [clip.kind, clip.text],
-  );
 
   const handleCopy = async () => {
     const text = copyText(clip);
@@ -141,15 +165,15 @@ export const ClipItem = memo(function ClipItem({
   };
 
   return (
-    <li className="flex flex-col items-end gap-0.5" data-testid="clips-row">
+    <li className="group flex flex-col items-end gap-0.5" data-testid="clips-row">
       <div
-        className="group max-w-[85%] rounded-xl rounded-tr-sm bg-base-200 px-2.5 py-1.5 text-sm"
+        className="max-w-[85%] rounded-lg bg-base-200 px-2.5 py-1.5 text-sm"
         draggable
         onDragStart={handleDragStart}
       >
         {clip.kind === "text" && (
           <p className="whitespace-pre-wrap break-words select-text">
-            {clip.text}
+            {withLinks(clip.text ?? "")}
           </p>
         )}
 
@@ -198,19 +222,15 @@ export const ClipItem = memo(function ClipItem({
             {clip.filePath}
           </p>
         )}
+      </div>
 
-        <div className="mt-1 flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          {url && (
-            <button
-              type="button"
-              className="btn btn-xs btn-ghost btn-circle"
-              aria-label={t("clips.openLink")}
-              title={t("clips.openLink")}
-              onClick={() => void openLinkInTab(url)}
-            >
-              <ExternalLink className="h-3 w-3" />
-            </button>
-          )}
+      {/*
+        The buttons live on the time line, not inside the bubble: the bubble
+        holds only the clip, and the line below it already has a fixed height
+        to hide them in, so nothing moves when they appear.
+      */}
+      <div className="flex h-6 items-center gap-1 pr-1 text-xs text-base-content/50">
+        <span className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <button
             type="button"
             className="btn btn-xs btn-ghost btn-circle"
@@ -243,13 +263,10 @@ export const ClipItem = memo(function ClipItem({
           >
             <X className="h-3 w-3" />
           </button>
-        </div>
-      </div>
-
-      <span className="flex items-center gap-1 pr-1 text-xs text-base-content/50">
+        </span>
         {clip.pinned && <Pin className="h-3 w-3" />}
         {time}
-      </span>
+      </div>
     </li>
   );
 });

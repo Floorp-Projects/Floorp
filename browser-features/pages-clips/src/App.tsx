@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CloudOff, Trash2 } from "lucide-react";
+import { CloudOff, Search, Trash2 } from "lucide-react";
 import { ClipItem } from "@/components/clips/ClipItem.tsx";
 import { ClipComposer } from "@/components/clips/ClipComposer.tsx";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
@@ -14,6 +14,7 @@ import {
   clipFromText,
   clipsFromFiles,
   filePathsFromDataTransfer,
+  imageFromHtml,
 } from "@/lib/intake.ts";
 import {
   addPrefObserver,
@@ -43,6 +44,16 @@ type Pending =
   | { kind: "delete"; id: string }
   | { kind: "cleanup" };
 
+/**
+ * Which parts of a clip a search looks at. Never the preview: it is a data
+ * URL, so every clip with an image would match almost any needle.
+ */
+function matches(clip: Clip, needle: string): boolean {
+  return [clip.text, clip.fileName, clip.filePath].some((field) =>
+    field?.toLowerCase().includes(needle)
+  );
+}
+
 const INITIAL_SETTINGS: ClipsSettings = {
   mode: "local",
   maxItems: DEFAULT_MAX_ITEMS,
@@ -56,6 +67,7 @@ function App() {
   const [settings, setSettings] = useState<ClipsSettings>(INITIAL_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [query, setQuery] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
   const [zoomed, setZoomed] = useState<Clip | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -134,14 +146,25 @@ function App() {
     })();
   }, []);
 
-  const visible = useMemo(
-    () => (pinnedOnly ? clips.filter((c) => c.pinned) : clips),
-    [clips, pinnedOnly],
-  );
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!pinnedOnly && needle === "") return clips;
+    return clips.filter((c) =>
+      (!pinnedOnly || c.pinned) && (needle === "" || matches(c, needle))
+    );
+  }, [clips, pinnedOnly, query]);
 
+  // Keep the newest clip in view. The list is not in the DOM until loading
+  // ends, so this has to wait for that too, not just for the count. An image
+  // decodes after the scroll and pushes the end further down, so follow it.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [visible.length]);
+    if (isLoading) return;
+    const toBottom = () => bottomRef.current?.scrollIntoView({ block: "end" });
+    toBottom();
+    const main = bottomRef.current?.parentElement;
+    main?.addEventListener("load", toBottom, true);
+    return () => main?.removeEventListener("load", toBottom, true);
+  }, [isLoading, visible.length]);
 
   useEffect(() => {
     const dialog = zoomRef.current;
@@ -297,18 +320,25 @@ function App() {
           void addFiles(files, filePathsFromDataTransfer(e.dataTransfer));
           return;
         }
-        const text = e.dataTransfer?.getData("text/plain") ?? "";
-        if (text.trim()) addText(text.trim());
+        // Nothing from the file system: maybe an image, or a link, dragged
+        // off a web page. The data is only readable inside this handler.
+        const html = e.dataTransfer?.getData("text/html") ?? "";
+        const text = (e.dataTransfer?.getData("text/plain") ?? "").trim();
+        void (async () => {
+          const image = await imageFromHtml(html);
+          if (image) await addFiles([image], [undefined]);
+          else if (text) addText(text);
+        })();
       }}
     >
-      <header className="flex items-center gap-1 border-b border-base-300 px-2 py-1.5">
-        <h1 className="flex-1 truncate text-sm font-semibold">
+      <header className="flex items-center gap-1 bg-base-200 px-2 py-1.5">
+        <h1 className="flex-1 truncate text-sm font-bold">
           {t("title.default")}
         </h1>
         <button
           type="button"
           data-testid="clips-pinned-filter"
-          className={`btn btn-xs ${pinnedOnly ? "btn-primary" : "btn-ghost"}`}
+          className={`btn btn-xs ${pinnedOnly ? "btn-secondary" : "btn-ghost"}`}
           aria-pressed={pinnedOnly}
           onClick={() => setPinnedOnly((v) => !v)}
         >
@@ -324,6 +354,22 @@ function App() {
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </header>
+
+      <div className="relative px-2 pt-2">
+        <Search className="pointer-events-none absolute left-4 top-1/2 z-10 mt-1 h-4 w-4 -translate-y-1/2 text-base-content/50" />
+        <input
+          type="search"
+          data-testid="clips-search"
+          className="input input-sm input-bordered w-full pl-8"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("clips.searchPlaceholder")}
+          aria-label={t("clips.searchPlaceholder")}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+      </div>
 
       {settings.mode === "sync" && notSynced > 0 && (
         <p className="flex items-center gap-1 border-b border-base-300 px-2 py-1 text-xs text-base-content/60">
@@ -342,7 +388,11 @@ function App() {
           : visible.length === 0
           ? (
             <p className="p-4 text-center text-sm opacity-60">
-              {pinnedOnly ? t("clips.noPinned") : t("clips.empty")}
+              {query.trim()
+                ? t("clips.noResults")
+                : pinnedOnly
+                ? t("clips.noPinned")
+                : t("clips.empty")}
             </p>
           )
           : (
@@ -373,8 +423,10 @@ function App() {
       />
 
       {isDragOver && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center border-2 border-dashed border-primary bg-base-100/80 text-sm font-medium">
-          {t("clips.dropHere")}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center border-2 border-dashed border-primary bg-base-100/80">
+          <span className="rounded-full bg-base-200 px-3 py-1 text-sm font-medium">
+            {t("clips.dropHere")}
+          </span>
         </div>
       )}
 
