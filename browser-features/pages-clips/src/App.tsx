@@ -90,7 +90,26 @@ function App() {
     settingsRef.current = settings;
   }, [settings]);
 
-  /** Store the clips and, in sync mode, publish them. */
+  /**
+   * One change to the clips at a time.
+   *
+   * A merge reads what we hold, waits on two prefs and the store, and writes
+   * back what it worked out. A pin, a delete or a new clip arriving in that
+   * gap would be written over by an answer that never saw it. So every change
+   * queues behind the one before it, and reads what we hold when its turn
+   * comes rather than before it started waiting.
+   *
+   * `commit` runs inside a turn, never around one.
+   */
+  const turn = useRef<Promise<unknown>>(Promise.resolve());
+  const inTurn = useCallback(<T,>(work: () => Promise<T>): Promise<T> => {
+    const mine = turn.current.then(work, work);
+    // A turn that threw must not hold up the ones behind it.
+    turn.current = mine.catch(() => {});
+    return mine;
+  }, []);
+
+  /** Store the clips and, in sync mode, publish them. Call inside a turn. */
   const commit = useCallback(async (next: Clip[]) => {
     setClips(next);
     clipsRef.current = next;
@@ -99,24 +118,19 @@ function App() {
     }
   }, []);
 
-  /**
-   * Take in what the other devices sent, and store the result.
-   *
-   * The merge is asked about the clips we held when it started, and it takes a
-   * moment. Anything clipped in the meantime is not in its answer, so it is
-   * carried over rather than replaced away.
-   */
-  const mergeIn = useCallback(async (mine: Clip[]): Promise<Clip[] | null> => {
-    const merged = await pullAndMerge(mine);
-    if (!merged) return null;
-    const inMerge = new Set(merged.map((c) => c.id));
-    const since = clipsRef.current.filter((c) => !inMerge.has(c.id));
-    const next = [...merged, ...since].sort((a, b) =>
-      a.createdAt - b.createdAt
-    );
-    await replaceAll(next);
-    return next;
-  }, []);
+  /** Take in what the other devices sent, and store the result. */
+  const mergeIn = useCallback(
+    () =>
+      inTurn(async () => {
+        const merged = await pullAndMerge(clipsRef.current);
+        if (!merged) return null;
+        await replaceAll(merged);
+        setClips(merged);
+        clipsRef.current = merged;
+        return merged;
+      }),
+    [inTurn],
+  );
 
   // ──────────────────────────────────────────────────────────
   // First load: settings, clips, and the things that may have happened
@@ -199,22 +213,24 @@ function App() {
    */
   const addClips = useCallback(async (incoming: Clip[]) => {
     if (incoming.length === 0) return;
-    try {
-      for (const clip of incoming) await putClip(clip);
+    await inTurn(async () => {
+      try {
+        for (const clip of incoming) await putClip(clip);
 
-      let next = [...clipsRef.current, ...incoming];
-      const unpinned = next.filter((c) => !c.pinned);
-      const excess = unpinned.length - settingsRef.current.maxItems;
-      if (excess > 0) {
-        const doomed = new Set(unpinned.slice(0, excess).map((c) => c.id));
-        await deleteClips([...doomed]);
-        next = next.filter((c) => !doomed.has(c.id));
+        let next = [...clipsRef.current, ...incoming];
+        const unpinned = next.filter((c) => !c.pinned);
+        const excess = unpinned.length - settingsRef.current.maxItems;
+        if (excess > 0) {
+          const doomed = new Set(unpinned.slice(0, excess).map((c) => c.id));
+          await deleteClips([...doomed]);
+          next = next.filter((c) => !doomed.has(c.id));
+        }
+        await commit(next);
+      } catch (e) {
+        console.error("[Floorp Clips] Failed to add clips:", e);
       }
-      await commit(next);
-    } catch (e) {
-      console.error("[Floorp Clips] Failed to add clips:", e);
-    }
-  }, [commit]);
+    });
+  }, [commit, inTurn]);
 
   const addText = useCallback((text: string) => {
     void addClips([clipFromText(text)]);
@@ -230,16 +246,20 @@ function App() {
   );
 
   const togglePin = useCallback(async (clip: Clip) => {
-    const updated = { ...clip, pinned: !clip.pinned, updatedAt: Date.now() };
-    try {
-      await putClip(updated);
-      await commit(
-        clipsRef.current.map((c) => (c.id === clip.id ? updated : c)),
-      );
-    } catch (e) {
-      console.error("[Floorp Clips] Failed to pin/unpin:", e);
-    }
-  }, [commit]);
+    await inTurn(async () => {
+      const held = clipsRef.current.find((c) => c.id === clip.id);
+      if (!held) return;
+      const updated = { ...held, pinned: !held.pinned, updatedAt: Date.now() };
+      try {
+        await putClip(updated);
+        await commit(
+          clipsRef.current.map((c) => (c.id === clip.id ? updated : c)),
+        );
+      } catch (e) {
+        console.error("[Floorp Clips] Failed to pin/unpin:", e);
+      }
+    });
+  }, [commit, inTurn]);
 
   /** The clips the open confirmation is about — shown, not just counted. */
   const doomed = useMemo<Clip[]>(() => {
@@ -251,18 +271,22 @@ function App() {
 
   const confirmPending = useCallback(async () => {
     if (!pending) return;
-    const doomed = pending.kind === "delete"
-      ? [pending.id]
-      : clipsRef.current.filter((c) => !c.pinned).map((c) => c.id);
+    const kind = pending.kind;
+    const id = pending.kind === "delete" ? pending.id : null;
     setPending(null);
-    try {
-      await deleteClips(doomed);
-      const gone = new Set(doomed);
-      await commit(clipsRef.current.filter((c) => !gone.has(c.id)));
-    } catch (e) {
-      console.error("[Floorp Clips] Failed to delete clips:", e);
-    }
-  }, [pending, commit]);
+    await inTurn(async () => {
+      const doomed = id !== null
+        ? [id]
+        : clipsRef.current.filter((c) => !c.pinned).map((c) => c.id);
+      try {
+        await deleteClips(doomed);
+        const gone = new Set(doomed);
+        await commit(clipsRef.current.filter((c) => !gone.has(c.id)));
+      } catch (e) {
+        console.error(`[Floorp Clips] Failed to ${kind} clips:`, e);
+      }
+    });
+  }, [pending, commit, inTurn]);
 
   // ──────────────────────────────────────────────────────────
   // The mode changed in the settings page while we were open. Switching
@@ -278,41 +302,37 @@ function App() {
       // Only a mode switch forgets clips; the other settings just take effect.
       if (previous === loaded.mode) return;
 
-      const doomed = clipsRef.current.filter((c) => !c.pinned).map((c) => c.id);
-      await deleteClips(doomed);
-      let kept = clipsRef.current.filter((c) => c.pinned);
-      setClips(kept);
-      clipsRef.current = kept;
+      await inTurn(async () => {
+        const doomed = clipsRef.current
+          .filter((c) => !c.pinned)
+          .map((c) => c.id);
+        await deleteClips(doomed);
+        const kept = clipsRef.current.filter((c) => c.pinned);
+        setClips(kept);
+        clipsRef.current = kept;
+      });
       // Switching into sync mode meets whatever the other devices already put
       // there. Take that in first, the same way first load does — publishing
       // what is only here would write over them.
-      if (loaded.mode === "sync") {
-        const merged = await mergeIn(kept);
-        if (merged) {
-          kept = merged;
-          setClips(kept);
-          clipsRef.current = kept;
-        }
-      }
+      if (loaded.mode === "sync") await mergeIn();
       const sessionStart = await clipsRpc.getSessionStartTime().catch(() => 0);
       await savePageState({ sessionStart, mode: loaded.mode });
-      if (loaded.mode === "sync") setNotSynced(await push(kept));
+      if (loaded.mode === "sync") {
+        setNotSynced(await inTurn(() => push(clipsRef.current)));
+      }
     };
     return addPrefObservers(
       [MODE_PREF, MAX_ITEMS_PREF, CLEAR_ON_EXIT_PREF, FILE_ACTION_PREF],
       () => void onChanged(),
     );
-  }, [isLoading, mergeIn]);
+  }, [isLoading, mergeIn, inTurn]);
 
   // ── Sync mode: merge what other devices sent ──────────────
   useEffect(() => {
     if (isLoading || settings.mode !== "sync") return;
     const onChanged = async () => {
       if (isWritingSync()) return;
-      const merged = await mergeIn(clipsRef.current);
-      if (!merged) return;
-      setClips(merged);
-      clipsRef.current = merged;
+      await mergeIn();
     };
     return addPrefObserver(DATA_PREF, () => void onChanged());
   }, [isLoading, settings.mode, mergeIn]);
