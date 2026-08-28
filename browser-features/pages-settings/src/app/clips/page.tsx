@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Clipboard, Sliders } from "lucide-react";
 import {
@@ -27,10 +27,15 @@ export default function Page() {
   /** A mode the user picked but has not confirmed yet. */
   const [modeToConfirm, setModeToConfirm] = useState<ClipsMode | null>(null);
 
+  /** Set once the user has changed something, so the load cannot undo it. */
+  const edited = useRef(false);
+
   useEffect(() => {
     let mounted = true;
     void getClipsSettings().then((loaded) => {
-      if (mounted) setSettings(loaded);
+      // The controls answer before the read comes back. Someone who was
+      // quicker than it should keep what they chose.
+      if (mounted && !edited.current) setSettings(loaded);
     });
     return () => {
       mounted = false;
@@ -38,6 +43,7 @@ export default function Page() {
   }, []);
 
   const update = (patch: Partial<ClipsSettings>) => {
+    edited.current = true;
     const next = { ...settings, ...patch };
     setSettings(next);
     void saveClipsSettings(next);

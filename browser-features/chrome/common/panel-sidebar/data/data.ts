@@ -54,7 +54,12 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
       ),
     );
     if (isRight(result)) {
-      setPanelSidebarData(result.right);
+      // A list arriving from elsewhere can still carry Clips while the Flasco
+      // says no, or miss it while it says yes. Keep it in step here too, or
+      // the effect below writes that back to the pref.
+      setPanelSidebarData(
+        withClipsPanel(result.right as Panels, clipsEnabled()).panels,
+      );
     }
   };
   Services.prefs.addObserver(

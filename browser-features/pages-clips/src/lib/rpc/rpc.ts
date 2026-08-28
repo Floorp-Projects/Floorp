@@ -152,10 +152,14 @@ const directClipsFunctions: NRClipsParentFunctions = {
         Ci.nsIClipboard.kGlobalClipboard,
         undefined,
       );
-      const result: { value?: { data?: string } } = {};
+      const result: {
+        value?: { QueryInterface: (iid: unknown) => { data?: string } };
+      } = {};
       trans.getTransferData("text/plain", result);
-      // The text/plain flavor always comes back as an nsISupportsString.
-      const text = result.value?.data;
+      // The text/plain flavor comes back as an nsISupportsString, but the JS
+      // wrapper only shows `.data` after QueryInterface — without it the read
+      // is silently undefined, and clipboard-history mode never adds.
+      const text = result.value?.QueryInterface(Ci.nsISupportsString).data;
       return Promise.resolve(
         typeof text === "string" && text.length > 0 ? text : null,
       );

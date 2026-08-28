@@ -16,14 +16,20 @@ export function watchClipboard(onText: (text: string) => void): () => void {
   let last: string | null = null;
   let started = false;
   let alive = true;
+  /** A read is out. A slow one must not have the next tick land on top of it. */
+  let reading = false;
 
   const tick = async () => {
+    if (reading) return;
+    reading = true;
     let text: string | null = null;
     try {
       text = await clips.readClipboardText();
     } catch (e) {
       console.error("[Floorp Clips] Could not read the clipboard:", e);
       return;
+    } finally {
+      reading = false;
     }
     if (!alive) return;
 
