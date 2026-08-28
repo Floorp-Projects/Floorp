@@ -11,11 +11,17 @@ export const MAX_SYNC_BYTES = 512 * 1024;
 export interface SyncPayload {
   clips: Clip[];
   /**
-   * The `createdAt` of the oldest clip that fitted.
+   * The `createdAt` of the newest clip that did not fit, or 0 if they all did.
    *
    * Without it, "this clip is not in the payload" would be indistinguishable
-   * from "someone deleted it", and a device holding older clips would keep
-   * losing them. Deletions are only believed for clips at or after the floor.
+   * from "someone deleted it", and a device holding the rest would keep losing
+   * them. The payload only speaks for clips newer than the floor: a deletion
+   * is believed there and nowhere else, and 0 means it speaks for all of them.
+   *
+   * It has to be read off the clips that stayed home, not off the oldest one
+   * that travelled. Pinned clips go first, so an old pinned note can travel
+   * while a newer clip stays — and then the oldest that travelled is far below
+   * the one that did not, and says the payload is complete where it is not.
    */
   floor: number;
 }
@@ -56,6 +62,8 @@ function byteLength(value: string): number {
  * As many clips as fit under the cap, newest first.
  *
  * Pinned clips go in before the rest: they are the ones the user said to keep.
+ * A clip too big for the room that is left is stepped over rather than ending
+ * the walk — one large image should not keep everything behind it at home.
  */
 export function selectForSync(
   clips: Clip[],
@@ -65,25 +73,31 @@ export function selectForSync(
     return b.createdAt - a.createdAt;
   });
 
+  // A payload is the wrapper, each clip's own JSON, and a comma between them,
+  // so each clip can be measured once instead of writing the whole payload out
+  // again for every candidate. Stepping over what does not fit means walking
+  // the whole list, and that is a lot of writing to do twice over.
+  const wrapper = byteLength(JSON.stringify({ clips: [], floor: 0 }));
+
   const kept: Clip[] = [];
+  const stayed: Clip[] = [];
+  let used = wrapper;
   for (const clip of ordered) {
-    const candidate = [...kept, clip];
-    if (
-      byteLength(JSON.stringify({ clips: candidate, floor: 0 })) >
-        MAX_SYNC_BYTES
-    ) {
-      break;
+    const cost = byteLength(JSON.stringify(clip)) + (kept.length > 0 ? 1 : 0);
+    if (used + cost > MAX_SYNC_BYTES) {
+      stayed.push(clip);
+      continue;
     }
+    used += cost;
     kept.push(clip);
   }
 
-  const floor = kept.length === clips.length
-    ? 0
-    : kept.reduce((min, c) => Math.min(min, c.createdAt), Infinity);
-
   return {
-    payload: { clips: kept, floor: Number.isFinite(floor) ? floor : 0 },
-    dropped: clips.length - kept.length,
+    payload: {
+      clips: kept,
+      floor: stayed.reduce((newest, c) => Math.max(newest, c.createdAt), 0),
+    },
+    dropped: stayed.length,
   };
 }
 
@@ -188,14 +202,15 @@ export function nextSyncState(
  *
  * The base is what the two sides last agreed on, so a clip missing from one
  * side can be read properly: gone from a side that had it means deleted;
- * missing from a side that never had it means new. A clip older than the
+ * missing from a side that never had it means new. A clip at or below the
  * remote floor is never read as deleted — the other device may simply not
  * have had room for it.
  *
  * The floor has to come from the payload, which is the only thing that knows
- * whether it is all of them: the oldest clip that arrived says nothing about
- * that, and reading it as the floor keeps a clip the other device really did
- * delete. Zero means the payload is complete and every absence is a deletion.
+ * what stayed home: the oldest clip that arrived says nothing about that, and
+ * reading it as the floor loses a clip that only could not travel and keeps
+ * one the other device really did delete. Zero means the payload speaks for
+ * every clip, so every absence is a deletion.
  *
  * When both sides changed the same clip, the later `updatedAt` wins. That only
  * ever decides a pin, so there is nothing to lose either way.
@@ -221,9 +236,9 @@ export function mergeClips(
 
     if (mine) {
       const wasShared = id in base;
-      // Below the remote floor the other device is not saying anything about
-      // this clip, so keep it.
-      const belowFloor = remoteFloor > 0 && mine.createdAt < remoteFloor;
+      // At or below the remote floor the other device is not saying anything
+      // about this clip, so keep it.
+      const belowFloor = remoteFloor > 0 && mine.createdAt <= remoteFloor;
       const changedSinceSync = mine.updatedAt > (base[id] ?? 0);
       if (!wasShared || belowFloor || changedSinceSync) merged.push(mine);
       continue;

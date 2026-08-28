@@ -53,13 +53,13 @@ function testDeletionOnTheOtherSideIsRespected(): void {
 }
 
 function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
-  // Remote only carries clips from t=100 on, because that is all that fitted,
-  // and says so in its floor.
+  // Remote could not carry "old", and its floor says so: it speaks for
+  // nothing at or below t=1.
   const local = [clip("old", 1), clip("new", 100)];
   const base = baseFromClips(local);
   const remote = [clip("new", 100)];
   assertEquals(
-    ids(mergeClips(local, remote, base, 100)),
+    ids(mergeClips(local, remote, base, 1)),
     "new,old",
     "the older one stays",
   );
@@ -167,16 +167,49 @@ function testNotFittingIsNotLeaving(): void {
   assertEquals(state.clips.b, 2, "b is still something they have of ours");
 }
 
-function testNothingFitsWhenTheFirstIsTooBig(): void {
-  // The case the store guards: a pinned clip too big to travel sorts first,
-  // and the selection comes back empty although clips are still held.
+function testTooBigIsSteppedOver(): void {
+  // A pinned clip too big to travel at all sorts first. It must not keep the
+  // rest at home with it.
   const huge = clip("huge", 1, {
     text: "x".repeat(MAX_SYNC_BYTES + 1),
     pinned: true,
   });
   const { payload, dropped } = selectForSync([huge, clip("small", 2)]);
+  assertEquals(ids(payload.clips), "small", "the small one still travels");
+  assertEquals(dropped, 1, "only the big one stayed");
+  assertEquals(payload.floor, 1, "the floor is the one that stayed");
+}
+
+function testNothingFitsWhenEveryClipIsTooBig(): void {
+  // The case the store guards: the payload comes back empty although clips
+  // are still held, and publishing it would read as "all deleted".
+  const tooBig = (id: string, at: number) =>
+    clip(id, at, { text: "x".repeat(MAX_SYNC_BYTES + 1) });
+  const { payload, dropped } = selectForSync([tooBig("a", 1), tooBig("b", 2)]);
   assertEquals(payload.clips.length, 0, "nothing fitted");
   assertEquals(dropped, 2, "both stayed home");
+}
+
+function testAClipThatCouldNotTravelIsNotADeletion(): void {
+  // A pinned old note travels because pinned clips go first; a newer clip does
+  // not fit behind it. The floor has to speak for the one that stayed home,
+  // not for the oldest one that travelled — otherwise the other device reads
+  // the absence as a deletion and lets a clip go that nobody deleted.
+  const big = "x".repeat(300 * 1024);
+  const { payload } = selectForSync([
+    clip("pinned-old", 1, { text: big, pinned: true }),
+    clip("recent", 500, { text: big }),
+  ]);
+  assertEquals(ids(payload.clips), "pinned-old", "only the pinned one fitted");
+  assertEquals(payload.floor, 500, "the floor is the one that stayed");
+
+  const local = [clip("recent", 500)];
+  const base = baseFromClips(local);
+  assertEquals(
+    ids(mergeClips(local, payload.clips, base, payload.floor)),
+    "pinned-old,recent",
+    "the one that could not travel stays",
+  );
 }
 
 function testSelectionStaysUnderTheCap(): void {
@@ -254,9 +287,14 @@ export async function runAllTests(): Promise<void> {
       fn: testAnOlderDeletionIsBelievedWhenNothingWasDropped,
     },
     { name: "not fitting is not leaving", fn: testNotFittingIsNotLeaving },
+    { name: "too big is stepped over", fn: testTooBigIsSteppedOver },
     {
-      name: "nothing fits when the first is too big",
-      fn: testNothingFitsWhenTheFirstIsTooBig,
+      name: "nothing fits when every clip is too big",
+      fn: testNothingFitsWhenEveryClipIsTooBig,
+    },
+    {
+      name: "a clip that could not travel is not a deletion",
+      fn: testAClipThatCouldNotTravelIsNotADeletion,
     },
     {
       name: "selection stays under the cap",
