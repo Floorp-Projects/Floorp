@@ -37,7 +37,7 @@ function ids(clips: Clip[]): string {
 function testNewOnEitherSideIsKept(): void {
   const local = [clip("a", 1)];
   const remote = [clip("b", 2)];
-  assertEquals(ids(mergeClips(local, remote, {})), "a,b", "both are kept");
+  assertEquals(ids(mergeClips(local, remote, {}, 0)), "a,b", "both are kept");
 }
 
 function testDeletionOnTheOtherSideIsRespected(): void {
@@ -46,19 +46,20 @@ function testDeletionOnTheOtherSideIsRespected(): void {
   const base = baseFromClips([clip("a", 1)]);
   const remote = [clip("b", 1)];
   assertEquals(
-    ids(mergeClips(local, remote, base)),
+    ids(mergeClips(local, remote, base, 0)),
     "b",
     "the deleted one is let go",
   );
 }
 
 function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
-  // Remote only carries clips from t=100 on, because that is all that fitted.
+  // Remote only carries clips from t=100 on, because that is all that fitted,
+  // and says so in its floor.
   const local = [clip("old", 1), clip("new", 100)];
   const base = baseFromClips(local);
   const remote = [clip("new", 100)];
   assertEquals(
-    ids(mergeClips(local, remote, base)),
+    ids(mergeClips(local, remote, base, 100)),
     "new,old",
     "the older one stays",
   );
@@ -67,7 +68,7 @@ function testMissingBelowTheRemoteFloorIsNotADeletion(): void {
 function testPinChangeWinsByTime(): void {
   const local = [clip("a", 1, { updatedAt: 5 })];
   const remote = [clip("a", 1, { updatedAt: 9, pinned: true })];
-  const merged = mergeClips(local, remote, baseFromClips([clip("a", 1)]));
+  const merged = mergeClips(local, remote, baseFromClips([clip("a", 1)]), 0);
   assertEquals(merged.length, 1, "still one clip");
   assertEquals(merged[0].pinned, true, "the later pin wins");
 }
@@ -75,7 +76,11 @@ function testPinChangeWinsByTime(): void {
 function testLocalEditSurvivesARemoteDeletion(): void {
   const local = [clip("a", 1, { updatedAt: 50, pinned: true })];
   const base = { a: 1 };
-  assertEquals(ids(mergeClips(local, [], base)), "a", "the edit keeps it here");
+  assertEquals(
+    ids(mergeClips(local, [], base, 0)),
+    "a",
+    "the edit keeps it here",
+  );
 }
 
 function testADeletedClipDoesNotComeBack(): void {
@@ -85,11 +90,12 @@ function testADeletedClipDoesNotComeBack(): void {
   const state = nextSyncState(
     { clips: baseFromClips(published), gone: {} },
     [clip("b", 2)],
+    [clip("b", 2)],
     100,
   );
   assertEquals(state.gone.a, 100, "a is remembered as having left");
   assertEquals(
-    ids(mergeClips([clip("b", 2)], published, baseOf(state))),
+    ids(mergeClips([clip("b", 2)], published, baseOf(state), 0)),
     "b",
     "a does not come home",
   );
@@ -101,11 +107,12 @@ function testTheOtherDeviceEditingWinsOverOurDeletion(): void {
   const state = nextSyncState(
     { clips: baseFromClips(published), gone: {} },
     [],
+    [],
     100,
   );
   const remote = [clip("a", 1, { updatedAt: 200, pinned: true })];
   assertEquals(
-    ids(mergeClips([], remote, baseOf(state))),
+    ids(mergeClips([], remote, baseOf(state), 0)),
     "a",
     "the edit brings it back",
   );
@@ -114,6 +121,7 @@ function testTheOtherDeviceEditingWinsOverOurDeletion(): void {
 function testARecordOfLeavingIsLetGoEventually(): void {
   const state = nextSyncState(
     { clips: {}, gone: { a: 1 } },
+    [],
     [],
     1 + GONE_KEPT_MS + 1,
   );
@@ -128,6 +136,47 @@ function testAStateWrittenBeforeThoseRecordsStillReads(): void {
     0,
     "nothing is remembered as having left",
   );
+}
+
+function testAnOlderDeletionIsBelievedWhenNothingWasDropped(): void {
+  // Remote carries every clip it has — floor 0 — and the old one is not among
+  // them, so it was deleted. Reading the oldest arrival as the floor would
+  // have kept it here forever.
+  const local = [clip("old", 1), clip("new", 100)];
+  const base = baseFromClips(local);
+  const remote = [clip("new", 100)];
+  assertEquals(
+    ids(mergeClips(local, remote, base, 0)),
+    "new",
+    "the old one is let go",
+  );
+}
+
+function testNotFittingIsNotLeaving(): void {
+  // b did not fit this time, but it is still here and the other device still
+  // has what we sent it. Only a is really gone.
+  const published = [clip("a", 1), clip("b", 2)];
+  const state = nextSyncState(
+    { clips: baseFromClips(published), gone: {} },
+    [],
+    [clip("b", 2)],
+    100,
+  );
+  assertEquals(state.gone.a, 100, "a is remembered as having left");
+  assertEquals("b" in state.gone, false, "b is not");
+  assertEquals(state.clips.b, 2, "b is still something they have of ours");
+}
+
+function testNothingFitsWhenTheFirstIsTooBig(): void {
+  // The case the store guards: a pinned clip too big to travel sorts first,
+  // and the selection comes back empty although clips are still held.
+  const huge = clip("huge", 1, {
+    text: "x".repeat(MAX_SYNC_BYTES + 1),
+    pinned: true,
+  });
+  const { payload, dropped } = selectForSync([huge, clip("small", 2)]);
+  assertEquals(payload.clips.length, 0, "nothing fitted");
+  assertEquals(dropped, 2, "both stayed home");
 }
 
 function testSelectionStaysUnderTheCap(): void {
@@ -199,6 +248,15 @@ export async function runAllTests(): Promise<void> {
     {
       name: "a state written before those records still reads",
       fn: testAStateWrittenBeforeThoseRecordsStillReads,
+    },
+    {
+      name: "an older deletion is believed when nothing was dropped",
+      fn: testAnOlderDeletionIsBelievedWhenNothingWasDropped,
+    },
+    { name: "not fitting is not leaving", fn: testNotFittingIsNotLeaving },
+    {
+      name: "nothing fits when the first is too big",
+      fn: testNothingFitsWhenTheFirstIsTooBig,
     },
     {
       name: "selection stays under the cap",

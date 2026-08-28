@@ -68,7 +68,10 @@ export function selectForSync(
   const kept: Clip[] = [];
   for (const clip of ordered) {
     const candidate = [...kept, clip];
-    if (byteLength(JSON.stringify({ clips: candidate, floor: 0 })) > MAX_SYNC_BYTES) {
+    if (
+      byteLength(JSON.stringify({ clips: candidate, floor: 0 })) >
+        MAX_SYNC_BYTES
+    ) {
       break;
     }
     kept.push(clip);
@@ -149,27 +152,33 @@ export function baseOf(state: SyncState): SyncBase {
 }
 
 /**
- * The state to record after publishing `published`.
+ * The state to record after publishing `published`, out of `held` — everything
+ * we still have.
  *
- * An id that was in the last payload and is not in this one has left: it is
- * remembered, stamped with now, until it is old enough to let go. A clip that
- * only left because it did not fit under the cap is remembered too — the
- * remote floor is what speaks for those, and it still does.
+ * An id we sent before and do not have any more is really gone: it is
+ * remembered, stamped with now, until it is old enough to let go. An id we
+ * still hold and only left out because it did not fit under the cap is not
+ * gone at all — the other device still has what we last sent it, so keep
+ * saying so rather than telling it to forget.
  */
 export function nextSyncState(
   previous: SyncState,
   published: Clip[],
+  held: Clip[],
   now: number = Date.now(),
 ): SyncState {
   const clips = baseFromClips(published);
   const gone: SyncBase = {};
+  const stillHere = new Set(held.map((c) => c.id));
+
   for (const [id, at] of Object.entries(previous.gone)) {
-    if (id in clips) continue;
+    if (id in clips || stillHere.has(id)) continue;
     if (now - at <= GONE_KEPT_MS) gone[id] = at;
   }
-  for (const id of Object.keys(previous.clips)) {
-    if (id in clips || id in gone) continue;
-    gone[id] = now;
+  for (const [id, at] of Object.entries(previous.clips)) {
+    if (id in clips) continue;
+    if (stillHere.has(id)) clips[id] = at;
+    else if (!(id in gone)) gone[id] = now;
   }
   return { clips, gone };
 }
@@ -183,6 +192,11 @@ export function nextSyncState(
  * remote floor is never read as deleted — the other device may simply not
  * have had room for it.
  *
+ * The floor has to come from the payload, which is the only thing that knows
+ * whether it is all of them: the oldest clip that arrived says nothing about
+ * that, and reading it as the floor keeps a clip the other device really did
+ * delete. Zero means the payload is complete and every absence is a deletion.
+ *
  * When both sides changed the same clip, the later `updatedAt` wins. That only
  * ever decides a pin, so there is nothing to lose either way.
  */
@@ -190,12 +204,10 @@ export function mergeClips(
   local: Clip[],
   remote: Clip[],
   base: SyncBase,
+  remoteFloor: number,
 ): Clip[] {
   const localById = new Map(local.map((c) => [c.id, c]));
   const remoteById = new Map(remote.map((c) => [c.id, c]));
-  const remoteFloor = remote.length === 0 ? 0 : Math.min(
-    ...remote.map((c) => c.createdAt),
-  );
 
   const merged: Clip[] = [];
   for (const id of new Set([...localById.keys(), ...remoteById.keys()])) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Clipboard, Sliders } from "lucide-react";
 import {
@@ -27,15 +27,21 @@ export default function Page() {
   /** A mode the user picked but has not confirmed yet. */
   const [modeToConfirm, setModeToConfirm] = useState<ClipsMode | null>(null);
 
-  /** Set once the user has changed something, so the load cannot undo it. */
-  const edited = useRef(false);
+  /**
+   * The controls wait for the read.
+   *
+   * What is on screen until then is the defaults, not what is stored, and a
+   * change made against them would save the defaults over everything the user
+   * did not touch.
+   */
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     void getClipsSettings().then((loaded) => {
-      // The controls answer before the read comes back. Someone who was
-      // quicker than it should keep what they chose.
-      if (mounted && !edited.current) setSettings(loaded);
+      if (!mounted) return;
+      setSettings(loaded);
+      setIsLoading(false);
     });
     return () => {
       mounted = false;
@@ -43,7 +49,6 @@ export default function Page() {
   }, []);
 
   const update = (patch: Partial<ClipsSettings>) => {
-    edited.current = true;
     const next = { ...settings, ...patch };
     setSettings(next);
     void saveClipsSettings(next);
@@ -73,6 +78,7 @@ export default function Page() {
                   className="radio mt-1"
                   value={mode}
                   checked={settings.mode === mode}
+                  disabled={isLoading}
                   onChange={() => setModeToConfirm(mode)}
                 />
                 <span>
@@ -113,6 +119,7 @@ export default function Page() {
                 id="clips-max-items"
                 type="number"
                 min={1}
+                disabled={isLoading}
                 value={settings.maxItems || ""}
                 onChange={(e) => {
                   const value = Number(e.target.value);
@@ -131,6 +138,7 @@ export default function Page() {
               </label>
               <Switch
                 id="clips-clear-on-exit"
+                disabled={isLoading}
                 checked={settings.clearOnExit}
                 onChange={(e) => update({ clearOnExit: e.target.checked })}
               />
@@ -146,6 +154,7 @@ export default function Page() {
                     type="radio"
                     name="clips-file-action"
                     className="radio"
+                    disabled={isLoading}
                     checked={settings.fileAction === "reveal"}
                     onChange={() => update({ fileAction: "reveal" })}
                   />
@@ -156,6 +165,7 @@ export default function Page() {
                     type="radio"
                     name="clips-file-action"
                     className="radio"
+                    disabled={isLoading}
                     checked={settings.fileAction === "launch"}
                     onChange={() => update({ fileAction: "launch" })}
                   />

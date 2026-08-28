@@ -99,6 +99,25 @@ function App() {
     }
   }, []);
 
+  /**
+   * Take in what the other devices sent, and store the result.
+   *
+   * The merge is asked about the clips we held when it started, and it takes a
+   * moment. Anything clipped in the meantime is not in its answer, so it is
+   * carried over rather than replaced away.
+   */
+  const mergeIn = useCallback(async (mine: Clip[]): Promise<Clip[] | null> => {
+    const merged = await pullAndMerge(mine);
+    if (!merged) return null;
+    const inMerge = new Set(merged.map((c) => c.id));
+    const since = clipsRef.current.filter((c) => !inMerge.has(c.id));
+    const next = [...merged, ...since].sort((a, b) =>
+      a.createdAt - b.createdAt
+    );
+    await replaceAll(next);
+    return next;
+  }, []);
+
   // ──────────────────────────────────────────────────────────
   // First load: settings, clips, and the things that may have happened
   // while the page was closed (a restart, or a mode switch).
@@ -262,18 +281,19 @@ function App() {
       const doomed = clipsRef.current.filter((c) => !c.pinned).map((c) => c.id);
       await deleteClips(doomed);
       let kept = clipsRef.current.filter((c) => c.pinned);
+      setClips(kept);
+      clipsRef.current = kept;
       // Switching into sync mode meets whatever the other devices already put
       // there. Take that in first, the same way first load does — publishing
       // what is only here would write over them.
       if (loaded.mode === "sync") {
-        const merged = await pullAndMerge(kept);
+        const merged = await mergeIn(kept);
         if (merged) {
-          await replaceAll(merged);
           kept = merged;
+          setClips(kept);
+          clipsRef.current = kept;
         }
       }
-      setClips(kept);
-      clipsRef.current = kept;
       const sessionStart = await clipsRpc.getSessionStartTime().catch(() => 0);
       await savePageState({ sessionStart, mode: loaded.mode });
       if (loaded.mode === "sync") setNotSynced(await push(kept));
@@ -282,21 +302,20 @@ function App() {
       [MODE_PREF, MAX_ITEMS_PREF, CLEAR_ON_EXIT_PREF, FILE_ACTION_PREF],
       () => void onChanged(),
     );
-  }, [isLoading]);
+  }, [isLoading, mergeIn]);
 
   // ── Sync mode: merge what other devices sent ──────────────
   useEffect(() => {
     if (isLoading || settings.mode !== "sync") return;
     const onChanged = async () => {
       if (isWritingSync()) return;
-      const merged = await pullAndMerge(clipsRef.current);
+      const merged = await mergeIn(clipsRef.current);
       if (!merged) return;
-      await replaceAll(merged);
       setClips(merged);
       clipsRef.current = merged;
     };
     return addPrefObserver(DATA_PREF, () => void onChanged());
-  }, [isLoading, settings.mode]);
+  }, [isLoading, settings.mode, mergeIn]);
 
   // ── Clipboard history mode ────────────────────────────────
   useEffect(() => {
