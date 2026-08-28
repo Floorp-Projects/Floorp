@@ -21,6 +21,9 @@ import {
 
 const MODES: ClipsMode[] = ["local", "sync", "clipboard"];
 
+/** How many clips to keep rides in an int pref, which is 32 bits wide. */
+const MAX_ITEMS_LIMIT = 2147483647;
+
 export default function Page() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<ClipsSettings>(DEFAULT_SETTINGS);
@@ -119,11 +122,20 @@ export default function Page() {
                 id="clips-max-items"
                 type="number"
                 min={1}
+                max={MAX_ITEMS_LIMIT}
+                step={1}
                 disabled={isLoading}
                 value={settings.maxItems || ""}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value > 0) update({ maxItems: value });
+                  // A number field will hand over "2.5" or "1e9" quite
+                  // happily, and the pref this ends up in holds neither.
+                  if (
+                    Number.isInteger(value) && value > 0 &&
+                    value <= MAX_ITEMS_LIMIT
+                  ) {
+                    update({ maxItems: value });
+                  }
                 }}
                 className="w-full"
               />

@@ -177,7 +177,11 @@ const directClipsFunctions: NRClipsParentFunctions = {
   },
   revealFile: (path) => {
     try {
-      localFile(path)?.reveal();
+      const file = localFile(path);
+      // No file is not a success. Saying it was leaves the panel reporting
+      // that it revealed something that was never there.
+      if (!file) return Promise.resolve(false);
+      file.reveal();
       return Promise.resolve(true);
     } catch {
       return Promise.resolve(false);
@@ -185,7 +189,11 @@ const directClipsFunctions: NRClipsParentFunctions = {
   },
   launchFile: (path) => {
     try {
-      localFile(path)?.launch();
+      const file = localFile(path);
+      // No file is not a success. Saying it was leaves the panel reporting
+      // that it launched something that was never there.
+      if (!file) return Promise.resolve(false);
+      file.launch();
       return Promise.resolve(true);
     } catch {
       return Promise.resolve(false);

@@ -64,7 +64,10 @@ export class NRClipsParent extends JSWindowActorParent {
         const filePath = pathOf();
         if (!filePath) return false;
         try {
-          localFile(filePath)?.reveal();
+          const file = localFile(filePath);
+          // No file is not a success; the panel would report it revealed one.
+          if (!file) return false;
+          file.reveal();
           return true;
         } catch (e) {
           console.error("[NRClips] Failed to reveal:", filePath, e);
@@ -76,7 +79,10 @@ export class NRClipsParent extends JSWindowActorParent {
         const filePath = pathOf();
         if (!filePath) return false;
         try {
-          localFile(filePath)?.launch();
+          const file = localFile(filePath);
+          // No file is not a success; the panel would report it launched one.
+          if (!file) return false;
+          file.launch();
           return true;
         } catch (e) {
           console.error("[NRClips] Failed to launch:", filePath, e);
@@ -110,7 +116,7 @@ export class NRClipsParent extends JSWindowActorParent {
       // The text/plain flavor comes back as an nsISupportsString, but the
       // JS wrapper only shows `.data` after QueryInterface — without it the
       // read is silently undefined, and clipboard-history mode never adds.
-      const text = result.value.QueryInterface(Ci.nsISupportsString).data;
+      const text = result.value.QueryInterface?.(Ci.nsISupportsString).data;
       return typeof text === "string" && text.length > 0 ? text : null;
     } catch (e) {
       // An empty clipboard, or one holding something that is not text, throws.

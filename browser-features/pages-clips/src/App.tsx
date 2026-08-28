@@ -137,7 +137,7 @@ function App() {
   // while the page was closed (a restart, or a mode switch).
   // ──────────────────────────────────────────────────────────
   useEffect(() => {
-    (async () => {
+    void inTurn(async () => {
       try {
         const [loaded, stored, pageState, sessionStart] = await Promise.all([
           getSettings(),
@@ -177,8 +177,8 @@ function App() {
       } finally {
         setIsLoading(false);
       }
-    })();
-  }, []);
+    });
+  }, [inTurn]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
