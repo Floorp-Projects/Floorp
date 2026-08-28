@@ -9,6 +9,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { Clip } from "@/types/clip.ts";
 import { formatSize, URL_PATTERN } from "@/lib/intake.ts";
+import { formatClipTime } from "@/lib/format.ts";
 import { clips as clipsRpc, localFile, openLinkInTab } from "@/lib/rpc/rpc.ts";
 import type { FileAction } from "@/lib/settings.ts";
 
@@ -87,21 +88,10 @@ export const ClipItem = memo(function ClipItem({
   const { t, i18n } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const time = useMemo(() => {
-    // i18n.language can carry Mozilla-only tags like "ja-JP-mac"; Intl wants
-    // a plain BCP47 tag.
-    const locale = i18n.language.replace(/-mac$/, "");
-    try {
-      return new Intl.DateTimeFormat(locale, {
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date(clip.createdAt));
-    } catch {
-      return new Date(clip.createdAt).toLocaleString();
-    }
-  }, [clip.createdAt, i18n.language]);
+  const time = useMemo(
+    () => formatClipTime(clip.createdAt, i18n.language),
+    [clip.createdAt, i18n.language],
+  );
 
   const handleCopy = async () => {
     const text = copyText(clip);

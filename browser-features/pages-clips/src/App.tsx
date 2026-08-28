@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { CloudOff, Search, Trash2 } from "lucide-react";
 import { ClipItem } from "@/components/clips/ClipItem.tsx";
 import { ClipComposer } from "@/components/clips/ClipComposer.tsx";
+import { ClipPreview } from "@/components/clips/ClipPreview.tsx";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import {
   deleteClips,
@@ -220,6 +221,14 @@ function App() {
       console.error("[Floorp Clips] Failed to pin/unpin:", e);
     }
   }, [commit]);
+
+  /** The clips the open confirmation is about — shown, not just counted. */
+  const doomed = useMemo<Clip[]>(() => {
+    if (!pending) return [];
+    return pending.kind === "delete"
+      ? clips.filter((c) => c.id === pending.id)
+      : clips.filter((c) => !c.pinned);
+  }, [pending, clips]);
 
   const confirmPending = useCallback(async () => {
     if (!pending) return;
@@ -440,9 +449,21 @@ function App() {
         confirmText={t("clips.delete")}
         confirmVariant="btn-error"
       >
-        {pending?.kind === "cleanup"
-          ? t("clips.cleanupConfirmMessage")
-          : t("clips.deleteConfirmMessage")}
+        <p>
+          {pending?.kind === "cleanup"
+            ? t("clips.cleanupConfirmMessage", { count: doomed.length })
+            : t("clips.deleteConfirmMessage")}
+        </p>
+        <div className="mt-3 flex flex-col gap-1.5">
+          {doomed.slice(0, 5).map((clip) => (
+            <ClipPreview key={clip.id} clip={clip} />
+          ))}
+          {doomed.length > 5 && (
+            <p className="text-xs text-base-content/60">
+              {t("clips.andMore", { count: doomed.length - 5 })}
+            </p>
+          )}
+        </div>
       </ConfirmModal>
 
       <dialog ref={zoomRef} className="modal" onClose={() => setZoomed(null)}>

@@ -25,13 +25,17 @@
     "deleteConfirmTitle": "Delete clip",
     "deleteConfirmMessage": "Delete this clip? This cannot be undone.",
     "cleanupConfirmTitle": "Clean up clips",
-    "cleanupConfirmMessage": "Delete every clip that is not pinned? This cannot be undone.",
     "imageFailed": "That image could not be clipped.",
     "fileGone": "That file is not where it was. Only the preview is left.",
     "revealFile": "Show in the file manager",
     "launchFile": "Open with the default app",
     "notSynced_one": "{{count}} older clip is staying on this device — the synced space is full.",
-    "notSynced_other": "{{count}} older clips are staying on this device — the synced space is full."
+    "notSynced_other": "{{count}} older clips are staying on this device — the synced space is full.",
+    "cleanupConfirmMessage_one": "This will delete {{count}} clip that is not pinned. This cannot be undone.",
+    "cleanupConfirmMessage_other": "This will delete {{count}} clips that are not pinned. This cannot be undone.",
+    "andMore_one": "and {{count}} more",
+    "andMore_other": "and {{count}} more",
+    "image": "Image"
   },
   "common": {
     "confirm": "OK",

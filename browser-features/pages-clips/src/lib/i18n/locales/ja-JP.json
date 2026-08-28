@@ -25,12 +25,14 @@
     "deleteConfirmTitle": "クリップを削除",
     "deleteConfirmMessage": "このクリップを削除しますか？ この操作は元に戻せません。",
     "cleanupConfirmTitle": "クリップをクリーンアップ",
-    "cleanupConfirmMessage": "ピン留めしていないクリップをすべて削除しますか？ この操作は元に戻せません。",
+    "cleanupConfirmMessage": "ピン留めしていない {{count}} 件のクリップを削除します。この操作は元に戻せません。",
     "imageFailed": "この画像はクリップできませんでした。",
     "fileGone": "そのファイルは元の場所にありません。プレビューだけが残っています。",
     "revealFile": "ファイルマネージャーで表示",
     "launchFile": "既定のアプリで開く",
-    "notSynced_other": "古いクリップ {{count}} 件はこの端末に残ります（同期できる大きさを超えました）。"
+    "notSynced_other": "古いクリップ {{count}} 件はこの端末に残ります（同期できる大きさを超えました）。",
+    "andMore": "ほか {{count}} 件",
+    "image": "画像"
   },
   "common": {
     "confirm": "OK",

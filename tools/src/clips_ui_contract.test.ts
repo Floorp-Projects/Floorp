@@ -11,6 +11,7 @@ Deno.test("Clips production UI exposes stable automation hooks", async () => {
     Deno.readTextFile(new URL("App.tsx", root)),
     Deno.readTextFile(new URL("components/clips/ClipItem.tsx", root)),
     Deno.readTextFile(new URL("components/clips/ClipComposer.tsx", root)),
+    Deno.readTextFile(new URL("components/clips/ClipPreview.tsx", root)),
     Deno.readTextFile(new URL("components/common/ConfirmModal.tsx", root)),
   ]);
   const combined = sources.join("\n");
@@ -22,6 +23,7 @@ Deno.test("Clips production UI exposes stable automation hooks", async () => {
       "clips-pin",
       "clips-delete",
       "clips-delete-confirm",
+      "clips-preview",
       "clips-open-file",
       "clips-input",
       "clips-suggest",
