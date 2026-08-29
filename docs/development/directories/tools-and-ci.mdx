@@ -1,34 +1,61 @@
 ---
 title: "Tools & CI Directories"
 sidebar_label: "Tools & CI"
-floorp_commit: "c2639cbacfedaf376c790952488cc5719fcca7a7"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
 generated: true
 ---
-# Tools & CI Directories
+## Overview
 
-This page is intentionally seeded before Codex rewrites it from the source inventory and allowed source files.
+Floorp relies on a set of Deno-based tools and GitHub Actions workflows for development, testing, building, and releasing. The `tools/` directory contains the core CLI scripts, while `deno.json` defines the task entrypoints. Continuous integration is managed through workflows in `.github/workflows/`.
 
-## Source Anchors
+## Tools Directory
 
-- Firefox Base: `static/gecko/pref/override.ini`
-- ESM Modules: `browser-features/modules/modules/BrowserGlue.sys.mts`
-- Bridge: `bridge/startup/src/chrome_root.ts`
-- Chrome UI: `browser-features/chrome/common/mod.ts`
-- Pages: `browser-features/pages-settings/vite.config.ts`
-- Loader entrypoint: `bridge/loader-features/loader/index.ts`
-- Loader module registry: `bridge/loader-features/loader/modules.ts`
-- Loader module hooks: `bridge/loader-features/loader/modules-hooks.ts`
-- Chrome feature overview: `browser-features/chrome/README.md`
-- Static chrome feature discovery: `browser-features/chrome/static/mod.ts`
-- Gecko version configuration: `static/gecko/config/README.md`
-- Settings app entry: `browser-features/pages-settings/src/main.tsx`
-- Settings routes: `browser-features/pages-settings/src/App.tsx`
-- Browser test runner: `tools/src/colocated_test_runner.ts`
-- Browser test result collector: `tools/src/browser_test_collector.ts`
-- Development inspection CLI: `tools/dev-tool.ts`
-- Build CLI: `tools/feles-build.ts`
-- Root Deno tasks: `deno.json`
-- Chrome feature discovery: `browser-features/chrome/common/mod.ts`
-- Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts`
-- Bridge loader: `bridge/startup/src/chrome_root.ts`
-- Loader dev server: `bridge/loader-features/vite.config.ts`
+The `tools/` directory houses custom scripts for building, developing, and testing Floorp.
+
+### Build and Development CLI
+
+The primary build tool is `tools/feles-build.ts`, which defines the build, dev, stage, test, and misc patch commands. It supports phases for the build process (`before-mach` and `after-mach`), staging with optional Marionette support, and patch management (`apply`, `create`, `init`).
+
+For runtime inspection, `tools/dev-tool.ts` provides a development CLI. It supports start, stop, and rebuild actions, alongside Marionette-backed commands for status checks, JavaScript evaluation, console logging, screenshots, navigation, and DOM inspection.
+
+### Test Runner and Collector
+
+Floorp uses a colocated test runner located at `tools/src/colocated_test_runner.ts`. This runner discovers browser tests, filters them by layer or near path, and can autostart `feles-build test`. It works in conjunction with `tools/src/browser_test_collector.ts`, which polls the Firefox profile's `prefs.js` for structured browser test results written by the browser-side runner.
+
+## Deno Tasks
+
+The `deno.json` file serves as the central configuration for Deno tasks, imports, and workspace packages. It defines entrypoints for the tools and documentation pipeline.
+
+Key tasks defined in `deno.json` include:
+
+- `feles-build`: Runs the build CLI.
+- `dev-tool`: Runs the development inspection CLI.
+- `test`: Runs the colocated test runner.
+- `test:smoke`: Runs the smoke test runner.
+- `docs-pipeline`: Runs the documentation generation and verification pipeline.
+
+## Continuous Integration
+
+The `.github/workflows/` directory contains GitHub Actions workflows that automate the build, test, package, and release processes.
+
+### Build and Packaging
+
+- `.github/workflows/build_installers.yml`: Builds Windows stub installers using Tauri.
+- `.github/workflows/package.yml`: Handles the core packaging process. It uses `./mach` for artifact builds, configures mozconfig based on the target platform (Linux, Windows, macOS), applies branding, and generates MAR files for updates.
+
+### Testing
+
+- `.github/workflows/colocated_runner_test.yml`: Runs browser integration and runner tests. It sets up a virtual display using Xvfb, starts `feles-build test` in the background, and executes the colocated and smoke tests.
+
+### Publishing
+
+- `.github/workflows/package_and_publish_alpha.yml` and `.github/workflows/package_and_publish_release.yml`: Reusable workflows that orchestrate the packaging and publishing of alpha and release versions.
+- `.github/workflows/publish_alpha.yml`: Publishes alpha builds, including generating update XML files.
+- `.github/workflows/publish_release.yml`: Publishes release builds, generates file hashes, and triggers external update workflows.
+- `.github/workflows/publish_ppa.yml`: Publishes Linux DEB packages to a PPA via FTP, including GPG signing and metadata generation.
+
+### Maintenance and Documentation
+
+- `.github/workflows/docs_pipeline.yml`: Automates documentation generation and verification using an LLM pipeline. It collects an inventory, generates docs, verifies the generated MDX, and runs `docs-pipeline:audit` with OpenAI-compatible LLMs on scheduled and manual triggers.
+- `.github/workflows/update_lepton.yml`: Scheduled workflow to update Lepton themes by downloading and extracting the latest releases.
+- `.github/workflows/moderation.yml` and `.github/workflows/organize_issue.yml`: Handle content moderation and issue/PR lifecycle management.

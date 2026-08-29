@@ -1,34 +1,45 @@
 ---
 title: "Bridge Directory"
 sidebar_label: "Bridge"
-floorp_commit: "c2639cbacfedaf376c790952488cc5719fcca7a7"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
 generated: true
 ---
-# Bridge Directory
+## Overview
 
-This page is intentionally seeded before Codex rewrites it from the source inventory and allowed source files.
+The `bridge` directory contains the startup and loader infrastructure that connects Floorp's custom browser features to the underlying Firefox base. It handles selecting the appropriate code loader depending on the environment (development, test, or production) and bootstrapping the feature modules.
 
-## Source Anchors
+## Startup Bridge
 
-- Firefox Base: `static/gecko/pref/override.ini`
-- ESM Modules: `browser-features/modules/modules/BrowserGlue.sys.mts`
-- Bridge: `bridge/startup/src/chrome_root.ts`
-- Chrome UI: `browser-features/chrome/common/mod.ts`
-- Pages: `browser-features/pages-settings/vite.config.ts`
-- Loader entrypoint: `bridge/loader-features/loader/index.ts`
-- Loader module registry: `bridge/loader-features/loader/modules.ts`
-- Loader module hooks: `bridge/loader-features/loader/modules-hooks.ts`
-- Chrome feature overview: `browser-features/chrome/README.md`
-- Static chrome feature discovery: `browser-features/chrome/static/mod.ts`
-- Gecko version configuration: `static/gecko/config/README.md`
-- Settings app entry: `browser-features/pages-settings/src/main.tsx`
-- Settings routes: `browser-features/pages-settings/src/App.tsx`
-- Browser test runner: `tools/src/colocated_test_runner.ts`
-- Browser test result collector: `tools/src/browser_test_collector.ts`
-- Development inspection CLI: `tools/dev-tool.ts`
-- Build CLI: `tools/feles-build.ts`
-- Root Deno tasks: `deno.json`
-- Chrome feature discovery: `browser-features/chrome/common/mod.ts`
-- Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts`
-- Bridge loader: `bridge/startup/src/chrome_root.ts`
-- Loader dev server: `bridge/loader-features/vite.config.ts`
+The startup bridge is responsible for determining which loader to use when the browser chrome initializes.
+
+`bridge/startup/src/chrome_root.ts` acts as the entry point for this selection process. It distinguishes between three primary environments:
+
+- **Development**: Uses a local HTTP loader served by Vite, specifically `http://localhost:5181/loader/index.ts`.
+- **Test**: Uses a test-specific HTTP loader, `http://localhost:5181/loader/test/index.ts`.
+- **Production**: Loads the compiled production code directly from `chrome://noraneko/content/core.js`.
+
+## Loader Features
+
+The `bridge/loader-features/` directory contains the Vite configuration and the actual loader scripts that run in development and test environments.
+
+### Vite Configuration
+
+The loader dev server is configured in `bridge/loader-features/vite.config.ts`. It serves the loader scripts on port `5181`, which corresponds to the URLs used by the startup bridge for development and test environments.
+
+### Loader Entrypoint
+
+The main loader entrypoint is located at `bridge/loader-features/loader/index.ts`. When executed, it:
+
+1. Imports `BrowserGlue` to integrate with Firefox's module system.
+2. Initializes internationalization (i18n).
+3. Records the loader state.
+4. Filters enabled modules based on their configuration.
+5. Runs the lifecycle hooks for the enabled modules.
+
+### Module Registry
+
+`bridge/loader-features/loader/modules.ts` is responsible for building the module maps. It discovers and aggregates common and static module entries from the chrome feature globs, making them available for the loader to process.
+
+### Module Hooks
+
+`bridge/loader-features/loader/modules-hooks.ts` provides the mechanism for tracking module load states. It exposes `onModuleLoaded` promises and handles the internal resolution of module load states, allowing the system to wait for or react to specific modules being loaded.
