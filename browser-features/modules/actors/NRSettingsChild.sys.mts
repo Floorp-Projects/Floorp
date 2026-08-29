@@ -244,7 +244,11 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefSet:", error);
-      throw error;
+      // Keep the legacy preference-write bridge fail-soft. Several existing
+      // settings pages intentionally fire-and-forget these writes, so changing
+      // this compatibility API to reject would create unhandled promises. New
+      // settings that need actionable failures use the typed atomic methods.
+      return null;
     }
   }
   handleEvent(_event: Event): void {

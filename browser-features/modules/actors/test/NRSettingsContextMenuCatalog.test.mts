@@ -128,6 +128,39 @@ async function testChildActorCatalogFailureRejects(): Promise<void> {
   );
 }
 
+async function testLegacyPreferenceWriteFailureRemainsFailSoft(): Promise<
+  void
+> {
+  const child = Object.create(NRSettingsChild.prototype) as NRSettingsChild;
+  Object.defineProperty(child, "sendQuery", {
+    value: (): Promise<never> => Promise.reject(new Error("write offline")),
+  });
+
+  const originalConsoleError = console.error;
+  let loggedError: unknown;
+  console.error = (_message?: unknown, error?: unknown) => {
+    loggedError = error;
+  };
+  try {
+    const result = await child.NRSPrefSet({
+      prefName: STRING_CAS_PREF,
+      prefValue: "next-value",
+      prefType: "string",
+    });
+    assertEquals(
+      result,
+      null,
+      "the legacy write bridge preserves its non-rejecting compatibility contract",
+    );
+    assert(
+      loggedError instanceof Error && loggedError.message === "write offline",
+      "the swallowed transport failure is still logged for diagnostics",
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
+}
+
 async function testParentActorCompareAndSetIsAtomic(): Promise<void> {
   const parent = Object.create(NRSettingsParent.prototype) as NRSettingsParent;
   Services.prefs.clearUserPref(BOOL_CAS_PREF);
@@ -400,6 +433,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "child actor catalog failure rejects",
       fn: testChildActorCatalogFailureRejects,
+    },
+    {
+      name: "legacy preference write failure remains fail-soft",
+      fn: testLegacyPreferenceWriteFailureRemainsFailSoft,
     },
     {
       name: "parent actor compare-and-set is atomic",
