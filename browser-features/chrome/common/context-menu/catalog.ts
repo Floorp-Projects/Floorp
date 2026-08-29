@@ -53,13 +53,20 @@ function getLocale(): string {
 }
 
 function getItemLabel(element: Element, fallback: string): string {
-  if (element.localName === "menuseparator") return "Separator";
-  const label = element.getAttribute("label") ??
-    element.getAttribute("aria-label") ??
-    element.getAttribute("data-l10n-id") ??
-    element.getAttribute("data-lazy-l10n-id") ??
-    element.id;
-  return label || fallback;
+  if (element.localName === "menuseparator") return "";
+  for (
+    const candidate of [
+      element.getAttribute("label"),
+      element.getAttribute("aria-label"),
+      element.getAttribute("data-l10n-id"),
+      element.getAttribute("data-lazy-l10n-id"),
+      element.id,
+    ]
+  ) {
+    const label = candidate?.trim();
+    if (label) return label;
+  }
+  return fallback;
 }
 
 function getContainerLabel(surface: ResolvedContextMenuSurface): string {

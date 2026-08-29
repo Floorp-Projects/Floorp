@@ -9,7 +9,7 @@ import {
 
 interface ContextMenuActorModule {
   NRContextMenuChild?: unknown;
-  isSecondaryContextMenuDocumentUri?: unknown;
+  isSecondaryContextMenuDocumentUri?: (uri: string) => boolean;
 }
 
 function testPackagedActorImportsFromResourceUri(): void {
@@ -24,6 +24,12 @@ function testPackagedActorImportsFromResourceUri(): void {
   assert(
     typeof actorModule.isSecondaryContextMenuDocumentUri === "function",
     "the packaged actor exports its chrome-document guard",
+  );
+  assert(
+    actorModule.isSecondaryContextMenuDocumentUri?.(
+      "chrome://browser/content/webext-panels.xhtml",
+    ) === true,
+    "the packaged actor routes Firefox's WebExtension panel chrome document",
   );
 }
 

@@ -47,6 +47,30 @@ export class NRSettingsParent extends JSWindowActorParent {
         }
         return Services.prefs.getStringPref(name);
       }
+      case "getBoolPrefState": {
+        const name = data && typeof data.name === "string" ? data.name : null;
+        if (!name) throw new TypeError("Invalid boolean preference read");
+        const currentType = Services.prefs.getPrefType(name);
+        return {
+          value: currentType === Services.prefs.PREF_BOOL
+            ? Services.prefs.getBoolPref(name)
+            : null,
+          typeMismatch: currentType !== Services.prefs.PREF_INVALID &&
+            currentType !== Services.prefs.PREF_BOOL,
+        };
+      }
+      case "getStringPrefState": {
+        const name = data && typeof data.name === "string" ? data.name : null;
+        if (!name) throw new TypeError("Invalid string preference read");
+        const currentType = Services.prefs.getPrefType(name);
+        return {
+          value: currentType === Services.prefs.PREF_STRING
+            ? Services.prefs.getStringPref(name)
+            : null,
+          typeMismatch: currentType !== Services.prefs.PREF_INVALID &&
+            currentType !== Services.prefs.PREF_STRING,
+        };
+      }
       case "setBoolPref": {
         {
           const name = data && typeof data.name === "string" ? data.name : null;
@@ -79,6 +103,60 @@ export class NRSettingsParent extends JSWindowActorParent {
           Services.prefs.setStringPref(name, val);
         }
         break;
+      }
+      case "compareAndSetBoolPref": {
+        const name = data && typeof data.name === "string" ? data.name : null;
+        const expectedValue = data?.expectedValue;
+        const prefValue = data?.prefValue;
+        if (
+          !name ||
+          (expectedValue !== null && typeof expectedValue !== "boolean") ||
+          typeof prefValue !== "boolean"
+        ) {
+          throw new TypeError("Invalid boolean preference comparison");
+        }
+        const currentType = Services.prefs.getPrefType(name);
+        if (
+          currentType !== Services.prefs.PREF_INVALID &&
+          currentType !== Services.prefs.PREF_BOOL
+        ) {
+          return { updated: false, currentValue: null, typeMismatch: true };
+        }
+        const currentValue = currentType === Services.prefs.PREF_BOOL
+          ? Services.prefs.getBoolPref(name)
+          : null;
+        if (currentValue !== expectedValue) {
+          return { updated: false, currentValue };
+        }
+        Services.prefs.setBoolPref(name, prefValue);
+        return { updated: true, currentValue: prefValue };
+      }
+      case "compareAndSetStringPref": {
+        const name = data && typeof data.name === "string" ? data.name : null;
+        const expectedValue = data?.expectedValue;
+        const prefValue = data?.prefValue;
+        if (
+          !name ||
+          (expectedValue !== null && typeof expectedValue !== "string") ||
+          typeof prefValue !== "string"
+        ) {
+          throw new TypeError("Invalid string preference comparison");
+        }
+        const currentType = Services.prefs.getPrefType(name);
+        if (
+          currentType !== Services.prefs.PREF_INVALID &&
+          currentType !== Services.prefs.PREF_STRING
+        ) {
+          return { updated: false, currentValue: null, typeMismatch: true };
+        }
+        const currentValue = currentType === Services.prefs.PREF_STRING
+          ? Services.prefs.getStringPref(name)
+          : null;
+        if (currentValue !== expectedValue) {
+          return { updated: false, currentValue };
+        }
+        Services.prefs.setStringPref(name, prefValue);
+        return { updated: true, currentValue: prefValue };
       }
     }
   }

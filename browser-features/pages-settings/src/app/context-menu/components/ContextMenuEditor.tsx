@@ -71,6 +71,7 @@ interface ContextMenuEditorProps {
   catalog: ContextMenuCatalogSnapshot;
   config: ContextMenuConfig;
   disabled?: boolean;
+  refreshing?: boolean;
   reloadCatalog(): Promise<void>;
   moveItem(
     target: ContextMenuLevelTarget,
@@ -169,7 +170,7 @@ const MenuItemContent = memo(function MenuItemContent({
 
   return (
     <>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 basis-48">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="truncate font-medium">{label}</span>
           <span className="badge badge-sm badge-ghost">
@@ -280,7 +281,7 @@ function rowClassName(
   isDragging: boolean,
   isMovingSource: boolean,
 ): string {
-  return `flex min-w-0 items-center gap-3 border-b border-base-300/30 bg-base-100 px-3 py-3 last:border-b-0 ${
+  return `flex min-w-0 flex-wrap items-center gap-3 border-b border-base-300/30 bg-base-100 px-3 py-3 last:border-b-0 ${
     isDragging ? "z-20 opacity-60 shadow-lg" : ""
   } ${visible ? "" : "opacity-60"} ${
     isMovingSource ? "relative z-10 ring-2 ring-inset ring-primary/60" : ""
@@ -318,6 +319,7 @@ function SortableMenuItem({
   return (
     <div
       ref={setNodeRef}
+      data-context-menu-sortable-row={item.key}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -355,7 +357,10 @@ function PlainMenuItem({
   ...contentProps
 }: MenuItemRowProps) {
   return (
-    <div className={rowClassName(visible, false, isMovingSource)}>
+    <div
+      data-context-menu-plain-row={item.key}
+      className={rowClassName(visible, false, isMovingSource)}
+    >
       <span className="size-8 shrink-0" aria-hidden="true" />
       <MenuItemContent
         item={item}
@@ -387,6 +392,7 @@ function PlacementGap({
   return (
     <button
       ref={buttonRef}
+      data-context-menu-placement-gap="true"
       type="button"
       className="group flex min-h-11 w-full items-center gap-3 bg-primary/5 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:opacity-50"
       disabled={disabled}
@@ -416,6 +422,7 @@ export function ContextMenuEditor({
   catalog,
   config,
   disabled = false,
+  refreshing = false,
   reloadCatalog,
   moveItem,
   moveItemBefore,
@@ -504,13 +511,29 @@ export function ContextMenuEditor({
     [orderedEntries, viewMode],
   );
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const filteredEntries = normalizedQuery
-    ? displayedEntries.filter(({ item }) =>
-      `${item.label} ${item.key}`.toLocaleLowerCase().includes(
-        normalizedQuery,
-      )
-    )
-    : displayedEntries;
+  const localizedSeparatorLabel = t("contextMenu.separator");
+  const filteredEntries = useMemo(
+    () =>
+      normalizedQuery
+        ? displayedEntries.filter(({ item }) =>
+          `${itemDisplayLabel(item, localizedSeparatorLabel)} ${item.key}`
+            .toLocaleLowerCase()
+            .includes(normalizedQuery)
+        )
+        : displayedEntries,
+    [displayedEntries, localizedSeparatorLabel, normalizedQuery],
+  );
+  const entriesBySortableId = useMemo(
+    () => new Map(orderedEntries.map((entry) => [entry.sortableId, entry])),
+    [orderedEntries],
+  );
+  const itemsByKey = useMemo(() => {
+    const result = new Map<string, ContextMenuItemDescriptor>();
+    for (const { item } of orderedEntries) {
+      if (!result.has(item.key)) result.set(item.key, item);
+    }
+    return result;
+  }, [orderedEntries]);
   const moveTargetsByKey = useMemo(() => {
     const anchorKeys = displayedEntries.flatMap(({ item }) =>
       isContextMenuItemOrderAnchor(item) ? [item.key] : []
@@ -533,8 +556,7 @@ export function ContextMenuEditor({
     [orderedEntries],
   );
   const movingItem = placementOrigin
-    ? orderedEntries.find(({ item }) => item.key === placementOrigin.itemKey)
-      ?.item
+    ? itemsByKey.get(placementOrigin.itemKey)
     : undefined;
   const placementDestinations = useMemo<PlacementDestination[]>(() => {
     if (!placementOrigin || !movingItem) return [];
@@ -660,12 +682,8 @@ export function ContextMenuEditor({
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (disabled || !target || !selectedContainer || !event.over) return;
-    const activeEntry = orderedEntries.find((entry) =>
-      entry.sortableId === String(event.active.id)
-    );
-    const overEntry = orderedEntries.find((entry) =>
-      entry.sortableId === String(event.over?.id)
-    );
+    const activeEntry = entriesBySortableId.get(String(event.active.id));
+    const overEntry = entriesBySortableId.get(String(event.over?.id));
     if (!activeEntry || !overEntry) return;
     const activeKey = activeEntry.item.key;
     const overKey = overEntry.item.key;
@@ -689,11 +707,10 @@ export function ContextMenuEditor({
   };
 
   const startPlacement = (itemKey: string) => {
+    const item = itemsByKey.get(itemKey);
     if (
       disabled || placementOrigin || allAnchorKeys.length < 2 ||
-      !orderedEntries.some(({ item }) =>
-        item.key === itemKey && isContextMenuItemMovable(item)
-      )
+      !item || !isContextMenuItemMovable(item)
     ) return;
     placementSessionRef.current += 1;
     setPlacementOrigin({ itemKey, query, viewMode });
@@ -718,8 +735,7 @@ export function ContextMenuEditor({
     );
     const targetItem = destination.beforeKey === null
       ? undefined
-      : orderedEntries.find(({ item }) => item.key === destination.beforeKey)
-        ?.item;
+      : itemsByKey.get(destination.beforeKey);
     setPlacementPending(true);
     const saved = await moveItemBefore(
       target,
@@ -819,8 +835,7 @@ export function ContextMenuEditor({
   const renderPlacementGap = (destination: PlacementDestination) => {
     const destinationItem = destination.beforeKey === null
       ? undefined
-      : orderedEntries.find(({ item }) => item.key === destination.beforeKey)
-        ?.item;
+      : itemsByKey.get(destination.beforeKey);
     const label = destinationItem
       ? t("contextMenu.moveBefore", {
         label: itemDisplayLabel(destinationItem, t("contextMenu.separator")),
@@ -877,13 +892,17 @@ export function ContextMenuEditor({
             size="sm"
             variant="ghost"
             className="shrink-0"
+            disabled={refreshing}
+            aria-busy={refreshing}
             onClick={() => {
               cancelPlacement(false, true);
               setMoveStatus("");
               void reloadCatalog();
             }}
           >
-            <RefreshCw className="mr-2 size-4" />
+            <RefreshCw
+              className={`mr-2 size-4 ${refreshing ? "animate-spin" : ""}`}
+            />
             {t("contextMenu.refreshCatalog")}
           </Button>
         </CardHeader>
@@ -925,15 +944,14 @@ export function ContextMenuEditor({
                 </p>
                 <div
                   className="flex flex-wrap gap-2"
-                  role="tablist"
+                  role="group"
                   aria-label={t("contextMenu.profile")}
                 >
                   {selectedSurface.profiles.map((profile) => (
                     <button
                       key={profile.key}
                       type="button"
-                      role="tab"
-                      aria-selected={profile.key === selectedProfile?.key}
+                      aria-pressed={profile.key === selectedProfile?.key}
                       className={`btn btn-sm ${
                         profile.key === selectedProfile?.key
                           ? "btn-primary"
@@ -1049,15 +1067,14 @@ export function ContextMenuEditor({
               </p>
               <div
                 className="join"
-                role="tablist"
+                role="group"
                 aria-label={t("contextMenu.viewMode")}
               >
                 {(["current", "all"] as const).map((mode) => (
                   <button
                     key={mode}
                     type="button"
-                    role="tab"
-                    aria-selected={viewMode === mode}
+                    aria-pressed={viewMode === mode}
                     aria-controls="context-menu-items-list"
                     disabled={placementOrigin !== null}
                     className={`btn btn-sm join-item ${
@@ -1127,6 +1144,7 @@ export function ContextMenuEditor({
               <input
                 type="search"
                 className="grow"
+                aria-label={t("contextMenu.searchItems")}
                 value={query}
                 disabled={placementOrigin !== null}
                 onChange={(event) => {

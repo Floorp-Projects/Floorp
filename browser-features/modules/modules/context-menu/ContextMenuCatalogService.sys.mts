@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type {
-  ContextMenuCatalogReporter,
-  ContextMenuCatalogSnapshot,
-  ContextMenuContainerDescriptor,
-  ContextMenuSurfaceDescriptor,
-} from "#features-chrome/common/context-menu/types.ts";
+import {
+  CONTEXT_MENU_SCHEMA_VERSION,
+  type ContextMenuCatalogReporter,
+  type ContextMenuCatalogSnapshot,
+  type ContextMenuContainerDescriptor,
+  type ContextMenuSurfaceDescriptor,
+} from "../../../chrome/common/context-menu/types.ts";
 
 interface OwnerCatalogSnapshot {
   sequence: number;
@@ -228,7 +229,7 @@ export class ContextMenuCatalogStore implements ContextMenuCatalogServiceType {
 
     const latestOwner = owners.at(-1);
     return cloneSerializable({
-      schemaVersion: 1,
+      schemaVersion: CONTEXT_MENU_SCHEMA_VERSION,
       revision: this.#revision,
       locale: latestOwner?.snapshot.locale ?? "",
       surfaces: [...surfaces.values()].sort((left, right) =>

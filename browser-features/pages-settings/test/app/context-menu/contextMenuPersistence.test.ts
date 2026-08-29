@@ -8,7 +8,10 @@ import {
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import type { ContextMenuConfig } from "../../../../chrome/common/context-menu/types.ts";
-import { parseContextMenuConfig } from "../../../../chrome/common/context-menu/config.ts";
+import {
+  parseContextMenuConfig,
+  serializeContextMenuConfig,
+} from "../../../../chrome/common/context-menu/config.ts";
 import { createContextMenuPersistence } from "../../../src/app/context-menu/configPersistence.ts";
 import {
   type ContextMenuLevelTarget,
@@ -70,10 +73,12 @@ async function testProjectedStateAndSerialCommit(): Promise<void> {
   const persistence = createContextMenuPersistence(
     { enabled: true, config: createDefaultContextMenuConfig() },
     {
-      writeEnabled: () => Promise.resolve(),
-      writeConfig: (serialized) => {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: async (_expected, serialized) => {
         writes.push(serialized);
-        return writes.length === 1 ? firstWrite.promise : Promise.resolve();
+        if (writes.length === 1) await firstWrite.promise;
+        return { updated: true, currentValue: serialized };
       },
     },
   );
@@ -123,12 +128,13 @@ async function testFailureRebasesLaterKeyOperation(): Promise<void> {
   const persistence = createContextMenuPersistence(
     { enabled: true, config: createDefaultContextMenuConfig() },
     {
-      writeEnabled: () => Promise.resolve(),
-      writeConfig: (serialized) => {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: (_expected, serialized) => {
         writes.push(serialized);
         return writes.length === 1
           ? Promise.reject(new Error("first write failed"))
-          : Promise.resolve();
+          : Promise.resolve({ updated: true, currentValue: serialized });
       },
     },
   );
@@ -165,13 +171,14 @@ async function testEnabledAndConfigUseOneQueue(): Promise<void> {
   const persistence = createContextMenuPersistence(
     { enabled: true, config: createDefaultContextMenuConfig() },
     {
-      writeEnabled: () => {
+      compareAndSetEnabled: async (_expected, enabled) => {
         operations.push("enabled");
-        return enabledWrite.promise;
+        await enabledWrite.promise;
+        return { updated: true, currentValue: enabled };
       },
-      writeConfig: () => {
+      compareAndSetConfig: (_expected, serialized) => {
         operations.push("config");
-        return Promise.resolve();
+        return Promise.resolve({ updated: true, currentValue: serialized });
       },
     },
   );
@@ -206,6 +213,278 @@ async function testEnabledAndConfigUseOneQueue(): Promise<void> {
     operations.join(","),
     "enabled,config",
     "bool and JSON preferences share one serial queue",
+  );
+}
+
+async function testConcurrentClientsDetectAndRecoverFromConflict(): Promise<
+  void
+> {
+  const initialConfig = createDefaultContextMenuConfig();
+  let storedConfig = serializeContextMenuConfig(initialConfig);
+  const createWriters = () => ({
+    compareAndSetEnabled: (_expected: boolean | null, enabled: boolean) =>
+      Promise.resolve({ updated: true, currentValue: enabled }),
+    compareAndSetConfig: (expected: string | null, serialized: string) => {
+      if (storedConfig !== expected) {
+        return Promise.resolve({
+          updated: false,
+          currentValue: storedConfig,
+        });
+      }
+      storedConfig = serialized;
+      return Promise.resolve({ updated: true, currentValue: serialized });
+    },
+  });
+  const versions = { enabled: true, config: storedConfig };
+  const firstClient = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    createWriters(),
+    versions,
+  );
+  const secondClient = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    createWriters(),
+    versions,
+  );
+
+  assertEquals(
+    await firstClient.updateConfig((config) =>
+      setContextMenuItemHidden(config, TARGET, "item-a", true)
+    ),
+    true,
+    "the first client commits against the shared baseline",
+  );
+  assertEquals(
+    await secondClient.updateConfig((config) =>
+      setContextMenuItemHidden(config, TARGET, "item-b", true)
+    ),
+    false,
+    "a stale client reports a conflict instead of overwriting newer data",
+  );
+  assertEquals(
+    secondClient.getSnapshot().error?.kind,
+    "conflict",
+    "the stale client exposes a distinct conflict state",
+  );
+  assertEquals(
+    (getContextMenuLevelOverride(
+      secondClient.getSnapshot().committed.config,
+      TARGET,
+    ).hidden ?? []).join(","),
+    "item-a",
+    "the stale client adopts the latest saved configuration",
+  );
+
+  assertEquals(
+    await secondClient.updateConfig((config) =>
+      setContextMenuItemHidden(config, TARGET, "item-b", true)
+    ),
+    true,
+    "retrying the user operation succeeds against the refreshed baseline",
+  );
+  assertEquals(
+    (getContextMenuLevelOverride(
+      parseContextMenuConfig(storedConfig),
+      TARGET,
+    ).hidden ?? []).join(","),
+    "item-a,item-b",
+    "retrying preserves both clients' changes",
+  );
+  assertEquals(
+    secondClient.getSnapshot().error,
+    null,
+    "a successful retry clears the conflict message",
+  );
+}
+
+async function testConflictDropsQueuedStaleOperations(): Promise<void> {
+  const initialConfig = createDefaultContextMenuConfig();
+  const initialSerialized = serializeContextMenuConfig(initialConfig);
+  const gate = createDeferred();
+  let storedConfig = initialSerialized;
+  let compareCalls = 0;
+  const persistence = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: async (expected, serialized) => {
+        compareCalls++;
+        await gate.promise;
+        if (storedConfig !== expected) {
+          return { updated: false, currentValue: storedConfig };
+        }
+        storedConfig = serialized;
+        return { updated: true, currentValue: serialized };
+      },
+    },
+    { enabled: true, config: initialSerialized },
+  );
+
+  const first = persistence.updateConfig((config) =>
+    setContextMenuItemHidden(config, TARGET, "stale-a", true)
+  );
+  const second = persistence.updateConfig((config) =>
+    setContextMenuItemHidden(config, TARGET, "stale-b", true)
+  );
+  storedConfig = serializeContextMenuConfig(
+    setContextMenuItemHidden(initialConfig, TARGET, "external", true),
+  );
+  gate.resolve();
+
+  assertEquals(await first, false, "the in-flight stale operation conflicts");
+  assertEquals(await second, false, "queued stale operations are abandoned");
+  assertEquals(compareCalls, 1, "no stale queued write reaches the preference");
+  assertEquals(
+    (getContextMenuLevelOverride(
+      parseContextMenuConfig(storedConfig),
+      TARGET,
+    ).hidden ?? []).join(","),
+    "external",
+    "an external reset or edit cannot be overwritten by an older queue",
+  );
+}
+
+async function testUnsafeExternalConfigStopsAllRetries(): Promise<void> {
+  const initialConfig = createDefaultContextMenuConfig();
+  const initialSerialized = serializeContextMenuConfig(initialConfig);
+  let storedConfig = "[]";
+  let compareCalls = 0;
+  const persistence = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: (expected, serialized) => {
+        compareCalls++;
+        if (storedConfig !== expected) {
+          return Promise.resolve({
+            updated: false,
+            currentValue: storedConfig,
+          });
+        }
+        storedConfig = serialized;
+        return Promise.resolve({ updated: true, currentValue: serialized });
+      },
+    },
+    { enabled: true, config: initialSerialized },
+  );
+
+  for (const itemKey of ["first-attempt", "second-attempt"]) {
+    assertEquals(
+      await persistence.updateConfig((config) =>
+        setContextMenuItemHidden(config, TARGET, itemKey, true)
+      ),
+      false,
+      "an unsafe external value rejects every ordinary editor write",
+    );
+    assertEquals(
+      persistence.getSnapshot().error?.kind,
+      "unsafe-config",
+      "the editor receives a blocking unsafe-config state",
+    );
+  }
+  assertEquals(compareCalls, 2, "both attempts compare without overwriting");
+  assertEquals(
+    await persistence.updateEnabled(false),
+    true,
+    "the independent enabled preference remains writable",
+  );
+  assertEquals(
+    persistence.getSnapshot().blockingErrors.config?.kind,
+    "unsafe-config",
+    "an enabled write cannot clear the blocking configuration error",
+  );
+  assertEquals(
+    storedConfig,
+    "[]",
+    "ordinary retries never replace an invalid external configuration",
+  );
+}
+
+async function testWrongTypePreferenceCannotMatchAbsentVersion(): Promise<
+  void
+> {
+  const initialConfig = createDefaultContextMenuConfig();
+  const persistence = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: () =>
+        Promise.resolve({
+          updated: false,
+          currentValue: null,
+          typeMismatch: true,
+        }),
+    },
+    { enabled: true, config: null },
+  );
+
+  assertEquals(
+    await persistence.updateConfig((config) =>
+      setContextMenuItemHidden(config, TARGET, "item-a", true)
+    ),
+    false,
+    "a wrong-type preference rejects the attempted write",
+  );
+  assertEquals(
+    persistence.getSnapshot().error?.kind,
+    "preference-type-mismatch",
+    "the UI receives a blocking preference-type error",
+  );
+  assertEquals(
+    await persistence.updateEnabled(false),
+    true,
+    "a config type mismatch does not disable the independent enabled preference",
+  );
+  assertEquals(
+    persistence.getSnapshot().blockingErrors.config?.kind,
+    "preference-type-mismatch",
+    "an enabled write cannot clear the config type mismatch",
+  );
+  assertEquals(
+    getContextMenuLevelOverride(
+      persistence.getSnapshot().committed.config,
+      TARGET,
+    ).hidden?.length ?? 0,
+    0,
+    "the rejected optimistic value is not committed",
+  );
+}
+
+async function testEnabledTypeMismatchSurvivesConfigWrite(): Promise<void> {
+  const initialConfig = createDefaultContextMenuConfig();
+  const persistence = createContextMenuPersistence(
+    { enabled: true, config: initialConfig },
+    {
+      compareAndSetEnabled: () =>
+        Promise.resolve({
+          updated: false,
+          currentValue: null,
+          typeMismatch: true,
+        }),
+      compareAndSetConfig: (_expected, serialized) =>
+        Promise.resolve({ updated: true, currentValue: serialized }),
+    },
+  );
+
+  assertEquals(
+    await persistence.updateEnabled(false),
+    false,
+    "a wrong-type enabled preference rejects the toggle",
+  );
+  assertEquals(
+    await persistence.updateConfig((config) =>
+      setContextMenuItemHidden(config, TARGET, "item-a", true)
+    ),
+    true,
+    "the independent config preference can still commit",
+  );
+  assertEquals(
+    persistence.getSnapshot().blockingErrors.enabled?.kind,
+    "preference-type-mismatch",
+    "a config write cannot clear the blocking enabled preference error",
   );
 }
 
@@ -313,10 +592,11 @@ async function testSeparatorOrderIsPersisted(): Promise<void> {
   const persistence = createContextMenuPersistence(
     { enabled: true, config: createDefaultContextMenuConfig() },
     {
-      writeEnabled: () => Promise.resolve(),
-      writeConfig: (serialized) => {
+      compareAndSetEnabled: (_expected, enabled) =>
+        Promise.resolve({ updated: true, currentValue: enabled }),
+      compareAndSetConfig: (_expected, serialized) => {
         writes.push(serialized);
-        return Promise.resolve();
+        return Promise.resolve({ updated: true, currentValue: serialized });
       },
     },
   );
@@ -755,6 +1035,26 @@ const tests: TestCase[] = [
   {
     name: "enabled and config updates use one queue",
     fn: testEnabledAndConfigUseOneQueue,
+  },
+  {
+    name: "concurrent clients detect and recover from conflicts",
+    fn: testConcurrentClientsDetectAndRecoverFromConflict,
+  },
+  {
+    name: "conflicts drop queued stale operations",
+    fn: testConflictDropsQueuedStaleOperations,
+  },
+  {
+    name: "unsafe external configs stop ordinary retries",
+    fn: testUnsafeExternalConfigStopsAllRetries,
+  },
+  {
+    name: "wrong-type preferences cannot match absent versions",
+    fn: testWrongTypePreferenceCannotMatchAbsentVersion,
+  },
+  {
+    name: "enabled type mismatch survives config writes",
+    fn: testEnabledTypeMismatchSurvivesConfigWrite,
   },
   {
     name: "key reorder preserves unknown catalog entries",

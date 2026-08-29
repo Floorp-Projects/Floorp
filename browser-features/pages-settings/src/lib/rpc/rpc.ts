@@ -1,12 +1,16 @@
 import type {
   NRContextMenuSettingsFunctions,
+  NRSettingsAtomicPreferenceFunctions,
   NRSettingsParentFunctions,
+  PrefCompareAndSetResult,
+  PrefReadResult,
 } from "../../../../modules/common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
 
 type SettingsPageParentFunctions =
   & NRSettingsParentFunctions
+  & NRSettingsAtomicPreferenceFunctions
   & NRContextMenuSettingsFunctions;
 
 interface LegacySettingsDirectFunctions {
@@ -29,6 +33,7 @@ interface ContextMenuCatalogServiceModule {
 }
 
 interface DirectPreferenceService {
+  readonly PREF_INVALID: number;
   readonly PREF_BOOL: number;
   readonly PREF_INT: number;
   readonly PREF_STRING: number;
@@ -39,6 +44,45 @@ interface DirectPreferenceService {
   setBoolPref(prefName: string, value: boolean): void;
   setIntPref(prefName: string, value: number): void;
   setStringPref(prefName: string, value: string): void;
+}
+
+function compareAndSetDirectPreference<T extends boolean | string>(
+  prefName: string,
+  expectedValue: T | null,
+  prefValue: T,
+  prefType: number,
+  read: () => T,
+  write: (value: T) => void,
+): Promise<PrefCompareAndSetResult<T>> {
+  const currentType = Services.prefs.getPrefType(prefName);
+  if (
+    currentType !== Services.prefs.PREF_INVALID && currentType !== prefType
+  ) {
+    return Promise.resolve({
+      updated: false,
+      currentValue: null,
+      typeMismatch: true,
+    });
+  }
+  const currentValue = currentType === prefType ? read() : null;
+  if (currentValue !== expectedValue) {
+    return Promise.resolve({ updated: false, currentValue });
+  }
+  write(prefValue);
+  return Promise.resolve({ updated: true, currentValue: prefValue });
+}
+
+function readDirectPreference<T extends boolean | string>(
+  prefName: string,
+  prefType: number,
+  read: () => T,
+): Promise<PrefReadResult<T>> {
+  const currentType = Services.prefs.getPrefType(prefName);
+  return Promise.resolve({
+    value: currentType === prefType ? read() : null,
+    typeMismatch: currentType !== Services.prefs.PREF_INVALID &&
+      currentType !== prefType,
+  });
 }
 
 interface DirectActor {
@@ -121,6 +165,18 @@ const directServicesFunctions: SettingsPageDirectFunctions = {
     }
     return Promise.resolve(Services.prefs.getStringPref(prefName));
   },
+  getBoolPrefState: (prefName) =>
+    readDirectPreference(
+      prefName,
+      Services.prefs.PREF_BOOL,
+      () => Services.prefs.getBoolPref(prefName),
+    ),
+  getStringPrefState: (prefName) =>
+    readDirectPreference(
+      prefName,
+      Services.prefs.PREF_STRING,
+      () => Services.prefs.getStringPref(prefName),
+    ),
   setBoolPref: (prefName, value) => {
     Services.prefs.setBoolPref(prefName, value);
     return Promise.resolve();
@@ -133,6 +189,24 @@ const directServicesFunctions: SettingsPageDirectFunctions = {
     Services.prefs.setStringPref(prefName, value);
     return Promise.resolve();
   },
+  compareAndSetBoolPref: (prefName, expectedValue, prefValue) =>
+    compareAndSetDirectPreference(
+      prefName,
+      expectedValue,
+      prefValue,
+      Services.prefs.PREF_BOOL,
+      () => Services.prefs.getBoolPref(prefName),
+      (value) => Services.prefs.setBoolPref(prefName, value),
+    ),
+  compareAndSetStringPref: (prefName, expectedValue, prefValue) =>
+    compareAndSetDirectPreference(
+      prefName,
+      expectedValue,
+      prefValue,
+      Services.prefs.PREF_STRING,
+      () => Services.prefs.getStringPref(prefName),
+      (value) => Services.prefs.setStringPref(prefName, value),
+    ),
   // フォルダ選択関連のメソッド
   selectFolder: () => {
     return Promise.resolve(null);

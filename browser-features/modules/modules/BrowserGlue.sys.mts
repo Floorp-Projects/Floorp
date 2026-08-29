@@ -59,7 +59,10 @@ const JS_WINDOW_ACTORS: {
         DOMContentLoaded: {},
       },
     },
-    matches: ["chrome://browser/content/places/*"],
+    matches: [
+      "chrome://browser/content/places/*",
+      "chrome://browser/content/webext-panels.xhtml",
+    ],
     includeChrome: true,
     allFrames: true,
     remoteTypes: ["parent"],

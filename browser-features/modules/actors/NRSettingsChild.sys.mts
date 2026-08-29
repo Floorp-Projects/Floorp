@@ -1,14 +1,18 @@
 import { createBirpc } from "birpc";
 import type {
   NRContextMenuSettingsFunctions,
+  NRSettingsAtomicPreferenceFunctions,
   NRSettingsParentFunctions,
+  PrefCompareAndSetResult,
   PrefGetParams,
+  PrefReadResult,
   PrefSetParams,
 } from "../common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 
 type SettingsPageParentFunctions =
   & NRSettingsParentFunctions
+  & NRSettingsAtomicPreferenceFunctions
   & NRContextMenuSettingsFunctions;
 
 export class NRSettingsChild extends JSWindowActorChild {
@@ -107,6 +111,20 @@ export class NRSettingsChild extends JSWindowActorChild {
         getStringPref: (prefName: string): Promise<string | null> => {
           return this.NRSPrefGet({ prefName, prefType: "string" });
         },
+        getBoolPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<boolean>> => {
+          return this.sendQuery("getBoolPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<boolean>>;
+        },
+        getStringPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<string>> => {
+          return this.sendQuery("getStringPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<string>>;
+        },
         setBoolPref: (prefName: string, prefValue: boolean): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "boolean" });
         },
@@ -115,6 +133,28 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
+        },
+        compareAndSetBoolPref: (
+          prefName: string,
+          expectedValue: boolean | null,
+          prefValue: boolean,
+        ): Promise<PrefCompareAndSetResult<boolean>> => {
+          return this.sendQuery("compareAndSetBoolPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<boolean>>;
+        },
+        compareAndSetStringPref: (
+          prefName: string,
+          expectedValue: string | null,
+          prefValue: string,
+        ): Promise<PrefCompareAndSetResult<string>> => {
+          return this.sendQuery("compareAndSetStringPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<string>>;
         },
       },
       {

@@ -10,6 +10,7 @@ const SECONDARY_CONTEXT_MENU_DOCUMENTS = new Set([
   "chrome://browser/content/places/places.xhtml",
   "chrome://browser/content/places/bookmarksSidebar.xhtml",
   "chrome://browser/content/places/historySidebar.xhtml",
+  "chrome://browser/content/webext-panels.xhtml",
 ]);
 
 export function isSecondaryContextMenuDocumentUri(uri: string): boolean {

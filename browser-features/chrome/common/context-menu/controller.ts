@@ -27,6 +27,7 @@ export interface ContextMenuControllerOptions {
   catalogReporter?: ContextMenuCatalogReporter;
   ownerId?: string;
   scheduleMicrotask?: (callback: () => void) => void;
+  scheduleOpeningPass?: (callback: () => void) => void;
 }
 
 interface ElementWithPopupState extends Element {
@@ -51,6 +52,7 @@ const NATIVE_MUTATION_ATTRIBUTES = [
   "hidden",
   "collapsed",
   "label",
+  "aria-label",
   "data-l10n-id",
   "data-lazy-l10n-id",
   "id",
@@ -69,6 +71,7 @@ export class ContextMenuController {
   readonly #catalogReporter: ContextMenuCatalogReporter;
   readonly #ownerId: string;
   readonly #scheduleMicrotask: (callback: () => void) => void;
+  readonly #scheduleOpeningPass: (callback: () => void) => void;
   readonly #transactions = new Map<Element, ContextMenuTransaction[]>();
   readonly #mutationObservers = new Map<Element, MutationObserver>();
   readonly #generations = new WeakMap<Element, number>();
@@ -83,7 +86,7 @@ export class ContextMenuController {
 
     // A stale transaction must never become input to Firefox's next builder.
     this.resetPopupTree(popup);
-    this.scheduleReconcile(popup, event);
+    this.scheduleReconcile(popup, event, true);
   };
 
   readonly #onPopupShown: EventListener = (event) => {
@@ -130,6 +133,10 @@ export class ContextMenuController {
     // controller as its receiver and throw before reconciliation can run.
     this.#scheduleMicrotask = options.scheduleMicrotask ??
       ((callback) => this.#window.queueMicrotask(callback));
+    this.#scheduleOpeningPass = options.scheduleOpeningPass ??
+      ((callback) => {
+        this.#window.requestAnimationFrame(() => callback());
+      });
   }
 
   attach(): void {
@@ -214,11 +221,15 @@ export class ContextMenuController {
     return target as Element;
   }
 
-  private scheduleReconcile(popup: Element, openingEvent?: Event): void {
+  private scheduleReconcile(
+    popup: Element,
+    openingEvent?: Event,
+    afterCurrentMicrotasks = false,
+  ): void {
     const generation = (this.#generations.get(popup) ?? 0) + 1;
     this.#generations.set(popup, generation);
 
-    this.#scheduleMicrotask(() => {
+    const reconcile = () => {
       if (this.#destroyed) return;
       this.pruneDisconnectedPopups();
       if (openingEvent?.defaultPrevented) return;
@@ -275,7 +286,19 @@ export class ContextMenuController {
           this.observePopup(popup);
         }
       }
-    });
+    };
+
+    if (!afterCurrentMicrotasks) {
+      this.#scheduleMicrotask(reconcile);
+      return;
+    }
+
+    // popupshowing is observed in capture so rollback precedes Firefox's
+    // builder. The animation-frame boundary runs after the dispatch task and
+    // its complete microtask checkpoint, while still applying before the next
+    // paint. This keeps arbitrarily nested native builder microtasks on the
+    // unmodified DOM. popupshown may reconcile sooner and invalidate this pass.
+    this.#scheduleOpeningPass(reconcile);
   }
 
   private observePopup(popup: Element): void {

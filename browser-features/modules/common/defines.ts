@@ -13,6 +13,17 @@ export interface PrefSetParams {
   prefValue: string | boolean | number;
 }
 
+export interface PrefCompareAndSetResult<T> {
+  updated: boolean;
+  currentValue: T | null;
+  typeMismatch?: boolean;
+}
+
+export interface PrefReadResult<T> {
+  value: T | null;
+  typeMismatch: boolean;
+}
+
 export interface ActiveExperiment {
   id: string;
   variantId: string;
@@ -47,6 +58,25 @@ export interface NRSettingsParentFunctions {
   setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
+}
+
+export interface NRSettingsAtomicPreferenceFunctions {
+  getBoolPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<boolean>>;
+  getStringPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<string>>;
+  compareAndSetBoolPref(
+    prefName: string,
+    expectedValue: boolean | null,
+    prefValue: boolean,
+  ): Promise<PrefCompareAndSetResult<boolean>>;
+  compareAndSetStringPref(
+    prefName: string,
+    expectedValue: string | null,
+    prefValue: string,
+  ): Promise<PrefCompareAndSetResult<string>>;
 }
 
 export interface NRContextMenuSettingsFunctions {

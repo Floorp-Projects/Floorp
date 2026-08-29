@@ -14,10 +14,15 @@ import {
   CONTEXT_MENU_CONFIG_PREF,
   CONTEXT_MENU_ENABLED_PREF,
 } from "#features-chrome/common/context-menu/types.ts";
-import { parseContextMenuConfigWithStatus } from "#features-chrome/common/context-menu/config.ts";
+import {
+  parseContextMenuConfigWithStatus,
+  serializeContextMenuConfig,
+} from "#features-chrome/common/context-menu/config.ts";
 import {
   type ContextMenuPersistence,
+  type ContextMenuPersistenceError,
   type ContextMenuPersistenceSnapshot,
+  type ContextMenuPersistenceVersions,
   createContextMenuPersistence,
 } from "./configPersistence.ts";
 import {
@@ -37,8 +42,15 @@ export interface ContextMenuSettingsModel {
   loading: boolean;
   catalogLoading: boolean;
   pending: boolean;
-  saveError: string | null;
+  saveError: ContextMenuPersistenceError | null;
+  enabledUnavailable: boolean;
   loadError: boolean;
+  loadErrorKind:
+    | "read"
+    | "invalid"
+    | "unsupported-version"
+    | "conflict"
+    | null;
   catalogError: boolean;
   toggleEnabled(): Promise<boolean>;
   setItemVisible(
@@ -65,6 +77,7 @@ export interface ContextMenuSettingsModel {
   ): Promise<boolean>;
   resetProfile(surfaceKey: string, profileKey: string): Promise<boolean>;
   resetAll(): Promise<boolean>;
+  repairInvalidConfig(): Promise<boolean>;
   reloadCatalog(): Promise<void>;
 }
 
@@ -79,7 +92,18 @@ const DEFAULT_PERSISTENCE_SNAPSHOT: ContextMenuPersistenceSnapshot = {
   },
   pending: false,
   error: null,
+  blockingErrors: {
+    enabled: null,
+    config: null,
+  },
 };
+
+function persistenceVersionsEqual(
+  first: ContextMenuPersistenceVersions,
+  second: ContextMenuPersistenceVersions,
+): boolean {
+  return first.enabled === second.enabled && first.config === second.config;
+}
 
 export function useContextMenuSettings(): ContextMenuSettingsModel {
   const [snapshot, setSnapshot] = useState<ContextMenuPersistenceSnapshot>(
@@ -90,35 +114,119 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
   );
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [enabledUnavailable, setEnabledUnavailable] = useState(false);
+  const [loadErrorKind, setLoadErrorKind] = useState<
+    ContextMenuSettingsModel["loadErrorKind"]
+  >(null);
+  const loadErrorKindRef = useRef<ContextMenuSettingsModel["loadErrorKind"]>(
+    null,
+  );
   const [catalogError, setCatalogError] = useState(false);
   const persistenceRef = useRef<ContextMenuPersistence | null>(null);
+  const unsafeConfigVersionRef = useRef<string | null>(null);
+  const configBlockingError = snapshot.blockingErrors.config;
+  const enabledBlockingError = snapshot.blockingErrors.enabled;
+  const unsafePersistenceError = configBlockingError?.kind === "unsafe-config"
+    ? configBlockingError
+    : null;
+  const configPreferenceTypeError = configBlockingError?.kind ===
+      "preference-type-mismatch"
+    ? configBlockingError
+    : null;
+  const enabledPreferenceTypeError = enabledBlockingError?.kind ===
+      "preference-type-mismatch"
+    ? enabledBlockingError
+    : null;
+  const effectiveLoadErrorKind = loadErrorKind ??
+    unsafePersistenceError?.status ??
+    (configPreferenceTypeError || enabledPreferenceTypeError ? "read" : null);
+  const effectiveEnabledUnavailable = enabledUnavailable ||
+    enabledPreferenceTypeError?.preference === "enabled";
 
   useEffect(() => {
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
-
-    const loadPreferences = async () => {
+    let preferencesLoaded = false;
+    let refreshInFlight = false;
+    const loadPreferences = async (initial: boolean) => {
+      if (refreshInFlight) return;
+      const baselinePersistence = persistenceRef.current;
+      const baselineVersions = baselinePersistence?.getVersions();
+      if (!initial && baselinePersistence?.getSnapshot().pending) return;
+      refreshInFlight = true;
       const [enabledResult, configResult] = await Promise.allSettled([
-        rpc.getBoolPref(CONTEXT_MENU_ENABLED_PREF),
-        rpc.getStringPref(CONTEXT_MENU_CONFIG_PREF),
+        rpc.getBoolPrefState(CONTEXT_MENU_ENABLED_PREF),
+        rpc.getStringPrefState(CONTEXT_MENU_CONFIG_PREF),
       ]);
+      refreshInFlight = false;
       if (cancelled) return;
 
       const enabled = enabledResult.status === "fulfilled"
-        ? enabledResult.value ?? true
+        ? enabledResult.value.value ?? true
         : true;
+      const enabledVersion = enabledResult.status === "fulfilled"
+        ? enabledResult.value.value
+        : null;
+      const serializedConfig = configResult.status === "fulfilled"
+        ? configResult.value.value
+        : null;
       const parsedConfig = parseContextMenuConfigWithStatus(
-        configResult.status === "fulfilled" ? configResult.value : null,
+        serializedConfig,
       );
       const config = parsedConfig.config;
+      const enabledReadFailed = enabledResult.status === "rejected" ||
+        enabledResult.value.typeMismatch;
+      const configReadFailed = configResult.status === "rejected" ||
+        configResult.value.typeMismatch;
+      const preferenceReadFailed = enabledReadFailed || configReadFailed;
       const unsafeConfig = parsedConfig.status === "invalid" ||
         parsedConfig.status === "unsupported-version";
-      const preferencesFailed = enabledResult.status === "rejected" ||
-        configResult.status === "rejected" || unsafeConfig;
-      setLoadError(preferencesFailed);
+      const nextLoadErrorKind = preferenceReadFailed
+        ? "read"
+        : parsedConfig.status === "invalid"
+        ? "invalid"
+        : parsedConfig.status === "unsupported-version"
+        ? "unsupported-version"
+        : null;
 
-      if (preferencesFailed) {
+      if (!initial && baselinePersistence) {
+        const currentPersistenceSnapshot = baselinePersistence.getSnapshot();
+        if (
+          baselinePersistence !== persistenceRef.current ||
+          currentPersistenceSnapshot.pending ||
+          !baselineVersions ||
+          !persistenceVersionsEqual(
+            baselineVersions,
+            baselinePersistence.getVersions(),
+          )
+        ) {
+          return;
+        }
+        const nextVersions = {
+          enabled: enabledVersion,
+          config: serializedConfig,
+        };
+        if (
+          enabledResult.status === "fulfilled" &&
+          configResult.status === "fulfilled" &&
+          nextLoadErrorKind === loadErrorKindRef.current &&
+          currentPersistenceSnapshot.blockingErrors.enabled === null &&
+          currentPersistenceSnapshot.blockingErrors.config === null &&
+          persistenceVersionsEqual(baselineVersions, nextVersions)
+        ) {
+          return;
+        }
+      }
+
+      unsubscribe?.();
+      unsubscribe = null;
+      persistenceRef.current = null;
+      unsafeConfigVersionRef.current = unsafeConfig ? serializedConfig : null;
+      setEnabledUnavailable(enabledReadFailed);
+      setLoadErrorKind(nextLoadErrorKind);
+      loadErrorKindRef.current = nextLoadErrorKind;
+
+      if (enabledReadFailed) {
         // Never allow a fallback/default value to overwrite a preference that
         // merely failed to load. A later page reload can retry the read.
         setSnapshot({
@@ -126,22 +234,36 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
           projected: { enabled, config },
           pending: false,
           error: null,
+          blockingErrors: {
+            enabled: null,
+            config: null,
+          },
         });
       } else {
         const persistence = createContextMenuPersistence(
           { enabled, config },
           {
-            writeEnabled: (nextEnabled) =>
-              rpc.setBoolPref(CONTEXT_MENU_ENABLED_PREF, nextEnabled),
-            writeConfig: (serializedConfig) =>
-              rpc.setStringPref(CONTEXT_MENU_CONFIG_PREF, serializedConfig),
+            compareAndSetEnabled: (expectedValue, nextEnabled) =>
+              rpc.compareAndSetBoolPref(
+                CONTEXT_MENU_ENABLED_PREF,
+                expectedValue,
+                nextEnabled,
+              ),
+            compareAndSetConfig: (expectedValue, nextConfig) =>
+              rpc.compareAndSetStringPref(
+                CONTEXT_MENU_CONFIG_PREF,
+                expectedValue,
+                nextConfig,
+              ),
           },
+          { enabled: enabledVersion, config: serializedConfig },
         );
         persistenceRef.current = persistence;
         setSnapshot(persistence.getSnapshot());
         unsubscribe = persistence.subscribe(setSnapshot);
       }
-      setLoading(false);
+      preferencesLoaded = true;
+      if (initial) setLoading(false);
     };
 
     const loadCatalog = async () => {
@@ -165,9 +287,27 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
 
     // Preference and catalog RPCs are independent: a menu that has not been
     // discovered yet must not delay the global enable/reset controls.
-    void Promise.all([loadPreferences(), loadCatalog()]);
+    const refreshFocusedPreferences = () => {
+      if (preferencesLoaded) void loadPreferences(false);
+    };
+    const refreshVisiblePreferences = () => {
+      if (globalThis.document.visibilityState === "visible") {
+        refreshFocusedPreferences();
+      }
+    };
+    globalThis.addEventListener("focus", refreshFocusedPreferences);
+    globalThis.document.addEventListener(
+      "visibilitychange",
+      refreshVisiblePreferences,
+    );
+    void Promise.all([loadPreferences(true), loadCatalog()]);
     return () => {
       cancelled = true;
+      globalThis.removeEventListener("focus", refreshFocusedPreferences);
+      globalThis.document.removeEventListener(
+        "visibilitychange",
+        refreshVisiblePreferences,
+      );
       unsubscribe?.();
       persistenceRef.current = null;
     };
@@ -262,6 +402,44 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
     [updateConfig],
   );
 
+  const repairInvalidConfig = useCallback(async () => {
+    if (effectiveLoadErrorKind !== "invalid") return false;
+    const serializedDefault = serializeContextMenuConfig(
+      createDefaultContextMenuConfig(),
+    );
+    const expectedValue = unsafePersistenceError?.status === "invalid"
+      ? unsafePersistenceError.currentValue
+      : unsafeConfigVersionRef.current;
+    try {
+      const result = await rpc.compareAndSetStringPref(
+        CONTEXT_MENU_CONFIG_PREF,
+        expectedValue,
+        serializedDefault,
+      );
+      if (result.typeMismatch) {
+        loadErrorKindRef.current = "read";
+        setLoadErrorKind("read");
+        return false;
+      }
+      if (result.updated || result.currentValue === serializedDefault) {
+        globalThis.location.reload();
+        return true;
+      }
+      unsafeConfigVersionRef.current = result.currentValue;
+      loadErrorKindRef.current = "conflict";
+      setLoadErrorKind("conflict");
+      return false;
+    } catch (error) {
+      console.error(
+        "[ContextMenuSettings] Failed to repair the configuration",
+        error,
+      );
+      loadErrorKindRef.current = "read";
+      setLoadErrorKind("read");
+      return false;
+    }
+  }, [effectiveLoadErrorKind, unsafePersistenceError]);
+
   const reloadCatalog = useCallback(async () => {
     setCatalogLoading(true);
     try {
@@ -273,7 +451,6 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
         "[ContextMenuSettings] Failed to reload the catalog",
         error,
       );
-      setCatalog(null);
       setCatalogError(true);
     } finally {
       setCatalogLoading(false);
@@ -288,7 +465,9 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
     catalogLoading,
     pending: snapshot.pending,
     saveError: snapshot.error,
-    loadError,
+    enabledUnavailable: effectiveEnabledUnavailable,
+    loadError: effectiveLoadErrorKind !== null,
+    loadErrorKind: effectiveLoadErrorKind,
     catalogError,
     toggleEnabled,
     setItemVisible,
@@ -297,6 +476,7 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
     setProfileIndependent,
     resetProfile,
     resetAll,
+    repairInvalidConfig,
     reloadCatalog,
   };
 }

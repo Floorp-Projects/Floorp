@@ -4,7 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { ContextMenuConfig } from "#features-chrome/common/context-menu/types.ts";
-import { serializeContextMenuConfig } from "#features-chrome/common/context-menu/config.ts";
+import {
+  parseContextMenuConfigWithStatus,
+  serializeContextMenuConfig,
+} from "#features-chrome/common/context-menu/config.ts";
+
+export type ContextMenuPersistenceError =
+  | { kind: "conflict" }
+  | {
+    kind: "unsafe-config";
+    status: "invalid" | "unsupported-version";
+    currentValue: string | null;
+  }
+  | {
+    kind: "preference-type-mismatch";
+    preference: "enabled" | "config";
+  }
+  | { kind: "write"; message: string };
 
 export interface ContextMenuPersistenceState {
   enabled: boolean;
@@ -15,16 +31,38 @@ export interface ContextMenuPersistenceSnapshot {
   committed: ContextMenuPersistenceState;
   projected: ContextMenuPersistenceState;
   pending: boolean;
-  error: string | null;
+  error: ContextMenuPersistenceError | null;
+  blockingErrors: {
+    enabled: ContextMenuPersistenceError | null;
+    config: ContextMenuPersistenceError | null;
+  };
+}
+
+export interface ContextMenuCompareAndSetResult<T> {
+  updated: boolean;
+  currentValue: T | null;
+  typeMismatch?: boolean;
 }
 
 export interface ContextMenuPersistenceWriters {
-  writeEnabled(enabled: boolean): Promise<void>;
-  writeConfig(serializedConfig: string): Promise<void>;
+  compareAndSetEnabled(
+    expectedValue: boolean | null,
+    enabled: boolean,
+  ): Promise<ContextMenuCompareAndSetResult<boolean>>;
+  compareAndSetConfig(
+    expectedValue: string | null,
+    serializedConfig: string,
+  ): Promise<ContextMenuCompareAndSetResult<string>>;
+}
+
+export interface ContextMenuPersistenceVersions {
+  enabled: boolean | null;
+  config: string | null;
 }
 
 export interface ContextMenuPersistence {
   getSnapshot(): ContextMenuPersistenceSnapshot;
+  getVersions(): ContextMenuPersistenceVersions;
   subscribe(
     listener: (snapshot: ContextMenuPersistenceSnapshot) => void,
   ): () => void;
@@ -37,11 +75,17 @@ export interface ContextMenuPersistence {
 }
 
 interface QueuedOperation {
+  preference: "enabled" | "config";
   apply(current: ContextMenuPersistenceState): ContextMenuPersistenceState;
   write(
     target: ContextMenuPersistenceState,
     writers: ContextMenuPersistenceWriters,
-  ): Promise<void>;
+  ): Promise<{
+    saved: boolean;
+    conflict: boolean;
+    conflictError?: ContextMenuPersistenceError;
+    state: ContextMenuPersistenceState;
+  }>;
   resolve(saved: boolean): void;
 }
 
@@ -52,11 +96,22 @@ function errorToMessage(error: unknown): string {
 export function createContextMenuPersistence(
   initial: ContextMenuPersistenceState,
   writers: ContextMenuPersistenceWriters,
+  initialVersions?: ContextMenuPersistenceVersions,
 ): ContextMenuPersistence {
   let committed = initial;
+  let enabledVersion = initialVersions
+    ? initialVersions.enabled
+    : initial.enabled;
+  let configVersion = initialVersions
+    ? initialVersions.config
+    : serializeContextMenuConfig(initial.config);
   let queue: QueuedOperation[] = [];
   let processing = false;
-  let error: string | null = null;
+  let error: ContextMenuPersistenceError | null = null;
+  let blockingErrors: ContextMenuPersistenceSnapshot["blockingErrors"] = {
+    enabled: null,
+    config: null,
+  };
   const listeners = new Set<
     (snapshot: ContextMenuPersistenceSnapshot) => void
   >();
@@ -72,6 +127,7 @@ export function createContextMenuPersistence(
     projected: committed,
     pending: false,
     error,
+    blockingErrors,
   };
 
   const publish = () => {
@@ -80,6 +136,7 @@ export function createContextMenuPersistence(
       projected: calculateProjected(),
       pending: queue.length > 0,
       error,
+      blockingErrors,
     };
     for (const listener of listeners) listener(snapshot);
   };
@@ -92,13 +149,31 @@ export function createContextMenuPersistence(
       const operation = queue[0];
       try {
         const target = operation.apply(committed);
-        await operation.write(target, writers);
-        committed = target;
-        error = null;
+        const result = await operation.write(target, writers);
+        committed = result.state;
         queue = queue.slice(1);
-        operation.resolve(true);
+        operation.resolve(result.saved);
+        if (result.conflict) {
+          error = result.conflictError ?? { kind: "conflict" };
+          blockingErrors = {
+            ...blockingErrors,
+            [operation.preference]: result.conflictError ?? null,
+          };
+          const staleOperations = queue;
+          queue = [];
+          for (const staleOperation of staleOperations) {
+            staleOperation.resolve(false);
+          }
+          publish();
+          break;
+        }
+        blockingErrors = {
+          ...blockingErrors,
+          [operation.preference]: null,
+        };
+        error = null;
       } catch (writeError) {
-        error = errorToMessage(writeError);
+        error = { kind: "write", message: errorToMessage(writeError) };
         queue = queue.slice(1);
         operation.resolve(false);
       }
@@ -123,31 +198,103 @@ export function createContextMenuPersistence(
 
   return {
     getSnapshot: () => snapshot,
+    getVersions: () => ({ enabled: enabledVersion, config: configVersion }),
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
     updateEnabled: (update) =>
       enqueue({
+        preference: "enabled",
         apply: (current) => ({
           ...current,
           enabled: typeof update === "function"
             ? update(current.enabled)
             : update,
         }),
-        write: (target, persistenceWriters) =>
-          persistenceWriters.writeEnabled(target.enabled),
+        write: async (target, persistenceWriters) => {
+          const result = await persistenceWriters.compareAndSetEnabled(
+            enabledVersion,
+            target.enabled,
+          );
+          if (result.typeMismatch) {
+            return {
+              saved: false,
+              conflict: true,
+              conflictError: {
+                kind: "preference-type-mismatch",
+                preference: "enabled",
+              },
+              state: committed,
+            };
+          }
+          if (result.updated || result.currentValue === target.enabled) {
+            enabledVersion = target.enabled;
+            return { saved: true, conflict: false, state: target };
+          }
+          enabledVersion = result.currentValue;
+          return {
+            saved: false,
+            conflict: true,
+            state: {
+              ...target,
+              enabled: result.currentValue ?? true,
+            },
+          };
+        },
       }),
     updateConfig: (update) =>
       enqueue({
+        preference: "config",
         apply: (current) => ({
           ...current,
           config: update(current.config),
         }),
-        write: (target, persistenceWriters) =>
-          persistenceWriters.writeConfig(
-            serializeContextMenuConfig(target.config),
-          ),
+        write: async (target, persistenceWriters) => {
+          const serializedConfig = serializeContextMenuConfig(target.config);
+          const result = await persistenceWriters.compareAndSetConfig(
+            configVersion,
+            serializedConfig,
+          );
+          if (result.typeMismatch) {
+            return {
+              saved: false,
+              conflict: true,
+              conflictError: {
+                kind: "preference-type-mismatch",
+                preference: "config",
+              },
+              state: committed,
+            };
+          }
+          if (result.updated || result.currentValue === serializedConfig) {
+            configVersion = serializedConfig;
+            return { saved: true, conflict: false, state: target };
+          }
+
+          const parsed = parseContextMenuConfigWithStatus(result.currentValue);
+          if (
+            parsed.status === "invalid" ||
+            parsed.status === "unsupported-version"
+          ) {
+            return {
+              saved: false,
+              conflict: true,
+              conflictError: {
+                kind: "unsafe-config",
+                status: parsed.status,
+                currentValue: result.currentValue,
+              },
+              state: committed,
+            };
+          }
+          configVersion = result.currentValue;
+          return {
+            saved: false,
+            conflict: true,
+            state: { ...target, config: parsed.config },
+          };
+        },
       }),
   };
 }

@@ -7,10 +7,11 @@ import {
   runTests,
   type TestCase,
 } from "../../../chrome/test/utils/test_harness.ts";
-import type {
-  ContextMenuCatalogSnapshot,
-  ContextMenuSurfaceDescriptor,
-} from "#features-chrome/common/context-menu/types.ts";
+import {
+  CONTEXT_MENU_SCHEMA_VERSION,
+  type ContextMenuCatalogSnapshot,
+  type ContextMenuSurfaceDescriptor,
+} from "../../../chrome/common/context-menu/types.ts";
 import { ContextMenuCatalogStore } from "./ContextMenuCatalogService.sys.mts";
 
 function assertJsonEquals(
@@ -54,7 +55,7 @@ function makeSnapshot(
   revision = 1,
 ): ContextMenuCatalogSnapshot {
   return {
-    schemaVersion: 1,
+    schemaVersion: CONTEXT_MENU_SCHEMA_VERSION,
     revision,
     locale,
     surfaces,
@@ -71,7 +72,7 @@ function surfaceLabel(
 function testEmptySnapshot(): void {
   const store = new ContextMenuCatalogStore();
   assertJsonEquals(store.getSnapshot(), {
-    schemaVersion: 1,
+    schemaVersion: CONTEXT_MENU_SCHEMA_VERSION,
     revision: 0,
     locale: "",
     surfaces: [],

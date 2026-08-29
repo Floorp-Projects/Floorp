@@ -46,14 +46,28 @@ export default function ContextMenuSettings() {
               {t("contextMenu.saving")}
             </p>
           )}
-          {model.saveError && (
+          {model.saveError &&
+            model.saveError.kind !== "unsafe-config" &&
+            model.saveError.kind !== "preference-type-mismatch" && (
             <p role="alert" className="text-error">
-              {t("contextMenu.saveError")}
+              {t(
+                model.saveError.kind === "conflict"
+                  ? "contextMenu.saveConflict"
+                  : "contextMenu.saveError",
+              )}
             </p>
           )}
           {model.loadError && (
             <p role="alert" className="text-warning">
-              {t("contextMenu.loadError")}
+              {t(
+                model.loadErrorKind === "invalid"
+                  ? "contextMenu.invalidConfigError"
+                  : model.loadErrorKind === "unsupported-version"
+                  ? "contextMenu.unsupportedConfigError"
+                  : model.loadErrorKind === "conflict"
+                  ? "contextMenu.repairConflict"
+                  : "contextMenu.loadError",
+              )}
             </p>
           )}
         </div>
@@ -75,7 +89,7 @@ export default function ContextMenuSettings() {
               </div>
               <Switch
                 checked={model.enabled}
-                disabled={model.loading || model.loadError}
+                disabled={model.loading || model.enabledUnavailable}
                 onChange={() => void model.toggleEnabled()}
                 aria-label={t("contextMenu.enable")}
               />
@@ -103,10 +117,14 @@ export default function ContextMenuSettings() {
                       type="button"
                       size="sm"
                       variant="danger"
-                      disabled={model.loading || model.loadError}
+                      disabled={model.loading ||
+                        (model.loadError &&
+                          model.loadErrorKind !== "invalid")}
                       onClick={() => {
                         setConfirmResetAll(false);
-                        void model.resetAll();
+                        void (model.loadErrorKind === "invalid"
+                          ? model.repairInvalidConfig()
+                          : model.resetAll());
                       }}
                     >
                       {t("contextMenu.confirmReset")}
@@ -118,7 +136,8 @@ export default function ContextMenuSettings() {
                     type="button"
                     size="sm"
                     variant="light"
-                    disabled={model.loading || model.loadError}
+                    disabled={model.loading ||
+                      (model.loadError && model.loadErrorKind !== "invalid")}
                     onClick={() => setConfirmResetAll(true)}
                   >
                     <RotateCcw className="mr-2 size-4" />
@@ -129,7 +148,7 @@ export default function ContextMenuSettings() {
           </CardContent>
         </Card>
 
-        {model.catalogLoading
+        {model.catalogLoading && !model.catalog
           ? (
             <Card>
               <CardContent className="py-8 text-center text-sm text-base-content/60">
@@ -162,17 +181,28 @@ export default function ContextMenuSettings() {
             </Card>
           )
           : (
-            <ContextMenuEditor
-              catalog={model.catalog}
-              config={model.config}
-              disabled={model.loading || model.loadError}
-              reloadCatalog={model.reloadCatalog}
-              moveItem={model.moveItem}
-              moveItemBefore={model.moveItemBefore}
-              setItemVisible={model.setItemVisible}
-              setProfileIndependent={model.setProfileIndependent}
-              resetProfile={model.resetProfile}
-            />
+            <>
+              {model.catalogError && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-warning/10 p-3 text-sm"
+                >
+                  {t("contextMenu.catalogRefreshError")}
+                </p>
+              )}
+              <ContextMenuEditor
+                catalog={model.catalog}
+                config={model.config}
+                disabled={model.loading || model.loadError}
+                refreshing={model.catalogLoading}
+                reloadCatalog={model.reloadCatalog}
+                moveItem={model.moveItem}
+                moveItemBefore={model.moveItemBefore}
+                setItemVisible={model.setItemVisible}
+                setProfileIndependent={model.setProfileIndependent}
+                resetProfile={model.resetProfile}
+              />
+            </>
           )}
       </div>
     </div>
