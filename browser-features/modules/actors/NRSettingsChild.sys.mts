@@ -1,9 +1,15 @@
 import { createBirpc } from "birpc";
 import type {
+  NRContextMenuSettingsFunctions,
   NRSettingsParentFunctions,
   PrefGetParams,
   PrefSetParams,
 } from "../common/defines.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+
+type SettingsPageParentFunctions =
+  & NRSettingsParentFunctions
+  & NRContextMenuSettingsFunctions;
 
 export class NRSettingsChild extends JSWindowActorChild {
   private static readonly MAX_INSTALL_ATTEMPTS = 200;
@@ -86,9 +92,12 @@ export class NRSettingsChild extends JSWindowActorChild {
   NRSettingsRegisterReceiveCallback(callback: (data: string) => void) {
     this.rpc = createBirpc<
       Record<PropertyKey, never>,
-      NRSettingsParentFunctions
+      SettingsPageParentFunctions
     >(
       {
+        getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
+          return this.NRSGetContextMenuCatalog();
+        },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },
@@ -118,6 +127,20 @@ export class NRSettingsChild extends JSWindowActorChild {
         deserialize: (v) => JSON.parse(v),
       },
     );
+  }
+
+  async NRSGetContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot> {
+    try {
+      return await this.sendQuery(
+        "getContextMenuCatalog",
+      ) as ContextMenuCatalogSnapshot;
+    } catch (error) {
+      console.error(
+        "[ContextMenuCatalog] Failed to read the catalog through NRSettings:",
+        error,
+      );
+      throw error;
+    }
   }
 
   async NRSPrefGet(params: {
@@ -155,7 +178,7 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefGet:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -181,7 +204,7 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefSet:", error);
-      return null;
+      throw error;
     }
   }
   handleEvent(_event: Event): void {

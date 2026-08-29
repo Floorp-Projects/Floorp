@@ -1,0 +1,1608 @@
+// SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../test/utils/test_harness.ts";
+import { ContextMenuCatalogBuilder } from "../catalog.ts";
+import {
+  ContextMenuConfigStore,
+  type ContextMenuPreferenceSource,
+} from "../config-store.ts";
+import {
+  DEFAULT_CONTEXT_MENU_CONFIG,
+  isContextMenuConfigEmpty,
+  parseContextMenuConfigWithStatus,
+  resolveContextMenuLevelOverride,
+  serializeContextMenuConfig,
+} from "../config.ts";
+import { ContextMenuController } from "../controller.ts";
+import { mergeElementsIntoNativeSlots } from "../order-policy.ts";
+import {
+  ContextMenuRegistry,
+  FLOORP_CONTEXT_MENU_KEY_ATTRIBUTE,
+} from "../registry.ts";
+import { findSeparatorsToHide, isNativelyHidden } from "../separator-policy.ts";
+import {
+  FLOORP_CONTEXT_HIDDEN_ATTRIBUTE,
+  FLOORP_CONTEXT_SEPARATOR_HIDDEN_ATTRIBUTE,
+  FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+} from "../style.ts";
+import { ContextMenuTransaction } from "../transaction.ts";
+import type {
+  ContextMenuAdapter,
+  ContextMenuCatalogReporter,
+  ContextMenuCatalogSnapshot,
+  ContextMenuConfig,
+} from "../types.ts";
+
+const TEST_POPUP_ID = "floorp-context-menu-runtime-test-popup";
+const TEST_SURFACE_KEY = "test.surface";
+
+function appendTestNode(localName: string, id?: string): Element {
+  const element = document.createElement(localName);
+  if (id) element.id = id;
+  return element;
+}
+
+function appendPopup(id = TEST_POPUP_ID): Element {
+  document.getElementById(id)?.remove();
+  const popup = appendTestNode("div", id);
+  (document.body ?? document.documentElement).appendChild(popup);
+  return popup;
+}
+
+function createPopupForDocument(
+  documentURI: string,
+  id: string,
+  parentId?: string,
+  className?: string,
+): Element {
+  const popup = appendTestNode("menupopup", id || undefined);
+  if (className) popup.className = className;
+  if (parentId) {
+    const parent = appendTestNode("toolbarbutton", parentId);
+    parent.appendChild(popup);
+  }
+  const ownerDocument = { documentURI };
+  return new Proxy(popup, {
+    get(target, property) {
+      if (property === "ownerDocument") return ownerDocument;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+}
+
+function childMarkers(parent: Element): string {
+  return Array.from(parent.children).map((element) =>
+    element.id || element.getAttribute("data-marker") || element.localName
+  ).join(",");
+}
+
+function createTestAdapter(): ContextMenuAdapter {
+  return {
+    key: TEST_SURFACE_KEY,
+    label: "Test surface",
+    documentURIs: [document.documentURI],
+    popupSelectors: [`#${TEST_POPUP_ID}`],
+    aliases: [
+      { key: "test.a", selectors: ['[id="runtime-a"]'] },
+      { key: "test.b", selectors: ['[id="runtime-b"]'] },
+      { key: "test.c", selectors: ['[id="runtime-c"]'] },
+      { key: "test.separator", selectors: ['[id="runtime-separator"]'] },
+      { key: "test.group", selectors: ['[id="runtime-group"]'] },
+      { key: "test.submenu", selectors: ['[id="runtime-submenu"]'] },
+      { key: "test.child", selectors: ['[id="runtime-child"]'] },
+    ],
+    readonlySelectors: [],
+    profiles: [{ key: "default", label: "Default" }],
+    getProfileKey: () => "default",
+  };
+}
+
+function createConfig(
+  level: { order?: string[]; hidden?: string[] },
+  containerKey = "root",
+): ContextMenuConfig {
+  return {
+    schemaVersion: 1,
+    surfaces: {
+      [TEST_SURFACE_KEY]: {
+        base: { [containerKey]: level },
+        profiles: {},
+      },
+    },
+  };
+}
+
+class FakePreferenceSource implements ContextMenuPreferenceSource {
+  readonly #serialized: string;
+  readonly #enabled: boolean | undefined;
+
+  constructor(config: ContextMenuConfig, enabled?: boolean) {
+    this.#serialized = serializeContextMenuConfig(config);
+    this.#enabled = enabled;
+  }
+
+  getBoolPref(_name: string, defaultValue = false): boolean {
+    return this.#enabled ?? defaultValue;
+  }
+
+  getStringPref(_name: string, _defaultValue = ""): string {
+    return this.#serialized;
+  }
+
+  addObserver(_name: string, _observer: nsIObserver): void {}
+
+  removeObserver(_name: string, _observer: nsIObserver): void {}
+}
+
+class RecordingReporter implements ContextMenuCatalogReporter {
+  readonly reports: ContextMenuCatalogSnapshot[] = [];
+  readonly reportOwnerIds: string[] = [];
+  readonly removedOwners: string[] = [];
+
+  report(ownerId: string, snapshot: ContextMenuCatalogSnapshot): void {
+    this.reportOwnerIds.push(ownerId);
+    this.reports.push(snapshot);
+  }
+
+  removeOwner(ownerId: string): void {
+    this.removedOwners.push(ownerId);
+  }
+}
+
+function createControllerFixture(config: ContextMenuConfig): {
+  controller: ContextMenuController;
+  callbacks: Array<() => void>;
+  reporter: RecordingReporter;
+} {
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const configStore = new ContextMenuConfigStore(
+    new FakePreferenceSource(config),
+  );
+  const callbacks: Array<() => void> = [];
+  const reporter = new RecordingReporter();
+  const controller = new ContextMenuController({
+    window,
+    registry,
+    configStore,
+    catalogReporter: reporter,
+    ownerId: "runtime-test-window",
+    scheduleMicrotask: (callback) => callbacks.push(callback),
+  });
+  return { controller, callbacks, reporter };
+}
+
+function runNextMicrotask(callbacks: Array<() => void>): void {
+  const callback = callbacks.shift();
+  assert(callback !== undefined, "popupshowing should schedule one microtask");
+  callback();
+}
+
+async function flushMutationObservers(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+function testConfigParsingAndDormantProfiles(): void {
+  assertEquals(
+    parseContextMenuConfigWithStatus("").status,
+    "empty",
+    "an unset pref is an empty v1 config",
+  );
+  assertEquals(
+    parseContextMenuConfigWithStatus('{"schemaVersion":2,"surfaces":{}}')
+      .status,
+    "unsupported-version",
+    "a future schema is distinguished from malformed JSON",
+  );
+  assertEquals(
+    parseContextMenuConfigWithStatus("not-json").status,
+    "invalid",
+    "malformed JSON is reported without throwing",
+  );
+
+  const config: ContextMenuConfig = {
+    schemaVersion: 1,
+    surfaces: {
+      [TEST_SURFACE_KEY]: {
+        base: { root: { order: ["base"], hidden: ["base-hidden"] } },
+        profiles: {
+          default: {
+            independent: false,
+            containers: {
+              root: {
+                order: ["profile"],
+                hidden: ["profile-hidden"],
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+  const inherited = resolveContextMenuLevelOverride(
+    config,
+    TEST_SURFACE_KEY,
+    "default",
+    "root",
+  );
+  assertEquals(
+    inherited?.order.join(","),
+    "base",
+    "non-independent profile order remains dormant",
+  );
+  assertEquals(
+    inherited?.hidden.join(","),
+    "base-hidden",
+    "non-independent profile visibility remains dormant",
+  );
+
+  config.surfaces[TEST_SURFACE_KEY].profiles.default.independent = true;
+  const independent = resolveContextMenuLevelOverride(
+    config,
+    TEST_SURFACE_KEY,
+    "default",
+    "root",
+  );
+  assertEquals(
+    independent?.order.join(","),
+    "profile",
+    "independent profile uses its retained order",
+  );
+  assertEquals(
+    independent?.hidden.join(","),
+    "profile-hidden",
+    "independent profile uses its retained visibility",
+  );
+  assert(
+    isContextMenuConfigEmpty(DEFAULT_CONTEXT_MENU_CONFIG),
+    "the default config is an explicit no-op",
+  );
+}
+
+function testConfigStoreDefaultsEnabled(): void {
+  const store = new ContextMenuConfigStore(
+    new FakePreferenceSource(DEFAULT_CONTEXT_MENU_CONFIG),
+  );
+  try {
+    assertEquals(
+      store.getSnapshot().enabled,
+      true,
+      "the feature is enabled by default while the empty config stays a no-op",
+    );
+  } finally {
+    store.destroy();
+  }
+}
+
+function testControllerOwnerIdsAreProcessUnique(): void {
+  const reporter = new RecordingReporter();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const first = new ContextMenuController({
+    window,
+    registry,
+    configStore: new ContextMenuConfigStore(
+      new FakePreferenceSource(DEFAULT_CONTEXT_MENU_CONFIG),
+    ),
+    catalogReporter: reporter,
+  });
+  const second = new ContextMenuController({
+    window,
+    registry,
+    configStore: new ContextMenuConfigStore(
+      new FakePreferenceSource(DEFAULT_CONTEXT_MENU_CONFIG),
+    ),
+    catalogReporter: reporter,
+  });
+  try {
+    first.attach();
+    second.attach();
+    assert(
+      reporter.reportOwnerIds[0] !== reporter.reportOwnerIds[1],
+      "default catalog owner IDs use process-wide UUIDs",
+    );
+  } finally {
+    first.destroy();
+    second.destroy();
+  }
+}
+
+function testNativeSlotMergeAndSameParentGuard(): void {
+  const popup = appendPopup();
+  const otherParent = appendTestNode("div");
+  (document.body ?? document.documentElement).appendChild(otherParent);
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    const unknown = appendTestNode("menuitem");
+    unknown.setAttribute("data-marker", "unknown");
+    const second = appendTestNode("menuitem", "runtime-b");
+    popup.append(first, unknown, second);
+
+    const merged = mergeElementsIntoNativeSlots(popup, [second, first]);
+    assert(merged.changed, "managed items should be reordered");
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,unknown,runtime-a",
+      "unknown nodes keep their exact native slot",
+    );
+    mergeElementsIntoNativeSlots(popup, merged.originalOrder);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,unknown,runtime-b",
+      "the recorded native order is reversible",
+    );
+
+    const foreign = appendTestNode("menuitem", "foreign");
+    otherParent.appendChild(foreign);
+    const rejected = mergeElementsIntoNativeSlots(popup, [first, foreign]);
+    assertEquals(
+      rejected.changed,
+      false,
+      "items from different parents must never be moved",
+    );
+  } finally {
+    popup.remove();
+    otherParent.remove();
+  }
+}
+
+function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
+  const adapter = createTestAdapter();
+  const registry = new ContextMenuRegistry([adapter]);
+  const script = appendTestNode("script");
+  assertEquals(
+    registry.identifyItem(adapter, script),
+    null,
+    "non-menu popup children are excluded from the catalog",
+  );
+
+  const pageItem = appendTestNode("menuitem");
+  pageItem.setAttribute("generateditemid", "page-menu-id");
+  assertEquals(
+    registry.identifyItem(adapter, pageItem),
+    null,
+    "page-authored generated menu items are excluded from the catalog",
+  );
+
+  const extension = appendTestNode("menuitem", "addon-command");
+  extension.setAttribute("ext-type", "context-menu");
+  const extensionIdentity = registry.identifyItem(adapter, extension);
+  assert(extensionIdentity !== null, "extension items remain in the catalog");
+  assertEquals(
+    extensionIdentity.source,
+    "extension",
+    "ext-type identifies an extension-owned item",
+  );
+  assertEquals(
+    extensionIdentity.customizable,
+    false,
+    "extension-owned items are read-only",
+  );
+  assertEquals(
+    extensionIdentity.orderAnchor,
+    false,
+    "extension IDs are not persisted as stable order anchors",
+  );
+
+  const extensionById = appendTestNode(
+    "menuitem",
+    "addon-widget-menuitem-command",
+  );
+  const extensionByIdIdentity = registry.identifyItem(adapter, extensionById);
+  assertEquals(
+    extensionByIdIdentity?.source,
+    "extension",
+    "the WebExtension widget menuitem ID pattern is protected without ext-type",
+  );
+  assertEquals(
+    extensionByIdIdentity?.customizable,
+    false,
+    "ID-detected extension items remain read-only",
+  );
+
+  const floorp = appendTestNode("menuitem");
+  floorp.setAttribute(FLOORP_CONTEXT_MENU_KEY_ATTRIBUTE, "floorp.test");
+  const floorpIdentity = registry.identifyItem(adapter, floorp);
+  assertEquals(
+    floorpIdentity?.source,
+    "floorp",
+    "Floorp's stable key attribute identifies owned commands",
+  );
+  assertEquals(
+    floorpIdentity?.customizable,
+    true,
+    "Floorp-owned commands are customizable",
+  );
+
+  const separator = appendTestNode("menuseparator", "runtime-separator");
+  const separatorIdentity = registry.identifyItem(adapter, separator);
+  assertEquals(
+    separatorIdentity?.movable,
+    true,
+    "a known separator with a semantic key is movable",
+  );
+  assertEquals(
+    separatorIdentity?.hideable,
+    false,
+    "a movable separator does not gain a manual visibility override",
+  );
+  assertEquals(
+    separatorIdentity?.customizable,
+    false,
+    "the legacy combined capability remains false for separators",
+  );
+  assertEquals(
+    separatorIdentity?.orderAnchor,
+    true,
+    "a known separator can be used as a stable order anchor",
+  );
+
+  const anonymousSeparator = appendTestNode("menuseparator");
+  const anonymousIdentity = registry.identifyItem(
+    adapter,
+    anonymousSeparator,
+  );
+  assertEquals(
+    anonymousIdentity?.movable,
+    false,
+    "an index-keyed anonymous separator is not movable",
+  );
+  assertEquals(
+    anonymousIdentity?.orderAnchor,
+    false,
+    "an index-keyed anonymous separator is not persisted as an anchor",
+  );
+}
+
+function testExplicitAliasesOverrideBroadReadonlyFallbacks(): void {
+  const adapter: ContextMenuAdapter = {
+    ...createTestAdapter(),
+    readonlySelectors: ["[data-usercontextid]"],
+  };
+  const registry = new ContextMenuRegistry([adapter]);
+
+  const knownFirefoxItem = appendTestNode("menuitem", "runtime-a");
+  knownFirefoxItem.setAttribute("data-usercontextid", "0");
+  const knownIdentity = registry.identifyItem(adapter, knownFirefoxItem);
+  assertEquals(
+    knownIdentity?.movable,
+    true,
+    "an explicit Firefox alias remains movable despite a broad fallback attribute",
+  );
+  assertEquals(
+    knownIdentity?.hideable,
+    true,
+    "an explicit Firefox alias remains hideable despite a broad fallback attribute",
+  );
+
+  const unknownDynamicItem = appendTestNode(
+    "menuitem",
+    "runtime-dynamic-container-command",
+  );
+  unknownDynamicItem.setAttribute("data-usercontextid", "7");
+  const unknownIdentity = registry.identifyItem(adapter, unknownDynamicItem);
+  assertEquals(
+    unknownIdentity?.movable,
+    false,
+    "a non-aliased dynamic container item remains protected",
+  );
+
+  const extensionAlias = appendTestNode("menuitem", "runtime-b");
+  extensionAlias.setAttribute("ext-type", "context-menu");
+  assertEquals(
+    registry.identifyItem(adapter, extensionAlias)?.movable,
+    false,
+    "extension ownership still overrides an explicit selector alias",
+  );
+}
+
+function testCatalogUsesLocalizedAccessibleLabels(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const builder = new ContextMenuCatalogBuilder(registry);
+  try {
+    const item = appendTestNode("menuitem", "runtime-a");
+    item.setAttribute("data-l10n-id", "raw-l10n-message-id");
+    item.setAttribute("aria-label", "Localized command");
+    popup.appendChild(item);
+
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "test popup should resolve");
+    const snapshot = builder.record(surface);
+    assertEquals(
+      snapshot.surfaces[0]?.profiles[0]?.containers[0]?.items[0]?.label,
+      "Localized command",
+      "the Hub catalog prefers Firefox's localized accessible label",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testCatalogProtectsDuplicateStableKeys(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const builder = new ContextMenuCatalogBuilder(registry);
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    first.setAttribute("label", "First duplicate");
+    const second = appendTestNode("menuitem", "runtime-a");
+    second.setAttribute("label", "Second duplicate");
+    popup.append(first, second);
+
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "duplicate-key popup should resolve");
+    const items = builder.record(surface).surfaces[0]?.profiles[0]
+      ?.containers[0]?.items ?? [];
+    assertEquals(items.length, 2, "both duplicate native rows stay visible");
+    assert(
+      items.every((item) =>
+        !item.movable && !item.hideable && !item.orderAnchor
+      ),
+      "every ambiguous catalog row is protected consistently with runtime resolution",
+    );
+    assert(
+      items[0]?.catalogInstanceId !== items[1]?.catalogInstanceId,
+      "duplicate rows receive distinct snapshot-local rendering identities",
+    );
+    assertEquals(
+      registry.resolveItemForOrdering(surface, "test.a").status,
+      "ambiguous",
+      "runtime ordering rejects the same duplicate key",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testRegistryGenericBrowserContextFallback(): void {
+  if (
+    !document.documentURI.startsWith(
+      "chrome://browser/content/browser.xhtml",
+    )
+  ) {
+    return;
+  }
+
+  const registry = new ContextMenuRegistry();
+  const popup = appendTestNode("menupopup", "future-context-menu");
+  const command = appendTestNode("menuitem", "future-context-command");
+  const submenu = appendTestNode("menu", "future-context-submenu");
+  const nestedPopup = appendTestNode(
+    "menupopup",
+    "future-context-submenu-popup",
+  );
+  submenu.appendChild(nestedPopup);
+  popup.append(command, submenu);
+  (document.body ?? document.documentElement).appendChild(popup);
+  try {
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "generic browser popup should resolve");
+    assertEquals(
+      surface.adapter.key,
+      "browser.chrome.future-context-menu",
+      "an unknown browser.xhtml context popup receives a stable fallback surface",
+    );
+    assertEquals(
+      registry.identifyItem(surface.adapter, command)?.key,
+      "firefox.future-context-command",
+      "generic fallback retains stable native item IDs",
+    );
+    const nestedSurface = registry.resolvePopup(nestedPopup, window);
+    assert(nestedSurface !== null, "generic nested popup should resolve");
+    assertEquals(
+      nestedSurface.adapter.key,
+      "browser.chrome.future-context-menu",
+      "a context-named child popup remains under the outer fallback surface",
+    );
+    assertEquals(
+      nestedSurface.containerKey,
+      "submenu:firefox.future-context-submenu",
+      "generic fallback retains nested container structure",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testKnownFirefoxPopupSurfacesAreDocumentScoped(): void {
+  const browserDocumentURI = "chrome://browser/content/browser.xhtml";
+  const placesDocumentURI = "chrome://browser/content/places/places.xhtml";
+  const registry = new ContextMenuRegistry();
+  const builder = new ContextMenuCatalogBuilder(registry);
+  const contracts = [
+    [browserDocumentURI, "backForwardMenu", "browser.navigation-history"],
+    [browserDocumentURI, "new-tab-button-popup", "browser.new-tab-button"],
+    [browserDocumentURI, "downloadsContextMenu", "browser.downloads"],
+    [browserDocumentURI, "split-view-menu", "browser.split-view"],
+    [placesDocumentURI, "placesColumnsContext", "places.library-columns"],
+    [placesDocumentURI, "downloadsContextMenu", "places.library-downloads"],
+  ] as const;
+
+  for (const [documentURI, popupId, surfaceKey] of contracts) {
+    const popup = createPopupForDocument(documentURI, popupId);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, `${documentURI}#${popupId} must resolve`);
+    assertEquals(
+      surface.adapter.key,
+      surfaceKey,
+      `${documentURI}#${popupId} must keep its document-scoped surface`,
+    );
+    builder.record(surface);
+  }
+
+  const snapshot = builder.snapshot();
+  const browserDownloads = snapshot.surfaces.find((surface) =>
+    surface.key === "browser.downloads"
+  );
+  const libraryDownloads = snapshot.surfaces.find((surface) =>
+    surface.key === "places.library-downloads"
+  );
+  assert(
+    browserDownloads !== undefined && libraryDownloads !== undefined,
+    "the duplicate downloadsContextMenu id must produce two catalog surfaces",
+  );
+  assertEquals(
+    browserDownloads.profiles[0]?.containers[0]?.complete,
+    true,
+    "browser downloads catalog is independently complete",
+  );
+  assertEquals(
+    libraryDownloads.profiles[0]?.containers[0]?.complete,
+    true,
+    "Library downloads catalog is independently complete",
+  );
+
+  const unknownPlacesPopup = createPopupForDocument(
+    placesDocumentURI,
+    "unregisteredPopup",
+  );
+  assertEquals(
+    registry.resolvePopup(unknownPlacesPopup, window),
+    null,
+    "an arbitrary Library menupopup must not be captured",
+  );
+  const unknownBrowserPopup = createPopupForDocument(
+    browserDocumentURI,
+    "unregisteredPopup",
+  );
+  assertEquals(
+    registry.resolvePopup(unknownBrowserPopup, window),
+    null,
+    "an arbitrary browser menupopup must not be captured",
+  );
+}
+
+function testFirefoxPopupCloneSelectorsStayNarrow(): void {
+  const browserDocumentURI = "chrome://browser/content/browser.xhtml";
+  const registry = new ContextMenuRegistry();
+  for (
+    const parentId of [
+      "new-tab-button",
+      "tabs-newtab-button",
+      "vertical-tabs-newtab-button",
+    ]
+  ) {
+    const popup = createPopupForDocument(
+      browserDocumentURI,
+      "",
+      parentId,
+      "new-tab-popup",
+    );
+    assertEquals(
+      registry.resolvePopup(popup, window)?.adapter.key,
+      "browser.new-tab-button",
+      `Firefox's id-less new-tab clone under #${parentId} must resolve`,
+    );
+  }
+
+  for (const parentId of ["back-button", "forward-button"]) {
+    const popup = createPopupForDocument(
+      browserDocumentURI,
+      "",
+      parentId,
+    );
+    popup.setAttribute("context", "");
+    assertEquals(
+      registry.resolvePopup(popup, window)?.adapter.key,
+      "browser.navigation-history",
+      `Firefox's id-less history clone under #${parentId} must resolve`,
+    );
+  }
+
+  const unrelatedClone = createPopupForDocument(
+    browserDocumentURI,
+    "",
+    "unrelated-button",
+    "new-tab-popup",
+  );
+  assertEquals(
+    registry.resolvePopup(unrelatedClone, window),
+    null,
+    "the clone class alone must not opt arbitrary popups into customization",
+  );
+}
+
+function testCurrentFirefoxContextMenuContracts(): void {
+  if (
+    !document.documentURI.startsWith(
+      "chrome://browser/content/browser.xhtml",
+    )
+  ) {
+    return;
+  }
+
+  const registry = new ContextMenuRegistry();
+  for (
+    const [popupId, surfaceKey] of [
+      ["contentAreaContextMenu", "browser.content"],
+      ["tabContextMenu", "browser.tabs"],
+      ["toolbar-context-menu", "browser.toolbar"],
+      ["placesContext", "browser.places"],
+      ["split-view-menu", "browser.split-view"],
+    ] as const
+  ) {
+    const popup = document.getElementById(popupId);
+    assert(popup !== null, `Firefox chrome contract #${popupId} must exist`);
+    assertEquals(
+      registry.resolvePopup(popup, window)?.adapter.key,
+      surfaceKey,
+      `#${popupId} must resolve to ${surfaceKey}`,
+    );
+  }
+
+  const aliasContracts = [
+    ["context-openlinkintab", "content.link.open-new-tab"],
+    ["context-openlinkinsplitview", "content.link.open-split-view"],
+    ["context_reloadTab", "tab.reload"],
+    ["placesContext_open", "places.open"],
+  ] as const;
+  for (const [elementId, expectedKey] of aliasContracts) {
+    const element = document.getElementById(elementId);
+    assert(
+      element !== null,
+      `Firefox chrome contract #${elementId} must exist`,
+    );
+    const popup = element.closest("menupopup");
+    assert(popup !== null, `#${elementId} must belong to a menupopup`);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, `#${elementId} popup must resolve`);
+    assertEquals(
+      registry.identifyItem(surface.adapter, element)?.key,
+      expectedKey,
+      `#${elementId} must retain its semantic alias`,
+    );
+  }
+
+  const toolbarOverflow = document.getElementById(
+    "toolbar-context-move-to-panel",
+  ) ?? document.getElementById("toolbar-context-pinToOverflowMenu");
+  assert(
+    toolbarOverflow !== null,
+    "Firefox toolbar overflow command must match a current or legacy ID",
+  );
+  const toolbarPopup = document.getElementById("toolbar-context-menu");
+  assert(toolbarPopup !== null, "Firefox toolbar popup must exist");
+  const toolbarSurface = registry.resolvePopup(toolbarPopup, window);
+  assert(toolbarSurface !== null, "Firefox toolbar popup must resolve");
+  assertEquals(
+    registry.identifyItem(toolbarSurface.adapter, toolbarOverflow)?.key,
+    "toolbar.pin-overflow",
+    "current and legacy toolbar IDs share one semantic key",
+  );
+  const extensionAnchor = document.getElementById(
+    "toolbar-context-manage-extension",
+  );
+  assert(
+    extensionAnchor !== null,
+    "Firefox asynchronous extension controls retain their insertion anchor",
+  );
+  assertEquals(
+    registry.identifyItem(toolbarSurface.adapter, extensionAnchor)
+      ?.customizable,
+    false,
+    "the asynchronous extension-control anchor stays in its native slot",
+  );
+
+  const navigationGroup = document.getElementById("context-navigation");
+  assert(
+    navigationGroup !== null && navigationGroup.localName === "menugroup",
+    "Firefox content navigation remains a menugroup contract",
+  );
+  const contentPopup = document.getElementById("contentAreaContextMenu");
+  assert(contentPopup !== null, "Firefox content popup must exist");
+  const contentSurface = registry.resolvePopup(contentPopup, window);
+  assert(contentSurface !== null, "Firefox content popup must resolve");
+  assertEquals(
+    registry.identifyItem(contentSurface.adapter, navigationGroup)
+      ?.childContainerKey,
+    "group:content.navigation",
+    "the Firefox navigation menugroup must remain an editable child container",
+  );
+}
+
+function testTransactionUsesOverlayAndRollsBack(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    const unknown = appendTestNode("menuitem");
+    unknown.setAttribute("data-marker", "unknown");
+    const second = appendTestNode("menuitem", "runtime-b");
+    popup.append(first, unknown, second);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "test popup should resolve");
+
+    const transaction = new ContextMenuTransaction(surface, registry, {
+      order: ["test.b", "test.a"],
+      hidden: ["test.a"],
+    });
+    assert(transaction.apply(), "known overrides should apply");
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,unknown,runtime-a",
+      "transaction uses native-slot merge",
+    );
+    assert(
+      first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "visibility uses Floorp's transient attribute",
+    );
+    assert(
+      !first.hasAttribute("hidden"),
+      "the native hidden attribute is untouched",
+    );
+    assert(
+      window.getComputedStyle(first)?.display === "none",
+      "the privileged document stylesheet applies the visibility overlay",
+    );
+    assertEquals(
+      document.querySelector("[data-floorp-context-menu-style]"),
+      null,
+      "Gecko documents do not rely on an inline style element",
+    );
+
+    transaction.rollback();
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,unknown,runtime-b",
+      "popuphiding rollback restores native slots",
+    );
+    assert(
+      !first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "rollback removes Floorp's visibility overlay",
+    );
+    assert(
+      window.getComputedStyle(first)?.display !== "none",
+      "the last rollback releases the privileged document stylesheet",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testTransactionMovesAcrossKnownSeparator(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  try {
+    const prefix = appendTestNode("menuitem", "runtime-c");
+    const first = appendTestNode("menuitem", "runtime-a");
+    const newFirefoxItem = appendTestNode("menuitem", "runtime-new-item");
+    const separator = appendTestNode("menuseparator", "runtime-separator");
+    separator.setAttribute(FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE, "true");
+    (separator as Element & { hidden: boolean }).hidden = true;
+    const second = appendTestNode("menuitem", "runtime-b");
+    popup.append(prefix, first, newFirefoxItem, separator, second);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "test popup should resolve");
+
+    const transaction = new ContextMenuTransaction(surface, registry, {
+      order: ["test.c", "test.separator", "test.a", "test.b"],
+      // A hand-edited preference must not turn a movable separator into a
+      // manually hidden item.
+      hidden: ["test.separator"],
+    });
+    assert(transaction.apply(), "separator-relative order should apply");
+    assertEquals(
+      childMarkers(popup),
+      "runtime-c,runtime-separator,runtime-new-item,runtime-a,runtime-b",
+      "a command crosses the separator while a new unconfigured Firefox item keeps its native slot",
+    );
+    assert(
+      !separator.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "separator visibility cannot be overridden through a stale preference",
+    );
+    assertEquals(
+      (separator as Element & { hidden: boolean }).hidden,
+      false,
+      "custom ordering recomputes a separator hidden by the legacy native-order cleanup",
+    );
+
+    const replacementSeparator = appendTestNode(
+      "menuseparator",
+      "runtime-separator",
+    );
+    separator.replaceWith(replacementSeparator);
+    transaction.rollback();
+    assertEquals(
+      childMarkers(popup),
+      "runtime-c,runtime-a,runtime-new-item,runtime-separator,runtime-b",
+      "a same-key separator replacement rolls back to Firefox's native slot",
+    );
+    assertEquals(
+      popup.children[3],
+      replacementSeparator,
+      "rollback adopts Firefox's replacement separator without reviving the old node",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testTransactionKeepsProtectedItemInNativeSlot(): void {
+  const popup = appendPopup();
+  const adapter: ContextMenuAdapter = {
+    ...createTestAdapter(),
+    readonlySelectors: ['[id="runtime-protected"]'],
+  };
+  const registry = new ContextMenuRegistry([adapter]);
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    const protectedItem = appendTestNode("menuitem", "runtime-protected");
+    const second = appendTestNode("menuitem", "runtime-b");
+    popup.append(first, protectedItem, second);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "test popup should resolve");
+
+    const transaction = new ContextMenuTransaction(surface, registry, {
+      // Include the protected key as if a preference had been hand-edited.
+      order: ["test.b", "firefox.runtime-protected", "test.a"],
+      hidden: ["firefox.runtime-protected"],
+    });
+    assert(transaction.apply(), "movable item order should still apply");
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-protected,runtime-a",
+      "the protected node keeps its exact native slot",
+    );
+    assert(
+      !protectedItem.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "the protected node cannot receive a visibility overlay",
+    );
+
+    transaction.rollback();
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,runtime-protected,runtime-b",
+      "rollback preserves the protected native slot",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testTransactionRestoresSurvivorsAfterNativeNodeChanges(): void {
+  for (const mutation of ["remove", "reparent", "replace"] as const) {
+    const popup = appendPopup();
+    const otherParent = appendTestNode("div");
+    (document.body ?? document.documentElement).appendChild(otherParent);
+    const registry = new ContextMenuRegistry([createTestAdapter()]);
+    try {
+      const first = appendTestNode("menuitem", "runtime-a");
+      const unknown = appendTestNode("menuitem");
+      unknown.setAttribute("data-marker", "unknown");
+      const second = appendTestNode("menuitem", "runtime-b");
+      const third = appendTestNode("menuitem", "runtime-c");
+      popup.append(first, unknown, second, third);
+      const surface = registry.resolvePopup(popup, window);
+      assert(surface !== null, "test popup should resolve");
+
+      const transaction = new ContextMenuTransaction(surface, registry, {
+        order: ["test.c", "test.b", "test.a"],
+        hidden: [],
+      });
+      assert(transaction.apply(), `${mutation}: overlay should apply`);
+      assertEquals(
+        childMarkers(popup),
+        "runtime-c,unknown,runtime-b,runtime-a",
+        `${mutation}: precondition uses the customized order`,
+      );
+
+      if (mutation === "remove") {
+        second.remove();
+      } else if (mutation === "reparent") {
+        otherParent.appendChild(second);
+      } else {
+        const replacement = appendTestNode("menuitem");
+        replacement.setAttribute("data-marker", "replacement");
+        second.replaceWith(replacement);
+      }
+
+      transaction.rollback();
+      assertEquals(
+        childMarkers(popup),
+        mutation === "replace"
+          ? "runtime-a,unknown,replacement,runtime-c"
+          : "runtime-a,unknown,runtime-c",
+        `${mutation}: surviving managed nodes return to native order`,
+      );
+      if (mutation === "reparent") {
+        assertEquals(
+          second.parentElement,
+          otherParent,
+          "rollback must not pull a natively reparented node back",
+        );
+      }
+    } finally {
+      popup.remove();
+      otherParent.remove();
+    }
+  }
+}
+
+function testSeparatorOverlayPolicy(): void {
+  const popup = appendPopup();
+  try {
+    const leading = appendTestNode("menuseparator");
+    leading.setAttribute("data-marker", "leading");
+    const first = appendTestNode("menuitem", "runtime-a");
+    const middle = appendTestNode("menuseparator");
+    middle.setAttribute("data-marker", "middle");
+    const duplicate = appendTestNode("menuseparator");
+    duplicate.setAttribute("data-marker", "duplicate");
+    const hidden = appendTestNode("menuitem", "runtime-b");
+    hidden.setAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE, "true");
+    const trailing = appendTestNode("menuseparator");
+    trailing.setAttribute("data-marker", "trailing");
+    popup.append(leading, first, middle, duplicate, hidden, trailing);
+
+    const markers = findSeparatorsToHide(popup).map((separator) =>
+      separator.getAttribute("data-marker")
+    ).sort().join(",");
+    assertEquals(
+      markers,
+      "duplicate,leading,middle,trailing",
+      "leading, duplicate, and trailing separators are overlaid",
+    );
+    assert(
+      !middle.hasAttribute(FLOORP_CONTEXT_SEPARATOR_HIDDEN_ATTRIBUTE),
+      "policy calculation itself does not mutate native nodes",
+    );
+
+    const collapsed = appendTestNode("menuitem");
+    collapsed.setAttribute("collapsed", "true");
+    assert(
+      isNativelyHidden(collapsed),
+      "XUL collapsed state participates in native visibility",
+    );
+    collapsed.setAttribute("collapsed", "false");
+    assert(
+      !isNativelyHidden(collapsed),
+      "an explicit false collapsed attribute remains visible",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testCatalogMergesNestedContainers(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const builder = new ContextMenuCatalogBuilder(registry);
+  try {
+    const submenu = appendTestNode("menu", "runtime-submenu");
+    submenu.setAttribute("label", "Nested menu");
+    const nestedPopup = appendTestNode("menupopup");
+    const child = appendTestNode("menuitem", "runtime-child");
+    child.setAttribute("label", "Nested command");
+    nestedPopup.appendChild(child);
+    submenu.appendChild(nestedPopup);
+    popup.appendChild(submenu);
+
+    const rootSurface = registry.resolvePopup(popup, window);
+    const nestedSurface = registry.resolvePopup(nestedPopup, window);
+    assert(rootSurface !== null, "root popup should resolve");
+    assert(
+      nestedSurface !== null,
+      "nested popup should resolve through its root",
+    );
+    assertEquals(
+      nestedSurface.containerKey,
+      "submenu:test.submenu",
+      "submenu identity becomes its child container key",
+    );
+
+    builder.record(rootSurface);
+    const snapshot = builder.record(nestedSurface);
+    const profile = snapshot.surfaces[0]?.profiles[0];
+    assertEquals(
+      profile?.containers.length,
+      2,
+      "recording a child merges instead of replacing the root container",
+    );
+    assert(
+      profile?.containers.every((container) => container.complete) === true,
+      "both observed container levels are marked complete",
+    );
+    assertEquals(
+      profile?.containers.find((container) => container.key === "root")
+        ?.items[0]?.childContainerKey,
+      "submenu:test.submenu",
+      "the root catalog links a submenu to its child container",
+    );
+  } finally {
+    popup.remove();
+  }
+}
+
+function testMenugroupIsCataloguedAndCustomizedAsContainer(): void {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(
+    createConfig(
+      { order: ["test.b", "test.a"], hidden: ["test.a"] },
+      "group:test.group",
+    ),
+  );
+  try {
+    const group = appendTestNode("menugroup", "runtime-group");
+    const first = appendTestNode("menuitem", "runtime-a");
+    const unknown = appendTestNode("menuitem");
+    unknown.setAttribute("data-marker", "group-unknown");
+    const second = appendTestNode("menuitem", "runtime-b");
+    group.append(first, unknown, second);
+    popup.appendChild(group);
+
+    fixture.controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(group),
+      "runtime-b,group-unknown,runtime-a",
+      "a menugroup container receives its own order overlay",
+    );
+    assert(
+      first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "a menugroup child receives its own visibility overlay",
+    );
+
+    const profile = fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0];
+    assertEquals(
+      profile?.containers.length,
+      2,
+      "root catalog capture includes the virtual group container",
+    );
+    assertEquals(
+      profile?.containers.find((container) => container.key === "root")
+        ?.items[0]?.childContainerKey,
+      "group:test.group",
+      "group descriptor links to its virtual child container",
+    );
+
+    popup.dispatchEvent(new Event("popuphiding", { bubbles: true }));
+    assertEquals(
+      childMarkers(group),
+      "runtime-a,group-unknown,runtime-b",
+      "root popup hiding rolls the group transaction back",
+    );
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+function testControllerAppliesAfterNativeBuilderAndRollsBack(): void {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"], hidden: ["test.a"] }),
+  );
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    const unknown = appendTestNode("menuitem");
+    unknown.setAttribute("data-marker", "unknown");
+    popup.append(first, unknown);
+    popup.addEventListener("popupshowing", () => {
+      popup.appendChild(appendTestNode("menuitem", "runtime-b"));
+    }, { once: true });
+
+    fixture.controller.attach();
+    popup.dispatchEvent(
+      new Event("popupshowing", { bubbles: true, cancelable: true }),
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,unknown,runtime-b",
+      "native target listener runs before the scheduled overlay",
+    );
+    assert(
+      !first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "capture listener does not mutate synchronously",
+    );
+
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,unknown,runtime-a",
+      "microtask applies to the native builder's final children",
+    );
+    assert(
+      first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "microtask applies visibility after native popupshowing",
+    );
+    assertEquals(
+      fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0]
+        ?.containers[0]?.items.length,
+      3,
+      "catalog observes the native popup before customization",
+    );
+
+    const late = appendTestNode("menuitem");
+    late.setAttribute("data-marker", "late-native-item");
+    popup.appendChild(late);
+    popup.dispatchEvent(new Event("popupshown", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,unknown,runtime-a,late-native-item",
+      "popupshown reconciles asynchronous native builder mutations",
+    );
+    assertEquals(
+      fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0]
+        ?.containers[0]?.items.length,
+      4,
+      "popupshown refreshes the catalog after asynchronous builders",
+    );
+
+    popup.dispatchEvent(new Event("popuphiding", { bubbles: true }));
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,unknown,runtime-b,late-native-item",
+      "popuphiding restores the native order",
+    );
+    assert(
+      !first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "popuphiding removes visibility overlays",
+    );
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+async function testControllerDefaultSchedulerUsesWindowReceiver(): Promise<
+  void
+> {
+  const popup = appendPopup();
+  const reporter = new RecordingReporter();
+  const controller = new ContextMenuController({
+    window,
+    registry: new ContextMenuRegistry([createTestAdapter()]),
+    configStore: new ContextMenuConfigStore(
+      new FakePreferenceSource(DEFAULT_CONTEXT_MENU_CONFIG),
+    ),
+    catalogReporter: reporter,
+    ownerId: "default-scheduler-test-window",
+  });
+  try {
+    popup.appendChild(appendTestNode("menuitem", "runtime-a"));
+    controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const root = reporter.reports.at(-1)?.surfaces.find((surface) =>
+      surface.key === TEST_SURFACE_KEY
+    )?.profiles[0].containers.find((container) => container.key === "root");
+    assertEquals(
+      root?.complete,
+      true,
+      "the default scheduler reaches reconciliation in a real Window realm",
+    );
+    assertEquals(
+      root?.items[0]?.key,
+      "test.a",
+      "the default scheduler records popup children instead of leaving a placeholder",
+    );
+  } finally {
+    controller.destroy();
+    popup.remove();
+  }
+}
+
+function testControllerUnknownKeysAndEmptyConfigAreDomNoOps(): void {
+  for (
+    const config of [
+      DEFAULT_CONTEXT_MENU_CONFIG,
+      createConfig({ order: ["missing-b", "missing-a"], hidden: ["missing"] }),
+    ]
+  ) {
+    const popup = appendPopup();
+    const fixture = createControllerFixture(config);
+    try {
+      popup.append(
+        appendTestNode("menuitem", "runtime-a"),
+        appendTestNode("menuitem", "runtime-b"),
+      );
+      const before = popup.innerHTML;
+      fixture.controller.attach();
+      popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+      runNextMicrotask(fixture.callbacks);
+      assertEquals(
+        popup.innerHTML,
+        before,
+        "empty or unknown-only configuration leaves DOM unchanged",
+      );
+      assertEquals(
+        document.querySelector("[data-floorp-context-menu-style]"),
+        null,
+        "a no-op never injects overlay CSS",
+      );
+    } finally {
+      fixture.controller.destroy();
+      popup.remove();
+    }
+  }
+}
+
+async function testControllerObservesNativeMutationsWithoutOverlayLoop(): Promise<
+  void
+> {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"] }),
+  );
+  try {
+    popup.append(
+      appendTestNode("menuitem", "runtime-a"),
+      appendTestNode("menuitem", "runtime-b"),
+    );
+    fixture.controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "Floorp's own reorder does not feed the native mutation observer",
+    );
+
+    const late = appendTestNode("menuitem");
+    late.setAttribute("data-marker", "observed-native-item");
+    popup.appendChild(late);
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      1,
+      "an open popup schedules reconciliation after a native child mutation",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,runtime-b,observed-native-item",
+      "observer rolls the old overlay back before reconciling",
+    );
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-a,observed-native-item",
+      "observed native children are merged into the refreshed overlay",
+    );
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "observer remains quiet after refreshed Floorp mutations",
+    );
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+async function testCancelledPopupHidingRestoresOverlayAndObserver(): Promise<
+  void
+> {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"] }),
+  );
+  try {
+    popup.append(
+      appendTestNode("menuitem", "runtime-a"),
+      appendTestNode("menuitem", "runtime-b"),
+    );
+    fixture.controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-a",
+      "the initial overlay is active",
+    );
+
+    popup.addEventListener("popuphiding", (event) => event.preventDefault(), {
+      once: true,
+    });
+    const hiding = new Event("popuphiding", {
+      bubbles: true,
+      cancelable: true,
+    });
+    assertEquals(
+      popup.dispatchEvent(hiding),
+      false,
+      "the native close is cancelled",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,runtime-b",
+      "capture phase exposes native order to popuphiding handlers",
+    );
+
+    runNextMicrotask(fixture.callbacks);
+    runNextMicrotask(fixture.callbacks);
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-a",
+      "a cancelled close restores the customization",
+    );
+
+    popup.appendChild(appendTestNode("menuitem"));
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      1,
+      "a cancelled close also restores native mutation monitoring",
+    );
+    runNextMicrotask(fixture.callbacks);
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+async function testRootObserverExcludesNestedPopupBoundary(): Promise<void> {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(DEFAULT_CONTEXT_MENU_CONFIG);
+  try {
+    const submenu = appendTestNode("menu", "runtime-submenu");
+    const nestedPopup = appendTestNode("menupopup");
+    nestedPopup.appendChild(appendTestNode("menuitem", "runtime-child"));
+    submenu.appendChild(nestedPopup);
+    popup.appendChild(submenu);
+
+    fixture.controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    nestedPopup.appendChild(appendTestNode("menuitem"));
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "root observer ignores mutations inside a closed child menupopup",
+    );
+
+    nestedPopup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runNextMicrotask(fixture.callbacks);
+    nestedPopup.appendChild(appendTestNode("menuitem"));
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      1,
+      "an opened child menupopup receives its own scoped observer",
+    );
+    runNextMicrotask(fixture.callbacks);
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+const tests: TestCase[] = [
+  {
+    name: "config parser and dormant profile semantics",
+    fn: testConfigParsingAndDormantProfiles,
+  },
+  {
+    name: "config store defaults enabled",
+    fn: testConfigStoreDefaultsEnabled,
+  },
+  {
+    name: "controller catalog owner IDs are unique",
+    fn: testControllerOwnerIdsAreProcessUnique,
+  },
+  {
+    name: "native-slot merge preserves unknown nodes",
+    fn: testNativeSlotMergeAndSameParentGuard,
+  },
+  {
+    name: "page menus excluded and extensions catalogued read-only",
+    fn: testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly,
+  },
+  {
+    name: "explicit aliases override broad readonly fallbacks",
+    fn: testExplicitAliasesOverrideBroadReadonlyFallbacks,
+  },
+  {
+    name: "catalog uses localized accessible labels",
+    fn: testCatalogUsesLocalizedAccessibleLabels,
+  },
+  {
+    name: "duplicate stable keys are protected in the catalog",
+    fn: testCatalogProtectsDuplicateStableKeys,
+  },
+  {
+    name: "generic browser context popup fallback",
+    fn: testRegistryGenericBrowserContextFallback,
+  },
+  {
+    name: "known Firefox popups have document-scoped surfaces",
+    fn: testKnownFirefoxPopupSurfacesAreDocumentScoped,
+  },
+  {
+    name: "Firefox popup clone selectors remain narrow",
+    fn: testFirefoxPopupCloneSelectorsStayNarrow,
+  },
+  {
+    name: "current Firefox context menu contracts",
+    fn: testCurrentFirefoxContextMenuContracts,
+  },
+  {
+    name: "transaction overlays and rollback",
+    fn: testTransactionUsesOverlayAndRollsBack,
+  },
+  {
+    name: "transaction moves commands across known separators",
+    fn: testTransactionMovesAcrossKnownSeparator,
+  },
+  {
+    name: "transaction preserves protected native slots",
+    fn: testTransactionKeepsProtectedItemInNativeSlot,
+  },
+  {
+    name: "transaction restores survivors after native node changes",
+    fn: testTransactionRestoresSurvivorsAfterNativeNodeChanges,
+  },
+  {
+    name: "separator overlay policy",
+    fn: testSeparatorOverlayPolicy,
+  },
+  {
+    name: "catalog merges nested containers",
+    fn: testCatalogMergesNestedContainers,
+  },
+  {
+    name: "menugroup is a virtual editable container",
+    fn: testMenugroupIsCataloguedAndCustomizedAsContainer,
+  },
+  {
+    name: "controller defers apply and rolls back",
+    fn: testControllerAppliesAfterNativeBuilderAndRollsBack,
+  },
+  {
+    name: "controller default scheduler keeps the Window receiver",
+    fn: testControllerDefaultSchedulerUsesWindowReceiver,
+  },
+  {
+    name: "empty and unknown config are DOM no-ops",
+    fn: testControllerUnknownKeysAndEmptyConfigAreDomNoOps,
+  },
+  {
+    name: "native mutation observer reconciles without overlay loop",
+    fn: testControllerObservesNativeMutationsWithoutOverlayLoop,
+  },
+  {
+    name: "cancelled popuphiding restores overlay and observer",
+    fn: testCancelledPopupHidingRestoresOverlayAndObserver,
+  },
+  {
+    name: "root observer excludes nested popup boundary",
+    fn: testRootObserverExcludesNestedPopupBoundary,
+  },
+];
+
+export async function runAllTests(): Promise<void> {
+  await runTests("contextMenuRuntime.test.ts", tests);
+}

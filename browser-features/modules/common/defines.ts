@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -46,6 +47,10 @@ export interface NRSettingsParentFunctions {
   setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
+}
+
+export interface NRContextMenuSettingsFunctions {
+  getContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot>;
 }
 
 export interface NRExperimemmtParentFunctions {

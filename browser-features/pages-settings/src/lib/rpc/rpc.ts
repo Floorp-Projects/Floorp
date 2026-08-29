@@ -1,12 +1,63 @@
-import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
+import type {
+  NRContextMenuSettingsFunctions,
+  NRSettingsParentFunctions,
+} from "../../../../modules/common/defines.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
 
-// deno-lint-ignore no-explicit-any
-declare const Services: any;
-// deno-lint-ignore no-explicit-any
-declare const ChromeUtils: any;
-// deno-lint-ignore no-explicit-any
-declare const Cu: any;
+type SettingsPageParentFunctions =
+  & NRSettingsParentFunctions
+  & NRContextMenuSettingsFunctions;
+
+interface LegacySettingsDirectFunctions {
+  selectFolder(): Promise<null>;
+  getRandomImageFromFolder(path: string): Promise<null>;
+  sendToNRPanelSidebarChild(
+    method: string,
+    ...args: unknown[]
+  ): Promise<unknown>;
+}
+
+type SettingsPageDirectFunctions =
+  & SettingsPageParentFunctions
+  & LegacySettingsDirectFunctions;
+
+interface ContextMenuCatalogServiceModule {
+  ContextMenuCatalogService: {
+    getSnapshot(): ContextMenuCatalogSnapshot;
+  };
+}
+
+interface DirectPreferenceService {
+  readonly PREF_BOOL: number;
+  readonly PREF_INT: number;
+  readonly PREF_STRING: number;
+  getPrefType(prefName: string): number;
+  getBoolPref(prefName: string): boolean;
+  getIntPref(prefName: string): number;
+  getStringPref(prefName: string): string;
+  setBoolPref(prefName: string, value: boolean): void;
+  setIntPref(prefName: string, value: number): void;
+  setStringPref(prefName: string, value: string): void;
+}
+
+interface DirectActor {
+  [method: string]: (...args: unknown[]) => unknown;
+}
+
+declare const Services: { prefs: DirectPreferenceService };
+declare const ChromeUtils: {
+  importESModule(moduleUri: string): unknown;
+};
+declare const Cu: {
+  getGlobalForObject(value: unknown): {
+    browsingContext: {
+      currentWindowGlobal: {
+        getActor(name: string): DirectActor;
+      };
+    };
+  };
+};
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -45,7 +96,13 @@ const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
   import.meta.url ?? "",
 );
 
-const directServicesFunctions: NRSettingsParentFunctions = {
+const directServicesFunctions: SettingsPageDirectFunctions = {
+  getContextMenuCatalog: () => {
+    const { ContextMenuCatalogService } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
+    ) as ContextMenuCatalogServiceModule;
+    return Promise.resolve(ContextMenuCatalogService.getSnapshot());
+  },
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
       return Promise.resolve(null);
@@ -102,7 +159,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
 };
 
 export const rpc = isLocalhost5183
-  ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
+  ? createBirpc<SettingsPageParentFunctions, Record<string, never>>(
     {},
     {
       post: (data) => {

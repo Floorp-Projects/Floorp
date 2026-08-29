@@ -49,6 +49,21 @@ const DEVELOPMENT_WEB_ACTOR_OPTIONS: Partial<WindowActorOptions> =
 const JS_WINDOW_ACTORS: {
   [k: string]: WindowActorOptions;
 } = {
+  NRContextMenu: {
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRContextMenuChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+        DOMContentLoaded: {},
+      },
+    },
+    matches: ["chrome://browser/content/places/*"],
+    includeChrome: true,
+    allFrames: true,
+    remoteTypes: ["parent"],
+  },
   NRAboutPreferences: {
     child: {
       esModuleURI: localPathToResourceURI(

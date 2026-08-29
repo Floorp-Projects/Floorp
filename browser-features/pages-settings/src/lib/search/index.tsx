@@ -11,6 +11,7 @@ import {
   House,
   Keyboard,
   List,
+  Menu,
   MousePointer,
   PanelLeft,
   PencilRuler,
@@ -27,6 +28,7 @@ import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
+import ContextMenuSettings from "@/app/context-menu/page.tsx";
 import About from "@/app/about/noraneko.tsx";
 
 const PREVIEW_LENGTH = 180;
@@ -113,6 +115,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: Keyboard,
     priority: 75,
     Component: KeyboardShortcut,
+  },
+  {
+    id: "context-menu",
+    route: "/features/context-menu",
+    titleKey: "pages.contextMenu",
+    descriptionKey: "contextMenu.description",
+    icon: Menu,
+    priority: 72,
+    Component: ContextMenuSettings,
   },
   {
     id: "web-apps",
