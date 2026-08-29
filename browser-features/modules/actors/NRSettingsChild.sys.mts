@@ -218,7 +218,10 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefGet:", error);
-      throw error;
+      // Keep the legacy preference-read bridge fail-soft. Existing settings
+      // pages use null to select defaults or an unavailable state. New settings
+      // that need typed failures use the explicit preference-state methods.
+      return null;
     }
   }
 

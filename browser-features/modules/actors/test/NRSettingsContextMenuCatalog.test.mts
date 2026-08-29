@@ -128,6 +128,38 @@ async function testChildActorCatalogFailureRejects(): Promise<void> {
   );
 }
 
+async function testLegacyPreferenceReadFailureRemainsFailSoft(): Promise<
+  void
+> {
+  const child = Object.create(NRSettingsChild.prototype) as NRSettingsChild;
+  Object.defineProperty(child, "sendQuery", {
+    value: (): Promise<never> => Promise.reject(new Error("read offline")),
+  });
+
+  const originalConsoleError = console.error;
+  let loggedError: unknown;
+  console.error = (_message?: unknown, error?: unknown) => {
+    loggedError = error;
+  };
+  try {
+    const result = await child.NRSPrefGet({
+      prefName: STRING_CAS_PREF,
+      prefType: "string",
+    });
+    assertEquals(
+      result,
+      null,
+      "the legacy read bridge preserves its nullable compatibility contract",
+    );
+    assert(
+      loggedError instanceof Error && loggedError.message === "read offline",
+      "the swallowed transport failure is still logged for diagnostics",
+    );
+  } finally {
+    console.error = originalConsoleError;
+  }
+}
+
 async function testLegacyPreferenceWriteFailureRemainsFailSoft(): Promise<
   void
 > {
@@ -433,6 +465,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "child actor catalog failure rejects",
       fn: testChildActorCatalogFailureRejects,
+    },
+    {
+      name: "legacy preference read failure remains fail-soft",
+      fn: testLegacyPreferenceReadFailureRemainsFailSoft,
     },
     {
       name: "legacy preference write failure remains fail-soft",
