@@ -101,19 +101,16 @@ function App() {
   useEffect(() => {
     if (isLoading) return;
 
-    const onPrefChanged = async (prefName: string) => {
-      // Skip if this change was triggered by our own save or merge
-      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
-        return;
-      }
-
+    const applyExternalPrefChange = async (
+      prefName: string,
+      remoteStr: string | null,
+    ) => {
       console.info(
         `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
       );
 
       try {
         // 1. Read remote notes from the pref (what sync just wrote)
-        const remoteStr = await rpc.getStringPref(NOTES_PREF_NAME);
         if (!remoteStr) return; // Empty or null — nothing to merge
         const remoteNotes = notesDataToNotes(
           JSON.parse(remoteStr) as NotesData,
@@ -146,6 +143,7 @@ function App() {
         await saveSyncState(syncStateFromNotes(remoteNotes));
 
         // 7. Update React state with merged notes
+        notesRef.current = result.merged;
         setNotes(result.merged);
 
         // 8. Preserve selected note if it still exists, otherwise select first
@@ -166,6 +164,27 @@ function App() {
       } catch (err) {
         console.error("[Floorp Notes] Failed to apply sync merge:", err);
       }
+    };
+
+    // Capture each server-delivered value as soon as its observer fires, then
+    // apply snapshots in notification order. Direct pref observers do not await
+    // async callbacks, so allowing merges to overlap could let an older callback
+    // overwrite a newer server-confirmed merge base.
+    let syncMergeQueue: Promise<void> = Promise.resolve();
+    const onPrefChanged = (prefName: string) => {
+      // Skip if this change was triggered by our own save or merge
+      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
+        return;
+      }
+
+      syncMergeQueue = Promise.all([
+        syncMergeQueue,
+        rpc.getStringPref(NOTES_PREF_NAME),
+      ])
+        .then(([, remoteStr]) => applyExternalPrefChange(prefName, remoteStr))
+        .catch((err) => {
+          console.error("[Floorp Notes] Failed to queue sync merge:", err);
+        });
     };
 
     console.debug("[Floorp Notes] Registering sync pref observer…");

@@ -42,4 +42,16 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
     appSource,
     "saveSyncState(syncStateFromNotes(remoteNotes))",
   );
+  assertStringIncludes(
+    appSource,
+    "let syncMergeQueue: Promise<void> = Promise.resolve()",
+  );
+  assertStringIncludes(
+    appSource,
+    "syncMergeQueue = Promise.all([",
+  );
+  assertStringIncludes(
+    appSource,
+    "notesRef.current = result.merged",
+  );
 });
