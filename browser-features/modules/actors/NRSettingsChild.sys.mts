@@ -102,6 +102,9 @@ export class NRSettingsChild extends JSWindowActorChild {
         getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
           return this.NRSGetContextMenuCatalog();
         },
+        getContextMenuCatalogRevision: (): Promise<number> => {
+          return this.NRSGetContextMenuCatalogRevision();
+        },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },
@@ -181,6 +184,10 @@ export class NRSettingsChild extends JSWindowActorChild {
       );
       throw error;
     }
+  }
+
+  async NRSGetContextMenuCatalogRevision(): Promise<number> {
+    return await this.sendQuery("getContextMenuCatalogRevision") as number;
   }
 
   async NRSPrefGet(params: {

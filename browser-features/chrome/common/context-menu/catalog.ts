@@ -163,15 +163,35 @@ export class ContextMenuCatalogBuilder {
   }
 
   record(surface: ResolvedContextMenuSurface): ContextMenuCatalogSnapshot {
-    this.recordContainer(surface);
-    for (const child of this.#registry.resolveVirtualContainers(surface)) {
-      this.recordContainer(child);
-    }
+    this.recordSurface(surface, true);
     this.#revision++;
     return this.snapshot();
   }
 
-  private recordContainer(surface: ResolvedContextMenuSurface): void {
+  /**
+   * Capture the chrome DOM before Firefox has opened the popup for a concrete
+   * context. The rows are useful to the Hub immediately, but stay incomplete
+   * because popupshowing may still add items or change native visibility.
+   */
+  seed(surface: ResolvedContextMenuSurface): void {
+    this.recordSurface(surface, false);
+    this.#revision++;
+  }
+
+  private recordSurface(
+    surface: ResolvedContextMenuSurface,
+    complete: boolean,
+  ): void {
+    this.recordContainer(surface, complete);
+    for (const child of this.#registry.resolveVirtualContainers(surface)) {
+      this.recordContainer(child, complete);
+    }
+  }
+
+  private recordContainer(
+    surface: ResolvedContextMenuSurface,
+    complete: boolean,
+  ): void {
     const items: ContextMenuItemDescriptor[] = [];
     const elements = Array.from(surface.popup.children);
     const identities = elements.map((element) =>
@@ -219,11 +239,19 @@ export class ContextMenuCatalogBuilder {
     const existingProfile = current.profiles.find((profile) =>
       profile.key === surface.profileKey
     );
+    const existingContainer = existingProfile?.containers.find((container) =>
+      container.key === surface.containerKey
+    );
+    if (
+      !complete &&
+      (existingContainer?.complete ||
+        (existingContainer?.items.length ?? 0) > 0 && items.length === 0)
+    ) return;
     const containers = existingProfile?.containers.map(cloneContainer) ?? [];
     const nextContainer: ContextMenuContainerDescriptor = {
       key: surface.containerKey,
       label: getContainerLabel(surface),
-      complete: true,
+      complete,
       items,
     };
     const containerIndex = containers.findIndex((container) =>

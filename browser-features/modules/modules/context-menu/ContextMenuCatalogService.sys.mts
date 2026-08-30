@@ -24,6 +24,7 @@ interface ContainerContribution {
 export interface ContextMenuCatalogServiceType
   extends ContextMenuCatalogReporter {
   getSnapshot(): ContextMenuCatalogSnapshot;
+  getRevision(): number;
 }
 
 function cloneSerializable<T>(value: T): T {
@@ -41,10 +42,14 @@ function mergeContainer(
   // Every window initially reports placeholder containers. A placeholder from
   // a newly opened window must not erase a complete catalog captured in an
   // older window. A complete report is authoritative even when it is empty.
-  if (!current || incoming.complete || !current.complete) {
-    return incoming;
-  }
-  return current;
+  if (!current || incoming.complete) return incoming;
+  if (current.complete) return current;
+  // Both reports are provisional. A secondary/new window often contributes
+  // the constructor's empty placeholder after the main browser window has
+  // already seeded useful static rows. Preserve the populated observation;
+  // a later populated provisional report is still allowed to update it.
+  if (current.items.length > 0 && incoming.items.length === 0) return current;
+  return incoming;
 }
 
 function containerSequenceKey(
@@ -174,6 +179,10 @@ export class ContextMenuCatalogStore implements ContextMenuCatalogServiceType {
     if (this.#owners.delete(ownerId)) {
       this.#revision++;
     }
+  }
+
+  getRevision(): number {
+    return this.#revision;
   }
 
   getSnapshot(): ContextMenuCatalogSnapshot {

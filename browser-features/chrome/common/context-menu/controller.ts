@@ -175,10 +175,41 @@ export class ContextMenuController {
       }
     });
     this.#configStore.start();
+    this.seedInitialCatalog();
     this.#catalogReporter.report(
       this.#ownerId,
       this.#catalogBuilder.snapshot(),
     );
+  }
+
+  /**
+   * Most browser chrome menus already exist in the document before their first
+   * popupshowing event. Publish those static rows so the Hub is useful on a
+   * cold start. They intentionally remain incomplete until Firefox builds the
+   * menu for a real click context.
+   */
+  private seedInitialCatalog(): void {
+    const seededRootPopups = new Set<Element>();
+    for (const popup of this.#document.querySelectorAll("menupopup")) {
+      try {
+        const surface = this.#registry.resolvePopup(popup, this.#window);
+        if (
+          !surface || surface.popup !== surface.rootPopup ||
+          seededRootPopups.has(surface.rootPopup)
+        ) {
+          continue;
+        }
+        seededRootPopups.add(surface.rootPopup);
+        this.#catalogBuilder.seed(surface);
+      } catch (error) {
+        // One Firefox-owned menu changing shape must not prevent the remaining
+        // adapters, config observation, or popup event handlers from starting.
+        console.error(
+          "[ContextMenuCustomizer] Initial catalog capture failed",
+          error,
+        );
+      }
+    }
   }
 
   destroy(): void {

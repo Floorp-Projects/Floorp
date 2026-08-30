@@ -19,6 +19,7 @@ import { isSecondaryContextMenuDocumentUri } from "../NRContextMenuChild.sys.mts
 interface CatalogServiceModule {
   ContextMenuCatalogService: ContextMenuCatalogReporter & {
     getSnapshot(): ContextMenuCatalogSnapshot;
+    getRevision(): number;
   };
 }
 
@@ -105,6 +106,35 @@ async function testChildActorCatalogQuery(): Promise<void> {
     getSurfaceLabel(result),
     "Settings catalog test",
     "the child actor preserves the structured-clone response",
+  );
+}
+
+async function testCatalogRevisionQueryRoutes(): Promise<void> {
+  const service = getCatalogService();
+  const parent = Object.create(NRSettingsParent.prototype) as NRSettingsParent;
+  assertEquals(
+    await parent.receiveMessage({ name: "getContextMenuCatalogRevision" }),
+    service.getRevision(),
+    "the parent returns the lightweight service revision",
+  );
+
+  const child = Object.create(NRSettingsChild.prototype) as NRSettingsChild;
+  let queryName = "";
+  Object.defineProperty(child, "sendQuery", {
+    value: (name: string): Promise<number> => {
+      queryName = name;
+      return Promise.resolve(42);
+    },
+  });
+  assertEquals(
+    await child.NRSGetContextMenuCatalogRevision(),
+    42,
+    "the child preserves the numeric revision response",
+  );
+  assertEquals(
+    queryName,
+    "getContextMenuCatalogRevision",
+    "the child uses the lightweight revision query name",
   );
 }
 
@@ -427,6 +457,11 @@ async function testProductionDirectCatalogRoute(): Promise<void> {
       "Settings catalog test",
       "the production direct-service route reads the same catalog singleton",
     );
+    assertEquals(
+      await rpc.getContextMenuCatalogRevision(),
+      service.getRevision(),
+      "the production direct route exposes the lightweight revision",
+    );
   } finally {
     service.removeOwner(OWNER_ID);
   }
@@ -462,6 +497,10 @@ export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "parent actor catalog query", fn: testParentActorCatalogQuery },
     { name: "child actor catalog query", fn: testChildActorCatalogQuery },
+    {
+      name: "catalog revision query routes",
+      fn: testCatalogRevisionQueryRoutes,
+    },
     {
       name: "child actor catalog failure rejects",
       fn: testChildActorCatalogFailureRejects,

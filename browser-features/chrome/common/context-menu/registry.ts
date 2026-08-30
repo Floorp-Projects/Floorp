@@ -78,7 +78,7 @@ function documentUriMatches(
 function isGenericBrowserContextPopup(element: Element): boolean {
   return element.localName === "menupopup" &&
     element.id.length > 0 &&
-    element.id.toLocaleLowerCase().includes("context");
+    /context(?:-?menu)?$/i.test(element.id);
 }
 
 function findGenericBrowserRootPopup(popup: Element): Element | null {

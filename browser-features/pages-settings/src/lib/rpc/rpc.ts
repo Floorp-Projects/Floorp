@@ -29,6 +29,7 @@ type SettingsPageDirectFunctions =
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
     getSnapshot(): ContextMenuCatalogSnapshot;
+    getRevision(): number;
   };
 }
 
@@ -140,12 +141,39 @@ const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
   import.meta.url ?? "",
 );
 
+let settingsBridgeReceiverReady: Promise<Window> | null = null;
+
+function registerSettingsBridgeReceiver(
+  callback: (data: string) => void,
+): Promise<void> {
+  settingsBridgeReceiverReady = waitForSettingsBridge().then((page) => {
+    page.NRSettingsRegisterReceiveCallback(callback);
+    return page;
+  });
+  return settingsBridgeReceiverReady.then(() => undefined);
+}
+
+function sendSettingsBridgeMessage(data: string): Promise<void> {
+  if (!settingsBridgeReceiverReady) {
+    return Promise.reject(
+      new Error("NRSettings page RPC receiver was not initialized"),
+    );
+  }
+  return settingsBridgeReceiverReady.then((page) => page.NRSettingsSend(data));
+}
+
 const directServicesFunctions: SettingsPageDirectFunctions = {
   getContextMenuCatalog: () => {
     const { ContextMenuCatalogService } = ChromeUtils.importESModule(
       "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
     ) as ContextMenuCatalogServiceModule;
     return Promise.resolve(ContextMenuCatalogService.getSnapshot());
+  },
+  getContextMenuCatalogRevision: () => {
+    const { ContextMenuCatalogService } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
+    ) as ContextMenuCatalogServiceModule;
+    return Promise.resolve(ContextMenuCatalogService.getRevision());
   },
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
@@ -236,16 +264,11 @@ export const rpc = isLocalhost5183
   ? createBirpc<SettingsPageParentFunctions, Record<string, never>>(
     {},
     {
-      post: (data) => {
-        void waitForSettingsBridge()
-          .then((page) => page.NRSettingsSend(data))
-          .catch((error) => console.error(error));
-      },
-      on: (callback) => {
-        void waitForSettingsBridge()
-          .then((page) => page.NRSettingsRegisterReceiveCallback(callback))
-          .catch((error) => console.error(error));
-      },
+      // birpc waits for the value returned by `on` before sending its first
+      // request. Return the bridge promises so an early catalog request cannot
+      // race the actor callback installation and be silently dropped.
+      post: sendSettingsBridgeMessage,
+      on: registerSettingsBridgeReceiver,
       serialize: (v) => JSON.stringify(v),
       deserialize: (v) => JSON.parse(v),
     },

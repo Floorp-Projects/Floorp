@@ -4,6 +4,7 @@ import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
     getSnapshot(): ContextMenuCatalogSnapshot;
+    getRevision(): number;
   };
 }
 
@@ -23,6 +24,8 @@ export class NRSettingsParent extends JSWindowActorParent {
     switch (message.name) {
       case "getContextMenuCatalog":
         return ContextMenuCatalogService.getSnapshot();
+      case "getContextMenuCatalogRevision":
+        return ContextMenuCatalogService.getRevision();
       case "getBoolPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;

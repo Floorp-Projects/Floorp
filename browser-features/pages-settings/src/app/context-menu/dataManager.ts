@@ -105,6 +105,15 @@ function persistenceVersionsEqual(
   return first.enabled === second.enabled && first.config === second.config;
 }
 
+function catalogHasInitialWebPageItems(
+  catalog: ContextMenuCatalogSnapshot,
+): boolean {
+  return (catalog.surfaces.find((surface) => surface.key === "browser.content")
+    ?.profiles.find((profile) => profile.key === "page")?.containers.find(
+      (container) => container.key === "root",
+    )?.items.length ?? 0) > 0;
+}
+
 export function useContextMenuSettings(): ContextMenuSettingsModel {
   const [snapshot, setSnapshot] = useState<ContextMenuPersistenceSnapshot>(
     DEFAULT_PERSISTENCE_SNAPSHOT,
@@ -124,6 +133,11 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
   const [catalogError, setCatalogError] = useState(false);
   const persistenceRef = useRef<ContextMenuPersistence | null>(null);
   const unsafeConfigVersionRef = useRef<string | null>(null);
+  const catalogMountedRef = useRef(false);
+  const catalogRefreshRef = useRef<Promise<void> | null>(null);
+  const catalogRefreshQueuedRef = useRef(false);
+  const catalogRevisionRef = useRef(-1);
+  const catalogHasInitialWebPageItemsRef = useRef(false);
   const configBlockingError = snapshot.blockingErrors.config;
   const enabledBlockingError = snapshot.blockingErrors.enabled;
   const unsafePersistenceError = configBlockingError?.kind === "unsafe-config"
@@ -143,9 +157,56 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
   const effectiveEnabledUnavailable = enabledUnavailable ||
     enabledPreferenceTypeError?.preference === "enabled";
 
+  const refreshCatalog = useCallback((showLoading: boolean): Promise<void> => {
+    if (showLoading && catalogMountedRef.current) setCatalogLoading(true);
+    const inFlight = catalogRefreshRef.current;
+    if (inFlight) {
+      // One extra pass is enough to observe every report that landed while the
+      // current snapshot RPC was in progress. Keep returning the shared promise
+      // so manual refresh waits for the queued pass as well.
+      catalogRefreshQueuedRef.current = true;
+      return inFlight;
+    }
+
+    const request = Promise.resolve().then(async () => {
+      do {
+        catalogRefreshQueuedRef.current = false;
+        try {
+          const nextCatalog = await rpc.getContextMenuCatalog();
+          if (!catalogMountedRef.current) return;
+          if (nextCatalog.revision < catalogRevisionRef.current) continue;
+          catalogRevisionRef.current = nextCatalog.revision;
+          catalogHasInitialWebPageItemsRef.current =
+            catalogHasInitialWebPageItems(nextCatalog);
+          setCatalog(nextCatalog);
+          setCatalogError(false);
+        } catch (error) {
+          if (!catalogMountedRef.current) return;
+          console.error(
+            "[ContextMenuSettings] Failed to load the catalog",
+            error,
+          );
+          setCatalogError(true);
+        }
+      } while (
+        catalogMountedRef.current && catalogRefreshQueuedRef.current
+      );
+    });
+    catalogRefreshRef.current = request;
+    void request.finally(() => {
+      if (catalogRefreshRef.current === request) {
+        catalogRefreshRef.current = null;
+        if (catalogMountedRef.current) setCatalogLoading(false);
+      }
+    });
+    return request;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
+    let catalogRetryTimer: number | undefined;
+    let catalogRevisionPollInFlight = false;
     let preferencesLoaded = false;
     let refreshInFlight = false;
     const loadPreferences = async (initial: boolean) => {
@@ -266,52 +327,76 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
       if (initial) setLoading(false);
     };
 
-    const loadCatalog = async () => {
-      try {
-        const initialCatalog = await rpc.getContextMenuCatalog();
-        if (cancelled) return;
-        setCatalog(initialCatalog);
-        setCatalogError(false);
-      } catch (error) {
-        if (cancelled) return;
-        console.error(
-          "[ContextMenuSettings] Failed to load the catalog",
-          error,
-        );
-        setCatalog(null);
-        setCatalogError(true);
-      } finally {
-        if (!cancelled) setCatalogLoading(false);
-      }
-    };
-
     // Preference and catalog RPCs are independent: a menu that has not been
     // discovered yet must not delay the global enable/reset controls.
-    const refreshFocusedPreferences = () => {
+    const refreshFocusedData = () => {
       if (preferencesLoaded) void loadPreferences(false);
+      void refreshCatalog(false);
     };
-    const refreshVisiblePreferences = () => {
+    const refreshVisibleData = () => {
       if (globalThis.document.visibilityState === "visible") {
-        refreshFocusedPreferences();
+        refreshFocusedData();
       }
     };
-    globalThis.addEventListener("focus", refreshFocusedPreferences);
+    catalogMountedRef.current = true;
+    globalThis.addEventListener("focus", refreshFocusedData);
     globalThis.document.addEventListener(
       "visibilitychange",
-      refreshVisiblePreferences,
+      refreshVisibleData,
     );
-    void Promise.all([loadPreferences(true), loadCatalog()]);
+    const catalogRevisionPoll = globalThis.setInterval(() => {
+      if (
+        cancelled || catalogRevisionPollInFlight ||
+        globalThis.document.visibilityState !== "visible"
+      ) return;
+      catalogRevisionPollInFlight = true;
+      void (async () => {
+        try {
+          const revision = await rpc.getContextMenuCatalogRevision();
+          if (!cancelled && revision > catalogRevisionRef.current) {
+            await refreshCatalog(false);
+          }
+        } catch {
+          // Focus/visibility refresh and the manual button remain available if
+          // a mixed-version or temporarily unavailable actor cannot probe.
+        } finally {
+          catalogRevisionPollInFlight = false;
+        }
+      })();
+    }, 1_500);
+    const retryDelays = [250, 1_000, 3_000] as const;
+    const loadCatalogUntilPopulated = async (attempt = 0): Promise<void> => {
+      await refreshCatalog(attempt === 0);
+      if (
+        cancelled || catalogHasInitialWebPageItemsRef.current ||
+        attempt >= retryDelays.length
+      ) return;
+
+      // Schedule relative to the completed request. Fixed startup timers can
+      // all coalesce into one slow in-flight RPC and leave an empty snapshot
+      // with no retry remaining.
+      catalogRetryTimer = globalThis.setTimeout(() => {
+        void loadCatalogUntilPopulated(attempt + 1);
+      }, retryDelays[attempt]);
+    };
+    void Promise.all([loadPreferences(true), loadCatalogUntilPopulated()]);
     return () => {
       cancelled = true;
-      globalThis.removeEventListener("focus", refreshFocusedPreferences);
+      catalogMountedRef.current = false;
+      catalogRefreshQueuedRef.current = false;
+      globalThis.removeEventListener("focus", refreshFocusedData);
       globalThis.document.removeEventListener(
         "visibilitychange",
-        refreshVisiblePreferences,
+        refreshVisibleData,
       );
+      globalThis.clearInterval(catalogRevisionPoll);
+      if (catalogRetryTimer !== undefined) {
+        globalThis.clearTimeout(catalogRetryTimer);
+      }
       unsubscribe?.();
       persistenceRef.current = null;
     };
-  }, []);
+  }, [refreshCatalog]);
 
   const updateConfig = useCallback(
     (update: (current: Readonly<ContextMenuConfig>) => ContextMenuConfig) =>
@@ -441,21 +526,8 @@ export function useContextMenuSettings(): ContextMenuSettingsModel {
   }, [effectiveLoadErrorKind, unsafePersistenceError]);
 
   const reloadCatalog = useCallback(async () => {
-    setCatalogLoading(true);
-    try {
-      const nextCatalog = await rpc.getContextMenuCatalog();
-      setCatalog(nextCatalog);
-      setCatalogError(false);
-    } catch (error) {
-      console.error(
-        "[ContextMenuSettings] Failed to reload the catalog",
-        error,
-      );
-      setCatalogError(true);
-    } finally {
-      setCatalogLoading(false);
-    }
-  }, []);
+    await refreshCatalog(true);
+  }, [refreshCatalog]);
 
   return {
     enabled: snapshot.projected.enabled,

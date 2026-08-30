@@ -324,6 +324,98 @@ function testControllerOwnerIdsAreProcessUnique(): void {
   }
 }
 
+function testControllerSeedsInitialPopupWithoutClaimingComplete(): void {
+  document.getElementById(TEST_POPUP_ID)?.remove();
+  const popup = appendTestNode("menupopup", TEST_POPUP_ID);
+  (document.body ?? document.documentElement).appendChild(popup);
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"], hidden: ["test.a"] }),
+  );
+  try {
+    const first = appendTestNode("menuitem", "runtime-a");
+    const second = appendTestNode("menuitem", "runtime-b");
+    popup.append(first, second);
+
+    fixture.controller.attach();
+    const seededRoot = fixture.reporter.reports.at(-1)?.surfaces.find(
+      (surface) => surface.key === TEST_SURFACE_KEY,
+    )?.profiles[0]?.containers.find((container) => container.key === "root");
+    assertEquals(
+      seededRoot?.complete,
+      false,
+      "attach-time DOM capture stays provisional until a real popup context is observed",
+    );
+    assertEquals(
+      seededRoot?.items.map((item) => item.key).join(","),
+      "test.a,test.b",
+      "attach-time DOM capture publishes existing menu rows",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,runtime-b",
+      "catalog seeding never applies the configured order",
+    );
+    assert(
+      !first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "catalog seeding never applies configured visibility",
+    );
+
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runPopupShowingReconcile(fixture.callbacks);
+    const observedRoot = fixture.reporter.reports.at(-1)?.surfaces.find(
+      (surface) => surface.key === TEST_SURFACE_KEY,
+    )?.profiles[0]?.containers.find((container) => container.key === "root");
+    assertEquals(
+      observedRoot?.complete,
+      true,
+      "the first real popup observation replaces the provisional catalog",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-a",
+      "normal popup reconciliation still applies the configured order",
+    );
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+function testCatalogSeedDoesNotRegressToEmptyClone(): void {
+  document.getElementById(TEST_POPUP_ID)?.remove();
+  const populatedPopup = appendTestNode("menupopup", TEST_POPUP_ID);
+  const emptyClone = appendTestNode("menupopup", TEST_POPUP_ID);
+  (document.body ?? document.documentElement).append(
+    populatedPopup,
+    emptyClone,
+  );
+  try {
+    populatedPopup.appendChild(appendTestNode("menuitem", "runtime-a"));
+    const registry = new ContextMenuRegistry([createTestAdapter()]);
+    const populatedSurface = registry.resolvePopup(populatedPopup, window);
+    const emptySurface = registry.resolvePopup(emptyClone, window);
+    assert(populatedSurface !== null, "the populated root resolves");
+    assert(emptySurface !== null, "the empty clone resolves");
+
+    const builder = new ContextMenuCatalogBuilder(registry);
+    builder.seed(populatedSurface);
+    builder.seed(emptySurface);
+    const snapshot = builder.snapshot();
+    const root = snapshot.surfaces[0]?.profiles[0]?.containers.find(
+      (container) => container.key === "root",
+    );
+    assertEquals(
+      root?.items[0]?.key,
+      "test.a",
+      "an empty clone cannot erase a populated seed for the same logical container",
+    );
+    assertEquals(root?.complete, false, "the retained seed stays provisional");
+  } finally {
+    populatedPopup.remove();
+    emptyClone.remove();
+  }
+}
+
 function testNativeSlotMergeAndSameParentGuard(): void {
   const popup = appendPopup();
   const otherParent = appendTestNode("div");
@@ -627,6 +719,24 @@ function testRegistryGenericBrowserContextFallback(): void {
   } finally {
     popup.remove();
   }
+
+  for (
+    const firefoxContextId of [
+      "SyncedTabsSidebarContext",
+      "SyncedTabsSidebarTabsFilterContext",
+    ]
+  ) {
+    const firefoxContext = appendTestNode("menupopup", firefoxContextId);
+    (document.body ?? document.documentElement).appendChild(firefoxContext);
+    try {
+      assert(
+        registry.resolvePopup(firefoxContext, window) !== null,
+        `${firefoxContextId} remains covered by the generic context fallback`,
+      );
+    } finally {
+      firefoxContext.remove();
+    }
+  }
 }
 
 function testKnownFirefoxPopupSurfacesAreDocumentScoped(): void {
@@ -695,6 +805,22 @@ function testKnownFirefoxPopupSurfacesAreDocumentScoped(): void {
     null,
     "an arbitrary browser menupopup must not be captured",
   );
+  for (
+    const ordinaryPopupId of [
+      "menu_newUserContextPopup",
+      "userContext-indicator-menu",
+    ]
+  ) {
+    const ordinaryPopup = createPopupForDocument(
+      browserDocumentURI,
+      ordinaryPopupId,
+    );
+    assertEquals(
+      registry.resolvePopup(ordinaryPopup, window),
+      null,
+      `${ordinaryPopupId} is an ordinary left-click menu, not a context menu`,
+    );
+  }
 }
 
 function testFirefoxPopupCloneSelectorsStayNarrow(): void {
@@ -3268,6 +3394,14 @@ const tests: TestCase[] = [
   {
     name: "controller defers apply and rolls back",
     fn: testControllerAppliesAfterNativeBuilderAndRollsBack,
+  },
+  {
+    name: "controller seeds an initial popup without claiming completeness",
+    fn: testControllerSeedsInitialPopupWithoutClaimingComplete,
+  },
+  {
+    name: "catalog seed does not regress to an empty clone",
+    fn: testCatalogSeedDoesNotRegressToEmptyClone,
   },
   {
     name: "controller waits for native builder microtasks",

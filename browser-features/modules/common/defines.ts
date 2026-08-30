@@ -81,6 +81,7 @@ export interface NRSettingsAtomicPreferenceFunctions {
 
 export interface NRContextMenuSettingsFunctions {
   getContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot>;
+  getContextMenuCatalogRevision(): Promise<number>;
 }
 
 export interface NRExperimemmtParentFunctions {

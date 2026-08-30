@@ -319,6 +319,81 @@ async function testCatalogRefreshKeepsEditorState(): Promise<void> {
   }
 }
 
+async function testIncompleteCatalogUsesAllItemsView(): Promise<void> {
+  const rendered = await renderEditor();
+  try {
+    const rootContainer = TEST_CATALOG.surfaces[0].profiles[0].containers[0];
+    rendered.rerender({
+      ...TEST_CATALOG,
+      revision: 2,
+      surfaces: [{
+        ...TEST_CATALOG.surfaces[0],
+        profiles: [{
+          ...TEST_CATALOG.surfaces[0].profiles[0],
+          containers: [{ ...rootContainer, complete: false }],
+        }],
+      }],
+    }, false);
+
+    assertEquals(
+      findButton(rendered.host, "All items").getAttribute("aria-pressed"),
+      "true",
+      "a provisional cold-start catalog exposes all structurally known rows",
+    );
+    assert(
+      findButton(rendered.host, "Current condition").disabled,
+      "current-condition filtering stays unavailable until Firefox observes a real context",
+    );
+    assertEquals(
+      rendered.host.querySelectorAll("[data-context-menu-plain-row]").length,
+      4,
+      "nativeHidden from the provisional DOM does not hide catalog rows",
+    );
+  } finally {
+    rendered.cleanup();
+  }
+}
+
+async function testInitialSelectionPrefersWebPage(): Promise<void> {
+  const rendered = await renderEditor();
+  try {
+    const originalSurface = TEST_CATALOG.surfaces[0];
+    const genericSurface = {
+      ...originalSurface,
+      key: "browser.chrome.customizationPanelItemContextMenu",
+      label: "Customization Panel Item",
+    };
+    const contentSurface = {
+      ...originalSurface,
+      key: "browser.content",
+      profiles: [{
+        ...originalSurface.profiles[0],
+        key: "page",
+        label: "Page",
+      }],
+    };
+    rendered.rerender({
+      ...TEST_CATALOG,
+      revision: 2,
+      surfaces: [genericSurface, contentSurface],
+    }, false);
+
+    const selects = rendered.host.querySelectorAll("select");
+    assertEquals(
+      selects[0]?.value,
+      "browser.content",
+      "generic discovered menus do not displace Web page as the useful initial target",
+    );
+    assertEquals(
+      findButton(rendered.host, "Page").getAttribute("aria-pressed"),
+      "true",
+      "the Web page context opens on its Page profile",
+    );
+  } finally {
+    rendered.cleanup();
+  }
+}
+
 async function testPlacementIncludesConditionalGapAndRestoresFocus(): Promise<
   void
 > {
@@ -431,6 +506,14 @@ const tests: TestCase[] = [
   {
     name: "catalog refresh keeps editor state",
     fn: testCatalogRefreshKeepsEditorState,
+  },
+  {
+    name: "incomplete catalog uses the all-items view",
+    fn: testIncompleteCatalogUsesAllItemsView,
+  },
+  {
+    name: "initial selection prefers the Web page menu",
+    fn: testInitialSelectionPrefersWebPage,
   },
   {
     name: "placement includes conditional gap and restores focus",

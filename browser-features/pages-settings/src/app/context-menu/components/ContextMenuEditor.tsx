@@ -418,6 +418,21 @@ function findContainer(
     containers[0];
 }
 
+function hasCompleteContainer(
+  profile: ContextMenuCatalogSnapshot["surfaces"][number]["profiles"][number],
+): boolean {
+  return profile.containers.some((container) => container.complete);
+}
+
+function findInitialSurface(catalog: ContextMenuCatalogSnapshot) {
+  return catalog.surfaces.find((surface) =>
+    surface.key === "browser.content"
+  ) ??
+    catalog.surfaces.find((surface) =>
+      surface.profiles.some(hasCompleteContainer)
+    ) ?? catalog.surfaces[0];
+}
+
 export function ContextMenuEditor({
   catalog,
   config,
@@ -457,15 +472,25 @@ export function ContextMenuEditor({
 
   const selectedSurface =
     catalog.surfaces.find((surface) => surface.key === selectedSurfaceKey) ??
-      catalog.surfaces[0];
+      findInitialSurface(catalog);
   const selectedProfile =
     selectedSurface?.profiles.find((profile) =>
       profile.key === selectedProfileKey
-    ) ?? selectedSurface?.profiles[0];
+    ) ??
+      selectedSurface?.profiles.find((profile) =>
+        selectedSurface.key === "browser.content" && profile.key === "page"
+      ) ?? selectedSurface?.profiles.find(hasCompleteContainer) ??
+      selectedSurface?.profiles[0];
   const selectedContainer = findContainer(
     selectedProfile?.containers ?? [],
     selectedContainerKey,
   );
+  // nativeHidden only describes a real Firefox click context after the popup
+  // has been observed. A cold-start DOM seed must expose all rows instead of
+  // presenting that provisional visibility as the current condition.
+  const effectiveViewMode: ViewMode = selectedContainer?.complete === false
+    ? "all"
+    : viewMode;
 
   const target = useMemo<ContextMenuLevelTarget | null>(() => {
     if (!selectedSurface || !selectedProfile || !selectedContainer) {
@@ -505,10 +530,10 @@ export function ContextMenuEditor({
 
   const displayedEntries = useMemo(
     () =>
-      viewMode === "all"
+      effectiveViewMode === "all"
         ? orderedEntries
         : orderedEntries.filter(({ item }) => !item.nativeHidden),
-    [orderedEntries, viewMode],
+    [effectiveViewMode, orderedEntries],
   );
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const localizedSeparatorLabel = t("contextMenu.separator");
@@ -713,7 +738,7 @@ export function ContextMenuEditor({
       !item || !isContextMenuItemMovable(item)
     ) return;
     placementSessionRef.current += 1;
-    setPlacementOrigin({ itemKey, query, viewMode });
+    setPlacementOrigin({ itemKey, query, viewMode: effectiveViewMode });
     setPlacementPending(false);
     setFocusedDestinationId("");
     setMoveStatus("");
@@ -786,7 +811,7 @@ export function ContextMenuEditor({
     destinationRefs.current.get(nextDestination.id)?.focus();
   };
 
-  const sortableView = viewMode === "current" && !normalizedQuery &&
+  const sortableView = effectiveViewMode === "current" && !normalizedQuery &&
     !placementOrigin;
   const renderMenuItem = (
     { item, sortableId }: (typeof filteredEntries)[number],
@@ -1074,11 +1099,12 @@ export function ContextMenuEditor({
                   <button
                     key={mode}
                     type="button"
-                    aria-pressed={viewMode === mode}
+                    aria-pressed={effectiveViewMode === mode}
                     aria-controls="context-menu-items-list"
-                    disabled={placementOrigin !== null}
+                    disabled={placementOrigin !== null ||
+                      (!selectedContainer.complete && mode === "current")}
                     className={`btn btn-sm join-item ${
-                      viewMode === mode ? "btn-primary" : "btn-ghost"
+                      effectiveViewMode === mode ? "btn-primary" : "btn-ghost"
                     }`}
                     onClick={() => {
                       setViewMode(mode);
@@ -1095,14 +1121,14 @@ export function ContextMenuEditor({
               </div>
               <p className="text-sm text-base-content/60">
                 {t(
-                  viewMode === "current"
+                  effectiveViewMode === "current"
                     ? "contextMenu.viewCurrentDescription"
                     : "contextMenu.viewAllDescription",
                 )}
               </p>
             </div>
 
-            {viewMode === "all" && !placementOrigin && (
+            {effectiveViewMode === "all" && !placementOrigin && (
               <p className="rounded-lg border border-info/30 bg-info/10 p-3 text-sm text-base-content/70">
                 {t("contextMenu.allModeDragHelp")}
               </p>
@@ -1161,7 +1187,8 @@ export function ContextMenuEditor({
                   {t("contextMenu.noItems")}
                 </p>
               )
-              : displayedEntries.length === 0 && viewMode === "current"
+              : displayedEntries.length === 0 &&
+                  effectiveViewMode === "current"
               ? (
                 <p className="rounded-lg bg-base-100 p-6 text-center text-sm text-base-content/60">
                   {t("contextMenu.noCurrentItems")}

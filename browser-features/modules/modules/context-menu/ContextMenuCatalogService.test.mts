@@ -202,6 +202,42 @@ function testIncompleteOwnerDoesNotEraseCompleteContainer(): void {
   );
 }
 
+function testEmptyIncompleteOwnerDoesNotEraseSeededContainer(): void {
+  const store = new ContextMenuCatalogStore();
+  const seeded = makeSurface("browser.content", "Seeded");
+  seeded.profiles[0].containers[0].complete = false;
+  seeded.profiles[0].containers[0].items[0].label = "Seeded item";
+  const placeholder = makeSurface("browser.content", "Placeholder");
+  placeholder.profiles[0].containers[0] = {
+    key: "root",
+    label: "Root",
+    complete: false,
+    items: [],
+  };
+
+  store.report("main-window", makeSnapshot("en-US", [seeded]));
+  store.report("secondary-window", makeSnapshot("en-US", [placeholder]));
+
+  let root = store.getSnapshot().surfaces[0].profiles[0].containers[0];
+  assertEquals(
+    root.items[0]?.label,
+    "Seeded item",
+    "a later empty placeholder cannot erase useful provisional rows",
+  );
+  assertEquals(root.complete, false, "the retained DOM seed stays provisional");
+
+  const newerSeed = makeSurface("browser.content", "Newer seed");
+  newerSeed.profiles[0].containers[0].complete = false;
+  newerSeed.profiles[0].containers[0].items[0].label = "Newer seeded item";
+  store.report("secondary-window", makeSnapshot("en-US", [newerSeed], 2));
+  root = store.getSnapshot().surfaces[0].profiles[0].containers[0];
+  assertEquals(
+    root.items[0]?.label,
+    "Newer seeded item",
+    "a later populated provisional report can refresh an older seed",
+  );
+}
+
 function testUnchangedContainersAreNotReagedByUnrelatedReports(): void {
   const store = new ContextMenuCatalogStore();
   const contentA = makeSurface("browser.content", "Content");
@@ -306,6 +342,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "incomplete owner preserves complete containers",
       fn: testIncompleteOwnerDoesNotEraseCompleteContainer,
+    },
+    {
+      name: "empty incomplete owner preserves seeded containers",
+      fn: testEmptyIncompleteOwnerDoesNotEraseSeededContainer,
     },
     {
       name: "unrelated owner reports do not re-age unchanged containers",

@@ -32,12 +32,45 @@ const EMPTY_CATALOG: ContextMenuCatalogSnapshot = {
   surfaces: [],
 };
 
+function createCatalog(revision: number, itemKey: string) {
+  return {
+    schemaVersion: CONTEXT_MENU_SCHEMA_VERSION,
+    revision,
+    locale: "en-US",
+    surfaces: [{
+      key: "browser.content",
+      label: "Web page",
+      profiles: [{
+        key: "page",
+        label: "Page",
+        containers: [{
+          key: "root",
+          label: "Web page",
+          complete: true,
+          items: [{
+            key: itemKey,
+            label: itemKey,
+            kind: "command" as const,
+            source: "firefox" as const,
+            customizable: true,
+            movable: true,
+            hideable: true,
+            orderAnchor: true,
+            nativeHidden: false,
+          }],
+        }],
+      }],
+    }],
+  } satisfies ContextMenuCatalogSnapshot;
+}
+
 type RpcMethodName =
   | "getBoolPrefState"
   | "getStringPrefState"
   | "compareAndSetBoolPref"
   | "compareAndSetStringPref"
-  | "getContextMenuCatalog";
+  | "getContextMenuCatalog"
+  | "getContextMenuCatalogRevision";
 
 type RpcOverrides = Pick<typeof rpc, RpcMethodName>;
 
@@ -45,6 +78,94 @@ interface RenderedModel {
   current(): ContextMenuSettingsModel;
   flush(): Promise<void>;
   cleanup(): void;
+}
+
+interface CapturedTimer {
+  pending(): boolean;
+  run(): void;
+  restore(): void;
+}
+
+function captureTimeout(delay: number): CapturedTimer {
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  const capturedId = 2_147_000_001;
+  let callback: (() => void) | null = null;
+  globalThis.setTimeout = ((
+    handler: unknown,
+    timeout?: number,
+    ...args: unknown[]
+  ) => {
+    if (timeout === delay && typeof handler === "function") {
+      callback = () => Reflect.apply(handler, globalThis, args);
+      return capturedId;
+    }
+    return Reflect.apply(originalSetTimeout, globalThis, [
+      handler,
+      timeout,
+      ...args,
+    ]) as number;
+  }) as typeof globalThis.setTimeout;
+  globalThis.clearTimeout = ((id?: number) => {
+    if (id === capturedId) {
+      callback = null;
+      return;
+    }
+    Reflect.apply(originalClearTimeout, globalThis, [id]);
+  }) as typeof globalThis.clearTimeout;
+  return {
+    pending: () => callback !== null,
+    run: () => {
+      const current = callback;
+      callback = null;
+      assert(current !== null, `a ${delay}ms timer should be pending`);
+      current();
+    },
+    restore: () => {
+      globalThis.setTimeout = originalSetTimeout;
+      globalThis.clearTimeout = originalClearTimeout;
+    },
+  };
+}
+
+function captureInterval(delay: number): CapturedTimer {
+  const originalSetInterval = globalThis.setInterval;
+  const originalClearInterval = globalThis.clearInterval;
+  const capturedId = 2_147_000_002;
+  let callback: (() => void) | null = null;
+  globalThis.setInterval = ((
+    handler: unknown,
+    timeout?: number,
+    ...args: unknown[]
+  ) => {
+    if (timeout === delay && typeof handler === "function") {
+      callback = () => Reflect.apply(handler, globalThis, args);
+      return capturedId;
+    }
+    return Reflect.apply(originalSetInterval, globalThis, [
+      handler,
+      timeout,
+      ...args,
+    ]) as number;
+  }) as typeof globalThis.setInterval;
+  globalThis.clearInterval = ((id?: number) => {
+    if (id === capturedId) {
+      callback = null;
+      return;
+    }
+    Reflect.apply(originalClearInterval, globalThis, [id]);
+  }) as typeof globalThis.clearInterval;
+  return {
+    pending: () => callback !== null,
+    run: () => {
+      assert(callback !== null, `a ${delay}ms interval should be active`);
+      callback();
+    },
+    restore: () => {
+      globalThis.setInterval = originalSetInterval;
+      globalThis.clearInterval = originalClearInterval;
+    },
+  };
 }
 
 function installRpcOverrides(overrides: RpcOverrides): () => void {
@@ -96,11 +217,13 @@ function createStoredRpc(initialConfig: string | null): {
   overrides: RpcOverrides;
   setEnabled(value: boolean | null, typeMismatch?: boolean): void;
   setConfig(value: string | null, typeMismatch?: boolean): void;
+  setCatalog(value: ContextMenuCatalogSnapshot): void;
 } {
   let enabled: boolean | null = true;
   let enabledTypeMismatch = false;
   let config = initialConfig;
   let configTypeMismatch = false;
+  let catalog = EMPTY_CATALOG;
   return {
     overrides: {
       getBoolPrefState: () =>
@@ -141,7 +264,8 @@ function createStoredRpc(initialConfig: string | null): {
         config = value;
         return Promise.resolve({ updated: true, currentValue: value });
       },
-      getContextMenuCatalog: () => Promise.resolve(EMPTY_CATALOG),
+      getContextMenuCatalog: () => Promise.resolve(catalog),
+      getContextMenuCatalogRevision: () => Promise.resolve(catalog.revision),
     },
     setEnabled: (value, typeMismatch = false) => {
       enabled = value;
@@ -151,7 +275,267 @@ function createStoredRpc(initialConfig: string | null): {
       config = value;
       configTypeMismatch = typeMismatch;
     },
+    setCatalog: (value) => {
+      catalog = value;
+    },
   };
+}
+
+async function testFocusRefreshesCatalogWithoutRevisionRegression(): Promise<
+  void
+> {
+  const stored = createStoredRpc(null);
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  try {
+    assertEquals(
+      rendered.current().catalog?.revision,
+      0,
+      "initial catalog snapshot is exposed",
+    );
+
+    stored.setCatalog(createCatalog(2, "new-item"));
+    globalThis.dispatchEvent(new Event("focus"));
+    await rendered.flush();
+    assertEquals(
+      rendered.current().catalog?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items[0]?.key,
+      "new-item",
+      "focus adopts a catalog reported after the Hub first loaded",
+    );
+
+    stored.setCatalog(createCatalog(1, "stale-item"));
+    globalThis.dispatchEvent(new Event("focus"));
+    await rendered.flush();
+    assertEquals(
+      rendered.current().catalog?.revision,
+      2,
+      "a stale response cannot regress the accepted catalog revision",
+    );
+  } finally {
+    rendered.cleanup();
+    restoreRpc();
+  }
+}
+
+async function testFocusQueuesCatalogRefreshDuringInflightRequest(): Promise<
+  void
+> {
+  const stored = createStoredRpc(null);
+  let resolveInitial: ((catalog: ContextMenuCatalogSnapshot) => void) | null =
+    null;
+  let catalogCalls = 0;
+  stored.overrides.getContextMenuCatalog = () => {
+    catalogCalls++;
+    if (catalogCalls === 1) {
+      return new Promise((resolve) => {
+        resolveInitial = resolve;
+      });
+    }
+    return Promise.resolve(createCatalog(2, "queued-item"));
+  };
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  try {
+    globalThis.dispatchEvent(new Event("focus"));
+    await act(async () => {
+      assert(resolveInitial !== null, "the initial catalog request is pending");
+      resolveInitial(EMPTY_CATALOG);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+
+    assertEquals(
+      catalogCalls,
+      2,
+      "focus queues one fresh snapshot after the in-flight request",
+    );
+    assertEquals(
+      rendered.current().catalog?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items[0]?.key,
+      "queued-item",
+      "the queued request observes a report that the older request missed",
+    );
+  } finally {
+    rendered.cleanup();
+    restoreRpc();
+  }
+}
+
+async function testSlowEmptyInitialRequestRetriesAfterCompletion(): Promise<
+  void
+> {
+  const retryTimer = captureTimeout(250);
+  const stored = createStoredRpc(null);
+  let resolveInitial: ((catalog: ContextMenuCatalogSnapshot) => void) | null =
+    null;
+  let catalogCalls = 0;
+  stored.overrides.getContextMenuCatalog = () => {
+    catalogCalls++;
+    if (catalogCalls === 1) {
+      return new Promise((resolve) => {
+        resolveInitial = resolve;
+      });
+    }
+    return Promise.resolve(createCatalog(1, "startup-item"));
+  };
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  try {
+    assertEquals(
+      catalogCalls,
+      1,
+      "startup retries wait for the slow request instead of coalescing into it",
+    );
+    assert(
+      !retryTimer.pending(),
+      "no retry timer starts before the slow request completes",
+    );
+
+    await act(async () => {
+      assert(resolveInitial !== null, "the slow initial request is pending");
+      resolveInitial(EMPTY_CATALOG);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+    assert(
+      retryTimer.pending(),
+      "an empty result schedules its retry after completion",
+    );
+    await act(async () => {
+      retryTimer.run();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+    assertEquals(
+      catalogCalls,
+      2,
+      "an empty result schedules a retry relative to request completion",
+    );
+    assertEquals(
+      rendered.current().catalog?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items[0]?.key,
+      "startup-item",
+      "the completion-relative retry adopts the initialized browser catalog",
+    );
+  } finally {
+    rendered.cleanup();
+    restoreRpc();
+    retryTimer.restore();
+  }
+}
+
+async function testUnmountCancelsCatalogRetry(): Promise<void> {
+  const retryTimer = captureTimeout(250);
+  const stored = createStoredRpc(null);
+  let catalogCalls = 0;
+  stored.overrides.getContextMenuCatalog = () => {
+    catalogCalls++;
+    return Promise.resolve(EMPTY_CATALOG);
+  };
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  let cleaned = false;
+  try {
+    assert(retryTimer.pending(), "the empty catalog schedules a startup retry");
+    rendered.cleanup();
+    cleaned = true;
+    assert(!retryTimer.pending(), "unmount clears the captured retry timer");
+    assertEquals(
+      catalogCalls,
+      1,
+      "unmount clears the pending startup retry timer",
+    );
+  } finally {
+    if (!cleaned) rendered.cleanup();
+    restoreRpc();
+    retryTimer.restore();
+  }
+}
+
+async function testRevisionPollingRefreshesSameWindowPopup(): Promise<void> {
+  const revisionPoll = captureInterval(1_500);
+  const stored = createStoredRpc(null);
+  stored.setCatalog(createCatalog(1, "initial-item"));
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  try {
+    assert(revisionPoll.pending(), "the visible Hub probes catalog revisions");
+    stored.setCatalog(createCatalog(2, "popup-item"));
+    await act(async () => {
+      revisionPoll.run();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+    assertEquals(
+      rendered.current().catalog?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items[0]?.key,
+      "popup-item",
+      "a same-window popup report is adopted without focus or visibility changes",
+    );
+  } finally {
+    rendered.cleanup();
+    restoreRpc();
+    revisionPoll.restore();
+  }
+}
+
+async function testRevisionPollingRecoversAfterProbeFailure(): Promise<void> {
+  const revisionPoll = captureInterval(1_500);
+  const stored = createStoredRpc(null);
+  stored.setCatalog(createCatalog(1, "initial-item"));
+  let revisionCalls = 0;
+  stored.overrides.getContextMenuCatalogRevision = () => {
+    revisionCalls++;
+    if (revisionCalls === 1) {
+      return Promise.reject(new Error("temporary bridge failure"));
+    }
+    return Promise.resolve(2);
+  };
+  const restoreRpc = installRpcOverrides(stored.overrides);
+  const rendered = await renderModel();
+  try {
+    stored.setCatalog(createCatalog(2, "recovered-item"));
+    await act(async () => {
+      revisionPoll.run();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+    assertEquals(
+      rendered.current().catalog?.revision,
+      1,
+      "a failed lightweight probe leaves the accepted catalog unchanged",
+    );
+
+    await act(async () => {
+      revisionPoll.run();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await rendered.flush();
+    assertEquals(
+      revisionCalls,
+      2,
+      "the next interval retries after a temporary revision probe failure",
+    );
+    assertEquals(
+      rendered.current().catalog?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items[0]?.key,
+      "recovered-item",
+      "a later successful probe refreshes the catalog",
+    );
+  } finally {
+    rendered.cleanup();
+    restoreRpc();
+    revisionPoll.restore();
+  }
 }
 
 async function testFocusSynchronizesExternalPreferences(): Promise<void> {
@@ -335,6 +719,30 @@ async function testFailedRepairRestoresSpecificErrorOnFocus(): Promise<void> {
 }
 
 const tests: TestCase[] = [
+  {
+    name: "focus refreshes catalog without revision regression",
+    fn: testFocusRefreshesCatalogWithoutRevisionRegression,
+  },
+  {
+    name: "focus queues catalog refresh during an in-flight request",
+    fn: testFocusQueuesCatalogRefreshDuringInflightRequest,
+  },
+  {
+    name: "slow empty initial request retries after completion",
+    fn: testSlowEmptyInitialRequestRetriesAfterCompletion,
+  },
+  {
+    name: "unmount cancels catalog retry",
+    fn: testUnmountCancelsCatalogRetry,
+  },
+  {
+    name: "revision polling refreshes a same-window popup",
+    fn: testRevisionPollingRefreshesSameWindowPopup,
+  },
+  {
+    name: "revision polling recovers after a probe failure",
+    fn: testRevisionPollingRecoversAfterProbeFailure,
+  },
   {
     name: "focus synchronizes external preferences",
     fn: testFocusSynchronizesExternalPreferences,
