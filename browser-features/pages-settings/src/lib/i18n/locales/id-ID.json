@@ -136,11 +136,11 @@
             "openLinks": "Open links that request a new window",
             "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
             "openCurrentWindowOrTab": "Current window or tab",
-            "openNewWindow": "New window",
-            "openNewTab": "New tab",
-            "taskbarPreviews": "Show tab previews in the taskbar",
-            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
-            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+            "openNewWindow": "Jendela baru",
+            "openNewTab": "Tab baru",
+            "taskbarPreviews": "Tampilkan pratinjau tab di bilah tugas",
+            "taskbarPreviewsDescription": "Ini hanya mengubah tampilan bilah tugas Windows. Ini tidak membuat jendela peramban baru.",
+            "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
         "lepton-preferences": {
             "title": "Pengaturan Lepton",
