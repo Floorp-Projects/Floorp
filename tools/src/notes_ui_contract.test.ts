@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertStringIncludes } from "@std/assert";
+import { assert, assertFalse, assertStringIncludes } from "@std/assert";
 
 Deno.test("Notes production UI exposes stable automation hooks", async () => {
   const root = new URL(
@@ -28,4 +28,30 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
   ) {
     assertStringIncludes(combined, `data-testid=\"${hook}\"`);
   }
+
+  const appSource = sources[0];
+  const localSaveStart = appSource.indexOf("const saveNotesToStorage");
+  const localSaveEnd = appSource.indexOf("const debouncedSave", localSaveStart);
+  assert(localSaveStart >= 0 && localSaveEnd > localSaveStart);
+  const localSaveSection = appSource.slice(localSaveStart, localSaveEnd);
+  assertFalse(
+    localSaveSection.includes("saveSyncState"),
+    "A local pref write must not advance the server-confirmed merge base",
+  );
+  assertStringIncludes(
+    appSource,
+    "saveSyncState(syncStateFromNotes(remoteNotes))",
+  );
+  assertStringIncludes(
+    appSource,
+    "let syncMergeQueue: Promise<void> = Promise.resolve()",
+  );
+  assertStringIncludes(
+    appSource,
+    "syncMergeQueue = Promise.all([",
+  );
+  assertStringIncludes(
+    appSource,
+    "notesRef.current = result.merged",
+  );
 });
