@@ -140,8 +140,10 @@ function App() {
           isWritingFromSyncRef.current = false;
         }
 
-        // 6. Save updated sync state
-        await saveSyncState(syncStateFromNotes(result.merged));
+        // 6. Advance the merge base only to data that Firefox Sync actually
+        // delivered from the server. `result.merged` may still be awaiting a
+        // later upload, so treating it as synced here can hide a real conflict.
+        await saveSyncState(syncStateFromNotes(remoteNotes));
 
         // 7. Update React state with merged notes
         setNotes(result.merged);
@@ -194,31 +196,8 @@ function App() {
     try {
       setSaveStatus("saving");
       await saveNotes(buildNotesData(notesToSave));
-
-      // Update sync base after local save.
-      // NOTE: We advance lastSyncedSnapshots on local save so that the next
-      // incoming sync can diff against what we just wrote. This means a true
-      // conflict (local edit + remote edit to the same note between syncs)
-      // will be detected and a conflict copy created, which is the desired
-      // behaviour. The trade-off is that if the remote side never receives
-      // our change (e.g. sync is disabled), a subsequent remote change to the
-      // same note would appear as a unilateral remote edit rather than a
-      // conflict. This is acceptable because Firefox Sync is expected to
-      // deliver the local change before the remote one arrives.
-      try {
-        const syncState = await loadSyncState();
-        const updatedState = syncStateFromNotes(notesToSave);
-        syncState.lastSyncedSnapshots = updatedState.lastSyncedSnapshots;
-        syncState.lastSyncTime = updatedState.lastSyncTime;
-        await saveSyncState(syncState);
-      } catch (syncErr) {
-        // Non-critical: sync state update failure shouldn't block the UI
-        console.warn(
-          "[Floorp Notes] Failed to update sync state after save:",
-          syncErr,
-        );
-      }
-
+      // A pref write is only a local save. The merge base must remain at the
+      // last server-delivered snapshot until Sync confirms newer remote data.
       setSaveStatus("saved");
     } catch (error) {
       console.error("Failed to save note data:", error);
