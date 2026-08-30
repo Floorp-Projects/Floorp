@@ -141,25 +141,60 @@ const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
   import.meta.url ?? "",
 );
 
-let settingsBridgeReceiverReady: Promise<Window> | null = null;
+export function createSettingsBridgeTransport(
+  resolveBridge: () => Promise<Window> = waitForSettingsBridge,
+): {
+  post(data: string): Promise<void>;
+  on(callback: (data: string) => void): Promise<void>;
+} {
+  let receiveCallback: ((data: string) => void) | null = null;
+  let receiverReady: Promise<Window> | null = null;
+
+  const ensureReceiver = (): Promise<Window> => {
+    if (receiverReady) return receiverReady;
+    if (!receiveCallback) {
+      return Promise.reject(
+        new Error("NRSettings page RPC receiver was not initialized"),
+      );
+    }
+
+    const attempt = resolveBridge().then((page) => {
+      if (!receiveCallback) {
+        throw new Error("NRSettings page RPC receiver was not initialized");
+      }
+      page.NRSettingsRegisterReceiveCallback(receiveCallback);
+      return page;
+    });
+    receiverReady = attempt;
+    void attempt.catch(() => {
+      // birpc only invokes `on` once. Clear a failed attempt so a later `post`
+      // can register the retained callback again instead of reusing a rejected
+      // promise forever.
+      if (receiverReady === attempt) receiverReady = null;
+    });
+    return attempt;
+  };
+
+  return {
+    on: (callback) => {
+      receiveCallback = callback;
+      receiverReady = null;
+      return ensureReceiver().then(() => undefined);
+    },
+    post: (data) => ensureReceiver().then((page) => page.NRSettingsSend(data)),
+  };
+}
+
+const settingsBridgeTransport = createSettingsBridgeTransport();
 
 function registerSettingsBridgeReceiver(
   callback: (data: string) => void,
 ): Promise<void> {
-  settingsBridgeReceiverReady = waitForSettingsBridge().then((page) => {
-    page.NRSettingsRegisterReceiveCallback(callback);
-    return page;
-  });
-  return settingsBridgeReceiverReady.then(() => undefined);
+  return settingsBridgeTransport.on(callback);
 }
 
 function sendSettingsBridgeMessage(data: string): Promise<void> {
-  if (!settingsBridgeReceiverReady) {
-    return Promise.reject(
-      new Error("NRSettings page RPC receiver was not initialized"),
-    );
-  }
-  return settingsBridgeReceiverReady.then((page) => page.NRSettingsSend(data));
+  return settingsBridgeTransport.post(data);
 }
 
 const directServicesFunctions: SettingsPageDirectFunctions = {
