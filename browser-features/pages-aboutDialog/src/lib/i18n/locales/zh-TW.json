@@ -7,40 +7,40 @@
       "esr": "ESR"
     },
     "update": {
-      "idle": "Check for updates",
-      "checking": "Checking for updates…",
-      "checkFailed": "Couldn't check for updates. Try again later.",
-      "upToDate": "You're up to date.",
-      "downloading": "Downloading update… {{progress}}",
-      "applying": "Installing update…",
-      "readyToRestart": "Update ready — restart to apply.",
-      "restarting": "Restarting…",
-      "policyDisabled": "Updates are managed by your organisation.",
-      "downloadFailed": "Download failed. Please try again.",
-      "noUpdater": "Updates are managed externally.",
-      "available": "Download update {{version}}",
-      "tryAgain": "Try again",
-      "restartToApply": "Restart to apply update"
+      "idle": "檢查更新",
+      "checking": "正在檢查更新…",
+      "checkFailed": "目前無法檢查更新。請稍後再試。",
+      "upToDate": "已是最新的版本。",
+      "downloading": "正在下載更新… {{progress}}",
+      "applying": "正在安裝更新…",
+      "readyToRestart": "更新完成 — 重啟以套用。",
+      "restarting": "重新啟動中…",
+      "policyDisabled": "更新由您的組織負責管理。",
+      "downloadFailed": "下載失敗，請重試。",
+      "noUpdater": "更新由外部管理。",
+      "available": "下載更新 {{version}}",
+      "tryAgain": "再試一次",
+      "restartToApply": "重啟以套用更新"
     },
     "community": {
-      "title": "Join the Community"
+      "title": "加入官方社區"
     },
     "help": {
-      "title": "Help & Support",
+      "title": "幫助和支援",
       "support": "支援"
     },
     "sponsor": {
-      "title": "Support the Project",
-      "button": "Become a Sponsor"
+      "title": "支援這個專案",
+      "button": "成為贊助者"
     },
     "links": {
-      "releaseNotes": "Release Notes",
-      "help": "Floorp Help",
-      "feedback": "Submit Feedback",
+      "releaseNotes": "版本更新一覽",
+      "help": "Floorp 幫助",
+      "feedback": "提交回饋",
       "licensing": "授權",
-      "terms": "Terms of Service",
-      "privacy": "Privacy Policy"
+      "terms": "服務條款",
+      "privacy": "隱私權政策"
     },
-    "trademark": "The name Floorp is a trademark in Japan."
+    "trademark": "「Floorp」在日本為註冊商標。"
   }
 }
