@@ -124,23 +124,23 @@
             "openNext": "在目前的分頁旁開啟",
             "other": "其他分頁設定",
             "doubleClickToClose": "連按兩下關閉分頁",
-            "tabDragToSplitCreate": "Allow creating split view by dragging tabs",
+            "tabDragToSplitCreate": "允許透過拖曳分頁來建立分割檢視",
             "minWidth": "最小分頁寬度",
             "minWidthError": "分頁寬度必須介於 {{min}} 和 {{max}} 像素之間。",
             "minHeight": "最小分頁高度",
             "minHeightError": "分頁高度必須介於 {{min}} 和 {{max}} 像素之間。"
         },
         "tabWindowBehavior": {
-            "title": "Tab and window behavior",
-            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
-            "openLinks": "Open links that request a new window",
-            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
-            "openCurrentWindowOrTab": "Current window or tab",
-            "openNewWindow": "New window",
-            "openNewTab": "New tab",
-            "taskbarPreviews": "Show tab previews in the taskbar",
-            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
-            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+            "title": "分頁與視窗的運作方式",
+            "description": "控制連結的開啟位置，並區分瀏覽器視窗與 Windows 工作列預覽。",
+            "openLinks": "開啟會要求在新視窗中開啟的連結",
+            "openLinksDescription": "選擇要求在新視窗開啟的連結應在當前視窗、新視窗或新分頁中開啟。",
+            "openCurrentWindowOrTab": "當前視窗或分頁",
+            "openNewWindow": "新視窗",
+            "openNewTab": "新分頁",
+            "taskbarPreviews": "在工作列上顯示分頁預覽",
+            "taskbarPreviewsDescription": "此更改僅會變更 Windows 工作列的顯示，並不會建立額外的瀏覽器視窗。",
+            "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
         },
         "lepton-preferences": {
             "title": "Lepton 設定",
@@ -216,12 +216,12 @@
             "exampleFullUrl": "僅匹配 Gmail URL"
         },
         "tabStacks": {
-            "title": "Tab Stacks",
-            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "title": "分頁堆",
+            "description": "將分頁分組堆疊，在分頁列中以一圖示顯示，下方則排列其他分頁堆。",
             "enableOrDisable": "啟用/停用",
-            "enableTabStacks": "Enable tab stacks",
-            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
-            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
+            "enableTabStacks": "啟用分頁堆",
+            "enableTabStacksDescription": "分頁堆會將分頁分組以圖示顯示在分頁列中。變更此設定後，必須重新啟動 {{productName}}。",
+            "needRestartDescriptionForEnableAndDisable": "要完全啟用或停用分頁堆，必須重新啟動 {{productName}}。"
         },
         "uiCustomization": {
             "title": "介面客製化",
@@ -322,10 +322,10 @@
         "versionInfo": "版本",
         "license": "授權",
         "noraneko": {
-            "logoAlt": "Browser Logo",
-            "description": "Noraneko is a browser as testhead of Floorp 12. Floorp is based on Firefox & Noraneko.",
-            "communityCredit": "Made by Noraneko Community with ❤",
-            "repositoryLabel": "GitHub Repository: Floorp-Projects/Floorp"
+            "logoAlt": "瀏覽器標誌",
+            "description": "Noraneko 是 Floorp 12 的測試版瀏覽器。Floorp 是以 Firefox 與 Noraneko 為基礎開發的。",
+            "communityCredit": "由 Noraneko 社群用 ❤ 製作",
+            "repositoryLabel": "GitHub 儲存庫：Floorp-Projects/Floorp"
         }
     },
     "updates": {
@@ -480,12 +480,12 @@
         "uninstall": "移除",
         "container": "容器",
         "noContainer": "無容器",
-        "setContainer": "Set Container",
-        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
-        "containerDeleted": "Container deleted",
+        "setContainer": "設定容器",
+        "containerDescription": "選擇此應用程式將在哪个 Firefox 容器中開啟。容器可隔離 Cookie 和網站資料。",
+        "containerDeleted": "容器已刪除",
         "resetContainer": "重設",
         "save": "儲存",
-        "errorSettingContainer": "Failed to set container"
+        "errorSettingContainer": "無法設定容器"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -504,7 +504,7 @@
             "stopped": "已停止",
             "enabledBadge": "已啟用",
             "disabledBadge": "已停用",
-            "serverToken": "Server Token",
+            "serverToken": "伺服器憑證",
             "copyToken": "複製"
         },
         "controlsCard": {
@@ -531,8 +531,8 @@
     },
     "mouseGesture": {
         "description": "使用滑鼠手勢控制瀏覽器。",
-        "saving": "Saving mouse gesture settings…",
-        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
+        "saving": "保存滑鼠手勢設定…",
+        "saveError": "無法儲存滑鼠手勢設定。先前設定仍然有效。",
         "generalSettings": "一般設定",
         "generalSettingsDescription": "滑鼠手勢基本設定",
         "enabled": "啟用滑鼠手勢",
@@ -564,15 +564,15 @@
         "actionDescription": "手勢說明",
         "rockerGesturesEnabled": "啟用搖桿手勢",
         "rockerGesturesDescription": "按一下滑鼠右鍵並向左移動可返回，按一下滑鼠右鍵並向右移動可向前。(實驗性質)",
-        "rockerLeftRight": "Left → Right",
-        "rockerLeftRightDescription": "Hold left button, then click right button",
-        "rockerRightLeft": "Right → Left",
-        "rockerRightLeftDescription": "Hold right button, then click left button",
+        "rockerLeftRight": "左 → 右",
+        "rockerLeftRightDescription": "按住左鍵，然後點擊右鍵",
+        "rockerRightLeft": "右 → 左",
+        "rockerRightLeftDescription": "按住右鍵，然後點擊左鍵",
         "wheelGesturesEnabled": "啟用滾輪手勢",
         "wheelScrollUp": "向上捲動",
-        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollUpDescription": "按住右鍵的同時向上滾動滾輪時的動作",
         "wheelScrollDown": "向下捲動",
-        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
+        "wheelScrollDownDescription": "按住右鍵的同時向下滾動滾輪時的操作",
         "actions": {
             "gecko-back": "返回",
             "gecko-forward": "前進",
@@ -648,26 +648,26 @@
             "gecko-scroll-to-bottom": "捲動至底端",
             "gecko-workspace-next": "切換到下一個工作空間",
             "gecko-workspace-previous": "切換到上一個工作空間",
-            "floorp-toggle-zen-mode": "Toggle Zen Mode",
-            "gecko-close-other-tabs": "Close Other Tabs",
-            "gecko-close-tabs-to-start": "Close Tabs to Left",
-            "gecko-close-tabs-to-end": "Close Tabs to Right",
+            "floorp-toggle-zen-mode": "開關 Zen 模式",
+            "gecko-close-other-tabs": "關閉其他分頁",
+            "gecko-close-tabs-to-start": "關閉左方所有分頁",
+            "gecko-close-tabs-to-end": "關閉左方所有分頁",
             "gecko-scroll-line-up": "向上捲動",
             "gecko-scroll-line-down": "向下捲動",
-            "floorp-toggle-command-palette": "Toggle Command Palette",
-            "floorp-open-settings": "Open Settings",
+            "floorp-toggle-command-palette": "開關指令面板",
+            "floorp-open-settings": "開啟設定",
             "floorp-open-hub": "開啟 Floorp Hub",
-            "floorp-toggle-share-mode": "Toggle Share Mode",
-            "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown",
-            "floorp-split-view-open-left": "Split View Left",
-            "floorp-split-view-open-right": "Split View Right",
-            "floorp-split-view-open-top": "Split View Top",
-            "floorp-split-view-open-bottom": "Split View Bottom",
-            "floorp-split-view-close": "Close Split View",
-            "floorp-split-view-swap-panes": "Swap Split Panes",
-            "floorp-split-view-cycle-layout": "Cycle Split Layout",
-            "floorp-split-view-add-pane": "Add Pane to Split View",
-            "floorp-split-view-remove-pane": "Remove Pane from Split View"
+            "floorp-toggle-share-mode": "開關分享模式",
+            "floorp-copy-page-url-as-markdown": "以 Markdown 格式複製分頁網址",
+            "floorp-split-view-open-left": "在左側新增分割檢視",
+            "floorp-split-view-open-right": "在右側新增分割檢視",
+            "floorp-split-view-open-top": "在上方新增分割檢視",
+            "floorp-split-view-open-bottom": "在下方新增分割檢視",
+            "floorp-split-view-close": "關閉分割檢視",
+            "floorp-split-view-swap-panes": "交換分割檢視順序",
+            "floorp-split-view-cycle-layout": "輪換分割檢視佈局",
+            "floorp-split-view-add-pane": "新增分割檢視窗格",
+            "floorp-split-view-remove-pane": "移除分割檢視中的窗格"
         },
         "edit": "編輯",
         "duplicate": "複製",
@@ -703,7 +703,7 @@
         "shortcut": "快速鍵",
         "actions": "動作",
         "actionLabels": {
-            "floorp-edit-tab-url": "Edit Tab URL"
+            "floorp-edit-tab-url": "編輯分頁網址"
         },
         "notSet": "未設定",
         "add": "新增",
