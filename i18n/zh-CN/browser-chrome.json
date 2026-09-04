@@ -1,6 +1,6 @@
 {
   "tab-refresh": {
-    "reload": "Reload tab"
+    "reload": "重新加载标签页"
   },
   "undo-closed-tab": {
     "label": "恢复关闭的标签页",
@@ -137,9 +137,9 @@
     "name": "私密身份"
   },
   "tabInlineEdit": {
-    "contextMenu": "Edit Tab URL",
-    "inputLabel": "Tab URL",
-    "keyboardAction": "Edit Tab URL"
+    "contextMenu": "编辑标签页网址",
+    "inputLabel": "标签页网址",
+    "keyboardAction": "编辑标签页网址"
   },
   "mouseGesture": {
     "actions": {
@@ -516,9 +516,9 @@
     "stepIndicator": "第 {{current}} 步 / 总 {{total}} 步",
     "backToCommands": "返回命令列表",
     "openUrl": "打开网址",
-    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepLabel": "在身份中打开",
     "openUrlContainerStepPlaceholder": "选择一个身份……",
-    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefault": "工作空间默认值",
     "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "在新标签中打开网址",
     "openUrlStepLabel": "输入要打开的网址",
@@ -585,7 +585,7 @@
     "bookmarkSwitcherDescription": "打开已收藏的页面",
     "bookmarkSwitcherStepLabel": "选择书签",
     "bookmarkSwitcherStepPlaceholder": "搜索或选择一个书签……",
-    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepLabel": "在身份中打开",
     "bookmarkSwitcherContainerStepPlaceholder": "选择一个身份……",
     "bookmarkSwitcherWhereBackgroundTab": "后台标签页",
     "bookmarkSwitcherWhereBackgroundTabDesc": "在新建的后台标签页中打开",
