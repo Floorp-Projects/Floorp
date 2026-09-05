@@ -238,7 +238,9 @@
       "floorp-split-view-swap-panes": "Swap Split Panes",
       "floorp-split-view-cycle-layout": "Cycle Split Layout",
       "floorp-split-view-add-pane": "Add Pane to Split View",
-      "floorp-split-view-remove-pane": "Remove Pane from Split View"
+      "floorp-split-view-remove-pane": "Remove Pane from Split View",
+      "floorp-open-clips": "Open Clips",
+      "floorp-clip-this-page": "Add this page to Clips"
     },
     "descriptions": {
       "gecko-back": "Navigate back to the previous page",
@@ -268,7 +270,9 @@
       "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
       "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
       "floorp-split-view-add-pane": "Add a new pane to the active split view",
-      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
+      "floorp-split-view-remove-pane": "Remove the last pane from the active split view",
+      "floorp-open-clips": "Show the Clips panel in the sidebar.",
+      "floorp-clip-this-page": "Put the current page's title and URL into Clips."
     }
   },
   "qrCode": {

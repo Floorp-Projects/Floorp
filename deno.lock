@@ -4463,6 +4463,7 @@
       "optionalPeers": [
         "typescript"
       ],
+      "deprecated": true,
       "bin": true
     },
     "tsdown@0.22.0_typescript@5.9.3_unrun@0.3.0": {
@@ -4953,6 +4954,29 @@
           "npm:react-i18next@^16.5.0",
           "npm:vite@^7.1.4"
         ]
+      },
+      "browser-features/pages-clips": {
+        "packageJson": {
+          "dependencies": [
+            "npm:@tailwindcss/vite@^4.1.18",
+            "npm:@types/react-dom@^19.2.3",
+            "npm:@types/react@^19.2.7",
+            "npm:@vitejs/plugin-react-swc@^4.2.2",
+            "npm:autoprefixer@^10.4.23",
+            "npm:birpc@4",
+            "npm:daisyui@^5.5.14",
+            "npm:i18next-browser-languagedetector@^8.2.0",
+            "npm:i18next@^25.7.3",
+            "npm:lucide-react@0.562",
+            "npm:postcss@^8.5.6",
+            "npm:react-dom@^19.2.3",
+            "npm:react-i18next@^16.5.0",
+            "npm:react@^19.2.3",
+            "npm:tailwindcss@^4.1.18",
+            "npm:vite-tsconfig-paths@^6.0.3",
+            "npm:vite@^7.3.0"
+          ]
+        }
       },
       "browser-features/pages-modal-child": {
         "packageJson": {

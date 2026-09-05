@@ -177,6 +177,21 @@ const JS_WINDOW_ACTORS: {
     ],
     ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },
+  NRClips: {
+    parent: {
+      esModuleURI: localPathToResourceURI("../actors/NRClipsParent.sys.mts"),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRClipsChild.sys.mts"),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    // Same shape as NRSettings: in dev the page is a loopback Vite page in
+    // a webIsolated process, and the actor is never created without these.
+    matches: [...DEVELOPMENT_LOOPBACK_MATCHES, "chrome://noraneko-clips/*"],
+    ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
+  },
   NRAppConstants: {
     parent: {
       esModuleURI: localPathToResourceURI(

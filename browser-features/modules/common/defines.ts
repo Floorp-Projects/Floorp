@@ -39,6 +39,11 @@ export interface AvailableExperiment {
   experimentData: Experiment;
 }
 
+export interface ActiveTabInfo {
+  title: string;
+  url: string;
+}
+
 export interface NRSettingsParentFunctions {
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
@@ -46,6 +51,27 @@ export interface NRSettingsParentFunctions {
   setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
+}
+
+/**
+ * What the Clips page needs from the parent process: the tab it should offer
+ * to clip, and the few OS-side things a clip can point at.
+ */
+export interface NRClipsParentFunctions {
+  /** The active tab of the browser window this page belongs to. */
+  getActiveTabInfo(): Promise<ActiveTabInfo | null>;
+  /** Open a web URL in a normal tab. Non-web schemes are refused. */
+  openLinkInTab(url: string): Promise<void>;
+  /** The plain text on the system clipboard, for clipboard-history mode. */
+  readClipboardText(): Promise<string | null>;
+  /** Whether the path a clip remembers still points at something. */
+  fileExists(path: string): Promise<boolean>;
+  /** Show the file in the OS file manager, selected. */
+  revealFile(path: string): Promise<boolean>;
+  /** Open the file with whatever the OS uses for it. */
+  launchFile(path: string): Promise<boolean>;
+  /** When this browser session started; used by "clear on exit". */
+  getSessionStartTime(): Promise<number>;
 }
 
 export interface NRExperimemmtParentFunctions {

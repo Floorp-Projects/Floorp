@@ -20,6 +20,15 @@ const osIconRaw = import.meta.glob("../icons/os.svg", {
 
 const osIcon = svgToDataUrl(Object.values(osIconRaw)[0]);
 
+const clipsIconRaw = import.meta.glob("../icons/clips.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as { [key: string]: string };
+
+const clipsIcon = svgToDataUrl(Object.values(clipsIconRaw)[0]);
+import { clipsEnabled } from "../../clips/clips-panel-list.ts";
+
 export type StaticPanelConfig = {
   url: string;
   icon: string;
@@ -97,6 +106,22 @@ function getConditionalPanels(): StaticPanelData {
         icon: osIcon,
         l10n: "floorp-os-sidebar",
         defaultWidth: 600,
+      };
+    }
+  } catch (_e) {
+    console.error("Failed to get conditional panels:", _e);
+  }
+
+  // Clips rides a Flasco; FloorpClipsGate leaves the verdict in this pref.
+  try {
+    if (clipsEnabled()) {
+      conditionalPanels["floorp//clips"] = {
+        url: import.meta.env.DEV
+          ? "http://localhost:5189"
+          : "chrome://noraneko-clips/content/index.html",
+        icon: clipsIcon,
+        l10n: "clips-sidebar",
+        defaultWidth: 400,
       };
     }
   } catch (_e) {
