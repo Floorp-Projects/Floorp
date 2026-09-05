@@ -182,7 +182,7 @@ export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
           "floorp.tabs.showPinnedTabsTitle",
           false,
         ),
-        tabDubleClickToClose: Services.prefs.getBoolPref(
+        tabDoubleClickToClose: Services.prefs.getBoolPref(
           "browser.tabs.closeTabByDblclick",
           false,
         ),
@@ -218,7 +218,7 @@ export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         tabMinHeight: 30,
         tabMinWidth: 76,
         tabPinTitle: false,
-        tabDubleClickToClose: false,
+        tabDoubleClickToClose: false,
         tabOpenPosition: -1,
       },
       uiCustomization: {

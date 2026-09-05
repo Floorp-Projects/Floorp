@@ -129,8 +129,8 @@ export function Tab() {
           </label>
           <Switch
             id="double-click-close"
-            checked={!!getValues("tabDubleClickToClose")}
-            onChange={(e) => setValue("tabDubleClickToClose", e.target.checked)}
+            checked={!!getValues("tabDoubleClickToClose")}
+            onChange={(e) => setValue("tabDoubleClickToClose", e.target.checked)}
           />
         </div>
 

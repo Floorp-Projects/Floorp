@@ -23,7 +23,7 @@ function constructInSolidRoot(construct: () => void): void {
 
 function withTabConfigPatch(
   patch: {
-    tabDubleClickToClose?: boolean;
+    tabDoubleClickToClose?: boolean;
     tabOpenPosition?: number;
     tabScrollEnabled?: boolean;
   },
@@ -36,8 +36,8 @@ function withTabConfigPatch(
       ...prev,
       tab: {
         ...prev.tab,
-        tabDubleClickToClose:
-          patch.tabDubleClickToClose ?? prev.tab.tabDubleClickToClose,
+        tabDoubleClickToClose:
+          patch.tabDoubleClickToClose ?? prev.tab.tabDoubleClickToClose,
         tabOpenPosition: patch.tabOpenPosition ?? prev.tab.tabOpenPosition,
         tabScroll: {
           ...prev.tab.tabScroll,
@@ -57,7 +57,7 @@ function testTabDoubleClickCloseSyncsPrefWhenConstructed(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
       constructInSolidRoot(() => {
         new TabDoubleClickClose();
       });
