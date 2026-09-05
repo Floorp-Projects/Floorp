@@ -65,6 +65,7 @@ export class FloorpPrivateContainer {
         () => {
           this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
         },
+        "floorp.private-container.open-link",
       );
     }, import.meta.hot);
   }

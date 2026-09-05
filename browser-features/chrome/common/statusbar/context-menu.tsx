@@ -22,6 +22,7 @@ export function ContextMenu() {
       label={label()}
       type="checkbox"
       id="toggle_statusBar"
+      data-floorp-context-menu-key="floorp.statusbar.toggle"
       data-toolbar-id="nora-statusbar"
       checked={manager.showStatusBar()}
       onCommand={() =>

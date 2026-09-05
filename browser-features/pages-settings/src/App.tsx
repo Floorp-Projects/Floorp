@@ -13,6 +13,7 @@ import About from "./app/about/noraneko.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
+import ContextMenuSettings from "@/app/context-menu/page.tsx";
 import Updates from "@/app/updates/page.tsx";
 import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
 import { AppBackground } from "@/components/app-background.tsx";
@@ -58,6 +59,10 @@ export default function App() {
               <Route
                 path="/features/shortcuts"
                 element={<KeyboardShortcut />}
+              />
+              <Route
+                path="/features/context-menu"
+                element={<ContextMenuSettings />}
               />
               <Route path="/about/browser" element={<About />} />
               <Route path="/about/updates" element={<Updates />} />

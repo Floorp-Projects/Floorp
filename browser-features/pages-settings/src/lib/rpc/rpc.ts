@@ -1,12 +1,108 @@
-import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
+import type {
+  NRContextMenuSettingsFunctions,
+  NRSettingsAtomicPreferenceFunctions,
+  NRSettingsParentFunctions,
+  PrefCompareAndSetResult,
+  PrefReadResult,
+} from "../../../../modules/common/defines.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
 
-// deno-lint-ignore no-explicit-any
-declare const Services: any;
-// deno-lint-ignore no-explicit-any
-declare const ChromeUtils: any;
-// deno-lint-ignore no-explicit-any
-declare const Cu: any;
+type SettingsPageParentFunctions =
+  & NRSettingsParentFunctions
+  & NRSettingsAtomicPreferenceFunctions
+  & NRContextMenuSettingsFunctions;
+
+interface LegacySettingsDirectFunctions {
+  selectFolder(): Promise<null>;
+  getRandomImageFromFolder(path: string): Promise<null>;
+  sendToNRPanelSidebarChild(
+    method: string,
+    ...args: unknown[]
+  ): Promise<unknown>;
+}
+
+type SettingsPageDirectFunctions =
+  & SettingsPageParentFunctions
+  & LegacySettingsDirectFunctions;
+
+interface ContextMenuCatalogServiceModule {
+  ContextMenuCatalogService: {
+    getSnapshot(): ContextMenuCatalogSnapshot;
+    getRevision(): number;
+  };
+}
+
+interface DirectPreferenceService {
+  readonly PREF_INVALID: number;
+  readonly PREF_BOOL: number;
+  readonly PREF_INT: number;
+  readonly PREF_STRING: number;
+  getPrefType(prefName: string): number;
+  getBoolPref(prefName: string): boolean;
+  getIntPref(prefName: string): number;
+  getStringPref(prefName: string): string;
+  setBoolPref(prefName: string, value: boolean): void;
+  setIntPref(prefName: string, value: number): void;
+  setStringPref(prefName: string, value: string): void;
+}
+
+function compareAndSetDirectPreference<T extends boolean | string>(
+  prefName: string,
+  expectedValue: T | null,
+  prefValue: T,
+  prefType: number,
+  read: () => T,
+  write: (value: T) => void,
+): Promise<PrefCompareAndSetResult<T>> {
+  const currentType = Services.prefs.getPrefType(prefName);
+  if (
+    currentType !== Services.prefs.PREF_INVALID && currentType !== prefType
+  ) {
+    return Promise.resolve({
+      updated: false,
+      currentValue: null,
+      typeMismatch: true,
+    });
+  }
+  const currentValue = currentType === prefType ? read() : null;
+  if (currentValue !== expectedValue) {
+    return Promise.resolve({ updated: false, currentValue });
+  }
+  write(prefValue);
+  return Promise.resolve({ updated: true, currentValue: prefValue });
+}
+
+function readDirectPreference<T extends boolean | string>(
+  prefName: string,
+  prefType: number,
+  read: () => T,
+): Promise<PrefReadResult<T>> {
+  const currentType = Services.prefs.getPrefType(prefName);
+  return Promise.resolve({
+    value: currentType === prefType ? read() : null,
+    typeMismatch: currentType !== Services.prefs.PREF_INVALID &&
+      currentType !== prefType,
+  });
+}
+
+interface DirectActor {
+  [method: string]: (...args: unknown[]) => unknown;
+}
+
+declare const Services: { prefs: DirectPreferenceService };
+declare const ChromeUtils: {
+  importESModule(moduleUri: string): unknown;
+};
+declare const Cu: {
+  getGlobalForObject(value: unknown): {
+    browsingContext: {
+      currentWindowGlobal: {
+        getActor(name: string): DirectActor;
+      };
+    };
+  };
+};
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -45,7 +141,75 @@ const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
   import.meta.url ?? "",
 );
 
-const directServicesFunctions: NRSettingsParentFunctions = {
+export function createSettingsBridgeTransport(
+  resolveBridge: () => Promise<Window> = waitForSettingsBridge,
+): {
+  post(data: string): Promise<void>;
+  on(callback: (data: string) => void): Promise<void>;
+} {
+  let receiveCallback: ((data: string) => void) | null = null;
+  let receiverReady: Promise<Window> | null = null;
+
+  const ensureReceiver = (): Promise<Window> => {
+    if (receiverReady) return receiverReady;
+    if (!receiveCallback) {
+      return Promise.reject(
+        new Error("NRSettings page RPC receiver was not initialized"),
+      );
+    }
+
+    const attempt = resolveBridge().then((page) => {
+      if (!receiveCallback) {
+        throw new Error("NRSettings page RPC receiver was not initialized");
+      }
+      page.NRSettingsRegisterReceiveCallback(receiveCallback);
+      return page;
+    });
+    receiverReady = attempt;
+    void attempt.catch(() => {
+      // birpc only invokes `on` once. Clear a failed attempt so a later `post`
+      // can register the retained callback again instead of reusing a rejected
+      // promise forever.
+      if (receiverReady === attempt) receiverReady = null;
+    });
+    return attempt;
+  };
+
+  return {
+    on: (callback) => {
+      receiveCallback = callback;
+      receiverReady = null;
+      return ensureReceiver().then(() => undefined);
+    },
+    post: (data) => ensureReceiver().then((page) => page.NRSettingsSend(data)),
+  };
+}
+
+const settingsBridgeTransport = createSettingsBridgeTransport();
+
+function registerSettingsBridgeReceiver(
+  callback: (data: string) => void,
+): Promise<void> {
+  return settingsBridgeTransport.on(callback);
+}
+
+function sendSettingsBridgeMessage(data: string): Promise<void> {
+  return settingsBridgeTransport.post(data);
+}
+
+const directServicesFunctions: SettingsPageDirectFunctions = {
+  getContextMenuCatalog: () => {
+    const { ContextMenuCatalogService } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
+    ) as ContextMenuCatalogServiceModule;
+    return Promise.resolve(ContextMenuCatalogService.getSnapshot());
+  },
+  getContextMenuCatalogRevision: () => {
+    const { ContextMenuCatalogService } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
+    ) as ContextMenuCatalogServiceModule;
+    return Promise.resolve(ContextMenuCatalogService.getRevision());
+  },
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
       return Promise.resolve(null);
@@ -64,6 +228,18 @@ const directServicesFunctions: NRSettingsParentFunctions = {
     }
     return Promise.resolve(Services.prefs.getStringPref(prefName));
   },
+  getBoolPrefState: (prefName) =>
+    readDirectPreference(
+      prefName,
+      Services.prefs.PREF_BOOL,
+      () => Services.prefs.getBoolPref(prefName),
+    ),
+  getStringPrefState: (prefName) =>
+    readDirectPreference(
+      prefName,
+      Services.prefs.PREF_STRING,
+      () => Services.prefs.getStringPref(prefName),
+    ),
   setBoolPref: (prefName, value) => {
     Services.prefs.setBoolPref(prefName, value);
     return Promise.resolve();
@@ -76,6 +252,24 @@ const directServicesFunctions: NRSettingsParentFunctions = {
     Services.prefs.setStringPref(prefName, value);
     return Promise.resolve();
   },
+  compareAndSetBoolPref: (prefName, expectedValue, prefValue) =>
+    compareAndSetDirectPreference(
+      prefName,
+      expectedValue,
+      prefValue,
+      Services.prefs.PREF_BOOL,
+      () => Services.prefs.getBoolPref(prefName),
+      (value) => Services.prefs.setBoolPref(prefName, value),
+    ),
+  compareAndSetStringPref: (prefName, expectedValue, prefValue) =>
+    compareAndSetDirectPreference(
+      prefName,
+      expectedValue,
+      prefValue,
+      Services.prefs.PREF_STRING,
+      () => Services.prefs.getStringPref(prefName),
+      (value) => Services.prefs.setStringPref(prefName, value),
+    ),
   // フォルダ選択関連のメソッド
   selectFolder: () => {
     return Promise.resolve(null);
@@ -102,19 +296,14 @@ const directServicesFunctions: NRSettingsParentFunctions = {
 };
 
 export const rpc = isLocalhost5183
-  ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
+  ? createBirpc<SettingsPageParentFunctions, Record<string, never>>(
     {},
     {
-      post: (data) => {
-        void waitForSettingsBridge()
-          .then((page) => page.NRSettingsSend(data))
-          .catch((error) => console.error(error));
-      },
-      on: (callback) => {
-        void waitForSettingsBridge()
-          .then((page) => page.NRSettingsRegisterReceiveCallback(callback))
-          .catch((error) => console.error(error));
-      },
+      // birpc waits for the value returned by `on` before sending its first
+      // request. Return the bridge promises so an early catalog request cannot
+      // race the actor callback installation and be silently dropped.
+      post: sendSettingsBridgeMessage,
+      on: registerSettingsBridgeReceiver,
       serialize: (v) => JSON.stringify(v),
       deserialize: (v) => JSON.parse(v),
     },

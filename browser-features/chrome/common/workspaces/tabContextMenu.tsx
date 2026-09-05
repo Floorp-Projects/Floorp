@@ -76,6 +76,7 @@ export class WorkspacesTabContextMenu {
         id="context_MoveTabToOtherWorkspace"
         label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
         accesskey="D"
+        data-floorp-context-menu-key="floorp.workspaces.move-tab"
       >
         <xul:menupopup
           id="WorkspacesTabContextMenu"
@@ -110,7 +111,9 @@ export class WorkspacesTabContextMenu {
     for (const workspaceId of excludeHasTabWorkspaceIdWorkspaces) {
       if (!this.ctx.isWorkspaceID(workspaceId)) {
         console.error(
-          `${getTranslatedText(translationKeys.invalidWorkspaceID)}: ${workspaceId}`,
+          `${
+            getTranslatedText(translationKeys.invalidWorkspaceID)
+          }: ${workspaceId}`,
         );
         continue;
       }
@@ -126,6 +129,12 @@ export class WorkspacesTabContextMenu {
       }
       menuitem.classList.add("menuitem-iconic");
       menuitem.setAttribute("label", workspace.name);
+      menuitem.setAttribute(
+        "data-floorp-context-menu-key",
+        `floorp.workspaces.tab.target.${
+          encodeURIComponent(String(workspaceId))
+        }`,
+      );
       const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       if (iconUrl) {
         menuitem.setAttribute("image", iconUrl);

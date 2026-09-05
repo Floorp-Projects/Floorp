@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "59b734acd2ca61cce4a8ba829956ceaf428675ff"
+floorp_commit: "c2639cbacfedaf376c790952488cc5719fcca7a7"
 generated: true
 ---
 # Architecture Overview
@@ -26,16 +26,17 @@ The startup bridge is owned by `bridge/startup/src/chrome_root.ts:61`. It select
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:18` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:27` on port 5181.
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:541`. The current inventory lists 23 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:559`. The current inventory lists 24 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
 - `NRChromeModal`
 - `NRChromeWebStore`
+- `NRContextMenu`
 - `NRExperimemmt`
 - `NRI18n`
 - `NRKeyboardShortcutFocus`
@@ -103,7 +104,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 14 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 15 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -10,6 +11,17 @@ export interface PrefSetParams {
   prefName: string;
   prefType: "string" | "boolean" | "number";
   prefValue: string | boolean | number;
+}
+
+export interface PrefCompareAndSetResult<T> {
+  updated: boolean;
+  currentValue: T | null;
+  typeMismatch?: boolean;
+}
+
+export interface PrefReadResult<T> {
+  value: T | null;
+  typeMismatch: boolean;
 }
 
 export interface ActiveExperiment {
@@ -46,6 +58,30 @@ export interface NRSettingsParentFunctions {
   setBoolPref(prefName: string, prefValue: boolean): Promise<void>;
   setIntPref(prefName: string, prefValue: number): Promise<void>;
   setStringPref(prefName: string, prefValue: string): Promise<void>;
+}
+
+export interface NRSettingsAtomicPreferenceFunctions {
+  getBoolPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<boolean>>;
+  getStringPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<string>>;
+  compareAndSetBoolPref(
+    prefName: string,
+    expectedValue: boolean | null,
+    prefValue: boolean,
+  ): Promise<PrefCompareAndSetResult<boolean>>;
+  compareAndSetStringPref(
+    prefName: string,
+    expectedValue: string | null,
+    prefValue: string,
+  ): Promise<PrefCompareAndSetResult<string>>;
+}
+
+export interface NRContextMenuSettingsFunctions {
+  getContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot>;
+  getContextMenuCatalogRevision(): Promise<number>;
 }
 
 export interface NRExperimemmtParentFunctions {
