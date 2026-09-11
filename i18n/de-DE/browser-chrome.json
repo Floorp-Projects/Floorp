@@ -1,6 +1,6 @@
 {
   "tab-refresh": {
-    "reload": "Reload tab"
+    "reload": "Tab neu laden"
   },
   "undo-closed-tab": {
     "label": "Tab wiederherstellen",
@@ -137,9 +137,9 @@
     "name": "Privater Container"
   },
   "tabInlineEdit": {
-    "contextMenu": "Edit Tab URL",
+    "contextMenu": "Tab-URL bearbeiten",
     "inputLabel": "Tab URL",
-    "keyboardAction": "Edit Tab URL"
+    "keyboardAction": "Tab-URL bearbeiten"
   },
   "mouseGesture": {
     "actions": {
@@ -457,31 +457,31 @@
     "menu-label": "Zen-Modus umschalten"
   },
   "ipProtection": {
-    "title": "Browser VPN",
+    "title": "Browser-VPN",
     "toolbar": {
-      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
-      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
-      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
-      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
-      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
-      "helpTooltip": "Open Browser VPN support page"
+      "activeTooltip": "Das Browser-VPN ist für den entsprechenden Web-Datenverkehr in Floorp aktiviert",
+      "inactiveTooltip": "Das Browser-VPN ist deaktiviert – der Web-Datenverkehr beim Surfen im Internet ist nicht geschützt",
+      "excludedTooltip": "Das Browser-VPN ist für diese Website deaktiviert – diese Website ist nicht geschützt",
+      "pausedTooltip": "Browser VPN ist pausiert — Web-Datenverkehr ist nicht geschützt",
+      "errorTooltip": "Browser-VPN – Verbindungsfehler; der betreffende Web-Datenverkehr ist nicht geschützt",
+      "helpTooltip": "Browser-VPN-Supportseite im Browser öffnen"
     },
     "scope": {
-      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
-      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+      "summary": "Wenn „Browser-VPN“ aktiviert ist, kann es den entsprechenden Web-Datenverkehr in Floorp schützen. Ihr Betriebssystem und andere Apps fallen nicht in den Geltungsbereich dieser Funktion.",
+      "fullDisclosure": "Diese Funktion nutzt ein Mozilla-Konto und die Infrastruktur der Mozilla-Dienste. Floorp ist ein unabhängiges Projekt und steht in keiner Verbindung zu Mozilla und wird weder von Mozilla unterstützt noch gesponsert. Die Verfügbarkeit hängt von Ihrer Region, Ihrem Kontostatus und den Zugangsvoraussetzungen für Mozilla-Dienste ab."
     },
     "unauthenticated": {
-      "title": "Try Browser VPN"
+      "title": "Browser VPN testen"
     },
     "settings": {
-      "promoHeading": "Try Browser VPN",
-      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+      "promoHeading": "Browser VPN testen",
+      "promoMessage": "Schützen Sie den berechtigten Web-Datenverkehr in Floorp, nachdem Sie sich angemeldet und die Verfügbarkeit des Dienstes bestätigt haben."
     },
     "terms": {
-      "prefix": "By continuing, you agree to ",
-      "termsOfUse": "Mozilla Firefox Terms of Use",
-      "conjunction": " and acknowledge ",
-      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "prefix": "Durch Fortfahren stimmen Sie den ",
+      "termsOfUse": "Nutzungsbedingungen für Mozilla Firefox",
+      "conjunction": " zu und bestätigen den ",
+      "privacyNotice": "Mozilla Firefox Datenschutzhinweis",
       "suffix": "."
     }
   },
@@ -516,10 +516,10 @@
     "stepIndicator": "Schritt {{current}} von {{total}}",
     "backToCommands": "Zurück zu den Befehlen",
     "openUrl": "URL öffnen",
-    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepLabel": "In Container öffnen",
     "openUrlContainerStepPlaceholder": "Wähle einen Container...",
-    "openUrlContainerWorkspaceDefault": "Workspace Default",
-    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
+    "openUrlContainerWorkspaceDefault": "Arbeitsbereich-Standard",
+    "openUrlContainerWorkspaceDefaultDesc": "Verwendet den Standard-Kontext des Arbeitsbereiches",
     "openUrlDescription": "URL in einem neuen Tab öffnen",
     "openUrlStepLabel": "URL zum Öffnen eingeben",
     "openUrlStepPlaceholder": "https://example.com",
@@ -585,7 +585,7 @@
     "bookmarkSwitcherDescription": "Eine mit Lesezeichen versehene Seite öffnen",
     "bookmarkSwitcherStepLabel": "Lesezeichen auswählen",
     "bookmarkSwitcherStepPlaceholder": "Lesezeichen suchen oder auswählen...",
-    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepLabel": "In Container öffnen",
     "bookmarkSwitcherContainerStepPlaceholder": "Wähle einen Container...",
     "bookmarkSwitcherWhereBackgroundTab": "Hintergrund-Tab",
     "bookmarkSwitcherWhereBackgroundTabDesc": "In einem neuen Hintergrund-Tab öffnen",
