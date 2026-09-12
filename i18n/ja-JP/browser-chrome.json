@@ -238,7 +238,9 @@
       "floorp-split-view-swap-panes": "分割ビューの区分けを入れ替える",
       "floorp-split-view-cycle-layout": "分割ビューの区分けを回す",
       "floorp-split-view-add-pane": "分割ビューに区分けを追加",
-      "floorp-split-view-remove-pane": "分割ビューから区分けを削除"
+      "floorp-split-view-remove-pane": "分割ビューから区分けを削除",
+      "floorp-open-clips": "Clips を開く",
+      "floorp-clip-this-page": "このページを Clips に追加"
     },
     "descriptions": {
       "gecko-back": "前のページに戻ります",
@@ -268,7 +270,9 @@
       "floorp-split-view-swap-panes": "表示中の分割ビューの区分けの位置を逆にします",
       "floorp-split-view-cycle-layout": "対応する分割ビュー (横並び、縦並び、グリッド) の配置を切り替えます",
       "floorp-split-view-add-pane": "表示中の分割ビューに新しい区分けを追加します",
-      "floorp-split-view-remove-pane": "表示中の分割ビューから最後の区分けを削除します"
+      "floorp-split-view-remove-pane": "表示中の分割ビューから最後の区分けを削除します",
+      "floorp-open-clips": "サイドバーの Clips パネルを表示します。",
+      "floorp-clip-this-page": "いま見ているページの題名と URL を Clips に置きます。"
     }
   },
   "qrCode": {

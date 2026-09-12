@@ -24,6 +24,7 @@ import {
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 import { isRight } from "fp-ts/Either";
+import { clipsEnabled, withClipsPanel } from "../../clips/clips-panel-list.ts";
 
 function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   function getPanelSidebarData(stringData: string) {
@@ -38,7 +39,10 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
     ),
   );
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    isRight(dataResult) ? dataResult.right : [],
+    // Clips rides a Flasco: keep the stored list in step with its pref.
+    isRight(dataResult)
+      ? withClipsPanel(dataResult.right as Panels, clipsEnabled()).panels
+      : [],
   );
   const observer = () => {
     const result = zPanels.decode(
@@ -50,7 +54,12 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
       ),
     );
     if (isRight(result)) {
-      setPanelSidebarData(result.right);
+      // A list arriving from elsewhere can still carry Clips while the Flasco
+      // says no, or miss it while it says yes. Keep it in step here too, or
+      // the effect below writes that back to the pref.
+      setPanelSidebarData(
+        withClipsPanel(result.right as Panels, clipsEnabled()).panels,
+      );
     }
   };
   Services.prefs.addObserver(

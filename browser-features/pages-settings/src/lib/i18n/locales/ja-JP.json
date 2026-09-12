@@ -25,6 +25,7 @@
         "home": "ホーム",
         "tabAndAppearance": "タブと外観",
         "browserSidebar": "パネルサイドバー",
+        "clips": "クリップ",
         "workspaces": "ワークスペース",
         "keyboardShortcuts": "キーボードショートカット",
         "webApps": "ウェブアプリ",
@@ -434,7 +435,8 @@
             "bookmarks": "ブックマーク",
             "history": "履歴",
             "downloads": "ダウンロード",
-            "notes": "Notes"
+            "notes": "Notes",
+            "clips": "クリップ"
         },
         "url": "URL",
         "untitled": "無題",
@@ -744,5 +746,32 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "clips": {
+        "title": "クリップ",
+        "description": "ブラウジング中に見つけたリンクやテキスト、画像やファイルを、あとで使うためにそばへ置いておく場所です。",
+        "mode": "動作モード",
+        "modes": {
+            "local": "ローカル",
+            "sync": "同期",
+            "clipboard": "クリップボード履歴"
+        },
+        "modeDescriptions": {
+            "local": "すべてこの端末のなかで完結します。どこにも送りません。",
+            "sync": "Notes と同じように、Firefox Sync を通して端末のあいだを行き来します。",
+            "clipboard": "Clips パネルを開いているあいだ、コピーした内容が追加されます。この端末のなかで完結します。"
+        },
+        "syncPathWarning": "ファイルのパスも一緒に届きますが、別の端末のパスはここでは開けないことがあります。",
+        "modeSwitchTitle": "動作モードを切り替える",
+        "modeSwitchWarning": "モードを切り替えると、ピン留めしていないクリップはすべて削除されます。ピン留めしたものは残ります。",
+        "modeSwitchConfirm": "切り替える",
+        "modeSwitchCancel": "キャンセル",
+        "otherSettings": "その他の設定",
+        "maxItems": "保持する件数",
+        "maxItemsDescription": "これを超えると古いものから消えます。ピン留めしたクリップは数えません。",
+        "clearOnExit": "Floorp の終了時に、ピン留め以外のクリップを削除する",
+        "fileAction": "ファイルのクリップを開いたとき",
+        "fileActionReveal": "ファイルマネージャーで表示する",
+        "fileActionLaunch": "既定のアプリで開く"
     }
 }

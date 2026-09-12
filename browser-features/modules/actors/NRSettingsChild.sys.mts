@@ -25,6 +25,7 @@ export class NRSettingsChild extends JSWindowActorChild {
         document.location.port === "5186" ||
         document.location.port === "5187" ||
         document.location.port === "5188" ||
+        document.location.port === "5189" ||
         document.location.href.startsWith("chrome://noraneko-settings/")
       )
     ) {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
   Briefcase,
+  Clipboard,
   Cpu,
   Grip,
   House,
@@ -35,6 +36,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isFloorpOSVisible, setIsFloorpOSVisible] = useState<boolean | null>(
     null,
   );
+  const [isClipsVisible, setIsClipsVisible] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const enabled = await rpc.getBoolPref("floorp.browser.clips.enabled");
+        if (mounted) setIsClipsVisible(Boolean(enabled));
+      } catch (e) {
+        console.error("failed to get pref floorp.browser.clips.enabled", e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -69,6 +86,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/sidebar",
       icon: PanelLeft,
     },
+    ...(isClipsVisible
+      ? [{
+        title: t("pages.clips"),
+        url: "/features/clips",
+        icon: Clipboard,
+      }]
+      : []),
     {
       title: t("pages.mouseGesture"),
       url: "/features/gesture",
@@ -100,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/accounts",
       icon: UserRoundPen,
     },
-  ], [isFloorpOSVisible, t]);
+  ], [isFloorpOSVisible, isClipsVisible, t]);
 
   const about: Feature[] = [
     {

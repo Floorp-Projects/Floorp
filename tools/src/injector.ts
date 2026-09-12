@@ -118,6 +118,7 @@ export function createManifest(mode: string, dirPath: string) {
       "content noraneko-newtab pages-newtab/ contentaccessible=yes",
       "content noraneko-welcome pages-welcome/ contentaccessible=yes",
       "content noraneko-notes pages-notes/ contentaccessible=yes",
+      "content noraneko-clips pages-clips/ contentaccessible=yes",
       "content noraneko-modal-child pages-modal-child/ contentaccessible=yes",
       "content noraneko-settings pages-settings/ contentaccessible=yes",
       "content noraneko-profile-manager pages-profile-manager/ contentaccessible=yes",

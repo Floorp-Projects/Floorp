@@ -6,6 +6,7 @@
 import Dashboard from "@/app/dashboard/page.tsx";
 import Design from "@/app/design/page.tsx";
 import PanelSidebar from "@/app/sidebar/page.tsx";
+import Clips from "@/app/clips/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import FloorpOS from "@/app/floorp-os/page.tsx";
@@ -21,10 +22,30 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
 import useHashSync from "@/hooks/useHashSync.ts";
+import { useEffect, useState } from "react";
+import { rpc } from "@/lib/rpc/rpc.ts";
 
 export default function App() {
   const location = useLocation();
   useHashSync(location.pathname);
+  /** Whether Clips rides along here. `null` until the pref has been read. */
+  const [clipsEnabled, setClipsEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const enabled = await rpc.getBoolPref("floorp.browser.clips.enabled");
+        if (mounted) setClipsEnabled(Boolean(enabled));
+      } catch (e) {
+        console.error("failed to get pref floorp.browser.clips.enabled", e);
+        if (mounted) setClipsEnabled(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -47,6 +68,16 @@ export default function App() {
                 element={<LeptonSettings />}
               />
               <Route path="/features/sidebar" element={<PanelSidebar />} />
+              {/* The sidebar hides its entry when Clips is off; the address
+                  bar can still ask for the page, so send it home instead. */}
+              {clipsEnabled !== null && (
+                <Route
+                  path="/features/clips"
+                  element={clipsEnabled
+                    ? <Clips />
+                    : <Navigate to="/overview/home" replace />}
+                />
+              )}
               <Route path="/features/workspaces" element={<Workspaces />} />
               <Route path="/features/webapps" element={<ProgressiveWebApp />} />
               <Route path="/features/floorp-os" element={<FloorpOS />} />
