@@ -21,7 +21,7 @@
       "container": "Container",
       "no-container": "No Container",
       "icon": "Icon",
-      "edit-title": "Edit Workspace Title",
+      "edit-title": "Edit Workspace",
       "save": "Save changes",
       "cancel": "Cancel"
     },
@@ -72,7 +72,7 @@
       "archive": "Archive Workspace"
     },
     "popup": {
-      "create-new": "Create new Workspace...",
+      "create-new": "Create New Workspace...",
       "manage": "Manage Workspaces",
       "restore": "Show Archived Workspaces",
       "restore-cancel": "Exit Restore Mode",
@@ -426,7 +426,7 @@
   },
   "hub": {
     "menu": {
-      "title": "Floorp Hub Title"
+      "title": "Floorp Hub"
     }
   },
   "splitView": {
