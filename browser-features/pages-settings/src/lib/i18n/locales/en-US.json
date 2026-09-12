@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "performance": "Performance",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -743,6 +744,20 @@
             "saveDescription": "Save the shortcut",
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
+        }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Settings that affect how the browser uses system resources.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Returns freed memory to the system while you are away. A long-running browser holds on to more memory than it uses, and reclaiming during idle time brings that back down without interrupting you.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "A reclaim can pause the browser for a few seconds, which is why it only runs while you are idle. Smaller values make that happen more often.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
         }
     }
 }
