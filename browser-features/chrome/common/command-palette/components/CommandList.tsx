@@ -5,6 +5,8 @@ import i18next from "i18next";
 import type { PaletteCommand } from "../types.ts";
 import { CommandItem } from "./CommandItem.tsx";
 import { CategoryHeader } from "./CategoryHeader.tsx";
+import { getCategoryPriority } from "../config.ts";
+import { sortCategoriesByPriority } from "../category-priority.ts";
 
 interface CommandListProps {
   commands: PaletteCommand[];
@@ -19,7 +21,10 @@ interface CategorizedCommands {
   commands: PaletteCommand[];
 }
 
-const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "search-suggestion"]);
+// `navigation-suggestion` renders inline (the URL itself is the label), and
+// `shortcut` (@prefix results) each carry their own `@prefix` label — neither
+// needs a category header.
+const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "shortcut"]);
 
 export function CommandList(props: CommandListProps) {
   const grouped = createMemo(() => {
@@ -39,7 +44,50 @@ export function CommandList(props: CommandListProps) {
       groups.push({ category, commands });
     }
 
-    return groups;
+    // Order groups by the user-defined category priority.
+    //
+    // - `shortcut` (@prefix results), `recent`, and `navigation-suggestion` are
+    //   pseudo-categories whose positions are controller-driven. They are pinned
+    //   to the top and excluded from the priority sort (see the controller's
+    //   `doUpdateSearch` push order: shortcut → navigation-suggestion → recent →
+    //   others). `shortcut` is intentionally NOT in `DEFAULT_CATEGORY_PRIORITY`
+    //   (doing so would break the `length === 18` invariant in
+    //   `category-priority.test.ts`), so without pinning it here
+    //   `getCategoryPriorityIndex("shortcut")` returns `MAX_SAFE_INTEGER` and
+    //   shortcut results would sink to the bottom — diverging from the flat
+    //   array where they sit at the top.
+    // - All other categories (including `search`, which has the lowest priority
+    //   by default) are sorted via the user's priority list.
+    const shortcutGroups = groups.filter((g) => g.category === "shortcut");
+    const navSuggestionGroups = groups.filter(
+      (g) => g.category === "navigation-suggestion",
+    );
+    const recentGroups = groups.filter((g) => g.category === "recent");
+    const visibleGroups = groups.filter(
+      (g) =>
+        g.category !== "shortcut" &&
+        g.category !== "navigation-suggestion" &&
+        g.category !== "recent",
+    );
+
+    const priorityList = getCategoryPriority();
+    const sortedVisible = sortCategoriesByPriority(visibleGroups, priorityList);
+
+    // NOTE: the order here mirrors `controller.ts:doUpdateSearch`'s flat-array
+    // push order exactly (shortcut → navigation-suggestion → recent → others).
+    // `recent` (only emitted for empty queries) and `navigation-suggestion`
+    // (only emitted for URL-like queries) are mutually exclusive in practice,
+    // but `shortcut` can coexist with both — e.g. `@g` yields shortcut +
+    // fuzzy-search results, and `@foo.com` yields shortcut + navigation-
+    // suggestion — so the full controller order is reproduced here to keep the
+    // `getGlobalIndex` (display space) ↔ `selectedIndex` (flat-array space)
+    // invariant sound and prevent highlight/execute drift.
+    return [
+      ...shortcutGroups,
+      ...navSuggestionGroups,
+      ...recentGroups,
+      ...sortedVisible,
+    ];
   });
 
   const getGlobalIndex = (groupIdx: number, itemIdx: number): number => {

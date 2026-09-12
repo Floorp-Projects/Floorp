@@ -815,8 +815,8 @@ function testResetStateClearsPressedKeys(): void {
     // Destroy should reset state
     controller.destroy();
 
-    // If we could access pressedKeys, we'd verify it's empty
-    // Since we can't, we just verify destroy doesn't throw
+    // We can't inspect internal state directly, so just verify destroy
+    // doesn't throw.
     assertEquals(true, true, "resetState should complete without error");
   });
 }
@@ -952,7 +952,7 @@ function testFunctionKeyMatching(): void {
 
     // Function keys use just "F5" as code. The normalization regex
     // /^[A-Z]$/ and /^[0-9]$/ do not match "F5", so the key is kept as-is.
-    // The event code is also "F5", so pressedKeys.has("F5") returns true.
+    // The event code is also "F5", so currentCode === key returns true.
     assertEquals(
       event.defaultPrevented,
       true,

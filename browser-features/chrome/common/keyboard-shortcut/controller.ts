@@ -14,7 +14,6 @@ import {
 
 export class KeyboardShortcutController {
   private eventListenersAttached = false;
-  private pressedKeys = new Set<string>();
   private pressedModifiers = {
     alt: false,
     ctrl: false,
@@ -56,7 +55,6 @@ export class KeyboardShortcutController {
   }
 
   private resetState(): void {
-    this.pressedKeys.clear();
     this.pressedModifiers = {
       alt: false,
       ctrl: false,
@@ -78,6 +76,9 @@ export class KeyboardShortcutController {
 
     const code = event.code;
 
+    // Synthetic events may lack a code; real key events always carry one.
+    if (!code) return;
+
     if (
       isBarePrintableKeyEvent(event) &&
       isKeyboardShortcutTypingContext(
@@ -85,12 +86,8 @@ export class KeyboardShortcutController {
         this.remoteFocusStore,
       )
     ) {
-      // Do not retain a repeated key from before focus entered an editable.
-      this.pressedKeys.delete(code);
       return;
     }
-
-    this.pressedKeys.add(code);
 
     // Ignore pure modifier key presses. Using startsWith keeps this concise
     // and handles location-specific variants like "AltLeft" / "AltRight".
@@ -103,7 +100,7 @@ export class KeyboardShortcutController {
       return;
     }
 
-    if (this.checkAndExecuteShortcut()) {
+    if (this.checkAndExecuteShortcut(code)) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -111,9 +108,6 @@ export class KeyboardShortcutController {
 
   private handleKeyUp = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
-
-    const code = event.code;
-    this.pressedKeys.delete(code);
 
     this.pressedModifiers = {
       alt: event.altKey,
@@ -123,12 +117,12 @@ export class KeyboardShortcutController {
     };
   };
 
-  private checkAndExecuteShortcut(): boolean {
+  private checkAndExecuteShortcut(code: string): boolean {
     const config = getConfig();
     const shortcuts = config.shortcuts;
 
     for (const [_id, shortcut] of Object.entries(shortcuts)) {
-      if (this.isShortcutMatch(shortcut)) {
+      if (this.isShortcutMatch(shortcut, code)) {
         this.executeShortcut(shortcut);
         this.resetState();
         return true;
@@ -138,7 +132,7 @@ export class KeyboardShortcutController {
     return false;
   }
 
-  private isShortcutMatch(shortcut: ShortcutConfig): boolean {
+  private isShortcutMatch(shortcut: ShortcutConfig, currentCode: string): boolean {
     if (
       shortcut.modifiers.alt !== this.pressedModifiers.alt ||
       shortcut.modifiers.ctrl !== this.pressedModifiers.ctrl ||
@@ -155,7 +149,11 @@ export class KeyboardShortcutController {
       key = `Digit${key}`;
     }
 
-    return this.pressedKeys.has(key);
+    if (!key) return false;
+
+    // Matching currentCode (the event's own code from this keydown) is
+    // sufficient — no stale state is involved.
+    return currentCode === key;
   }
 
   private executeShortcut(shortcut: ShortcutConfig): void {

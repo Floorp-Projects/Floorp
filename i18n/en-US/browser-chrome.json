@@ -508,8 +508,8 @@
       "media": "Media",
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
-      "history-suggestions": "History",
-      "bookmark-suggestions": "Bookmarks"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -594,7 +594,15 @@
     "bookmarkSwitcherWhereLabel": "Where to open",
     "bookmarkSwitcherWhereNewTab": "New Tab",
     "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
-    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
+    "bookmarkSwitcherWherePlaceholder": "Select where to open...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Search History"
+    }
   },
   "commandPaletteReadings": {}
 }

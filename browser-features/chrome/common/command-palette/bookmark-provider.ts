@@ -57,7 +57,16 @@ export async function searchBookmarks(
       PlacesUtils.bookmarks?.TYPE_BOOKMARK,
     );
 
-    const results = await PlacesUtils.bookmarks.search(query);
+    // An empty query means "list recent bookmarks" (used by the @b command
+    // palette mode when only the "@b " prefix is typed). PlacesUtils.bookmarks
+    // .search throws on an empty/absent query ("Query object is required"), so
+    // fall back to getRecent, which returns the most recent bookmarks capped
+    // by the caller's limit.
+    const results = query
+      ? await PlacesUtils.bookmarks.search(query)
+      // getRecent counts folders/separators toward its limit; over-fetch so
+      // the TYPE_BOOKMARK filter below still yields `limit` real bookmarks.
+      : await PlacesUtils.bookmarks.getRecent(Math.max(limit * 4, limit + 10));
     console.debug(
       "[command-palette/bookmark] Raw results count:",
       results.length,

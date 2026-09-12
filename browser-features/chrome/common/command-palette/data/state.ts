@@ -9,6 +9,10 @@ export function createPaletteState() {
   const [isVisible, setIsVisible] = createSignal(false);
   const [isAnimatingOut, setIsAnimatingOut] = createSignal(false);
   const [query, setQuery] = createSignal("");
+  // Query used for result highlighting. Normally identical to `query`, but
+  // @prefix modes (e.g. "@t <query>") may want to highlight only the argument
+  // part so the "@t " prefix itself is not highlighted.
+  const [highlightQuery, setHighlightQuery] = createSignal("");
   const [selectedIndex, setSelectedIndex] = createSignal(0);
   const [filteredCommands, setFilteredCommands] = createSignal<
     PaletteCommand[]
@@ -43,6 +47,8 @@ export function createPaletteState() {
     setIsAnimatingOut,
     query,
     setQuery,
+    highlightQuery,
+    setHighlightQuery,
     selectedIndex,
     setSelectedIndex,
     filteredCommands,
@@ -73,6 +79,7 @@ export function createPaletteState() {
     setLoadingMore,
     reset() {
       setQuery("");
+      setHighlightQuery("");
       setSelectedIndex(0);
       setFilteredCommands([]);
       setMode("command");

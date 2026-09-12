@@ -8,6 +8,7 @@ import {
   AppWindow,
   BadgeInfo,
   Briefcase,
+  Command,
   House,
   Keyboard,
   List,
@@ -24,6 +25,7 @@ import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
 import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
+import CommandPalette from "@/app/command-palette/page.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
@@ -122,6 +124,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: AppWindow,
     priority: 65,
     Component: ProgressiveWebApp,
+  },
+  {
+    id: "command-palette",
+    route: "/features/command-palette",
+    titleKey: "pages.commandPalette",
+    descriptionKey: "commandPalette.description",
+    icon: Command,
+    priority: 62,
+    Component: CommandPalette,
   },
   {
     id: "accounts",
