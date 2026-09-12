@@ -153,7 +153,11 @@ export class ExternalBrowserLinkContextMenu {
 
   private menu() {
     return (
-      <xul:menu id={MENU_ID} label={t("externalBrowser.menu.openLinkIn")}>
+      <xul:menu
+        id={MENU_ID}
+        label={t("externalBrowser.menu.openLinkIn")}
+        data-floorp-context-menu-key="floorp.external-browser.open-link"
+      >
         <xul:menupopup
           id={MENU_POPUP_ID}
           onPopupShowing={() => this.populateMenu()}
@@ -206,6 +210,7 @@ export class ExternalBrowserLinkContextMenu {
       t("externalBrowser.menu.defaultBrowser"),
       false,
       () => this.openInBrowser(url),
+      "floorp.external-browser.link.default",
     );
     if (defaultItem) {
       popup.appendChild(defaultItem);
@@ -214,6 +219,10 @@ export class ExternalBrowserLinkContextMenu {
     // Add separator
     const separator = document?.createXULElement?.("menuseparator");
     if (separator) {
+      separator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.external-browser.link.separator",
+      );
       popup.appendChild(separator);
     }
 
@@ -223,6 +232,9 @@ export class ExternalBrowserLinkContextMenu {
         browserInfo.name,
         false,
         () => this.openInBrowser(url, browserInfo.id),
+        `floorp.external-browser.link.browser.${
+          encodeURIComponent(String(browserInfo.id))
+        }`,
       );
       if (menuItem) {
         popup.appendChild(menuItem);
@@ -234,6 +246,7 @@ export class ExternalBrowserLinkContextMenu {
     label: string,
     disabled: boolean,
     onClick?: () => void,
+    contextMenuKey?: string,
   ): XULElement | null {
     const menuitem = document?.createXULElement?.("menuitem") as
       | XULElement
@@ -242,6 +255,9 @@ export class ExternalBrowserLinkContextMenu {
       return null;
     }
     menuitem.setAttribute("label", label);
+    if (contextMenuKey) {
+      menuitem.setAttribute("data-floorp-context-menu-key", contextMenuKey);
+    }
     if (disabled) {
       menuitem.setAttribute("disabled", "true");
     }

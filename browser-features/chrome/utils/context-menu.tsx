@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import type { JSXElement } from "solid-js";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { createRootHMR } from "@nora/solid-xul";
+import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "#features-chrome/common/context-menu/style.ts";
 
 // deno-lint-ignore no-namespace
 export namespace ContextMenuUtils {
@@ -43,15 +44,21 @@ export namespace ContextMenuUtils {
     runFunction: () => void,
     checkID: string,
     checkedFunction: () => void,
+    semanticKey?: string,
   ) {
-    const contextMenu = ContextMenu(id, l10n, runFunction);
-    const targetNode = document?.getElementById(checkID) as unknown as XULElement | null;
+    const contextMenu = ContextMenu(id, l10n, runFunction, semanticKey);
+    const targetNode = document?.getElementById(checkID) as unknown as
+      | XULElement
+      | null;
     const renderElement = document?.getElementById(
       renderElementId,
     ) as unknown as XULElement | null;
 
     if (!targetNode || !renderElement) {
-      console.warn("[ContextMenu]", `Element not found: ${!targetNode ? checkID : renderElementId}`);
+      console.warn(
+        "[ContextMenu]",
+        `Element not found: ${!targetNode ? checkID : renderElementId}`,
+      );
       return;
     }
 
@@ -87,7 +94,24 @@ export namespace ContextMenuUtils {
     }
 
     (() => {
-      for (const contextMenuSeparator of contextMenuSeparators()) {
+      const separators = contextMenuSeparators();
+      // Undo only the state this helper applied on an earlier opening. This
+      // lets the current Firefox visibility conditions be evaluated afresh
+      // without touching separators hidden by Firefox itself.
+      for (const contextMenuSeparator of separators) {
+        if (
+          contextMenuSeparator.hasAttribute(
+            FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+          )
+        ) {
+          contextMenuSeparator.hidden = false;
+          contextMenuSeparator.removeAttribute(
+            FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+          );
+        }
+      }
+
+      for (const contextMenuSeparator of separators) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
 
         if (
@@ -95,6 +119,12 @@ export namespace ContextMenuUtils {
           contextMenuSeparator.id !== "context-sep-navigation" &&
           contextMenuSeparator.id !== "context-sep-pdfjs-selectall"
         ) {
+          if (!contextMenuSeparator.hidden) {
+            contextMenuSeparator.setAttribute(
+              FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+              "true",
+            );
+          }
           contextMenuSeparator.hidden = true;
         }
       }
@@ -102,7 +132,12 @@ export namespace ContextMenuUtils {
   }
 }
 
-export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
+export function ContextMenu(
+  id: string,
+  l10n: string,
+  runFunction: () => void,
+  semanticKey?: string,
+) {
   const [label, setLabel] = createSignal(i18next.t(l10n));
 
   createRootHMR(() => {
@@ -114,6 +149,7 @@ export function ContextMenu(id: string, l10n: string, runFunction: () => void) {
     <xul:menuitem
       label={label()}
       id={id}
+      data-floorp-context-menu-key={semanticKey}
       onCommand={runFunction}
     />
   );

@@ -18,55 +18,158 @@ import {
 /** Create a mock #contentAreaContextMenu element in the DOM */
 function createMockContentAreaContextMenu(): Element {
   const existing = document!.getElementById("contentAreaContextMenu");
-  if (existing) return existing;
+  if (existing?.hasAttribute("data-floorp-context-menu-test-owned")) {
+    return existing;
+  }
+  parkNativeContentAreaContextMenu();
 
   const menu = document!.createElement("div");
   menu.id = "contentAreaContextMenu";
+  menu.setAttribute("data-floorp-context-menu-test-owned", "true");
   document!.body!.appendChild(menu);
   return menu;
 }
 
-/** Remove mock context menu from DOM */
-function cleanupDOM(): void {
-  document!.getElementById("contentAreaContextMenu")?.remove();
+function parkNativeContentAreaContextMenu(): void {
+  if (parkedNativeMenu) return;
+  const existing = document!.getElementById("contentAreaContextMenu");
+  if (
+    existing?.parentNode &&
+    !existing.hasAttribute("data-floorp-context-menu-test-owned")
+  ) {
+    parkedNativeMenu = {
+      element: existing,
+      parent: existing.parentNode,
+      nextSibling: existing.nextSibling,
+    };
+    existing.remove();
+  }
 }
 
-/** Track popupshowing listener additions/removals */
-let popupListenerAdded = false;
-let _popupListenerRemoved = false;
+/** Remove mock context menu from DOM */
+function cleanupDOM(): void {
+  document!
+    .querySelector(
+      '#contentAreaContextMenu[data-floorp-context-menu-test-owned="true"]',
+    )
+    ?.remove();
+  if (parkedNativeMenu) {
+    const { element, parent, nextSibling } = parkedNativeMenu;
+    parent.insertBefore(
+      element,
+      nextSibling?.parentNode === parent ? nextSibling : null,
+    );
+    parkedNativeMenu = null;
+  }
+  restoreDocumentListenerTracking?.();
+  restoreDocumentListenerTracking = null;
+  restoreWindowListenerTracking?.();
+  restoreWindowListenerTracking = null;
+}
+
+let parkedNativeMenu: {
+  element: Element;
+  parent: Node;
+  nextSibling: Node | null;
+} | null = null;
+
+/** Track capture listeners installed by the document-level controller. */
+let popupListenerAddCount = 0;
+let popupListenerRemoveCount = 0;
+let restoreDocumentListenerTracking: (() => void) | null = null;
+let unloadListenerRemoveCount = 0;
+let capturedUnloadListener: EventListenerOrEventListenerObject | null = null;
+let restoreWindowListenerTracking: (() => void) | null = null;
 
 function resetListenerTracking(): void {
-  popupListenerAdded = false;
-  _popupListenerRemoved = false;
+  popupListenerAddCount = 0;
+  popupListenerRemoveCount = 0;
+  unloadListenerRemoveCount = 0;
+  capturedUnloadListener = null;
+}
+
+function wrapWindowForUnloadTracking(): void {
+  restoreWindowListenerTracking?.();
+  const target = window;
+  const originalAdd = target.addEventListener.bind(target);
+  const originalRemove = target.removeEventListener.bind(target);
+  Object.defineProperty(target, "addEventListener", {
+    configurable: true,
+    value: (
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | AddEventListenerOptions,
+    ): void => {
+      if (type === "unload") capturedUnloadListener = listener;
+      originalAdd(type, listener, options);
+    },
+  });
+  Object.defineProperty(target, "removeEventListener", {
+    configurable: true,
+    value: (
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | EventListenerOptions,
+    ): void => {
+      if (type === "unload" && listener === capturedUnloadListener) {
+        unloadListenerRemoveCount++;
+      }
+      originalRemove(type, listener, options);
+    },
+  });
+  restoreWindowListenerTracking = () => {
+    Reflect.deleteProperty(target, "addEventListener");
+    Reflect.deleteProperty(target, "removeEventListener");
+  };
+}
+
+function invokeCapturedUnloadListener(): void {
+  const listener = capturedUnloadListener;
+  assert(listener !== null, "component should register an unload listener");
+  const event = new Event("unload");
+  if (typeof listener === "function") listener.call(window, event);
+  else listener.handleEvent(event);
 }
 
 /**
- * Wrap #contentAreaContextMenu with tracking addEventListener/removeEventListener
- * to verify that the component attaches and cleans up listeners correctly.
+ * Wrap document listener methods to verify the controller's capture listener.
  */
-function wrapContextMenuForTracking(): void {
-  const menu = document!.getElementById("contentAreaContextMenu");
-  if (!menu) return;
+function wrapDocumentForTracking(): void {
+  restoreDocumentListenerTracking?.();
+  const target = document!;
+  const originalAdd = target.addEventListener.bind(target);
+  const originalRemove = target.removeEventListener.bind(target);
 
-  const origAdd = menu.addEventListener.bind(menu);
-  const origRemove = menu.removeEventListener.bind(menu);
+  Object.defineProperty(target, "addEventListener", {
+    configurable: true,
+    value: (
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | AddEventListenerOptions,
+    ): void => {
+      const capture = options === true ||
+        (typeof options === "object" && options.capture === true);
+      if (type === "popupshowing" && capture) popupListenerAddCount++;
+      originalAdd(type, listener, options);
+    },
+  });
+  Object.defineProperty(target, "removeEventListener", {
+    configurable: true,
+    value: (
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | EventListenerOptions,
+    ): void => {
+      const capture = options === true ||
+        (typeof options === "object" && options.capture === true);
+      if (type === "popupshowing" && capture) popupListenerRemoveCount++;
+      originalRemove(type, listener, options);
+    },
+  });
 
-  // deno-lint-ignore no-explicit-any
-  (menu as any).addEventListener = (
-    type: string,
-    _listener: EventListenerOrEventListenerObject,
-  ) => {
-    if (type === "popupshowing") popupListenerAdded = true;
-    return origAdd(type, _listener);
-  };
-
-  // deno-lint-ignore no-explicit-any
-  (menu as any).removeEventListener = (
-    type: string,
-    _listener: EventListenerOrEventListenerObject,
-  ) => {
-    if (type === "popupshowing") _popupListenerRemoved = true;
-    return origRemove(type, _listener);
+  restoreDocumentListenerTracking = () => {
+    Reflect.deleteProperty(target, "addEventListener");
+    Reflect.deleteProperty(target, "removeEventListener");
   };
 }
 
@@ -109,7 +212,8 @@ async function testInitAttachesPopupShowingListener(): Promise<void> {
   cleanupDOM();
   createMockContentAreaContextMenu();
   resetListenerTracking();
-  wrapContextMenuForTracking();
+  wrapDocumentForTracking();
+  wrapWindowForUnloadTracking();
 
   try {
     const mod = await import("../index.ts");
@@ -117,17 +221,22 @@ async function testInitAttachesPopupShowingListener(): Promise<void> {
     const instance = new ContextMenu();
     instance.init();
 
-    assert(
-      popupListenerAdded,
-      "init() should add popupshowing listener to #contentAreaContextMenu",
+    assertEquals(
+      popupListenerAddCount,
+      1,
+      "constructor init and an explicit init should share one document capture listener",
     );
   } finally {
+    if (capturedUnloadListener) invokeCapturedUnloadListener();
     cleanupDOM();
   }
 }
 
 async function testInitDoesNotThrowWithoutContextMenu(): Promise<void> {
   cleanupDOM();
+  parkNativeContentAreaContextMenu();
+  resetListenerTracking();
+  wrapWindowForUnloadTracking();
   let threw = false;
   try {
     const mod = await import("../index.ts");
@@ -137,20 +246,27 @@ async function testInitDoesNotThrowWithoutContextMenu(): Promise<void> {
   } catch {
     threw = true;
   }
-  assert(
-    !threw,
-    "init() should not throw when #contentAreaContextMenu is missing",
-  );
-  cleanupDOM();
+  try {
+    assert(
+      !threw,
+      "init() should not throw when #contentAreaContextMenu is missing",
+    );
+  } finally {
+    if (capturedUnloadListener) invokeCapturedUnloadListener();
+    cleanupDOM();
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Tests: ContextMenuUtils — contentAreaContextMenu
 // ---------------------------------------------------------------------------
 
-async function testContentAreaContextMenuReturnsCorrectElement(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testContentAreaContextMenuReturnsCorrectElement(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -164,17 +280,25 @@ async function testContentAreaContextMenuReturnsCorrectElement(): Promise<void> 
   cleanupDOM();
 }
 
-async function testContentAreaContextMenuReturnsNullWhenAbsent(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
-  cleanupDOM();
-
-  const result = ContextMenuUtils.contentAreaContextMenu();
-  assertEquals(
-    result,
-    null,
-    "contentAreaContextMenu should return null when element is absent",
+async function testContentAreaContextMenuReturnsNullWhenAbsent(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
   );
+  cleanupDOM();
+  parkNativeContentAreaContextMenu();
+
+  try {
+    const result = ContextMenuUtils.contentAreaContextMenu();
+    assertEquals(
+      result,
+      null,
+      "contentAreaContextMenu should return null when element is absent",
+    );
+  } finally {
+    cleanupDOM();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -182,8 +306,9 @@ async function testContentAreaContextMenuReturnsNullWhenAbsent(): Promise<void> 
 // ---------------------------------------------------------------------------
 
 async function testOnPopupShowingDoesNotThrow(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -198,9 +323,11 @@ async function testOnPopupShowingDoesNotThrow(): Promise<void> {
 }
 
 async function testOnPopupShowingDoesNotThrowWithoutMenu(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
+  parkNativeContentAreaContextMenu();
 
   let threw = false;
   try {
@@ -209,11 +336,13 @@ async function testOnPopupShowingDoesNotThrowWithoutMenu(): Promise<void> {
     threw = true;
   }
   assert(!threw, "onPopupShowing should not throw when context menu is absent");
+  cleanupDOM();
 }
 
 async function testOnPopupShowingHidesAdjacentSeparators(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -239,8 +368,9 @@ async function testOnPopupShowingHidesAdjacentSeparators(): Promise<void> {
 }
 
 async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -265,8 +395,9 @@ async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
 }
 
 async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -290,9 +421,12 @@ async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
   cleanupDOM();
 }
 
-async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -320,8 +454,9 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
 // ---------------------------------------------------------------------------
 
 async function testAddContextBoxRequiresCheckElement(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -353,8 +488,9 @@ async function testAddContextBoxRequiresCheckElement(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function testAddToolbarContentMenuPopupSetDoesNotThrow(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
 
   let threw = false;
   try {
@@ -377,9 +513,12 @@ async function testAddToolbarContentMenuPopupSetDoesNotThrow(): Promise<void> {
 // Tests: onPopupShowing — Screenshot and PDFjs separator handling
 // ---------------------------------------------------------------------------
 
-async function testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -408,9 +547,12 @@ async function testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible(): Pro
   cleanupDOM();
 }
 
-async function testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -437,8 +579,9 @@ async function testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden()
 }
 
 async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -455,7 +598,10 @@ async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
     threw = true;
   }
 
-  assert(!threw, "onPopupShowing should not throw when screenshot item is missing");
+  assert(
+    !threw,
+    "onPopupShowing should not throw when screenshot item is missing",
+  );
   assertEquals(
     pdfjsSep.hidden,
     false,
@@ -465,8 +611,9 @@ async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
 }
 
 async function testOnPopupShowingHandlesMissingNextSibling(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -483,7 +630,10 @@ async function testOnPopupShowingHandlesMissingNextSibling(): Promise<void> {
     threw = true;
   }
 
-  assert(!threw, "onPopupShowing should not throw when next sibling is missing");
+  assert(
+    !threw,
+    "onPopupShowing should not throw when next sibling is missing",
+  );
   cleanupDOM();
 }
 
@@ -491,9 +641,12 @@ async function testOnPopupShowingHandlesMissingNextSibling(): Promise<void> {
 // Tests: onPopupShowing — Multiple consecutive separators
 // ---------------------------------------------------------------------------
 
-async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -523,9 +676,21 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<v
 
   ContextMenuUtils.onPopupShowing();
 
-  assertEquals(sep1.hidden, true, "First separator before hidden item should be hidden");
-  assertEquals(sep2.hidden, true, "Second separator before hidden item should be hidden");
-  assertEquals(sep3.hidden, false, "Separator before visible item should not be hidden");
+  assertEquals(
+    sep1.hidden,
+    true,
+    "First separator before hidden item should be hidden",
+  );
+  assertEquals(
+    sep2.hidden,
+    true,
+    "Second separator before hidden item should be hidden",
+  );
+  assertEquals(
+    sep3.hidden,
+    false,
+    "Separator before visible item should not be hidden",
+  );
   cleanupDOM();
 }
 
@@ -534,8 +699,9 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<v
 // ---------------------------------------------------------------------------
 
 async function testOnPopupShowingHandlesEmptyMenu(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const _menu = createMockContentAreaContextMenu();
 
@@ -551,9 +717,12 @@ async function testOnPopupShowingHandlesEmptyMenu(): Promise<void> {
   cleanupDOM();
 }
 
-async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -574,15 +743,30 @@ async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<void> 
   // When nextSibling is null (last element) or another separator (hidden is false/undefined),
   // the condition nextSibling?.hidden is falsy, so these separators are NOT hidden.
   // Only separators whose next sibling is explicitly hidden get hidden.
-  assertEquals(sep1.hidden, false, "Separator with non-hidden next sibling should not be hidden");
-  assertEquals(sep2.hidden, false, "context-sep-navigation should never be hidden");
-  assertEquals(sep3.hidden, false, "Separator at end (no next sibling with hidden=true) should not be hidden");
+  assertEquals(
+    sep1.hidden,
+    false,
+    "Separator with non-hidden next sibling should not be hidden",
+  );
+  assertEquals(
+    sep2.hidden,
+    false,
+    "context-sep-navigation should never be hidden",
+  );
+  assertEquals(
+    sep3.hidden,
+    false,
+    "Separator at end (no next sibling with hidden=true) should not be hidden",
+  );
   cleanupDOM();
 }
 
-async function testOnPopupShowingHandlesFirstItemHiddenWithSeparator(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingHandlesFirstItemHiddenWithSeparator(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -602,13 +786,20 @@ async function testOnPopupShowingHandlesFirstItemHiddenWithSeparator(): Promise<
 
   ContextMenuUtils.onPopupShowing();
 
-  assertEquals(sep.hidden, true, "Separator before first hidden item should be hidden");
+  assertEquals(
+    sep.hidden,
+    true,
+    "Separator before first hidden item should be hidden",
+  );
   cleanupDOM();
 }
 
-async function testOnPopupShowingHandlesLastItemHiddenWithSeparator(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testOnPopupShowingHandlesLastItemHiddenWithSeparator(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -628,7 +819,11 @@ async function testOnPopupShowingHandlesLastItemHiddenWithSeparator(): Promise<v
 
   ContextMenuUtils.onPopupShowing();
 
-  assertEquals(sep.hidden, true, "Separator before last hidden item should be hidden");
+  assertEquals(
+    sep.hidden,
+    true,
+    "Separator before last hidden item should be hidden",
+  );
   cleanupDOM();
 }
 
@@ -637,8 +832,9 @@ async function testOnPopupShowingHandlesLastItemHiddenWithSeparator(): Promise<v
 // ---------------------------------------------------------------------------
 
 async function testAddContextBoxSuccessfulExecution(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -687,9 +883,12 @@ async function testAddContextBoxSuccessfulExecution(): Promise<void> {
   checkElement.remove();
 }
 
-async function testAddContextBoxCallsCheckedFunctionViaObserver(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+async function testAddContextBoxCallsCheckedFunctionViaObserver(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
@@ -732,8 +931,9 @@ async function testAddContextBoxCallsCheckedFunctionViaObserver(): Promise<void>
 }
 
 async function testAddContextBoxHandlesMissingRenderElement(): Promise<void> {
-  const { ContextMenuUtils } =
-    await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
   cleanupDOM();
   createMockContentAreaContextMenu();
 
@@ -756,7 +956,10 @@ async function testAddContextBoxHandlesMissingRenderElement(): Promise<void> {
   }
 
   // May throw due to missing render element, but should handle gracefully
-  assert(typeof threw === "boolean", "addContextBox should handle missing render element");
+  assert(
+    typeof threw === "boolean",
+    "addContextBox should handle missing render element",
+  );
   cleanupDOM();
   checkElement.remove();
 }
@@ -767,68 +970,62 @@ async function testAddContextBoxHandlesMissingRenderElement(): Promise<void> {
 
 async function testCleanupRemovesEventListener(): Promise<void> {
   cleanupDOM();
-  createMockContentAreaContextMenu();
   resetListenerTracking();
-  wrapContextMenuForTracking();
+  wrapDocumentForTracking();
 
   try {
-    const mod = await import("../index.ts");
-    const ContextMenu = mod.default;
-    const instance = new ContextMenu();
+    const { ContextMenuController } = await import("../controller.ts");
+    const controller = new ContextMenuController({ window });
+    controller.attach();
+    assertEquals(
+      popupListenerAddCount,
+      1,
+      "attach should add one popupshowing capture listener",
+    );
+    controller.destroy();
+    assertEquals(
+      popupListenerRemoveCount,
+      1,
+      "destroy should remove the popupshowing capture listener",
+    );
+  } finally {
+    cleanupDOM();
+  }
+}
 
-    // Mock SolidJS onCleanup to capture the cleanup callback
-    const capturedCleanup: { fn: (() => void) | null } = { fn: null };
-    const solidJsModule = await import("solid-js");
-    const originalOnCleanup = solidJsModule.onCleanup;
+async function testWindowUnloadDestroysController(): Promise<void> {
+  cleanupDOM();
+  const mod = await import("../index.ts");
+  resetListenerTracking();
+  wrapDocumentForTracking();
+  wrapWindowForUnloadTracking();
 
-    // onCleanup may be read-only in the module namespace, use Object.defineProperty
-    let mockApplied = false;
-    try {
-      Object.defineProperty(solidJsModule, "onCleanup", {
-        value: (fn: () => void) => {
-          capturedCleanup.fn = fn;
-        },
-        configurable: true,
-        writable: true,
-      });
-      mockApplied = true;
-    } catch {
-      // onCleanup is non-configurable; cannot intercept cleanup callback.
-    }
-
-    instance.init();
-
-    // Restore original onCleanup
-    if (mockApplied) {
-      try {
-        Object.defineProperty(solidJsModule, "onCleanup", {
-          value: originalOnCleanup,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if onCleanup cannot be restored.
-      }
-    }
-
-    assert(
-      popupListenerAdded,
-      "init() should add popupshowing listener",
+  try {
+    const instance = new mod.default();
+    assertEquals(
+      popupListenerAddCount,
+      1,
+      "component should attach one controller",
+    );
+    invokeCapturedUnloadListener();
+    assertEquals(
+      popupListenerRemoveCount,
+      1,
+      "window unload should destroy the controller",
+    );
+    assertEquals(
+      unloadListenerRemoveCount,
+      1,
+      "shared cleanup should remove its unload listener",
     );
 
-    // Simulate cleanup
-    if (capturedCleanup.fn) {
-      capturedCleanup.fn();
-    }
-
-    // Note: We can't verify removeEventListener was called without more sophisticated mocking
-    // This test verifies the cleanup mechanism is in place
-    if (mockApplied) {
-      assert(
-        capturedCleanup.fn !== null,
-        "onCleanup callback should be registered",
-      );
-    }
+    instance.init();
+    assertEquals(
+      popupListenerAddCount,
+      2,
+      "an explicitly reinitialized instance should own one fresh controller",
+    );
+    invokeCapturedUnloadListener();
   } finally {
     cleanupDOM();
   }
@@ -836,76 +1033,25 @@ async function testCleanupRemovesEventListener(): Promise<void> {
 
 async function testCleanupCallbackActuallyRemovesListener(): Promise<void> {
   cleanupDOM();
-  createMockContentAreaContextMenu();
   resetListenerTracking();
-  wrapContextMenuForTracking();
+  wrapDocumentForTracking();
 
   try {
-    const mod = await import("../index.ts");
-    const ContextMenu = mod.default;
-    const instance = new ContextMenu();
-
-    // Mock SolidJS onCleanup to capture the cleanup callback
-    const capturedCleanup: { fn: (() => void) | null } = { fn: null };
-    const solidJsModule = await import("solid-js");
-    const originalOnCleanup = solidJsModule.onCleanup;
-
-    // onCleanup may be read-only in the module namespace, use Object.defineProperty
-    let mockApplied = false;
-    try {
-      Object.defineProperty(solidJsModule, "onCleanup", {
-        value: (fn: () => void) => {
-          capturedCleanup.fn = fn;
-        },
-        configurable: true,
-        writable: true,
-      });
-      mockApplied = true;
-    } catch {
-      // onCleanup is non-configurable; cannot intercept cleanup callback.
-    }
-
-    instance.init();
-
-    // Restore original onCleanup
-    if (mockApplied) {
-      try {
-        Object.defineProperty(solidJsModule, "onCleanup", {
-          value: originalOnCleanup,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if onCleanup cannot be restored.
-      }
-    }
-
-    assert(
-      popupListenerAdded,
-      "init() should add popupshowing listener",
-    );
-
-    if (!mockApplied) {
-      // Cannot verify cleanup without onCleanup mock
-      return;
-    }
-
+    const { ContextMenuController } = await import("../controller.ts");
+    const controller = new ContextMenuController({ window });
+    controller.attach();
+    controller.attach();
     assertEquals(
-      _popupListenerRemoved,
-      false,
-      "listener should not be removed before cleanup",
+      popupListenerAddCount,
+      1,
+      "attach should be idempotent",
     );
-
-    // Simulate cleanup
-    if (capturedCleanup.fn) {
-      capturedCleanup.fn();
-    }
-
-    // Verify that removeEventListener was called
+    controller.destroy();
+    controller.destroy();
     assertEquals(
-      _popupListenerRemoved,
-      true,
-      "cleanup callback should remove event listener",
+      popupListenerRemoveCount,
+      1,
+      "destroy should be idempotent",
     );
   } finally {
     cleanupDOM();
@@ -917,7 +1063,9 @@ async function testCleanupCallbackActuallyRemovesListener(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 async function testContextMenuComponentCreatesMenuItem(): Promise<void> {
-  const { ContextMenu } = await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenu } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
 
   const runFunctionCalled = { value: false };
   const runFunction = () => {
@@ -933,7 +1081,9 @@ async function testContextMenuComponentCreatesMenuItem(): Promise<void> {
 }
 
 async function testContextMenuComponentHasCorrectProperties(): Promise<void> {
-  const { ContextMenu } = await import("#features-chrome/utils/context-menu.tsx");
+  const { ContextMenu } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
 
   const testId = "test-menu-item-id";
   const testL10n = "test.l10n.key";
@@ -951,6 +1101,64 @@ async function testContextMenuComponentHasCorrectProperties(): Promise<void> {
     result !== null && typeof result === "object",
     "ContextMenu should return a non-null object",
   );
+}
+
+async function testDownloadBarCommandsHaveUniqueSemanticKeys(): Promise<void> {
+  const [{ render }, { DonwloadBar }] = await Promise.all([
+    import("@nora/solid-xul"),
+    import("#features-chrome/static/downloadbar/downloadbar.tsx"),
+  ]);
+  const host = document!.createElement("div");
+  document!.body!.appendChild(host);
+  const dispose = render(() => DonwloadBar(), host);
+
+  try {
+    const popup = host.querySelector('[id="downloadsContextMenu"]');
+    assert(popup !== null, "Download Bar should render its context menu");
+    const commandItems = Array.from(popup.children).filter((item) =>
+      item.localName === "menuitem"
+    );
+    assertEquals(
+      commandItems.length,
+      13,
+      "the Download Bar context menu contract covers every command variant",
+    );
+
+    const semanticKeys = commandItems.map((item) =>
+      item.getAttribute("data-floorp-context-menu-key") ?? ""
+    );
+    assert(
+      semanticKeys.every((key) => key.length > 0),
+      "every Download Bar command should expose a stable semantic key",
+    );
+    assertEquals(
+      new Set(semanticKeys).size,
+      commandItems.length,
+      "pause/resume and other command variants must not share semantic keys",
+    );
+    assertEquals(
+      semanticKeys.join(","),
+      [
+        "floorp.downloadbar.pause",
+        "floorp.downloadbar.resume",
+        "floorp.downloadbar.unblock",
+        "floorp.downloadbar.open-system-viewer",
+        "floorp.downloadbar.always-open-system-viewer",
+        "floorp.downloadbar.always-open-similar-files",
+        "floorp.downloadbar.show",
+        "floorp.downloadbar.open-referrer",
+        "floorp.downloadbar.copy-location",
+        "floorp.downloadbar.delete-file",
+        "floorp.downloadbar.remove-from-history",
+        "floorp.downloadbar.clear-list",
+        "floorp.downloadbar.clear-downloads",
+      ].join(","),
+      "semantic keys should remain stable and follow the native command order",
+    );
+  } finally {
+    dispose();
+    host.remove();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -981,6 +1189,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "ContextMenu init does not throw without context menu",
       fn: testInitDoesNotThrowWithoutContextMenu,
+    },
+    {
+      name: "ContextMenu unload destroys and releases controller",
+      fn: testWindowUnloadDestroysController,
     },
 
     // ContextMenuUtils — contentAreaContextMenu
@@ -1037,7 +1249,8 @@ export async function runAllTests(): Promise<void> {
       fn: testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible,
     },
     {
-      name: "onPopupShowing does not show PDFjs separator when screenshot hidden",
+      name:
+        "onPopupShowing does not show PDFjs separator when screenshot hidden",
       fn: testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden,
     },
     {
@@ -1105,6 +1318,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "ContextMenu component has correct properties",
       fn: testContextMenuComponentHasCorrectProperties,
+    },
+    {
+      name: "Download Bar commands have unique semantic keys",
+      fn: testDownloadBarCommandsHaveUniqueSemanticKeys,
     },
   ];
 

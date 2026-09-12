@@ -94,6 +94,7 @@ export class WorkspacesLinkContextMenu {
       <xul:menu
         id={WORKSPACE_MENU_ID}
         label={i18next.t("workspaces.menu.openLinkInWorkspace")}
+        data-floorp-context-menu-key="floorp.workspaces.open-link"
       >
         <xul:menupopup
           id={WORKSPACE_MENU_POPUP_ID}
@@ -206,6 +207,12 @@ export class WorkspacesLinkContextMenu {
       }
       menuitem.classList.add("menuitem-iconic");
       menuitem.setAttribute("label", workspace.name);
+      menuitem.setAttribute(
+        "data-floorp-context-menu-key",
+        `floorp.workspaces.link.target.${
+          encodeURIComponent(String(workspaceId))
+        }`,
+      );
       const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       if (iconUrl) {
         menuitem.setAttribute("image", iconUrl);

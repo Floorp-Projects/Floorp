@@ -104,6 +104,10 @@ function onPopupShowing(): void {
     const separator = document?.createXULElement("menuseparator");
     if (separator) {
       separator.className = "floorp-split-view-menu-item";
+      separator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.split-view.layout.separator",
+      );
       menu.appendChild(separator);
       anchor = separator;
     }
@@ -132,6 +136,10 @@ function onPopupShowing(): void {
     item.className = "floorp-split-view-menu-item";
     item.setAttribute("label", t(opt.i18nKey));
     item.setAttribute("type", "radio");
+    item.setAttribute(
+      "data-floorp-context-menu-key",
+      `floorp.split-view.layout.${opt.layout}`,
+    );
 
     if (opt.layout === currentLayout) {
       item.setAttribute("checked", "true");
@@ -160,6 +168,10 @@ function onPopupShowing(): void {
     if (addItem) {
       addItem.className = "floorp-split-view-menu-item";
       addItem.setAttribute("label", t("splitView.layoutPicker.addPane"));
+      addItem.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.split-view.layout.add-pane",
+      );
       addItem.addEventListener("command", () => {
         log.debug("[command] adding pane");
         addPaneToActiveSplitView();
@@ -173,6 +185,10 @@ function onPopupShowing(): void {
     if (removeItem) {
       removeItem.className = "floorp-split-view-menu-item";
       removeItem.setAttribute("label", t("splitView.layoutPicker.removePane"));
+      removeItem.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.split-view.layout.remove-pane",
+      );
       removeItem.addEventListener("command", () => {
         log.debug("[command] removing last pane");
         removePaneFromActiveSplitView();

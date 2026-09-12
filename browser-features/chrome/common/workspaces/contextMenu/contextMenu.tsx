@@ -45,28 +45,39 @@ export function ContextMenu(props: {
   return (
     <>
       <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.move-up"
         label={texts().moveUp}
         disabled={props.disableBefore}
         onCommand={() => props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)}
       />
       <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.move-down"
         label={texts().moveDown}
         disabled={props.disableAfter}
         onCommand={() =>
           props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)}
       />
-      <xul:menuseparator class="workspaces-context-menu-separator" />
+      <xul:menuseparator
+        data-floorp-context-menu-key="floorp.workspaces.separator-delete"
+        class="workspaces-context-menu-separator"
+      />
       <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.delete"
         label={texts().delete}
         onCommand={() => props.ctx.deleteWorkspace(props.contextWorkspaceId)}
       />
       <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.manage"
         label={texts().manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
       />
-      <xul:menuseparator class="workspaces-context-menu-separator" />
+      <xul:menuseparator
+        data-floorp-context-menu-key="floorp.workspaces.separator-archive"
+        class="workspaces-context-menu-separator"
+      />
       <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.archive"
         label={texts().archive}
         onCommand={async () => {
           await props.ctx.archiveWorkspace(props.contextWorkspaceId);

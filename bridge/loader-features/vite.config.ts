@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { defineConfig } from "vite";
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
@@ -10,6 +11,14 @@ import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
+
+const dndKitCoreDir = realpathSync(
+  r("../../browser-features/pages-settings/node_modules/@dnd-kit/core"),
+);
+const dndKitAccessibilityDir = realpathSync(
+  path.join(path.dirname(dndKitCoreDir), "accessibility"),
+);
+const PAGES_SETTINGS_PATH = /[\\/]browser-features[\\/]pages-settings[\\/]/;
 
 export default defineConfig({
   cacheDir: "../../node_modules/.vite/loader-features",
@@ -98,7 +107,7 @@ export default defineConfig({
     // deno(),
 
     swc.vite({
-      exclude: ["*solid-xul*", "*solid-js*"],
+      exclude: ["*solid-xul*", "*solid-js*", PAGES_SETTINGS_PATH],
       jsc: {
         target: "esnext",
         parser: {
@@ -112,7 +121,30 @@ export default defineConfig({
       },
     }),
 
+    // Hub tests are loaded directly into a privileged browser document instead
+    // of through Vite's HTML pipeline. Compile their React JSX without Fast
+    // Refresh so the output does not depend on the injected refresh preamble.
+    swc.vite({
+      include: PAGES_SETTINGS_PATH,
+      jsc: {
+        target: "esnext",
+        parser: {
+          syntax: "typescript",
+          tsx: true,
+          decorators: true,
+        },
+        transform: {
+          react: {
+            runtime: "automatic",
+            development: false,
+            refresh: false,
+          },
+        },
+      },
+    }),
+
     solidPlugin({
+      exclude: PAGES_SETTINGS_PATH,
       solid: {
         generate: "universal",
         moduleName: "@nora/solid-xul",
@@ -155,8 +187,27 @@ export default defineConfig({
   optimizeDeps: {
     ignoreOutdatedRequests: true,
     noDiscovery: true,
+    esbuildOptions: {
+      // The workspace uses isolated symlinks. Following them lets the browser
+      // test bundle resolve each package's transitive dependencies from its
+      // real Deno npm cache location.
+      preserveSymlinks: false,
+    },
     include: [
       "./node_modules/@nora",
+      "@dnd-kit/core",
+      "@dnd-kit/modifiers",
+      "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
+      "clsx",
+      "i18next",
+      "lucide-react",
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react-i18next",
+      "react/jsx-runtime",
+      "tailwind-merge",
       "solid-js",
       "solid-js/web",
       "solid-js/store",
@@ -175,6 +226,10 @@ export default defineConfig({
     ],
     preserveSymlinks: true,
     alias: [
+      {
+        find: "@dnd-kit/accessibility",
+        replacement: dndKitAccessibilityDir,
+      },
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
       {
         find: "@nora/solid-xul",
@@ -205,6 +260,10 @@ export default defineConfig({
       {
         find: "#firefox-tests",
         replacement: r("../../_dist/firefox-tests/files"),
+      },
+      {
+        find: "@",
+        replacement: r("../../browser-features/pages-settings/src"),
       },
       {
         find: "#libs",

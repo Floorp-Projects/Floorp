@@ -523,18 +523,20 @@ export default class TabStacks extends NoraComponentBase {
       menu.id = KIND_MENU_ID;
       kindMenu = menu;
       const makeItem = (
+        semanticKey: string,
         stackLabel: string,
         groupLabel: string,
         onCommand: () => void,
       ): XULElement => {
         const item = createXULElement("menuitem");
+        item.setAttribute("data-floorp-context-menu-key", semanticKey);
         item.setAttribute("label", stackLabel);
         item.addEventListener("command", onCommand);
         kindMenu?.appendChild(item);
         dualLabelItems.push({ item, stack: stackLabel, group: groupLabel });
         return item;
       };
-      makeItem("Reload Stack", "Reload Group", () => {
+      makeItem("floorp.tab-stacks.reload", "Reload Stack", "Reload Group", () => {
         const group = menuGroup;
         if (!group) return;
         try {
@@ -543,7 +545,11 @@ export default class TabStacks extends NoraComponentBase {
           console.error("[tab-stacks] reload stack failed:", e);
         }
       });
-      makeItem("New Tab in Stack", "New Tab in Group", () => {
+      makeItem(
+        "floorp.tab-stacks.new-tab",
+        "New Tab in Stack",
+        "New Tab in Group",
+        () => {
         const group = menuGroup;
         if (!group) return;
         try {
@@ -561,12 +567,21 @@ export default class TabStacks extends NoraComponentBase {
           console.error("[tab-stacks] new tab in stack failed:", e);
         }
       });
-      makeItem("Manage Stack…", "Manage Group…", () => {
+      makeItem("floorp.tab-stacks.manage", "Manage Stack…", "Manage Group…", () => {
         // Native group editor: rename, colour and group actions.
         if (menuGroup) gb.tabGroupMenu?.openEditModal(menuGroup);
       });
-      kindMenu.appendChild(createXULElement("menuseparator"));
+      const kindSeparator = createXULElement("menuseparator");
+      kindSeparator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.tab-stacks.separator-kind",
+      );
+      kindMenu.appendChild(kindSeparator);
       kindItem = createXULElement("menuitem");
+      kindItem.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.tab-stacks.switch-kind",
+      );
       kindItem.addEventListener("command", () => {
         if (!menuGroup) return;
         const next: GroupKind = getGroupKind(menuGroup.id) === "stack"
@@ -578,7 +593,7 @@ export default class TabStacks extends NoraComponentBase {
         bumpStacksVersion();
       });
       kindMenu.appendChild(kindItem);
-      makeItem("Ungroup Stack", "Ungroup Tabs", () => {
+      makeItem("floorp.tab-stacks.ungroup", "Ungroup Stack", "Ungroup Tabs", () => {
         // Dissolve the stack, keep every tab in the strip.
         const group = menuGroup;
         if (!group || !gb.ungroupTab) return;
@@ -588,8 +603,13 @@ export default class TabStacks extends NoraComponentBase {
           console.error("[tab-stacks] ungroup stack failed:", e);
         }
       });
-      kindMenu.appendChild(createXULElement("menuseparator"));
-      makeItem("Close Stack", "Close Group", () => {
+      const closeSeparator = createXULElement("menuseparator");
+      closeSeparator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.tab-stacks.separator-close",
+      );
+      kindMenu.appendChild(closeSeparator);
+      makeItem("floorp.tab-stacks.close", "Close Stack", "Close Group", () => {
         const group = menuGroup;
         if (!group) return;
         try {

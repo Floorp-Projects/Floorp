@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Catalog"
 sidebar_label: "Common Chrome"
-floorp_commit: "145eca89ab58c45ed05f3baf611eee4563a8351d"
+floorp_commit: "c2639cbacfedaf376c790952488cc5719fcca7a7"
 generated: true
 ---
 # Common Chrome Feature Catalog
@@ -17,7 +17,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | browser-tab-color | `browser-features/chrome/common/browser-tab-color/index.ts` | `default class BrowserTabColor`, `init` | Owns the browser tab color feature through the BrowserTabColor chrome component and wires `tabcolor-manager`. |
 | chrome-css | `browser-features/chrome/common/chrome-css/index.ts` | `default class ChromeCSS`, `init` | Owns the chrome css feature through the ChromeCSS chrome component and wires `service`. |
 | command-palette | `browser-features/chrome/common/command-palette/index.ts` | `default class CommandPalette`, `init` | Owns the command palette feature through the CommandPalette chrome component and wires `service`, `components/CommandPalette`, `style.css?inline`. |
-| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component and wires `controller`, `config`. |
 | designs | `browser-features/chrome/common/designs/index.ts` | `default class Designs`, `init` | Owns the designs feature through the Designs chrome component and wires `browser-design-element`. |
 | external-browser | `browser-features/chrome/common/external-browser/index.ts` | `default class ExternalBrowser`, `init` | Owns the external browser feature through the ExternalBrowser chrome component and wires `tab-context-menu`, `link-context-menu`. |
 | flex-order | `browser-features/chrome/common/flex-order/index.ts` | `default class FlexOrder`, `init` | Owns the flex order feature through the FlexOrder chrome component and wires `flex-order`. |
