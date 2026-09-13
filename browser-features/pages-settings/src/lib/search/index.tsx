@@ -8,6 +8,7 @@ import {
   AppWindow,
   BadgeInfo,
   Briefcase,
+  Gauge,
   House,
   Keyboard,
   List,
@@ -27,6 +28,7 @@ import ProgressiveWebApp from "@/app/pwa/page.tsx";
 import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
+import Performance from "@/app/performance/page.tsx";
 import About from "@/app/about/noraneko.tsx";
 
 const PREVIEW_LENGTH = 180;
@@ -122,6 +124,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: AppWindow,
     priority: 65,
     Component: ProgressiveWebApp,
+  },
+  {
+    id: "performance",
+    route: "/features/performance",
+    titleKey: "pages.performance",
+    descriptionKey: "performance.description",
+    icon: Gauge,
+    priority: 55,
+    Component: Performance,
   },
   {
     id: "accounts",

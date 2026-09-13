@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "59b734acd2ca61cce4a8ba829956ceaf428675ff"
+floorp_commit: "9c051c5de2783c683e0f7ef3f399bd694072b8d8"
 generated: true
 ---
 # Architecture Overview
@@ -58,7 +58,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 
 ## Chrome UI Features
 
-Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 34 common features:
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 35 common features:
 
 - `addons`
 - `browser-share-mode`
@@ -70,6 +70,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `external-browser`
 - `flex-order`
 - `hub-panel-menu`
+- `idle-memory-reclaim`
 - `keyboard-shortcut`
 - `modal-parent`
 - `mouse-gesture`
@@ -103,7 +104,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 14 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 15 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 

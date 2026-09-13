@@ -14,6 +14,7 @@ import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
 import Updates from "@/app/updates/page.tsx";
+import Performance from "@/app/performance/page.tsx";
 import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
 import { AppBackground } from "@/components/app-background.tsx";
 import SearchPage from "@/app/search/page.tsx";
@@ -59,6 +60,7 @@ export default function App() {
                 path="/features/shortcuts"
                 element={<KeyboardShortcut />}
               />
+              <Route path="/features/performance" element={<Performance />} />
               <Route path="/about/browser" element={<About />} />
               <Route path="/about/updates" element={<Updates />} />
             </Routes>

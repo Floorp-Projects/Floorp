@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "performance": "Performance",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -743,6 +744,20 @@
             "saveDescription": "Save the shortcut",
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
+        }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Settings that affect how the browser uses system resources.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Experimental and off by default. When enabled, attempts to reduce memory use after a period without keyboard or mouse input. The amount reclaimed depends on the pages in use.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
         }
     }
 }
