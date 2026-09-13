@@ -7,6 +7,7 @@ const navigationItems = [
   { path: "/features", labelKey: "navigation.featureIntroduction" },
   { path: "/hub", labelKey: "navigation.hub" },
   { path: "/customize", labelKey: "navigation.initialSettings" },
+  { path: "/support", labelKey: "navigation.support" },
   { path: "/finish", labelKey: "navigation.complete" },
 ];
 
@@ -20,17 +21,25 @@ export default function ProgressBar() {
 
   return (
     <div className="w-full mb-12">
-      <ul className="steps steps-horizontal w-full">
-        {navigationItems.map((item, index) => (
-          <li
-            key={item.path}
-            className={`step ${index <= currentIndex ? "step-primary" : ""}`}
-            onClick={() => navigate(item.path)}
-          >
-            {t(item.labelKey)}
-          </li>
-        ))}
-      </ul>
+      <div className="flex justify-between gap-4 md:hidden">
+        <span>
+          {t(navigationItems[currentIndex]?.labelKey ?? "navigation.welcome")}
+        </span>
+        <span>{currentIndex + 1} / {navigationItems.length}</span>
+      </div>
+      <div className="hidden md:block">
+        <ul className="steps steps-horizontal w-full">
+          {navigationItems.map((item, index) => (
+            <li
+              key={item.path}
+              className={`step ${index <= currentIndex ? "step-primary" : ""}`}
+              onClick={() => navigate(item.path)}
+            >
+              {t(item.labelKey)}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

@@ -330,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+      "learnMore": "Read about our funding and this setting (Japanese)",
+            "title": "Release notes after updates",
+            "description": "Choose how Floorp opens release notes after an update.",
+            "disabled": {
+                "label": "Do not open automatically",
+                "description": "Release notes will not open after updates. Your blocker settings apply when you visit the blog."
+            },
+            "blocking": {
+                "label": "Open with your blocker settings",
+                "description": "Open release notes without restricting your extensions. This does not install or enable an ad blocker."
+            },
+            "support": {
+                "label": "Open and allow ads to support Floorp (recommended)",
+                "description": "Prevent uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery from filtering the Floorp blog."
+            },
+            "supportMessage": "Advertising revenue from release notes supports Floorp development and operation. Thank you for supporting us in a way that works for you.",
+            "scope": "This exception applies to all HTTPS visits to blog.floorp.app, including manually opened pages. It also affects tracking protection and custom filters in the five listed extensions. Other extensions are not restricted by this setting. Other protection tools may still block ads. Reload open blog pages after changing this setting.",
+            "error": "Could not load or save this setting. Please reopen this page and try again."
+        },
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {

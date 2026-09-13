@@ -4,6 +4,7 @@ import ProgressBar from "./components/ProgressBar.tsx";
 import { rpc } from "./lib/rpc/rpc.ts";
 import WhatsNewPage from "./app/whatsnew/page.tsx";
 import { I18nProvider } from "./components/I18nProvider.tsx";
+import { ReleaseNotesPrompt, SetupReleaseNotesProvider } from "./components/ReleaseNotesChoice.tsx";
 
 const WelcomePage = lazy(() => import("./app/welcome/page.tsx"));
 const LocalizationPage = lazy(() => import("./app/localization/page.tsx"));
@@ -11,6 +12,7 @@ const HubIntroPage = lazy(() => import("./app/hub/page.tsx"));
 const FeaturesPage = lazy(() => import("./app/features/page.tsx"));
 const CustomizePage = lazy(() => import("./app/customize/page.tsx"));
 const FinishPage = lazy(() => import("./app/finish/page.tsx"));
+const SupportPage = lazy(() => import("./app/support/page.tsx"));
 
 function App() {
   //* Set welcome page shown to true (kept for first-run compatibility)
@@ -19,6 +21,10 @@ function App() {
   // Detect upgrade query (e.g., about:welcome?upgrade=12)
   const url = new URL(globalThis.location.href);
   const upgrade = url.searchParams.get("upgrade");
+
+  if (url.searchParams.get("releaseNotes") === "1") {
+    return <I18nProvider><ReleaseNotesPrompt /></I18nProvider>;
+  }
 
   // If upgrade mode, show only the WhatsNew page, similar to Chrome's post-update UI
   if (upgrade) {
@@ -33,6 +39,7 @@ function App() {
 
   return (
     <I18nProvider>
+      <SetupReleaseNotesProvider>
       <MemoryRouter>
         <div className="min-h-screen bg-base-100 text-base-content flex flex-col relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -167,12 +174,14 @@ function App() {
                 <Route path="/features" element={<FeaturesPage />} />
                 <Route path="/hub" element={<HubIntroPage />} />
                 <Route path="/customize" element={<CustomizePage />} />
+                <Route path="/support" element={<SupportPage />} />
                 <Route path="/finish" element={<FinishPage />} />
               </Routes>
             </Suspense>
           </main>
         </div>
       </MemoryRouter>
+      </SetupReleaseNotesProvider>
     </I18nProvider>
   );
 }

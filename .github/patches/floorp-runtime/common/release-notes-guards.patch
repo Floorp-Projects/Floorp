@@ -1,0 +1,183 @@
+diff --git a/toolkit/components/extensions/ExtensionCommon.sys.mjs b/toolkit/components/extensions/ExtensionCommon.sys.mjs
+index ec57020..138e926 100644
+--- a/toolkit/components/extensions/ExtensionCommon.sys.mjs
++++ b/toolkit/components/extensions/ExtensionCommon.sys.mjs
+@@ -3079,8 +3079,25 @@ function updateAllowedOrigins(policy, origins, isAdd) {
+ var GuardSets = {
+   _inits: null,
+   _defaults: [],
++  _floorpObserver: null,
++  _floorpBlockers: new Set([
++    "uBlock0@raymondhill.net",
++    "adguardadblocker@adguard.com",
++    "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}",
++    "jid1-NIfFY2CA8fy1tg@jetpack",
++    "firefox@ghostery.com",
++  ]),
+ 
+   init(inits) {
++    if (!this._floorpObserver) {
++      this._floorpObserver = () => {
++        WebExtensionPolicy.getActiveExtensions().forEach(p => this.updateFor(p));
++      };
++      Services.prefs.addObserver(
++        "floorp.releaseNotes.",
++        this._floorpObserver
++      );
++    }
+     this._inits = inits ?? Services.cpmm.sharedData.get("extensions/guards");
+     let def = this._inits?.get("*");
+     this._defaults = def ? [new ExtensionGuardSet(def)] : [];
+@@ -3104,7 +3121,21 @@ var GuardSets = {
+       this.init();
+     }
+     let init = this._inits?.get(policy.id);
+-    policy.guardSets = init ? [new ExtensionGuardSet(init)] : this._defaults;
++    let guards = init ? [new ExtensionGuardSet(init)] : [...this._defaults];
++    if (
++      this._floorpBlockers.has(policy.id) &&
++      Services.prefs.getBoolPref("floorp.releaseNotes.choiceConfirmed", false) &&
++      Services.prefs.getStringPref("floorp.releaseNotes.mode", "blocking") ===
++        "support"
++    ) {
++      guards.push(
++        new ExtensionGuardSet({
++          deny: ["https://blog.floorp.app"],
++          source: "enterprise-per-extension",
++        })
++      );
++    }
++    policy.guardSets = guards;
+   },
+ };
+ 
+diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
+index c1b29e5..f42733f 100644
+--- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
++++ b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
+@@ -170,9 +170,7 @@ ExtensionManager = {
+         contentScripts: extension.contentScripts,
+       });
+ 
+-      if (sharedData.has("extensions/guards")) {
+-        lazy.ExtensionCommon.GuardSets.updateFor(policy);
+-      }
++      lazy.ExtensionCommon.GuardSets.updateFor(policy);
+ 
+       policy.debugName = `${JSON.stringify(policy.name)} (ID: ${
+         policy.id
+diff --git a/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js
+new file mode 100644
+index 0000000..d318480
+--- /dev/null
++++ b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js
+@@ -0,0 +1,96 @@
++"use strict";
++
++const MODE_PREF = "floorp.releaseNotes.mode";
++const CONFIRMED_PREF = "floorp.releaseNotes.choiceConfirmed";
++const BLOCKERS = [
++  "uBlock0@raymondhill.net",
++  "adguardadblocker@adguard.com",
++  "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}",
++  "jid1-NIfFY2CA8fy1tg@jetpack",
++  "firefox@ghostery.com",
++];
++
++add_task(async function release_notes_guards_are_scoped_and_reversible() {
++  const { setEnterpriseGuards } = ChromeUtils.importESModule(
++    "resource://gre/modules/ExtensionPermissions.sys.mjs"
++  );
++  const blog = Services.io.newURI("https://blog.floorp.app/release/test");
++  const other = Services.io.newURI("https://example.org/");
++  const lookalike = Services.io.newURI("https://blog.floorp.app.example.org/");
++  const originalMode = Services.prefs.getStringPref(MODE_PREF, "support");
++  const hadMode = Services.prefs.prefHasUserValue(MODE_PREF);
++  const hadConfirmation = Services.prefs.prefHasUserValue(CONFIRMED_PREF);
++  const originalConfirmation = Services.prefs.getBoolPref(CONFIRMED_PREF, false);
++  const extensions = [];
++  registerCleanupFunction(async () => {
++    setEnterpriseGuards({});
++    if (hadConfirmation) {
++      Services.prefs.setBoolPref(CONFIRMED_PREF, originalConfirmation);
++    } else {
++      Services.prefs.clearUserPref(CONFIRMED_PREF);
++    }
++    if (hadMode) {
++      Services.prefs.setStringPref(MODE_PREF, originalMode);
++    } else {
++      Services.prefs.clearUserPref(MODE_PREF);
++    }
++    for (const extension of extensions) {
++      await extension.unload();
++    }
++  });
++
++  Services.prefs.setStringPref(MODE_PREF, "support");
++  Services.prefs.setBoolPref(CONFIRMED_PREF, false);
++  for (const id of [...BLOCKERS, "unrelated@example.org"]) {
++    const extension = ExtensionTestUtils.loadExtension({
++      manifest: {
++        manifest_version: 2,
++        browser_specific_settings: { gecko: { id } },
++        permissions: ["<all_urls>"],
++      },
++    });
++    await extension.startup();
++    extensions.push(extension);
++    const policy = WebExtensionPolicy.getByID(id);
++    Assert.ok(policy.canAccessURI(blog), "No restriction before confirmation: " + id);
++    Assert.ok(policy.canAccessURI(other), "Other sites remain accessible");
++    Assert.ok(policy.canAccessURI(lookalike), "Host match is exact");
++  }
++
++  Services.prefs.setBoolPref(CONFIRMED_PREF, true);
++  for (const id of BLOCKERS) {
++    Assert.ok(!WebExtensionPolicy.getByID(id).canAccessURI(blog), id);
++  }
++  Assert.ok(WebExtensionPolicy.getByID("unrelated@example.org").canAccessURI(blog));
++
++  const policy = WebExtensionPolicy.getByID(BLOCKERS[0]);
++  const script = new WebExtensionContentScript(policy, {
++    matches: ["<all_urls>"],
++    jsPaths: ["script.js"],
++  });
++  Assert.ok(!script.matchesURI(blog), "Content script excluded on blog");
++  Assert.ok(script.matchesURI(other), "Content script still matches other sites");
++
++  setEnterpriseGuards({
++    "*": { runtime_blocked_hosts: ["https://example.org"] },
++  });
++  Assert.ok(!policy.canAccessURI(other), "Enterprise restriction preserved");
++  Assert.ok(!policy.canAccessURI(blog), "Support restriction survives policy update");
++
++  for (const mode of ["blocking", "disabled", "invalid"]) {
++    Services.prefs.setStringPref(MODE_PREF, mode);
++    for (const id of BLOCKERS) {
++      Assert.ok(WebExtensionPolicy.getByID(id).canAccessURI(blog), mode);
++    }
++    Assert.ok(script.matchesURI(blog), "Content scripts restored");
++    Assert.ok(!policy.canAccessURI(other), "Enterprise restriction remains");
++  }
++
++  Services.prefs.setStringPref(MODE_PREF, "support");
++  Assert.ok(!policy.canAccessURI(blog), "Support can be enabled again");
++  Assert.ok(!script.matchesURI(blog), "Content script excluded again");
++  Assert.ok(!policy.canAccessURI(other), "Enterprise restriction still remains");
++  Services.prefs.setBoolPref(CONFIRMED_PREF, false);
++  Assert.ok(policy.canAccessURI(blog), "Removing confirmation restores protection");
++  Assert.ok(!policy.canAccessURI(other), "Enterprise restriction remains after reset");
++});
+diff --git a/toolkit/components/extensions/test/xpcshell/xpcshell.toml b/toolkit/components/extensions/test/xpcshell/xpcshell.toml
+index 861aadf..fb7e7f3 100644
+--- a/toolkit/components/extensions/test/xpcshell/xpcshell.toml
++++ b/toolkit/components/extensions/test/xpcshell/xpcshell.toml
+@@ -49,6 +49,8 @@ run-if = [
+ 
+ ["test_MatchPattern.js"]
+ 
++["test_ext_floorp_release_notes.js"]
++
+ ["test_OriginControls.js"]
+ 
+ ["test_StorageSyncService.js"]

@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
+import { ReleaseNotesSettings } from "./ReleaseNotesSettings.tsx";
 
 const EXPERIMENTS_POLICY_PREF = "floorp.experiments.participationPolicy";
 
@@ -299,6 +300,7 @@ export default function Page() {
       </div>
 
       <div className="flex flex-col gap-8 pl-6">
+        <ReleaseNotesSettings />
         <Card>
           <CardHeader>
             <CardTitle>{t("updates.experiments.title")}</CardTitle>
