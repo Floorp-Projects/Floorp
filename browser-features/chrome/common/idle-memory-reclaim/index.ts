@@ -193,8 +193,9 @@ export function isIdleEnough(
  * Firefox schedules GC/CC lazily off an idle timer and jemalloc keeps freed
  * pages mapped, so resident memory stays high after long uptime. This performs
  * the same work as the "Minimize memory usage" button in about:memory
- * (nsIMemoryReporterManager.minimizeMemoryUsage) automatically, but only while
- * the user is away.
+ * (nsIMemoryReporterManager.minimizeMemoryUsage) automatically when opted in
+ * and input has been idle. Playback and calls do not reset input inactivity;
+ * an already started reclaim can also delay input when the user returns.
  */
 @noraComponent(import.meta.hot)
 export default class IdleMemoryReclaim extends NoraComponentBase {

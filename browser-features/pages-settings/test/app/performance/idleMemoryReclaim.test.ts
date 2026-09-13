@@ -66,8 +66,18 @@ function assertDefaults(
 }
 
 function testNormalizeFallsBackForNonObjects(): void {
+  assertEquals(
+    DEFAULT_IDLE_MEMORY_RECLAIM_SETTINGS.enabled,
+    false,
+    "settings page must default to opt-in",
+  );
   assertDefaults(normalizeIdleMemoryReclaimSettings(null), "null");
   assertDefaults(normalizeIdleMemoryReclaimSettings("nope"), "a non-object");
+  assertEquals(
+    normalizeIdleMemoryReclaimSettings({ enabled: true }).enabled,
+    true,
+    "existing explicit opt-in must be preserved",
+  );
 }
 
 function testNormalizeRejectsWrongTypes(): void {
@@ -196,7 +206,7 @@ function testMergeStartsFromDefaultsWhenPrefIsMissing(): void {
     mergeIdleMemoryReclaimSettings(null, makeSettings()),
   ) as Record<string, unknown>;
 
-  assertEquals(merged.enabled, true, "a missing pref should be filled in");
+  assertEquals(merged.enabled, false, "a missing pref must remain opt-in");
   assertEquals(
     merged.idleThresholdSec,
     DEFAULT_IDLE_MEMORY_RECLAIM_SETTINGS.idleThresholdSec,

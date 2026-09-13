@@ -9,7 +9,8 @@
  * Gecko keeps freed heap pages mapped rather than returning them to the OS, so
  * a long-running browser holds more resident memory than it actually uses. This
  * feature runs an explicit reclaim (GC + CC + jemalloc purge) to bring that back
- * down, but only while the user is away so the pause never lands mid-interaction.
+ * down after an idle threshold. Input inactivity does not imply that playback
+ * or calls have stopped, and a reclaim already started can delay returning input.
  */
 export interface IdleMemoryReclaimSettings {
   /** Whether the feature is enabled at all. */
@@ -55,7 +56,7 @@ export const IDLE_MEMORY_RECLAIM_PREF = "floorp.memory.idleReclaim";
 export const IDLE_MEMORY_RECLAIM_STATS_PREF = "floorp.memory.idleReclaim.stats";
 
 export const DEFAULT_SETTINGS: IdleMemoryReclaimSettings = {
-  enabled: true,
+  enabled: false,
   idleThresholdSec: 60,
   pollIntervalSec: 60,
   minIntervalSec: 300,

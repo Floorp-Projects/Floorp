@@ -15,7 +15,7 @@ export interface IdleMemoryReclaimSettings {
 }
 
 export const DEFAULT_IDLE_MEMORY_RECLAIM_SETTINGS: IdleMemoryReclaimSettings = {
-  enabled: true,
+  enabled: false,
   idleThresholdSec: 60,
   minIntervalSec: 300,
   minResidentMB: 400,
@@ -24,9 +24,8 @@ export const DEFAULT_IDLE_MEMORY_RECLAIM_SETTINGS: IdleMemoryReclaimSettings = {
 /**
  * Floors for the values this page offers.
  *
- * The feature clamps lower (15s / 30s) so that a hand-edited pref can never
- * destroy the machine. A reclaim stalls the main thread for a second or more,
- * so this page deliberately does not offer values that would fire that often.
+ * The feature clamps lower (15s / 30s). Reclaim can pause the browser,
+ * so this page offers more conservative minimum intervals.
  */
 export const IDLE_THRESHOLD_SEC_MIN = 60;
 export const MIN_INTERVAL_SEC_MIN = 60;

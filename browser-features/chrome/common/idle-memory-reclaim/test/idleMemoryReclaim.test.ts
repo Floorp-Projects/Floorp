@@ -29,7 +29,7 @@ import {
 function makeSettings(
   overrides: Partial<IdleMemoryReclaimSettings> = {},
 ): IdleMemoryReclaimSettings {
-  return { ...DEFAULT_SETTINGS, ...overrides };
+  return { ...DEFAULT_SETTINGS, enabled: true, ...overrides };
 }
 
 function makeStats(
