@@ -576,6 +576,14 @@ export default function WhatsNewPage() {
 
               <div className="flex flex-wrap gap-6 text-sm">
                 <a
+                  href="https://floorp.app/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("whatsNew.footer.terms")}
+                </a>
+                <a
                   href="https://floorp.app/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
