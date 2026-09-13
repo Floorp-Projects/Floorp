@@ -1,12 +1,14 @@
 diff --git a/modules/ExtensionCommon.sys.mjs b/modules/ExtensionCommon.sys.mjs
-index ec57020..138e926 100644
+index ec57020..2ecc4ef 100644
 --- a/modules/ExtensionCommon.sys.mjs
 +++ b/modules/ExtensionCommon.sys.mjs
-@@ -3079,8 +3079,25 @@ function updateAllowedOrigins(policy, origins, isAdd) {
+@@ -3079,8 +3079,79 @@ function updateAllowedOrigins(policy, origins, isAdd) {
  var GuardSets = {
    _inits: null,
    _defaults: [],
 +  _floorpObserver: null,
++  _floorpTopDocuments: new WeakMap(),
++  _floorpTopDocumentListener: null,
 +  _floorpBlockers: new Set([
 +    "uBlock0@raymondhill.net",
 +    "adguardadblocker@adguard.com",
@@ -14,8 +16,60 @@ index ec57020..138e926 100644
 +    "jid1-NIfFY2CA8fy1tg@jetpack",
 +    "firefox@ghostery.com",
 +  ]),
++
++  isFloorpSupportEnabled(policy) {
++    return (
++      this._floorpBlockers.has(policy?.id) &&
++      Services.prefs.getBoolPref("floorp.releaseNotes.choiceConfirmed", false) &&
++      Services.prefs.getStringPref("floorp.releaseNotes.mode", "blocking") ===
++        "support"
++    );
++  },
++
++  isFloorpRestrictedTopDocument(policy, uri) {
++    return this.isFloorpSupportEnabled(policy) &&
++      uri?.schemeIs("https") && uri.host === "blog.floorp.app";
++  },
++
++  isFloorpRestrictedWindow(policy, window) {
++    if (!this.isFloorpSupportEnabled(policy)) {
++      return false;
++    }
++    const top = window.windowGlobalChild?.windowContext.topWindowContext;
++    if (!top) {
++      return false;
++    }
++    if (!this._floorpTopDocuments.has(top)) {
++      // A remote top document's URI is only available in the parent process.
++      // Query once per top WindowContext, before any document_start script or
++      // CSS runs. A new document has a new context; preference changes are
++      // checked above on every call and are not cached.
++      const result = Services.cpmm.sendSyncMessage("Floorp:GetBlogTopDocument", {
++        browsingContextId: top.browsingContext.id,
++        innerWindowId: top.innerWindowId,
++      })[0];
++      this._floorpTopDocuments.set(top, result === true);
++    }
++    return this._floorpTopDocuments.get(top);
++  },
  
    init(inits) {
++    if (
++      Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT &&
++      !this._floorpTopDocumentListener
++    ) {
++      this._floorpTopDocumentListener = ({ data }) => {
++        const context = BrowsingContext.get(data.browsingContextId);
++        const global = context?.currentWindowGlobal;
++        const uri = global?.documentURI;
++        return context?.top === context &&
++          global?.innerWindowId === data.innerWindowId &&
++          uri?.schemeIs("https") && uri.host === "blog.floorp.app";
++      };
++      Services.ppmm.addMessageListener(
++        "Floorp:GetBlogTopDocument", this._floorpTopDocumentListener
++      );
++    }
 +    if (!this._floorpObserver) {
 +      this._floorpObserver = () => {
 +        WebExtensionPolicy.getActiveExtensions().forEach(p => this.updateFor(p));
@@ -28,7 +82,7 @@ index ec57020..138e926 100644
      this._inits = inits ?? Services.cpmm.sharedData.get("extensions/guards");
      let def = this._inits?.get("*");
      this._defaults = def ? [new ExtensionGuardSet(def)] : [];
-@@ -3104,7 +3121,21 @@ var GuardSets = {
+@@ -3104,7 +3175,21 @@ var GuardSets = {
        this.init();
      }
      let init = this._inits?.get(policy.id);
@@ -51,6 +105,57 @@ index ec57020..138e926 100644
    },
  };
  
+diff --git a/modules/ExtensionContent.sys.mjs b/modules/ExtensionContent.sys.mjs
+index 116c307..27a8af1 100644
+--- a/modules/ExtensionContent.sys.mjs
++++ b/modules/ExtensionContent.sys.mjs
+@@ -515,6 +515,13 @@ class Script {
+     ) {
+       return;
+     }
++    if (
++      ExtensionCommon.GuardSets.isFloorpRestrictedWindow(
++        this.extension.policy, window
++      )
++    ) {
++      return;
++    }
+     this.injectedInto.add(window.document);
+ 
+     let context = this.extension.getContext(window);
+diff --git a/modules/ExtensionDNR.sys.mjs b/modules/ExtensionDNR.sys.mjs
+index 043ee22..24c5734 100644
+--- a/modules/ExtensionDNR.sys.mjs
++++ b/modules/ExtensionDNR.sys.mjs
+@@ -76,6 +76,7 @@ let gInvalidateResourceCacheTimer = null;
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
+   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
+   WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
+@@ -1591,6 +1592,20 @@ class RequestEvaluator {
+     let requestEvaluators = [];
+     let finalMatch;
+     for (let ruleManager of ruleManagers) {
++      const policy = ruleManager.extension.policy;
++      const guards = lazy.ExtensionCommon.GuardSets;
++      // DNR block/allow actions can run without host permissions, so a
++      // canExtensionModify check alone does not exclude these rules.
++      if (
++        guards.isFloorpRestrictedTopDocument(policy, request.requestURI) ||
++        (request.type !== "main_frame" &&
++          (guards.isFloorpRestrictedTopDocument(policy, request.initiatorURI) ||
++            guards.isFloorpRestrictedTopDocument(
++              policy, request.browsingContext?.top.currentURI
++            )))
++      ) {
++        continue;
++      }
+       // Evaluate request with findMatchingRules():
+       const requestEvaluator = new RequestEvaluator(request, ruleManager);
+       // RequestEvaluator may be used after the loop when the request is
 diff --git a/modules/ExtensionProcessScript.sys.mjs b/modules/ExtensionProcessScript.sys.mjs
 index c1b29e5..f42733f 100644
 --- a/modules/ExtensionProcessScript.sys.mjs
@@ -66,3 +171,35 @@ index c1b29e5..f42733f 100644
  
        policy.debugName = `${JSON.stringify(policy.name)} (ID: ${
          policy.id
+diff --git a/modules/WebRequest.sys.mjs b/modules/WebRequest.sys.mjs
+index 8fada7e..e2f800e 100644
+--- a/modules/WebRequest.sys.mjs
++++ b/modules/WebRequest.sys.mjs
+@@ -6,6 +6,7 @@
+ const lazy = {};
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
+   ExtensionDocumentId: "resource://gre/modules/ExtensionDocumentId.sys.mjs",
+   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+@@ -897,6 +898,19 @@ HttpObserverManager = {
+           return;
+         }
+ 
++        // Use the request's ancestor snapshot, not the selected browser tab.
++        // Third-party frames retain the top document as frameId 0.
++        const topDocument = channel.frameAncestors?.find(a => a.frameId === 0);
++        if (
++          topDocument &&
++          lazy.ExtensionCommon.GuardSets.isFloorpRestrictedTopDocument(
++            opts.policy,
++            Services.io.newURI(topDocument.url)
++          )
++        ) {
++          return;
++        }
++
+         let extension = opts.policy?.extension;
+         // TODO: Move this logic to ChannelWrapper::matches, see bug 1699481
+         if (

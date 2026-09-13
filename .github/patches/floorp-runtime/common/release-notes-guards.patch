@@ -1,12 +1,14 @@
 diff --git a/toolkit/components/extensions/ExtensionCommon.sys.mjs b/toolkit/components/extensions/ExtensionCommon.sys.mjs
-index ec57020..138e926 100644
+index ec57020..2ecc4ef 100644
 --- a/toolkit/components/extensions/ExtensionCommon.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionCommon.sys.mjs
-@@ -3079,8 +3079,25 @@ function updateAllowedOrigins(policy, origins, isAdd) {
+@@ -3079,8 +3079,79 @@ function updateAllowedOrigins(policy, origins, isAdd) {
  var GuardSets = {
    _inits: null,
    _defaults: [],
 +  _floorpObserver: null,
++  _floorpTopDocuments: new WeakMap(),
++  _floorpTopDocumentListener: null,
 +  _floorpBlockers: new Set([
 +    "uBlock0@raymondhill.net",
 +    "adguardadblocker@adguard.com",
@@ -14,8 +16,60 @@ index ec57020..138e926 100644
 +    "jid1-NIfFY2CA8fy1tg@jetpack",
 +    "firefox@ghostery.com",
 +  ]),
++
++  isFloorpSupportEnabled(policy) {
++    return (
++      this._floorpBlockers.has(policy?.id) &&
++      Services.prefs.getBoolPref("floorp.releaseNotes.choiceConfirmed", false) &&
++      Services.prefs.getStringPref("floorp.releaseNotes.mode", "blocking") ===
++        "support"
++    );
++  },
++
++  isFloorpRestrictedTopDocument(policy, uri) {
++    return this.isFloorpSupportEnabled(policy) &&
++      uri?.schemeIs("https") && uri.host === "blog.floorp.app";
++  },
++
++  isFloorpRestrictedWindow(policy, window) {
++    if (!this.isFloorpSupportEnabled(policy)) {
++      return false;
++    }
++    const top = window.windowGlobalChild?.windowContext.topWindowContext;
++    if (!top) {
++      return false;
++    }
++    if (!this._floorpTopDocuments.has(top)) {
++      // A remote top document's URI is only available in the parent process.
++      // Query once per top WindowContext, before any document_start script or
++      // CSS runs. A new document has a new context; preference changes are
++      // checked above on every call and are not cached.
++      const result = Services.cpmm.sendSyncMessage("Floorp:GetBlogTopDocument", {
++        browsingContextId: top.browsingContext.id,
++        innerWindowId: top.innerWindowId,
++      })[0];
++      this._floorpTopDocuments.set(top, result === true);
++    }
++    return this._floorpTopDocuments.get(top);
++  },
  
    init(inits) {
++    if (
++      Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT &&
++      !this._floorpTopDocumentListener
++    ) {
++      this._floorpTopDocumentListener = ({ data }) => {
++        const context = BrowsingContext.get(data.browsingContextId);
++        const global = context?.currentWindowGlobal;
++        const uri = global?.documentURI;
++        return context?.top === context &&
++          global?.innerWindowId === data.innerWindowId &&
++          uri?.schemeIs("https") && uri.host === "blog.floorp.app";
++      };
++      Services.ppmm.addMessageListener(
++        "Floorp:GetBlogTopDocument", this._floorpTopDocumentListener
++      );
++    }
 +    if (!this._floorpObserver) {
 +      this._floorpObserver = () => {
 +        WebExtensionPolicy.getActiveExtensions().forEach(p => this.updateFor(p));
@@ -28,7 +82,7 @@ index ec57020..138e926 100644
      this._inits = inits ?? Services.cpmm.sharedData.get("extensions/guards");
      let def = this._inits?.get("*");
      this._defaults = def ? [new ExtensionGuardSet(def)] : [];
-@@ -3104,7 +3121,21 @@ var GuardSets = {
+@@ -3104,7 +3175,21 @@ var GuardSets = {
        this.init();
      }
      let init = this._inits?.get(policy.id);
@@ -51,6 +105,57 @@ index ec57020..138e926 100644
    },
  };
  
+diff --git a/toolkit/components/extensions/ExtensionContent.sys.mjs b/toolkit/components/extensions/ExtensionContent.sys.mjs
+index 116c307..27a8af1 100644
+--- a/toolkit/components/extensions/ExtensionContent.sys.mjs
++++ b/toolkit/components/extensions/ExtensionContent.sys.mjs
+@@ -515,6 +515,13 @@ class Script {
+     ) {
+       return;
+     }
++    if (
++      ExtensionCommon.GuardSets.isFloorpRestrictedWindow(
++        this.extension.policy, window
++      )
++    ) {
++      return;
++    }
+     this.injectedInto.add(window.document);
+ 
+     let context = this.extension.getContext(window);
+diff --git a/toolkit/components/extensions/ExtensionDNR.sys.mjs b/toolkit/components/extensions/ExtensionDNR.sys.mjs
+index 043ee22..24c5734 100644
+--- a/toolkit/components/extensions/ExtensionDNR.sys.mjs
++++ b/toolkit/components/extensions/ExtensionDNR.sys.mjs
+@@ -76,6 +76,7 @@ let gInvalidateResourceCacheTimer = null;
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
+   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
+   WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
+@@ -1591,6 +1592,20 @@ class RequestEvaluator {
+     let requestEvaluators = [];
+     let finalMatch;
+     for (let ruleManager of ruleManagers) {
++      const policy = ruleManager.extension.policy;
++      const guards = lazy.ExtensionCommon.GuardSets;
++      // DNR block/allow actions can run without host permissions, so a
++      // canExtensionModify check alone does not exclude these rules.
++      if (
++        guards.isFloorpRestrictedTopDocument(policy, request.requestURI) ||
++        (request.type !== "main_frame" &&
++          (guards.isFloorpRestrictedTopDocument(policy, request.initiatorURI) ||
++            guards.isFloorpRestrictedTopDocument(
++              policy, request.browsingContext?.top.currentURI
++            )))
++      ) {
++        continue;
++      }
+       // Evaluate request with findMatchingRules():
+       const requestEvaluator = new RequestEvaluator(request, ruleManager);
+       // RequestEvaluator may be used after the loop when the request is
 diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 index c1b29e5..f42733f 100644
 --- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
@@ -68,10 +173,10 @@ index c1b29e5..f42733f 100644
          policy.id
 diff --git a/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js
 new file mode 100644
-index 0000000..d318480
+index 0000000..3f49857
 --- /dev/null
 +++ b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,150 @@
 +"use strict";
 +
 +const MODE_PREF = "floorp.releaseNotes.mode";
@@ -168,16 +273,179 @@ index 0000000..d318480
 +  Assert.ok(policy.canAccessURI(blog), "Removing confirmation restores protection");
 +  Assert.ok(!policy.canAccessURI(other), "Enterprise restriction remains after reset");
 +});
++
++add_task(function release_notes_top_document_scope() {
++  const { GuardSets } = ChromeUtils.importESModule(
++    "resource://gre/modules/ExtensionCommon.sys.mjs"
++  ).ExtensionCommon;
++  const previousMode = Services.prefs.getStringPref(MODE_PREF, "blocking");
++  const previousConfirmation = Services.prefs.getBoolPref(CONFIRMED_PREF, false);
++  try {
++    Services.prefs.setStringPref(MODE_PREF, "support");
++    Services.prefs.setBoolPref(CONFIRMED_PREF, true);
++    for (const id of BLOCKERS) {
++      for (const [url, expected] of [
++        ["https://blog.floorp.app/ja/", true],
++        ["http://blog.floorp.app/", false],
++        ["https://blog.floorp.app.example.org/", false],
++        ["https://example.org/", false],
++      ]) {
++        Assert.equal(
++          !!GuardSets.isFloorpRestrictedTopDocument({ id }, Services.io.newURI(url)),
++          expected,
++          `${id}: ${url}`
++        );
++      }
++    }
++    const top = {};
++    const window = { windowGlobalChild: { windowContext: { topWindowContext: top } } };
++    GuardSets._floorpTopDocuments.set(top, true);
++    Assert.ok(GuardSets.isFloorpRestrictedWindow({ id: BLOCKERS[0] }, window),
++      "Content injection checks the WindowGlobalChild windowContext");
++    GuardSets._floorpTopDocuments.set(top, false);
++    Assert.ok(!GuardSets.isFloorpRestrictedWindow({ id: BLOCKERS[0] }, window),
++      "An unrelated top document does not restrict injection");
++    GuardSets._floorpTopDocuments.set(top, true);
++    Services.prefs.setStringPref(MODE_PREF, "blocking");
++    Assert.ok(!GuardSets.isFloorpRestrictedWindow({ id: BLOCKERS[0] }, window),
++      "Disabling support takes effect even when the document is cached");
++    Services.prefs.setStringPref(MODE_PREF, "support");
++    Assert.ok(GuardSets.isFloorpRestrictedWindow({ id: BLOCKERS[0] }, window),
++      "Re-enabling support reuses only the document identity");
++    GuardSets._floorpTopDocuments.delete(top);
++    const blog = Services.io.newURI("https://blog.floorp.app/");
++    Assert.ok(!GuardSets.isFloorpRestrictedTopDocument({ id: "other@test" }, blog));
++    Services.prefs.setBoolPref(CONFIRMED_PREF, false);
++    Assert.ok(!GuardSets.isFloorpRestrictedTopDocument({ id: BLOCKERS[0] }, blog));
++    Services.prefs.setBoolPref(CONFIRMED_PREF, true);
++    for (const mode of ["blocking", "disabled"]) {
++      Services.prefs.setStringPref(MODE_PREF, mode);
++      Assert.ok(!GuardSets.isFloorpRestrictedTopDocument({ id: BLOCKERS[0] }, blog));
++    }
++  } finally {
++    Services.prefs.setStringPref(MODE_PREF, previousMode);
++    Services.prefs.setBoolPref(CONFIRMED_PREF, previousConfirmation);
++  }
++});
+diff --git a/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes_dnr.js b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes_dnr.js
+new file mode 100644
+index 0000000..0f2909e
+--- /dev/null
++++ b/toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes_dnr.js
+@@ -0,0 +1,69 @@
++"use strict";
++
++add_task(async function floorp_dnr_frame_scope_and_restore() {
++  const { ExtensionDNR } = ChromeUtils.importESModule(
++    "resource://gre/modules/ExtensionDNR.sys.mjs"
++  );
++  const modePref = "floorp.releaseNotes.mode";
++  const confirmPref = "floorp.releaseNotes.choiceConfirmed";
++  const oldMode = Services.prefs.getStringPref(modePref, "blocking");
++  const oldConfirmed = Services.prefs.getBoolPref(confirmPref, false);
++  const hadMode = Services.prefs.prefHasUserValue(modePref);
++  const hadConfirmed = Services.prefs.prefHasUserValue(confirmPref);
++  const ids = [
++    "uBlock0@raymondhill.net", "adguardadblocker@adguard.com",
++    "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}",
++    "jid1-NIfFY2CA8fy1tg@jetpack", "firefox@ghostery.com", "control@test",
++  ];
++  try {
++    for (const id of ids) {
++      const extension = ExtensionTestUtils.loadExtension({
++        manifest: {
++          manifest_version: 3,
++          browser_specific_settings: { gecko: { id } },
++          permissions: ["declarativeNetRequest"],
++          host_permissions: ["<all_urls>"],
++          declarative_net_request: {
++            rule_resources: [{ id: "probe", enabled: true, path: "rules.json" }],
++          },
++        },
++        files: {
++          "rules.json": JSON.stringify([{
++            id: 1, priority: 1, action: { type: "block" },
++            condition: { urlFilter: "floorp-probe", resourceTypes: ["script"] },
++          }]),
++        },
++      });
++      await extension.startup();
++      try {
++        await ExtensionDNR.ensureInitialized(extension.extension);
++        for (const confirmed of [false, true]) {
++          Services.prefs.setBoolPref(confirmPref, confirmed);
++          for (const mode of ["support", "blocking", "disabled"]) {
++            Services.prefs.setStringPref(modePref, mode);
++            for (const top of ["https://blog.floorp.app/", "https://example.org/",
++              "https://blog.floorp.app.example.org/"]) {
++              const matches = ExtensionDNR.getMatchedRulesForRequest({
++                requestURI: Services.io.newURI("https://example.org/floorp-probe.js"),
++                initiatorURI: Services.io.newURI("https://ads.example.net/"),
++                type: "script", method: "get", tabId: -1,
++                browsingContext: { top: { currentURI: Services.io.newURI(top) } },
++              }, extension.extension);
++              const restricted = id !== "control@test" && confirmed &&
++                mode === "support" && top === "https://blog.floorp.app/";
++              Assert.equal(matches.length, restricted ? 0 : 1,
++                `${id}, ${mode}, confirmed=${confirmed}, top=${top}`);
++            }
++          }
++        }
++      } finally {
++        await extension.unload();
++      }
++    }
++  } finally {
++    if (hadMode) Services.prefs.setStringPref(modePref, oldMode);
++    else Services.prefs.clearUserPref(modePref);
++    if (hadConfirmed) Services.prefs.setBoolPref(confirmPref, oldConfirmed);
++    else Services.prefs.clearUserPref(confirmPref);
++  }
++});
 diff --git a/toolkit/components/extensions/test/xpcshell/xpcshell.toml b/toolkit/components/extensions/test/xpcshell/xpcshell.toml
-index 861aadf..fb7e7f3 100644
+index 861aadf..e8a61e8 100644
 --- a/toolkit/components/extensions/test/xpcshell/xpcshell.toml
 +++ b/toolkit/components/extensions/test/xpcshell/xpcshell.toml
-@@ -49,6 +49,8 @@ run-if = [
+@@ -49,6 +49,10 @@ run-if = [
  
  ["test_MatchPattern.js"]
  
 +["test_ext_floorp_release_notes.js"]
 +
++["test_ext_floorp_release_notes_dnr.js"]
++
  ["test_OriginControls.js"]
  
  ["test_StorageSyncService.js"]
+diff --git a/toolkit/components/extensions/webrequest/WebRequest.sys.mjs b/toolkit/components/extensions/webrequest/WebRequest.sys.mjs
+index 8fada7e..e2f800e 100644
+--- a/toolkit/components/extensions/webrequest/WebRequest.sys.mjs
++++ b/toolkit/components/extensions/webrequest/WebRequest.sys.mjs
+@@ -6,6 +6,7 @@
+ const lazy = {};
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
+   ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
+   ExtensionDocumentId: "resource://gre/modules/ExtensionDocumentId.sys.mjs",
+   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+@@ -897,6 +898,19 @@ HttpObserverManager = {
+           return;
+         }
+ 
++        // Use the request's ancestor snapshot, not the selected browser tab.
++        // Third-party frames retain the top document as frameId 0.
++        const topDocument = channel.frameAncestors?.find(a => a.frameId === 0);
++        if (
++          topDocument &&
++          lazy.ExtensionCommon.GuardSets.isFloorpRestrictedTopDocument(
++            opts.policy,
++            Services.io.newURI(topDocument.url)
++          )
++        ) {
++          return;
++        }
++
+         let extension = opts.policy?.extension;
+         // TODO: Move this logic to ChannelWrapper::matches, see bug 1699481
+         if (

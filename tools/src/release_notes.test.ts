@@ -58,12 +58,13 @@ Deno.test("release notes: development patch matches packaged Runtime changes", a
   const development = await Deno.readTextFile(
     new URL("../patches/release-notes-guards.patch", import.meta.url),
   );
-  const expected = source.replaceAll("\r\n", "\n").split("diff --git ").slice(
-    1,
-    3,
-  ).map((part) => "diff --git " + part).join("").replaceAll(
-    "toolkit/components/extensions/",
-    "modules/",
-  );
+  const expected = source.replaceAll("\r\n", "\n").split("diff --git ")
+    .slice(1).filter((part) => !part.split("\n", 1)[0].includes("/test/"))
+    .map((part) => "diff --git " + part).join("")
+    .replaceAll(
+      "toolkit/components/extensions/webrequest/WebRequest.sys.mjs",
+      "modules/WebRequest.sys.mjs",
+    )
+    .replaceAll("toolkit/components/extensions/", "modules/");
   assert.equal(development.replaceAll("\r\n", "\n"), expected);
 });
