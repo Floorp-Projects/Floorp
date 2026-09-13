@@ -216,7 +216,7 @@ async function openReleaseNotesInRecentWindow(): Promise<void> {
   tabBrowser.selectedTab = newTab;
 }
 
-async function showReleaseNotesChoice(): Promise<void> {
+function showReleaseNotesChoice(): void {
   if (
     !shouldShowReleaseNotesChoice(
       Services.prefs.getStringPref(RELEASE_NOTES_PREFS.audience, "existing"),

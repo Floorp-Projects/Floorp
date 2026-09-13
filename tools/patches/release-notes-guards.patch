@@ -1,0 +1,68 @@
+diff --git a/modules/ExtensionCommon.sys.mjs b/modules/ExtensionCommon.sys.mjs
+index ec57020..138e926 100644
+--- a/modules/ExtensionCommon.sys.mjs
++++ b/modules/ExtensionCommon.sys.mjs
+@@ -3079,8 +3079,25 @@ function updateAllowedOrigins(policy, origins, isAdd) {
+ var GuardSets = {
+   _inits: null,
+   _defaults: [],
++  _floorpObserver: null,
++  _floorpBlockers: new Set([
++    "uBlock0@raymondhill.net",
++    "adguardadblocker@adguard.com",
++    "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}",
++    "jid1-NIfFY2CA8fy1tg@jetpack",
++    "firefox@ghostery.com",
++  ]),
+ 
+   init(inits) {
++    if (!this._floorpObserver) {
++      this._floorpObserver = () => {
++        WebExtensionPolicy.getActiveExtensions().forEach(p => this.updateFor(p));
++      };
++      Services.prefs.addObserver(
++        "floorp.releaseNotes.",
++        this._floorpObserver
++      );
++    }
+     this._inits = inits ?? Services.cpmm.sharedData.get("extensions/guards");
+     let def = this._inits?.get("*");
+     this._defaults = def ? [new ExtensionGuardSet(def)] : [];
+@@ -3104,7 +3121,21 @@ var GuardSets = {
+       this.init();
+     }
+     let init = this._inits?.get(policy.id);
+-    policy.guardSets = init ? [new ExtensionGuardSet(init)] : this._defaults;
++    let guards = init ? [new ExtensionGuardSet(init)] : [...this._defaults];
++    if (
++      this._floorpBlockers.has(policy.id) &&
++      Services.prefs.getBoolPref("floorp.releaseNotes.choiceConfirmed", false) &&
++      Services.prefs.getStringPref("floorp.releaseNotes.mode", "blocking") ===
++        "support"
++    ) {
++      guards.push(
++        new ExtensionGuardSet({
++          deny: ["https://blog.floorp.app"],
++          source: "enterprise-per-extension",
++        })
++      );
++    }
++    policy.guardSets = guards;
+   },
+ };
+ 
+diff --git a/modules/ExtensionProcessScript.sys.mjs b/modules/ExtensionProcessScript.sys.mjs
+index c1b29e5..f42733f 100644
+--- a/modules/ExtensionProcessScript.sys.mjs
++++ b/modules/ExtensionProcessScript.sys.mjs
+@@ -170,9 +170,7 @@ ExtensionManager = {
+         contentScripts: extension.contentScripts,
+       });
+ 
+-      if (sharedData.has("extensions/guards")) {
+-        lazy.ExtensionCommon.GuardSets.updateFor(policy);
+-      }
++      lazy.ExtensionCommon.GuardSets.updateFor(policy);
+ 
+       policy.debugName = `${JSON.stringify(policy.name)} (ID: ${
+         policy.id

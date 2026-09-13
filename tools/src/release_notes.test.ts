@@ -47,3 +47,23 @@ Deno.test("release notes: an absent new preference does not make an existing use
   assert.equal(releaseNotesAudience(true, undefined, true), "existing");
   assert.equal(releaseNotesAudience(false, undefined, false), "existing");
 });
+
+Deno.test("release notes: development patch matches packaged Runtime changes", async () => {
+  const source = await Deno.readTextFile(
+    new URL(
+      "../../.github/patches/floorp-runtime/common/release-notes-guards.patch",
+      import.meta.url,
+    ),
+  );
+  const development = await Deno.readTextFile(
+    new URL("../patches/release-notes-guards.patch", import.meta.url),
+  );
+  const expected = source.replaceAll("\r\n", "\n").split("diff --git ").slice(
+    1,
+    3,
+  ).map((part) => "diff --git " + part).join("").replaceAll(
+    "toolkit/components/extensions/",
+    "modules/",
+  );
+  assert.equal(development.replaceAll("\r\n", "\n"), expected);
+});

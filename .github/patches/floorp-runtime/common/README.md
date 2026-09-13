@@ -23,3 +23,8 @@ After applying the patch in a Runtime test build, run:
 ```sh
 ./mach xpcshell-test toolkit/components/extensions/test/xpcshell/test_ext_floorp_release_notes.js
 ```
+
+Local development uses the matching `tools/patches/release-notes-guards.patch`
+through the existing development patcher. It contains the same two JavaScript
+changes mapped to the unpacked artifact's `modules/` paths. The host tests check
+that the development and packaging patches stay in sync.
