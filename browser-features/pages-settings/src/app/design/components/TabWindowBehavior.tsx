@@ -1,3 +1,4 @@
+import { Select } from "../../../../../../libs/ui/dropdown.tsx";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MonitorCog } from "lucide-react";
@@ -107,9 +108,9 @@ export function TabWindowBehavior() {
           <p className="text-sm text-muted-foreground">
             {t("design.tabWindowBehavior.openLinksDescription")}
           </p>
-          <select
+          <Select
             id="open-new-window-behavior"
-            className="select select-bordered w-full"
+            className="w-full"
             value={settings?.openNewWindow ?? ""}
             onChange={handleOpenNewWindowChange}
             disabled={settings === null}
@@ -123,7 +124,7 @@ export function TabWindowBehavior() {
             <option value="3">
               {t("design.tabWindowBehavior.openNewTab")}
             </option>
-          </select>
+          </Select>
         </div>
 
         <div className="flex items-start justify-between gap-4">

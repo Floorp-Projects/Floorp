@@ -95,7 +95,7 @@ export function BasicSettings() {
                       value="end"
                       checked={!watchAll.position_start}
                       onChange={() => setValue("position_start", false)}
-                      className="radio"
+                      className="floorp-radio"
                     />
                     <span>{t("panelSidebar.positionLeft")}</span>
                   </label>
@@ -106,7 +106,7 @@ export function BasicSettings() {
                       value="start"
                       checked={watchAll.position_start}
                       onChange={() => setValue("position_start", true)}
-                      className="radio"
+                      className="floorp-radio"
                     />
                     <span>{t("panelSidebar.positionRight")}</span>
                   </label>

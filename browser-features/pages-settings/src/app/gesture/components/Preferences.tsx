@@ -1,3 +1,5 @@
+import { Select } from "../../../../../../libs/ui/dropdown.tsx";
+import { Input } from "../../../../../../libs/ui/input.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -127,7 +129,7 @@ export function GeneralSettings({
                   {t("mouseGesture.enabledDescription")}
                 </p>
               </div>
-              <Switch
+              <Switch aria-label={t("mouseGesture.enabled")}
                 data-setting="mouse-gesture-enabled"
                 checked={config.enabled}
                 onChange={() => toggleEnabled()}
@@ -143,7 +145,7 @@ export function GeneralSettings({
                   {t("mouseGesture.rockerGesturesDescription")}
                 </p>
               </div>
-              <Switch
+              <Switch aria-label={t("mouseGesture.rockerGesturesEnabled")}
                 checked={config.rockerGesturesEnabled ?? true}
                 onChange={() =>
                   updateConfig((current) => ({
@@ -166,8 +168,8 @@ export function GeneralSettings({
                       {t("mouseGesture.rockerLeftRightDescription")}
                     </p>
                   </div>
-                  <select
-                    className="select select-bordered w-64 max-w-xs text-sm"
+                  <Select
+                    className="w-64 max-w-xs text-sm"
                     aria-label={t("mouseGesture.rockerLeftRight")}
                     value={config.rockerActions.leftRight}
                     onChange={(e) =>
@@ -179,7 +181,7 @@ export function GeneralSettings({
                         {action.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="flex items-center justify-between py-2 pl-4">
@@ -191,8 +193,8 @@ export function GeneralSettings({
                       {t("mouseGesture.rockerRightLeftDescription")}
                     </p>
                   </div>
-                  <select
-                    className="select select-bordered w-64 max-w-xs text-sm"
+                  <Select
+                    className="w-64 max-w-xs text-sm"
                     aria-label={t("mouseGesture.rockerRightLeft")}
                     value={config.rockerActions.rightLeft}
                     onChange={(e) =>
@@ -204,7 +206,7 @@ export function GeneralSettings({
                         {action.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </>
             )}
@@ -213,7 +215,7 @@ export function GeneralSettings({
               <span className="text-base-content/90 font-medium">
                 {t("mouseGesture.wheelGesturesEnabled")}
               </span>
-              <Switch
+              <Switch aria-label={t("mouseGesture.wheelGesturesEnabled")}
                 data-setting="mouse-gesture-wheel-enabled"
                 checked={config.wheelGesturesEnabled ?? true}
                 onChange={() =>
@@ -237,8 +239,8 @@ export function GeneralSettings({
                       {t("mouseGesture.wheelScrollUpDescription")}
                     </p>
                   </div>
-                  <select
-                    className="select select-bordered w-64 max-w-xs text-sm"
+                  <Select
+                    className="w-64 max-w-xs text-sm"
                     aria-label={t("mouseGesture.wheelScrollUp")}
                     value={config.wheelActions.scrollUp}
                     onChange={(e) =>
@@ -250,7 +252,7 @@ export function GeneralSettings({
                         {action.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="flex items-center justify-between py-2 pl-4">
@@ -262,8 +264,8 @@ export function GeneralSettings({
                       {t("mouseGesture.wheelScrollDownDescription")}
                     </p>
                   </div>
-                  <select
-                    className="select select-bordered w-64 max-w-xs text-sm"
+                  <Select
+                    className="w-64 max-w-xs text-sm"
                     aria-label={t("mouseGesture.wheelScrollDown")}
                     value={config.wheelActions.scrollDown}
                     onChange={(e) =>
@@ -275,13 +277,13 @@ export function GeneralSettings({
                         {action.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </>
             )}
           </div>
 
-          <div className="divider" />
+          <div className="floorp-divider" />
 
           {/* 感度設定 */}
           <div className="space-y-3">
@@ -332,7 +334,7 @@ export function GeneralSettings({
             />
           </div>
 
-          <div className="divider" />
+          <div className="floorp-divider" />
 
           {/* 軌跡設定 */}
           <div className="space-y-3">
@@ -352,7 +354,7 @@ export function GeneralSettings({
                   {t("mouseGesture.showTrailDescription")}
                 </p>
               </div>
-              <Switch
+              <Switch aria-label={t("mouseGesture.showTrail")}
                 checked={config.showTrail}
                 onChange={() => toggleShowTrail()}
                 disabled={!config.enabled}
@@ -368,7 +370,7 @@ export function GeneralSettings({
                   {t("mouseGesture.showLabelDescription")}
                 </p>
               </div>
-              <Switch
+              <Switch aria-label={t("mouseGesture.showLabel")}
                 checked={config.showLabel ?? true}
                 onChange={() => toggleShowLabel()}
                 disabled={!config.enabled}
@@ -388,16 +390,17 @@ export function GeneralSettings({
               maxLabel="10px"
             />
 
-            <div className="form-control flex items-center gap-2 flex-initial justify-between">
-              <label className="mb-2">
+            <div className="floorp-field flex items-center gap-2 flex-initial justify-between">
+              <label className="mb-2" htmlFor="gesture-trail-color-text">
                 <span className="text-base-content/90">
                   {t("mouseGesture.trailColor")}
                 </span>
               </label>
               <div className="flex items-center gap-2">
-                <div className="relative w-10 h-10 rounded border border-base-300 overflow-hidden cursor-pointer">
+                <div className="relative size-11 shrink-0 rounded border border-base-300 overflow-hidden cursor-pointer">
                   <input
                     type="color"
+                    aria-label={t("mouseGesture.trailColor")}
                     value={config.trailColor}
                     onChange={handleTrailColorChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -409,11 +412,12 @@ export function GeneralSettings({
                   >
                   </div>
                 </div>
-                <input
+                <Input
                   type="text"
+                  id="gesture-trail-color-text"
                   value={config.trailColor}
                   onChange={handleTrailColorChange}
-                  className="input input-bordered w-full max-w-xs"
+                  className="w-full max-w-xs"
                   placeholder="#000000"
                   disabled={!config.enabled || !config.showTrail}
                 />

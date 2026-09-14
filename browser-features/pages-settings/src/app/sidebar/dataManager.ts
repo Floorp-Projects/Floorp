@@ -3,27 +3,9 @@ import type { PanelSidebarFormData } from "@/types/pref.ts";
 import type {
   Panel,
   Panels,
-} from "../../../../main/core/common/panel-sidebar/utils/type.ts";
+} from "../../../../chrome/common/panel-sidebar/utils/type.ts";
 
-type Container = {
-  id: number | string;
-  name: string;
-  label: string;
-  icon: string;
-  color: string;
-};
-
-type StaticPanel = {
-  value: string;
-  label: string;
-  icon: string;
-};
-
-type ExtensionPanel = {
-  extensionId: string;
-  title: string;
-  iconUrl: string;
-};
+import type { Container, StaticPanel, ExtensionPanel } from "./types.ts";
 
 export function getStaticPanelDisplayName(
   value: string | null,

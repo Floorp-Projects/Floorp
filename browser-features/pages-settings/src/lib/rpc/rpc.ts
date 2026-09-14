@@ -3,10 +3,6 @@ import { createBirpc } from "birpc";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
-// deno-lint-ignore no-explicit-any
-declare const ChromeUtils: any;
-// deno-lint-ignore no-explicit-any
-declare const Cu: any;
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -75,29 +71,6 @@ const directServicesFunctions: NRSettingsParentFunctions = {
   setStringPref: (prefName, value) => {
     Services.prefs.setStringPref(prefName, value);
     return Promise.resolve();
-  },
-  // フォルダ選択関連のメソッド
-  selectFolder: () => {
-    return Promise.resolve(null);
-  },
-  getRandomImageFromFolder: (_path) => {
-    return Promise.resolve(null);
-  },
-  // Actor通信用メソッド
-  sendToNRPanelSidebarChild: async (method, ...args) => {
-    try {
-      // NRPanelSidebarParentアクターを取得
-      const windowGlobal = Cu.getGlobalForObject(Services);
-      const actor = windowGlobal.browsingContext.currentWindowGlobal.getActor(
-        "NRPanelSidebar",
-      );
-
-      // メソッドを実行
-      return await actor[method](...args);
-    } catch (error) {
-      console.error(`Error calling NRPanelSidebarChild.${method}:`, error);
-      throw error;
-    }
   },
 };
 

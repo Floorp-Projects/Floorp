@@ -29,17 +29,17 @@ export default function Page() {
   }
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">
           {t("pages.mouseGesture")}
         </h1>
-        <p className="text-sm mb-8">
+        <p className="floorp-page-description">
           {t("mouseGesture.description")}
         </p>
       </div>
 
-      <div className="space-y-3 pl-6">
+      <div className="floorp-settings-sections">
         <div
           className="min-h-6 text-sm"
           aria-live="polite"

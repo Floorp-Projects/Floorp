@@ -10,13 +10,13 @@ export default function Page() {
   const { t } = useTranslation();
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("performance.title")}</h1>
-        <p className="text-sm mb-8">{t("performance.description")}</p>
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("performance.title")}</h1>
+        <p className="floorp-page-description">{t("performance.description")}</p>
       </div>
 
-      <div className="space-y-3 pl-6">
+      <div className="floorp-settings-sections">
         <IdleMemoryReclaim />
       </div>
     </div>

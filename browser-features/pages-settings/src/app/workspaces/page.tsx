@@ -9,18 +9,22 @@ export default function Page() {
   const { t } = useTranslation();
   const methods = useForm<WorkspacesFormData>({});
 
-  const { control, setValue } = methods;
+  const { control, reset, getValues } = methods;
+  const [ready, setReady] = React.useState(false);
+  const [error, setError] = React.useState(false);
   const watchAll = useWatch({ control });
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
-      const values = await getWorkspaceSettings();
-      if (!values) return;
-
-      for (const key in values) {
-        setValue(key as keyof WorkspacesFormData, values[key], {
-          shouldValidate: true,
-        });
+      try {
+        const values = await getWorkspaceSettings();
+        if (!values) throw new Error("Settings unavailable");
+        reset(values);
+        setReady(true);
+        setError(false);
+      } catch (error) {
+        console.error("[Settings:workspaces] Load failed", error);
+        setError(true);
       }
     };
 
@@ -29,34 +33,40 @@ export default function Page() {
     return () => {
       globalThis.removeEventListener("focus", fetchDefaultValues);
     };
-  }, [setValue]);
+  }, [reset]);
 
   React.useEffect(() => {
-    if (Object.keys(watchAll).length === 0) return;
-
-    try {
-      saveWorkspaceSettings(watchAll);
-    } catch (error) {
-      globalThis.console?.error("Failed to save workspace settings:", error);
-    }
-  }, [watchAll]);
+    if (!ready) return;
+    Promise.resolve().then(() => saveWorkspaceSettings(getValues())).catch(
+      (error) => {
+        console.error("[Settings:workspaces] Save failed", error);
+        setError(true);
+      },
+    );
+  }, [watchAll, ready, getValues]);
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">
+    <div className="space-y-6">
+      <div>
+        <h1 className="floorp-page-heading">
           {t("workspaces.workspaces")}
         </h1>
-        <p className="text-sm mb-8">{t("workspaces.workspacesDescription")}</p>
+        <p className="floorp-page-description">
+          {t("workspaces.workspacesDescription")}
+        </p>
       </div>
 
+      {error && <p role="alert">{t(ready ? "ui.saveError" : "ui.loadError")}</p>}
+      {!ready && !error && <p role="status">{t("ui.loading")}</p>}
       <FormProvider {...methods}>
         <form
-          className="space-y-3 pl-6"
+          className="space-y-6"
           onSubmit={(e) => e.preventDefault()}
         >
-          <BasicSettings />
-          {/* <BackupSettings /> */}
+          <fieldset disabled={!ready} aria-busy={!ready} className="min-w-0">
+            <BasicSettings />
+            {/* <BackupSettings /> */}
+          </fieldset>
         </form>
       </FormProvider>
     </div>

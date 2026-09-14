@@ -1,3 +1,4 @@
+import { Input } from "../../../../../../libs/ui/input.tsx";
 import {
   Card,
   CardContent,
@@ -80,7 +81,7 @@ export function Tabbar() {
                     1 ~ 10
                   </span>
                 </label>
-                <input
+                <Input
                   type="number"
                   name="maxRow"
                   value={getValues("maxRow")}
@@ -96,7 +97,7 @@ export function Tabbar() {
           )}
         </div>
 
-        <div className="alert alert-warning alert-soft">
+        <div className="floorp-notice floorp-notice-warning">
           <span className="text-sm">
             {t("design.verticalTabIsRemovedFromBrowser")}{" "}
             <a

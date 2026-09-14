@@ -4,365 +4,156 @@ import Navigation from "../../components/Navigation.tsx";
 import {
   getDefaultEngine,
   getSearchEngines,
-  getThemeSetting,
   setDefaultEngine,
-  setThemeSetting,
 } from "./dataManager.ts";
 import type { SearchEngine } from "./types.ts";
-import { Monitor, Moon, Search, Settings, Sun } from "lucide-react";
-
+import { useTheme } from "../../components/theme-provider.tsx";
+import styles from "../../setup.module.css";
+import { RadioCard } from "@chakra-ui/react";
+import {
+  CurrentSetting,
+  SelectionBadge,
+  SetupSelect,
+} from "../../components/SetupControls.tsx";
+import { Monitor, Moon, Search, Sun } from "lucide-react";
+const themeIcons = { light: Sun, dark: Moon, system: Monitor };
 export default function CustomizePage() {
   const { t } = useTranslation();
-
-  const themes = [
-    { id: "light", name: t("customize.themes.light"), icon: <Sun size={20} /> },
-    { id: "dark", name: t("customize.themes.dark"), icon: <Moon size={20} /> },
-    {
-      id: "system",
-      name: t("customize.themes.system"),
-      icon: <Monitor size={20} />,
-    },
-  ];
-
-  const [selectedTheme, setSelectedTheme] = useState<
-    "system" | "light" | "dark"
-  >("system");
-  const [selectedEngine, setSelectedEngine] = useState("");
-  const [searchEngines, setSearchEngines] = useState<SearchEngine[]>([]);
+  const { theme, setTheme } = useTheme();
+  const [engines, setEngines] = useState<SearchEngine[]>([]);
+  const [engine, setEngine] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const applyThemeToPage = (theme: "system" | "light" | "dark") => {
-    let dataTheme: string;
-
-    if (theme === "light") {
-      dataTheme = "light";
-    } else if (theme === "dark") {
-      dataTheme = "dark";
-    } else {
-      const prefersDark =
-        globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
-      dataTheme = prefersDark ? "dark" : "light";
-    }
-
-    document.documentElement.setAttribute("data-theme", dataTheme);
-  };
-
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const engines = await getSearchEngines();
-        setSearchEngines(engines);
-
-        const defaultEngine = await getDefaultEngine();
-        setSelectedEngine(defaultEngine.identifier);
-
-        const themePref = await getThemeSetting();
-        let currentTheme: "system" | "light" | "dark" = "system";
-        if (themePref === 1) {
-          currentTheme = "light";
-        } else if (themePref === 0) {
-          currentTheme = "dark";
-        } else {
-          currentTheme = "system";
+    let active = true;
+    Promise.all([getSearchEngines(), getDefaultEngine()]).then(
+      ([list, current]) => {
+        if (active) {
+          setEngines(list);
+          setEngine(current.identifier);
         }
-        setSelectedTheme(currentTheme);
-
-        applyThemeToPage(currentTheme);
-      } catch (error) {
-        console.error("Failed to retrieve settings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemThemeChange = () => {
-      if (selectedTheme === "system") {
-        applyThemeToPage("system");
-      }
-    };
-
-    mediaQuery.addEventListener("change", handleSystemThemeChange);
-
+      },
+    ).catch(() => {
+      if (active) setError(true);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
     return () => {
-      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+      active = false;
     };
-  }, [selectedTheme]);
-
-  const handleEngineChange = async (engineId: string) => {
-    setSelectedEngine(engineId);
+  }, []);
+  async function save(action: () => Promise<unknown>) {
+    if (saving) return;
+    setSaving(true);
+    setError(false);
     try {
-      const result = await setDefaultEngine(engineId);
-      if (!result.success) {
-        console.error("Failed to set search engine");
-      }
+      await action();
     } catch (error) {
-      console.error("Error occurred while setting search engine:", error);
+      console.error("[Welcome] Could not save customization", error);
+      setError(true);
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleThemeChange = async (themeId: "system" | "light" | "dark") => {
-    setSelectedTheme(themeId);
-
-    applyThemeToPage(themeId);
-
-    try {
-      await setThemeSetting(themeId);
-    } catch (error) {
-      console.error("Error occurred while setting theme:", error);
-    }
-  };
-
-  const getEngineIcon = (engine: SearchEngine) => {
-    if (engine.iconURL) {
-      return (
-        <img
-          src={engine.iconURL}
-          alt={engine.name}
-          className="w-5 h-5 mr-2 object-contain"
-        />
-      );
-    }
-    return (
-      <div className="w-5 h-5 mr-2 flex items-center justify-center rounded">
-        <Search fill="none" size={16} />
-      </div>
-    );
-  };
-
-  const getEngineName = (engine: SearchEngine) => {
-    const maxLength = 15;
-    if (engine.name.length > maxLength) {
-      return `${engine.name.substring(0, maxLength)}...`;
-    }
-    return engine.name;
-  };
-
-  const ThemePreview = () => {
-    const currentEngine = searchEngines.find((e) =>
-      e.identifier === selectedEngine
-    );
-
-    const themeClass = selectedTheme === "dark"
-      ? "bg-neutral text-neutral-content"
-      : "bg-base-200";
-    const contentClass = selectedTheme === "dark"
-      ? "bg-neutral-focus"
-      : "bg-base-100";
-
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="relative w-full max-w-md bg-base-300 rounded-lg p-4 shadow-lg">
-          <div className={`mockup-browser border ${themeClass}`}>
-            <div className="mockup-browser-toolbar">
-              <div className="input border border-base-content/20 flex items-center">
-                {currentEngine ? getEngineIcon(currentEngine) : (
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center rounded">
-                    <Search fill="none" size={16} />
-                  </div>
-                )}
-                <span className="truncate">
-                  {currentEngine?.name || t("customize.searchEngine.default")}
-                  {" "}
-                  {t("customize.searchEngine.search")}
-                </span>
-              </div>
-            </div>
-            <div className={`flex flex-col px-4 py-8 ${contentClass}`}>
-              <div className="flex items-center mb-2">
-                <div className="w-4 h-4 rounded-full bg-primary mr-2"></div>
-                <div className="h-2 bg-base-content/20 rounded w-24"></div>
-              </div>
-              <div className="h-2 bg-base-content/20 rounded w-full mb-1.5">
-              </div>
-              <div className="h-2 bg-base-content/20 rounded w-5/6 mb-1.5">
-              </div>
-              <div className="h-2 bg-base-content/20 rounded w-4/6"></div>
-            </div>
-          </div>
-          <div className="text-center mt-2">
-            <span className="text-sm opacity-70">
-              {selectedTheme === "light"
-                ? t("customize.themeInfo.light")
-                : selectedTheme === "dark"
-                ? t("customize.themeInfo.dark")
-                : t("customize.themeInfo.system")}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEngines = () => {
-    if (loading) {
-      return (
-        <div className="flex justify-center my-4">
-          <div className="loading loading-spinner loading-md"></div>
-        </div>
-      );
-    }
-
-    if (searchEngines.length === 0) {
-      return (
-        <div className="alert alert-info">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            className="stroke-current shrink-0 w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            >
-            </path>
-          </svg>
-          <span>{t("customize.searchEngine.noEnginesFound")}</span>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-2 gap-3 my-2">
-        {searchEngines.map((engine) => (
-          <div
-            key={engine.identifier}
-            className={`btn ${
-              selectedEngine === engine.identifier
-                ? "btn-primary"
-                : "btn-outline"
-            } justify-start overflow-hidden`}
-            onClick={() => handleEngineChange(engine.identifier)}
-            title={engine.description || engine.name}
-          >
-            {getEngineIcon(engine)}
-            <span className="truncate">{getEngineName(engine)}</span>
-            {engine.isDefault && (
-              <span className="badge badge-sm badge-accent ml-auto">
-                {t("customize.searchEngine.default")}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
+  }
+  const ThemeIcon = themeIcons[theme];
+  const selectedEngine = engines.find((item) => item.identifier === engine);
   return (
-    <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">{t("customize.title")}</h1>
-        <p className="text-lg">{t("customize.description")}</p>
-      </div>
-
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body p-0 overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="p-6 flex flex-col justify-center">
-              <div className="flex items-center mb-6 gap-2">
-                <div className="text-primary">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2" />
-                    <path d="M12 20v2" />
-                    <path d="m4.93 4.93 1.41 1.41" />
-                    <path d="m17.66 17.66 1.41 1.41" />
-                    <path d="M2 12h2" />
-                    <path d="M20 12h2" />
-                    <path d="m6.34 17.66-1.41 1.41" />
-                    <path d="m19.07 4.93-1.41 1.41" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold">
-                  {t("customize.appearance.title")}
-                </h2>
-              </div>
-              <p className="mb-6">
-                {t("customize.appearance.description")}
-              </p>
-
-              <div className="flex flex-wrap gap-3 my-2">
-                {themes.map((theme) => (
-                  <div
-                    key={theme.id}
-                    className={`btn ${
-                      selectedTheme === theme.id ? "btn-primary" : "btn-outline"
-                    }`}
-                    onClick={() =>
-                      handleThemeChange(
-                        theme.id as "system" | "light" | "dark",
-                      )}
-                  >
-                    <span className="mr-2">{theme.icon}</span>
-                    {theme.name}
-                  </div>
-                ))}
-              </div>
-
-              <h2 className="text-2xl font-bold mt-6 mb-3">
-                {t("customize.searchEngine.title")}
-              </h2>
-              {renderEngines()}
-            </div>
-            <div className="bg-base-300 p-6 flex items-center justify-center">
-              <ThemePreview />
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Floorp Hub introduction card */}
-      <div className="card bg-base-200 shadow-xl">
-        <div className="card-body">
-          <div className="flex items-center mb-4 gap-2">
-            <div className="text-primary">
-              <Settings size={28} />
-            </div>
-            <h2 className="text-2xl font-bold">
-              {t("customize.floorpHub.title")}
-            </h2>
-          </div>
-          <p className="mb-4">
-            {t("customize.floorpHub.description")}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                globalThis.open("about:hub", "_blank");
-              }}
+    <div>
+      <h2>{t("setupV5.customizeTitle")}</h2>
+      <RadioCard.Root
+        unstyled
+        value={theme}
+        disabled={saving}
+        onValueChange={({ value }) => {
+          if (
+            value === "light" || value === "dark" || value === "system"
+          ) void save(() => setTheme(value));
+        }}
+      >
+        <RadioCard.Label className={styles.fieldLabel}>
+          {t("customize.appearance.title")}
+        </RadioCard.Label>
+        <div className={styles.choices}>
+          {(["light", "dark", "system"] as const).map((value) => (
+            <RadioCard.Item
+              key={value}
+              value={value}
+              className={styles.radioItem}
             >
-              {t("customize.floorpHub.openHub")}
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => {
-                globalThis.open("about:preferences", "_blank");
-              }}
-            >
-              {t("customize.floorpHub.openPreferences")}
-            </button>
-          </div>
+              <RadioCard.ItemHiddenInput />
+              <span
+                className={styles.themePreview}
+                data-theme={value}
+                aria-hidden="true"
+              >
+                <span className={styles.sampleType}>Aa</span>
+                <span className={styles.sampleAction} />
+              </span>
+              <RadioCard.ItemControl className={styles.radioControl}>
+                <RadioCard.ItemText>
+                  {t(`customize.themes.${value}`)}
+                </RadioCard.ItemText>
+              </RadioCard.ItemControl>
+              <span className={styles.choiceCaption}>
+                {t("setupRich.palettePreview")}
+              </span>
+              {theme === value && <SelectionBadge />}
+            </RadioCard.Item>
+          ))}
         </div>
+      </RadioCard.Root>
+      <div className={styles.themeStatus} role="status">
+        <ThemeIcon size={20} aria-hidden="true" />
+        <span>{t(`customize.themeInfo.${theme}`)}</span>
       </div>
-
+      {loading
+        ? <p role="status">{t("ui.loading")}</p>
+        : engines.length === 0
+        ? <p>{t("customize.searchEngine.noEnginesFound")}</p>
+        : (
+          <SetupSelect
+            id="setup-engine"
+            icon={<Search size={22} />}
+            label={t("customize.searchEngine.title")}
+            hint={t("setupV5.searchHint")}
+            value={engine}
+            disabled={saving}
+            options={engines.map((item) => ({
+              value: item.identifier,
+              label: item.name,
+            }))}
+            onChange={(value) =>
+              void save(async () => {
+                const result = await setDefaultEngine(value);
+                if (!result.success) {
+                  throw new Error("Search engine update rejected");
+                }
+                setEngine(value);
+              })}
+          />
+        )}
+      {!loading && selectedEngine && (
+        <CurrentSetting
+          icon={<Search size={26} />}
+          label={t("setupRich.searchDestination")}
+          value={selectedEngine.name}
+          detail={t("setupV5.searchHint")}
+        />
+      )}
+      {saving && (
+        <p role="status" className={styles.status}>{t("ui.loading")}</p>
+      )}
+      {error && <p role="alert" className={styles.error}>{t("ui.saveError")}
+      </p>}
+      <div className={styles.links}>
+        <a href="about:hub" target="_blank" rel="noopener noreferrer">
+          {t("setupV5.openHub")}
+        </a>
+        <a href="about:preferences" target="_blank" rel="noopener noreferrer">
+          {t("setupV5.openPreferences")}
+        </a>
+      </div>
       <Navigation />
     </div>
   );

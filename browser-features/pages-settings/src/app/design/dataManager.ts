@@ -213,7 +213,7 @@ export async function saveDesignSettings(
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
-  rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+  await rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
     settings.tabDragToSplitCreate,

@@ -1,3 +1,4 @@
+import { Button } from "../../../../../../libs/ui/button.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5,7 +6,8 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { KeyboardShortcutConfig, ShortcutConfig } from "../../../types/pref.ts";
+import type { ShortcutConfig } from "../../../types/pref.ts";
+import type { ShortcutsSettingsProps } from "../types.ts";
 import { useAvailableActions } from "../../gesture/useAvailableActions.ts";
 import { getKeyboardShortcutActionOptions } from "../actionCatalog.ts";
 import { ShortcutEditor } from "./ShortcutEditor.tsx";
@@ -24,13 +26,6 @@ function formatKeyCode(code: string): string {
     return code.replace(/^(Key|Digit|Arrow)/, "").toUpperCase();
 }
 
-interface ShortcutsSettingsProps {
-    config: KeyboardShortcutConfig;
-    addShortcut: (action: string, shortcut: ShortcutConfig) => void;
-    updateShortcut: (action: string, shortcut: ShortcutConfig) => void;
-    deleteShortcut: (action: string) => void;
-}
-
 export const ShortcutsSettings = ({
     config,
     addShortcut,
@@ -47,16 +42,15 @@ export const ShortcutsSettings = ({
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingShortcut, setEditingShortcut] = useState<ShortcutConfig | null>(null);
 
-    const handleSaveShortcut = (shortcut: ShortcutConfig) => {
-        if (editingAction) {
-            if (config.shortcuts[editingAction]) {
-                updateShortcut(editingAction, shortcut);
-            } else {
-                addShortcut(editingAction, shortcut);
-            }
-        }
+    const handleSaveShortcut = async (shortcut: ShortcutConfig) => {
+        if (!editingAction) return false;
+        const saved = config.shortcuts[editingAction]
+            ? await updateShortcut(editingAction, shortcut)
+            : await addShortcut(editingAction, shortcut);
+        if (!saved) return false;
         setEditingShortcut(null);
         setEditingAction(null);
+        return true;
     };
 
     return (
@@ -77,7 +71,7 @@ export const ShortcutsSettings = ({
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <table className="table">
+                    <table className="floorp-table">
                         <thead>
                             <tr>
                                 <th>{t("keyboardShortcut.action")}</th>
@@ -108,9 +102,9 @@ export const ShortcutsSettings = ({
                                         </td>
                                         <td>
                                             <div className="flex gap-8">
-                                                <button
+                                                <Button
                                                     type="button"
-                                                    className="btn btn-sm btn-primary"
+                                                    variant="primary"
                                                     onClick={() => {
                                                         setEditingShortcut(shortcut);
                                                         setEditingAction(action.id);
@@ -118,15 +112,15 @@ export const ShortcutsSettings = ({
                                                     }}
                                                 >
                                                     {shortcut ? t("keyboardShortcut.edit") : t("keyboardShortcut.add")}
-                                                </button>
+                                                </Button>
                                                 {shortcut && (
-                                                    <button
+                                                    <Button
                                                         type="button"
-                                                        className="btn btn-sm btn-error"
+                                                        variant="danger"
                                                         onClick={() => deleteShortcut(action.id)}
                                                     >
                                                         {t("keyboardShortcut.delete")}
-                                                    </button>
+                                                    </Button>
                                                 )}
                                             </div>
                                         </td>

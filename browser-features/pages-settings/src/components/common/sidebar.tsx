@@ -1,187 +1,143 @@
-import { createContext, type ReactNode, useContext } from "react";
-import { cn } from "@/lib/utils";
-
-const SidebarContext = createContext<{
-  isMobile: boolean;
-}>({
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Menu, X } from "lucide-react";
+import { Button } from "../../../../../libs/ui/button.tsx";
+import styles from "./sidebar.module.css";
+const SidebarContext = createContext({
   isMobile: false,
+  open: false,
+  setOpen: (_open: boolean) => {},
 });
-
 export const useSidebar = () => useContext(SidebarContext);
-
+export function SidebarProvider({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [isMobile, setMobile] = useState(() =>
+    globalThis.matchMedia("(max-width: 1023px)").matches
+  );
+  const { pathname } = useLocation();
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    const media = globalThis.matchMedia("(max-width: 1023px)");
+    const update = () => setMobile(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return (
+    <SidebarContext.Provider value={{ isMobile, open, setOpen }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
 interface SidebarProps {
   children?: ReactNode;
   className?: string;
   collapsible?: "icon";
 }
-
-export function Sidebar({ children, className }: SidebarProps) {
-  return (
-    <div className="drawer w-auto lg:drawer-open">
-      <input id="settings-drawer" type="checkbox" className="drawer-toggle" />
-      <div className={cn("drawer-side z-50", className)}>
-        <label
-          htmlFor="settings-drawer"
-          aria-label="close sidebar"
-          className="drawer-overlay"
+export function Sidebar({ children, className = "" }: SidebarProps) {
+  const { isMobile, open, setOpen } = useSidebar();
+  const { t } = useTranslation();
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (isMobile && open) ref.current?.showModal();
+    else ref.current?.close();
+  }, [isMobile, open]);
+  if (!isMobile) {
+    return (
+      <aside className={`${styles.sidebar} ${className}`}>
+        <nav
+          aria-label={t("ui.settingsNavigation", {
+            defaultValue: "Settings navigation",
+          })}
         >
-        </label>
-        <div className="min-h-screen w-80 bg-base-200 text-base-content border-r border-base-300">
           {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function SidebarHeader({ children, className }: SidebarProps) {
+        </nav>
+      </aside>
+    );
+  }
   return (
-    <div
-      className={cn(
-        "border-b border-base-300/50 px-6 py-3 bg-base-200/30",
-        className,
-      )}
+    <dialog
+      ref={ref}
+      className={styles.dialog}
+      onClose={() => setOpen(false)}
+      aria-label={t("ui.settingsNavigation", {
+        defaultValue: "Settings navigation",
+      })}
     >
-      {children}
-    </div>
-  );
-}
-
-export function SidebarContent({ children, className }: SidebarProps) {
-  return (
-    <div
-      className={cn(
-        "flex-1 overflow-auto px-4 py-2",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-export function SidebarFooter({ children, className }: SidebarProps) {
-  return (
-    <div
-      className={cn(
-        "mt-auto border-t border-base-300/50 py-4 px-6 bg-base-200/30",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-export function SidebarGroup({ children, className }: SidebarProps) {
-  return <div className={cn("px-2 pt-2 pb-4", className)}>{children}</div>;
-}
-
-export function SidebarGroupLabel({ children, className }: SidebarProps) {
-  return (
-    <h3
-      className={cn(
-        "mb-4 px-4 text-sm font-medium text-base-content/60",
-        className,
-      )}
-    >
-      {children}
-    </h3>
-  );
-}
-
-export function SidebarMenu({ children, className }: SidebarProps) {
-  return <div className={cn(className)}>{children}</div>;
-}
-
-export function SidebarMenuItem(
-  { children, className, href }: SidebarProps & { href?: string },
-) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
-        className,
-      )}
-    >
-      <a href={href} className="flex items-center gap-2 w-full">
-        {children}
-      </a>
-    </div>
-  );
-}
-
-export function SidebarMenuButton({
-  children,
-  className,
-  asChild,
-  ...props
-}: SidebarProps & { asChild?: boolean }) {
-  const Comp = asChild ? "span" : "button";
-  return (
-    <Comp
-      className={cn(
-        "flex w-full items-center gap-2 rounded-lg px-1 py-2 text-sm font-medium transition-colors",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </Comp>
-  );
-}
-
-export function SidebarMenuAction({
-  children,
-  className,
-  showOnHover,
-  ...props
-}: SidebarProps & { showOnHover?: boolean }) {
-  return (
-    <button
-      className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-primary active:bg-primary-content",
-        showOnHover && "opacity-0 group-hover:opacity-100",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function SidebarTrigger() {
-  return (
-    <label
-      htmlFor="settings-drawer"
-      className="btn btn-square btn-ghost drawer-button lg:hidden"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        className="inline-block h-5 w-5 stroke-current"
+      <Button
+        variant="ghost"
+        onClick={() => setOpen(false)}
+        aria-label={t("ui.closeNavigation", {
+          defaultValue: "Close navigation",
+        })}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        >
-        </path>
-      </svg>
-    </label>
+        <X size={20} />
+      </Button>
+      <nav>{children}</nav>
+    </dialog>
   );
 }
-
-export function SidebarRail({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "absolute right-0 top-0 bottom-0 w-2 bg-transparent group-hover:bg-base-300 transition-colors duration-300",
-        className,
-      )}
-    />
-  );
+export function SidebarHeader({ children }: SidebarProps) {
+  return <div className={styles.header}>{children}</div>;
+}
+export function SidebarContent({ children }: SidebarProps) {
+  return <div className={styles.content}>{children}</div>;
+}
+export function SidebarGroup({ children }: SidebarProps) {
+  return <div className={styles.group}>{children}</div>;
+}
+export function SidebarGroupLabel({ children }: SidebarProps) {
+  return <h2 className={styles.label}>{children}</h2>;
+}
+export function SidebarMenu({ children }: SidebarProps) {
+  return <div>{children}</div>;
+}
+export function SidebarTrigger() {
+  const { isMobile, open, setOpen } = useSidebar();
+  const { t } = useTranslation();
+  return isMobile
+    ? (
+      <Button
+        variant="ghost"
+        aria-expanded={open}
+        aria-label={t("ui.openNavigation", { defaultValue: "Open navigation" })}
+        onClick={() => setOpen(true)}
+      >
+        <Menu size={20} />
+      </Button>
+    )
+    : null;
+}
+export function SidebarRail() {
+  return null;
+}
+// Retain the existing exports for feature modules migrated separately.
+export function SidebarFooter({ children, className }: SidebarProps) {
+  return <div className={className}>{children}</div>;
+}
+export function SidebarMenuItem(
+  { children, className }: SidebarProps & { href?: string },
+) {
+  return <div className={className}>{children}</div>;
+}
+export function SidebarMenuButton(
+  { children, className, asChild }: SidebarProps & { asChild?: boolean },
+) {
+  return asChild
+    ? <span className={className}>{children}</span>
+    : <button type="button" className={className}>{children}</button>;
+}
+export function SidebarMenuAction(
+  { children, className }: SidebarProps & { showOnHover?: boolean },
+) {
+  return <button type="button" className={className}>{children}</button>;
 }

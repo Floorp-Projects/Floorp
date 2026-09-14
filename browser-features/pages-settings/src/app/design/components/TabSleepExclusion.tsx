@@ -1,3 +1,4 @@
+import { Button } from "../../../../../../libs/ui/button.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Globe, Moon, Plus, X } from "lucide-react";
@@ -146,6 +147,7 @@ export function TabSleepExclusion() {
           <div className="flex gap-2">
             <Input
               type="text"
+              aria-label={t("design.tabSleepExclusion.patterns")}
               placeholder={t("design.tabSleepExclusion.patternPlaceholder")}
               value={newPattern}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -153,15 +155,15 @@ export function TabSleepExclusion() {
               onKeyDown={handleKeyDown}
               className="flex-1"
             />
-            <button
+            <Button
               type="button"
               onClick={handleAddPattern}
               disabled={!newPattern.trim()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+              variant="secondary" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
             >
               <Plus className="size-4" />
               {t("design.tabSleepExclusion.add")}
-            </button>
+            </Button>
           </div>
 
           {/* Pattern Examples - Collapsible */}
@@ -216,14 +218,14 @@ export function TabSleepExclusion() {
                       <Globe className="size-4 text-muted-foreground shrink-0" />
                       <code className="text-sm font-mono">{pattern}</code>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleRemovePattern(pattern)}
-                      className="opacity-60 hover:opacity-100 text-destructive p-1 rounded hover:bg-destructive/10 transition-all"
+                      variant="secondary" className="opacity-60 hover:opacity-100 text-destructive p-1 rounded hover:bg-destructive/10 transition-all"
                       aria-label={t("design.tabSleepExclusion.remove")}
                     >
                       <X className="size-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>

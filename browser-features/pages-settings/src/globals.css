@@ -1,8 +1,32 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
-}
+@import "../../../libs/ui/page.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 @theme {
-  --link-text-color: #007aff;
+  --link-text-color: var(--floorp-action);
+}
+
+@theme inline {
+  --color-background: var(--floorp-canvas);
+  --color-foreground: var(--floorp-ink);
+  --color-muted: var(--floorp-subtle);
+  --color-muted-foreground: var(--floorp-muted);
+  --color-border: var(--floorp-line);
+  --color-input: var(--floorp-line);
+  --color-ring: var(--floorp-focus);
+  --color-destructive: var(--floorp-danger);
+  --color-base-100: var(--floorp-canvas);
+  --color-base-200: var(--floorp-subtle);
+  --color-base-300: var(--floorp-line);
+  --color-base-content: var(--floorp-ink);
+  --color-primary: var(--floorp-action);
+  --color-primary-content: var(--floorp-on-purple);
+  --color-secondary: var(--floorp-action);
+  --color-secondary-content: var(--floorp-surface);
+  --color-accent: var(--floorp-action);
+  --color-error: var(--floorp-danger);
+  --color-warning: var(--floorp-warning);
+  --color-success: var(--floorp-success);
+  --color-info: var(--floorp-action);
 }

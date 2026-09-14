@@ -32,9 +32,9 @@ export default function Page() {
 
   return (
     <div className="p-6">
-      <div className="flex flex-col items-start pl-6">
+      <div className="floorp-page-header">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="floorp-page-heading">
             {t("progressiveWebApp.title")}
           </h1>
           <p className="text-sm">
