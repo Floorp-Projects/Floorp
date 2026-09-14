@@ -1,3 +1,8 @@
+import { Modal } from "../../../../../../libs/ui/modal.tsx";
+import type { AppDialog } from "../types.ts";
+import { Button } from "../../../../../../libs/ui/button.tsx";
+import { Select } from "../../../../../../libs/ui/dropdown.tsx";
+import { Input } from "../../../../../../libs/ui/input.tsx";
 import {
   Card,
   CardContent,
@@ -5,15 +10,15 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { useTranslation } from "react-i18next";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import type { InstalledApp, TProgressiveWebAppObject } from "@/types/pref.ts";
 import {
+  type Container,
+  getContainers,
   getInstalledApps,
   renamePwaApp,
-  uninstallPwaApp,
-  getContainers,
   setSsbContainer,
-  type Container,
+  uninstallPwaApp,
 } from "../dataManager.ts";
 import { LayoutGrid } from "lucide-react";
 
@@ -31,15 +36,7 @@ export function InstalledApps() {
   // When NRGetContainers is not exported, the experiment is disabled.
   const containerExperimentEnabled =
     typeof globalThis.NRGetContainers === "function";
-  const renameDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
-    HTMLDialogElement
-  >;
-  const uninstallDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
-    HTMLDialogElement
-  >;
-  const containerDialogRef = useRef<HTMLDialogElement>(null) as React.RefObject<
-    HTMLDialogElement
-  >;
+  const [activeDialog, setActiveDialog] = useState<AppDialog>(null);
 
   const fetchApps = async () => {
     try {
@@ -94,20 +91,20 @@ export function InstalledApps() {
     setSelectedApp(app);
     setNewName(app.name);
     setError("");
-    renameDialogRef.current?.showModal();
+    setActiveDialog("rename");
   };
 
   const handleUninstall = (app: InstalledApp) => {
     setSelectedApp(app);
     setError("");
-    uninstallDialogRef.current?.showModal();
+    setActiveDialog("uninstall");
   };
 
   const handleContainer = (app: InstalledApp) => {
     setSelectedApp(app);
     setSelectedContainerId(app.userContextId ?? 0);
     setError("");
-    containerDialogRef.current?.showModal();
+    setActiveDialog("container");
   };
 
   const executeRename = async () => {
@@ -115,7 +112,7 @@ export function InstalledApps() {
 
     try {
       await renamePwaApp(selectedApp.id, newName);
-      renameDialogRef.current?.close();
+      setActiveDialog(null);
       setError("");
       setTimeout(() => {
         fetchApps();
@@ -131,7 +128,7 @@ export function InstalledApps() {
 
     try {
       await uninstallPwaApp(selectedApp.id);
-      uninstallDialogRef.current?.close();
+      setActiveDialog(null);
       setError("");
       setTimeout(() => {
         fetchApps();
@@ -147,7 +144,7 @@ export function InstalledApps() {
 
     try {
       await setSsbContainer(selectedApp.id, selectedContainerId);
-      containerDialogRef.current?.close();
+      setActiveDialog(null);
       setError("");
       setTimeout(() => {
         fetchApps();
@@ -158,9 +155,9 @@ export function InstalledApps() {
     }
   };
 
-  const handleClose = (dialogRef: React.RefObject<HTMLDialogElement>) => {
+  const handleClose = () => {
     setError("");
-    dialogRef.current?.close();
+    setActiveDialog(null);
   };
 
   return (
@@ -173,7 +170,7 @@ export function InstalledApps() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <p className="text-error mb-4">{error}</p>}
+          {error && <p role="alert" className="text-error mb-4">{error}</p>}
           {Object.keys(installedApps).length === 0
             ? (
               <p className="text-base-content/70">
@@ -190,11 +187,13 @@ export function InstalledApps() {
                     <div
                       key={app.id}
                       className="flex items-center p-3 border rounded-lg"
-                      style={containerColor ? {
-                        borderColor: containerColor,
-                        borderWidth: "2px",
-                        backgroundColor: `${containerColor}10`,
-                      } : undefined}
+                      style={containerColor
+                        ? {
+                          borderColor: containerColor,
+                          borderWidth: "2px",
+                          backgroundColor: `${containerColor}10`,
+                        }
+                        : undefined}
                     >
                       <img
                         src={app.icon}
@@ -204,17 +203,20 @@ export function InstalledApps() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-medium truncate">{app.name}</p>
-                          {containerExperimentEnabled && app.userContextId && app.userContextId > 0 && (
+                          {containerExperimentEnabled &&
+                            (app.userContextId ?? 0) > 0 && (
                             <span
-                              className={`text-xs px-1.5 py-0.5 rounded ${isContainerDeleted(app.userContextId)
-                                ? "bg-warning/20 text-warning"
-                                : "bg-base-200 text-base-content/70"
-                                }`}
+                              className={`text-xs px-1.5 py-0.5 rounded ${
+                                isContainerDeleted(app.userContextId)
+                                  ? "bg-warning/20 text-warning"
+                                  : "bg-base-200 text-base-content/70"
+                              }`}
                             >
                               {getContainerName(app.userContextId)}
                               {isContainerDeleted(app.userContextId) && (
-                                <button
+                                <Button
                                   type="button"
+                                  variant="secondary"
                                   className="ml-1 text-xs underline"
                                   onClick={async () => {
                                     await setSsbContainer(app.id, 0);
@@ -222,7 +224,7 @@ export function InstalledApps() {
                                   }}
                                 >
                                   {t("progressiveWebApp.resetContainer")}
-                                </button>
+                                </Button>
                               )}
                             </span>
                           )}
@@ -233,28 +235,28 @@ export function InstalledApps() {
                       </div>
                       <div className="flex gap-2 ml-4">
                         {containerExperimentEnabled && (
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-sm"
+                            variant="secondary"
                             onClick={() => handleContainer(app)}
                           >
                             {t("progressiveWebApp.container")}
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
-                          className="btn btn-sm"
+                          variant="secondary"
                           onClick={() => handleRename(app)}
                         >
                           {t("progressiveWebApp.renameApp")}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="btn btn-sm btn-error"
+                          variant="danger"
                           onClick={() => handleUninstall(app)}
                         >
                           {t("progressiveWebApp.uninstallApp")}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -264,25 +266,19 @@ export function InstalledApps() {
         </CardContent>
       </Card>
 
-      <dialog
-        ref={containerDialogRef}
-        className="modal modal-bottom sm:modal-middle"
-        onClick={(e) => {
-          if (e.target === containerDialogRef.current) {
-            handleClose(containerDialogRef);
-          }
-        }}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            {t("progressiveWebApp.setContainer")}
-          </h3>
-          {error && <p className="text-error mb-4">{error}</p>}
+      {activeDialog === "container" && (
+        <Modal
+          title={t("progressiveWebApp.setContainer")}
+          onClose={handleClose}
+          closeLabel={t("progressiveWebApp.cancel")}
+        >
+          {error && <p role="alert" className="text-error mb-4">{error}</p>}
           <p className="py-4 text-base-content/70">
             {t("progressiveWebApp.containerDescription")}
           </p>
-          <select
-            className="select select-bordered w-full mb-4"
+          <Select
+            aria-label={t("progressiveWebApp.container")}
+            className="w-full mb-4"
             value={selectedContainerId}
             onChange={(e) => setSelectedContainerId(Number(e.target.value))}
           >
@@ -294,116 +290,94 @@ export function InstalledApps() {
                 {c.name}
               </option>
             ))}
-          </select>
-          <div className="modal-action">
-            <button
+          </Select>
+          <div className="flex flex-wrap justify-end gap-3 mt-6">
+            <Button
               type="button"
-              className="btn"
-              onClick={() => handleClose(containerDialogRef)}
+              variant="secondary"
+              onClick={handleClose}
             >
               {t("progressiveWebApp.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               onClick={executeSetContainer}
             >
               {t("progressiveWebApp.save")}
-            </button>
+            </Button>
           </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(containerDialogRef)}>close</button>
-        </form>
-      </dialog>
+        </Modal>
+      )}
 
-      <dialog
-        ref={renameDialogRef}
-        className="modal modal-bottom sm:modal-middle"
-        onClick={(e) => {
-          if (e.target === renameDialogRef.current) {
-            handleClose(renameDialogRef);
-          }
-        }}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            {t("progressiveWebApp.renameApp")}
-          </h3>
-          {error && <p className="text-error mb-4">{error}</p>}
+      {activeDialog === "rename" && (
+        <Modal
+          title={t("progressiveWebApp.renameApp")}
+          onClose={handleClose}
+          closeLabel={t("progressiveWebApp.cancel")}
+        >
+          {error && <p role="alert" className="text-error mb-4">{error}</p>}
           <p className="py-4 text-base-content/70">
             {t("progressiveWebApp.enterNewName")}
           </p>
-          <input
+          <Input
+            aria-label={t("progressiveWebApp.enterNewName")}
             type="text"
             value={newName}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setNewName(e.target.value)}
-            className="input input-bordered w-full mb-4"
+            className="w-full mb-4"
           />
-          <div className="modal-action">
-            <button
+          <div className="flex flex-wrap justify-end gap-3 mt-6">
+            <Button
               type="button"
-              className="btn"
-              onClick={() => handleClose(renameDialogRef)}
+              variant="secondary"
+              onClick={handleClose}
             >
               {t("progressiveWebApp.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-primary"
+              variant="primary"
               onClick={executeRename}
               disabled={!newName.trim() || newName === selectedApp?.name}
             >
               {t("progressiveWebApp.rename")}
-            </button>
+            </Button>
           </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(renameDialogRef)}>close</button>
-        </form>
-      </dialog>
+        </Modal>
+      )}
 
-      <dialog
-        ref={uninstallDialogRef}
-        className="modal modal-bottom sm:modal-middle"
-        onClick={(e) => {
-          if (e.target === uninstallDialogRef.current) {
-            handleClose(uninstallDialogRef);
-          }
-        }}
-      >
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            {t("progressiveWebApp.uninstallConfirmation")}
-          </h3>
-          {error && <p className="text-error mb-4">{error}</p>}
+      {activeDialog === "uninstall" && (
+        <Modal
+          title={t("progressiveWebApp.uninstallConfirmation")}
+          onClose={handleClose}
+          closeLabel={t("progressiveWebApp.cancel")}
+        >
+          {error && <p role="alert" className="text-error mb-4">{error}</p>}
           <p className="py-4 text-base-content/70">
             {t("progressiveWebApp.uninstallWarning", {
               name: selectedApp?.name,
             })}
           </p>
-          <div className="modal-action">
-            <button
+          <div className="flex flex-wrap justify-end gap-3 mt-6">
+            <Button
               type="button"
-              className="btn"
-              onClick={() => handleClose(uninstallDialogRef)}
+              variant="secondary"
+              onClick={handleClose}
             >
               {t("progressiveWebApp.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-error"
+              variant="danger"
               onClick={executeUninstall}
             >
               {t("progressiveWebApp.uninstall")}
-            </button>
+            </Button>
           </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button type="submit" onClick={() => handleClose(uninstallDialogRef)}>close</button>
-        </form>
-      </dialog>
+        </Modal>
+      )}
     </>
   );
 }

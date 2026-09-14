@@ -1,3 +1,4 @@
+import { fontLicensesPlugin } from "../../libs/ui/vite-font-licenses.ts";
 import process from "node:process";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -11,6 +12,7 @@ export default defineConfig(({ command }) => {
   return {
     cacheDir: "../../node_modules/.vite/pages-settings",
     build: {
+      assetsInlineLimit: 0,
       outDir: "_dist",
     },
     resolve: {
@@ -22,6 +24,7 @@ export default defineConfig(({ command }) => {
         jsxImportSource: "react",
       }),
       tsconfigPaths(),
+      fontLicensesPlugin(),
       genJarmnPlugin("content-settings", "noraneko-settings", "content"),
       disableCspInDevPlugin(command === "serve"),
     ],

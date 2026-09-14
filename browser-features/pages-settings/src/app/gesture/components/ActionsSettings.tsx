@@ -1,3 +1,4 @@
+import { Button } from "../../../../../../libs/ui/button.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -82,14 +83,14 @@ export function ActionsSettings({
     };
 
     const handleSaveAction = async (action: GestureAction) => {
-        if (editingMode === "edit" && editingIndex !== null) {
-            await updateAction(editingIndex, action);
-        } else {
-            await addAction(action);
-        }
+        const saved = editingMode === "edit" && editingIndex !== null
+            ? await updateAction(editingIndex, action)
+            : await addAction(action);
+        if (!saved) return false;
         setIsDialogOpen(false);
         setEditingAction(null);
         setEditingIndex(null);
+        return true;
     };
 
     const handleCloseModal = () => {
@@ -111,7 +112,7 @@ export function ActionsSettings({
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <table className="table w-full min-w-[36rem]">
+                    <table className="floorp-table w-full min-w-[36rem]">
                         <thead>
                             <tr>
                                 <th className="text-base-content/70">{t("mouseGesture.action")}</th>
@@ -131,7 +132,7 @@ export function ActionsSettings({
                                             {action.pattern.map((direction, i) => (
                                                 <span
                                                     key={i}
-                                                    className="badge badge-primary badge-sm"
+                                                    className="floorp-tag"
                                                     title={direction}
                                                 >
                                                     {patternToString([direction])}
@@ -141,30 +142,30 @@ export function ActionsSettings({
                                     </td>
                                     <td>
                                         <div className="flex space-x-1">
-                                            <button
+                                            <Button
                                                 type="button"
-                                                className="btn btn-ghost btn-sm"
+                                                variant="ghost"
                                                 onClick={() => editAction(action, index)}
                                                 title={t("mouseGesture.edit")}
                                             >
                                                 <Edit className="size-4" />
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 type="button"
-                                                className="btn btn-ghost btn-sm"
+                                                variant="ghost"
                                                 onClick={() => duplicateAction(action)}
                                                 title={t("mouseGesture.duplicate")}
                                             >
                                                 <Copy className="size-4" />
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 type="button"
-                                                className="btn btn-ghost btn-sm"
+                                                variant="ghost"
                                                 onClick={() => handleDeleteAction(index)}
                                                 title={t("mouseGesture.delete")}
                                             >
                                                 <Trash2 className="size-4" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -181,15 +182,15 @@ export function ActionsSettings({
                 </div>
 
                 <div className="flex justify-start mt-4">
-                    <button
+                    <Button
                         type="button"
-                        className="btn btn-primary flex items-center gap-2"
+                        variant="primary" className="flex items-center gap-2"
                         onClick={newAction}
                         disabled={!config.enabled}
                     >
                         <PlusCircle className="size-4" />
                         {t("mouseGesture.addAction")}
-                    </button>
+                    </Button>
                 </div>
             </CardContent>
 

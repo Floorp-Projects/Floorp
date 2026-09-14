@@ -1,3 +1,5 @@
+import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
+import { Button } from "../../../../../../libs/ui/button.tsx";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,14 +38,7 @@ import type {
   Panels,
 } from "#features-chrome/common/panel-sidebar/utils/type.ts";
 import { PanelEditModal } from "./PanelEditModal.tsx";
-import {
-  AlertTriangle,
-  Edit,
-  GripVertical,
-  List,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Edit, GripVertical, List, Plus, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -101,7 +96,7 @@ const SortablePanel = ({
             </span>
           </div>
           <div className="text-sm text-base-content/60 mt-1">
-            <div className="badge badge-sm">
+            <div className="floorp-tag">
               {t(`panelSidebar.type.${panel.type}`)}
             </div>
             {panel.width > 0 && (
@@ -111,22 +106,22 @@ const SortablePanel = ({
         </div>
       </div>
       <div className="flex gap-2">
-        <button
+        <Button
           type="button"
           onClick={() => onEdit(panel)}
-          className="btn btn-ghost btn-sm btn-square"
-          aria-label={t("common.edit")}
+          variant="ghost"
+          aria-label={t("panelSidebar.editPanel")}
         >
           <Edit size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => onDelete(panel.id)}
-          className="btn btn-ghost btn-sm btn-square"
-          aria-label={t("common.delete")}
+          variant="ghost"
+          aria-label={t("panelSidebar.delete")}
         >
           <Trash2 size={16} />
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -155,26 +150,17 @@ const DeleteConfirmationModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal modal-open">
-      <div className="modal-box">
-        <h3 className="font-bold text-lg flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-warning" />
-          {t("panelSidebar.confirmDeleteTitle")}
-        </h3>
-        <p className="py-4">
-          {t("panelSidebar.confirmDelete", { name: panelName })}
-        </p>
-        <div className="modal-action">
-          <button type="button" onClick={onClose} className="btn btn-outline">
-            {t("panelSidebar.cancel")}
-          </button>
-          <button type="button" onClick={onConfirm} className="btn btn-error">
-            {t("panelSidebar.delete")}
-          </button>
-        </div>
-      </div>
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+    <ConfirmModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title={t("panelSidebar.confirmDeleteTitle")}
+      cancelText={t("panelSidebar.cancel")}
+      confirmText={t("panelSidebar.delete")}
+      confirmVariant="danger"
+    >
+      <p>{t("panelSidebar.confirmDelete", { name: panelName })}</p>
+    </ConfirmModal>
   );
 };
 
@@ -301,8 +287,7 @@ export const PanelList: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <span className="loading loading-spinner loading-md text-primary">
-        </span>
+        <span role="status">{t("ui.loading")}</span>
       </div>
     );
   }
@@ -315,20 +300,21 @@ export const PanelList: React.FC = () => {
           {t("panelSidebar.panelList")}
         </CardTitle>
         <div className="flex justify-end">
-          <button
+          <Button
             type="button"
             onClick={handleAddPanel}
-            className="btn btn-primary btn-sm gap-2"
+            variant="primary"
+            className="gap-2"
           >
             <Plus size={16} />
             {t("panelSidebar.addPanel")}
-          </button>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
         {panels.length === 0
           ? (
-            <div className="card-body items-center text-center text-base-content/70 py-8 bg-base-100 rounded-lg">
+            <div className="floorp-empty-state items-center text-center text-base-content/70 py-8 bg-base-100 rounded-lg">
               <p>{t("panelSidebar.noPanels")}</p>
             </div>
           )

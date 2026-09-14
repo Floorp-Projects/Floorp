@@ -1,3 +1,5 @@
+import { Button } from "../../../../libs/ui/button.tsx";
+import styles from "../welcome.module.css";
 import {
   createContext,
   type ReactNode,
@@ -26,14 +28,13 @@ export function useReleaseNotesChoice(allowNewDefault = false) {
     Promise.all([
       rpc.getStringPref(RELEASE_NOTES_PREFS.mode),
       rpc.getBoolPref(RELEASE_NOTES_PREFS.confirmed),
-      rpc.getStringPref(RELEASE_NOTES_PREFS.audience),
-    ]).then(([value, confirmed, audience]) => {
+    ]).then(([value, confirmed]) => {
       if (!active) return;
       setMode(
         initialReleaseNotesChoice(
           value,
           confirmed,
-          allowNewDefault ? audience : "existing",
+          allowNewDefault ? "new" : "existing",
         ),
       );
       setReady(true);
@@ -93,16 +94,18 @@ export function useSetupReleaseNotesChoice() {
 }
 
 export function ReleaseNotesChoice(
-  { choice, setup = false }: {
+  { choice, setup = false, standalone = false }: {
     choice: ReturnType<typeof useReleaseNotesChoice>;
     setup?: boolean;
+    standalone?: boolean;
   },
 ) {
   const { t } = useTranslation();
+  const Heading = standalone ? "h1" : "h2";
   return (
-    <section className="card border border-base-300 bg-base-100 w-full max-w-2xl mb-6">
-      <div className="card-body">
-        <h2 className="card-title">{t("releaseNotes.title")}</h2>
+    <section className={styles.section}>
+      <div className={styles.choiceContent}>
+        <Heading className={standalone ? "floorp-page-heading" : undefined}>{t("releaseNotes.title")}</Heading>
         <p className="text-sm opacity-80">{t("releaseNotes.description")}</p>
         <fieldset
           disabled={!choice.ready || choice.saving}
@@ -110,7 +113,7 @@ export function ReleaseNotesChoice(
         >
           <legend className="sr-only">{t("releaseNotes.title")}</legend>
           {RELEASE_NOTES_MODES.map((mode) => (
-            <label key={mode} className="flex items-start gap-3 cursor-pointer">
+            <label key={mode} className={styles.choice}>
               <input
                 type="radio"
                 name="release-notes-choice"
@@ -118,7 +121,6 @@ export function ReleaseNotesChoice(
                 checked={choice.mode === mode}
                 onChange={() =>
                   choice.setMode(mode)}
-                className="radio radio-primary radio-sm mt-1"
               />
               <span>
                 <span className="block font-semibold">
@@ -143,12 +145,12 @@ export function ReleaseNotesChoice(
           href={RELEASE_NOTES_SUPPORT_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="link link-primary text-sm"
+          className={styles.textLink}
         >
           {t("releaseNotes.learnMore")}
         </a>
         {choice.error && (
-          <p role="alert" className="text-error">{t("releaseNotes.error")}</p>
+          <p role="alert" className={styles.error}>{t("releaseNotes.error")}</p>
         )}
       </div>
     </section>
@@ -159,27 +161,26 @@ export function ReleaseNotesPrompt() {
   const { t } = useTranslation();
   const choice = useReleaseNotesChoice();
   return (
-    <main className="min-h-screen bg-base-100 text-base-content flex flex-col items-center justify-center p-6">
-      <ReleaseNotesChoice choice={choice} />
+    <main className={styles.content}>
+      <ReleaseNotesChoice choice={choice} standalone />
       <div className="flex flex-wrap gap-3">
-        <button
+        <Button
           type="button"
-          className="btn btn-primary"
           disabled={!choice.ready || choice.saving}
           onClick={async () => {
             if (await choice.confirm()) globalThis.close();
           }}
         >
           {t("releaseNotes.confirm")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn btn-ghost"
+          variant="ghost"
           disabled={choice.saving}
           onClick={() => globalThis.close()}
         >
           {t("releaseNotes.dismiss")}
-        </button>
+        </Button>
       </div>
     </main>
   );

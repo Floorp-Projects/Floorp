@@ -66,7 +66,7 @@ export function BasicSettings() {
         )
         : null}
       <Card>
-        <CardHeader>
+        <CardHeader className="floorp-section-heading-row">
           <CardTitle className="flex items-center gap-2">
             <Settings className="size-5" />
             {t("workspaces.basicSettings")}
@@ -83,41 +83,35 @@ export function BasicSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2">
-              <h3 className="text-base font-medium">
-                {t("workspaces.enableOrDisable")}
-              </h3>
-              <InfoTip
-                description={t("workspaces.enableWorkspacesDescription")}
-              />
-            </div>
+          <div className="floorp-workspace-enable">
             <div className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <div className="space-y-1">
-                  <label htmlFor="enable-workspaces">
-                    {t("workspaces.enableWorkspaces")}
-                  </label>
-                </div>
-                <Switch
-                  id="enable-workspaces"
-                  checked={getValues("enabled")}
-                  onChange={(e) => {
-                    setValue("enabled", e.target.checked);
-                    setShowRestartModal(true);
-                  }}
+              <div className="flex items-center gap-2">
+                <label htmlFor="enable-workspaces" className="font-semibold">
+                  {t("workspaces.enableWorkspaces")}
+                </label>
+                <InfoTip
+                  description={t("workspaces.enableWorkspacesDescription")}
                 />
               </div>
-              <div className="text-sm text-base-content/70">
+              <p id="workspace-restart-hint" className="floorp-workspace-hint">
                 {t("workspaces.needRestartDescriptionForEnableAndDisable")}
-              </div>
+              </p>
             </div>
+            <Switch
+              id="enable-workspaces"
+              aria-describedby="workspace-restart-hint"
+              checked={getValues("enabled")}
+              onChange={(e) => {
+                setValue("enabled", e.target.checked);
+                setShowRestartModal(true);
+              }}
+            />
           </div>
 
-          <h3 className="text-base font-medium">
+          <h3 className="floorp-workspace-subheading">
             {t("workspaces.otherSettings")}
           </h3>
-          <div className="space-y-3">
+          <div className="floorp-setting-rows">
             <div className="flex items-center justify-between gap-2">
               <label htmlFor="close-popup" className="flex flex-col gap-1.5">
                 <span>{t("workspaces.closePopupWhenSelectingWorkspace")}</span>

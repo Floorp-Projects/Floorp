@@ -779,5 +779,17 @@
             "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
             "saveFailed": "Could not save this setting. The previous value has been restored."
         }
-    }
+    },
+  "ui": {
+    "skipToContent": "Skip to content",
+    "loading": "Loading…",
+    "setupProgress": "Setup progress",
+    "stepNavigation": "Setup navigation",
+    "settingsNavigation": "Settings navigation",
+    "openNavigation": "Open navigation",
+    "closeNavigation": "Close navigation",
+    "saveError": "Could not save. Please try again.",
+    "retry": "Retry",
+    "loadError": "Could not load settings. Please reload this page."
+  }
 }

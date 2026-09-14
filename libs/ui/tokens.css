@@ -1,0 +1,44 @@
+/* Floorp Split Canvas. Source: web-v5/design-system, verified 2026-08-24.
+ * App semantic colors extend the website's light-only theme. */
+:root {
+  --floorp-brand-deep: #21113f;
+  --floorp-brand: #5309e8;
+  --floorp-brand-hover: #4708c5;
+  --floorp-canvas: #f7f5ff;
+  --floorp-subtle: #f0edff;
+  --floorp-surface: #fff;
+  --floorp-ink: #15131b;
+  --floorp-muted: #625d6b;
+  --floorp-line: #d8d1e8;
+  --floorp-control-border: #82778f;
+  --floorp-switch-on: #5309e8;
+  --floorp-switch-off: #625d6b;
+  --floorp-action: #5309e8;
+  --floorp-focus: #5309e8;
+  --floorp-on-purple: #fff;
+  --floorp-on-purple-muted: #d7cdea;
+  --floorp-focus-dark: #ffd45c;
+  --floorp-danger: #b42332;
+  --floorp-warning: #855100;
+  --floorp-success: #22633d;
+  --floorp-font: Inter, "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Hiragino Sans", system-ui, sans-serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --floorp-canvas: #141416;
+  --floorp-subtle: #202024;
+  --floorp-surface: #202024;
+  --floorp-ink: #f4f4f5;
+  --floorp-muted: #b8b8c0;
+  --floorp-line: #3a3a40;
+  --floorp-control-border: #777780;
+  --floorp-switch-on: #6a4dff;
+  --floorp-switch-off: #3a3a40;
+  --floorp-on-purple-muted: #d0d0d6;
+  --floorp-action: #c4acff;
+  --floorp-focus: #ffd45c;
+  --floorp-danger: #ffacb6;
+  --floorp-warning: #ffd45c;
+  --floorp-success: #9ddbb2;
+  color-scheme: dark;
+}
