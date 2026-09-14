@@ -18,7 +18,7 @@ export function disableCspInDevPlugin(isDev: boolean) {
       // the self-closing `...\" />` form, and attributes split across lines)
       let transformed = html.replace(
         /<meta\s+http-equiv="Content-Security-Policy"\s+content="[^"]*"\s*\/?>/i,
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;\">",
+        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; object-src 'none';\">",
       );
 
       // When loaded via CustomAboutPage (about:welcome → localhost),

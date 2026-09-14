@@ -12,7 +12,8 @@ declare global {
   }
 }
 
-const isLocalhost5187 = import.meta.url?.includes("localhost:5187");
+const isLocalhost5187 = globalThis.location.protocol === "http:" &&
+  globalThis.location.port === "5187";
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {

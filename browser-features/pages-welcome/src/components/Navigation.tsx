@@ -7,6 +7,7 @@ const navigationItems = [
   { path: "/features", labelKey: "navigation.features" },
   { path: "/hub", labelKey: "navigation.hub" },
   { path: "/customize", labelKey: "navigation.customize" },
+  { path: "/support", labelKey: "navigation.support" },
   { path: "/finish", labelKey: "navigation.complete" },
 ];
 

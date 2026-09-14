@@ -3,9 +3,12 @@ import { useTranslation } from "react-i18next";
 import { setDefaultBrowser } from "@/app/finish/dataManager.ts";
 import { useState } from "react";
 import { Check, Sun, Github, Twitter, HelpCircle, ArrowRight } from "lucide-react";
+import { useSetupReleaseNotesChoice } from "../../components/ReleaseNotesChoice.tsx";
+import { Link, Navigate } from "react-router-dom";
 
 export default function FinishPage() {
     const { t } = useTranslation();
+    const { choice: releaseNotesChoice, reviewed } = useSetupReleaseNotesChoice();
     const [isDefaultBrowser, setIsDefaultBrowser] = useState({ message: "", success: false });
 
     const setAsDefaultBrowser = () => {
@@ -18,12 +21,15 @@ export default function FinishPage() {
         });
     };
 
-    const closeWelcomePage = () => {
+    const closeWelcomePage = async () => {
+        if (!await releaseNotesChoice.confirm()) return;
         globalThis.open("about:newtab", "_blank");
         setTimeout(() => {
             globalThis.close();
         }, 50);
     };
+
+    if (!reviewed) return <Navigate to="/support" replace />;
 
     return (
         <main className="flex flex-col justify-between overflow-hidden py-6">
@@ -90,11 +96,17 @@ export default function FinishPage() {
                     </div>
                 </div>
 
+                <div className="w-full max-w-2xl mb-6 text-sm text-center space-y-2">
+                    <p>{t('releaseNotes.title')}: {t(`releaseNotes.${releaseNotesChoice.mode}.label`)}</p>
+                    <Link to="/support" className="link link-primary">{t('releaseNotes.changeSelection')}</Link>
+                    {releaseNotesChoice.error && <p role="alert" className="text-error">{t('releaseNotes.error')}</p>}
+                </div>
                 <div className="flex flex-col items-center">
                     <button
                         type="button"
                         className="btn btn-success btn-md md:btn-lg shadow-xl hover:shadow-success/20 transform hover:-translate-y-1 transition-all duration-300 px-6 md:px-8 text-white font-bold"
                         onClick={closeWelcomePage}
+                        disabled={!releaseNotesChoice.ready || releaseNotesChoice.saving}
                     >
                         <ArrowRight className="mr-2" size={20} />
                         {t('finishPage.getStarted')}
