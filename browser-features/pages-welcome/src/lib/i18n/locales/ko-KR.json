@@ -1,169 +1,195 @@
 {
-    "navigation": {
-        "welcome": "환영합니다",
-        "language": "언어",
-        "languageSupport": "언어 지원",
-        "features": "기능",
-        "featureIntroduction": "기능 소개",
-        "hub": "Floorp Hub",
-        "hubIntro": "Floorp Hub에 대해",
-        "customize": "맞춤 설정",
-        "initialSettings": "초기 설정",
-        "complete": "완료",
-        "previous": "이전",
-        "next": "다음"
-    },
-    "hubPage": {
-        "title": "Floorp Hub에 대해",
-        "subtitle": "Floorp별 설정을 위한 집중 공간입니다.",
-        "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub는 플로어별 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:환경설정'에서도 액세스할 수 있습니다.",
-        "openHub": "about:hub 열기",
-        "openPreferences": "설정(about:preferences)을 열기",
-        "tip": "팁: Firefox 설정 사이드바에서 Floorp Hub에 액세스할 수도 있습니다.",
-        "features": {
-            "dedicated": "Floorp 전용 설정 센터",
-            "accessible": "about:hub 또는 Firefox 설정에서 사용가능",
-            "centralized": "모든 Floorp 옵션을 한 곳에서 확인하세요"
-        }
-    },
-    "customize": {
-        "title": "Floorp 맞춤 설정",
-        "description": "원하는 설정으로 맞춤 설정합니다. 나중에 Floorp 허브 또는 설정 페이지에서 언제든지 변경할 수 있습니다.",
-        "appearance": {
-            "title": "모양 설정",
-            "description": "원하는 대로 Floorp의 모양을 맞춤 설정할 수 있습니다. 밝거나 어두운 테마를 선택하거나 시스템 설정에 따라 자동으로 전환되도록 설정할 수 있습니다."
-        },
-        "themes": {
-            "light": "밝음",
-            "dark": "어두움",
-            "system": "시스템 설정에 따르기"
-        },
-        "themeInfo": {
-            "light": "밝은 테마",
-            "dark": "어두운 테마",
-            "system": "시스템 기본 설정"
-        },
-        "searchEngine": {
-            "title": "기본 검색 엔진",
-            "default": "기본",
-            "search": "검색",
-            "noEnginesFound": "검색 엔진을 찾을 수 없습니다."
-        },
-        "floorpHub": {
-            "title": "Floorp Hub",
-            "description": "Floorp Hub는 Floorp 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:preferences'에서도 액세스할 수 있습니다.",
-            "openHub": "about:hub 열기",
-            "openPreferences": "설정(about:preferences)을 열기"
-        }
-    },
-    "finish": {
-        "title": "설정이 완료되었습니다!",
-        "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 빠르고 안전한 인터넷 브라우저 환경을 즐기세요.",
-        "nextSteps": {
-            "title": "다음 단계 (선택적)",
-            "setDefault": "기본 브라우저로 설정",
-            "documentation": "문서"
-        },
-        "getStarted": "Floorp 시작하기",
-        "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다."
-    },
-    "welcomePage": {
-        "welcome": "Floorp에 오신 것을 환영합니다!",
-        "description": "Floorp는 개인 정보 보호와 보안을 강조하는 빠르고 사용자 친화적인 웹 브라우저입니다. 이 가이드에서는 Floorp의 주요 기능과 설정에 대해 소개합니다.",
-        "readyToStart": "준비가 완료되면 아래 버튼을 클릭하여 계속 진행하세요.",
-        "features": "Floorp 기능",
-        "privacy": "개인 정보 보호 정책",
-        "privacyDesc": "데이터 보호",
-        "speed": "속도",
-        "speedDesc": "성능 최적화",
-        "customization": "사용자 정의",
-        "customizationDesc": "직접 설정해서 정렬",
-        "start": "시작하기"
-    },
-    "localizationPage": {
-        "title": "Floorp는 당신의 언어를 말합니다",
-        "subtitle": "변경이 필요하다면 언어 설정을 확인하세요",
-        "languageSettings": "언어 설정",
-        "languageChanged": "언어 변경 완료!",
-        "currentLanguageInfo": "이 언어 정보",
-        "systemLanguage": "시스템 언어",
-        "floorpLanguage": "Floorp 언어",
-        "selectLanguage": "언어 선택",
-        "useSystemLanguage": "시스템 언어 사용",
-        "multilingual": "다국어 지원",
-        "chooseLanguage": "다양한 언어 중에서 선택하세요",
-        "languageChangeNotice": "언어를 변경하면 Floorp를 다시 시작하지 않고도 새 언어가 적용됩니다. 일부 애드온은 언어 변경을 지원하지 않을 수 있습니다."
-    },
-    "featuresPage": {
-        "title": "Floorp 기능",
-        "subtitle": "Floorp에는 유용한 기능이 많이 있습니다. 기능 개요를 확인하세요!",
-        "panelSidebar": {
-            "title": "패널 사이드바",
-            "description": "탐색하는 동안 오른쪽 사이드바에서 편리한 기능에 액세스하세요. 사이드바에 웹 패널, 메모 기능, 애드온, 북마크 등을 배치할 수 있습니다.",
-            "features": [
+  "releaseNotes": {
+      "learnMore": "이 설정과 자금 마련에 대해 자세히 알아보기 (일본어)",
+      "title": "릴리스 노트 및 Floorp 지원",
+      "description": "광고 수익을 바탕으로 Floorp를 개발하고 운영할 수 있습니다. 업데이트 후 릴리스 노트를 열 방식을 선택하세요. 나중에 설정 → 업데이트 및 실험에서 변경할 수 있습니다.",
+      "disabled": {
+      "label": "자동으로 열지 않기",
+      "description": "업데이트 후 릴리스 노트를 열지 않습니다. 블로그에 방문할 때 차단기 설정을 유지합니다."
+      },
+      "blocking": {
+      "label": "차단기 설정을 유지한 채 열기",
+      "description": "확장을 설정한 대로 작동하도록 유지합니다. 이 설정이 광고 차단기를 자동으로 설치하거나 활성화하지는 않습니다."
+      },
+      "support": {
+      "label": "Floorp를 돕기 위해 광고 허용하기 (권장)",
+      "description": "Floorp 블로그에서 uBlock Origin, AdGuard, Adblock Plus, AdBlock, Ghostery를 제한합니다."
+      },
+      "scope": "이 제한은 수동으로 열린 페이지를 포함하여 blog.floorp.app의 모든 HTTPS 페이지에 적용되며, 광고 차단뿐 아니라 추적 보호 기능 및 사용자 필터에도 영향을 미칩니다. 다른 확장은 이 설정의 제한을 받지 않습니다. 다른 보호 도구는 여전히 광고를 차단할 수 있습니다. 설정을 변경한 뒤에는 열린 블로그 페이지를 새로고침하세요.",
+      "applyOnConfirm": "확인을 눌러야 선택한 내용이 적용됩니다. 이 페이지를 닫으면 현재 설정을 유지합니다.",
+      "changeSelection": "선택 변경",
+      "applyOnFinish": "임시 선택입니다. 다음 화면에서 설정을 마치면 적용됩니다. 그 전에 설정을 닫으면 현재 설정이 유지됩니다.",
+      "confirm": "선택 저장",
+      "dismiss": "현재 설정 유지",
+      "error": "선택을 불러오거나 저장할 수 있습니다. 이 페이지를 닫았다 연 뒤 다시 시도해 주세요."
+  },
+  "navigation": {
+      "support": "Floorp 지원",
+      "welcome": "환영합니다",
+      "language": "언어",
+      "languageSupport": "언어 지원",
+      "features": "기능",
+      "featureIntroduction": "기능 소개",
+      "hub": "Floorp Hub",
+      "hubIntro": "Floorp Hub에 대해",
+      "customize": "맞춤 설정",
+      "initialSettings": "초기 설정",
+      "complete": "완료",
+      "previous": "이전",
+      "next": "다음"
+  },
+  "hubPage": {
+      "title": "Floorp Hub에 대해",
+      "subtitle": "Floorp별 설정을 위한 집중 공간입니다.",
+      "sectionTitle": "Floorp Hub",
+      "description": "Floorp Hub는 플로어별 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:환경설정'에서도 액세스할 수 있습니다.",
+      "openHub": "about:hub 열기",
+      "openPreferences": "설정(about:preferences)을 열기",
+      "tip": "팁: Firefox 설정 사이드바에서 Floorp Hub에 액세스할 수도 있습니다.",
+      "features": {
+      "dedicated": "Floorp 전용 설정 센터",
+      "accessible": "about:hub 또는 Firefox 설정에서 사용가능",
+      "centralized": "모든 Floorp 옵션을 한 곳에서 확인하세요"
+      }
+  },
+  "customize": {
+      "title": "Floorp 맞춤 설정",
+      "description": "원하는 설정으로 맞춤 설정합니다. 나중에 Floorp 허브 또는 설정 페이지에서 언제든지 변경할 수 있습니다.",
+      "appearance": {
+      "title": "모양 설정",
+      "description": "원하는 대로 Floorp의 모양을 맞춤 설정할 수 있습니다. 밝거나 어두운 테마를 선택하거나 시스템 설정에 따라 자동으로 전환되도록 설정할 수 있습니다."
+      },
+      "themes": {
+      "light": "밝음",
+      "dark": "어두움",
+      "system": "시스템 설정에 따르기"
+      },
+      "themeInfo": {
+      "light": "밝은 테마",
+      "dark": "어두운 테마",
+      "system": "시스템 기본 설정"
+      },
+      "searchEngine": {
+      "title": "기본 검색 엔진",
+      "default": "기본",
+      "search": "검색",
+      "noEnginesFound": "검색 엔진을 찾을 수 없습니다."
+      },
+      "floorpHub": {
+      "title": "Floorp Hub",
+      "description": "Floorp Hub는 Floorp 옵션을 위한 전용 설정 센터입니다. 'about:hub'로 이동하여 열 수 있습니다. Firefox 설정 페이지의 왼쪽 사이드바에 있는 'about:preferences'에서도 액세스할 수 있습니다.",
+      "openHub": "about:hub 열기",
+      "openPreferences": "설정(about:preferences)을 열기"
+      }
+  },
+  "finish": {
+      "title": "설정이 완료되었습니다!",
+      "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 빠르고 안전한 인터넷 브라우저 환경을 즐기세요.",
+      "nextSteps": {
+      "title": "다음 단계 (선택적)",
+      "setDefault": "기본 브라우저로 설정",
+      "documentation": "문서"
+      },
+      "getStarted": "Floorp 시작하기",
+      "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다."
+  },
+  "welcomePage": {
+      "welcome": "Floorp에 오신 것을 환영합니다!",
+      "description": "Floorp는 개인 정보 보호와 보안을 강조하는 빠르고 사용자 친화적인 웹 브라우저입니다. 이 가이드에서는 Floorp의 주요 기능과 설정에 대해 소개합니다.",
+      "readyToStart": "준비가 완료되면 아래 버튼을 클릭하여 계속 진행하세요.",
+      "features": "Floorp 기능",
+      "privacy": "개인 정보 보호 정책",
+      "privacyDesc": "데이터 보호",
+      "speed": "속도",
+      "speedDesc": "성능 최적화",
+      "customization": "사용자 정의",
+      "customizationDesc": "직접 설정해서 정렬",
+      "start": "시작하기"
+  },
+  "localizationPage": {
+      "title": "Floorp는 당신의 언어를 말합니다",
+      "subtitle": "변경이 필요하다면 언어 설정을 확인하세요",
+      "languageSettings": "언어 설정",
+      "languageChanged": "언어 변경 완료!",
+      "currentLanguageInfo": "이 언어 정보",
+      "systemLanguage": "시스템 언어",
+      "floorpLanguage": "Floorp 언어",
+      "selectLanguage": "언어 선택",
+      "useSystemLanguage": "시스템 언어 사용",
+      "multilingual": "다국어 지원",
+      "chooseLanguage": "다양한 언어 중에서 선택하세요",
+      "languageChangeNotice": "언어를 변경하면 Floorp를 다시 시작하지 않고도 새 언어가 적용됩니다. 일부 애드온은 언어 변경을 지원하지 않을 수 있습니다."
+  },
+  "featuresPage": {
+      "title": "Floorp 기능",
+      "subtitle": "Floorp에는 유용한 기능이 많이 있습니다. 기능 개요를 확인하세요!",
+      "panelSidebar": {
+      "title": "패널 사이드바",
+      "description": "탐색하는 동안 오른쪽 사이드바에서 편리한 기능에 액세스하세요. 사이드바에 웹 패널, 메모 기능, 애드온, 북마크 등을 배치할 수 있습니다.",
+      "features": [
                 "사이드바에 웹사이트 고정",
                 "탐색하는 동안 Floorp 노트로 빠르게 메모하기",
                 "컨테이너 지원"
-            ]
-        },
-        "workspaces": {
-            "title": "워크스페이스",
-            "description": "여러 개의 탭 세트를 구성하여 작업을 간소화하세요. 고유한 아이콘과 이름으로 작업 공간 사이를 빠르게 전환하세요. 왼쪽 상단의 작업 공간 버튼을 통해 액세스하세요.",
-            "features": [
+      ]
+      },
+      "workspaces": {
+      "title": "워크스페이스",
+      "description": "여러 개의 탭 세트를 구성하여 작업을 간소화하세요. 고유한 아이콘과 이름으로 작업 공간 사이를 빠르게 전환하세요. 왼쪽 상단의 작업 공간 버튼을 통해 액세스하세요.",
+      "features": [
                 "업무, 개인 등 목적별로 분류합니다.",
                 "사용자 지정 아이콘으로 시각적으로 식별",
                 "간편한 탭 관리"
-            ]
-        },
-        "pwa": {
-            "title": "프로그레시브 웹 애플리케이션 지원",
-            "description": "Windows에서는 PWA 호환 사이트를 방문할 때 데스크톱 애플리케이션으로 추가할 수 있습니다. 일반 웹사이트도 설치할 수 있습니다.",
-            "features": [
+      ]
+      },
+      "pwa": {
+      "title": "프로그레시브 웹 애플리케이션 지원",
+      "description": "Windows에서는 PWA 호환 사이트를 방문할 때 데스크톱 애플리케이션으로 추가할 수 있습니다. 일반 웹사이트도 설치할 수 있습니다.",
+      "features": [
                 "데스크톱 앱으로 독립적으로 실행",
                 "작업 표시줄에 고정 가능",
                 "Firefox 애드온도 작동합니다"
-            ]
-        },
-        "mouseGesture": {
-            "title": "마우스 제스처",
-            "description": "기본적으로 구현된 마우스 제스처 기능으로 브라우저를 더욱 직관적으로 제어하세요. 마우스 오른쪽 클릭 버튼을 누른 채 마우스를 움직여 제스처를 실행할 수 있습니다.",
-            "features": [
+      ]
+      },
+      "mouseGesture": {
+      "title": "마우스 제스처",
+      "description": "기본적으로 구현된 마우스 제스처 기능으로 브라우저를 더욱 직관적으로 제어하세요. 마우스 오른쪽 클릭 버튼을 누른 채 마우스를 움직여 제스처를 실행할 수 있습니다.",
+      "features": [
                 "키보드 단축키 없이 작동",
                 "완전히 사용자 지정 가능한 제스처",
                 "페이지와 기록을 빠르게 탐색"
-            ]
-        },
-        "notebook": "메모장",
-        "nextTab": "다음 탭으로"
-    },
-    "finishPage": {
-        "title": "설정 완료!",
-        "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 이제 빠르고 안전한 인터넷 브라우징을 즐기세요.",
-        "nextSteps": "다음 단계 (선택적)",
-        "defaultBrowser": "기본 브라우저로 설정",
-        "support": "지원",
-        "documentation": "문서",
-        "getStarted": "Floorp 시작하기",
-        "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다.",
-        "resourcesLabel": "리소스",
-        "defaultBrowserSuccess": "Floorp가 기본 브라우저로 설정되었습니다!"
-    },
-    "whatsNew": {
-        "title": "Floorp {{version}} 에 오신 것을 환영합니다!",
-        "subtitle": "Floorp의 새로운 기능을 확인하세요!",
-        "tags": {
-            "settings": "설정",
-            "productivity": "편의 기능",
-            "workspaces": "워크스페이스",
-            "pwa": "PWA",
-            "gestures": "제스처"
-        },
-        "footer": {
-            "follow": "팔로우",
-            "privacy": "개인 정보 보호 및 약관",
-            "about": "Floorp Hub에 대해",
-            "copyright": "© {{year}} Floorp Projects. All Rights Reserved."
-        }
-    }
+      ]
+      },
+      "notebook": "메모장",
+      "nextTab": "다음 탭으로"
+  },
+  "finishPage": {
+      "title": "설정 완료!",
+      "subtitle": "축하합니다! Floorp 설정을 완료했습니다. 이제 빠르고 안전한 인터넷 브라우징을 즐기세요.",
+      "nextSteps": "다음 단계 (선택적)",
+      "defaultBrowser": "기본 브라우저로 설정",
+      "support": "지원",
+      "documentation": "문서",
+      "getStarted": "Floorp 시작하기",
+      "hint": "더 자세한 설정은 오른쪽 상단의 메뉴 버튼에 있는 설정 옵션을 통해 사용자 지정할 수 있습니다.",
+      "resourcesLabel": "리소스",
+      "defaultBrowserSuccess": "Floorp가 기본 브라우저로 설정되었습니다!"
+  },
+  "whatsNew": {
+      "title": "Floorp {{version}} 에 오신 것을 환영합니다!",
+      "subtitle": "Floorp의 새로운 기능을 확인하세요!",
+      "tags": {
+      "settings": "설정",
+      "productivity": "편의 기능",
+      "workspaces": "워크스페이스",
+      "pwa": "PWA",
+      "gestures": "제스처"
+      },
+      "footer": {
+      "follow": "팔로우",
+      "terms": "이용 약관",
+      "privacy": "개인 정보 보호 정책",
+      "about": "Floorp Hub에 대해",
+      "copyright": "© {{year}} Floorp Projects. All Rights Reserved."
+      }
+  }
 }
