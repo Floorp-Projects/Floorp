@@ -59,7 +59,7 @@ export const zFloorpDesignConfigs = t.intersection([
         tabMinHeight: t.number,
         tabMinWidth: t.number,
         tabPinTitle: t.boolean,
-        tabDubleClickToClose: t.boolean,
+        tabDoubleClickToClose: t.boolean,
         tabOpenPosition: t.number,
       }),
       t.UnknownRecord,
