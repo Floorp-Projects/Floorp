@@ -260,8 +260,10 @@ export const overrides = [
                 try {
                   clipboard = stripFn(clipboard);
                 } catch {
-                  // Ignore strip errors
+                  clipboard = "";
                 }
+              } else {
+                clipboard = "";
               }
               clipboard = clipboard.trim();
 
