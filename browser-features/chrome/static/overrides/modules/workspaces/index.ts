@@ -216,11 +216,55 @@ export const overrides = [
               [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
-              let clipboard = globalThis.readFromClipboard();
-              clipboard =
-                globalThis.UrlbarUtils.stripUnsafeProtocolOnPaste(
-                  clipboard,
-                ).trim();
+              let clipboard = "";
+              try {
+                clipboard = globalThis.readFromClipboard?.() || "";
+              } catch {
+                // Ignore clipboard read errors
+              }
+
+              // Fallback to global clipboard if selection clipboard is empty (e.g., Linux primary selection vs Ctrl+C)
+              if (
+                !clipboard &&
+                typeof Cc !== "undefined" &&
+                typeof Ci !== "undefined"
+              ) {
+                try {
+                  const trans = Cc[
+                    "@mozilla.org/widget/transferable;1"
+                  ].createInstance(Ci.nsITransferable);
+                  trans.init(
+                    // deno-lint-ignore no-explicit-any
+                    (window as any).docShell.QueryInterface(Ci.nsILoadContext),
+                  );
+                  trans.addDataFlavor("text/plain");
+                  Services.clipboard.getData(
+                    trans,
+                    Services.clipboard.kGlobalClipboard,
+                  );
+                  const data: { value?: unknown } = {};
+                  trans.getTransferData("text/plain", data);
+                  if (data.value) {
+                    clipboard =
+                      (data.value as Ci.nsISupportsString).data || "";
+                  }
+                } catch {
+                  // Ignore fallback errors
+                }
+              }
+
+              const stripFn =
+                globalThis.UrlbarShared?.stripUnsafeProtocolOnPaste ??
+                globalThis.UrlbarUtils?.stripUnsafeProtocolOnPaste;
+              if (stripFn) {
+                try {
+                  clipboard = stripFn(clipboard);
+                } catch {
+                  // Ignore strip errors
+                }
+              }
+              clipboard = clipboard.trim();
+
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;
