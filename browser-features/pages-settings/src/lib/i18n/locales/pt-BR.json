@@ -34,7 +34,6 @@
         "debug": "Depurar",
         "mouseGesture": "Gestos do mouse",
         "keyboardShortcut": "Atalhos de teclado",
-        "performance": "Desempenho",
         "search": {
             "title": "Configurações de pesquisa",
             "resultsFor": "Resultados da pesquisa para \"{{query}}\"",
@@ -330,26 +329,6 @@
         }
     },
     "updates": {
-        "releaseNotes": {
-            "learnMore": "Leia sobre nosso financiamento e esta configuração (em japonês)",
-            "title": "Notas da versão após atualizações",
-            "description": "Escolha como o Floorp abre as notas da versão após uma atualização.",
-            "disabled": {
-                "label": "Não abrir automaticamente",
-                "description": "As notas da versão não abrirão após as atualizações. Suas configurações de bloqueio se aplicam quando você visita o blog."
-            },
-            "blocking": {
-                "label": "Abrir com as configurações do bloqueador",
-                "description": "Abrir notas de lançamento sem restringir suas extensões. Isso não instala nem ativa um bloqueador de anúncios."
-            },
-            "support": {
-                "label": "Abrir e permitir a exibição de anúncios para apoiar o Floorp (recomendado)",
-                "description": "Impedir que o uBlock Origin, o AdGuard, o Adblock Plus, o AdBlock e o Ghostery filtrem o blog do Floorp."
-            },
-            "supportMessage": "A receita publicitária das notas da versão ajuda a financiar o desenvolvimento e a operação do Floorp. Agradecemos por nos apoiar da maneira que for mais conveniente para você.",
-            "scope": "Essa exceção se aplica a todas as visitas em HTTPS ao blog.floorp.app, incluindo páginas abertas manualmente. Ela também afeta a proteção contra rastreamento e os filtros personalizados nas cinco extensões listadas. Outras extensões não são restringidas por essa configuração. Outras ferramentas de proteção ainda podem bloquear anúncios. Atualize as páginas do blog abertas após alterar essa configuração.",
-            "error": "Não foi possível carregar ou salvar esta configuração. Por favor, reabra esta página e tente novamente."
-        },
         "title": "Atualizações e testes",
         "description": "Gerencie as configurações de atualização e a participação em recursos experimentais.",
         "experiments": {
@@ -764,20 +743,6 @@
             "saveDescription": "Salvar atalho",
             "cancel": "Cancelar",
             "cancelDescription": "Cancelar edição"
-        }
-    },
-    "performance": {
-        "title": "Desempenho",
-        "description": "Configurações que afetam como o navegador utiliza os recursos do sistema.",
-        "idleReclaim": {
-            "title": "Recuperação de memória ociosa",
-            "description": "Experimental e desativado por padrão. Quando ativado, tenta reduzir o uso de memória após um período sem teclado ou entrada do mouse. A quantidade recuperada depende das páginas em uso.",
-            "enable": "Recuperar memória enquanto o navegador estiver inativo",
-            "idleThreshold": "Tempo ocioso antes da recuperação (segundos)",
-            "minInterval": "Intervalo mínimo entre as tentativas de recuperação (segundos)",
-            "minResident": "Recuperar apenas quando o uso de memória exceder (MB)",
-            "cost": "A reprodução de vídeos, as chamadas e o compartilhamento de tela não impedem a liberação de memória. A liberação de memória pode pausar o navegador, inclusive quando você retoma o uso dele. Intervalos mais curtos aumentam a frequência desse processo.",
-            "saveFailed": "Não foi possível salvar esta configuração. O valor anterior foi restaurado."
         }
     }
 }

@@ -34,7 +34,6 @@
         "debug": "Debug",
         "mouseGesture": "Muis gebaren",
         "keyboardShortcut": "Sneltoetsen",
-        "performance": "Prestaties",
         "search": {
             "title": "Zoekinstellingen",
             "resultsFor": "Zoekresultaten voor \"{{query}}\"",
@@ -330,26 +329,6 @@
         }
     },
     "updates": {
-        "releaseNotes": {
-            "learnMore": "Lees meer over onze financiering en deze instelling (Japans)",
-            "title": "Releaseopmerkingen na updates",
-            "description": "Kies hoe Floorp releaseopmerkingen opent na een update.",
-            "disabled": {
-                "label": "Niet automatisch openen",
-                "description": "Releaseopmerkingen worden niet geopend na updates. Uw instellingen voor blokkering zijn van toepassing wanneer u de blog bezoekt."
-            },
-            "blocking": {
-                "label": "Openen met je blocker-instellingen",
-                "description": "Releaseopmerkingen openen zonder je extensies te beperken. Dit installeert of activeert geen advertentieblokker."
-            },
-            "support": {
-                "label": "Openen en advertenties toestaan om Floorp te steunen (aanbevolen)",
-                "description": "Voorkom dat uBlock Origin, AdGuard, Adblock Plus, AdBlock en Ghostery de Floorp-blog filteren."
-            },
-            "supportMessage": "Advertentie-inkomsten uit releaseopmerkingen ondersteunen de ontwikkeling en exploitatie van Floorp. Bedankt dat je ons steunt op een manier die voor jou werkt.",
-            "scope": "Deze uitzondering is van toepassing op alle HTTPS-bezoeken aan blog.floorp.app, inclusief handmatig geopende pagina's. Het heeft ook invloed op de trackingbescherming en aangepaste filters in de vijf vermelde extensies. Andere extensies worden niet beperkt door deze instelling. Andere beschermingsmiddelen kunnen nog steeds advertenties blokkeren. Herlaad geopende blogpagina's na het wijzigen van deze instelling.",
-            "error": "Kon deze instelling niet laden of opslaan. Open deze pagina opnieuw en probeer het nog een keer."
-        },
         "title": "Updates en experimenten",
         "description": "Beheer de update-instellingen en de deelname aan experimentele functies.",
         "experiments": {
@@ -764,20 +743,6 @@
             "saveDescription": "Sneltoets opslaan",
             "cancel": "",
             "cancelDescription": "Bewerking annuleren"
-        }
-    },
-    "performance": {
-        "title": "Prestaties",
-        "description": "Instellingen die invloed hebben op hoe de browser systeembronnen gebruikt.",
-        "idleReclaim": {
-            "title": "Geheugen vrijmaken bij inactiviteit",
-            "description": "Experimenteel en standaard uitgeschakeld. Wanneer ingeschakeld, wordt geprobeerd het geheugengebruik te verminderen na een periode zonder toetsenbord- of muisinvoer. De hoeveelheid vrijgemaakt geheugen hangt af van de pagina's die je gebruikt.",
-            "enable": "Geheugen vrijmaken wanneer de browser inactief is",
-            "idleThreshold": "Inactiviteitstijd voor vrijmaken (seconden)",
-            "minInterval": "Minimaal interval tussen vrijgaven (seconden)",
-            "minResident": "Alleen vrijmaken wanneer geheugengebruik hoger is dan (MB)",
-            "cost": "Het afspelen van video's, oproepen en het delen van je scherm voorkomen het vrijmaken van geheugen niet. Het vrijmaken kan de browser tijdelijk laten haperen, ook wanneer je deze weer gaat gebruiken. Kortere intervallen verhogen de frequentie hiervan.",
-            "saveFailed": "Kon deze instelling niet opslaan. De vorige waarde is hersteld."
         }
     }
 }
