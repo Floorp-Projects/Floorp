@@ -217,7 +217,6 @@
             "exampleFullUrl": "Gmail の URL のみに反応"
         },
         "tabStacks": {
-            "unavailableInVerticalTabs": "垂直タブではタブスタックを使用できません。設定は保持され、横タブに戻すと適用されます。",
             "title": "タブスタック",
             "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
             "enableOrDisable": "有効化/無効化",
@@ -780,41 +779,5 @@
             "cost": "動画再生、通話、画面共有は解放を妨げません。解放処理により、使用を再開する際などにブラウザーの動作が一時停止する場合があります。間隔を短くするほど解放頻度が高まります。",
             "saveFailed": "この設定を保存できませんでした。以前の値が復元されました。"
         }
-    },
-    "ui": {
-        "skipToContent": "本文へ移動",
-        "loading": "読み込み中…",
-        "setupProgress": "セットアップの進行状況",
-        "stepNavigation": "セットアップの移動",
-        "settingsNavigation": "設定のナビゲーション",
-        "openNavigation": "ナビゲーションを開く",
-        "closeNavigation": "ナビゲーションを閉じる",
-        "saveError": "保存できませんでした。もう一度お試しください。",
-        "retry": "再試行",
-        "loadError": "設定を読み込めませんでした。ページを再読み込みしてください。"
-    },
-    "settingsHome": {
-        "title": "Floorp を自分好みに",
-        "description": "見た目や操作を、使いやすく整えましょう。",
-        "open": "設定を開く",
-        "manage": "ブラウザーの管理",
-        "descriptions": {
-            "tabAndAppearance": "テーマやタブの表示を調整",
-            "workspaces": "仕事用とプライベート用のタブを切り替える",
-            "browserSidebar": "ページの横で別のサイトを見る",
-            "mouseGesture": "マウスの動きに操作を割り当てる",
-            "keyboardShortcuts": "キーに操作を割り当てる",
-            "performance": "メモリの使い方を調整"
-        },
-        "resources": {
-            "privacy": "プライバシーについて",
-            "extensions": "拡張機能を管理",
-            "help": "ヘルプを見る"
-        }
-    },
-    "workspaceRefresh": {
-        "behavior": "表示と操作",
-        "reset": "初期化",
-        "help": "使い方を見る"
     }
 }

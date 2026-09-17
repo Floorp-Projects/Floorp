@@ -34,6 +34,7 @@
         "debug": "调试",
         "mouseGesture": "鼠标手势",
         "keyboardShortcut": "键盘快捷键",
+        "performance": "Performance",
         "search": {
             "title": "搜索设置",
             "resultsFor": "“{{query}}”搜索结果",
@@ -329,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Read about our funding and this setting (Japanese)",
+            "title": "Release notes after updates",
+            "description": "Choose how Floorp opens release notes after an update.",
+            "disabled": {
+                "label": "Do not open automatically",
+                "description": "Release notes will not open after updates. Your blocker settings apply when you visit the blog."
+            },
+            "blocking": {
+                "label": "Open with your blocker settings",
+                "description": "Open release notes without restricting your extensions. This does not install or enable an ad blocker."
+            },
+            "support": {
+                "label": "Open and allow ads to support Floorp (recommended)",
+                "description": "Prevent uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery from filtering the Floorp blog."
+            },
+            "supportMessage": "Advertising revenue from release notes supports Floorp development and operation. Thank you for supporting us in a way that works for you.",
+            "scope": "This exception applies to all HTTPS visits to blog.floorp.app, including manually opened pages. It also affects tracking protection and custom filters in the five listed extensions. Other extensions are not restricted by this setting. Other protection tools may still block ads. Reload open blog pages after changing this setting.",
+            "error": "Could not load or save this setting. Please reopen this page and try again."
+        },
         "title": "更新与实验",
         "description": "管理更新设置和实验功能参与。",
         "experiments": {
@@ -743,6 +764,20 @@
             "saveDescription": "保存快捷键",
             "cancel": "取消",
             "cancelDescription": "取消编辑"
+        }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Settings that affect how the browser uses system resources.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Experimental and off by default. When enabled, attempts to reduce memory use after a period without keyboard or mouse input. The amount reclaimed depends on the pages in use.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
         }
     }
 }
