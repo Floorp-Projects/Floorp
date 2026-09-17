@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Öppna i delad vy",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Lägg till panel till delad vy",
       "moveToPane": "Flytta till panel",
       "moveToPaneN": "Panel {{n}} ({{title}})"

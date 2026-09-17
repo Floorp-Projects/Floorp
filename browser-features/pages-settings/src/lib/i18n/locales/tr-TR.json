@@ -217,6 +217,7 @@
             "exampleFullUrl": "Matches Gmail URLs only"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
             "title": "Tab Stacks",
             "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
             "enableOrDisable": "Etkinleştir / Devre Dışı Bırak",
@@ -779,5 +780,41 @@
             "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
             "saveFailed": "Could not save this setting. The previous value has been restored."
         }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "Yükleniyor…",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "Tekrar deneyin",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "About privacy",
+            "extensions": "Manage extensions",
+            "help": "Get help"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Appearance and behavior",
+        "reset": "Reset workspaces",
+        "help": "How to use"
     }
 }

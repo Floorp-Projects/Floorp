@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "In geteilter Ansicht öffnen",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Bereich zur geteilten Ansicht hinzufügen",
       "moveToPane": "In Bereich verschieben",
       "moveToPaneN": "Bereich {{n}} ({{title}})"
