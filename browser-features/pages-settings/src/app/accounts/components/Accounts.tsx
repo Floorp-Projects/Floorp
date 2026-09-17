@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import {
   Card,
   CardContent,
@@ -17,15 +18,15 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
   const { t } = useTranslation();
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Settings className="size-5" />
           {t("accounts.mozillaAccountSyncSettings")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
+      <CardContent className={`${styles.details} space-y-6`}>
+        <div className={styles.identity}>
           <Avatar>
             <AvatarImage
               src={accountAndProfileData?.accountImage}
@@ -53,7 +54,7 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
         <a
           href="https://accounts.firefox.com/signin"
           target="_blank"
-          className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+          className={styles.link}
         >
           {t("accounts.manageMozillaAccount")}
           <ExternalLink className="size-4" />
@@ -65,7 +66,7 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
             e.preventDefault();
             globalThis.NRAddTab("about:preferences#sync");
           }}
-          className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+          className={styles.link}
         >
           {t("accounts.manageFirefoxFeatureSync")}
           <ExternalLink className="size-4" />

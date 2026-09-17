@@ -1,5 +1,5 @@
 .sidebar {
-  inline-size: 264px;
+  inline-size: clamp(264px, 18vw, 288px);
   flex-shrink: 0;
   background: var(--floorp-brand-deep);
   color: #fff;
@@ -22,7 +22,7 @@
 }
 .sidebar .header {
   flex-shrink: 0;
-  padding-block: 20px;
+  padding-block: 30px;
   margin-inline-end: 16px;
   border-inline-end: 8px solid var(--floorp-brand);
 }
@@ -38,7 +38,7 @@
   pointer-events: none;
 }
 .content {
-  padding: 16px 12px 32px;
+  padding: 20px 16px 40px;
 }
 .sidebar .content {
   flex: 1;
@@ -59,9 +59,9 @@
   gap: 12px;
   align-items: center;
   padding: 12px;
-  min-block-size: 44px;
+  min-block-size: 48px;
   padding-inline-start: 15px;
-  border-radius: 10px;
+  border-radius: 4px;
   color: #fff;
   text-decoration: none;
   inline-size: 100%;

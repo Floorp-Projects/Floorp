@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import { Button } from "../../../../../../libs/ui/button.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -85,7 +86,7 @@ export function TabSleepExclusion() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Moon className="size-5" />
@@ -103,7 +104,7 @@ export function TabSleepExclusion() {
   }
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Moon className="size-5" />

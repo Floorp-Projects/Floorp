@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -31,23 +32,22 @@ export default function Page() {
   }, [watchAll]);
 
   return (
-    <div className="p-6">
-      <div className="floorp-page-header">
-        <header className="mb-8">
-          <h1 className="floorp-page-heading">
-            {t("progressiveWebApp.title")}
-          </h1>
-          <p className="text-sm">
-            {t("progressiveWebApp.description")}
-          </p>
-        </header>
-        <FormProvider {...methods}>
-          <form className="space-y-3 w-full">
-            <Preferences />
-            <InstalledApps />
-          </form>
-        </FormProvider>
-      </div>
+    <div className={`floorp-settings-page ${styles.page}`}>
+      <header className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("progressiveWebApp.title")}</h1>
+        <p className="floorp-page-description">
+          {t("progressiveWebApp.description")}
+        </p>
+      </header>
+      <FormProvider {...methods}>
+        <form
+          className={styles.sections}
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <Preferences />
+          <InstalledApps />
+        </form>
+      </FormProvider>
     </div>
   );
 }

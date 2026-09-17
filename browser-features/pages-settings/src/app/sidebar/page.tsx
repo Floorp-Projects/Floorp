@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -49,7 +50,7 @@ export default function Page() {
   }, [watchAll, ready, getValues]);
 
   return (
-    <div className="floorp-settings-page">
+    <div className={`floorp-settings-page ${styles.page}`}>
       <div className="floorp-page-header">
         <h1 className="floorp-page-heading">{t("panelSidebar.title")}</h1>
         <p className="floorp-page-description">
@@ -57,16 +58,19 @@ export default function Page() {
         </p>
       </div>
 
-      {error && <p role="alert">{t(ready ? "ui.saveError" : "ui.loadError")}</p>}
+      {error && <p role="alert">{t(ready ? "ui.saveError" : "ui.loadError")}
+      </p>}
       {!ready && !error && <p role="status">{t("ui.loading")}</p>}
-      <FormProvider {...methods}>
-        <form onSubmit={(event) => event.preventDefault()}>
-          <fieldset disabled={!ready} aria-busy={!ready} className="min-w-0">
-            <BasicSettings />
-          </fieldset>
-        </form>
-      </FormProvider>
-      <PanelList />
+      <div className={styles.sections}>
+        <FormProvider {...methods}>
+          <form onSubmit={(event) => event.preventDefault()}>
+            <fieldset disabled={!ready} aria-busy={!ready} className="min-w-0">
+              <BasicSettings />
+            </fieldset>
+          </form>
+        </FormProvider>
+        <PanelList />
+      </div>
     </div>
   );
 }

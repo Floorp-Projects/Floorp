@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import { Modal } from "../../../../../../libs/ui/modal.tsx";
 import type { AppDialog } from "../types.ts";
 import { Button } from "../../../../../../libs/ui/button.tsx";
@@ -162,7 +163,7 @@ export function InstalledApps() {
 
   return (
     <>
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutGrid className="size-5" />
@@ -186,7 +187,7 @@ export function InstalledApps() {
                   return (
                     <div
                       key={app.id}
-                      className="flex items-center p-3 border rounded-lg"
+                      className={styles.appItem}
                       style={containerColor
                         ? {
                           borderColor: containerColor,
@@ -198,11 +199,11 @@ export function InstalledApps() {
                       <img
                         src={app.icon}
                         alt={app.name}
-                        className="w-8 h-8 rounded mr-3"
+                        className="w-8 h-8 rounded"
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium truncate">{app.name}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="w-full font-medium truncate">{app.name}</p>
                           {containerExperimentEnabled &&
                             (app.userContextId ?? 0) > 0 && (
                             <span
@@ -233,7 +234,7 @@ export function InstalledApps() {
                           {app.start_url}
                         </p>
                       </div>
-                      <div className="flex gap-2 ml-4">
+                      <div className={styles.actions}>
                         {containerExperimentEnabled && (
                           <Button
                             type="button"

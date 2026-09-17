@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import { Button } from "../../../../../../libs/ui/button.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -100,19 +101,30 @@ export function ActionsSettings({
     };
 
     return (
-        <Card>
+        <Card className={styles.section}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <MousePointer className="size-5" />
                     {t("mouseGesture.actionsSettings")}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className={styles.description}>
                     {t("mouseGesture.actionsSettingsDescription")}
                 </CardDescription>
             </CardHeader>
             <CardContent>
+                <div className={styles.toolbar}>
+                    <Button
+                        type="button"
+                        variant="primary" className="flex items-center gap-2"
+                        onClick={newAction}
+                        disabled={!config.enabled}
+                    >
+                        <PlusCircle className="size-4" />
+                        {t("mouseGesture.addAction")}
+                    </Button>
+                </div>
                 <div className="overflow-x-auto">
-                    <table className="floorp-table w-full min-w-[36rem]">
+                    <table className={`floorp-table ${styles.table}`}>
                         <thead>
                             <tr>
                                 <th className="text-base-content/70">{t("mouseGesture.action")}</th>
@@ -172,7 +184,7 @@ export function ActionsSettings({
                             ))}
                             {config.actions.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="text-center py-4 text-base-content/60">
+                                    <td colSpan={3} className="text-center py-4 text-base-content/60">
                                         {t("mouseGesture.noActions")}
                                     </td>
                                 </tr>
@@ -181,17 +193,7 @@ export function ActionsSettings({
                     </table>
                 </div>
 
-                <div className="flex justify-start mt-4">
-                    <Button
-                        type="button"
-                        variant="primary" className="flex items-center gap-2"
-                        onClick={newAction}
-                        disabled={!config.enabled}
-                    >
-                        <PlusCircle className="size-4" />
-                        {t("mouseGesture.addAction")}
-                    </Button>
-                </div>
+
             </CardContent>
 
             {isDialogOpen && editingAction && (

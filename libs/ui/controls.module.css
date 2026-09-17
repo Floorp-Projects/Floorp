@@ -105,6 +105,20 @@
   cursor: inherit;
   z-index: 1;
 }
+.standardSwitch {
+  position: relative;
+  cursor: pointer;
+}
+.standardSwitch:has(:disabled) {
+  cursor: not-allowed;
+}
+.standardSwitch > .switchInput:disabled + [data-part="control"] {
+  opacity: .5;
+}
+.standardSwitch > .switchInput:focus-visible + [data-part="control"] {
+  outline: 2px solid var(--chakra-colors-purple-focus-ring);
+  outline-offset: 2px;
+}
 .track {
   display: block;
   inline-size: 42px;

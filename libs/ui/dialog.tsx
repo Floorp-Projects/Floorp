@@ -3,6 +3,7 @@ import { Dialog, Portal } from "@chakra-ui/react";
 import { useLayoutEffect, useRef } from "react";
 import { Button } from "./button.tsx";
 import styles from "./dialog.module.css";
+import { useStandardControls } from "./control-theme.ts";
 
 export function ConfirmModal(
   {
@@ -16,6 +17,7 @@ export function ConfirmModal(
     confirmVariant = "primary",
   }: ConfirmModalProps,
 ) {
+  const standard = useStandardControls();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
@@ -37,14 +39,26 @@ export function ConfirmModal(
       unmountOnExit
     >
       <Portal>
-        <Dialog.Backdrop className={styles.backdrop} />
-        <Dialog.Positioner className={styles.positioner}>
-          <Dialog.Content className={styles.content}>
+        <Dialog.Backdrop className={standard ? undefined : styles.backdrop} />
+        <Dialog.Positioner className={standard ? undefined : styles.positioner}>
+          <Dialog.Content
+            className={standard ? "floorp-standard-ui" : styles.content}
+            mx={standard ? "5" : undefined}
+            maxH={standard ? "calc(100dvh - 40px)" : undefined}
+            overflowY={standard ? "auto" : undefined}
+          >
             <Dialog.Header>
-              <Dialog.Title className={styles.title}>{title}</Dialog.Title>
+              <Dialog.Title className={standard ? undefined : styles.title}>
+                {title}
+              </Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body className={styles.body}>{children}</Dialog.Body>
-            <Dialog.Footer className={styles.footer}>
+            <Dialog.Body className={standard ? undefined : styles.body}>
+              {children}
+            </Dialog.Body>
+            <Dialog.Footer
+              className={standard ? undefined : styles.footer}
+              flexWrap={standard ? "wrap" : undefined}
+            >
               <Button ref={cancelRef} onClick={onClose} variant="ghost">
                 {cancelText}
               </Button>

@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import { Input } from "../../../../../../libs/ui/input.tsx";
 import {
   Card,
@@ -14,7 +15,7 @@ export function Tabbar() {
   const { getValues, setValue } = useFormContext();
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Rows className="size-5" />

@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import { Button } from "../../../../../../libs/ui/button.tsx";
 import type React from "react";
@@ -75,21 +76,21 @@ const SortablePanel = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-base-100 hover:bg-base-200 p-4 flex items-center justify-between transition-colors"
+      className="bg-base-100 hover:bg-base-200 p-4 flex items-center justify-between gap-3 transition-colors"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab text-base-content/50 hover:text-base-content/70"
+          className="shrink-0 cursor-grab text-base-content/50 hover:text-base-content/70"
           aria-label="Drag to reorder"
         >
           <GripVertical size={20} />
         </div>
-        <div>
+        <div className="min-w-0">
           <div className="font-medium flex items-center gap-2">
             {panel.icon && (
-              <img src={panel.icon} alt="" className="w-5 h-5 rounded-full" />
+              <img src={panel.icon} alt="" className="w-5 h-5 shrink-0 rounded-full" />
             )}
             <span className="max-w-md truncate">
               {displayName}
@@ -105,7 +106,7 @@ const SortablePanel = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <Button
           type="button"
           onClick={() => onEdit(panel)}
@@ -293,13 +294,15 @@ export const PanelList: React.FC = () => {
   }
 
   return (
-    <Card className="bg-base-200">
-      <CardHeader className="flex flex-row justify-between">
+    <Card className={styles.section}>
+      <CardHeader>
         <CardTitle className="flex gap-2">
           <List className="size-5" />
           {t("panelSidebar.panelList")}
         </CardTitle>
-        <div className="flex justify-end">
+      </CardHeader>
+      <CardContent>
+        <div className={styles.toolbar}>
           <Button
             type="button"
             onClick={handleAddPanel}
@@ -310,8 +313,6 @@ export const PanelList: React.FC = () => {
             {t("panelSidebar.addPanel")}
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
         {panels.length === 0
           ? (
             <div className="floorp-empty-state items-center text-center text-base-content/70 py-8 bg-base-100 rounded-lg">

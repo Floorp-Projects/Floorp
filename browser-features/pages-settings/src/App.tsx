@@ -10,6 +10,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar.tsx";
 import { Header } from "@/header/header.tsx";
 import useHashSync from "@/hooks/useHashSync.ts";
+import { StandardUIProvider } from "../../../libs/ui/standard-provider.tsx";
 import { useSettingFocus } from "@/hooks/useSettingFocus.ts";
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
@@ -48,55 +49,60 @@ export default function App() {
           {t("ui.skipToContent", { defaultValue: "Skip to content" })}
         </a>
         <AppSidebar />
-        <div className="floorp-settings-body">
-          <Header />
-          <main
-            id="settings-content"
-            tabIndex={-1}
-            className="floorp-settings-main"
-          >
-            <Suspense
-              fallback={
-                <p role="status">
-                  {t("ui.loading", { defaultValue: "Loading…" })}
-                </p>
-              }
+        <StandardUIProvider>
+          <div className="floorp-settings-body floorp-standard-ui">
+            <Header />
+            <main
+              id="settings-content"
+              tabIndex={-1}
+              className="floorp-settings-main"
             >
-              <Routes>
-                <Route
-                  path="/"
-                  element={<Navigate to="/overview/home" replace />}
-                />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/overview/home" element={<Dashboard />} />
-                <Route path="/features/design" element={<Design />} />
-                <Route
-                  path="/features/design/lepton"
-                  element={<LeptonSettings />}
-                />
-                <Route path="/features/sidebar" element={<PanelSidebar />} />
-                <Route path="/features/workspaces" element={<Workspaces />} />
-                <Route
-                  path="/features/webapps"
-                  element={<ProgressiveWebApp />}
-                />
-                <Route path="/features/floorp-os" element={<FloorpOS />} />
-                <Route
-                  path="/features/accounts"
-                  element={<ProfileAndAccount />}
-                />
-                <Route path="features/gesture" element={<MouseGesture />} />
-                <Route
-                  path="/features/shortcuts"
-                  element={<KeyboardShortcut />}
-                />
-                <Route path="/features/performance" element={<Performance />} />
-                <Route path="/about/browser" element={<About />} />
-                <Route path="/about/updates" element={<Updates />} />
-              </Routes>
-            </Suspense>
-          </main>
-        </div>
+              <Suspense
+                fallback={
+                  <p role="status">
+                    {t("ui.loading", { defaultValue: "Loading…" })}
+                  </p>
+                }
+              >
+                <Routes>
+                  <Route
+                    path="/"
+                    element={<Navigate to="/overview/home" replace />}
+                  />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/overview/home" element={<Dashboard />} />
+                  <Route path="/features/design" element={<Design />} />
+                  <Route
+                    path="/features/design/lepton"
+                    element={<LeptonSettings />}
+                  />
+                  <Route path="/features/sidebar" element={<PanelSidebar />} />
+                  <Route path="/features/workspaces" element={<Workspaces />} />
+                  <Route
+                    path="/features/webapps"
+                    element={<ProgressiveWebApp />}
+                  />
+                  <Route path="/features/floorp-os" element={<FloorpOS />} />
+                  <Route
+                    path="/features/accounts"
+                    element={<ProfileAndAccount />}
+                  />
+                  <Route path="features/gesture" element={<MouseGesture />} />
+                  <Route
+                    path="/features/shortcuts"
+                    element={<KeyboardShortcut />}
+                  />
+                  <Route
+                    path="/features/performance"
+                    element={<Performance />}
+                  />
+                  <Route path="/about/browser" element={<About />} />
+                  <Route path="/about/updates" element={<Updates />} />
+                </Routes>
+              </Suspense>
+            </main>
+          </div>
+        </StandardUIProvider>
       </div>
     </SidebarProvider>
   );

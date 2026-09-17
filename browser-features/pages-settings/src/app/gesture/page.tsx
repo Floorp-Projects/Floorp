@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import { useMouseGestureConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/Preferences.tsx";
@@ -29,7 +30,7 @@ export default function Page() {
   }
 
   return (
-    <div className="floorp-settings-page">
+    <div className={`floorp-settings-page ${styles.page}`}>
       <div className="floorp-page-header">
         <h1 className="floorp-page-heading">
           {t("pages.mouseGesture")}
@@ -39,9 +40,9 @@ export default function Page() {
         </p>
       </div>
 
-      <div className="floorp-settings-sections">
+      <div className={styles.sections}>
         <div
-          className="min-h-6 text-sm"
+          className="text-sm empty:hidden"
           aria-live="polite"
           aria-atomic="true"
         >

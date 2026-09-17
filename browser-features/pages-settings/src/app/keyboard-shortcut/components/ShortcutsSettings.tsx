@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import { Button } from "../../../../../../libs/ui/button.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -54,24 +55,24 @@ export const ShortcutsSettings = ({
     };
 
     return (
-        <Card>
+        <Card className={styles.section}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Keyboard className="size-5" />
                     {t("keyboardShortcut.shortcuts")}
                 </CardTitle>
-                <CardDescription>
-                    <div className="inline-flex items-center gap-2">
+                <CardDescription className={styles.description}>
+                    <span className="inline-flex items-center gap-2">
                         {t("keyboardShortcut.shortcutsDescription")}
                         <InfoTip
                             description={t("keyboardShortcut.shortcutsTip")}
                         />
-                    </div>
+                    </span>
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
-                    <table className="floorp-table">
+                    <table className={`floorp-table ${styles.table}`}>
                         <thead>
                             <tr>
                                 <th>{t("keyboardShortcut.action")}</th>
@@ -101,7 +102,7 @@ export const ShortcutsSettings = ({
                                             )}
                                         </td>
                                         <td>
-                                            <div className="flex gap-8">
+                                            <div className={styles.actions}>
                                                 <Button
                                                     type="button"
                                                     variant="primary"

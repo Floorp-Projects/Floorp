@@ -20,14 +20,14 @@ export const useSidebar = () => useContext(SidebarContext);
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isMobile, setMobile] = useState(() =>
-    globalThis.matchMedia("(max-width: 1023px)").matches
+    globalThis.matchMedia("(max-width: 1100px)").matches
   );
   const { pathname } = useLocation();
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
   useEffect(() => {
-    const media = globalThis.matchMedia("(max-width: 1023px)");
+    const media = globalThis.matchMedia("(max-width: 1100px)");
     const update = () => setMobile(media.matches);
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);

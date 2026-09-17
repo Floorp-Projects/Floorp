@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import { Select } from "../../../../../../libs/ui/dropdown.tsx";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -87,7 +88,7 @@ export function TabWindowBehavior() {
     settings.taskbarPreviews !== null;
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MonitorCog className="size-5" />

@@ -1,3 +1,4 @@
+import styles from "./design.module.css";
 import { Button } from "../../../../../libs/ui/button.tsx";
 import React from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
@@ -122,30 +123,27 @@ export default function Page() {
     });
   }, [cloneDesignSettings, hasLoadedDefaults, watchAll, retry]);
 
-  const LeptonSettingsButton = () => {
-    return (
-      <div className="bg-muted/50 p-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium mb-1">
-              {t("design.lepton-preferences.title")}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {t("design.lepton-preferences.description")}
-            </p>
-          </div>
-          <Button
-            type="button"
-            onClick={() => navigate("/features/design/lepton")}
-            variant="secondary"
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/80"
-          >
-            {t("design.lepton-preferences.configureLepton")}
-          </Button>
+  const leptonSettingsButton = (
+    <div className={styles.lepton}>
+      <div className={styles.row}>
+        <div>
+          <h3 className="font-medium mb-1">
+            {t("design.lepton-preferences.title")}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {t("design.lepton-preferences.description")}
+          </p>
         </div>
+        <Button
+          type="button"
+          onClick={() => navigate("/features/design/lepton")}
+          variant="secondary"
+        >
+          {t("design.lepton-preferences.configureLepton")}
+        </Button>
       </div>
-    );
-  };
+    </div>
+  );
 
   // Check if current design supports Lepton settings
   const isLeptonCompatible = watchAll &&
@@ -153,7 +151,7 @@ export default function Page() {
     ["protonfix", "photon", "lepton"].includes(watchAll.design);
 
   return (
-    <div className="floorp-settings-page">
+    <div className={`floorp-settings-page ${styles.page}`}>
       <div className="floorp-page-header">
         <h1 className="floorp-page-heading">
           {t("design.tabAndAppearance")}
@@ -188,10 +186,10 @@ export default function Page() {
           <fieldset
             disabled={!hasLoadedDefaults}
             aria-busy={!hasLoadedDefaults || saving}
-            className="floorp-settings-sections min-w-0"
+            className={styles.sections}
           >
             <Interface />
-            {isLeptonCompatible && <LeptonSettingsButton />}
+            {isLeptonCompatible && leptonSettingsButton}
             <Tabbar />
             <Tab />
             <TabWindowBehavior />
