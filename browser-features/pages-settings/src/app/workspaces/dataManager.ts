@@ -46,12 +46,11 @@ export async function initializeWorkspaces(reason?: string): Promise<boolean> {
   }
 
   try {
-    globalWindow.Services?.obs?.notifyObservers(
-      null,
-      WORKSPACES_INIT_TOPIC,
-      reason ?? null,
-    );
-    return true;
+    const observers = globalWindow.Services?.obs;
+    if (typeof observers?.notifyObservers === "function") {
+      observers.notifyObservers(null, WORKSPACES_INIT_TOPIC, reason ?? null);
+      return true;
+    }
   } catch (error) {
     console.error("initializeWorkspaces: fallback notification failed", error);
   }
@@ -77,16 +76,17 @@ export async function saveWorkspaceSettings(
     exitOnLastTabClose: settings.exitOnLastTabClose,
   };
 
-  await Promise.all([
-    rpc.setStringPref(
-      "floorp.workspaces.v4.config",
-      JSON.stringify(newConfigs),
-    ),
-    rpc.setBoolPref("floorp.workspaces.enabled", Boolean(settings.enabled)),
-  ]);
+  // Finish each write before reporting success or failure to the save queue.
+  await rpc.setStringPref(
+    "floorp.workspaces.v4.config",
+    JSON.stringify(newConfigs),
+  );
+  await rpc.setBoolPref("floorp.workspaces.enabled", Boolean(settings.enabled));
 }
 
-export async function getWorkspaceSettings(): Promise<WorkspacesFormData | null> {
+export async function getWorkspaceSettings(): Promise<
+  WorkspacesFormData | null
+> {
   const [enabled, configs] = await Promise.all([
     getWorkspacesEnabled(),
     getWorkspacesConfigsExcludeEnabled(),
@@ -106,10 +106,12 @@ async function getWorkspacesEnabled(): Promise<boolean | null> {
   return await rpc.getBoolPref("floorp.workspaces.enabled");
 }
 
-async function getWorkspacesConfigsExcludeEnabled(): Promise<Omit<
-  WorkspacesFormData,
-  "enabled"
-> | null> {
+async function getWorkspacesConfigsExcludeEnabled(): Promise<
+  Omit<
+    WorkspacesFormData,
+    "enabled"
+  > | null
+> {
   const defaultConfigs = {
     manageOnBms: false,
     showWorkspaceNameOnToolbar: false,

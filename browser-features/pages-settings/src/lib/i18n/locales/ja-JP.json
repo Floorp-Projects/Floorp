@@ -331,7 +331,7 @@
     },
     "updates": {
         "releaseNotes": {
-      "learnMore": "運営方針と、この設定について詳しく読む",
+            "learnMore": "運営方針と、この設定について詳しく読む",
             "title": "アップデート後のリリースノート",
             "description": "アップデート後にリリースノートを開く方法を選択します。",
             "disabled": {
@@ -779,5 +779,41 @@
             "cost": "動画再生・通話・画面共有中も回収の対象になります。回収中は、操作を再開した場合もブラウザが一時停止することがあります。間隔を短くすると回収の頻度が上がります。",
             "saveFailed": "設定を保存できませんでした。以前の値に戻しています。"
         }
+    },
+    "ui": {
+        "skipToContent": "本文へ移動",
+        "loading": "読み込み中…",
+        "setupProgress": "セットアップの進行状況",
+        "stepNavigation": "セットアップの移動",
+        "settingsNavigation": "設定のナビゲーション",
+        "openNavigation": "ナビゲーションを開く",
+        "closeNavigation": "ナビゲーションを閉じる",
+        "saveError": "保存できませんでした。もう一度お試しください。",
+        "retry": "再試行",
+        "loadError": "設定を読み込めませんでした。ページを再読み込みしてください。"
+    },
+    "settingsHome": {
+        "title": "Floorp を自分好みに",
+        "description": "見た目や操作を、使いやすく整えましょう。",
+        "open": "設定を開く",
+        "manage": "ブラウザーの管理",
+        "descriptions": {
+            "tabAndAppearance": "テーマやタブの表示を調整",
+            "workspaces": "仕事用とプライベート用のタブを切り替える",
+            "browserSidebar": "ページの横で別のサイトを見る",
+            "mouseGesture": "マウスの動きに操作を割り当てる",
+            "keyboardShortcuts": "キーに操作を割り当てる",
+            "performance": "メモリの使い方を調整"
+        },
+        "resources": {
+            "privacy": "プライバシーについて",
+            "extensions": "拡張機能を管理",
+            "help": "ヘルプを見る"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "表示と操作",
+        "reset": "初期化",
+        "help": "使い方を見る"
     }
 }

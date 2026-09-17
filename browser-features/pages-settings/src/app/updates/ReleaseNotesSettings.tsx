@@ -101,7 +101,7 @@ export function ReleaseNotesSettings() {
           href={RELEASE_NOTES_SUPPORT_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="link link-primary text-sm"
+          className="text-primary underline underline-offset-4 text-sm"
         >
           {t("updates.releaseNotes.learnMore")}
         </a>

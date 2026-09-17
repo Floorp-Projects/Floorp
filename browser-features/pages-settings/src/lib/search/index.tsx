@@ -1,9 +1,7 @@
-import type { ComponentType } from "react";
 import type { i18n as I18nInstance } from "i18next";
-import { renderToStaticMarkup } from "react-dom/server";
-import { I18nextProvider } from "react-i18next";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
+import type { SectionDefinition, SettingsSearchDocument } from "./types.ts";
+import { SETTING_FIELDS } from "./fields.ts";
+export type { SettingsSearchDocument } from "./types.ts";
 import {
   AppWindow,
   BadgeInfo,
@@ -19,29 +17,7 @@ import {
   UserRoundPen,
 } from "lucide-react";
 
-import Dashboard from "@/app/dashboard/page.tsx";
-import Design from "@/app/design/page.tsx";
-import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
-import PanelSidebar from "@/app/sidebar/page.tsx";
-import Workspaces from "@/app/workspaces/page.tsx";
-import ProgressiveWebApp from "@/app/pwa/page.tsx";
-import ProfileAndAccount from "@/app/accounts/page.tsx";
-import MouseGesture from "@/app/gesture/page.tsx";
-import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
-import Performance from "@/app/performance/page.tsx";
-import About from "@/app/about/noraneko.tsx";
-
 const PREVIEW_LENGTH = 180;
-
-interface SectionDefinition {
-  id: string;
-  route: string;
-  titleKey: string;
-  descriptionKey?: string;
-  icon?: LucideIcon;
-  priority: number;
-  Component: ComponentType;
-}
 
 const SECTION_DEFINITIONS: SectionDefinition[] = [
   {
@@ -51,7 +27,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "home.description",
     icon: House,
     priority: 90,
-    Component: Dashboard,
+    textKey: "home",
   },
   {
     id: "design-tab-and-appearance",
@@ -60,7 +36,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "design.customizePositionOfToolbars",
     icon: PencilRuler,
     priority: 100,
-    Component: Design,
+    textKey: "design",
   },
   {
     id: "design-lepton",
@@ -69,7 +45,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "design.lepton-preferences.description",
     icon: Sparkles,
     priority: 60,
-    Component: LeptonSettings,
+    textKey: "design.lepton-preferences",
   },
   {
     id: "panel-sidebar",
@@ -78,7 +54,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "panelSidebar.description",
     icon: PanelLeft,
     priority: 85,
-    Component: PanelSidebar,
+    textKey: "panelSidebar",
   },
   {
     id: "panel-sidebar-panels",
@@ -87,7 +63,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "panelSidebar.howToUseAndCustomize",
     icon: List,
     priority: 40,
-    Component: PanelSidebar,
+    textKey: "panelSidebar",
   },
   {
     id: "workspaces",
@@ -96,7 +72,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "workspaces.workspacesDescription",
     icon: Briefcase,
     priority: 80,
-    Component: Workspaces,
+    textKey: "workspaces",
   },
   {
     id: "mouse-gestures",
@@ -105,7 +81,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "mouseGesture.description",
     icon: MousePointer,
     priority: 70,
-    Component: MouseGesture,
+    textKey: "mouseGesture",
   },
   {
     id: "keyboard-shortcuts",
@@ -114,7 +90,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "keyboardShortcut.description",
     icon: Keyboard,
     priority: 75,
-    Component: KeyboardShortcut,
+    textKey: "keyboardShortcut",
   },
   {
     id: "web-apps",
@@ -123,7 +99,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "progressiveWebApp.description",
     icon: AppWindow,
     priority: 65,
-    Component: ProgressiveWebApp,
+    textKey: "progressiveWebApp",
   },
   {
     id: "performance",
@@ -132,7 +108,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "performance.description",
     icon: Gauge,
     priority: 55,
-    Component: Performance,
+    textKey: "performance",
   },
   {
     id: "accounts",
@@ -141,7 +117,7 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "accounts.profileDescription",
     icon: UserRoundPen,
     priority: 60,
-    Component: ProfileAndAccount,
+    textKey: "accounts",
   },
   {
     id: "about-browser",
@@ -150,7 +126,23 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     descriptionKey: "about.browserDescription",
     icon: BadgeInfo,
     priority: 50,
-    Component: About,
+    textKey: "about",
+  },
+  {
+    id: "updates",
+    route: "/about/updates",
+    titleKey: "pages.updates",
+    icon: Sparkles,
+    priority: 50,
+    textKey: "updates",
+  },
+  {
+    id: "floorp-os",
+    route: "/features/floorp-os",
+    titleKey: "floorpOS.title",
+    icon: AppWindow,
+    priority: 40,
+    textKey: "floorpOS",
   },
 ];
 
@@ -158,64 +150,31 @@ function sanitizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
-function htmlToPlainText(markup: string): string {
-  // Avoid using innerHTML or fragment parser in any environment (including
-  // chrome:// or about: pages). Use a conservative HTML-to-text conversion
-  // that strips tags and decodes simple HTML entities.
-
-  // 1) Strip tags
-  let text = markup.replace(/<[^>]+>/g, " ");
-
-  // 2) Decode a few common HTML entities (minimal, safe replacement)
-  //    This avoids depending on DOM APIs or external libraries.
-  const entities: [RegExp, string][] = [
-    [/&nbsp;/gi, " "],
-    [/&lt;/gi, "<"],
-    [/&gt;/gi, ">"],
-    [/&amp;/gi, "&"],
-    [/&quot;/gi, '"'],
-    [/&#39;/gi, "'"],
-  ];
-  for (const [re, repl] of entities) {
-    text = text.replace(re, repl);
+// Search indexes translated labels and descriptions without mounting feature UI.
+// This keeps search independent of providers, IPC and route chunk loading.
+function translatedSectionText(key: string, instance: I18nInstance): string {
+  const keys = new Set<string>();
+  const collect = (value: unknown, path: string): void => {
+    if (typeof value === "string") {
+      keys.add(path);
+    } else if (value && typeof value === "object") {
+      for (const [child, entry] of Object.entries(value)) {
+        collect(entry, path + "." + child);
+      }
+    }
+  };
+  // Include keys missing from a partial locale; t() resolves each leaf using
+  // the same fallback chain as the visible settings labels.
+  const defaultNamespace = instance.options.defaultNS;
+  const namespace = Array.isArray(defaultNamespace)
+    ? defaultNamespace[0]
+    : defaultNamespace || "translation";
+  for (const language of instance.languages) {
+    collect(instance.getResource(language, namespace, key), key);
   }
-
-  // 3) Collapse whitespace and trim
-  return sanitizeWhitespace(text);
-}
-
-function buildPreview(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return "";
-  if (trimmed.length <= PREVIEW_LENGTH) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, PREVIEW_LENGTH).trim()}…`;
-}
-
-function renderSectionToText(
-  definition: SectionDefinition,
-  i18nInstance: I18nInstance,
-): string {
-  const Component = definition.Component;
-  try {
-    const markup = renderToStaticMarkup(
-      <I18nextProvider i18n={i18nInstance}>
-        <MemoryRouter initialEntries={[definition.route]}>
-          <Routes>
-            <Route path="*" element={<Component />} />
-          </Routes>
-        </MemoryRouter>
-      </I18nextProvider>,
-    );
-    return htmlToPlainText(markup);
-  } catch (error) {
-    console.error(
-      `[settings-search] Failed to render section "${definition.id}":`,
-      error,
-    );
-    return "";
-  }
+  return sanitizeWhitespace(
+    [...keys].map((path) => String(instance.t(path))).join(" "),
+  );
 }
 
 export function normalizeSearchText(value: string): string {
@@ -227,22 +186,21 @@ export function normalizeSearchText(value: string): string {
     .trim();
 }
 
-export interface SettingsSearchDocument {
-  id: string;
-  route: string;
-  title: string;
-  icon?: LucideIcon;
-  priority: number;
-  textContent: string;
-  preview: string;
-  normalizedTitle: string;
-  normalizedText: string;
-}
-
 export function buildSearchDocuments(
   i18nInstance: I18nInstance,
 ): SettingsSearchDocument[] {
-  return SECTION_DEFINITIONS.map((definition) => {
+  const definitions: SectionDefinition[] = [
+    ...SECTION_DEFINITIONS,
+    ...SETTING_FIELDS.filter((field) => i18nInstance.exists(field.titleKey))
+      .map((field) => ({
+        ...field,
+        id: `field:${field.route}:${field.id}`,
+        route: `${field.route}?setting=${encodeURIComponent(field.id)}`,
+        priority: 110,
+        textKey: field.titleKey,
+      })),
+  ];
+  return definitions.map((definition) => {
     const title = i18nInstance.t(definition.titleKey, {
       defaultValue: definition.titleKey,
     });
@@ -250,10 +208,16 @@ export function buildSearchDocuments(
       ? i18nInstance.t(definition.descriptionKey, { defaultValue: "" })
       : "";
 
-    const renderedText = renderSectionToText(definition, i18nInstance);
+    const renderedText = translatedSectionText(
+      definition.textKey,
+      i18nInstance,
+    );
     const textContent = renderedText ||
       sanitizeWhitespace(`${description} ${title}`);
-    const preview = buildPreview(renderedText || description || title);
+    const preview = (definition.id.startsWith("field:") ? description : description || renderedText || title).slice(
+      0,
+      PREVIEW_LENGTH,
+    );
 
     return {
       id: definition.id,

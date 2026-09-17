@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useCallback, useEffect, useState } from "react";
+import styles from "@/components/common/settings-sections.module.css";
+import {
+  type ComponentProps,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { MemoryStick } from "lucide-react";
 import {
@@ -12,7 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Input } from "@/components/common/input.tsx";
+import { NumberInput } from "@chakra-ui/react";
+import type { NumberFieldProps } from "../types.ts";
 import { Switch } from "@/components/common/switch.tsx";
 import {
   DEFAULT_IDLE_MEMORY_RECLAIM_SETTINGS,
@@ -24,14 +32,17 @@ import {
   saveIdleMemoryReclaimSettings,
 } from "@/app/performance/dataManager.ts";
 
-interface NumberFieldProps {
-  id: string;
-  label: string;
-  value: number;
-  min: number;
-  disabled: boolean;
-  onCommit: (value: number) => void;
-}
+// Let React synchronize the native value in Gecko, including stepper changes.
+// Remove Ark's defaultValue when supplying a controlled value through asChild.
+const ControlledNumberInput = forwardRef<
+  HTMLInputElement,
+  ComponentProps<"input">
+>(function ControlledNumberInput(
+  { defaultValue: _defaultValue, ...props },
+  ref,
+) {
+  return <input {...props} ref={ref} />;
+});
 
 /**
  * Number input that keeps the raw text while typing, so a half-typed or
@@ -51,8 +62,8 @@ function NumberField({
     setText(String(value));
   }, [value]);
 
-  const commit = () => {
-    const parsed = Number(text);
+  const commit = (rawValue: string) => {
+    const parsed = Number(rawValue);
     if (!Number.isFinite(parsed)) {
       setText(String(value));
       return;
@@ -66,26 +77,27 @@ function NumberField({
   };
 
   return (
-    <div className="space-y-1">
+    <div className={styles.field}>
       <label htmlFor={id} className="text-sm">
         {label}
       </label>
-      <Input
-        id={id}
-        type="number"
+      <NumberInput.Root
+        ids={{ input: id }}
         min={min}
         value={text}
         disabled={disabled}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setText(e.currentTarget.value)}
-        onBlur={commit}
-        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit();
-          }
-        }}
-      />
+        colorPalette="purple"
+        onValueChange={({ value }) => setText(value)}
+        onValueCommit={({ value }) => commit(value)}
+      >
+        <NumberInput.Input asChild>
+          <ControlledNumberInput
+            value={text}
+            onChange={(event) => setText(event.currentTarget.value)}
+          />
+        </NumberInput.Input>
+        <NumberInput.Control />
+      </NumberInput.Root>
     </div>
   );
 }
@@ -132,7 +144,7 @@ export function IdleMemoryReclaim() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MemoryStick className="size-5" />
@@ -150,7 +162,7 @@ export function IdleMemoryReclaim() {
   }
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MemoryStick className="size-5" />
@@ -162,7 +174,7 @@ export function IdleMemoryReclaim() {
           {t("performance.idleReclaim.description")}
         </p>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className={styles.row}>
           <label htmlFor="idle-memory-reclaim-enabled">
             {t("performance.idleReclaim.enable")}
           </label>
@@ -174,11 +186,7 @@ export function IdleMemoryReclaim() {
           />
         </div>
 
-        <div
-          className={`space-y-4 transition-opacity duration-200 ${
-            settings.enabled ? "" : "opacity-50 pointer-events-none"
-          }`}
-        >
+        <div className="space-y-4">
           <NumberField
             id="idle-memory-reclaim-idle-threshold"
             label={t("performance.idleReclaim.idleThreshold")}
@@ -194,8 +202,7 @@ export function IdleMemoryReclaim() {
             value={settings.minIntervalSec}
             min={MIN_INTERVAL_SEC_MIN}
             disabled={!settings.enabled}
-            onCommit={(minIntervalSec) =>
-              save({ ...settings, minIntervalSec })}
+            onCommit={(minIntervalSec) => save({ ...settings, minIntervalSec })}
           />
           <NumberField
             id="idle-memory-reclaim-min-resident"
@@ -203,8 +210,7 @@ export function IdleMemoryReclaim() {
             value={settings.minResidentMB}
             min={MIN_RESIDENT_MB_MIN}
             disabled={!settings.enabled}
-            onCommit={(minResidentMB) =>
-              save({ ...settings, minResidentMB })}
+            onCommit={(minResidentMB) => save({ ...settings, minResidentMB })}
           />
         </div>
 

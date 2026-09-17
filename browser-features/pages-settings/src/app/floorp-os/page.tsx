@@ -52,6 +52,7 @@ export default function FloorpOS() {
   const { t } = useTranslation();
   const [status, setStatus] = useState<FloorpOSStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -60,6 +61,7 @@ export default function FloorpOS() {
   }, []);
 
   const loadStatus = async () => {
+    setStatusLoading(true);
     try {
       if (!globalThis.OSAutomotor) {
         setError(t("floorpOS.errors.apiUnavailable"));
@@ -72,6 +74,8 @@ export default function FloorpOS() {
     } catch (err) {
       console.error("Failed to load status:", err);
       setError(t("floorpOS.errors.loadStatus", { reason: String(err) }));
+    } finally {
+      setStatusLoading(false);
     }
   };
 
@@ -123,27 +127,44 @@ export default function FloorpOS() {
 
   if (!status) {
     return (
-      <div className="p-6 space-y-3">
-        <div className="flex flex-col items-start pl-6">
-          <h1 className="text-3xl font-bold mb-2">{t("floorpOS.title")}</h1>
-          <p className="text-sm mb-8">
-            {t("floorpOS.loading")}
-          </p>
+      <div className="floorp-settings-page">
+        <div className="floorp-page-header">
+          <h1 className="floorp-page-heading">{t("floorpOS.title")}</h1>
+          {!error && (
+            <p role="status" className="floorp-page-description">
+              {t("floorpOS.loading")}
+            </p>
+          )}
         </div>
+        {error && (
+          <div className="space-y-4">
+            <p role="alert" className="floorp-notice floorp-notice-error">
+              {error}
+            </p>
+            <Button
+              variant="secondary"
+              aria-busy={statusLoading}
+              aria-disabled={statusLoading}
+              onClick={() => { if (!statusLoading) void loadStatus(); }}
+            >
+              {t("floorpOS.controlsCard.refresh")}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("floorpOS.title")}</h1>
-        <p className="text-sm mb-8">
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("floorpOS.title")}</h1>
+        <p className="floorp-page-description">
           {t("floorpOS.description")}
         </p>
       </div>
 
-      <div className="space-y-3 pl-6">
+      <div className="floorp-settings-sections">
         {/* Status Card */}
         <Card>
           <CardHeader>

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import type { KeyboardShortcutConfig } from "../../../types/pref.ts";
 import {
@@ -29,13 +30,13 @@ export const GeneralSettings = ({
     const { t } = useTranslation();
 
     return (
-        <Card>
+        <Card className={styles.section}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Settings className="size-5" />
                     {t("keyboardShortcut.basicSettings")}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className={styles.description}>
                     {t("keyboardShortcut.basicSettingsDescription")}
                 </CardDescription>
             </CardHeader>
@@ -50,7 +51,7 @@ export const GeneralSettings = ({
                         />
                     </div>
                     <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className={styles.row}>
                             <div className="space-y-1">
                                 <label htmlFor="enable-shortcuts">
                                     {t("keyboardShortcut.enable")}

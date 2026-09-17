@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "分割ビューで開く",
+      "paneLimit": "分割ビューで開く（最大 {{max}} タブ）",
       "addPane": "分割ビューに区分けを追加",
       "moveToPane": "区分けの中に移動",
       "moveToPaneN": "区分け {{n}} ({{title}})"

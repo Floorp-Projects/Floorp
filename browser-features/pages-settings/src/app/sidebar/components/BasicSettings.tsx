@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import {
   Card,
   CardContent,
@@ -21,13 +22,15 @@ export function BasicSettings() {
 
   return (
     <>
-      {showRestartModal ? (
-        <RestartModal
-          onClose={() => setShowRestartModal(false)}
-          label={t("panelSidebar.needRestartDescriptionForEnableAndDisable")}
-        />
-      ) : null}
-      <Card>
+      {showRestartModal
+        ? (
+          <RestartModal
+            onClose={() => setShowRestartModal(false)}
+            label={t("panelSidebar.needRestartDescriptionForEnableAndDisable")}
+          />
+        )
+        : null}
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sliders className="size-5" />
@@ -44,7 +47,7 @@ export function BasicSettings() {
                 description={t("panelSidebar.enableDescription")}
               />
             </div>
-            <div className="flex items-center justify-between gap-2">
+            <div className={styles.row}>
               <div className="space-y-1">
                 <label
                   htmlFor="enable-panel"
@@ -55,7 +58,7 @@ export function BasicSettings() {
               </div>
               <Switch
                 id="enable-panel"
-                checked={watchAll.enabled}
+                checked={!!watchAll.enabled}
                 onChange={(e) => {
                   setValue("enabled", e.currentTarget.checked);
                   setShowRestartModal(true);
@@ -63,57 +66,60 @@ export function BasicSettings() {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+      <Card className={styles.section}>
+        <CardHeader>
+          <CardTitle>{t("panelSidebar.otherSettings")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className={styles.row}>
+              <label
+                htmlFor="auto-unload"
+                className="text-sm font-medium leading-none"
+              >
+                {t("panelSidebar.autoUnloadOnClose")}
+              </label>
+              <Switch
+                id="auto-unload"
+                checked={!!watchAll.autoUnload}
+                onChange={(e) => setValue("autoUnload", e.target.checked)}
+              />
+            </div>
 
-          <div>
-            <h3 className="text-base font-medium mb-2">
-              {t("panelSidebar.otherSettings")}
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <label
-                  htmlFor="auto-unload"
-                  className="text-sm font-medium leading-none"
-                >
-                  {t("panelSidebar.autoUnloadOnClose")}
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                {t("panelSidebar.position")}
+              </label>
+              <div className={styles.actions}>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="position"
+                    value="end"
+                    checked={!watchAll.position_start}
+                    onChange={() => setValue("position_start", false)}
+                    className="floorp-radio"
+                  />
+                  <span>{t("panelSidebar.positionLeft")}</span>
                 </label>
-                <Switch
-                  id="auto-unload"
-                  checked={watchAll.autoUnload}
-                  onChange={(e) => setValue("autoUnload", e.target.checked)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  {t("panelSidebar.position")}
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="position"
+                    value="start"
+                    checked={!!watchAll.position_start}
+                    onChange={() => setValue("position_start", true)}
+                    className="floorp-radio"
+                  />
+                  <span>{t("panelSidebar.positionRight")}</span>
                 </label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="position"
-                      value="end"
-                      checked={!watchAll.position_start}
-                      onChange={() => setValue("position_start", false)}
-                      className="radio"
-                    />
-                    <span>{t("panelSidebar.positionLeft")}</span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      name="position"
-                      value="start"
-                      checked={watchAll.position_start}
-                      onChange={() => setValue("position_start", true)}
-                      className="radio"
-                    />
-                    <span>{t("panelSidebar.positionRight")}</span>
-                  </label>
-                </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
+            <div className="space-y-2">
+              <div className={styles.field}>
                 <label
                   htmlFor="global-width"
                   className="text-sm font-medium leading-none"
@@ -126,18 +132,17 @@ export function BasicSettings() {
                   value={watchAll.globalWidth || ""}
                   onChange={(e) =>
                     setValue("globalWidth", Number(e.target.value))}
-                  className="w-full"
                 />
-                <p className="text-sm text-base-content/70">
-                  {t("panelSidebar.globalWidthDescription")}
-                </p>
               </div>
+              <p className="text-sm text-base-content/70">
+                {t("panelSidebar.globalWidthDescription")}
+              </p>
+            </div>
 
-              <div className="p-3 bg-base-200 rounded-lg">
-                <p className="text-sm">
-                  {t("panelSidebar.iconProviderRemoved")}
-                </p>
-              </div>
+            <div className="p-3 bg-base-200 rounded-lg">
+              <p className="text-sm">
+                {t("panelSidebar.iconProviderRemoved")}
+              </p>
             </div>
           </div>
         </CardContent>

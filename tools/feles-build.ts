@@ -54,9 +54,13 @@ async function runDev(): Promise<void> {
   logger.info("Starting development environment...");
 
   // Initial setup
-  // The canonical lock points at the PGO/Release channel. Dev requires the
-  // separate Debug Runtime published to the Runtime FTP channel.
-  await Initializer.run({ distribution: "debug" });
+  // Prefer the Debug FTP channel. Allow the locked Release runtime when the
+  // latest Debug runtime is incompatible with this checkout's patches.
+  await Initializer.run({
+    distribution: Deno.env.get("FLOORP_DEV_RUNTIME_DISTRIBUTION") === "release"
+      ? "release"
+      : "debug",
+  });
   CustomAppIcons.run();
   Patcher.run("apply");
   Pref.run();
@@ -86,7 +90,7 @@ async function runDev(): Promise<void> {
       // Launch browser; when it exits (or fails to launch), take the dev
       // servers down with it — otherwise they keep listening on their
       // ports and the next run dies with "port already in use".
-      BrowserLauncher.run().then(() => {
+      BrowserLauncher.run({ initialUrl: "http://localhost:5183/" }).then(() => {
         logger.info("Browser closed — shutting down dev servers.");
         DevServer.shutdown();
         Deno.exit(0);
