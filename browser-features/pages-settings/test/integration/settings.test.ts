@@ -68,7 +68,7 @@ const designToggles = [
   ["scroll-wrap", "tab.tabScroll.wrap"],
   ["scroll-tab", "tab.tabScroll.enabled"],
   ["pin-title", "tab.tabPinTitle"],
-  ["double-click-close", "tab.tabDubleClickToClose"],
+  ["double-click-close", "tab.tabDoubleClickToClose"],
   ["search-bar-top", "uiCustomization.navbar.searchBarTop"],
   [
     "disable-fullscreen-notification",
@@ -96,6 +96,50 @@ export async function runPageTests() {
     15000,
   );
   const tests: TestCase[] = [];
+  tests.push({
+    name:
+      "Legacy double-click preference loads and saves under the corrected key",
+    fn: async () => {
+      const original = prefs.get(DESIGN);
+      try {
+        for (const enabled of [true, false]) {
+          const saved = JSON.parse(String(original));
+          delete saved.tab.tabDoubleClickToClose;
+          saved.tab.tabDubleClickToClose = enabled;
+          prefs.set(DESIGN, JSON.stringify(saved));
+          await route("features/design", "#double-click-close");
+          assertEquals(
+            element<HTMLInputElement>("#double-click-close").checked,
+            enabled,
+            "Legacy value should be displayed",
+          );
+          await toggle(
+            "#double-click-close",
+            DESIGN,
+            "tab.tabDoubleClickToClose",
+          );
+          const updated = JSON.parse(String(prefs.get(DESIGN)));
+          assert(
+            !Object.hasOwn(updated.tab, "tabDubleClickToClose"),
+            "Saving must remove the old key",
+          );
+          assertEquals(
+            updated.futureKey,
+            "keep",
+            "Unrelated settings survive migration",
+          );
+          await route("features/design", "#double-click-close");
+          assertEquals(
+            element<HTMLInputElement>("#double-click-close").checked,
+            !enabled,
+            "Saved value survives reload",
+          );
+        }
+      } finally {
+        prefs.set(DESIGN, original);
+      }
+    },
+  });
   tests.push({
     name: "Design initial load does not write settings",
     fn: async () => {

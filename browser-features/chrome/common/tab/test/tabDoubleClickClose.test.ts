@@ -22,7 +22,7 @@ function constructInSolidRoot(construct: () => void): (() => void) | undefined {
 
 function withTabConfigPatch(
   patch: {
-    tabDubleClickToClose?: boolean;
+    tabDoubleClickToClose?: boolean;
   },
   run: () => void,
 ): void {
@@ -33,8 +33,8 @@ function withTabConfigPatch(
       ...prev,
       tab: {
         ...prev.tab,
-        tabDubleClickToClose:
-          patch.tabDubleClickToClose ?? prev.tab.tabDubleClickToClose,
+        tabDoubleClickToClose:
+          patch.tabDoubleClickToClose ?? prev.tab.tabDoubleClickToClose,
       },
     }));
 
@@ -72,7 +72,7 @@ function testTabDoubleClickCloseSyncsPrefWhenEnabled(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
       constructInSolidRoot(() => {
         new TabDoubleClickClose();
       });
@@ -92,7 +92,7 @@ function testTabDoubleClickCloseSyncsPrefWhenDisabled(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: false }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: false }, () => {
       constructInSolidRoot(() => {
         new TabDoubleClickClose();
       });
@@ -112,7 +112,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: false }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: false }, () => {
       const dispose = constructInSolidRoot(() => {
         new TabDoubleClickClose();
       });
@@ -122,7 +122,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
         ...prev,
         tab: {
           ...prev.tab,
-          tabDubleClickToClose: true,
+          tabDoubleClickToClose: true,
         },
       }));
 
@@ -137,7 +137,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
         ...prev,
         tab: {
           ...prev.tab,
-          tabDubleClickToClose: false,
+          tabDoubleClickToClose: false,
         },
       }));
 
@@ -159,7 +159,7 @@ function testTabDoubleClickCloseHandlesMultipleInstances(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
       const dispose = constructInSolidRoot(() => {
         // Create multiple instances - they should all sync the same pref
         const instance1 = new TabDoubleClickClose();
@@ -190,7 +190,7 @@ function testTabDoubleClickCloseHandlesPrefErrors(): void {
 
   try {
     // Test with invalid config state
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
       constructInSolidRoot(() => {
         // Even if pref setting fails, the constructor should not throw
         try {

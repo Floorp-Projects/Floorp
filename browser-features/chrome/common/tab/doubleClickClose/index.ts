@@ -9,7 +9,7 @@ import { createEffect } from "solid-js";
 export class TabDoubleClickClose {
   constructor() {
     createEffect(() => {
-      const option = config().tab.tabDubleClickToClose;
+      const option = config().tab.tabDoubleClickToClose;
       Services.prefs.setBoolPref("browser.tabs.closeTabByDblclick", option);
     });
   }
