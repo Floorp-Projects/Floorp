@@ -1,170 +1,195 @@
 {
-    "navigation": {
-        "welcome": "Te damos la bienvenida",
-        "language": "Idioma",
-        "languageSupport": "Soporte de Idiomas",
-        "features": "Características",
-        "featureIntroduction": "Introducción de características",
-        "hub": "Floorp Hub",
-        "hubIntro": "Acerca de Floorp Hub",
-        "customize": "Personalizar",
-        "initialSettings": "Configuración Inicial",
-        "complete": "Completar",
-        "previous": "Anterior",
-        "next": "Siguiente"
-    },
-    "hubPage": {
-        "title": "Acerca de Floorp Hub",
-        "subtitle": "Un lugar central para los ajustes específicos de Floorp.",
-        "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub es un centro de configuración dedicado a las opciones específicas de Floorp. Puedes abrirlo navegando a 'about:hub'. También se puede acceder desde la barra lateral izquierda de la página de configuración de Firefox en 'about:preferences'.",
-        "openHub": "Abrir about:hub",
-        "openPreferences": "Abrir Configuración (about:preferences)",
-        "tip": "Consejo: También puedes acceder a Floorp Hub desde la barra lateral de configuración de Firefox.",
-        "features": {
-            "dedicated": "Centro de configuración de Floorp dedicado",
-            "accessible": "Accesible desde about:hub o la configuración de Firefox",
-            "centralized": "Todas las opciones específicas de Floorp en un solo lugar"
-        }
-    },
-    "customize": {
-        "title": "Personalizar Floorp",
-        "description": "Personalízalo según tus preferencias. Siempre puedes cambiarlos más tarde desde Floorp Hub o la página de configuración.",
-        "appearance": {
-            "title": "Configuración de apariencia",
-            "description": "Puedes personalizar la apariencia de Floorp según tus preferencias. Elige un tema claro u oscuro, o haz que cambie automáticamente en función de la configuración de tu sistema."
-        },
-        "themes": {
-            "light": "Claro",
-            "dark": "Oscuro",
-            "system": "Seguir configuración del sistema"
-        },
-        "themeInfo": {
-            "light": "Tema claro",
-            "dark": "Tema oscuro",
-            "system": "Preferencia del sistema"
-        },
-        "searchEngine": {
-            "title": "Motor de búsqueda predeterminado",
-            "default": "Predeterminado",
-            "search": "Búsqueda",
-            "noEnginesFound": "No se han encontrado motores de búsqueda."
-        },
-        "floorpHub": {
-            "title": "Floorp Hub",
-            "description": "Floorp Hub es un centro de configuración dedicado a las opciones específicas de Floorp. Puedes abrirlo navegando a 'about:hub'. También se puede acceder desde la barra lateral izquierda de la página de configuración de Firefox en 'about:preferences'.",
-            "openHub": "Abrir about:hub",
-            "openPreferences": "Abrir Configuración (about:preferences)"
-        }
-    },
-    "finish": {
-        "title": "¡Configuración completada!",
-        "subtitle": "¡Felicidades! Has completado la configuración de Floorp. Disfruta de una experiencia de navegación segura y cómoda.",
-        "nextSteps": {
-            "title": "Siguientes pasos (opcional)",
-            "setDefault": "Establecer como navegador predeterminado",
-            "documentation": "Documentación"
-        },
-        "getStarted": "Empieza con Floorp",
-        "hint": "Para una configuración más detallada, puede personalizar a través de la opción Configuración en el botón de menú en la parte superior derecha."
-    },
-    "welcomePage": {
-        "welcome": "¡Bienvenido a Floorp!",
-        "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
-        "readyToStart": "Cuando estés listo, haz clic en el botón de abajo para continuar.",
-        "features": "Características de Floorp",
-        "privacy": "Privacidad",
-        "privacyDesc": "Protege tus datos",
-        "speed": "Speed",
-        "speedDesc": "Rendimiento Optimizado",
-        "customization": "Personalizacion",
-        "customizationDesc": "Arrange to your preference",
-        "start": "Comenzar"
-    },
-    "localizationPage": {
-        "title": "Floorp habla su idioma",
-        "subtitle": "Compruebe la configuración de idioma y cámbiela si es necesario",
-        "languageSettings": "Configuración de idioma",
-        "languageChanged": "¡Idioma cambiado!",
-        "currentLanguageInfo": "Información de idioma actual",
-        "systemLanguage": "Idioma del sistema",
-        "floorpLanguage": "Lenguaje de Floorp",
-        "selectLanguage": "Seleccionar idioma",
-        "useSystemLanguage": "Usar idioma del sistema",
-        "multilingual": "Soporte multilingüe",
-        "chooseLanguage": "Elija entre una amplia variedad de idiomas",
-        "languageChangeNotice": "El cambio de idioma se aplicará sin reiniciar Floorp. Es posible que algunos complementos no admitan cambios de idioma."
-    },
-    "featuresPage": {
-        "title": "Características principales de Floorp",
-        "subtitle": "Floorp viene con muchas características útiles. ¡Echa un vistazo al resumen de la característica!",
-        "panelSidebar": {
-            "title": "Panel Sidebar",
-            "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
-            "features": [
+  "releaseNotes": {
+      "learnMore": "Read about our funding and this setting (Japanese)",
+      "title": "Release notes and supporting Floorp",
+      "description": "Advertising revenue supports Floorp development and operation. Choose how to open release notes after updates. You can change this later in Settings → Updates & Experiments.",
+      "disabled": {
+      "label": "Do not open automatically",
+      "description": "Do not open release notes after updates. Keep your blocker settings when visiting the blog."
+      },
+      "blocking": {
+      "label": "Open with your blocker settings",
+      "description": "Keep your extensions working as configured. This does not install or enable an ad blocker."
+      },
+      "support": {
+      "label": "Allow ads to support Floorp (recommended)",
+      "description": "Restrict uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery on the Floorp blog."
+      },
+      "scope": "The restriction applies to all HTTPS pages on blog.floorp.app, including manually opened pages, and affects tracking protection and custom filters as well as ad blocking. Other extensions are not restricted by this setting. Ads may still be blocked by other protection tools. Reload open blog pages after changing the setting.",
+      "applyOnConfirm": "Your selection takes effect only when you confirm. Closing this page keeps your current setting.",
+      "changeSelection": "Change selection",
+      "applyOnFinish": "This is a draft selection. It takes effect when you finish setup on the next screen. Closing setup before then keeps your current setting.",
+      "confirm": "Save selection",
+      "dismiss": "Keep current setting",
+      "error": "Could not load or save your selection. Please reopen this page and try again."
+  },
+  "navigation": {
+      "support": "Support Floorp",
+      "welcome": "Te damos la bienvenida",
+      "language": "Idioma",
+      "languageSupport": "Soporte de Idiomas",
+      "features": "Características",
+      "featureIntroduction": "Introducción de características",
+      "hub": "Floorp Hub",
+      "hubIntro": "Acerca de Floorp Hub",
+      "customize": "Personalizar",
+      "initialSettings": "Configuración Inicial",
+      "complete": "Completar",
+      "previous": "Anterior",
+      "next": "Siguiente"
+  },
+  "hubPage": {
+      "title": "Acerca de Floorp Hub",
+      "subtitle": "Un lugar central para los ajustes específicos de Floorp.",
+      "sectionTitle": "Floorp Hub",
+      "description": "Floorp Hub es un centro de configuración dedicado a las opciones específicas de Floorp. Puedes abrirlo navegando a 'about:hub'. También se puede acceder desde la barra lateral izquierda de la página de configuración de Firefox en 'about:preferences'.",
+      "openHub": "Abrir about:hub",
+      "openPreferences": "Abrir Configuración (about:preferences)",
+      "tip": "Consejo: También puedes acceder a Floorp Hub desde la barra lateral de configuración de Firefox.",
+      "features": {
+      "dedicated": "Centro de configuración de Floorp dedicado",
+      "accessible": "Accesible desde about:hub o la configuración de Firefox",
+      "centralized": "Todas las opciones específicas de Floorp en un solo lugar"
+      }
+  },
+  "customize": {
+      "title": "Personalizar Floorp",
+      "description": "Personalízalo según tus preferencias. Siempre puedes cambiarlos más tarde desde Floorp Hub o la página de configuración.",
+      "appearance": {
+      "title": "Configuración de apariencia",
+      "description": "Puedes personalizar la apariencia de Floorp según tus preferencias. Elige un tema claro u oscuro, o haz que cambie automáticamente en función de la configuración de tu sistema."
+      },
+      "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Seguir configuración del sistema"
+      },
+      "themeInfo": {
+      "light": "Tema claro",
+      "dark": "Tema oscuro",
+      "system": "Preferencia del sistema"
+      },
+      "searchEngine": {
+      "title": "Motor de búsqueda predeterminado",
+      "default": "Predeterminado",
+      "search": "Búsqueda",
+      "noEnginesFound": "No se han encontrado motores de búsqueda."
+      },
+      "floorpHub": {
+      "title": "Floorp Hub",
+      "description": "Floorp Hub es un centro de configuración dedicado a las opciones específicas de Floorp. Puedes abrirlo navegando a 'about:hub'. También se puede acceder desde la barra lateral izquierda de la página de configuración de Firefox en 'about:preferences'.",
+      "openHub": "Abrir about:hub",
+      "openPreferences": "Abrir Configuración (about:preferences)"
+      }
+  },
+  "finish": {
+      "title": "¡Configuración completada!",
+      "subtitle": "¡Felicidades! Has completado la configuración de Floorp. Disfruta de una experiencia de navegación segura y cómoda.",
+      "nextSteps": {
+      "title": "Siguientes pasos (opcional)",
+      "setDefault": "Establecer como navegador predeterminado",
+      "documentation": "Documentación"
+      },
+      "getStarted": "Empieza con Floorp",
+      "hint": "Para una configuración más detallada, puede personalizar a través de la opción Configuración en el botón de menú en la parte superior derecha."
+  },
+  "welcomePage": {
+      "welcome": "¡Bienvenido a Floorp!",
+      "description": "Floorp is a fast and user-friendly web browser that emphasizes privacy and security. This guide will introduce you to the main features and settings of Floorp.",
+      "readyToStart": "Cuando estés listo, haz clic en el botón de abajo para continuar.",
+      "features": "Características de Floorp",
+      "privacy": "Privacidad",
+      "privacyDesc": "Protege tus datos",
+      "speed": "Speed",
+      "speedDesc": "Rendimiento Optimizado",
+      "customization": "Personalizacion",
+      "customizationDesc": "Arrange to your preference",
+      "start": "Comenzar"
+  },
+  "localizationPage": {
+      "title": "Floorp habla su idioma",
+      "subtitle": "Compruebe la configuración de idioma y cámbiela si es necesario",
+      "languageSettings": "Configuración de idioma",
+      "languageChanged": "¡Idioma cambiado!",
+      "currentLanguageInfo": "Información de idioma actual",
+      "systemLanguage": "Idioma del sistema",
+      "floorpLanguage": "Lenguaje de Floorp",
+      "selectLanguage": "Seleccionar idioma",
+      "useSystemLanguage": "Usar idioma del sistema",
+      "multilingual": "Soporte multilingüe",
+      "chooseLanguage": "Elija entre una amplia variedad de idiomas",
+      "languageChangeNotice": "El cambio de idioma se aplicará sin reiniciar Floorp. Es posible que algunos complementos no admitan cambios de idioma."
+  },
+  "featuresPage": {
+      "title": "Características principales de Floorp",
+      "subtitle": "Floorp viene con muchas características útiles. ¡Echa un vistazo al resumen de la característica!",
+      "panelSidebar": {
+      "title": "Panel Sidebar",
+      "description": "Access convenient features from the sidebar on the right while browsing. You can place web panels, note-taking functions, add-ons, bookmarks, etc. in the sidebar.",
+      "features": [
                 "Anclar sitios web a la barra lateral",
                 "Toma notas rápidamente con Notas Floorp mientras navegas",
                 "Admite contenedores"
-            ]
-        },
-        "workspaces": {
-            "title": "Espacios de trabajo",
-            "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
-            "features": [
+      ]
+      },
+      "workspaces": {
+      "title": "Espacios de trabajo",
+      "description": "Organize multiple tab sets to streamline your work. Quickly switch between workspaces with distinctive icons and names. Access via the workspace button in the top left.",
+      "features": [
                 "Categorizar por propósito: trabajo, personal, etc.",
                 "Visually identify with custom icons",
                 "Gestiona fácilmente las pestañas"
-            ]
-        },
-        "pwa": {
-            "title": "Soporte de Aplicaciones Web Progresivas",
-            "description": "En Windows, puedes añadir sitios compatibles con PWA como aplicaciones de escritorio cuando los visites. También se pueden instalar sitios web normales.",
-            "features": [
+      ]
+      },
+      "pwa": {
+      "title": "Soporte de Aplicaciones Web Progresivas",
+      "description": "En Windows, puedes añadir sitios compatibles con PWA como aplicaciones de escritorio cuando los visites. También se pueden instalar sitios web normales.",
+      "features": [
                 "Funcionan independientemente como aplicaciones de escritorio",
                 "Puede anclarse a la barra de tareas",
                 "Los complementos de Firefox también funcionan"
-            ]
-        },
-        "mouseGesture": {
-            "title": "Gestos de ratón",
-            "description": "Controla tu navegador de forma más intuitiva con la funcionalidad de gestos del ratón implementada de forma nativa. Ejecuta gestos manteniendo pulsado el botón derecho y moviendo el ratón.",
-            "features": [
+      ]
+      },
+      "mouseGesture": {
+      "title": "Gestos de ratón",
+      "description": "Controla tu navegador de forma más intuitiva con la funcionalidad de gestos del ratón implementada de forma nativa. Ejecuta gestos manteniendo pulsado el botón derecho y moviendo el ratón.",
+      "features": [
                 "Operar sin atajos de teclado",
                 "Gestos totalmente personalizables",
                 "Navegar rápidamente por las páginas y el historial"
-            ]
-        },
-        "notebook": "Cuaderno",
-        "nextTab": "Ir a la siguiente pestaña"
-    },
-    "finishPage": {
-        "title": "¡Configuración completada!",
-        "subtitle": "¡Felicidades! Has completado la configuración de Floorp. Disfruta de una experiencia de navegación segura y cómoda.",
-        "nextSteps": "Siguientes pasos (opcional)",
-        "defaultBrowser": "Establecer como navegador predeterminado",
-        "support": "Asistencia",
-        "documentation": "Documentación",
-        "getStarted": "Empieza con Floorp",
-        "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
-        "resourcesLabel": "Recursos",
-        "defaultBrowserSuccess": "¡Floorp se ha establecido como tu navegador por defecto!"
-    },
-    "whatsNew": {
-        "title": "¡Bienvenido a Floorp {{version}}!",
-        "subtitle": "¡Descubra las novedades de Floorp!",
-        "tags": {
-            "settings": "Configuración",
-            "productivity": "Productividad",
-            "workspaces": "Espacios de trabajo",
-            "pwa": "PWA",
-            "gestures": "Gestos"
-        },
-        "footer": {
-            "follow": "Seguir",
-            "terms": "Términos de servicio",
-            "privacy": "Política de privacidad",
-            "about": "Acerca de Floorp",
-            "copyright": "© {{year}} Floorp Projects. Todos los derechos reservados."
-        }
-    }
+      ]
+      },
+      "notebook": "Cuaderno",
+      "nextTab": "Ir a la siguiente pestaña"
+  },
+  "finishPage": {
+      "title": "¡Configuración completada!",
+      "subtitle": "¡Felicidades! Has completado la configuración de Floorp. Disfruta de una experiencia de navegación segura y cómoda.",
+      "nextSteps": "Siguientes pasos (opcional)",
+      "defaultBrowser": "Establecer como navegador predeterminado",
+      "support": "Asistencia",
+      "documentation": "Documentación",
+      "getStarted": "Empieza con Floorp",
+      "hint": "For more detailed settings, you can customize via the Settings option in the menu button at the top right.",
+      "resourcesLabel": "Recursos",
+      "defaultBrowserSuccess": "¡Floorp se ha establecido como tu navegador por defecto!"
+  },
+  "whatsNew": {
+      "title": "¡Bienvenido a Floorp {{version}}!",
+      "subtitle": "¡Descubra las novedades de Floorp!",
+      "tags": {
+      "settings": "Configuración",
+      "productivity": "Productividad",
+      "workspaces": "Espacios de trabajo",
+      "pwa": "PWA",
+      "gestures": "Gestos"
+      },
+      "footer": {
+      "follow": "Seguir",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "about": "Acerca de Floorp",
+      "copyright": "© {{year}} Floorp Projects. Todos los derechos reservados."
+      }
+  }
 }

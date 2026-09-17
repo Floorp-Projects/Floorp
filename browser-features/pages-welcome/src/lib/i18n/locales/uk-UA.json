@@ -1,170 +1,195 @@
 {
-    "navigation": {
-        "welcome": "Ласкаво просимо",
-        "language": "Мова",
-        "languageSupport": "Підтримка мов",
-        "features": "Особливості",
-        "featureIntroduction": "Ознайомлення з особливостями",
-        "hub": "Floorp Hub",
-        "hubIntro": "Про Floorp Hub",
-        "customize": "Персоналізувати",
-        "initialSettings": "Початкові налаштування",
-        "complete": "Завершити",
-        "previous": "Назад",
-        "next": "Далі"
-    },
-    "hubPage": {
-        "title": "Про Floorp Hub",
-        "subtitle": "Основне місце для специфічних налаштувань Floorp.",
-        "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub — це спеціальний центр налаштувань для опцій, характерних для Floorp. Ви можете відкрити його, перейшовши за посиланням \"about:hub\". Він також доступний з лівої бічної панелі сторінки налаштувань Firefox за посиланням «about:preferences».",
-        "openHub": "Відкрити about:hub",
-        "openPreferences": "Відкрити налаштування (about:preferences)",
-        "tip": "Підказка: Ви також можете отримати доступ до Floorp Hub з бічної панелі налаштувань Firefox.",
-        "features": {
-            "dedicated": "Спеціальний центр налаштувань Floorp",
-            "accessible": "Доступно в about:hub або налаштуваннях Firefox",
-            "centralized": "Всі налаштування, специфічні для Floorp, в одному місці"
-        }
-    },
-    "customize": {
-        "title": "Налаштувати Floorp",
-        "description": "Налаштуйте відповідно до своїх уподобань. Ви завжди можете змінити їх пізніше в Floorp Hub або на сторінці налаштувань.",
-        "appearance": {
-            "title": "Налаштування зовнішнього вигляду",
-            "description": "Ви можете налаштувати зовнішній вигляд Floorp відповідно до своїх уподобань. Виберіть світлу або темну тему або налаштуйте автоматичне перемикання залежно від налаштувань вашої системи."
-        },
-        "themes": {
-            "light": "Світла",
-            "dark": "Темна",
-            "system": "Налаштування як у системі"
-        },
-        "themeInfo": {
-            "light": "Світла тема",
-            "dark": "Темна тема",
-            "system": "Системні налаштування"
-        },
-        "searchEngine": {
-            "title": "Пошукова система за замовчуванням",
-            "default": "За замовчуванням",
-            "search": "Пошук",
-            "noEnginesFound": "Пошукові системи не знайдено."
-        },
-        "floorpHub": {
-            "title": "Floorp Hub",
-            "description": "Floorp Hub — це спеціальний центр налаштувань для опцій, характерних суто для Floorp. Його можна відкрити, перейшовши за адресою «about:hub». Доступ до нього також можна отримати з лівої бічної панелі сторінки налаштувань Firefox за адресою «about:preferences».",
-            "openHub": "Відкрити about:hub",
-            "openPreferences": "Відкрити налаштування (about:preferences)"
-        }
-    },
-    "finish": {
-        "title": "Налаштування завершено!",
-        "subtitle": "Вітаю! Ви завершили налаштування Floorp. Насолоджуйтесь комфортним та безпечним переглядом веб-сторінок.",
-        "nextSteps": {
-            "title": "Наступні кроки (необов'язково)",
-            "setDefault": "Встановити браузер за замовчуванням",
-            "documentation": "Документація"
-        },
-        "getStarted": "Початок роботи з Floorp",
-        "hint": "Детальніші налаштування можна виконати за допомогою меню Налаштування, розташованому у верхньому правому куті."
-    },
-    "welcomePage": {
-        "welcome": "Вітаємо у Floorp!",
-        "description": "Floorp - це швидкий і зручний веб-браузер, який приділяє особливу увагу конфіденційності та безпеці. Цей посібник познайомить вас з основними можливостями та налаштуваннями Floorp.",
-        "readyToStart": "Коли будете готові, натисніть кнопку нижче, щоб продовжити.",
-        "features": "Особливості Floorp",
-        "privacy": "Конфіденційність",
-        "privacyDesc": "Захищає ваші дані",
-        "speed": "Швидкість",
-        "speedDesc": "Оптимізована продуктивність",
-        "customization": "Кастомізація",
-        "customizationDesc": "Розташуйте на свій розсуд",
-        "start": "Почати роботу"
-    },
-    "localizationPage": {
-        "title": "Floorp говорить вашою мовою",
-        "subtitle": "Перевірте мовні налаштування та змініть їх за потреби",
-        "languageSettings": "Налаштування мови",
-        "languageChanged": "Мову змінено!",
-        "currentLanguageInfo": "Інформація про поточну мову",
-        "systemLanguage": "Мова системи",
-        "floorpLanguage": "Мова Floorp",
-        "selectLanguage": "Вибір мови",
-        "useSystemLanguage": "Використовувати мову системи",
-        "multilingual": "Багатомовна підтримка",
-        "chooseLanguage": "Обирайте з широкого спектру мов",
-        "languageChangeNotice": "Зміна мови призведе до застосування нової мови без перезапуску Floorp. Деякі додатки можуть не підтримувати зміну мови."
-    },
-    "featuresPage": {
-        "title": "Основні можливості Floorp",
-        "subtitle": "Floorp має багато корисних функцій. Ознайомтеся з оглядом функцій!",
-        "panelSidebar": {
-            "title": "Бічна панель",
-            "description": "Отримуйте доступ до зручних функцій з бічної панелі праворуч під час перегляду. На бічній панелі можна розміщувати веб-панелі, функції нотаток, розширення, закладки тощо.",
-            "features": [
+  "releaseNotes": {
+      "learnMore": "Read about our funding and this setting (Japanese)",
+      "title": "Release notes and supporting Floorp",
+      "description": "Advertising revenue supports Floorp development and operation. Choose how to open release notes after updates. You can change this later in Settings → Updates & Experiments.",
+      "disabled": {
+      "label": "Do not open automatically",
+      "description": "Do not open release notes after updates. Keep your blocker settings when visiting the blog."
+      },
+      "blocking": {
+      "label": "Open with your blocker settings",
+      "description": "Keep your extensions working as configured. This does not install or enable an ad blocker."
+      },
+      "support": {
+      "label": "Allow ads to support Floorp (recommended)",
+      "description": "Restrict uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery on the Floorp blog."
+      },
+      "scope": "The restriction applies to all HTTPS pages on blog.floorp.app, including manually opened pages, and affects tracking protection and custom filters as well as ad blocking. Other extensions are not restricted by this setting. Ads may still be blocked by other protection tools. Reload open blog pages after changing the setting.",
+      "applyOnConfirm": "Your selection takes effect only when you confirm. Closing this page keeps your current setting.",
+      "changeSelection": "Change selection",
+      "applyOnFinish": "This is a draft selection. It takes effect when you finish setup on the next screen. Closing setup before then keeps your current setting.",
+      "confirm": "Save selection",
+      "dismiss": "Keep current setting",
+      "error": "Could not load or save your selection. Please reopen this page and try again."
+  },
+  "navigation": {
+      "support": "Support Floorp",
+      "welcome": "Ласкаво просимо",
+      "language": "Мова",
+      "languageSupport": "Підтримка мов",
+      "features": "Особливості",
+      "featureIntroduction": "Ознайомлення з особливостями",
+      "hub": "Floorp Hub",
+      "hubIntro": "Про Floorp Hub",
+      "customize": "Персоналізувати",
+      "initialSettings": "Початкові налаштування",
+      "complete": "Завершити",
+      "previous": "Назад",
+      "next": "Далі"
+  },
+  "hubPage": {
+      "title": "Про Floorp Hub",
+      "subtitle": "Основне місце для специфічних налаштувань Floorp.",
+      "sectionTitle": "Floorp Hub",
+      "description": "Floorp Hub — це спеціальний центр налаштувань для опцій, характерних для Floorp. Ви можете відкрити його, перейшовши за посиланням \"about:hub\". Він також доступний з лівої бічної панелі сторінки налаштувань Firefox за посиланням «about:preferences».",
+      "openHub": "Відкрити about:hub",
+      "openPreferences": "Відкрити налаштування (about:preferences)",
+      "tip": "Підказка: Ви також можете отримати доступ до Floorp Hub з бічної панелі налаштувань Firefox.",
+      "features": {
+      "dedicated": "Спеціальний центр налаштувань Floorp",
+      "accessible": "Доступно в about:hub або налаштуваннях Firefox",
+      "centralized": "Всі налаштування, специфічні для Floorp, в одному місці"
+      }
+  },
+  "customize": {
+      "title": "Налаштувати Floorp",
+      "description": "Налаштуйте відповідно до своїх уподобань. Ви завжди можете змінити їх пізніше в Floorp Hub або на сторінці налаштувань.",
+      "appearance": {
+      "title": "Налаштування зовнішнього вигляду",
+      "description": "Ви можете налаштувати зовнішній вигляд Floorp відповідно до своїх уподобань. Виберіть світлу або темну тему або налаштуйте автоматичне перемикання залежно від налаштувань вашої системи."
+      },
+      "themes": {
+      "light": "Світла",
+      "dark": "Темна",
+      "system": "Налаштування як у системі"
+      },
+      "themeInfo": {
+      "light": "Світла тема",
+      "dark": "Темна тема",
+      "system": "Системні налаштування"
+      },
+      "searchEngine": {
+      "title": "Пошукова система за замовчуванням",
+      "default": "За замовчуванням",
+      "search": "Пошук",
+      "noEnginesFound": "Пошукові системи не знайдено."
+      },
+      "floorpHub": {
+      "title": "Floorp Hub",
+      "description": "Floorp Hub — це спеціальний центр налаштувань для опцій, характерних суто для Floorp. Його можна відкрити, перейшовши за адресою «about:hub». Доступ до нього також можна отримати з лівої бічної панелі сторінки налаштувань Firefox за адресою «about:preferences».",
+      "openHub": "Відкрити about:hub",
+      "openPreferences": "Відкрити налаштування (about:preferences)"
+      }
+  },
+  "finish": {
+      "title": "Налаштування завершено!",
+      "subtitle": "Вітаю! Ви завершили налаштування Floorp. Насолоджуйтесь комфортним та безпечним переглядом веб-сторінок.",
+      "nextSteps": {
+      "title": "Наступні кроки (необов'язково)",
+      "setDefault": "Встановити браузер за замовчуванням",
+      "documentation": "Документація"
+      },
+      "getStarted": "Початок роботи з Floorp",
+      "hint": "Детальніші налаштування можна виконати за допомогою меню Налаштування, розташованому у верхньому правому куті."
+  },
+  "welcomePage": {
+      "welcome": "Вітаємо у Floorp!",
+      "description": "Floorp - це швидкий і зручний веб-браузер, який приділяє особливу увагу конфіденційності та безпеці. Цей посібник познайомить вас з основними можливостями та налаштуваннями Floorp.",
+      "readyToStart": "Коли будете готові, натисніть кнопку нижче, щоб продовжити.",
+      "features": "Особливості Floorp",
+      "privacy": "Конфіденційність",
+      "privacyDesc": "Захищає ваші дані",
+      "speed": "Швидкість",
+      "speedDesc": "Оптимізована продуктивність",
+      "customization": "Кастомізація",
+      "customizationDesc": "Розташуйте на свій розсуд",
+      "start": "Почати роботу"
+  },
+  "localizationPage": {
+      "title": "Floorp говорить вашою мовою",
+      "subtitle": "Перевірте мовні налаштування та змініть їх за потреби",
+      "languageSettings": "Налаштування мови",
+      "languageChanged": "Мову змінено!",
+      "currentLanguageInfo": "Інформація про поточну мову",
+      "systemLanguage": "Мова системи",
+      "floorpLanguage": "Мова Floorp",
+      "selectLanguage": "Вибір мови",
+      "useSystemLanguage": "Використовувати мову системи",
+      "multilingual": "Багатомовна підтримка",
+      "chooseLanguage": "Обирайте з широкого спектру мов",
+      "languageChangeNotice": "Зміна мови призведе до застосування нової мови без перезапуску Floorp. Деякі додатки можуть не підтримувати зміну мови."
+  },
+  "featuresPage": {
+      "title": "Основні можливості Floorp",
+      "subtitle": "Floorp має багато корисних функцій. Ознайомтеся з оглядом функцій!",
+      "panelSidebar": {
+      "title": "Бічна панель",
+      "description": "Отримуйте доступ до зручних функцій з бічної панелі праворуч під час перегляду. На бічній панелі можна розміщувати веб-панелі, функції нотаток, розширення, закладки тощо.",
+      "features": [
                 "Закріпіть веб-сайти на бічній панелі",
                 "Швидко робіть нотатки за допомогою Floorp Notes під час перегляду",
                 "Підтримує контейнери"
-            ]
-        },
-        "workspaces": {
-            "title": "Робочі області",
-            "description": "Організуйте кілька наборів вкладок, щоб спростити роботу. Швидко перемикайтеся між робочими областями за допомогою характерних іконок і назв. Доступ за допомогою кнопки робочої області у верхньому лівому куті.",
-            "features": [
+      ]
+      },
+      "workspaces": {
+      "title": "Робочі області",
+      "description": "Організуйте кілька наборів вкладок, щоб спростити роботу. Швидко перемикайтеся між робочими областями за допомогою характерних іконок і назв. Доступ за допомогою кнопки робочої області у верхньому лівому куті.",
+      "features": [
                 "Розподіліть за призначенням: робота, особисте тощо.",
                 "Візуально визначайте за допомогою іконок користувача",
                 "Легке керування вкладками"
-            ]
-        },
-        "pwa": {
-            "title": "Підтримка прогресивних веб-застосунків",
-            "description": "На Windows ви можете додати сайти сумісності з PWA-застосунками як настільні застосунки, якщо відвідувати їх. Звичайні сайти також можуть бути встановлені.",
-            "features": [
+      ]
+      },
+      "pwa": {
+      "title": "Підтримка прогресивних веб-застосунків",
+      "description": "На Windows ви можете додати сайти сумісності з PWA-застосунками як настільні застосунки, якщо відвідувати їх. Звичайні сайти також можуть бути встановлені.",
+      "features": [
                 "Працюють незалежно у вигляді настільних застосунків",
                 "Можна закріпити на панелі завдань",
                 "Розширення Firefox також працюють"
-            ]
-        },
-        "mouseGesture": {
-            "title": "Жести мишею",
-            "description": "Керуйте браузером інтуїтивно зрозуміліше завдяки вбудованій функції жестів миші. Виконуйте жести, утримуючи праву кнопку миші та рухаючи нею.",
-            "features": [
+      ]
+      },
+      "mouseGesture": {
+      "title": "Жести мишею",
+      "description": "Керуйте браузером інтуїтивно зрозуміліше завдяки вбудованій функції жестів миші. Виконуйте жести, утримуючи праву кнопку миші та рухаючи нею.",
+      "features": [
                 "Працюйте без комбінацій клавіш",
                 "Повністю налаштовувані жести",
                 "Швидка навігація сторінок і історії"
-            ]
-        },
-        "notebook": "Нотатник",
-        "nextTab": "Перейти до наступної вкладки"
-    },
-    "finishPage": {
-        "title": "Налаштування завершено!",
-        "subtitle": "Вітаю! Ви завершили налаштування Floorp. Тепер ви можете насолоджуватися комфортним і безпечним переглядом веб-сторінок.",
-        "nextSteps": "Наступні кроки (необов'язково)",
-        "defaultBrowser": "Встановити браузер за замовчуванням",
-        "support": "Підтримка",
-        "documentation": "Документація",
-        "getStarted": "Початок роботи з Floorp",
-        "hint": "Детальніші налаштування можна виконати за допомогою меню Налаштування, розташованому у верхньому правому куті.",
-        "resourcesLabel": "Ресурси",
-        "defaultBrowserSuccess": "Floorp встановлено як браузер за замовчуванням!"
-    },
-    "whatsNew": {
-        "title": "Вітаємо у Floorp {{version}}!",
-        "subtitle": "Погляньте, що нового у Floorp!",
-        "tags": {
-            "settings": "Налаштування",
-            "productivity": "Продуктивність",
-            "workspaces": "Робочі області",
-            "pwa": "PWA",
-            "gestures": "Жести"
-        },
-        "footer": {
-            "follow": "Слідкувати",
-            "terms": "Умови використання",
-            "privacy": "Політика конфіденційності",
-            "about": "Про Floorp",
-            "copyright": "© {{year}} Floorp Projects. Всі права захищені."
-        }
-    }
+      ]
+      },
+      "notebook": "Нотатник",
+      "nextTab": "Перейти до наступної вкладки"
+  },
+  "finishPage": {
+      "title": "Налаштування завершено!",
+      "subtitle": "Вітаю! Ви завершили налаштування Floorp. Тепер ви можете насолоджуватися комфортним і безпечним переглядом веб-сторінок.",
+      "nextSteps": "Наступні кроки (необов'язково)",
+      "defaultBrowser": "Встановити браузер за замовчуванням",
+      "support": "Підтримка",
+      "documentation": "Документація",
+      "getStarted": "Початок роботи з Floorp",
+      "hint": "Детальніші налаштування можна виконати за допомогою меню Налаштування, розташованому у верхньому правому куті.",
+      "resourcesLabel": "Ресурси",
+      "defaultBrowserSuccess": "Floorp встановлено як браузер за замовчуванням!"
+  },
+  "whatsNew": {
+      "title": "Вітаємо у Floorp {{version}}!",
+      "subtitle": "Погляньте, що нового у Floorp!",
+      "tags": {
+      "settings": "Налаштування",
+      "productivity": "Продуктивність",
+      "workspaces": "Робочі області",
+      "pwa": "PWA",
+      "gestures": "Жести"
+      },
+      "footer": {
+      "follow": "Слідкувати",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "about": "Про Floorp",
+      "copyright": "© {{year}} Floorp Projects. Всі права захищені."
+      }
+  }
 }
