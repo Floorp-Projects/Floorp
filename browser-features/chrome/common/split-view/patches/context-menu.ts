@@ -195,10 +195,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
     }
   };
   tabMenu.addEventListener("popupshowing", onTabContextMenu);
-  openInSplitItem.addEventListener("command", onOpenCommand);
+  // Capture also runs before native handlers attached directly to the item.
+  openInSplitItem.addEventListener("command", onOpenCommand, true);
   onCleanup(() => {
     tabMenu.removeEventListener("popupshowing", onTabContextMenu);
-    openInSplitItem.removeEventListener("command", onOpenCommand);
+    openInSplitItem.removeEventListener("command", onOpenCommand, true);
     openInSplitItem.removeAttribute("tooltiptext");
   });
   logger.debug("[patch] context menu listener attached");
