@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { readNewTabClipboard } from "./clipboard.ts";
 import Workspaces from "#features-chrome/common/workspaces";
 import { resolveWorkspaceOpenLinkUserContext } from "./open-link-user-context.ts";
 
@@ -53,8 +54,8 @@ export const overrides = [
             "Workspaces: redirecting about:opentabs pane to about:newtab",
           );
           opentabsTab.linkedBrowser.fixupAndLoadURIString("about:newtab", {
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
           });
           return;
         }
@@ -147,8 +148,8 @@ export const overrides = [
     } = {}) => {
       const werePassedURL = !!url;
       url ??= globalThis.BROWSER_NEW_TAB_URL;
-      const searchClipboard =
-        globalThis.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
+      const searchClipboard = globalThis.gMiddleClickNewTabUsesPasteboard &&
+        event?.button === 1;
 
       let relatedToCurrent = false;
       let where = "tab";
@@ -216,56 +217,30 @@ export const overrides = [
               [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
-              let clipboard = "";
-              try {
-                clipboard = globalThis.readFromClipboard?.() || "";
-              } catch {
-                // Ignore clipboard read errors
-              }
-
-              // Fallback to global clipboard if selection clipboard is empty (e.g., Linux primary selection vs Ctrl+C)
-              if (
-                !clipboard &&
-                typeof Cc !== "undefined" &&
-                typeof Ci !== "undefined"
-              ) {
-                try {
+              const clipboard = readNewTabClipboard(
+                () => globalThis.readFromClipboard?.() || "",
+                () => {
                   const trans = Cc[
                     "@mozilla.org/widget/transferable;1"
                   ].createInstance(Ci.nsITransferable);
-                  trans.init(
-                    // deno-lint-ignore no-explicit-any
-                    (window as any).docShell.QueryInterface(Ci.nsILoadContext),
+                  const context = window.docShell?.QueryInterface?.(
+                    Ci.nsILoadContext,
                   );
+                  if (!context) return "";
+                  trans.init(context);
                   trans.addDataFlavor("text/plain");
                   Services.clipboard.getData(
                     trans,
-                    Services.clipboard.kGlobalClipboard,
+                    Ci.nsIClipboard.kGlobalClipboard,
                   );
-                  const data: { value?: unknown } = {};
+                  const data: { value?: nsISupports } = {};
                   trans.getTransferData("text/plain", data);
-                  if (data.value) {
-                    clipboard =
-                      (data.value as Ci.nsISupportsString).data || "";
-                  }
-                } catch {
-                  // Ignore fallback errors
-                }
-              }
-
-              const stripFn =
+                  return data.value?.QueryInterface?.(Ci.nsISupportsString)
+                    .data || "";
+                },
                 globalThis.UrlbarShared?.stripUnsafeProtocolOnPaste ??
-                globalThis.UrlbarUtils?.stripUnsafeProtocolOnPaste;
-              if (stripFn) {
-                try {
-                  clipboard = stripFn(clipboard);
-                } catch {
-                  clipboard = "";
-                }
-              } else {
-                clipboard = "";
-              }
-              clipboard = clipboard.trim();
+                  globalThis.UrlbarUtils?.stripUnsafeProtocolOnPaste,
+              );
 
               if (clipboard) {
                 url = clipboard;
