@@ -10,26 +10,37 @@ import type { TProgressiveWebAppFormData } from "@/types/pref.ts";
 export default function Page() {
   const { t } = useTranslation();
   const methods = useForm<TProgressiveWebAppFormData>({ defaultValues: {} });
-  const { control, setValue } = methods;
+  const { control, reset } = methods;
+  const [ready, setReady] = React.useState(false);
+  const [error, setError] = React.useState(false);
   const watchAll = useWatch({ control });
 
   React.useEffect(() => {
     const fetchDefaultValues = async () => {
-      const values = await getPwaSettings();
-      Object.entries(values).forEach(([key, value]) => {
-        setValue(key as keyof TProgressiveWebAppFormData, value);
-      });
+      try {
+        const values = await getPwaSettings();
+        reset(values);
+        setReady(true);
+        setError(false);
+      } catch (error) {
+        console.error("[Settings:pwa] Load failed", error);
+        setError(true);
+      }
     };
     fetchDefaultValues();
     globalThis.addEventListener("focus", fetchDefaultValues);
     return () => {
       globalThis.removeEventListener("focus", fetchDefaultValues);
     };
-  }, [setValue]);
+  }, [reset]);
 
   React.useEffect(() => {
-    savePwaSettings(watchAll as TProgressiveWebAppFormData);
-  }, [watchAll]);
+    if (!ready) return;
+    void savePwaSettings(watchAll as TProgressiveWebAppFormData).catch((error) => {
+      console.error("[Settings:pwa] Save failed", error);
+      setError(true);
+    });
+  }, [watchAll, ready]);
 
   return (
     <div className={`floorp-settings-page ${styles.page}`}>
@@ -39,12 +50,16 @@ export default function Page() {
           {t("progressiveWebApp.description")}
         </p>
       </header>
+      {error && <p role="alert">{t(ready ? "ui.saveError" : "ui.loadError")}</p>}
+      {!ready && !error && <p role="status">{t("ui.loading")}</p>}
       <FormProvider {...methods}>
         <form
           className={styles.sections}
           onSubmit={(event) => event.preventDefault()}
         >
-          <Preferences />
+          <fieldset disabled={!ready} aria-busy={!ready} className="min-w-0">
+            <Preferences />
+          </fieldset>
           <InstalledApps />
         </form>
       </FormProvider>

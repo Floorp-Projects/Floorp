@@ -1,5 +1,5 @@
 export type { DropDownOption, DropDownProps } from "./types.ts";
-import type { DropDownOption, DropDownProps } from "./types.ts";
+import type { DropDownProps } from "./types.ts";
 import { forwardRef } from "react";
 import styles from "./controls.module.css";
 import type { SelectProps } from "./types.ts";

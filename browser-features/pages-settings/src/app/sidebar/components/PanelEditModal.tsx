@@ -32,6 +32,8 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
   const [staticPanels, setStaticPanels] = useState<StaticPanel[]>([]);
   const [extensionPanels, setExtensionPanels] = useState<ExtensionPanel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const fetchPanelData = useCallback(async () => {
     setIsLoading(true);
@@ -174,11 +176,20 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSave(editedPanel);
+    if (!saving && validateForm()) {
+      setSaving(true);
+      setSaveError(false);
+      try {
+        await onSave(editedPanel);
+      } catch (error) {
+        console.error("[PanelSidebar] Failed to save panel", error);
+        setSaveError(true);
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -204,6 +215,8 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
       closeLabel={t("panelSidebar.cancel")}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {saveError && <p role="alert" className="floorp-notice floorp-notice-error">{t("ui.saveError")}</p>}
+        <fieldset disabled={saving} className="space-y-4">
         <div className="floorp-field">
           <label className="floorp-field-label" htmlFor="panel-type">
             <span className="floorp-field-text">{t("panelSidebar.panelType")}</span>
@@ -418,6 +431,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
             {t("panelSidebar.save")}
           </Button>
         </div>
+        </fieldset>
       </form>
     </Modal>
   );

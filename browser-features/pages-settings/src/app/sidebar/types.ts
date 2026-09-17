@@ -21,6 +21,6 @@ export type ExtensionPanel = {
 
 export interface PanelEditModalProps {
   panel: Panel;
-  onSave: (panel: Panel) => void;
+  onSave: (panel: Panel) => Promise<void>;
   onClose: () => void;
 }

@@ -8,6 +8,8 @@ import {
 import { useTranslation } from "react-i18next";
 import type { AccountsFormData } from "@/types/pref";
 import { ExternalLink, User } from "lucide-react";
+import { useState } from "react";
+import { openCurrentProfileDirectory } from "../dataManager.ts";
 
 type ProfileProps = {
   accountAndProfileData: AccountsFormData | null;
@@ -15,6 +17,7 @@ type ProfileProps = {
 
 export function Profile({ accountAndProfileData }: ProfileProps) {
   const { t } = useTranslation();
+  const [openError, setOpenError] = useState(false);
 
   return (
     <Card className={styles.section}>
@@ -57,12 +60,18 @@ export function Profile({ accountAndProfileData }: ProfileProps) {
           </a>
           <a
             href="#"
+            onClick={async (event) => {
+              event.preventDefault();
+              try { setOpenError(!await openCurrentProfileDirectory()); }
+              catch { setOpenError(true); }
+            }}
             className={styles.link}
           >
             {t("accounts.openProfileSaveLocation")}
             <ExternalLink className="size-4" />
           </a>
         </div>
+        {openError && <p role="alert" className="floorp-notice floorp-notice-error">{t("ui.loadError")}</p>}
       </CardContent>
     </Card>
   );

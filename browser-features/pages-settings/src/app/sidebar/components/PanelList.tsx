@@ -222,7 +222,6 @@ export const PanelList: React.FC = () => {
   };
 
   const handleSavePanel = async (panel: Panel) => {
-    setIsModalOpen(false);
 
     const isNew = !panels.some((p) => p.id === panel.id);
 
@@ -236,6 +235,7 @@ export const PanelList: React.FC = () => {
     if (updatedPanels) {
       setPanels(updatedPanels);
     }
+    setIsModalOpen(false);
   };
 
   const handleShowDeleteModal = (panel: Panel) => {

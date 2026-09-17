@@ -18,6 +18,7 @@ declare global {
       callback: (localeInfo: string) => void,
     ) => void;
     NRSetDefaultBrowser: (callback: (response: string) => void) => void;
+    NRDismissWelcomePage: () => void;
   }
 }
 

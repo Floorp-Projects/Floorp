@@ -1,5 +1,6 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
+import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
@@ -37,9 +38,8 @@ function waitForSettingsBridge(): Promise<Window> {
   });
 }
 
-const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
-  import.meta.url ?? "",
-);
+// about:hub is privileged even when its scripts are served by Vite.
+const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {

@@ -25,7 +25,7 @@ const system = createSystem(
 export function StandardUIProvider({ children }: PropsWithChildren) {
   return (
     <ChakraProvider value={system}>
-      <StandardControlsContext.Provider value={true}>
+      <StandardControlsContext.Provider value>
         {children}
       </StandardControlsContext.Provider>
     </ChakraProvider>

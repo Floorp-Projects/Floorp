@@ -81,7 +81,7 @@ export default function CustomizePage() {
               value={value}
               className={styles.radioItem}
             >
-              <RadioCard.ItemHiddenInput />
+              <RadioCard.ItemHiddenInput checked={theme === value} />
               <span
                 className={styles.themePreview}
                 data-theme={value}

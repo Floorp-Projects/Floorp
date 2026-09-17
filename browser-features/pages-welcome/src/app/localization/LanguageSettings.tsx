@@ -7,6 +7,7 @@ import {
   setAppLocale,
 } from "./dataManager.ts";
 import type { LocaleData } from "./type.ts";
+import { resolveSystemLocale } from "./system-locale.ts";
 import { Button } from "../../../../../libs/ui/button.tsx";
 import { DataList } from "@chakra-ui/react";
 import {
@@ -25,6 +26,11 @@ export function LanguageSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  const systemLocale = data ? resolveSystemLocale(
+    data.localeInfo.systemLocale,
+    [selected, ...data.installedLocales, ...data.availableLocales.map((pack) => pack.target_locale)],
+    data.langPackInfo?.target_locale,
+  ) : undefined;
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -130,10 +136,10 @@ export function LanguageSettings() {
           />
           <Button
             variant="secondary"
-            disabled={saving ||
-              data.localeInfo.systemLocale.language === selected}
+            disabled={saving || !systemLocale ||
+              systemLocale === selected}
             onClick={() =>
-              void changeLocale(data.localeInfo.systemLocale.language)}
+              systemLocale && void changeLocale(systemLocale)}
           >
             {t("localizationPage.useSystemLanguage")}
           </Button>

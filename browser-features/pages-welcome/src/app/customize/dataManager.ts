@@ -41,16 +41,16 @@ function callNRFunction<T>(
 }
 
 export function getSearchEngines(): Promise<SearchEngine[]> {
-  // deno-lint-ignore no-window
   return callNRFunction<SearchEngine[]>(
+    // deno-lint-ignore no-window
     window.NRGetSearchEngines,
     "NRGetSearchEngines",
   );
 }
 
 export function getDefaultEngine(): Promise<SearchEngine> {
-  // deno-lint-ignore no-window
   return callNRFunction<SearchEngine>(
+    // deno-lint-ignore no-window
     window.NRGetDefaultEngine,
     "NRGetDefaultEngine",
   );
@@ -59,16 +59,16 @@ export function setDefaultEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
   console.log("setDefaultEngine", engineId);
-  // deno-lint-ignore no-window
   return callNRFunction(
+    // deno-lint-ignore no-window
     (cb) => window.NRSetDefaultEngine(engineId, cb),
     "NRSetDefaultEngine",
   );
 }
 
 export function getDefaultPrivateEngine(): Promise<SearchEngine> {
-  // deno-lint-ignore no-window
   return callNRFunction<SearchEngine>(
+    // deno-lint-ignore no-window
     window.NRGetDefaultPrivateEngine,
     "NRGetDefaultPrivateEngine",
   );
@@ -77,8 +77,8 @@ export function getDefaultPrivateEngine(): Promise<SearchEngine> {
 export function setDefaultPrivateEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
-  // deno-lint-ignore no-window
   return callNRFunction(
+    // deno-lint-ignore no-window
     (cb) => window.NRSetDefaultPrivateEngine(engineId, cb),
     "NRSetDefaultPrivateEngine",
   );
