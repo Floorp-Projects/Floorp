@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Accounts } from "./components/Accounts.tsx";
@@ -25,15 +26,15 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">
+    <div className={`floorp-settings-page ${styles.page}`}>
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">
           {t("accounts.profileAndAccount")}
         </h1>
-        <p className="text-sm mb-8">{t("accounts.profileDescription")}</p>
+        <p className="floorp-page-description">{t("accounts.profileDescription")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 pl-6">
+      <div className={styles.sections}>
         <FormProvider {...methods}>
           <Accounts accountAndProfileData={accountAndProfileData} />
           <Profile accountAndProfileData={accountAndProfileData} />

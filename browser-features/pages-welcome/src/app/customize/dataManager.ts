@@ -1,5 +1,6 @@
 import type { SearchEngine } from "./types.ts";
 import { rpc } from "../../lib/rpc/rpc";
+import { themeToPreference } from "../../../../../libs/ui/theme-value.ts";
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -21,7 +22,9 @@ function callNRFunction<T>(
           try {
             const parsed = JSON.parse(data);
             // Check for error responses from the actor
-            if (parsed && typeof parsed === "object" && parsed.success === false) {
+            if (
+              parsed && typeof parsed === "object" && parsed.success === false
+            ) {
               reject(new Error(parsed.error || `${name} returned an error`));
             } else {
               resolve(parsed);
@@ -38,32 +41,47 @@ function callNRFunction<T>(
 }
 
 export function getSearchEngines(): Promise<SearchEngine[]> {
-  // deno-lint-ignore no-window
-  return callNRFunction<SearchEngine[]>(window.NRGetSearchEngines, "NRGetSearchEngines");
+  return callNRFunction<SearchEngine[]>(
+    // deno-lint-ignore no-window
+    window.NRGetSearchEngines,
+    "NRGetSearchEngines",
+  );
 }
 
 export function getDefaultEngine(): Promise<SearchEngine> {
-  // deno-lint-ignore no-window
-  return callNRFunction<SearchEngine>(window.NRGetDefaultEngine, "NRGetDefaultEngine");
+  return callNRFunction<SearchEngine>(
+    // deno-lint-ignore no-window
+    window.NRGetDefaultEngine,
+    "NRGetDefaultEngine",
+  );
 }
 export function setDefaultEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
   console.log("setDefaultEngine", engineId);
-  // deno-lint-ignore no-window
-  return callNRFunction((cb) => window.NRSetDefaultEngine(engineId, cb), "NRSetDefaultEngine");
+  return callNRFunction(
+    // deno-lint-ignore no-window
+    (cb) => window.NRSetDefaultEngine(engineId, cb),
+    "NRSetDefaultEngine",
+  );
 }
 
 export function getDefaultPrivateEngine(): Promise<SearchEngine> {
-  // deno-lint-ignore no-window
-  return callNRFunction<SearchEngine>(window.NRGetDefaultPrivateEngine, "NRGetDefaultPrivateEngine");
+  return callNRFunction<SearchEngine>(
+    // deno-lint-ignore no-window
+    window.NRGetDefaultPrivateEngine,
+    "NRGetDefaultPrivateEngine",
+  );
 }
 
 export function setDefaultPrivateEngine(
   engineId: string,
 ): Promise<{ success: boolean; engineId: string }> {
-  // deno-lint-ignore no-window
-  return callNRFunction((cb) => window.NRSetDefaultPrivateEngine(engineId, cb), "NRSetDefaultPrivateEngine");
+  return callNRFunction(
+    // deno-lint-ignore no-window
+    (cb) => window.NRSetDefaultPrivateEngine(engineId, cb),
+    "NRSetDefaultPrivateEngine",
+  );
 }
 
 export async function getThemeSetting(): Promise<number | null> {
@@ -75,7 +93,7 @@ export async function getThemeSetting(): Promise<number | null> {
 export async function setThemeSetting(
   theme: "system" | "light" | "dark",
 ): Promise<void> {
-  const themeValue = theme === "light" ? 1 : theme === "dark" ? 0 : 2;
+  const themeValue = themeToPreference(theme);
   await rpc.setIntPref(
     "layout.css.prefers-color-scheme.content-override",
     themeValue,

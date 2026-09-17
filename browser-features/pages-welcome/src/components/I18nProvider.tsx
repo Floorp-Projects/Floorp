@@ -6,11 +6,24 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    const updateDocumentLanguage = () => {
+      document.documentElement.lang = i18n.language;
+      document.documentElement.dir = i18n.dir(i18n.language);
+    };
+    i18n.on("languageChanged", updateDocumentLanguage);
     const init = async () => {
       await initializeI18n();
-      setInitialized(true);
+      if (active) {
+        updateDocumentLanguage();
+        setInitialized(true);
+      }
     };
-    init();
+    void init();
+    return () => {
+      active = false;
+      i18n.off("languageChanged", updateDocumentLanguage);
+    };
   }, []);
 
   if (!initialized) {

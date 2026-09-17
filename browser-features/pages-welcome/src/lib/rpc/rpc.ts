@@ -1,5 +1,6 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
+import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
@@ -12,8 +13,7 @@ declare global {
   }
 }
 
-const isLocalhost5187 = globalThis.location.protocol === "http:" &&
-  globalThis.location.port === "5187";
+const isLocalhost5187 = usesSettingsActor(globalThis.location.href, "5187");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {

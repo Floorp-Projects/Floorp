@@ -5,6 +5,7 @@ import App from "@/App.tsx";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
 import { I18nProvider } from "@/lib/i18n/I18nProvider.tsx";
+import { FloorpUIProvider } from "../../../libs/ui/provider.tsx";
 
 const getInitialEntry = () => {
   const hash = globalThis.location.hash.slice(1);
@@ -25,12 +26,14 @@ globalThis.addEventListener("hashchange", () => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="system">
-      <I18nProvider>
-        <MemoryRouter initialEntries={[getInitialEntry()]}>
-          <App />
-        </MemoryRouter>
-      </I18nProvider>
-    </ThemeProvider>
+    <FloorpUIProvider>
+      <ThemeProvider defaultTheme="system">
+        <I18nProvider>
+          <MemoryRouter initialEntries={[getInitialEntry()]}>
+            <App />
+          </MemoryRouter>
+        </I18nProvider>
+      </ThemeProvider>
+    </FloorpUIProvider>
   </StrictMode>,
 );

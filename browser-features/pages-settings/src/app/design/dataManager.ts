@@ -188,32 +188,38 @@ export async function saveDesignSettings(
     uiCustomization: {
       ...oldData.uiCustomization,
       navbar: {
+        ...oldData.uiCustomization.navbar,
         position: settings.navbarPosition,
         searchBarTop: settings.searchBarTop,
       },
       display: {
+        ...oldData.uiCustomization.display,
         disableFullscreenNotification: settings.disableFullscreenNotification,
         deleteBrowserBorder: settings.deleteBrowserBorder,
       },
       special: {
+        ...oldData.uiCustomization.special,
         optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
         hideForwardBackwardButton: settings.hideForwardBackwardButton,
         stgLikeWorkspaces: settings.stgLikeWorkspaces,
       },
       multirowTab: {
+        ...oldData.uiCustomization.multirowTab,
         newtabInsideEnabled: settings.multirowTabNewtabInside,
       },
       bookmarkBar: {
+        ...oldData.uiCustomization.bookmarkBar,
         focusExpand: settings.bookmarkBarFocusExpand,
         position: settings.bookmarkBarPosition,
       },
       qrCode: {
+        ...oldData.uiCustomization.qrCode,
         disableButton: settings.disableQRCodeButton,
       },
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
-  rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+  await rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
     settings.tabDragToSplitCreate,

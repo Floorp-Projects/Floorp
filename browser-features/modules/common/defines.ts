@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
+import type { Experiment } from "../modules/experiments/types.ts";
 
 export interface PrefGetParams {
   prefName: string;

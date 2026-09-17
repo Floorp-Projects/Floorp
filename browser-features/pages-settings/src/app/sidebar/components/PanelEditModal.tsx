@@ -1,8 +1,11 @@
+import { Select } from "../../../../../../libs/ui/dropdown.tsx";
+import { Input } from "../../../../../../libs/ui/input.tsx";
+import { Button } from "../../../../../../libs/ui/button.tsx";
+import { Modal } from "../../../../../../libs/ui/modal.tsx";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Panel } from "../../../../../main/core/common/panel-sidebar/utils/type.ts";
-import { X } from "lucide-react";
+import type { Panel } from "../../../../../chrome/common/panel-sidebar/utils/type.ts";
 import {
   getContainers,
   getExtensionPanels,
@@ -10,31 +13,12 @@ import {
   getStaticPanels,
 } from "../dataManager.ts";
 
-interface PanelEditModalProps {
-  panel: Panel;
-  onSave: (panel: Panel) => void;
-  onClose: () => void;
-}
-
-type Container = {
-  id: number;
-  name: string;
-  label: string;
-  icon: string;
-  color: string;
-};
-
-type StaticPanel = {
-  value: string;
-  label: string;
-  icon: string;
-};
-
-type ExtensionPanel = {
-  extensionId: string;
-  title: string;
-  iconUrl: string;
-};
+import type {
+  Container,
+  ExtensionPanel,
+  PanelEditModalProps,
+  StaticPanel,
+} from "../types.ts";
 
 export const PanelEditModal: React.FC<PanelEditModalProps> = ({
   panel,
@@ -48,6 +32,8 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
   const [staticPanels, setStaticPanels] = useState<StaticPanel[]>([]);
   const [extensionPanels, setExtensionPanels] = useState<ExtensionPanel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const fetchPanelData = useCallback(async () => {
     setIsLoading(true);
@@ -60,8 +46,7 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
         ]);
 
       if (containersData && Array.isArray(containersData)) {
-        // deno-lint-ignore no-explicit-any
-        setContainers(containersData as any);
+        setContainers(containersData);
       } else {
         console.error("Invalid containers data", containersData);
         setContainers([]);
@@ -191,263 +176,263 @@ export const PanelEditModal: React.FC<PanelEditModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSave(editedPanel);
+    if (!saving && validateForm()) {
+      setSaving(true);
+      setSaveError(false);
+      try {
+        await onSave(editedPanel);
+      } catch (error) {
+        console.error("[PanelSidebar] Failed to save panel", error);
+        setSaveError(true);
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="modal modal-open">
-        <div className="modal-box relative max-w-2xl">
-          <div className="flex justify-center py-8">
-            <span className="loading loading-spinner loading-md text-primary">
-            </span>
-          </div>
-        </div>
-        <div className="modal-backdrop"></div>
-      </div>
+      <Modal
+        title={t("panelSidebar.editPanel")}
+        onClose={onClose}
+        closeLabel={t("panelSidebar.cancel")}
+      >
+        <p role="status">{t("ui.loading")}</p>
+      </Modal>
     );
   }
 
   return (
-    <div className="modal modal-open">
-      <div className="modal-box relative max-w-2xl">
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn btn-sm btn-circle absolute right-2 top-2"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        <h3 className="font-bold text-lg mb-4">
-          {editedPanel.id.startsWith("panel-")
-            ? t("panelSidebar.addPanel")
-            : t("panelSidebar.editPanel")}
-        </h3>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">{t("panelSidebar.panelType")}</span>
+    <Modal
+      wide
+      title={editedPanel.id.startsWith("panel-")
+        ? t("panelSidebar.addPanel")
+        : t("panelSidebar.editPanel")}
+      onClose={onClose}
+      closeLabel={t("panelSidebar.cancel")}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {saveError && <p role="alert" className="floorp-notice floorp-notice-error">{t("ui.saveError")}</p>}
+        <fieldset disabled={saving} className="space-y-4">
+        <div className="floorp-field">
+          <label className="floorp-field-label" htmlFor="panel-type">
+            <span className="floorp-field-text">{t("panelSidebar.panelType")}</span>
+          </label>
+          <Select
+            name="type" id="panel-type" aria-label={t("panelSidebar.panelType")}
+            value={editedPanel.type}
+            onChange={handleChange}
+            className="w-full"
+          >
+            <option value="web">{t("panelSidebar.type.web")}</option>
+            <option value="static">{t("panelSidebar.type.static")}</option>
+            <option value="extension">
+              {t("panelSidebar.type.extension")}
+            </option>
+          </Select>
+          {errors.type && (
+            <label className="floorp-field-label">
+              <span className="floorp-field-hint text-error">{errors.type}</span>
             </label>
-            <select
-              name="type"
-              value={editedPanel.type}
-              onChange={handleChange}
-              className="select select-bordered w-full"
-            >
-              <option value="web">{t("panelSidebar.type.web")}</option>
-              <option value="static">{t("panelSidebar.type.static")}</option>
-              <option value="extension">
-                {t("panelSidebar.type.extension")}
-              </option>
-            </select>
-            {errors.type && (
-              <label className="label">
-                <span className="label-text-alt text-error">{errors.type}</span>
-              </label>
-            )}
-          </div>
-
-          {shouldShowWebFields && (
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">{t("panelSidebar.url")}</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="url"
-                  value={editedPanel.url || ""}
-                  onChange={handleChange}
-                  placeholder="example.com"
-                  className="input input-bordered w-full pr-8"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-base-content/50">
-                  {editedPanel.url && (
-                    <span className="text-xs">
-                      {editedPanel.url.startsWith("https://") ? "🔒" : "⚠️"}
-                    </span>
-                  )}
-                </div>
-              </div>
-              {errors.url && (
-                <label className="label">
-                  <span className="label-text-alt text-error">
-                    {errors.url}
-                  </span>
-                </label>
-              )}
-            </div>
           )}
+        </div>
 
-          {shouldShowStaticFields && (
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">
-                  {t("panelSidebar.staticPanel")}
-                </span>
-              </label>
-              <select
-                name="url"
+        {shouldShowWebFields && (
+          <div className="floorp-field">
+            <label className="floorp-field-label" htmlFor="panel-url">
+              <span className="floorp-field-text">{t("panelSidebar.url")}</span>
+            </label>
+            <div className="relative">
+              <Input
+                type="text"
+                name="url" id="panel-url" aria-label={t("panelSidebar.url")}
                 value={editedPanel.url || ""}
                 onChange={handleChange}
-                className="select select-bordered w-full"
-              >
-                <option value="">{t("panelSidebar.selectStaticPanel")}</option>
-                {staticPanels.map((panel) => (
-                  <option key={panel.value} value={panel.value}>
-                    {getStaticPanelDisplayName(panel.value, t)}
-                  </option>
-                ))}
-              </select>
-              {errors.url && (
-                <label className="label">
-                  <span className="label-text-alt text-error">
-                    {errors.url}
+                placeholder="example.com"
+                className="w-full pr-8"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-base-content/50">
+                {editedPanel.url && (
+                  <span className="text-xs">
+                    {editedPanel.url.startsWith("https://") ? "🔒" : "⚠️"}
                   </span>
-                </label>
-              )}
+                )}
+              </div>
             </div>
-          )}
-
-          {shouldShowExtensionFields && (
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">
-                  {t("panelSidebar.extensionPanel")}
-                </span>
-              </label>
-              <select
-                name="extensionId"
-                value={editedPanel.extensionId || ""}
-                onChange={handleChange}
-                className="select select-bordered w-full"
-              >
-                <option value="">{t("panelSidebar.selectExtension")}</option>
-                {extensionPanels.map((panel) => (
-                  <option key={panel.extensionId} value={panel.extensionId}>
-                    {panel.title}
-                  </option>
-                ))}
-              </select>
-              {errors.extensionId && (
-                <label className="label">
-                  <span className="label-text-alt text-error">
-                    {errors.extensionId}
-                  </span>
-                </label>
-              )}
-            </div>
-          )}
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">{t("panelSidebar.icon")}</span>
-            </label>
-            <input
-              type="text"
-              name="icon"
-              value={editedPanel.icon || ""}
-              onChange={handleChange}
-              placeholder="chrome://browser/skin/preferences/icon.svg"
-              className="input input-bordered w-full"
-            />
-          </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">{t("panelSidebar.width")} (px)</span>
-            </label>
-            <input
-              type="number"
-              name="width"
-              value={editedPanel.width}
-              onChange={handleChange}
-              className="input input-bordered w-full"
-            />
-            {errors.width && (
-              <label className="label">
-                <span className="label-text-alt text-error">
-                  {errors.width}
+            {errors.url && (
+              <label className="floorp-field-label">
+                <span className="floorp-field-hint text-error">
+                  {errors.url}
                 </span>
               </label>
             )}
           </div>
+        )}
 
-          {shouldShowWebFields && (
-            <>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">
-                    {t("panelSidebar.zoomLevel")}
-                  </span>
-                </label>
-                <input
-                  type="number"
-                  name="zoomLevel"
-                  step="0.1"
-                  value={editedPanel.zoomLevel ?? ""}
-                  onChange={handleChange}
-                  placeholder="1.0"
-                  className="input input-bordered w-full"
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">
-                    {t("panelSidebar.container")}
-                  </span>
-                </label>
-                <select
-                  name="userContextId"
-                  value={editedPanel.userContextId?.toString() || "0"}
-                  onChange={handleChange}
-                  className="select select-bordered w-full"
-                >
-                  <option value="0">{t("panelSidebar.noContainer")}</option>
-                  {containers.map((container) => (
-                    <option key={container.id} value={container.id.toString()}>
-                      {container.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="cursor-pointer label justify-start gap-2">
-                  <input
-                    type="checkbox"
-                    name="userAgent"
-                    checked={editedPanel.userAgent === true}
-                    onChange={handleCheckboxChange}
-                    className="checkbox checkbox-primary"
-                  />
-                  <span className="label-text">
-                    {t("panelSidebar.useUserAgent")}
-                  </span>
-                </label>
-              </div>
-            </>
-          )}
-
-          <div className="modal-action mt-6">
-            <button type="button" onClick={onClose} className="btn btn-outline">
-              {t("panelSidebar.cancel")}
-            </button>
-            <button type="submit" className="btn btn-primary">
-              {t("panelSidebar.save")}
-            </button>
+        {shouldShowStaticFields && (
+          <div className="floorp-field">
+            <label className="floorp-field-label" htmlFor="panel-url">
+              <span className="floorp-field-text">
+                {t("panelSidebar.staticPanel")}
+              </span>
+            </label>
+            <Select
+              name="url" id="panel-url" aria-label={t("panelSidebar.url")}
+              value={editedPanel.url || ""}
+              onChange={handleChange}
+              className="w-full"
+            >
+              <option value="">{t("panelSidebar.selectStaticPanel")}</option>
+              {staticPanels.map((panel) => (
+                <option key={panel.value} value={panel.value}>
+                  {getStaticPanelDisplayName(panel.value, t)}
+                </option>
+              ))}
+            </Select>
+            {errors.url && (
+              <label className="floorp-field-label">
+                <span className="floorp-field-hint text-error">
+                  {errors.url}
+                </span>
+              </label>
+            )}
           </div>
-        </form>
-      </div>
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+        )}
+
+        {shouldShowExtensionFields && (
+          <div className="floorp-field">
+            <label className="floorp-field-label" htmlFor="panel-extensionId">
+              <span className="floorp-field-text">
+                {t("panelSidebar.extensionPanel")}
+              </span>
+            </label>
+            <Select
+              name="extensionId" id="panel-extensionId" aria-label={t("panelSidebar.extensionPanel")}
+              value={editedPanel.extensionId || ""}
+              onChange={handleChange}
+              className="w-full"
+            >
+              <option value="">{t("panelSidebar.selectExtension")}</option>
+              {extensionPanels.map((panel) => (
+                <option key={panel.extensionId} value={panel.extensionId}>
+                  {panel.title}
+                </option>
+              ))}
+            </Select>
+            {errors.extensionId && (
+              <label className="floorp-field-label">
+                <span className="floorp-field-hint text-error">
+                  {errors.extensionId}
+                </span>
+              </label>
+            )}
+          </div>
+        )}
+
+        <div className="floorp-field">
+          <label className="floorp-field-label" htmlFor="panel-icon">
+            <span className="floorp-field-text">{t("panelSidebar.icon")}</span>
+          </label>
+          <Input
+            type="text"
+            name="icon" id="panel-icon" aria-label={t("panelSidebar.icon")}
+            value={editedPanel.icon || ""}
+            onChange={handleChange}
+            placeholder="chrome://browser/skin/preferences/icon.svg"
+            className="w-full"
+          />
+        </div>
+
+        <div className="floorp-field">
+          <label className="floorp-field-label" htmlFor="panel-width">
+            <span className="floorp-field-text">{t("panelSidebar.width")} (px)</span>
+          </label>
+          <Input
+            type="number"
+            name="width" id="panel-width" aria-label={t("panelSidebar.width")}
+            value={editedPanel.width}
+            onChange={handleChange}
+            className="w-full"
+          />
+          {errors.width && (
+            <label className="floorp-field-label">
+              <span className="floorp-field-hint text-error">
+                {errors.width}
+              </span>
+            </label>
+          )}
+        </div>
+
+        {shouldShowWebFields && (
+          <>
+            <div className="floorp-field">
+              <label className="floorp-field-label" htmlFor="panel-zoomLevel">
+                <span className="floorp-field-text">
+                  {t("panelSidebar.zoomLevel")}
+                </span>
+              </label>
+              <Input
+                type="number"
+                name="zoomLevel" id="panel-zoomLevel" aria-label={t("panelSidebar.zoomLevel")}
+                step="0.1"
+                value={editedPanel.zoomLevel ?? ""}
+                onChange={handleChange}
+                placeholder="1.0"
+                className="w-full"
+              />
+            </div>
+
+            <div className="floorp-field">
+              <label className="floorp-field-label" htmlFor="panel-userContextId">
+                <span className="floorp-field-text">
+                  {t("panelSidebar.container")}
+                </span>
+              </label>
+              <Select
+                name="userContextId" id="panel-userContextId" aria-label={t("panelSidebar.container")}
+                value={editedPanel.userContextId?.toString() || "0"}
+                onChange={handleChange}
+                className="w-full"
+              >
+                <option value="0">{t("panelSidebar.noContainer")}</option>
+                {containers.map((container) => (
+                  <option key={container.id} value={container.id.toString()}>
+                    {container.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="floorp-field">
+              <label className="cursor-pointer floorp-field-label justify-start gap-2">
+                <input
+                  type="checkbox"
+                  name="userAgent"
+                  checked={editedPanel.userAgent === true}
+                  onChange={handleCheckboxChange}
+                  className="floorp-checkbox"
+                />
+                <span className="floorp-field-text">
+                  {t("panelSidebar.useUserAgent")}
+                </span>
+              </label>
+            </div>
+          </>
+        )}
+
+        <div className="floorp-form-actions mt-6">
+          <Button type="button" onClick={onClose} variant="secondary">
+            {t("panelSidebar.cancel")}
+          </Button>
+          <Button type="submit" variant="primary">
+            {t("panelSidebar.save")}
+          </Button>
+        </div>
+        </fieldset>
+      </form>
+    </Modal>
   );
 };
