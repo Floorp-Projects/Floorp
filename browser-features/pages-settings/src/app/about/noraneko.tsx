@@ -28,13 +28,13 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("about.aboutBrowser")}</h1>
-        <p className="text-sm mb-8">{t("about.browserDescription")}</p>
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("about.aboutBrowser")}</h1>
+        <p className="floorp-page-description">{t("about.browserDescription")}</p>
       </div>
 
-      <div className="flex flex-col gap-8 pl-6">
+      <div className="floorp-settings-sections">
         <Card>
           <CardHeader>
             <CardTitle>{t("about.versionInfo")}</CardTitle>

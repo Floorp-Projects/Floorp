@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import {
   Card,
   CardContent,
@@ -15,7 +16,7 @@ export function Tab() {
   const { getValues, setValue } = useFormContext();
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LayoutGrid className="size-5" />

@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { usePageTheme } from "../../../../libs/ui/use-page-theme.ts";
+import { themeFromPreference } from "../../../../libs/ui/theme-value.ts";
 import { getThemeSetting, setThemeSetting } from "../app/customize/dataManager";
 
 type Theme = "light" | "dark" | "system";
@@ -11,12 +13,12 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme) => Promise<void>;
 };
 
 const initialState: ThemeProviderState = {
   theme: "system",
-  setTheme: () => null,
+  setTheme: async () => {},
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
@@ -28,17 +30,16 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const userChanged = useRef(false);
+  usePageTheme(theme);
 
   useEffect(() => {
+    let active = true;
     const fetchTheme = async () => {
       try {
         const themeValue = await getThemeSetting();
-        if (themeValue === 1) {
-          setTheme("light");
-        } else if (themeValue === 2) {
-          setTheme("dark");
-        } else {
-          setTheme("system");
+        if (active && !userChanged.current) {
+          setTheme(themeFromPreference(themeValue));
         }
       } catch (error) {
         console.error("テーマ設定の取得に失敗しました:", error);
@@ -46,34 +47,16 @@ export function ThemeProvider({
     };
 
     fetchTheme();
+    return () => {
+      active = false;
+    };
   }, []);
-
-  useEffect(() => {
-    const root = globalThis.document.documentElement;
-
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      root.setAttribute("data-theme", systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-    root.setAttribute("data-theme", theme);
-  }, [theme]);
 
   const value = {
     theme,
-    setTheme: (newTheme: Theme) => {
-      setThemeSetting(newTheme).catch(error => {
-        console.error("テーマ設定の保存に失敗しました:", error);
-      });
+    setTheme: async (newTheme: Theme) => {
+      userChanged.current = true;
+      await setThemeSetting(newTheme);
       setTheme(newTheme);
     },
   };
@@ -88,8 +71,9 @@ export function ThemeProvider({
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 
-  if (context === undefined)
+  if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
+  }
 
   return context;
 };

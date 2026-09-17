@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import { useKeyboardShortcutConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/GeneralSettings.tsx";
@@ -25,17 +26,17 @@ export default function Page() {
     }
 
     return (
-        <div className="p-6 space-y-3">
-            <div className="flex flex-col items-start pl-6">
-                <h1 className="text-3xl font-bold mb-2">
+        <div className={`floorp-settings-page ${styles.page}`}>
+            <div className="floorp-page-header">
+                <h1 className="floorp-page-heading">
                     {t("pages.keyboardShortcut")}
                 </h1>
-                <p className="text-sm mb-8">
+                <p className="floorp-page-description">
                     {t("keyboardShortcut.description")}
                 </p>
             </div>
 
-            <div className="space-y-3 pl-6">
+            <div className={styles.sections}>
                 <GeneralSettings
                     config={config}
                     toggleEnabled={toggleEnabled}

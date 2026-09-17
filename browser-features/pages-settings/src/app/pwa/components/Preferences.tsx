@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import {
   Card,
   CardContent,
@@ -28,19 +29,29 @@ export function Preferences() {
           />
         )
         : null}
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="size-5" />
             {t("progressiveWebApp.basicSettings")}
           </CardTitle>
+          <div>
+            <a
+              href="https://docs.floorp.app/docs/features/webapps"
+              target="_blank"
+              className={`${styles.link} mt-3 text-sm`}
+            >
+              {t("progressiveWebApp.learnMore")}
+              <ExternalLink className="size-4" />
+            </a>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <h3 className="text-base font-medium mb-2">
               {t("progressiveWebApp.enableDisable")}
             </h3>
-            <div className="flex items-center justify-between gap-2">
+            <div className={styles.row}>
               <div className="space-y-1">
                 <label htmlFor="enable-pwa" className="font-medium">
                   {t("progressiveWebApp.enablePwa")}
@@ -64,7 +75,7 @@ export function Preferences() {
             <h3 className="text-base font-medium mb-2">
               {t("progressiveWebApp.otherSettings")}
             </h3>
-            <div className="flex items-center justify-between gap-2">
+            <div className={styles.row}>
               <div className="space-y-1">
                 <label htmlFor="show-toolbar" className="font-medium">
                   {t("progressiveWebApp.showToolbar")}
@@ -81,16 +92,7 @@ export function Preferences() {
             </div>
           </div>
 
-          <div>
-            <a
-              href="https://docs.floorp.app/docs/features/webapps"
-              target="_blank"
-              className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
-            >
-              {t("progressiveWebApp.learnMore")}
-              <ExternalLink className="size-4" />
-            </a>
-          </div>
+
         </CardContent>
       </Card>
     </>
