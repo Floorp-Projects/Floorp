@@ -10,23 +10,25 @@ import type { SplitViewTab } from "../data/types.js";
 import { getGBrowser, getTabContextMenu } from "../data/types.js";
 import { splitViewConfig } from "../data/config.js";
 import { swapPanesByTab } from "../utils/reorder-panes.js";
+import { canOpenContextTabsInSplitView } from "../utils/context-menu-policy.ts";
 
 const t = (key: string, opts?: Record<string, string>): string =>
   (i18next.t as (k: string, o?: Record<string, string>) => string)(key, opts);
 
 /**
- * Adds "Open in Split View", "Add Pane to Split View" and "Move to Pane"
- * items to the tab context menu.
+ * Extends the native split-view entry and adds pane management actions.
  */
 export function initContextMenu(logger: ConsoleInstance): void {
-  const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  const tabMenu = document?.getElementById("tabContextMenu");
+  const openInSplitItem = document?.getElementById(
+    "context_moveTabToSplitView",
+  ) as XULElement | null;
+  if (!tabMenu || !openInSplitItem) return;
+
+  // Remove the former duplicate when this module is hot-reloaded.
+  document?.getElementById("floorp_openInSplitView")?.remove();
 
   const updateLabels = (): void => {
-    const openInSplitItem = document?.getElementById("floorp_openInSplitView");
-    if (openInSplitItem) {
-      openInSplitItem.setAttribute("label", t("splitView.contextMenu.openInSplitView"));
-    }
     const addPaneItem = document?.getElementById("floorp_addPaneToSplitView");
     if (addPaneItem) {
       addPaneItem.setAttribute("label", t("splitView.contextMenu.addPane"));
@@ -39,78 +41,50 @@ export function initContextMenu(logger: ConsoleInstance): void {
 
   addI18nObserver(updateLabels);
 
-  const onTabContextMenu = (): void => {
+  const onTabContextMenu = (event: Event): void => {
+    if (event.target !== tabMenu) return;
     const separateItem = document?.getElementById("context_separateSplitView");
     if (!separateItem) return;
 
     const gBrowser = getGBrowser();
+    // Native popupshowing runs first and resolves the right-clicked tab's
+    // contextTabs. Do not substitute a selection from elsewhere in the strip.
+    const contextTabs = getTabContextMenu()?.contextTabs ?? [];
+    const maxPanes = splitViewConfig().maxPanes;
+    openInSplitItem.removeAttribute("tooltiptext");
     const splitViewEnabled = Services.prefs.getBoolPref(
       "browser.tabs.splitView.enabled",
       false,
     );
     if (!splitViewEnabled) return;
 
+    if (canOpenContextTabsInSplitView(contextTabs, maxPanes)) {
+      openInSplitItem.removeAttribute("disabled");
+    } else {
+      openInSplitItem.setAttribute("disabled", "true");
+    }
+    if (!openInSplitItem.hidden && contextTabs.length > maxPanes) {
+      openInSplitItem.setAttribute(
+        "tooltiptext",
+        t("splitView.contextMenu.paneLimit", {
+          max: String(maxPanes),
+        }),
+      );
+    }
+
     const activeSplitView = gBrowser?.activeSplitView;
-    const contextTabs: SplitViewTab[] = getTabContextMenu()?.contextTabs ?? [];
     const hasSplitViewTab = contextTabs.some(
       (tab: SplitViewTab) => tab.splitview,
     );
 
-    // gBrowser.selectedTabs reflects the current multi-selection state
-    // regardless of TabContextMenu timing.  It always contains at least
-    // the active tab; length >= 2 means the user Ctrl/Shift-clicked.
-    const multiSelectedTabs: SplitViewTab[] = gBrowser?.selectedTabs ?? [];
-
     logger.debug(
       `[contextMenu] activeSplitView=${!!activeSplitView}, ` +
         `contextTabs=${contextTabs.length}, hasSplitViewTab=${hasSplitViewTab}, ` +
-        `multiSelected=${multiSelectedTabs.length}, ` +
         `activeTabs=${activeSplitView?.tabs?.length ?? 0}`,
     );
 
-    // === Open in Split View (create new split from multi-selected tabs) ===
-    const shouldShowOpenInSplit =
-      multiSelectedTabs.length >= 2 && !activeSplitView;
-
-    let openInSplitItem = document?.getElementById(
-      "floorp_openInSplitView",
-    ) as XULElement | null;
-
-    if (shouldShowOpenInSplit) {
-      if (!openInSplitItem) {
-        openInSplitItem = document?.createXULElement("menuitem") as XULElement;
-        if (openInSplitItem) {
-          openInSplitItem.id = "floorp_openInSplitView";
-          openInSplitItem.setAttribute(
-            "label",
-            t("splitView.contextMenu.openInSplitView"),
-          );
-          openInSplitItem.addEventListener("command", () => {
-            const currentGBrowser = getGBrowser();
-            if (!currentGBrowser) return;
-            const currentSelectedTabs = currentGBrowser.selectedTabs;
-            const maxPanes = splitViewConfig().maxPanes;
-            const tabsToSplit = currentSelectedTabs.slice(0, maxPanes);
-            logger.debug(
-              `[contextMenu:command] opening ${tabsToSplit.length} tab(s) in new split view`,
-            );
-            if (tabsToSplit.length >= 2) {
-              currentGBrowser.addTabSplitView(tabsToSplit);
-            }
-          });
-          separateItem.after(openInSplitItem);
-        }
-      }
-      if (openInSplitItem) {
-        openInSplitItem.hidden = false;
-      }
-    } else if (openInSplitItem) {
-      openInSplitItem.hidden = true;
-    }
-
     // === Add Pane to Split View ===
-    const shouldShowAddPane =
-      hasSplitViewTab &&
+    const shouldShowAddPane = hasSplitViewTab &&
       activeSplitView &&
       activeSplitView.tabs.length < splitViewConfig().maxPanes;
 
@@ -142,10 +116,9 @@ export function initContextMenu(logger: ConsoleInstance): void {
               currentSplitView.addTabs(nonSplitTabs);
             }
           });
-          const insertAddPaneAfter =
-            openInSplitItem && !openInSplitItem.hidden
-              ? openInSplitItem
-              : separateItem;
+          const insertAddPaneAfter = openInSplitItem && !openInSplitItem.hidden
+            ? openInSplitItem
+            : separateItem;
           insertAddPaneAfter.after(addPaneItem);
         }
       }
@@ -157,8 +130,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     }
 
     // === Move to Pane submenu ===
-    const shouldShowMoveToPane =
-      hasSplitViewTab &&
+    const shouldShowMoveToPane = hasSplitViewTab &&
       activeSplitView &&
       activeSplitView.tabs.length >= 2;
 
@@ -187,12 +159,11 @@ export function initContextMenu(logger: ConsoleInstance): void {
             moveMenu.appendChild(popup);
           }
 
-          const insertMoveAfter =
-            addPaneItem && !addPaneItem.hidden
-              ? addPaneItem
-              : openInSplitItem && !openInSplitItem.hidden
-                ? openInSplitItem
-                : separateItem;
+          const insertMoveAfter = addPaneItem && !addPaneItem.hidden
+            ? addPaneItem
+            : openInSplitItem && !openInSplitItem.hidden
+            ? openInSplitItem
+            : separateItem;
           insertMoveAfter.after(moveMenu);
         }
       }
@@ -208,9 +179,27 @@ export function initContextMenu(logger: ConsoleInstance): void {
     }
   };
 
-  tabContainer.addEventListener("contextmenu", onTabContextMenu);
+  // Keep the native command: it opens the partner picker for one tab and
+  // preserves placement/order for multiple tabs. Guard again at activation
+  // in case the selection, limit or feature preference changed while open.
+  const onOpenCommand = (event: Event): void => {
+    if (
+      !Services.prefs.getBoolPref("browser.tabs.splitView.enabled", false) ||
+      !canOpenContextTabsInSplitView(
+        getTabContextMenu()?.contextTabs ?? [],
+        splitViewConfig().maxPanes,
+      )
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  };
+  tabMenu.addEventListener("popupshowing", onTabContextMenu);
+  openInSplitItem.addEventListener("command", onOpenCommand);
   onCleanup(() => {
-    tabContainer.removeEventListener("contextmenu", onTabContextMenu);
+    tabMenu.removeEventListener("popupshowing", onTabContextMenu);
+    openInSplitItem.removeEventListener("command", onOpenCommand);
+    openInSplitItem.removeAttribute("tooltiptext");
   });
   logger.debug("[patch] context menu listener attached");
 }
@@ -230,8 +219,7 @@ function onMoveToPanePopupShowing(logger: ConsoleInstance): void {
   const activeSplitView = gBrowser?.activeSplitView;
   if (!activeSplitView) return;
 
-  const contextTabs: SplitViewTab[] =
-    getTabContextMenu()?.contextTabs ?? [];
+  const contextTabs: SplitViewTab[] = getTabContextMenu()?.contextTabs ?? [];
   const contextTab = contextTabs[0];
   if (!contextTab) return;
 
