@@ -34,6 +34,7 @@
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
         "keyboardShortcut": "鍵盤快捷鍵",
+        "performance": "效能",
         "search": {
             "title": "搜尋設定",
             "resultsFor": "搜尋 {{query}} 的結果",
@@ -329,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "了解我們的資金來源及此計畫的背景（日文）",
+            "title": "歷來更新版本說明",
+            "description": "選擇 Floorp 在更新後如何開啟版本說明。",
+            "disabled": {
+                "label": "不要自動開啟",
+                "description": "版本說明將不會在更新後自動開啟。攔截設定在你造訪官方部落格時也會生效。"
+            },
+            "blocking": {
+                "label": "以你的廣告攔截器設定開啟",
+                "description": "在不限制擴充功能的情況下開啟版本說明。此操作不會開啟或安裝廣告攔截器。"
+            },
+            "support": {
+                "label": "開啟並顯示廣告來支持 Floorp（建議）",
+                "description": "阻止 uBlock Origin、AdGuard、Adblock Plus、AdBlock 及 Ghostery 過濾 Floorp 部落格的內容。"
+            },
+            "supportMessage": "版本說明中的廣告收入全部用於支持 Floorp 的開發與營運。感謝你以適合自己的方式支持我們。",
+            "scope": "此例外適用於所有透過 HTTPS 存取 blog.floorp.app 的情況，包括手動開啟的頁面。此設定亦會影響所列五款擴充功能中的追蹤防護與自訂篩選器。其他擴充功能不受此設定限制。其他防護工具仍可能阻擋廣告。變更此設定後，請重新載入已開啟的部落格頁面。",
+            "error": "無法載入或儲存此設定。請重新開啟此頁面並再次嘗試。"
+        },
         "title": "更新與實驗功能",
         "description": "管理更新設定和實驗功能參與。",
         "experiments": {
@@ -743,6 +764,20 @@
             "saveDescription": "將快速鍵儲存",
             "cancel": "取消",
             "cancelDescription": "取消編輯"
+        }
+    },
+    "performance": {
+        "title": "效能",
+        "description": "影響瀏覽器使用系統資源之設定。",
+        "idleReclaim": {
+            "title": "閒置記憶體回收",
+            "description": "此功能屬實驗性質且預設為關閉。啟用後，系統會在一段時間內未偵測到鍵盤或滑鼠輸入時，嘗試減少記憶體使用量。回收的記憶體量取決於當前使用的頁面。",
+            "enable": "在瀏覽器閒置時回收記憶體",
+            "idleThreshold": "回收前的閒置時間（秒）",
+            "minInterval": "重新回收之間的最小間隔（秒）",
+            "minResident": "僅在記憶體使用超過 (MB) 時才進行回收",
+            "cost": "影片播放、通話及螢幕共享不會阻止記憶體回收。這可能會暫停瀏覽器，也包括你重新開始使用瀏覽器時。間隔時間越短，回收的頻率就越高。",
+            "saveFailed": "無法儲存此設定。已還原至先前的值。"
         }
     }
 }

@@ -34,6 +34,7 @@
         "debug": "Felsökning",
         "mouseGesture": "Musgester",
         "keyboardShortcut": "Tangentbordsgenvägar",
+        "performance": "Prestanda",
         "search": {
             "title": "Sökinställningar",
             "resultsFor": "Sökresultat för \"{{query}}\"",
@@ -329,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Läs mer om vår finansiering och denna verksamhetsmiljö (japanska)",
+            "title": "Släpp anteckningar efter uppdateringar",
+            "description": "Välj hur Floorp ska öppna versionsinformation efter en uppdatering.",
+            "disabled": {
+                "label": "Öppnas inte automatiskt",
+                "description": "Släpp anteckningar kommer inte att öppnas efter uppdateringar. Dina blockerarinställningar gäller när du besöker bloggen."
+            },
+            "blocking": {
+                "label": "Öppna med dina blockeringsinställningar",
+                "description": "Öppna versionsinformation utan att begränsa dina tillägg. Detta installerar eller aktiverar inte en annonsblockerare."
+            },
+            "support": {
+                "label": "Öppna och tillåt annonser för att stödja Floorp (rekommenderas)",
+                "description": "Förhindra uBlock Origin, AdGuard, Adblock Plus, AdBlock och Ghostery från att filtrera Floorp blogg."
+            },
+            "supportMessage": "Reklam intäkter från versionsfakta stöder Floorp utveckling och drift. Tack för att stödja oss på ett sätt som fungerar för dig.",
+            "scope": "Detta undantag gäller alla HTTPS-besök på blog.floorp.app, inklusive sidor som öppnas manuellt. Det påverkar även spårningsskyddet och anpassade filter i de fem angivna tilläggen. Övriga tillägg påverkas inte av den här inställningen. Andra skyddsverktyg kan fortfarande blockera annonser. Ladda om öppna bloggsidor efter att du har ändrat den här inställningen.",
+            "error": "Kunde inte ladda eller spara den här inställningen. Öppna den här sidan igen och försök igen."
+        },
         "title": "Uppdateringar och experiment",
         "description": "Hantera uppdateringsinställningar och deltagande i experimentella funktioner.",
         "experiments": {
@@ -743,6 +764,20 @@
             "saveDescription": "Spara genväg",
             "cancel": "Avbryt",
             "cancelDescription": "Avbryt redigering"
+        }
+    },
+    "performance": {
+        "title": "Prestanda",
+        "description": "Inställningar som påverkar hur webbläsaren använder systemresurser.",
+        "idleReclaim": {
+            "title": "Återvinning av ledigt minne",
+            "description": "Experimentell funktion och avstängd som standard. När funktionen är aktiverad försöker systemet minska minnesanvändningen efter en viss tid utan tangentbords eller musinmatning. Hur mycket minne som frigörs beror på vilka sidor som används.",
+            "enable": "Återvinn minne när webbläsaren är inaktiv",
+            "idleThreshold": "Väntetid innan återvinning (sekunder)",
+            "minInterval": "Minsta intervall mellan återvinning (sekunder)",
+            "minResident": "Återanvänd endast när minnesanvändningen överstiger (MB)",
+            "cost": "Videouppspelning, samtal och skärmdelning hindrar inte återanvändning. Återanvändningen kan pausa webbläsaren, även när du återupptar användningen. Kortare intervall ökar frekvensen.",
+            "saveFailed": "Kunde inte spara denna inställning. Det tidigare värdet har återställts."
         }
     }
 }
