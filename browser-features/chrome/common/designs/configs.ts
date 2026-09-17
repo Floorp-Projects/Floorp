@@ -26,6 +26,20 @@ export function isPlainObject(
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** Normalize saved keys before merging defaults, including explicit false values. */
+export function migrateDesignConfig(value: unknown): unknown {
+  if (!isPlainObject(value) || !isPlainObject(value.tab)) return value;
+  const tab = { ...value.tab };
+  if (
+    typeof tab.tabDoubleClickToClose !== "boolean" &&
+    typeof tab.tabDubleClickToClose === "boolean"
+  ) {
+    tab.tabDoubleClickToClose = tab.tabDubleClickToClose;
+  }
+  delete tab.tabDubleClickToClose;
+  return { ...value, tab };
+}
+
 export function deepMerge<T extends Record<string, unknown>>(
   base: T,
   override: unknown,
@@ -273,7 +287,7 @@ function createConfig(): [
     );
     const parsedConfig = JSON.parse(configStr);
     // Merge existing config with defaults to tolerate newly added fields
-    const merged = deepMerge(defaultConfig, parsedConfig);
+    const merged = deepMerge(defaultConfig, migrateDesignConfig(parsedConfig));
     // Ensure backward compatibility: set default position if missing
     if (
       merged.uiCustomization?.bookmarkBar &&
@@ -296,7 +310,7 @@ function createConfig(): [
         getOldConfigs,
       );
       const parsedConfig = JSON.parse(configStr);
-      const merged = deepMerge(defaultConfig, parsedConfig);
+      const merged = deepMerge(defaultConfig, migrateDesignConfig(parsedConfig));
       // Ensure backward compatibility: set default position if missing
       if (
         merged.uiCustomization?.bookmarkBar &&

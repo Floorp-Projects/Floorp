@@ -219,6 +219,7 @@ export async function saveDesignSettings(
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
+  delete newData.tab.tabDubleClickToClose;
   await rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
@@ -258,7 +259,9 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
       DEFAULT_SPLIT_VIEW_DND_CREATE,
     tabScrollReverse: data.tab.tabScroll.reverse,
     tabScrollWrap: data.tab.tabScroll.wrap,
-    tabDoubleClickToClose: data.tab.tabDoubleClickToClose,
+    tabDoubleClickToClose: typeof data.tab.tabDoubleClickToClose === "boolean"
+      ? data.tab.tabDoubleClickToClose
+      : data.tab.tabDubleClickToClose === true,
     tabScroll: data.tab.tabScroll.enabled,
     faviconColor: data.globalConfigs.faviconColor,
     maxRowEnabled: data.tabbar.multiRowTabBar.maxRowEnabled,
