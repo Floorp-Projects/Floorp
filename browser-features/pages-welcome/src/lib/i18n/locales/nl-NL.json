@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Volg",
-            "privacy": "Privacy & voorwaarden",
+            "terms": "Gebruiksvoorwaarden",
+            "privacy": "Privacybeleid",
             "about": "Over Floorp",
             "copyright": "© {{year}} Floorp Projects. Alle rechten voorbehouden."
         }

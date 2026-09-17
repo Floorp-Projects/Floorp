@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Ikuti",
-            "privacy": "Privasi & Ketentuan",
+            "terms": "Ketentuan Layanan",
+            "privacy": "Kebijakan Privasi",
             "about": "Tentang Floorp",
             "copyright": "© {{year}} Floorp Projects. Semua hak cipta dilindungi undang-undang."
         }

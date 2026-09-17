@@ -263,7 +263,7 @@ function testPerformanceTranslationsExist(): void {
   );
   assertEquals(
     jaJP.performance.idleReclaim.title,
-    "アイドル時のメモリ回収",
+    "待機時のメモリー解放",
     "Japanese card title should exist",
   );
 

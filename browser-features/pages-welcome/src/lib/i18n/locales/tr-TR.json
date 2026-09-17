@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Takip Et",
-            "privacy": "Gizlilik & Şartlar",
+            "terms": "Kullanım Koşulları",
+            "privacy": "Gizlilik Politikası",
             "about": "Floorp Hakkında",
             "copyright": "© {{year}} Floorp Projesi. Tüm hakları saklıdır."
         }
