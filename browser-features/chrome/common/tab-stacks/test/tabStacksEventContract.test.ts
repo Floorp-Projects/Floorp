@@ -11,9 +11,9 @@ import {
 } from "../index.ts";
 import {
   getActiveGroup,
+  STACK_ATTR,
   type StackGroup,
   type StackTab,
-  STACK_ATTR,
   syncActiveGroup,
   type TabBrowser,
 } from "../stack-bar.tsx";
@@ -61,7 +61,10 @@ function createXULElement(tag: string): XULElement {
   }).createXULElement(tag);
 }
 
-function createTab(label: string, options: { hidden?: boolean } = {}): StackTab {
+function createTab(
+  label: string,
+  options: { hidden?: boolean } = {},
+): StackTab {
   const tab = createXULElement("tab") as unknown as StackTab;
   tab.id = `event-tab-${++tabCounter}`;
   setProperty(tab, "label", label);
@@ -138,7 +141,7 @@ function withFakeBrowser<T>(
 function testExactRebuildEventContract(): void {
   assertEquals(
     [...TAB_EVENTS].join(","),
-    "TabSelect,TabClose,TabMove,TabAttrModified,TabGrouped,TabUngrouped,TabGroupCreate,TabGroupRemoved,TabGroupCollapse,TabGroupExpand",
+    "TabSelect,TabClose,TabMove,TabAttrModified,TabGrouped,TabUngrouped,TabGroupCreate,TabGroupRemoved,TabGroupCollapse,TabGroupExpand,SplitViewCreated,SplitViewRemoved,SplitViewTabChange,TabSplitViewActivate,TabSplitViewDeactivate",
     "TAB_EVENTS must exactly cover selection, membership, order, label and close changes",
   );
 }
@@ -182,8 +185,8 @@ function testDecorateReReadsMembership(): void {
   );
 }
 
-/** Split-view groups must never be decorated as stacks regardless of events. */
-function testSplitViewGroupsStayNative(): void {
+/** Session markers on split panes must not override the containing stack. */
+function testSplitViewPreservesStack(): void {
   const splitTab = createTab("Split");
   splitTab.setAttribute("floorpSplitViewGroupId", "sv-1");
   const group = createGroup([splitTab], "Split");
@@ -195,8 +198,23 @@ function testSplitViewGroupsStayNative(): void {
 
   assertEquals(
     group.hasAttribute(STACK_ATTR),
-    false,
-    "split-view group is excluded from stack presentation",
+    true,
+    "split-view group retains stack presentation",
+  );
+  const browser = makeBrowser([group], [splitTab], splitTab);
+  withFakeBrowser(browser, () => syncActiveGroup());
+  assertEquals(
+    getActiveGroup(),
+    group,
+    "split pane keeps the stack bar active",
+  );
+
+  splitTab.removeAttribute("floorpSplitViewGroupId");
+  updateGroupChips(gb);
+  assertEquals(
+    group.getAttribute(STACK_ATTR),
+    "true",
+    "unsplit keeps the stack",
   );
 }
 
@@ -240,8 +258,10 @@ function testKindChoicePersistsAndToggles(): void {
   assertEquals(getGroupKind("g1", prefs), "group", "choice survives a re-read");
 
   setGroupKind("g1", "stack", prefs);
-  const stored = JSON.parse(prefs.raw.get(GROUP_KINDS_PREF) ?? "{}") as
-    Record<string, string>;
+  const stored = JSON.parse(prefs.raw.get(GROUP_KINDS_PREF) ?? "{}") as Record<
+    string,
+    string
+  >;
   assertEquals(
     "g1" in stored,
     false,
@@ -264,8 +284,8 @@ export async function runAllTests(): Promise<void> {
       fn: testDecorateReReadsMembership,
     },
     {
-      name: "split-view groups stay native",
-      fn: testSplitViewGroupsStayNative,
+      name: "split views preserve the containing stack",
+      fn: testSplitViewPreservesStack,
     },
     {
       name: "workspace-hidden groups never surface a bar",

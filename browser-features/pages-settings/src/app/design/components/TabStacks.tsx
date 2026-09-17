@@ -1,4 +1,5 @@
 import styles from "../design.module.css";
+import type { TabStacksProps } from "../types.ts";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layers } from "lucide-react";
@@ -18,7 +19,7 @@ import {
   type TabStacksSettings,
 } from "@/app/design/tabStacks.ts";
 
-export function TabStacks() {
+export function TabStacks({ vertical = false }: TabStacksProps) {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<TabStacksSettings>({
     enabled: false,
@@ -36,7 +37,10 @@ export function TabStacks() {
           setSettings(loaded);
         }
       } catch (error) {
-        console.error("[tab-stacks] Failed to load tab stacks settings:", error);
+        console.error(
+          "[tab-stacks] Failed to load tab stacks settings:",
+          error,
+        );
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -54,6 +58,7 @@ export function TabStacks() {
   }, []);
 
   const handleEnabledChange = async (enabled: boolean) => {
+    if (vertical) return;
     const previous = settings.enabled;
     setSettings((current) => ({ ...current, enabled }));
     try {
@@ -71,7 +76,9 @@ export function TabStacks() {
         ? (
           <RestartModal
             onClose={() => setShowRestartModal(false)}
-            label={t("design.tabStacks.needRestartDescriptionForEnableAndDisable")}
+            label={t(
+              "design.tabStacks.needRestartDescriptionForEnableAndDisable",
+            )}
           />
         )
         : null}
@@ -105,12 +112,19 @@ export function TabStacks() {
                 <Switch
                   id="enable-tab-stacks"
                   checked={settings.enabled}
-                  disabled={isLoading}
+                  disabled={isLoading || vertical}
                   onChange={(e) => handleEnabledChange(e.target.checked)}
                 />
               </div>
+              {vertical && (
+                <p className="text-sm text-muted-foreground" role="status">
+                  {t("design.tabStacks.unavailableInVerticalTabs")}
+                </p>
+              )}
               <div className="text-sm text-base-content/70">
-                {t("design.tabStacks.needRestartDescriptionForEnableAndDisable")}
+                {t(
+                  "design.tabStacks.needRestartDescriptionForEnableAndDisable",
+                )}
               </div>
             </div>
           </div>

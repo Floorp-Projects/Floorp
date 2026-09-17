@@ -217,6 +217,7 @@
             "exampleFullUrl": "Matches Gmail URLs only"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
             "title": "Tab Stacks",
             "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
             "enableOrDisable": "Enable/Disable",
