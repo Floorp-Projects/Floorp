@@ -64,8 +64,12 @@ export function initContextMenu(logger: ConsoleInstance): void {
       openInSplitItem.setAttribute("disabled", "true");
     }
     if (!openInSplitItem.hidden && contextTabs.length > maxPanes) {
+      // Fluent asynchronously clears attributes absent from its translation.
+      // Own the label while over the limit so the explanation stays visible.
+      // The native updater restores its l10n ID the next time the menu opens.
+      openInSplitItem.removeAttribute("data-l10n-id");
       openInSplitItem.setAttribute(
-        "tooltiptext",
+        "label",
         t("splitView.contextMenu.paneLimit", {
           max: String(maxPanes),
         }),
