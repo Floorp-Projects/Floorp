@@ -5,6 +5,8 @@ Thank you for your interest!
 First, please ask "how to contribute" in [GitHub Discussions](https://github.com/Floorp-Projects/Floorp/discussions/new?category=q-a) or [Floorp Projects Discord](https://floorp.app/discord) \
 It can be helpful if you are stuck, or for communication to start contributing.
 
+You might also find [this documentation](https://docs.floorp.app/docs/contributing/floorp) helpful.
+
 When you ask, make a discussion and make pull request, please use 5W1H as a reference for description.
 
 1. Who

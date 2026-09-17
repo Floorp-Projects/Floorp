@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import {
   Card,
   CardContent,
@@ -31,7 +32,7 @@ export function UICustomization() {
         )
         : null}
 
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sliders className="size-5" />

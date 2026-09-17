@@ -3,27 +3,57 @@
 
 import { gFlexOrder } from "../flex-order.tsx";
 
-import { assert, runTests } from "../../../test/utils/test_harness.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+} from "../../../test/utils/test_harness.ts";
 
-function cleanupFlexOrderStyles(): void {
-  const styles: HTMLStyleElement[] = Array.from(
-    document!.head!.querySelectorAll("style"),
-  );
-  for (const style of styles) {
-    if (style.textContent?.includes("#sidebar-box")) {
-      style.remove();
-    }
-  }
+const flexOrderStyleId = "floorp-flex-order-style";
+
+function cleanupFlexOrderStyle(): void {
+  document?.getElementById(flexOrderStyleId)?.remove();
 }
 
 function findFlexOrderStyleText(): string | undefined {
-  const styles: HTMLStyleElement[] = Array.from(
-    document!.head!.querySelectorAll("style"),
+  return document?.getElementById(flexOrderStyleId)?.textContent ?? undefined;
+}
+
+function getRenderedOrder(styleText: string, selector: string): number {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = styleText.match(
+    new RegExp(`${escapedSelector}\\s*\\{[^}]*order:\\s*(-?\\d+)`),
   );
-  const match = styles.find((style) =>
-    style.textContent?.includes("#sidebar-box"),
-  );
-  return match?.textContent ?? undefined;
+  assert(match, `style should include an order for ${selector}`);
+  return Number(match[1]);
+}
+
+function getComputedOrder(id: string): number {
+  const element = document?.getElementById(id) ?? null;
+  assert(element !== null, `browser should contain #${id}`);
+  const style = getComputedStyle(element);
+  assert(style !== null, `browser should compute styles for #${id}`);
+  return Number(style.order);
+}
+
+function assertStrictlyIncreasing(ids: string[], message: string): void {
+  const orderValues = ids.map(getComputedOrder);
+  for (let index = 1; index < orderValues.length; index++) {
+    assert(
+      orderValues[index - 1] < orderValues[index],
+      `${message}: ${ids[index - 1]} (${
+        orderValues[index - 1]
+      }) should precede ${ids[index]} (${orderValues[index]})`,
+    );
+  }
+}
+
+function initializeFlexOrder(): string {
+  cleanupFlexOrderStyle();
+  gFlexOrder.init();
+  const styleText = findFlexOrderStyleText();
+  assert(styleText !== undefined, "gFlexOrder.init should inject its style");
+  return styleText;
 }
 
 function testGFlexOrderExports(): void {
@@ -37,459 +67,212 @@ function testGFlexOrderExports(): void {
   );
 }
 
-function testApplyFlexOrderDoesNotThrow(): void {
-  // applyFlexOrder updates internal signals — should not throw for any combination
-  gFlexOrder.applyFlexOrder(true, true);
-  gFlexOrder.applyFlexOrder(true, false);
-  gFlexOrder.applyFlexOrder(false, true);
-  gFlexOrder.applyFlexOrder(false, false);
-}
-
 function testInitRendersFlexOrderStyle(): void {
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-
-  const styleText = findFlexOrderStyleText();
+  const styleText = initializeFlexOrder();
   assert(
-    styleText !== undefined,
-    "gFlexOrder.init should inject a flex-order style tag",
+    styleText.includes("#panel-sidebar-box"),
+    "style should include the Floorp sidebar selector",
   );
-  assert(
-    styleText!.includes("#sidebar-box"),
-    "injected style should contain the sidebar order selector",
-  );
-  cleanupFlexOrderStyles();
+  cleanupFlexOrderStyle();
 }
 
-function testApplyFlexOrderUpdatesRenderedStyle(): void {
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(true, false);
+function testFloorpSidebarAtRight(): void {
+  initializeFlexOrder();
+  gFlexOrder.applyFlexOrder(true);
 
   const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "flex order style should be rendered after applyFlexOrder",
+  assert(styleText !== undefined, "flex-order style should remain rendered");
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-splitter"),
+    1000,
+    "right-side splitter should follow all Firefox-owned browser children",
   );
-  assert(
-    styleText!.includes("#panel-sidebar-box"),
-    "rendered style should include the Floorp sidebar selector",
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-box"),
+    1001,
+    "right-side panel should follow its splitter",
   );
-  cleanupFlexOrderStyles();
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-select-box"),
+    1002,
+    "right-side selector should be the outermost Floorp element",
+  );
+  cleanupFlexOrderStyle();
 }
 
-function testSidebarPositionPrefExists(): void {
-  const prefValue = Services.prefs.getBoolPref("sidebar.position_start", true);
-  assert(
-    typeof prefValue === "boolean",
-    "sidebar.position_start pref should return a boolean",
-  );
-}
-
-function testApplyFlexOrderBothSidebarsAtStart(): void {
-  // Test branch: fxSidebarPositionPref=true, floorpSidebarPositionPref=true
-  // Expected order: Fx sidebar (0) -> Fx splitter (1) -> browser (2) -> Floorp splitter (3) -> Floorp sidebar (4) -> Floorp select box (5)
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(true, true);
+function testFloorpSidebarAtLeft(): void {
+  initializeFlexOrder();
+  gFlexOrder.applyFlexOrder(false);
 
   const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "style should be rendered when both sidebars are at start",
+  assert(styleText !== undefined, "flex-order style should remain rendered");
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-select-box"),
+    -3,
+    "left-side selector should be the outermost Floorp element",
   );
-
-  // Verify order values in the rendered style
-  assert(
-    styleText!.includes("#sidebar-box"),
-    "style should include #sidebar-box selector",
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-box"),
+    -2,
+    "left-side panel should follow its selector",
   );
-  assert(
-    styleText!.includes("#panel-sidebar-box"),
-    "style should include #panel-sidebar-box selector",
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-splitter"),
+    -1,
+    "left-side splitter should precede all Firefox-owned browser children",
   );
-  assert(
-    styleText!.includes("order: 0"),
-    "style should include order 0 for first element",
-  );
-  assert(
-    styleText!.includes("order: 1"),
-    "style should include order 1 for second element",
-  );
-  assert(
-    styleText!.includes("order: 2"),
-    "style should include order 2 for third element",
-  );
-  assert(
-    styleText!.includes("order: 3"),
-    "style should include order 3 for fourth element",
-  );
-  assert(
-    styleText!.includes("order: 4"),
-    "style should include order 4 for fifth element",
-  );
-  assert(
-    styleText!.includes("order: 5"),
-    "style should include order 5 for sixth element",
-  );
+  cleanupFlexOrderStyle();
 }
 
-function testApplyFlexOrderFxAtStartFloorpAtEnd(): void {
-  // Test branch: fxSidebarPositionPref=true, floorpSidebarPositionPref=false
-  // Expected order: Floorp select box (0) -> Floorp sidebar (1) -> Floorp splitter (2) -> Fx sidebar (3) -> Fx splitter (4) -> browser (5)
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(true, false);
-
-  const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "style should be rendered when Fx sidebar at start, Floorp at end",
-  );
-
-  assert(styleText!.includes("order: 0"), "style should include order 0");
-  assert(styleText!.includes("order: 1"), "style should include order 1");
-  assert(styleText!.includes("order: 2"), "style should include order 2");
-  assert(styleText!.includes("order: 3"), "style should include order 3");
-  assert(styleText!.includes("order: 4"), "style should include order 4");
-  assert(styleText!.includes("order: 5"), "style should include order 5");
-  cleanupFlexOrderStyles();
-}
-
-function testApplyFlexOrderFxAtEndFloorpAtStart(): void {
-  // Test branch: fxSidebarPositionPref=false, floorpSidebarPositionPref=true
-  // Expected order: browser (0) -> vertical tab bar splitter (1) -> vertical tab bar (2) -> Fx sidebar (3) -> Fx splitter (4) -> Floorp splitter (5) -> Floorp sidebar (6) -> Floorp select box (7)
-  // Note: verticaltabbar and verticaltabbarSplitter are NOT rendered in CSS, so order 1 and 2 won't appear
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(false, true);
-
-  const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "style should be rendered when Fx sidebar at end, Floorp at start",
-  );
-
-  // Only orders for elements rendered in CSS template are present
-  // CSS template covers: fxSidebar, floorpSidebar, floorpSidebarSelectBox, floorpSidebarSplitter, fxSidebarSplitter, browserBox
-  // In this branch: browserBox=0, fxSidebar=3, fxSidebarSplitter=4, floorpSidebarSplitter=5, floorpSidebar=6, floorpSidebarSelectBox=7
-  assert(
-    styleText!.includes("order: 0"),
-    "style should include order 0 (browserBox)",
-  );
-  assert(
-    styleText!.includes("order: 3"),
-    "style should include order 3 (fxSidebar)",
-  );
-  assert(
-    styleText!.includes("order: 4"),
-    "style should include order 4 (fxSidebarSplitter)",
-  );
-  assert(
-    styleText!.includes("order: 5"),
-    "style should include order 5 (floorpSidebarSplitter)",
-  );
-  assert(
-    styleText!.includes("order: 6"),
-    "style should include order 6 (floorpSidebar)",
-  );
-  assert(
-    styleText!.includes("order: 7"),
-    "style should include order 7 (floorpSidebarSelectBox)",
-  );
-  cleanupFlexOrderStyles();
-}
-
-function testApplyFlexOrderBothSidebarsAtEnd(): void {
-  // Test branch: fxSidebarPositionPref=false, floorpSidebarPositionPref=false
-  // Expected order: Floorp select box (0) -> Floorp sidebar (1) -> Floorp splitter (2) -> browser (3) -> vertical tab bar splitter (4) -> vertical tab bar (5) -> Fx sidebar (6) -> Fx splitter (7)
-  // Note: verticaltabbar and verticaltabbarSplitter are NOT rendered in CSS, so order 4 and 5 won't appear
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(false, false);
-
-  const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "style should be rendered when both sidebars are at end",
-  );
-
-  // Only orders for elements rendered in CSS template are present
-  // CSS template covers: fxSidebar, floorpSidebar, floorpSidebarSelectBox, floorpSidebarSplitter, fxSidebarSplitter, browserBox
-  // In this branch: floorpSidebarSelectBox=0, floorpSidebar=1, floorpSidebarSplitter=2, browserBox=3, fxSidebar=6, fxSidebarSplitter=7
-  assert(
-    styleText!.includes("order: 0"),
-    "style should include order 0 (floorpSidebarSelectBox)",
-  );
-  assert(
-    styleText!.includes("order: 1"),
-    "style should include order 1 (floorpSidebar)",
-  );
-  assert(
-    styleText!.includes("order: 2"),
-    "style should include order 2 (floorpSidebarSplitter)",
-  );
-  assert(
-    styleText!.includes("order: 3"),
-    "style should include order 3 (browserBox)",
-  );
-  assert(
-    styleText!.includes("order: 6"),
-    "style should include order 6 (fxSidebar)",
-  );
-  assert(
-    styleText!.includes("order: 7"),
-    "style should include order 7 (fxSidebarSplitter)",
-  );
-  cleanupFlexOrderStyles();
-}
-
-function testAllExpectedSelectorsPresent(): void {
-  // Verify that all expected CSS selectors are present in the rendered style
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-  gFlexOrder.applyFlexOrder(true, true);
-
-  const styleText = findFlexOrderStyleText();
-  assert(styleText !== undefined, "style should be rendered");
-
-  const expectedSelectors = [
+function testFirefoxOrderingIsNotOverridden(): void {
+  const styleText = initializeFlexOrder();
+  const firefoxOwnedSelectors = [
+    "#sidebar-container",
+    "#sidebar-launcher-splitter",
     "#sidebar-box",
-    "#panel-sidebar-box",
-    "#panel-sidebar-select-box",
-    "#panel-sidebar-splitter",
     "#sidebar-splitter",
     "#tabbrowser-tabbox",
+    "#ai-window-splitter",
+    "#ai-window-box",
   ];
 
-  for (const selector of expectedSelectors) {
+  for (const selector of firefoxOwnedSelectors) {
     assert(
-      styleText!.includes(selector),
-      `style should include selector: ${selector}`,
+      !styleText.includes(`${selector} {`),
+      `Floorp should not override Firefox-owned order for ${selector}`,
     );
   }
-
-  cleanupFlexOrderStyles();
+  cleanupFlexOrderStyle();
 }
 
-function testApplyFlexOrderCanBeCalledMultipleTimes(): void {
-  // Verify that applyFlexOrder can be called multiple times without errors
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
+function testFirefoxSidebarGroupRemainsCoherent(): void {
+  initializeFlexOrder();
+  const sidebarController = (globalThis as unknown as {
+    SidebarController?: { setPosition(): void };
+  }).SidebarController;
+  assert(sidebarController, "SidebarController should be initialized");
 
-  // Call with different combinations sequentially
-  gFlexOrder.applyFlexOrder(true, true);
-  gFlexOrder.applyFlexOrder(true, false);
-  gFlexOrder.applyFlexOrder(false, true);
-  gFlexOrder.applyFlexOrder(false, false);
-  gFlexOrder.applyFlexOrder(true, true); // back to first combination
-
-  const styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined,
-    "style should still be rendered after multiple applyFlexOrder calls",
-  );
-
-  cleanupFlexOrderStyles();
-}
-
-function testInitRegistersPrefObserver(): void {
-  // Test that init() registers a preference observer
-  cleanupFlexOrderStyles();
-
-  let observerAdded = false;
-  // deno-lint-ignore no-explicit-any
-  const originalAddObserver = (Services.prefs as any).addObserver;
-
-  // Use Object.defineProperty since addObserver may be read-only in Firefox
-  let mockApplied = false;
-  try {
-    Object.defineProperty(Services.prefs, "addObserver", {
-      value: (pref: string, _fn: unknown) => {
-        if (pref === "sidebar.position_start") {
-          observerAdded = true;
-        }
-        // Delegate to original if available
-        if (typeof originalAddObserver === "function") {
-          originalAddObserver.call(Services.prefs, pref, _fn);
-        }
-      },
-      configurable: true,
-      writable: true,
-    });
-    mockApplied = true;
-  } catch {
-    // addObserver is non-configurable; observer detection will not work.
-  }
+  const positionPref = "sidebar.position_start";
+  const originalPosition = Services.prefs.getBoolPref(positionPref, true);
+  const hadUserPosition = Services.prefs.prefHasUserValue(positionPref);
+  const originalFloorpPosition = getComputedOrder("panel-sidebar-box") > 0;
+  const firefoxOwnedIds = [
+    "sidebar-container",
+    "sidebar-launcher-splitter",
+    "sidebar-box",
+    "sidebar-splitter",
+    "tabbrowser-tabbox",
+    "ai-window-splitter",
+    "ai-window-box",
+  ];
+  const floorpIds = [
+    "panel-sidebar-select-box",
+    "panel-sidebar-box",
+    "panel-sidebar-splitter",
+  ];
 
   try {
-    gFlexOrder.init();
-    if (mockApplied) {
-      assert(
-        observerAdded,
-        "init should register observer for sidebar.position_start pref",
+    for (const firefoxAtStart of [true, false]) {
+      Services.prefs.setBoolPref(positionPref, firefoxAtStart);
+      sidebarController.setPosition();
+
+      const expectedNativeOrder = firefoxAtStart
+        ? [
+          "sidebar-container",
+          "sidebar-launcher-splitter",
+          "sidebar-box",
+          "sidebar-splitter",
+          "tabbrowser-tabbox",
+        ]
+        : [
+          "tabbrowser-tabbox",
+          "sidebar-splitter",
+          "sidebar-box",
+          "sidebar-launcher-splitter",
+          "sidebar-container",
+        ];
+      assertStrictlyIncreasing(
+        expectedNativeOrder,
+        `Firefox sidebar group should stay coherent at ${
+          firefoxAtStart ? "start" : "end"
+        }`,
       );
-    }
-  } finally {
-    // Restore original addObserver
-    if (mockApplied) {
-      try {
-        Object.defineProperty(Services.prefs, "addObserver", {
-          value: originalAddObserver,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if addObserver cannot be restored.
+
+      const firefoxOrders = firefoxOwnedIds.map(getComputedOrder);
+      for (const floorpAtRight of [true, false]) {
+        gFlexOrder.applyFlexOrder(floorpAtRight);
+        const floorpOrders = floorpIds.map(getComputedOrder);
+        if (floorpAtRight) {
+          assert(
+            Math.min(...floorpOrders) > Math.max(...firefoxOrders),
+            "right-side Floorp elements should follow every Firefox-owned element",
+          );
+        } else {
+          assert(
+            Math.max(...floorpOrders) < Math.min(...firefoxOrders),
+            "left-side Floorp elements should precede every Firefox-owned element",
+          );
+        }
       }
     }
-    cleanupFlexOrderStyles();
+  } finally {
+    if (hadUserPosition) {
+      Services.prefs.setBoolPref(positionPref, originalPosition);
+    } else {
+      Services.prefs.clearUserPref(positionPref);
+    }
+    sidebarController.setPosition();
+    gFlexOrder.applyFlexOrder(originalFloorpPosition);
+    cleanupFlexOrderStyle();
   }
 }
 
-function testObserverRemovedOnCleanup(): void {
-  // Test that the preference observer is removed when cleanup is called
-  cleanupFlexOrderStyles();
+function testPositionCanBeUpdatedWithoutRenderingAnotherStyle(): void {
+  initializeFlexOrder();
 
-  let _observerRemoved = false;
-  // deno-lint-ignore no-explicit-any
-  const originalRemoveObserver = (Services.prefs as any).removeObserver;
-
-  // Use Object.defineProperty since removeObserver may be read-only in Firefox
-  let mockApplied = false;
-  try {
-    Object.defineProperty(Services.prefs, "removeObserver", {
-      value: (pref: string, _fn: unknown) => {
-        if (pref === "sidebar.position_start") {
-          _observerRemoved = true;
-        }
-        // Delegate to original if available
-        if (typeof originalRemoveObserver === "function") {
-          originalRemoveObserver.call(Services.prefs, pref, _fn);
-        }
-      },
-      configurable: true,
-      writable: true,
-    });
-    mockApplied = true;
-  } catch {
-    // removeObserver is non-configurable; test cannot verify removal.
-  }
-
-  try {
-    gFlexOrder.init();
-    // Trigger cleanup by calling onCleanup callback
-    // Note: This is a simplified test - in real scenario, onCleanup is called by SolidJS
-    // The observer should be removed when the component is destroyed
-    assert(
-      typeof Services.prefs.removeObserver === "function",
-      "removeObserver should be available",
-    );
-  } finally {
-    // Restore original removeObserver
-    if (mockApplied) {
-      try {
-        Object.defineProperty(Services.prefs, "removeObserver", {
-          value: originalRemoveObserver,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // Ignore if removeObserver cannot be restored.
-      }
-    }
-    cleanupFlexOrderStyles();
-  }
-}
-
-function testOrdersSignalUpdatesCorrectly(): void {
-  // Test that the orders signal is updated correctly when applyFlexOrder is called
-  cleanupFlexOrderStyles();
-  gFlexOrder.init();
-
-  // Test all four combinations
-  gFlexOrder.applyFlexOrder(true, true);
-  let styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined && styleText.includes("order: 0"),
-    "orders should be set for both sidebars at start",
+  gFlexOrder.applyFlexOrder(true);
+  gFlexOrder.applyFlexOrder(false);
+  const styleText = findFlexOrderStyleText();
+  assert(styleText !== undefined, "flex-order style should remain rendered");
+  assertEquals(
+    getRenderedOrder(styleText, "#panel-sidebar-box"),
+    -2,
+    "latest Floorp sidebar position should be reflected",
   );
-
-  gFlexOrder.applyFlexOrder(true, false);
-  styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined && styleText.includes("order: 0"),
-    "orders should be set for Fx at start, Floorp at end",
+  assertEquals(
+    document?.querySelectorAll(`#${flexOrderStyleId}`).length ?? 0,
+    1,
+    "position updates should reuse the existing style element",
   );
-
-  gFlexOrder.applyFlexOrder(false, true);
-  styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined && styleText.includes("order: 0"),
-    "orders should be set for Fx at end, Floorp at start",
-  );
-
-  gFlexOrder.applyFlexOrder(false, false);
-  styleText = findFlexOrderStyleText();
-  assert(
-    styleText !== undefined && styleText.includes("order: 0"),
-    "orders should be set for both sidebars at end",
-  );
-
-  cleanupFlexOrderStyles();
+  cleanupFlexOrderStyle();
 }
 
 export async function runAllTests(): Promise<void> {
   await runTests("flexOrder.test.ts", [
     { name: "gFlexOrder exports", fn: testGFlexOrderExports },
     {
-      name: "applyFlexOrder does not throw",
-      fn: testApplyFlexOrderDoesNotThrow,
-    },
-    {
       name: "init renders flex-order style",
       fn: testInitRendersFlexOrderStyle,
     },
     {
-      name: "applyFlexOrder updates rendered style",
-      fn: testApplyFlexOrderUpdatesRenderedStyle,
-    },
-    { name: "sidebar.position_start pref", fn: testSidebarPositionPrefExists },
-    {
-      name: "applyFlexOrder: both sidebars at start",
-      fn: testApplyFlexOrderBothSidebarsAtStart,
+      name: "Floorp sidebar can be placed at right",
+      fn: testFloorpSidebarAtRight,
     },
     {
-      name: "applyFlexOrder: Fx at start, Floorp at end",
-      fn: testApplyFlexOrderFxAtStartFloorpAtEnd,
+      name: "Floorp sidebar can be placed at left",
+      fn: testFloorpSidebarAtLeft,
     },
     {
-      name: "applyFlexOrder: Fx at end, Floorp at start",
-      fn: testApplyFlexOrderFxAtEndFloorpAtStart,
+      name: "Firefox-owned ordering is not overridden",
+      fn: testFirefoxOrderingIsNotOverridden,
     },
     {
-      name: "applyFlexOrder: both sidebars at end",
-      fn: testApplyFlexOrderBothSidebarsAtEnd,
+      name: "Firefox sidebar group remains coherent",
+      fn: testFirefoxSidebarGroupRemainsCoherent,
     },
     {
-      name: "all expected CSS selectors are present",
-      fn: testAllExpectedSelectorsPresent,
-    },
-    {
-      name: "applyFlexOrder can be called multiple times",
-      fn: testApplyFlexOrderCanBeCalledMultipleTimes,
-    },
-    {
-      name: "init registers pref observer",
-      fn: testInitRegistersPrefObserver,
-    },
-    {
-      name: "observer removed on cleanup",
-      fn: testObserverRemovedOnCleanup,
-    },
-    {
-      name: "orders signal updates correctly",
-      fn: testOrdersSignalUpdatesCorrectly,
+      name: "position updates reuse the rendered style",
+      fn: testPositionCanBeUpdatedWithoutRenderingAnotherStyle,
     },
   ]);
 }

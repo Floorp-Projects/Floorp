@@ -658,6 +658,17 @@ jobs:
           path: "noraneko"
           persist-credentials: false
 
+      - name: Apply Floorp common Runtime patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          for patch in noraneko/.github/patches/floorp-runtime/common/*.patch; do
+            [ -e "$patch" ] || continue
+            echo "Applying Floorp Runtime patch: $(basename "$patch")"
+            git apply --check "$patch"
+            git apply --verbose "$patch"
+          done
+
       - name: Apply Floorp custom browser icons
         if: ${{ steps.provenance.outputs.platform_key == 'windows' }}
         shell: bash

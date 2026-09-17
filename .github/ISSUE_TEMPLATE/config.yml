@@ -6,3 +6,6 @@ contact_links:
   - name: User Support
     url: https://docs.floorp.app/docs/features
     about: Support for end-user.
+  - name: Floorp for iOS issue
+    url: https://github.com/Floorp-Projects/floorp-ios/issues
+    about: Feedback on the mobile browser.

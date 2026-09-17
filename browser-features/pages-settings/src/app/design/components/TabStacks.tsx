@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layers } from "lucide-react";
@@ -74,7 +75,7 @@ export function TabStacks() {
           />
         )
         : null}
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Layers className="size-5" />

@@ -18,7 +18,6 @@ for (const [path, content] of Object.entries(translations)) {
 export const initializeI18n = async () => {
   let osLocale = "en-US";
   try {
-    // @ts-expect-error - NRI18n is injected at runtime
     osLocale = await globalThis.NRI18n.getOperatingSystemLocale();
   } catch (e) {
     console.error("Failed to get OS locale from NRI18n, falling back to en-US", e);

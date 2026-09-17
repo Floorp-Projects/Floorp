@@ -31,6 +31,9 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       Cu.exportFunction(this.setDefaultBrowser.bind(this), window, {
         defineAs: "NRSetDefaultBrowser",
       });
+      Cu.exportFunction(this.dismissWelcomePage.bind(this), window, {
+        defineAs: "NRDismissWelcomePage",
+      });
     }
   }
 
@@ -93,6 +96,10 @@ export class NRWelcomePageChild extends JSWindowActorChild {
   }
 
   resolveSetDefaultBrowser: ((response: string) => void) | null = null;
+
+  dismissWelcomePage() {
+    this.sendAsyncMessage("WelcomePage:dismiss");
+  }
 
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
