@@ -1,169 +1,195 @@
 {
-    "navigation": {
-        "welcome": "Welkom",
-        "language": "Taal",
-        "languageSupport": "Taal ondersteuning",
-        "features": "Functies",
-        "featureIntroduction": "Maak kennis met de functies",
-        "hub": "Floor Hub",
-        "hubIntro": "Over Floorp Hub",
-        "customize": "Personaliseren",
-        "initialSettings": "Standaard instellingen",
-        "complete": "Voltooien",
-        "previous": "Vorige",
-        "next": "Volgende"
-    },
-    "hubPage": {
-        "title": "Over Floorp Hub ",
-        "subtitle": "Een centrale plek voor Floorp specifieke instellingen.",
-        "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub is een speciaal instellingencentrum voor Floorp-specifieke opties. Je kunt dit openen door naar 'about:hub' te navigeren. Het is ook toegankelijk via de linkerzijbalk van de instellingenpagina van Firefox op 'about:preferences'.",
-        "openHub": "Open about:hub",
-        "openPreferences": "Open instellingen (about:preferences)",
-        "tip": "Tip: Je kunt Floorp Hub ook openen via de zijbalk van de Firefox-instellingen.",
-        "features": {
-            "dedicated": "Speciaal instellingencentrum voor Floorp",
-            "accessible": "Toegankelijk via about:hub of de Firefox-instellingen",
-            "centralized": "Alle Floorp-specifieke opties op één plek"
-        }
-    },
-    "customize": {
-        "title": "Floorp aanpassen",
-        "description": "Pas dit aan naar je eigen voorkeursinstellingen. Je kunt ze later altijd wijzigen vanuit de Floorp Hub of de instellingenpagina.",
-        "appearance": {
-            "title": "Weergave-instellingen",
-            "description": "Je kunt het uiterlijk van Floorp naar eigen wens aanpassen. Kies een licht of donker thema, of laat het automatisch wisselen op basis van je systeeminstellingen."
-        },
-        "themes": {
-            "light": "Licht",
-            "dark": "Donker",
-            "system": "Systeeminstellingen volgen"
-        },
-        "themeInfo": {
-            "light": "Licht thema",
-            "dark": "Donker thema",
-            "system": "Systeeminstellingen"
-        },
-        "searchEngine": {
-            "title": "Standaardzoekmachine",
-            "default": "Standaard",
-            "search": "Zoeken",
-            "noEnginesFound": "Geen zoekmachines gevonden."
-        },
-        "floorpHub": {
-            "title": "Floorp Hub",
-            "description": "Floorp Hub is een speciaal instellingencentrum voor Floorp-specifieke opties. Je kunt dit openen door naar 'about:hub' te navigeren. Het is ook toegankelijk via de linkerzijbalk van de instellingenpagina van Firefox op 'about:preferences'.",
-            "openHub": "Open about:hub",
-            "openPreferences": "Open Instellingen (about:preferences)"
-        }
-    },
-    "finish": {
-        "title": "Installatie voltooid!",
-        "subtitle": "Gefeliciteerd! Je hebt de installatie van Floorp voltooid. Geniet van een comfortabele en veilige internetervaring.",
-        "nextSteps": {
-            "title": "Volgende stappen (optioneel)",
-            "setDefault": "Als standaardbrowser instellen",
-            "documentation": "Documentatie"
-        },
-        "getStarted": "Aan de slag met Floorp",
-        "hint": "Voor meer gedetailleerde instellingen kun je dingen aanpassen via de optie Instellingen in de menuknop rechtsboven."
-    },
-    "welcomePage": {
-        "welcome": "Welkom bij Floorp!",
-        "description": "Floorp is een snelle en gebruiksvriendelijke webbrowser die de nadruk legt op privacy en veiligheid [A]. Deze gids maakt je wegwijs in de belangrijkste functies en instellingen van Floorp.",
-        "readyToStart": "Wanneer je er klaar voor bent, klik dan op de onderstaande knop om door te gaan.",
-        "features": "Floorp-functies",
-        "privacy": "Privacy",
-        "privacyDesc": "Beschermt uw gegevens",
-        "speed": "Snelheid",
-        "speedDesc": "Geoptimaliseerde prestaties",
-        "customization": "Aanpassingen",
-        "customizationDesc": "Rangschik je voorkeur",
-        "start": "Aan de slag"
-    },
-    "localizationPage": {
-        "title": "Floorp spreekt jouw taal",
-        "subtitle": "Controleer de taalinstellingen en pas deze indien nodig aan",
-        "languageSettings": "Taalinstellingen",
-        "languageChanged": "Taal gewijzigd!",
-        "currentLanguageInfo": "Huidige taalinformatie",
-        "systemLanguage": "Systeemtaal",
-        "floorpLanguage": "Floorp-taal",
-        "selectLanguage": "Taal selecteren",
-        "useSystemLanguage": "Systeemtaal gebruiken",
-        "multilingual": "Meertalige ondersteuning",
-        "chooseLanguage": "Kies uit een breed aanbod van talen",
-        "languageChangeNotice": "De nieuwe taal wordt direct toegepast zonder Floorp opnieuw op te starten. Sommige add-ons ondersteunen dit mogelijk niet."
-    },
-    "featuresPage": {
-        "title": "Belangrijkste Floorp-functies",
-        "subtitle": "Floorp biedt tal van handige functies. Bekijk het overzicht van de functies!",
-        "panelSidebar": {
-            "title": "Paneelzijbalk",
-            "description": "Gebruik tijdens het browsen handige functies via de rechterzijbalk. Je kunt hier webpanelen, notities, add-ons, bladwijzers en meer in plaatsen.",
-            "features": [
+  "releaseNotes": {
+      "learnMore": "Lees meer over onze financiering en deze instelling (Japans)",
+      "title": "Releaseopmerkingen en het steunen van Floorp",
+      "description": "Advertentie-inkomsten ondersteunen de ontwikkeling en exploitatie van Floorp. Kies hoe releaseopmerkingen na updates worden geopend. Je kunt dit later wijzigen via Instellingen → Updates & Experimenten.",
+      "disabled": {
+      "label": "Niet automatisch openen",
+      "description": "Releaseopmerkingen niet openen na updates. Behoud je blocker-instellingen bij het bezoeken van de blog."
+      },
+      "blocking": {
+      "label": "Openen met je blocker-instellingen",
+      "description": "Zorg dat je extensies blijven werken zoals geconfigureerd. Dit installeert of activeert geen advertentieblokker."
+      },
+      "support": {
+      "label": "Advertenties toestaan om Floorp te steunen (aanbevolen)",
+      "description": "Beperk uBlock Origin, AdGuard, Adblock Plus, AdBlock en Ghostery op de Floorp-blog."
+      },
+      "scope": "De beperking is van toepassing op alle HTTPS-pagina's op blog.floorp.app, inclusief handmatig geopende pagina's, en heeft zowel invloed op trackingbescherming en aangepaste filters als op het blokkeren van advertenties. Andere extensies worden niet beperkt door deze instelling. Advertenties kunnen nog steeds worden geblokkeerd door andere beschermingsmiddelen. Herlaad geopende blogpagina's na het wijzigen van de instelling.",
+      "applyOnConfirm": "Je selectie wordt pas van kracht nadat je deze bevestigt. Als je deze pagina sluit, behoud je je huidige instelling.",
+      "changeSelection": "Keuze wijzigen",
+      "applyOnFinish": "Dit is een conceptselectie. Deze wordt pas van kracht wanneer je de installatie op het volgende scherm voltooit. Als je de installatie daarvoor sluit, behoud je je huidige instelling.",
+      "confirm": "Selectie opslaan",
+      "dismiss": "Huidige instelling behouden",
+      "error": "Kon je selectie niet laden of opslaan. Open deze pagina opnieuw en probeer het nog een keer."
+  },
+  "navigation": {
+      "support": "Steun Floorp",
+      "welcome": "Welkom",
+      "language": "Taal",
+      "languageSupport": "Taal ondersteuning",
+      "features": "Functies",
+      "featureIntroduction": "Maak kennis met de functies",
+      "hub": "Floor Hub",
+      "hubIntro": "Over Floorp Hub",
+      "customize": "Personaliseren",
+      "initialSettings": "Standaard instellingen",
+      "complete": "Voltooien",
+      "previous": "Vorige",
+      "next": "Volgende"
+  },
+  "hubPage": {
+      "title": "Over Floorp Hub ",
+      "subtitle": "Een centrale plek voor Floorp specifieke instellingen.",
+      "sectionTitle": "Floorp Hub",
+      "description": "Floorp Hub is een speciaal instellingencentrum voor Floorp-specifieke opties. Je kunt dit openen door naar 'about:hub' te navigeren. Het is ook toegankelijk via de linkerzijbalk van de instellingenpagina van Firefox op 'about:preferences'.",
+      "openHub": "Open about:hub",
+      "openPreferences": "Open instellingen (about:preferences)",
+      "tip": "Tip: Je kunt Floorp Hub ook openen via de zijbalk van de Firefox-instellingen.",
+      "features": {
+      "dedicated": "Speciaal instellingencentrum voor Floorp",
+      "accessible": "Toegankelijk via about:hub of de Firefox-instellingen",
+      "centralized": "Alle Floorp-specifieke opties op één plek"
+      }
+  },
+  "customize": {
+      "title": "Floorp aanpassen",
+      "description": "Pas dit aan naar je eigen voorkeursinstellingen. Je kunt ze later altijd wijzigen vanuit de Floorp Hub of de instellingenpagina.",
+      "appearance": {
+      "title": "Weergave-instellingen",
+      "description": "Je kunt het uiterlijk van Floorp naar eigen wens aanpassen. Kies een licht of donker thema, of laat het automatisch wisselen op basis van je systeeminstellingen."
+      },
+      "themes": {
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeeminstellingen volgen"
+      },
+      "themeInfo": {
+      "light": "Licht thema",
+      "dark": "Donker thema",
+      "system": "Systeeminstellingen"
+      },
+      "searchEngine": {
+      "title": "Standaardzoekmachine",
+      "default": "Standaard",
+      "search": "Zoeken",
+      "noEnginesFound": "Geen zoekmachines gevonden."
+      },
+      "floorpHub": {
+      "title": "Floorp Hub",
+      "description": "Floorp Hub is een speciaal instellingencentrum voor Floorp-specifieke opties. Je kunt dit openen door naar 'about:hub' te navigeren. Het is ook toegankelijk via de linkerzijbalk van de instellingenpagina van Firefox op 'about:preferences'.",
+      "openHub": "Open about:hub",
+      "openPreferences": "Open Instellingen (about:preferences)"
+      }
+  },
+  "finish": {
+      "title": "Installatie voltooid!",
+      "subtitle": "Gefeliciteerd! Je hebt de installatie van Floorp voltooid. Geniet van een comfortabele en veilige internetervaring.",
+      "nextSteps": {
+      "title": "Volgende stappen (optioneel)",
+      "setDefault": "Als standaardbrowser instellen",
+      "documentation": "Documentatie"
+      },
+      "getStarted": "Aan de slag met Floorp",
+      "hint": "Voor meer gedetailleerde instellingen kun je dingen aanpassen via de optie Instellingen in de menuknop rechtsboven."
+  },
+  "welcomePage": {
+      "welcome": "Welkom bij Floorp!",
+      "description": "Floorp is een snelle en gebruiksvriendelijke webbrowser die de nadruk legt op privacy en veiligheid [A]. Deze gids maakt je wegwijs in de belangrijkste functies en instellingen van Floorp.",
+      "readyToStart": "Wanneer je er klaar voor bent, klik dan op de onderstaande knop om door te gaan.",
+      "features": "Floorp-functies",
+      "privacy": "Privacy",
+      "privacyDesc": "Beschermt uw gegevens",
+      "speed": "Snelheid",
+      "speedDesc": "Geoptimaliseerde prestaties",
+      "customization": "Aanpassingen",
+      "customizationDesc": "Rangschik je voorkeur",
+      "start": "Aan de slag"
+  },
+  "localizationPage": {
+      "title": "Floorp spreekt jouw taal",
+      "subtitle": "Controleer de taalinstellingen en pas deze indien nodig aan",
+      "languageSettings": "Taalinstellingen",
+      "languageChanged": "Taal gewijzigd!",
+      "currentLanguageInfo": "Huidige taalinformatie",
+      "systemLanguage": "Systeemtaal",
+      "floorpLanguage": "Floorp-taal",
+      "selectLanguage": "Taal selecteren",
+      "useSystemLanguage": "Systeemtaal gebruiken",
+      "multilingual": "Meertalige ondersteuning",
+      "chooseLanguage": "Kies uit een breed aanbod van talen",
+      "languageChangeNotice": "De nieuwe taal wordt direct toegepast zonder Floorp opnieuw op te starten. Sommige add-ons ondersteunen dit mogelijk niet."
+  },
+  "featuresPage": {
+      "title": "Belangrijkste Floorp-functies",
+      "subtitle": "Floorp biedt tal van handige functies. Bekijk het overzicht van de functies!",
+      "panelSidebar": {
+      "title": "Paneelzijbalk",
+      "description": "Gebruik tijdens het browsen handige functies via de rechterzijbalk. Je kunt hier webpanelen, notities, add-ons, bladwijzers en meer in plaatsen.",
+      "features": [
                 "Zet websites vast in de zijbalk",
                 "Maak tijdens het browsen snel notities met Floorp Notes",
                 "Ondersteunt containers"
-            ]
-        },
-        "workspaces": {
-            "title": "Workspaces",
-            "description": "Organiseer meerdere tabbladsets om je werk te stroomlijnen. Wissel snel tussen workspaces met herkenbare pictogrammen en namen. Open ze via de workspace-knop linksboven.",
-            "features": [
+      ]
+      },
+      "workspaces": {
+      "title": "Workspaces",
+      "description": "Organiseer meerdere tabbladsets om je werk te stroomlijnen. Wissel snel tussen workspaces met herkenbare pictogrammen en namen. Open ze via de workspace-knop linksboven.",
+      "features": [
                 "Indelen op doel: werk, privé, enz.",
                 "Visueel herkenbaar maken met aangepaste pictogrammen",
                 "Tabbladen eenvoudig beheren"
-            ]
-        },
-        "pwa": {
-            "title": "Ondersteuning voor progressieve webapplicaties",
-            "description": "Als je op Windows websites bezoekt die geschikt zijn voor PWA, kun je ze toevoegen als apps op je bureaublad. Je kunt trouwens ook gewone websites installeren.",
-            "features": [
+      ]
+      },
+      "pwa": {
+      "title": "Ondersteuning voor progressieve webapplicaties",
+      "description": "Als je op Windows websites bezoekt die geschikt zijn voor PWA, kun je ze toevoegen als apps op je bureaublad. Je kunt trouwens ook gewone websites installeren.",
+      "features": [
                 "Zelfstandig uitvoeren als desktop-apps",
                 "Kan aan de taakbalk worden vastgezet",
                 "Firefox-add-ons werken ook"
-            ]
-        },
-        "mouseGesture": {
-            "title": "Muisbewegingen",
-            "description": "Bestuur je browser intuïtiever met de standaard ingebouwde muisbewegingen. Je voert bewegingen uit door de rechtermuisknop ingedrukt te houden en je muis te bewegen.",
-            "features": [
+      ]
+      },
+      "mouseGesture": {
+      "title": "Muisbewegingen",
+      "description": "Bestuur je browser intuïtiever met de standaard ingebouwde muisbewegingen. Je voert bewegingen uit door de rechtermuisknop ingedrukt te houden en je muis te bewegen.",
+      "features": [
                 "Werken zonder sneltoetsen",
                 "Volledig aanpasbare muisbewegingen",
                 "Snel door pagina's en de geschiedenis bladeren"
-            ]
-        },
-        "notebook": "Notitieboekje",
-        "nextTab": "Ga naar volgend tabblad"
-    },
-    "finishPage": {
-        "title": "Installatie voltooid!",
-        "subtitle": "Gefeliciteerd! Je hebt de installatie van Floorp voltooid. Je kunt nu comfortabel en veilig op internet surfen.",
-        "nextSteps": "Volgende stappen (optioneel)",
-        "defaultBrowser": "Als standaardbrowser instellen",
-        "support": "Ondersteuning",
-        "documentation": "Documentatie",
-        "getStarted": "Aan de slag met Floorp",
-        "hint": "Voor meer gedetailleerde instellingen, kun je deze aanpassen via de optie ‘Instellingen’ in de menuknop rechtsboven.",
-        "resourcesLabel": "Bronnen",
-        "defaultBrowserSuccess": "Floorp is ingesteld als uw standaardbrowser!"
-    },
-    "whatsNew": {
-        "title": "Welkom bij Floorp {{version}}!",
-        "subtitle": "Bekijk wat er nieuw is in Floorp!",
-        "tags": {
-            "settings": "Instellingen",
-            "productivity": "Productiviteit",
-            "workspaces": "Werkruimtes",
-            "pwa": "PWA",
-            "gestures": "Muisbewegingen"
-        },
-        "footer": {
-            "follow": "Volg",
-            "privacy": "Privacy & voorwaarden",
-            "about": "Over Floorp",
-            "copyright": "© {{year}} Floorp Projects. Alle rechten voorbehouden."
-        }
-    }
+      ]
+      },
+      "notebook": "Notitieboekje",
+      "nextTab": "Ga naar volgend tabblad"
+  },
+  "finishPage": {
+      "title": "Installatie voltooid!",
+      "subtitle": "Gefeliciteerd! Je hebt de installatie van Floorp voltooid. Je kunt nu comfortabel en veilig op internet surfen.",
+      "nextSteps": "Volgende stappen (optioneel)",
+      "defaultBrowser": "Als standaardbrowser instellen",
+      "support": "Ondersteuning",
+      "documentation": "Documentatie",
+      "getStarted": "Aan de slag met Floorp",
+      "hint": "Voor meer gedetailleerde instellingen, kun je deze aanpassen via de optie ‘Instellingen’ in de menuknop rechtsboven.",
+      "resourcesLabel": "Bronnen",
+      "defaultBrowserSuccess": "Floorp is ingesteld als uw standaardbrowser!"
+  },
+  "whatsNew": {
+      "title": "Welkom bij Floorp {{version}}!",
+      "subtitle": "Bekijk wat er nieuw is in Floorp!",
+      "tags": {
+      "settings": "Instellingen",
+      "productivity": "Productiviteit",
+      "workspaces": "Werkruimtes",
+      "pwa": "PWA",
+      "gestures": "Muisbewegingen"
+      },
+      "footer": {
+      "follow": "Volg",
+      "terms": "Gebruiksvoorwaarden",
+      "privacy": "Privacy Beleid",
+      "about": "Over Floorp",
+      "copyright": "© {{year}} Floorp Projects. Alle rechten voorbehouden."
+      }
+  }
 }
