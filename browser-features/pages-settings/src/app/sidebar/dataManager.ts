@@ -3,27 +3,9 @@ import type { PanelSidebarFormData } from "@/types/pref.ts";
 import type {
   Panel,
   Panels,
-} from "../../../../main/core/common/panel-sidebar/utils/type.ts";
+} from "../../../../chrome/common/panel-sidebar/utils/type.ts";
 
-type Container = {
-  id: number | string;
-  name: string;
-  label: string;
-  icon: string;
-  color: string;
-};
-
-type StaticPanel = {
-  value: string;
-  label: string;
-  icon: string;
-};
-
-type ExtensionPanel = {
-  extensionId: string;
-  title: string;
-  iconUrl: string;
-};
+import type { Container, StaticPanel, ExtensionPanel } from "./types.ts";
 
 export function getStaticPanelDisplayName(
   value: string | null,
@@ -40,10 +22,12 @@ export async function savePanelSidebarSettings(
   data: PanelSidebarFormData,
 ): Promise<void> {
   const { enabled, ...configData } = data;
+  const previous = await rpc.getStringPref("floorp.panelSidebar.config");
+  const config = { ...(previous ? JSON.parse(previous) : {}), ...configData };
 
   await Promise.all([
     rpc.setBoolPref("floorp.panelSidebar.enabled", enabled),
-    rpc.setStringPref("floorp.panelSidebar.config", JSON.stringify(configData)),
+    rpc.setStringPref("floorp.panelSidebar.config", JSON.stringify(config)),
   ]);
 }
 
@@ -142,7 +126,7 @@ export function getContainers(): Promise<Container[]> {
   if (fetchState.isGettingContainers) {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (!fetchState.isGettingContainers && containersCache.length > 0) {
+        if (!fetchState.isGettingContainers) {
           clearInterval(checkInterval);
           resolve(containersCache);
         }
@@ -236,7 +220,7 @@ export function getStaticPanels(): Promise<StaticPanel[]> {
   if (fetchState.isGettingStaticPanels) {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
-        if (!fetchState.isGettingStaticPanels && staticPanelsCache.length > 0) {
+        if (!fetchState.isGettingStaticPanels) {
           clearInterval(checkInterval);
           resolve(staticPanelsCache);
         }
@@ -305,8 +289,7 @@ export function getExtensionPanels(): Promise<ExtensionPanel[]> {
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (
-          !fetchState.isGettingExtensionPanels &&
-          extensionPanelsCache.length > 0
+          !fetchState.isGettingExtensionPanels
         ) {
           clearInterval(checkInterval);
           resolve(extensionPanelsCache);

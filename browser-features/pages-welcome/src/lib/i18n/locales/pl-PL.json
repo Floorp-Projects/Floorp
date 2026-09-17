@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Follow",
-            "privacy": "Privacy & Terms",
+            "terms": "Terms of Service",
+            "privacy": "Privacy Policy",
             "about": "About Floorp",
             "copyright": "© {{year}} Floorp Projects. All rights reserved."
         }

@@ -236,7 +236,8 @@ declare namespace globalThis {
     EXTENSION_REMOTE_TYPE: string;
     deserializePrincipal(principal: unknown): unknown;
   };
-  var UrlbarUtils: { stripUnsafeProtocolOnPaste(text: string): string };
+  var UrlbarUtils: { stripUnsafeProtocolOnPaste?(text: string): string };
+  var UrlbarShared: { stripUnsafeProtocolOnPaste(text: string): string };
   var E: unknown;
   var noraAAA: unknown;
 }

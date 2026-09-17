@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Theo dõi",
-            "privacy": "Điều khoản và chính sách",
+            "terms": "Điều khoản dịch vụ",
+            "privacy": "Chính sách quyền riêng tư",
             "about": "Về Floorp",
             "copyright": "{{year}} Floorp Projects. Bảo lưu mọi quyền."
         }

@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "Följ",
-            "privacy": "Sekretess och villkor",
+            "terms": "Användarvillkor",
+            "privacy": "Integritetspolicy",
             "about": "Om Floorp",
             "copyright": "© {{year}} Projekt. Alla rättigheter reserverade."
         }
