@@ -35,7 +35,7 @@
  */
 
 const { SessionStore } = ChromeUtils.importESModule(
-  "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
 );
 
 const NORMAL_URL = "data:text/plain,floorp-sessionstore-closed-normal";

@@ -1,8 +1,8 @@
-diff --git a/browser/modules/sessionstore/TabState.sys.mjs b/browser/modules/sessionstore/TabState.sys.mjs
-index 8f7ed55..60c0d21 100644
---- ./browser/modules/sessionstore/TabState.sys.mjs
-+++ ./browser/modules/sessionstore/TabState.sys.mjs
-@@ -69,6 +69,24 @@ class _TabState {
+diff --git a/moz-src/browser/components/sessionstore/TabState.sys.mjs b/moz-src/browser/components/sessionstore/TabState.sys.mjs
+index bb7bd8c7..4ecbccbf 100644
+--- a/moz-src/browser/components/sessionstore/TabState.sys.mjs
++++ b/moz-src/browser/components/sessionstore/TabState.sys.mjs
+@@ -73,6 +73,24 @@ class _TabState {
      let tabData = { entries: [], lastAccessed: tab.lastAccessed };
      let browser = tab.linkedBrowser;
  

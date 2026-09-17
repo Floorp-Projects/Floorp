@@ -1,43 +1,118 @@
-diff --git a/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js b/browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-index c42b1a1..38630a5 100644
---- ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-+++ ./browser/chrome/browser/content/browser/tabbrowser/tabbrowser.js
-@@ -4485,6 +4485,45 @@
-       for (var i = 0; i < tabDataList.length; i++) {
-         let tabData = tabDataList[i];
+diff --git a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+index f68e3792..4e00326b 100644
+--- a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -4918,6 +4918,45 @@ export class Tabbrowser {
+     for (var i = 0; i < tabDataList.length; i++) {
+       let tabData = tabDataList[i];
  
-+        let isPrivateContainerPlaceholder = false;
++      let isPrivateContainerPlaceholder = false;
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * START
++       */
++      if (
++        tabData.floorpDisableHistory === true ||
++        tabData.floorpDisableHistory === "true"
++      ) {
++        isPrivateContainerPlaceholder = true;
++        let sanitizedTabData = { entries: [] };
++        for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
++          if (property in tabData) {
++            sanitizedTabData[property] = tabData[property];
++          }
++        }
++        tabDataList[i] = tabData = sanitizedTabData;
++      }
++
++      let floorpWorkspaceId = tabData.floorpWorkspaceId;
++      let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
++      let floorpSSB = tabData.floorpSSB;
++
++      if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
++        try {
++          floorpWorkspaceId = JSON.parse(
++            Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
++          ).defaultID;
++        } catch {
++          console.warn("Floorp: failed to parse the workspace store");
++        }
++      }
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * END
++       */
++
+       let userContextId = tabData.userContextId;
+       let select = i == selectTab - 1;
+       let tab;
+@@ -4935,6 +4974,36 @@ export class Tabbrowser {
+       ) {
+         tabWasReused = true;
+         tab = this.selectedTab;
 +        /**
 +         * * NORANEKO PATCH - 0.1.19
 +         * * [WORKSPACES]
 +         * * START
 +         */
-+        if (
-+          tabData.floorpDisableHistory === true ||
-+          tabData.floorpDisableHistory === "true"
-+        ) {
-+          isPrivateContainerPlaceholder = true;
-+          let sanitizedTabData = { entries: [] };
-+          for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
-+            if (property in tabData) {
-+              sanitizedTabData[property] = tabData[property];
-+            }
-+          }
-+          tabDataList[i] = tabData = sanitizedTabData;
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
 +        }
 +
-+        let floorpWorkspaceId = tabData.floorpWorkspaceId;
-+        let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
-+        let floorpSSB = tabData.floorpSSB;
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
 +
-+        if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
-+          try {
-+            floorpWorkspaceId = JSON.parse(
-+              Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
-+            ).defaultID;
-+          } catch {
-+            console.warn("Floorp: failed to parse the workspace store");
-+          }
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
++        }
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
+         if (!tabData.pinned) {
+           this.unpinTab(tab);
+         } else {
+@@ -4979,6 +5048,37 @@ export class Tabbrowser {
+           preferredRemoteType,
+         });
+ 
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
++        }
++
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
++
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
 +        }
 +        /**
 +         * * NORANEKO PATCH - 0.1.19
@@ -45,81 +120,6 @@ index c42b1a1..38630a5 100644
 +         * * END
 +         */
 +
-         let userContextId = tabData.userContextId;
-         let select = i == selectTab - 1;
-         let tab;
-@@ -4502,6 +4541,36 @@
-         ) {
-           tabWasReused = true;
-           tab = this.selectedTab;
-+          /**
-+           * * NORANEKO PATCH - 0.1.19
-+           * * [WORKSPACES]
-+           * * START
-+           */
-+          if (floorpWorkspaceId) {
-+            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
-+          } else {
-+            tab.removeAttribute("floorpWorkspaceId");
-+          }
-+
-+          if (floorpLastShowWorkspaceId) {
-+            tab.setAttribute(
-+              "floorpWorkspaceLastShowId",
-+              floorpLastShowWorkspaceId
-+            );
-+          } else {
-+            tab.removeAttribute("floorpWorkspaceLastShowId");
-+          }
-+
-+          if (floorpSSB) {
-+            tab.setAttribute("floorpSSB", floorpSSB);
-+          } else {
-+            tab.removeAttribute("floorpSSB");
-+          }
-+          /**
-+           * * NORANEKO PATCH - 0.1.19
-+           * * [WORKSPACES]
-+           * * END
-+           */
-           if (!tabData.pinned) {
-             this.unpinTab(tab);
-           } else {
-@@ -4547,6 +4616,37 @@
-             preferredRemoteType,
-           });
- 
-+          /**
-+           * * NORANEKO PATCH - 0.1.19
-+           * * [WORKSPACES]
-+           * * START
-+           */
-+          if (floorpWorkspaceId) {
-+            tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
-+          } else {
-+            tab.removeAttribute("floorpWorkspaceId");
-+          }
-+
-+          if (floorpLastShowWorkspaceId) {
-+            tab.setAttribute(
-+              "floorpWorkspaceLastShowId",
-+              floorpLastShowWorkspaceId
-+            );
-+          } else {
-+            tab.removeAttribute("floorpWorkspaceLastShowId");
-+          }
-+
-+          if (floorpSSB) {
-+            tab.setAttribute("floorpSSB", floorpSSB);
-+          } else {
-+            tab.removeAttribute("floorpSSB");
-+          }
-+          /**
-+           * * NORANEKO PATCH - 0.1.19
-+           * * [WORKSPACES]
-+           * * END
-+           */
-+
-           if (select) {
-             tabToSelect = tab;
-           }
+         if (select) {
+           tabToSelect = tab;
+         }

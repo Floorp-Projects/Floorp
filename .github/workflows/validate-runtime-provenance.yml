@@ -155,6 +155,7 @@ jobs:
               throw new Error("validation_only must be an Actions boolean");
             }
             const validationOnly = process.env.VALIDATION_ONLY === "true";
+            const runtimeLock = JSON.parse(fs.readFileSync("floorp-runtime.lock.json", "utf8"));
 
             const { data: run } = await github.rest.actions.getWorkflowRun({
               owner,
@@ -180,6 +181,11 @@ jobs:
               throw new Error("Runtime run attempt must be a positive integer");
             }
             if (!validationOnly) {
+              if (run.head_sha !== runtimeLock.source.commit) {
+                throw new Error(
+                  "Production Runtime must match the source commit validated by Floorp CI",
+                );
+              }
               const { data: runtimeRepository } = await github.rest.repos.get({
                 owner,
                 repo,

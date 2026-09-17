@@ -57,7 +57,7 @@
  */
 
 const { SessionStore } = ChromeUtils.importESModule(
-  "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
 );
 
 const WORKSPACE_STORE_PREF = "floorp.workspaces.v4.store";

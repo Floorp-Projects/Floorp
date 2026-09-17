@@ -12,6 +12,7 @@ import {
   Show,
 } from "solid-js";
 import styles from "./styles.css?inline";
+import type { StackSplitView } from "./types.ts";
 
 /** Drag data type used by row-2 proxy drags (reorder / eject). */
 export const PROXY_DRAG_TYPE = "application/x-floorp-stack-tab";
@@ -29,6 +30,7 @@ export type StackTab = XULElement & {
   selected: boolean;
   linkedPanel: string;
   group: StackGroup | null;
+  splitview?: StackSplitView | null;
   hidden?: boolean;
   closing?: boolean;
   multiselected?: boolean;
@@ -162,6 +164,26 @@ export const findTabByDragId = (id: string): StackTab | undefined =>
 const SCROLL_STEP_PX = 48;
 
 function StackTabProxy(props: { tab: StackTab }) {
+  const split = createMemo(() => {
+    version();
+    const panes = props.tab.splitview?.tabs.filter((tab) =>
+      tab.group === props.tab.group && !tab.closing
+    ) ?? [];
+    const index = panes.indexOf(props.tab);
+    if (panes.length < 2 || index < 0) {
+      return null;
+    }
+    return {
+      position: index === 0
+        ? "first"
+        : index === panes.length - 1
+        ? "last"
+        : "middle",
+      active: panes.some((tab) =>
+        tab === getGBrowser()?.selectedTab
+      ),
+    };
+  });
   const label = () => {
     version();
     return props.tab.label;
@@ -180,6 +202,8 @@ function StackTabProxy(props: { tab: StackTab }) {
       class="floorp-stack-tab"
       align="center"
       data-selected={selected()}
+      data-split-position={split()?.position}
+      data-split-active={split()?.active ? "true" : undefined}
       data-floorp-drag-id={getTabDragId(props.tab)}
       tooltiptext={label()}
       context="tabContextMenu"
