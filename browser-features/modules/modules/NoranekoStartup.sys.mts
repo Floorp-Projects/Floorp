@@ -140,7 +140,7 @@ export function onFinalUIStartup(): void {
 
 async function openReleaseNotesInRecentWindow(): Promise<void> {
   const { SessionStore } = await ChromeUtils.importESModule(
-    "resource:///modules/sessionstore/SessionStore.sys.mjs",
+    "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
   );
 
   await SessionStore.promiseInitialized;

@@ -1408,7 +1408,7 @@ jobs:
             [ -e "$patch_file" ] || continue
             case "$patch_file" in
               *.windows.patch)
-                [[ "$CANON_PLATFORM" == "Windows-x64" ]] || continue
+                [[ "$CANON_PLATFORM" == "Windows-x86_64" ]] || continue
                 ;;
               *.linux.patch)
                 [[ "$CANON_PLATFORM" == Linux-* ]] || continue
@@ -1423,8 +1423,10 @@ jobs:
           if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             for patch_file in "${patch_files[@]}"; do
               for resource_dir in "$DIST_ROOT"/*.app/Contents/Resources; do
-                if patch --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                  patch --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
+                if patch --batch --follow-symlinks --reverse --forward --fuzz=0 --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                  echo "Already applied by the Runtime source build: $patch_file"
+                elif patch --batch --forward --fuzz=0 --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
+                  patch --batch --forward --fuzz=0 --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
                 else
                   echo "Dry-run failed for $patch_file in $resource_dir" >&2
                   exit 1
@@ -1440,7 +1442,14 @@ jobs:
             shopt -u nullglob || true
           else
             # Git 2.54+ rejects --directory paths starting with ../
-            git apply --reject --directory "$PATCH_TARGET" --unsafe-paths --check --apply "${patch_files[@]}"
+            for patch_file in "${patch_files[@]}"; do
+              if git apply --reverse --directory "$PATCH_TARGET" --unsafe-paths --check "$patch_file"; then
+                echo "Already applied by the Runtime source build: $patch_file"
+              else
+                git apply --directory "$PATCH_TARGET" --unsafe-paths --check "$patch_file"
+                git apply --directory "$PATCH_TARGET" --unsafe-paths "$patch_file"
+              fi
+            done
             copy_buildid2 "$PATCH_TARGET"
             for candidate in "$DIST_ROOT/floorp" "$DIST_ROOT/noraneko"; do
               copy_buildid2 "$candidate"

@@ -347,6 +347,67 @@ tab-group[data-floorp-stack] .tab-group-label[data-floorp-count]::after {
   );
 }
 
+/* A split is one connected outline, with a separate selection inside it.
+   Keep proxies as siblings so existing drag/drop and context menus still
+   address individual tabs. Logical borders also preserve the shape in RTL. */
+.floorp-stack-tab[data-split-position] {
+  --stack-split-color: var(--focus-outline-color, AccentColor);
+  box-sizing: border-box;
+  height: calc(var(--tab-min-height, 32px) - 4px);
+  border-block: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+.floorp-stack-tab[data-split-position="first"] {
+  border-inline-start: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-start-start-radius: 6px;
+  border-end-start-radius: 6px;
+  margin-inline-start: 4px;
+}
+
+.floorp-stack-tab[data-split-position="last"] {
+  border-inline-end: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-start-end-radius: 6px;
+  border-end-end-radius: 6px;
+  margin-inline-end: 4px;
+}
+
+.floorp-stack-tab[data-split-position="last"]::after {
+  display: none;
+}
+
+.floorp-stack-tab[data-split-active="true"] {
+  border-color: var(--stack-split-color);
+  background: color-mix(in srgb, var(--stack-split-color) 10%, transparent);
+}
+
+.floorp-stack-tab[data-split-position]:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.floorp-stack-tab[data-split-position][data-selected="true"] {
+  background: color-mix(in srgb, var(--stack-split-color) 25%, var(--tab-selected-bgcolor, Canvas));
+}
+
+.floorp-stack-tab[data-split-position] .floorp-stack-tab-iconbox {
+  flex: 0 0 auto;
+}
+
+.floorp-stack-tab[data-split-position] .floorp-stack-tab-label {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (forced-colors: active) {
+  .floorp-stack-tab[data-split-position] {
+    border-color: ButtonText;
+  }
+  .floorp-stack-tab[data-split-position][data-selected="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* Favicon swaps to a close button on hover — same manner as row-1 tabs */
 .floorp-stack-tab-iconbox {
   width: 16px;

@@ -1,8 +1,8 @@
 diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-index 4a4ee9c..e64e5b0 100644
---- ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-+++ ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-@@ -281,8 +281,8 @@
+index 86400b64..47f9c156 100644
+--- a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
++++ b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
+@@ -375,8 +375,8 @@
      --panel-min-width: 140px;
      min-width: var(--panel-min-width);
      max-width: calc(100% - var(--panel-min-width));
@@ -13,7 +13,7 @@ index 4a4ee9c..e64e5b0 100644
    }
  
    &[splitview] {
-@@ -341,9 +341,10 @@
+@@ -431,18 +431,30 @@
        }
      }
  
@@ -26,7 +26,6 @@ index 4a4ee9c..e64e5b0 100644
  
        @media not (-moz-platform: macos) {
          z-index: 1;
-@@ -376,9 +377,20 @@
        }
      }
  
@@ -48,7 +47,7 @@ index 4a4ee9c..e64e5b0 100644
        -moz-user-focus: normal;
        border-color: transparent;
  
-@@ -387,21 +399,21 @@
+@@ -451,9 +463,21 @@
        }
      }
  
@@ -59,23 +58,13 @@ index 4a4ee9c..e64e5b0 100644
 +    &[split-view-layout="vertical"] {
 +      flex-direction: column;
 +    }
- 
--      @media -moz-pref("browser.nova.enabled") {
--        /* Outer (inline-end) edge faces the window: the panel carries the
--         * full 2px gap, plus 2px for the selected panel's focus outline. */
--        :root[uidensity="compact"] & {
--          margin-inline-end: 2px;
--        }
++
 +    &[split-view-layout="grid-2x2"] {
 +      display: grid;
 +      grid-template-columns: 1fr 1fr;
 +      grid-template-rows: 1fr 1fr;
 +    }
- 
--        :root[uidensity="compact"] &.deck-selected {
--          margin-inline-end: 4px;
--        }
--      }
++
 +    &[split-view-layout="grid-3x2"] {
 +      display: grid;
 +      grid-template-columns: 1fr 1fr 1fr;

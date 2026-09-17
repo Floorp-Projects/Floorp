@@ -1,7 +1,132 @@
-diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+index f68e3792..4e00326b 100644
+--- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -4918,6 +4918,45 @@ export class Tabbrowser {
+     for (var i = 0; i < tabDataList.length; i++) {
+       let tabData = tabDataList[i];
+ 
++      let isPrivateContainerPlaceholder = false;
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * START
++       */
++      if (
++        tabData.floorpDisableHistory === true ||
++        tabData.floorpDisableHistory === "true"
++      ) {
++        isPrivateContainerPlaceholder = true;
++        let sanitizedTabData = { entries: [] };
++        for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
++          if (property in tabData) {
++            sanitizedTabData[property] = tabData[property];
++          }
++        }
++        tabDataList[i] = tabData = sanitizedTabData;
++      }
++
++      let floorpWorkspaceId = tabData.floorpWorkspaceId;
++      let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
++      let floorpSSB = tabData.floorpSSB;
++
++      if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
++        try {
++          floorpWorkspaceId = JSON.parse(
++            Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
++          ).defaultID;
++        } catch {
++          console.warn("Floorp: failed to parse the workspace store");
++        }
++      }
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * END
++       */
++
+       let userContextId = tabData.userContextId;
+       let select = i == selectTab - 1;
+       let tab;
+@@ -4935,6 +4974,36 @@ export class Tabbrowser {
+       ) {
+         tabWasReused = true;
+         tab = this.selectedTab;
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
++        }
++
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
++
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
++        }
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
+         if (!tabData.pinned) {
+           this.unpinTab(tab);
+         } else {
+@@ -4979,6 +5048,37 @@ export class Tabbrowser {
+           preferredRemoteType,
+         });
+ 
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
++        }
++
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
++
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
++        }
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
++
+         if (select) {
+           tabToSelect = tab;
+         }
+diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
 index 52fc8030..7c0c52c1 100644
---- a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
-+++ b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+--- a/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/browser/components/sessionstore/SessionStore.sys.mjs
 @@ -138,6 +138,13 @@ const RESTORE_TAB_CONTENT_REASON = {
  // 'browser.startup.page' preference value to resume the previous session.
  const BROWSER_STARTUP_RESUME_SESSION = 3;
@@ -348,3 +473,106 @@ index 52fc8030..7c0c52c1 100644
        wIndex++;
      }
  
+diff --git a/browser/components/sessionstore/TabState.sys.mjs b/browser/components/sessionstore/TabState.sys.mjs
+index bb7bd8c7..4ecbccbf 100644
+--- a/browser/components/sessionstore/TabState.sys.mjs
++++ b/browser/components/sessionstore/TabState.sys.mjs
+@@ -73,6 +73,24 @@ class _TabState {
+     let tabData = { entries: [], lastAccessed: tab.lastAccessed };
+     let browser = tab.linkedBrowser;
+ 
++    /*@nora:inject:start*/
++    // WorkspaceId
++    tabData.floorpWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceId"
++    );
++    // lastShowWorkspaceId
++    tabData.floorpLastShowWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceLastShowId"
++    );
++
++    // Private Container
++    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
++    // Split View Group
++    tabData.floorpSplitViewGroupId = tab.getAttribute(
++      "floorpSplitViewGroupId"
++    );
++    /*@nora:inject:end*/
++
+     if (tab.pinned) {
+       tabData.pinned = true;
+     }
+diff --git a/browser/themes/shared/tabbrowser/content-area.css b/browser/themes/shared/tabbrowser/content-area.css
+index 86400b64..47f9c156 100644
+--- a/browser/themes/shared/tabbrowser/content-area.css
++++ b/browser/themes/shared/tabbrowser/content-area.css
+@@ -375,8 +375,8 @@
+     --panel-min-width: 140px;
+     min-width: var(--panel-min-width);
+     max-width: calc(100% - var(--panel-min-width));
+-    flex: 1;
+-    width: 49.4%;
++    flex: 1 1 0;
++    width: auto;
+   }
+ 
+   &[splitview] {
+@@ -431,18 +431,30 @@
+       }
+     }
+ 
++    /* Column ordering for N-way split */
++    /* First panel - no start margin */
+     .split-view-panel[column="0"] {
+-      order: 0;
+-      margin-inline-end: 0;
++      order: var(--panel-order, 0);
+ 
+       @media not (-moz-platform: macos) {
+         z-index: 1;
+       }
+     }
+ 
++    /* Last panel - no end margin (detected via :last-child in flex) */
++    .split-view-panel:last-child {
++      margin-inline-end: 0;
++    }
++
++    /* All panels use order from attribute or CSS variable */
++    .split-view-panel {
++      order: var(--panel-order);
++    }
++
++    /* Splitters position between panels */
+     .split-view-splitter {
+-      order: 1;
+       flex: none;
++      order: var(--splitter-order);
+       -moz-user-focus: normal;
+       border-color: transparent;
+ 
+@@ -451,9 +463,21 @@
+       }
+     }
+ 
+-    .split-view-panel[column="1"] {
+-      order: 2;
+-      margin-inline-start: 0;
++    /* Layout mode support */
++    &[split-view-layout="vertical"] {
++      flex-direction: column;
++    }
++
++    &[split-view-layout="grid-2x2"] {
++      display: grid;
++      grid-template-columns: 1fr 1fr;
++      grid-template-rows: 1fr 1fr;
++    }
++
++    &[split-view-layout="grid-3x2"] {
++      display: grid;
++      grid-template-columns: 1fr 1fr 1fr;
++      grid-template-rows: 1fr 1fr;
+     }
+ 
+     /* Panels with a custom width shouldn't grow. */

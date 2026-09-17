@@ -128,6 +128,30 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
         tabs.length,
         "No missing or duplicate pane proxies",
       );
+      await waitFor(
+        () =>
+          proxies().filter((proxy) => proxy.hasAttribute("data-split-position"))
+            .length === paneCount,
+        "Split panes receive a connected outline",
+      );
+      for (let i = 0; i < paneCount; i++) {
+        assertEquals(
+          proxies()[i].getAttribute("data-split-position"),
+          i === 0 ? "first" : i === paneCount - 1 ? "last" : "middle",
+          "Outline follows the native pane order",
+        );
+        assert(
+          Number.parseFloat(
+            getComputedStyle(proxies()[i])?.borderTopWidth ?? "0",
+          ) > 0,
+          "Split membership has a visible outline",
+        );
+      }
+      assertEquals(
+        proxies()[paneCount].hasAttribute("data-split-position"),
+        false,
+        "Ordinary stack members keep their normal appearance",
+      );
       const rect = split.getBoundingClientRect();
       assert(
         rect.width === 0 && rect.height === 0,
@@ -152,6 +176,18 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
           proxies().length,
           tabs.length,
           "Selection preserves the bar",
+        );
+        await waitFor(
+          () =>
+            proxies().slice(0, paneCount).every((proxy) =>
+              proxy.hasAttribute("data-split-active") === (i < paneCount)
+            ),
+          "Only the displayed split is highlighted",
+        );
+        assertEquals(
+          proxies()[i].getAttribute("data-selected"),
+          "true",
+          "The focused pane remains individually selected",
         );
       }
       const panel = document.getElementById(tabs[0].linkedPanel);
@@ -300,6 +336,13 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
 
       split.unsplitTabs();
       await waitFor(() => !tabs[0].splitview, "Split is removed");
+      await waitFor(
+        () =>
+          proxies().every((proxy) =>
+            !proxy.hasAttribute("data-split-position")
+          ),
+        "Unsplit removes the outline",
+      );
       assertEquals(
         group.getAttribute(STACK_ATTR),
         "true",
@@ -325,6 +368,13 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
       await waitFor(
         () => proxies().length === tabs.length - 1 && !tabs[1].splitview,
         "Closing a pane removes its proxy and dissolves the two-pane split",
+      );
+      await waitFor(
+        () =>
+          proxies().every((proxy) =>
+            !proxy.hasAttribute("data-split-position")
+          ),
+        "Closing the other pane clears the surviving tab's split indicator",
       );
       assertEquals(
         gb.selectedTab,
