@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Ouvrir en vue partagée",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Ajouter le volet à la vue fractionnée",
       "moveToPane": "Déplacer dans le volet",
       "moveToPaneN": "Volet {{n}} ({{title}})"

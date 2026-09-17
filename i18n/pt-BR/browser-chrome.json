@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Abrir na Visualização Dividida",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Adicionar painel à visualização dividida",
       "moveToPane": "Mover para o painel",
       "moveToPaneN": "Painel {{n}} ({{title}})"

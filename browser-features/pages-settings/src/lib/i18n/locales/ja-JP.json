@@ -217,6 +217,7 @@
             "exampleFullUrl": "Gmail の URL のみに反応"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
             "title": "タブスタック",
             "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
             "enableOrDisable": "有効化/無効化",
@@ -779,5 +780,41 @@
             "cost": "動画再生、通話、画面共有は解放を妨げません。解放処理により、使用を再開する際などにブラウザーの動作が一時停止する場合があります。間隔を短くするほど解放頻度が高まります。",
             "saveFailed": "この設定を保存できませんでした。以前の値が復元されました。"
         }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "読み込み中...",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "やりなおす",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "About privacy",
+            "extensions": "Manage extensions",
+            "help": "Get help"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Appearance and behavior",
+        "reset": "Reset workspaces",
+        "help": "How to use"
     }
 }
