@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "追蹤",
-            "privacy": "隱私聲明與條款",
+            "terms": "服務條款",
+            "privacy": "隱私權政策",
             "about": "關於 Floorp",
             "copyright": "© {{year}} Floorp Projects。保留所有權利。"
         }

@@ -1,5 +1,5 @@
 const { LangPackMatcher } = ChromeUtils.importESModule(
-  "resource://gre/modules/LangPackMatcher.sys.mjs",
+  "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
 );
 
 class i18nUtils {

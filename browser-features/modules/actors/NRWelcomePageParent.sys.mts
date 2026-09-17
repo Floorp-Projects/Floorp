@@ -6,22 +6,53 @@
 export class NRWelcomePageParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
+      case "WelcomePage:dismiss": {
+        const context = this.browsingContext;
+        const uri = this.manager.documentURI;
+        const isWelcomePage = uri.spec.split(/[?#]/)[0] === "about:welcome" ||
+          (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
+          (uri.schemeIs("http") && uri.port === 5187 &&
+            (uri.host === "localhost" || uri.host === "127.0.0.1"));
+        // Only the current top-level welcome document may dismiss its own tab.
+        if (
+          !isWelcomePage || context.parent ||
+          context.currentWindowGlobal !== this.manager
+        ) break;
+        const browser = context.embedderElement;
+        const tabBrowser = (browser?.ownerDocument.defaultView as Window | null)
+          ?.gBrowser;
+        const tab = browser && tabBrowser?.getTabForBrowser(browser);
+        if (!tab || !tabBrowser || tab.closing) break;
+        const hasOtherTab = tabBrowser.tabs.some((other) =>
+          other !== tab && other.isOpen && !other.hidden
+        );
+        if (hasOtherTab) {
+          // Also prevent window closure if another tab starts closing meanwhile.
+          tabBrowser.removeTab(tab, { closeWindowWithLastTab: false });
+        } else {
+          browser.loadURI(Services.io.newURI("about:newtab"), {
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
+          });
+        }
+        break;
+      }
       case "WelcomePage:getLocaleInfo": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const localeInfo = LangPackMatcher.getAppAndSystemLocaleInfo();
         const isUserLocaleSet = Services.prefs.prefHasUserValue(
           "intl.locale.requested",
         );
-        const availableLocales =
-          await LangPackMatcher.mockable.getAvailableLangpacks();
+        const availableLocales = await LangPackMatcher.mockable
+          .getAvailableLangpacks();
         const installedLocales = await LangPackMatcher.getAvailableLocales();
         let langPackInfo = null;
         if (localeInfo.matchType !== "match") {
-          langPackInfo =
-            await LangPackMatcher.negotiateLangPackForLanguageMismatch();
+          langPackInfo = await LangPackMatcher
+            .negotiateLangPackForLanguageMismatch();
         }
         this.sendAsyncMessage(
           "WelcomePage:localeInfoResponse",
@@ -40,7 +71,7 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
       case "WelcomePage:setAppLocale": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const { locale } = message.data;
@@ -66,15 +97,16 @@ export class NRWelcomePageParent extends JSWindowActorParent {
 
       case "WelcomePage:installLangPack": {
         const { LangPackMatcher } = ChromeUtils.importESModule(
-          "resource://gre/modules/LangPackMatcher.sys.mjs",
+          "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
         );
 
         const { langPack } = message.data;
 
         if (langPack) {
           try {
-            const success =
-              await LangPackMatcher.ensureLangPackInstalled(langPack);
+            const success = await LangPackMatcher.ensureLangPackInstalled(
+              langPack,
+            );
 
             this.sendAsyncMessage(
               "WelcomePage:installLangPackResponse",

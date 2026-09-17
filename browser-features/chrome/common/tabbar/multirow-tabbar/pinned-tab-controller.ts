@@ -1,5 +1,18 @@
 import { findChildIndex } from "./dom-utils.ts";
 
+type TabbrowserTabElement = Element & { closing?: boolean };
+
+function isMigratablePinnedTab(
+  candidate: Node | null,
+  sourceContainer: Element,
+): candidate is TabbrowserTabElement {
+  return candidate instanceof Element &&
+    candidate.parentElement === sourceContainer &&
+    candidate.isConnected &&
+    candidate.matches(".tabbrowser-tab[pinned]") &&
+    (candidate as TabbrowserTabElement).closing !== true;
+}
+
 export class PinnedTabController {
   private mutationObserver: MutationObserver | null = null;
   private isRegistered = false;
@@ -22,7 +35,8 @@ export class PinnedTabController {
       for (const mutation of mutationList) {
         this.migratePinnedTabs(
           tabsContainer,
-          mutation.addedNodes as NodeListOf<Element>,
+          mutation.addedNodes,
+          pinnedTabsContainer,
         );
       }
     });
@@ -33,7 +47,8 @@ export class PinnedTabController {
     if (pinnedTabsContainer.childElementCount > 0) {
       this.migratePinnedTabs(
         tabsContainer,
-        pinnedTabsContainer.childNodes as NodeListOf<Element>,
+        pinnedTabsContainer.childNodes,
+        pinnedTabsContainer,
       );
     }
 
@@ -65,11 +80,15 @@ export class PinnedTabController {
 
   migratePinnedTabs(
     newContainer: Element,
-    pinnedTabs: NodeListOf<Element>,
+    candidates: Iterable<Node | null>,
+    sourceContainer: Element,
   ): void {
-    if (!pinnedTabs || pinnedTabs.length === 0) return;
+    for (const candidate of Array.from(candidates)) {
+      if (!isMigratablePinnedTab(candidate, sourceContainer)) {
+        continue;
+      }
 
-    (Array.from(pinnedTabs) as Element[]).forEach((tab) => {
+      const tab = candidate;
       tab.setAttribute("newPin", "true");
 
       const firstUnpinnedTab = newContainer.querySelector(
@@ -84,7 +103,7 @@ export class PinnedTabController {
       } else if (periphery) {
         newContainer.insertBefore(tab, periphery);
       }
-    });
+    }
   }
 
   private handleTabUnpinned = (event: Event): void => {
@@ -104,8 +123,8 @@ export class PinnedTabController {
     if (!pinnedTabs || pinnedTabs.length === 0) return;
 
     const lastPinnedTab = pinnedTabs[pinnedTabs.length - 1];
-    const indexToInsertBefore =
-      findChildIndex(tabsContainer, lastPinnedTab) + 1;
+    const indexToInsertBefore = findChildIndex(tabsContainer, lastPinnedTab) +
+      1;
 
     tabsContainer.insertBefore(
       tab,

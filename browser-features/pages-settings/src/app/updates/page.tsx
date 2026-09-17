@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
+import { ReleaseNotesSettings } from "./ReleaseNotesSettings.tsx";
 
 const EXPERIMENTS_POLICY_PREF = "floorp.experiments.participationPolicy";
 
@@ -292,13 +293,14 @@ export default function Page() {
   }
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("updates.title")}</h1>
-        <p className="text-sm mb-8">{t("updates.description")}</p>
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("updates.title")}</h1>
+        <p className="floorp-page-description">{t("updates.description")}</p>
       </div>
 
       <div className="flex flex-col gap-8 pl-6">
+        <ReleaseNotesSettings />
         <Card>
           <CardHeader>
             <CardTitle>{t("updates.experiments.title")}</CardTitle>
@@ -308,12 +310,13 @@ export default function Page() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="label">
-                <span className="label-text">
+              <label className="floorp-field-label" htmlFor="experiments-policy">
+                <span className="floorp-field-text">
                   {t("updates.experiments.policyLabel")}
                 </span>
               </label>
               <DropDown
+                id="experiments-policy"
                 value={participationPolicy}
                 onChange={handlePolicyChange}
                 options={policyOptions}

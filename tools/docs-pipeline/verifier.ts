@@ -335,9 +335,17 @@ function requireCiReferenceCommands(
   );
   const expectedCommands =
     colocatedWorkflow?.runCommands.filter((command) =>
+      command ===
+        "deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock" ||
       command === "deno task test:smoke" ||
-      command === "deno task test --no-autostart" ||
-      command.startsWith("deno task feles-build test")
+      command === "deno task test:host" ||
+      command === "deno task test:firefox-tests" ||
+      command.startsWith("deno task feles-build test") ||
+      command.startsWith("deno task firefox-tests:collect") ||
+      command === "deno task firefox-tests:triage-browser" ||
+      command === "deno task firefox-tests:prepare-browser" ||
+      command.startsWith("deno task test --layer all") ||
+      command === "deno test -A tools/src/colocated_test_runner.test.ts"
     ) ?? [];
 
   for (const command of expectedCommands) {

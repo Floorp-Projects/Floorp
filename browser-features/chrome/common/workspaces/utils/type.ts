@@ -6,13 +6,17 @@
 import * as t from "io-ts";
 
 /* io-ts codecs */
-export const zWorkspace = t.type({
-  name: t.string,
-  icon: t.union([t.string, t.null, t.undefined]),
-  userContextId: t.number,
-  isSelected: t.union([t.boolean, t.null, t.undefined]),
-  isDefault: t.union([t.boolean, t.null, t.undefined]),
-});
+export const zWorkspace = t.intersection([
+  t.type({
+    name: t.string,
+    userContextId: t.number,
+    isSelected: t.union([t.boolean, t.null, t.undefined]),
+    isDefault: t.union([t.boolean, t.null, t.undefined]),
+  }),
+  t.partial({
+    icon: t.union([t.string, t.null, t.undefined]),
+  }),
+]);
 
 // Brand type for WorkspaceID
 export type WorkspaceIDBrand = { readonly WorkspaceID: unique symbol };
@@ -73,12 +77,16 @@ export const zWorkspaceSnapshotTab = t.type({
 
 export const zWorkspaceSnapshot = t.type({
   capturedAt: t.number,
-  workspace: t.type({
-    workspaceId: zWorkspaceID,
-    name: t.string,
-    icon: t.union([t.string, t.null]),
-    userContextId: t.number,
-  }),
+  workspace: t.intersection([
+    t.type({
+      workspaceId: zWorkspaceID,
+      name: t.string,
+      userContextId: t.number,
+    }),
+    t.partial({
+      icon: t.union([t.string, t.null, t.undefined]),
+    }),
+  ]),
   tabs: t.array(zWorkspaceSnapshotTab),
 });
 

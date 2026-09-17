@@ -19,6 +19,7 @@ export class NRProfileManagerChild extends JSWindowActorChild {
       // Export a set of helper functions to content window.
       const exports = [
         "NRGetCurrentProfile",
+        "NROpenCurrentProfileDirectory",
         "NRGetFxAccountsInfo",
         "NROpenUrl",
         "NRGetProfiles",
@@ -226,6 +227,12 @@ export class NRProfileManagerChild extends JSWindowActorChild {
 
   NRRestart(safeMode: boolean = false) {
     this.sendAsyncMessage("NRProfileManager:Restart", { safeMode });
+  }
+
+  NROpenCurrentProfileDirectory(callback: (ok: boolean) => void = () => {}) {
+    this._sendRequest("NRProfileManager:OpenCurrentProfileDirectory")
+      .then((result) => callback(result === true))
+      .catch(() => callback(false));
   }
 
   receiveMessage(message: ReceiveMessageArgument) {

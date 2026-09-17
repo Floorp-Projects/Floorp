@@ -16,13 +16,19 @@ import type {
 } from "./workspacesDataManagerBase";
 import type { WorkspacesTabManager } from "./workspacesTabManager";
 import type { WorkspaceIcons } from "./utils/workspace-icons";
-import { WorkspaceManageModal } from "./workspace-modal";
+import {
+  applyWorkspaceModalResult,
+  WorkspaceManageModal,
+} from "./workspace-modal";
 import i18next from "i18next";
 import {
   createWorkspaceSnapshot,
   ensureSessionStore,
 } from "./utils/workspace-snapshot";
-import { WorkspacesArchiveService } from "./utils/workspaces-archive-service";
+import {
+  applyWorkspaceSnapshotMetadata,
+  WorkspacesArchiveService,
+} from "./utils/workspaces-archive-service";
 import type { TWorkspaceSnapshotTab } from "./utils/type";
 import type { WorkspaceArchiveSummary } from "./utils/archive-types";
 import {
@@ -30,6 +36,7 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
+import { ExplicitTabUserContextOperations } from "./utils/explicit-tab-user-context.ts";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
   dataManagerCtx: WorkspacesDataManager;
@@ -37,6 +44,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   iconCtx: WorkspaceIcons;
   modalCtx: WorkspaceManageModal;
   archiveService: WorkspacesArchiveService;
+
+  private explicitTabUserContextOperations =
+    new ExplicitTabUserContextOperations();
+
+  /**
+   * Opens one tab without replacing an explicitly selected container with the
+   * current workspace's default container. gBrowser.addTab dispatches TabOpen
+   * synchronously, so this operation only exists for the duration of openTab.
+   */
+  withExplicitTabUserContext<T>(
+    userContextId: number,
+    openTab: () => T,
+  ): T {
+    return this.explicitTabUserContextOperations.run(userContextId, openTab);
+  }
 
   private cloneWorkspaceMap(source: unknown): Map<TWorkspaceID, TWorkspace> {
     if (source instanceof Map) {
@@ -67,9 +89,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       return fromOrder;
     }
 
-    for (const id of (
-      workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>
-    ).keys()) {
+    for (
+      const id of (
+        workspacesDataStore.data as unknown as Map<TWorkspaceID, TWorkspace>
+      ).keys()
+    ) {
       if (id !== excludeId) {
         return id;
       }
@@ -110,14 +134,37 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       this.setCurrentWorkspaceID(id);
     }
 
-    // Register persistTabAttribute early (after promiseInitialized) so
-    // SessionStore knows to save/restore our custom tab attributes.
-    // IMPORTANT: This must happen before restoration completes so that
-    // SessionStore includes floorpWorkspaceId in the restored tab data.
-    globalThis.SessionStore.promiseInitialized.then(() => {
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
-      globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
-    });
+    // Register persistTabAttribute early (after promiseInitialized) where the
+    // runtime still offers it, so SessionStore saves and restores our tab
+    // attributes itself.
+    //
+    // Firefox 152 removed it: SessionStore.sys.mjs has no such method, and
+    // TabAttributes.sys.mjs now hard-codes PERSISTED_ATTRIBUTES to
+    // ["customizemode"] with no way to register another name. Calling it
+    // unguarded rejects at window init.
+    //
+    // Losing it costs us nothing, because the workspace attributes do not
+    // depend on it: the runtime patches persist them directly —
+    // tools/patches/browser-modules-sessionstore-TabState.sys.patch writes
+    // tabData.floorpWorkspaceId / floorpLastShowWorkspaceId when tab state is
+    // collected, and browser-chrome-...-tabbrowser.patch sets both attributes
+    // back on the restored tab. This call stays as belt-and-braces for
+    // runtimes that still have the API.
+    globalThis.SessionStore.promiseInitialized
+      .then(() => {
+        if (typeof globalThis.SessionStore.persistTabAttribute === "function") {
+          globalThis.SessionStore.persistTabAttribute(
+            WORKSPACE_TAB_ATTRIBUTION_ID,
+          );
+          globalThis.SessionStore.persistTabAttribute(WORKSPACE_LAST_SHOW_ID);
+        }
+      })
+      .catch((e: unknown) => {
+        console.error(
+          "[workspaces] failed to register persisted tab attributes",
+          e,
+        );
+      });
 
     // Delay TabOpen handler and ProgressListener registration until AFTER
     // session restore completes. During restore (between promiseInitialized
@@ -192,8 +239,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       workspaceID,
       fallbackWorkspaceID ?? undefined,
     );
-    setWorkspacesDataStore("order", (prev) =>
-      prev.filter((v) => v !== workspaceID),
+    setWorkspacesDataStore(
+      "order",
+      (prev) => prev.filter((v) => v !== workspaceID),
     );
     this.dataManagerCtx.deleteWorkspace(workspaceID);
   }
@@ -296,22 +344,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
+    if (!this.getRawWorkspace(targetWorkspaceID)) return;
     const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
     if (result === null) return;
-    const { name, icon, userContextId } = result;
-    const workspace = this.getRawWorkspace(targetWorkspaceID);
-    if (!workspace) return;
-    const newWorkspace: TWorkspace = {
-      ...workspace,
-      name: name as string,
-      icon: icon as string,
-      userContextId: Number(userContextId),
-    };
+    let didApply = false;
     setWorkspacesDataStore("data", (prev) => {
       const temp = this.cloneWorkspaceMap(prev);
+      const latestWorkspace = temp.get(targetWorkspaceID);
+      if (!latestWorkspace) return prev;
+      const newWorkspace = applyWorkspaceModalResult(latestWorkspace, result);
+      if (!newWorkspace) return prev;
       temp.set(targetWorkspaceID, newWorkspace);
+      didApply = true;
       return temp as unknown as TWorkspacesStoreData["data"];
     });
+    if (!didApply) return;
     this.tabManagerCtx.updateTabsVisibility();
     return result;
   }
@@ -391,11 +438,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       const temp = this.cloneWorkspaceMap(prev);
       const workspace = temp.get(restoredWorkspaceId);
       if (workspace) {
-        temp.set(restoredWorkspaceId, {
-          ...workspace,
-          icon: snapshot.workspace.icon,
-          userContextId: snapshot.workspace.userContextId,
-        });
+        temp.set(
+          restoredWorkspaceId,
+          applyWorkspaceSnapshotMetadata(workspace, snapshot.workspace),
+        );
       }
       return temp as unknown as TWorkspacesStoreData["data"];
     });
@@ -432,9 +478,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     try {
       const gBrowser = globalThis.gBrowser as
         | {
-            tabs: XULElement[];
-            showTab: (tab: XULElement) => void;
-          }
+          tabs: XULElement[];
+          showTab: (tab: XULElement) => void;
+        }
         | undefined;
 
       if (gBrowser?.tabs) {
@@ -472,8 +518,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         skipAnimation: true,
         inBackground: true,
         userContextId: tabSnapshot.userContextId,
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       });
 
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, workspaceId);
@@ -493,7 +539,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           const clonedState = structuredClone(tabSnapshot.state);
           const attributes =
             (clonedState.attributes as Record<string, unknown> | undefined) ??
-            {};
+              {};
           attributes[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
           if (tabSnapshot.lastShownWorkspaceId) {
             attributes[WORKSPACE_LAST_SHOW_ID] =
@@ -514,8 +560,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           globalThis.gBrowser
             .getBrowserForTab(tab)
             .loadURI(Services.io.newURI(tabSnapshot.url), {
-              triggeringPrincipal:
-                Services.scriptSecurityManager.getSystemPrincipal(),
+              triggeringPrincipal: Services.scriptSecurityManager
+                .getSystemPrincipal(),
             });
         } catch (error) {
           console.error("WorkspacesService: failed to load tab URL", error);
@@ -575,6 +621,25 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // If tab doesn't have a workspace ID, assign it to current workspace
     if (!workspaceId) {
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
+    }
+
+    const explicitUserContextId = this.explicitTabUserContextOperations
+      .consumeNext();
+    if (explicitUserContextId !== null) {
+      const openedTabUserContextId = Number.parseInt(
+        tab.getAttribute("usercontextid") || "0",
+        10,
+      );
+      if (openedTabUserContextId !== explicitUserContextId) {
+        console.error(
+          "WorkspacesService: Explicit tab container did not match TabOpen",
+          {
+            expectedUserContextId: explicitUserContextId,
+            openedTabUserContextId,
+          },
+        );
+      }
+      return;
     }
 
     // Get the workspace ID that should be used (either existing or current)

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import type { TWorkspaceSnapshot } from "./type.ts";
+import type { TWorkspace, TWorkspaceSnapshot } from "./type.ts";
 import type {
   WorkspaceArchiveFile,
   WorkspaceArchiveSummary,
@@ -34,16 +34,45 @@ export const buildSummary = (
   archiveId: string,
   snapshot: TWorkspaceSnapshot,
   filePath: string,
-): WorkspaceArchiveSummary => ({
-  archiveId,
-  workspaceId: snapshot.workspace.workspaceId,
-  name: snapshot.workspace.name,
-  icon: snapshot.workspace.icon ?? null,
-  userContextId: snapshot.workspace.userContextId,
-  capturedAt: snapshot.capturedAt,
-  filePath,
-  tabCount: snapshot.tabs.length,
+): WorkspaceArchiveSummary => {
+  const summary: WorkspaceArchiveSummary = {
+    archiveId,
+    workspaceId: snapshot.workspace.workspaceId,
+    name: snapshot.workspace.name,
+    userContextId: snapshot.workspace.userContextId,
+    capturedAt: snapshot.capturedAt,
+    filePath,
+    tabCount: snapshot.tabs.length,
+  };
+  if (Object.hasOwn(snapshot.workspace, "icon")) {
+    summary.icon = snapshot.workspace.icon;
+  }
+  return summary;
+};
+
+export const createArchiveFile = (
+  snapshot: TWorkspaceSnapshot,
+): WorkspaceArchiveFile => ({
+  version: 1,
+  snapshot,
 });
+
+export const applyWorkspaceSnapshotMetadata = (
+  workspace: TWorkspace,
+  snapshotWorkspace: TWorkspaceSnapshot["workspace"],
+): TWorkspace => {
+  const restoredWorkspace: TWorkspace = {
+    ...workspace,
+    name: snapshotWorkspace.name,
+    userContextId: snapshotWorkspace.userContextId,
+  };
+  if (Object.hasOwn(snapshotWorkspace, "icon")) {
+    restoredWorkspace.icon = snapshotWorkspace.icon;
+  } else {
+    delete restoredWorkspace.icon;
+  }
+  return restoredWorkspace;
+};
 
 export const filterJsonFiles = (paths: string[]) =>
   paths.filter((path) => path.toLowerCase().endsWith(SNAPSHOT_FILE_EXTENSION));
@@ -141,10 +170,7 @@ export class WorkspacesArchiveService {
     const archiveId = createArchiveId();
     const path = getSnapshotPath(archiveId);
 
-    await safeWriteJSON(path, {
-      version: 1,
-      snapshot,
-    });
+    await safeWriteJSON(path, createArchiveFile(snapshot));
 
     return archiveId;
   }

@@ -47,6 +47,7 @@ function includePublicInJarmn() {
 }
 
 export default defineConfig({
+  cacheDir: "../../node_modules/.vite/pages-aboutdialog",
   plugins: [
     deno(),
     react({

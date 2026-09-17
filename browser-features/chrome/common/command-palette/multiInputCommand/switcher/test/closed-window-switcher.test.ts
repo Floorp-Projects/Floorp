@@ -53,7 +53,11 @@ const rawTests: TestCase[] = [
   {
     name: "closedWindowSwitcherCommand has correct category",
     fn() {
-      assertEquals(closedWindowSwitcherCommand.category, "switcher", "category should be switcher");
+      assertEquals(
+        closedWindowSwitcherCommand.category,
+        "switcher",
+        "category should be switcher",
+      );
     },
   },
   {
@@ -63,7 +67,11 @@ const rawTests: TestCase[] = [
         Array.isArray(closedWindowSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(closedWindowSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
+      assertEquals(
+        closedWindowSwitcherCommand.steps!.length,
+        1,
+        "should have exactly 1 step",
+      );
     },
   },
   {
@@ -97,7 +105,8 @@ const rawTests: TestCase[] = [
     },
   },
   {
-    name: "closedWindowSwitcherCommand fn does not throw with invalid closed window index",
+    name:
+      "closedWindowSwitcherCommand fn does not throw with invalid closed window index",
     fn() {
       assertDoesNotThrow(() => {
         closedWindowSwitcherCommand.fn({} as Window, { closedWindow: "999" });
@@ -162,6 +171,6 @@ function assertDoesNotThrow(fn: () => void): void {
   }
 }
 
-export function runAllTests() {
-  runTests("closed-window-switcher.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("closed-window-switcher.test.ts", rawTests);
 }

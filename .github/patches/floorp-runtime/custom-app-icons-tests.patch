@@ -1,0 +1,1610 @@
+diff --git a/browser/components/preferences/tests/browser_browserIcon.js b/browser/components/preferences/tests/browser_browserIcon.js
+index 2684836f9ec..41951d97f1f 100644
+--- a/browser/components/preferences/tests/browser_browserIcon.js
++++ b/browser/components/preferences/tests/browser_browserIcon.js
+@@ -11,11 +11,40 @@ const { CustomIconManager, ICON_CATALOG } = ChromeUtils.importESModule(
+ );
+
+ const PREF_ICON_ID = "browser.shell.customIcon.id";
+-
+-// Fake default-browser / taskbar-pin state, flipped by the stubs in the unlock
+-// task. The Bonus icons unlock only when both are true.
+-let gIsDefault = false;
+-let gIsPinned = false;
++const TEST_ICON_ID = "floorpFloorpleGradient";
++const EXPECTED_ICON_IDS = [
++  "default",
++  "floorp01000110",
++  "floorp84",
++  "floorpAero",
++  "floorpAsagao",
++  "floorpBotan",
++  "floorpCurve",
++  "floorpDaidai",
++  "floorpDisco",
++  "floorpEarlyBird",
++  "floorpExplorer",
++  "floorpFloat",
++  "floorpFloor",
++  "floorpFloorple",
++  "floorpFloorpleGradient",
++  "floorpHarenohi",
++  "floorpHello",
++  "floorpMetal",
++  "floorpMidnight",
++  "floorpMoegi",
++  "floorpNani",
++  "floorpNightOwl",
++  "floorpObsidian",
++  "floorpPastel",
++  "floorpPowerUp",
++  "floorpQuartz",
++  "floorpSimple",
++  "floorpTranslatedIntoKorean",
++  "floorpTsuyukusa",
++  "floorpUguisu",
++  "floorpWave",
++];
+
+ /**
+  * Stub CustomIconManager.apply()/revert() so they only drive the icon pref
+@@ -97,219 +126,83 @@ add_task(async function test_appearance_readout_reflects_pref() {
+       "Readout shows the default branding icon"
+     );
+
+-    // Switching the pref to another icon updates label + thumbnail.
+-    Services.prefs.setStringPref(PREF_ICON_ID, "retro2004");
+-    await readout.updateComplete;
+-    is(
+-      readout.getAttribute("data-l10n-id"),
+-      ICON_CATALOG.retro2004.l10nId,
+-      "Readout updates to the Retro 2004 icon"
++    // Switching the pref to a Floorp icon updates label + thumbnail.
++    Services.prefs.setStringPref(PREF_ICON_ID, TEST_ICON_ID);
++    await TestUtils.waitForCondition(
++      () =>
++        readout.getAttribute("data-l10n-id") ===
++        ICON_CATALOG[TEST_ICON_ID].l10nId,
++      "Readout updates to the selected Floorp icon"
+     );
+     is(
+       readout.iconSrc,
+-      ICON_CATALOG.retro2004.preview,
+-      "Readout thumbnail is the Retro 2004 preview"
+-    );
+-  });
+-});
+-
+-// The Momo icon carries a description in its Fluent message; the readout
+-// moz-box-item should surface it (Fluent applies .description automatically
+-// because moz-box-item declares description as a localizable attribute).
+-add_task(async function test_appearance_readout_shows_momo_description() {
+-  await withBrowserIconUI(async ({ win }) => {
+-    let control = await settingControlRenders("current-browser-icon", win);
+-    let readout = control.controlEl;
+-
+-    Services.prefs.setStringPref(PREF_ICON_ID, "momo");
+-    await TestUtils.waitForCondition(
+-      () => readout.getAttribute("data-l10n-id") === ICON_CATALOG.momo.l10nId,
+-      "Readout updates to the Momo icon"
+-    );
+-    await TestUtils.waitForCondition(
+-      () => readout.description,
+-      "Momo description is localized onto the readout"
+-    );
+-    ok(
+-      readout.description.includes("@heyheymomodraws"),
+-      "Readout shows Momo's author credit description"
++      ICON_CATALOG[TEST_ICON_ID].preview,
++      "Readout thumbnail is the selected Floorp icon preview"
+     );
+   });
+ });
+
+-// The sub-pane splits icons into Basic and Bonus pickers, and choosing an icon
+-// drives CustomIconManager.apply()/revert() with the right id.
+-add_task(async function test_subpane_pickers_apply_and_revert() {
++// The sub-pane exposes the complete Floorp catalog in one picker. Choosing a
++// custom icon applies it, while choosing Default reverts the override.
++add_task(async function test_subpane_picker_catalog_apply_and_revert() {
+   await withBrowserIconUI(async ({ doc, win }) => {
+     let paneChange = waitForPaneChange("browserIcon", win);
+     doc.location.hash = "browserIcon";
+     await paneChange;
+
+-    let basicControl = await settingControlRenders(
++    let pickerControl = await settingControlRenders(
+       "customBrowserIconBasic",
+       win
+     );
+-    let bonusControl = await settingControlRenders(
+-      "customBrowserIconBonus",
+-      win
+-    );
+-    let basic = basicControl.controlEl;
+-    let bonus = bonusControl.controlEl;
+-
+-    let basicValues = [...basic.querySelectorAll("moz-visual-picker-item")].map(
+-      item => item.value
+-    );
+-    let bonusValues = [...bonus.querySelectorAll("moz-visual-picker-item")].map(
+-      item => item.value
+-    );
++    let picker = pickerControl.controlEl;
++    let items = [...picker.querySelectorAll("moz-visual-picker-item")];
++    await Promise.all(items.map(item => item.updateComplete));
+
+     Assert.deepEqual(
+-      basicValues,
+-      ["default", "retro2004", "retro2017", "pride", "minimal"],
+-      "Basic picker offers the default plus the non-gated icons"
++      items.map(item => item.value),
++      EXPECTED_ICON_IDS,
++      "Picker offers Default and every Floorp catalog icon in catalog order"
+     );
+     Assert.deepEqual(
+-      bonusValues,
+-      ["kit", "pixelated", "momo"],
+-      "Bonus picker offers the gated icons"
+-    );
++      Object.keys(ICON_CATALOG),
++      EXPECTED_ICON_IDS,
++      "The shipped catalog contains the expected Floorp icon ids"
++    );
++    for (let item of items) {
++      let entry = ICON_CATALOG[item.value];
++      is(
++        item.getAttribute("data-l10n-id"),
++        entry.l10nId,
++        `${item.value} uses its catalog label`
++      );
++      is(
++        item.imageSrc,
++        entry.preview,
++        `${item.value} uses its catalog preview`
++      );
++      ok(!item.disabled, `${item.value} is selectable without an unlock gate`);
++    }
+
+-    // Choosing a Basic icon applies it.
+-    await selectPickerValue(basic, "retro2004");
++    await selectPickerValue(picker, TEST_ICON_ID);
+     await TestUtils.waitForCondition(
+-      () => CustomIconManager.apply.calledWith("retro2004"),
+-      "apply('retro2004') called when a Basic icon is chosen"
++      () => CustomIconManager.apply.calledWith(TEST_ICON_ID),
++      `apply('${TEST_ICON_ID}') called when a Floorp icon is chosen`
+     );
+-
+-    // Choosing the default reverts.
+-    await selectPickerValue(basic, "default");
+-    await TestUtils.waitForCondition(
+-      () => CustomIconManager.revert.called,
+-      "revert() called when the Default option is chosen"
++    is(
++      Services.prefs.getStringPref(PREF_ICON_ID),
++      TEST_ICON_ID,
++      "The selected Floorp icon becomes active"
+     );
+-  });
+-});
+-
+-// The gated Bonus icons stay locked until the browser is both the default and
+-// pinned to the taskbar.
+-add_task(async function test_bonus_icons_unlock_on_default_and_pin() {
+-  gIsDefault = false;
+-  gIsPinned = false;
+-
+-  await withBrowserIconUI(async ({ doc, win }) => {
+-    let sandbox = sinon.createSandbox();
+-    // The sub-pane reads the default-browser and taskbar-pin state through
+-    // getShellService(); override it with a fake that reports our fake state and
+-    // flips it when the buttons act, so the unlock gate never touches the OS.
+-    sandbox.stub(win, "getShellService").returns({
+-      isDefaultBrowser: () => gIsDefault,
+-      setDefaultBrowser: () => {
+-        gIsDefault = true;
+-      },
+-      pinToTaskbar: () => {
+-        gIsPinned = true;
+-      },
+-      shellService: {
+-        isCurrentAppPinnedToTaskbar: () => Promise.resolve(gIsPinned),
+-      },
+-    });
+-
+-    try {
+-      let paneChange = waitForPaneChange("browserIcon", win);
+-      doc.location.hash = "browserIcon";
+-      await paneChange;
+-
+-      let bonusControl = await settingControlRenders(
+-        "customBrowserIconBonus",
+-        win
+-      );
+-      let bonus = bonusControl.controlEl;
+-      let bonusItems = () => [
+-        ...bonus.querySelectorAll("moz-visual-picker-item"),
+-      ];
+
+-      let promo = await settingControlRenders(
+-        "customBrowserIconRequirement",
+-        win
+-      );
+-      let unlockedPromo = await settingControlRenders(
+-        "customBrowserIconUnlocked",
+-        win
+-      );
+-      let setDefaultButton = await settingControlRenders(
+-        "browserIconSetDefaultButton",
+-        win
+-      );
+-      let pinButton = await settingControlRenders("browserIconPinButton", win);
+-
+-      // Locked: every Bonus option is disabled, the requirement promo shows,
+-      // and both action buttons are offered.
+-      ok(
+-        bonusItems().every(item => item.disabled),
+-        "Bonus options are disabled while locked"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(promo),
+-        "Requirement promo shown while locked"
+-      );
+-      ok(
+-        BrowserTestUtils.isHidden(unlockedPromo),
+-        "Unlocked promo hidden while locked"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(setDefaultButton),
+-        "Set-default button shown while not default"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(pinButton),
+-        "Pin button shown while not pinned"
+-      );
+-
+-      // Becoming default is not enough on its own: the icons stay locked and
+-      // only the (now satisfied) set-default button drops away. Click the button
+-      // element directly (rather than by screen coordinates) so a mid-transition
+-      // pane layout can't move it out from under a synthesized mouse event; the
+-      // setting-group's delegated handler keys off the event target's `.control`
+-      // back-reference, so wait for the button to finish rendering first.
+-      await setDefaultButton.controlEl.updateComplete;
+-      setDefaultButton.controlEl.click();
+-      await TestUtils.waitForCondition(
+-        () => BrowserTestUtils.isHidden(setDefaultButton),
+-        "Set-default button hides once the browser is default"
+-      );
+-      ok(gIsDefault, "Clicking set-default made the browser default");
+-      ok(
+-        bonusItems().every(item => item.disabled),
+-        "Bonus options remain disabled while still not pinned"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(promo),
+-        "Requirement promo still shown while not pinned"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(pinButton),
+-        "Pin button still shown while not pinned"
+-      );
+-
+-      // Pinning satisfies the last condition: the icons unlock and the promo
+-      // (with its buttons) goes away.
+-      await pinButton.controlEl.updateComplete;
+-      pinButton.controlEl.click();
+-      await TestUtils.waitForCondition(
+-        () => bonusItems().every(item => !item.disabled),
+-        "Bonus options enable once default and pinned"
+-      );
+-      ok(gIsPinned, "Clicking pin pinned the browser to the taskbar");
+-      await TestUtils.waitForCondition(
+-        () => BrowserTestUtils.isHidden(promo),
+-        "Requirement promo hidden once unlocked"
+-      );
+-      ok(
+-        !BrowserTestUtils.isHidden(unlockedPromo),
+-        "Unlocked promo shown once unlocked"
+-      );
+-    } finally {
+-      sandbox.restore();
+-    }
++    await selectPickerValue(picker, "default");
++    await TestUtils.waitForCondition(
++      () =>
++        CustomIconManager.revert.called &&
++        !Services.prefs.prefHasUserValue(PREF_ICON_ID),
++      "Choosing Default clears the custom icon preference"
++    );
++    sinon.assert.calledOnce(CustomIconManager.apply);
++    sinon.assert.calledWithExactly(CustomIconManager.apply, TEST_ICON_ID);
++    sinon.assert.calledOnce(CustomIconManager.revert);
+   });
+ });
+diff --git a/browser/components/shell/test/unit/test_customIconManager.js b/browser/components/shell/test/unit/test_customIconManager.js
+index 5e752dab52f..938d0e7ecf9 100644
+--- a/browser/components/shell/test/unit/test_customIconManager.js
++++ b/browser/components/shell/test/unit/test_customIconManager.js
+@@ -9,27 +9,28 @@ const { MockRegistrar } = ChromeUtils.importESModule(
+ const { sinon } = ChromeUtils.importESModule(
+   "resource://testing-common/Sinon.sys.mjs"
+ );
+-// This is an xpcshell test, but a sibling browser.toml makes eslint apply the
+-// browser-test env, where TestUtils is a predefined global. It isn't one in
+-// xpcshell (there's no head.js here to import it either), so the import is
+-// required.
++// A sibling browser.toml makes eslint treat TestUtils as a browser-test global,
++// but xpcshell still needs the explicit import.
+ // eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
+ const { TestUtils } = ChromeUtils.importESModule(
+   "resource://testing-common/TestUtils.sys.mjs"
+ );
+-const {
+-  CustomIconManager,
+-  ICON_CATALOG,
+-  resolvePreview,
+-  resolveResourceId,
+-  OS_LIGHT,
+-  OS_DARK,
+-} = ChromeUtils.importESModule(
++const { PrivateBrowsingUtils: PrivateBrowsingUtilsModule } =
++  ChromeUtils.importESModule(
++    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
++  );
++const { TaskbarTabsUtils } = ChromeUtils.importESModule(
++  "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs"
++);
++const { ShellService: ShellServiceModule } = ChromeUtils.importESModule(
++  "moz-src:///browser/components/shell/ShellService.sys.mjs"
++);
++const { CustomIconManager, ICON_CATALOG } = ChromeUtils.importESModule(
+   "moz-src:///browser/components/shell/CustomIconManager.sys.mjs"
+ );
+-// Importing this module constructs the toolkit profile service as a side effect,
+-// which requires setupProfileService() to have run, so it must stay lazy and
+-// only be touched from add_setup() onwards.
++
++// Importing this module constructs the profile service as a side effect, so it
++// must stay lazy until setupProfileService() has run.
+ const lazy = {};
+ ChromeUtils.defineESModuleGetters(lazy, {
+   SelectableProfileService:
+@@ -37,17 +38,24 @@ ChromeUtils.defineESModuleGetters(lazy, {
+ });
+
+ const PREF_ICON_ID = "browser.shell.customIcon.id";
+-const TEST_AUMID = "Test.Firefox.AUMID";
+-const TEST_SHORTCUTS = ["C:\\fake\\Desktop\\Nightly.lnk"];
+-const RETRO_RESOURCE_ID = ICON_CATALOG.retro2004.iconResourceId;
++const TEST_AUMID = "Test.Floorp.AUMID";
++const TEST_SHORTCUTS = ["C:\\fake\\Desktop\\Floorp.lnk"];
++const TEST_IMAGE = { name: "decoded Floorp icon" };
++const IDS = {
++  apply: "floorpAero",
++  retry: "floorpBotan",
++  noShortcut: "floorpCurve",
++  shortcutFailure: "floorpDaidai",
++  same: "floorpDisco",
++  revert: "floorpEarlyBird",
++  earlyStartup: "floorpExplorer",
++  startupReconcile: "floorpFloat",
++  remoteReconcile: "floorpFloor",
++};
+
+-// CustomIconManager.apply() refuses to run on MSIX (packaged) builds, so on the
+-// MSIX CI job every task except the MSIX-specific one (which fakes the
+-// condition itself and runs everywhere) is skipped.
+ const ON_MSIX = Services.sysinfo.getProperty("hasWinPackageId");
+
+-// add_task() mutates the options object it is handed (tagging it isTask), so
+-// each call needs its own fresh object rather than a shared one.
++// add_task() mutates its options object, so each task needs a fresh one.
+ function skipOnMsix() {
+   return { skip_if: () => ON_MSIX };
+ }
+@@ -56,14 +64,14 @@ function exePath() {
+   return Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
+ }
+
+-let shellServiceMock = {
++const shellServiceMock = {
+   QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsShellService]),
+   enumerateInstallShortcuts: sinon.stub(),
+   setShortcutsIcon: sinon.stub(),
+   createShortcut: sinon.stub(),
+ };
+
+-let winTaskbarMock = {
++const winTaskbarMock = {
+   QueryInterface: ChromeUtils.generateQI([Ci.nsIWinTaskbar]),
+   setAllWindowIcons: sinon.stub(),
+   refreshTaskbarButtons: sinon.stub(),
+@@ -72,40 +80,17 @@ let winTaskbarMock = {
+   },
+ };
+
+-// ensureAppliedOrRevert() awaits SelectableProfileService.init() on the startup
+-// path so the shared custom-icon pref can finish loading from the profiles
+-// database before it reconciles. We stub it here so these unit tests don't spin up
+-// the real profiles machinery.
+-let spsInitStub;
+-
+-// Reset stub history + default behaviour, clear the pref, and drop any recorded
+-// Glean values before each task.
+-function resetMocks() {
+-  shellServiceMock.enumerateInstallShortcuts.reset();
+-  shellServiceMock.enumerateInstallShortcuts.resolves(TEST_SHORTCUTS.slice());
+-  shellServiceMock.setShortcutsIcon.reset();
+-  shellServiceMock.setShortcutsIcon.resolves();
+-  shellServiceMock.createShortcut.reset();
+-  shellServiceMock.createShortcut.resolves();
+-  winTaskbarMock.setAllWindowIcons.reset();
+-  winTaskbarMock.refreshTaskbarButtons.reset();
+-  spsInitStub.reset();
+-  spsInitStub.resolves();
+-  Services.prefs.clearUserPref(PREF_ICON_ID);
+-  Services.fog.testResetFOG();
+-}
++const windowsUIUtilsMock = {
++  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsUIUtils]),
++  setWindowIcon: sinon.stub(),
++};
+
+-// The single "changed" event recorded since the last reset, or undefined if
+-// none. Fails if more than one was recorded (each task exercises one change).
+-function singleChangedEvent() {
+-  let events = Glean.customIcon.changed.testGetValue() ?? [];
+-  Assert.lessOrEqual(events.length, 1, "at most one changed event recorded");
+-  return events[0];
+-}
++let decodeImageStub;
++let isPrivateWindowStub;
++let isTaskbarTabWindowStub;
++let writeShortcutIconStub;
++let spsInitStub;
+
+-// Since we're importing SelectableProfileService for this test, we lift some of
+-// the setup from toolkit/profile/test/xpcshell/head.js which lets the service
+-// be imported and executed in debug xpcshell tests.
+ function setupProfileService() {
+   let profD = do_get_profile();
+
+@@ -117,11 +102,11 @@ function setupProfileService() {
+   dataHomeLocal.append("local");
+   dataHomeLocal.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+
+-  let xreDirProvider = Cc["@mozilla.org/xre/directory-provider;1"].getService(
++  let provider = Cc["@mozilla.org/xre/directory-provider;1"].getService(
+     Ci.nsIXREDirProvider
+   );
+-  xreDirProvider.setUserDataDirectory(dataHome, false);
+-  xreDirProvider.setUserDataDirectory(dataHomeLocal, true);
++  provider.setUserDataDirectory(dataHome, false);
++  provider.setUserDataDirectory(dataHomeLocal, true);
+ }
+
+ add_setup(function () {
+@@ -136,766 +121,553 @@ add_setup(function () {
+     "@mozilla.org/windows-taskbar;1",
+     winTaskbarMock
+   );
++  let windowsUIUtilsCid = MockRegistrar.register(
++    "@mozilla.org/windows-ui-utils;1",
++    windowsUIUtilsMock
++  );
+
+-  spsInitStub = sinon.stub(lazy.SelectableProfileService, "init").resolves();
++  decodeImageStub = sinon.stub(TaskbarTabsUtils, "_imageFromLocalURI");
++  isTaskbarTabWindowStub = sinon.stub(TaskbarTabsUtils, "isTaskbarTabWindow");
++  isPrivateWindowStub = sinon.stub(
++    PrivateBrowsingUtilsModule,
++    "isWindowPrivate"
++  );
++  writeShortcutIconStub = sinon.stub(ShellServiceModule, "writeShortcutIcon");
++  spsInitStub = sinon.stub(lazy.SelectableProfileService, "init");
+
+   registerCleanupFunction(() => {
+-    spsInitStub.restore();
++    CustomIconManager.unregisterObservers();
++    sinon.restore();
++    MockRegistrar.unregister(windowsUIUtilsCid);
+     MockRegistrar.unregister(taskbarCid);
+     MockRegistrar.unregister(shellCid);
+     Services.prefs.clearUserPref(PREF_ICON_ID);
+   });
+ });
+
+-/**
+- * This test verifies that apply() enumerates shortcuts by the default AUMID,
+- * writes the catalog resource ID (positive, un-negated) and the executable
+- * path to the matching shortcuts, sets the runtime window icon, and records
+- * the pref.
+- */
++function resetMocks() {
++  CustomIconManager.unregisterObservers();
++
++  shellServiceMock.enumerateInstallShortcuts.reset();
++  shellServiceMock.enumerateInstallShortcuts.resolves(TEST_SHORTCUTS.slice());
++  shellServiceMock.setShortcutsIcon.reset();
++  shellServiceMock.setShortcutsIcon.resolves();
++  shellServiceMock.createShortcut.reset();
++  shellServiceMock.createShortcut.resolves();
++  winTaskbarMock.setAllWindowIcons.reset();
++  winTaskbarMock.refreshTaskbarButtons.reset();
++  windowsUIUtilsMock.setWindowIcon.reset();
++
++  decodeImageStub.reset();
++  decodeImageStub.resolves(TEST_IMAGE);
++  isTaskbarTabWindowStub.reset();
++  isTaskbarTabWindowStub.returns(false);
++  isPrivateWindowStub.reset();
++  isPrivateWindowStub.returns(false);
++  writeShortcutIconStub.reset();
++  writeShortcutIconStub.resolves();
++  spsInitStub.reset();
++  spsInitStub.resolves();
++
++  Services.prefs.clearUserPref(PREF_ICON_ID);
++  Services.fog.testResetFOG();
++}
++
++function assertNoPersistentIconIO(context) {
++  Assert.ok(
++    writeShortcutIconStub.notCalled,
++    `${context}: no profile icon was written`
++  );
++  Assert.ok(
++    shellServiceMock.enumerateInstallShortcuts.notCalled,
++    `${context}: shortcuts were not enumerated`
++  );
++  Assert.ok(
++    shellServiceMock.setShortcutsIcon.notCalled,
++    `${context}: shortcuts were not rewritten`
++  );
++  Assert.ok(
++    shellServiceMock.createShortcut.notCalled,
++    `${context}: no shortcut was created`
++  );
++}
++
++function singleChangedEvent() {
++  let events = Glean.customIcon.changed.testGetValue() ?? [];
++  Assert.equal(events.length, 1, "exactly one changed event was recorded");
++  return events[0];
++}
++
++add_task(function test_catalog_contains_floorp_png_icons() {
++  let customEntries = Object.entries(ICON_CATALOG).filter(
++    ([id]) => id !== "default"
++  );
++  Assert.greater(customEntries.length, 0, "the catalog contains custom icons");
++  for (let [id, entry] of customEntries) {
++    Assert.ok(entry.preview.endsWith(".png"), `${id} uses a bundled PNG`);
++    Assert.ok(entry.l10nId, `${id} has a localized label`);
++  }
++});
++
+ add_task(
+   skipOnMsix(),
+-  async function test_apply_updates_shortcuts_pref_and_runtime() {
++  async function test_apply_decodes_writes_and_updates_shortcuts() {
+     resetMocks();
+
+-    await CustomIconManager.apply("retro2004");
++    await CustomIconManager.apply(IDS.apply);
+
++    Assert.ok(decodeImageStub.calledOnce, "the PNG was decoded once");
++    Assert.equal(
++      decodeImageStub.firstCall.args[0].spec,
++      ICON_CATALOG[IDS.apply].preview,
++      "the selected catalog image was decoded"
++    );
++    Assert.ok(writeShortcutIconStub.calledOnce, "an ICO was written");
++    let [profileIcon, image] = writeShortcutIconStub.firstCall.args;
++    Assert.equal(profileIcon.leafName, `${IDS.apply}.ico`, "correct filename");
++    Assert.equal(
++      profileIcon.parent.leafName,
++      "floorp-custom-icons",
++      "the ICO is profile-local"
++    );
++    Assert.equal(image, TEST_IMAGE, "the decoded image was encoded");
+     Assert.ok(
+       shellServiceMock.enumerateInstallShortcuts.calledOnceWithExactly(
+         TEST_AUMID
+       ),
+-      "enumerateInstallShortcuts called once with the default AUMID"
++      "shortcuts were enumerated by AUMID"
+     );
+-
+     Assert.ok(
+-      shellServiceMock.setShortcutsIcon.calledOnce,
+-      "setShortcutsIcon called once"
+-    );
+-    let [shortcuts, iconPath, resourceId] =
+-      shellServiceMock.setShortcutsIcon.getCall(0).args;
+-    Assert.deepEqual(
+-      shortcuts,
+-      TEST_SHORTCUTS,
+-      "passed the enumerated shortcuts through"
++      shellServiceMock.setShortcutsIcon.calledOnceWithExactly(
++        TEST_SHORTCUTS,
++        profileIcon.path,
++        0
++      ),
++      "shortcuts reference the profile ICO at index 0"
+     );
+-    Assert.equal(iconPath, exePath(), "icon source is the running executable");
+-    Assert.equal(
+-      resourceId,
+-      RETRO_RESOURCE_ID,
+-      "passed the catalog resource ID as-is (negation happens in C++, not JS)"
++    Assert.ok(
++      decodeImageStub.calledBefore(writeShortcutIconStub),
++      "decode precedes the ICO write"
+     );
+-
+     Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(RETRO_RESOURCE_ID),
+-      "runtime window icon set to the retro resource ID"
++      writeShortcutIconStub.calledBefore(shellServiceMock.setShortcutsIcon),
++      "the ICO write precedes the shortcut update"
+     );
+     Assert.equal(
+       Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-      "retro2004",
+-      "pref records the applied id"
++      IDS.apply,
++      "the selected id was persisted"
++    );
++    Assert.ok(
++      winTaskbarMock.refreshTaskbarButtons.calledOnce,
++      "taskbar buttons were refreshed"
+     );
+-
+-    let event = singleChangedEvent();
+-    Assert.ok(event, "a changed event was recorded");
+-    Assert.equal(event.category, "custom_icon", "event category");
+-    Assert.equal(event.name, "changed", "event name");
+     Assert.equal(
+-      event.extra.icon_id,
+-      "retro2004",
+-      "changed event carries the applied id"
++      singleChangedEvent().extra.icon_id,
++      IDS.apply,
++      "telemetry records the selection"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that apply() rejects when given an id absent from the
+- * catalog, without touching any shortcut or runtime state or the pref.
+- */
+-add_task(skipOnMsix(), async function test_apply_unknown_id_throws() {
+-  resetMocks();
+-
+-  await Assert.rejects(
+-    CustomIconManager.apply("does-not-exist"),
+-    /Unknown icon id/,
+-    "apply rejects for an unknown catalog id"
+-  );
+-
+-  Assert.ok(
+-    shellServiceMock.setShortcutsIcon.notCalled,
+-    "no shortcut work attempted for an unknown id"
+-  );
+-  Assert.ok(
+-    winTaskbarMock.setAllWindowIcons.notCalled,
+-    "no runtime work attempted for an unknown id"
+-  );
+-  Assert.equal(
+-    Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-    "",
+-    "pref left untouched"
+-  );
+-});
+-
+-/**
+- * This test verifies that apply() throws on MSIX (packaged) builds, where the
+- * feature is unsupported, without touching shortcuts, the runtime icon, or the
+- * pref.
+- */
+-add_task(async function test_apply_throws_on_msix() {
+-  resetMocks();
+-
+-  // Fake an MSIX build by flipping the sysinfo property the manager checks.
+-  // nsSystemInfo is a writable property bag, so set it directly and restore it.
+-  let bag = Services.sysinfo.QueryInterface(Ci.nsIWritablePropertyBag2);
+-  let original = bag.getProperty("hasWinPackageId");
+-  bag.setPropertyAsBool("hasWinPackageId", true);
++add_task(
++  skipOnMsix(),
++  async function test_decode_rejection_is_evicted_and_retried() {
++    resetMocks();
++    decodeImageStub.onFirstCall().rejects(new Error("mock decode failure"));
+
+-  try {
+     await Assert.rejects(
+-      CustomIconManager.apply("retro2004"),
+-      /MSIX/,
+-      "apply rejects on an MSIX build"
++      CustomIconManager.apply(IDS.retry),
++      /mock decode failure/,
++      "the first decode failure reaches the caller"
+     );
+-
++    Assert.ok(writeShortcutIconStub.notCalled, "no ICO was written");
+     Assert.ok(
+       shellServiceMock.setShortcutsIcon.notCalled,
+-      "no shortcut work attempted on MSIX"
++      "no shortcut changed"
+     );
+     Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.notCalled,
+-      "no runtime work attempted on MSIX"
+-    );
+-    Assert.equal(
+-      Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-      "",
+-      "pref left untouched on MSIX"
++      !Services.prefs.prefHasUserValue(PREF_ICON_ID),
++      "the failed selection was not persisted"
+     );
+-  } finally {
+-    bag.setPropertyAsBool("hasWinPackageId", original);
+-  }
+-});
+
+-/**
+- * This test verifies that revert() resets matching shortcuts to the
+- * executable's default icon (resource ID 0), clears the runtime override, and
+- * clears the pref.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_revert_resets_shortcuts_pref_and_runtime() {
+-    resetMocks();
+-    Services.prefs.setStringPref(PREF_ICON_ID, "retro2004");
+-
+-    await CustomIconManager.revert();
++    await CustomIconManager.apply(IDS.retry);
+
++    Assert.equal(decodeImageStub.callCount, 2, "the decoder was retried");
++    Assert.ok(writeShortcutIconStub.calledOnce, "the retry wrote the ICO");
+     Assert.ok(
+       shellServiceMock.setShortcutsIcon.calledOnce,
+-      "setShortcutsIcon called once"
+-    );
+-    let [, iconPath, resourceId] =
+-      shellServiceMock.setShortcutsIcon.getCall(0).args;
+-    Assert.equal(iconPath, exePath(), "reverts using the executable path");
+-    Assert.equal(
+-      resourceId,
+-      0,
+-      "resource ID 0 selects the executable's default icon"
++      "the retry applied"
+     );
+-
+-    Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(0),
+-      "runtime window icon cleared (0)"
+-    );
+-    Assert.ok(!Services.prefs.prefHasUserValue(PREF_ICON_ID), "pref cleared");
+-
+-    let event = singleChangedEvent();
+-    Assert.ok(event, "reverting from a custom icon records a changed event");
+     Assert.equal(
+-      event.extra.icon_id,
+-      "default",
+-      "revert records the default id as the new selection"
++      Services.prefs.getStringPref(PREF_ICON_ID, ""),
++      IDS.retry,
++      "the successful retry was persisted"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that when enumeration matches no shortcuts, apply() skips
+- * setShortcutsIcon but still applies the runtime icon and records the pref, so
+- * the running window updates even though no shortcut could be changed.
+- */
+-add_task(skipOnMsix(), async function test_apply_no_matching_shortcuts() {
++add_task(skipOnMsix(), async function test_apply_without_matching_shortcuts() {
+   resetMocks();
+   shellServiceMock.enumerateInstallShortcuts.resolves([]);
+
+-  // Must not throw even though nothing matched.
+-  await CustomIconManager.apply("retro2004");
++  await CustomIconManager.apply(IDS.noShortcut);
+
+-  Assert.ok(
+-    shellServiceMock.setShortcutsIcon.notCalled,
+-    "setShortcutsIcon not called when enumeration matched nothing"
+-  );
+-  Assert.ok(
+-    winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(RETRO_RESOURCE_ID),
+-    "runtime icon still applied even though no shortcut changed"
+-  );
++  Assert.ok(writeShortcutIconStub.calledOnce, "the ICO was still prepared");
++  Assert.ok(shellServiceMock.setShortcutsIcon.notCalled, "no shortcut write");
+   Assert.equal(
+     Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-    "retro2004",
+-    "pref still recorded"
+-  );
+-  Assert.equal(
+-    singleChangedEvent()?.extra.icon_id,
+-    "retro2004",
+-    "changed event still recorded even though no shortcut matched"
++    IDS.noShortcut,
++    "the runtime selection was still persisted"
+   );
+ });
+
+-/**
+- * This test verifies that when setShortcutsIcon rejects, apply() logs and
+- * swallows the failure rather than throwing, and still applies the runtime
+- * icon and pref.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_apply_shortcut_write_failure_is_swallowed() {
+-    resetMocks();
+-    shellServiceMock.setShortcutsIcon.rejects(
+-      Components.Exception(
+-        "mock setShortcutsIcon failure",
+-        Cr.NS_ERROR_NOT_AVAILABLE
+-      )
+-    );
+-
+-    // A shortcut-write failure is logged, not thrown.
+-    await CustomIconManager.apply("retro2004");
+-
+-    Assert.ok(
+-      shellServiceMock.setShortcutsIcon.calledOnce,
+-      "setShortcutsIcon was attempted"
+-    );
+-    Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(RETRO_RESOURCE_ID),
+-      "runtime icon still applied despite the shortcut-write failure"
+-    );
+-    Assert.equal(
+-      Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-      "retro2004",
+-      "pref still recorded"
+-    );
+-    Assert.equal(
+-      singleChangedEvent()?.extra.icon_id,
+-      "retro2004",
+-      "changed event still recorded despite the shortcut-write failure"
+-    );
+-  }
+-);
+-
+-/**
+- * This test verifies that re-applying the icon that is already active (as the
+- * theme observer and startup reconcile do) records no changed event, so the
+- * probe only fires on a genuine change of icon.
+- */
+-add_task(skipOnMsix(), async function test_apply_same_id_records_no_change() {
++add_task(skipOnMsix(), async function test_shortcut_failure_is_nonfatal() {
+   resetMocks();
++  shellServiceMock.setShortcutsIcon.rejects(
++    Components.Exception("mock update failure", Cr.NS_ERROR_NOT_AVAILABLE)
++  );
+
+-  await CustomIconManager.apply("retro2004");
+-  Assert.ok(singleChangedEvent(), "first apply records a change");
++  await CustomIconManager.apply(IDS.shortcutFailure);
+
+-  Services.fog.testResetFOG();
+-  await CustomIconManager.apply("retro2004");
++  Assert.ok(shellServiceMock.setShortcutsIcon.calledOnce, "update attempted");
+   Assert.equal(
+-    Glean.customIcon.changed.testGetValue(),
+-    undefined,
+-    "re-applying the same id records no changed event"
++    Services.prefs.getStringPref(PREF_ICON_ID, ""),
++    IDS.shortcutFailure,
++    "the runtime selection survives shortcut failure"
++  );
++  Assert.ok(
++    winTaskbarMock.refreshTaskbarButtons.calledOnce,
++    "taskbar refreshed"
+   );
+ });
+
+-/**
+- * This test verifies that revert() over the already-default state (no custom
+- * icon active) records no changed event.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_revert_when_default_records_nothing() {
+-    resetMocks();
+-
+-    await CustomIconManager.revert();
+-
+-    Assert.equal(
+-      Glean.customIcon.changed.testGetValue(),
+-      undefined,
+-      "reverting when already default records no changed event"
+-    );
+-  }
+-);
+-
+-/**
+- * This test verifies that a rejected apply() (unknown id) records no changed
+- * event.
+- */
+-add_task(skipOnMsix(), async function test_unknown_id_records_no_change() {
++add_task(skipOnMsix(), async function test_unknown_apply_is_side_effect_free() {
+   resetMocks();
+
+   await Assert.rejects(
+     CustomIconManager.apply("does-not-exist"),
+     /Unknown icon id/,
+-    "apply rejects for an unknown catalog id"
++    "unknown ids are rejected"
+   );
+
++  Assert.ok(decodeImageStub.notCalled, "no image was decoded");
++  assertNoPersistentIconIO("unknown apply");
++  Assert.ok(winTaskbarMock.refreshTaskbarButtons.notCalled, "no refresh");
+   Assert.equal(
+     Glean.customIcon.changed.testGetValue(),
+     undefined,
+-    "no changed event recorded for a rejected apply"
++    "no telemetry event was recorded"
+   );
+ });
+
+-/**
+- * This test verifies that ensureAppliedOrRevert() records the current-icon
+- * string metric once at startup: the active id for a known custom icon, and
+- * "default" when no custom icon is set.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_records_current() {
+-    resetMocks();
+-    Services.prefs.setStringPref(PREF_ICON_ID, "retro2004");
+-
+-    await CustomIconManager.ensureAppliedOrRevert();
+-    Assert.equal(
+-      Glean.customIcon.current.testGetValue(),
+-      "retro2004",
+-      "current records the active custom icon id"
+-    );
++add_task(async function test_msix_is_unsupported_and_side_effect_free() {
++  resetMocks();
++  let bag = Services.sysinfo.QueryInterface(Ci.nsIWritablePropertyBag2);
++  let original = bag.getProperty("hasWinPackageId");
++  bag.setPropertyAsBool("hasWinPackageId", true);
+
+-    resetMocks();
+-    await CustomIconManager.ensureAppliedOrRevert();
+-    Assert.equal(
+-      Glean.customIcon.current.testGetValue(),
+-      "default",
+-      "current records the default id when no custom icon is set"
++  try {
++    Assert.ok(!CustomIconManager.supported, "MSIX is unsupported");
++    await Assert.rejects(
++      CustomIconManager.apply(IDS.apply),
++      /MSIX/,
++      "apply rejects on MSIX"
+     );
++    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++    Assert.ok(decodeImageStub.notCalled, "MSIX does not decode images");
++    assertNoPersistentIconIO("MSIX");
++  } finally {
++    bag.setPropertyAsBool("hasWinPackageId", original);
+   }
+-);
++});
+
+-/**
+- * This test verifies that ensureAppliedOrRevert() with a pref naming a known
+- * catalog id re-applies the runtime icon only, without rewriting shortcuts,
+- * and keeps the pref.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_applies_known_id() {
++  async function test_revert_uses_executable_without_profile_write() {
+     resetMocks();
+-    Services.prefs.setStringPref(PREF_ICON_ID, "retro2004");
++    Services.prefs.setStringPref(PREF_ICON_ID, IDS.revert);
+
+-    await CustomIconManager.ensureAppliedOrRevert();
++    await CustomIconManager.revert();
+
++    Assert.ok(decodeImageStub.notCalled, "revert does not decode an image");
++    Assert.ok(writeShortcutIconStub.notCalled, "revert writes no profile ICO");
+     Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(RETRO_RESOURCE_ID),
+-      "runtime icon applied for a known id"
++      shellServiceMock.setShortcutsIcon.calledOnceWithExactly(
++        TEST_SHORTCUTS,
++        exePath(),
++        0
++      ),
++      "shortcuts return to the executable's index-0 icon"
+     );
+     Assert.ok(
+-      shellServiceMock.setShortcutsIcon.notCalled,
+-      "ensureAppliedOrRevert does not rewrite shortcuts for a known id"
++      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(0),
++      "live windows return to the default icon"
++    );
++    Assert.ok(
++      !Services.prefs.prefHasUserValue(PREF_ICON_ID),
++      "the custom icon pref was cleared"
+     );
+     Assert.equal(
+-      Services.prefs.getStringPref(PREF_ICON_ID, ""),
+-      "retro2004",
+-      "pref retained"
++      singleChangedEvent().extra.icon_id,
++      "default",
++      "telemetry records a genuine revert"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that ensureAppliedOrRevert() with a pref naming an id
+- * absent from the catalog (e.g. a newer build's icon, or one since retired)
+- * reverts the shortcuts and runtime icon to default and clears the pref.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_reverts_unknown_id() {
++  async function test_reapply_records_no_duplicate_change() {
+     resetMocks();
+-    Services.prefs.setStringPref(PREF_ICON_ID, "icon-from-a-newer-build");
+-
+-    await CustomIconManager.ensureAppliedOrRevert();
++    await CustomIconManager.apply(IDS.same);
++    Assert.equal(singleChangedEvent().extra.icon_id, IDS.same, "first change");
+
+-    // Unknown id -> revert: shortcuts reset to default, runtime cleared, pref
+-    // cleared.
+-    Assert.ok(
+-      shellServiceMock.setShortcutsIcon.calledOnce,
+-      "revert rewrote shortcuts"
+-    );
+-    Assert.equal(
+-      shellServiceMock.setShortcutsIcon.getCall(0).args[2],
+-      0,
+-      "shortcuts reset to the default icon"
+-    );
+-    Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(0),
+-      "runtime icon cleared"
+-    );
+-    Assert.ok(!Services.prefs.prefHasUserValue(PREF_ICON_ID), "pref cleared");
++    Services.fog.testResetFOG();
++    await CustomIconManager.apply(IDS.same);
+     Assert.equal(
+       Glean.customIcon.changed.testGetValue(),
+       undefined,
+-      "the startup reconcile of an unknown id is not a user change"
++      "re-applying the active id records no change"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that ensureAppliedOrRevert() does nothing when no custom
+- * icon pref is set.
+- */
++add_task(skipOnMsix(), async function test_revert_default_records_no_change() {
++  resetMocks();
++  await CustomIconManager.revert();
++  Assert.equal(
++    Glean.customIcon.changed.testGetValue(),
++    undefined,
++    "reverting the default state records no change"
++  );
++});
++
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_noop_without_pref() {
++  async function test_early_startup_only_decodes_runtime_image() {
+     resetMocks();
++    Services.prefs.setStringPref(PREF_ICON_ID, IDS.earlyStartup);
+
+-    await CustomIconManager.ensureAppliedOrRevert();
+-
+-    Assert.ok(
+-      shellServiceMock.setShortcutsIcon.notCalled,
+-      "no shortcut work when no custom icon is recorded"
++    CustomIconManager.applyRuntimeOverrideForStartup();
++    await TestUtils.waitForCondition(
++      () => decodeImageStub.calledOnce,
++      "startup began decoding the selected image"
+     );
++    await TestUtils.waitForTick();
++
++    assertNoPersistentIconIO("early startup");
+     Assert.ok(
+       winTaskbarMock.setAllWindowIcons.notCalled,
+-      "no runtime work when no custom icon is recorded"
+-    );
+-  }
+-);
+-
+-/**
+- * This test checks that ensureAppliedOrRevert() will run setShortcutsIcon
+- * even if no custom ID is set, but only if it's being called because a remote
+- * profile updated.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_when_remoteProfileUpdated() {
+-    resetMocks();
+-
+-    await CustomIconManager.ensureAppliedOrRevert(
+-      true /* remoteProfileUpdated */
++      "the PNG is not treated as an executable resource id"
+     );
+
+-    Assert.ok(
+-      shellServiceMock.setShortcutsIcon.notCalled,
+-      "Shortcuts were not modified if a remote profile cleared the icon"
++    windowsUIUtilsMock.setWindowIcon.resetHistory();
++    let fakeWindow = {
++      closed: false,
++      document: { documentElement: { hasAttribute: () => false } },
++    };
++    CustomIconManager.observe(fakeWindow, "browser-delayed-startup-finished");
++    await TestUtils.waitForCondition(
++      () => windowsUIUtilsMock.setWindowIcon.calledOnce,
++      "the decoded image was applied to the new window"
+     );
+     Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnce,
+-      "Runtime icon was modified if a remote profile cleared the icon"
++      windowsUIUtilsMock.setWindowIcon.calledOnceWithExactly(
++        fakeWindow,
++        TEST_IMAGE,
++        TEST_IMAGE
++      ),
++      "the decoded image is used for both window icon sizes"
+     );
++    Assert.ok(decodeImageStub.calledOnce, "the cached decode was reused");
++    assertNoPersistentIconIO("delayed window startup");
+   }
+ );
+
+-/**
+- * This test verifies that the startup reconcile (remoteProfileUpdated = false)
+- * awaits SelectableProfileService.init() before reading the pref, so a custom
+- * icon synced late from the selectable-profiles database is still applied
+- * rather than missed. init() stands in for that shared-pref load and only sets
+- * the pref after yielding, so a reconcile that read the pref without awaiting
+- * would see no icon and apply nothing.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureAppliedOrRevert_waits_for_shared_pref_load() {
++  async function test_startup_reconcile_updates_runtime_only() {
+     resetMocks();
+-
+     spsInitStub.callsFake(async () => {
+       await Promise.resolve();
+-      Services.prefs.setStringPref(PREF_ICON_ID, "retro2004");
++      Services.prefs.setStringPref(PREF_ICON_ID, IDS.startupReconcile);
+     });
+
+     await CustomIconManager.ensureAppliedOrRevert();
+
+-    Assert.ok(
+-      spsInitStub.calledOnce,
+-      "The startup reconcile awaited SelectableProfileService.init()."
+-    );
+-    Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(RETRO_RESOURCE_ID),
+-      "The icon synced during init() was applied to runtime windows."
+-    );
+-  }
+-);
+-
+-/**
+- * This test verifies the theme-aware catalog shape: a theme-aware icon exposes
+- * distinct dark/light variants and resolveResourceId()/resolvePreview() pick the
+- * scheme-specific asset, while a flat icon ignores the scheme.
+- */
+-add_task(async function test_theme_aware_catalog() {
+-  let minimal = ICON_CATALOG.minimal;
+-  Assert.ok(minimal.variants, "minimal is theme-aware");
+-  Assert.notEqual(
+-    minimal.variants.dark.iconResourceId,
+-    minimal.variants.light.iconResourceId,
+-    "dark and light variants use distinct resource IDs"
+-  );
+-  Assert.notEqual(
+-    resolvePreview(minimal, "dark"),
+-    resolvePreview(minimal, "light"),
+-    "resolvePreview returns the scheme-specific preview for a theme-aware icon"
+-  );
+-  Assert.equal(
+-    resolveResourceId(minimal, "dark"),
+-    minimal.variants.dark.iconResourceId,
+-    "resolveResourceId picks the dark variant's id under a dark scheme"
+-  );
+-  Assert.equal(
+-    resolveResourceId(minimal, "light"),
+-    minimal.variants.light.iconResourceId,
+-    "resolveResourceId picks the light variant's id under a light scheme"
+-  );
+-
+-  let retro = ICON_CATALOG.retro2004;
+-  Assert.ok(!retro.variants, "retro2004 is theme-agnostic");
+-  Assert.equal(
+-    resolvePreview(retro, "dark"),
+-    resolvePreview(retro, "light"),
+-    "a flat entry returns the same preview regardless of scheme"
+-  );
+-  Assert.equal(
+-    resolveResourceId(retro, "dark"),
+-    retro.iconResourceId,
+-    "a flat entry returns its single resource id regardless of scheme"
+-  );
+-});
+-
+-/**
+- * This test verifies the OS-theme runtime behaviour of a theme-aware icon:
+- * apply() picks the variant matching the OS taskbar theme, and a
+- * look-and-feel-changed notification re-applies the other variant when (and
+- * only when) the OS theme actually flips.
+- *
+- * osColorScheme() reads the Windows registry, so we mock nsIWindowsRegKey for
+- * the duration of this task only (to avoid disturbing other registry reads) and
+- * drive SystemUsesLightTheme directly.
+- */
+-add_task(skipOnMsix(), async function test_theme_change_reapplies_variant() {
+-  resetMocks();
+-
+-  // The test flips this between OS_LIGHT/OS_DARK to simulate the user
+-  // changing their OS theme.
+-  let osTheme = OS_LIGHT;
+-  let regKeyMock = {
+-    QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowsRegKey]),
+-    open() {},
+-    close() {},
+-    hasValue: name => name === "SystemUsesLightTheme",
+-    readIntValue: name => (name === "SystemUsesLightTheme" ? osTheme : 0),
+-  };
+-  let regCid = MockRegistrar.register(
+-    "@mozilla.org/windows-registry-key;1",
+-    regKeyMock
+-  );
+-
+-  let { dark, light } = ICON_CATALOG.minimal.variants;
+-
+-  try {
+-    // Startup registers the look-and-feel-changed observer.
+-    CustomIconManager.applyRuntimeOverrideForStartup();
+-
+-    // Light OS theme -> Minimal applies the light variant.
+-    osTheme = OS_LIGHT;
+-    await CustomIconManager.apply("minimal");
++    Assert.ok(spsInitStub.calledOnce, "startup waited for shared prefs");
++    Assert.ok(decodeImageStub.calledOnce, "the runtime image was decoded");
++    assertNoPersistentIconIO("startup reconcile");
+     Assert.equal(
+-      shellServiceMock.setShortcutsIcon.lastCall.args[2],
+-      light.iconResourceId,
+-      "Minimal applies the light variant under a light OS theme"
+-    );
+-    Assert.ok(
+-      winTaskbarMock.setAllWindowIcons.calledWith(light.iconResourceId),
+-      "runtime window icon set to the light variant"
+-    );
+-
+-    // Flip the OS to dark and notify -> the active Minimal re-applies as dark.
+-    osTheme = OS_DARK;
+-    shellServiceMock.setShortcutsIcon.resetHistory();
+-    winTaskbarMock.setAllWindowIcons.resetHistory();
+-    Services.obs.notifyObservers(null, "look-and-feel-changed");
+-    await TestUtils.waitForCondition(
+-      () => shellServiceMock.setShortcutsIcon.called,
+-      "icon re-applied after the OS theme flipped to dark"
++      Services.prefs.getStringPref(PREF_ICON_ID, ""),
++      IDS.startupReconcile,
++      "the synced selection was retained"
+     );
+     Assert.equal(
+-      shellServiceMock.setShortcutsIcon.lastCall.args[2],
+-      dark.iconResourceId,
+-      "the dark variant is applied after the theme flips to dark"
+-    );
+-
+-    // A notification with no actual theme change is a no-op (the
+-    // gLastAppliedScheme guard short-circuits before re-applying).
+-    shellServiceMock.setShortcutsIcon.resetHistory();
+-    Services.obs.notifyObservers(null, "look-and-feel-changed");
+-    Assert.ok(
+-      shellServiceMock.setShortcutsIcon.notCalled,
+-      "no re-apply when the OS theme is unchanged"
++      Glean.customIcon.current.testGetValue(),
++      IDS.startupReconcile,
++      "current telemetry records the startup selection"
+     );
+-  } finally {
+-    MockRegistrar.unregister(regCid);
+-    Services.prefs.clearUserPref(PREF_ICON_ID);
+   }
+-});
++);
+
+-/**
+- * This test verifies that ensureShortcutInPerUserStartMenu() does not create a
+- * shortcut when one already exists in the per-user Start Menu Programs folder.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureShortcutInPerUserStartMenu_already_exists() {
++  async function test_remote_reconcile_updates_runtime_only() {
+     resetMocks();
++    Services.prefs.setStringPref(PREF_ICON_ID, IDS.remoteReconcile);
+
+-    let programsPath = Services.dirsvc.get("Progs", Ci.nsIFile).path;
+-    shellServiceMock.enumerateInstallShortcuts.resolves([
+-      programsPath + "\\Nightly.lnk",
+-    ]);
+-
+-    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++    await CustomIconManager.ensureAppliedOrRevert(true);
+
+     Assert.ok(
+-      shellServiceMock.createShortcut.notCalled,
+-      "createShortcut not called when a per-user Start Menu shortcut already exists"
++      spsInitStub.notCalled,
++      "remote sync skips profile initialization"
++    );
++    Assert.ok(decodeImageStub.calledOnce, "the remote image was decoded");
++    assertNoPersistentIconIO("remote reconcile");
++    Assert.equal(
++      Glean.customIcon.current.testGetValue(),
++      IDS.remoteReconcile,
++      "current telemetry records the remote selection"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that ensureShortcutInPerUserStartMenu() creates a shortcut
+- * in the Programs folder when none is found among the enumerated shortcuts.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureShortcutInPerUserStartMenu_creates_shortcut() {
++  async function test_remote_clear_resets_runtime_without_persistent_io() {
+     resetMocks();
+-    // TEST_SHORTCUTS ("C:\\fake\\Desktop\\Nightly.lnk") does not live in
+-    // the Programs dir, so the method must create the missing shortcut.
+
+-    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++    await CustomIconManager.ensureAppliedOrRevert(true);
+
++    Assert.ok(decodeImageStub.notCalled, "no custom image was decoded");
++    assertNoPersistentIconIO("remote clear");
+     Assert.ok(
+-      shellServiceMock.createShortcut.calledOnce,
+-      "createShortcut called when no per-user Start Menu shortcut exists"
+-    );
+-    let [exeFile, args, , iconFile, iconIndex, aumid, location, name] =
+-      shellServiceMock.createShortcut.getCall(0).args;
+-    Assert.equal(
+-      exeFile.path,
+-      exePath(),
+-      "shortcut targets the running executable"
++      winTaskbarMock.setAllWindowIcons.calledOnceWithExactly(0),
++      "live windows return to their default icon"
+     );
+-    Assert.deepEqual(args, [], "no extra arguments");
+-    Assert.equal(iconFile.path, exePath(), "icon source is the executable");
+-    Assert.equal(
+-      iconIndex,
+-      0,
+-      "icon index 0 selects the executable's default icon"
++    Assert.ok(
++      winTaskbarMock.refreshTaskbarButtons.calledOnce,
++      "taskbar refreshed"
+     );
+-    Assert.equal(aumid, TEST_AUMID, "shortcut carries the install AUMID");
+     Assert.equal(
+-      location,
+-      "Programs",
+-      "shortcut placed in the Programs location"
++      Glean.customIcon.current.testGetValue(),
++      "default",
++      "current telemetry records the default state"
+     );
+-    Assert.ok(name.endsWith(".lnk"), "shortcut filename ends with .lnk");
+   }
+ );
+
+-/**
+- * This test verifies that when enumerateInstallShortcuts rejects,
+- * ensureShortcutInPerUserStartMenu() swallows the error and does not attempt
+- * to create a shortcut.
+- */
+ add_task(
+   skipOnMsix(),
+-  async function test_ensureShortcutInPerUserStartMenu_enumeration_failure() {
++  async function test_unknown_saved_id_reverts_without_profile_write() {
+     resetMocks();
+-    shellServiceMock.enumerateInstallShortcuts.rejects(
+-      Components.Exception("mock enum failure", Cr.NS_ERROR_FAILURE)
+-    );
++    Services.prefs.setStringPref(PREF_ICON_ID, "icon-from-a-newer-build");
+
+-    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++    await CustomIconManager.ensureAppliedOrRevert();
+
++    Assert.ok(decodeImageStub.notCalled, "the unknown id was not decoded");
++    Assert.ok(writeShortcutIconStub.notCalled, "no profile ICO was written");
+     Assert.ok(
+-      shellServiceMock.createShortcut.notCalled,
+-      "createShortcut not attempted when enumeration fails"
++      shellServiceMock.setShortcutsIcon.calledOnceWithExactly(
++        TEST_SHORTCUTS,
++        exePath(),
++        0
++      ),
++      "unknown saved state reverts to the executable icon"
++    );
++    Assert.ok(!Services.prefs.prefHasUserValue(PREF_ICON_ID), "pref cleared");
++    Assert.equal(
++      Glean.customIcon.changed.testGetValue(),
++      undefined,
++      "startup repair is not a user change"
+     );
+   }
+ );
+
+-/**
+- * This test verifies that when createShortcut rejects,
+- * ensureShortcutInPerUserStartMenu() swallows the error and does not throw.
+- */
+-add_task(
+-  skipOnMsix(),
+-  async function test_ensureShortcutInPerUserStartMenu_create_failure() {
+-    resetMocks();
+-    shellServiceMock.createShortcut.rejects(
+-      Components.Exception("mock create failure", Cr.NS_ERROR_FAILURE)
+-    );
++add_task(skipOnMsix(), async function test_start_menu_existing_is_preserved() {
++  resetMocks();
++  let programsPath = Services.dirsvc.get("Progs", Ci.nsIFile).path;
++  shellServiceMock.enumerateInstallShortcuts.resolves([
++    programsPath + "\\Floorp.lnk",
++  ]);
+
+-    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++  await CustomIconManager.ensureShortcutInPerUserStartMenu();
+
+-    Assert.ok(
+-      shellServiceMock.createShortcut.calledOnce,
+-      "createShortcut was attempted despite the eventual failure"
+-    );
+-  }
+-);
++  Assert.ok(
++    shellServiceMock.enumerateInstallShortcuts.calledOnceWithExactly(
++      TEST_AUMID
++    ),
++    "this installation's shortcuts were enumerated"
++  );
++  Assert.ok(
++    shellServiceMock.createShortcut.notCalled,
++    "existing shortcut kept"
++  );
++});
+
+-/**
+- * This test verifies that ensureShortcutInPerUserStartMenu() is a no-op on
+- * MSIX (packaged) builds where shortcut creation is unsupported.
+- */
+-add_task(
+-  { skip_if: () => !ON_MSIX },
+-  async function test_ensureShortcutInPerUserStartMenu_noop_on_msix() {
+-    resetMocks();
++add_task(skipOnMsix(), async function test_start_menu_missing_is_created() {
++  resetMocks();
+
+-    await CustomIconManager.ensureShortcutInPerUserStartMenu();
++  await CustomIconManager.ensureShortcutInPerUserStartMenu();
++
++  Assert.ok(shellServiceMock.createShortcut.calledOnce, "shortcut created");
++  let [exeFile, args, description, iconFile, index, aumid, folder, name] =
++    shellServiceMock.createShortcut.firstCall.args;
++  Assert.equal(exeFile.path, exePath(), "shortcut launches this executable");
++  Assert.deepEqual(args, [], "no extra arguments");
++  Assert.ok(description, "localized description supplied");
++  Assert.equal(iconFile.path, exePath(), "executable supplies default icon");
++  Assert.equal(index, 0, "default executable icon selected");
++  Assert.equal(aumid, TEST_AUMID, "install AUMID supplied");
++  Assert.equal(folder, "Programs", "shortcut placed in Programs");
++  Assert.ok(name.endsWith(".lnk"), "shortcut name ends in .lnk");
++  Assert.ok(writeShortcutIconStub.notCalled, "no profile ICO needed");
++});
+
+-    Assert.ok(
+-      shellServiceMock.enumerateInstallShortcuts.notCalled,
+-      "no enumeration on MSIX"
+-    );
+-    Assert.ok(
+-      shellServiceMock.createShortcut.notCalled,
+-      "no shortcut creation on MSIX"
+-    );
+-  }
+-);
++add_task(skipOnMsix(), async function test_start_menu_failures_are_nonfatal() {
++  resetMocks();
++  shellServiceMock.enumerateInstallShortcuts.rejects(
++    Components.Exception("mock enumeration failure", Cr.NS_ERROR_FAILURE)
++  );
++  await CustomIconManager.ensureShortcutInPerUserStartMenu();
++  Assert.ok(shellServiceMock.createShortcut.notCalled, "creation was skipped");
+
+-/**
+- * This test verifies that refreshTaskbarButtons() delegates to
+- * WinTaskbar.refreshTaskbarButtons().
+- */
+-add_task(function test_refreshTaskbarButtons_calls_wintaskbar() {
+-  winTaskbarMock.refreshTaskbarButtons.reset();
++  resetMocks();
++  shellServiceMock.createShortcut.rejects(
++    Components.Exception("mock creation failure", Cr.NS_ERROR_FAILURE)
++  );
++  await CustomIconManager.ensureShortcutInPerUserStartMenu();
++  Assert.ok(
++    shellServiceMock.createShortcut.calledOnce,
++    "creation was attempted"
++  );
++});
++
++add_task(async function test_refresh_taskbar_buttons_notifies_consumers() {
++  resetMocks();
++  let notified = TestUtils.topicObserved("taskbar-buttons-refreshed");
+
+   CustomIconManager.refreshTaskbarButtons();
+
++  await notified;
+   Assert.ok(
+     winTaskbarMock.refreshTaskbarButtons.calledOnce,
+-    "refreshTaskbarButtons delegates to WinTaskbar"
++    "native taskbar buttons were refreshed"
+   );
+ });
+
+-/**
+- * This test verifies that refreshTaskbarButtons() swallows errors thrown by
+- * WinTaskbar.refreshTaskbarButtons() rather than propagating them.
+- */
+-add_task(function test_refreshTaskbarButtons_swallows_errors() {
+-  winTaskbarMock.refreshTaskbarButtons.reset();
++add_task(function test_refresh_taskbar_buttons_swallows_error() {
++  resetMocks();
+   winTaskbarMock.refreshTaskbarButtons.throws(
+-    Components.Exception("mock failure", Cr.NS_ERROR_FAILURE)
++    Components.Exception("mock refresh failure", Cr.NS_ERROR_FAILURE)
+   );
+
+   CustomIconManager.refreshTaskbarButtons();
+
+   Assert.ok(
+     winTaskbarMock.refreshTaskbarButtons.calledOnce,
+-    "refreshTaskbarButtons was attempted"
++    "native refresh was attempted without propagating its error"
+   );
+ });

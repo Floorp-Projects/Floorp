@@ -484,7 +484,10 @@ async function cmdRebuild() {
   ]);
 
   Injector.run("dev");
-  await Injector.injectXhtmlFromTs(true);
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: true,
+  });
   console.log("Rebuild complete. (loader-features is handled by HMR)");
 }
 

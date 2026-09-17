@@ -75,7 +75,7 @@ function withRestoredPref(run: () => void): void {
   );
   const originalValue = Services.prefs.getBoolPref(
     PREF_SPLIT_VIEW_DND_CREATION_ENABLED,
-    true,
+    false,
   );
 
   try {
@@ -301,9 +301,7 @@ function setupDragScenario(options: DragScenarioOptions = {}): DragScenario {
     tabContainer.dispatchEvent(
       createTabDragEvent("dragstart", 100, 50, draggedTab),
     );
-    document.dispatchEvent(
-      createTabDragEvent("dragover", 100, 50, draggedTab),
-    );
+    document.dispatchEvent(createTabDragEvent("dragover", 100, 50, draggedTab));
   };
   const dispatchDropToContent = (): Event => {
     const drop = createTabDragEvent("drop", 100, 50, draggedTab);
@@ -384,7 +382,7 @@ async function withEnabledDragScenario(
   );
   const originalValue = Services.prefs.getBoolPref(
     PREF_SPLIT_VIEW_DND_CREATION_ENABLED,
-    true,
+    false,
   );
   Services.prefs.setBoolPref(PREF_SPLIT_VIEW_DND_CREATION_ENABLED, true);
   const scenario = setupDragScenario(options);
@@ -437,18 +435,16 @@ function dispatchSafetyTerminal(
   globalThis.dispatchEvent(new Event(terminal));
 }
 
-function testTabDragToSplitCreationDefaultsToEnabled(): void {
+function testTabDragToSplitCreationDefaultsToDisabled(): void {
   withRestoredPref(() => {
-    if (
-      Services.prefs.prefHasUserValue(PREF_SPLIT_VIEW_DND_CREATION_ENABLED)
-    ) {
+    if (Services.prefs.prefHasUserValue(PREF_SPLIT_VIEW_DND_CREATION_ENABLED)) {
       Services.prefs.clearUserPref(PREF_SPLIT_VIEW_DND_CREATION_ENABLED);
     }
 
     assertEquals(
       isTabDragToSplitCreationEnabled(),
-      true,
-      "tab drag-to-split creation should default to enabled",
+      false,
+      "tab drag-to-split creation should default to disabled",
     );
   });
 }
@@ -540,7 +536,7 @@ async function testNormalDragEndLetsGeckoFinishFirst(): Promise<void> {
   );
   const originalValue = Services.prefs.getBoolPref(
     PREF_SPLIT_VIEW_DND_CREATION_ENABLED,
-    true,
+    false,
   );
   Services.prefs.setBoolPref(PREF_SPLIT_VIEW_DND_CREATION_ENABLED, true);
 
@@ -585,21 +581,24 @@ async function testNormalDragEndLetsGeckoFinishFirst(): Promise<void> {
 async function testNormalMultiSelectedDragEndDoesNotRecoverPrivately(): Promise<
   void
 > {
-  await withEnabledDragScenario(async (scenario) => {
-    scenario.dispatchDragToContent();
-    await waitForLostTerminalRecovery();
+  await withEnabledDragScenario(
+    async (scenario) => {
+      scenario.dispatchDragToContent();
+      await waitForLostTerminalRecovery();
 
-    assertEquals(
-      scenario.eventOrder().join(" > "),
-      "gecko-dragend > split-created",
-      "normal multi-selected dragend should remain Gecko-first",
-    );
-    assertEquals(
-      scenario.nativeFinalizerCalls().length,
-      0,
-      "Floorp must not repeat multi-selected finalization after normal dragend",
-    );
-  }, { multiSelected: true });
+      assertEquals(
+        scenario.eventOrder().join(" > "),
+        "gecko-dragend > split-created",
+        "normal multi-selected dragend should remain Gecko-first",
+      );
+      assertEquals(
+        scenario.nativeFinalizerCalls().length,
+        0,
+        "Floorp must not repeat multi-selected finalization after normal dragend",
+      );
+    },
+    { multiSelected: true },
+  );
 }
 
 async function testLostContentDropRecoversThenCreatesSplit(): Promise<void> {
@@ -641,34 +640,37 @@ async function testLostContentDropRecoversThenCreatesSplit(): Promise<void> {
 async function testActiveSessionRetriesThenCreatesOneSplit(): Promise<void> {
   const activeSession = {} as nsIDragSession;
   let sessionReads = 0;
-  await withEnabledDragScenario(async (scenario) => {
-    scenario.dispatchDragStartAndOver();
-    scenario.dispatchDropToContent();
+  await withEnabledDragScenario(
+    async (scenario) => {
+      scenario.dispatchDragStartAndOver();
+      scenario.dispatchDropToContent();
 
-    await waitForRecoveryRetry();
+      await waitForRecoveryRetry();
 
-    assertEquals(
-      sessionReads,
-      2,
-      "recovery should retry after the first active native session",
-    );
-    assertEquals(
-      scenario.nativeFinalizerCalls().join(" > "),
-      "finishMoveTogetherSelectedTabs > finishAnimateTabMove > " +
-        "_resetTabsAfterDrop",
-      "the later session-null attempt should finalize the native drag once",
-    );
-    assertEquals(
-      scenario.addTabSplitViewCalls(),
-      1,
-      "the accepted content drop should survive one active-session retry",
-    );
-  }, {
-    readNativeDragSession: () => {
-      sessionReads += 1;
-      return sessionReads === 1 ? activeSession : null;
+      assertEquals(
+        sessionReads,
+        2,
+        "recovery should retry after the first active native session",
+      );
+      assertEquals(
+        scenario.nativeFinalizerCalls().join(" > "),
+        "finishMoveTogetherSelectedTabs > finishAnimateTabMove > " +
+          "_resetTabsAfterDrop",
+        "the later session-null attempt should finalize the native drag once",
+      );
+      assertEquals(
+        scenario.addTabSplitViewCalls(),
+        1,
+        "the accepted content drop should survive one active-session retry",
+      );
     },
-  });
+    {
+      readNativeDragSession: () => {
+        sessionReads += 1;
+        return sessionReads === 1 ? activeSession : null;
+      },
+    },
+  );
 }
 
 async function testActiveSessionDeadlineDiscardsWithoutResurrection(): Promise<
@@ -677,48 +679,51 @@ async function testActiveSessionDeadlineDiscardsWithoutResurrection(): Promise<
   const activeSession = {} as nsIDragSession;
   let sessionActive = true;
   let sessionReads = 0;
-  await withEnabledDragScenario(async (scenario) => {
-    scenario.dispatchDragStartAndOver();
-    scenario.dispatchDropToContent();
+  await withEnabledDragScenario(
+    async (scenario) => {
+      scenario.dispatchDragStartAndOver();
+      scenario.dispatchDropToContent();
 
-    await waitForRecoveryDeadline();
+      await waitForRecoveryDeadline();
 
-    assert(
-      sessionReads > 1,
-      "an active session should be retried before the bounded deadline",
-    );
-    assertEquals(
-      scenario.nativeFinalizerCalls().length,
-      0,
-      "an active session through the deadline must not run native finalizers",
-    );
-    assertEquals(
-      scenario.addTabSplitViewCalls(),
-      0,
-      "deadline expiry must discard the accepted pending split",
-    );
+      assert(
+        sessionReads > 1,
+        "an active session should be retried before the bounded deadline",
+      );
+      assertEquals(
+        scenario.nativeFinalizerCalls().length,
+        0,
+        "an active session through the deadline must not run native finalizers",
+      );
+      assertEquals(
+        scenario.addTabSplitViewCalls(),
+        0,
+        "deadline expiry must discard the accepted pending split",
+      );
 
-    sessionActive = false;
-    await waitForRecoveryRetry();
-    scenario.dispatchDragEnd();
-    await waitForLostTerminalRecovery();
+      sessionActive = false;
+      await waitForRecoveryRetry();
+      scenario.dispatchDragEnd();
+      await waitForLostTerminalRecovery();
 
-    assertEquals(
-      scenario.nativeFinalizerCalls().length,
-      0,
-      "session-null after expiry must not resurrect the discarded transaction",
-    );
-    assertEquals(
-      scenario.addTabSplitViewCalls(),
-      0,
-      "a late dragend must not resurrect the discarded pending split",
-    );
-  }, {
-    readNativeDragSession: () => {
-      sessionReads += 1;
-      return sessionActive ? activeSession : null;
+      assertEquals(
+        scenario.nativeFinalizerCalls().length,
+        0,
+        "session-null after expiry must not resurrect the discarded transaction",
+      );
+      assertEquals(
+        scenario.addTabSplitViewCalls(),
+        0,
+        "a late dragend must not resurrect the discarded pending split",
+      );
     },
-  });
+    {
+      readNativeDragSession: () => {
+        sessionReads += 1;
+        return sessionActive ? activeSession : null;
+      },
+    },
+  );
 }
 
 async function testLostContentDropWithClosingTabNeverCreatesSplit(): Promise<
@@ -836,46 +841,52 @@ async function testStuckWatchdogRecoversWithoutCreatingSplit(): Promise<void> {
 async function testLostMultiSelectedDropFinalizesOnceBeforeSplit(): Promise<
   void
 > {
-  await withEnabledDragScenario(async (scenario) => {
-    scenario.dispatchDragStartAndOver();
-    scenario.dispatchDropToContent();
-    await waitForLostTerminalRecovery();
+  await withEnabledDragScenario(
+    async (scenario) => {
+      scenario.dispatchDragStartAndOver();
+      scenario.dispatchDropToContent();
+      await waitForLostTerminalRecovery();
 
-    assertEquals(
-      scenario.nativeFinalizerCalls().join(" > "),
-      "finishMoveTogetherSelectedTabs > finishAnimateTabMove > " +
-        "_resetTabsAfterDrop",
-      "lost multi-selected recovery should finalize the group exactly once first",
-    );
-    assertEquals(
-      scenario.addTabSplitViewCalls(),
-      1,
-      "a fully recovered multi-selected content drop may create one split",
-    );
-  }, { multiSelected: true });
+      assertEquals(
+        scenario.nativeFinalizerCalls().join(" > "),
+        "finishMoveTogetherSelectedTabs > finishAnimateTabMove > " +
+          "_resetTabsAfterDrop",
+        "lost multi-selected recovery should finalize the group exactly once first",
+      );
+      assertEquals(
+        scenario.addTabSplitViewCalls(),
+        1,
+        "a fully recovered multi-selected content drop may create one split",
+      );
+    },
+    { multiSelected: true },
+  );
 }
 
 async function testMultiSelectedSafetyTerminalNeverCreatesSplit(): Promise<
   void
 > {
-  await withEnabledDragScenario(async (scenario) => {
-    scenario.dispatchDragStartAndOver();
-    dispatchSafetyTerminal(scenario, "mouseup");
-    await waitForLostTerminalRecovery();
+  await withEnabledDragScenario(
+    async (scenario) => {
+      scenario.dispatchDragStartAndOver();
+      dispatchSafetyTerminal(scenario, "mouseup");
+      await waitForLostTerminalRecovery();
 
-    assertEquals(
-      scenario.nativeFinalizerCalls().filter((call) =>
-        call === "finishMoveTogetherSelectedTabs"
-      ).length,
-      1,
-      "multi-selected safety recovery should finalize the group once",
-    );
-    assertEquals(
-      scenario.addTabSplitViewCalls(),
-      0,
-      "multi-selected safety-only recovery must never create a split",
-    );
-  }, { multiSelected: true });
+      assertEquals(
+        scenario
+          .nativeFinalizerCalls()
+          .filter((call) => call === "finishMoveTogetherSelectedTabs").length,
+        1,
+        "multi-selected safety recovery should finalize the group once",
+      );
+      assertEquals(
+        scenario.addTabSplitViewCalls(),
+        0,
+        "multi-selected safety-only recovery must never create a split",
+      );
+    },
+    { multiSelected: true },
+  );
 }
 
 function testNullSessionRecoveryUsesExactOrderOnce(): void {
@@ -1175,11 +1186,7 @@ function testRecoveryRejectsReentrancy(): void {
   capturedRecovery = fixture.recovery;
 
   assertEquals(
-    recoverLostNativeTabDrag(
-      fixture.recovery,
-      fixture.recovery,
-      () => null,
-    ),
+    recoverLostNativeTabDrag(fixture.recovery, fixture.recovery, () => null),
     "full",
     "outer recovery should complete",
   );
@@ -1256,18 +1263,14 @@ function testRecoveryRequiresCapturedIdentityAndUnobservedDragend(): void {
     0,
     "identity mismatch should fail before querying the drag service",
   );
-  assertEquals(
-    calls.length,
-    0,
-    "identity mismatch must not touch Gecko state",
-  );
+  assertEquals(calls.length, 0, "identity mismatch must not touch Gecko state");
 }
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
-      name: "tab drag-to-split creation defaults to enabled",
-      fn: testTabDragToSplitCreationDefaultsToEnabled,
+      name: "tab drag-to-split creation defaults to disabled",
+      fn: testTabDragToSplitCreationDefaultsToDisabled,
     },
     {
       name: "tab drag-to-split creation can be disabled",

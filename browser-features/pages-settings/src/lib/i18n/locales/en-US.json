@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "performance": "Performance",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -130,6 +131,18 @@
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
         "lepton-preferences": {
             "title": "Lepton Settings",
             "description": "Configure advanced Lepton theme preferences",
@@ -202,6 +215,14 @@
             "exampleDomain": "Matches any URL containing this domain",
             "exampleWildcard": "Matches all subdomains of google.com",
             "exampleFullUrl": "Matches Gmail URLs only"
+        },
+        "tabStacks": {
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "Enable/Disable",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "UI Customization",
@@ -309,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Read about our funding and this setting (Japanese)",
+            "title": "Release notes after updates",
+            "description": "Choose how Floorp opens release notes after an update.",
+            "disabled": {
+                "label": "Do not open automatically",
+                "description": "Release notes will not open after updates. Your blocker settings apply when you visit the blog."
+            },
+            "blocking": {
+                "label": "Open with your blocker settings",
+                "description": "Open release notes without restricting your extensions. This does not install or enable an ad blocker."
+            },
+            "support": {
+                "label": "Open and allow ads to support Floorp (recommended)",
+                "description": "Prevent uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery from filtering the Floorp blog."
+            },
+            "supportMessage": "Advertising revenue from release notes supports Floorp development and operation. Thank you for supporting us in a way that works for you.",
+            "scope": "This exception applies to all HTTPS visits to blog.floorp.app, including manually opened pages. It also affects tracking protection and custom filters in the five listed extensions. Other extensions are not restricted by this setting. Other protection tools may still block ads. Reload open blog pages after changing this setting.",
+            "error": "Could not load or save this setting. Please reopen this page and try again."
+        },
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
@@ -511,6 +552,8 @@
     },
     "mouseGesture": {
         "description": "Control your browser with mouse movements.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "General Settings",
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
@@ -547,6 +590,10 @@
         "rockerRightLeft": "Right → Left",
         "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Enable wheel gestures",
+        "wheelScrollUp": "Scroll Up",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Scroll Down",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -676,6 +723,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",
@@ -715,5 +765,55 @@
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
         }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Settings that affect how the browser uses system resources.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Experimental and off by default. When enabled, attempts to reduce memory use after a period without keyboard or mouse input. The amount reclaimed depends on the pages in use.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
+        }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "Loading…",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "Retry",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "About privacy",
+            "extensions": "Manage extensions",
+            "help": "Get help"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Appearance and behavior",
+        "reset": "Reset workspaces",
+        "help": "How to use"
     }
 }

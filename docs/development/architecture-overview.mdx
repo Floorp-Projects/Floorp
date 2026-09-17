@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "7e2e9c05e1c6c0113f74e9d4ea72654cb63e7500"
+floorp_commit: "9c051c5de2783c683e0f7ef3f399bd694072b8d8"
 generated: true
 ---
 # Architecture Overview
@@ -20,17 +20,17 @@ Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the s
 
 ## Startup And Loader Flow
 
-The startup bridge is owned by `bridge/startup/src/chrome_root.ts:59`. It selects these loader entry points from the inventory:
+The startup bridge is owned by `bridge/startup/src/chrome_root.ts:61`. It selects these loader entry points from the inventory:
 
 - Development: `http://localhost:5181/loader/index.ts`
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:17` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:18` on port 5181.
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:398`. The current inventory lists 22 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:541`. The current inventory lists 23 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -38,6 +38,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 - `NRChromeWebStore`
 - `NRExperimemmt`
 - `NRI18n`
+- `NRKeyboardShortcutFocus`
 - `NRMouseGestureScroll`
 - `NROSAutomotor`
 - `NRPanelSidebar`
@@ -57,7 +58,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 
 ## Chrome UI Features
 
-Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 29 common features:
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 35 common features:
 
 - `addons`
 - `browser-share-mode`
@@ -69,6 +70,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `external-browser`
 - `flex-order`
 - `hub-panel-menu`
+- `idle-memory-reclaim`
 - `keyboard-shortcut`
 - `modal-parent`
 - `mouse-gesture`
@@ -82,10 +84,15 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `split-view`
 - `statusbar`
 - `tab`
+- `tab-inline-edit`
+- `tab-refresh`
 - `tab-sleep-exclusion`
+- `tab-stacks`
+- `tab-strip-wheel-guard`
 - `tabbar`
 - `ui-custom`
 - `undo-closed-tab`
+- `window-drag`
 - `workspaces`
 - `zen-mode`
 
@@ -97,7 +104,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 14 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 15 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 
@@ -117,13 +124,16 @@ The docs pipeline treats Floorp OS API as a special integration layer for local 
 
 ## Commands And CI
 
-Deno task inventory comes from `deno.json` and currently lists 25 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+Deno task inventory comes from `deno.json` and currently lists 29 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
 
 CI workflows recorded in the docs inventory:
 
+- `.github/workflows/assemble-release-bundle.yml` - triggers: `workflow_call`
 - `.github/workflows/build_installers.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
+- `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
@@ -133,3 +143,5 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
+- `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

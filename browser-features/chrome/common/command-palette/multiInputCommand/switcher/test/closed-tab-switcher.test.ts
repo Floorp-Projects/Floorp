@@ -18,7 +18,11 @@ const rawTests: TestCase[] = [
   {
     name: "closedTabSwitcherCommand has correct id",
     fn() {
-      assertEquals(closedTabSwitcherCommand.id, "floorp-closed-tab-switcher", "id should be floorp-closed-tab-switcher");
+      assertEquals(
+        closedTabSwitcherCommand.id,
+        "floorp-closed-tab-switcher",
+        "id should be floorp-closed-tab-switcher",
+      );
     },
   },
   {
@@ -49,7 +53,11 @@ const rawTests: TestCase[] = [
   {
     name: "closedTabSwitcherCommand has correct category",
     fn() {
-      assertEquals(closedTabSwitcherCommand.category, "switcher", "category should be switcher");
+      assertEquals(
+        closedTabSwitcherCommand.category,
+        "switcher",
+        "category should be switcher",
+      );
     },
   },
   {
@@ -59,7 +67,11 @@ const rawTests: TestCase[] = [
         Array.isArray(closedTabSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(closedTabSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
+      assertEquals(
+        closedTabSwitcherCommand.steps!.length,
+        1,
+        "should have exactly 1 step",
+      );
     },
   },
   {
@@ -93,7 +105,8 @@ const rawTests: TestCase[] = [
     },
   },
   {
-    name: "closedTabSwitcherCommand fn does not throw with invalid closed tab index",
+    name:
+      "closedTabSwitcherCommand fn does not throw with invalid closed tab index",
     fn() {
       assertDoesNotThrow(() => {
         closedTabSwitcherCommand.fn({} as Window, { closedTab: "999" });
@@ -146,6 +159,6 @@ function assertDoesNotThrow(fn: () => void): void {
   }
 }
 
-export function runAllTests() {
-  runTests("closed-tab-switcher.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("closed-tab-switcher.test.ts", rawTests);
 }

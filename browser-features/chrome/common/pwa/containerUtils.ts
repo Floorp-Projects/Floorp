@@ -75,7 +75,7 @@ export function getContainerLabel(userContextId: number): string | null {
   }
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
-      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
     const label = ContextualIdentityService.getUserContextLabel(userContextId);
     return label || null;
@@ -98,7 +98,7 @@ export function getPublicContainerOptions(): ContainerOption[] {
 
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
-      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
     const identities =
       ContextualIdentityService.getPublicIdentities() as PublicIdentity[];

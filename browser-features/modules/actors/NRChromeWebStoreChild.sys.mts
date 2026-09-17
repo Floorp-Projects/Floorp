@@ -19,10 +19,13 @@ import type {
   MutableExtensionMetadata,
 } from "../modules/chrome-web-store/types.ts";
 import {
-  isChromeWebStoreUrl,
-  extractExtensionId,
   CWS_I18N_KEYS,
+  extractExtensionId,
+  isChromeWebStoreUrl,
 } from "../modules/chrome-web-store/Constants.sys.mts";
+import {
+  findPrimaryVisibleActionButton,
+} from "../modules/chrome-web-store/DOMUtils.sys.mts";
 
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
@@ -40,6 +43,9 @@ const BUTTON_RESET_DELAY = 3000;
 
 /** Error notice auto-hide delay in milliseconds */
 const ERROR_NOTICE_TIMEOUT = 10000;
+
+/** Marker used to restore the store action after SPA navigation */
+const ORIGINAL_ADD_BUTTON_ATTRIBUTE = "data-floorp-cws-original-button";
 
 /** Button states */
 type ButtonState = "default" | "installing" | "success" | "error" | "installed";
@@ -80,18 +86,15 @@ const DEFAULT_TRANSLATIONS: Record<string, string> = {
 // making it work across all languages and UI changes.
 
 /**
- * Primary selector for the "Add to Chrome" button.
- * Uses DOM structure: main element contains sections, first section has h1 and the action button.
- * The button is a sibling of the div containing h1.
+ * Primary selector for the extension header containing the action button.
+ * Uses DOM structure so it does not depend on localized button text.
  */
-const ADD_BUTTON_STRUCTURE_SELECTOR =
-  "main section:has(h1) button:first-of-type";
+const EXTENSION_HEADER_SELECTOR = "main section:has(h1)";
 
 /**
  * Fallback selector using the first section approach
  */
-const ADD_BUTTON_FALLBACK_SELECTOR =
-  "main > div > section:first-of-type button:first-of-type";
+const EXTENSION_HEADER_FALLBACK_SELECTOR = "main > div > section:first-of-type";
 
 /**
  * Selector for extension logo image (fallback for extractExtensionMetadata)
@@ -103,19 +106,23 @@ const EXTENSION_LOGO_SELECTOR = "main section:has(h1) img";
 // =============================================================================
 
 /** SVG path data for the plus icon (default state) */
-const SVG_PATH_PLUS = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z";
+const SVG_PATH_PLUS =
+  "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z";
 
 /** SVG path data for the checkmark icon (success/installed state) */
 const SVG_PATH_CHECK = "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
 
 /** SVG path data for the error icon */
-const SVG_PATH_ERROR = "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z";
+const SVG_PATH_ERROR =
+  "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z";
 
 /** SVG path data for the info/warning icon */
-const SVG_PATH_INFO = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z";
+const SVG_PATH_INFO =
+  "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z";
 
 /** SVG path data for the close/X icon */
-const SVG_PATH_CLOSE = "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
+const SVG_PATH_CLOSE =
+  "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
 // =============================================================================
 // Main Class
@@ -154,7 +161,11 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Create an SVG element with the given path
    * This avoids using innerHTML which violates CSP on Chrome Web Store
    */
-  private createSvgElement(viewBox: string, pathData: string, className?: string): SVGSVGElement {
+  private createSvgElement(
+    viewBox: string,
+    pathData: string,
+    className?: string,
+  ): SVGSVGElement {
     const doc = this.document!;
     const svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("viewBox", viewBox);
@@ -174,12 +185,19 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Create a button content element with icon and text
    * This avoids using innerHTML which violates CSP on Chrome Web Store
    */
-  private createButtonContent(iconPathData: string, text: string): DocumentFragment {
+  private createButtonContent(
+    iconPathData: string,
+    text: string,
+  ): DocumentFragment {
     const doc = this.document!;
     const fragment = doc.createDocumentFragment();
 
     // Create SVG icon
-    const svg = this.createSvgElement("0 0 24 24", iconPathData, "floorp-add-button__icon");
+    const svg = this.createSvgElement(
+      "0 0 24 24",
+      iconPathData,
+      "floorp-add-button__icon",
+    );
     fragment.appendChild(svg);
 
     // Create text span
@@ -421,6 +439,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     // Find and hide the Add to Chrome button
     const addToChromeButton = this.findOriginalAddToChromeButton();
     if (addToChromeButton) {
+      addToChromeButton.setAttribute(ORIGINAL_ADD_BUTTON_ATTRIBUTE, "true");
       (addToChromeButton as HTMLElement).style.setProperty(
         "display",
         "none",
@@ -445,15 +464,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       const section = h1.closest("section");
       if (!section) continue;
 
-      // Find button that is NOT our Floorp button
-      const buttons = section.querySelectorAll("button");
-      for (const button of buttons) {
-        if (
-          button.id !== "floorp-add-extension-btn" &&
-          this.isElementVisible(button)
-        ) {
-          return button;
-        }
+      const button = this.findVisibleHeaderActionButton(section);
+      if (button) {
+        return button;
       }
     }
 
@@ -470,6 +483,14 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const existingButton = doc.getElementById("floorp-add-extension-btn");
     if (existingButton) {
       existingButton.remove();
+    }
+
+    const originalButton = doc.querySelector(
+      `[${ORIGINAL_ADD_BUTTON_ATTRIBUTE}="true"]`,
+    );
+    if (originalButton instanceof HTMLElement) {
+      originalButton.style.removeProperty("display");
+      originalButton.removeAttribute(ORIGINAL_ADD_BUTTON_ATTRIBUTE);
     }
 
     const existingError = doc.getElementById("floorp-cws-error");
@@ -667,9 +688,10 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       return false;
     }
 
-    // Verify the "Add to Chrome" button is visible and ready
-    const button = section.querySelector("button");
-    if (!button || !this.isElementVisible(button)) {
+    // Chrome Web Store may prepend hidden utility buttons to the header.
+    // Verify that the actual visible action button is ready instead of only
+    // checking the first button in DOM order.
+    if (!this.findVisibleHeaderActionButton(section)) {
       return false;
     }
 
@@ -726,7 +748,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
    * Chrome Web Store has a consistent DOM structure:
    * - main > div > section (first section = header with extension info)
    * - Header section contains: img (logo), h1 (name), and button (Add to Chrome)
-   * - The "Add to Chrome" button is the first button in the header section
+   * - The "Add to Chrome" button is the last visible button in the header
    *
    * This approach is language-independent and doesn't rely on button text.
    *
@@ -747,52 +769,50 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       const section = h1.closest("section");
       if (!section) continue;
 
-      // Look for the "Add to Chrome" button near this h1
-      // DOM structure: section > div > div (contains h1) + div (contains button)
-      const h1Container = h1.closest("div");
-      const siblingDiv = h1Container?.nextElementSibling;
-      const button = siblingDiv?.querySelector("button");
-
-      if (
-        button &&
-        button.id !== "floorp-add-extension-btn" &&
-        this.isElementVisible(button)
-      ) {
+      const button = this.findVisibleHeaderActionButton(section);
+      if (button) {
         return button;
-      }
-
-      // Alternative: Find first button within the section
-      const sectionButton = section.querySelector("button");
-      if (
-        sectionButton &&
-        sectionButton.id !== "floorp-add-extension-btn" &&
-        this.isElementVisible(sectionButton)
-      ) {
-        return sectionButton;
       }
     }
 
     // Strategy 2: Use direct CSS selector (may not work with SPA)
-    const buttonViaSelector = doc.querySelector(ADD_BUTTON_STRUCTURE_SELECTOR);
-    if (
-      buttonViaSelector &&
-      buttonViaSelector.id !== "floorp-add-extension-btn" &&
-      this.isElementVisible(buttonViaSelector)
-    ) {
+    const headerViaSelector = doc.querySelector(EXTENSION_HEADER_SELECTOR);
+    const buttonViaSelector = headerViaSelector
+      ? this.findVisibleHeaderActionButton(headerViaSelector)
+      : null;
+    if (buttonViaSelector) {
       return buttonViaSelector;
     }
 
-    // Strategy 3: Fallback to first section's first button
-    const fallbackButton = doc.querySelector(ADD_BUTTON_FALLBACK_SELECTOR);
-    if (
-      fallbackButton &&
-      fallbackButton.id !== "floorp-add-extension-btn" &&
-      this.isElementVisible(fallbackButton)
-    ) {
+    // Strategy 3: Fallback to the first section's primary visible action
+    const fallbackHeader = doc.querySelector(
+      EXTENSION_HEADER_FALLBACK_SELECTOR,
+    );
+    const fallbackButton = fallbackHeader
+      ? this.findVisibleHeaderActionButton(fallbackHeader)
+      : null;
+    if (fallbackButton) {
       return fallbackButton;
     }
 
     return null;
+  }
+
+  /**
+   * Find the primary visible action button in an extension header.
+   *
+   * The store currently places hidden utility controls and the Share button
+   * before the install button. The install action is the last visible button
+   * in the header, so scan in reverse without depending on localized text or
+   * generated class names.
+   */
+  private findVisibleHeaderActionButton(
+    header: Element,
+  ): HTMLButtonElement | null {
+    return findPrimaryVisibleActionButton(
+      header,
+      (button) => this.isElementVisible(button),
+    );
   }
 
   /**
@@ -948,8 +968,8 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     if (this.installInProgress || !this.currentExtensionId) return;
 
     this.installInProgress = true;
-    const button =
-      this.document?.getElementById("floorp-add-extension-btn") ?? null;
+    const button = this.document?.getElementById("floorp-add-extension-btn") ??
+      null;
 
     try {
       // Update button state to installing
@@ -975,8 +995,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       }
     } catch (error) {
       this.updateButtonState(button, "error");
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
       this.showError(errorMessage);
     } finally {
       // Reset button state after delay
@@ -1026,7 +1047,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       case "success": {
         const successText = this.t(CWS_I18N_KEYS.button.success);
         button.classList.add("floorp-add-button--success");
-        button.appendChild(this.createButtonContent(SVG_PATH_CHECK, successText));
+        button.appendChild(
+          this.createButtonContent(SVG_PATH_CHECK, successText),
+        );
         (button as HTMLButtonElement).disabled = true;
         break;
       }
@@ -1034,7 +1057,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
       case "installed": {
         const installedText = this.t(CWS_I18N_KEYS.button.installed);
         button.classList.add("floorp-add-button--installed");
-        button.appendChild(this.createButtonContent(SVG_PATH_CHECK, installedText));
+        button.appendChild(
+          this.createButtonContent(SVG_PATH_CHECK, installedText),
+        );
         (button as HTMLButtonElement).disabled = true;
         break;
       }
@@ -1049,7 +1074,9 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
 
       default: {
         const defaultText = this.t(CWS_I18N_KEYS.button.addToFloorp);
-        button.appendChild(this.createButtonContent(SVG_PATH_PLUS, defaultText));
+        button.appendChild(
+          this.createButtonContent(SVG_PATH_PLUS, defaultText),
+        );
         (button as HTMLButtonElement).disabled = false;
       }
     }
@@ -1202,7 +1229,7 @@ export class NRChromeWebStoreChild extends JSWindowActorChild {
     const errorIcon = this.createSvgElement(
       "0 0 24 24",
       SVG_PATH_INFO,
-      "floorp-cws-notice__icon"
+      "floorp-cws-notice__icon",
     );
     notice.appendChild(errorIcon);
 

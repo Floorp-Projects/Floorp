@@ -2,7 +2,7 @@ import { rpc } from "@/lib/rpc/rpc.ts";
 import type { DesignFormData } from "@/types/pref.ts";
 
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
-const DEFAULT_SPLIT_VIEW_DND_CREATE = true;
+const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
 
 // Lepton Settings Interface
 export interface LeptonFormData {
@@ -188,32 +188,38 @@ export async function saveDesignSettings(
     uiCustomization: {
       ...oldData.uiCustomization,
       navbar: {
+        ...oldData.uiCustomization.navbar,
         position: settings.navbarPosition,
         searchBarTop: settings.searchBarTop,
       },
       display: {
+        ...oldData.uiCustomization.display,
         disableFullscreenNotification: settings.disableFullscreenNotification,
         deleteBrowserBorder: settings.deleteBrowserBorder,
       },
       special: {
+        ...oldData.uiCustomization.special,
         optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
         hideForwardBackwardButton: settings.hideForwardBackwardButton,
         stgLikeWorkspaces: settings.stgLikeWorkspaces,
       },
       multirowTab: {
+        ...oldData.uiCustomization.multirowTab,
         newtabInsideEnabled: settings.multirowTabNewtabInside,
       },
       bookmarkBar: {
+        ...oldData.uiCustomization.bookmarkBar,
         focusExpand: settings.bookmarkBarFocusExpand,
         position: settings.bookmarkBarPosition,
       },
       qrCode: {
+        ...oldData.uiCustomization.qrCode,
         disableButton: settings.disableQRCodeButton,
       },
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
-  rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+  await rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
     settings.tabDragToSplitCreate,
@@ -269,8 +275,8 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     stgLikeWorkspaces: data.uiCustomization.special.stgLikeWorkspaces,
     multirowTabNewtabInside:
       data.uiCustomization.multirowTab.newtabInsideEnabled,
-    bookmarkBarFocusExpand:
-      data.uiCustomization.bookmarkBar?.focusExpand ?? false,
+    bookmarkBarFocusExpand: data.uiCustomization.bookmarkBar?.focusExpand ??
+      false,
     bookmarkBarPosition: data.uiCustomization.bookmarkBar?.position ?? "top",
     disableQRCodeButton: data.uiCustomization.qrCode?.disableButton ?? false,
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
@@ -291,7 +297,9 @@ const DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS: TabSleepExclusionSettings = {
   patterns: [],
 };
 
-export async function getTabSleepExclusionSettings(): Promise<TabSleepExclusionSettings> {
+export async function getTabSleepExclusionSettings(): Promise<
+  TabSleepExclusionSettings
+> {
   try {
     const result = await rpc.getStringPref(TAB_SLEEP_EXCLUSION_PREF);
     if (!result) {

@@ -12,6 +12,7 @@ const r = (dir: string) => {
 };
 
 export default defineConfig({
+  cacheDir: "../../node_modules/.vite/loader-features",
   publicDir: r("public"),
   server: {
     port: 5181,
@@ -152,7 +153,13 @@ export default defineConfig({
 
   // 既存の設定...
   optimizeDeps: {
+    ignoreOutdatedRequests: true,
+    noDiscovery: true,
     include: [
+      // Page tests import React helpers (for example the settings search index).
+      // With discovery disabled, CJS React must be explicitly converted to ESM.
+      "react",
+      "react/jsx-runtime",
       "./node_modules/@nora",
       "solid-js",
       "solid-js/web",
@@ -164,6 +171,8 @@ export default defineConfig({
 
   resolve: {
     dedupe: [
+      "react",
+      "react-dom",
       "solid-js",
       "solid-js/web",
       "solid-js/store",
@@ -198,6 +207,10 @@ export default defineConfig({
       {
         find: "#features-pages",
         replacement: r("../../browser-features"),
+      },
+      {
+        find: "#firefox-tests",
+        replacement: r("../../_dist/firefox-tests/files"),
       },
       {
         find: "#libs",

@@ -102,7 +102,7 @@ scoop install extras/floorp
 
 Scoop repository provided by [@SegoCode](https://github.com/SegoCode)
 
-**Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". However, the installer for the Daylight build is not signed.**
+**Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano".**
 
 #### macOS
 
@@ -177,6 +177,8 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 ## 🌟 Contributing
 
+Please also check [`CONTRIBUTING.md`](https://github.com/Floorp-Projects/Floorp/blob/main/.github/CONTRIBUTING.md) for more details on how to contribute.
+
 ### 🧰 How to Start Development
 
 Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
@@ -243,4 +245,4 @@ Notice: If you are a maintainer of any listed component and your name or license
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Floorp-Projects/Floorp&type=date&legend=top-left)](https://www.star-history.com/#Floorp-Projects/Floorp&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=Floorp-Projects/Floorp&type=date&legend=top-left)](https://star-history.dera.page/#Floorp-Projects/Floorp&type=date&legend=top-left)

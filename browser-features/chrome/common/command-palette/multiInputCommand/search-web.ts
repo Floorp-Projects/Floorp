@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand, CommandStepChoice } from "#features-chrome/common/command-palette/types.ts";
+import type {
+  CommandStepChoice,
+  PaletteCommand,
+} from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import {
+  isPaletteTargetAvailable,
+  resolvePaletteTarget,
+} from "#features-chrome/common/command-palette/utils/targetContext.ts";
 
 export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
   try {
@@ -35,12 +42,11 @@ export async function loadSearchEngines(): Promise<CommandStepChoice[]> {
 
     return (engines ?? []).map(
       (engine: { name: string; description?: string }) => ({
-        label:
-          engine.name +
+        label: engine.name +
           (engine.name === defaultName
             ? i18next.t("commandPalette.searchEngineDefault", {
-                defaultValue: " (default)",
-              })
+              defaultValue: " (default)",
+            })
             : ""),
         value: engine.name,
         description: engine.description ?? "",
@@ -68,8 +74,14 @@ export const searchWebCommand: PaletteCommand = {
     "lookup",
     "google",
     ...getJapaneseReadings("floorp-search-web"),
-    ...getEnglishStepCommandKeywords("commandPalette.searchWeb", "commandPalette.searchWebDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.searchWeb", "commandPalette.searchWebDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.searchWeb",
+      "commandPalette.searchWebDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.searchWeb",
+      "commandPalette.searchWebDescription",
+    ),
   ],
   steps: [
     {
@@ -81,10 +93,11 @@ export const searchWebCommand: PaletteCommand = {
         defaultValue: "Search terms...",
       }),
       validate: (input: string): boolean | string => {
-        if (!input.trim())
+        if (!input.trim()) {
           return i18next.t("commandPalette.searchWebValidationError", {
             defaultValue: "Please enter a search query",
           });
+        }
         return true;
       },
     },
@@ -143,7 +156,7 @@ export const searchWebCommand: PaletteCommand = {
       ],
     },
   ],
-  fn: (_win: Window, args?: Record<string, string>) => {
+  fn: (targetWindow: Window, args?: Record<string, string>) => {
     const query = args?.query?.trim();
     if (!query) return;
 
@@ -155,8 +168,14 @@ export const searchWebCommand: PaletteCommand = {
     );
 
     try {
+      const target = resolvePaletteTarget(targetWindow);
+      if (!target) {
+        console.error("[command-palette] Search target is unavailable");
+        return;
+      }
+      const userContextId = target.workspaceUserContextId;
       const timeoutPromise = new Promise((_, reject) => {
-        globalThis.setTimeout(() => {
+        targetWindow.setTimeout(() => {
           reject(new Error("Search engine timeout"));
         }, 2000);
       });
@@ -164,14 +183,20 @@ export const searchWebCommand: PaletteCommand = {
       // getEngineByName is synchronous, getDefault is async
       const enginePromise = engineName
         ? Promise.resolve(
-            SearchService.getEngineByName(engineName) ??
-              SearchService.getDefault(),
-          )
+          SearchService.getEngineByName(engineName) ??
+            SearchService.getDefault(),
+        )
         : SearchService.getDefault();
 
       Promise.race([enginePromise, timeoutPromise])
         .then((engine) => {
           if (!engine) return;
+          if (!isPaletteTargetAvailable(target)) {
+            console.error(
+              "[command-palette] Search target changed before execution",
+            );
+            return;
+          }
 
           const sysPrincipal = (
             globalThis as typeof globalThis & {
@@ -184,7 +209,7 @@ export const searchWebCommand: PaletteCommand = {
 
           switch (where) {
             case "current-tab":
-              globalThis.gBrowser?.loadURI?.(submission.uri, {
+              target.browser.loadURI?.(submission.uri, {
                 triggeringPrincipal: sysPrincipal,
                 postData: submission.postData,
               } as {
@@ -195,9 +220,10 @@ export const searchWebCommand: PaletteCommand = {
               break;
 
             case "background-tab": {
-              globalThis.gBrowser?.addTab(submission.uri.spec, {
+              target.gBrowser.addTab(submission.uri.spec, {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: true,
+                userContextId,
                 postData: submission.postData,
               } as {
                 skipAnimation?: boolean;
@@ -213,9 +239,10 @@ export const searchWebCommand: PaletteCommand = {
 
             case "new-tab":
             default: {
-              const tab = globalThis.gBrowser?.addTab(submission.uri.spec, {
+              const tab = target.gBrowser.addTab(submission.uri.spec, {
                 triggeringPrincipal: sysPrincipal,
                 inBackground: false,
+                userContextId,
                 postData: submission.postData,
               } as {
                 skipAnimation?: boolean;
@@ -226,9 +253,7 @@ export const searchWebCommand: PaletteCommand = {
                 index?: number;
                 postData?: unknown;
               });
-              if (globalThis.gBrowser && tab) {
-                globalThis.gBrowser.selectedTab = tab;
-              }
+              target.gBrowser.selectedTab = tab;
               break;
             }
           }

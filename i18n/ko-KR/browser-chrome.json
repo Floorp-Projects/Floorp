@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "탭 새로 고침"
+  },
   "undo-closed-tab": {
     "label": "닫은 탭 되돌리기",
     "tooltiptext": "마지막으로 닫은 탭을 다시 열기 {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "사생활 보호 컨테이너으로 열기",
     "reopenInPrivateContainer": "비공개 컨테이너 다시 열기",
     "name": "사생활 보호 컨테이너"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "탭 URL 편집",
+    "inputLabel": "탭 URL",
+    "keyboardAction": "탭 URL 편집"
   },
   "mouseGesture": {
     "actions": {
@@ -418,7 +426,7 @@
   },
   "hub": {
     "menu": {
-      "title": ""
+      "title": "Floorp Hub"
     }
   },
   "splitView": {
@@ -508,6 +516,10 @@
     "stepIndicator": "{{current}}/{{total}}단계",
     "backToCommands": "명령 목록으로 돌아가기",
     "openUrl": "URL 열기",
+    "openUrlContainerStepLabel": "컨테이너에서 열기",
+    "openUrlContainerStepPlaceholder": "컨테이너 선택...",
+    "openUrlContainerWorkspaceDefault": "워크스페이스 기본값",
+    "openUrlContainerWorkspaceDefaultDesc": "워크스페이스의 기본 컨텍스트 사용",
     "openUrlDescription": "새 탭에서 URL 열기",
     "openUrlStepLabel": "열 URL 입력",
     "openUrlStepPlaceholder": "https://example.com",
@@ -572,7 +584,17 @@
     "bookmarkSwitcher": "북마크 전환",
     "bookmarkSwitcherDescription": "북마크한 페이지 열기",
     "bookmarkSwitcherStepLabel": "북마크 선택",
-    "bookmarkSwitcherStepPlaceholder": "북마크를 검색하거나 선택..."
+    "bookmarkSwitcherStepPlaceholder": "북마크를 검색하거나 선택...",
+    "bookmarkSwitcherContainerStepLabel": "컨테이너에서 열기",
+    "bookmarkSwitcherContainerStepPlaceholder": "컨테이너 선택...",
+    "bookmarkSwitcherWhereBackgroundTab": "백그라운드 탭",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "새 백그라운드 탭에서 열기",
+    "bookmarkSwitcherWhereCurrentTab": "현재 탭",
+    "bookmarkSwitcherWhereCurrentTabDesc": "현재 탭에서 탐색",
+    "bookmarkSwitcherWhereLabel": "열 위치",
+    "bookmarkSwitcherWhereNewTab": "새 탭",
+    "bookmarkSwitcherWhereNewTabDesc": "새 포그라운드 탭에서 열기",
+    "bookmarkSwitcherWherePlaceholder": "열 위치 선택..."
   },
   "commandPaletteReadings": {}
 }

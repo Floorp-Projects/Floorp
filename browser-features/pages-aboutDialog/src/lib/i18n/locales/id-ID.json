@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Tentang Floorp",
+    "version": "Versi",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Periksa pembaruan",
+      "checking": "Memeriksa pembaruan…",
+      "checkFailed": "Tidak bisa memeriksa pembaruan. Coba lagi nanti.",
+      "upToDate": "Sudah mutakhir.",
+      "downloading": "Mengunduh pembaruan… {{progress}}",
+      "applying": "Memasang pembaruan…",
+      "readyToRestart": "Pembaruan siap — mulai ulang untuk menerapkan.",
+      "restarting": "Memulai ulang…",
+      "policyDisabled": "Pembaruan dikelola oleh organisasi Anda.",
+      "downloadFailed": "Pengunduhan gagal. Silakan coba lagi.",
+      "noUpdater": "Pembaruan dikelola secara eksternal.",
+      "available": "Unduh pembaruan {{version}}",
+      "tryAgain": "Coba lagi",
+      "restartToApply": "Mulai ulang untuk menerapkan pembaruan"
+    },
+    "community": {
+      "title": "Bergabunglah dengan Komunitas"
+    },
+    "help": {
+      "title": "Bantuan dan Dukungan",
+      "support": "Dukungan"
+    },
+    "sponsor": {
+      "title": "Dukung Proyek Ini",
+      "button": "Jadilah Sponsor Kami"
+    },
+    "links": {
+      "releaseNotes": "Catatan Rilis",
+      "help": "Bantuan Floorp",
+      "feedback": "Kirim Umpan Balik",
+      "licensing": "Lisensi",
+      "terms": "Ketentuan Layanan",
+      "privacy": "Kebijakan Privasi"
+    },
+    "trademark": "Nama Floorp merupakan merek dagang di Jepang."
+  }
+}

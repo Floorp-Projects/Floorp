@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "重新加载标签页"
+  },
   "undo-closed-tab": {
     "label": "恢复关闭的标签页",
     "tooltiptext": "重新打开上次关闭的选项卡 {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "在私密身份打开",
     "reopenInPrivateContainer": "在私密身份中重新打开",
     "name": "私密身份"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "编辑标签页网址",
+    "inputLabel": "标签页网址",
+    "keyboardAction": "编辑标签页网址"
   },
   "mouseGesture": {
     "actions": {
@@ -313,7 +321,7 @@
     "create": "创建样式",
     "open_folder": "打开样式文件夹",
     "edit_user_chrome": "编辑 userChrome.css",
-    "edit_user_content": "编辑 userChrome.css",
+    "edit_user_content": "编辑 userContent.css",
     "rebuild_complete": "样式已重重载",
     "editor_path_not_found": "未找到编辑器路径",
     "set_pref_description": "请设置编辑器路径",
@@ -508,6 +516,10 @@
     "stepIndicator": "第 {{current}} 步 / 总 {{total}} 步",
     "backToCommands": "返回命令列表",
     "openUrl": "打开网址",
+    "openUrlContainerStepLabel": "在身份中打开",
+    "openUrlContainerStepPlaceholder": "选择一个身份……",
+    "openUrlContainerWorkspaceDefault": "工作空间默认值",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "在新标签中打开网址",
     "openUrlStepLabel": "输入要打开的网址",
     "openUrlStepPlaceholder": "https://example.com",
@@ -572,7 +584,17 @@
     "bookmarkSwitcher": "切换书签",
     "bookmarkSwitcherDescription": "打开已收藏的页面",
     "bookmarkSwitcherStepLabel": "选择书签",
-    "bookmarkSwitcherStepPlaceholder": "搜索或选择一个书签……"
+    "bookmarkSwitcherStepPlaceholder": "搜索或选择一个书签……",
+    "bookmarkSwitcherContainerStepLabel": "在身份中打开",
+    "bookmarkSwitcherContainerStepPlaceholder": "选择一个身份……",
+    "bookmarkSwitcherWhereBackgroundTab": "后台标签页",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "在新建的后台标签页中打开",
+    "bookmarkSwitcherWhereCurrentTab": "当前标签页",
+    "bookmarkSwitcherWhereCurrentTabDesc": "在当前标签页中打开",
+    "bookmarkSwitcherWhereLabel": "打开位置",
+    "bookmarkSwitcherWhereNewTab": "新标签页",
+    "bookmarkSwitcherWhereNewTabDesc": "在新建的前台标签页中打开",
+    "bookmarkSwitcherWherePlaceholder": "选择打开位置……"
   },
   "commandPaletteReadings": {}
 }

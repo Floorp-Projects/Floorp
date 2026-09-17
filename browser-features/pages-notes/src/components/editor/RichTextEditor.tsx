@@ -148,6 +148,7 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
                 <EditorContent
                     editor={editor}
                     className="h-full"
+                    data-testid="notes-body"
                     aria-label={t("editor.contentArea")}
                 />
             </div>

@@ -2,21 +2,27 @@
 // @colocated-env browser
 
 import {
-  getFloorpImages,
-  getRandomBackgroundImage,
-  getSelectedFloorpImage,
-} from "../../src/utils/backgroundImages.ts";
-import {
   assert,
   assertEquals,
   runTests,
   type TestCase,
 } from "../../../chrome/test/utils/test_harness.ts";
 
+type BackgroundImagesModule =
+  typeof import("../../src/utils/backgroundImages.ts");
+
+let backgroundImagesModule: Promise<BackgroundImagesModule> | null = null;
+
+function loadBackgroundImagesModule(): Promise<BackgroundImagesModule> {
+  backgroundImagesModule ??= import("../../src/utils/backgroundImages.ts");
+  return backgroundImagesModule;
+}
+
 const tests: TestCase[] = [
   {
     name: "getRandomBackgroundImage should return string or null",
-    fn: () => {
+    fn: async () => {
+      const { getRandomBackgroundImage } = await loadBackgroundImagesModule();
       const randomImage = getRandomBackgroundImage();
       assert(
         randomImage === null || typeof randomImage === "string",
@@ -26,7 +32,8 @@ const tests: TestCase[] = [
   },
   {
     name: "getFloorpImages should return array with valid entries",
-    fn: () => {
+    fn: async () => {
+      const { getFloorpImages } = await loadBackgroundImagesModule();
       const floorpImages = getFloorpImages();
       assert(
         Array.isArray(floorpImages),
@@ -46,7 +53,9 @@ const tests: TestCase[] = [
   },
   {
     name: "selected image should match name lookup",
-    fn: () => {
+    fn: async () => {
+      const { getFloorpImages, getSelectedFloorpImage } =
+        await loadBackgroundImagesModule();
       const floorpImages = getFloorpImages();
       if (floorpImages.length > 0) {
         const first = floorpImages[0];
@@ -61,21 +70,25 @@ const tests: TestCase[] = [
   },
   {
     name: "null name should return null",
-    fn: () =>
+    fn: async () => {
+      const { getSelectedFloorpImage } = await loadBackgroundImagesModule();
       assertEquals(
         getSelectedFloorpImage(null),
         null,
         "null name should return null",
-      ),
+      );
+    },
   },
   {
     name: "unknown image should return null",
-    fn: () =>
+    fn: async () => {
+      const { getSelectedFloorpImage } = await loadBackgroundImagesModule();
       assertEquals(
         getSelectedFloorpImage("__missing__"),
         null,
         "unknown image should return null",
-      ),
+      );
+    },
   },
 ];
 

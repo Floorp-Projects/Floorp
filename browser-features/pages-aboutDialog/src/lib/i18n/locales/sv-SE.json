@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Om Floorp",
+    "version": "Version",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Sök efter uppdateringar",
+      "checking": "Söker efter uppdateringar…",
+      "checkFailed": "Kunde inte söka efter uppdateringar. Försök igen senare.",
+      "upToDate": "Du är uppdaterad.",
+      "downloading": "Laddar ner uppdatering… {{progress}}",
+      "applying": "Installerar uppdatering…",
+      "readyToRestart": "Uppdateringen är klar – starta om för att tillämpa den.",
+      "restarting": "Startar om…",
+      "policyDisabled": "Uppdateringar hanteras av din organisation.",
+      "downloadFailed": "Nedladdningen misslyckades. Försök igen senare.",
+      "noUpdater": "Uppdateringar hanteras externt.",
+      "available": "Ladda ner uppdatering {{version}}",
+      "tryAgain": "Försök igen",
+      "restartToApply": "Starta om för att tillämpa uppdatering"
+    },
+    "community": {
+      "title": "Gå med i gemenskapen"
+    },
+    "help": {
+      "title": "Hjälp & support",
+      "support": "Support"
+    },
+    "sponsor": {
+      "title": "Stöd projektet",
+      "button": "Bli en sponsor"
+    },
+    "links": {
+      "releaseNotes": "Versionsinformation",
+      "help": "Floorp hjälp",
+      "feedback": "Skicka in feedback",
+      "licensing": "Licens",
+      "terms": "Användarvillkor",
+      "privacy": "Integritetspolicy"
+    },
+    "trademark": "Namnet Floorp är ett varumärke i Japan."
+  }
+}

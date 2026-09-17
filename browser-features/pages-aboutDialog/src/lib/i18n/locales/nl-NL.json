@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Over Floorp",
+    "version": "Versie",
+    "channel": {
+      "nightly": "Nachtelijke",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Controleer op updates",
+      "checking": "Controleren op updates…",
+      "checkFailed": "Kan niet controleren op updates. Probeer het later nog eens.",
+      "upToDate": "Helemaal up-to-date.",
+      "downloading": "Update wordt gedownload… {{progress}}",
+      "applying": "Update wordt geïnstalleerd…",
+      "readyToRestart": "Update klaar — start opnieuw op om deze toe te passen.",
+      "restarting": "Herstarten…",
+      "policyDisabled": "Updates worden beheerd door uw organisatie.",
+      "downloadFailed": "Download is mislukt. Probeer opnieuw.",
+      "noUpdater": "Updates worden extern beheerd.",
+      "available": "Update {{version}} downloaden",
+      "tryAgain": "Probeer opnieuw",
+      "restartToApply": "Start opnieuw om de update toe te passen"
+    },
+    "community": {
+      "title": "Word lid van de groep"
+    },
+    "help": {
+      "title": "Help & Ondersteuning",
+      "support": "Ondersteuning"
+    },
+    "sponsor": {
+      "title": "Steun het Project",
+      "button": "Wordt Sponsor"
+    },
+    "links": {
+      "releaseNotes": "Versie-informatie",
+      "help": "Floorp Help",
+      "feedback": "Feedback geven",
+      "licensing": "Licentie",
+      "terms": "Gebruiksvoorwaarden",
+      "privacy": "Privacy Beleid"
+    },
+    "trademark": "Floorp is een handelsmerk in Japan."
+  }
+}

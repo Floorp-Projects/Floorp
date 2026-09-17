@@ -2,19 +2,54 @@
 // @colocated-env browser
 
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import ModalParent from "../index.ts";
 import { isModalVisible, setModalVisible } from "../data/data.ts";
+import { attachModalBackdropListener } from "../modalElement.tsx";
+import type { TFormItem } from "../utils/type.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers – save/restore modal visibility state
 // ---------------------------------------------------------------------------
 
 let savedVisible: boolean;
+
+type ModalManagerTestDouble = {
+  show: (
+    form: unknown,
+    options: { width: number; height: number },
+  ) => Promise<Record<string, never>>;
+  hide: () => void;
+  setModalSize: (size: { width: number; height: number }) => void;
+};
+
+const fakeModalCalls = {
+  show: 0,
+  hide: 0,
+  setSize: 0,
+  lastForm: undefined as unknown,
+  lastSize: undefined as { width: number; height: number } | undefined,
+};
+
+const fakeModalManager: ModalManagerTestDouble = {
+  show: (form, options) => {
+    fakeModalCalls.show++;
+    fakeModalCalls.lastForm = form;
+    fakeModalCalls.lastSize = options;
+    return Promise.resolve({});
+  },
+  hide: () => {
+    fakeModalCalls.hide++;
+  },
+  setModalSize: (size) => {
+    fakeModalCalls.setSize++;
+    fakeModalCalls.lastSize = size;
+  },
+};
 
 function saveState(): void {
   savedVisible = isModalVisible();
@@ -40,60 +75,99 @@ function testGetInstanceIsSingleton(): void {
   assertEquals(a, b, "getInstance should return the same instance");
 }
 
+function testFirstConstructedInstanceOwnsSingletonManager(): void {
+  const constructorState = ModalParent as unknown as {
+    instance: ModalParent | undefined;
+  };
+  const savedInstance = constructorState.instance;
+  constructorState.instance = undefined;
+
+  let firstManager: { dispose(): void } | null = null;
+  let laterManager: { dispose(): void } | null = null;
+  try {
+    const first = new ModalParent();
+    const firstState = first as unknown as {
+      modalManager: { dispose(): void } | null;
+    };
+    firstManager = firstState.modalManager;
+    assert(
+      firstManager !== null,
+      "base initialization should create a manager",
+    );
+    assertEquals(
+      ModalParent.getInstance(),
+      first,
+      "the first constructed component should become the singleton",
+    );
+
+    first.init();
+    assertEquals(
+      firstState.modalManager,
+      firstManager,
+      "repeated init should preserve the rendered manager owner",
+    );
+
+    const later = new ModalParent();
+    laterManager = (later as unknown as {
+      modalManager: { dispose(): void } | null;
+    }).modalManager;
+    assertEquals(
+      ModalParent.getInstance(),
+      first,
+      "later construction must not replace the singleton owner",
+    );
+  } finally {
+    firstManager?.dispose();
+    laterManager?.dispose();
+    constructorState.instance = savedInstance;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Uninitialized state error tests
 // ---------------------------------------------------------------------------
 
-function testShowNoraModalDoesNotCrash(): void {
-  // In the live browser the singleton is already initialised by the chrome
-  // layer, so we verify the positive path — calling showNoraModal should not
-  // throw unexpectedly (it may fail on actor lookup but that's acceptable).
+async function testShowNoraModalUsesManager(): Promise<void> {
   const inst = ModalParent.getInstance();
-  try {
-    inst.showNoraModal(
-      { forms: [], title: "test" },
-      { width: 100, height: 100 },
-      () => {},
-    );
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized") ||
-        msg.includes("NRChromeModal") ||
-        msg.includes("browsingContext") ||
-        msg.includes("modal-parent-container"),
-      "Unexpected error from showNoraModal: " + msg,
-    );
-  }
+  const showBefore = fakeModalCalls.show;
+  const hideBefore = fakeModalCalls.hide;
+  let callbackCalled = false;
+
+  await inst.showNoraModal(
+    { forms: [], title: "test" },
+    { width: 100, height: 100 },
+    () => {
+      callbackCalled = true;
+    },
+  );
+
+  assertEquals(fakeModalCalls.show, showBefore + 1, "manager show called");
+  assertEquals(
+    fakeModalCalls.hide,
+    hideBefore,
+    "completed wrapper must not unconditionally hide a replacement",
+  );
+  assert(callbackCalled, "showNoraModal should invoke the callback");
 }
 
-function testHideNoraModalDoesNotCrash(): void {
-  // hideNoraModal on the initialised singleton should not throw.
+function testHideNoraModalUsesManager(): void {
   const inst = ModalParent.getInstance();
-  try {
-    inst.hideNoraModal();
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized") ||
-        msg.includes("modal-parent-container"),
-      "Unexpected error from hideNoraModal: " + msg,
-    );
-  }
+  const hideBefore = fakeModalCalls.hide;
+  inst.hideNoraModal();
+  assertEquals(fakeModalCalls.hide, hideBefore + 1, "manager hide called");
 }
 
-function testSetModalSizeDoesNotCrash(): void {
-  // setModalSize on the initialised singleton should delegate to the manager.
+function testSetModalSizeUsesManager(): void {
   const inst = ModalParent.getInstance();
-  try {
-    inst.setModalSize({ width: 100, height: 100 });
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized"),
-      "Unexpected error from setModalSize: " + msg,
-    );
-  }
+  const setSizeBefore = fakeModalCalls.setSize;
+  inst.setModalSize({ width: 100, height: 100 });
+  assertEquals(
+    fakeModalCalls.setSize,
+    setSizeBefore + 1,
+    "manager setModalSize called",
+  );
+  assertEquals(fakeModalCalls.lastSize?.width, 100, "width forwarded");
+  assertEquals(fakeModalCalls.lastSize?.height, 100, "height forwarded");
 }
 
 // ---------------------------------------------------------------------------
@@ -128,12 +202,13 @@ function testTFormItemAllTypes(): void {
     "textarea",
     "select",
     "dropdown",
+    "workspace-icon-picker",
     "checkbox",
     "radio",
     "url",
   ] as const;
 
-  assertEquals(types.length, 8, "TFormItem should support 8 types");
+  assertEquals(types.length, 9, "TFormItem should support 9 types");
   for (const t of types) {
     assert(typeof t === "string", `type ${t} should be a string`);
   }
@@ -200,12 +275,52 @@ function testTFormItemAllTypesWithStructure(): void {
     { type: "textarea", appropriateFields: ["rows", "maxLength"] },
     { type: "select", appropriateFields: ["options"] },
     { type: "dropdown", appropriateFields: ["options"] },
+    {
+      type: "workspace-icon-picker",
+      appropriateFields: ["options", "displayValue", "value"],
+    },
     { type: "checkbox", appropriateFields: ["value"] },
     { type: "radio", appropriateFields: ["options"] },
     { type: "url", appropriateFields: ["placeholder"] },
   ];
 
-  assertEquals(types.length, 8, "all 8 types covered");
+  assertEquals(types.length, 9, "all 9 types covered");
+}
+
+function testWorkspaceIconPickerTransportIsCanonicalOnly(): void {
+  const rawStoredValue = "https://example.invalid/raw-workspace-icon.svg";
+  const item: TFormItem = {
+    type: "workspace-icon-picker",
+    id: "icon",
+    label: "Icon",
+    value: "__private_no_change__",
+    displayValue: "floorp-icon:v1:fingerprint",
+    options: [
+      {
+        value: "floorp-icon:v1:fingerprint",
+        label: "Fingerprint",
+        icon: "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+        keywords: ["identity", "default"],
+      },
+    ],
+  };
+  const transported = JSON.parse(JSON.stringify(item)) as TFormItem;
+  assertEquals(transported.type, "workspace-icon-picker", "dedicated type");
+  assertEquals(transported.value, "__private_no_change__", "sentinel survives");
+  assertEquals(
+    transported.displayValue,
+    "floorp-icon:v1:fingerprint",
+    "safe display ID survives",
+  );
+  assertEquals(
+    transported.options?.[0].value,
+    "floorp-icon:v1:fingerprint",
+    "only canonical option is transported",
+  );
+  assert(
+    !JSON.stringify(transported).includes(rawStoredValue),
+    "raw stored value is not transported to the child",
+  );
 }
 
 function testTFormResultEmpty(): void {
@@ -230,75 +345,125 @@ function testTFormResultMultipleFields(): void {
 // ModalParent initialization and error handling tests
 // ---------------------------------------------------------------------------
 
-function testModalParentInit(): void {
+function testModalParentPublicMethodsAreAvailable(): void {
   const inst = ModalParent.getInstance();
-  // init() should not throw even if called multiple times
-  try {
-    inst.init();
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // Some errors are acceptable in test environment
-    assert(
-      msg.includes("browsingContext") ||
-        msg.includes("modal-parent-container") ||
-        msg.includes("NRChromeModal") ||
-        msg.includes("undefined"),
-      "Unexpected init error: " + msg,
-    );
-  }
+  assert(typeof inst.init === "function", "init should be available");
+  assert(
+    typeof inst.showNoraModal === "function",
+    "showNoraModal should be available",
+  );
+  assert(
+    typeof inst.hideNoraModal === "function",
+    "hideNoraModal should be available",
+  );
+  assert(
+    typeof inst.setModalSize === "function",
+    "setModalSize should be available",
+  );
 }
 
-function testShowNoraModalBeforeInit(): void {
-  // Create fresh instance to test uninitialized state
-  const inst = ModalParent.getInstance();
-  // If init wasn't called, showNoraModal should throw specific error
-  // Note: In test environment, singleton may already be partially initialized
+function testNativeBackdropListenerForwardsAndCleansUp(): void {
+  const targetParent = document.createElement("div");
+  const backdrop = document.createElement("div");
+  const child = document.createElement("button");
+  backdrop.id = "modal-parent-container";
+  backdrop.append(child);
+  targetParent.append(backdrop);
+  const firstReasons: Array<string | undefined> = [];
+  const secondReasons: Array<string | undefined> = [];
+  let currentManager: { hide(reason?: string): void } | null = {
+    hide: (reason) => firstReasons.push(reason),
+  };
+  const detach = attachModalBackdropListener(
+    targetParent,
+    () => currentManager,
+  );
+
+  child.click();
+  assertEquals(
+    firstReasons.length,
+    0,
+    "child clicks should not dismiss the modal",
+  );
+
+  backdrop.click();
+  assertEquals(firstReasons.length, 1, "exact backdrop should dismiss once");
+  assertEquals(
+    firstReasons[0],
+    "backdrop",
+    "backdrop reason should be forwarded",
+  );
+
+  currentManager = {
+    hide: (reason) => secondReasons.push(reason),
+  };
+  backdrop.click();
+  assertEquals(
+    firstReasons.length,
+    1,
+    "manager rebinding should stop calls to the old owner",
+  );
+  assertEquals(secondReasons.length, 1, "rebound manager should receive click");
+  assertEquals(secondReasons[0], "backdrop", "rebound reason should match");
+
+  detach();
+  backdrop.click();
+  assertEquals(secondReasons.length, 1, "cleanup should remove the listener");
+}
+
+async function testShowNoraModalBeforeInit(): Promise<void> {
+  const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
+  let message = "";
   try {
-    inst.showNoraModal(
+    await inst.showNoraModal(
       { forms: [], title: "test" },
       { width: 100, height: 100 },
       () => {},
     );
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // Should get initialization error or actor error
-    assert(
-      msg.includes("ModalManager not initialized") ||
-        msg.includes("NRChromeModal") ||
-        msg.includes("browsingContext"),
-      "Expected initialization or actor error, got: " + msg,
-    );
+    message = e instanceof Error ? e.message : String(e);
   }
+  assertEquals(
+    message,
+    "ModalManager not initialized. Call init() first.",
+    "showNoraModal should reject before initialization",
+  );
 }
 
 function testHideNoraModalBeforeInit(): void {
-  const inst = ModalParent.getInstance();
+  const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
+  let message = "";
   try {
     inst.hideNoraModal();
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized") ||
-        msg.includes("modal-parent-container"),
-      "Expected initialization error, got: " + msg,
-    );
+    message = e instanceof Error ? e.message : String(e);
   }
+  assertEquals(
+    message,
+    "ModalManager not initialized. Call init() first.",
+    "hideNoraModal should throw before initialization",
+  );
 }
 
 function testSetModalSizeBeforeInit(): void {
-  const inst = ModalParent.getInstance();
+  const inst = new ModalParent();
+  (inst as unknown as { modalManager: unknown }).modalManager = null;
+  let message = "";
   try {
     inst.setModalSize({ width: 300, height: 400 });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized"),
-      "Expected initialization error, got: " + msg,
-    );
+    message = e instanceof Error ? e.message : String(e);
   }
+  assertEquals(
+    message,
+    "ModalManager not initialized. Call init() first.",
+    "setModalSize should throw before initialization",
+  );
 }
 
-function testShowNoraModalWithComplexForm(): void {
+async function testShowNoraModalWithComplexForm(): Promise<void> {
   const inst = ModalParent.getInstance();
   const complexForm = {
     forms: [
@@ -329,45 +494,32 @@ function testShowNoraModalWithComplexForm(): void {
     cancelLabel: "Cancel",
   };
 
-  try {
-    inst.showNoraModal(
-      complexForm,
-      { width: 500, height: 600 },
-      (result) => {
-        // Callback should be called with result
-        assert(typeof result === "object", "result should be object");
-      },
-    );
-  } catch (e: unknown) {
-    // Actor errors are acceptable in test environment
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("NRChromeModal") ||
-        msg.includes("browsingContext") ||
-        msg.includes("modal-parent-container"),
-      "Unexpected error: " + msg,
-    );
-  }
+  const showBefore = fakeModalCalls.show;
+  let callbackCalled = false;
+  await inst.showNoraModal(
+    complexForm,
+    { width: 500, height: 600 },
+    (result) => {
+      callbackCalled = true;
+      assert(typeof result === "object", "result should be object");
+    },
+  );
+
+  assertEquals(fakeModalCalls.show, showBefore + 1, "manager show called");
+  assertEquals(fakeModalCalls.lastForm, complexForm, "form forwarded");
+  assertEquals(fakeModalCalls.lastSize?.width, 500, "width forwarded");
+  assertEquals(fakeModalCalls.lastSize?.height, 600, "height forwarded");
+  assert(callbackCalled, "complex form callback should run");
 }
 
 function testModalParentMethodChaining(): void {
-  // Test that multiple operations can be called on same instance
   const inst = ModalParent.getInstance();
-  try {
-    inst.init();
-    inst.setModalSize({ width: 400, height: 500 });
-    inst.hideNoraModal();
-  } catch (e: unknown) {
-    // Errors are acceptable, we're testing that methods exist
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("ModalManager not initialized") ||
-        msg.includes("NRChromeModal") ||
-        msg.includes("browsingContext") ||
-        msg.includes("modal-parent-container"),
-      "Unexpected error in method chaining: " + msg,
-    );
-  }
+  const setSizeBefore = fakeModalCalls.setSize;
+  const hideBefore = fakeModalCalls.hide;
+  inst.setModalSize({ width: 400, height: 500 });
+  inst.hideNoraModal();
+  assertEquals(fakeModalCalls.setSize, setSizeBefore + 1, "size call recorded");
+  assertEquals(fakeModalCalls.hide, hideBefore + 1, "hide call recorded");
 }
 
 // ---------------------------------------------------------------------------
@@ -377,15 +529,19 @@ function testModalParentMethodChaining(): void {
 const tests: TestCase[] = [
   { name: "getInstance returns object", fn: testGetInstanceReturnsObject },
   { name: "getInstance is singleton", fn: testGetInstanceIsSingleton },
-  { name: "showNoraModal does not crash", fn: testShowNoraModalDoesNotCrash },
-  { name: "hideNoraModal does not crash", fn: testHideNoraModalDoesNotCrash },
-  { name: "setModalSize does not crash", fn: testSetModalSizeDoesNotCrash },
+  {
+    name: "first constructed instance owns singleton manager",
+    fn: testFirstConstructedInstanceOwnsSingletonManager,
+  },
+  { name: "showNoraModal uses manager", fn: testShowNoraModalUsesManager },
+  { name: "hideNoraModal uses manager", fn: testHideNoraModalUsesManager },
+  { name: "setModalSize uses manager", fn: testSetModalSizeUsesManager },
   { name: "minimal TForm is valid", fn: testMinimalTFormIsValid },
   {
     name: "TForm with submit/cancel labels",
     fn: testTFormWithSubmitCancelLabels,
   },
-  { name: "TFormItem supports 8 types", fn: testTFormItemAllTypes },
+  { name: "TFormItem supports 9 types", fn: testTFormItemAllTypes },
   { name: "TFormResult key-value", fn: testTFormResultKeyValue },
   {
     name: "TFormItem all optional fields",
@@ -396,9 +552,20 @@ const tests: TestCase[] = [
     name: "TFormItem all types with structure",
     fn: testTFormItemAllTypesWithStructure,
   },
+  {
+    name: "workspace icon picker transport is canonical only",
+    fn: testWorkspaceIconPickerTransportIsCanonicalOnly,
+  },
   { name: "TFormResult empty", fn: testTFormResultEmpty },
   { name: "TFormResult multiple fields", fn: testTFormResultMultipleFields },
-  { name: "ModalParent init", fn: testModalParentInit },
+  {
+    name: "ModalParent public methods are available",
+    fn: testModalParentPublicMethodsAreAvailable,
+  },
+  {
+    name: "native backdrop listener forwards and cleans up",
+    fn: testNativeBackdropListenerForwardsAndCleansUp,
+  },
   {
     name: "showNoraModal before init",
     fn: testShowNoraModalBeforeInit,
@@ -422,10 +589,15 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
+  const instance = ModalParent.getInstance();
+  const instanceState = instance as unknown as { modalManager: unknown };
+  const savedManager = instanceState.modalManager;
   saveState();
+  instanceState.modalManager = fakeModalManager;
   try {
     await runTests("modalParent.test.ts", tests);
   } finally {
+    instanceState.modalManager = savedManager;
     restoreState();
   }
 }

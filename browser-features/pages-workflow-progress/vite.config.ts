@@ -9,26 +9,31 @@ import { disableCspInDevPlugin } from "../../libs/vite-plugin-disable-csp/plugin
 export default defineConfig(({ command }) => {
   if (command === "serve") process.env.NODE_ENV = "development";
   return {
-  build: {
-    outDir: "_dist",
-  },
-  plugins: [
-    tailwindcss(),
-    react({
-      jsxImportSource: "react",
-    }),
-    tsconfigPaths(),
-    genJarmnPlugin("content-workflow-progress", "noraneko-workflow-progress", "content"),
-    disableCspInDevPlugin(command === "serve"),
-  ],
-  optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime"],
-  },
-  server: {
-    port: 5192,
-    hmr: {
-      overlay: true,
+    cacheDir: "../../node_modules/.vite/pages-workflow-progress",
+    build: {
+      outDir: "_dist",
     },
-  },
+    plugins: [
+      tailwindcss(),
+      react({
+        jsxImportSource: "react",
+      }),
+      tsconfigPaths(),
+      genJarmnPlugin(
+        "content-workflow-progress",
+        "noraneko-workflow-progress",
+        "content",
+      ),
+      disableCspInDevPlugin(command === "serve"),
+    ],
+    optimizeDeps: {
+      include: ["react", "react-dom", "react/jsx-runtime"],
+    },
+    server: {
+      port: 5192,
+      hmr: {
+        overlay: true,
+      },
+    },
   };
 });

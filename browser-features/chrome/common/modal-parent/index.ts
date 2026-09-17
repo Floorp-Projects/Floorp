@@ -15,7 +15,9 @@ import type { TForm, TFormResult } from "./utils/type.ts";
 @noraComponent(import.meta.hot)
 export default class ModalParent extends NoraComponentBase {
   private static instance: ModalParent;
-  private modalManager: ModalManager | null = null;
+  // NoraComponentBase invokes init() during super(). This declaration must not
+  // emit a class-field initializer that would overwrite the manager afterward.
+  declare private modalManager: ModalManager | null;
 
   public static getInstance(): ModalParent {
     if (!ModalParent.instance) {
@@ -26,31 +28,38 @@ export default class ModalParent extends NoraComponentBase {
 
   constructor() {
     super();
+    // The loader may construct the decorated component before a caller uses
+    // getInstance(). Preserve that rendered owner as the public singleton.
+    if (!ModalParent.instance) {
+      ModalParent.instance = this;
+    }
   }
 
   init(): void {
-    this.modalManager = new ModalManager();
-    ModalElement.getInstance().initializeModal();
+    if (!this.modalManager) {
+      this.modalManager = new ModalManager();
+    }
+    ModalElement.getInstance().initializeModal(this.modalManager);
   }
 
   public async showNoraModal(
     forms: TForm,
     options: { width: number; height: number },
-    callback: (result: TFormResult) => void,
-  ): Promise<void> {
+    callback: (result: TFormResult | null) => void,
+  ): Promise<TFormResult | null> {
     if (!this.modalManager) {
       throw new Error("ModalManager not initialized. Call init() first.");
     }
     const result = await this.modalManager.show(forms, options);
-    callback(result as TFormResult);
-    this.modalManager.hide();
+    callback(result);
+    return result;
   }
 
   public hideNoraModal(): void {
     if (!this.modalManager) {
       throw new Error("ModalManager not initialized. Call init() first.");
     }
-    this.modalManager.hide();
+    this.modalManager.hide("hide");
   }
 
   public setModalSize(newSize: ModalSize): void {

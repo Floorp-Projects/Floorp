@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals, assertThrows } from "@std/assert";
-import { resolveMode, createSmokeSteps } from "./smoke_runner.ts";
+import { createSmokeSteps, resolveMode } from "./smoke_runner.ts";
 
 // --- resolveMode ---
 
@@ -47,9 +47,17 @@ Deno.test("resolveMode throws on invalid value", () => {
 // --- createSmokeSteps ---
 
 Deno.test("createSmokeSteps('unit') returns only unit steps", () => {
-  const steps = createSmokeSteps("unit");
-  assertEquals(steps.length, 1);
-  assertEquals(steps[0].name, "colocated runner unit tests");
+  assertEquals(createSmokeSteps("unit"), [
+    {
+      name: "colocated runner unit tests",
+      args: [
+        "test",
+        "--allow-read",
+        "--allow-write",
+        "tools/src/colocated_test_runner.test.ts",
+      ],
+    },
+  ]);
 });
 
 Deno.test("createSmokeSteps('runtime') returns only runtime steps", () => {

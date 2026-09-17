@@ -1,8 +1,8 @@
 diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-index dff8162..3021a59 100644
+index 4a4ee9c..e64e5b0 100644
 --- ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
 +++ ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-@@ -255,8 +255,8 @@
+@@ -281,8 +281,8 @@
      --panel-min-width: 140px;
      min-width: var(--panel-min-width);
      max-width: calc(100% - var(--panel-min-width));
@@ -13,7 +13,7 @@ index dff8162..3021a59 100644
    }
  
    &[splitview] {
-@@ -316,9 +316,10 @@
+@@ -341,9 +341,10 @@
        }
      }
  
@@ -26,7 +26,7 @@ index dff8162..3021a59 100644
  
        @media not (-moz-platform: macos) {
          z-index: 1;
-@@ -332,9 +333,20 @@
+@@ -376,9 +377,20 @@
        }
      }
  
@@ -48,7 +48,7 @@ index dff8162..3021a59 100644
        -moz-user-focus: normal;
        border-color: transparent;
  
-@@ -343,9 +355,21 @@
+@@ -387,21 +399,21 @@
        }
      }
  
@@ -59,13 +59,23 @@ index dff8162..3021a59 100644
 +    &[split-view-layout="vertical"] {
 +      flex-direction: column;
 +    }
-+
+ 
+-      @media -moz-pref("browser.nova.enabled") {
+-        /* Outer (inline-end) edge faces the window: the panel carries the
+-         * full 2px gap, plus 2px for the selected panel's focus outline. */
+-        :root[uidensity="compact"] & {
+-          margin-inline-end: 2px;
+-        }
 +    &[split-view-layout="grid-2x2"] {
 +      display: grid;
 +      grid-template-columns: 1fr 1fr;
 +      grid-template-rows: 1fr 1fr;
 +    }
-+
+ 
+-        :root[uidensity="compact"] &.deck-selected {
+-          margin-inline-end: 4px;
+-        }
+-      }
 +    &[split-view-layout="grid-3x2"] {
 +      display: grid;
 +      grid-template-columns: 1fr 1fr 1fr;

@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "关注",
-            "privacy": "隐私政策",
+            "terms": "使用条款",
+            "privacy": "隐私声明",
             "about": "关于 Floorp",
             "copyright": "© {{year}} Floorp 项目。保留所有权利。"
         }

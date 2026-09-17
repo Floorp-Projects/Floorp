@@ -161,7 +161,8 @@
         },
         "footer": {
             "follow": "팔로우",
-            "privacy": "개인 정보 보호 및 약관",
+            "terms": "이용 약관",
+            "privacy": "개인 정보 보호 정책",
             "about": "Floorp Hub에 대해",
             "copyright": "© {{year}} Floorp Projects. All Rights Reserved."
         }

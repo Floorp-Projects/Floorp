@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Undo Closed Tab",
     "tooltiptext": "Reopen the last closed tab {{shortcut}}"
@@ -132,6 +135,11 @@
     "openInPrivateContainer": "Open in Private Container",
     "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Private Container"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {
@@ -508,6 +516,10 @@
     "stepIndicator": "Step {{current}} of {{total}}",
     "backToCommands": "Back to commands",
     "openUrl": "Open URL",
+    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepPlaceholder": "Choose a container...",
+    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "Open a URL in a new tab",
     "openUrlStepLabel": "Enter URL to open",
     "openUrlStepPlaceholder": "https://example.com",
@@ -572,7 +584,17 @@
     "bookmarkSwitcher": "Switch Bookmark",
     "bookmarkSwitcherDescription": "Open a bookmarked page",
     "bookmarkSwitcherStepLabel": "Select a bookmark",
-    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark...",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "Choose a container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Background Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Open in a new background tab",
+    "bookmarkSwitcherWhereCurrentTab": "Current Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navigate the current tab",
+    "bookmarkSwitcherWhereLabel": "Where to open",
+    "bookmarkSwitcherWhereNewTab": "New Tab",
+    "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
+    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
   },
   "commandPaletteReadings": {}
 }

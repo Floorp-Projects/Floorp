@@ -2,21 +2,40 @@
 
 import * as path from "@std/path";
 import {
-  runCommandChecked,
-  Logger,
-  exists,
-  safeRemove,
   createSymlink,
+  exists,
+  Logger,
+  runCommandChecked,
+  safeRemove,
 } from "./utils.ts";
 import { BIN_DIR, PROD_BIN_DIR, PROJECT_ROOT } from "./defines.ts";
 
 const logger = new Logger("injector");
 
+export interface XhtmlInjectionOptions {
+  devPages?: boolean;
+  isCI?: boolean;
+  allowBrowserHttpLoader?: boolean;
+}
+
+export function buildXhtmlInjectionArgs(
+  scriptPath: string,
+  binPath: string,
+  options: XhtmlInjectionOptions = {},
+): string[] {
+  const args = ["run", "--allow-read", "--allow-write", scriptPath, binPath];
+  if (options.devPages) args.push("--dev");
+  if (options.allowBrowserHttpLoader) {
+    args.push("--allow-browser-http-loader");
+  }
+  return args;
+}
+
 export async function injectXhtmlFromTs(
-  isDev = false,
-  isCI = false,
+  options: XhtmlInjectionOptions = {},
 ): Promise<void> {
   const scriptPath = path.join(PROJECT_ROOT, "tools", "scripts", "xhtml.ts");
+  const isCI = options.isCI ?? false;
   let binPath = !isCI ? BIN_DIR : PROD_BIN_DIR;
 
   // In CI, the default PROJECT_ROOT is incorrect because scripts run from a subdir.
@@ -51,7 +70,9 @@ export async function injectXhtmlFromTs(
         }
       } catch (e: unknown) {
         logger.warn(
-          `Could not read dist directory ${distDir} for macOS .app bundle search: ${e instanceof Error ? e.message : e}`,
+          `Could not read dist directory ${distDir} for macOS .app bundle search: ${
+            e instanceof Error ? e.message : e
+          }`,
         );
       }
       if (!appBundleFound) {
@@ -68,8 +89,7 @@ export async function injectXhtmlFromTs(
     }
   }
 
-  const args = ["run", "--allow-read", "--allow-write", scriptPath, binPath];
-  if (isDev) args.push("--dev");
+  const args = buildXhtmlInjectionArgs(scriptPath, binPath, options);
 
   const result = runCommandChecked("deno", args);
   if (!result.success) {

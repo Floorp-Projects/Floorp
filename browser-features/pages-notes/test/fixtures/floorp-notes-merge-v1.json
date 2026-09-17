@@ -1,0 +1,318 @@
+{
+  "fixtureSchemaVersion": 2,
+  "contractVersion": "floorp-notes-merge-v1",
+  "wirePayloadVersion": 1,
+  "requiredCaseNames": [
+    "concurrent-edits-preserve-deterministic-loser",
+    "equal-timestamp-has-commutative-bytewise-winner",
+    "first-sync-same-id-preserves-both-versions",
+    "one-sided-remote-reorder-wins",
+    "one-sided-deletion-wins",
+    "delete-versus-edit-keeps-edit-in-both-directions",
+    "concurrent-reorder-prefers-local-and-appends-remote-new",
+    "conflict-probe-skips-unrelated-collision",
+    "conflict-candidate-conflict-winner-is-reused",
+    "rich-unknown-content-is-byte-preserved",
+    "uploaded-then-local-commit-failure-retry-is-idempotent",
+    "duplicate-local-id-fails-closed"
+  ],
+  "productionDesktopObservation": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "410c211c202012631159d1bce1f3ab208305d2b7",
+    "implementation": "browser-features/pages-notes/src/lib/dataManager.ts",
+    "declaredContractVersion": null,
+    "matchesFixtureContract": false,
+    "knownDivergences": [
+      "conflict copies use random UUIDs",
+      "equal-timestamp conflict winners depend on which client is local",
+      "first-sync same-ID conflicts do not preserve the losing version",
+      "the merge base advances on local save before Sync succeeds",
+      "one-sided remote reorder does not win"
+    ]
+  },
+  "canonicalConflictIdentity": {
+    "digest": "SHA-256",
+    "prefix": "floorp-sync-conflict-",
+    "input": "u64be-length-prefixed UTF-8 losing id, followed by u64be-length-prefixed UTF-8 losing id,title,content and i64be losing createdAt,updatedAt",
+    "probe": "append a u64be-length-prefixed UTF-8 decimal probe only when probe is greater than zero"
+  },
+  "mergeCases": [
+    {
+      "name": "concurrent-edits-preserve-deterministic-loser",
+      "base": [
+        { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "local": [
+        { "id": "shared", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "remote": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 }
+      ],
+      "expectedNotes": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedConflicts": [
+        { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e" }
+      ]
+    },
+    {
+      "name": "equal-timestamp-has-commutative-bytewise-winner",
+      "base": [
+        { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "local": [
+        { "id": "shared", "title": "Alpha", "content": "first", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "remote": [
+        { "id": "shared", "title": "Zulu", "content": "second", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedNotes": [
+        { "id": "shared", "title": "Alpha", "content": "first", "createdAt": 1, "updatedAt": 20 },
+        { "id": "floorp-sync-conflict-ade681279e309c90d6a7846c18fcb45c59e3a938de595990dd962027bda2d712", "title": "Zulu (Conflict)", "content": "second", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedConflicts": [
+        { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-ade681279e309c90d6a7846c18fcb45c59e3a938de595990dd962027bda2d712" }
+      ]
+    },
+    {
+      "name": "first-sync-same-id-preserves-both-versions",
+      "base": [],
+      "local": [
+        { "id": "first-sync", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "remote": [
+        { "id": "first-sync", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 }
+      ],
+      "expectedNotes": [
+        { "id": "first-sync", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-2ad1a382bdff254d92c69df47bbb102ac8a0ab3eceaea23e7fce9df135d5cda6", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedConflicts": [
+        { "originalNoteID": "first-sync", "conflictCopyID": "floorp-sync-conflict-2ad1a382bdff254d92c69df47bbb102ac8a0ab3eceaea23e7fce9df135d5cda6" }
+      ]
+    },
+    {
+      "name": "one-sided-remote-reorder-wins",
+      "base": [
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 }
+      ],
+      "local": [
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 }
+      ],
+      "remote": [
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 },
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 }
+      ],
+      "expectedNotes": [
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 },
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 }
+      ],
+      "expectedConflicts": []
+    },
+    {
+      "name": "one-sided-deletion-wins",
+      "base": [
+        { "id": "delete-me", "title": "Delete", "content": "gone", "createdAt": 1, "updatedAt": 10 },
+        { "id": "keep", "title": "Keep", "content": "kept", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "local": [
+        { "id": "keep", "title": "Keep", "content": "kept", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "remote": [
+        { "id": "delete-me", "title": "Delete", "content": "gone", "createdAt": 1, "updatedAt": 10 },
+        { "id": "keep", "title": "Keep", "content": "kept", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "expectedNotes": [
+        { "id": "keep", "title": "Keep", "content": "kept", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "expectedConflicts": []
+    },
+    {
+      "name": "delete-versus-edit-keeps-edit-in-both-directions",
+      "base": [
+        { "id": "local-delete", "title": "Local delete", "content": "base", "createdAt": 1, "updatedAt": 10 },
+        { "id": "remote-delete", "title": "Remote delete", "content": "base", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "local": [
+        { "id": "remote-delete", "title": "Remote delete", "content": "local edit", "createdAt": 1, "updatedAt": 30 }
+      ],
+      "remote": [
+        { "id": "local-delete", "title": "Local delete", "content": "remote edit", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedNotes": [
+        { "id": "remote-delete", "title": "Remote delete", "content": "local edit", "createdAt": 1, "updatedAt": 30 },
+        { "id": "local-delete", "title": "Local delete", "content": "remote edit", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "expectedConflicts": []
+    },
+    {
+      "name": "concurrent-reorder-prefers-local-and-appends-remote-new",
+      "base": [
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 }
+      ],
+      "local": [
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 },
+        { "id": "local-new", "title": "Local new", "content": "local", "createdAt": 2, "updatedAt": 2 }
+      ],
+      "remote": [
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 },
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "remote-new", "title": "Remote new", "content": "remote", "createdAt": 3, "updatedAt": 3 }
+      ],
+      "expectedNotes": [
+        { "id": "b", "title": "B", "content": "b", "createdAt": 1, "updatedAt": 1 },
+        { "id": "a", "title": "A", "content": "a", "createdAt": 1, "updatedAt": 1 },
+        { "id": "c", "title": "C", "content": "c", "createdAt": 1, "updatedAt": 1 },
+        { "id": "local-new", "title": "Local new", "content": "local", "createdAt": 2, "updatedAt": 2 },
+        { "id": "remote-new", "title": "Remote new", "content": "remote", "createdAt": 3, "updatedAt": 3 }
+      ],
+      "expectedConflicts": []
+    },
+    {
+      "name": "conflict-probe-skips-unrelated-collision",
+      "base": [
+        { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Unrelated", "content": "must survive", "createdAt": 1, "updatedAt": 40 }
+      ],
+      "local": [
+        { "id": "shared", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Unrelated", "content": "must survive", "createdAt": 1, "updatedAt": 40 }
+      ],
+      "remote": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Unrelated", "content": "must survive", "createdAt": 1, "updatedAt": 40 }
+      ],
+      "expectedNotes": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-098e7fea130ea4bacfb9c9bfee3ab1cf9e6099255f50f39b08a1d2ba41de260b", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Unrelated", "content": "must survive", "createdAt": 1, "updatedAt": 40 }
+      ],
+      "expectedConflicts": [
+        { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-098e7fea130ea4bacfb9c9bfee3ab1cf9e6099255f50f39b08a1d2ba41de260b" }
+      ]
+    },
+    {
+      "name": "conflict-candidate-conflict-winner-is-reused",
+      "base": [
+        { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Candidate Base", "content": "candidate base", "createdAt": 1, "updatedAt": 5 }
+      ],
+      "local": [
+        { "id": "shared", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+      ],
+      "remote": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Candidate Remote", "content": "candidate remote", "createdAt": 1, "updatedAt": 15 }
+      ],
+      "expectedNotes": [
+        { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+        { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 },
+        { "id": "floorp-sync-conflict-4ffad297e73ff89293c85a658dc4f4c0c5e08e559fb5b988e6a4a7e644e9fd1a", "title": "Candidate Remote (Conflict)", "content": "candidate remote", "createdAt": 1, "updatedAt": 15 }
+      ],
+      "expectedConflicts": [
+        { "originalNoteID": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "conflictCopyID": "floorp-sync-conflict-4ffad297e73ff89293c85a658dc4f4c0c5e08e559fb5b988e6a4a7e644e9fd1a" },
+        { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e" }
+      ]
+    },
+    {
+      "name": "rich-unknown-content-is-byte-preserved",
+      "base": [
+        { "id": "rich", "title": "Unknown rich node 雪", "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"futureBlock\",\"attrs\":{\"version\":7,\"opaque\":true},\"content\":[{\"type\":\"text\",\"text\":\"雪\"}]}]}", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "local": [
+        { "id": "rich", "title": "Unknown rich node 雪", "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"futureBlock\",\"attrs\":{\"version\":7,\"opaque\":true},\"content\":[{\"type\":\"text\",\"text\":\"雪\"}]}]}", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "remote": [
+        { "id": "rich", "title": "Unknown rich node 雪", "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"futureBlock\",\"attrs\":{\"version\":7,\"opaque\":true},\"content\":[{\"type\":\"text\",\"text\":\"雪\"}]}]}", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "expectedNotes": [
+        { "id": "rich", "title": "Unknown rich node 雪", "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"futureBlock\",\"attrs\":{\"version\":7,\"opaque\":true},\"content\":[{\"type\":\"text\",\"text\":\"雪\"}]}]}", "createdAt": 1, "updatedAt": 10 }
+      ],
+      "expectedConflicts": []
+    }
+  ],
+  "sequenceCases": [
+    {
+      "name": "uploaded-then-local-commit-failure-retry-is-idempotent",
+      "steps": [
+        {
+          "name": "initial-conflict-upload",
+          "base": [
+            { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 }
+          ],
+          "local": [
+            { "id": "shared", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 }
+          ],
+          "remote": [
+            { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 }
+          ],
+          "expectedNotes": [
+            { "id": "shared", "title": "Remote", "content": "remote", "createdAt": 1, "updatedAt": 30 },
+            { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+          ],
+          "expectedConflicts": [
+            { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e" }
+          ]
+        },
+        {
+          "name": "retry-with-stale-local-base-after-winner-edit",
+          "transitionFromPrevious": "previous-upload-succeeded-local-commit-failed-then-remote-winner-edited",
+          "base": [
+            { "id": "shared", "title": "Base", "content": "base", "createdAt": 1, "updatedAt": 10 }
+          ],
+          "local": [
+            { "id": "shared", "title": "Local", "content": "local", "createdAt": 1, "updatedAt": 20 }
+          ],
+          "remote": [
+            { "id": "shared", "title": "Remote edited again", "content": "remote edited again", "createdAt": 1, "updatedAt": 40 },
+            { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+          ],
+          "expectedNotes": [
+            { "id": "shared", "title": "Remote edited again", "content": "remote edited again", "createdAt": 1, "updatedAt": 40 },
+            { "id": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e", "title": "Local (Conflict)", "content": "local", "createdAt": 1, "updatedAt": 20 }
+          ],
+          "expectedConflicts": [
+            { "originalNoteID": "shared", "conflictCopyID": "floorp-sync-conflict-849e5b5e55c59272fed3c2f1260cf5f4c3a18380b592baab01f9a13e2eef3a7e" }
+          ]
+        }
+      ],
+      "invariants": [
+        {
+          "kind": "same-conflict-copy",
+          "originalNoteID": "shared",
+          "fromStep": "initial-conflict-upload",
+          "toStep": "retry-with-stale-local-base-after-winner-edit"
+        }
+      ]
+    }
+  ],
+  "errorCases": [
+    {
+      "name": "duplicate-local-id-fails-closed",
+      "base": [],
+      "local": [
+        { "id": "duplicate", "title": "First", "content": "one", "createdAt": 1, "updatedAt": 1 },
+        { "id": "duplicate", "title": "Second", "content": "two", "createdAt": 2, "updatedAt": 2 }
+      ],
+      "remote": [],
+      "expectedError": {
+        "code": "duplicate-note-id",
+        "source": "local",
+        "id": "duplicate"
+      }
+    }
+  ]
+}

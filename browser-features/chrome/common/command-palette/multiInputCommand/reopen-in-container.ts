@@ -9,7 +9,7 @@ import { getSegmentedKeywordsFromI18nKeys } from "../utils/budouxSegmenter.ts";
 export async function loadContainers(): Promise<CommandStepChoice[]> {
   try {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
-      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
 
     ContextualIdentityService.ensureDataReady();

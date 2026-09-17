@@ -9,7 +9,7 @@ import { TabColorManager } from "./tabcolor-manager";
 import chroma from "chroma-js";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 const { ManifestObtainer } = ChromeUtils.importESModule(
-  "resource://gre/modules/ManifestObtainer.sys.mjs",
+  "moz-src:///dom/manifest/ManifestObtainer.sys.mjs",
 );
 
 export let manager: TabColorManager;

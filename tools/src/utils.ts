@@ -36,7 +36,7 @@ export function safeRemove(p: string): void {
     if (exists(p)) {
       Deno.removeSync(p, { recursive: true });
     }
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     // keep parity with Ruby behavior (warn)
     // No logger available here by default.
@@ -45,13 +45,34 @@ export function safeRemove(p: string): void {
   }
 }
 
+/**
+ * Create a directory junction. Unlike a symlink this needs no elevation on
+ * Windows, which makes it a usable fallback when symlink creation is denied.
+ * Only succeeds when `target` is a directory.
+ */
+function createDirectoryJunction(link: string, target: string): boolean {
+  try {
+    Deno.symlinkSync(target, link, { type: "junction" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createSymlink(link: string, target: string): void {
   try {
     safeRemove(link);
     // Deno.symlinkSync(target, path) => target then path (link)
     Deno.symlinkSync(target, link);
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   } catch (e: any) {
+    // Windows refuses symlink creation unless Developer Mode is enabled or the
+    // process is elevated (os error 1314). A directory junction needs neither
+    // and is equivalent for the build's purposes, so fall back to one instead
+    // of leaving the link missing and failing the build further downstream.
+    if (Deno.build.os === "windows" && createDirectoryJunction(link, target)) {
+      return;
+    }
     console.warn(
       `Failed to create symlink ${link} -> ${target}: ${e?.message ?? e}`,
     );
@@ -149,28 +170,36 @@ export class Logger {
 
   info(message: string, ...args: unknown[]) {
     console.log(
-      `${Logger.COLORS.info}${this.format("INFO", message)}${Logger.COLORS.reset}`,
+      `${Logger.COLORS.info}${
+        this.format("INFO", message)
+      }${Logger.COLORS.reset}`,
       ...args,
     );
   }
 
   warn(message: string, ...args: unknown[]) {
     console.log(
-      `${Logger.COLORS.warn}${this.format("WARN", message)}${Logger.COLORS.reset}`,
+      `${Logger.COLORS.warn}${
+        this.format("WARN", message)
+      }${Logger.COLORS.reset}`,
       ...args,
     );
   }
 
   error(message: string, ...args: unknown[]) {
     console.log(
-      `${Logger.COLORS.error}${this.format("ERROR", message)}${Logger.COLORS.reset}`,
+      `${Logger.COLORS.error}${
+        this.format("ERROR", message)
+      }${Logger.COLORS.reset}`,
       ...args,
     );
   }
 
   success(message: string, ...args: unknown[]) {
     console.log(
-      `${Logger.COLORS.success}${this.format("SUCCESS", message)}${Logger.COLORS.reset}`,
+      `${Logger.COLORS.success}${
+        this.format("SUCCESS", message)
+      }${Logger.COLORS.reset}`,
       ...args,
     );
   }
@@ -178,7 +207,9 @@ export class Logger {
   debug(message: string, ...args: unknown[]) {
     if (Deno.env.get("DEBUG")) {
       console.log(
-        `${Logger.COLORS.debug}${this.format("DEBUG", message)}${Logger.COLORS.reset}`,
+        `${Logger.COLORS.debug}${
+          this.format("DEBUG", message)
+        }${Logger.COLORS.reset}`,
         ...args,
       );
     }

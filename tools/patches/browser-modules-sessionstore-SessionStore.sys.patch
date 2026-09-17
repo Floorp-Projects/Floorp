@@ -1,0 +1,350 @@
+diff --git a/browser/modules/sessionstore/SessionStore.sys.mjs b/browser/modules/sessionstore/SessionStore.sys.mjs
+index 11191a8..9cf32a0 100644
+--- ./browser/modules/sessionstore/SessionStore.sys.mjs
++++ ./browser/modules/sessionstore/SessionStore.sys.mjs
+@@ -156,6 +156,13 @@ const RESTORE_TAB_CONTENT_REASON = {
+ // 'browser.startup.page' preference value to resume the previous session.
+ const BROWSER_STARTUP_RESUME_SESSION = 3;
+ 
++function isFloorpPrivateContainerTabState(tabState) {
++  return (
++    tabState?.floorpDisableHistory === true ||
++    tabState?.floorpDisableHistory === "true"
++  );
++}
++
+ // Used by SessionHistoryListener.
+ const kNoIndex = Number.MAX_SAFE_INTEGER;
+ const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
+@@ -1348,6 +1355,7 @@ var SessionStoreInternal = {
+     if (state) {
+       // Initialize the splitViewId counter and migrate any string-based splitViewIds
+       this._initSplitViewIds(state);
++      this._sanitizeFloorpPrivateContainerRootState(state);
+ 
+       try {
+         // If we're doing a DEFERRED session, then we want to pull pinned tabs
+@@ -3982,6 +3990,7 @@ var SessionStoreInternal = {
+     // Initialize counter and migrate splitViewIds from persisted given state
+     this._maxSplitViewId = 0;
+     this._initSplitViewIds(state);
++    this._sanitizeFloorpPrivateContainerRootState(state);
+ 
+     this._browserSetState = true;
+ 
+@@ -5893,6 +5902,239 @@ var SessionStoreInternal = {
+     return tabData;
+   },
+ 
++  _sanitizeFloorpPrivateContainerSplitViews(tabStates, splitViews) {
++    let splitViewTabCounts = new Map();
++    for (let tabState of tabStates) {
++      if (tabState.splitViewId === undefined) {
++        continue;
++      }
++      splitViewTabCounts.set(
++        tabState.splitViewId,
++        (splitViewTabCounts.get(tabState.splitViewId) ?? 0) + 1
++      );
++    }
++
++    for (let tabState of tabStates) {
++      if ((splitViewTabCounts.get(tabState.splitViewId) ?? 0) < 2) {
++        delete tabState.splitViewId;
++      }
++    }
++
++    if (!Array.isArray(splitViews)) {
++      return splitViews;
++    }
++
++    return splitViews.flatMap(splitView => {
++      let numberOfTabs = splitViewTabCounts.get(splitView.id) ?? 0;
++      if (numberOfTabs < 2) {
++        return [];
++      }
++      splitView.numberOfTabs = numberOfTabs;
++      return splitView;
++    });
++  },
++
++  _sanitizeFloorpPrivateContainerTabGroups(tabGroups) {
++    if (!Array.isArray(tabGroups)) {
++      return tabGroups;
++    }
++
++    return tabGroups.flatMap(tabGroup => {
++      if (!Array.isArray(tabGroup.tabs)) {
++        return tabGroup;
++      }
++
++      tabGroup.tabs = tabGroup.tabs.filter(
++        tabData => !isFloorpPrivateContainerTabState(tabData.state)
++      );
++      if (!tabGroup.tabs.length) {
++        return [];
++      }
++
++      let tabStates = tabGroup.tabs.map(tabData => tabData.state);
++      tabGroup.splitViews = this._sanitizeFloorpPrivateContainerSplitViews(
++        tabStates,
++        tabGroup.splitViews
++      );
++      return tabGroup;
++    });
++  },
++
++  _sanitizeFloorpPrivateContainerClosedData(winData) {
++    if (!winData) {
++      return;
++    }
++
++    if (Array.isArray(winData._closedTabs)) {
++      winData._closedTabs = winData._closedTabs.filter(
++        tabData => !isFloorpPrivateContainerTabState(tabData.state)
++      );
++    }
++    winData.closedGroups = this._sanitizeFloorpPrivateContainerTabGroups(
++      winData.closedGroups
++    );
++  },
++
++  _sanitizeFloorpPrivateContainerWindowState(winData) {
++    if (!winData || !Array.isArray(winData.tabs)) {
++      return false;
++    }
++
++    let originalTabs = winData.tabs;
++    let tabs = originalTabs.filter(
++      tabState => !isFloorpPrivateContainerTabState(tabState)
++    );
++    if (tabs.length == originalTabs.length) {
++      return false;
++    }
++
++    let originalSelectedIndex = parseInt(winData.selected || 1, 10) - 1;
++    if (!Number.isInteger(originalSelectedIndex)) {
++      originalSelectedIndex = 0;
++    }
++    originalSelectedIndex = Math.max(
++      0,
++      Math.min(originalSelectedIndex, originalTabs.length - 1)
++    );
++
++    let selectedTab = originalTabs[originalSelectedIndex];
++    let selectedIndex = tabs.indexOf(selectedTab);
++    if (selectedIndex == -1) {
++      for (let index = originalSelectedIndex - 1; index >= 0; index--) {
++        if (!isFloorpPrivateContainerTabState(originalTabs[index])) {
++          selectedIndex = tabs.indexOf(originalTabs[index]);
++          break;
++        }
++      }
++    }
++    if (selectedIndex == -1 && tabs.length) {
++      selectedIndex = 0;
++    }
++
++    winData.tabs = tabs;
++    winData.selected = selectedIndex + 1;
++
++    if (Array.isArray(winData.groups)) {
++      let groupIds = new Set(
++        tabs.map(tabState => tabState.groupId).filter(Boolean)
++      );
++      winData.groups = winData.groups.filter(group => groupIds.has(group.id));
++    }
++    winData.splitViews = this._sanitizeFloorpPrivateContainerSplitViews(
++      tabs,
++      winData.splitViews
++    );
++    return true;
++  },
++
++  _sanitizeFloorpPrivateContainerClosedWindowState(winData) {
++    let removedOpenTab =
++      this._sanitizeFloorpPrivateContainerWindowState(winData);
++    this._sanitizeFloorpPrivateContainerClosedData(winData);
++
++    if (!removedOpenTab) {
++      return true;
++    }
++
++    if (!winData.tabs?.length) {
++      winData.selected = 0;
++      delete winData.title;
++      return Boolean(
++        winData._closedTabs?.length || winData.closedGroups?.length
++      );
++    }
++
++    let selectedTabState = winData.tabs[winData.selected - 1];
++    let entries = selectedTabState?.entries ?? [];
++    let activeIndex = (selectedTabState?.index || entries.length) - 1;
++    activeIndex = Math.max(0, Math.min(activeIndex, entries.length - 1));
++    let activeEntry = entries[activeIndex];
++    if (activeEntry) {
++      winData.title = activeEntry.title || activeEntry.url;
++    } else {
++      delete winData.title;
++    }
++    return true;
++  },
++
++  _sanitizeFloorpPrivateContainerOpenWindows(root) {
++    if (!Array.isArray(root.windows)) {
++      return;
++    }
++
++    let originalWindows = root.windows;
++    let originalSelectedIndex = parseInt(root.selectedWindow || 1, 10) - 1;
++    if (!Number.isInteger(originalSelectedIndex)) {
++      originalSelectedIndex = 0;
++    }
++    originalSelectedIndex = Math.max(
++      0,
++      Math.min(originalSelectedIndex, originalWindows.length - 1)
++    );
++
++    let privateOnlyEmptyWindows = new Set();
++    for (let winData of originalWindows) {
++      let removedOpenTab =
++        this._sanitizeFloorpPrivateContainerWindowState(winData);
++      this._sanitizeFloorpPrivateContainerClosedData(winData);
++      if (removedOpenTab && !winData.tabs.length) {
++        winData.selected = 0;
++        delete winData.title;
++        if (!winData._closedTabs?.length && !winData.closedGroups?.length) {
++          privateOnlyEmptyWindows.add(winData);
++        }
++      }
++    }
++
++    let windows = originalWindows.filter(
++      winData => !privateOnlyEmptyWindows.has(winData)
++    );
++    if (!windows.length && privateOnlyEmptyWindows.size) {
++      windows.push(
++        originalWindows[originalSelectedIndex] ?? originalWindows[0]
++      );
++    }
++
++    let selectedWindow = originalWindows[originalSelectedIndex];
++    let selectedIndex = windows.indexOf(selectedWindow);
++    if (selectedIndex == -1) {
++      for (let index = originalSelectedIndex - 1; index >= 0; index--) {
++        if (windows.includes(originalWindows[index])) {
++          selectedIndex = windows.indexOf(originalWindows[index]);
++          break;
++        }
++      }
++    }
++    if (selectedIndex == -1 && windows.length) {
++      selectedIndex = 0;
++    }
++
++    root.windows = windows;
++    root.selectedWindow = selectedIndex + 1;
++  },
++
++  _sanitizeFloorpPrivateContainerRootState(state) {
++    for (let root of [
++      state?.deferredInitialState,
++      state?.lastSessionState,
++      state,
++    ]) {
++      if (!root) {
++        continue;
++      }
++
++      this._sanitizeFloorpPrivateContainerOpenWindows(root);
++      if (Array.isArray(root._closedWindows)) {
++        root._closedWindows = root._closedWindows.filter(winData =>
++          this._sanitizeFloorpPrivateContainerClosedWindowState(winData)
++        );
++      }
++      root.savedGroups = this._sanitizeFloorpPrivateContainerTabGroups(
++        root.savedGroups
++      );
++    }
++  },
++
+   _initSplitViewIds(state) {
+     if (this._maxSplitViewId > 0) {
+       this._log.error(
+@@ -6029,6 +6271,9 @@ var SessionStoreInternal = {
+       winData.tabs = [];
+     }
+ 
++    this._sanitizeFloorpPrivateContainerWindowState(winData);
++    this._sanitizeFloorpPrivateContainerClosedData(winData);
++
+     // See SessionStoreInternal.restoreTabs for a description of what
+     // selectTab represents.
+     let selectTab = 0;
+@@ -6349,6 +6594,8 @@ var SessionStoreInternal = {
+       return;
+     }
+ 
++    this._sanitizeFloorpPrivateContainerRootState(root);
++
+     // Restore closed windows if any.
+     if (root._closedWindows) {
+       this._closedWindows = root._closedWindows;
+@@ -7511,6 +7758,10 @@ var SessionStoreInternal = {
+    * @returns boolean
+    */
+   _shouldSaveTabState: function ssi_shouldSaveTabState(aTabState) {
++    if (isFloorpPrivateContainerTabState(aTabState)) {
++      return false;
++    }
++
+     // If the tab has only a transient about: history entry, no other
+     // session history, and no userTypedValue, then we don't actually want to
+     // store this tab's data.
+@@ -7649,6 +7900,12 @@ var SessionStoreInternal = {
+           // We don't want to increment tIndex here.
+           continue;
+         } else if (window.tabs[tIndex].groupId) {
++          let tabToAdd = window.tabs[tIndex];
++          if (!this._shouldSaveTabState(tabToAdd)) {
++            tIndex++;
++            continue;
++          }
++
+           // Convert any open groups into saved groups.
+           let groupStateToSave = window.groups.find(
+             groupState => groupState.id == window.tabs[tIndex].groupId
+@@ -7662,7 +7919,6 @@ var SessionStoreInternal = {
+             groupToSave.removeAfterRestore = true;
+             groupsToSave.set(groupStateToSave.id, groupToSave);
+           }
+-          let tabToAdd = window.tabs[tIndex];
+           groupToSave.tabs.push(this._formatTabStateForSavedGroup(tabToAdd));
+         } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
+           // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
+@@ -7763,6 +8019,24 @@ var SessionStoreInternal = {
+           continue;
+         }
+       }
++
++      if (!window.tabs.length) {
++        let removedWindowIndex = wIndex + 1;
++        state.windows.splice(wIndex, 1);
++
++        if (removedWindowIndex < state.selectedWindow) {
++          state.selectedWindow -= 1;
++        } else if (
++          removedWindowIndex == state.selectedWindow &&
++          state.windows.length
++        ) {
++          state.selectedWindow = Math.min(
++            removedWindowIndex,
++            state.windows.length
++          );
++        }
++        continue;
++      }
+       wIndex++;
+     }
+ 

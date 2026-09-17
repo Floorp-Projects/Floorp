@@ -38,23 +38,8 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-type Variant = {
-  id: string;
-  weight?: number;
-  configUrl?: string;
-  [k: string]: unknown;
-};
-export type Experiment = {
-  id: string;
-  name?: string;
-  description?: string;
-  salt?: string;
-  rollout?: number;
-  start?: string;
-  end?: string;
-  variants?: Variant[];
-  [k: string]: unknown;
-};
+import type { Experiment, Variant } from "./types.ts";
+export type { Experiment } from "./types.ts";
 type Assignment = {
   installId: string | null;
   variantId: string | null;

@@ -30,11 +30,30 @@ import {
   FirefoxTabReplacementTracker,
   hasOriginUserContextId,
 } from "./utils/tab-replacement-lifecycle.ts";
+import {
+  hasAnyWindowWithHiddenTabToPreserve,
+  shouldCloseWindowForLastTabReplacement,
+} from "./utils/workspace-last-tab-policy.ts";
+
+const BROWSER_WINDOW_CLOSED_TOPIC = "domwindowclosed";
 
 interface TabEvent extends Event {
   target: XULElement;
   forUnsplit?: boolean;
 }
+
+type BrowserWindowWithTabs = Window & {
+  gBrowser?: Pick<GBrowser, "tabs">;
+};
+
+type BrowserWindowCloseHelpers = {
+  closeWindow(
+    close: boolean,
+    promptFunction: () => boolean,
+    source: string,
+  ): boolean;
+  warnAboutClosingWindow(): boolean;
+};
 
 export class WorkspacesTabManager {
   dataManagerCtx: WorkspacesDataManager;
@@ -46,11 +65,23 @@ export class WorkspacesTabManager {
   private readonly firefoxReplacementTracker = new FirefoxTabReplacementTracker<
     XULElement
   >();
+  private readonly browserWindowClosedObserver = {
+    observe: (): void => {
+      Services.tm.dispatchToMainThread(() => {
+        this.syncCloseWindowWithLastTabPreference();
+      });
+    },
+  };
+
   constructor(iconCtx: WorkspaceIcons, dataManagerCtx: WorkspacesDataManager) {
     this.iconCtx = iconCtx;
     this.dataManagerCtx = dataManagerCtx;
     this.boundHandleTabClose = this.handleTabClose.bind(this);
     this.boundHandleTabOpen = this.handleTabOpen.bind(this);
+    Services.obs.addObserver(
+      this.browserWindowClosedObserver,
+      BROWSER_WINDOW_CLOSED_TOPIC,
+    );
 
     const initWorkspace = () => {
       (
@@ -79,27 +110,7 @@ export class WorkspacesTabManager {
 
     initWorkspace();
 
-    createEffect(() => {
-      try {
-        const prefName = "browser.tabs.closeWindowWithLastTab";
-        // Always disable Firefox's auto-close on last tab.
-        const desiredValue = false;
-        try {
-          const current = Services.prefs.getBoolPref(prefName, true);
-          if (current !== desiredValue) {
-            Services.prefs.setBoolPref(prefName, desiredValue);
-          }
-        } catch {
-          // Ensure pref is disabled even if reading fails
-          Services.prefs.setBoolPref(prefName, desiredValue);
-        }
-      } catch (e) {
-        console.warn(
-          "WorkspacesTabManager: failed to set closeWindowWithLastTab pref",
-          e,
-        );
-      }
-    });
+    createEffect(() => this.syncCloseWindowWithLastTabPreference());
 
     const owner = getOwner?.();
     const exec = () =>
@@ -215,6 +226,10 @@ export class WorkspacesTabManager {
       this.boundHandleTabClose as EventListener,
     );
     globalThis.removeEventListener("TabOpen", this.boundHandleTabOpen);
+    Services.obs.removeObserver(
+      this.browserWindowClosedObserver,
+      BROWSER_WINDOW_CLOSED_TOPIC,
+    );
   }
 
   private handleTabClose = (event: TabEvent) => {
@@ -225,6 +240,7 @@ export class WorkspacesTabManager {
     const trackedReplacement = this.firefoxReplacementTracker.finishTabClose(
       tab,
     );
+    this.syncCloseWindowWithLastTabPreference(tab);
 
     // Skip workspace-empty logic when bulk-removing tabs (e.g. workspace deletion)
     if (this.suppressTabCloseHandling) return;
@@ -256,6 +272,28 @@ export class WorkspacesTabManager {
       remainingTabs,
       replacementTab,
     );
+
+    if (
+      replacementTab &&
+      shouldCloseWindowForLastTabReplacement(
+        allTabs,
+        tab,
+        configStore.exitOnLastTabClose,
+      )
+    ) {
+      // Another window can require the profile-wide pref to stay false. Gecko
+      // then creates a replacement here even though this window has no hidden
+      // state to preserve, so emulate its native per-window close behavior.
+      const browserWindow = globalThis as unknown as BrowserWindowCloseHelpers;
+      setTimeout(() => {
+        browserWindow.closeWindow(
+          true,
+          browserWindow.warnAboutClosingWindow,
+          "close-last-tab",
+        );
+      }, 0);
+      return;
+    }
 
     const resolveWorkspaceIdForClose = (
       targetTab: XULElement,
@@ -315,8 +353,8 @@ export class WorkspacesTabManager {
 
         // If the user closes the last tab in the current workspace, close the window
         // but keep the session (including tabs in other workspaces).
-        // Since we forced browser.tabs.closeWindowWithLastTab to false, we need to
-        // close the window manually.
+        // Hidden tabs make Gecko treat this as the last visible tab. Close the
+        // window only after Workspace has preserved their state.
         setTimeout(() => {
           globalThis.close();
         }, 0);
@@ -391,6 +429,7 @@ export class WorkspacesTabManager {
       if (!this.getWorkspaceIdFromAttribute(tab)) {
         this.setWorkspaceIdToAttribute(tab, wsId);
       }
+      this.syncCloseWindowWithLastTabPreference();
     } catch {
       // ignore tab-open handler error
     }
@@ -466,6 +505,46 @@ export class WorkspacesTabManager {
       (wrapper as HTMLElement).style.display = hasVisibleTabInWrapper
         ? ""
         : "none";
+    }
+
+    this.syncCloseWindowWithLastTabPreference();
+  }
+
+  private getOpenBrowserWindowTabs(): Iterable<XULElement>[] {
+    const tabsByWindow: Iterable<XULElement>[] = [];
+    const browserWindows = Services.wm.getEnumerator("navigator:browser");
+    while (browserWindows.hasMoreElements()) {
+      const browserWindow = browserWindows.getNext() as BrowserWindowWithTabs;
+      if (!browserWindow.closed && browserWindow.gBrowser?.tabs) {
+        tabsByWindow.push(browserWindow.gBrowser.tabs);
+      }
+    }
+    return tabsByWindow;
+  }
+
+  /**
+   * Synchronize the profile-wide preference from every browser window. Native
+   * last-tab closing is safe only when none has hidden state to preserve. A
+   * TabClose call configures the next close because Gecko has already read the
+   * preference for the current operation.
+   */
+  private syncCloseWindowWithLastTabPreference(closingTab?: XULElement): void {
+    try {
+      const prefName = "browser.tabs.closeWindowWithLastTab";
+      const desiredValue = !hasAnyWindowWithHiddenTabToPreserve(
+        this.getOpenBrowserWindowTabs(),
+        closingTab,
+      );
+      if (
+        Services.prefs.getBoolPref(prefName, !desiredValue) !== desiredValue
+      ) {
+        Services.prefs.setBoolPref(prefName, desiredValue);
+      }
+    } catch (error) {
+      console.warn(
+        "[WorkspacesTabManager] Failed to sync closeWindowWithLastTab pref",
+        error,
+      );
     }
   }
 
@@ -687,6 +766,13 @@ export class WorkspacesTabManager {
     // previously selected workspace before switching. This ensures we can
     // restore focus when returning to that workspace instead of creating
     // a new tab each time.
+    //
+    // The marker must be unique per workspace: stale markers accumulate when
+    // the user switches tabs within the workspace without switching
+    // workspaces (the marker is only refreshed on workspace changes), which
+    // made the restored selection history-dependent and seemingly random
+    // (Floorp issue #2616). Remove stale markers before persisting the new
+    // one, mirroring the remove-then-set pattern in updateTabsVisibility().
     try {
       const prevWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
       const currentlySelectedTab = globalThis.gBrowser
@@ -696,6 +782,9 @@ export class WorkspacesTabManager {
         this.getWorkspaceIdFromAttribute(currentlySelectedTab) ===
           prevWorkspaceId
       ) {
+        document
+          ?.querySelectorAll(`[${WORKSPACE_LAST_SHOW_ID}="${prevWorkspaceId}"]`)
+          .forEach((tab) => tab.removeAttribute(WORKSPACE_LAST_SHOW_ID));
         currentlySelectedTab.setAttribute(
           WORKSPACE_LAST_SHOW_ID,
           prevWorkspaceId,
@@ -722,9 +811,21 @@ export class WorkspacesTabManager {
         // already chose the correct tab for this workspace.
       } else {
         // Priority 2: Use the last-shown tab for this workspace.
-        const willChangeWorkspaceLastShowTab = document?.querySelector(
+        // The persist step above guarantees at most one marker per
+        // workspace, so this normally matches the user's last-selected tab.
+        // If duplicate markers from older versions remain, pick the last
+        // one in DOM order as a deterministic fallback rather than the
+        // first (which made the selection history-dependent — Floorp issue
+        // #2616). Note: DOM order reflects tab position, not write order;
+        // it is only a deterministic fallback for legacy duplicates.
+        const willChangeWorkspaceLastShowTabs = document?.querySelectorAll(
           `[${WORKSPACE_LAST_SHOW_ID}="${workspaceId}"]`,
-        ) as XULElement;
+        );
+        const willChangeWorkspaceLastShowTab = willChangeWorkspaceLastShowTabs
+          ? (willChangeWorkspaceLastShowTabs[
+            willChangeWorkspaceLastShowTabs.length - 1
+          ] as XULElement | undefined)
+          : undefined;
 
         if (willChangeWorkspaceLastShowTab) {
           globalThis.gBrowser.selectedTab = willChangeWorkspaceLastShowTab;

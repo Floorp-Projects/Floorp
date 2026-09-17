@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Floorp Hub에 대해",
+    "version": "버전",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "업데이트 확인",
+      "checking": "업데이트 확인 중…",
+      "checkFailed": "업데이트를 확인할 수 없습니다. 나중에 다시 시도하세요.",
+      "upToDate": "최신 버전입니다.",
+      "downloading": "업데이트 다운로드 중… {{progress}}",
+      "applying": "업데이트 설치 중…",
+      "readyToRestart": "업데이트 준비 완료 — 다시 시작해 적용하세요.",
+      "restarting": "다시 시작 중…",
+      "policyDisabled": "업데이트를 사용자의 조직에서 관리합니다.",
+      "downloadFailed": "다운로드하지 못했습니다. 다시 시도하세요.",
+      "noUpdater": "업데이트를 외부에서 관리합니다.",
+      "available": "{{version}} 업데이트 다운로드",
+      "tryAgain": "다시 시도",
+      "restartToApply": "업데이트를 적용하려면 다시 시작"
+    },
+    "community": {
+      "title": "커뮤니티 참여"
+    },
+    "help": {
+      "title": "도움 및 지원",
+      "support": "지원"
+    },
+    "sponsor": {
+      "title": "프로젝트 후원",
+      "button": "후원자 되기"
+    },
+    "links": {
+      "releaseNotes": "릴리스 노트",
+      "help": "Floorp 도움말",
+      "feedback": "피드백 제출",
+      "licensing": "라이센스",
+      "terms": "이용 약관",
+      "privacy": "개인 정보 보호 정책"
+    },
+    "trademark": "Floorp는 일본 내의 상표입니다."
+  }
+}

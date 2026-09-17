@@ -1,12 +1,9 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
+import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
-// deno-lint-ignore no-explicit-any
-declare const ChromeUtils: any;
-// deno-lint-ignore no-explicit-any
-declare const Cu: any;
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -16,7 +13,33 @@ declare global {
   }
 }
 
-const isLocalhost5183 = import.meta.url?.includes("localhost:5183");
+const SETTINGS_BRIDGE_TIMEOUT_MS = 15_000;
+const SETTINGS_BRIDGE_POLL_INTERVAL_MS = 25;
+
+function waitForSettingsBridge(): Promise<Window> {
+  const startedAt = Date.now();
+  return new Promise((resolve, reject) => {
+    const poll = () => {
+      const page = globalThis as unknown as Window;
+      if (
+        typeof page.NRSettingsSend === "function" &&
+        typeof page.NRSettingsRegisterReceiveCallback === "function"
+      ) {
+        resolve(page);
+        return;
+      }
+      if (Date.now() - startedAt >= SETTINGS_BRIDGE_TIMEOUT_MS) {
+        reject(new Error("NRSettings page RPC bridge did not initialize"));
+        return;
+      }
+      globalThis.setTimeout(poll, SETTINGS_BRIDGE_POLL_INTERVAL_MS);
+    };
+    poll();
+  });
+}
+
+// about:hub is privileged even when its scripts are served by Vite.
+const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getBoolPref: (prefName) => {
@@ -49,40 +72,21 @@ const directServicesFunctions: NRSettingsParentFunctions = {
     Services.prefs.setStringPref(prefName, value);
     return Promise.resolve();
   },
-  // フォルダ選択関連のメソッド
-  selectFolder: () => {
-    return Promise.resolve(null);
-  },
-  getRandomImageFromFolder: (_path) => {
-    return Promise.resolve(null);
-  },
-  // Actor通信用メソッド
-  sendToNRPanelSidebarChild: async (method, ...args) => {
-    try {
-      // NRPanelSidebarParentアクターを取得
-      const windowGlobal = Cu.getGlobalForObject(Services);
-      const actor = windowGlobal.browsingContext.currentWindowGlobal.getActor(
-        "NRPanelSidebar",
-      );
-
-      // メソッドを実行
-      return await actor[method](...args);
-    } catch (error) {
-      console.error(`Error calling NRPanelSidebarChild.${method}:`, error);
-      throw error;
-    }
-  },
 };
 
 export const rpc = isLocalhost5183
   ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
     {},
     {
-      post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
+      post: (data) => {
+        void waitForSettingsBridge()
+          .then((page) => page.NRSettingsSend(data))
+          .catch((error) => console.error(error));
+      },
       on: (callback) => {
-        (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
-          callback,
-        );
+        void waitForSettingsBridge()
+          .then((page) => page.NRSettingsRegisterReceiveCallback(callback))
+          .catch((error) => console.error(error));
       },
       serialize: (v) => JSON.stringify(v),
       deserialize: (v) => JSON.parse(v),

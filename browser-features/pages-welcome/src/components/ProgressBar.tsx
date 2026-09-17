@@ -1,36 +1,50 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-const navigationItems = [
-  { path: "/", labelKey: "navigation.welcome" },
-  { path: "/localization", labelKey: "navigation.languageSupport" },
-  { path: "/features", labelKey: "navigation.featureIntroduction" },
-  { path: "/hub", labelKey: "navigation.hub" },
-  { path: "/customize", labelKey: "navigation.initialSettings" },
-  { path: "/finish", labelKey: "navigation.complete" },
-];
-
+import { welcomeSteps } from "./steps.ts";
+import styles from "../setup.module.css";
+import { NativeSelect } from "@chakra-ui/react";
+import { ChevronDown } from "lucide-react";
 export default function ProgressBar() {
   const { t } = useTranslation();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
-  const currentIndex = navigationItems.findIndex((item) =>
-    item.path === location.pathname
-  );
-
   return (
-    <div className="w-full mb-12">
-      <ul className="steps steps-horizontal w-full">
-        {navigationItems.map((item, index) => (
-          <li
-            key={item.path}
-            className={`step ${index <= currentIndex ? "step-primary" : ""}`}
-            onClick={() => navigate(item.path)}
-          >
-            {t(item.labelKey)}
+    <nav
+      className={styles.progress}
+      aria-label={t("ui.setupProgress", { defaultValue: "Setup progress" })}
+    >
+      <NativeSelect.Root unstyled className={styles.compactProgress}>
+        <NativeSelect.Field
+          aria-label={t("ui.stepNavigation", {
+            defaultValue: "Setup navigation",
+          })}
+          value={pathname}
+          onChange={(event) => navigate(event.target.value)}
+          className={styles.select}
+        >
+          {welcomeSteps.map((item, index) => (
+            <option key={item.path} value={item.path}>
+              {index + 1}. {t(`setupV5.steps.${index}`)}
+            </option>
+          ))}
+        </NativeSelect.Field>
+        <NativeSelect.Indicator className={styles.selectIndicator}>
+          <ChevronDown size={18} aria-hidden="true" />
+        </NativeSelect.Indicator>
+      </NativeSelect.Root>
+      <ol className={styles.steps}>
+        {welcomeSteps.map((item) => (
+          <li key={item.path}>
+            <button
+              type="button"
+              aria-current={pathname === item.path ? "step" : undefined}
+              onClick={() => navigate(item.path)}
+            >
+              {t(`setupV5.steps.${welcomeSteps.indexOf(item)}`)}
+            </button>
           </li>
         ))}
-      </ul>
-    </div>
+      </ol>
+    </nav>
   );
 }

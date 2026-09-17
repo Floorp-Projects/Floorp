@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The target is inserted only after the pointer-hover delay and is removed on
+ * exit. Keeping it in normal tab-content layout, immediately before Firefox's
+ * close button, prevents it from covering the close affordance. */
+:root[floorp-hover-reload]
+  #tabbrowser-tabs#tabbrowser-tabs
+  .tabbrowser-tab:not([pinned])[floorp-show-refresh]
+  > .tab-stack
+  > .tab-content
+  > .floorp-tab-refresh {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  -moz-box-flex: 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  margin-inline: 2px;
+  padding: 1px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  fill: currentColor;
+  cursor: pointer;
+  animation: floorp-tab-refresh-fade-in 180ms ease-out;
+}
+
+:root[floorp-hover-reload]
+  #tabbrowser-tabs#tabbrowser-tabs
+  .tabbrowser-tab[floorp-show-refresh]
+  > .tab-stack
+  > .tab-content
+  > .floorp-tab-refresh:hover {
+  background-color: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+:root[floorp-hover-reload]
+  #tabbrowser-tabs#tabbrowser-tabs
+  .tabbrowser-tab[floorp-show-refresh]
+  > .tab-stack
+  > .tab-content
+  > .floorp-tab-refresh:focus-visible {
+  outline: 2px solid var(--focus-outline-color, currentColor);
+  outline-offset: 1px;
+}
+
+@keyframes floorp-tab-refresh-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[floorp-hover-reload]
+    #tabbrowser-tabs#tabbrowser-tabs
+    .floorp-tab-refresh {
+    animation: none;
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Sobre o Floorp",
+    "version": "Versão",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Verificar atualizações",
+      "checking": "Verificando atualizações…",
+      "checkFailed": "Não foi possível verificar se há atualizações. Tente novamente mais tarde.",
+      "upToDate": "Você possui a versão mais recente",
+      "downloading": "Baixando atualização… {{progress}}",
+      "applying": "Instalando atualização",
+      "readyToRestart": "Atualização pronta — reinicie para instalar.",
+      "restarting": "Reiniciando...",
+      "policyDisabled": "As atualizações são gerenciadas pela sua organização.",
+      "downloadFailed": "O download falhou. Tente novamente.",
+      "noUpdater": "As atualizações são gerenciadas externamente.",
+      "available": "Transferir atualização {{version}}",
+      "tryAgain": "Tente novamente",
+      "restartToApply": "Reinicie para instalar a atualização"
+    },
+    "community": {
+      "title": "Participe da Comunidade"
+    },
+    "help": {
+      "title": "Ajuda e suporte",
+      "support": "Ajuda"
+    },
+    "sponsor": {
+      "title": "Apoie o projeto",
+      "button": "Torne-se um patrocinador"
+    },
+    "links": {
+      "releaseNotes": "Notas da versão",
+      "help": "Ajuda do Floorp",
+      "feedback": "Enviar comentário",
+      "licensing": "Licença",
+      "terms": "Termos de serviço",
+      "privacy": "Política de privacidade"
+    },
+    "trademark": "O nome Floorp é uma marca registrada no Japão."
+  }
+}

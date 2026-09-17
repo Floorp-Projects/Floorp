@@ -1,5 +1,12 @@
 import { getAccountImage, getAccountInfo } from "@/app/dashboard/dataManager";
 import type { AccountsFormData } from "@/types/pref";
+import type { ProfileDirectoryApi } from "./types.ts";
+
+export function openCurrentProfileDirectory(): Promise<boolean> {
+  return new Promise((resolve) => {
+    (globalThis as unknown as ProfileDirectoryApi).NROpenCurrentProfileDirectory(resolve);
+  });
+}
 
 export async function getCurrentProfile(): Promise<{
   profileName: string;

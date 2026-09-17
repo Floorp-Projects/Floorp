@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** Nav/toolbar surface color (Gecko 152+). Falls back to legacy --toolbar-bgcolor. */
+/** Nav/toolbar surface color. Prefer the legacy token selected tabs still track. */
 export const TOOLBAR_SURFACE =
-  "var(--toolbar-background-color, var(--toolbar-bgcolor))";
+  "var(--toolbar-bgcolor, var(--toolbar-background-color))";
 
 /**
  * Fluerial-only: selected tab layout + rounded bottom corners.

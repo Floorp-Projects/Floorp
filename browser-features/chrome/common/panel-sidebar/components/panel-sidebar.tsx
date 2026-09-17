@@ -164,19 +164,6 @@ export class CPanelSidebar {
       const sidebarAction = getExtensionSidebarAction(panel.extensionId);
 
       browser.addEventListener("DOMContentLoaded", () => {
-        const oa = globalThis.E10SUtils.predictOriginAttributes({ browser });
-        browser.setAttribute(
-          "remoteType",
-          globalThis.E10SUtils.getRemoteTypeForURI(
-            panel.url ?? "",
-            true,
-            false,
-            globalThis.E10SUtils.EXTENSION_REMOTE_TYPE,
-            null,
-            oa,
-          ),
-        );
-
         browser.contentWindow.loadPanel(
           panel.extensionId,
           sidebarAction.default_panel,

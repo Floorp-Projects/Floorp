@@ -1,0 +1,435 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: Validate Runtime Provenance v2
+
+'on':
+  workflow_call:
+    inputs:
+      runtime_workflow_run_id:
+        description: Successful Floorp-Runtime daily-build workflow run ID
+        type: string
+        required: true
+      runtime_manifest_artifact_id:
+        description: Immutable floorp-runtime-build-manifest-v2 artifact ID
+        type: string
+        required: true
+      validation_only:
+        description: Allow an exact non-default-branch Runtime run for validation only
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      runtime_artifact_token:
+        description: Token with Actions read access to Floorp-Runtime
+        required: true
+    outputs:
+      provenance_artifact_name:
+        value: ${{ jobs.validate.outputs.provenance_artifact_name }}
+      provenance_artifact_id:
+        value: ${{ jobs.validate.outputs.provenance_artifact_id }}
+      provenance_artifact_digest:
+        value: ${{ jobs.validate.outputs.provenance_artifact_digest }}
+      runtime_repository:
+        value: ${{ jobs.validate.outputs.runtime_repository }}
+      runtime_workflow_run_id:
+        value: ${{ jobs.validate.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_name:
+        value: ${{ jobs.validate.outputs.runtime_manifest_artifact_name }}
+      runtime_manifest_artifact_id:
+        value: ${{ jobs.validate.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest:
+        value: ${{ jobs.validate.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha:
+        value: ${{ jobs.validate.outputs.runtime_head_sha }}
+      expected_build_id:
+        value: ${{ jobs.validate.outputs.expected_build_id }}
+      windows_artifact_name:
+        value: ${{ jobs.validate.outputs.windows_artifact_name }}
+      windows_artifact_id:
+        value: ${{ jobs.validate.outputs.windows_artifact_id }}
+      windows_artifact_digest:
+        value: ${{ jobs.validate.outputs.windows_artifact_digest }}
+      linux_artifact_name:
+        value: ${{ jobs.validate.outputs.linux_artifact_name }}
+      linux_artifact_id:
+        value: ${{ jobs.validate.outputs.linux_artifact_id }}
+      linux_artifact_digest:
+        value: ${{ jobs.validate.outputs.linux_artifact_digest }}
+      linux_aarch64_artifact_name:
+        value: ${{ jobs.validate.outputs.linux_aarch64_artifact_name }}
+      linux_aarch64_artifact_id:
+        value: ${{ jobs.validate.outputs.linux_aarch64_artifact_id }}
+      linux_aarch64_artifact_digest:
+        value: ${{ jobs.validate.outputs.linux_aarch64_artifact_digest }}
+      mac_artifact_name:
+        value: ${{ jobs.validate.outputs.mac_artifact_name }}
+      mac_artifact_id:
+        value: ${{ jobs.validate.outputs.mac_artifact_id }}
+      mac_artifact_digest:
+        value: ${{ jobs.validate.outputs.mac_artifact_digest }}
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  validate:
+    name: Validate immutable Floorp-Runtime provenance
+    runs-on: ubuntu-24.04
+    outputs:
+      provenance_artifact_name: floorp-runtime-provenance-v2
+      provenance_artifact_id: ${{ steps.upload-provenance.outputs.artifact-id }}
+      provenance_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-provenance.outputs.artifact-digest) }}
+      runtime_repository: Floorp-Projects/Floorp-Runtime
+      runtime_workflow_run_id: ${{ steps.validate-runtime.outputs.runtime-run-id }}
+      runtime_manifest_artifact_name: floorp-runtime-build-manifest-v2
+      runtime_manifest_artifact_id: ${{ steps.validate-runtime.outputs.runtime-manifest-artifact-id }}
+      runtime_manifest_artifact_digest: ${{ steps.validate-runtime.outputs.runtime-manifest-artifact-digest }}
+      runtime_head_sha: ${{ steps.validate-runtime.outputs.runtime-head-sha }}
+      expected_build_id: ${{ steps.validate-runtime.outputs.runtime-build-id }}
+      windows_artifact_name: floorp-windows-x86_64-moz-artifact
+      windows_artifact_id: ${{ steps.validate-runtime.outputs.windows-artifact-id }}
+      windows_artifact_digest: ${{ steps.validate-runtime.outputs.windows-artifact-digest }}
+      linux_artifact_name: floorp-linux-x86_64-moz-artifact
+      linux_artifact_id: ${{ steps.validate-runtime.outputs.linux-artifact-id }}
+      linux_artifact_digest: ${{ steps.validate-runtime.outputs.linux-artifact-digest }}
+      linux_aarch64_artifact_name: floorp-linux-aarch64-moz-artifact
+      linux_aarch64_artifact_id: ${{ steps.validate-runtime.outputs.linuxAarch64-artifact-id }}
+      linux_aarch64_artifact_digest: ${{ steps.validate-runtime.outputs.linuxAarch64-artifact-digest }}
+      mac_artifact_name: floorp-mac-universal-moz-artifact
+      mac_artifact_id: ${{ steps.validate-runtime.outputs.mac-artifact-id }}
+      mac_artifact_digest: ${{ steps.validate-runtime.outputs.mac-artifact-digest }}
+    steps:
+      - name: Checkout current Floorp source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Validate Runtime run and manifest artifact through REST
+        uses: actions/github-script@v7
+        env:
+          RUNTIME_WORKFLOW_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
+          RUNTIME_MANIFEST_ARTIFACT_ID: ${{ inputs.runtime_manifest_artifact_id }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+        with:
+          github-token: ${{ secrets.runtime_artifact_token }}
+          script: |
+            const fs = require("fs");
+            const owner = "Floorp-Projects";
+            const repo = "Floorp-Runtime";
+            const repository = `${owner}/${repo}`;
+            const expectedWorkflowPath = ".github/workflows/daily-build.yml";
+            const expectedManifestName = "floorp-runtime-build-manifest-v2";
+            const apiHeaders = {
+              "X-GitHub-Api-Version": "2026-03-10",
+            };
+
+            function positiveId(label, raw) {
+              if (!/^[1-9][0-9]*$/.test(raw || "")) {
+                throw new Error(`${label} must be a positive decimal integer`);
+              }
+              const value = Number(raw);
+              if (!Number.isSafeInteger(value)) {
+                throw new Error(`${label} exceeds JavaScript's safe integer range`);
+              }
+              return value;
+            }
+
+            const runId = positiveId(
+              "Runtime workflow run ID",
+              process.env.RUNTIME_WORKFLOW_RUN_ID,
+            );
+            const manifestArtifactId = positiveId(
+              "Runtime manifest artifact ID",
+              process.env.RUNTIME_MANIFEST_ARTIFACT_ID,
+            );
+            if (!["true", "false"].includes(process.env.VALIDATION_ONLY)) {
+              throw new Error("validation_only must be an Actions boolean");
+            }
+            const validationOnly = process.env.VALIDATION_ONLY === "true";
+
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner,
+              repo,
+              run_id: runId,
+              headers: apiHeaders,
+            });
+            if (run.id !== runId) {
+              throw new Error(`Runtime API returned unexpected run ID ${run.id}`);
+            }
+            if (run.repository?.full_name !== repository) {
+              throw new Error(`Runtime run belongs to ${run.repository?.full_name}`);
+            }
+            if (run.status !== "completed" || run.conclusion !== "success") {
+              throw new Error(
+                `Runtime run must be completed/success, got ${run.status}/${run.conclusion}`,
+              );
+            }
+            if (!/^[0-9a-f]{40}$/.test(run.head_sha || "")) {
+              throw new Error("Runtime run head SHA must be 40 lowercase hex digits");
+            }
+            if (!Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1) {
+              throw new Error("Runtime run attempt must be a positive integer");
+            }
+            if (!validationOnly) {
+              const { data: runtimeRepository } = await github.rest.repos.get({
+                owner,
+                repo,
+                headers: apiHeaders,
+              });
+              if (
+                run.head_branch !== runtimeRepository.default_branch ||
+                run.head_repository?.full_name !== repository
+              ) {
+                throw new Error(
+                  "Production requires a Runtime run from its exact default branch",
+                );
+              }
+              if (!["workflow_dispatch", "schedule"].includes(run.event)) {
+                throw new Error(
+                  `Production rejects untrusted Runtime event ${run.event}`,
+                );
+              }
+            }
+
+            const { data: workflow } = await github.rest.actions.getWorkflow({
+              owner,
+              repo,
+              workflow_id: run.workflow_id,
+              headers: apiHeaders,
+            });
+            if (workflow.path !== expectedWorkflowPath) {
+              throw new Error(
+                `Runtime run must use ${expectedWorkflowPath}, got ${workflow.path}`,
+              );
+            }
+
+            const { data: manifestArtifact } =
+              await github.rest.actions.getArtifact({
+                owner,
+                repo,
+                artifact_id: manifestArtifactId,
+                headers: apiHeaders,
+              });
+            if (manifestArtifact.id !== manifestArtifactId) {
+              throw new Error("Runtime manifest artifact ID changed during lookup");
+            }
+            if (manifestArtifact.name !== expectedManifestName) {
+              throw new Error(
+                `Expected ${expectedManifestName}, got ${manifestArtifact.name}`,
+              );
+            }
+            if (manifestArtifact.expired !== false) {
+              throw new Error("Runtime manifest artifact is expired");
+            }
+            if (!/^sha256:[0-9a-f]{64}$/.test(manifestArtifact.digest || "")) {
+              throw new Error("Runtime manifest artifact digest is invalid");
+            }
+            if (manifestArtifact.workflow_run?.id !== runId) {
+              throw new Error("Runtime manifest artifact belongs to another run");
+            }
+            if (manifestArtifact.workflow_run?.head_sha !== run.head_sha) {
+              throw new Error("Runtime manifest artifact head SHA differs from its run");
+            }
+
+            const preflight = {
+              schema_version: 2,
+              repository,
+              workflow_path: expectedWorkflowPath,
+              run: {
+                id: run.id,
+                status: run.status,
+                conclusion: run.conclusion,
+                head_sha: run.head_sha,
+                run_attempt: run.run_attempt,
+                created_at: run.created_at,
+              },
+              manifest_artifact: {
+                id: manifestArtifact.id,
+                name: manifestArtifact.name,
+                digest: manifestArtifact.digest,
+                expired: manifestArtifact.expired,
+                workflow_run_id: manifestArtifact.workflow_run.id,
+                workflow_run_head_sha: manifestArtifact.workflow_run.head_sha,
+              },
+            };
+            fs.mkdirSync("runtime-validation", { recursive: true });
+            fs.writeFileSync(
+              "runtime-validation/runtime-rest-preflight-v2.json",
+              `${JSON.stringify(preflight, null, 2)}\n`,
+              "utf8",
+            );
+
+      - name: Download exact Runtime manifest artifact
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.runtime_artifact_token }}
+          script: |
+            const fs = require("fs");
+            const preflight = JSON.parse(fs.readFileSync(
+              "runtime-validation/runtime-rest-preflight-v2.json",
+              "utf8",
+            ));
+            const response = await github.rest.actions.downloadArtifact({
+              owner: "Floorp-Projects",
+              repo: "Floorp-Runtime",
+              artifact_id: preflight.manifest_artifact.id,
+              archive_format: "zip",
+              headers: {
+                "X-GitHub-Api-Version": "2026-03-10",
+              },
+            });
+            fs.writeFileSync(
+              "runtime-validation/runtime-manifest-artifact.zip",
+              Buffer.from(response.data),
+            );
+
+      - name: Extract exact Runtime manifest artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE=runtime-validation/runtime-manifest-artifact.zip
+          if [[ "$(unzip -Z1 "$ARCHIVE")" != "runtime-build-manifest-v2.json" ]]; then
+            echo "Runtime manifest archive must contain exactly runtime-build-manifest-v2.json" >&2
+            unzip -Z1 "$ARCHIVE" >&2
+            exit 1
+          fi
+          mkdir -p runtime-validation/manifest
+          unzip -q "$ARCHIVE" -d runtime-validation/manifest
+
+      - name: Validate Runtime manifest artifact layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST=runtime-validation/manifest/runtime-build-manifest-v2.json
+          FILE_COUNT=$(find runtime-validation/manifest -type f -print | wc -l | tr -d ' ')
+          if [[ "$FILE_COUNT" != "1" || ! -f "$MANIFEST" ]]; then
+            echo "Runtime manifest artifact must contain exactly runtime-build-manifest-v2.json" >&2
+            find runtime-validation/manifest -type f -print >&2
+            exit 1
+          fi
+
+      - name: Build strict Runtime REST snapshot
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.runtime_artifact_token }}
+          script: |
+            const fs = require("fs");
+            const owner = "Floorp-Projects";
+            const repo = "Floorp-Runtime";
+            const apiHeaders = {
+              "X-GitHub-Api-Version": "2026-03-10",
+            };
+            const preflight = JSON.parse(fs.readFileSync(
+              "runtime-validation/runtime-rest-preflight-v2.json",
+              "utf8",
+            ));
+            const manifest = JSON.parse(fs.readFileSync(
+              "runtime-validation/manifest/runtime-build-manifest-v2.json",
+              "utf8",
+            ));
+            const expectedTargets = [
+              ["Windows", "x86_64", "floorp-windows-x86_64-moz-artifact"],
+              ["Linux", "x86_64", "floorp-linux-x86_64-moz-artifact"],
+              ["Linux", "aarch64", "floorp-linux-aarch64-moz-artifact"],
+              ["Darwin", "universal", "floorp-mac-universal-moz-artifact"],
+            ];
+            if (!Array.isArray(manifest.targets) ||
+                manifest.targets.length !== expectedTargets.length) {
+              throw new Error("Runtime manifest must contain exactly four targets");
+            }
+
+            const artifactIds = new Set([preflight.manifest_artifact.id]);
+            const targetArtifacts = [];
+            for (let index = 0; index < expectedTargets.length; index += 1) {
+              const target = manifest.targets[index];
+              const [platform, arch, artifactName] = expectedTargets[index];
+              if (target?.platform !== platform || target?.arch !== arch ||
+                  target?.artifact_name !== artifactName) {
+                throw new Error(
+                  `Runtime manifest target ${index} does not match ${platform}/${arch}`,
+                );
+              }
+              const rawArtifactId = String(target.artifact_id ?? "");
+              if (!/^[1-9][0-9]*$/.test(rawArtifactId)) {
+                throw new Error(`Runtime target ${index} artifact ID is invalid`);
+              }
+              const artifactId = Number(rawArtifactId);
+              if (!Number.isSafeInteger(artifactId) || artifactIds.has(artifactId)) {
+                throw new Error(`Runtime target ${index} artifact ID is not unique`);
+              }
+              artifactIds.add(artifactId);
+
+              const { data: artifact } = await github.rest.actions.getArtifact({
+                owner,
+                repo,
+                artifact_id: artifactId,
+                headers: apiHeaders,
+              });
+              targetArtifacts.push({
+                id: artifact.id,
+                name: artifact.name,
+                digest: artifact.digest,
+                expired: artifact.expired,
+                workflow_run_id: artifact.workflow_run?.id,
+                workflow_run_head_sha: artifact.workflow_run?.head_sha,
+              });
+            }
+
+            const snapshot = {
+              ...preflight,
+              target_artifacts: targetArtifacts,
+            };
+            fs.writeFileSync(
+              "runtime-validation/runtime-rest-snapshot-v2.json",
+              `${JSON.stringify(snapshot, null, 2)}\n`,
+              "utf8",
+            );
+
+      - name: Validate and normalize Runtime provenance
+        id: validate-runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno run --allow-read --allow-write \
+            tools/src/release_provenance.ts validate-runtime \
+            --manifest runtime-validation/manifest/runtime-build-manifest-v2.json \
+            --rest-snapshot runtime-validation/runtime-rest-snapshot-v2.json \
+            --output runtime-validation/normalized-runtime-provenance-v2.json \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Upload normalized Runtime provenance
+        id: upload-provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-runtime-provenance-v2
+          path: runtime-validation/normalized-runtime-provenance-v2.json
+          if-no-files-found: error
+          overwrite: true
+
+      - name: Summarize validated Runtime provenance
+        shell: bash
+        env:
+          PROVENANCE_ARTIFACT_ID: ${{ steps.upload-provenance.outputs.artifact-id }}
+          PROVENANCE_ARTIFACT_DIGEST: ${{ steps.upload-provenance.outputs.artifact-digest }}
+          RUNTIME_RUN_ID: ${{ steps.validate-runtime.outputs.runtime-run-id }}
+          RUNTIME_HEAD_SHA: ${{ steps.validate-runtime.outputs.runtime-head-sha }}
+          EXPECTED_BUILD_ID: ${{ steps.validate-runtime.outputs.runtime-build-id }}
+        run: |
+          {
+            echo "### Validated Runtime provenance v2"
+            echo ""
+            echo "- Runtime run: \`${RUNTIME_RUN_ID}\`"
+            echo "- Runtime head: \`${RUNTIME_HEAD_SHA}\`"
+            echo "- Expected BuildID: \`${EXPECTED_BUILD_ID}\`"
+            echo "- Normalized artifact ID: \`${PROVENANCE_ARTIFACT_ID}\`"
+            echo "- Normalized artifact digest: \`${PROVENANCE_ARTIFACT_DIGEST}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

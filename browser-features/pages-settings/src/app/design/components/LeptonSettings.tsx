@@ -1,3 +1,4 @@
+import { Button } from "../../../../../../libs/ui/button.tsx";
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -95,13 +96,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             {t("design.lepton-preferences.description")}
           </p>
         </div>
-        <button
+        <Button
           onClick={() => (onClose ? onClose() : navigate("/features/design"))}
           type="button"
-          className="btn btn-primary"
+          variant="primary"
         >
           {t("design.lepton-preferences.back")}
-        </button>
+        </Button>
       </div>
 
       {/* Experimental Warning */}

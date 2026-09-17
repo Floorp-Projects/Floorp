@@ -47,58 +47,78 @@ async function resetServiceSingleton(): Promise<void> {
 }
 
 /**
- * Mock browser dialogs (window.prompt, Services.prompt.confirm/alert) so that
- * svc.create() does not block on user interaction.
+ * Test-facing subset of ChromeCSSService methods that can trigger user-visible
+ * side effects. Tests replace them to avoid native dialogs and editor launches.
+ */
+type ChromeCSSSideEffectMethods = {
+  alertCSSFileCreated: (fileName: string) => void;
+  confirmOpenCreatedCSSFile: (fileName: string) => boolean;
+  getDefaultEditorPath: () => Promise<string>;
+  openFileInEditor: (filePath: string, editorPath: string) => void;
+  promptForCSSFileName: (defaultName: string) => string | null;
+};
+
+type ChromeCSSCleanupMethods = {
+  readCSS: Record<string, { enabled: boolean }>;
+  updateCssFilesList: () => void;
+};
+
+/**
+ * Disable browser dialogs and editor discovery for create() tests.
  * Returns a restore function to undo the mocks.
  */
-function mockPromptDialogs(): () => void {
-  const originalConfirm = Services.prompt.confirm;
-  const originalAlert = Services.prompt.alert;
-  const originalPrompt = globalThis.prompt;
+function mockCreateSideEffects(svc: ChromeCSSSideEffectMethods): () => void {
+  const originalAlertCSSFileCreated = svc.alertCSSFileCreated.bind(svc);
+  const originalConfirmOpenCreatedCSSFile = svc.confirmOpenCreatedCSSFile.bind(
+    svc,
+  );
+  const originalGetDefaultEditorPath = svc.getDefaultEditorPath.bind(svc);
+  const originalOpenFileInEditor = svc.openFileInEditor.bind(svc);
+  const originalPromptForCSSFileName = svc.promptForCSSFileName.bind(svc);
 
-  // Services.prompt.confirm and .alert may be read-only in Firefox,
-  // so use Object.defineProperty wrapped in try/catch.
-  try {
-    Object.defineProperty(Services.prompt, "confirm", {
-      value: () => false,
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // Property is non-configurable; tests using this mock may be skipped.
-  }
-  try {
-    Object.defineProperty(Services.prompt, "alert", {
-      value: () => {},
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // Property is non-configurable; tests using this mock may be skipped.
-  }
-  globalThis.prompt = () => null;
+  svc.alertCSSFileCreated = () => {};
+  svc.confirmOpenCreatedCSSFile = () => false;
+  svc.getDefaultEditorPath = () => Promise.resolve("");
+  svc.openFileInEditor = () => {};
+  svc.promptForCSSFileName = () => null;
 
   return () => {
-    try {
-      Object.defineProperty(Services.prompt, "confirm", {
-        value: originalConfirm,
-        configurable: true,
-        writable: true,
-      });
-    } catch {
-      // Ignore if property cannot be restored.
-    }
-    try {
-      Object.defineProperty(Services.prompt, "alert", {
-        value: originalAlert,
-        configurable: true,
-        writable: true,
-      });
-    } catch {
-      // Ignore if property cannot be restored.
-    }
-    globalThis.prompt = originalPrompt;
+    svc.alertCSSFileCreated = originalAlertCSSFileCreated;
+    svc.confirmOpenCreatedCSSFile = originalConfirmOpenCreatedCSSFile;
+    svc.getDefaultEditorPath = originalGetDefaultEditorPath;
+    svc.openFileInEditor = originalOpenFileInEditor;
+    svc.promptForCSSFileName = originalPromptForCSSFileName;
   };
+}
+
+async function recreateDirectory(path: string): Promise<void> {
+  try {
+    await IOUtils.remove(path, { recursive: true });
+  } catch {
+    // Ignore missing folders from previous clean test runs.
+  }
+  await IOUtils.makeDirectory(path);
+}
+
+async function removeCreatedCSSFile(
+  svc: ChromeCSSCleanupMethods,
+  fileName: string,
+  filePath: string,
+): Promise<void> {
+  const entry = svc.readCSS[fileName];
+  if (entry) {
+    entry.enabled = false;
+    delete svc.readCSS[fileName];
+    svc.updateCssFilesList();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  try {
+    await IOUtils.remove(filePath);
+  } catch {
+    // Windows may briefly keep a loaded stylesheet file locked. Directory
+    // cleanup is best-effort as well, so do not fail an otherwise passing test.
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -567,7 +587,9 @@ async function testSheetTypeConstantsAreDistinct(): Promise<void> {
 // Tests: CSSEntry — enabled setter with file operations
 // ---------------------------------------------------------------------------
 
-async function testCSSEntryEnabledSetterHandlesNonExistentFile(): Promise<void> {
+async function testCSSEntryEnabledSetterHandlesNonExistentFile(): Promise<
+  void
+> {
   const { CSSEntry } = await import("../cssEntry.ts");
   const entry = new CSSEntry("nonexistent.css", TEST_CSS_FOLDER);
 
@@ -882,7 +904,9 @@ async function testConvertUTF8ToShiftJISHandlesEmptyString(): Promise<void> {
   assertEquals(typeof result, "string", "should return string for empty input");
 }
 
-async function testConvertUTF8ToShiftJISHandlesSpecialCharacters(): Promise<void> {
+async function testConvertUTF8ToShiftJISHandlesSpecialCharacters(): Promise<
+  void
+> {
   const { ChromeCSSService } = await import("../service.tsx");
   const svc = ChromeCSSService.getInstance();
 
@@ -915,7 +939,12 @@ async function testOpenFolderHandlesNonExistentFolder(): Promise<void> {
 
   // Override getCSSFolder
   const originalGetCSSFolder = svc.getCSSFolder.bind(svc);
+  const originalLaunchCSSFolder = svc.launchCSSFolder.bind(svc);
+  let launchedFolder: string | null = null;
   svc.getCSSFolder = () => testFolder;
+  svc.launchCSSFolder = (folder) => {
+    launchedFolder = folder;
+  };
 
   try {
     // Should not throw - should create the folder
@@ -924,9 +953,15 @@ async function testOpenFolderHandlesNonExistentFolder(): Promise<void> {
     // Verify folder was created
     const exists = await IOUtils.exists(testFolder);
     assertEquals(exists, true, "folder should be created if it doesn't exist");
+    assertEquals(
+      launchedFolder,
+      testFolder,
+      "openFolder should launch the created CSS folder",
+    );
   } finally {
     // Restore and cleanup
     svc.getCSSFolder = originalGetCSSFolder;
+    svc.launchCSSFolder = originalLaunchCSSFolder;
     try {
       await IOUtils.remove(testFolder, { recursive: true });
     } catch {
@@ -950,23 +985,25 @@ async function testEditUserCSSConstructsCorrectPath(): Promise<void> {
 
   // Override getCSSFolder
   const originalGetCSSFolder = svc.getCSSFolder.bind(svc);
+  const originalEdit = svc.edit.bind(svc);
+  let editedPath: string | null = null;
   svc.getCSSFolder = () => testFolder;
+  svc.edit = (filePath) => {
+    editedPath = filePath;
+    return Promise.resolve();
+  };
 
   try {
-    // This should not throw when constructing the path
-    // (it may fail when trying to actually edit since no editor is configured)
-    let _threw = false;
-    try {
-      svc.editUserCSS("test-edit.css");
-    } catch {
-      // Expected to fail due to no editor, but should not fail on path construction
-      _threw = true;
-    }
-    // We expect it might throw due to editor not being configured
-    // but not due to path construction issues
+    svc.editUserCSS("test-edit.css");
+    assertEquals(
+      editedPath,
+      PathUtils.join(testFolder, "test-edit.css"),
+      "editUserCSS should pass the CSS file path to edit",
+    );
   } finally {
     // Restore
     svc.getCSSFolder = originalGetCSSFolder;
+    svc.edit = originalEdit;
   }
 }
 
@@ -1240,7 +1277,7 @@ async function testCreateValidatesWhitespace(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
     // This test verifies the filename validation logic exists
@@ -1275,7 +1312,7 @@ async function testCreatePreventsConcurrentCreation(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
     // Start a create operation (without filename, which would prompt)
@@ -1337,10 +1374,10 @@ async function testCreateNormalizesWhitespace(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Create a file with multiple spaces - these should be normalized to single spaces
       // Line 579: fileName.replace(/\s+/g, " ")
@@ -1368,9 +1405,9 @@ async function testCreateNormalizesWhitespace(): Promise<void> {
       );
 
       // Cleanup
-      await IOUtils.remove(filePath);
+      await removeCreatedCSSFile(svc, expectedFileName, filePath);
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1398,10 +1435,10 @@ async function testCreateSanitizesInvalidCharacters(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Test with invalid filename characters: \ / : * ? " < > |
       // Line 580: fileName.replace(/[\\/:*?"<>|]/g, "")
@@ -1420,9 +1457,9 @@ async function testCreateSanitizesInvalidCharacters(): Promise<void> {
       );
 
       // Cleanup
-      await IOUtils.remove(filePath);
+      await removeCreatedCSSFile(svc, expectedFileName, filePath);
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1450,10 +1487,10 @@ async function testCreateAppendsCssExtension(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Create a file without .css extension - it should be appended
       // Line 587-589: if (!fileName.endsWith(".css")) { fileName += ".css"; }
@@ -1481,9 +1518,9 @@ async function testCreateAppendsCssExtension(): Promise<void> {
       );
 
       // Cleanup
-      await IOUtils.remove(filePath);
+      await removeCreatedCSSFile(svc, expectedFileName, filePath);
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1511,10 +1548,10 @@ async function testCreateRejectsEmptyFilename(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Try to create with empty filename - should return early
       // Line 582-585: if (!fileName || !/\S/.test(fileName)) { this.isCreating = false; return; }
@@ -1536,7 +1573,7 @@ async function testCreateRejectsEmptyFilename(): Promise<void> {
         "no files should be created for empty filename",
       );
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1564,7 +1601,7 @@ async function testCreateRejectsWhitespaceOnlyFilename(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
     // Try to create with whitespace-only filename - should return early
@@ -1611,10 +1648,10 @@ async function testCreateWithAlreadyHasCssExtension(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Create a file that already has .css extension - should NOT append another
       const testFileName = "test-already-has.css";
@@ -1640,9 +1677,9 @@ async function testCreateWithAlreadyHasCssExtension(): Promise<void> {
       );
 
       // Cleanup
-      await IOUtils.remove(filePath);
+      await removeCreatedCSSFile(svc, testFileName, filePath);
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1670,10 +1707,10 @@ async function testCreateNormalizesAndSanitizesCombined(): Promise<void> {
   svc.getCSSFolder = () => testFolder;
 
   // Create folder
-  await IOUtils.makeDirectory(testFolder);
+  await recreateDirectory(testFolder);
 
   try {
-    const restorePrompts = mockPromptDialogs();
+    const restoreSideEffects = mockCreateSideEffects(svc);
     try {
       // Test combined: whitespace normalization + invalid char removal + extension append
       const testFileName = "  test:   file/  name  ";
@@ -1694,9 +1731,9 @@ async function testCreateNormalizesAndSanitizesCombined(): Promise<void> {
       );
 
       // Cleanup
-      await IOUtils.remove(filePath);
+      await removeCreatedCSSFile(svc, expectedFileName, filePath);
     } finally {
-      restorePrompts();
+      restoreSideEffects();
     }
   } finally {
     // Restore and cleanup
@@ -1959,7 +1996,8 @@ export async function runAllTests(): Promise<void> {
       fn: testUninitSavesDisabledListPref,
     },
     {
-      name: "ChromeCSSService: uninit saves empty disabled list when all enabled",
+      name:
+        "ChromeCSSService: uninit saves empty disabled list when all enabled",
       fn: testUninitSavesEmptyDisabledListWhenAllEnabled,
     },
     {
@@ -1981,7 +2019,8 @@ export async function runAllTests(): Promise<void> {
       fn: testConvertUTF8ToShiftJISHandlesEmptyString,
     },
     {
-      name: "ChromeCSSService: convertUTF8ToShiftJIS handles special characters",
+      name:
+        "ChromeCSSService: convertUTF8ToShiftJIS handles special characters",
       fn: testConvertUTF8ToShiftJISHandlesSpecialCharacters,
     },
 

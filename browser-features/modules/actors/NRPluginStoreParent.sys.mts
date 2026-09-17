@@ -13,9 +13,18 @@
  */
 
 import type {
-  PluginMetadata,
   InstallResult,
+  PluginMetadata,
 } from "./NRPluginStoreChild.sys.mts";
+import {
+  isTrustedPluginStoreSource,
+  isValidPluginId,
+  isValidPluginMetadata,
+} from "../modules/plugin-store/Policy.sys.mts";
+
+const STARTUP_MODE = Services.prefs.getStringPref("nora.startup.mode", "");
+const ALLOW_DEVELOPMENT_PLUGIN_STORE = STARTUP_MODE === "dev" ||
+  STARTUP_MODE === "test";
 
 // =============================================================================
 // Types
@@ -51,24 +60,49 @@ export class NRPluginStoreParent extends JSWindowActorParent {
     data?: InstallRequest | { pluginId: string } | Record<string, unknown>;
   }):
     | Promise<
-        InstallResult | { installed: boolean } | { version: string } | null
-      >
+      InstallResult | { installed: boolean } | { version: string } | null
+    >
     | InstallResult
     | { installed: boolean }
     | { version: string }
     | null {
+    if (
+      !isTrustedPluginStoreSource(
+        this.manager?.documentURI?.spec,
+        ALLOW_DEVELOPMENT_PLUGIN_STORE,
+      )
+    ) {
+      console.error("[NRPluginStoreParent] Rejected untrusted message source");
+      if (message.name === "PluginStore:IsInstalled") {
+        return { installed: false };
+      }
+      if (message.name === "PluginStore:GetVersion") {
+        return null;
+      }
+      return { success: false, error: "Untrusted plugin store source" };
+    }
+
     switch (message.name) {
       case "PluginStore:GetVersion":
         return this.getFloorpVersion();
 
       case "PluginStore:Install":
-        if (message.data && "pluginId" in message.data) {
+        if (
+          message.data &&
+          "pluginId" in message.data &&
+          isValidPluginId(message.data.pluginId) &&
+          isValidPluginMetadata((message.data as InstallRequest).metadata)
+        ) {
           return this.installPlugin(message.data as InstallRequest);
         }
         return { success: false, error: "Invalid request data" };
 
       case "PluginStore:Uninstall":
-        if (message.data && "pluginId" in message.data) {
+        if (
+          message.data &&
+          "pluginId" in message.data &&
+          isValidPluginId(message.data.pluginId)
+        ) {
           return this.uninstallPlugin(
             (message.data as { pluginId: string }).pluginId,
           );
@@ -76,7 +110,11 @@ export class NRPluginStoreParent extends JSWindowActorParent {
         return { success: false, error: "Invalid request data" };
 
       case "PluginStore:IsInstalled":
-        if (message.data && "pluginId" in message.data) {
+        if (
+          message.data &&
+          "pluginId" in message.data &&
+          isValidPluginId(message.data.pluginId)
+        ) {
           return this.isPluginInstalled(
             (message.data as { pluginId: string }).pluginId,
           );
@@ -93,7 +131,9 @@ export class NRPluginStoreParent extends JSWindowActorParent {
    * TODO: Return actual Floorp version from AppInfo
    */
   private getFloorpVersion(): { version: string } {
-    const randomVersion = `${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 100)}`;
+    const randomVersion = `${Math.floor(Math.random() * 100)}.${
+      Math.floor(Math.random() * 100)
+    }.${Math.floor(Math.random() * 100)}`;
     console.log("[NRPluginStoreParent] getFloorpVersion:", randomVersion);
     return { version: randomVersion };
   }

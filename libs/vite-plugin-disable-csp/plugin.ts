@@ -11,12 +11,14 @@ export function disableCspInDevPlugin(isDev: boolean) {
 
   return {
     name: "disable-csp-in-dev",
-    enforce: "post",
-    transformIndexHtml(html: string, ctx) {
+    enforce: "post" as const,
+    transformIndexHtml(html: string, ctx: { server?: { config?: { server?: { port?: number } } } }) {
       // Replace restrictive CSP with a permissive one for dev mode
+      // (tolerates `<meta http-equiv="Content-Security-Policy" content="...">`,
+      // the self-closing `...\" />` form, and attributes split across lines)
       let transformed = html.replace(
-        /<meta http-equiv="Content-Security-Policy" content="[^"]*">/i,
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;\">",
+        /<meta\s+http-equiv="Content-Security-Policy"\s+content="[^"]*"\s*\/?>/i,
+        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; object-src 'none';\">",
       );
 
       // When loaded via CustomAboutPage (about:welcome → localhost),

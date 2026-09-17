@@ -1,9 +1,13 @@
 const backgroundImages = import.meta.glob("../assets/background/*.avif", {
   eager: true,
+  import: "default",
+  query: "?url",
 });
 
 const floorpImages = import.meta.glob("../assets/floorp/*.png", {
   eager: true,
+  import: "default",
+  query: "?url",
 });
 
 // Helper to extract a URL string from different module shapes that Vite/rollup
