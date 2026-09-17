@@ -167,6 +167,55 @@ export async function runPageTests() {
       },
     });
   }
+  tests.push({
+    name:
+      "Vertical tabs disable the stack switch without changing its saved preference",
+    fn: async () => {
+      const key = "floorp.tabstacks.enabled";
+      const previous = prefs.get(key);
+      prefs.set(key, true);
+      try {
+        await route("features/design", "#enable-tab-stacks");
+        await click('input[name="style"][value="vertical"]');
+        await until(
+          () => element<HTMLInputElement>("#enable-tab-stacks").disabled,
+          "Vertical mode must disable the stack switch",
+        );
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "vertical",
+          "Vertical choice saves",
+        );
+        // The interaction helper rejects disabled controls before clicking.
+        // Use the native method to verify that the disabled input ignores it.
+        element<HTMLInputElement>("#enable-tab-stacks").click();
+        await pause();
+        assertEquals(
+          prefs.get(key),
+          true,
+          "Disabled switch preserves saved preference",
+        );
+        assert(
+          element("#enable-tab-stacks").closest(".space-y-1")?.parentElement
+            ?.textContent?.includes("vertical"),
+          "The limitation is explained beside the switch",
+        );
+        await click('input[name="style"][value="horizontal"]');
+        await until(
+          () => !element<HTMLInputElement>("#enable-tab-stacks").disabled,
+          "Horizontal mode enables the stack switch again",
+        );
+        assertEquals(
+          element<HTMLInputElement>("#enable-tab-stacks").checked,
+          true,
+          "Returning to horizontal keeps the user's enabled setting",
+        );
+      } finally {
+        if (previous === undefined) prefs.delete(key);
+        else prefs.set(key, previous);
+      }
+    },
+  });
   for (
     const [selector, path, values] of [
       ['input[name="design"]', "globalConfigs.userInterface", [

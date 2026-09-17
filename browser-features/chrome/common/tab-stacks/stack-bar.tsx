@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import styles from "./styles.css?inline";
 
 /** Drag data type used by row-2 proxy drags (reorder / eject). */
@@ -64,6 +71,10 @@ export type TabBrowser = {
 export const getGBrowser = (): TabBrowser | null =>
   (globalThis as unknown as { gBrowser?: TabBrowser }).gBrowser ?? null;
 
+export const isVerticalTabMode = (
+  tabContainer: Element | null | undefined,
+): boolean => tabContainer?.getAttribute?.("orient") === "vertical";
+
 /** Bumped on any tab/group mutation so proxies re-read live tab state. */
 const [version, setVersion] = createSignal(0);
 export const bumpStacksVersion = () => setVersion((v) => v + 1);
@@ -74,14 +85,14 @@ export const getActiveGroup = () => activeGroup();
 
 /**
  * The stack bar shows the group of the currently selected tab — but only
- * groups we own (marked data-floorp-stack). Split-view groups are not ours,
- * and groups hidden by a workspace (`style.display === "none"`) must never
- * surface their bar either.
+ * groups we own (marked data-floorp-stack), including their split panes.
+ * Groups hidden by a workspace (`style.display === "none"`) must never
+ * surface their bar.
  */
 export const syncActiveGroup = () => {
   const gb = getGBrowser();
   const group = gb?.selectedTab?.group ?? null;
-  const isOurs = group &&
+  const isOurs = !isVerticalTabMode(gb?.tabContainer) && group &&
     (group as unknown as Element).getAttribute?.(STACK_ATTR) === "true" &&
     group.style?.display !== "none";
   setActiveGroup(isOurs ? group : null);
@@ -170,6 +181,7 @@ function StackTabProxy(props: { tab: StackTab }) {
       align="center"
       data-selected={selected()}
       data-floorp-drag-id={getTabDragId(props.tab)}
+      tooltiptext={label()}
       context="tabContextMenu"
       draggable="true"
       onDragStart={(event: DragEvent) => {
@@ -300,10 +312,12 @@ function StackRow() {
         tooltiptext="Scroll tabs right"
         onClick={scrollBy(1)}
       />
-      {/* Outside the scroller and last in the row, which is where row 1
+      {
+        /* Outside the scroller and last in the row, which is where row 1
           keeps the "+" it actually shows: #new-tab-button is a sibling
           AFTER #tabbrowser-tabs, so it sits past the right arrow and never
-          scrolls away. */}
+          scrolls away. */
+      }
       <xul:toolbarbutton
         id="floorp-stack-newtab"
         tooltiptext="New tab in stack"

@@ -15,13 +15,14 @@ import {
   findTabByDragId,
   getGBrowser,
   getGroupDisplayTitle,
+  isVerticalTabMode,
   PROXY_DRAG_TYPE,
   rememberSelection,
-  StackBar,
   STACK_ATTR,
+  StackBar,
   type StackGroup,
-  type StackTab,
   StackStyleElement,
+  type StackTab,
   syncActiveGroup,
   TAB_DRAG_ID_ATTR,
   type TabBrowser,
@@ -118,24 +119,12 @@ export const TAB_EVENTS = [
   "TabGroupRemoved",
   "TabGroupCollapse",
   "TabGroupExpand",
+  "SplitViewCreated",
+  "SplitViewRemoved",
+  "SplitViewTabChange",
+  "TabSplitViewActivate",
+  "TabSplitViewDeactivate",
 ] as const;
-
-/**
- * Split-view binds its panes with tab groups too — those must be left
- * completely alone or the two features fight.
- */
-export function isSplitViewGroup(group: StackGroup): boolean {
-  try {
-    return group.tabs.some(
-      (t) =>
-        t.hasAttribute("floorpSplitViewGroupId") ||
-        t.hasAttribute("split-view-layout"),
-    );
-  } catch {
-    // When unsure, hands off.
-    return true;
-  }
-}
 
 /**
  * Decorate one group for its current kind. "stack" hides the native inline
@@ -155,10 +144,12 @@ export function decorateGroup(
   gb: { tabGroups: StackGroup[] },
 ): void {
   const centerLabels = (): void => {
-    for (const sel of [
-      ".tab-group-label-container",
-      ".tab-group-label-hover-highlight",
-    ]) {
+    for (
+      const sel of [
+        ".tab-group-label-container",
+        ".tab-group-label-hover-highlight",
+      ]
+    ) {
       group.querySelector(sel)?.setAttribute("pack", "center");
     }
   };
@@ -217,10 +208,12 @@ export function decorateGroup(
   // pack="center" is a XUL layout attribute mapped to justify-content as a
   // presentation hint — author CSS cannot beat it, not even inline
   // !important. pack="start" vertically seats the chip like a tab.
-  for (const sel of [
-    ".tab-group-label-container",
-    ".tab-group-label-hover-highlight",
-  ]) {
+  for (
+    const sel of [
+      ".tab-group-label-container",
+      ".tab-group-label-hover-highlight",
+    ]
+  ) {
     group.querySelector(sel)?.setAttribute("pack", "start");
   }
   const labelEl = group.querySelector(".tab-group-label");
@@ -250,22 +243,18 @@ export function decorateGroup(
 }
 
 /** Reclassify every group and refresh its chip. Cheap; called on demand. */
-export function updateGroupChips(gb: { tabGroups: StackGroup[] }): void {
+export function updateGroupChips(
+  gb: { tabGroups: StackGroup[]; tabContainer?: Element },
+): void {
   for (const group of gb.tabGroups) {
     try {
-      if (isSplitViewGroup(group)) {
-        group.removeAttribute(STACK_ATTR);
-        group.querySelector(".floorp-stack-close")?.remove();
-        group.querySelector(".floorp-stack-icon")?.remove();
-        for (const sel of [
-          ".tab-group-label-container",
-          ".tab-group-label-hover-highlight",
-        ]) {
-          group.querySelector(sel)?.setAttribute("pack", "center");
-        }
-        continue;
-      }
-      decorateGroup(group, getGroupKind(group.id), gb);
+      // Native split-view wrappers can live inside a tab group. Pane
+      // session markers do not change that group's presentation choice.
+      decorateGroup(
+        group,
+        isVerticalTabMode(gb.tabContainer) ? "group" : getGroupKind(group.id),
+        gb,
+      );
     } catch {
       // Group may be mid-removal; the next event refreshes it.
     }
@@ -305,15 +294,25 @@ export default class TabStacks extends NoraComponentBase {
     render(StackStyleElement, document.head, {
       hotCtx: import.meta.hot,
     });
-    render(StackBar, toolbox, {
-      marker: navBar,
-      hotCtx: import.meta.hot,
-    });
+    render(StackBar, toolbox, { marker: navBar, hotCtx: import.meta.hot });
 
     const tabsContainer = gb.tabContainer as unknown as Element;
 
     this.wrapEnsureElementIsVisible(gb, tabsContainer);
-    this.wireCloseSuccessor(gb, tabsContainer);
+    const refreshCloseSuccessor = this.wireCloseSuccessor(gb, tabsContainer);
+
+    // Suspend presentation per window without overwriting the saved group kind.
+    const orientationObserver = new MutationObserver(() => {
+      updateGroupChips(gb);
+      syncActiveGroup();
+      bumpStacksVersion();
+      refreshCloseSuccessor();
+    });
+    orientationObserver.observe(tabsContainer, {
+      attributes: true,
+      attributeFilter: ["orient"],
+    });
+    onCleanup(() => orientationObserver.disconnect());
 
     // ==== shared drag state ====
     let tabDragActive = false;
@@ -389,7 +388,7 @@ export default class TabStacks extends NoraComponentBase {
       }
       const labelContainer = target?.closest?.(".tab-group-label-container");
       if (!labelContainer) return;
-      // Only groups we own — split-view groups keep native label behavior.
+      // Only groups we own; ordinary groups keep native label behavior.
       const group = labelContainer.closest(
         `tab-group[${STACK_ATTR}]`,
       ) as StackGroup | null;
@@ -596,7 +595,9 @@ export default class TabStacks extends NoraComponentBase {
           if (gb.removeTabs) {
             gb.removeTabs([...group.tabs]);
           } else {
-            for (const t of [...group.tabs]) gb.removeTab(t, { animate: false });
+            for (const t of [...group.tabs]) {
+              gb.removeTab(t, { animate: false });
+            }
           }
         } catch (e) {
           console.error("[tab-stacks] close stack failed:", e);
@@ -605,12 +606,12 @@ export default class TabStacks extends NoraComponentBase {
       popupSet.appendChild(kindMenu);
     }
     const onLabelContextMenu = (event: MouseEvent) => {
+      if (isVerticalTabMode(gb.tabContainer)) return;
       const target = event.target as Element | null;
       const labelContainer = target?.closest?.(".tab-group-label-container");
       const group = (labelContainer?.closest?.("tab-group") ??
         null) as StackGroup | null;
       if (!group || !kindMenu || !kindItem) return;
-      if (isSplitViewGroup(group)) return;
       event.preventDefault();
       event.stopPropagation();
       menuGroup = group;
@@ -1131,6 +1132,7 @@ export default class TabStacks extends NoraComponentBase {
     if (asb && !asb.__floorpEnsureWrapped) {
       const orig = asb.ensureElementIsVisible.bind(asb);
       asb.ensureElementIsVisible = (el: Element, instant?: boolean) => {
+        if (isVerticalTabMode(gb.tabContainer)) return orig(el, instant);
         try {
           if (
             el &&
@@ -1173,7 +1175,7 @@ export default class TabStacks extends NoraComponentBase {
   private wireCloseSuccessor(
     gb: TabBrowser,
     tabsContainer: Element,
-  ): void {
+  ): () => void {
     const floorpSuccessors = new WeakSet<Element>();
     const refreshCloseSuccessor = () => {
       try {
@@ -1199,9 +1201,8 @@ export default class TabStacks extends NoraComponentBase {
           }
           return;
         }
-        const members =
-          ([...group.tabs] as (Element & { closing?: boolean })[])
-            .filter((t) => !t.closing);
+        const members = ([...group.tabs] as (Element & { closing?: boolean })[])
+          .filter((t) => !t.closing);
         const idx = members.indexOf(tab);
         const pick = members[idx + 1] ?? members[idx - 1] ?? null;
         if (pick && pick !== tab) {
@@ -1234,5 +1235,6 @@ export default class TabStacks extends NoraComponentBase {
         tabsContainer.removeEventListener(ev, refreshCloseSuccessor);
       }
     });
+    return refreshCloseSuccessor;
   }
 }

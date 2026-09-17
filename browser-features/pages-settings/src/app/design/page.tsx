@@ -193,7 +193,7 @@ export default function Page() {
             <Tabbar />
             <Tab />
             <TabWindowBehavior />
-            <TabStacks />
+            <TabStacks vertical={watchAll.style === "vertical"} />
             <TabSleepExclusion />
             <UICustomization />
           </fieldset>

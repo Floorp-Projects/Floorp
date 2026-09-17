@@ -4,17 +4,20 @@
 
 /* ===== Row 1: a stack's member tabs are represented by the chip alone.
    Everything below is scoped to groups tab-stacks explicitly owns
-   ([data-floorp-stack]); split-view's groups render natively. ===== */
+   ([data-floorp-stack]); ordinary groups and ungrouped splits stay native. ===== */
 /* visibility:collapse only removes width in XUL box layout; the strip
    is flexbox, where it acts like plain hidden and the invisible tabs
    still claim their flex size (a giant blank gap in sparse strips).
    Zero every box metric instead — the tabs stay rendered for Firefox's
    tab machinery but take no space. */
-#tabbrowser-tabs tab-group[data-floorp-stack] > .tabbrowser-tab {
+#tabbrowser-tabs tab-group[data-floorp-stack] > :is(.tabbrowser-tab, tab-split-view-wrapper) {
   visibility: collapse !important;
   flex: 0 0 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
@@ -131,7 +134,8 @@ tab-group[data-floorp-stack] .tab-group-label {
   /* Dim the group-colour border a touch — at full strength it stood out
      more than the chip needs. */
   border: 1px solid
-    color-mix(in srgb, var(--tab-group-color-invert, currentColor) 70%, transparent)
+    color-mix(in srgb, var(--tab-group-color-invert, currentColor) 70%,
+    transparent)
     !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
@@ -141,7 +145,8 @@ tab-group[data-floorp-stack] .tab-group-label {
    the group [hasactivetab], so no JS is needed. Match a selected tab's
    22% currentColor wash exactly, and brighten the group-colour border. */
 #tabbrowser-tabs tab-group[data-floorp-stack][hasactivetab] .tab-group-label {
-  background-color: color-mix(in srgb, currentColor 22%, transparent) !important;
+  background-color: color-mix(in srgb, currentColor 22%, transparent)
+    !important;
   border-color: color-mix(
     in srgb,
     var(--tab-group-color-invert, currentColor) 85%,
@@ -489,8 +494,7 @@ tab-group[data-floorp-stack] .tab-group-label[data-floorp-count]::after {
 /* Drag-over-chip: light the whole cell ("drop to join this stack") — set
    by onChipDragOverHighlight in index.ts. Replaces the thin insertion
    underline for the join gesture. */
-#tabbrowser-tabs tab-group[data-floorp-stack][data-floorp-drop-into]
-  .tab-group-label {
+#tabbrowser-tabs tab-group[data-floorp-stack][data-floorp-drop-into] .tab-group-label {
   background-color: color-mix(
     in srgb,
     var(--focus-outline-color, #0a84ff) 35%,
