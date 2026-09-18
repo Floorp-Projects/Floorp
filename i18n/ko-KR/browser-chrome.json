@@ -432,7 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "분할 화면에서 열기",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "분할 화면에서 열기 (최대 탭 {{max}}개)",
       "addPane": "분할 화면 창에 추가",
       "moveToPane": "창으로 이동",
       "moveToPaneN": "{{n}} 창 ({{title}})"

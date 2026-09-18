@@ -1,22 +1,22 @@
 {
   "setupRich": {
     "selected": "선택됨",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "메뉴와 설정에 쓰임",
+    "palettePreview": "색상 미리보기",
+    "searchDestination": "주소 표시줄 검색 제공자",
+    "enlarge": "{{feature}} 스크린샷 확대",
+    "enlargeShort": "더 크게 보기",
+    "closePreview": "미리보기 닫기",
+    "actualScreenshot": "실제 Floorp의 스크린샷입니다. 외관은 사용 중인 버전과 설정에 따라 달라질 수 있습니다."
   },
   "setupV5": {
     "back": "뒤로 가기",
     "supportLabels": {
       "disabled": "자동으로 열지 않기",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "blocking": "차단기 설정을 유지한 채 열기",
+      "support": "Floorp를 돕기 위해 광고 허용하기"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "임시 선택입니다. 다음 화면에서 \"Floorp 사용 시작\"을 누르면 적용됩니다. 그 전에 설정을 닫으면 현재 설정이 유지됩니다.",
     "steps": [
       "환영합니다",
       "언어",
@@ -24,11 +24,11 @@
       "Floorp Hub",
       "설정",
       "지원",
-      "Finish"
+      "마침"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
+        "title": "Floorp 사용을\n환영합니다.",
         "description": "Make your browser work the way you do.",
         "hint": "This guide introduces the features and helps you choose your first settings."
       },
@@ -112,7 +112,7 @@
     "change": "변경",
     "defaultTitle": "Make Floorp your everyday browser",
     "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
+    "getStarted": "Floorp 사용 시작",
     "finishNotice": "“Start using Floorp” confirms your release notes choice."
   },
   "releaseNotes": {

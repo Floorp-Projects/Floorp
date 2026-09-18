@@ -217,7 +217,7 @@
             "exampleFullUrl": "Gmail URL만 일치"
         },
         "tabStacks": {
-            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "unavailableInVerticalTabs": "세로 탭에서는 탭 쌓기를 이용할 수 없습니다. 설정 내용은 저장되며 가로 탭으로 돌아가면 적용됩니다.",
             "title": "탭 쌓기",
             "description": "탭을 묶어 쌓습니다. 탭 표시줄의 칩 아래 두 번째 행에 쌓인 탭이 나타납니다.",
             "enableOrDisable": "활성화/비활성화",
@@ -782,39 +782,39 @@
         }
     },
     "ui": {
-        "skipToContent": "Skip to content",
+        "skipToContent": "본문으로 건너뛰기",
         "loading": "로딩중...",
-        "setupProgress": "Setup progress",
-        "stepNavigation": "Setup navigation",
-        "settingsNavigation": "Settings navigation",
-        "openNavigation": "Open navigation",
-        "closeNavigation": "Close navigation",
-        "saveError": "Could not save. Please try again.",
+        "setupProgress": "설치 진행도",
+        "stepNavigation": "설치 내비게이션",
+        "settingsNavigation": "설정 내비게이션",
+        "openNavigation": "내비게이션 열기",
+        "closeNavigation": "내비게이션 닫기",
+        "saveError": "저장하지 못했습니다. 다시 시도하세요.",
         "retry": "다시 시도",
-        "loadError": "Could not load settings. Please reload this page."
+        "loadError": "설정을 불러오지 못했습니다. 페이지를 새로고침해 주세요."
     },
     "settingsHome": {
-        "title": "Make Floorp yours",
-        "description": "Adjust the look and controls to suit the way you browse.",
-        "open": "Explore settings",
-        "manage": "Manage your browser",
+        "title": "Floorp 내게 맞추기",
+        "description": "외관과 조작 설정을 자신에 맞게 조정하세요.",
+        "open": "설정 둘러보기",
+        "manage": "내 브라우저 관리하기",
         "descriptions": {
-            "tabAndAppearance": "Adjust themes and tab appearance",
-            "workspaces": "Switch between work and personal tabs",
-            "browserSidebar": "Open another site alongside your page",
-            "mouseGesture": "Assign actions to mouse movements",
-            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
-            "performance": "Adjust memory usage"
+            "tabAndAppearance": "테마와 탭 표시 조정하기",
+            "workspaces": "업무용과 개인용 탭 전환하기",
+            "browserSidebar": "페이지 옆에 나란히 다른 사이트 열기",
+            "mouseGesture": "마우스 움직임에 동작 할당하기",
+            "keyboardShortcuts": "키보드 단축키에 동작 할당하기",
+            "performance": "메모리 사용량 조정하기"
         },
         "resources": {
-            "privacy": "About privacy",
-            "extensions": "Manage extensions",
-            "help": "Get help"
+            "privacy": "개인정보 안내",
+            "extensions": "확장 관리",
+            "help": "도움 받기"
         }
     },
     "workspaceRefresh": {
-        "behavior": "Appearance and behavior",
-        "reset": "Reset workspaces",
-        "help": "How to use"
+        "behavior": "모양과 동작",
+        "reset": "워크스페이스 초기화",
+        "help": "사용하는 방법"
     }
 }
