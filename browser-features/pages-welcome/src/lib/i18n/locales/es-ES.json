@@ -378,9 +378,9 @@
           "Música"
         ],
         [
-          "Notes",
+          "Notas",
           "Dictionary",
-          "Resources"
+          "Recursos"
         ]
       ],
       "result": "Showing tabs for {{name}}.",
@@ -427,7 +427,7 @@
       "title": "Open a site alongside your page",
       "instruction": "Use the music icon on the right to open or close the saved site.",
       "article": "Keep exploring",
-      "music": "Music",
+      "music": "Música",
       "favorites": "Favorites",
       "tracks": [
         "Moonlit",
@@ -446,7 +446,7 @@
       "instruction": "Try installing from the icon on the right of the address bar.",
       "icon": "Open web app installation menu",
       "open": "Open app",
-      "install": "Install app",
+      "install": "Instalar aplicación",
       "calendar": "Calendar",
       "result": "Example of a standalone app window",
       "benefit": "Open a site as an app in a separate window.",

@@ -1,22 +1,22 @@
 {
   "setupRich": {
     "selected": "已選取",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "用於選單和設定",
+    "palettePreview": "顏色預覽",
+    "searchDestination": "網址列搜尋供應商",
+    "enlarge": "放大 {{feature}} 的螢幕截圖",
+    "enlargeShort": "查看大圖",
+    "closePreview": "關閉預覽",
+    "actualScreenshot": "這是 Floorp 的實際螢幕截圖。外觀會因版本和設定而異。"
   },
   "setupV5": {
     "back": "返回",
     "supportLabels": {
       "disabled": "不要自動開啟",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "blocking": "以我的廣告攔截器設定開啟",
+      "support": "允許顯示廣告以支持 Floorp"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "這些選擇尚未保存。當你在下一畫面按下「開始使用 Floorp」後，這些選項將會生效。若在此之前關閉設定畫面，系統將保留原本的設定。",
     "steps": [
       "歡迎！",
       "語言",
@@ -24,105 +24,105 @@
       "Floorp Hub",
       "設定",
       "支援",
-      "Finish"
+      "結束"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "title": "歡迎\n來到 Floorp。",
+        "description": "讓您的瀏覽器按照你的習慣運作。",
+        "hint": "本指南將介紹各項功能，並協助你設定初始選項。"
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "從你最熟悉的語言\n開始。",
+        "description": "檢查 Floorp 的顯示語言，並在需要時變更。",
+        "hint": "所選的語言將立即生效。"
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "探索 Floorp 的\n各項功能。",
+        "description": "分開處理不同任務、並排檢視頁面，並加快工作速度。探索你感興趣的功能。",
+        "hint": "稍後可在設定裡自定義這些功能。"
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "你的設定\n皆在 Floorp Hub 中。",
+        "description": "在同一處更改所有 Floorp 專有功能。",
+        "hint": "設定完成後可隨時開啟它。"
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "外觀和搜尋引擎\n專屬於你自己定義。",
+        "description": "選擇你日常使用的佈景主題和搜尋引擎。",
+        "hint": "稍後可在 Floorp Hub 或 Firefox 設定中進行變更。"
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "更新和\n支持 Floorp。",
+        "description": "廣告收入支持 Floorp 的開發與營運。請選擇發行說明的開啟方式。",
+        "hint": "您稍後可在「更新與實驗功能」中變更此設定。"
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "你已準備好\n開始衝浪了。",
+        "description": "確認你的選擇，並開始使用 Floorp。",
+        "hint": "稍後仍可變更這些設定。"
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "在你開始之前",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "檢查你的顯示語言",
+        "description": "就從你每天使用的語言開始吧。"
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "選擇適合你的設定",
+        "description": "請選擇佈景主題和搜尋引擎。"
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "準備好瀏覽吧",
+        "description": "開始之前，請先檢視你的選擇。"
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "稍後仍可變更這些設定。",
+    "languageTitle": "顯示語言",
+    "languageLabel": "Floorp 顯示語言",
+    "languageHint": "用於選單和設定。",
+    "languageNotice": "某些擴充元件可能不支援更改語言。",
+    "languageCurrent": "使用 {{language}}",
+    "featuresTitle": "探索其他功能",
+    "hubTitle": "找出想調整的項目",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "分頁與外觀",
+        "description": "分頁版面配置與瀏覽器的外觀"
       },
       {
         "title": "工作空間",
-        "description": "Switch tasks and organize tabs"
+        "description": "切換任務與整理分頁"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "滑鼠手勢",
+        "description": "常用操作的快捷方式"
       }
     ],
     "openHub": "開啟 Floorp Hub",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
+    "openPreferences": "開啟 Firefox 設定",
+    "newTab": "在新分頁開啟。",
+    "hubAddress": "你也可以在網址列中輸入 about:hub。",
+    "customizeTitle": "你的初步設定",
+    "searchHint": "用於從網址列進行搜尋時。",
     "supportTitle": "歷來更新版本說明",
-    "scopeTitle": "Scope when allowing advertising",
-    "summaryTitle": "Review your settings",
+    "scopeTitle": "允許廣告時的適用範圍",
+    "summaryTitle": "檢視您的設定",
     "change": "變更",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "讓 Floorp 成為你的日常瀏覽器",
+    "defaultHint": "設定在 Floorp 中開啟的連結。",
+    "getStarted": "開始使用 Floorp",
+    "finishNotice": "「開始使用 Floorp」將確認你所選擇的發行說明顯示方式。"
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "一個嶄新的選擇。\n支持未來的發展。",
+      "description": "廣告收入支持 Floorp 的開發與營運。你可以選擇如何開啟發行說明，以及在 Floorp 部落格裡廣告阻擋器的運作方式。",
+      "hint": "在儲存選項之前，你的設定將維持現狀。稍後可在「更新與實驗」中進行變更。",
+      "choiceTitle": "選擇發行說明的開啟方式",
+      "choiceDescription": "選擇如何開啟發行說明，以及 Floorp 部落格裡你廣告阻擋器的運作方式。",
+      "dismiss": "稍後再說"
     },
     "learnMore": "了解我們的資金來源及此計畫的背景（日文）",
     "title": "發行說明與支持 Floorp",
@@ -140,7 +140,7 @@
       "description": "在 Floorp 部落格上限制 uBlock Origin、AdGuard、Adblock Plus、AdBlock 及 Ghostery。"
     },
     "scope": "此限制適用於所有在 blog.floorp.app 網域的 HTTPS 頁面，包括手動開啟的頁面。此設定亦會影響追蹤防護、自定義篩選器和廣告阻擋器。其他擴充功能不受此設定限制，但其他防護工具仍可能阻擋廣告。變更此設定後，請重新載入已開啟的部落格頁面。",
-    "currentSetting": "Current setting: {{mode}}",
+    "currentSetting": "目前設定： {{mode}}",
     "applyOnConfirm": "你的選擇必須在確認後才會生效。關閉此頁面將保留原本的設定。",
     "changeSelection": "變更選擇",
     "applyOnFinish": "這些選擇尚未保存。當你在下一畫面完成設定後，這些選項將會生效。若在此之前關閉設定畫面，系統將保留原本的設定。",
@@ -220,24 +220,24 @@
   },
   "setupGuide": {
     "welcome": "歡迎使用 Floorp.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "description": "讓您的瀏覽器按照你的習慣運作。",
+    "introduction": "本指南將介紹 Floorp 的功能，並協助你設定初始選項。",
+    "start": "開始設定",
+    "next": "接著，檢查你的顯示語言。",
+    "progress": "設定 {{current}} / {{total}}",
+    "title": "本指南涵蓋的內容",
+    "subtitle": "探索各項功能，並選擇適合你的設定。",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "探索 Floorp 的各項功能",
+      "description": "探索各種整理分頁與自訂瀏覽器的方式。"
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "選擇你的設定",
+      "description": "請根據你的喜好調整外觀與控制項。"
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "準備好瀏覽吧",
+      "description": "確認你的選擇並開始瀏覽。"
     }
   },
   "welcomePage": {
@@ -341,147 +341,147 @@
   },
   "ui": {
     "retry": "再試一次",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "loadError": "無法載入這些設定。請重試。",
+    "skipToContent": "跳轉至內容",
     "loading": "正在載入…",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "安裝進度",
+    "stepNavigation": "安裝導覽",
+    "settingsNavigation": "設定導覽",
+    "openNavigation": "開啟導覽選單",
+    "closeNavigation": "關閉導覽選單",
+    "saveError": "無法儲存。請重試。"
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
+    "label": "互動示範",
+    "close": "關閉面板",
     "cancel": "取消",
-    "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "reset": "重設示範",
+    "play": "觀看此手勢",
+    "replay": "再次觀看",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "切換工作區",
+      "instruction": "點擊左上角的「開啟工作區」按鈕，然後選擇一個工作區。",
       "names": [
-        "Work",
+        "工作",
         "個人",
-        "Learning"
+        "學習"
       ],
       "tabs": [
         [
-          "Project",
-          "Mail",
-          "Calendar"
+          "專案",
+          "郵件",
+          "行事曆"
         ],
         [
-          "Travel",
-          "Recipes",
+          "旅行",
+          "食譜",
           "音樂"
         ],
         [
           "筆記",
-          "Dictionary",
+          "字典",
           "資源"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "顯示 {{name}} 的分頁。",
+      "benefit": "將工作與個人分頁分組以輕鬆切換。",
+      "guideOpen": "點選「工作」按鈕。",
+      "guideSelect": "點選「個人」。",
+      "guideDone": "上方的分頁已一併切換。",
+      "openHint": "1 由此處打開",
+      "selectHint": "2 點選「個人」",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "團隊合作",
+          "title": "本週的專案",
+          "description": "將任務與進度整合在一起。",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "為該專案蒐集點子",
+            "檢視設計",
+            "為下次會議做準備"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "週末計劃",
+          "title": "接下來要去哪裡？",
+          "description": "將喜愛的景點收藏起來，並規劃你的下一趟旅程。",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "找一家海邊的咖啡館",
+            "探索一座新城鎮",
+            "製作一份行李清單"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "學習筆記",
+          "title": "今日的學習筆記",
+          "description": "用自己的話來闡述你所學到的內容。",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "總結重點",
+            "將新單字寫下來",
+            "列出接下來要探討的問題"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "在你的網頁旁開啟另一個網站",
+      "instruction": "請使用右側的音樂圖示來開啟或關閉已儲存的網站。",
+      "article": "繼續探索",
       "music": "音樂",
-      "favorites": "Favorites",
+      "favorites": "我的最愛",
       "tracks": [
         "Moonlit",
         "Blue hour",
         "Gentle breeze"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "試聽（無音訊）",
+      "stop": "停止播放",
+      "toggle": "切換顯示音樂面板",
+      "open": "你的頁面與已儲存的網站會並排顯示。",
+      "closed": "點擊音樂圖示來再次開啟面板。",
+      "benefit": "在正在瀏覽的頁面旁邊開啟另一個網站。"
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "將喜愛的網站轉為應用程式",
+      "instruction": "請嘗試透過網址列右側的圖示來安裝。",
+      "icon": "開啟網頁應用程式安裝選單",
+      "open": "開啟應用程式",
       "install": "安裝應用程式",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
-      "tab": "Web apps"
+      "calendar": "行事曆",
+      "result": "獨立應用程式視窗的範例",
+      "benefit": "在獨立視窗中以應用程式形式開啟網站。",
+      "tab": "網頁應用程式"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "使用滑鼠手勢進行導航",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "按住右鍵",
+        "向左移動",
+        "放開按鈕"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "上一頁面",
+      "current": "當前頁面",
+      "result": "← 返回上一頁（示範）",
+      "hint": "預設「返回」手勢的範例。",
+      "enable": "請在「設定」中啟用滑鼠手勢，即可使用此功能。",
+      "benefit": "按住滑鼠右鍵並移動滑鼠，即可執行「返回」等動作。"
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "檢查語言",
+      "選擇外觀",
+      "讓我們開始吧"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "檢查你偏好的顯示語言。",
+      "選擇佈景主題和搜尋引擎。",
+      "確認你的選擇並開始使用 Floorp。"
     ],
-    "replay": "Watch again"
+    "replay": "再次觀看"
   },
   "demoPlayback": {
-    "pause": "Pause",
-    "play": "Play / resume"
+    "pause": "暫停",
+    "play": "播放／繼續播放"
   }
 }

@@ -432,7 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "在分割視圖中開啟",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "以分割檢視開啟（最多 {{max}} 分頁）",
       "addPane": "新增視窗到分割檢視",
       "moveToPane": "移動到視窗",
       "moveToPaneN": "視窗 {{n}}（{{title}}）"
