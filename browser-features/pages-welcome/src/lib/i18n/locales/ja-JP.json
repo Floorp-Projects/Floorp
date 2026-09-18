@@ -108,21 +108,21 @@
     "searchHint": "アドレスバーからの検索に使います。",
     "supportTitle": "更新後のリリースノート",
     "scopeTitle": "広告を許可する場合の適用範囲",
-    "summaryTitle": "Review your settings",
+    "summaryTitle": "設定内容を確認",
     "change": "変更",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "Floorp をいつものブラウザーにする",
+    "defaultHint": "リンクを Floorp で開くように設定できます。",
+    "getStarted": "Floorp をはじめる",
+    "finishNotice": "[Floorp をはじめる] を押すと、リリースノートの選択が確定します。"
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "開発を支える\n新しい選択肢。",
+      "description": "広告収入は Floorp の開発と運営を支えています。リリースノートの開き方と、ブログにおけるブロッカーの動作方法を選択できるようになりました。",
+      "hint": "選択内容を保存するまで、設定は現在のまま維持されます。後で [更新と実験] から変更できます。",
+      "choiceTitle": "リリースノートの開き方を選択",
+      "choiceDescription": "更新後の自動表示と、Floorp ブログにおけるブロッカーの動作方法をお選びください。",
+      "dismiss": "今は変更しない"
     },
     "learnMore": "この設定とご支援についての詳細を読む",
     "title": "更新のお知らせと Floorp の支援",
@@ -140,7 +140,7 @@
       "description": "Floorp ブログで、uBlock Origin、AdGuard、Adblock Plus、AdBlock、Ghostery の動作を制限します。"
     },
     "scope": "この制限は、手動で開いた場合を含む blog.floorp.app 上のすべての HTTPS ページに適用され、広告ブロックやトラッキング保護、カスタムフィルター機能に影響します。他の拡張機能はこの設定による制限を受けません。他の保護ツールによって広告がブロックされる場合があります。設定を変更した後は、開いているブログページを再読み込みしてください。",
-    "currentSetting": "Current setting: {{mode}}",
+    "currentSetting": "現在の設定: {{mode}}",
     "applyOnConfirm": "選択は確定するまで反映されません。このままページを閉じると、元の設定が維持されます。",
     "changeSelection": "選択を変更",
     "applyOnFinish": "まだ仮選択です。次の画面で設定を完了すると、この選択が適用されます。設定を中断した場合は、元の設定が維持されます。",
@@ -219,25 +219,25 @@
     "hint": "より詳細な設定は、右上のメニューボタンの中にある [設定] からいつでもアクセスできます。"
   },
   "setupGuide": {
-    "welcome": "Welcome to Floorp.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "welcome": "Floorp へようこそ。",
+    "description": "自分の使い方に合わせて、ブラウザーを調整しましょう。",
+    "introduction": "このガイドでは、Floorp の機能と初期設定をご案内します。",
+    "start": "セットアップを開始",
+    "next": "次に、表示言語を確認します。",
+    "progress": "ステップ {{current}} / {{total}}",
+    "title": "このガイドの内容",
+    "subtitle": "各種機能を試して、ご自身に合う設定をお選びください。",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "Floorp の機能を見る",
+      "description": "タブの整理方法、ブラウザーのカスタマイズ方法を調べてみましょう。"
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "設定を選択する",
+      "description": "お好みに合わせて、外観や操作方法を調整できます。"
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "使いはじめる",
+      "description": "選択内容を確認し、ブラウジングをはじめましょう。"
     }
   },
   "welcomePage": {
@@ -341,147 +341,147 @@
   },
   "ui": {
     "retry": "再試行",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "loadError": "設定を読み込めませんでした。もう一度お試しください。",
+    "skipToContent": "本文へ移動",
     "loading": "読み込み中...",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "セットアップの進捗",
+    "stepNavigation": "セットアップのナビゲーション",
+    "settingsNavigation": "設定のナビゲーション",
+    "openNavigation": "ナビゲーションを開く",
+    "closeNavigation": "ナビゲーションを閉じる",
+    "saveError": "保存できませんでした。もう一度お試しください。"
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
+    "label": "体験型デモ",
+    "close": "パネルを閉じる",
     "cancel": "キャンセル",
-    "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "reset": "デモをリセット",
+    "play": "ジェスチャーを見る",
+    "replay": "もう一度見る",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "ワークスペースを切り替える",
+      "instruction": "左上のワークスペースボタンを開き、ワークスペースを選択します。",
       "names": [
-        "Work",
+        "仕事",
         "個人",
-        "Learning"
+        "学習"
       ],
       "tabs": [
         [
-          "Project",
-          "Mail",
-          "Calendar"
+          "プロジェクト",
+          "メール",
+          "カレンダー"
         ],
         [
-          "Travel",
-          "Recipes",
+          "旅行",
+          "レシピ",
           "音楽"
         ],
         [
           "Notes",
-          "Dictionary",
+          "辞書",
           "リソース"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "[{{name}}] のタブを表示しています。",
+      "benefit": "仕事用とプライベート用のタブをまとめて切り替えられます。",
+      "guideOpen": "[仕事] ボタンを開きます。",
+      "guideSelect": "[プライベート] を選択します。",
+      "guideDone": "上部のタブがまとめて切り替わりました。",
+      "openHint": "① ここを開く",
+      "selectHint": "② [プライベート] を選ぶ",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "チームの業務",
+          "title": "今週のプロジェクト",
+          "description": "タスクと進捗をまとめて管理。",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "企画のアイデアをまとめる",
+            "デザインを確認する",
+            "次の会議に備える"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "週末の予定",
+          "title": "次はどこへ行く？",
+          "description": "お気に入りの場所をまとめて、次の旅行を計画を立てよう。",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "海辺のカフェを探す",
+            "新しい町を探索する",
+            "持ち物リストを作る"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "学習ノート",
+          "title": "今日の学習ノート",
+          "description": "学んだことを自分の言葉で残しましょう。",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "要点を整理する",
+            "新しい単語を記録する",
+            "次に調べることを書き出す"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "ページを見ながらサイドで開く",
+      "instruction": "登録したサイトを開閉できます。右側の音楽アイコンで試してみましょう。",
+      "article": "調べものを続ける",
       "music": "音楽",
-      "favorites": "Favorites",
+      "favorites": "お気に入り",
       "tracks": [
-        "Moonlit",
-        "Blue hour",
-        "Gentle breeze"
+        "夜のかけら",
+        "薄明",
+        "そよ風"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "再生を試す (音声なし)",
+      "stop": "再生を停止",
+      "toggle": "音楽パネルの表示を切り替える",
+      "open": "ページと登録したサイトを並べて表示できます。",
+      "closed": "右側の音楽アイコンをクリックして、パネルをもう一度開いてみましょう。",
+      "benefit": "今見ているページの横に、別のサイトを開けます。"
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "お気に入りのサイトをアプリに変える",
+      "instruction": "アドレスバーの右側にあるアイコンで、インストールを試してみましょう。",
+      "icon": "ウェブアプリのインストールメニューを開く",
+      "open": "アプリを開く",
       "install": "アプリをインストール",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
-      "tab": "Web apps"
+      "calendar": "カレンダー",
+      "result": "独立したウィンドウの表示例",
+      "benefit": "サイトをアプリとして、別のウィンドウで開けます。",
+      "tab": "ウェブアプリ"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "マウスの動きで、すばやく操作",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "右ボタンを押したまま",
+        "左へ動かして",
+        "ボタンを離す"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "前のページ",
+      "current": "現在のページ",
+      "result": "← 前のページに戻りました (デモ)",
+      "hint": "既定の [戻る] ジェスチャーの例。",
+      "enable": "利用する場合は、設定でマウスジェスチャーを有効にしてください。",
+      "benefit": "右ボタンを押しながらマウスを動かすと、[戻る] などの操作ができます。"
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "言語を確認",
+      "外観を選ぶ",
+      "はじめる"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "お好みの表示言語を確認します。",
+      "テーマや検索エンジンを選べます。",
+      "選択内容を確認し、Floorp をはじめましょう。"
     ],
-    "replay": "Watch again"
+    "replay": "もう一度見る"
   },
   "demoPlayback": {
-    "pause": "Pause",
-    "play": "Play / resume"
+    "pause": "一時停止",
+    "play": "再生 / 再開"
   }
 }
