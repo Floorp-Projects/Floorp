@@ -217,7 +217,7 @@
             "exampleFullUrl": "僅匹配 Gmail URL"
         },
         "tabStacks": {
-            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "unavailableInVerticalTabs": "在垂直分頁模式下，分頁堆無法使用。你的設定會被保留，並在切換回水平分頁模式時生效。",
             "title": "分頁堆",
             "description": "將分頁分組堆疊，在分頁列中以一圖示顯示，下方則排列其他分頁堆。",
             "enableOrDisable": "啟用/停用",
@@ -782,39 +782,39 @@
         }
     },
     "ui": {
-        "skipToContent": "Skip to content",
+        "skipToContent": "跳轉至內容",
         "loading": "正在載入…",
-        "setupProgress": "Setup progress",
-        "stepNavigation": "Setup navigation",
-        "settingsNavigation": "Settings navigation",
-        "openNavigation": "Open navigation",
-        "closeNavigation": "Close navigation",
-        "saveError": "Could not save. Please try again.",
+        "setupProgress": "安裝進度",
+        "stepNavigation": "安裝導覽",
+        "settingsNavigation": "設定導覽",
+        "openNavigation": "開啟導覽選單",
+        "closeNavigation": "關閉導覽選單",
+        "saveError": "無法儲存。請重試。",
         "retry": "重試",
-        "loadError": "Could not load settings. Please reload this page."
+        "loadError": "無法載入設定。請重新載入此頁面。"
     },
     "settingsHome": {
-        "title": "Make Floorp yours",
-        "description": "Adjust the look and controls to suit the way you browse.",
-        "open": "Explore settings",
-        "manage": "Manage your browser",
+        "title": "讓 Floorp 成為你想要的樣子",
+        "description": "根據瀏覽習慣來調整外觀與控制方式。",
+        "open": "探索設定",
+        "manage": "管理你的瀏覽器",
         "descriptions": {
-            "tabAndAppearance": "Adjust themes and tab appearance",
-            "workspaces": "Switch between work and personal tabs",
-            "browserSidebar": "Open another site alongside your page",
-            "mouseGesture": "Assign actions to mouse movements",
-            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
-            "performance": "Adjust memory usage"
+            "tabAndAppearance": "調整主題與分頁外觀",
+            "workspaces": "在工作與個人分頁之間切換",
+            "browserSidebar": "在你的網頁旁開啟另一個網站",
+            "mouseGesture": "將動作指派給滑鼠手勢",
+            "keyboardShortcuts": "將動作指派給快捷鍵",
+            "performance": "調整記憶體使用量"
         },
         "resources": {
-            "privacy": "About privacy",
-            "extensions": "Manage extensions",
-            "help": "Get help"
+            "privacy": "關於隱私",
+            "extensions": "擴充套件管理",
+            "help": "取得幫助"
         }
     },
     "workspaceRefresh": {
-        "behavior": "Appearance and behavior",
-        "reset": "Reset workspaces",
-        "help": "How to use"
+        "behavior": "外觀與行為",
+        "reset": "重置工作空間",
+        "help": "如何使用"
     }
 }

@@ -1,22 +1,22 @@
 {
   "setupRich": {
     "selected": "選択中",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "メニューや設定画面に使用されます",
+    "palettePreview": "色のプレビュー",
+    "searchDestination": "アドレスバーの検索プロバイダー",
+    "enlarge": "{{feature}} のスクリーンショットを拡大",
+    "enlargeShort": "拡大表示",
+    "closePreview": "プレビューを閉じる",
+    "actualScreenshot": "Floorp の実際のスクリーンショットです。外観はお使いのバージョンや設定によって異なります。"
   },
   "setupV5": {
     "back": "戻る",
     "supportLabels": {
       "disabled": "自動で開かない",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "blocking": "ブロッカーの設定を維持して開く",
+      "support": "Floorp を支援するために広告を許可"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "まだ仮選択です。次の画面で [Floorp をはじめる] を押すと、この選択が適用されます。設定を中断した場合は、元の設定が維持されます。",
     "steps": [
       "ようこそ！",
       "言語",
@@ -24,90 +24,90 @@
       "Floorp Hub",
       "設定",
       "サポート",
-      "Finish"
+      "完了"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "title": "Floorp へ\nようこそ。",
+        "description": "自分の使い方に合わせて、ブラウザーを調整しましょう。",
+        "hint": "このガイドでは、各種機能と初期設定をご案内します。"
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "おなじみの言語で\nはじめましょう。",
+        "description": "Floorp の表示言語を確認し、必要に応じて変更できます。",
+        "hint": "選択した言語はすぐに反映されます。"
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "使い方が広がる\nFloorp の機能。",
+        "description": "タスクを分ける、ページを並べる、すばやく操作する。気になる機能はありますか？",
+        "hint": "これらの機能は、後から設定で調整できます。"
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "Floorp Hub、\n設定のハブ。",
+        "description": "Floorp 固有の設定を、ひとつの場所で調整できます。",
+        "hint": "セットアップの後も、いつでも開けます。"
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "外観と検索を\n自分色に。",
+        "description": "ふだん使うテーマと検索エンジンを選びましょう。",
+        "hint": "後から Floorp Hub や Firefox の設定で変更できます。"
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "更新のお知らせと\nFloorp への支援。",
+        "description": "広告収入は Floorp の開発と運営を支えています。リリースノートの開き方をお選びください。",
+        "hint": "後から [更新と実験] で変更できます。"
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "出発準備は\n整いました。",
+        "description": "選択内容を確認し、Floorp をはじめましょう。",
+        "hint": "設定は後でいつでも変更できます。"
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "はじめに",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "表示言語を確認",
+        "description": "使い慣れた言語を確認します。"
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "外観を選ぶ",
+        "description": "テーマや検索エンジンを選べます。"
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "使いはじめる",
+        "description": "選択内容を確認して、いざはじめましょう。"
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "これらの設定はあとで変更できます。",
+    "languageTitle": "表示言語",
+    "languageLabel": "Floorp の表示言語",
+    "languageHint": "メニューや設定画面に使用されます。",
+    "languageNotice": "一部のアドオンは、言語の変更に対応していない場合があります。",
+    "languageCurrent": "{{language}} を使う",
+    "featuresTitle": "機能を見てみる",
+    "hubTitle": "調整したい内容を探す",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "タブと外観",
+        "description": "タブの配置とブラウザーの外観"
       },
       {
         "title": "ワークスペース",
-        "description": "Switch tasks and organize tabs"
+        "description": "作業の切り替えとタブの整理"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "マウスジェスチャー",
+        "description": "よく使う操作の軌跡をたどる"
       }
     ],
     "openHub": "Floorp Hub を開く",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
+    "openPreferences": "Firefox の設定を開く",
+    "newTab": "新しいタブで開きます。",
+    "hubAddress": "アドレスバーに about:hub と入力しても開けます。",
+    "customizeTitle": "設定の第一歩",
+    "searchHint": "アドレスバーからの検索に使います。",
     "supportTitle": "更新後のリリースノート",
-    "scopeTitle": "Scope when allowing advertising",
+    "scopeTitle": "広告を許可する場合の適用範囲",
     "summaryTitle": "Review your settings",
     "change": "変更",
     "defaultTitle": "Make Floorp your everyday browser",
@@ -136,7 +136,7 @@
       "description": "お使いの拡張機能の設定が維持されます。この操作によって、広告ブロッカーがインストールまたは有効化されることはありません。"
     },
     "support": {
-      "label": "広告を許可して Floorp を支援する (おすすめ)",
+      "label": "Floorp を支援するために広告を許可 (おすすめ)",
       "description": "Floorp ブログで、uBlock Origin、AdGuard、Adblock Plus、AdBlock、Ghostery の動作を制限します。"
     },
     "scope": "この制限は、手動で開いた場合を含む blog.floorp.app 上のすべての HTTPS ページに適用され、広告ブロックやトラッキング保護、カスタムフィルター機能に影響します。他の拡張機能はこの設定による制限を受けません。他の保護ツールによって広告がブロックされる場合があります。設定を変更した後は、開いているブログページを再読み込みしてください。",
