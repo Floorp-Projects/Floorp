@@ -29,100 +29,100 @@
     "pages": [
       {
         "title": "Floorp 사용을\n환영합니다.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "description": "브라우저를 당신의 방식대로 맞추세요.",
+        "hint": "이 도움말은 기능을 소개하고 초기 설정을 선택할 수 있도록 돕습니다."
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "가장 친숙한 언어로\n시작하세요.",
+        "description": "Floorp의 표시 언어를 확인하고 필요하면 변경하세요.",
+        "hint": "선택하신 언어는 즉시 적용됩니다."
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "Floorp의 기능을\n둘러보세요.",
+        "description": "작업을 분리하고, 페이지를 나란히 표시해, 더 빠르게 작업하세요. 관심 있는 기능을 살펴보세요.",
+        "hint": "이 기능들은 나중에 설정에서 조정할 수 있습니다."
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "당신의 설정,\nFloorp Hub에서.",
+        "description": "Floorp만의 특별한 기능을 한 곳에서 설정하세요.",
+        "hint": "설정이 끝나면 언제든 열 수 있습니다."
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "외관과 검색 기능을\n나에게 맞게.",
+        "description": "일상적으로 이용할 테마와 검색 엔진을 선택하세요.",
+        "hint": "나중에 Floorp Hub나 Firefox 설정에서 변경할 수 있습니다."
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "업데이트 및\nFloorp 지원.",
+        "description": "광고 수익을 바탕으로 Floorp를 개발하고 운영할 수 있습니다. 릴리스 노트를 열 방식을 선택하세요.",
+        "hint": "나중에 '업데이트 및 실험'에서 이 설정을 변경할 수 있습니다."
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "시작할 준비가\n되었습니다.",
+        "description": "선택을 검토하고 Floorp 사용을 시작하세요.",
+        "hint": "나중에도 설정을 변경할 수 있습니다."
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "시작하기 전에",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "표시 언어를 확인하세요",
+        "description": "일상적으로 쓰는 언어로 시작하세요."
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "맞춤 설정 선택",
+        "description": "테마와 검색 엔진을 선택하세요."
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "탐색할 준비 마무리",
+        "description": "시작하기 전에 선택을 검토하세요."
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "나중에 설정을 변경할 수 있습니다.",
+    "languageTitle": "표시 언어",
+    "languageLabel": "Floorp 표시 언어",
+    "languageHint": "메뉴와 설정에 쓰입니다.",
+    "languageNotice": "일부 부가 기능은 언어 변경을 지원하지 않을 수 있습니다.",
+    "languageCurrent": "{{language}} 사용 중",
+    "featuresTitle": "기능 둘러보기",
+    "hubTitle": "조정하고픈 설정을 찾으세요",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "탭 및 모양",
+        "description": "탭 레이아웃과 브라우저 모양"
       },
       {
         "title": "워크스페이스",
-        "description": "Switch tasks and organize tabs"
+        "description": "작업 전환 및 탭 정리"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "마우스 제스처",
+        "description": "자주 쓰는 동작의 바로가기"
       }
     ],
     "openHub": "Floorp Hub 열기",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
+    "openPreferences": "Firefox 설정 열기",
+    "newTab": "새 탭에서 열립니다.",
+    "hubAddress": "주소 표시줄에서 about:hub를 입력하셔도 됩니다.",
+    "customizeTitle": "내 첫 설정",
+    "searchHint": "주소 표시줄에서 검색할 때 쓰입니다.",
     "supportTitle": "업데이트 후 릴리스 노트",
-    "scopeTitle": "Scope when allowing advertising",
-    "summaryTitle": "Review your settings",
+    "scopeTitle": "광고 허용 범위",
+    "summaryTitle": "설정 검토",
     "change": "변경",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
+    "defaultTitle": "Floorp를 일상의 브라우저로 만드세요",
+    "defaultHint": "링크가 Floorp에서 열리도록 하세요.",
     "getStarted": "Floorp 사용 시작",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "finishNotice": "\"Floorp 사용 시작\"을 누르면 릴리스 노트에 대한 선택을 확정합니다."
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "새로운 선택.\n미래의 변화를 지원해주세요.",
+      "description": "광고 수익을 바탕으로 Floorp를 개발하고 운영할 수 있습니다. 이제 릴리스 노트를 열 방식과 Floorp 블로그 내 차단기의 동작 방식을 선택할 수 있습니다.",
+      "hint": "선택 사항을 저장하기 전까지는 설정이 그대로 유지됩니다. 나중에 '업데이트 및 실험'에서 변경할 수 있습니다.",
+      "choiceTitle": "릴리스 노트를 열 방식 선택",
+      "choiceDescription": "업데이트 후 자동으로 표시할 방식과 Floorp 블로그 내 차단기의 동작 방식을 선택하세요.",
+      "dismiss": "나중에"
     },
     "learnMore": "이 설정과 자금 마련에 대해 자세히 알아보기 (일본어)",
     "title": "릴리스 노트 및 Floorp 지원",
@@ -140,7 +140,7 @@
       "description": "Floorp 블로그에서 uBlock Origin, AdGuard, Adblock Plus, AdBlock, Ghostery를 제한합니다."
     },
     "scope": "이 제한은 수동으로 열린 페이지를 포함하여 blog.floorp.app의 모든 HTTPS 페이지에 적용되며, 광고 차단뿐 아니라 추적 보호 기능 및 사용자 필터에도 영향을 미칩니다. 다른 확장은 이 설정의 제한을 받지 않습니다. 다른 보호 도구는 여전히 광고를 차단할 수 있습니다. 설정을 변경한 뒤에는 열린 블로그 페이지를 새로고침하세요.",
-    "currentSetting": "Current setting: {{mode}}",
+    "currentSetting": "현재 설정: {{mode}}",
     "applyOnConfirm": "확인을 눌러야 선택한 내용이 적용됩니다. 이 페이지를 닫으면 현재 설정을 유지합니다.",
     "changeSelection": "선택 변경",
     "applyOnFinish": "임시 선택입니다. 다음 화면에서 설정을 마치면 적용됩니다. 그 전에 설정을 닫으면 현재 설정이 유지됩니다.",
@@ -220,24 +220,24 @@
   },
   "setupGuide": {
     "welcome": "Floorp에 오신 것을 환영합니다.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "description": "브라우저를 당신의 방식대로 맞추세요.",
+    "introduction": "이 도움말은 Floorp의 기능을 소개하고 초기 설정을 선택할 수 있도록 돕습니다.",
+    "start": "설정 시작",
+    "next": "다음으로, 표시 언어를 확인하세요.",
+    "progress": "설정 {{current}} / {{total}}",
+    "title": "도움말의 내용",
+    "subtitle": "기능을 둘러보고 맞는 설정을 고르세요.",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "Floorp 기능 살펴보기",
+      "description": "탭을 정리하고 브라우저를 맞춤 설정하는 법을 알아보세요."
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "설정 선택",
+      "description": "외관과 조작 기능을 맞춤 설정하세요."
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "탐색할 준비 마무리",
+      "description": "선택을 검토하고 탐색을 시작하세요."
     }
   },
   "welcomePage": {
@@ -341,147 +341,147 @@
   },
   "ui": {
     "retry": "다시 시도",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "loadError": "이 설정을 불러오지 못했습니다. 다시 시도해 주세요.",
+    "skipToContent": "본문으로 건너뛰기",
     "loading": "로딩중...",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "설치 진행도",
+    "stepNavigation": "설치 내비게이션",
+    "settingsNavigation": "설정 내비게이션",
+    "openNavigation": "내비게이션 열기",
+    "closeNavigation": "내비게이션 닫기",
+    "saveError": "저장하지 못했습니다. 다시 시도하세요."
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
+    "label": "체험형 데모",
+    "close": "패널 닫기",
     "cancel": "취소",
-    "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "reset": "데모 초기화",
+    "play": "제스처 보기",
+    "replay": "다시 보기",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "워크스페이스 전환",
+      "instruction": "왼쪽 상단의 워크스페이스 버튼을 클릭한 다음, 워크스페이스를 선택하세요.",
       "names": [
-        "Work",
-        "Personal",
-        "Learning"
+        "업무",
+        "개인",
+        "학습"
       ],
       "tabs": [
         [
-          "Project",
-          "Mail",
-          "Calendar"
+          "프로젝트",
+          "메일",
+          "캘린더"
         ],
         [
-          "Travel",
-          "Recipes",
+          "여행",
+          "요리법",
           "음악"
         ],
         [
           "메모",
-          "Dictionary",
+          "사전",
           "리소스"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "{{name}} 탭을 표시하는 중입니다.",
+      "benefit": "업무용과 개인용 탭 묶음을 전환하세요.",
+      "guideOpen": "'업무' 버튼을 여세요.",
+      "guideSelect": "'개인'을 선택하세요.",
+      "guideDone": "상단의 탭을 함께 전환했습니다.",
+      "openHint": "1 여기서 열기",
+      "selectHint": "2 '개인' 선택하기",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "팀 업무",
+          "title": "주간 프로젝트",
+          "description": "작업과 진행 상황을 한데 모아 두세요.",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "프로젝트 아이디어 정리하기",
+            "디자인 검토하기",
+            "다음 회의 준비하기"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "주말 계획",
+          "title": "다음에는 어디로 갈까요?",
+          "description": "좋아하는 장소를 모아두고 다음 여행을 계획하세요.",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "바다 근처의 카페 찾기",
+            "새 마을 둘러보기",
+            "챙길 짐 목록 작성하기"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "공부 노트",
+          "title": "오늘의 공부 노트",
+          "description": "배운 내용을 스스로의 언어로 남기세요.",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "요점 정리하기",
+            "새 단어 써내리기",
+            "다음에 알아볼 질문 나열하기"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "페이지 옆에 나란히 사이트 열기",
+      "instruction": "오른쪽의 음악 아이콘을 눌러 저장한 사이트를 여닫으세요.",
+      "article": "계속 둘러보기",
       "music": "음악",
-      "favorites": "Favorites",
+      "favorites": "즐겨찾기",
       "tracks": [
-        "Moonlit",
-        "Blue hour",
-        "Gentle breeze"
+        "달빛",
+        "박명",
+        "산들바람"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "재생 시도 (음소거)",
+      "stop": "재생 정지",
+      "toggle": "음악 패널 전환",
+      "open": "페이지와 저장한 사이트를 나란히 표시합니다.",
+      "closed": "오른쪽의 음악 아이콘을 눌러 패널을 다시 엽니다.",
+      "benefit": "현재 보고 있는 페이지 옆에 나란히 다른 사이트를 엽니다."
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "즐겨 찾는 사이트를 앱으로 만들기",
+      "instruction": "주소 표시줄의 오른쪽 아이콘에서 설치해 보세요.",
+      "icon": "웹 앱 설치 메뉴 열기",
+      "open": "앱 열기",
       "install": "앱 설치",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
-      "tab": "Web apps"
+      "calendar": "캘린더",
+      "result": "독립형 앱 창 예시",
+      "benefit": "사이트를 별도의 창에서 앱으로 엽니다.",
+      "tab": "웹 앱"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "마우스 제스처로 탐색하기",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "오른쪽 버튼을 누른 채로",
+        "왼쪽으로 움직이기",
+        "버튼 떼기"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "이전 페이지",
+      "current": "현재 페이지",
+      "result": "← 이전 페이지로 돌아감 (데모)",
+      "hint": "기본 뒤로 가기 제스처 예시입니다.",
+      "enable": "이 기능을 사용하려면 설정에서 마우스 제스처를 켜세요.",
+      "benefit": "마우스 오른쪽 버튼을 누른 채로 마우스를 움직여 ‘뒤로 가기’ 등의 동작을 수행할 수 있습니다."
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "언어 확인",
+      "모양 선택",
+      "시작하기"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "선호하는 표시 언어를 확인하세요.",
+      "테마와 검색 엔진을 선택하세요.",
+      "선택을 검토하고 Floorp 사용을 시작하세요."
     ],
-    "replay": "Watch again"
+    "replay": "다시 보기"
   },
   "demoPlayback": {
-    "pause": "Pause",
-    "play": "Play / resume"
+    "pause": "일시정지",
+    "play": "재생 / 재개"
   }
 }

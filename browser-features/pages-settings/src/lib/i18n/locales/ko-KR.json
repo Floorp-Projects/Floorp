@@ -260,7 +260,7 @@
                 "position": "위치 (실험)",
                 "top": "위",
                 "bottom": "아래",
-                "focusExpand": "초점에서 북마크 표시줄 확장"
+                "focusExpand": "포커스하면 북마크 표시줄 확장"
             }
         }
     },
