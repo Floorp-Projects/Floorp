@@ -117,11 +117,15 @@ export class PanelSidebarElem {
           <SidebarHeader ctx={this.ctx} />
           <BrowserBox />
           <Show when={isFloating()}>
-            <FloatingSplitter />
+            <FloatingSplitter
+              onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
+            />
           </Show>
         </xul:vbox>
         <Show when={!isFloating()}>
-          <SidebarSplitter />
+          <SidebarSplitter
+            onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
+          />
         </Show>
         <SidebarSelectbox ctx={this.ctx} />
       </Show>

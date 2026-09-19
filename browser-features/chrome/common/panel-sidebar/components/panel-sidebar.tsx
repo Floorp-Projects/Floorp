@@ -203,14 +203,17 @@ export class CPanelSidebar {
   }
 
   public saveCurrentSidebarWidth() {
-    const currentWidth = this.sidebarElement?.getAttribute("width");
-    if (currentWidth) {
+    const panelId = selectedPanelId();
+    // Floating resize handles only update CSS width. Use the rendered size for
+    // both kinds of splitter, and only persist a completed, visible resize.
+    const currentWidth = this.sidebarElement?.getBoundingClientRect().width;
+    if (panelId && currentWidth && Number.isFinite(currentWidth)) {
+      const width = Math.round(currentWidth);
+      if (this.getPanelData(panelId)?.width === width) {
+        return;
+      }
       setPanelSidebarData((prev) =>
-        prev.map((panel) =>
-          panel.id === selectedPanelId()
-            ? { ...panel, width: Number(currentWidth) }
-            : panel
-        )
+        prev.map((panel) => panel.id === panelId ? { ...panel, width } : panel)
       );
     }
   }

@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { gFlexOrder } from "../flex-order.tsx";
+import { createRoot } from "solid-js";
 
 import {
   assert,
@@ -10,8 +11,11 @@ import {
 } from "../../../test/utils/test_harness.ts";
 
 const flexOrderStyleId = "floorp-flex-order-style";
+let disposeStyle: (() => void) | undefined;
 
 function cleanupFlexOrderStyle(): void {
+  disposeStyle?.();
+  disposeStyle = undefined;
   document?.getElementById(flexOrderStyleId)?.remove();
 }
 
@@ -50,7 +54,10 @@ function assertStrictlyIncreasing(ids: string[], message: string): void {
 
 function initializeFlexOrder(): string {
   cleanupFlexOrderStyle();
-  gFlexOrder.init();
+  createRoot((dispose) => {
+    disposeStyle = dispose;
+    gFlexOrder.init();
+  });
   const styleText = findFlexOrderStyleText();
   assert(styleText !== undefined, "gFlexOrder.init should inject its style");
   return styleText;
@@ -137,8 +144,11 @@ function testFirefoxOrderingIsNotOverridden(): void {
   ];
 
   for (const selector of firefoxOwnedSelectors) {
+    const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     assert(
-      !styleText.includes(`${selector} {`),
+      !new RegExp(`${escapedSelector}\\s*\\{[^}]*\\border\\s*:`).test(
+        styleText,
+      ),
       `Floorp should not override Firefox-owned order for ${selector}`,
     );
   }
@@ -248,31 +258,40 @@ function testPositionCanBeUpdatedWithoutRenderingAnotherStyle(): void {
 }
 
 export async function runAllTests(): Promise<void> {
-  await runTests("flexOrder.test.ts", [
-    { name: "gFlexOrder exports", fn: testGFlexOrderExports },
-    {
-      name: "init renders flex-order style",
-      fn: testInitRendersFlexOrderStyle,
-    },
-    {
-      name: "Floorp sidebar can be placed at right",
-      fn: testFloorpSidebarAtRight,
-    },
-    {
-      name: "Floorp sidebar can be placed at left",
-      fn: testFloorpSidebarAtLeft,
-    },
-    {
-      name: "Firefox-owned ordering is not overridden",
-      fn: testFirefoxOrderingIsNotOverridden,
-    },
-    {
-      name: "Firefox sidebar group remains coherent",
-      fn: testFirefoxSidebarGroupRemainsCoherent,
-    },
-    {
-      name: "position updates reuse the rendered style",
-      fn: testPositionCanBeUpdatedWithoutRenderingAnotherStyle,
-    },
-  ]);
+  const originalStyle = document.getElementById(flexOrderStyleId);
+  const originalFloorpAtRight = getComputedOrder("panel-sidebar-box") > 0;
+  originalStyle?.remove();
+  try {
+    await runTests("flexOrder.test.ts", [
+      { name: "gFlexOrder exports", fn: testGFlexOrderExports },
+      {
+        name: "init renders flex-order style",
+        fn: testInitRendersFlexOrderStyle,
+      },
+      {
+        name: "Floorp sidebar can be placed at right",
+        fn: testFloorpSidebarAtRight,
+      },
+      {
+        name: "Floorp sidebar can be placed at left",
+        fn: testFloorpSidebarAtLeft,
+      },
+      {
+        name: "Firefox-owned ordering is not overridden",
+        fn: testFirefoxOrderingIsNotOverridden,
+      },
+      {
+        name: "Firefox sidebar group remains coherent",
+        fn: testFirefoxSidebarGroupRemainsCoherent,
+      },
+      {
+        name: "position updates reuse the rendered style",
+        fn: testPositionCanBeUpdatedWithoutRenderingAnotherStyle,
+      },
+    ]);
+  } finally {
+    cleanupFlexOrderStyle();
+    if (originalStyle) document.head.appendChild(originalStyle);
+    gFlexOrder.applyFlexOrder(originalFloorpAtRight);
+  }
 }

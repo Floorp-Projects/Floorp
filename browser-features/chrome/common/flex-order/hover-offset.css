@@ -1,0 +1,12 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+
+/* Leave the collapsed, relative launcher in normal flex flow. Only the
+ * absolute hover launcher needs the space occupied by Floorp's panels. */
+:root[sidebar-expand-on-hover] #sidebar-container:is([sidebar-launcher-expanded], [sidebar-ongoing-animations]) {
+  &:not([sidebar-positionend]) {
+    inset-inline-start: var(--floorp-panel-start-width, 0px);
+  }
+  &[sidebar-positionend] {
+    inset-inline-end: var(--floorp-panel-end-width, 0px);
+  }
+}
