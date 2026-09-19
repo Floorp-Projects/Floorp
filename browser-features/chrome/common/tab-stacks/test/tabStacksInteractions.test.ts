@@ -18,7 +18,11 @@ import {
   assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
-import type { NativeStackBrowser, NativeStackTab } from "./types.ts";
+import type {
+  NativeStackBrowser,
+  NativeStackTab,
+  NativeStackTransfer,
+} from "./types.ts";
 
 const tick = () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -257,7 +261,48 @@ async function testNativeInteractions(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 180));
     };
     scroller().scrollLeft = 0;
+    const nativeTabs = [addTab(), addTab()];
+    gb.selectedTab = nativeTabs[0] as NativeStackTab;
+    gb.addToMultiSelectedTabs(nativeTabs[0]);
+    gb.addToMultiSelectedTabs(nativeTabs[1]);
+    // A constructed DataTransfer cannot append Gecko's second native item.
+    // Exercise the stack's receiving handler with the real first tab and
+    // native selectedTabs instead; OS multi-item drag creation is not mocked.
+    const nativeTransfer = new DataTransfer() as NativeStackTransfer;
+    nativeTransfer.mozSetDataAt(TAB_DROP_TYPE, nativeTabs[0], 0);
+    assert(
+      nativeTabs.every((tab) => tab.multiselected),
+      "Native strip drop starts with both selected tabs",
+    );
+    nativeTransfer.dropEffect = "move";
+    drop(
+      otherGroup.querySelector(".tab-group-label-container")!,
+      nativeTransfer,
+    );
+    await waitFor(
+      () => nativeTabs.every((tab) => tab.group === otherGroup),
+      "Native strip multiselection joins the stack together",
+    );
+    gb.unlockClearMultiSelection?.();
+    gb.clearMultiSelectedTabs?.();
+    gb.selectedTab = tabs[0];
+    await waitFor(
+      () => !!proxy(tabs[0]),
+      "Source stack returns after native join",
+    );
+    gb.addToMultiSelectedTabs(tabs[0]);
+    gb.addToMultiSelectedTabs(tabs[2]);
+    assert(tabs[2].multiselected, "Proxy starts in a native multiselection");
     const reorder = drag(tabs[2]);
+    assert(
+      !tabs[2].multiselected && !tabs[0].multiselected,
+      "Proxy dragging explicitly chooses a single tab",
+    );
+    assertEquals(
+      (tabs[2]._dragData as { movingTabs: StackTab[] }).movingTabs.length,
+      1,
+      "Native payload and moving set agree on one proxy tab",
+    );
     drop(proxy(tabs[0]), reorder.dt);
     await end(reorder.source, reorder.dt);
     assertEquals(
@@ -267,7 +312,7 @@ async function testNativeInteractions(): Promise<void> {
     );
     const join = drag(tabs[2]);
     drop(otherGroup.querySelector(".tab-group-label-container")!, join.dt);
-    await end(join.source, join.dt);
+    // Deliberately omit dragend: the source proxy is removed on this drop.
     await waitFor(
       () => tabs[2].group === otherGroup,
       "Direct proxy drop joins another stack",
@@ -277,8 +322,15 @@ async function testNativeInteractions(): Promise<void> {
       "true",
       "Destination remains a stack",
     );
+    await waitFor(
+      () => !tabs[2]._dragData,
+      "Lost dragend is recovered without the removed proxy",
+    );
     gb.selectedTab = tabs[0];
-    await tick();
+    await waitFor(
+      () => !!proxy(tabs[0]),
+      "Active stack synchronization resumes after lost dragend",
+    );
     const eject = drag(tabs[1]);
     drop(gb.tabContainer, eject.dt, true);
     await end(eject.source, eject.dt);
@@ -302,11 +354,24 @@ async function testNativeInteractions(): Promise<void> {
     const transfer = drag(tabs[4]);
     const previousCount = destination.tabs.length;
     drop(destination.tabContainer, transfer.dt, true);
-    await end(transfer.source, transfer.dt);
     await waitFor(
       () =>
         !tabs[4].isConnected && destination.tabs.length === previousCount + 1,
       "Native cross-window drop adopts the proxy tab",
+    );
+    await waitFor(
+      () => !tabs[4]._dragData,
+      "Foreign native drop without dragend cleans the source payload",
+    );
+    gb.selectedTab = otherTabs[0];
+    await waitFor(
+      () => !!proxy(otherTabs[0]),
+      "Foreign drop without dragend releases the source active-stack freeze",
+    );
+    gb.selectedTab = tabs[0];
+    await waitFor(
+      () => !!proxy(tabs[0]),
+      "Source stack can be reselected after adoption",
     );
     assert(
       tabs[0].isConnected && tabs[0].group === group,
@@ -319,17 +384,26 @@ async function testNativeInteractions(): Promise<void> {
       () => destinationGroup.hasAttribute(STACK_ATTR),
       "Second window presents its stack",
     );
+    gb.addToMultiSelectedTabs(tabs[6]);
+    gb.addToMultiSelectedTabs(tabs[8]);
     const chipTransfer = drag(tabs[6]);
     drop(
       destinationGroup.querySelector(".tab-group-label-container")!,
       chipTransfer.dt,
     );
-    await end(chipTransfer.source, chipTransfer.dt);
     await waitFor(
       () =>
         !tabs[6].isConnected &&
         destinationGroup.tabs.length === previousCount + 2,
       "Proxy joins another window's stack directly",
+    );
+    assert(
+      tabs[8].isConnected && tabs[8].group === group,
+      "Other previously selected tabs stay in their source stack",
+    );
+    await waitFor(
+      () => !tabs[6]._dragData,
+      "Cross-window chip join recovers without source dragend",
     );
     const barTransfer = drag(tabs[7]);
     const destinationScroller = otherWindow.document.getElementById(
@@ -349,6 +423,8 @@ async function testNativeInteractions(): Promise<void> {
 
     // Finish an unhandled drop outside the toolbox through Firefox's real
     // detach handler, including screen geometry and new-window adoption.
+    gb.addToMultiSelectedTabs(tabs[5]);
+    gb.addToMultiSelectedTabs(tabs[9]);
     const detach = drag(tabs[5]);
     detach.dt.dropEffect = "none";
     const screenX = window.screenX + 100;
@@ -376,6 +452,10 @@ async function testNativeInteractions(): Promise<void> {
       if (candidate !== window && !candidate.closed) otherWindow = candidate;
     }
     assert(otherWindow, "Detach created a second browser window");
+    assert(
+      tabs[9].isConnected && tabs[9].group === group,
+      "Proxy detach leaves other previously selected tabs in the source stack",
+    );
   } finally {
     otherWindow?.close();
     for (const tab of created) {

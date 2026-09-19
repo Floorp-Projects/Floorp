@@ -12,6 +12,7 @@ import {
   Show,
 } from "solid-js";
 import styles from "./styles.css?inline";
+import { proxyDragLifecycle } from "./proxy-drag.ts";
 import type {
   StackDataTransfer,
   StackDragController,
@@ -21,7 +22,6 @@ import type {
 /** Drag data type used by row-2 proxy drags (reorder / eject). */
 export const PROXY_DRAG_TYPE = "application/x-floorp-stack-tab";
 export const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
-export const PROXY_DRAG_END_EVENT = "floorp-stack-proxy-dragend";
 /** Attribute stamped on every `tab-group` this feature presents as a stack. */
 export const STACK_ATTR = "data-floorp-stack";
 /** Per-tab drag identity attribute (stable for the tab's whole life). */
@@ -40,6 +40,7 @@ export type StackTab = XULElement & {
   hidden?: boolean;
   closing?: boolean;
   multiselected?: boolean;
+  _dragData?: object;
   isConnected?: boolean;
   linkedBrowser?: {
     currentURI?: { spec?: string };
@@ -65,6 +66,8 @@ export type TabBrowser = {
   removeTabs?: (tabs: StackTab[], opts?: Record<string, unknown>) => void;
   addTab: (url: string, opts: Record<string, unknown>) => StackTab;
   ungroupTab?: (tab: StackTab) => void;
+  clearMultiSelectedTabs?: () => void;
+  unlockClearMultiSelection?: () => void;
   reloadTab?: (tab: StackTab) => void;
   moveTabBefore?: (
     tab: StackTab | StackGroup,
@@ -230,11 +233,26 @@ function StackTabProxy(props: { tab: StackTab }) {
       onDragStart={(event: DragEvent) => {
         // Use the same native entry point as the all-tabs list. Native tab
         // data MUST be the first flavor for cross-window drops and detach.
-        getGBrowser()?.tabContainer.tabDragAndDrop?.startTabDrag(
+        const gb = getGBrowser();
+        const controller = gb?.tabContainer.tabDragAndDrop;
+        // Proxies represent one member. Clear native multiselection so both
+        // the transfer and native movingTabs/detach paths move only that tab.
+        if (props.tab.multiselected) {
+          gb?.unlockClearMultiSelection?.();
+          gb?.clearMultiSelectedTabs?.();
+        }
+        controller?.startTabDrag(
           event,
           props.tab,
           { fromTabList: true },
         );
+        if (controller) {
+          proxyDragLifecycle.begin(
+            props.tab,
+            event.currentTarget as Element,
+            controller,
+          );
+        }
         event.dataTransfer?.setData(PROXY_DRAG_TYPE, getTabDragId(props.tab));
         if (event.dataTransfer) {
           event.dataTransfer.effectAllowed = "move";
@@ -251,15 +269,7 @@ function StackTabProxy(props: { tab: StackTab }) {
         }
       }}
       onDragEnd={(event: DragEvent) => {
-        try {
-          getGBrowser()?.tabContainer.tabDragAndDrop?.handle_dragend(event);
-        } finally {
-          // Adoption/joining can remove the source proxy before dragend, so
-          // that event no longer bubbles to the window's drag-state listener.
-          if (!(event.currentTarget as Element)?.isConnected) {
-            dispatchEvent(new Event(PROXY_DRAG_END_EVENT));
-          }
-        }
+        proxyDragLifecycle.end(props.tab, event);
       }}
       onClick={(event: MouseEvent) => {
         if (event.button !== 0) return;

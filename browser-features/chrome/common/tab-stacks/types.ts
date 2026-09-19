@@ -13,6 +13,30 @@ export type StackDragController = {
   ): void;
   handle_dragend(event: DragEvent): void;
   getDropEffectForTabDrag(event: DragEvent): string;
+  finishMoveTogetherSelectedTabs(tab: StackTab): void;
+  finishAnimateTabMove(): void;
+  _resetTabsAfterDrop(tab: StackTab): void;
+};
+
+export type ProxyDragTransaction = {
+  tab: StackTab;
+  source: Element;
+  controller: StackDragController;
+  data: object;
+  sawSession: boolean;
+  dropped: boolean;
+};
+
+export type ProxyDragEnvironment = {
+  readSession(): unknown;
+  schedule(callback: () => void): number;
+  cancel(timer: number): void;
+  finished(): void;
+};
+
+// The runtime takes the source window; the generated Gecko type predates it.
+export type ProxyDragService = {
+  getCurrentSession(window: Window): nsIDragSession | null;
 };
 
 export type StackDataTransfer = DataTransfer & {

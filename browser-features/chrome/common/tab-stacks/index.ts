@@ -18,7 +18,6 @@ import {
   getGBrowser,
   getGroupDisplayTitle,
   isVerticalTabMode,
-  PROXY_DRAG_END_EVENT,
   PROXY_DRAG_TYPE,
   rememberSelection,
   STACK_ATTR,
@@ -31,6 +30,7 @@ import {
   TAB_DROP_TYPE,
   type TabBrowser,
 } from "./stack-bar.tsx";
+import { PROXY_DRAG_END_EVENT, proxyDragLifecycle } from "./proxy-drag.ts";
 
 export const ENABLED_PREF = "floorp.tabstacks.enabled";
 export const GROUP_KINDS_PREF = "floorp.tabstacks.groupKinds";
@@ -323,6 +323,11 @@ export default class TabStacks extends NoraComponentBase {
     let lastDropPoint: { x: number; y: number } | null = null;
     let lastTabDropTime = 0;
     let lastProxyStripScroll = 0;
+    let endDragTimer: ReturnType<typeof setTimeout> | null = null;
+    onCleanup(() => {
+      if (endDragTimer !== null) clearTimeout(endDragTimer);
+      proxyDragLifecycle.dispose();
+    });
 
     // ==== live rebuild triggers ====
     const onTabEvent = (event: Event) => {
@@ -644,10 +649,13 @@ export default class TabStacks extends NoraComponentBase {
       if (
         t?.closest?.(".tabbrowser-tab") || t?.closest?.(".floorp-stack-tab")
       ) {
+        if (endDragTimer !== null) clearTimeout(endDragTimer);
+        endDragTimer = null;
         tabDragActive = true;
       }
     };
     const onAnyDrop = (event: DragEvent) => {
+      proxyDragLifecycle.noteDrop(getDraggedTab(event));
       // Record every TAB drop, not only drags that started in this window:
       // a drop from ANOTHER window adopts the tab here and can land it
       // inside a stack's neighbourhood — it must pass the same on-chip
@@ -665,7 +673,9 @@ export default class TabStacks extends NoraComponentBase {
       clearChipHighlight();
       // TabGrouped from a drop arrives before dragend; clear on a delay,
       // then reconcile the bar with wherever selection actually landed.
-      setTimeout(() => {
+      if (endDragTimer !== null) clearTimeout(endDragTimer);
+      endDragTimer = setTimeout(() => {
+        endDragTimer = null;
         tabDragActive = false;
         lastDropPoint = null;
         updateGroupChips(gb);
@@ -737,11 +747,19 @@ export default class TabStacks extends NoraComponentBase {
       // Adopt after the native drag machinery settles.
       setTimeout(() => {
         try {
-          group.addTabs(joining);
+          // Native addTabs can adopt too, but retain the destination objects
+          // here so subsequent scrolling never uses a detached source tab.
+          const adopted = joining.map((tab) =>
+            tab.ownerDocument === document ? tab : gb.adoptTab?.(tab, {
+              tabIndex: gb.tabs.length,
+              selectTab: tab.selected,
+            })
+          ).filter((tab): tab is StackTab => !!tab);
+          group.addTabs(adopted);
           updateGroupChips(gb);
           syncActiveGroup();
           bumpStacksVersion();
-          scrollProxyIntoView(src);
+          if (adopted[0]) scrollProxyIntoView(adopted[0]);
         } catch (e) {
           console.error("[tab-stacks] chip drop join failed:", e);
         }
