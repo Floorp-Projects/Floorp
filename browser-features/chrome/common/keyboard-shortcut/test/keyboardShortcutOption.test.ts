@@ -21,7 +21,19 @@ function testOptionAndAltGr(): void {
         ) {
           // Option can change key to a symbol or Dead; code remains physical
           // on US and non-US layouts. The saved shortcut must use that code.
-          for (const key of ["π", "Dead", "å"]) {
+          for (
+            const { key, code, textInput } of [
+              { key: "π", code: "KeyP", textInput: true },
+              { key: "Dead", code: "KeyP", textInput: true },
+              { key: "å", code: "KeyP", textInput: true },
+              { key: "😀", code: "KeyP", textInput: true },
+              { key: "ḍ\u0307", code: "KeyP", textInput: true },
+              { key: "👩‍💻", code: "KeyP", textInput: true },
+              { key: "ArrowLeft", code: "ArrowLeft", textInput: false },
+              { key: "Backspace", code: "Backspace", textInput: false },
+              { key: "F1", code: "F1", textInput: false },
+            ]
+          ) {
             const ctrl = chord === "ctrl-option";
             const meta = chord === "cmd-option";
             const shift = chord === "shift-option";
@@ -30,7 +42,7 @@ function testOptionAndAltGr(): void {
               enabled: true,
               shortcuts: {
                 option: {
-                  key: "KeyP",
+                  key: code,
                   modifiers: { alt: true, ctrl, meta, shift },
                   action,
                 },
@@ -56,10 +68,10 @@ function testOptionAndAltGr(): void {
             );
             try {
               const expected = platform === "macosx" &&
-                (focus === "page" || ctrl || meta);
+                (focus === "page" || ctrl || meta || !textInput);
               const event = new KeyboardEvent("keydown", {
                 key,
-                code: "KeyP",
+                code,
                 altKey: true,
                 ctrlKey: ctrl,
                 metaKey: meta,
@@ -75,7 +87,7 @@ function testOptionAndAltGr(): void {
 
               const composing = new KeyboardEvent("keydown", {
                 key,
-                code: "KeyP",
+                code,
                 altKey: true,
                 ctrlKey: ctrl,
                 metaKey: meta,

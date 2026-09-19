@@ -9,6 +9,7 @@ import type { ShortcutConfig } from "./type.ts";
 import {
   isBarePrintableKeyEvent,
   isKeyboardShortcutTypingContext,
+  isPrintableKeyValue,
   type KeyboardShortcutFocusStoreReader,
 } from "./editable-focus.ts";
 
@@ -92,7 +93,7 @@ export class KeyboardShortcutController {
       (isBarePrintableKeyEvent(event) ||
         (this.platform === "macosx" && event.altKey &&
           !event.ctrlKey && !event.metaKey &&
-          (event.key.length === 1 || event.key === "Dead"))) &&
+          (isPrintableKeyValue(event.key) || event.key === "Dead"))) &&
       isKeyboardShortcutTypingContext(
         this.targetWindow,
         this.remoteFocusStore,

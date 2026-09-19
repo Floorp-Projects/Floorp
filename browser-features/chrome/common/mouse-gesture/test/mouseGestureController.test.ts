@@ -2287,7 +2287,138 @@ async function testContextMenuBeforeMouseUpPreservesGesture(): Promise<void> {
   }
 }
 
+async function testEarlyContextMenuAllowsOrdinaryRightClick(): Promise<void> {
+  for (const buttons of [0, 2]) {
+    for (const distance of [0, defaultConfig.contextMenu.minDistance - 1]) {
+      await withTrackedActions(async (counts) => {
+        await withController({}, ({ win, pendingTimerCount }) => {
+          dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+          dispatchMouse(win, "mousemove", 0, distance, 0, 2);
+          const menu = dispatchMouse(
+            win,
+            "contextmenu",
+            2,
+            distance,
+            0,
+            buttons,
+          );
+          assertEquals(
+            menu.defaultPrevented,
+            false,
+            "a stationary or sub-threshold right click must retain its only menu event",
+          );
+          assertEquals(
+            dispatchMouse(win, "mouseup", 2, distance, 0).defaultPrevented,
+            false,
+            "ordinary release remains passive",
+          );
+          assertEquals(
+            pendingTimerCount(),
+            0,
+            "ordinary clicks must not schedule suppression",
+          );
+          for (const action of TRACKED_ACTIONS) {
+            assertEquals(
+              counts[action],
+              0,
+              "ordinary clicks must not execute actions",
+            );
+          }
+        });
+      });
+    }
+  }
+}
+
+async function testEarlyContextMenuKeepsWheelAndRockerSuppression(): Promise<
+  void
+> {
+  for (const buttons of [0, 2]) {
+    await withTrackedActions(async (counts) => {
+      await withController({}, ({ win, runAllTimers }) => {
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchWheel(win, 120, 2);
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2, 0, 0, buttons).defaultPrevented,
+          true,
+          "unmoved wheel gesture still owns the menu",
+        );
+        dispatchMouse(win, "mouseup", 2);
+        assertEquals(counts[NEXT_TAB_ACTION], 1, "wheel action executes once");
+        runAllTimers();
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchMouse(win, "mousedown", 0, 0, 0, 3);
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2, 0, 0, buttons).defaultPrevented,
+          true,
+          "unmoved rocker still owns the menu",
+        );
+        dispatchMouse(win, "mouseup", 2, 0, 0, 1);
+        dispatchMouse(win, "mouseup", 0);
+        assertEquals(
+          counts[ROCKER_RIGHT_LEFT_ACTION],
+          1,
+          "rocker action executes once",
+        );
+      });
+    });
+  }
+}
+
+async function testHeldButtonContinuesAfterEarlyMenu(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({
+      actions: [{ pattern: ["right"], action: DRAWN_RIGHT_ACTION }],
+    }, ({ win, runAllTimers }) => {
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      const menu = dispatchMouse(win, "contextmenu", 2, 0, 0, 2);
+      assertEquals(
+        menu.defaultPrevented,
+        false,
+        "allow an early stationary menu",
+      );
+      // The page can cancel the menu without releasing the physical button.
+      menu.preventDefault();
+      dispatchMouse(win, "mousedown", 0, 0, 0, 3);
+      dispatchMouse(win, "mouseup", 2, 0, 0, 1);
+      dispatchMouse(win, "mouseup", 0);
+      assertEquals(
+        counts[ROCKER_RIGHT_LEFT_ACTION],
+        1,
+        "the held right button still anchors a rocker",
+      );
+      runAllTimers();
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      dispatchMouse(win, "contextmenu", 2, 0, 0, 2).preventDefault();
+      dispatchDrag(win, 160, 0);
+      assertEquals(
+        dispatchMouse(win, "contextmenu", 2, 160, 0, 2).defaultPrevented,
+        true,
+        "movement past the threshold now suppresses a menu",
+      );
+      dispatchMouse(win, "mouseup", 2, 160, 0);
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        1,
+        "a drag can continue after the page cancels the early menu",
+      );
+    });
+  });
+}
+
 const tests: TestCase[] = [
+  {
+    name: "held right button survives a page-cancelled early contextmenu",
+    fn: testHeldButtonContinuesAfterEarlyMenu,
+  },
+  {
+    name: "early contextmenu preserves ordinary right clicks",
+    fn: testEarlyContextMenuAllowsOrdinaryRightClick,
+  },
+  {
+    name: "early contextmenu still suppresses wheel and rocker menus",
+    fn: testEarlyContextMenuKeepsWheelAndRockerSuppression,
+  },
   {
     name: "native contextmenu before mouseup preserves the drawn gesture",
     fn: testContextMenuBeforeMouseUpPreservesGesture,
