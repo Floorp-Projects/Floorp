@@ -12,167 +12,78 @@ import {
   setEnabled,
 } from "./config.ts";
 import { MouseGestureController } from "./controller.ts";
+import { handleContextMenuAfterMouseUp } from "./context-menu-policy.ts";
 import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { createEffect, createRoot, onCleanup } from "solid-js";
+import type { MouseGestureWindow } from "./types.ts";
 
-interface nsIObserver {
-  observe(subject: unknown, topic: string, data: string): void;
-}
-
-/**
- * MouseGestureService manages the lifecycle of gesture controllers across windows.
- */
+/** Each browser window owns the service and controller loaded in its realm. */
 export class MouseGestureService {
-  private controllers: Map<Window, MouseGestureController> = new Map();
+  private controller: MouseGestureController | null = null;
   private lastConfigString = "";
-  private configObserver: nsIObserver | null = null;
+  private disposed = true;
+  private disposeRoot: (() => void) | null = null;
 
-  constructor() {
-    this.initialize();
+  constructor(private readonly targetWindow: MouseGestureWindow = window) {
+    // An asynchronous feature import can finish after a detached window closes.
+    if (targetWindow.closed) return;
+    this.disposed = false;
 
-    // React to config changes
-    createEffect(() => {
-      const config = getConfig();
-      const configString = JSON.stringify(config);
-      const enabled = isEnabled();
+    this.disposeRoot = createRoot((dispose) => {
+      targetWindow.addEventListener("unload", dispose, { once: true });
+      onCleanup(() => {
+        this.disposed = true;
+        targetWindow.removeEventListener("unload", dispose);
+        this.destroyController();
+      });
 
-      if (this.lastConfigString && this.lastConfigString !== configString) {
-        // Recreate controllers when config changes
-        this.destroyAllControllers();
-        if (enabled) {
-          this.attachToAllWindows();
+      // config.ts already observes both preferences. Keep a single local
+      // subscription instead of a second process-wide preference observer.
+      createEffect(() => {
+        const configString = JSON.stringify(getConfig());
+        const enabled = isEnabled();
+        if (this.disposed || targetWindow.closed) return;
+
+        if (this.lastConfigString && this.lastConfigString !== configString) {
+          this.destroyController();
         }
+        this.lastConfigString = configString;
+        if (enabled) this.attachToWindow(targetWindow);
+        else this.destroyController();
         handleContextMenuAfterMouseUp(enabled);
-      }
-
-      this.lastConfigString = configString;
+      });
+      return dispose;
     });
 
-    // React to enabled state changes
-    createEffect(() => {
-      const enabled = isEnabled();
-      if (enabled) {
-        this.attachToAllWindows();
-      } else {
-        this.destroyAllControllers();
-      }
-      handleContextMenuAfterMouseUp(enabled);
-    });
-
-    this.setupEnabledObserver();
-  }
-
-  private attachToAllWindows(): void {
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const win = windows.getNext() as Window;
-      this.attachToWindow(win);
-    }
+    // The enclosing createRootHMR disposes this service on a module update.
+    onCleanup(() => this.destroy());
   }
 
   public attachToWindow(win: Window): void {
-    // Check if this window already has a controller registered from ANY context
-    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
-    // deno-lint-ignore no-explicit-any
-    if ((win as any).__mouseGestureControllerAttached === true) {
-      return;
-    }
+    if (
+      this.disposed || win !== this.targetWindow || win.closed ||
+      this.controller || !isEnabled()
+    ) return;
 
-    if (this.controllers.has(win)) {
-      return;
-    }
-
-    if (isEnabled()) {
-      const controller = new MouseGestureController(win);
-      this.controllers.set(win, controller);
-
-      // Mark the window as having a controller attached
-      // deno-lint-ignore no-explicit-any
-      (win as any).__mouseGestureControllerAttached = true;
-
-      const onUnload = () => {
-        controller.destroy();
-        this.controllers.delete(win);
-        // Clean up the marker when the window is closed
-        try {
-          // deno-lint-ignore no-explicit-any
-          delete (win as any).__mouseGestureControllerAttached;
-        } catch (_e) {
-          // Window might be already gone
-        }
-        try {
-          win.removeEventListener("unload", onUnload);
-        } catch (_e) {
-          // Window might be already gone
-        }
-      };
-
-      win.addEventListener("unload", onUnload, { once: true });
-    }
+    this.controller = new MouseGestureController(win);
+    // This marker is diagnostic only; another realm cannot reserve this window.
+    this.targetWindow.__mouseGestureControllerAttached = true;
   }
 
-  private destroyAllControllers(): void {
-    for (const [win, controller] of this.controllers.entries()) {
+  private destroyController(): void {
+    if (!this.controller) return;
+    const controller = this.controller;
+    this.controller = null;
+    try {
       controller.destroy();
-      // Clean up the marker
-      try {
-        // deno-lint-ignore no-explicit-any
-        delete (win as any).__mouseGestureControllerAttached;
-      } catch (_e) {
-        // Window might be already gone
-      }
+    } finally {
+      delete this.targetWindow.__mouseGestureControllerAttached;
     }
-    this.controllers.clear();
   }
 
-  private setupEnabledObserver(): void {
-    if (this.configObserver) {
-      try {
-        Services.prefs.removeObserver(
-          "floorp.mousegesture.enabled",
-          this.configObserver,
-        );
-      } catch (e) {
-        console.error("[MouseGestureService] Error removing observer:", e);
-      }
-    }
-
-    this.configObserver = {
-      observe: (_subject: unknown, topic: string, data: string) => {
-        if (
-          topic === "nsPref:changed" &&
-          data === "floorp.mousegesture.enabled"
-        ) {
-          const enabled = Services.prefs.getBoolPref(
-            "floorp.mousegesture.enabled",
-            false,
-          );
-
-          if (enabled) {
-            this.attachToAllWindows();
-          } else {
-            this.destroyAllControllers();
-          }
-
-          handleContextMenuAfterMouseUp(enabled);
-        }
-      },
-    };
-
-    Services.prefs.addObserver(
-      "floorp.mousegesture.enabled",
-      this.configObserver,
-    );
-  }
-
-  private initialize(): void {
-    this.lastConfigString = JSON.stringify(getConfig());
-    const enabled = isEnabled();
-
-    if (enabled) {
-      this.attachToAllWindows();
-    }
-    handleContextMenuAfterMouseUp(enabled);
+  public destroy(): void {
+    this.disposeRoot?.();
+    this.disposeRoot = null;
   }
 
   public isEnabled(): boolean {
@@ -180,15 +91,7 @@ export class MouseGestureService {
   }
 
   public setEnabled(value: boolean): void {
-    setEnabled(value);
-
-    if (value) {
-      this.attachToAllWindows();
-    } else {
-      this.destroyAllControllers();
-    }
-
-    handleContextMenuAfterMouseUp(value);
+    if (!this.disposed) setEnabled(value);
   }
 
   public getConfig(): MouseGestureConfig {
@@ -196,12 +99,7 @@ export class MouseGestureService {
   }
 
   public updateConfig(newConfig: MouseGestureConfig): void {
-    setConfig(newConfig);
-
-    this.destroyAllControllers();
-    if (isEnabled()) {
-      this.attachToAllWindows();
-    }
+    if (!this.disposed) _setConfig(newConfig);
   }
 
   public patternToDisplayString(pattern: GesturePattern): string {
@@ -220,52 +118,7 @@ export class MouseGestureService {
   }
 }
 
-function setConfig(config: MouseGestureConfig) {
-  _setConfig(config);
-}
-
-function createMouseGestureService() {
-  return new MouseGestureService();
-}
-
-const PREF_LAST_ENABLED_STATE = "floorp.mousegesture.last_enabled_state";
-
-let lastEnabledState: boolean | null = null;
-
-// Initialize from pref if it exists
-try {
-  if (
-    Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) ===
-    Services.prefs.PREF_BOOL
-  ) {
-    lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
-  }
-} catch (e) {
-  console.log(
-    "[MouseGestureService] Could not read last enabled state pref:",
-    e,
-  );
-}
-
-function handleContextMenuAfterMouseUp(enabled: boolean) {
-  if (Services.appinfo.OS === "WINNT") return;
-
-  if (lastEnabledState === enabled) return;
-
-  Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
-  lastEnabledState = enabled;
-
-  try {
-    Services.prefs.setBoolPref(PREF_LAST_ENABLED_STATE, enabled);
-  } catch (e) {
-    console.error(
-      "[MouseGestureService] Failed to save last enabled state:",
-      e,
-    );
-  }
-}
-
 export const mouseGestureService = createRootHMR(
-  createMouseGestureService,
+  () => new MouseGestureService(),
   import.meta.hot,
 );

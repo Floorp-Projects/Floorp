@@ -719,13 +719,29 @@ export class MouseGestureController {
       return;
     }
 
-    // Keyboard context-menu input (or any other event with no physical right
-    // button) must not remain blocked by a gesture whose releases were lost.
+    // On press-time platforms this can be the click's only menu event.
+    // Merely holding the secondary button is not yet a drawn gesture. Keep
+    // ordinary clicks available even when policy locks the native timing pref.
     if (
-      ((this.isGestureActive || this.isWheelGestureFired) &&
+      event.button === 2 && this.isGestureActive &&
+      !this.isWheelGestureFired && !this.isRockerGestureFired &&
+      this.getTotalMovement() < this.getActivationDistance()
+    ) {
+      // A page may cancel this menu and continue the held-button interaction
+      // with a drag or rocker. Only the real release/interruption ends it.
+      return;
+    }
+
+    // A mouse contextmenu can precede the matching mouseup while reporting
+    // buttons=0 (native dispatch samples physical state separately). It is
+    // not evidence of a lost release: preserve the trail until mouseup.
+    // Keyboard context-menu input must still recover a stale gesture.
+    if (
+      event.button !== 2 &&
+      (((this.isGestureActive || this.isWheelGestureFired) &&
         !this.isRockerGestureFired &&
         !this.isSecondaryButtonPhysicallyDown(event)) ||
-      (this.isRockerGestureFired && event.buttons === 0)
+        (this.isRockerGestureFired && event.buttons === 0))
     ) {
       this.resetInteractionState();
     }

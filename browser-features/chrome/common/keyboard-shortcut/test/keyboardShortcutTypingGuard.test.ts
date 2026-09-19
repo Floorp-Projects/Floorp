@@ -293,8 +293,29 @@ function testNonPrintableCommandRemainsActiveWhileRemoteTyping(): void {
   });
 }
 
+function testUnicodePrintableKeys(): void {
+  for (const key of ["😀", "ḍ\u0307", "👩‍💻", "\u0307", " "]) {
+    assertEquals(
+      isBarePrintableKeyEvent(predicateEvent({ key })),
+      true,
+      `text key ${key} must be protected`,
+    );
+  }
+  for (const key of ["", "Enter", "ArrowLeft", "F1", "\n", "\u007f"]) {
+    assertEquals(
+      isBarePrintableKeyEvent(predicateEvent({ key })),
+      false,
+      `non-text key ${key} is not a text shortcut`,
+    );
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name: "Unicode graphemes are printable keys",
+      fn: testUnicodePrintableKeys,
+    },
     {
       name: "bare printable predicate is exact",
       fn: testBarePrintablePredicateIsExact,

@@ -11,12 +11,23 @@ type ChromeFocusElement = Element & {
   isContentEditable?: boolean;
 };
 
+const keySegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/** Text keys can contain surrogate pairs, combining marks or joined emoji. */
+export function isPrintableKeyValue(key: string): boolean {
+  if (!key || /\p{Cc}/u.test(key)) return false;
+  const segments = keySegmenter.segment(key)[Symbol.iterator]();
+  segments.next();
+  // Named keys (ArrowLeft, F1, etc.) consist of multiple graphemes.
+  return segments.next().done === true;
+}
+
 /**
- * Bare printable key events are the only events the typing guard suppresses.
+ * Identify unmodified text input for the editable typing guard.
  * Matching still uses KeyboardEvent.code in the controller.
  */
 export function isBarePrintableKeyEvent(event: KeyboardEvent): boolean {
-  return event.key.length === 1 &&
+  return isPrintableKeyValue(event.key) &&
     !event.altKey &&
     !event.ctrlKey &&
     !event.metaKey &&

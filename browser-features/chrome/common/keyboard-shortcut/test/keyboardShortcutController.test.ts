@@ -1439,7 +1439,7 @@ function testAltGraphIsNotCtrlAlt(): void {
     };
     applyTestConfig(config);
     const fakeWin = createFakeWindow();
-    const controller = new KeyboardShortcutController(fakeWin);
+    const controller = new KeyboardShortcutController(fakeWin, null, "win");
     const event = dispatchKeyEvent(fakeWin, "keydown", {
       code: "KeyZ",
       ctrlKey: true,
