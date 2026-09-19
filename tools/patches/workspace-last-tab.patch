@@ -1,0 +1,26 @@
+diff --git a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+--- a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -6469,3 +6469,22 @@ export class Tabbrowser {
++      // Floorp: defer only for tabs hidden in a different Floorp workspace.
++      // Extension-hidden tabs in this workspace retain native close behavior;
++      // browser.tabs.closeWindowWithLastTab must remain the user's preference.
++      const floorpWorkspaceId = aTab.getAttribute("floorpWorkspaceId");
++      if (
++        Services.prefs.getBoolPref("floorp.workspaces.enabled", true) &&
++        floorpWorkspaceId &&
++        this.tabs.some(
++          tab =>
++            tab != aTab &&
++            tab.isOpen &&
++            tab.hidden &&
++            tab.getAttribute("floorpWorkspaceId") &&
++            tab.getAttribute("floorpWorkspaceId") != floorpWorkspaceId
++        )
++      ) {
++        closeWindow = false;
++      }
++
+       if (closeWindow) {
+         // We've already called beforeunload on all the relevant tabs if we get here,
+         // so avoid calling it again:
