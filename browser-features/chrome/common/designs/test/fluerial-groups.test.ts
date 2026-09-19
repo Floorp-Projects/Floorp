@@ -22,11 +22,34 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
   const verticalPref = "sidebar.verticalTabs";
   const hadVerticalPref = Services.prefs.prefHasUserValue(verticalPref);
   const wasVertical = Services.prefs.getBoolPref(verticalPref, false);
+  const designPref = "floorp.design.configs";
+  const hadDesignPref = Services.prefs.prefHasUserValue(designPref);
+  const savedDesign = Services.prefs.getStringPref(designPref, "{}");
   // Load the Fluerial tab styles over native Firefox tabs: a detached DOM
   // cannot expose the paint-order bug.
   style.textContent = GECKO_152_VAR_ALIASES_CSS + fluerial +
     TAB_COLOR_LIKE_TOOLBAR_CSS + FLUERIAL_TAB_CORNER_CSS;
   try {
+    const design: unknown = JSON.parse(savedDesign);
+    assert(
+      typeof design === "object" && design !== null,
+      "Design config must be an object",
+    );
+    const globalConfigs = "globalConfigs" in design &&
+        typeof design.globalConfigs === "object" &&
+        design.globalConfigs !== null
+      ? design.globalConfigs
+      : {};
+    // The full test runner has a live design renderer. Layering Fluerial over
+    // Lepton leaves Lepton's selected-tab drop-shadow filter in place, which
+    // creates a stacking context and hides the line regardless of our fix.
+    Services.prefs.setStringPref(
+      designPref,
+      JSON.stringify({
+        ...design,
+        globalConfigs: { ...globalConfigs, userInterface: "fluerial" },
+      }),
+    );
     Services.prefs.setBoolPref(verticalPref, false);
     document.head!.append(style);
     for (let i = 0; i < 3; i++) {
@@ -52,6 +75,11 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
       assert(element, "Native tabs must contain a group line");
       return element;
     };
+    assert(
+      getComputedStyle(tabs[0].querySelector(".tab-background")!)!.filter ===
+        "none",
+      "The Fluerial fixture must not inherit another design's drop-shadow filter",
+    );
     if (!checkHover) {
       // The selected .tab-content previously painted over the group's line.
       // Hit testing checks actual stacking, rather than a z-index declaration.
@@ -106,6 +134,11 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
     style.remove();
     if (hadVerticalPref) Services.prefs.setBoolPref(verticalPref, wasVertical);
     else Services.prefs.clearUserPref(verticalPref);
+    if (hadDesignPref) Services.prefs.setStringPref(designPref, savedDesign);
+    else Services.prefs.clearUserPref(designPref);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
   }
 }
 
