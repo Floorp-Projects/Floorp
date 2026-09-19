@@ -224,7 +224,7 @@
     "introduction": "このガイドでは、Floorp の機能と初期設定をご案内します。",
     "start": "セットアップを開始",
     "next": "次に、表示言語を確認します。",
-    "progress": "ステップ {{current}} / {{total}}",
+    "progress": "セットアップ {{current}} / {{total}}",
     "title": "このガイドの内容",
     "subtitle": "各種機能を試して、ご自身に合う設定をお選びください。",
     "discover": {

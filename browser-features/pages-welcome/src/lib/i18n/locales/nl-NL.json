@@ -103,26 +103,26 @@
     "openHub": "Open Floorp Hub",
     "openPreferences": "Open de Firefox-instellingen",
     "newTab": "Opent in nieuw tabblad.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
+    "hubAddress": "Je kunt ook about:hub invoeren in de adresbalk.",
+    "customizeTitle": "Je eerste instellingen",
+    "searchHint": "Gebruikt bij zoeken vanuit de adresbalk.",
     "supportTitle": "Releaseopmerkingen na updates",
-    "scopeTitle": "Scope when allowing advertising",
-    "summaryTitle": "Review your settings",
+    "scopeTitle": "Bereik van toegestane advertenties",
+    "summaryTitle": "Controleer je instellingen",
     "change": "Wijzigen",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "Stel Floorp in als je standaardbrowser",
+    "defaultHint": "Stel links in om te openen in Floorp.",
+    "getStarted": "Start met Floorp",
+    "finishNotice": "“Start met Floorp” bevestigt je keuze voor de releaseopmerkingen."
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "Een nieuwe keuze.\nOndersteun wat hierna komt.",
+      "description": "Advertentie-inkomsten ondersteunen de ontwikkeling en werking van Floorp. Je kunt nu kiezen hoe releaseopmerkingen openen en hoe blokkeerders werken op de Floorp-blog.",
+      "hint": "Je instellingen blijven ongewijzigd tot je een selectie opslaat. Je kunt dit later aanpassen bij Updates & Experimenten.",
+      "choiceTitle": "Kies hoe releaseopmerkingen openen",
+      "choiceDescription": "Kies voor automatische weergave na updates en bepaal hoe uw blokkeerders werken op de Floorp-blog.",
+      "dismiss": "Nu niet"
     },
     "learnMore": "Lees meer over onze financiering en deze instelling (Japans)",
     "title": "Releaseopmerkingen en het steunen van Floorp",
@@ -140,7 +140,7 @@
       "description": "Beperk uBlock Origin, AdGuard, Adblock Plus, AdBlock en Ghostery op de Floorp-blog."
     },
     "scope": "De beperking is van toepassing op alle HTTPS-pagina's op blog.floorp.app, inclusief handmatig geopende pagina's, en heeft zowel invloed op trackingbescherming en aangepaste filters als op het blokkeren van advertenties. Andere extensies worden niet beperkt door deze instelling. Advertenties kunnen nog steeds worden geblokkeerd door andere beschermingsmiddelen. Herlaad geopende blogpagina's na het wijzigen van de instelling.",
-    "currentSetting": "Current setting: {{mode}}",
+    "currentSetting": "Huidige instelling: {{mode}}",
     "applyOnConfirm": "Je selectie wordt pas van kracht nadat je deze bevestigt. Als je deze pagina sluit, behoud je je huidige instelling.",
     "changeSelection": "Keuze wijzigen",
     "applyOnFinish": "Dit is een conceptselectie. Deze wordt pas van kracht wanneer je de installatie op het volgende scherm voltooit. Als je de installatie daarvoor sluit, behoud je je huidige instelling.",
@@ -220,24 +220,24 @@
   },
   "setupGuide": {
     "welcome": "Welkom bij Floorp.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "description": "Laat je browser werken zoals jij werkt.",
+    "introduction": "Deze gids laat je kennismaken met de functies van Floorp en helpt je bij het kiezen van je eerste instellingen.",
+    "start": "Installatie starten",
+    "next": "Controleer vervolgens je weergavetaal.",
+    "progress": "Installatie {{current}} / {{total}}",
+    "title": "Inhoud van deze gids",
+    "subtitle": "Ontdek de functies en kies de instellingen die bij je passen.",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "Ontdek de functies van Floorp",
+      "description": "Ontdek manieren om tabbladen te organiseren en je browser aan te passen."
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "Kies je instellingen",
+      "description": "Pas het uiterlijk en de bediening aan naar je eigen voorkeuren."
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "Maak je klaar om te surfen",
+      "description": "Controleer je keuzes en begin met surfen."
     }
   },
   "welcomePage": {
@@ -341,28 +341,28 @@
   },
   "ui": {
     "retry": "Probeer opnieuw",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "loadError": "Kan deze instellingen niet laden. Probeer het opnieuw.",
+    "skipToContent": "Spring naar de inhoud",
     "loading": "Laden…",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "Voortgang configuratie",
+    "stepNavigation": "Navigatie configuratie",
+    "settingsNavigation": "Navigatie instellingen",
+    "openNavigation": "Open navigatie",
+    "closeNavigation": "Sluit navigatie",
+    "saveError": "Opslaan mislukt. Probeer het opnieuw."
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
+    "label": "Interactieve demo",
+    "close": "Paneel sluiten",
     "cancel": "Annuleren",
     "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "play": "Bekijk de beweging",
+    "replay": "Opnieuw bekijken",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "Werkruimte wisselen",
+      "instruction": "Klik op de werkruimteknop linksboven en kies een werkruimte.",
       "names": [
-        "Work",
+        "Werk",
         "Persoonlijk",
         "Leren"
       ],
@@ -446,42 +446,42 @@
       "instruction": "Probeer de installatie via het pictogram rechts in de adresbalk.",
       "icon": "Open het installatiemenu van de web-app",
       "open": "App openen",
-      "install": "Install app",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
+      "install": "Installeer app",
+      "calendar": "Kalender",
+      "result": "Voorbeeld van een losstaand app-venster",
+      "benefit": "Open een website als app in een losstaand venster.",
       "tab": "Web apps"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "Navigeer met een muisgebaar",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "Rechtermuisknop ingedrukt houden",
+        "Beweeg naar links",
+        "Muisknop loslaten"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "Vorige pagina",
+      "current": "Huidige pagina",
+      "result": "← Terug naar de vorige pagina (demo)",
+      "hint": "Voorbeeld van het standaard Terug-gebaar.",
+      "enable": "Schakel muisgebaren in bij de instellingen om deze functie te gebruiken.",
+      "benefit": "Houd de rechtermuisknop ingedrukt en beweeg de muis om acties zoals 'Terug' uit te voeren."
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "Controleer je taal",
+      "Kies het uiterlijk",
+      "Aan de slag"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "Gewenste weergavetaal controleren.",
+      "Kies een thema en zoekmachine.",
+      "Controleer je keuzes en start met Floorp."
     ],
-    "replay": "Watch again"
+    "replay": "Kijk nog eens"
   },
   "demoPlayback": {
     "pause": "Pause",
-    "play": "Play / resume"
+    "play": "Afspelen / Doorgaan"
   }
 }
