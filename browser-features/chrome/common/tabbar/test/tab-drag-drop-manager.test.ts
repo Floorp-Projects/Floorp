@@ -9,6 +9,7 @@ import {
 import {
   cleanupOwnedDropIndicator,
   DropIndicatorOwnership,
+  getTabDropIndex,
   resolveDropIndicatorTarget,
 } from "../multirow-tabbar/tab-drag-drop-manager.ts";
 
@@ -123,6 +124,65 @@ function testDropIndicatorTargets(): void {
     null,
     "out-of-range indices should be rejected",
   );
+}
+
+function testDropIndicesCountGroupedTabs(): void {
+  // Detached elements keep the fixture independent of the browser's current
+  // tab layout while exercising the same nested DOM that native groups use.
+  const doc = document.implementation.createHTMLDocument();
+  for (const groupSize of [0, 2, 3, 6]) {
+    for (const collapsed of [false, true]) {
+      const container = doc.createElement("div");
+      const first = doc.createElement("tab");
+      const group = doc.createElement("tab-group");
+      const last = doc.createElement("tab");
+      container.append(first);
+      // Non-tab DOM children must not participate in the tab index either.
+      container.append(doc.createTextNode("\n"));
+      if (groupSize) container.append(group);
+      if (collapsed) group.setAttribute("collapsed", "true");
+      group.append(doc.createElement("label"));
+      for (let i = 0; i < groupSize; i++) {
+        group.append(doc.createElement("tab"));
+      }
+      container.append(last, doc.createElement("button"));
+
+      for (const isLtr of [true, false]) {
+        for (
+          const [index, tab] of container.querySelectorAll("tab").entries()
+        ) {
+          const rect = tab.getBoundingClientRect();
+          const midpoint = rect.x + rect.width / 2;
+          const leading = midpoint + (isLtr ? -1 : 1);
+          const trailing = midpoint + (isLtr ? 1 : -1);
+          const context =
+            `${groupSize} grouped tabs, collapsed=${collapsed}, ltr=${isLtr}`;
+          assertEquals(
+            getTabDropIndex(container, tab, leading, isLtr),
+            index,
+            `leading edge uses the flat tab index: ${context}`,
+          );
+          assertEquals(
+            getTabDropIndex(container, tab, trailing, isLtr),
+            index + 1,
+            `trailing edge uses the next boundary: ${context}`,
+          );
+        }
+        if (groupSize) {
+          assertEquals(
+            getTabDropIndex(container, group, 0, isLtr),
+            groupSize + 1,
+            "group header appends after all group members",
+          );
+        }
+      }
+      assertEquals(
+        getTabDropIndex(container, doc.createElement("tab"), 0, true),
+        -1,
+        "a detached target must not point at the first tab",
+      );
+    }
+  }
 }
 
 function createDropIndicator(): XULElement {
@@ -249,6 +309,10 @@ const tests: TestCase[] = [
   {
     name: "drop indicator targets include index zero",
     fn: testDropIndicatorTargets,
+  },
+  {
+    name: "drop indices count grouped tabs in both directions",
+    fn: testDropIndicesCountGroupedTabs,
   },
   {
     name: "owned drop indicator cleanup is scoped and idempotent",
