@@ -9,8 +9,14 @@ import {
 import {
   cleanupOwnedDropIndicator,
   DropIndicatorOwnership,
+  getTabDropIndex,
   resolveDropIndicatorTarget,
+  TabDragDropManager,
 } from "../multirow-tabbar/tab-drag-drop-manager.ts";
+import { PinnedTabController } from "../multirow-tabbar/pinned-tab-controller.ts";
+import type { TabBrowser, XULTab } from "../multirow-tabbar/multibar.d.ts";
+
+declare const TAB_DROP_TYPE: string;
 
 // ---------------------------------------------------------------------------
 // Tests — TabDragDropManager dragend listener
@@ -123,6 +129,127 @@ function testDropIndicatorTargets(): void {
     null,
     "out-of-range indices should be rejected",
   );
+}
+
+function testDropIndicesCountGroupedTabs(): void {
+  // Detached elements keep the fixture independent of the browser's current
+  // tab layout while exercising the same nested DOM that native groups use.
+  const doc = document.implementation.createHTMLDocument();
+  for (const groupSize of [0, 2, 3, 6]) {
+    for (const collapsed of [false, true]) {
+      const container = doc.createElement("div");
+      const first = doc.createElement("tab");
+      const group = doc.createElement("tab-group");
+      const last = doc.createElement("tab");
+      container.append(first);
+      // Non-tab DOM children must not participate in the tab index either.
+      container.append(doc.createTextNode("\n"));
+      if (groupSize) container.append(group);
+      if (collapsed) group.setAttribute("collapsed", "true");
+      group.append(doc.createElement("label"));
+      for (let i = 0; i < groupSize; i++) {
+        group.append(doc.createElement("tab"));
+      }
+      container.append(last, doc.createElement("button"));
+
+      for (const isLtr of [true, false]) {
+        for (
+          const [index, tab] of container.querySelectorAll("tab").entries()
+        ) {
+          const rect = tab.getBoundingClientRect();
+          const midpoint = rect.x + rect.width / 2;
+          const leading = midpoint + (isLtr ? -1 : 1);
+          const trailing = midpoint + (isLtr ? 1 : -1);
+          const context =
+            `${groupSize} grouped tabs, collapsed=${collapsed}, ltr=${isLtr}`;
+          assertEquals(
+            getTabDropIndex(container, tab, leading, isLtr),
+            index,
+            `leading edge uses the flat tab index: ${context}`,
+          );
+          assertEquals(
+            getTabDropIndex(container, tab, trailing, isLtr),
+            index + 1,
+            `trailing edge uses the next boundary: ${context}`,
+          );
+        }
+        if (groupSize) {
+          assertEquals(
+            getTabDropIndex(container, group, 0, isLtr),
+            groupSize + 1,
+            "group header appends after all group members",
+          );
+        }
+      }
+      assertEquals(
+        getTabDropIndex(container, doc.createElement("tab"), 0, true),
+        -1,
+        "a detached target must not point at the first tab",
+      );
+    }
+  }
+}
+
+function testDropOnSelectedTabsPreservesOrder(): void {
+  const browser = gBrowser as unknown as TabBrowser & typeof gBrowser & {
+    addToMultiSelectedTabs(tab: XULTab): void;
+    clearMultiSelectedTabs(): void;
+  };
+  const originalTab = browser.selectedTab;
+  const originalSelection = [...browser.selectedTabs];
+  const tabs: XULTab[] = [];
+  const container = browser.tabContainer.arrowScrollbox;
+  const manager = new TabDragDropManager(
+    () => container,
+    new PinnedTabController(() => container),
+  );
+  try {
+    for (let i = 0; i < 3; i++) {
+      tabs.push(browser.addTab("about:blank", {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+        inBackground: true,
+        skipAnimation: true,
+      }) as XULTab);
+    }
+    for (const boundary of [0, 1, 3]) {
+      browser.moveTabAfter(tabs[1], tabs[0]);
+      browser.moveTabAfter(tabs[2], tabs[1]);
+      browser.selectedTab = tabs[0];
+      browser.clearMultiSelectedTabs();
+      tabs.forEach((tab) => browser.addToMultiSelectedTabs(tab));
+      const allTabs = Array.from(container.querySelectorAll("tab"));
+      Reflect.set(
+        manager,
+        "lastKnownIndex",
+        allTabs.indexOf(tabs[0]) + boundary,
+      );
+      const transfer = new DataTransfer();
+      transfer.mozSetDataAt(TAB_DROP_TYPE, tabs[0], 0);
+      transfer.dropEffect = "move";
+      // Exercise the actual drop handler and native tab movement APIs without
+      // installing another drag listener over the user's current tabbar mode.
+      const drop: unknown = Reflect.get(manager, "performTabDropEvent");
+      if (typeof drop !== "function") throw new Error("Drop handler missing");
+      drop.call(manager, new DragEvent("drop", { dataTransfer: transfer }));
+      const actual = Array.from(container.querySelectorAll("tab"))
+        .filter((tab) => tabs.includes(tab as XULTab));
+      tabs.forEach((tab, index) => {
+        assertEquals(
+          actual[index],
+          tab,
+          `dropping at selected boundary ${boundary} must preserve tab ${index}`,
+        );
+      });
+    }
+  } finally {
+    browser.selectedTab = originalTab;
+    browser.clearMultiSelectedTabs();
+    for (const tab of originalSelection) {
+      if (tab.isConnected) browser.addToMultiSelectedTabs(tab);
+    }
+    for (const tab of tabs) browser.removeTab(tab);
+  }
 }
 
 function createDropIndicator(): XULElement {
@@ -249,6 +376,14 @@ const tests: TestCase[] = [
   {
     name: "drop indicator targets include index zero",
     fn: testDropIndicatorTargets,
+  },
+  {
+    name: "drop indices count grouped tabs in both directions",
+    fn: testDropIndicesCountGroupedTabs,
+  },
+  {
+    name: "drops within the selected block preserve native tab order",
+    fn: testDropOnSelectedTabsPreservesOrder,
   },
   {
     name: "owned drop indicator cleanup is scoped and idempotent",
