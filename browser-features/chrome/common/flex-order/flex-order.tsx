@@ -4,8 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createRootHMR, render } from "@nora/solid-xul";
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
+import hoverStyle from "./hover-offset.css?inline";
 
 type Orders = {
   floorpSidebarSplitter: number;
@@ -31,6 +32,7 @@ export namespace gFlexOrder {
 
   export function init() {
     renderOrderStyle();
+    observePanelWidths();
 
     createEffect(() => {
       const floorpSidebarPositionPref = panelSidebarConfig().position_start;
@@ -56,6 +58,82 @@ export namespace gFlexOrder {
         floorpSidebarSplitter: -1,
       });
     }
+    updateHoverOffset();
+  }
+
+  // Firefox anchors its absolute hover launcher to #browser's edge. Floorp's
+  // in-flow panels can occupy that edge, so reserve their actual rendered size.
+  // Do not observe the launcher itself: its animation must not feed back into
+  // the offset or move the hover target out from underneath the pointer.
+  function updateHoverOffset() {
+    const browser = document?.getElementById("browser");
+    if (!browser) return;
+    let width = 0;
+    for (
+      const id of [
+        floorpSidebarSelectBoxId,
+        floorpSidebarId,
+        floorpSidebarSplitterId,
+      ]
+    ) {
+      const element = document.getElementById(id);
+      if (!element) continue;
+      const style = getComputedStyle(element);
+      if (
+        !style || style.display === "none" || style.position === "absolute" ||
+        style.position === "fixed"
+      ) continue;
+      width += element.getBoundingClientRect().width +
+        (parseFloat(style.marginInlineStart) || 0) +
+        (parseFloat(style.marginInlineEnd) || 0);
+    }
+    const atEnd = untrack(orders).floorpSidebar > 0;
+    browser.style.setProperty(
+      "--floorp-panel-start-width",
+      `${atEnd ? 0 : width}px`,
+    );
+    browser.style.setProperty(
+      "--floorp-panel-end-width",
+      `${atEnd ? width : 0}px`,
+    );
+  }
+
+  function observePanelWidths() {
+    const browser = document?.getElementById("browser");
+    if (!browser) return;
+    const resizeObserver = new ResizeObserver(updateHoverOffset);
+    const panelObserver = new MutationObserver(updateHoverOffset);
+    const observe = () => {
+      resizeObserver.disconnect();
+      panelObserver.disconnect();
+      for (
+        const id of [
+          floorpSidebarSelectBoxId,
+          floorpSidebarId,
+          floorpSidebarSplitterId,
+        ]
+      ) {
+        const element = document.getElementById(id);
+        if (element) {
+          resizeObserver.observe(element);
+          panelObserver.observe(element, {
+            attributes: true,
+            attributeFilter: ["data-floating", "hidden"],
+          });
+        }
+      }
+      updateHoverOffset();
+    };
+    const childrenObserver = new MutationObserver(observe);
+    childrenObserver.observe(browser, { childList: true });
+    observe();
+    onCleanup(() => {
+      resizeObserver.disconnect();
+      panelObserver.disconnect();
+      childrenObserver.disconnect();
+      browser.style.removeProperty("--floorp-panel-start-width");
+      browser.style.removeProperty("--floorp-panel-end-width");
+    });
   }
 
   function renderOrderStyle() {
@@ -71,6 +149,7 @@ export namespace gFlexOrder {
       #${floorpSidebarSplitterId} {
         order: ${orders().floorpSidebarSplitter} !important;
       }
+      ${hoverStyle}
     `}
       </style>
     ), document?.head);
