@@ -172,6 +172,16 @@ export async function runAllTests(): Promise<void> {
           "selects installing profile",
         );
         assert(
+          !bundle.launcher.includes("--new-instance"),
+          "keeps profile-specific remoting for an already running PWA",
+        );
+        assert(
+          bundle.launcher.includes(
+            "'/usr/bin/open' '-n' '/Applications/Floorp Nightly.app' '--args'",
+          ),
+          "launches the browser app through LaunchServices with arguments",
+        );
+        assert(
           bundle.launcher.includes("O'\"'\"'Brien"),
           "quotes apostrophes safely",
         );
@@ -231,6 +241,35 @@ export async function runAllTests(): Promise<void> {
             (await IOUtils.readUTF8(launcher)).startsWith("#!/bin/sh\nexec "),
             "executable launcher",
           );
+          if (Services.appinfo.OS === "Darwin") {
+            const quarantine = new TextEncoder().encode(
+              "0081;00000000;Floorp;",
+            );
+            await IOUtils.setMacXAttr(
+              path,
+              "com.apple.quarantine",
+              quarantine,
+            );
+            await IOUtils.setMacXAttr(
+              launcher,
+              "com.apple.quarantine",
+              quarantine,
+            );
+            await support.install(app);
+            assertEquals(
+              support.iconWrites,
+              1,
+              "quarantine repair does not rewrite a complete bundle",
+            );
+            assert(
+              !await IOUtils.hasMacXAttr(path, "com.apple.quarantine"),
+              "complete bundle quarantine is cleared",
+            );
+            assert(
+              !await IOUtils.hasMacXAttr(launcher, "com.apple.quarantine"),
+              "complete launcher quarantine is cleared",
+            );
+          }
           assert(
             await IOUtils.exists(PathUtils.join(contents, "Info.plist")),
             "Finder metadata",
@@ -274,6 +313,63 @@ export async function runAllTests(): Promise<void> {
           await support.uninstall(renamed);
           await support.uninstall(renamed);
           assert(!await IOUtils.exists(renamedPath), "uninstall is idempotent");
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name: "install upgrades v1 launchers to Finder-safe bundles",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-v1-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const support = new TestMacOSSupport(options);
+        const app = { ...ssb, name: "Legacy Launcher" };
+        const { path } = await getMacAppBundle(app, options);
+        const contents = PathUtils.join(path, "Contents");
+        const marker = PathUtils.join(contents, "floorp.json");
+        const launcher = PathUtils.join(contents, "MacOS", "launcher");
+        try {
+          await support.install(app);
+          const markerData = await IOUtils.readJSON(marker) as {
+            version: number;
+          };
+          await IOUtils.writeJSON(marker, { ...markerData, version: 1 });
+          await IOUtils.writeUTF8(
+            launcher,
+            "#!/bin/sh\nexec '/Applications/Floorp.app/Contents/MacOS/floorp' '--profile' '/wrong'\n",
+          );
+
+          await support.install(app);
+
+          assertEquals(
+            (await IOUtils.readJSON(marker) as { version: number }).version,
+            3,
+            "bundle marker records the launcher contract upgrade",
+          );
+          assert(
+            (await IOUtils.readUTF8(launcher)).includes(
+              `'--profile' '${options.profileDir}'`,
+            ),
+            "repair restores the profile-specific launcher",
+          );
+          assert(
+            !(await IOUtils.readUTF8(launcher)).includes("--new-instance"),
+            "repair preserves remoting to an already running PWA profile",
+          );
+          assert(
+            (await IOUtils.readUTF8(launcher)).includes(
+              "'/usr/bin/open' '-n' '/Applications/Floorp.app' '--args'",
+            ),
+            "repair replaces direct Mach-O execution with LaunchServices",
+          );
         } finally {
           await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
         }

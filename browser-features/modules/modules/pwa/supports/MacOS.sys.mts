@@ -76,11 +76,24 @@ ${
     ).join("\n")
   }
 </dict></plist>\n`;
-  // Invoke the installed browser directly so --start-ssb reaches both a running
-  // instance and a cold start. Forwarding through `open -a` drops args when open.
+  // Launch the app bundle through LaunchServices. Directly exec'ing its Mach-O
+  // from a script-based .app can make Finder preserve the launcher's process
+  // architecture and application identity, leaving Floorp before XRE startup.
+  // `-n` guarantees --args are delivered to a new client process; Gecko then
+  // remotes them to the named profile when that profile is already running.
+  const executableMarker = "/Contents/MacOS/";
+  const executableMarkerIndex = options.executable.lastIndexOf(
+    executableMarker,
+  );
+  const application = executableMarkerIndex >= 0
+    ? options.executable.slice(0, executableMarkerIndex)
+    : options.executable;
   const launcher = `#!/bin/sh\nexec ${
     [
-      options.executable,
+      "/usr/bin/open",
+      "-n",
+      application,
+      "--args",
       "--profile",
       options.profileDir,
       "--start-ssb",
@@ -164,25 +177,45 @@ export class MacOSSupport {
     bundle: Awaited<ReturnType<typeof getMacAppBundle>>,
   ): Promise<void> {
     const contents = PathUtils.join(bundle.path, "Contents");
+    const macOS = PathUtils.join(contents, "MacOS");
+    const resources = PathUtils.join(contents, "Resources");
     const markerPath = PathUtils.join(contents, "floorp.json");
-    const marker = JSON.stringify({ version: 1, ssb, ...options });
-    const executable = PathUtils.join(contents, "MacOS", "launcher");
-    const icon = PathUtils.join(contents, "Resources", "app.icns");
+    // Version 3 launches the browser bundle through LaunchServices and clears
+    // quarantine inherited from a downloaded Floorp. Bumping the marker forces
+    // repair of older bundles whose generated files otherwise look complete.
+    const marker = JSON.stringify({ version: 3, ssb, ...options });
+    const executable = PathUtils.join(macOS, "launcher");
+    const icon = PathUtils.join(resources, "app.icns");
     const plist = PathUtils.join(contents, "Info.plist");
+    const bundlePaths = [
+      bundle.path,
+      contents,
+      macOS,
+      resources,
+      executable,
+      icon,
+      plist,
+      markerPath,
+    ];
     if (await IOUtils.exists(markerPath)) {
       if (
         await IOUtils.readUTF8(markerPath) === marker &&
         await IOUtils.exists(executable) && await IOUtils.exists(icon) &&
         await IOUtils.exists(plist)
-      ) return;
+      ) {
+        // The browser itself can acquire quarantine after the launcher was
+        // installed, so also repair a complete bundle without rewriting it.
+        await this.clearQuarantine(bundlePaths);
+        return;
+      }
     }
 
     const iconBytes = await this.createIcon(ssb);
-    await IOUtils.makeDirectory(PathUtils.join(contents, "MacOS"), {
+    await IOUtils.makeDirectory(macOS, {
       createAncestors: true,
       ignoreExisting: true,
     });
-    await IOUtils.makeDirectory(PathUtils.join(contents, "Resources"), {
+    await IOUtils.makeDirectory(resources, {
       ignoreExisting: true,
     });
     await IOUtils.write(icon, iconBytes);
@@ -191,6 +224,21 @@ export class MacOSSupport {
     await IOUtils.writeUTF8(plist, bundle.plist);
     // Write last: interrupted installs are repaired on the next launch.
     await IOUtils.writeUTF8(markerPath, marker);
+    await this.clearQuarantine(bundlePaths);
+  }
+
+  private async clearQuarantine(paths: string[]): Promise<void> {
+    // IOUtils exposes these operations on every test host, but they are only
+    // implemented on macOS. Generated launchers are local, trusted output;
+    // keeping Floorp's download quarantine would make Finder gate them as if
+    // they themselves had been downloaded from the Internet.
+    if (Services.appinfo.OS !== "Darwin") return;
+    const attribute = "com.apple.quarantine";
+    for (const path of paths) {
+      if (await IOUtils.hasMacXAttr(path, attribute)) {
+        await IOUtils.delMacXAttr(path, attribute);
+      }
+    }
   }
 
   protected async createIcon(ssb: Manifest): Promise<Uint8Array> {
