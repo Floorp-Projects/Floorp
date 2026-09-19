@@ -12,10 +12,16 @@ import {
   Show,
 } from "solid-js";
 import styles from "./styles.css?inline";
-import type { StackSplitView } from "./types.ts";
+import { proxyDragLifecycle } from "./proxy-drag.ts";
+import type {
+  StackDataTransfer,
+  StackDragController,
+  StackSplitView,
+} from "./types.ts";
 
 /** Drag data type used by row-2 proxy drags (reorder / eject). */
 export const PROXY_DRAG_TYPE = "application/x-floorp-stack-tab";
+export const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
 /** Attribute stamped on every `tab-group` this feature presents as a stack. */
 export const STACK_ATTR = "data-floorp-stack";
 /** Per-tab drag identity attribute (stable for the tab's whole life). */
@@ -34,6 +40,7 @@ export type StackTab = XULElement & {
   hidden?: boolean;
   closing?: boolean;
   multiselected?: boolean;
+  _dragData?: object;
   isConnected?: boolean;
   linkedBrowser?: {
     currentURI?: { spec?: string };
@@ -53,12 +60,14 @@ export type TabBrowser = {
   tabs: StackTab[];
   selectedTab: StackTab;
   tabGroups: StackGroup[];
-  tabContainer: XULElement;
+  tabContainer: XULElement & { tabDragAndDrop?: StackDragController };
   tabGroupMenu?: { openEditModal: (group: StackGroup) => void };
   removeTab: (tab: StackTab, opts?: Record<string, unknown>) => void;
   removeTabs?: (tabs: StackTab[], opts?: Record<string, unknown>) => void;
   addTab: (url: string, opts: Record<string, unknown>) => StackTab;
   ungroupTab?: (tab: StackTab) => void;
+  clearMultiSelectedTabs?: () => void;
+  unlockClearMultiSelection?: () => void;
   reloadTab?: (tab: StackTab) => void;
   moveTabBefore?: (
     tab: StackTab | StackGroup,
@@ -68,6 +77,10 @@ export type TabBrowser = {
     tab: StackTab | StackGroup,
     target: StackTab | StackGroup,
   ) => void;
+  adoptTab?: (
+    tab: StackTab,
+    options: { tabIndex: number; selectTab: boolean },
+  ) => StackTab | null;
 };
 
 export const getGBrowser = (): TabBrowser | null =>
@@ -147,11 +160,10 @@ const DEFAULT_FAVICON = "chrome://global/skin/icons/defaultFavicon.svg";
  * an unloaded tab would carry an empty id. Stamped on demand and good for
  * the tab's whole life.
  */
-let dragIdCounter = 0;
 export const getTabDragId = (tab: StackTab): string => {
   let id = tab.getAttribute(TAB_DRAG_ID_ATTR);
   if (!id) {
-    id = `dt${++dragIdCounter}`;
+    id = `dt-${crypto.randomUUID()}`;
     tab.setAttribute(TAB_DRAG_ID_ATTR, id);
   }
   return id;
@@ -159,6 +171,16 @@ export const getTabDragId = (tab: StackTab): string => {
 
 export const findTabByDragId = (id: string): StackTab | undefined =>
   getGBrowser()?.tabs.find((t) => t.getAttribute(TAB_DRAG_ID_ATTR) === id);
+
+/** Read the actual tab, including when its proxy belongs to another window. */
+export const getDraggedTab = (event: DragEvent): StackTab | null => {
+  const dt = event.dataTransfer as StackDataTransfer | null;
+  const tab = dt?.mozGetDataAt?.(TAB_DROP_TYPE, 0) as StackTab | null;
+  return tab?.localName === "tab" ? tab : null;
+};
+
+// Weak keys retain no closed groups and keep positions local to this window.
+const scrollPositions = new WeakMap<StackGroup, number>();
 
 /** Pixels per wheel/arrow notch for the overflow scroller. */
 const SCROLL_STEP_PX = 48;
@@ -209,9 +231,28 @@ function StackTabProxy(props: { tab: StackTab }) {
       context="tabContextMenu"
       draggable="true"
       onDragStart={(event: DragEvent) => {
-        // Proxies drag with a private type: within the bar to reorder
-        // the stack, up into the tab row to leave it (the real member
-        // tabs are hidden in row 1, so this is the only drag handle).
+        // Use the same native entry point as the all-tabs list. Native tab
+        // data MUST be the first flavor for cross-window drops and detach.
+        const gb = getGBrowser();
+        const controller = gb?.tabContainer.tabDragAndDrop;
+        // Proxies represent one member. Clear native multiselection so both
+        // the transfer and native movingTabs/detach paths move only that tab.
+        if (props.tab.multiselected) {
+          gb?.unlockClearMultiSelection?.();
+          gb?.clearMultiSelectedTabs?.();
+        }
+        controller?.startTabDrag(
+          event,
+          props.tab,
+          { fromTabList: true },
+        );
+        if (controller) {
+          proxyDragLifecycle.begin(
+            props.tab,
+            event.currentTarget as Element,
+            controller,
+          );
+        }
         event.dataTransfer?.setData(PROXY_DRAG_TYPE, getTabDragId(props.tab));
         if (event.dataTransfer) {
           event.dataTransfer.effectAllowed = "move";
@@ -227,11 +268,21 @@ function StackTabProxy(props: { tab: StackTab }) {
           }
         }
       }}
-      onClick={() => {
+      onDragEnd={(event: DragEvent) => {
+        proxyDragLifecycle.end(props.tab, event);
+      }}
+      onClick={(event: MouseEvent) => {
+        if (event.button !== 0) return;
         const gb = getGBrowser();
         if (gb) {
           gb.selectedTab = props.tab;
         }
+      }}
+      onAuxClick={(event: MouseEvent) => {
+        if (event.button !== 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+        getGBrowser()?.removeTab(props.tab, { animate: false, byMouse: true });
       }}
     >
       <xul:hbox class="floorp-stack-tab-iconbox" align="center">
@@ -241,6 +292,7 @@ function StackTabProxy(props: { tab: StackTab }) {
           tooltiptext="Close tab"
           onClick={(event: MouseEvent) => {
             event.stopPropagation();
+            if (event.button !== 0) return;
             getGBrowser()?.removeTab(props.tab, { animate: false });
           }}
         />
@@ -258,6 +310,7 @@ function StackTabProxy(props: { tab: StackTab }) {
         }}
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
+          if (event.button !== 0) return;
           getGBrowser()?.reloadTab?.(props.tab);
         }}
       />
@@ -265,11 +318,10 @@ function StackTabProxy(props: { tab: StackTab }) {
   );
 }
 
-function StackRow() {
+function StackRow(props: { group: StackGroup }) {
   const tabs = createMemo(() => {
     version();
-    const group = activeGroup();
-    return group ? [...group.tabs] : [];
+    return [...props.group.tabs];
   });
 
   const addTabToActiveGroup = () => {
@@ -303,18 +355,42 @@ function StackRow() {
   onMount(() => {
     const scroller = document?.getElementById("floorp-stack-scroller");
     if (!scroller) return;
+    scroller.scrollLeft = scrollPositions.get(props.group) ?? 0;
+    const savePosition = () =>
+      scrollPositions.set(props.group, scroller.scrollLeft);
+    scroller.addEventListener("scroll", savePosition);
     const onWheel = (event: WheelEvent) => {
       if (scroller.scrollWidth - scroller.clientWidth <= 1) return;
-      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
-        ? event.deltaX
-        : event.deltaY;
+      const vertical = Math.abs(event.deltaY) > Math.abs(event.deltaX);
+      let delta = vertical ? event.deltaY : event.deltaX;
+      if (vertical && getComputedStyle(scroller)?.direction === "rtl") {
+        delta *= -1;
+      }
       if (delta === 0) return;
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        // Like the native arrowscrollbox, one line is one average tab width.
+        const items = scroller.querySelector("#floorp-stack-items");
+        const count = items?.children.length ?? 0;
+        const line = count ? items!.scrollWidth / count : SCROLL_STEP_PX;
+        if (Math.abs(delta * line) > scroller.clientWidth) {
+          delta = Math.sign(delta) *
+            Math.max(1, Math.floor(scroller.clientWidth / line));
+        }
+        delta *= line;
+      } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        delta *= scroller.clientWidth;
+      }
       event.preventDefault();
       event.stopPropagation();
       scroller.scrollLeft += delta;
+      savePosition();
     };
     scroller.addEventListener("wheel", onWheel, { passive: false });
-    onCleanup(() => scroller.removeEventListener("wheel", onWheel));
+    onCleanup(() => {
+      savePosition();
+      scroller.removeEventListener("scroll", savePosition);
+      scroller.removeEventListener("wheel", onWheel);
+    });
   });
 
   return (
@@ -353,8 +429,8 @@ function StackRow() {
 
 export function StackBar() {
   return (
-    <Show when={activeGroup()}>
-      <StackRow />
+    <Show when={activeGroup()} keyed>
+      {(group) => <StackRow group={group} />}
     </Show>
   );
 }

@@ -362,9 +362,19 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve())
       );
-      proxies()[0].querySelector(".floorp-stack-tab-close")!.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
+      if (paneCount === 2) {
+        proxies()[0].dispatchEvent(
+          new MouseEvent("auxclick", {
+            button: 1,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      } else {
+        proxies()[0].querySelector(".floorp-stack-tab-close")!.dispatchEvent(
+          new MouseEvent("click", { bubbles: true }),
+        );
+      }
       await waitFor(
         () => proxies().length === tabs.length - 1 && !tabs[1].splitview,
         "Closing a pane removes its proxy and dissolves the two-pane split",

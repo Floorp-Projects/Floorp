@@ -5,6 +5,10 @@ export type NativeStackTab = StackTab & {
   splitview: NativeSplitView | null;
 };
 
+export type NativeStackTransfer = DataTransfer & {
+  mozSetDataAt(format: string, value: unknown, index: number): void;
+};
+
 export type NativeSplitView = XULElement & {
   tabs: NativeStackTab[];
   unsplitTabs(): void;
@@ -14,6 +18,7 @@ export type NativeStackBrowser = TabBrowser & {
   selectedTab: NativeStackTab;
   tabContainer: XULElement & { verticalMode: boolean };
   addTabGroup(tabs: StackTab[], options: { label: string }): StackGroup;
+  addToMultiSelectedTabs(tab: StackTab): void;
   addTabSplitView(
     tabs: StackTab[],
     options: { insertBefore: StackTab },
