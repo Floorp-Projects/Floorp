@@ -11,6 +11,10 @@ and embedded browser. It covers:
 - #2722: completed docked resizing updates preferences and survives closing and
   recreating a panel; floating resizing saves its final queued animation frame.
   A floating panel does not contribute to the native hover launcher's offset.
+- Floating width/height are stored separately from each panel's docked width.
+  Horizontal, vertical-only, and diagonal floating resizes preserve custom
+  docked widths and the `width: 0` global-width sentinel. Reopening panels and
+  switching between floating and docked modes restores the appropriate width.
 
 Run with the browser test runner:
 
@@ -29,6 +33,12 @@ splitter repeatedly between 400 and 540px on both sides, close/reopen the panel,
 and restart the test profile. With vertical tabs set to expand on hover, hold
 the pointer over the collapsed launcher for at least two seconds and verify that
 its outer edge remains fixed. Repeat with the web panel closed.
+
+For floating persistence, use one panel with a custom docked width and another
+with `width: 0`. Set a different floating size, resize vertically, then resize
+diagonally. Check that only `floatingWidth`/`floatingHeight` change. Restart the
+test profile and verify both docked widths and the independent floating size;
+the default panel must still follow changes to the global width.
 
 This fixture exercises responsive layout and width persistence. Passing it does
 not establish that the WhatsApp-specific unresponsive state in #2722 is fixed.

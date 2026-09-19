@@ -117,9 +117,7 @@ export class PanelSidebarElem {
           <SidebarHeader ctx={this.ctx} />
           <BrowserBox />
           <Show when={isFloating()}>
-            <FloatingSplitter
-              onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
-            />
+            <FloatingSplitter />
           </Show>
         </xul:vbox>
         <Show when={!isFloating()}>

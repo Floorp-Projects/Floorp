@@ -11,7 +11,7 @@ export const [isResizeCooldown, setIsResizeCooldown] = createSignal<boolean>(
 );
 let resizeCooldownTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
-export function FloatingSplitter(props: { onResizeEnd: () => void }) {
+export function FloatingSplitter() {
   const onHorizontalMouseDown = (e: MouseEvent) => {
     setIsFloatingDragging(true);
     const sidebarBox = document?.getElementById(
@@ -85,7 +85,6 @@ export function FloatingSplitter(props: { onResizeEnd: () => void }) {
         globalThis.cancelAnimationFrame(frameId);
         applyFrame();
       }
-      props.onResizeEnd();
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
@@ -181,7 +180,6 @@ export function FloatingSplitter(props: { onResizeEnd: () => void }) {
         globalThis.cancelAnimationFrame(frameId);
         applyFrame();
       }
-      props.onResizeEnd();
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
@@ -322,7 +320,6 @@ export function FloatingSplitter(props: { onResizeEnd: () => void }) {
         globalThis.cancelAnimationFrame(frameId);
         applyFrame();
       }
-      props.onResizeEnd();
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);

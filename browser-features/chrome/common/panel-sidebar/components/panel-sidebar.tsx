@@ -9,6 +9,7 @@ import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
+  isFloating,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
@@ -203,9 +204,10 @@ export class CPanelSidebar {
   }
 
   public saveCurrentSidebarWidth() {
+    // Floating dimensions belong to panelSidebarConfig, never to panel.width.
+    if (isFloating()) return;
     const panelId = selectedPanelId();
-    // Floating resize handles only update CSS width. Use the rendered size for
-    // both kinds of splitter, and only persist a completed, visible resize.
+    // Persist the rendered size only after a completed, visible docked resize.
     const currentWidth = this.sidebarElement?.getBoundingClientRect().width;
     if (panelId && currentWidth && Number.isFinite(currentWidth)) {
       const width = Math.round(currentWidth);
@@ -218,10 +220,15 @@ export class CPanelSidebar {
     }
   }
 
-  private setSidebarWidth(panel: Panel) {
+  public setSidebarWidth(panel: Panel) {
+    const config = panelSidebarConfig();
+    const dockedWidth = panel.width !== 0 ? panel.width : config.globalWidth;
+    const width = isFloating()
+      ? config.floatingWidth ?? dockedWidth
+      : dockedWidth;
     this.sidebarElement?.style.setProperty(
       "width",
-      `${panel.width !== 0 ? panel.width : panelSidebarConfig().globalWidth}px`,
+      `${width}px`,
     );
   }
 

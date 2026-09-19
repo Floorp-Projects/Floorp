@@ -14,16 +14,7 @@ import {
 } from "../data/data.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import { isResizeCooldown } from "./floating-splitter.tsx";
-import type { Panel } from "../utils/type.ts";
-
-declare global {
-  interface Window {
-    gFloorpPanelSidebar?: {
-      getPanelData: (id: string) => Panel | undefined;
-      showPanel: (panel: Panel) => void;
-    };
-  }
-}
+import { PanelNavigator } from "../panel-navigator.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -431,28 +422,10 @@ export class PanelSidebarFloating {
   };
 
   private restoreActivePanel() {
-    const currentPanelId = selectedPanelId();
-
-    if (currentPanelId) {
-      try {
-        const panelSidebarInstance = globalThis
-          .gFloorpPanelSidebar as Window["gFloorpPanelSidebar"];
-        if (panelSidebarInstance) {
-          setSelectedPanelId(null);
-
-          setTimeout(() => {
-            setSelectedPanelId(currentPanelId);
-            if (panelSidebarInstance.showPanel) {
-              const panel = panelSidebarInstance.getPanelData(currentPanelId);
-              if (panel) {
-                panelSidebarInstance.showPanel(panel);
-              }
-            }
-          }, 50);
-        }
-      } catch (e) {
-        console.error("Failed to restore panel:", e);
-      }
+    const controller = PanelNavigator.gPanelSidebar;
+    const panel = controller?.getPanelData(selectedPanelId() ?? "");
+    if (panel) {
+      controller?.setSidebarWidth(panel);
     }
   }
 }
