@@ -1,22 +1,22 @@
 {
   "setupRich": {
     "selected": "Selecionado",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "Usado para menus e configurações",
+    "palettePreview": "Pré-visualização de cores",
+    "searchDestination": "Provedor de pesquisa da barra de endereços",
+    "enlarge": "Amplie a captura de tela de {{feature}}",
+    "enlargeShort": "Ver em tamanho maior",
+    "closePreview": "Fechar pré-visualização",
+    "actualScreenshot": "Uma captura de tela real do Floorp. A aparência pode variar de acordo com a sua versão e configurações."
   },
   "setupV5": {
     "back": "Voltar",
     "supportLabels": {
       "disabled": "Não abrir automaticamente",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "blocking": "Abrir com as configurações do bloqueador",
+      "support": "Permitir a exibição de anúncios para apoiar o Floorp"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "Esta é uma seleção preliminar. Ela entrará em vigor assim que você concluir a configuração na próxima tela. Se você fechar a configuração antes disso, suas configurações atuais serão mantidas.",
     "steps": [
       "Bem-vindo(a)",
       "Idioma",
@@ -24,105 +24,105 @@
       "Floorp Hub",
       "Configurações",
       "Ajuda",
-      "Finish"
+      "Concluir"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "title": "Bem-vindo(a) ao Floorp.",
+        "description": "Faça com que seu navegador funcione do jeito que você quer.",
+        "hint": "Este guia apresenta os recursos e ajuda você a definir suas primeiras configurações."
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "Comece com o idioma\nque você conhece melhor.",
+        "description": "Verifique o idioma de exibição do Floorp e altere-o, se necessário.",
+        "hint": "O idioma escolhido entra em vigor imediatamente."
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "Descubra o que o Floorp\npode oferecer.",
+        "description": "Separe as tarefas, visualize as páginas lado a lado e trabalhe mais rápido. Explore os recursos que lhe interessam.",
+        "hint": "Você pode ajustar esses recursos em “Configurações” mais tarde."
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "Suas configurações,\nno Floorp Hub.",
+        "description": "Todas as configurações específicas do Floorp em um só lugar.",
+        "hint": "Você pode abrir a qualquer momento após a instalação."
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "Deixe o visual\ne a pesquisa do seu jeito",
+        "description": "Escolha o tema e o motor de busca que você usa todos os dias.",
+        "hint": "Você pode alterá-los mais tarde nas Configurações do Floorp Hub ou Firefox."
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "Atualizações\ne apoio ao Floorp.",
+        "description": "A receita publicitária sustenta o desenvolvimento e a operação do Floorp. Escolha como as notas da versão serão exibidas.",
+        "hint": "Você pode alterar isso mais tarde na seção “Atualizações e experimentos”."
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "Você está pronto\npara navegar.",
+        "description": "Revise suas escolhas e comece a usar o Floorp.",
+        "hint": "Você ainda pode alterar suas configurações mais tarde."
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "Antes de começar",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "Verifique o idioma de exibição",
+        "description": "Comece com o idioma que você usa no dia a dia."
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "Escolha as configurações que melhor atendam às suas necessidades",
+        "description": "Selecione o tema e o motor de busca."
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "Prepare-se para navegar",
+        "description": "Verifique suas opções antes de começar."
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "Você pode alterar essas configurações mais tarde.",
+    "languageTitle": "Idioma de exibição",
+    "languageLabel": "Idioma do Floorp",
+    "languageHint": "Utilizado para menus e configurações.",
+    "languageNotice": "Alguns complementos podem não permitir a alteração do idioma.",
+    "languageCurrent": "Usando {{language}}",
+    "featuresTitle": "Explore os recursos",
+    "hubTitle": "Encontre o que você quer ajustar",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "Abas e visual",
+        "description": "Layout das abas e visual do navegador"
       },
       {
         "title": "Espaços de trabalho",
-        "description": "Switch tasks and organize tabs"
+        "description": "Alternar entre tarefas e organizar abas"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "Gestos com o mouse",
+        "description": "Atalhos para ações usadas com frequência"
       }
     ],
     "openHub": "Abrir o Floorp Hub",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
+    "openPreferences": "Abrir Configurações do Firefox",
+    "newTab": "Abre em uma nova aba.",
+    "hubAddress": "Você também pode digitar about:hub na barra de endereços.",
+    "customizeTitle": "Suas primeiras configurações",
+    "searchHint": "Usado ao pesquisar na barra de endereços.",
     "supportTitle": "Notas da versão após atualizações",
-    "scopeTitle": "Scope when allowing advertising",
-    "summaryTitle": "Review your settings",
+    "scopeTitle": "Âmbito de aplicação ao permitir publicidade",
+    "summaryTitle": "Verifique suas configurações",
     "change": "Alterar",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "Faça do Floorp seu navegador padrão",
+    "defaultHint": "Configure os links para que sejam abertos no Floorp.",
+    "getStarted": "Comece a usar o Floorp",
+    "finishNotice": "“Comece a usar o Floorp” confirma sua escolha de notas da versão."
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "Uma nova opção.\nApoie o que está por vir.",
+      "description": "A receita publicitária sustenta o desenvolvimento e a operação do Floorp. Agora você pode escolher como as notas da versão são exibidas e como os bloqueadores funcionam no blog do Floorp.",
+      "hint": "Suas configurações permanecem como estão até que você salve uma seleção. Você pode alterá-las posteriormente em “Atualizações e Experimentos”.",
+      "choiceTitle": "Escolher como as notas da versão são abertas",
+      "choiceDescription": "Escolha a exibição automática após as atualizações e veja como funcionam seus bloqueadores no blog do Floorp.",
+      "dismiss": "Agora não"
     },
     "learnMore": "Leia sobre nosso financiamento e esta configuração (em japonês)",
     "title": "Notas da versão e suporte ao Floorp",
@@ -140,7 +140,7 @@
       "description": "Restringir o uBlock Origin, AdGuard, Adblock Plus, AdBlock e Ghostery no blog do Floorp."
     },
     "scope": "A restrição se aplica a todas as páginas HTTPS no blog.floorp.app, incluindo páginas abertas manualmente, e afeta a proteção contra rastreamento e os filtros personalizados, bem como o bloqueio de anúncios. Outras extensões não são afetadas por essa configuração. Os anúncios ainda podem ser bloqueados por outras ferramentas de proteção. Atualize as páginas do blog abertas após alterar a configuração.",
-    "currentSetting": "Current setting: {{mode}}",
+    "currentSetting": "Configuração atual: {{mode}}",
     "applyOnConfirm": "Sua escolha só entrará em vigor quando você confirmar. Ao fechar esta página, sua configuração atual será mantida.",
     "changeSelection": "Alterar seleção",
     "applyOnFinish": "Esta é uma seleção preliminar. Ela entrará em vigor assim que você concluir a configuração na próxima tela. Se você fechar a configuração antes disso, suas configurações atuais serão mantidas.",
@@ -220,24 +220,24 @@
   },
   "setupGuide": {
     "welcome": "Bem-vindo(a) ao Floorp.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "description": "Faça com que seu navegador funcione do jeito que você quer.",
+    "introduction": "Este guia apresenta os recursos do Floorp e ajuda você a definir suas primeiras configurações.",
+    "start": "Iniciar configuração",
+    "next": "Em seguida, verifique o idioma de exibição.",
+    "progress": "Configuração {{current}} / {{total}}",
+    "title": "O que este guia abrange",
+    "subtitle": "Explore os recursos e escolha as configurações que melhor atendam às suas necessidades.",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "Descubra os recursos do Floorp",
+      "description": "Descubra maneiras de organizar as abas e personalizar seu navegador."
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "Escolha suas configurações",
+      "description": "Ajuste o visual e as definições de acordo com suas preferências."
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "Prepare-se para navegar",
+      "description": "Analise suas opções e comece a navegar."
     }
   },
   "welcomePage": {
@@ -341,147 +341,147 @@
   },
   "ui": {
     "retry": "Tente novamente",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "loadError": "Não foi possível carregar essas configurações. Tente novamente.",
+    "skipToContent": "Pular para o conteúdo",
     "loading": "Carregando…",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "Andamento da configuração",
+    "stepNavigation": "Configurar navegação",
+    "settingsNavigation": "Navegar pelas configurações",
+    "openNavigation": "Abrir navegação",
+    "closeNavigation": "Fechar navegação",
+    "saveError": "Não foi possível salvar. Por favor, tente novamente."
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
+    "label": "Demonstração interativa",
+    "close": "Fechar",
     "cancel": "Cancelar",
-    "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "reset": "Reiniciar demonstração",
+    "play": "Observe o gesto",
+    "replay": "Veja novamente",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "Trocar de espaço de trabalho",
+      "instruction": "Clique no botão “Espaço de trabalho” no canto superior esquerdo e, em seguida, escolha um espaço de trabalho.",
       "names": [
-        "Work",
-        "Personal",
-        "Learning"
+        "Trabalho",
+        "Pessoal",
+        "Estudar"
       ],
       "tabs": [
         [
-          "Project",
-          "Mail",
-          "Calendar"
+          "Projetos",
+          "E-mail",
+          "Calendário"
         ],
         [
-          "Travel",
-          "Recipes",
+          "Viagens",
+          "Receitas",
           "Música"
         ],
         [
           "Anotações",
-          "Dictionary",
+          "Dicionário",
           "Recursos"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "Mostrando abas para {{name}}.",
+      "benefit": "Alterne entre as abas de trabalho e pessoais em grupo.",
+      "guideOpen": "Clique no botão “Trabalho”.",
+      "guideSelect": "Escolha “Pessoal”.",
+      "guideDone": "As abas acima mudaram todas ao mesmo tempo.",
+      "openHint": "1 Abra aqui",
+      "selectHint": "2 Escolha “Pessoal”",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "Trabalho em equipe",
+          "title": "Projeto desta semana",
+          "description": "Manter as tarefas e o andamento em um só lugar.",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "Reunir ideias para o projeto",
+            "Revisar o design",
+            "Preparar para a próxima reunião"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "Planos para o fim de semana",
+          "title": "Para onde agora?",
+          "description": "Salve seus lugares favoritos e planeje sua próxima viagem.",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "Encontre um café à beira-mar",
+            "Explorar uma nova cidade",
+            "Faça uma lista do que levar"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "Anotações de estudo",
+          "title": "Anotações de aprendizagem de hoje",
+          "description": "Expresse com suas próprias palavras o que aprendeu.",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "Resumir os pontos principais",
+            "Anote as palavras novas",
+            "Lista de perguntas a serem exploradas"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "Abra um site ao lado da sua página",
+      "instruction": "Use o ícone de música à direita para abrir ou fechar o site salvo.",
+      "article": "Continue explorando",
       "music": "Música",
-      "favorites": "Favorites",
+      "favorites": "Favoritos",
       "tracks": [
-        "Moonlit",
+        "Ao luar",
         "Blue hour",
-        "Gentle breeze"
+        "Brisa suave"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "Tente reproduzir (sem áudio)",
+      "stop": "Parar reprodução",
+      "toggle": "Alternar painel atual",
+      "open": "Sua página e o site salvo aparecem lado a lado.",
+      "closed": "Abra o painel novamente usando o ícone de música à direita.",
+      "benefit": "Abra outro site ao lado da página que você está visualizando."
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "Transforme um site favorito em um aplicativo",
+      "instruction": "Tente fazer a instalação a partir do ícone à direita da barra de endereços.",
+      "icon": "Abrir o menu de instalação do aplicativo web",
+      "open": "Abrir aplicativo",
       "install": "Instalar aplicativo",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
-      "tab": "Web apps"
+      "calendar": "Calendário",
+      "result": "Exemplo de janela de um aplicativo independente",
+      "benefit": "Abra um site como um aplicativo em uma janela separada.",
+      "tab": "Aplicativos web"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "Navegar com um gesto do mouse",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "Mantenha pressionado o botão direito",
+        "Mova para a esquerda",
+        "Solte o botão"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "Página anterior",
+      "current": "Página atual",
+      "result": "← Voltar à página anterior (demonstração)",
+      "hint": "Um exemplo do gesto “Voltar” padrão.",
+      "enable": "Ative os gestos do mouse em “Configurações” para usar esse recurso.",
+      "benefit": "Mantenha pressionado o botão direito do mouse e mova o mouse para realizar ações como “Voltar”."
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "Verificar idioma",
+      "Escolha o visual",
+      "Começar"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "Verifique o idioma de exibição de sua preferência.",
+      "Escolha um tema e um motor de busca.",
+      "Confira suas opções e comece a usar o Floorp."
     ],
-    "replay": "Watch again"
+    "replay": "Rever"
   },
   "demoPlayback": {
-    "pause": "Pause",
-    "play": "Play / resume"
+    "pause": "Pausar",
+    "play": "Reproduzir / continuar"
   }
 }
