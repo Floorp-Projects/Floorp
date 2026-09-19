@@ -74,6 +74,19 @@ export class SsbRunnerUtils {
   }
 
   static async applyOSIntegration(ssb: Manifest, win: Window) {
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      try {
+        // Also repairs apps installed before macOS launcher support existed.
+        await new MacOSSupport().install(ssb);
+      } catch (error) {
+        console.error("[SsbRunnerUtils] Failed to create macOS app launcher:", error);
+      }
+      return;
+    }
+
     // Check A/B test before applying taskbar integration
     if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
       console.debug(

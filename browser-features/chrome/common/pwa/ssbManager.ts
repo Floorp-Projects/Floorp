@@ -6,7 +6,7 @@
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
-import type { Browser, Manifest } from "./type.ts";
+import type { Browser, Manifest, SsbSupport } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
 import {
   getUserContextIdForBrowser,
@@ -20,8 +20,7 @@ const { TaskbarExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
 );
 
-// deno-lint-ignore no-explicit-any
-let SupportClass: any | null = null;
+let SupportClass: (new () => SsbSupport) | null = null;
 if (AppConstants.platform === "win") {
   const { WindowsSupport } = ChromeUtils.importESModule(
     "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
@@ -32,6 +31,11 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+} else if (AppConstants.platform === "macosx") {
+  const { MacOSSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+  );
+  SupportClass = MacOSSupport;
 }
 
 export function resolveEffectiveUserContextId(
@@ -295,18 +299,16 @@ export class SiteSpecificBrowserManager {
       if (AppConstants.platform === "win") {
         // Windows install (taskbar integration) is controlled by A/B test
         if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass(this);
+          const windowsSupport = new SupportClass();
           await windowsSupport.install(manifest);
         } else {
           console.debug(
             "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
           );
         }
-      } else if (AppConstants.platform === "linux") {
-        // Linux install (.desktop file generation) is NOT controlled by A/B test
-        // This is excluded from A/B test as per requirements
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.install(manifest);
+      } else {
+        // Launcher file generation is independent of taskbar experiments.
+        await new SupportClass().install(manifest);
       }
     }
 
@@ -318,18 +320,15 @@ export class SiteSpecificBrowserManager {
       if (AppConstants.platform === "win") {
         // Windows uninstall (taskbar integration) is controlled by A/B test
         if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass(this);
+          const windowsSupport = new SupportClass();
           await windowsSupport.uninstall(manifest);
         } else {
           console.debug(
             "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
           );
         }
-      } else if (AppConstants.platform === "linux") {
-        // Linux uninstall (.desktop file removal) is NOT controlled by A/B test
-        // This is excluded from A/B test as per requirements
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.uninstall(manifest);
+      } else {
+        await new SupportClass().uninstall(manifest);
       }
     }
 
