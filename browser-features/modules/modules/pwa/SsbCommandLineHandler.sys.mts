@@ -80,9 +80,18 @@ export class SsbRunnerUtils {
       );
       try {
         // Also repairs apps installed before macOS launcher support existed.
-        await new MacOSSupport().install(ssb);
+        const { DataStoreProvider } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/DataStore.sys.mjs",
+        );
+        await new MacOSSupport().repair(
+          ssb,
+          DataStoreProvider.getDataManager(),
+        );
       } catch (error) {
-        console.error("[SsbRunnerUtils] Failed to create macOS app launcher:", error);
+        console.error(
+          "[SsbRunnerUtils] Failed to create macOS app launcher:",
+          error,
+        );
       }
       return;
     }

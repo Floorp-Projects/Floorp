@@ -31,11 +31,6 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
-} else if (AppConstants.platform === "macosx") {
-  const { MacOSSupport } = ChromeUtils.importESModule(
-    "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
-  );
-  SupportClass = MacOSSupport;
 }
 
 export function resolveEffectiveUserContextId(
@@ -295,6 +290,14 @@ export class SiteSpecificBrowserManager {
   }
 
   private async install(manifest: Manifest) {
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      // The macOS queue covers launcher creation and the corresponding store write.
+      await new MacOSSupport().install(manifest, this.dataManager);
+      return;
+    }
     if (SupportClass) {
       if (AppConstants.platform === "win") {
         // Windows install (taskbar integration) is controlled by A/B test
@@ -316,6 +319,13 @@ export class SiteSpecificBrowserManager {
   }
 
   private async uninstall(manifest: Manifest) {
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      await new MacOSSupport().uninstall(manifest, this.dataManager);
+      return;
+    }
     if (SupportClass) {
       if (AppConstants.platform === "win") {
         // Windows uninstall (taskbar integration) is controlled by A/B test

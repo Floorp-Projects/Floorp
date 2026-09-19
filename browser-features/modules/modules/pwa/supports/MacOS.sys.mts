@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { Manifest } from "../type.ts";
+import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
 
 export type MacAppOptions = {
   applicationsDir: string;
@@ -8,9 +9,23 @@ export type MacAppOptions = {
   executable: string;
 };
 
+type MacAppStore = {
+  getCurrentSsbData(): Promise<Record<string, Manifest>>;
+  saveSsbData(ssb: Manifest): Promise<void>;
+  removeSsbData(key: string): Promise<void>;
+};
+
 function escapeXml(value: string): string {
-  // deno-lint-ignore no-control-regex -- XML 1.0 disallows these characters.
-  return value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "")
+  // XML 1.0 Char production, evaluated as code points to preserve non-BMP text.
+  // https://www.w3.org/TR/xml/#charsets
+  const characters = Array.from(value).filter((character) => {
+    const code = character.codePointAt(0)!;
+    return code === 0x9 || code === 0xa || code === 0xd ||
+      (code >= 0x20 && code <= 0xd7ff) ||
+      (code >= 0xe000 && code <= 0xfffd) ||
+      (code >= 0x10000 && code <= 0x10ffff);
+  });
+  return characters.join("")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
@@ -102,22 +117,45 @@ export class MacOSSupport {
     };
   }
 
-  async install(ssb: Manifest): Promise<void> {
-    const options = this.getOptions();
-    const bundle = await getMacAppBundle(ssb, options);
-    // Several browser windows can launch the same existing app concurrently.
-    const previous = MacOSSupport.pending.get(bundle.path) ?? Promise.resolve();
-    const pending = previous.catch(() => {}).then(() =>
-      this.writeBundle(ssb, options, bundle)
-    );
-    MacOSSupport.pending.set(bundle.path, pending);
+  private static async enqueue(
+    path: string,
+    operation: () => Promise<void>,
+  ): Promise<void> {
+    // Keep both filesystem and store changes ordered across browser windows.
+    // A failed operation must not prevent a later repair or explicit reinstall.
+    const previous = MacOSSupport.pending.get(path) ?? Promise.resolve();
+    const pending = previous.catch(() => {}).then(operation);
+    MacOSSupport.pending.set(path, pending);
     try {
       await pending;
     } finally {
-      if (MacOSSupport.pending.get(bundle.path) === pending) {
-        MacOSSupport.pending.delete(bundle.path);
+      if (MacOSSupport.pending.get(path) === pending) {
+        MacOSSupport.pending.delete(path);
       }
     }
+  }
+
+  async install(ssb: Manifest, store?: MacAppStore): Promise<void> {
+    const options = this.getOptions();
+    const bundle = await getMacAppBundle(ssb, options);
+    await MacOSSupport.enqueue(bundle.path, async () => {
+      await this.writeBundle(ssb, options, bundle);
+      await store?.saveSsbData(ssb);
+    });
+  }
+
+  async repair(ssb: Manifest, store: MacAppStore): Promise<void> {
+    const options = this.getOptions();
+    const bundle = await getMacAppBundle(ssb, options);
+    await MacOSSupport.enqueue(bundle.path, async () => {
+      const apps = await store.getCurrentSsbData();
+      const current = Object.values(apps).find((app) => app.id === ssb.id);
+      if (!current) return;
+      const currentBundle = await getMacAppBundle(current, options);
+      // A window opened before a rename must not recreate the old launcher.
+      if (currentBundle.path !== bundle.path) return;
+      await this.writeBundle(current, options, currentBundle);
+    });
   }
 
   private async writeBundle(
@@ -210,10 +248,22 @@ export class MacOSSupport {
     return pngToIcns(new Uint8Array(await png.arrayBuffer()));
   }
 
-  async uninstall(ssb: Manifest): Promise<void> {
+  async uninstall(ssb: Manifest, store?: MacAppStore): Promise<void> {
     const options = this.getOptions();
     const { path } = await getMacAppBundle(ssb, options);
-    await MacOSSupport.pending.get(path);
+    await MacOSSupport.enqueue(path, async () => {
+      await this.removeBundle(ssb, options, path);
+      await store?.removeSsbData(
+        buildSsbKey(ssb.start_url, ssb.userContextId ?? 0),
+      );
+    });
+  }
+
+  private async removeBundle(
+    ssb: Manifest,
+    options: MacAppOptions,
+    path: string,
+  ): Promise<void> {
     const markerPath = PathUtils.join(path, "Contents", "floorp.json");
     if (!await IOUtils.exists(markerPath)) return;
     const marker = await IOUtils.readJSON(markerPath) as {

@@ -8,6 +8,7 @@ import {
   pngToIcns,
 } from "../MacOS.sys.mts";
 import type { Manifest } from "../../type.ts";
+import { DataManager } from "../../../../../chrome/common/pwa/dataStore.ts";
 import {
   assert,
   assertEquals,
@@ -33,8 +34,108 @@ class TestMacOSSupport extends MacOSSupport {
   }
 }
 
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
+async function timeout<T>(
+  promise: Promise<T>,
+  milliseconds = 5000,
+): Promise<T> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("PWA test timed out")),
+          milliseconds,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Exercise the real data lifecycle in a disposable store, never the user's file.
+class TestStore extends DataManager {
+  afterSave: (() => Promise<void>) | undefined;
+  afterRemove: (() => Promise<void>) | undefined;
+  constructor(file: string) {
+    super();
+    Object.defineProperties(this, {
+      ssbStoreFile: { value: file },
+      ssbStoreDirectory: { value: PathUtils.parent(file) },
+    });
+  }
+  override async saveSsbData(app: Manifest): Promise<void> {
+    await super.saveSsbData(app);
+    await this.afterSave?.();
+  }
+  override async removeSsbData(key: string): Promise<void> {
+    await super.removeSsbData(key);
+    await this.afterRemove?.();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("MacOS.test.mts", [
+    {
+      name:
+        "plist filters forbidden XML code points and preserves valid non-BMP text",
+      async fn() {
+        const valid =
+          "\t\n \u0020\ud7ff\ue000\ufffd\u{10000}日本語🌏\u{10ffff}&<>\"'";
+        // Construct lone surrogates at runtime so UTF-8 build output preserves
+        // the intended UTF-16 code units rather than replacement characters.
+        const invalid = "\0\u0001\u0008\u000b\u000c\u000e\u001f\ufffe\uffff" +
+          String.fromCharCode(0xd800, 0x58, 0xdfff);
+        assertEquals(
+          invalid.charCodeAt(invalid.length - 3),
+          0xd800,
+          "input contains an unpaired high surrogate",
+        );
+        assertEquals(
+          invalid.charCodeAt(invalid.length - 1),
+          0xdfff,
+          "input contains an unpaired low surrogate",
+        );
+        const bundle = await getMacAppBundle(
+          { ...ssb, name: valid + invalid },
+          {
+            applicationsDir: PathUtils.tempDir,
+            profileDir: "/profile",
+            executable: "/floorp",
+          },
+        );
+        const parsed = new DOMParser().parseFromString(
+          bundle.plist,
+          "text/xml",
+        );
+        assertEquals(
+          parsed.querySelector("parsererror"),
+          null,
+          "generated plist is well-formed XML",
+        );
+        const name = Array.from(parsed.querySelectorAll("key")).find((key) =>
+          key.textContent === "CFBundleName"
+        );
+        assertEquals(
+          name?.nextElementSibling?.textContent,
+          valid + "X",
+          "only XML-forbidden code points removed",
+        );
+      },
+    },
     {
       name:
         "bundle metadata escapes XML and shell arguments and isolates profiles",
@@ -174,6 +275,172 @@ export async function runAllTests(): Promise<void> {
           await support.uninstall(renamed);
           assert(!await IOUtils.exists(renamedPath), "uninstall is idempotent");
         } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name:
+        "install waits for uninstall ownership validation and recursive removal",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-queue-${crypto.randomUUID()}`,
+        );
+        const options = {
+          applicationsDir: root,
+          profileDir: "/profile",
+          executable: "/floorp",
+        };
+        const app = { ...ssb, name: "Queue App" };
+        const support = new TestMacOSSupport(options);
+        const { path } = await getMacAppBundle(app, options);
+        const marker = PathUtils.join(path, "Contents", "floorp.json");
+        const entered = deferred();
+        const release = deferred();
+        const originalRead = IOUtils.readJSON;
+        const originalRemove = IOUtils.remove;
+        const events: string[] = [];
+        const operations: Promise<void>[] = [];
+        try {
+          await support.install(app);
+          IOUtils.readJSON = async (file, opts) => {
+            const data = await originalRead.call(IOUtils, file, opts);
+            if (file === marker) {
+              events.push("validate");
+              entered.resolve();
+              await release.promise;
+            }
+            return data;
+          };
+          IOUtils.remove = async (file, opts) => {
+            await originalRemove.call(IOUtils, file, opts);
+            if (file === path) events.push("removed");
+          };
+          const removal = support.uninstall(app);
+          operations.push(removal);
+          await timeout(entered.promise);
+          let installed = false;
+          const installation = new TestMacOSSupport(options).install({
+            ...app,
+            icon: "updated",
+          })
+            .then(() => {
+              installed = true;
+              events.push("installed");
+            });
+          operations.push(installation);
+          await new Promise<void>((resolve) => setTimeout(resolve, 100));
+          assertEquals(
+            installed,
+            false,
+            "install remains blocked during ownership validation",
+          );
+          release.resolve();
+          await timeout(Promise.all(operations));
+          assertEquals(
+            events.join(","),
+            "validate,removed,installed",
+            "whole uninstall precedes subsequent install",
+          );
+          assert(
+            await IOUtils.exists(marker),
+            "later install leaves a complete bundle",
+          );
+        } finally {
+          release.resolve();
+          await Promise.allSettled(operations);
+          IOUtils.readJSON = originalRead;
+          IOUtils.remove = originalRemove;
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
+    {
+      name:
+        "store writes share the queue and stale launch repair cannot resurrect removed or renamed apps",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-store-${crypto.randomUUID()}`,
+        );
+        await IOUtils.makeDirectory(root);
+        const options = {
+          applicationsDir: root,
+          profileDir: "/profile",
+          executable: "/floorp",
+        };
+        const support = new TestMacOSSupport(options);
+        const store = new TestStore(PathUtils.join(root, "ssb.json"));
+        const app = { ...ssb, name: "Store App" };
+        const { path } = await getMacAppBundle(app, options);
+        const saved = deferred();
+        const finishSave = deferred();
+        const removed = deferred();
+        const finishRemove = deferred();
+        const operations: Promise<void>[] = [];
+        try {
+          store.afterSave = async () => {
+            saved.resolve();
+            await finishSave.promise;
+          };
+          operations.push(support.install(app, store));
+          await timeout(saved.promise);
+          operations.push(support.uninstall(app, store));
+          await new Promise<void>((resolve) => setTimeout(resolve, 100));
+          assert(
+            await IOUtils.exists(path),
+            "uninstall waits until save has completed",
+          );
+          finishSave.resolve();
+          await timeout(Promise.all(operations));
+          assertEquals(
+            Object.keys(await store.getCurrentSsbData()).length,
+            0,
+            "uninstall removes stored app",
+          );
+          assert(
+            !await IOUtils.exists(path),
+            "install followed by uninstall leaves no bundle",
+          );
+          await support.install(app, store);
+          store.afterRemove = async () => {
+            removed.resolve();
+            await finishRemove.promise;
+          };
+          operations.push(support.uninstall(app, store));
+          await timeout(removed.promise);
+          operations.push(support.repair(app, store));
+          finishRemove.resolve();
+          await timeout(Promise.all(operations));
+          assert(
+            !await IOUtils.exists(path),
+            "stale launch does not recreate removed bundle",
+          );
+          assertEquals(
+            Object.keys(await store.getCurrentSsbData()).length,
+            0,
+            "stale launch does not recreate stored app",
+          );
+          await support.install(app, store);
+          await support.uninstall(app, store);
+          const renamed = { ...app, name: "Renamed Store App" };
+          await support.install(renamed, store);
+          await support.repair(app, store);
+          assert(
+            !await IOUtils.exists(path),
+            "stale launch does not recreate pre-rename bundle",
+          );
+          const current = await store.getCurrentSsbData();
+          assertEquals(
+            Object.values(current)[0].name,
+            renamed.name,
+            "renamed app remains registered",
+          );
+        } finally {
+          finishSave.resolve();
+          finishRemove.resolve();
+          await Promise.allSettled(operations);
           await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
         }
       },
