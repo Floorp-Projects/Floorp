@@ -18,6 +18,30 @@
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.25s ease !important;
   z-index: 101 !important;
+
+  /* Firefox normally paints the frame on body. An overlay needs its own
+     opaque backing, with the theme artwork above it, or web content and the
+     revealed sidebar show through the tabs. Keep translucent theme colors
+     above a system fallback, as Firefox's floating fullscreen toolbox does. */
+  background-color: ActiveCaption !important;
+  background-image:
+    var(--toolbox-background-image, none),
+    image(var(--toolbox-background-color, var(--lwt-accent-color, Canvas)))
+    !important;
+  background-repeat: var(--toolbox-background-repeat, no-repeat), no-repeat
+    !important;
+  background-position: var(--toolbox-background-position, right top), right top
+    !important;
+  background-size: var(--toolbox-background-size, auto), auto !important;
+}
+
+:root[zenmode]:-moz-window-inactive #navigator-toolbox {
+  background-color: InactiveCaption !important;
+  background-image:
+    var(--toolbox-background-image, none),
+    image(var(--toolbox-background-color-inactive,
+    var(--toolbox-background-color, var(--lwt-accent-color, Canvas))))
+    !important;
 }
 
 /* The urlbar is rendered in the top layer and must be hidden directly. */
