@@ -134,8 +134,12 @@ async function resetZoom(): Promise<number> {
   return await readZoom();
 }
 
-function assertNoRockerActivation(state: PageState, label: string): void {
-  for (const type of ["click", "auxclick", "dblclick", "contextmenu"]) {
+function assertNoRockerActivation(
+  state: PageState,
+  label: string,
+  rightButtonFirst: boolean,
+): void {
+  for (const type of ["click", "auxclick", "dblclick"]) {
     assert(
       state.counts[type] === 0,
       `${label}: expected zero ${type} events, got ${state.counts[type]}: ${
@@ -143,6 +147,23 @@ function assertNoRockerActivation(state: PageState, label: string): void {
       }`,
     );
   }
+  // Marionette emits contextmenu immediately after secondary pointerDown on
+  // every OS. Before the second button this is still an ordinary right click;
+  // the fixture cancels its menu, allowing the held-button rocker to continue.
+  const firstDown = state.events.findIndex((event) =>
+    event.type === "mousedown"
+  );
+  const menus = state.events.filter((event) => event.type === "contextmenu");
+  const initialMenu = rightButtonFirst && state.counts.contextmenu === 1 &&
+    menus.length === 1 && state.events[firstDown]?.button === 2 &&
+    state.events[firstDown + 1] === menus[0] &&
+    menus[0].button === 2 && menus[0].buttons === 2;
+  assert(
+    state.counts.contextmenu === 0 || initialMenu,
+    `${label}: unexpected contextmenu after the rocker began: ${
+      JSON.stringify(state.events)
+    }`,
+  );
 }
 
 async function assertOrdinaryClick(
@@ -199,11 +220,31 @@ async function assertRocker(
   // race each other on the same connection.
   const state = await readPageState();
   const zoomAfter = await readZoom();
+  const diagnostics = zoomAfter !== setup.oneStepZoom
+    ? await client.executeScript(`
+      const config = JSON.parse(Services.prefs.getStringPref(${
+      JSON.stringify(CONFIG_PREF)
+    }, "{}"));
+      return JSON.stringify({
+        enabled: Services.prefs.getBoolPref(${
+      JSON.stringify(ENABLED_PREF)
+    }, false),
+        controllerAttached: window.__mouseGestureControllerAttached === true,
+        activeWindow: Services.focus.activeWindow === window,
+        documentFocused: document.hasFocus(),
+        rockerGesturesEnabled: config.rockerGesturesEnabled,
+        rockerActions: config.rockerActions,
+        contextMenuAfterMouseUp: Services.prefs.getBoolPref("ui.context_menus.after_mouseup", false),
+      });
+    `).catch((error: unknown) => `unavailable: ${String(error)}`)
+    : null;
   assert(
     zoomAfter === setup.oneStepZoom,
-    `${label}: rocker action must execute exactly once; expected zoom ${setup.oneStepZoom}, got ${zoomAfter}`,
+    `${label}: rocker action must execute exactly once; expected zoom ${setup.oneStepZoom}, got ${zoomAfter}; events=${
+      JSON.stringify(state.events)
+    }; counts=${JSON.stringify(state.counts)}; diagnostics=${diagnostics}`,
   );
-  assertNoRockerActivation(state, label);
+  assertNoRockerActivation(state, label, !expectForwardedLeftRelease);
 
   if (expectForwardedLeftRelease) {
     const leftDown = state.events.filter((event) =>
