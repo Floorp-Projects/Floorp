@@ -535,6 +535,7 @@ export class TabDragDropManager {
       const selectedTabs = gBrowser.selectedTabs.filter(
         (t: XULTab | null) => t != null,
       ) as XULTab[];
+      if (selectedTabs.length === 0) return;
 
       const pinnedTabsCount = tabsContainer.querySelectorAll(
         ".tabbrowser-tab[newPin]",
@@ -603,14 +604,15 @@ export class TabDragDropManager {
           if (t.hasAttribute("newPin")) {
             t.removeAttribute("newPin");
           }
-
-          if (!shouldMoveAfter) {
-            gBrowser.moveTabBefore(t, tabToMoveTo as unknown as XULElement);
-          } else {
-            gBrowser.moveTabAfter(t, tabToMoveTo as unknown as XULElement);
-            tabToMoveTo = t;
-          }
         });
+        // The reference can itself be selected. Native bulk movement chains
+        // each remaining tab after the previous one, preserving the block's
+        // order even when dropped back onto its own leading/interior edge.
+        if (shouldMoveAfter) {
+          gBrowser.moveTabsAfter(selectedTabs, tabToMoveTo as XULElement);
+        } else {
+          gBrowser.moveTabsBefore(selectedTabs, tabToMoveTo as XULElement);
+        }
       }
     }
 

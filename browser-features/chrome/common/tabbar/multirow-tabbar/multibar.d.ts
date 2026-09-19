@@ -17,6 +17,8 @@ export interface TabBrowser {
   unpinTab(tab: XULTab): void;
   moveTabBefore(tab: XULTab | XULElement, beforeTab: XULTab | XULElement): void;
   moveTabAfter(tab: XULTab | XULElement, afterTab: XULTab | XULElement): void;
+  moveTabsBefore(tabs: XULTab[], beforeTab: XULElement): void;
+  moveTabsAfter(tabs: XULTab[], afterTab: XULElement): void;
   moveTabToExistingGroup(tab: XULTab, group: XULElement): void;
 }
 
