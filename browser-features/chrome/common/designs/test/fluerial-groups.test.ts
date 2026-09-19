@@ -19,6 +19,7 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
   const originalTab = browser.selectedTab;
   const style = document.createElement("style");
   const tabs: XULElement[] = [];
+  let group: XULElement | undefined;
   const verticalPref = "sidebar.verticalTabs";
   const hadVerticalPref = Services.prefs.prefHasUserValue(verticalPref);
   const wasVertical = Services.prefs.getBoolPref(verticalPref, false);
@@ -59,7 +60,7 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
         skipAnimation: true,
       }));
     }
-    browser.addTabGroup(tabs, { label: "Fluerial regression" });
+    group = browser.addTabGroup(tabs, { label: "Fluerial regression" });
     browser.selectedTab = tabs[0];
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve())
@@ -131,6 +132,12 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
     for (const tab of tabs) InspectorUtils.removePseudoClassLock(tab, ":hover");
     browser.selectedTab = originalTab;
     for (const tab of tabs) browser.removeTab(tab);
+    // Native groups remove themselves through a MutationObserver. Let that
+    // finish before restoring the design, which reparents the tab toolbar
+    // and disconnects the group's observer, discarding pending mutations.
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
     style.remove();
     if (hadVerticalPref) Services.prefs.setBoolPref(verticalPref, wasVertical);
     else Services.prefs.clearUserPref(verticalPref);
@@ -139,6 +146,7 @@ async function testNativeGroupLines(checkHover: boolean): Promise<void> {
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve())
     );
+    assert(!group?.isConnected, "The fixture must leave no native tab group");
   }
 }
 
