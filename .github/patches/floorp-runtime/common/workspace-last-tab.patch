@@ -1,0 +1,14 @@
+diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+--- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -6469,3 +6469,10 @@ export class Tabbrowser {
++      // Floorp: let Workspace handle the last visible tab without discarding
++      // hidden tabs. This decision belongs to this removal in this window;
++      // browser.tabs.closeWindowWithLastTab must remain the user's preference.
++      if (this.tabs.some(tab => tab != aTab && tab.isOpen && tab.hidden)) {
++        closeWindow = false;
++      }
++
+       if (closeWindow) {
+         // We've already called beforeunload on all the relevant tabs if we get here,
+         // so avoid calling it again:
