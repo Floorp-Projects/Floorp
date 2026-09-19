@@ -432,7 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Openen in gesplitste weergave",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "Openen in Split View (tot {{max}} tabbladen)",
       "addPane": "Venster toevoegen aan gesplitste weergave",
       "moveToPane": "Verplaatsen naar venster",
       "moveToPaneN": "Venster {{n}} ({{title}})"

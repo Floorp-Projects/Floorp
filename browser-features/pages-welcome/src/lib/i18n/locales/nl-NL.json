@@ -1,108 +1,108 @@
 {
   "setupRich": {
     "selected": "Geselecteerd",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "Gebruikt voor menu's en instellingen",
+    "palettePreview": "Kleurvoorbeeld",
+    "searchDestination": "Zoekmachine in de adresbalk",
+    "enlarge": "Schermafbeelding van {{feature}} vergroten",
+    "enlargeShort": "Groter weergeven",
+    "closePreview": "Sluit voorbeeld",
+    "actualScreenshot": "Echte schermafbeelding van Floorp. Het uiterlijk hangt af van je versie en instellingen."
   },
   "setupV5": {
     "back": "Terug",
     "supportLabels": {
       "disabled": "Niet automatisch openen",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "blocking": "Open met mijn blocker-instellingen",
+      "support": "Advertenties toestaan om Floorp te ondersteunen"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "Dit is een conceptkeuze. Deze wordt pas van kracht wanneer je op de volgende pagina op „Start met het gebruik van Floorp” klikt. Als je de installatie voor die tijd sluit, behoud je je huidige instellingen.",
     "steps": [
       "Welkom",
       "Taal",
       "Functies",
       "Floorp Hub",
-      "Preferences",
+      "Voorkeuren",
       "Ondersteuning",
-      "Finish"
+      "Voltooien"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "title": "Welkom\nbij Floorp.",
+        "description": "Laat je browser aansluiten op jouw manier van werken.",
+        "hint": "Deze gids laat je kennismaken met de functies en helpt je bij het kiezen van je eerste instellingen."
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "Start in de taal\ndie je het beste kent.",
+        "description": "Controleer de weergavetaal van Floorp en pas deze indien nodig aan.",
+        "hint": "Je gekozen taal wordt direct toegepast."
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "Ontdek wat\nFloorp allemaal kan.",
+        "description": "Scheid je taken, bekijk pagina's zij aan zij en werk sneller. Ontdek de functies die je interesseren.",
+        "hint": "Je kunt deze functies later aanpassen in de Instellingen."
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "Je instellingen,\nin de Floorp Hub.",
+        "description": "Pas Floorp-specifieke functies aan op één plek.",
+        "hint": "Na de installatie kun je dit op elk moment openen."
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "Maak uiterlijk\n en zoeken helemaal van jou.",
+        "description": "Kies je dagelijkse thema en zoekmachine.",
+        "hint": "Je kunt deze later wijzigen in de Floorp Hub of de Firefox-instellingen."
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "Updates en\nsteun aan Floorp.",
+        "description": "Advertentie-inkomsten ondersteunen de ontwikkeling en werking van Floorp. Kies hoe release-opmerkingen worden geopend.",
+        "hint": "Later aan te passen via Updates en experimenten."
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "Je bent klaar\nom te surfen.",
+        "description": "Bekijk je keuzes en begin met Floorp.",
+        "hint": "Je kunt je instellingen later altijd nog wijzigen."
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "Voordat je begint",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "Controleer je weergavetaal",
+        "description": "Start in de taal die je elke dag gebruikt."
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "Kies instellingen die bij je passen",
+        "description": "Selecteer je thema en zoekmachine."
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "Maak je klaar om te surfen",
+        "description": "Bekijk je keuzes voor de start."
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "Je kunt deze instellingen later altijd nog wijzigen.",
+    "languageTitle": "Weergavetaal",
+    "languageLabel": "Weergavetaal van Floorp",
+    "languageHint": "Gebruikt voor menu's en instellingen.",
+    "languageNotice": "Sommige add-ons ondersteunen taalwijzigingen mogelijk niet.",
+    "languageCurrent": "{{language}} wordt gebruikt",
+    "featuresTitle": "Ontdek de functies",
+    "hubTitle": "Vind wat je wilt aanpassen",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "Tabbladen en uiterlijk",
+        "description": "Tabbladindeling en het uiterlijk van de browser"
       },
       {
         "title": "Workspaces",
-        "description": "Switch tasks and organize tabs"
+        "description": "Wissel van taak en organiseer tabbladen"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "Muisbewegingen",
+        "description": "Sneltoetsen voor veelgebruikte acties"
       }
     ],
     "openHub": "Open Floorp Hub",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
+    "openPreferences": "Open de Firefox-instellingen",
+    "newTab": "Opent in nieuw tabblad.",
     "hubAddress": "You can also enter about:hub in the address bar.",
     "customizeTitle": "Your first settings",
     "searchHint": "Used when searching from the address bar.",
@@ -164,7 +164,7 @@
     "next": "Volgende"
   },
   "hubPage": {
-    "title": "Over Floorp Hub ",
+    "title": "Over Floorp Hub",
     "subtitle": "Een centrale plek voor Floorp specifieke instellingen.",
     "sectionTitle": "Floorp Hub",
     "description": "Floorp Hub is een speciaal instellingencentrum voor Floorp-specifieke opties. Je kunt dit openen door naar 'about:hub' te navigeren. Het is ook toegankelijk via de linkerzijbalk van de instellingenpagina van Firefox op 'about:preferences'.",
@@ -363,89 +363,89 @@
       "instruction": "Open the workspace button at the upper left, then choose a workspace.",
       "names": [
         "Work",
-        "Personal",
-        "Learning"
+        "Persoonlijk",
+        "Leren"
       ],
       "tabs": [
         [
           "Project",
-          "Mail",
-          "Calendar"
+          "E-mail",
+          "Kalender"
         ],
         [
-          "Travel",
-          "Recipes",
+          "Reizen",
+          "Recepten",
           "Muziek"
         ],
         [
           "Notities",
-          "Dictionary",
+          "Woordenboek",
           "Bronnen"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "Tabbladen voor {{name}} tonen.",
+      "benefit": "Wissel tussen je werk- en privétabbladen als groep.",
+      "guideOpen": "Klik op de knop Werk.",
+      "guideSelect": "Kies Privé.",
+      "guideDone": "De tabbladen hierboven zijn samen omgeschakeld.",
+      "openHint": "1 Hier openen",
+      "selectHint": "2 Kies Privé",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "Teamwerk",
+          "title": "Project van deze week",
+          "description": "Houd taken en vooruitgang samen.",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "Verzamel ideeën voor het project",
+            "Ontwerp beoordelen",
+            "Bereid je voor op de volgende vergadering"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "Weekendplannen",
+          "title": "Wat is de volgende stap?",
+          "description": "Verzamel favoriete plekken en plan je volgende reis.",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "Vind een café aan zee",
+            "Verken een nieuwe stad",
+            "Een paklijst maken"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "Studiemateriaal",
+          "title": "Studienotities van vandaag",
+          "description": "Leg in je eigen woorden uit wat je hebt geleerd.",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "De hoofdlijnen samenvatten",
+            "Schrijf nieuwe woorden op",
+            "Noteer vervolgvragen voor verder onderzoek"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "Open een website naast je pagina",
+      "instruction": "Gebruik het muziekpictogram rechts om de opgeslagen website te openen of te sluiten.",
+      "article": "Blijf verkennen",
       "music": "Muziek",
-      "favorites": "Favorites",
+      "favorites": "Favorieten",
       "tracks": [
-        "Moonlit",
-        "Blue hour",
-        "Gentle breeze"
+        "Bij maneschijn",
+        "De schemering",
+        "Een zacht briesje"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "Probeer afspelen (zonder audio)",
+      "stop": "Stop afspelen",
+      "toggle": "Muziekpaneel openen/sluiten",
+      "open": "Je pagina en de opgeslagen website worden naast elkaar weergegeven.",
+      "closed": "Open het paneel opnieuw via het muziekpictogram rechts.",
+      "benefit": "Open een andere website naast de huidige pagina."
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "Maak van een favoriete site een app",
+      "instruction": "Probeer de installatie via het pictogram rechts in de adresbalk.",
+      "icon": "Open het installatiemenu van de web-app",
+      "open": "App openen",
       "install": "Install app",
       "calendar": "Calendar",
       "result": "Example of a standalone app window",
