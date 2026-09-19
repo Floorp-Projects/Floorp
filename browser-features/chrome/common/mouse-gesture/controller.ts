@@ -719,13 +719,16 @@ export class MouseGestureController {
       return;
     }
 
-    // Keyboard context-menu input (or any other event with no physical right
-    // button) must not remain blocked by a gesture whose releases were lost.
+    // A mouse contextmenu can precede the matching mouseup while reporting
+    // buttons=0 (native dispatch samples physical state separately). It is
+    // not evidence of a lost release: preserve the trail until mouseup.
+    // Keyboard context-menu input must still recover a stale gesture.
     if (
-      ((this.isGestureActive || this.isWheelGestureFired) &&
+      event.button !== 2 &&
+      (((this.isGestureActive || this.isWheelGestureFired) &&
         !this.isRockerGestureFired &&
         !this.isSecondaryButtonPhysicallyDown(event)) ||
-      (this.isRockerGestureFired && event.buttons === 0)
+        (this.isRockerGestureFired && event.buttons === 0))
     ) {
       this.resetInteractionState();
     }

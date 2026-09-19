@@ -12,6 +12,7 @@ import {
   setEnabled,
 } from "./config.ts";
 import { MouseGestureController } from "./controller.ts";
+import { handleContextMenuAfterMouseUp } from "./context-menu-policy.ts";
 import { createRootHMR } from "@nora/solid-xul";
 import { createEffect } from "solid-js";
 
@@ -226,43 +227,6 @@ function setConfig(config: MouseGestureConfig) {
 
 function createMouseGestureService() {
   return new MouseGestureService();
-}
-
-const PREF_LAST_ENABLED_STATE = "floorp.mousegesture.last_enabled_state";
-
-let lastEnabledState: boolean | null = null;
-
-// Initialize from pref if it exists
-try {
-  if (
-    Services.prefs.getPrefType(PREF_LAST_ENABLED_STATE) ===
-    Services.prefs.PREF_BOOL
-  ) {
-    lastEnabledState = Services.prefs.getBoolPref(PREF_LAST_ENABLED_STATE);
-  }
-} catch (e) {
-  console.log(
-    "[MouseGestureService] Could not read last enabled state pref:",
-    e,
-  );
-}
-
-function handleContextMenuAfterMouseUp(enabled: boolean) {
-  if (Services.appinfo.OS === "WINNT") return;
-
-  if (lastEnabledState === enabled) return;
-
-  Services.prefs.setBoolPref("ui.context_menus.after_mouseup", enabled);
-  lastEnabledState = enabled;
-
-  try {
-    Services.prefs.setBoolPref(PREF_LAST_ENABLED_STATE, enabled);
-  } catch (e) {
-    console.error(
-      "[MouseGestureService] Failed to save last enabled state:",
-      e,
-    );
-  }
 }
 
 export const mouseGestureService = createRootHMR(

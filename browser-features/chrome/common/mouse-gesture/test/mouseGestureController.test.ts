@@ -2237,7 +2237,61 @@ async function testRightLeftRockerSuppressesLeftMouseUp(): Promise<void> {
   });
 }
 
+async function testContextMenuBeforeMouseUpPreservesGesture(): Promise<void> {
+  for (const buttons of [0, 2]) {
+    await withTrackedActions(async (counts) => {
+      await withController({
+        actions: [{ pattern: ["right"], action: DRAWN_RIGHT_ACTION }],
+      }, ({ win, runAllTimers }) => {
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchDrag(win, 160, 0);
+        const beforeRelease = dispatchMouse(
+          win,
+          "contextmenu",
+          2,
+          160,
+          0,
+          buttons,
+        );
+        assertEquals(
+          beforeRelease.defaultPrevented,
+          true,
+          "early native menu must not cancel the drag",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          0,
+          "contextmenu must not execute the action",
+        );
+        dispatchMouse(win, "mouseup", 2, 160, 0, 0);
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          1,
+          "matching mouseup must execute exactly once",
+        );
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+          true,
+          "post-release menu remains suppressed",
+        );
+        runAllTimers();
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchMouse(win, "mouseup", 2);
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+          false,
+          "next ordinary right click must open its menu",
+        );
+      });
+    });
+  }
+}
+
 const tests: TestCase[] = [
+  {
+    name: "native contextmenu before mouseup preserves the drawn gesture",
+    fn: testContextMenuBeforeMouseUpPreservesGesture,
+  },
   {
     name: "wheel gesture suppresses post-mouseup contextmenu",
     fn: testWheelGestureSuppressesPostMouseUpContextMenu,
