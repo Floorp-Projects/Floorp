@@ -217,7 +217,7 @@
             "exampleFullUrl": "Matches Gmail URLs only"
         },
         "tabStacks": {
-            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "unavailableInVerticalTabs": "Tab bertumpuk tidak tersedia pada tata letak tab vertikal. Pengaturan Anda tetap tersimpan dan berlaku saat kembali ke tata letak tab horizontal.",
             "title": "Tab Stacks",
             "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
             "enableOrDisable": "(Non)Aktifkan",
@@ -807,14 +807,14 @@
             "performance": "Adjust memory usage"
         },
         "resources": {
-            "privacy": "About privacy",
-            "extensions": "Manage extensions",
-            "help": "Get help"
+            "privacy": "Tentang privasi",
+            "extensions": "Kelola ekstensi",
+            "help": "Dapatkan bantuan"
         }
     },
     "workspaceRefresh": {
-        "behavior": "Appearance and behavior",
-        "reset": "Reset workspaces",
-        "help": "How to use"
+        "behavior": "Tampilan dan perilaku",
+        "reset": "Atur ulang ruang kerja",
+        "help": "Cara menggunakan"
     }
 }

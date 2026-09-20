@@ -1,20 +1,20 @@
 {
   "setupRich": {
     "selected": "Terpilih",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
+    "languageActive": "Digunakan di menu dan pengaturan",
+    "palettePreview": "Pratinjau warna",
+    "searchDestination": "Penyedia pencarian di bilah alamat",
+    "enlarge": "Perbesar tangkapan layar {{feature}}",
     "enlargeShort": "View larger",
-    "closePreview": "Close preview",
+    "closePreview": "Tutup pratinjau",
     "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
   },
   "setupV5": {
     "back": "Kembali",
     "supportLabels": {
-      "disabled": "Do not open automatically",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "disabled": "Jangan buka secara otomatis",
+      "blocking": "Buka dengan pengaturan pemblokir saya",
+      "support": "Izinkan iklan untuk mendukung Floorp"
     },
     "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
     "steps": [
@@ -24,21 +24,21 @@
       "Floorp Hub",
       "Preferences",
       "Dukungan",
-      "Finish"
+      "Selesai"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
+        "title": "Selamat datang\ndi Floorp.",
         "description": "Make your browser work the way you do.",
         "hint": "This guide introduces the features and helps you choose your first settings."
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "Mulailah dengan bahasa\nyang paling Anda kuasai.",
+        "description": "Cek bahasa tampilan Floorp dan ubah bila perlu.",
+        "hint": "Bahasa yang Anda pilih akan diterapkan langsung."
       },
       {
-        "title": "Explore what\nFloorp can do.",
+        "title": "Pelajari yang\nbisa Floorp lakukan.",
         "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
         "hint": "You can adjust these features in Settings later."
       },
@@ -63,10 +63,10 @@
         "hint": "You can still change your settings later."
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "Sebelum memulai",
     "startItems": [
       {
-        "title": "Check your display language",
+        "title": "Cek bahasa tampilan Anda",
         "description": "Start in the language you use every day."
       },
       {
@@ -74,22 +74,22 @@
         "description": "Select your theme and search engine."
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "Bersiap meramban",
+        "description": "Tinjau ulang pilihan Anda sebelum memulai."
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
+    "changeLater": "Pengaturan dapat diubah nanti.",
+    "languageTitle": "Bahasa tampilan",
+    "languageLabel": "Bahasa tampilan Floorp",
+    "languageHint": "Digunakan di menu dan pengaturan.",
+    "languageNotice": "Beberapa ekstensi mungkin tidak mendukung pengubahan bahasa.",
+    "languageCurrent": "Menggunakan {{language}}",
+    "featuresTitle": "Jelajahi fitur-fiturnya",
     "hubTitle": "Find what you want to adjust",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "Tab dan tampilan",
+        "description": "Tata letak tab dan tampilan peramban"
       },
       {
         "title": "Ruang Kerja",
@@ -97,11 +97,11 @@
       },
       {
         "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "description": "Pintasan untuk tindakan yang sering dilakukan"
       }
     ],
     "openHub": "Buka Floorp Hub",
-    "openPreferences": "Open Firefox Settings",
+    "openPreferences": "Buka Pengaturan Firefox",
     "newTab": "Opens in a new tab.",
     "hubAddress": "You can also enter about:hub in the address bar.",
     "customizeTitle": "Your first settings",
@@ -110,10 +110,10 @@
     "scopeTitle": "Scope when allowing advertising",
     "summaryTitle": "Review your settings",
     "change": "Ubah",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "Jadikan Floorp peramban harian Anda",
+    "defaultHint": "Atur agar tautan dibuka di Floorp.",
+    "getStarted": "Mulai menggunakan Floorp",
+    "finishNotice": "\"Mulai menggunakan Floorp\" akan mengonfirmasi pilihan catatan rilis Anda."
   },
   "releaseNotes": {
     "prompt": {
@@ -447,7 +447,7 @@
       "icon": "Open web app installation menu",
       "open": "Open app",
       "install": "Pasang aplikasi",
-      "calendar": "Calendar",
+      "calendar": "Kalender",
       "result": "Example of a standalone app window",
       "benefit": "Open a site as an app in a separate window.",
       "tab": "Web apps"
