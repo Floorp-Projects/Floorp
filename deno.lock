@@ -5878,7 +5878,7 @@
       "jsr:@std/streams@^1.0.14",
       "npm:@jsr/std__toml@^1.0.11",
       "npm:fflate@~0.8.3",
-      "npm:rolldown-vite@^7.3.0"
+      "npm:vite@^7.3.0"
     ],
     "packageJson": {
       "dependencies": [
