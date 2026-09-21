@@ -45,6 +45,7 @@ export class KeyboardShortcutController {
 
     this.targetWindow.addEventListener("keydown", this.handleKeyDown, true);
     this.targetWindow.addEventListener("keyup", this.handleKeyUp, true);
+    this.targetWindow.addEventListener("blur", this.handleBlur, true);
     this.eventListenersAttached = true;
   }
 
@@ -56,6 +57,7 @@ export class KeyboardShortcutController {
         true,
       );
       this.targetWindow.removeEventListener("keyup", this.handleKeyUp, true);
+      this.targetWindow.removeEventListener("blur", this.handleBlur, true);
       this.eventListenersAttached = false;
     }
     this.resetState();
@@ -135,6 +137,13 @@ export class KeyboardShortcutController {
       meta: event.metaKey,
       shift: event.shiftKey,
     };
+  };
+
+  private handleBlur = (): void => {
+    // A key released after the browser loses focus does not deliver keyup to
+    // this window. Discard the snapshot so a stale key cannot satisfy the
+    // next shortcut after focus returns.
+    this.resetState();
   };
 
   private checkAndExecuteShortcut(): boolean {
