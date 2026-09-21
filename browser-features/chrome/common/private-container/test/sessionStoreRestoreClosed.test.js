@@ -40,7 +40,6 @@ const { SessionStore } = ChromeUtils.importESModule(
 
 const NORMAL_URL = "data:text/plain,floorp-sessionstore-closed-normal";
 const PRIVATE_URL = "data:text/plain,floorp-sessionstore-closed-private";
-const LIVE_PRIVATE_URL = "about:mozilla";
 
 const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 /** @type {unknown} */
@@ -110,21 +109,23 @@ registerCleanupFunction(async function restoreOriginalState() {
 
 add_task(async function closedPrivateContainerTabIsNotRecorded() {
   originalWindowState = SessionStore.getWindowState(browserWindow);
-  const before = SessionStore.getClosedTabCountForWindow(browserWindow);
+  const livePrivateUrl = `about:mozilla#floorp-private-${crypto.randomUUID()}`;
   const tab = /** @type {XULElement} */ (
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, LIVE_PRIVATE_URL, true)
+    await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      livePrivateUrl,
+      true,
+    )
   );
   tab.setAttribute("floorp-disablehistory", "true");
+  const tabClosed = BrowserTestUtils.waitForEvent(tab, "TabClose");
   BrowserTestUtils.removeTab(tab);
+  await tabClosed;
 
-  await TestUtils.waitForCondition(
-    () => SessionStore.getClosedTabCountForWindow(browserWindow) == before,
-    "closing a private-container tab should not add closed-tab history",
-  );
-  is(
-    SessionStore.getClosedTabCountForWindow(browserWindow),
-    before,
-    "private-container closed tabs should be discarded",
+  const closedTabs = SessionStore.getClosedTabDataForWindow(browserWindow);
+  ok(
+    !JSON.stringify(closedTabs).includes(livePrivateUrl),
+    "the closed private-container URL should not be recorded",
   );
 });
 
