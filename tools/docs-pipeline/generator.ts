@@ -1104,9 +1104,10 @@ function buildArchitectureOverview(inventory: DocsInventory): string {
     "## Startup And Loader Flow",
     "",
     `The startup bridge is owned by \`${
-      formatSource(
+      formatSourceRange(
         inventory.architecture.bridgeLoader.source.path,
         inventory.architecture.bridgeLoader.source.line,
+        2,
       )
     }\`. It selects these loader entry points from the inventory:`,
     "",
@@ -1887,6 +1888,17 @@ function formatOsApiRoutePath(path: string): string {
 
 function formatSource(path: string, line?: number): string {
   return line ? `${path}:${line}` : path;
+}
+
+function formatSourceRange(
+  path: string,
+  line: number | undefined,
+  lineCount: number,
+): string {
+  if (!line || lineCount <= 1) {
+    return formatSource(path, line);
+  }
+  return `${path}:${line}-${line + lineCount - 1}`;
 }
 
 function formatList(values: string[]): string {
