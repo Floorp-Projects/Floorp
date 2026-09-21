@@ -8,11 +8,11 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import { KeyboardShortcutController } from "../controller.ts";
 import {
-  setEnabled,
-  setConfig,
-  KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_CONFIG_PREF,
+  KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF,
+  setConfig,
+  setEnabled,
 } from "../config.ts";
 import type { KeyboardShortcutConfig } from "../type.ts";
 
@@ -1332,6 +1332,46 @@ function testStatePreservedAfterUnmatchedKey(): void {
   });
 }
 
+function testWindowBlurClearsLostKeyUpState(): void {
+  withPrefs(() => {
+    const CTRL_D_CONFIG: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-d": {
+          key: "D",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-ctrl-d",
+        },
+      },
+    };
+    applyTestConfig(CTRL_D_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Simulate releasing D after a compositor/window switch. Floorp receives
+    // the keydown and blur, but no matching keyup.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      key: "d",
+      code: "KeyD",
+    });
+    fakeWin.dispatchEvent(new Event("blur"));
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      key: "x",
+      code: "KeyX",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "Ctrl+X must not trigger Ctrl+D after a lost keyup and window blur",
+    );
+
+    controller.destroy();
+  });
+}
+
 function testCapturePhaseBlocksBubbleListener(): void {
   withPrefs(() => {
     const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
@@ -1645,6 +1685,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "state preserved after unmatched key",
       fn: testStatePreservedAfterUnmatchedKey,
+    },
+    {
+      name: "window blur clears lost keyup state",
+      fn: testWindowBlurClearsLostKeyUpState,
     },
     // Capture phase priority
     {
