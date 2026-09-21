@@ -3,6 +3,7 @@
 import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
+  copyDebugMacAppFromMountedDmg,
   debugRuntimeArchiveName,
   filterRuntimeEntries,
   type InitializerRunDependencies,
@@ -11,6 +12,7 @@ import {
   lockedReleasePublicDownloadUrl,
   type LockedRuntimeOperations,
   pickRuntimeEntry,
+  prepareDebugMacInfoPlist,
   resolveNativeRuntimeTarget,
   run,
   runtimeLayoutFor,
@@ -653,6 +655,103 @@ Deno.test("locked Runtime native target mapping fails closed", () => {
   });
   assertThrows(() => resolveNativeRuntimeTarget("windows", "aarch64"));
   assertThrows(() => resolveNativeRuntimeTarget("freebsd", "x86_64"));
+});
+
+Deno.test("debug macOS Runtime copies only the expected app from the DMG root", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const mountRoot = path.join(root, "mount");
+    const executable = path.join(
+      mountRoot,
+      "Floorp.app",
+      "Contents",
+      "MacOS",
+      "floorp",
+    );
+    const destinationRoot = path.join(root, "stage");
+    const applicationsRoot = path.join(root, "outside-applications");
+    const applicationsSentinel = path.join(applicationsRoot, "sentinel.txt");
+    await Deno.mkdir(path.dirname(executable), { recursive: true });
+    await Deno.mkdir(applicationsRoot);
+    await Deno.writeTextFile(executable, "binary");
+    await Deno.writeTextFile(applicationsSentinel, "outside");
+    await Deno.symlink(
+      applicationsRoot,
+      path.join(mountRoot, "Applications"),
+      { type: "dir" },
+    );
+
+    await copyDebugMacAppFromMountedDmg(mountRoot, destinationRoot);
+
+    assertEquals(
+      await Deno.readTextFile(
+        path.join(
+          destinationRoot,
+          "floorp",
+          "Floorp.app",
+          "Contents",
+          "MacOS",
+          "floorp",
+        ),
+      ),
+      "binary",
+    );
+    await assertRejects(() =>
+      Deno.stat(path.join(destinationRoot, "floorp", "Applications"))
+    );
+    assertEquals(await Deno.readTextFile(applicationsSentinel), "outside");
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("debug macOS Runtime plist commits final paths before staging swap", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const stageRoot = path.resolve(root, "runtime-debug-staging-test");
+    const finalBinRoot = path.resolve(root, "dist", "bin");
+    const stagingDeveloperPath = path.join(stageRoot, "floorp");
+    const infoPlist = path.join(
+      stageRoot,
+      "floorp",
+      "Floorp.app",
+      "Contents",
+      "Info.plist",
+    );
+    await Deno.mkdir(path.dirname(infoPlist), { recursive: true });
+    await Deno.writeTextFile(
+      infoPlist,
+      [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        "<plist><dict>",
+        "<key>MozillaDeveloperRepoPath</key>",
+        `<string>${stagingDeveloperPath}</string>`,
+        "<key>MozillaDeveloperObjPath</key>",
+        `<string>${stagingDeveloperPath}</string>`,
+        "</dict></plist>",
+      ].join("\n"),
+    );
+
+    await prepareDebugMacInfoPlist(stageRoot, finalBinRoot);
+
+    const content = await Deno.readTextFile(infoPlist);
+    const finalDeveloperPath = path.join(finalBinRoot, "floorp");
+    assertEquals(
+      content.split(`<string>${finalDeveloperPath}</string>`).length - 1,
+      2,
+    );
+    assertEquals(content.includes(stagingDeveloperPath), false);
+    assertEquals(
+      content.split("MozillaDeveloperRepoPath").length - 1,
+      1,
+    );
+    assertEquals(
+      content.split("MozillaDeveloperObjPath").length - 1,
+      1,
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
 });
 
 Deno.test("locked Runtime install validates then swaps and retains recovery state", async () => {
