@@ -157,7 +157,7 @@ async function resetZoom(): Promise<number> {
 }
 
 function assertNoClickLikeEvents(state: PageState, label: string): void {
-  for (const type of ["click", "auxclick", "dblclick", "contextmenu"]) {
+  for (const type of ["click", "auxclick", "dblclick"]) {
     assert(
       state.counts[type] === 0,
       `${label}: expected zero ${type} events, got ${state.counts[type]}: ${
@@ -165,6 +165,23 @@ function assertNoClickLikeEvents(state: PageState, label: string): void {
       }`,
     );
   }
+  // Marionette emits a menu on secondary pointerDown, before there is any
+  // trail. The fixture cancels it so the later drag can proceed. Only this
+  // initial menu is allowed; a menu during/after movement remains a failure.
+  const firstDown = state.events.findIndex((event) =>
+    event.type === "mousedown"
+  );
+  const menus = state.events.filter((event) => event.type === "contextmenu");
+  const initialMenu = state.counts.contextmenu === 1 && menus.length === 1 &&
+    state.events[firstDown]?.button === 2 &&
+    state.events[firstDown + 1] === menus[0] &&
+    menus[0].button === 2 && menus[0].buttons === 2;
+  assert(
+    state.counts.contextmenu === 0 || initialMenu,
+    `${label}: unexpected contextmenu after movement: ${
+      JSON.stringify(state.events)
+    }`,
+  );
 }
 
 async function assertOrdinaryLeftClick(
