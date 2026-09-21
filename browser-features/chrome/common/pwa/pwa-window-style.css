@@ -5,6 +5,10 @@
  */
 
 /** Navigation bar **/
+:root[floorp-pwa-hide-toolbar] :is(#nav-bar, #status-bar, #PersonalToolbar, #titlebar) {
+  display: none !important;
+}
+
 #nav-bar {
   min-height: 34px !important;
   background-color: var(--toolbox-bgcolor) !important;

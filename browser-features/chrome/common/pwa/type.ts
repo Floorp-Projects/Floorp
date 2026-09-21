@@ -72,6 +72,11 @@ export const zPwaConfig = t.type({
 
 export type TPwaConfig = t.TypeOf<typeof zPwaConfig>;
 
+export type SsbSupport = {
+  install(manifest: Manifest): Promise<void>;
+  uninstall(manifest: Manifest): Promise<void>;
+};
+
 export interface CustomTitlebarAPI {
   allowedBy(condition: string, allow: boolean): void;
   __floorpSsbPatched?: boolean;
