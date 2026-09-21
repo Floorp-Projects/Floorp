@@ -9,6 +9,7 @@ import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
+  isFloating,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
@@ -203,22 +204,31 @@ export class CPanelSidebar {
   }
 
   public saveCurrentSidebarWidth() {
-    const currentWidth = this.sidebarElement?.getAttribute("width");
-    if (currentWidth) {
+    // Floating dimensions belong to panelSidebarConfig, never to panel.width.
+    if (isFloating()) return;
+    const panelId = selectedPanelId();
+    // Persist the rendered size only after a completed, visible docked resize.
+    const currentWidth = this.sidebarElement?.getBoundingClientRect().width;
+    if (panelId && currentWidth && Number.isFinite(currentWidth)) {
+      const width = Math.round(currentWidth);
+      if (this.getPanelData(panelId)?.width === width) {
+        return;
+      }
       setPanelSidebarData((prev) =>
-        prev.map((panel) =>
-          panel.id === selectedPanelId()
-            ? { ...panel, width: Number(currentWidth) }
-            : panel
-        )
+        prev.map((panel) => panel.id === panelId ? { ...panel, width } : panel)
       );
     }
   }
 
-  private setSidebarWidth(panel: Panel) {
+  public setSidebarWidth(panel: Panel) {
+    const config = panelSidebarConfig();
+    const dockedWidth = panel.width !== 0 ? panel.width : config.globalWidth;
+    const width = isFloating()
+      ? config.floatingWidth ?? dockedWidth
+      : dockedWidth;
     this.sidebarElement?.style.setProperty(
       "width",
-      `${panel.width !== 0 ? panel.width : panelSidebarConfig().globalWidth}px`,
+      `${width}px`,
     );
   }
 

@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel resize fixture</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font: 14px sans-serif;
+}
+header {
+  position: sticky;
+  top: 0;
+  padding: 12px;
+  background: #ddeeff;
+}
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  padding: 8px;
+}
+article {
+  padding: 12px;
+  border: 1px solid #8899aa;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 350px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+<header></header>
+<main></main>
+<script>
+const grid = document.querySelector("main");
+for (let index = 0; index < 2400; index++) {
+  const card = document.createElement("article");
+  card.textContent =
+    `Message ${index}: Responsive content wraps as the panel changes width.`;
+  grid.append(card);
+}
+let resizeCount = 0;
+new ResizeObserver(() => {
+  document.title = `Panel ${innerWidth}px, resize ${++resizeCount}`;
+  document.querySelector("header").textContent = document.title;
+}).observe(document.documentElement);
+</script>
