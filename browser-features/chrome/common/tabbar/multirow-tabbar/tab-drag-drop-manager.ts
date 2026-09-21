@@ -1,4 +1,3 @@
-import { findChildIndex } from "./dom-utils.ts";
 import type { PinnedTabController } from "./pinned-tab-controller.ts";
 import type {
   FirefoxWindow,
@@ -29,6 +28,29 @@ export function resolveDropIndicatorTarget(
   return dropIndex === tabCount
     ? { tabIndex: tabCount - 1, atEnd: true }
     : { tabIndex: dropIndex, atEnd: false };
+}
+
+export function getTabDropIndex(
+  container: Element,
+  target: Element,
+  clientX: number,
+  isLtr: boolean,
+): number {
+  // Groups are DOM children too, but drop positions count every tab,
+  // including the tabs inside collapsed groups.
+  const tabs = Array.from(container.querySelectorAll("tab"));
+  if (target.localName === "tab-group") {
+    const lastTab = target.querySelector("tab:last-of-type");
+    const lastIndex = lastTab ? tabs.indexOf(lastTab) : -1;
+    return lastIndex < 0 ? -1 : lastIndex + 1;
+  }
+  const tabPos = tabs.indexOf(target);
+  if (tabPos < 0) return -1;
+  const rect = target.getBoundingClientRect();
+  const before = isLtr
+    ? clientX < rect.x + rect.width / 2
+    : clientX > rect.x + rect.width / 2;
+  return before ? tabPos : tabPos + 1;
 }
 
 export function cleanupOwnedDropIndicator(
@@ -182,7 +204,9 @@ export class TabDragDropManager {
       const pinnedTabsCount = this.arrowScrollbox.querySelectorAll(
         ".tabbrowser-tab[newPin]",
       ).length;
-      this.draggedTabIndex = findChildIndex(this.arrowScrollbox, tab);
+      this.draggedTabIndex = Array.from(
+        this.arrowScrollbox.querySelectorAll("tab"),
+      ).indexOf(tab);
 
       const firstTab = document?.getElementsByClassName("tabbrowser-tab")[0];
       const isMultiRow = firstTab &&
@@ -243,14 +267,13 @@ export class TabDragDropManager {
     const tabContainer = gBrowser.tabContainer;
     tabContainer._getDropIndex = (event: DragEvent): number => {
       const tabToDropAt = this.getTabFromEventTarget(event);
-      if (!tabToDropAt || !this.arrowScrollbox) return 0;
-      const tabPos = findChildIndex(this.arrowScrollbox, tabToDropAt);
-      const rect = tabToDropAt.getBoundingClientRect();
-      const isLtr = window.getComputedStyle(tabContainer).direction === "ltr";
-      if (isLtr) {
-        return event.clientX < rect.x + rect.width / 2 ? tabPos : tabPos + 1;
-      }
-      return event.clientX > rect.x + rect.width / 2 ? tabPos : tabPos + 1;
+      if (!tabToDropAt || !this.arrowScrollbox) return -1;
+      return getTabDropIndex(
+        this.arrowScrollbox,
+        tabToDropAt,
+        event.clientX,
+        window.getComputedStyle(tabContainer).direction === "ltr",
+      );
     };
     tabContainer.getDropEffectForTabDrag = (event: DragEvent) =>
       this.orig_getDropEffectForTabDrag(event);
@@ -423,22 +446,25 @@ export class TabDragDropManager {
     const ltr = window.getComputedStyle(tabContainer).direction === "ltr";
     const rect = tabContainer.arrowScrollbox.getBoundingClientRect();
 
-    let newMarginX: number;
-    let newMarginY: number;
-    if (indicatorTarget.atEnd) {
-      const tabRect = tabs[indicatorTarget.tabIndex].getBoundingClientRect();
-      newMarginX = ltr ? tabRect.right - rect.left : rect.right - tabRect.left;
-      newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
-      if (CSS.supports("offset-anchor", "left bottom")) {
-        newMarginY += rect.height / 2 - tabRect.height / 2;
-      }
-    } else {
-      const tabRect = tabs[indicatorTarget.tabIndex].getBoundingClientRect();
-      newMarginX = ltr ? tabRect.left - rect.left : rect.right - tabRect.right;
-      newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
-      if (CSS.supports("offset-anchor", "left bottom")) {
-        newMarginY += rect.height / 2 - tabRect.height / 2;
-      }
+    // Anchor to the hovered edge, not the next tab in the flat list: that
+    // next tab can be hidden inside a collapsed group or on another row.
+    const isGroup = tab.localName === "tab-group";
+    const anchor = isGroup
+      ? tab.querySelector(
+        tab.hasAttribute("collapsed")
+          ? ".tab-group-label-container"
+          : "tab:last-of-type",
+      ) ?? tab
+      : tab;
+    const atEnd = isGroup ||
+      dropIndex === Array.prototype.indexOf.call(tabs, tab) + 1;
+    const tabRect = anchor.getBoundingClientRect();
+    let newMarginX = atEnd
+      ? (ltr ? tabRect.right - rect.left : rect.right - tabRect.left)
+      : (ltr ? tabRect.left - rect.left : rect.right - tabRect.right);
+    let newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
+    if (CSS.supports("offset-anchor", "left bottom")) {
+      newMarginY += rect.height / 2 - tabRect.height / 2;
     }
 
     newMarginX += indicator.clientWidth / 2;
@@ -473,8 +499,11 @@ export class TabDragDropManager {
     if (!tabsContainer) return;
 
     const allTabs = tabsContainer.querySelectorAll("tab");
-    if (this.lastKnownIndex !== null && this.lastKnownIndex >= allTabs.length) {
-      this.lastKnownIndex = allTabs.length - 1;
+    if (
+      this.lastKnownIndex === null || this.lastKnownIndex < 0 ||
+      this.lastKnownIndex > allTabs.length || allTabs.length === 0
+    ) {
+      return;
     }
 
     if (
@@ -483,11 +512,13 @@ export class TabDragDropManager {
     ) {
       const tabGroup = draggedTab.parentNode.parentNode
         .parentNode as XULElement;
-      const tabToMoveTo = allTabs[this.lastKnownIndex!];
+      const atEnd = this.lastKnownIndex === allTabs.length;
+      const tabToMoveTo =
+        allTabs[atEnd ? allTabs.length - 1 : this.lastKnownIndex];
       if (this.groupToInsertTo && "querySelectorAll" in tabGroup) {
         const tabs = Array.from(tabGroup.querySelectorAll("tab")) as XULTab[];
         this.moveTabsToGroup(tabs);
-      } else if (this.lastKnownIndex !== allTabs.length - 1) {
+      } else if (!atEnd) {
         gBrowser.moveTabBefore(tabGroup, tabToMoveTo as unknown as XULElement);
       } else {
         gBrowser.moveTabAfter(tabGroup, tabToMoveTo as unknown as XULElement);
@@ -504,6 +535,7 @@ export class TabDragDropManager {
       const selectedTabs = gBrowser.selectedTabs.filter(
         (t: XULTab | null) => t != null,
       ) as XULTab[];
+      if (selectedTabs.length === 0) return;
 
       const pinnedTabsCount = tabsContainer.querySelectorAll(
         ".tabbrowser-tab[newPin]",
@@ -558,26 +590,29 @@ export class TabDragDropManager {
         this.moveTabsToGroup(selectedTabs);
       } else {
         const updatedTabs = tabsContainer.querySelectorAll("tab");
-        let tabToMoveTo = updatedTabs[newIndex];
-        let shouldMoveAfter =
-          tabToMoveTo.parentElement?.nodeName === "tab-group";
-        if (shouldMoveAfter) {
-          tabToMoveTo = updatedTabs[newIndex - 1];
-        } else if (newIndex === updatedTabs.length - 1) {
-          shouldMoveAfter = true;
+        // Keep the end sentinel distinct from the boundary before the last
+        // tab. Clamping it would make both positions insert after that tab.
+        const shouldMoveAfter = newIndex === updatedTabs.length;
+        let tabToMoveTo: Element = updatedTabs[
+          shouldMoveAfter ? updatedTabs.length - 1 : newIndex
+        ];
+        if (tabToMoveTo.parentElement?.localName === "tab-group") {
+          tabToMoveTo = tabToMoveTo.parentElement;
         }
 
         selectedTabs.forEach((t: XULTab) => {
           if (t.hasAttribute("newPin")) {
             t.removeAttribute("newPin");
           }
-
-          if (!shouldMoveAfter) {
-            gBrowser.moveTabBefore(t, tabToMoveTo as unknown as XULElement);
-          } else {
-            gBrowser.moveTabAfter(t, tabToMoveTo as unknown as XULElement);
-          }
         });
+        // The reference can itself be selected. Native bulk movement chains
+        // each remaining tab after the previous one, preserving the block's
+        // order even when dropped back onto its own leading/interior edge.
+        if (shouldMoveAfter) {
+          gBrowser.moveTabsAfter(selectedTabs, tabToMoveTo as XULElement);
+        } else {
+          gBrowser.moveTabsBefore(selectedTabs, tabToMoveTo as XULElement);
+        }
       }
     }
 
@@ -649,7 +684,7 @@ export class TabDragDropManager {
         t.removeAttribute("newPin");
       }
       if (this.groupToInsertTo) {
-        gBrowser.moveTabToGroup(t, this.groupToInsertTo);
+        gBrowser.moveTabToExistingGroup(t, this.groupToInsertTo);
 
         if (tabInGroupToMoveTo) {
           gBrowser.moveTabBefore(t, tabInGroupToMoveTo as XULElement);
