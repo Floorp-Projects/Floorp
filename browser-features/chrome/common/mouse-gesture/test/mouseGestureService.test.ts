@@ -177,6 +177,11 @@ export async function runAllTests(): Promise<void> {
     Services.prefs.prefHasUserValue(MOUSE_GESTURE_CONFIG_PREF)
       ? Services.prefs.getStringPref(MOUSE_GESTURE_CONFIG_PREF)
       : null;
+  const contextMenuPref = "ui.context_menus.after_mouseup";
+  const previousContextMenuPref =
+    Services.prefs.prefHasUserValue(contextMenuPref)
+      ? Services.prefs.getBoolPref(contextMenuPref)
+      : null;
   try {
     setEnabled(true);
     await runTests("mouseGestureService.test.ts", [
@@ -198,15 +203,24 @@ export async function runAllTests(): Promise<void> {
     setEnabled(previousEnabled);
     if (previousConfigPref === null) {
       Services.prefs.clearUserPref(MOUSE_GESTURE_CONFIG_PREF);
-    } else {Services.prefs.setStringPref(
+    } else {
+      Services.prefs.setStringPref(
         MOUSE_GESTURE_CONFIG_PREF,
         previousConfigPref,
-      );}
+      );
+    }
     if (previousEnabledPref === null) {
       Services.prefs.clearUserPref(MOUSE_GESTURE_ENABLED_PREF);
-    } else {Services.prefs.setBoolPref(
+    } else {
+      Services.prefs.setBoolPref(
         MOUSE_GESTURE_ENABLED_PREF,
         previousEnabledPref,
-      );}
+      );
+    }
+    if (previousContextMenuPref === null) {
+      Services.prefs.clearUserPref(contextMenuPref);
+    } else {
+      Services.prefs.setBoolPref(contextMenuPref, previousContextMenuPref);
+    }
   }
 }
