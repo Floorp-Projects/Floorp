@@ -12,6 +12,21 @@ export const TOOLBAR_SURFACE =
  * Restores --tab-block-margin top gap (TAB_COLOR_LIKE_TOOLBAR fills .tab-content).
  */
 export const FLUERIAL_TAB_CORNER_CSS = `
+/* The native group line lives inside .tab-background. Fluerial shrinks that
+ * background on hover and paints the selected .tab-content above it. Anchor
+ * the line to the stable .tab-stack instead, and let it paint above the fill
+ * without raising the entire background over the tab's label and controls. */
+#TabsToolbar #tabbrowser-tabs[orient="horizontal"] tab-group
+  .tabbrowser-tab > .tab-stack > .tab-background {
+  position: static !important;
+  z-index: auto !important;
+}
+
+#TabsToolbar #tabbrowser-tabs[orient="horizontal"] tab-group
+  .tabbrowser-tab > .tab-stack > .tab-background > .tab-group-line {
+  z-index: 1;
+}
+
 #TabsToolbar
   #tabbrowser-tabs
   .tabbrowser-tab:is([visuallyselected], [multiselected])
