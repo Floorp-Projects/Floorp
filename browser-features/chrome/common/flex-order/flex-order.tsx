@@ -19,6 +19,7 @@ export namespace gFlexOrder {
   const floorpSidebarId = "panel-sidebar-box";
   const floorpSidebarSplitterId = "panel-sidebar-splitter";
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
+  let hoverOffsetFrame: number | undefined;
 
   const [orders, setOrders] = createRootHMR(
     () =>
@@ -59,6 +60,20 @@ export namespace gFlexOrder {
       });
     }
     updateHoverOffset();
+    scheduleHoverOffsetUpdate();
+  }
+
+  // Flex order and child insertion can change the rendered panel width only
+  // after the current style/layout pass. Measure once more on the next frame
+  // so Firefox's hover launcher uses the post-layout width in narrow windows.
+  function scheduleHoverOffsetUpdate() {
+    if (hoverOffsetFrame !== undefined) {
+      cancelAnimationFrame(hoverOffsetFrame);
+    }
+    hoverOffsetFrame = requestAnimationFrame(() => {
+      hoverOffsetFrame = undefined;
+      updateHoverOffset();
+    });
   }
 
   // Firefox anchors its absolute hover launcher to #browser's edge. Floorp's
@@ -123,6 +138,7 @@ export namespace gFlexOrder {
         }
       }
       updateHoverOffset();
+      scheduleHoverOffsetUpdate();
     };
     const childrenObserver = new MutationObserver(observe);
     childrenObserver.observe(browser, { childList: true });
@@ -131,6 +147,10 @@ export namespace gFlexOrder {
       resizeObserver.disconnect();
       panelObserver.disconnect();
       childrenObserver.disconnect();
+      if (hoverOffsetFrame !== undefined) {
+        cancelAnimationFrame(hoverOffsetFrame);
+        hoverOffsetFrame = undefined;
+      }
       browser.style.removeProperty("--floorp-panel-start-width");
       browser.style.removeProperty("--floorp-panel-end-width");
     });
