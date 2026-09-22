@@ -6,6 +6,7 @@
 import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
 import {
   isFloating,
+  isPanelSidebarEnabled,
   panelSidebarConfig,
   selectedPanelId,
   setIsFloatingDragging,
@@ -33,33 +34,18 @@ export class PanelSidebarFloating {
   private parentHeightTargetId = "browser";
   private userResizedHeight = false;
   private isDraggingHeader = false;
+  private floatingSetupFrame: number | undefined;
 
   constructor() {
     const owner = getOwner();
     const exec1 = () => {
       createEffect(() => {
-        if (isFloating()) {
-          if (!this.userResizedHeight) {
-            this.applyHeightToSidebarBox();
-          }
-          this.initResizeObserver();
-          this.initDragHeader();
-          this.applyStoredPositionToSidebarBox();
-          document?.addEventListener(
-            "mousedown",
-            this.handleOutsideClick,
-            true,
-          );
+        const floating = isFloating();
+        const enabled = isPanelSidebarEnabled();
+        if (floating && enabled) {
+          this.scheduleFloatingSetup();
         } else {
-          this.removeFloatingStyles();
-          this.resizeObserver?.disconnect();
-          document?.removeEventListener(
-            "mousedown",
-            this.handleOutsideClick,
-            true,
-          );
-          this.userResizedHeight = false;
-          this.restoreActivePanel();
+          this.teardownFloatingState();
         }
       });
     };
@@ -86,6 +72,43 @@ export class PanelSidebarFloating {
       createRoot(exec1);
       createRoot(exec2);
     }
+  }
+
+  private scheduleFloatingSetup() {
+    if (this.floatingSetupFrame !== undefined) {
+      cancelAnimationFrame(this.floatingSetupFrame);
+    }
+    this.floatingSetupFrame = requestAnimationFrame(() => {
+      this.floatingSetupFrame = undefined;
+      if (!isFloating() || !isPanelSidebarEnabled()) return;
+      if (!document?.getElementById("panel-sidebar-box")) return;
+      if (!this.userResizedHeight) {
+        this.applyHeightToSidebarBox();
+      }
+      this.resizeObserver?.disconnect();
+      this.initResizeObserver();
+      this.initDragHeader();
+      this.applyStoredPositionToSidebarBox();
+      document.removeEventListener("mousedown", this.handleOutsideClick, true);
+      document.addEventListener("mousedown", this.handleOutsideClick, true);
+    });
+  }
+
+  private teardownFloatingState() {
+    if (this.floatingSetupFrame !== undefined) {
+      cancelAnimationFrame(this.floatingSetupFrame);
+      this.floatingSetupFrame = undefined;
+    }
+    this.removeFloatingStyles();
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    document?.removeEventListener(
+      "mousedown",
+      this.handleOutsideClick,
+      true,
+    );
+    this.userResizedHeight = false;
+    this.restoreActivePanel();
   }
 
   private initResizeObserver() {

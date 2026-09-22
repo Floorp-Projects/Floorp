@@ -2,7 +2,11 @@
 // @colocated-env browser
 
 import { parsePanelSidebarData } from "../data/data.ts";
-import { convertSidebar, migratePanelSidebarData } from "../data/migration.ts";
+import {
+  commitMigratedPreferences,
+  convertSidebar,
+  migratePanelSidebarData,
+} from "../data/migration.ts";
 import {
   assert,
   assertEquals,
@@ -160,6 +164,74 @@ function testMalformedLegacyDataDoesNotAbortStartup(): void {
   }
 }
 
+function testMigrationRollsBackFailedPreferenceWrites(): void {
+  const legacyPref = "floorp.browser.sidebar2.data";
+  const dataPref = "floorp.panelSidebar.data";
+  const configPref = "floorp.panelSidebar.config";
+  const legacyValue = JSON.stringify({
+    data: { legacy: { url: "https://example.com", width: 320 } },
+    index: ["legacy"],
+  });
+  const dataValue = JSON.stringify({ data: [] });
+  const configValue = JSON.stringify({
+    globalWidth: 777,
+    autoUnload: false,
+    position_start: true,
+    displayed: true,
+    webExtensionRunningEnabled: false,
+  });
+  const values = new Map<string, string>([
+    [legacyPref, legacyValue],
+    [dataPref, dataValue],
+    [configPref, configValue],
+  ]);
+  let failConfigWrite = true;
+  const prefs = {
+    prefHasUserValue: (name: string) => values.has(name),
+    getStringPref: (name: string) => {
+      const value = values.get(name);
+      if (value === undefined) throw new Error(`Missing preference: ${name}`);
+      return value;
+    },
+    setStringPref: (name: string, value: string) => {
+      if (name === configPref && failConfigWrite) {
+        failConfigWrite = false;
+        throw new Error("simulated config write failure");
+      }
+      values.set(name, value);
+    },
+    clearUserPref: (name: string) => {
+      values.delete(name);
+    },
+  };
+  let threw = false;
+
+  try {
+    commitMigratedPreferences(prefs, {
+      legacyPrefName: legacyPref,
+      dataPrefName: dataPref,
+      serializedSidebar: JSON.stringify({ data: [{ id: "migrated" }] }),
+      configPrefName: configPref,
+      serializedConfig: JSON.stringify({ globalWidth: 400 }),
+    });
+  } catch {
+    threw = true;
+  }
+
+  assert(threw, "simulated preference write should fail");
+  assertEquals(values.get(dataPref), dataValue, "panel data should roll back");
+  assertEquals(
+    values.get(configPref),
+    configValue,
+    "panel config should remain unchanged",
+  );
+  assertEquals(
+    values.get(legacyPref),
+    legacyValue,
+    "legacy data should remain available for a later retry",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -187,6 +259,10 @@ export function runAllTests(): void {
     {
       name: "malformed legacy data does not abort startup",
       fn: testMalformedLegacyDataDoesNotAbortStartup,
+    },
+    {
+      name: "migration rolls back failed preference writes",
+      fn: testMigrationRollsBackFailedPreferenceWrites,
     },
   ];
 

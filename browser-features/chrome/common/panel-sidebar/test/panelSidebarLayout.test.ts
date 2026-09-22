@@ -206,6 +206,84 @@ async function testFeatureToggleWithVerticalTabs(): Promise<void> {
   });
 }
 
+async function testFloatingFeatureToggleRestoresBehavior(): Promise<void> {
+  await withPanel(async () => {
+    const enabled = isPanelSidebarEnabled();
+    try {
+      setPanelSidebarConfig((config) => ({
+        ...config,
+        floatingWidth: 520,
+        floatingHeight: 300,
+        floatingPositionLeft: 40,
+        floatingPositionTop: 60,
+      }));
+      setIsFloating(true);
+      await nextFrame();
+      const originalBox = element("panel-sidebar-box");
+
+      setIsPanelSidebarEnabled(false);
+      await nextFrame();
+      assertEquals(
+        document.getElementById("panel-sidebar-box"),
+        null,
+        "disabling should unmount the floating panel",
+      );
+
+      setIsPanelSidebarEnabled(true);
+      await nextFrame();
+      const restoredBox = element("panel-sidebar-box");
+      assert(
+        restoredBox !== originalBox,
+        "re-enabling should mount a new floating panel element",
+      );
+      assertApprox(
+        restoredBox.getBoundingClientRect().width,
+        520,
+        1,
+        "re-enabled floating panel should restore its width",
+      );
+      assertApprox(
+        restoredBox.getBoundingClientRect().height,
+        300,
+        1,
+        "re-enabled floating panel should restore its height",
+      );
+
+      const header = element("panel-sidebar-header");
+      assertEquals(
+        header.style.getPropertyValue("cursor"),
+        "move",
+        "re-enabled floating panel should restore header dragging",
+      );
+      const before = restoredBox.getBoundingClientRect();
+      header.dispatchEvent(
+        new MouseEvent("mousedown", {
+          bubbles: true,
+          clientX: before.left + 10,
+          clientY: before.top + 10,
+        }),
+      );
+      document.dispatchEvent(
+        new MouseEvent("mousemove", {
+          clientX: before.left + 30,
+          clientY: before.top + 25,
+        }),
+      );
+      await nextFrame();
+      document.dispatchEvent(new MouseEvent("mouseup"));
+      assert(
+        (panelSidebarConfig().floatingPositionLeft ?? before.left) >
+          before.left,
+        "re-enabled floating panel header should remain draggable",
+      );
+    } finally {
+      setIsFloating(false);
+      setIsPanelSidebarEnabled(enabled);
+      await nextFrame();
+    }
+  });
+}
+
 async function testHoverAnchor(): Promise<void> {
   await withPanel(async () => {
     const root = document.documentElement;
@@ -262,6 +340,38 @@ async function testHoverAnchor(): Promise<void> {
                 `hover anchor should stay put: Firefox start=${firefoxAtStart}, Floorp end=${floorpAtEnd}, open=${open}, ${attr}`,
               );
               launcher.removeAttribute(attr);
+              await nextFrame();
+              const browser = element("browser");
+              const browserRect = browser.getBoundingClientRect();
+              const panelRects = [
+                "panel-sidebar-select-box",
+                "panel-sidebar-box",
+                "panel-sidebar-splitter",
+              ].flatMap((id) => {
+                const panelElement = document.getElementById(id);
+                if (!panelElement) return [];
+                const style = getComputedStyle(panelElement);
+                if (
+                  !style || style.display === "none" ||
+                  style.position === "absolute" || style.position === "fixed"
+                ) return [];
+                return [panelElement.getBoundingClientRect()];
+              });
+              const occupiedEdge = floorpAtEnd
+                ? Math.min(browserRect.right, ...panelRects.map((r) => r.left))
+                : Math.max(browserRect.left, ...panelRects.map((r) => r.right));
+              const occupiedWidth = floorpAtEnd
+                ? browserRect.right - occupiedEdge
+                : occupiedEdge - browserRect.left;
+              const property = floorpAtEnd
+                ? "--floorp-panel-end-width"
+                : "--floorp-panel-start-width";
+              assertApprox(
+                parseFloat(browser.style.getPropertyValue(property)),
+                occupiedWidth,
+                1,
+                `hover offset should refresh after ${attr} is removed`,
+              );
             }
           }
         }
@@ -484,6 +594,10 @@ export async function runAllTests(): Promise<void> {
       name:
         "feature toggling preserves Floorp panels and Firefox vertical tabs",
       fn: testFeatureToggleWithVerticalTabs,
+    },
+    {
+      name: "feature toggling restores floating panel behavior",
+      fn: testFloatingFeatureToggleRestoresBehavior,
     },
     {
       name:
