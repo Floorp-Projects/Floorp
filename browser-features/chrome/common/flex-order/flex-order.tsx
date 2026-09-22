@@ -83,6 +83,16 @@ export namespace gFlexOrder {
   function updateHoverOffset() {
     const browser = document?.getElementById("browser");
     if (!browser) return;
+    const launcher = document.getElementById("sidebar-container");
+    if (
+      document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
+      (launcher?.hasAttribute("sidebar-launcher-expanded") ||
+        launcher?.hasAttribute("sidebar-ongoing-animations"))
+    ) {
+      // Expanding Firefox's launcher can let a flex-shrunk Floorp panel grow.
+      // Keep the collapsed measurement so the hover target does not move.
+      return;
+    }
     let width = 0;
     for (
       const id of [
