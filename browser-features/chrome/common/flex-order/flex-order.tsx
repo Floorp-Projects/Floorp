@@ -93,7 +93,10 @@ export namespace gFlexOrder {
       // Keep the collapsed measurement so the hover target does not move.
       return;
     }
-    let width = 0;
+    const atEnd = untrack(orders).floorpSidebar > 0;
+    const browserRect = browser.getBoundingClientRect();
+    let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
+    let hasVisiblePanel = false;
     for (
       const id of [
         floorpSidebarSelectBoxId,
@@ -108,11 +111,20 @@ export namespace gFlexOrder {
         !style || style.display === "none" || style.position === "absolute" ||
         style.position === "fixed"
       ) continue;
-      width += element.getBoundingClientRect().width +
-        (parseFloat(style.marginInlineStart) || 0) +
-        (parseFloat(style.marginInlineEnd) || 0);
+      const rect = element.getBoundingClientRect();
+      occupiedEdge = atEnd
+        ? Math.min(occupiedEdge, rect.left)
+        : Math.max(occupiedEdge, rect.right);
+      hasVisiblePanel = true;
     }
-    const atEnd = untrack(orders).floorpSidebar > 0;
+    const width = hasVisiblePanel
+      ? Math.max(
+        0,
+        atEnd
+          ? browserRect.right - occupiedEdge
+          : occupiedEdge - browserRect.left,
+      )
+      : 0;
     browser.style.setProperty(
       "--floorp-panel-start-width",
       `${atEnd ? 0 : width}px`,
