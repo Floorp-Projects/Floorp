@@ -33,9 +33,6 @@ export class PanelSidebarElem {
 
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    if (!isPanelSidebarEnabled()) {
-      return;
-    }
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
 
@@ -72,6 +69,26 @@ export class PanelSidebarElem {
       });
     if (owner) runWithOwner(owner, execEffect);
     else createRoot(execEffect);
+
+    const execEnabledEffect = () => {
+      let wasEnabled = isPanelSidebarEnabled();
+      createEffect(() => {
+        const enabled = isPanelSidebarEnabled();
+        const shouldRestore = enabled && !wasEnabled;
+        wasEnabled = enabled;
+        if (!shouldRestore) return;
+
+        requestAnimationFrame(() => {
+          if (!isPanelSidebarEnabled()) return;
+          const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
+          if (!panel) return;
+          this.ctx.setSidebarWidth(panel);
+          this.ctx.showPanel(panel);
+        });
+      });
+    };
+    if (owner) runWithOwner(owner, execEnabledEffect);
+    else createRoot(execEnabledEffect);
 
     this.setVerticalTabBgColor();
     Services.prefs.addObserver("sidebar.verticalTabs", () => {

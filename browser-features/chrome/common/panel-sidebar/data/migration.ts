@@ -13,57 +13,64 @@ export function migratePanelSidebarData() {
   );
 
   if (oldData) {
-    const newSidebar = convertSidebar(JSON.parse(oldData) as OldSidebar);
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      JSON.stringify(newSidebar),
-    );
+    try {
+      const newSidebar = convertSidebar(JSON.parse(oldData) as OldSidebar);
+      Services.prefs.setStringPref(
+        PanelSidebarStaticNames.panelSidebarDataPrefName,
+        JSON.stringify(newSidebar),
+      );
 
-    Services.prefs.clearUserPref("floorp.browser.sidebar2.data");
+      Services.prefs.clearUserPref("floorp.browser.sidebar2.data");
 
-    // Create a new config
-    const globalWidth = Services.prefs.getIntPref(
-      "floorp.browser.sidebar2.global.webpanel.width",
-      400,
-    );
+      // Create a new config
+      const globalWidth = Services.prefs.getIntPref(
+        "floorp.browser.sidebar2.global.webpanel.width",
+        400,
+      );
 
-    const autoUnload = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar2.hide.to.unload.panel.enabled",
-      false,
-    );
+      const autoUnload = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar2.hide.to.unload.panel.enabled",
+        false,
+      );
 
-    const position_start = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.right",
-      true,
-    );
+      const position_start = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.right",
+        true,
+      );
 
-    let displayed = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.is.displayed",
-      true,
-    );
-    const enabled = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.enable",
-      true,
-    );
+      let displayed = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.is.displayed",
+        true,
+      );
+      const enabled = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.enable",
+        true,
+      );
 
-    if (!enabled || !displayed) {
-      // If either the old 'enable' pref or 'displayed' pref is false, set displayed to false.
-      // This ensures that if the sidebar was previously disabled or hidden, it remains so.
-      displayed = false;
+      if (!enabled || !displayed) {
+        // If either the old 'enable' pref or 'displayed' pref is false, set displayed to false.
+        // This ensures that if the sidebar was previously disabled or hidden, it remains so.
+        displayed = false;
+      }
+
+      const config: PanelSidebarConfig = {
+        globalWidth,
+        autoUnload,
+        position_start,
+        displayed,
+        webExtensionRunningEnabled: false,
+      };
+
+      Services.prefs.setStringPref(
+        PanelSidebarStaticNames.panelSidebarConfigPrefName,
+        JSON.stringify(config),
+      );
+    } catch (error) {
+      console.warn(
+        "[PanelSidebar] Failed to migrate legacy panel data; using the current panel configuration.",
+        error,
+      );
     }
-
-    const config: PanelSidebarConfig = {
-      globalWidth,
-      autoUnload,
-      position_start,
-      displayed,
-      webExtensionRunningEnabled: false,
-    };
-
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarConfigPrefName,
-      JSON.stringify(config),
-    );
   }
 }
 

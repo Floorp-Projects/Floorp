@@ -3,10 +3,12 @@
 
 import {
   isFloating,
+  isPanelSidebarEnabled,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
   setIsFloating,
+  setIsPanelSidebarEnabled,
   setPanelSidebarConfig,
   setPanelSidebarData,
   setSelectedPanelId,
@@ -143,6 +145,63 @@ async function testCompletedResizePersists(): Promise<void> {
         1,
         "recreating a panel should restore width",
       );
+    }
+  });
+}
+
+async function testFeatureToggleWithVerticalTabs(): Promise<void> {
+  await withPanel(async () => {
+    const root = document.documentElement;
+    const verticalPref = "sidebar.verticalTabs";
+    const hadVerticalPref = Services.prefs.prefHasUserValue(verticalPref);
+    const savedVerticalPref = Services.prefs.getBoolPref(verticalPref, false);
+    const enabled = isPanelSidebarEnabled();
+    try {
+      Services.prefs.setBoolPref(verticalPref, true);
+      await nextFrame();
+      assert(
+        root.hasAttribute("sidebar-mode") ||
+          document.getElementById("sidebar-container") !== null,
+        "Firefox sidebar should remain initialized with vertical tabs",
+      );
+
+      for (const atEnd of [false, true]) {
+        setPanelSidebarConfig((config) => ({
+          ...config,
+          position_start: atEnd,
+        }));
+        gFlexOrder.applyFlexOrder(atEnd);
+        await nextFrame();
+
+        setIsPanelSidebarEnabled(false);
+        await nextFrame();
+        assertEquals(
+          document.getElementById("panel-sidebar-select-box"),
+          null,
+          "disabling should remove only Floorp's panel sidebar",
+        );
+        assert(
+          document.getElementById("sidebar-container") !== null,
+          "disabling Floorp's panel sidebar must preserve Firefox vertical tabs",
+        );
+
+        setIsPanelSidebarEnabled(true);
+        await nextFrame();
+        element("panel-sidebar-select-box");
+        element("panel-sidebar-box");
+        element(`sidebar-panel-${testPanelId}`);
+        assert(
+          document.getElementById("sidebar-container") !== null,
+          "re-enabling Floorp's panel sidebar must preserve Firefox vertical tabs",
+        );
+      }
+    } finally {
+      setIsPanelSidebarEnabled(enabled);
+      if (hadVerticalPref) {
+        Services.prefs.setBoolPref(verticalPref, savedVerticalPref);
+      } else {
+        Services.prefs.clearUserPref(verticalPref);
+      }
     }
   });
 }
@@ -415,6 +474,11 @@ export async function runAllTests(): Promise<void> {
     {
       name: "completed resize persists across closing and recreating panels",
       fn: testCompletedResizePersists,
+    },
+    {
+      name:
+        "feature toggling preserves Floorp panels and Firefox vertical tabs",
+      fn: testFeatureToggleWithVerticalTabs,
     },
     {
       name:

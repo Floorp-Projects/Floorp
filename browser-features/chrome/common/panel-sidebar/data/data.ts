@@ -19,39 +19,57 @@ import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.js"
 import {
   type Panels,
   type PanelSidebarConfig,
-  zPanels,
   zPanelSidebarConfig,
+  zPanelSidebarData,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 import { isRight } from "fp-ts/Either";
 
-function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
-  function getPanelSidebarData(stringData: string) {
-    return JSON.parse(stringData).data || {};
+function defaultPanelSidebarData(): Panels {
+  const result = zPanelSidebarData.decode(
+    JSON.parse(strDefaultData) as unknown,
+  );
+  return isRight(result) ? result.right.data : [];
+}
+
+export function parsePanelSidebarData(stringData: string): Panels {
+  try {
+    const result = zPanelSidebarData.decode(
+      JSON.parse(stringData) as unknown,
+    );
+    if (isRight(result)) {
+      return result.right.data;
+    }
+    console.warn(
+      "[PanelSidebar] Invalid panel data; restoring defaults.",
+    );
+  } catch (error) {
+    console.warn(
+      "[PanelSidebar] Failed to parse panel data; restoring defaults.",
+      error,
+    );
   }
-  const dataResult = zPanels.decode(
-    getPanelSidebarData(
+  return defaultPanelSidebarData();
+}
+
+function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
+  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
+    parsePanelSidebarData(
       Services.prefs.getStringPref(
         PanelSidebarStaticNames.panelSidebarDataPrefName,
         strDefaultData,
       ),
     ),
   );
-  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    isRight(dataResult) ? dataResult.right : [],
-  );
   const observer = () => {
-    const result = zPanels.decode(
-      getPanelSidebarData(
+    setPanelSidebarData(
+      parsePanelSidebarData(
         Services.prefs.getStringPref(
           PanelSidebarStaticNames.panelSidebarDataPrefName,
           strDefaultData,
         ),
       ),
     );
-    if (isRight(result)) {
-      setPanelSidebarData(result.right);
-    }
   };
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
@@ -110,10 +128,11 @@ function createPanelSidebarConfig(): [
       ),
     ),
   );
-  const [panelSidebarConfig, setPanelSidebarConfig] =
-    createSignal<PanelSidebarConfig>(
-      isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
-    );
+  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
+    PanelSidebarConfig
+  >(
+    isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
+  );
   createEffect(() => {
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
@@ -174,13 +193,14 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
 );
 
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
-    createSignal<boolean>(
-      Services.prefs.getBoolPref(
-        PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-        defaultEnabled,
-      ),
-    );
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
+    boolean
+  >(
+    Services.prefs.getBoolPref(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      defaultEnabled,
+    ),
+  );
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,

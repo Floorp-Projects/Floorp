@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { convertSidebar } from "../data/migration.ts";
+import { parsePanelSidebarData } from "../data/data.ts";
+import { convertSidebar, migratePanelSidebarData } from "../data/migration.ts";
 import {
-  type TestCase,
+  assert,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
@@ -126,6 +128,38 @@ function testIndexOrdering(): void {
   assertEquals(result.data[2].id, "b", "third should be b");
 }
 
+function testMalformedCurrentDataFallsBack(): void {
+  const result = parsePanelSidebarData("not-json");
+  assert(
+    result.some((panel) => panel.id === "default-panel-bookmarks"),
+    "malformed current data should restore the default panels",
+  );
+}
+
+function testInvalidCurrentDataShapeFallsBack(): void {
+  const result = parsePanelSidebarData('{"data":{}}');
+  assert(
+    result.some((panel) => panel.id === "default-panel-bookmarks"),
+    "invalid current data should restore the default panels",
+  );
+}
+
+function testMalformedLegacyDataDoesNotAbortStartup(): void {
+  const prefName = "floorp.browser.sidebar2.data";
+  const hadUserValue = Services.prefs.prefHasUserValue(prefName);
+  const previousValue = Services.prefs.getStringPref(prefName, "");
+  try {
+    Services.prefs.setStringPref(prefName, "not-json");
+    migratePanelSidebarData();
+  } finally {
+    if (hadUserValue) {
+      Services.prefs.setStringPref(prefName, previousValue);
+    } else {
+      Services.prefs.clearUserPref(prefName);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -142,6 +176,18 @@ export function runAllTests(): void {
     { name: "userContext null", fn: testUserContextNull },
     { name: "zoomLevel preserved", fn: testZoomLevelPreserved },
     { name: "index ordering", fn: testIndexOrdering },
+    {
+      name: "malformed current data falls back",
+      fn: testMalformedCurrentDataFallsBack,
+    },
+    {
+      name: "invalid current data shape falls back",
+      fn: testInvalidCurrentDataShapeFallsBack,
+    },
+    {
+      name: "malformed legacy data does not abort startup",
+      fn: testMalformedLegacyDataDoesNotAbortStartup,
+    },
   ];
 
   const failures: string[] = [];
