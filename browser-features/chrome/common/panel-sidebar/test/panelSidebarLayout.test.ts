@@ -220,9 +220,12 @@ async function testHoverAnchor(): Promise<void> {
     const verticalPref = "sidebar.verticalTabs";
     const hadVerticalPref = Services.prefs.prefHasUserValue(verticalPref);
     const savedVerticalPref = Services.prefs.getBoolPref(verticalPref, false);
-    const sidebar =
-      (globalThis as unknown as { SidebarController: { setPosition(): void } })
-        .SidebarController;
+    const sidebar = (globalThis as unknown as {
+      SidebarController: {
+        setPosition(): void;
+        waitUntilStable(): Promise<unknown>;
+      };
+    }).SidebarController;
     try {
       Services.prefs.setBoolPref(verticalPref, true);
       await nextFrame();
@@ -230,6 +233,7 @@ async function testHoverAnchor(): Promise<void> {
       for (const firefoxAtStart of [true, false]) {
         Services.prefs.setBoolPref(pref, firefoxAtStart);
         sidebar.setPosition();
+        await sidebar.waitUntilStable();
         for (const floorpAtEnd of [false, true]) {
           setPanelSidebarConfig((config) => ({
             ...config,
@@ -273,6 +277,7 @@ async function testHoverAnchor(): Promise<void> {
       launcher.toggleAttribute("sidebar-positionend", savedEnd);
       launcher.toggleAttribute("sidebar-launcher-expanded", savedExpanded);
       launcher.toggleAttribute("sidebar-ongoing-animations", savedAnimating);
+      await sidebar.waitUntilStable();
     }
   });
 }
