@@ -6,6 +6,85 @@
 import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names";
 import type { PanelSidebarConfig } from "../utils/type";
 
+type StringPrefSnapshot = {
+  hasUserValue: boolean;
+  value: string;
+};
+
+type StringPrefStore = {
+  prefHasUserValue(name: string): boolean;
+  getStringPref(name: string): string;
+  setStringPref(name: string, value: string): void;
+  clearUserPref(name: string): void;
+};
+
+type MigratedPreferenceValues = {
+  legacyPrefName: string;
+  dataPrefName: string;
+  serializedSidebar: string;
+  configPrefName: string;
+  serializedConfig: string;
+};
+
+function snapshotStringPref(
+  prefs: StringPrefStore,
+  name: string,
+): StringPrefSnapshot {
+  const hasUserValue = prefs.prefHasUserValue(name);
+  return {
+    hasUserValue,
+    value: hasUserValue ? prefs.getStringPref(name) : "",
+  };
+}
+
+function restoreStringPref(
+  prefs: StringPrefStore,
+  name: string,
+  snapshot: StringPrefSnapshot,
+) {
+  const hasUserValue = prefs.prefHasUserValue(name);
+  if (
+    hasUserValue === snapshot.hasUserValue &&
+    (!hasUserValue || prefs.getStringPref(name) === snapshot.value)
+  ) {
+    return;
+  }
+  if (snapshot.hasUserValue) {
+    prefs.setStringPref(name, snapshot.value);
+  } else {
+    prefs.clearUserPref(name);
+  }
+}
+
+export function commitMigratedPreferences(
+  prefs: StringPrefStore,
+  values: MigratedPreferenceValues,
+) {
+  const snapshots = new Map<string, StringPrefSnapshot>([
+    [values.dataPrefName, snapshotStringPref(prefs, values.dataPrefName)],
+    [values.configPrefName, snapshotStringPref(prefs, values.configPrefName)],
+    [values.legacyPrefName, snapshotStringPref(prefs, values.legacyPrefName)],
+  ]);
+
+  try {
+    prefs.setStringPref(values.dataPrefName, values.serializedSidebar);
+    prefs.setStringPref(values.configPrefName, values.serializedConfig);
+    prefs.clearUserPref(values.legacyPrefName);
+  } catch (error) {
+    for (const [name, snapshot] of snapshots) {
+      try {
+        restoreStringPref(prefs, name, snapshot);
+      } catch (rollbackError) {
+        console.error(
+          `[PanelSidebar] Failed to roll back preference ${name}.`,
+          rollbackError,
+        );
+      }
+    }
+    throw error;
+  }
+}
+
 export function migratePanelSidebarData() {
   const oldData = Services.prefs.getCharPref(
     "floorp.browser.sidebar2.data",
@@ -13,57 +92,63 @@ export function migratePanelSidebarData() {
   );
 
   if (oldData) {
-    const newSidebar = convertSidebar(JSON.parse(oldData) as OldSidebar);
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      JSON.stringify(newSidebar),
-    );
+    try {
+      const newSidebar = convertSidebar(JSON.parse(oldData) as OldSidebar);
+      const serializedSidebar = JSON.stringify(newSidebar);
 
-    Services.prefs.clearUserPref("floorp.browser.sidebar2.data");
+      // Create a new config
+      const globalWidth = Services.prefs.getIntPref(
+        "floorp.browser.sidebar2.global.webpanel.width",
+        400,
+      );
 
-    // Create a new config
-    const globalWidth = Services.prefs.getIntPref(
-      "floorp.browser.sidebar2.global.webpanel.width",
-      400,
-    );
+      const autoUnload = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar2.hide.to.unload.panel.enabled",
+        false,
+      );
 
-    const autoUnload = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar2.hide.to.unload.panel.enabled",
-      false,
-    );
+      const position_start = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.right",
+        true,
+      );
 
-    const position_start = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.right",
-      true,
-    );
+      let displayed = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.is.displayed",
+        true,
+      );
+      const enabled = Services.prefs.getBoolPref(
+        "floorp.browser.sidebar.enable",
+        true,
+      );
 
-    let displayed = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.is.displayed",
-      true,
-    );
-    const enabled = Services.prefs.getBoolPref(
-      "floorp.browser.sidebar.enable",
-      true,
-    );
+      if (!enabled || !displayed) {
+        // If either the old 'enable' pref or 'displayed' pref is false, set displayed to false.
+        // This ensures that if the sidebar was previously disabled or hidden, it remains so.
+        displayed = false;
+      }
 
-    if (!enabled || !displayed) {
-      // If either the old 'enable' pref or 'displayed' pref is false, set displayed to false.
-      // This ensures that if the sidebar was previously disabled or hidden, it remains so.
-      displayed = false;
+      const config: PanelSidebarConfig = {
+        globalWidth,
+        autoUnload,
+        position_start,
+        displayed,
+        webExtensionRunningEnabled: false,
+      };
+      const serializedConfig = JSON.stringify(config);
+      const legacyPrefName = "floorp.browser.sidebar2.data";
+      commitMigratedPreferences(Services.prefs, {
+        legacyPrefName,
+        dataPrefName: PanelSidebarStaticNames.panelSidebarDataPrefName,
+        serializedSidebar,
+        configPrefName: PanelSidebarStaticNames.panelSidebarConfigPrefName,
+        serializedConfig,
+      });
+    } catch (error) {
+      console.warn(
+        "[PanelSidebar] Failed to migrate legacy panel data; using the current panel configuration.",
+        error,
+      );
     }
-
-    const config: PanelSidebarConfig = {
-      globalWidth,
-      autoUnload,
-      position_start,
-      displayed,
-      webExtensionRunningEnabled: false,
-    };
-
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarConfigPrefName,
-      JSON.stringify(config),
-    );
   }
 }
 

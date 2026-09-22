@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { convertSidebar } from "../data/migration.ts";
+import { parsePanelSidebarData } from "../data/data.ts";
 import {
-  type TestCase,
+  commitMigratedPreferences,
+  convertSidebar,
+  migratePanelSidebarData,
+} from "../data/migration.ts";
+import {
+  assert,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 // ---------------------------------------------------------------------------
@@ -126,6 +132,106 @@ function testIndexOrdering(): void {
   assertEquals(result.data[2].id, "b", "third should be b");
 }
 
+function testMalformedCurrentDataFallsBack(): void {
+  const result = parsePanelSidebarData("not-json");
+  assert(
+    result.some((panel) => panel.id === "default-panel-bookmarks"),
+    "malformed current data should restore the default panels",
+  );
+}
+
+function testInvalidCurrentDataShapeFallsBack(): void {
+  const result = parsePanelSidebarData('{"data":{}}');
+  assert(
+    result.some((panel) => panel.id === "default-panel-bookmarks"),
+    "invalid current data should restore the default panels",
+  );
+}
+
+function testMalformedLegacyDataDoesNotAbortStartup(): void {
+  const prefName = "floorp.browser.sidebar2.data";
+  const hadUserValue = Services.prefs.prefHasUserValue(prefName);
+  const previousValue = Services.prefs.getStringPref(prefName, "");
+  try {
+    Services.prefs.setStringPref(prefName, "not-json");
+    migratePanelSidebarData();
+  } finally {
+    if (hadUserValue) {
+      Services.prefs.setStringPref(prefName, previousValue);
+    } else {
+      Services.prefs.clearUserPref(prefName);
+    }
+  }
+}
+
+function testMigrationRollsBackFailedPreferenceWrites(): void {
+  const legacyPref = "floorp.browser.sidebar2.data";
+  const dataPref = "floorp.panelSidebar.data";
+  const configPref = "floorp.panelSidebar.config";
+  const legacyValue = JSON.stringify({
+    data: { legacy: { url: "https://example.com", width: 320 } },
+    index: ["legacy"],
+  });
+  const dataValue = JSON.stringify({ data: [] });
+  const configValue = JSON.stringify({
+    globalWidth: 777,
+    autoUnload: false,
+    position_start: true,
+    displayed: true,
+    webExtensionRunningEnabled: false,
+  });
+  const values = new Map<string, string>([
+    [legacyPref, legacyValue],
+    [dataPref, dataValue],
+    [configPref, configValue],
+  ]);
+  let failConfigWrite = true;
+  const prefs = {
+    prefHasUserValue: (name: string) => values.has(name),
+    getStringPref: (name: string) => {
+      const value = values.get(name);
+      if (value === undefined) throw new Error(`Missing preference: ${name}`);
+      return value;
+    },
+    setStringPref: (name: string, value: string) => {
+      if (name === configPref && failConfigWrite) {
+        failConfigWrite = false;
+        throw new Error("simulated config write failure");
+      }
+      values.set(name, value);
+    },
+    clearUserPref: (name: string) => {
+      values.delete(name);
+    },
+  };
+  let threw = false;
+
+  try {
+    commitMigratedPreferences(prefs, {
+      legacyPrefName: legacyPref,
+      dataPrefName: dataPref,
+      serializedSidebar: JSON.stringify({ data: [{ id: "migrated" }] }),
+      configPrefName: configPref,
+      serializedConfig: JSON.stringify({ globalWidth: 400 }),
+    });
+  } catch {
+    threw = true;
+  }
+
+  assert(threw, "simulated preference write should fail");
+  assertEquals(values.get(dataPref), dataValue, "panel data should roll back");
+  assertEquals(
+    values.get(configPref),
+    configValue,
+    "panel config should remain unchanged",
+  );
+  assertEquals(
+    values.get(legacyPref),
+    legacyValue,
+    "legacy data should remain available for a later retry",
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -142,6 +248,22 @@ export function runAllTests(): void {
     { name: "userContext null", fn: testUserContextNull },
     { name: "zoomLevel preserved", fn: testZoomLevelPreserved },
     { name: "index ordering", fn: testIndexOrdering },
+    {
+      name: "malformed current data falls back",
+      fn: testMalformedCurrentDataFallsBack,
+    },
+    {
+      name: "invalid current data shape falls back",
+      fn: testInvalidCurrentDataShapeFallsBack,
+    },
+    {
+      name: "malformed legacy data does not abort startup",
+      fn: testMalformedLegacyDataDoesNotAbortStartup,
+    },
+    {
+      name: "migration rolls back failed preference writes",
+      fn: testMigrationRollsBackFailedPreferenceWrites,
+    },
   ];
 
   const failures: string[] = [];

@@ -12,6 +12,7 @@ import {
   createEffect,
   createRoot,
   getOwner,
+  on,
   runWithOwner,
   Show,
 } from "solid-js";
@@ -26,6 +27,7 @@ import type { CPanelSidebar } from "./panel-sidebar";
 
 export class PanelSidebarElem {
   ctx: CPanelSidebar;
+  private readonly sidebarReady: Promise<void>;
 
   private get documentElement() {
     return document?.documentElement as unknown as XULElement;
@@ -33,9 +35,6 @@ export class PanelSidebarElem {
 
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    if (!isPanelSidebarEnabled()) {
-      return;
-    }
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
 
@@ -45,7 +44,7 @@ export class PanelSidebarElem {
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
-    SidebarController.promiseInitialized.then(() => {
+    this.sidebarReady = SidebarController.promiseInitialized.then(() => {
       const exec = () =>
         render(() => this.sidebar(), parentElem, {
           marker: beforeElem as unknown as XULElement,
@@ -73,10 +72,33 @@ export class PanelSidebarElem {
     if (owner) runWithOwner(owner, execEffect);
     else createRoot(execEffect);
 
+    const execEnabledEffect = () => {
+      createEffect(
+        on(isPanelSidebarEnabled, (enabled, wasEnabled) => {
+          if (!enabled || wasEnabled !== false) return;
+          void this.restoreSelectedPanel();
+        }),
+      );
+    };
+    if (owner) runWithOwner(owner, execEnabledEffect);
+    else createRoot(execEnabledEffect);
+
     this.setVerticalTabBgColor();
     Services.prefs.addObserver("sidebar.verticalTabs", () => {
       this.setVerticalTabBgColor();
     });
+  }
+
+  private async restoreSelectedPanel() {
+    await this.sidebarReady;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
+    if (!isPanelSidebarEnabled()) return;
+    const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
+    if (!panel) return;
+    this.ctx.setSidebarWidth(panel);
+    this.ctx.showPanel(panel);
   }
 
   private setVerticalTabBgColor() {

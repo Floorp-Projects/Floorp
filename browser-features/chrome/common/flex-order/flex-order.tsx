@@ -19,6 +19,7 @@ export namespace gFlexOrder {
   const floorpSidebarId = "panel-sidebar-box";
   const floorpSidebarSplitterId = "panel-sidebar-splitter";
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
+  let hoverOffsetFrame: number | undefined;
 
   const [orders, setOrders] = createRootHMR(
     () =>
@@ -59,16 +60,43 @@ export namespace gFlexOrder {
       });
     }
     updateHoverOffset();
+    scheduleHoverOffsetUpdate();
+  }
+
+  // Flex order and child insertion can change the rendered panel width only
+  // after the current style/layout pass. Measure once more on the next frame
+  // so Firefox's hover launcher uses the post-layout width in narrow windows.
+  function scheduleHoverOffsetUpdate() {
+    if (hoverOffsetFrame !== undefined) {
+      cancelAnimationFrame(hoverOffsetFrame);
+    }
+    hoverOffsetFrame = requestAnimationFrame(() => {
+      hoverOffsetFrame = undefined;
+      updateHoverOffset();
+    });
   }
 
   // Firefox anchors its absolute hover launcher to #browser's edge. Floorp's
   // in-flow panels can occupy that edge, so reserve their actual rendered size.
-  // Do not observe the launcher itself: its animation must not feed back into
-  // the offset or move the hover target out from underneath the pointer.
+  // Never remeasure while the launcher is expanded. Once it has collapsed,
+  // measure Floorp's panels again because flex sizing may have changed.
   function updateHoverOffset() {
     const browser = document?.getElementById("browser");
     if (!browser) return;
-    let width = 0;
+    const launcher = document.getElementById("sidebar-container");
+    if (
+      document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
+      (launcher?.hasAttribute("sidebar-launcher-expanded") ||
+        launcher?.hasAttribute("sidebar-ongoing-animations"))
+    ) {
+      // Expanding Firefox's launcher can let a flex-shrunk Floorp panel grow.
+      // Keep the collapsed measurement so the hover target does not move.
+      return;
+    }
+    const atEnd = untrack(orders).floorpSidebar > 0;
+    const browserRect = browser.getBoundingClientRect();
+    let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
+    let hasVisiblePanel = false;
     for (
       const id of [
         floorpSidebarSelectBoxId,
@@ -83,11 +111,20 @@ export namespace gFlexOrder {
         !style || style.display === "none" || style.position === "absolute" ||
         style.position === "fixed"
       ) continue;
-      width += element.getBoundingClientRect().width +
-        (parseFloat(style.marginInlineStart) || 0) +
-        (parseFloat(style.marginInlineEnd) || 0);
+      const rect = element.getBoundingClientRect();
+      occupiedEdge = atEnd
+        ? Math.min(occupiedEdge, rect.left)
+        : Math.max(occupiedEdge, rect.right);
+      hasVisiblePanel = true;
     }
-    const atEnd = untrack(orders).floorpSidebar > 0;
+    const width = hasVisiblePanel
+      ? Math.max(
+        0,
+        atEnd
+          ? browserRect.right - occupiedEdge
+          : occupiedEdge - browserRect.left,
+      )
+      : 0;
     browser.style.setProperty(
       "--floorp-panel-start-width",
       `${atEnd ? 0 : width}px`,
@@ -103,9 +140,19 @@ export namespace gFlexOrder {
     if (!browser) return;
     const resizeObserver = new ResizeObserver(updateHoverOffset);
     const panelObserver = new MutationObserver(updateHoverOffset);
+    const launcherObserver = new MutationObserver(() => {
+      const launcher = document.getElementById("sidebar-container");
+      if (
+        !launcher?.hasAttribute("sidebar-launcher-expanded") &&
+        !launcher?.hasAttribute("sidebar-ongoing-animations")
+      ) {
+        scheduleHoverOffsetUpdate();
+      }
+    });
     const observe = () => {
       resizeObserver.disconnect();
       panelObserver.disconnect();
+      launcherObserver.disconnect();
       for (
         const id of [
           floorpSidebarSelectBoxId,
@@ -122,7 +169,19 @@ export namespace gFlexOrder {
           });
         }
       }
+      const launcher = document.getElementById("sidebar-container");
+      if (launcher) {
+        launcherObserver.observe(launcher, {
+          attributes: true,
+          attributeFilter: [
+            "sidebar-positionend",
+            "sidebar-launcher-expanded",
+            "sidebar-ongoing-animations",
+          ],
+        });
+      }
       updateHoverOffset();
+      scheduleHoverOffsetUpdate();
     };
     const childrenObserver = new MutationObserver(observe);
     childrenObserver.observe(browser, { childList: true });
@@ -130,7 +189,12 @@ export namespace gFlexOrder {
     onCleanup(() => {
       resizeObserver.disconnect();
       panelObserver.disconnect();
+      launcherObserver.disconnect();
       childrenObserver.disconnect();
+      if (hoverOffsetFrame !== undefined) {
+        cancelAnimationFrame(hoverOffsetFrame);
+        hoverOffsetFrame = undefined;
+      }
       browser.style.removeProperty("--floorp-panel-start-width");
       browser.style.removeProperty("--floorp-panel-end-width");
     });
