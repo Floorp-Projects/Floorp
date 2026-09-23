@@ -93,17 +93,17 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-1094");
+  assertEquals(canonicalLock.source.ref, "daily-1108");
   assertEquals(
     canonicalLock.source.commit,
-    "04556dbea6f1c761b36dfe7f973b8c538aebacfd",
+    "f3fbed8ede70e69526fe339e4a4433b6c9815889",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "7dac8a01fc750e8fff01597a91a0ad8d8b2446cf",
+    "9680c212741f0ba9a7d1276c00e226b68a46d4f3",
   );
   assertEquals(canonicalLock.source.release, {
-    id: 390214516,
+    id: 394143527,
     immutable: false,
   });
   assertEquals(canonicalLock.source.materials.count, 53);
@@ -149,51 +149,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       tuple: "linux/aarch64",
-      assetId: 568654414,
-      assetSize: 73547404,
+      assetId: 582317082,
+      assetSize: 73529772,
       assetSha:
-        "f147f9cc2d84e6ef8ddfcb2a659c87a91e3b8781da74e986e81117bd3d66d0fe",
-      iniId: 568654418,
+        "662ac03e899bf442144b63c886e60dcf910a25565cc10a2c0e223450a63b7b7c",
+      iniId: 582317081,
       iniSize: 537,
       iniSha:
-        "6a18e737c1306accdeb4c678922f31f0f1b132a599dbd63007a7b70affcf9c49",
-      buildId: "20260916130640",
+        "46f00c2680a2d97d4d4a054dacea579a75a59a2730f65a6347b09dd8ae56d108",
+      buildId: "20260922152932",
     },
     {
       tuple: "linux/x86_64",
-      assetId: 568654407,
-      assetSize: 84940644,
+      assetId: 582317083,
+      assetSize: 84934580,
       assetSha:
-        "8a16afa8450da0aefee7368fa6a974c2210667866cb51a2a3c5d0565310b0f4d",
-      iniId: 568654405,
+        "d27301886aab71968e981b431762e1da00aaff224641ef0e0fc6b1473f5ece9a",
+      iniId: 582317086,
       iniSize: 537,
       iniSha:
-        "2ec1903db281970f05eddf5e100e61822cd8255c99ff391c2da9605eca1075cf",
-      buildId: "20260916130640",
+        "c05d08e00b49b3e41ce8cdc41740464973607d310b3eeb3f19a892568a5f2e76",
+      buildId: "20260922152932",
     },
     {
       tuple: "macos/universal",
-      assetId: 568654417,
-      assetSize: 183435450,
+      assetId: 582317090,
+      assetSize: 183421703,
       assetSha:
-        "90ea75dafd8da9939b104ea9f3910d8c43450fb48089d7910652b69e6d37aeb9",
-      iniId: 568654416,
+        "eadb84ad7d6ab5bec0988f91c1a9ad789d68ed48e673b67f5b61cfd37e653c9e",
+      iniId: 582317088,
       iniSize: 537,
       iniSha:
-        "cd77d93205dad51ad84e53e785cf4616988f5a316fee91d3630dc055d238054a",
-      buildId: "20260916130640",
+        "039c4e705ece454b01d4e385578f8ec5c82f4cd905b7f9e52c00bf179386df2b",
+      buildId: "20260922152932",
     },
     {
       tuple: "windows/x86_64",
-      assetId: 568654411,
-      assetSize: 137315282,
+      assetId: 582317093,
+      assetSize: 137252033,
       assetSha:
-        "a19f0d011838f84cfce148515cd42df16f5f54f3614cd3f009235cabfcb75979",
-      iniId: 568654419,
+        "9abce16dc9aec261d8148bdd7ec97b4aae7cd530e4358fa0d6b2031441c78bfa",
+      iniId: 582317089,
       iniSize: 537,
       iniSha:
-        "f7a1b720e0388aadb52f7fa5a01cc637ac4cf8dadc47d086fded2191a6becc7d",
-      buildId: "20260916130640",
+        "ed6dca1c658d83608170203daed99d564a82adfcb4858d569458d634132c57a4",
+      buildId: "20260922152932",
     },
   ];
 
