@@ -136,6 +136,21 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
   );
+
+  // drops: 起動時に、手元の xpi から入れ直す(承認は一回でいい)。
+  // 見る・入れる・戻すは about:hub#/features/drops(settings の一枚)
+  ChromeUtils.importESModule("resource://noraneko/modules/Drops.sys.mjs")
+    .restoreDropsAtStartup()
+    .catch((error: unknown) => {
+      console.error("[noraneko-drops] startup restore failed:", error);
+    });
+  // registry の xpi へのリンクは、add-on のインストールでなく drops の「見る」へ
+  try {
+    ChromeUtils.importESModule("resource://noraneko/modules/DropLinks.sys.mjs")
+      .registerDropLinks();
+  } catch (error) {
+    console.error("[noraneko-drops] link handler failed:", error);
+  }
 }
 
 async function openReleaseNotesInRecentWindow(): Promise<void> {

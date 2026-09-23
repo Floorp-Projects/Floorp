@@ -31,6 +31,7 @@ const LeptonSettings = lazy(() =>
   }))
 );
 const SearchPage = lazy(() => import("@/app/search/page.tsx"));
+const Drops = lazy(() => import("@/app/drops/page.tsx"));
 
 export default function App() {
   const location = useLocation();
@@ -98,6 +99,8 @@ export default function App() {
                   />
                   <Route path="/about/browser" element={<About />} />
                   <Route path="/about/updates" element={<Updates />} />
+                  <Route path="/features/drops" element={<Drops />} />
+                  <Route path="/features/drops/:uuid" element={<Drops />} />
                 </Routes>
               </Suspense>
             </main>
