@@ -1,9 +1,15 @@
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
 // deno-lint-ignore no-explicit-any
 declare const Services: any;
+declare const ChromeUtils: {
+  importESModule(uri: string): {
+    AppLifecycle: { getSettings(): AppLifecycleSettings };
+  };
+};
 declare global {
   interface Window {
     NRSettingsSend: (data: string) => void;
@@ -42,6 +48,12 @@ function waitForSettingsBridge(): Promise<Window> {
 const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
+  getWebAppLifecycleSettings: () => {
+    const { AppLifecycle } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/AppLifecycle.sys.mjs",
+    );
+    return Promise.resolve(AppLifecycle.getSettings());
+  },
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
       return Promise.resolve(null);

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "#features-chrome/common/pwa/type.ts";
+import { NativeAppRuntime } from "./NativeAppRuntime.sys.mts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -48,11 +49,14 @@ export class SsbRunnerUtils {
       const args = this.createWindowArgs(ssb);
       const windowFeatures = getWindowFeatures(ssb.display);
 
-      const win = await BrowserWindowTracker.promiseOpenWindow({
+      const options = {
         args,
         features: windowFeatures,
         all: false,
-      });
+      };
+      const win = await NativeAppRuntime.open(ssb, () =>
+        BrowserWindowTracker.openWindow(options)) ??
+        await BrowserWindowTracker.promiseOpenWindow(options);
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
@@ -75,6 +79,7 @@ export class SsbRunnerUtils {
 
   static async applyOSIntegration(ssb: Manifest, win: Window) {
     if (AppConstants.platform === "macosx") {
+      if (NativeAppRuntime.ownsWindow(win)) return;
       const { MacOSSupport } = ChromeUtils.importESModule(
         "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
       );

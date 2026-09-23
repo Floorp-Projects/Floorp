@@ -89,6 +89,9 @@ export class NRSettingsChild extends JSWindowActorChild {
       NRSettingsParentFunctions
     >(
       {
+        getWebAppLifecycleSettings: () => {
+          return this.sendQuery("getWebAppLifecycleSettings");
+        },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },

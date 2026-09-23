@@ -213,12 +213,49 @@ export async function runManagementTests() {
     },
   });
   tests.push({
+    name:
+      "native PWA container rejection explains preserved session without changing data",
+    fn: async () => {
+      await button("Container");
+      await input("[role=dialog] select", "0");
+      management.fail = "native-context";
+      try {
+        await button("Save");
+        await until(
+          () =>
+            document.querySelector("[role=dialog] [role=alert]")?.textContent
+              ?.includes("current login and site data have been kept"),
+          "Native container restriction was not explained",
+        );
+        assertEquals(
+          management.apps.test.userContextId,
+          1,
+          "Rejected native change modified the active container",
+        );
+      } finally {
+        management.fail = "";
+      }
+      await button("Cancel");
+    },
+  });
+  tests.push({
     name: "PWA uninstall confirmation and cancellation",
     fn: async () => {
       await button("Uninstall App");
       await button("Cancel");
       assert(management.apps.test, "Uninstalled after cancel");
       await button("Uninstall App");
+      management.fail = "uninstall";
+      try {
+        await button("Uninstall");
+        await until(
+          () => document.querySelector("[role=dialog] [role=alert]"),
+          "Uninstall veto was not shown",
+        );
+        assert(management.apps.test, "Rejected uninstall removed app data");
+      } finally {
+        management.fail = "";
+      }
       await button("Uninstall");
       assert(!management.apps.test, "PWA not uninstalled");
       await route("features/webapps", "#enable-pwa");

@@ -151,7 +151,13 @@ export function InstalledApps() {
         fetchApps();
       }, 1000);
     } catch (e) {
-      setError(t("progressiveWebApp.errorSettingContainer"));
+      setError(
+        t(
+          e instanceof Error && e.message === "native-context-fixed"
+            ? "progressiveWebApp.nativeContainerFixed"
+            : "progressiveWebApp.errorSettingContainer",
+        ),
+      );
       console.error("Error setting container:", e);
     }
   };
@@ -203,7 +209,9 @@ export function InstalledApps() {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="w-full font-medium truncate">{app.name}</p>
+                          <p className="w-full font-medium truncate">
+                            {app.name}
+                          </p>
                           {containerExperimentEnabled &&
                             (app.userContextId ?? 0) > 0 && (
                             <span
