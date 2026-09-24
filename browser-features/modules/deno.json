@@ -1,6 +1,7 @@
 {
   "name": "@nora/modules",
   "imports": {
+    "@freedomofpress/sigstore-browser": "npm:@freedomofpress/sigstore-browser@^0.1.14",
     "@jsr/std__fs": "npm:@jsr/std__fs@^1.0.20",
     "birpc": "npm:birpc@^4.0.0",
     "fflate": "npm:fflate@^0.8.2",

@@ -9,6 +9,7 @@ import {
   House,
   MousePointer,
   Option,
+  PackageOpen,
   PanelLeft,
   PencilRuler,
   RefreshCw,
@@ -86,6 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: Option,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
+    { title: t("pages.drops"), url: "/features/drops", icon: PackageOpen },
     // Floorp OS entry is conditional based on pref floorp.os.hidden
     ...(isFloorpOSVisible
       ? [
