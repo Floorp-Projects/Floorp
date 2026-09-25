@@ -30,6 +30,14 @@ const OBSERVER_TOPICS = [
   "quit-application-granted",
 ] as const;
 
+/**
+ * Gecko exposes the owning docShell on browser windows. `libs/` types the
+ * window without it, because it is type-checked without the Firefox globals.
+ */
+type NativeAppWindowWithDocShell = NativeAppWindow & {
+  readonly docShell: nsIDocShell;
+};
+
 interface Session {
   appId: string;
   windows: Map<string, NativeAppWindow>;
@@ -483,7 +491,8 @@ export class MacNativeAppRuntime {
     if (window.closed) return;
     // The native process is gone, so a beforeunload dialog has no owner to
     // display it. Only used when restoring the same live docshell has failed.
-    window.docShell.treeOwner.QueryInterface!(Ci.nsIBaseWindow).destroy();
+    const docShell = (window as NativeAppWindowWithDocShell).docShell;
+    docShell.treeOwner.QueryInterface!(Ci.nsIBaseWindow).destroy();
   }
 
   private async recover(session: Session): Promise<void> {

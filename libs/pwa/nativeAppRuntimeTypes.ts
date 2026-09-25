@@ -26,8 +26,14 @@ export interface NativeAppService {
   sendControl(appId: string, type: number, payload: string): void;
 }
 
+/**
+ * Chrome-side window hosted by the native App Shim.
+ *
+ * The Gecko `docShell` is intentionally not declared here: `libs/` is
+ * type-checked without the Firefox global types, so chrome modules extend this
+ * with `NativeAppWindowWithDocShell` where `nsIDocShell` is available.
+ */
 export interface NativeAppWindow extends Window {
-  readonly docShell: nsIDocShell;
   BrowserCommands?: { tryToCloseWindow(): void };
   goDoCommand?(command: string): void;
 }
