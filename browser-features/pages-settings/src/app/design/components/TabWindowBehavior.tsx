@@ -101,7 +101,7 @@ export function TabWindowBehavior() {
       <CardContent className="space-y-5">
         <div className="space-y-2">
           <label
-            className="text-base font-medium"
+            className="block text-base font-medium"
             htmlFor="open-new-window-behavior"
           >
             {t("design.tabWindowBehavior.openLinks")}
@@ -129,9 +129,9 @@ export function TabWindowBehavior() {
         </div>
 
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="space-y-2">
             <label
-              className="text-base font-medium"
+              className="block text-base font-medium"
               htmlFor="taskbar-tab-previews"
             >
               {t("design.tabWindowBehavior.taskbarPreviews")}

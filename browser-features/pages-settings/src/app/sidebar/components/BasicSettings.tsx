@@ -89,7 +89,7 @@ export function BasicSettings() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
+              <label className="block text-sm font-medium leading-none">
                 {t("panelSidebar.position")}
               </label>
               <div className={styles.actions}>
