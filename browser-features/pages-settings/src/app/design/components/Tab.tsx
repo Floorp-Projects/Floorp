@@ -28,10 +28,10 @@ export function Tab() {
           <h3 className="text-base font-medium mb-2">
             {t("design.tab.scroll")}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-3">
             {t("design.tab.scrollDescription")}
           </p>
-          <div className="space-y-4">
+          <div>
             <div className="flex items-center justify-between gap-2">
               <label htmlFor="scroll-tab">{t("design.tab.scrollTab")}</label>
               <Switch
@@ -80,10 +80,10 @@ export function Tab() {
           <h3 className="text-base font-medium mb-2">
             {t("design.tab.openPosition")}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-3">
             {t("design.tab.openPositionDescription")}
           </p>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             {[
               { value: -1, label: "design.tab.openDefault" },
               { value: 0, label: "design.tab.openLast" },

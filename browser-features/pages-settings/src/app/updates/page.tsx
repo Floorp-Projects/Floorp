@@ -308,7 +308,7 @@ export default function Page() {
               {t("updates.experiments.description")}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 mb-4">
             <div className="space-y-2">
               <label className="floorp-field-label" htmlFor="experiments-policy">
                 <span className="floorp-field-text">
@@ -326,7 +326,7 @@ export default function Page() {
               </p>
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-start gap-4 pt-4 border-t border-base-content/10">
+          <CardFooter className="flex-col items-start pt-4 border-t border-base-content/10 space-y-4">
             <h3 className="text-sm font-medium">
               {t("updates.experiments.troubleshooting")}
             </h3>

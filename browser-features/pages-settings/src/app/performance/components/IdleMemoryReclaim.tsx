@@ -169,7 +169,7 @@ export function IdleMemoryReclaim() {
           {t("performance.idleReclaim.title")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-2">
         <p className="text-sm text-muted-foreground leading-relaxed">
           {t("performance.idleReclaim.description")}
         </p>
@@ -186,7 +186,7 @@ export function IdleMemoryReclaim() {
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 md:space-y-0">
           <NumberField
             id="idle-memory-reclaim-idle-threshold"
             label={t("performance.idleReclaim.idleThreshold")}
