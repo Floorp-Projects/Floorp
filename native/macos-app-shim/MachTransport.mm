@@ -42,6 +42,17 @@ Port Port::Receive() {
   if (mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &port) != KERN_SUCCESS) {
     return {};
   }
+  // The kernel default holds five messages. The browser drains its receive port
+  // on the main thread, so a briefly busy thread would otherwise make the peer
+  // hammer a full queue; every receive port asks for the maximum instead.
+  mach_port_limits_t limits = {};
+  limits.mpl_qlimit = MACH_PORT_QLIMIT_MAX;
+  if (mach_port_set_attributes(mach_task_self(), port, MACH_PORT_LIMITS_INFO,
+                               reinterpret_cast<mach_port_info_t>(&limits),
+                               MACH_PORT_LIMITS_INFO_COUNT) != KERN_SUCCESS) {
+    mach_port_mod_refs(mach_task_self(), port, MACH_PORT_RIGHT_RECEIVE, -1);
+    return {};
+  }
   return Port(port, true);
 }
 
@@ -186,23 +197,29 @@ MessageSender::MessageSender(mach_port_t destination, std::function<void()> onFa
 
 MessageSender::~MessageSender() { Stop(); }
 
-bool MessageSender::Enqueue(MessageType type, uint64_t sequence, NSDictionary* payload,
-                            mach_port_t attachment) {
+EnqueueStatus MessageSender::Enqueue(MessageType type, uint64_t sequence,
+                                     NSDictionary* payload,
+                                     mach_port_t attachment) {
   NSData* data = EncodePayload(payload);
-  if (!data || !sequence || !IsKnownMessage(static_cast<uint32_t>(type))) return false;
+  if (!data || !sequence || !IsKnownMessage(static_cast<uint32_t>(type))) {
+    return EnqueueStatus::Invalid;
+  }
   Port retainedAttachment;
   if (MACH_PORT_VALID(attachment)) {
-    if (mach_port_mod_refs(mach_task_self(), attachment, MACH_PORT_RIGHT_SEND, 1) != KERN_SUCCESS) return false;
+    if (mach_port_mod_refs(mach_task_self(), attachment, MACH_PORT_RIGHT_SEND, 1) != KERN_SUCCESS) return EnqueueStatus::Invalid;
     retainedAttachment = Port(attachment);
   } else if (attachment != MACH_PORT_NULL) {
-    return false;
+    return EnqueueStatus::Invalid;
   }
   auto state = state_;
   bool start = false;
   {
     std::lock_guard<std::mutex> lock(state->mutex);
-    if (state->stopped || sequence <= state->lastSequence ||
-        state->count >= State::kMaxMessages || data.length > State::kMaxBytes - state->bytes) return false;
+    if (state->stopped) return EnqueueStatus::Stopped;
+    if (sequence <= state->lastSequence || state->count >= State::kMaxMessages ||
+        data.length > State::kMaxBytes - state->bytes) {
+      return EnqueueStatus::Backpressure;
+    }
     state->lastSequence = sequence;
     ++state->count;
     state->bytes += data.length;
@@ -210,7 +227,7 @@ bool MessageSender::Enqueue(MessageType type, uint64_t sequence, NSDictionary* p
     if (!state->running) state->running = start = true;
   }
   if (start) dispatch_async(state->worker, ^{ state->Pump(); });
-  return true;
+  return EnqueueStatus::Accepted;
 }
 
 void MessageSender::Stop() {

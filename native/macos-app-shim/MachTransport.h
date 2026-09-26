@@ -49,19 +49,26 @@ bool SendMessage(mach_port_t destination, MessageType type, uint64_t sequence,
                  mach_msg_type_name_t disposition = MACH_MSG_TYPE_COPY_SEND);
 ReceiveResult ReceiveMessage(mach_port_t receivePort, mach_msg_timeout_t timeout);
 
-// Ordered, bounded delivery on a private worker queue. Enqueue only admits a
-// message; delivery failure is reported asynchronously on the main queue.
-// Stop never blocks and suppresses pending failure callbacks. A send already
-// accepted by the kernel cannot be recalled. Both destination and attachment
-// send rights are independently retained until delivery or cancellation.
+// Why an enqueue was refused. Only `Accepted` advances the caller's sequence:
+// `Backpressure` is a temporarily full bounded queue, so the same sequence can
+// be sent again once it drains, while `Invalid` and `Stopped` are permanent.
+enum class EnqueueStatus { Accepted, Backpressure, Invalid, Stopped };
+
+// Ordered, bounded delivery on a private worker queue. Enqueue either admits a
+// message or reports why it refused one; delivery failure is reported
+// asynchronously on the main queue. Stop never blocks and suppresses pending
+// failure callbacks. A send already accepted by the kernel cannot be recalled.
+// Both destination and attachment send rights are independently retained until
+// delivery or cancellation.
 class MessageSender {
  public:
   MessageSender(mach_port_t destination, std::function<void()> onFailure);
   ~MessageSender();
   MessageSender(const MessageSender&) = delete;
   MessageSender& operator=(const MessageSender&) = delete;
-  bool Enqueue(MessageType type, uint64_t sequence, NSDictionary* payload,
-               mach_port_t attachment = MACH_PORT_NULL);
+  EnqueueStatus Enqueue(MessageType type, uint64_t sequence,
+                        NSDictionary* payload,
+                        mach_port_t attachment = MACH_PORT_NULL);
   void Stop();
 
  private:

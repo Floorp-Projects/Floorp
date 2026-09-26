@@ -11,6 +11,9 @@ constexpr uint32_t kProtocolMagic = 0x46415348;
 constexpr uint16_t kProtocolMajor = 1;
 constexpr uint16_t kProtocolMinor = 0;
 constexpr size_t kMaxPayloadBytes = 64 * 1024;
+// Forwarded text is limited by its encoded size, not by UTF-16 units: the JSON
+// wrapper and multi-byte characters must still fit inside kMaxPayloadBytes.
+constexpr size_t kMaxTextPayloadBytes = 32 * 1024;
 constexpr size_t kMaxWindows = 16;
 constexpr size_t kMaxLayers = 128;
 constexpr size_t kMaxSurfaceBytes = 256 * 1024 * 1024;

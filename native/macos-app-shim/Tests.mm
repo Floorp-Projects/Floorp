@@ -423,6 +423,17 @@ void TestNativeView() {
   CFRelease(second);
 }
 
+void TestReceivePortQueueLimit() {
+  Port receiving = Port::Receive();
+  Expect(bool(receiving), "receive port allocates");
+  mach_port_limits_t limits = {};
+  mach_msg_type_number_t count = MACH_PORT_LIMITS_INFO_COUNT;
+  Expect(mach_port_get_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
+      reinterpret_cast<mach_port_info_t>(&limits), &count) == KERN_SUCCESS &&
+      limits.mpl_qlimit == MACH_PORT_QLIMIT_MAX,
+      "receive ports request the maximum kernel queue limit");
+}
+
 void TestAsyncSender() {
   Port receiving = Port::Receive();
   Expect(mach_port_insert_right(mach_task_self(), receiving.get(), receiving.get(), MACH_MSG_TYPE_MAKE_SEND) == KERN_SUCCESS,
@@ -434,7 +445,7 @@ void TestAsyncSender() {
   auto start = std::chrono::steady_clock::now();
   constexpr uint32_t fullReplacementMessages = 2 + 2 * kMaxLayers;
   for (uint32_t i = 1; i <= fullReplacementMessages; ++i) {
-    Expect(sender.Enqueue(MessageType::WindowChanged, i, @{@"index": @(i)}, i == fullReplacementMessages ? surfacePort.get() : MACH_PORT_NULL),
+    Expect(sender.Enqueue(MessageType::WindowChanged, i, @{@"index": @(i)}, i == fullReplacementMessages ? surfacePort.get() : MACH_PORT_NULL) == EnqueueStatus::Accepted,
         "async burst admitted without receiver draining");
   }
   surfacePort = Port();
@@ -458,7 +469,8 @@ void TestAsyncSender() {
       CFRelease(imported);
     }
   }
-  Expect(!sender.Enqueue(MessageType::WindowChanged, fullReplacementMessages, @{}), "async sender rejects sequence replay");
+  Expect(sender.Enqueue(MessageType::WindowChanged, fullReplacementMessages, @{}) == EnqueueStatus::Backpressure,
+      "async sender reports a replayed sequence as backpressure");
   IOSurfaceRef cancelledSurface = MakeSurface(0xff00abcd);
   Port cancelledPort(IOSurfaceCreateMachPort(cancelledSurface));
   CFRelease(cancelledSurface);
@@ -466,20 +478,35 @@ void TestAsyncSender() {
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesBefore) == KERN_SUCCESS,
       "read caller surface send-right count");
   for (uint32_t i = fullReplacementMessages + 1; i < fullReplacementMessages + 33; ++i)
-    Expect(sender.Enqueue(MessageType::WindowChanged, i, @{}), "fill receiver before cancellation");
-  Expect(sender.Enqueue(MessageType::SetLayer, fullReplacementMessages + 33, @{}, cancelledPort.get()),
+    Expect(sender.Enqueue(MessageType::WindowChanged, i, @{}) == EnqueueStatus::Accepted, "fill receiver before cancellation");
+  Expect(sender.Enqueue(MessageType::SetLayer, fullReplacementMessages + 33, @{}, cancelledPort.get()) == EnqueueStatus::Accepted,
       "retain surface queued behind stalled receiver");
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesQueued) == KERN_SUCCESS &&
       referencesQueued == referencesBefore + 1, "queue independently retains attachment right");
   sender.Stop();
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesAfter) == KERN_SUCCESS &&
       referencesAfter == referencesBefore, "Stop releases pending attachment while another send waits");
+  // Production receive ports ask for the largest kernel queue. Put this peer
+  // back to the default limit so it stops accepting messages again, which is
+  // the stalled receiver the bounded sender has to survive.
+  mach_port_limits_t stalledLimits = {};
+  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
+  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
+               reinterpret_cast<mach_port_info_t>(&stalledLimits),
+               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
+      "stall the receiving peer for the bounded sender");
   MessageSender bounded(receiving.get(), [&] { failed = true; });
   uint32_t admitted = 0;
-  for (uint32_t i = 1; i < 1000 && bounded.Enqueue(MessageType::WindowChanged, i, @{}); ++i) ++admitted;
+  EnqueueStatus refusal = EnqueueStatus::Accepted;
+  for (uint32_t i = 1; i < 1000; ++i) {
+    refusal = bounded.Enqueue(MessageType::WindowChanged, i, @{});
+    if (refusal != EnqueueStatus::Accepted) break;
+    ++admitted;
+  }
   Expect(admitted > 0 && admitted <= 517, "async pending message count is bounded including in-flight send");
+  Expect(refusal == EnqueueStatus::Backpressure, "a full bounded queue is backpressure, not a dead sender");
   bounded.Stop();
-  Expect(!sender.Enqueue(MessageType::WindowChanged, 1000, @{}), "stopped sender rejects work");
+  Expect(sender.Enqueue(MessageType::WindowChanged, 1000, @{}) == EnqueueStatus::Stopped, "stopped sender rejects work");
   Pump();
   Expect(!failed, "explicit cancellation suppresses failure callback");
   mach_port_deallocate(mach_task_self(), receiving.get());
@@ -490,7 +517,7 @@ void TestAsyncSender() {
   MessageSender deadSender(deadReceiver.get(), [&] { failed = true; });
   mach_port_deallocate(mach_task_self(), deadReceiver.get());
   deadReceiver = Port();
-  Expect(deadSender.Enqueue(MessageType::WindowChanged, 1, @{}), "dead-peer delivery is asynchronous");
+  Expect(deadSender.Enqueue(MessageType::WindowChanged, 1, @{}) == EnqueueStatus::Accepted, "dead-peer delivery is asynchronous");
   for (int i = 0; i < 50 && !failed; ++i) Pump();
   Expect(failed, "dead peer reports delivery failure on main queue");
 }
@@ -614,6 +641,7 @@ int main(int argc, char* argv[]) {
     TestSignedPeer();
     TestColdBootstrap(argv[0]);
     TestNativeView();
+    TestReceivePortQueueLimit();
     TestAsyncSender();
     TestRelatedWindows();
     printf("PASS: %d native App Shim assertions\n", gAssertions);

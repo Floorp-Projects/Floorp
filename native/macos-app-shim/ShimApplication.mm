@@ -99,10 +99,28 @@ using namespace floorp::shim;
 
 - (BOOL)send:(MessageType)type payload:(NSDictionary*)payload {
   if (_terminating) return NO;
-  if (!_sender || !_sender->Enqueue(type, ++_outgoing, payload)) {
+  if (!_sender) {
     [self stop:1];
     return NO;
   }
+  const EnqueueStatus status = _sender->Enqueue(type, _outgoing + 1, payload);
+  if (status == EnqueueStatus::Backpressure) {
+    // A full bounded queue is backpressure, not a broken transport. Pointer
+    // motion and scrolling are coalescible, so dropping them keeps the app
+    // alive; other input is ordered, so losing it would corrupt the page.
+    NSString* kind = payload[@"kind"];
+    if (type != MessageType::Input ||
+        (![kind isEqual:@"mouseMove"] && ![kind isEqual:@"scroll"])) {
+      [self stop:1];
+      return NO;
+    }
+    return NO;
+  }
+  if (status != EnqueueStatus::Accepted) {
+    [self stop:1];
+    return NO;
+  }
+  ++_outgoing;
   return YES;
 }
 

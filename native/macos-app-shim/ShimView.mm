@@ -243,6 +243,13 @@ NSString* PlainText(id value) {
   return [value isKindOfClass:NSString.class] ? value : nil;
 }
 
+// The wire budget is measured in encoded bytes, so multi-byte input such as
+// Japanese IME or dictation cannot exceed it by passing a UTF-16 length check.
+bool TextFitsWire(NSString* text) {
+  return [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding] <=
+      kMaxTextPayloadBytes;
+}
+
 bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
                NSUInteger bound, NSRange* range) {
   uint32_t start, length;
@@ -655,14 +662,14 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
 }
 - (void)insertText:(id)value replacementRange:(NSRange)replacement {
   NSString* text = PlainText(value);
-  if (!_editable || !text || text.length > 32768) return;
+  if (!_editable || !text || !TextFitsWire(text)) return;
   [self emit:MessageType::Input payload:@{@"kind": @"insertText", @"text": text,
       @"replacement": RangePayload(replacement), @"editorRevision": @(_editorRevision)}];
   _markedRange = NSMakeRange(NSNotFound, 0);
 }
 - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange:(NSRange)replacement {
   NSString* text = PlainText(value);
-  if (!_editable || !text || text.length > 32768 || selected.location > text.length ||
+  if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
       selected.length > text.length - selected.location) return;
   [self emit:MessageType::Input payload:@{@"kind": @"setMarkedText", @"text": text,
       @"selected": RangePayload(selected), @"replacement": RangePayload(replacement),
