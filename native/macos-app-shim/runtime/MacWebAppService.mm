@@ -206,6 +206,23 @@ struct MacWebAppService::Impl {
     return it == apps.end() ? nullptr : it->second.get();
   }
 
+  /**
+   * Registrations that never connected and never started consume a slot
+   * forever otherwise, so a long session could exhaust the app cap with apps
+   * that are already closed. Only entries with no live process and no pending
+   * launch are dropped; destroying one releases its sender, reply port and
+   * exit source through App's destructor.
+   */
+  void ReleaseIdleApps() {
+    for (auto it = apps.begin(); it != apps.end();) {
+      if (it->second->connected || it->second->launching || it->second->running) {
+        ++it;
+        continue;
+      }
+      it = apps.erase(it);
+    }
+  }
+
   void Notify(NSString* aAppId, id aType, NSDictionary* aPayload) {
     MOZ_ASSERT(NS_IsMainThread());
     NSData* data = floorp::shim::EncodePayload(@{
@@ -320,10 +337,13 @@ struct MacWebAppService::Impl {
     // The bounded per-connection worker owns copies of the payload and rights.
     // Never wait for another application's main queue while on Gecko's main
     // thread: AppKit activation can temporarily fill the peer's Mach queue.
-    const bool success = aApp.sender->Enqueue(
+    const floorp::shim::EnqueueStatus status = aApp.sender->Enqueue(
         aType, ++aApp.sentSequence, aPayload, aSurface);
-    if (!success) Disconnect(aApp, @"send-failed");
-    return success;
+    if (status != floorp::shim::EnqueueStatus::Accepted) {
+      Disconnect(aApp, @"send-failed");
+      return false;
+    }
+    return true;
   }
 
   void AcceptHello(App& aApp, Message aMessage) {
@@ -641,8 +661,9 @@ NS_IMETHODIMP MacWebAppService::RegisterApp(const nsACString& aAppId,
   NSString* bundlePath = ToNSString(aBundlePath);
   if (Impl::App* existing = mImpl->Find(appId)) {
     if (existing->connected || existing->launching) return NS_ERROR_IN_PROGRESS;
-  } else if (mImpl->apps.size() >= kMaxApps) {
-    return NS_ERROR_NOT_AVAILABLE;
+  } else {
+    if (mImpl->apps.size() >= kMaxApps) mImpl->ReleaseIdleApps();
+    if (mImpl->apps.size() >= kMaxApps) return NS_ERROR_NOT_AVAILABLE;
   }
   NSURL* bundleURL = [NSURL fileURLWithPath:bundlePath isDirectory:YES];
   NSDictionary* signing = ValidatedSigningInfo(appId, mImpl->profileId, bundlePath);
