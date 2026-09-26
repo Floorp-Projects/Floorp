@@ -58,8 +58,7 @@
   "tasks": {
     "feles-build": "deno run -A tools/feles-build.ts",
     "app-shim:build": "deno run --allow-read --allow-write --allow-run --allow-env tools/app-shim/build.ts",
-    "app-shim:prepare-runtime": "deno run --allow-read --allow-write --allow-run=git tools/app-shim/prepare-runtime.ts",
-    "app-shim:test": "deno test --allow-read --allow-write --allow-run=git libs/pwa/appRegistry.test.ts libs/pwa/bundleRecovery.test.ts tools/app-shim/prepare-runtime.test.ts",
+    "app-shim:test": "deno test --allow-read --allow-write --allow-run=git libs/pwa/appRegistry.test.ts libs/pwa/bundleRecovery.test.ts",
     "act": "deno run -A tools/act/run-package-workflow.ts",
     "dev-tool": "deno run -A tools/dev-tool.ts",
     "docs-pipeline": "deno run --allow-read --allow-write --allow-env --allow-net --allow-run tools/docs-pipeline/mod.ts",

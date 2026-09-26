@@ -93,28 +93,32 @@ support. Browser-owned legacy Web App windows keep their previous behavior.
 
 ## Build
 
+The Runtime side is maintained as a source patch, like every other Runtime
+change in this repository: `.github/patches/floorp-runtime/common/macos-web-app-shim.patch`.
+It adds the Shim and host sources and modifies the Gecko files they integrate
+with. `package.yml` applies it when packaging, and `AGENTS.md` documents the
+convention.
+
 Use a separate, clean Runtime checkout at the exact `source.commit` from
 `floorp-runtime.lock.json` (currently
-`f3fbed8ede70e69526fe339e4a4433b6c9815889`). From this Floorp checkout:
+`f3fbed8ede70e69526fe339e4a4433b6c9815889`). From that checkout:
 
 ```sh
-deno task app-shim:prepare-runtime --runtime /absolute/path/to/clean-runtime --check
-deno task app-shim:prepare-runtime --runtime /absolute/path/to/clean-runtime --apply
+git apply --check /absolute/path/to/noraneko/.github/patches/floorp-runtime/common/macos-web-app-shim.patch
+git apply /absolute/path/to/noraneko/.github/patches/floorp-runtime/common/macos-web-app-shim.patch
 ```
 
-The preparation tool stages the explicitly listed sources and applies
-`native/macos-app-shim/runtime/integration.patch`. It checks the locked
-revision, dirty files, index changes, symlink traversal, and ownership of
-existing output. It refuses to overwrite unowned or changed files. Reapplying
-identical inputs is supported; use a fresh checkout after changing the source
-inputs.
-
-Build that Runtime with a normal macOS browser source configuration and
+Then build that Runtime with a normal macOS browser source configuration and
 `./mach build`. Its build graph produces `floorp-app-shim`, registers
 `nsIMacWebAppService`, and includes the Shim in the macOS package manifest. Then
 build and package the matching Floorp frontend. A release requires publishing a
-new native Runtime artifact and updating the pinned artifact; the existing
-prebuilt-artifact packaging workflow alone cannot ship this native change.
+new native Runtime artifact and updating the pinned artifact; the packaging
+workflow applies this patch to prebuilt sources, so source changes alone cannot
+deliver the native recompilation.
+
+The same sources live under `native/macos-app-shim/` for the isolated native
+build and its tests, which do not need a Gecko checkout. Keep the two in sync:
+the patch is generated from a Runtime checkout that has them staged.
 
 For repeated local builds, stage into a fresh packaging directory before signing.
 Signing changes file timestamps; an older signed staged executable can otherwise
