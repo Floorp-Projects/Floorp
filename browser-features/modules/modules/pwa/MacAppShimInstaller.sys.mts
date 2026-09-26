@@ -86,6 +86,15 @@ function string(value: unknown): string {
   return value;
 }
 
+/** A bundle name must still name the bundle after XML filtering. */
+function bundleName(value: unknown): string {
+  const name = string(value);
+  if (!xml(name)) {
+    throw new Error("[MacAppShimInstaller] Invalid bundle name");
+  }
+  return name;
+}
+
 /** Explicit, capability-gated installation. Never called by legacy repair. */
 export class MacAppShimInstaller {
   private static operations = new Map<string, Promise<unknown>>();
@@ -538,10 +547,11 @@ export class MacAppShimInstaller {
           PathUtils.join(legacy.path, "Contents", "Resources", "app.icns"),
           PathUtils.join(resources, "app.icns"),
         );
+        const name = bundleName(ssb.name);
         const entries = {
           CFBundleIdentifier: legacy.bundleId,
-          CFBundleName: ssb.name,
-          CFBundleDisplayName: ssb.name,
+          CFBundleName: name,
+          CFBundleDisplayName: name,
           CFBundleExecutable: "app-shim",
           CFBundleIconFile: "app.icns",
           CFBundlePackageType: "APPL",
@@ -683,7 +693,7 @@ export class MacAppShimInstaller {
         "[MacAppShimInstaller] Rename cannot change the app's session identity",
       );
     }
-    string(updated.name);
+    const updatedName = bundleName(updated.name);
     const { NativeAppRuntime } = ChromeUtils.importESModule(
       "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
     );
@@ -760,7 +770,7 @@ export class MacAppShimInstaller {
                 );
               }
               plist = plist.replace(field, (_match, opening: string) =>
-                `${opening}${xml(updated.name)}</string>`);
+                `${opening}${xml(updatedName)}</string>`);
             }
             await IOUtils.writeUTF8(plistPath, plist);
             const markerPath = PathUtils.join(
