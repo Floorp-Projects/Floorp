@@ -414,10 +414,12 @@ export class AppRegistryStore {
           "Application is not registered",
         );
       }
-      if (
-        app.pendingMigration?.transactionId !== verified.transactionId &&
-        app.installedShim?.transactionId !== verified.transactionId
-      ) {
+      // A pending migration owns the journal: only its own transaction may
+      // commit it. Without one, only an idempotent replay of the installed
+      // receipt is accepted, so a late receipt cannot delete a live journal.
+      const expected = app.pendingMigration?.transactionId ??
+        app.installedShim?.transactionId;
+      if (expected !== verified.transactionId) {
         throw new AppRegistryError(
           "transaction-mismatch",
           "Native receipt does not match the prepared transaction",

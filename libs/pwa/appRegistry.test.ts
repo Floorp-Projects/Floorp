@@ -340,6 +340,47 @@ Deno.test("native receipt commit preserves session identity and rejects launcher
   });
 });
 
+Deno.test("pending migration journal rejects a late installed receipt", async () => {
+  const { store } = fixture();
+  await store.ensureLegacyApp(app);
+  const installed = {
+    transactionId: "native-1",
+    shimVersion: "1",
+    cdHash: "a".repeat(40),
+    fingerprint: "b".repeat(64),
+  };
+  const pending = {
+    ...installed,
+    transactionId: "native-2",
+    cdHash: "c".repeat(40),
+    fingerprint: "d".repeat(64),
+  };
+  await store.beginMigration(
+    app.installId,
+    installed.transactionId,
+    "1",
+    capabilities,
+  );
+  await store.completeMigration(app.installId, installed, app.name);
+  await store.beginMigration(
+    app.installId,
+    pending.transactionId,
+    "1",
+    capabilities,
+  );
+  await assertRejects(
+    () => store.completeMigration(app.installId, installed, app.name),
+    AppRegistryError,
+  );
+  const journalled = (await store.read())!.apps[0];
+  assertEquals(journalled.pendingMigration?.transactionId, pending.transactionId);
+  assertEquals(journalled.installedShim?.transactionId, installed.transactionId);
+  await store.completeMigration(app.installId, pending, "New Name");
+  const committed = (await store.read())!.apps[0];
+  assertEquals(committed.pendingMigration, undefined);
+  assertEquals(committed.installedShim, pending);
+});
+
 Deno.test("native rename receipts retain bundle and container identities across rollback", async () => {
   const { store } = fixture();
   await store.ensureLegacyApp({ ...app, userContextId: 8 });
