@@ -49,9 +49,15 @@ const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
 
 const directServicesFunctions: NRSettingsParentFunctions = {
   getWebAppLifecycleSettings: () => {
+    const { NativeAppRuntime } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+    );
     const { AppLifecycle } = ChromeUtils.importESModule(
       "resource://noraneko/modules/pwa/AppLifecycle.sys.mjs",
     );
+    // Match the actor path: registering the native runtime is what makes the
+    // lifecycle adapter report support, so it must run before reading settings.
+    NativeAppRuntime.isAvailable();
     return Promise.resolve(AppLifecycle.getSettings());
   },
   getBoolPref: (prefName) => {
