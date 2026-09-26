@@ -3,9 +3,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Open a URL in a new tab from the browser window. A plain <a target="_blank">
+// click inside a system-principal about page (about:welcome) opens about:blank,
+// so the page routes external links here instead. See Floorp issue #2787.
+// deno-lint-ignore no-explicit-any
+function openExternalLinkInBrowser(url: string): boolean {
+  try {
+    const win = Services.wm.getMostRecentWindow("navigator:browser") as any;
+    if (!win || typeof win.openTrustedLinkIn !== "function") {
+      return false;
+    }
+    win.openTrustedLinkIn(url, "tab", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      relatedToCurrent: true,
+      // Never let the new content tab inherit the system principal.
+      allowInheritPrincipal: false,
+    });
+    return true;
+  } catch (error) {
+    console.error("[noraneko] openExternalLinkInBrowser failed", error);
+    return false;
+  }
+}
+
 export class NRWelcomePageParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
+      case "WelcomePage:openExternalLink": {
+        const data = message.data as { url?: unknown } | undefined;
+        const url = typeof data?.url === "string" ? data.url : "";
+        if (url) {
+          openExternalLinkInBrowser(url);
+        }
+        break;
+      }
       case "WelcomePage:dismiss": {
         const context = this.browsingContext;
         const uri = this.manager.documentURI;

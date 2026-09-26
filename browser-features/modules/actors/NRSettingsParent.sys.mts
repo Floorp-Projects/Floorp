@@ -1,3 +1,26 @@
+// Open a URL in a new tab from the browser window. A plain <a target="_blank">
+// click inside a system-principal about page (about:hub) opens about:blank, so
+// the page routes external links here instead. See Floorp issue #2787.
+// deno-lint-ignore no-explicit-any
+function openExternalLinkInBrowser(url: string): boolean {
+  try {
+    const win = Services.wm.getMostRecentWindow("navigator:browser") as any;
+    if (!win || typeof win.openTrustedLinkIn !== "function") {
+      return false;
+    }
+    win.openTrustedLinkIn(url, "tab", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      relatedToCurrent: true,
+      // Never let the new content tab inherit the system principal.
+      allowInheritPrincipal: false,
+    });
+    return true;
+  } catch (error) {
+    console.error("[noraneko] openExternalLinkInBrowser failed", error);
+    return false;
+  }
+}
+
 //TODO: make reject when the name is invalid
 export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
@@ -7,6 +30,13 @@ export class NRSettingsParent extends JSWindowActorParent {
   async receiveMessage(message: { name: string; data?: unknown }): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
+      case "openExternalLink": {
+        const url = data && typeof data.url === "string" ? data.url : null;
+        if (url) {
+          openExternalLinkInBrowser(url);
+        }
+        break;
+      }
       case "getBoolPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;

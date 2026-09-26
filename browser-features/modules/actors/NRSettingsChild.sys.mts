@@ -51,6 +51,11 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
+    if (typeof page.NROpenExternalLink !== "function") {
+      Cu.exportFunction(this.NROpenExternalLink.bind(this), window, {
+        defineAs: "NROpenExternalLink",
+      });
+    }
     return true;
   }
 
@@ -73,6 +78,15 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
   NRSPing() {
     return true;
+  }
+
+  NROpenExternalLink(url: string): void {
+    if (typeof url !== "string" || !url) {
+      return;
+    }
+    this.sendQuery("openExternalLink", { url }).catch((error) =>
+      console.error("[noraneko] NROpenExternalLink failed", error)
+    );
   }
 
   sendToPage: ((data: string) => void) | null = null;
