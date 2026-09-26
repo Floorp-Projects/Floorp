@@ -488,6 +488,8 @@
         "otherSettings": "Paramètres supplémentaires",
         "showToolbar": "Afficher la barre d'outils",
         "showToolbarDescription": "Afficher la barre d'outils dans les fenêtres d'applications Web",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Applications installées",
         "noInstalledApps": "Aucune application Web installée",
         "removeApp": "Supprimer l'application",
@@ -507,7 +509,10 @@
         "containerDeleted": "Conteneur supprimé",
         "resetContainer": "Réinitialiser",
         "save": "Enregistrer",
-        "errorSettingContainer": "Échec de la définition du conteneur"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Échec de la définition du conteneur",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

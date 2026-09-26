@@ -488,6 +488,8 @@
         "otherSettings": "其他設定",
         "showToolbar": "顯示工具列",
         "showToolbarDescription": "在 PWA 應用程式視窗中顯示工具列",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "已安裝的 PWA 應用程式",
         "noInstalledApps": "未安裝任何 PWA 應用程式",
         "removeApp": "移除 PWA 應用程式",
@@ -507,7 +509,10 @@
         "containerDeleted": "容器已刪除",
         "resetContainer": "重設",
         "save": "儲存",
-        "errorSettingContainer": "無法設定容器"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "無法設定容器",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

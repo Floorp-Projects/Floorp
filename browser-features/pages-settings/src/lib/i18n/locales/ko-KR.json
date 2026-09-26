@@ -488,6 +488,8 @@
         "otherSettings": "기타 설정",
         "showToolbar": "도구 모음 표시",
         "showToolbarDescription": "프로그레시브 웹 앱 창에 툴바 표시",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "설치된 앱",
         "noInstalledApps": "프로그레시브 웹 앱이 설치되지 않음",
         "removeApp": "앱 삭제",
@@ -507,7 +509,10 @@
         "containerDeleted": "컨테이너 삭제됨",
         "resetContainer": "초기화",
         "save": "저장",
-        "errorSettingContainer": "컨테이너 설정 실패"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "컨테이너 설정 실패",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
