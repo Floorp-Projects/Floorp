@@ -49,7 +49,19 @@ type InstallJournal = {
 };
 
 function xml(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+  // XML 1.0 Char production, evaluated as code points to preserve non-BMP text,
+  // exactly as the legacy macOS bundle generator does. A name containing a
+  // noncharacter or an unpaired surrogate would otherwise produce a plist that
+  // neither codesign nor the Shim can read.
+  // https://www.w3.org/TR/xml/#charsets
+  const characters = Array.from(value).filter((character) => {
+    const code = character.codePointAt(0)!;
+    return code === 0x9 || code === 0xa || code === 0xd ||
+      (code >= 0x20 && code <= 0xd7ff) || (code >= 0xe000 && code <= 0xfffd) ||
+      (code >= 0x10000 && code <= 0x10ffff);
+  });
+  return characters.join("")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll(
       "'",
       "&apos;",
