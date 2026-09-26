@@ -117,12 +117,20 @@ destination and IOSurface send rights. A private worker retries a full kernel
 queue for at most five seconds per message, so AppKit creation and activation do
 not block either peer's main queue. Delivery failure is reported on the main
 queue. The message bound accommodates a maximal 258-message layer replacement
-transaction (begin, 128 additions, 128 removals, commit). Queue
-overflow is rejected immediately and disconnects the connection. This is
-bounded backpressure, not unbounded presentation retry. `Stop` drops pending
-rights, suppresses stale failure callbacks, and returns without waiting for the
-worker; an already delivered kernel message cannot be recalled. The initial
-`Hello` bootstrap remains a single synchronous send before windows exist.
+transaction (begin, 128 additions, 128 removals, commit). Receive ports request
+the largest kernel queue limit, so a briefly busy main thread is absorbed by the
+queue rather than overflowing it. Queue overflow is reported as backpressure:
+the Shim drops coalescible `mouseMove` and `scroll` input instead of quitting,
+every other refused message disconnects its connection, and host presentation
+and control sends disconnect on refusal. This is bounded backpressure, not
+unbounded presentation retry. `Stop` drops pending rights, suppresses stale
+failure callbacks, and returns without waiting for the worker; an already
+delivered kernel message cannot be recalled. The initial `Hello` bootstrap
+remains a single synchronous send before windows exist.
+
+Text forwarded from AppKit (`insertText`, `setMarkedText`) is bounded by its
+encoded size, not by UTF-16 units, so multi-byte IME and dictation input cannot
+exceed the 64 KiB wire payload once the JSON wrapper is added.
 
 The Shim looks up the browser's registered service with `bootstrap_look_up` and
 sends `Hello` with a MAKE_SEND descriptor for its private receive port:
