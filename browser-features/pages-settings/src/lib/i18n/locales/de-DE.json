@@ -488,6 +488,8 @@
         "otherSettings": "Weitere Einstellungen",
         "showToolbar": "Symbolleiste anzeigen",
         "showToolbarDescription": "Die Symbolleiste in Fenstern von Progressive Web-Apps anzeigen",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Installierte Apps",
         "noInstalledApps": "Keine Progressive Web-Apps installiert",
         "removeApp": "App entfernen",
@@ -507,7 +509,10 @@
         "containerDeleted": "Container gelöscht",
         "resetContainer": "Zurücksetzen",
         "save": "Speichern",
-        "errorSettingContainer": "Fehler beim Festlegen des Containers"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Fehler beim Festlegen des Containers",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "Floorp OS",

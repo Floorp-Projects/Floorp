@@ -488,6 +488,8 @@
         "otherSettings": "Andre indstillinger",
         "showToolbar": "Vis værktøjslinje",
         "showToolbarDescription": "Vis værktøjslinjen i Progressive Webapp-vinduer",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Installerede apps",
         "noInstalledApps": "Ingen Progressive Webapps installeret",
         "removeApp": "Fjern app",
@@ -507,7 +509,10 @@
         "containerDeleted": "Container deleted",
         "resetContainer": "Nulstil",
         "save": "Gem",
-        "errorSettingContainer": "Failed to set container"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Failed to set container",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

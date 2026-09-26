@@ -488,6 +488,8 @@
         "otherSettings": "Pengaturan Lainnya",
         "showToolbar": "Tampilkan Bilah Alat",
         "showToolbarDescription": "Tampilkan bilah alat di jendela Aplikasi Web Progresif",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Aplikasi Terpasang",
         "noInstalledApps": "Tidak ada PWA terpasang",
         "removeApp": "Hapus Aplikasi",
@@ -507,7 +509,10 @@
         "containerDeleted": "Kontainer dihapus",
         "resetContainer": "Setel Ulang",
         "save": "Simpan",
-        "errorSettingContainer": "Gagal mengatur kontainer"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Gagal mengatur kontainer",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

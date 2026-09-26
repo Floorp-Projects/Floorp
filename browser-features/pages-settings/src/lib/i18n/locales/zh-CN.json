@@ -488,6 +488,8 @@
         "otherSettings": "其它设置",
         "showToolbar": "显示工具栏",
         "showToolbarDescription": "在渐进式 Web 应用窗口中显示工具栏",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "已安装的应用",
         "noInstalledApps": "未安装任何应用",
         "removeApp": "移除 Web 应用",
@@ -507,7 +509,10 @@
         "containerDeleted": "身份已删除",
         "resetContainer": "重置",
         "save": "保存",
-        "errorSettingContainer": "无法设置身份"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "无法设置身份",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
