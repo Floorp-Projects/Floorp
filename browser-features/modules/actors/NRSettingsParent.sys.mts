@@ -4,9 +4,21 @@ export class NRSettingsParent extends JSWindowActorParent {
     super();
   }
   // deno-lint-ignore require-await
-  async receiveMessage(message: { name: string; data?: unknown }): Promise<unknown> {
+  async receiveMessage(
+    message: { name: string; data?: unknown },
+  ): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
+      case "getWebAppLifecycleSettings": {
+        const { NativeAppRuntime } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+        );
+        const { AppLifecycle } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/AppLifecycle.sys.mjs",
+        );
+        NativeAppRuntime.isAvailable();
+        return AppLifecycle.getSettings();
+      }
       case "getBoolPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;
@@ -34,8 +46,9 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "setBoolPref": {
         {
           const name = data && typeof data.name === "string" ? data.name : null;
-          const val =
-            data && typeof data.prefValue === "boolean" ? data.prefValue : null;
+          const val = data && typeof data.prefValue === "boolean"
+            ? data.prefValue
+            : null;
           if (!name || val === null) return null;
           Services.prefs.setBoolPref(name, val);
         }
@@ -44,8 +57,9 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "setIntPref": {
         {
           const name = data && typeof data.name === "string" ? data.name : null;
-          const val =
-            data && typeof data.prefValue === "number" ? data.prefValue : null;
+          const val = data && typeof data.prefValue === "number"
+            ? data.prefValue
+            : null;
           if (!name || val === null) return null;
           Services.prefs.setIntPref(name, val);
         }
@@ -54,8 +68,9 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "setStringPref": {
         {
           const name = data && typeof data.name === "string" ? data.name : null;
-          const val =
-            data && typeof data.prefValue === "string" ? data.prefValue : null;
+          const val = data && typeof data.prefValue === "string"
+            ? data.prefValue
+            : null;
           if (!name || val === null) return null;
           Services.prefs.setStringPref(name, val);
         }

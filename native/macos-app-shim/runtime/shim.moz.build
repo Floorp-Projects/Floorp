@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program("floorp-app-shim")
+DisableStlWrapping()
+NO_PGO = True
+
+SOURCES += [
+    "ColdLaunch.mm",
+    "MachTransport.mm",
+    "main.mm",
+    "PeerIdentity.mm",
+    "Protocol.mm",
+    "Session.mm",
+    "ShimApplication.mm",
+    "ShimView.mm",
+]
+
+CXXFLAGS += ["-fobjc-arc"]
+OS_LIBS += [
+    "-framework Carbon",
+    "-framework Cocoa",
+    "-framework IOSurface",
+    "-framework QuartzCore",
+    "-framework Security",
+    "bsm",
+]
