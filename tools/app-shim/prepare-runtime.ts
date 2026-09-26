@@ -231,6 +231,26 @@ async function outputHashes(
   );
 }
 
+/**
+ * Detect what a previous preparation left in this Runtime. A manifest on its
+ * own proves nothing: the same absolute path is commonly re-cloned, which
+ * leaves the manifest but removes every prepared file.
+ */
+async function hasPreparationTrace(
+  root: string,
+  modifiedFiles: readonly string[],
+  destinations: readonly string[],
+): Promise<boolean> {
+  for (const file of destinations) {
+    if (await info(await checkedPath(root, file))) return true;
+  }
+  const changed = await gitChecked(
+    root,
+    ["diff", "HEAD", "--name-only", "-z", "--", ...modifiedFiles],
+  );
+  return changed.length > 0;
+}
+
 async function patchFiles(root: string, patch: Uint8Array): Promise<string[]> {
   // Only modifications of these existing files are supported; no mode changes,
   // renames, removals, binary files, or new files can bypass the staging list.
@@ -332,7 +352,18 @@ export async function prepareRuntime(
   }
 
   const result = { runtimeRoot, runtimeCommit, manifestPath, files };
-  if (existingManifest) {
+  const tracesPreparation = existingManifest === null ||
+    await hasPreparationTrace(
+      runtimeRoot,
+      modifiedFiles,
+      [...sources.keys()],
+    );
+  if (existingManifest !== null && !tracesPreparation) {
+    // Nothing here was prepared by the recorded manifest, so it describes a
+    // different checkout that reused this path. A check still validates the
+    // fresh-apply path below; an apply drops the manifest and starts over.
+    if (options.mode === "apply") await Deno.remove(manifestPath);
+  } else if (existingManifest) {
     const previous = parseManifest(
       await readFile(floorpRoot, manifestRelative),
     );
@@ -343,14 +374,16 @@ export async function prepareRuntime(
       !sameHashes(previous.sourceHashes, sourceHashes)
     ) {
       throw new Error(
-        "Preparation inputs changed; use a clean isolated Runtime checkout before restaging",
+        "Preparation inputs changed; use a clean isolated Runtime checkout before restaging " +
+          `or remove ${manifestPath}`,
       );
     }
     if (
       !sameHashes(previous.outputHashes, await outputHashes(runtimeRoot, files))
     ) {
       throw new Error(
-        "Previously prepared Runtime files were modified; refusing to overwrite them",
+        "Previously prepared Runtime files were modified; refusing to overwrite them. " +
+          `Reset that checkout or remove ${manifestPath}`,
       );
     }
     await gitChecked(

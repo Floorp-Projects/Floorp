@@ -182,6 +182,35 @@ Deno.test("prepared output modifications are detected and never overwritten", as
   }
 });
 
+Deno.test("a reused Runtime path without preparation traces restages from scratch", async () => {
+  const f = await fixture();
+  try {
+    await f.apply();
+    const { source, destination } = RUNTIME_SOURCE_FILES[0];
+    // Simulate re-cloning the same absolute path: every prepared file is gone
+    // and the integration patch is no longer applied.
+    await git(
+      f.runtimeRoot,
+      "apply",
+      "--reverse",
+      join(f.floorpRoot, PATCH_RELATIVE),
+    );
+    for (const entry of RUNTIME_SOURCE_FILES) {
+      await Deno.remove(join(f.runtimeRoot, entry.destination));
+    }
+    assertEquals((await f.check()).state, "ready");
+    assertEquals((await f.apply()).state, "applied");
+    const staged = await Deno.readTextFile(join(f.runtimeRoot, destination));
+    assertEquals(staged, `// fixture ${source}\n`);
+    assertEquals(
+      await Deno.readTextFile(join(f.runtimeRoot, PATCH_TARGET)),
+      'SOURCES = []\nSOURCES += ["appshim/MacWebAppService.mm"]\n',
+    );
+  } finally {
+    await f.cleanup();
+  }
+});
+
 Deno.test("changed native inputs cannot silently replace a prepared revision", async () => {
   const f = await fixture();
   try {
