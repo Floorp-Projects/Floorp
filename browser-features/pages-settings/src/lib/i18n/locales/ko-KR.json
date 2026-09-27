@@ -488,8 +488,8 @@
         "otherSettings": "기타 설정",
         "showToolbar": "도구 모음 표시",
         "showToolbarDescription": "프로그레시브 웹 앱 창에 툴바 표시",
-        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
-        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
+        "keepRunningAfterBrowserQuit": "{{productName}} 종료 후에도 웹 앱 계속 실행하기",
+        "keepRunningAfterBrowserQuitDescription": "브라우저 창을 닫아도 웹 앱을 열린 채로 유지합니다. 이 설정을 끄면 창을 닫을 때 웹 앱이 함께 종료됩니다. 웹 앱을 종료하면 해당 앱만 닫습니다. {{productName}}에서 로그아웃하거나 다시 시작하면 모든 앱이 닫힙니다.",
         "installedApps": "설치된 앱",
         "noInstalledApps": "프로그레시브 웹 앱이 설치되지 않음",
         "removeApp": "앱 삭제",
@@ -509,10 +509,10 @@
         "containerDeleted": "컨테이너 삭제됨",
         "resetContainer": "초기화",
         "save": "저장",
-        "errorRenaming": "Could not rename this Web App.",
-        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorRenaming": "이 웹 앱의 이름을 변경하지 못했습니다.",
+        "errorUninstalling": "이 웹을 제거하지 못했습니다.",
         "errorSettingContainer": "컨테이너 설정 실패",
-        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
+        "nativeContainerFixed": "이 macOS 웹 앱은 설치할 때 선택한 컨테이너를 유지합니다. 컨테이너 변경 기능은 아직 지원되지 않습니다. 현재 로그인과 사이트 데이터는 그대로 유지됩니다."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
