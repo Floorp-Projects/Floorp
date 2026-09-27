@@ -229,15 +229,15 @@ jobs:
         ${{ steps.upload-deb.outputs.artifact-digest &&
             format('sha256:{0}', steps.upload-deb.outputs.artifact-digest) || '' }}
     steps:
-      - name: Require dedicated Runtime artifact token
+      - name: Require Runtime artifact token
         if: ${{ inputs.provenance_mode != 'legacy' }}
         shell: bash
         env:
-          RUNTIME_ARTIFACT_TOKEN: ${{ secrets.runtime_artifact_token }}
+          RUNTIME_ARTIFACT_TOKEN: ${{ secrets.runtime_artifact_token || secrets.PAT }}
         run: |
           set -euo pipefail
           if [[ -z "$RUNTIME_ARTIFACT_TOKEN" ]]; then
-            echo "stable v2 requires the dedicated runtime_artifact_token secret" >&2
+            echo "stable v2 requires runtime_artifact_token or PAT with Floorp-Runtime Actions read access" >&2
             exit 1
           fi
 
@@ -265,7 +265,7 @@ jobs:
           CURRENT_FLOORP_REF: ${{ github.ref }}
           FLOORP_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         with:
-          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           script: |
             const fail = (message) => {
               core.setFailed(message);
@@ -633,7 +633,7 @@ jobs:
         with:
           repository: ${{ steps.provenance.outputs.runtime_repository }}
           ref: ${{ steps.provenance.outputs.runtime_ref }}
-          token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           persist-credentials: false
           submodules: "recursive"
 
@@ -694,7 +694,7 @@ jobs:
         with:
           artifact-ids: ${{ steps.provenance.outputs.runtime_artifact_id }}
           run-id: ${{ steps.provenance.outputs.runtime_workflow_run_id }}
-          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           repository: ${{ steps.provenance.outputs.runtime_repository }}
           path: ${{ runner.temp }}/floorp-runtime-v2
           merge-multiple: true
