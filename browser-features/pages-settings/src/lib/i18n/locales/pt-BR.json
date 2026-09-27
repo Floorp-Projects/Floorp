@@ -488,8 +488,8 @@
         "otherSettings": "Outras configurações",
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
-        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
-        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
+        "keepRunningAfterBrowserQuit": "Manter aplicativos web em execução após encerrar o {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Feche as janelas do navegador e mantenha abertos os aplicativos da Web em execução. Desative essa opção para fechá-los ao mesmo tempo. Ao fechar um aplicativo da Web, apenas esse aplicativo é encerrado. Reiniciar o {{productName}} ou fazer logout fecha todos os aplicativos.",
         "installedApps": "Aplicativos instalados",
         "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
@@ -509,10 +509,10 @@
         "containerDeleted": "Contêiner excluído",
         "resetContainer": "Redefinir",
         "save": "Salvar",
-        "errorRenaming": "Could not rename this Web App.",
-        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorRenaming": "Não foi possível renomear este aplicativo web.",
+        "errorUninstalling": "Não foi possível desinstalar este aplicativo web.",
         "errorSettingContainer": "Falha ao definir contêiner",
-        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
+        "nativeContainerFixed": "Este aplicativo web para macOS mantém o contêiner escolhido no momento da instalação. Ainda não é possível alterá-lo. Os dados atuais de login e do site foram mantidos."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
