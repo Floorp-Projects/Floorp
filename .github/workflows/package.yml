@@ -1855,7 +1855,14 @@ jobs:
                 VOLUME_NAME="Floorp Installer"
               fi
               mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-              mv "obj-artifact-build-output/dist/$INSTALLER_PATH" ~/mac-code-signing/original.dmg
+              shopt -s nullglob
+              installers=(obj-artifact-build-output/dist/$INSTALLER_PATH)
+              shopt -u nullglob
+              if (( ${#installers[@]} != 1 )); then
+                echo "Expected exactly one macOS DMG, found ${#installers[@]}" >&2
+                exit 1
+              fi
+              mv -- "${installers[0]}" ~/mac-code-signing/original.dmg
               ./mach python -m mozbuild.action.unpack_dmg \
                 ~/mac-code-signing/original.dmg ~/mac-code-signing/old
               APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d -print -quit)
