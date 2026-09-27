@@ -427,12 +427,26 @@ index 4947351aad5..85dfdcafb5f 100644
      // If the tab has only a transient about: history entry, no other
      // session history, and no userTypedValue, then we don't actually want to
      // store this tab's data.
-@@ -7545,6 +7796,12 @@ class _SessionStore {
+@@ -7487,7 +7738,9 @@ class _SessionStore {
+   #prepDataForDeferredRestore(startupState) {
+     // Make sure that we don't modify the global state as provided by
+     // SessionStartup.state.
+     let state = Cu.cloneInto(startupState, {});
++    this._sanitizeFloorpPrivateContainerRootState(state);
++
+     let hasPinnedTabs = false;
+     let defaultState = {
+       windows: [],
+@@ -7545,6 +7798,16 @@ class _SessionStore {
            // We don't want to increment tIndex here.
            continue;
          } else if (window.tabs[tIndex].groupId) {
 +          let tabToAdd = window.tabs[tIndex];
 +          if (!this.#shouldSaveTabState(tabToAdd)) {
++            if (isFloorpPrivateContainerTabState(tabToAdd)) {
++              this._sanitizeFloorpPrivateContainerWindowState(window);
++              continue;
++            }
 +            tIndex++;
 +            continue;
 +          }
@@ -440,7 +454,7 @@ index 4947351aad5..85dfdcafb5f 100644
            // Convert any open groups into saved groups.
            let groupStateToSave = window.groups.find(
              groupState => groupState.id == window.tabs[tIndex].groupId
-@@ -7558,7 +7815,6 @@ class _SessionStore {
+@@ -7558,7 +7821,6 @@ class _SessionStore {
              groupToSave.removeAfterRestore = true;
              groupsToSave.set(groupStateToSave.id, groupToSave);
            }
@@ -448,7 +462,7 @@ index 4947351aad5..85dfdcafb5f 100644
            groupToSave.tabs.push(this.formatTabStateForSavedGroup(tabToAdd));
          } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
            // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
-@@ -7659,6 +7915,24 @@ class _SessionStore {
+@@ -7659,6 +7921,24 @@ class _SessionStore {
            continue;
          }
        }

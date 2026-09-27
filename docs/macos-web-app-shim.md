@@ -172,7 +172,8 @@ on Apple Silicon. This does not validate the official Developer ID signature,
 notarized installer, or execution on Intel Mac. The final package verifier
 requires the native Shim on both architectures and checks its code signature.
 On Apple Silicon, the optional Rosetta test started the x86_64 browser but the
-native Shim connection closed during installation. This path remains unverified;
+native Shim process exited before authentication and the first window. The
+exit cause has not been established. This path remains unverified;
 the result does not establish a failure on an Intel Mac. Do not describe the
 experimental feature as fully validated for x86_64 until its native lifecycle
 passes on an Intel runner or the Rosetta failure is resolved.

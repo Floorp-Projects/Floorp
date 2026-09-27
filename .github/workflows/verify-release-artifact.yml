@@ -961,6 +961,14 @@ jobs:
               echo "Production Web App Shim code signature verification failed" >&2
               exit 1
             fi
+            if ! codesign --display --verbose=4 \
+              "$shim_binary" > "$codesign_log" 2>&1 ||
+               ! grep -q '^Authority=' "$codesign_log" ||
+               grep -q '^Signature=adhoc$' "$codesign_log"; then
+              cat "$codesign_log" >&2
+              echo "Production Web App Shim must have a certificate-backed signature" >&2
+              exit 1
+            fi
             cat "$codesign_log"
             echo "Verified production Web App Shim code signature"
           fi

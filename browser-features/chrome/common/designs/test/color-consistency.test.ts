@@ -181,7 +181,7 @@ function parseRgbColor(raw: string): RgbTuple | null {
   // Gecko 157 serializes computed toolbar colors as color(srgb r g b).
   // Components are unit-interval numbers, unlike rgb()'s 0..255 channels.
   const srgbMatch = value.match(
-    /^color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)$/,
+    /^color\(\s*srgb\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)$/,
   );
   if (srgbMatch) {
     const channel = (index: number) =>
@@ -568,6 +568,14 @@ function restoreOriginalDarkPref(): void {
 // Tests
 // ---------------------------------------------------------------------------
 
+function testSignedSrgbChannels(): void {
+  const color = parseRgbColor("color(srgb -0.1 +0.5 1.1)");
+  assert(
+    color !== null && colorsApproxEqual(color, [0, 128, 255], 0),
+    "signed out-of-gamut sRGB channels should be clamped",
+  );
+}
+
 async function testDesignMatrix(): Promise<void> {
   captureOriginalDarkPref();
 
@@ -645,6 +653,7 @@ async function testCurrentStateSharesOneSurface(): Promise<void> {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    { name: "signed sRGB channels are clamped", fn: testSignedSrgbChannels },
     {
       name: "current state shares one surface color",
       fn: testCurrentStateSharesOneSurface,

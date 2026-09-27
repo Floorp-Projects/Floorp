@@ -458,6 +458,14 @@ def main():
     except Exception as error:
         report["error"] = str(error)
         report["traceback"] = traceback.format_exc(limit=5)
+        if client_verified and client:
+            try:
+                client.context("chrome")
+                report["nativeEvents"] = client.script(
+                    f"return {state}?.events ?? [];"
+                )
+            except Exception as inspection_error:
+                report["eventInspectionError"] = str(inspection_error)
     finally:
         if client:
             try:
