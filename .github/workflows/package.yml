@@ -1427,19 +1427,6 @@ jobs:
               echo "No macOS app resources found for Runtime patching" >&2
               exit 1
             fi
-            for patch_file in "${patch_files[@]}"; do
-              patch_path="$PWD/$patch_file"
-              for resource_dir in "${resource_dirs[@]}"; do
-                if git -C "$resource_dir" apply --reverse --check "$patch_path"; then
-                  echo "Already applied by the Runtime source build: $patch_file"
-                elif git -C "$resource_dir" apply --check "$patch_path"; then
-                  git -C "$resource_dir" apply "$patch_path"
-                else
-                  echo "Patch check failed for $patch_file in $resource_dir" >&2
-                  exit 1
-                fi
-              done
-            done
             for resource_dir in "${resource_dirs[@]}"; do
               python3 ./tools/app-shim/sync-omnijar-patches.py --sync \
                 --resources "$resource_dir" --patch-dir ./tools/patches

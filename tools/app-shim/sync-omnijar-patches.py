@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
-"""Keep artifact-build omnijars in sync with patched loose Runtime resources.
+"""Apply and verify Floorp Runtime patches inside artifact-build omnijars.
 
-Artifact builds retain the Runtime's existing omni.ja files. Patching the loose
-files succeeds, but `mach package` copies the old archive entries into the DMG.
-This tool updates exactly the archive members named by Floorp's patch files and
-can verify the installed package by reverse-checking those same patches.
+Artifact builds retain the Runtime's existing omni.ja files. Source-tree patch
+checks do not change those archives, and `mach package` copies their entries
+into the DMG. This tool patches exactly the archive members named by Floorp's
+patch files and reverse-checks them in the installed package.
 """
 
 import argparse
@@ -42,11 +42,24 @@ def archive_member(resources, path):
     return resources / "omni.ja", path
 
 
+def extract(resources, paths, root):
+    for path in paths:
+        archive, member = archive_member(resources, path)
+        with zipfile.ZipFile(archive) as source:
+            data = source.read(member)
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+
+
+def git_apply(root, patch, *options):
+    return subprocess.run(["git", "apply", *options, str(patch.resolve())],
+                          cwd=root, capture_output=True, text=True)
+
+
 def check_patches(root, patches):
     for patch in patches:
-        result = subprocess.run(["git", "apply", "--reverse", "--check",
-                                 str(patch.resolve())], cwd=root,
-                                capture_output=True, text=True)
+        result = git_apply(root, patch, "--reverse", "--check")
         if result.returncode:
             raise RuntimeError(f"Patch is absent or incompatible: {patch.name}\n{result.stderr}")
 
@@ -54,27 +67,29 @@ def check_patches(root, patches):
 def verify(resources, patches, paths):
     with tempfile.TemporaryDirectory(prefix="floorp-omnijar-check-") as directory:
         root = Path(directory)
-        for path in paths:
-            archive, member = archive_member(resources, path)
-            with zipfile.ZipFile(archive) as source:
-                data = source.read(member)
-            target = root / path
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
+        extract(resources, paths, root)
         check_patches(root, patches)
     print(f"Verified {len(paths)} patched Runtime resources in packaged omnijars")
 
 
 def sync(resources, patches, paths):
-    # The existing Git patch step must have succeeded on the loose files first.
-    check_patches(resources, patches)
-    replacements = {}
-    for path in paths:
-        source = resources / path
-        if not source.is_file() or source.is_symlink():
-            raise FileNotFoundError(f"Patched loose resource missing: {source}")
-        archive, member = archive_member(resources, path)
-        replacements.setdefault(archive, {})[member] = source.read_bytes()
+    with tempfile.TemporaryDirectory(prefix="floorp-omnijar-patch-") as directory:
+        root = Path(directory)
+        extract(resources, paths, root)
+        for patch in patches:
+            if git_apply(root, patch, "--reverse", "--check").returncode == 0:
+                continue
+            checked = git_apply(root, patch, "--check")
+            if checked.returncode:
+                raise RuntimeError(f"Cannot apply {patch.name} to Runtime archive:\n{checked.stderr}")
+            applied = git_apply(root, patch)
+            if applied.returncode:
+                raise RuntimeError(f"Could not apply {patch.name}:\n{applied.stderr}")
+        check_patches(root, patches)
+        replacements = {}
+        for path in paths:
+            archive, member = archive_member(resources, path)
+            replacements.setdefault(archive, {})[member] = (root / path).read_bytes()
 
     for archive, members in replacements.items():
         with zipfile.ZipFile(archive) as source:
