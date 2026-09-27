@@ -48,6 +48,8 @@ def main():
     parser.add_argument("--browser", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=Path("_dist/app-shim-cold-tests"))
     parser.add_argument("--timeout", type=int, default=90)
+    parser.add_argument("--architecture", choices=("native", "x86_64"), default="native",
+                        help="Use x86_64 under Rosetta for the browser and Finder-launched Shim")
     parser.add_argument("--inspect-seconds", type=int, default=0, choices=range(61),
                         metavar="0..60", help="Keep the verified cold window open briefly for manual inspection")
     args = parser.parse_args()
@@ -84,6 +86,7 @@ def main():
     host_identities = {}
     exit_queues = {}
     report = {"status": "failed", "phase": "prepare", "browser": str(browser),
+              "architecture": args.architecture,
               "output": str(output), "appId": app_id}
     log = (output / "browser.log").open("w")
 
@@ -224,7 +227,9 @@ def main():
     def finder_open(bundle, label):
         # These environment variables enable only Marionette inspection. The
         # Shim's signed host/profile identifiers and authentication are intact.
-        smoke.run("/usr/bin/open", "-n", "-a", str(bundle),
+        architecture = (["--arch", args.architecture]
+                        if args.architecture != "native" else [])
+        smoke.run("/usr/bin/open", *architecture, "-n", "-a", str(bundle),
                   "--env", "MOZ_MARIONETTE=1", "--env", "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1",
                   "--env", "MOZ_CRASHREPORTER_DISABLE=1",
                   *(argument for key, value in profile_environment.items()
@@ -254,10 +259,9 @@ def main():
         return identity is not None and identity in smoke.HostProcess._process_rows(pid)
 
     def remember_host(pid, command):
-        identity = next((row for row in smoke.HostProcess._process_rows(pid)
-                         if row[0] == pid and row[2] == command), None)
-        if identity is None:
-            raise RuntimeError("Test host executable/profile command does not match its PID")
+        identity = smoke.wait_for("test host executable/profile command", lambda: next(
+            (row for row in smoke.HostProcess._process_rows(pid)
+             if row[0] == pid and row[2] == command), None), args.timeout)
         host_identities[pid] = identity
         if host is None or pid != host.pid:
             queue = select.kqueue()
@@ -269,6 +273,13 @@ def main():
                 raise RuntimeError("Test host changed during process monitoring")
         report.setdefault("hostIdentities", []).append(
             {"pid": pid, "startTime": identity[1], "command": identity[2]})
+
+    def verify_host_architecture(stage):
+        client.context("chrome")
+        abi = client.script("return Services.appinfo.XPCOMABI;")
+        report.setdefault("hostABIs", {})[stage] = abi
+        if args.architecture == "x86_64" and not abi.startswith("x86_64"):
+            raise RuntimeError(f"{stage}: expected x86_64 browser under Rosetta, got {abi}")
 
     def verify_clean_exit(pid):
         if host is not None and pid == host.pid:
@@ -313,7 +324,9 @@ def main():
         # existing browser parent and profile instead of opening a second host.
         host_command = [str(binary), "--profile", str(profile), "--marionette",
                         "--remote-allow-system-access", "about:blank"]
-        host = subprocess.Popen(host_command,
+        launch_command = (["/usr/bin/arch", "-x86_64"]
+                          if args.architecture == "x86_64" else []) + host_command
+        host = subprocess.Popen(launch_command,
                                 stdout=log, stderr=subprocess.STDOUT, env=env)
         remember_host(host.pid, " ".join(host_command))
         client = smoke.wait_for("initial Marionette", connect, args.timeout)
@@ -321,6 +334,7 @@ def main():
         if capabilities.get("moz:processID") != host.pid or capabilities.get("moz:profile") != str(profile):
             raise RuntimeError("Marionette connected to an unexpected initial browser or profile")
         client_verified = True
+        verify_host_architecture("initialHost")
         normal_handle = client.handles()[0]
         client.context("chrome")
         registered = smoke.wait_for("normal Floorp command-line registration", lambda: client.script("""
@@ -423,6 +437,7 @@ def main():
         remember_host(cold_pid, f"{binary} --profile {profile} --start-ssb {app_id}")
         client_verified = True
         client.context("chrome")
+        verify_host_architecture("coldFinder")
         attach_observer()
         verify_page("coldFinder")
         report["coldFinder"]["newHostPid"] = cold_pid

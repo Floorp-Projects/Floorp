@@ -133,6 +133,7 @@ python3 tools/app-shim/test-browser-modules.py --browser /absolute/path/to/Night
 python3 tools/app-shim/test-runtime.py --browser /absolute/path/to/Nightly.app --launch-services --frontend-modules bridge/loader-modules/_dist
 python3 tools/app-shim/test-runtime.py --browser /absolute/path/to/Nightly.app --launch-services --frontend-modules bridge/loader-modules/_dist --quit-all
 python3 tools/app-shim/test-cold-launch.py --browser /absolute/path/to/fully-bundled-Floorp.app
+python3 tools/app-shim/test-cold-launch.py --browser /absolute/path/to/fully-bundled-Floorp.app --architecture x86_64
 ```
 
 Build `bridge/loader-modules` before the browser module tests. Both runners
@@ -170,6 +171,11 @@ certificate-signed universal browser passed the same warm and cold Finder test
 on Apple Silicon. This does not validate the official Developer ID signature,
 notarized installer, or execution on Intel Mac. The final package verifier
 requires the native Shim on both architectures and checks its code signature.
+On Apple Silicon, the optional Rosetta test started the x86_64 browser but the
+native Shim connection closed during installation. This path remains unverified;
+the result does not establish a failure on an Intel Mac. Do not describe the
+experimental feature as fully validated for x86_64 until its native lifecycle
+passes on an Intel runner or the Rosetta failure is resolved.
 
 Use `--launch-services` for foreground tests: it opens the exact test bundle and
 verifies the actual browser PID, isolated profile and process start time before
