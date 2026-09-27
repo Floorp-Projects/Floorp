@@ -1422,15 +1422,6 @@ jobs:
 
           if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
             shopt -s nullglob
-            resource_dirs=("$DIST_ROOT"/*.app/Contents/Resources "$DIST_ROOT"/floorp/*.app/Contents/Resources)
-            if (( ${#resource_dirs[@]} == 0 )); then
-              echo "No macOS app resources found for Runtime patching" >&2
-              exit 1
-            fi
-            for resource_dir in "${resource_dirs[@]}"; do
-              python3 ./tools/app-shim/sync-omnijar-patches.py --sync \
-                --resources "$resource_dir" --patch-dir ./tools/patches
-            done
             for app_bundle in "$DIST_ROOT"/*.app "$DIST_ROOT"/floorp/*.app; do
               if [ -d "$app_bundle/Contents/Resources" ]; then
                 copy_buildid2 "$app_bundle/Contents/Resources"
@@ -1854,19 +1845,39 @@ jobs:
               mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               ;;
             "macOS-x86_64")
-              if [ "${{inputs.skip_signing}}" == "true" ]; then
-                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              if [ "${{inputs.beta}}" == "true" ]; then
+                DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
+                BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
+                VOLUME_NAME="Floorp Daylight Installer"
               else
-                mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-                ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
+                DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/DS_Store"
+                BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/background.tiff"
+                VOLUME_NAME="Floorp Installer"
+              fi
+              mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
+              mv "obj-artifact-build-output/dist/$INSTALLER_PATH" ~/mac-code-signing/original.dmg
+              ./mach python -m mozbuild.action.unpack_dmg \
+                ~/mac-code-signing/original.dmg ~/mac-code-signing/old
+              APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d -print -quit)
+              if [ -z "$APP_FILE" ]; then
+                echo "No macOS app bundle found in packaged DMG" >&2
+                exit 1
+              fi
+              python3 "$GITHUB_WORKSPACE/noraneko/tools/app-shim/sync-omnijar-patches.py" --sync \
+                --resources "$APP_FILE/Contents/Resources" \
+                --patch-dir "$GITHUB_WORKSPACE/noraneko/tools/patches"
+              if [ "${{inputs.skip_signing}}" == "true" ]; then
+                ./mach python -m mozbuild.action.make_dmg \
+                  --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" \
+                  --volume-name "$VOLUME_NAME" \
+                  ~/mac-code-signing/old ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              else
                 cargo install apple-codesign --locked
                 echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
                 base64 --decode floorp-cert.txt > floorpCert.p12
                 echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
                 echo ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }} > provisioning-profile.txt
                 base64 --decode provisioning-profile.txt > Floorp.provisionprofile
-                APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
                 echo "Found app file: $APP_FILE"
 
                 # Show rcodesign version for diagnostics
@@ -2014,15 +2025,6 @@ jobs:
                 # entitlements slot for post-sign grepping, so rely on the pre-sign XML
                 # check above plus mach's built-in verification instead.
 
-                if [ "${{inputs.beta}}" == "true" ]; then
-                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
-                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
-                  VOLUME_NAME="Floorp Daylight Installer"
-                else
-                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/DS_Store"
-                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/background.tiff"
-                  VOLUME_NAME="Floorp Installer"
-                fi
                 ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
                 printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
                 rcodesign notary-submit \
