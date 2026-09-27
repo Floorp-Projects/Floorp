@@ -1,0 +1,86 @@
+/* Floorp chrome-extras: tabbarAsTitlebar
+ *
+ * Mostly a port, with one sub-option dropped.
+ *
+ * Source: leptonChrome.css:6841-6926 (`@media -moz-pref("userChrome.tabbar.as_titlebar")`).
+ * That block is self-contained apart from two `--uc-*` tokens, both of which the
+ * scaffold provides, so it ports directly instead of needing a rewrite.
+ *
+ * Not ported:
+ *  - the `centered.tab.label` branch of the padding block — both non-label
+ *    branches set identical values, and `centered.tab.label` is a Lepton-only
+ *    sub-option;
+ *  - the `browser.tabs.tabmanager.enabled` branch (a different Lepton feature);
+ *  - `margin-inline-start: calc(var(--tab-shadow-max-size) * -1)`.
+ *    `--tab-shadow-max-size` is not defined anywhere in Lepton or in Gecko 152,
+ *    so upstream that declaration is already dead — dropping it is a no-op.
+ */
+
+:root:not([tabsintitlebar="true"]):not([customtitlebar="true"]) #tabbrowser-tabs,
+#scrollbutton-up,
+#scrollbutton-down,
+.titlebar-spacer[type="pre-tabs"],
+spacer:is([part="overflow-start-indicator"], [part="overflow-end-indicator"]),
+.tabbrowser-tab:not([selected="true"]),
+.tabbrowser-tab[selected="true"] .tab-background,
+.tabbrowser-tab[selected="true"] .tab-stack:is(::before, ::after),
+.tabbrowser-tab[selected="true"] .tab-close-button,
+#tabs-newtab-button {
+  display: none !important;
+}
+
+.tabbrowser-tab[selected="true"] {
+  -moz-window-dragging: drag;
+  --tab-max-width: 100vw;
+  min-width: calc(var(--uc-tabbar-width, 100vw) - var(--uc-window-control-space)) !important;
+  max-width: var(--tab-max-width) !important;
+}
+
+.tabbrowser-tab[selected="true"][pinned="true"] {
+  flex: 100;
+  -moz-box-flex: 100;
+  max-width: var(--tab-max-width) !important;
+}
+
+.tabbrowser-tab[selected="true"] .tab-label-container {
+  margin-inline: 0 !important;
+}
+
+.tab-content {
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* Pinned */
+#tabbrowser-tabs[positionpinnedtabs] > #pinned-tabs-container > .tabbrowser-tab[pinned][selected="true"],
+#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned][selected="true"] {
+  position: relative !important;
+}
+
+#tabbrowser-tabs {
+  --tab-overflow-pinned-tabs-width: 0 !important;
+  padding-inline: 0 !important; /* Original: var(--tab-overflow-pinned-tabs-width) 0; */
+}
+
+.tab-throbber[pinned],
+.tab-icon-pending[pinned],
+.tab-icon-image[pinned],
+.tab-sharing-icon-overlay[pinned],
+.tab-icon-overlay[pinned] {
+  margin-inline-end: 5.5px;
+}
+
+.tab-label-container[pinned] {
+  width: unset !important;
+}
+
+/* Padding — the non-`centered.tab.label` branch, applied unconditionally. */
+#pinned-tabs-container,
+#tabbrowser-arrowscrollbox {
+  margin-inline: 2px !important;
+}
+
+:root[sizemode="normal"] #pinned-tabs-container,
+:root[sizemode="normal"] #tabbrowser-arrowscrollbox {
+  margin-inline: 6px !important;
+}

@@ -1,0 +1,2582 @@
+/* Floorp chrome-extras: iconMenu
+ * Ported from vendored Lepton (leptonChrome.css 28488-31401, 352 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Applied only while icons are enabled (iconDisabled off).
+ *
+ * 20 block(s) gated on Lepton-only sub-options (userChrome.icon.menu.full, userChrome.theme.non_native_menu, userChrome.padding.global_menubar) are not ported — they stay Lepton-family-only.
+ */
+
+/* leptonChrome.css:28488-28582 */
+menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]),
+menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]) > .menu-iconic-left > .menu-iconic-icon,
+menupopup menuitem:not([type="checkbox"][checked="true"], [type="radio"]) > .menu-icon,
+menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]) > .menu-iconic-left > .menu-iconic-icon,
+menupopup menu:not([type="checkbox"][checked="true"], [type="radio"]) > .menu-icon,
+#main-menubar > menu {
+  -moz-appearance: none !important; /* Linux: menulist */
+}
+/* Icon */
+#main-menubar > menu,
+:not(menu, #ContentSelectDropdown)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+:not(menu, #ContentSelectDropdown)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #context_sendTabToDevicePopupMenu,
+    #context-sendpagetodevice-popup,
+    #context-sendlinktodevice-popup,
+    #frame > menupopup,
+    #spell-dictionaries-menu,
+    #context-ask-chat > menupopup
+  )
+  > menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+.openintabs-menuitem,
+#blockedPopupDontShowMessage,
+#BMB_viewBookmarksToolbar,
+#sidebarMenu-popup:is(menupopup),
+#context_openANewTab.tabmix-newtab-menu-icon {
+  /* Color */
+  -moz-context-properties: fill, fill-opacity, stroke !important;
+  fill: currentColor !important;
+  stroke: currentColor;
+  /* Layout */
+  background-size: 16px !important;
+  background-repeat: no-repeat !important;
+  background-image: var(--menuitem-image);
+}
+#tabContextMenu > .tabmix-newtab-menu-icon {
+  -moz-context-properties: fill, fill-opacity, stroke !important;
+  fill: currentColor !important;
+}
+/* For native context menus */
+/* Padding */
+/* Menubar */
+/* Padding - Non Native */
+/* Padding - Windows */
+/* Padding - Linux */
+/* Padding - Mac */
+/*= Bookmark Menu - Layout ===================================================*/
+/* #goPopup(Legacy of historyMenuPopup), #historyMenuPopup, #bookmarksMenuPopup: looks like global menu
+   * #BMB_bookmarksPopup: looks like arrow panel
+   */
+/* Empty Menu */
+/* Bookmark Popup - As Arrow Panel */
+/* Windows */
+/* Windows 7, 8 */
+/* Linux */
+
+/* leptonChrome.css:28583-28593 */
+:not(menu, #ContentSelectDropdown)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+:not(menu, #ContentSelectDropdown)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+  list-style-image: var(--menuitem-image, url("../icons/blank.svg")) !important;
+}
+
+/* leptonChrome.css:28594-28603 */
+:root {
+  --uc-menu-background-position: left;
+  --context-menu-background-padding-default: 5px;
+  --context-menu-background-padding: var(--context-menu-background-padding-default);
+}
+:root:-moz-locale-dir(rtl) {
+  --uc-menu-background-position: right;
+}
+
+/* leptonChrome.css:28604-28665 */
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic),
+:not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menu:not(.menu-iconic),
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #context_sendTabToDevicePopupMenu,
+    #context-sendpagetodevice-popup,
+    #context-sendlinktodevice-popup,
+    #frame > menupopup,
+    #spell-dictionaries-menu,
+    #context-ask-chat > menupopup
+  )
+  > menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+.openintabs-menuitem,
+#blockedPopupDontShowMessage,
+#BMB_viewBookmarksToolbar,
+#sidebarMenu-popup:is(menupopup),
+#context_openANewTab.tabmix-newtab-menu-icon {
+  background-position: var(--uc-menu-background-position) var(--context-menu-background-padding) center !important;
+  padding-inline-start: var(--context-menu-background-padding) !important;
+}
+
+/* leptonChrome.css:28666-28677 */
+#sidebarMenu-popup:is(menupopup):not(panel) {
+  --context-menu-background-padding: var(--context-menu-background-padding-default);
+  padding-inline-start: 0 !important;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > #sidebarMenu-popup:is(menupopup):not(panel)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]) {
+  padding-inline-start: 28px !important;
+  margin-inline-start: var(--arrowpanel-menuitem-margin-inline) !important;
+}
+
+/* leptonChrome.css:28678-28692 — extra conditions dropped: userChrome.icon.global_menubar */
+#main-menubar > menu {
+  background-position: var(--uc-menu-background-position) var(--context-menu-background-padding-default) center !important;
+  padding-inline-start: calc(16px + var(--context-menu-background-padding-default)) !important;
+  padding-inline-end: 3px;
+}
+#main-menubar > menu:first-child {
+  background-position: var(--uc-menu-background-position) calc(3px + var(--context-menu-background-padding-default))
+    center !important;
+  padding-inline-start: calc(19px + var(--context-menu-background-padding-default)) !important;
+}
+#main-menubar > menu menupopup {
+  --menuitem-image: none; /* Prevent Image Inheritance */
+}
+
+/* leptonChrome.css:28693-28698 — extra conditions dropped: userChrome.icon.global_menubar */
+#main-menubar > menu > :is(.menubar-text, .menu-text) {
+  transform: translateY(-1px) !important; /* Fix menu top padding position */
+  padding-inline-start: 0.3em !important;
+}
+
+/* leptonChrome.css:28699-28703 — extra conditions dropped: userChrome.icon.global_menubar */
+#main-menubar > menu > :is(.menubar-text, .menu-text) {
+  padding-inline-start: 3px;
+}
+
+/* leptonChrome.css:28704-28708 — extra conditions dropped: userChrome.icon.global_menubar */
+#main-menubar > menu {
+  padding-block: 2px !important;
+}
+
+/* leptonChrome.css:28709-28840 */
+:root {
+  --context-menu-background-padding: 1em;
+  --context-menu-text-padding-default: 24px;
+  --context-menu-text-padding: var(--context-menu-text-padding-default);
+  --menu-background-padding-default: calc(var(--context-menu-background-padding) + var(--context-menu-text-padding));
+  --bookmark-menu-icon-align-padding: 0px;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+menupopup:is(
+    #context_sendTabToDevicePopupMenu,
+    #context-sendpagetodevice-popup,
+    #context-sendlinktodevice-popup,
+    #frame > menupopup,
+    #spell-dictionaries-menu,
+    #context-ask-chat > menupopup
+  )
+  > menuitem:not([type="checkbox"][checked="true"], [type="radio"]),
+.openintabs-menuitem,
+#blockedPopupDontShowMessage,
+#BMB_viewBookmarksToolbar,
+#sidebarMenu-popup:is(menupopup),
+#context_openANewTab.tabmix-newtab-menu-icon {
+  padding-inline-start: var(--menu-background-padding-default) !important;
+  margin-left: 0 !important;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
+  > .menu-icon,
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"])
+  > .menu-icon,
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
+  > .menu-icon,
+menupopup:is(
+    #menu_FilePopup,
+    #menu_EditPopup,
+    #menu_viewPopup,
+    #goPopup,
+    #historyMenuPopup,
+    #bookmarksMenuPopup,
+    #menu_ProfilesPopup,
+    #menu_ToolsPopup,
+    #windowPopup,
+    #menu_HelpPopup,
+    #usercssloader-menupopup,
+    #sidebar-context-menu
+  )
+  menu:not(.menu-iconic, .in-menulist, [checked="true"])
+  > .menu-icon,
+menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"])
+  > .menu-icon,
+menupopup:is(#viewMenuPopup, #maintenanceButtonPopup)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"])
+  > .menu-icon,
+menupopup:is(
+    #context_sendTabToDevicePopupMenu,
+    #context-sendpagetodevice-popup,
+    #context-sendlinktodevice-popup,
+    #frame > menupopup,
+    #spell-dictionaries-menu,
+    #context-ask-chat > menupopup
+  )
+  > menuitem:not([type="checkbox"][checked="true"], [type="radio"])
+  > .menu-icon,
+.openintabs-menuitem > .menu-icon,
+#blockedPopupDontShowMessage > .menu-icon,
+#BMB_viewBookmarksToolbar > .menu-icon,
+#sidebarMenu-popup:is(menupopup) > .menu-icon,
+#context_openANewTab.tabmix-newtab-menu-icon > .menu-icon {
+  display: none !important;
+}
+.menupopup-arrowscrollbox {
+  padding-inline: 0 !important; /* Original: padding: var(--panel-padding); --panel-padding-block: 4px; */
+}
+
+/* leptonChrome.css:28973-28982 */
+:root {
+  --bookmark-menu-icon-text-padding: calc(
+    var(--context-menu-text-padding) + var(--arrowpanel-menuitem-padding-inline)
+  );
+  --bookmark-menu-icon-background-padding: calc(
+    var(--arrowpanel-menuitem-padding-inline) + var(--bookmark-menu-icon-align-padding)
+  );
+}
+
+/* leptonChrome.css:28983-28994 */
+:root {
+  --context-menu-background-padding-default: 6px;
+  --context-menu-text-padding: 21px;
+}
+.menu-icon {
+  display: unset !important;
+}
+#main-menubar > menu > .menu-icon {
+  display: none !important;
+}
+
+/* leptonChrome.css:28995-29021 */
+:root {
+  --context-menu-background-padding-default: 10px;
+  --context-menu-mac-padding: 21px;
+}
+/* context menu width */
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+#blockedPopupDontShowMessage {
+  padding-inline-end: var(--context-menu-background-padding) !important;
+}
+/* text position */
+:not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menuitem > .menu-text,
+:not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menu > .menu-text {
+  padding-inline-start: var(--context-menu-mac-padding) !important;
+}
+/* Checkbox menuitem, None iconic menu */
+:not(menu, #ContentSelectDropdown, #context-navigation) > menupopup:not(.in-menulist) > menuitem[type="checkbox"] {
+  padding-inline-start: calc(var(--context-menu-background-padding) + var(--context-menu-mac-padding)) !important;
+}
+/* Global Menu */
+/* Exeptions */
+
+/* leptonChrome.css:29056-29060 */
+#unified-extensions-context-menu > menuitem::before {
+  padding-inline: 0 !important;
+}
+
+/* leptonChrome.css:29061-29084 */
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]) {
+  padding-inline-start: 0 !important;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic):has(.menu-iconic-left)[checked] {
+  padding-left: 4px !important;
+  background-image: none !important;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic):has(.menu-iconic-left)[checked="true"] {
+  padding-left: calc(var(--context-menu-mac-padding) - 8px) !important;
+}
+:not(menu, #ContentSelectDropdown, #context-navigation)
+  > menupopup:not(.in-menulist)
+  > menuitem:not(.menuitem-iconic):has(.menu-iconic-left)[checked="true"]
+  .menu-iconic-text {
+  padding-left: 8px !important;
+}
+
+/* leptonChrome.css:29085-29090 */
+menupopup menupopup[emptyplacesresult] .menu-text,
+#PersonalToolbar menupopup[emptyplacesresult] .menu-text {
+  margin-inline-start: 0 !important;
+}
+
+/* leptonChrome.css:29091-29096 */
+#BMB_bookmarksPopup,
+#PersonalToolbar {
+  --context-menu-background-padding: var(--arrowpanel-menuitem-padding-inline);
+}
+
+/* leptonChrome.css:29097-29111 */
+/* Bookmark Popup - None icon menu */
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])),
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+#PersonalToolbar menupopup[placespopup="true"] menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])) {
+  margin-inline: var(--arrowpanel-menuitem-margin-inline) !important;
+  padding-inline-start: var(--bookmark-menu-icon-text-padding) !important;
+  background-position: var(--uc-menu-background-position) var(--bookmark-menu-icon-background-padding) center !important;
+}
+
+/* leptonChrome.css:29112-29133 */
+/* Global Menu */
+menupopup:is(#goPopup, #historyMenuPopup, #bookmarksMenuPopup) .bookmark-item {
+  padding-inline-start: var(--context-menu-background-padding) !important;
+}
+/* Bookmark Popup - Iconic menu */
+#BMB_bookmarksPopup .menu-iconic-text,
+#PersonalToolbar menupopup[placespopup="true"] .bookmark-item .menu-iconic-text {
+  margin-inline-start: -1px !important;
+}
+/* Bookmark Popup - None icon menu */
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])),
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+#PersonalToolbar menupopup[placespopup="true"] menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])) {
+  padding-inline-start: calc(var(--context-menu-background-padding) + 2px) !important;
+}
+
+/* leptonChrome.css:29146-29163 */
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"]))
+  .menu-text,
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"]))
+  .menu-text,
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"]))
+  .menu-text,
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"]))
+  .menu-text {
+  margin-inline-start: var(--context-menu-text-padding) !important;
+}
+
+/* leptonChrome.css:29164-29199 */
+/* Bookmark Popup - As Arrow Panel */
+#PersonalToolbar menupopup menuitem,
+#PersonalToolbar menupopup menu {
+  padding-inline: var(--arrowpanel-menuitem-padding-inline) !important;
+}
+/* Bookmark Popup - None icon menu */
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])) {
+  padding-inline-start: calc(var(--arrowpanel-menuitem-padding-inline) + 3px) !important;
+}
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"])),
+#PersonalToolbar menupopup[placespopup="true"] menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"])) {
+  padding-inline-start: calc(var(--arrowpanel-menuitem-padding-inline) + 1px) !important;
+}
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"]))
+  > .menu-text,
+menupopup:is(#BMB_bookmarksPopup)[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"]))
+  > .menu-text,
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menuitem:not(.menuitem-iconic, [disabled="true"]):not(:has(.menu-icon[aria-hidden="true"]))
+  > .menu-text,
+#PersonalToolbar
+  menupopup[placespopup="true"]
+  menu:not(.menu-iconic):not(:has(.menu-icon[aria-hidden="true"]))
+  > .menu-text {
+  padding-inline-start: var(--context-menu-mac-padding) !important;
+}
+
+/* leptonChrome.css:29200-29326 — extra conditions dropped: userChrome.icon.context_menu */
+/** Context Menu - Icons ******************************************************/ /*= tabContextMenu ===========================================================*/
+#context_openANewTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_newTab,
+#tabcenter-reborn_ariasuni-menuitem-_newTabContextMenuOpenAlternatePosition,
+#sidebartabs_asamuzak_jp-menuitem-_newTab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+#tabcenter-reborn_ariasuni-menuitem-_newTabContextMenuOpenInWindow {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+#tabcenter-reborn_ariasuni-menuitem-_newTabContextMenuOpenInPrivateWindow {
+  --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+#context_reloadTab,
+#context_reloadSelectedTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_reloadTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_noContextTab\:context_reloadTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_grouped\:reloadTree,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuReloadTab,
+#sidebartabs_asamuzak_jp-menuitem-_reloadTab,
+#sidebartabs_asamuzak_jp-menuitem-_reloadAllTabs {
+  --menuitem-image: url("../icons/reload.svg");
+}
+#context_playTab,
+#context_playSelectedTabs {
+  --menuitem-image: url("../icons/play-fill.svg");
+}
+#context_toggleMuteTab,
+#context_toggleMuteSelectedTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_toggleMuteTab[label="Mute Tab"],
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_toggleMuteTab-mute,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuMuteTab,
+#sidebartabs_asamuzak_jp-menuitem-_muteTab {
+  --menuitem-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
+  stroke: transparent !important;
+}
+#context_toggleMuteTab[muted],
+#context_toggleMuteSelectedTabs[muted],
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_toggleMuteTab[label="Unmute Tab"],
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_toggleMuteTab-unmute,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuMuteTab[label="Unmute Tab"],
+#sidebartabs_asamuzak_jp-menuitem-_muteTab[label="Unmute Tab"] {
+  --menuitem-image: url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg");
+}
+#context_pinTab,
+#context_pinSelectedTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_pinTab,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuPinTab,
+#sidebartabs_asamuzak_jp-menuitem-_pinTab {
+  --menuitem-image: url("../icons/pin-tab.svg");
+}
+#context_unpinTab,
+#context_unpinSelectedTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_unpinTab,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuPinTab[label="Unpin Tab"],
+#sidebartabs_asamuzak_jp-menuitem-_pinTab[label="Unpin Tab"] {
+  --menuitem-image: url("../icons/unpin-tab.svg");
+}
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_topLevel_toggleSticky[label="Stick Tab to Edges"] {
+  --menuitem-image: url("../icons/align-distribute-top.svg");
+}
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_topLevel_toggleSticky[label="Unstick Tab to Edges"] {
+  --menuitem-image: url("../icons/align-space-evenly-vertical.svg");
+}
+#context_duplicateTab,
+#context_duplicateTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_duplicateTab,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuDuplicateTab,
+#sidebartabs_asamuzak_jp-menuitem-_dupeTab {
+  --menuitem-image: var(--uc-tab-copy-icon);
+}
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuUnloadTab {
+  --menuitem-image: var(--uc-tab-unload-icon);
+}
+#context_bookmarkTab,
+#context_bookmarkSelectedTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_bookmarkTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_noContextTab\:context_bookmarkSelected,
+#treestyletab_piro_sakura_ne_jp-menuitem-_grouped\:bookmarkTree,
+#sidebartabs_asamuzak_jp-menuitem-_bookmarkTab,
+#sidebartabs_asamuzak_jp-menuitem-_bookmarkAllTabs {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+#context_moveTabOptions,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_moveTab,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuMoveTab,
+#sidebartabs_asamuzak_jp-menuitem-_moveTab {
+  --menuitem-image: url("../icons/arrow-swap.svg");
+}
+#context_sendTabToDevice,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_sendTabsToDevice {
+  --menuitem-image: url("../icons/send-to-device.svg");
+}
+#context_sendTabToDevice:is([disabled="true"]) + #context_shareTabURL,
+#context_sendTabToDevice:is([disabled="true"]) + menuitem.share-tab-url-item {
+  /* At windows */
+  --menuitem-image: url("../icons/share.svg");
+}
+/*= new-tab-button-popup =====================================================*/
+/*= toolbar-context-menu =====================================================*/
+/*= Tab Mix Plus =============================================================*/
+/*= contentAreaContextMenu ===================================================*/
+/*= context-ask-chat =========================================================*/
+/*= main-context-menu-frame ==================================================*/
+/*= Tab Mix Plus =============================================================*/
+/*= downloadsContextMenu =====================================================*/ /*= placeContext =============================================================*/ /*= Notification =============================================================*/
+/*= blockedPopupOptions ======================================================*/
+/*= autohide-context =========================================================*/
+/*= pictureInPictureToggleContextMenu ========================================*/
+/*= pageActionContextMenu ====================================================*/
+/*= customizationPanelItemContextMenu ========================================*/
+/*= customizationPaletteItemContextMenu ======================================*/
+/*= customizationPanelContextMenu ============================================*/
+/*= downloads-button-autohide-panel ==========================================*/
+/*= SyncedTabsSidebarContext =================================================*/
+/*= SyncedTabsSidebarTabsFilterContext =======================================*/
+/*= urlbar-input-container ===================================================*/
+/*= textbox-contextmenu ======================================================*/
+/* Browser's Searchbar, Library's Searchbar, Page Info */
+/* Only searchbar */
+/*= context_sendTabToDevicePopupMenu =========================================*/
+/*= unified-extensions-context-menu ==========================================*/
+/*= urlbarView-result-menu ===================================================*/
+/*= full-page-translations-panel-settings-menupopup ==========================*/
+/*= select-translations-panel-settings-menupopup =============================*/
+
+/* leptonChrome.css:29333-29341 — extra conditions dropped: userChrome.icon.context_menu */
+#context_reopenInContainer,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_reopenInContainer,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuOpenInContextualTab,
+#sidebartabs_asamuzak_jp-menuitem-_openNewTabInContainer,
+#sidebartabs_asamuzak_jp-menuitem-_reopenTabInContainer {
+  --menuitem-image: url("../icons/container-openin-16.svg");
+}
+
+/* leptonChrome.css:29342-29349 — extra conditions dropped: userChrome.icon.context_menu */
+#context_selectAllTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_selectAllTabs,
+#treestyletab_piro_sakura_ne_jp-menuitem-_noContextTab\:context_selectAllTabs,
+#sidebartabs_asamuzak_jp-menuitem-_selectAllTabs {
+  --menuitem-image: var(--uc-tab-multiple-icon);
+}
+
+/* leptonChrome.css:29350-29358 — extra conditions dropped: userChrome.icon.context_menu */
+#context_closeTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_closeTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_grouped\:closeTree,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuCloseTab,
+#sidebartabs_asamuzak_jp-menuitem-_closeTab {
+  --menuitem-image: url("chrome://global/skin/icons/close.svg");
+}
+
+/* leptonChrome.css:29373-29381 — extra conditions dropped: userChrome.icon.context_menu */
+#context_undoCloseTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_undoCloseTab,
+#treestyletab_piro_sakura_ne_jp-menuitem-_noContextTab\:context_undoCloseTab,
+#tabcenter-reborn_ariasuni-menuitem-_contextMenuUndoCloseTab,
+#sidebartabs_asamuzak_jp-menuitem-_undoCloseTab {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:29382-29387 — extra conditions dropped: userChrome.icon.context_menu */
+#new-tab-button-popup > menuitem[command="Browser:NewUserContextTab"],
+.new-tab-popup > menuitem[command="Browser:NewUserContextTab"] {
+  --menuitem-image: url("../icons/container-openin-16.svg");
+}
+
+/* leptonChrome.css:29388-29393 — extra conditions dropped: userChrome.icon.context_menu */
+#new-tab-button-popup > menuitem[command="Browser:OpenAboutContainers"],
+.new-tab-popup > menuitem[command="Browser:OpenAboutContainers"] {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:29394-29398 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-manageExtension {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:29399-29403 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-removeExtension {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:29404-29408 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-reportExtension {
+  --menuitem-image: url("../icons/send.svg");
+}
+
+/* leptonChrome.css:29409-29413 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-moveToPanel {
+  --menuitem-image: url("../icons/pin-tab.svg");
+}
+
+/* leptonChrome.css:29414-29419 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-autohide-downloads-button {
+  /* checkbox */
+  --menuitem-image: url("../icons/eye-tracking-off.svg");
+}
+
+/* leptonChrome.css:29420-29424 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-removeFromToolbar {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:29425-29430 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-always-open-downloads-panel {
+  /* checkbox */
+  --menuitem-image: url("../icons/drawer-arrow-download.svg");
+}
+
+/* leptonChrome.css:29431-29435 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-openANewTab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+
+/* leptonChrome.css:29436-29441 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-reloadSelectedTab,
+#toolbar-context-reloadSelectedTabs {
+  --menuitem-image: url("../icons/reload.svg");
+}
+
+/* leptonChrome.css:29442-29447 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-bookmarkSelectedTab,
+#toolbar-context-bookmarkSelectedTabs {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:29448-29452 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-selectAllTabs {
+  --menuitem-image: var(--uc-tab-multiple-icon);
+}
+
+/* leptonChrome.css:29453-29457 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-undoCloseTab {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:29458-29462 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-customize-sidebar {
+  --menuitem-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:29463-29467 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-toggle-vertical-tabs {
+  --menuitem-image: url("chrome://browser/skin/sidebar-collapsed.svg");
+}
+
+/* leptonChrome.css:29468-29473 — extra conditions dropped: userChrome.icon.context_menu */
+#toggle_toolbar-menubar {
+  /* checkbox */
+  --menuitem-image: url("../icons/calendar-agenda.svg");
+}
+
+/* leptonChrome.css:29474-29479 — extra conditions dropped: userChrome.icon.context_menu */
+#toggle_PersonalToolbar {
+  /* Also placeContext */
+  --menuitem-image: url("../icons/bookmarks-toolbar-alt.svg");
+}
+
+/* leptonChrome.css:29480-29484 — extra conditions dropped: userChrome.icon.context_menu */
+menuitem.viewCustomizeToolbar {
+  --menuitem-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:29485-29490 — extra conditions dropped: userChrome.icon.context_menu */
+.fullscreen-context-autohide {
+  /* checkbox */
+  --menuitem-image: url("../icons/eye-tracking-off.svg");
+}
+
+/* leptonChrome.css:29491-29495 — extra conditions dropped: userChrome.icon.context_menu */
+#toolbar-context-menu > menuitem[data-l10n-id="full-screen-exit"] {
+  --menuitem-image: url("chrome://browser/skin/fullscreen-exit.svg");
+}
+
+/* leptonChrome.css:29496-29500 — extra conditions dropped: userChrome.icon.context_menu */
+#context_openANewTab.tabmix-newtab-menu-icon .menu-iconic-left {
+  display: none;
+}
+
+/* leptonChrome.css:29509-29513 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-renameTab {
+  --menuitem-image: url("../icons/edit-active.svg");
+}
+
+/* leptonChrome.css:29514-29518 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-copyTabUrl {
+  --menuitem-image: url("../icons/link.svg");
+}
+
+/* leptonChrome.css:29519-29523 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-autoreloadTab_menu {
+  --menuitem-image: url("../icons/timer10.svg");
+}
+
+/* leptonChrome.css:29524-29528 — extra conditions dropped: userChrome.icon.context_menu */
+#context_reloadTabOptions {
+  --menuitem-image: url("../icons/reload.svg");
+}
+
+/* leptonChrome.css:29534-29538 — extra conditions dropped: userChrome.icon.context_menu */
+#context_reloadTabOptions + #context_reloadTab {
+  --menuitem-image: url("../icons/blank.svg");
+}
+
+/* leptonChrome.css:29539-29543 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-docShell {
+  --menuitem-image: url("chrome://browser/skin/permissions.svg");
+}
+
+/* leptonChrome.css:29544-29548 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-freezeTab {
+  --menuitem-image: url("../icons/weather-snowflake.svg");
+}
+
+/* leptonChrome.css:29549-29553 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-protectTab {
+  --menuitem-image: url("../icons/shield-task.svg");
+}
+
+/* leptonChrome.css:29564-29568 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewsource-goToLine {
+  --menuitem-image: url("../icons/text-number-format.svg");
+}
+
+/* leptonChrome.css:29569-29574 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewsource-wrapLongLines {
+  /* checkbox */
+  --menuitem-image: url("../icons/arrow-sort-down-lines.svg");
+}
+
+/* leptonChrome.css:29575-29580 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewsource-highlightSyntax {
+  /* checkbox */
+  --menuitem-image: url("../icons/highlight.svg");
+}
+
+/* leptonChrome.css:29581-29585 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-no-suggestions {
+  --menuitem-image: url("../icons/text-proofing-tools.svg");
+}
+
+/* leptonChrome.css:29586-29591 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-add-to-dictionary,
+#spell-add-dictionaries {
+  --menuitem-image: url("../icons/book-add.svg");
+}
+
+/* leptonChrome.css:29592-29596 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-undo-add-to-dictionary {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:29597-29601 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openlinkincurrent {
+  --menuitem-image: url("../icons/link-square.svg");
+}
+
+/* leptonChrome.css:29602-29607 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openlinkincontainertab,
+#context-openlinkintab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+
+/* leptonChrome.css:29608-29612 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openlinkinusercontext-menu {
+  --menuitem-image: url("../icons/container-openin-16.svg");
+}
+
+/* leptonChrome.css:29613-29617 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openlink {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:29618-29622 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openlinkprivate {
+  --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+
+/* leptonChrome.css:29623-29627 — extra conditions dropped: userChrome.icon.context_menu */
+#context-bookmarklink {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:29628-29632 — extra conditions dropped: userChrome.icon.context_menu */
+#context-savelink {
+  --menuitem-image: url("../icons/toolbarButton-download.svg");
+}
+
+/* leptonChrome.css:29633-29637 — extra conditions dropped: userChrome.icon.context_menu */
+#context-savelinktopocket {
+  --menuitem-image: url("../icons/pocket-outline.svg");
+}
+
+/* leptonChrome.css:29638-29642 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copyemail {
+  --menuitem-image: url("../icons/mail.svg");
+}
+
+/* leptonChrome.css:29643-29647 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copyphone {
+  --menuitem-image: url("../icons/device-phone.svg");
+}
+
+/* leptonChrome.css:29648-29652 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copylink {
+  --menuitem-image: url("../icons/link.svg");
+}
+
+/* leptonChrome.css:29653-29657 — extra conditions dropped: userChrome.icon.context_menu */
+#context-stripOnShareLink {
+  --menuitem-image: url("../icons/link-no-tracking.svg");
+}
+
+/* leptonChrome.css:29658-29662 — extra conditions dropped: userChrome.icon.context_menu */
+#context-sendlinktodevice {
+  --menuitem-image: url("../icons/send-to-device.svg");
+}
+
+/* leptonChrome.css:29663-29667 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-play {
+  --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
+}
+
+/* leptonChrome.css:29668-29672 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-pause {
+  --menuitem-image: url("chrome://global/skin/media/pause-fill.svg");
+}
+
+/* leptonChrome.css:29673-29677 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-mute {
+  --menuitem-image: url("chrome://global/skin/media/audio-muted.svg");
+}
+
+/* leptonChrome.css:29678-29682 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-unmute {
+  --menuitem-image: url("chrome://global/skin/media/audio.svg");
+}
+
+/* leptonChrome.css:29683-29687 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-playbackrate {
+  --menuitem-image: url("../icons/time-picker.svg");
+}
+
+/* leptonChrome.css:29688-29693 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-loop {
+  /* checkbox */
+  --menuitem-image: url("../icons/arrow-repeat-all.svg");
+}
+
+/* leptonChrome.css:29694-29698 — extra conditions dropped: userChrome.icon.context_menu */
+#context-leave-dom-fullscreen {
+  --menuitem-image: url("chrome://global/skin/media/fullscreenExitButton.svg");
+}
+
+/* leptonChrome.css:29699-29703 — extra conditions dropped: userChrome.icon.context_menu */
+#context-video-fullscreen {
+  --menuitem-image: url("chrome://global/skin/media/fullscreenEnterButton.svg");
+}
+
+/* leptonChrome.css:29704-29708 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-hidecontrols {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:29709-29713 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-showcontrols {
+  --menuitem-image: url("../icons/eye-show.svg");
+}
+
+/* leptonChrome.css:29714-29718 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewvideo {
+  --menuitem-image: url("../icons/video.svg");
+}
+
+/* leptonChrome.css:29719-29724 — extra conditions dropped: userChrome.icon.context_menu */
+#context-video-pictureinpicture {
+  /* checkbox */
+  --menuitem-image: url("chrome://global/skin/media/picture-in-picture-open.svg");
+}
+
+/* leptonChrome.css:29725-29729 — extra conditions dropped: userChrome.icon.context_menu */
+#context-reloadimage {
+  --menuitem-image: url("../icons/image-arrow-counterclockwise.svg");
+}
+
+/* leptonChrome.css:29730-29734 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewimage {
+  --menuitem-image: url("../icons/image-add.svg");
+}
+
+/* leptonChrome.css:29735-29739 — extra conditions dropped: userChrome.icon.context_menu */
+#context-saveimage {
+  --menuitem-image: url("../icons/image.svg");
+}
+
+/* leptonChrome.css:29740-29744 — extra conditions dropped: userChrome.icon.context_menu */
+#context-video-saveimage {
+  --menuitem-image: url("../icons/video-snapshot.svg");
+}
+
+/* leptonChrome.css:29745-29749 — extra conditions dropped: userChrome.icon.context_menu */
+#context-savevideo {
+  --menuitem-image: url("../icons/video.svg");
+}
+
+/* leptonChrome.css:29750-29754 — extra conditions dropped: userChrome.icon.context_menu */
+#context-saveaudio {
+  --menuitem-image: url("chrome://global/skin/media/audio.svg");
+}
+
+/* leptonChrome.css:29755-29759 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copyimage-contents {
+  --menuitem-image: url("../icons/image-copy.svg");
+}
+
+/* leptonChrome.css:29760-29766 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copyimage,
+#context-copyvideourl,
+#context-copyaudiourl {
+  --menuitem-image: url("../icons/link.svg");
+}
+
+/* leptonChrome.css:29767-29773 — extra conditions dropped: userChrome.icon.context_menu */
+#context-sendimage,
+#context-sendvideo,
+#context-sendaudio {
+  --menuitem-image: url("../icons/mail.svg");
+}
+
+/* leptonChrome.css:29774-29778 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewimageinfo {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:29779-29783 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewimagedesc {
+  --menuitem-image: url("../icons/image-alt-text.svg");
+}
+
+/* leptonChrome.css:29784-29788 — extra conditions dropped: userChrome.icon.context_menu */
+#context-setDesktopBackground {
+  --menuitem-image: url("../icons/resize-image.svg");
+}
+
+/* leptonChrome.css:29789-29793 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ctp-play {
+  --menuitem-image: url("chrome://global/skin/icons/plugin.svg");
+}
+
+/* leptonChrome.css:29794-29798 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ctp-hide {
+  --menuitem-image: url("chrome://global/skin/icons/plugin-blocked.svg");
+}
+
+/* leptonChrome.css:29799-29803 — extra conditions dropped: userChrome.icon.context_menu */
+#context-savepage {
+  --menuitem-image: url("../icons/toolbarButton-download.svg");
+}
+
+/* leptonChrome.css:29804-29808 — extra conditions dropped: userChrome.icon.context_menu */
+#context-pocket {
+  --menuitem-image: url("../icons/pocket-outline.svg");
+}
+
+/* leptonChrome.css:29809-29813 — extra conditions dropped: userChrome.icon.context_menu */
+#context-sendpagetodevice {
+  --menuitem-image: url("../icons/send-to-device.svg");
+}
+
+/* leptonChrome.css:29814-29818 — extra conditions dropped: userChrome.icon.context_menu */
+#fill-login {
+  --menuitem-image: url("../icons/password.svg");
+}
+
+/* leptonChrome.css:29819-29823 — extra conditions dropped: userChrome.icon.context_menu */
+#fill-login-generated-password {
+  --menuitem-image: url("chrome://browser/skin/login.svg");
+}
+
+/* leptonChrome.css:29824-29828 — extra conditions dropped: userChrome.icon.context_menu */
+#use-relay-mask {
+  --menuitem-image: url("../icons/relay-logo.svg");
+}
+
+/* leptonChrome.css:29829-29833 — extra conditions dropped: userChrome.icon.context_menu */
+#manage-saved-logins {
+  --menuitem-image: url("../icons/key-multiple.svg");
+}
+
+/* leptonChrome.css:29834-29839 — extra conditions dropped: userChrome.icon.context_menu */
+#context-undo,
+#context-pdfjs-undo {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:29846-29851 — extra conditions dropped: userChrome.icon.context_menu */
+#context-cut,
+#context-pdfjs-cut {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:29852-29857 — extra conditions dropped: userChrome.icon.context_menu */
+#context-copy,
+#context-pdfjs-copy {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:29858-29863 — extra conditions dropped: userChrome.icon.context_menu */
+#context-paste,
+#context-pdfjs-paste {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:29864-29869 — extra conditions dropped: userChrome.icon.context_menu */
+#context-delete,
+#context-pdfjs-delete {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:29870-29875 — extra conditions dropped: userChrome.icon.context_menu */
+#context-selectall,
+#context-pdfjs-selectall {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:29876-29880 — extra conditions dropped: userChrome.icon.context_menu */
+#context-pdfjs-highlight-selection {
+  --menuitem-image: url("../icons/toolbarButton-editorHighlight.svg");
+}
+
+/* leptonChrome.css:29881-29885 — extra conditions dropped: userChrome.icon.context_menu */
+#context-reveal-password {
+  --menuitem-image: url("../icons/eye-show.svg");
+}
+
+/* leptonChrome.css:29886-29890 — extra conditions dropped: userChrome.icon.context_menu */
+#context-print-selection {
+  --menuitem-image: url("chrome://global/skin/icons/print.svg");
+}
+
+/* leptonChrome.css:29891-29895 — extra conditions dropped: userChrome.icon.context_menu */
+#context-take-screenshot {
+  --menuitem-image: url("../icons/screenshot-1.svg");
+}
+
+/* leptonChrome.css:29896-29900 — extra conditions dropped: userChrome.icon.context_menu */
+#context-keywordfield {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:29901-29906 — extra conditions dropped: userChrome.icon.context_menu */
+#context-searchselect,
+#context-searchselect-private {
+  --menuitem-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:29907-29911 — extra conditions dropped: userChrome.icon.context_menu */
+#context-translate-selection {
+  --menuitem-image: url("../icons/translations.svg");
+}
+
+/* leptonChrome.css:29912-29916 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ask-chat {
+  --menuitem-image: url("../icons/chat-sparkle.svg");
+}
+
+/* leptonChrome.css:29917-29921 — extra conditions dropped: userChrome.icon.context_menu */
+#frame {
+  --menuitem-image: url("../icons/command-frames.svg");
+}
+
+/* leptonChrome.css:29922-29927 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-check-enabled {
+  /* checkbox */
+  --menuitem-image: url("../icons/text-proofing-tools.svg");
+}
+
+/* leptonChrome.css:29928-29932 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-add-dictionaries-main {
+  --menuitem-image: url("../icons/book-add.svg");
+}
+
+/* leptonChrome.css:29933-29937 — extra conditions dropped: userChrome.icon.context_menu */
+#spell-dictionaries {
+  --menuitem-image: url("../icons/book.svg");
+}
+
+/* leptonChrome.css:29938-29942 — extra conditions dropped: userChrome.icon.context_menu */
+#context-bidi-text-direction-toggle {
+  --menuitem-image: url("../icons/text-direction-horizontal-ltr.svg");
+}
+
+/* leptonChrome.css:29943-29947 — extra conditions dropped: userChrome.icon.context_menu */
+#context-bidi-page-direction-toggle {
+  --menuitem-image: url("../icons/document-landscape-split-hint.svg");
+}
+
+/* leptonChrome.css:29948-29953 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewpartialsource-selection,
+#context-viewsource {
+  --menuitem-image: url("../icons/document-search.svg");
+}
+
+/* leptonChrome.css:29954-29958 — extra conditions dropped: userChrome.icon.context_menu */
+#context-inspect-a11y {
+  --menuitem-image: url("../icons/tool-accessibility.svg");
+}
+
+/* leptonChrome.css:29959-29963 — extra conditions dropped: userChrome.icon.context_menu */
+#context-inspect {
+  --menuitem-image: url("../icons/command-pick.svg");
+}
+
+/* leptonChrome.css:29964-29968 — extra conditions dropped: userChrome.icon.context_menu */
+#context-media-eme-learnmore {
+  /* iconic */
+}
+
+/* leptonChrome.css:29969-29985 — extra conditions dropped: userChrome.icon.context_menu */
+#context-back {
+  --menuitem-image: url("chrome://browser/skin/back.svg");
+}
+#context-forward {
+  --menuitem-image: url("chrome://browser/skin/forward.svg");
+}
+#context-reload {
+  --menuitem-image: url("../icons/reload.svg");
+}
+#context-stop {
+  --menuitem-image: url("chrome://global/skin/icons/close.svg");
+}
+#context-bookmarkpage {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:29986-29991 — extra conditions dropped: userChrome.icon.context_menu */
+#ask-chat-shortcuts .toolbarbutton-icon {
+  order: -1;
+  margin-inline-end: var(--arrowpanel-menuitem-margin-inline) !important;
+}
+
+/* leptonChrome.css:29992-29996 — extra conditions dropped: userChrome.icon.context_menu */
+#ask-chat-shortcuts .subviewbutton:nth-child(1) {
+  list-style-image: url("../icons/apps-list-detail.svg");
+}
+
+/* leptonChrome.css:29997-30001 — extra conditions dropped: userChrome.icon.context_menu */
+#ask-chat-shortcuts .subviewbutton:nth-child(2) {
+  list-style-image: url("../icons/code-text.svg");
+}
+
+/* leptonChrome.css:30002-30006 — extra conditions dropped: userChrome.icon.context_menu */
+#ask-chat-shortcuts .subviewbutton:nth-child(3) {
+  list-style-image: url("../icons/tetris-app.svg");
+}
+
+/* leptonChrome.css:30007-30011 — extra conditions dropped: userChrome.icon.context_menu */
+#ask-chat-shortcuts .subviewbutton:nth-child(4) {
+  list-style-image: url("../icons/arrow-up-exclamation.svg");
+}
+
+/* leptonChrome.css:30012-30016 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ask-chat menuitem:nth-child(1) {
+  --menuitem-image: url("../icons/apps-list-detail.svg");
+}
+
+/* leptonChrome.css:30017-30021 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ask-chat menuitem:nth-child(2) {
+  --menuitem-image: url("../icons/code-text.svg");
+}
+
+/* leptonChrome.css:30022-30026 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ask-chat menuitem:nth-child(3) {
+  --menuitem-image: url("../icons/tetris-app.svg");
+}
+
+/* leptonChrome.css:30027-30031 — extra conditions dropped: userChrome.icon.context_menu */
+#context-ask-chat menuitem:nth-child(4) {
+  --menuitem-image: url("../icons/arrow-up-exclamation.svg");
+}
+
+/* leptonChrome.css:30032-30036 — extra conditions dropped: userChrome.icon.context_menu */
+#context-showonlythisframe {
+  --menuitem-image: url("../icons/eye-show.svg");
+}
+
+/* leptonChrome.css:30037-30041 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openframeintab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+
+/* leptonChrome.css:30042-30046 — extra conditions dropped: userChrome.icon.context_menu */
+#context-openframe {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:30047-30051 — extra conditions dropped: userChrome.icon.context_menu */
+#context-reloadframe {
+  --menuitem-image: url("../icons/reload.svg");
+}
+
+/* leptonChrome.css:30052-30056 — extra conditions dropped: userChrome.icon.context_menu */
+#context-bookmarkframe {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:30057-30061 — extra conditions dropped: userChrome.icon.context_menu */
+#context-saveframe {
+  --menuitem-image: url("../icons/toolbarButton-download.svg");
+}
+
+/* leptonChrome.css:30062-30066 — extra conditions dropped: userChrome.icon.context_menu */
+#context-printframe {
+  --menuitem-image: url("chrome://global/skin/icons/print.svg");
+}
+
+/* leptonChrome.css:30067-30071 — extra conditions dropped: userChrome.icon.context_menu */
+#context-take-frame-screenshot {
+  --menuitem-image: url("../icons/screenshot-1.svg");
+}
+
+/* leptonChrome.css:30072-30076 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewframesource {
+  --menuitem-image: url("../icons/document-search.svg");
+}
+
+/* leptonChrome.css:30077-30081 — extra conditions dropped: userChrome.icon.context_menu */
+#context-viewframeinfo {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:30082-30086 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-autoreload_menu {
+  --menuitem-image: url("../icons/timer10.svg");
+}
+
+/* leptonChrome.css:30087-30091 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-linkWithhistory {
+  --menuitem-image: var(--uc-new-tab-skip-forward-icon);
+}
+
+/* leptonChrome.css:30092-30096 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-openAllLinks {
+  --menuitem-image: var(--uc-new-tab-multiple-icon);
+}
+
+/* leptonChrome.css:30097-30101 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-openinverselink {
+  --menuitem-image: var(--uc-new-tab-forward-icon);
+}
+
+/* leptonChrome.css:30102-30106 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-content-closetab {
+  --menuitem-image: url("../icons/dismiss-filled.svg");
+}
+
+/* leptonChrome.css:30107-30111 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-duplicateTabContext {
+  --menuitem-image: var(--uc-tab-copy-icon);
+}
+
+/* leptonChrome.css:30112-30116 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-duplicateinWinContext {
+  --menuitem-image: url("../icons/tab-desktop-multiple-bottom.svg");
+}
+
+/* leptonChrome.css:30117-30121 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-detachTabContext {
+  --menuitem-image: url("../icons/convert-range.svg");
+}
+
+/* leptonChrome.css:30122-30126 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-mergeWindows {
+  --menuitem-image: url("../icons/merge.svg");
+}
+
+/* leptonChrome.css:30127-30131 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-content-freezeTab {
+  --menuitem-image: url("../icons/weather-snowflake.svg");
+}
+
+/* leptonChrome.css:30132-30136 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-content-protectTab {
+  --menuitem-image: url("../icons/shield-task.svg");
+}
+
+/* leptonChrome.css:30137-30141 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-content-lockTab {
+  --menuitem-image: url("../icons/lock-closed.svg");
+}
+
+/* leptonChrome.css:30142-30146 — extra conditions dropped: userChrome.icon.context_menu */
+#tm-content-undoCloseTab {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:30147-30151 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadPauseMenuItem {
+  --menuitem-image: url("chrome://global/skin/media/pause-fill.svg");
+}
+
+/* leptonChrome.css:30152-30156 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadResumeMenuItem {
+  --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
+}
+
+/* leptonChrome.css:30157-30161 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadUnblockMenuItem {
+  --menuitem-image: url("../icons/checkmark-circle.svg");
+}
+
+/* leptonChrome.css:30162-30166 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadUseSystemDefaultMenuItem {
+  --menuitem-image: url("../icons/toolbarButton-upload.svg");
+}
+
+/* leptonChrome.css:30167-30172 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadAlwaysUseSystemDefaultMenuItem {
+  /* checkbox */
+  --menuitem-image: url("../icons/folder-globe.svg");
+}
+
+/* leptonChrome.css:30173-30178 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadAlwaysOpenSimilarFilesMenuItem {
+  /* checkbox */
+  --menuitem-image: url("../icons/fluid.svg");
+}
+
+/* leptonChrome.css:30179-30183 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadShowMenuItem {
+  --menuitem-image: var(--uc-folder-icon);
+}
+
+/* leptonChrome.css:30184-30193 — extra conditions dropped: userChrome.icon.context_menu */
+#downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
+#downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
+  --menuitem-image: url("../icons/link-square.svg");
+}
+#downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
+#downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
+  --menuitem-image: url("../icons/link.svg");
+}
+
+/* leptonChrome.css:30194-30198 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadDeleteFileMenuItem {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30199-30203 — extra conditions dropped: userChrome.icon.context_menu */
+.downloadRemoveFromHistoryMenuItem {
+  --menuitem-image: url("../icons/eraser.svg");
+}
+
+/* leptonChrome.css:30204-30209 — extra conditions dropped: userChrome.icon.context_menu */
+#downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
+#downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
+  --menuitem-image: url("../icons/broom.svg");
+}
+
+/* leptonChrome.css:30210-30214 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_open {
+  --menuitem-image: url("../icons/link-square.svg");
+}
+
+/* leptonChrome.css:30215-30220 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_openBookmarkContainer\:tabs,
+#placesContext_openBookmarkLinks\:tabs {
+  --menuitem-image: url("../icons/movetowindow-16.svg");
+}
+
+/* leptonChrome.css:30221-30227 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_open\:newtab,
+#placesContext_openContainer\:tabs,
+#placesContext_openLinks\:tabs {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+
+/* leptonChrome.css:30228-30232 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_open\:newcontainertab {
+  --menuitem-image: url("../icons/container-openin-16.svg");
+}
+
+/* leptonChrome.css:30233-30237 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_open\:newwindow {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:30238-30242 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_open\:newprivatewindow {
+  --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+
+/* leptonChrome.css:30243-30249 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_show_bookmark\:info,
+#placesContext_show\:info,
+#placesContext_show_folder\:info {
+  --menuitem-image: url("../icons/edit-active.svg");
+}
+
+/* leptonChrome.css:30250-30257 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_deleteBookmark,
+#placesContext_deleteFolder,
+#placesContext_delete,
+#placesContext_delete_history {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30258-30262 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_deleteHost {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:30263-30267 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_sortBy\:name {
+  --menuitem-image: url("../icons/text-sort-ascending.svg");
+}
+
+/* leptonChrome.css:30268-30272 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_cut {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:30273-30277 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_copy {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:30278-30282 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_paste_group {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30283-30287 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_new\:bookmark {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:30288-30293 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_showInFolder,
+#placesContext_new\:folder {
+  --menuitem-image: var(--uc-folder-icon);
+}
+
+/* leptonChrome.css:30294-30298 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_new\:separator {
+  --menuitem-image: url("../icons/vertical-line.svg");
+}
+
+/* leptonChrome.css:30299-30303 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_paste {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30304-30308 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_createBookmark {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:30309-30314 — extra conditions dropped: userChrome.icon.context_menu */
+#show-other-bookmarks_PersonalToolbar {
+  /* checkbox */
+  --menuitem-image: url("../icons/star-line-horizontal.svg");
+}
+
+/* leptonChrome.css:30315-30319 — extra conditions dropped: userChrome.icon.context_menu */
+#placesContext_showAllBookmarks {
+  --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+/* leptonChrome.css:30320-30324 — extra conditions dropped: userChrome.icon.context_menu */
+.openintabs-menuitem {
+  --menuitem-image: url("../icons/movetowindow-16.svg");
+}
+
+/* leptonChrome.css:30325-30329 — extra conditions dropped: userChrome.icon.context_menu */
+#doNotDisturbMenuItem {
+  --menuitem-image: url(chrome://global/skin/media/pause-fill.svg);
+}
+
+/* leptonChrome.css:30330-30334 — extra conditions dropped: userChrome.icon.context_menu */
+#disableForOriginMenuItem {
+  --menuitem-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
+/* leptonChrome.css:30335-30339 — extra conditions dropped: userChrome.icon.context_menu */
+#openSettingsMenuItem {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30340-30344 — extra conditions dropped: userChrome.icon.context_menu */
+#blockedPopupAllowSite {
+  --menuitem-image: url("chrome://global/skin/icons/check.svg");
+}
+
+/* leptonChrome.css:30345-30349 — extra conditions dropped: userChrome.icon.context_menu */
+#blockedPopupOptions > menuitem[oncommand="gPopupBlockerObserver.editPopupSettings();"] {
+  --menuitem-image: url("../icons/edit-active.svg");
+}
+
+/* leptonChrome.css:30350-30355 — extra conditions dropped: userChrome.icon.context_menu */
+#blockedPopupDontShowMessage {
+  /* checkbox */
+  --menuitem-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
+/* leptonChrome.css:30356-30361 — extra conditions dropped: userChrome.icon.context_menu */
+menuitem[data-l10n-id="popup-show-popup-menuitem"] {
+  /* checkbox */
+  --menuitem-image: url("../icons/eye-show.svg");
+}
+
+/* leptonChrome.css:30362-30367 — extra conditions dropped: userChrome.icon.context_menu */
+#autohide-context > menuitem[data-l10n-id="full-screen-autohide"] {
+  /* checkbox */
+  --menuitem-image: url("../icons/eye-tracking-off.svg");
+}
+
+/* leptonChrome.css:30368-30372 — extra conditions dropped: userChrome.icon.context_menu */
+#autohide-context > menuitem[data-l10n-id="full-screen-exit"] {
+  --menuitem-image: url("chrome://browser/skin/fullscreen-exit.svg");
+}
+
+/* leptonChrome.css:30373-30377 — extra conditions dropped: userChrome.icon.context_menu */
+#pictureInPictureToggleContextMenu > menuitem[oncommand="PictureInPicture.hideToggle();"] {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:30378-30385 — extra conditions dropped: userChrome.icon.context_menu */
+.pageActionContextMenuItem.extensionPinned.extensionUnpinned.manageExtensionItem {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+.pageActionContextMenuItem.extensionPinned.extensionUnpinned.removeExtensionItem {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30386-30390 — extra conditions dropped: userChrome.icon.context_menu */
+#customizationPanelItemContextMenuUnpin {
+  --menuitem-image: url("../icons/unpin-tab.svg");
+}
+
+/* leptonChrome.css:30391-30395 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-removeFromPanel {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30396-30400 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-addToToolbar {
+  --menuitem-image: url("chrome://devtools/skin/images/dock-bottom.svg");
+}
+
+/* leptonChrome.css:30401-30405 — extra conditions dropped: userChrome.icon.context_menu */
+.customize-context-addToPanel {
+  --menuitem-image: url("chrome://browser/skin/menu.svg");
+}
+
+/* leptonChrome.css:30406-30410 — extra conditions dropped: userChrome.icon.context_menu */
+#customizationPanelContextMenu > menuitem[command="cmd_CustomizeToolbars"] {
+  --menuitem-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:30411-30416 — extra conditions dropped: userChrome.icon.context_menu */
+#downloads-button-autohide-checkbox {
+  /* checkbox */
+  --menuitem-image: url("../icons/eye-tracking-off.svg");
+}
+
+/* leptonChrome.css:30417-30421 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsOpenSelected {
+  --menuitem-image: url("../icons/link-square.svg");
+}
+
+/* leptonChrome.css:30422-30426 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsOpenSelectedInTab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+
+/* leptonChrome.css:30427-30431 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsOpenSelectedInWindow {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:30432-30436 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsOpenSelectedInPrivateWindow {
+  --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+
+/* leptonChrome.css:30437-30441 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsBookmarkSelected {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:30442-30446 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsCopySelected {
+  --menuitem-image: url("../icons/link.svg");
+}
+
+/* leptonChrome.css:30447-30451 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsOpenAllInTabs {
+  --menuitem-image: url("../icons/movetowindow-16.svg");
+}
+
+/* leptonChrome.css:30452-30456 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsManageDevices {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30457-30461 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsRefresh {
+  --menuitem-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* leptonChrome.css:30462-30466 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_undo"] {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:30467-30471 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_cut"] {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:30472-30476 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_copy"] {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:30477-30481 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_paste"] {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30482-30486 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_delete"] {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30487-30491 — extra conditions dropped: userChrome.icon.context_menu */
+#SyncedTabsSidebarTabsFilterContext > menuitem[cmd="cmd_selectAll"] {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:30492-30496 — extra conditions dropped: userChrome.icon.context_menu */
+#syncedTabsRefreshFilter {
+  --menuitem-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* leptonChrome.css:30497-30501 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_undo"] {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:30507-30511 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_cut"] {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:30512-30516 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_copy"] {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:30522-30526 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_paste"] {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30532-30536 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_delete"] {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30537-30541 — extra conditions dropped: userChrome.icon.context_menu */
+#urlbar-input-container .textbox-contextmenu menuitem[cmd="cmd_selectAll"] {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:30542-30546 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-undo"] {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:30552-30556 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-cut"] {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:30557-30561 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-copy"] {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:30562-30566 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-paste"] {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30567-30571 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-delete"] {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30572-30576 — extra conditions dropped: userChrome.icon.context_menu */
+.textbox-contextmenu > menuitem[data-l10n-id="text-action-select-all"] {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:30582-30586 — extra conditions dropped: userChrome.icon.context_menu */
+menuitem.searchbar-clear-history {
+  --menuitem-image: url("../icons/forget.svg");
+}
+
+/* leptonChrome.css:30587-30609 — extra conditions dropped: userChrome.icon.context_menu */
+.sync-menuitem.sendtab-target[clientType="phone"] {
+  --menuitem-image: url("../icons/device-phone.svg");
+}
+.sync-menuitem.sendtab-target[clientType="tablet"] {
+  --menuitem-image: url("../icons/device-tablet.svg");
+}
+.sync-menuitem.sendtab-target[clientType="desktop"] {
+  --menuitem-image: url("../icons/device-desktop.svg");
+}
+.sync-menuitem.sendtab-target[clientType="tv"] {
+  --menuitem-image: url("../icons/device-tv.svg");
+}
+.sync-menuitem.sendtab-target[clientType="vr"] {
+  --menuitem-image: url("../icons/device-vr.svg");
+}
+.sync-menuitem.sendtab-target[clientType=""] {
+  --menuitem-image: url("../icons/send-to-device.svg");
+}
+.sync-menuitem.sendtab-target:not([clientType]) {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30610-30614 — extra conditions dropped: userChrome.icon.context_menu */
+#treestyletab_piro_sakura_ne_jp-menuitem-_context_sendTabsToDevice\:manage {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30615-30619 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-pin-to-toolbar {
+  --menuitem-image: url("../icons/pin-tab.svg");
+}
+
+/* leptonChrome.css:30620-30624 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-move-widget-up {
+  --menuitem-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+/* leptonChrome.css:30625-30629 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-move-widget-down {
+  --menuitem-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+/* leptonChrome.css:30630-30634 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-manage-extension {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30635-30639 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-remove-extension {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30640-30644 — extra conditions dropped: userChrome.icon.context_menu */
+.unified-extensions-context-menu-report-extension {
+  --menuitem-image: url("../icons/send.svg");
+}
+
+/* leptonChrome.css:30645-30655 — extra conditions dropped: userChrome.icon.context_menu */
+.urlbarView-result-menuitem[data-command="trendingblock"] {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+.urlbarView-result-menuitem[data-command="dismiss"] {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+.urlbarView-result-menuitem[data-command="help"] {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:30656-30660 — extra conditions dropped: userChrome.icon.context_menu */
+.manage-languages-menuitem {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30661-30665 — extra conditions dropped: userChrome.icon.context_menu */
+#full-page-translations-panel-settings-menupopup > menuitem[data-l10n-id="translations-panel-settings-about2"] {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:30666-30670 — extra conditions dropped: userChrome.icon.context_menu */
+#select-translations-panel-open-settings-page-menuitem {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30671-30675 — extra conditions dropped: userChrome.icon.context_menu */
+#select-translations-panel-about-translations-menuitem {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:30676-30718 — extra conditions dropped: userChrome.icon.global_menubar */
+/*= main-menubar =============================================================*/
+#file-menu {
+  --menuitem-image: url("../icons/mail-inbox-all.svg");
+}
+#edit-menu {
+  --menuitem-image: url("../icons/edit-active.svg");
+}
+#view-menu {
+  --menuitem-image: url("../icons/content-view.svg");
+}
+#history-menu {
+  --menuitem-image: url("chrome://browser/skin/history.svg");
+}
+#bookmarksMenu {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+#profiles-menu:is(menu) {
+  fill: transparent !important;
+  --menuitem-image: url("chrome://browser/content/profiles/assets/16_heart.svg");
+}
+#tools-menu {
+  --menuitem-image: url("../icons/toolbox.svg");
+}
+#tabSharingMenu {
+  --menuitem-image: url("chrome://browser/skin/notification-icons/screen.svg");
+}
+#helpMenu {
+  --menuitem-image: url("chrome://global/skin/icons/help.svg");
+}
+/*= Others ===================================================================*/
+#alltabs-button {
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg") !important;
+}
+#alltabs-button > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  /* Original
+     width: 20px;
+     margin: -2px;
+   */
+  width: 16px !important;
+  margin: 0 !important;
+}
+
+/* leptonChrome.css:30719-30754 — extra conditions dropped: userChrome.icon.global_menu */
+/** Global Menu ***************************************************************/
+/*= menu_FilePopup ===========================================================*/
+#menu_newNavigatorTab {
+  --menuitem-image: var(--uc-new-tab-icon);
+}
+#menu_newUserContext {
+  --menuitem-image: url("../icons/container-openin-16.svg");
+}
+#menu_newNavigator {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+#menu_newPrivateWindow {
+  --menuitem-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+#menu_openFile {
+  --menuitem-image: url("../icons/toolbarButton-upload.svg");
+}
+#menu_close {
+  --menuitem-image: var(--uc-tab-close-icon);
+}
+/* Mange Containers */
+/*= menu_EditPopup ===========================================================*/
+/*= menu_viewPopup ===========================================================*/
+/* view-menu-popup sub menu */
+/* viewSidebarMenu sub menu */
+/* viewFullZoomMenu sub menu */
+/*= goPopup ==================================================================*/
+/* sub menu */
+/*= bookmarksMenuPopup =======================================================*/
+/*= menu_ProfilesPopup =======================================================*/
+/*= menu_ToolsPopup ==========================================================*/
+/* menuWebDeveloperPopup sub menu */
+/*= windowPopup ==============================================================*/
+/*= menu_HelpPopup ===========================================================*/
+
+/* leptonChrome.css:30760-30764 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_savePage {
+  --menuitem-image: url("../icons/toolbarButton-download.svg");
+}
+
+/* leptonChrome.css:30765-30769 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_sendLink {
+  --menuitem-image: url("../icons/mail.svg");
+}
+
+/* leptonChrome.css:30770-30774 — extra conditions dropped: userChrome.icon.global_menu */
+menu.share-tab-url-item {
+  --menuitem-image: url("chrome://browser/skin/share.svg");
+}
+
+/* leptonChrome.css:30775-30779 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_print {
+  --menuitem-image: url("chrome://global/skin/icons/print.svg");
+}
+
+/* leptonChrome.css:30780-30784 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_importFromAnotherBrowser {
+  --menuitem-image: url("chrome://browser/skin/import.svg");
+}
+
+/* leptonChrome.css:30785-30790 — extra conditions dropped: userChrome.icon.global_menu */
+#goOfflineMenuitem {
+  /* checkbox */
+  --menuitem-image: url("../icons/plug-disconnected.svg");
+}
+
+/* leptonChrome.css:30791-30795 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_FileQuitItem {
+  --menuitem-image: url("../icons/quit.svg");
+}
+
+/* leptonChrome.css:30796-30800 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_newUserContext menupopup menuitem:last-child {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30801-30805 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_undo {
+  --menuitem-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:30811-30815 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_cut {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:30816-30820 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_copy {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:30821-30825 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_paste {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:30826-30830 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_delete {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:30831-30835 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_selectAll {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:30836-30840 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_find {
+  --menuitem-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:30846-30850 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_preferences {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:30851-30855 — extra conditions dropped: userChrome.icon.global_menu */
+#viewToolbarsMenu {
+  --menuitem-image: url("../icons/toolbar.svg");
+}
+
+/* leptonChrome.css:30856-30860 — extra conditions dropped: userChrome.icon.global_menu */
+#viewSidebarMenuMenu {
+  --menuitem-image: var(--uc-sidebar-icon);
+}
+
+/* leptonChrome.css:30861-30865 — extra conditions dropped: userChrome.icon.global_menu */
+#viewFullZoomMenu {
+  --menuitem-image: url("../icons/screenshot.svg");
+}
+
+/* leptonChrome.css:30866-30870 — extra conditions dropped: userChrome.icon.global_menu */
+#pageStyleMenu {
+  --menuitem-image: url("../icons/document-css.svg");
+}
+
+/* leptonChrome.css:30871-30875 — extra conditions dropped: userChrome.icon.global_menu */
+#repair-text-encoding {
+  --menuitem-image: url("../icons/characterEncoding.svg");
+}
+
+/* leptonChrome.css:30876-30880 — extra conditions dropped: userChrome.icon.global_menu */
+#enterFullScreenItem {
+  --menuitem-image: url("chrome://browser/skin/fullscreen.svg");
+}
+
+/* leptonChrome.css:30881-30885 — extra conditions dropped: userChrome.icon.global_menu */
+#exitFullScreenItem {
+  --menuitem-image: url("chrome://browser/skin/fullscreen-exit.svg");
+}
+
+/* leptonChrome.css:30886-30891 — extra conditions dropped: userChrome.icon.global_menu */
+#fullScreenItem {
+  /* checkbox */
+  --menuitem-image: url("chrome://browser/skin/fullscreen.svg");
+}
+
+/* leptonChrome.css:30892-30896 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_readerModeItem {
+  --menuitem-image: url("chrome://browser/skin/reader-mode.svg");
+}
+
+/* leptonChrome.css:30897-30901 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_showAllTabs {
+  --menuitem-image: var(--uc-tab-icon);
+}
+
+/* leptonChrome.css:30902-30906 — extra conditions dropped: userChrome.icon.global_menu */
+#documentDirection-swap {
+  --menuitem-image: url("../icons/text-direction-horizontal-ltr.svg");
+}
+
+/* leptonChrome.css:30907-30911 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_customizeToolbars {
+  --menuitem-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:30912-30916 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_bookmarksSidebar {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:30917-30921 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_historySidebar {
+  --menuitem-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:30922-30926 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_tabsSidebar {
+  --menuitem-image: url("../icons/synced-tabs.svg");
+}
+
+/* leptonChrome.css:30927-30932 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_zoomEnlarge {
+  --menuitem-image: url("chrome://browser/skin/add-circle-fill.svg");
+  stroke: transparent !important;
+}
+
+/* leptonChrome.css:30933-30938 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_zoomReduce {
+  --menuitem-image: url("chrome://browser/skin/subtract-circle-fill.svg");
+  stroke: transparent !important;
+}
+
+/* leptonChrome.css:30939-30943 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_zoomReset {
+  --menuitem-image: url("../icons/resize.svg");
+}
+
+/* leptonChrome.css:30944-30948 — extra conditions dropped: userChrome.icon.global_menu */
+#toggle_zoom {
+  --menuitem-image: url("../icons/screenshot.svg");
+}
+
+/* leptonChrome.css:30949-30953 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_showAllHistory {
+  --menuitem-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:30954-30958 — extra conditions dropped: userChrome.icon.global_menu */
+#sanitizeItem {
+  --menuitem-image: url("../icons/forget.svg");
+}
+
+/* leptonChrome.css:30959-30963 — extra conditions dropped: userChrome.icon.global_menu */
+#sync-tabs-menuitem {
+  --menuitem-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* leptonChrome.css:30964-30968 — extra conditions dropped: userChrome.icon.global_menu */
+#historyRestoreLastSession {
+  --menuitem-image: url("../icons/restore-session.svg");
+}
+
+/* leptonChrome.css:30969-30973 — extra conditions dropped: userChrome.icon.global_menu */
+#hiddenTabsMenu {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:30974-30978 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_searchHistory {
+  --menuitem-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:30979-30983 — extra conditions dropped: userChrome.icon.global_menu */
+#historyUndoMenu {
+  --menuitem-image: var(--uc-tab-icon);
+}
+
+/* leptonChrome.css:30984-30988 — extra conditions dropped: userChrome.icon.global_menu */
+#historyUndoWindowMenu {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:30989-30993 — extra conditions dropped: userChrome.icon.global_menu */
+#historyUndoPopup .restoreallitem {
+  --menuitem-image: url("../icons/movetowindow-16.svg");
+}
+
+/* leptonChrome.css:30994-30998 — extra conditions dropped: userChrome.icon.global_menu */
+#historyUndoWindowPopup .restoreallitem {
+  --menuitem-image: url("../icons/restore-session.svg");
+}
+
+/* leptonChrome.css:30999-31003 — extra conditions dropped: userChrome.icon.global_menu */
+#bookmarksShowAll {
+  --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+/* leptonChrome.css:31004-31009 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_bookmarkThisPage,
+#menu_bookmarkAllTabs {
+  --menuitem-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+/* leptonChrome.css:31010-31014 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_bookmarkThisPage[data-l10n-id="menu-bookmark-edit"] {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:31015-31019 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_searchBookmarks {
+  --menuitem-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:31020-31024 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_manageProfiles {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:31025-31029 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_openDownloads {
+  --menuitem-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+/* leptonChrome.css:31030-31034 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_openAddons {
+  --menuitem-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
+/* leptonChrome.css:31035-31039 — extra conditions dropped: userChrome.icon.global_menu */
+#sync-setup {
+  --menuitem-image: url("chrome://browser/skin/fxa/avatar-empty.svg");
+}
+
+/* leptonChrome.css:31040-31044 — extra conditions dropped: userChrome.icon.global_menu */
+#sync-syncnowitem {
+  --menuitem-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* leptonChrome.css:31045-31049 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_openFirefoxView {
+  --menuitem-image: url("../icons/firefox-view.svg");
+}
+
+/* leptonChrome.css:31050-31055 — extra conditions dropped: userChrome.icon.global_menu */
+#webDeveloperMenu,
+#browserToolsMenu {
+  --menuitem-image: url("../icons/developer.svg");
+}
+
+/* leptonChrome.css:31056-31060 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_pageInfo {
+  --menuitem-image: url("../icons/document-endnote.svg");
+}
+
+/* leptonChrome.css:31061-31066 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_devToolbox {
+  /* checkbox */
+  --menuitem-image: url("../icons/developer.svg");
+}
+
+/* leptonChrome.css:31067-31071 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_taskManager {
+  --menuitem-image: url("../icons/performance.svg");
+}
+
+/* leptonChrome.css:31072-31076 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_devtools_remotedebugging {
+  --menuitem-image: url("../icons/bug.svg");
+}
+
+/* leptonChrome.css:31077-31081 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_browserToolbox {
+  --menuitem-image: url("../icons/window-dev-tools.svg");
+}
+
+/* leptonChrome.css:31082-31086 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_browserContentToolbox {
+  --menuitem-image: url("../icons/command-frames.svg");
+}
+
+/* leptonChrome.css:31087-31091 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_browserConsole {
+  --menuitem-image: url("../icons/command-console.svg");
+}
+
+/* leptonChrome.css:31092-31097 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_responsiveUI {
+  /* checkbox */
+  --menuitem-image: url("../icons/command-responsivemode.svg");
+}
+
+/* leptonChrome.css:31098-31103 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_eyedropper {
+  /* checkbox */
+  --menuitem-image: url("../icons/command-eyedropper.svg");
+}
+
+/* leptonChrome.css:31104-31108 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_pageSource {
+  --menuitem-image: url("../icons/document-search.svg");
+}
+
+/* leptonChrome.css:31109-31113 — extra conditions dropped: userChrome.icon.global_menu */
+#extensionsForDevelopers {
+  --menuitem-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
+/* leptonChrome.css:31114-31121 — extra conditions dropped: userChrome.icon.global_menu */
+#windowPopup > menuitem[command="minimizeWindow"] {
+  --menuitem-image: url("../icons/arrow-between-down.svg");
+}
+#windowPopup > menuitem[command="zoomWindow"] {
+  --menuitem-image: url("../icons/auto-fit-width.svg");
+}
+
+/* leptonChrome.css:31122-31126 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_openHelp {
+  --menuitem-image: url("chrome://global/skin/icons/help.svg");
+}
+
+/* leptonChrome.css:31127-31131 — extra conditions dropped: userChrome.icon.global_menu */
+#help_reportBrokenSite {
+  --menuitem-image: url("chrome://global/skin/icons/lightbulb.svg");
+}
+
+/* leptonChrome.css:31132-31136 — extra conditions dropped: userChrome.icon.global_menu */
+#feedbackPage {
+  --menuitem-image: url("../icons/send.svg");
+}
+
+/* leptonChrome.css:31137-31141 — extra conditions dropped: userChrome.icon.global_menu */
+#helpSafeMode {
+  --menuitem-image: url("chrome://devtools/skin/images/debugging-workers.svg");
+}
+
+/* leptonChrome.css:31142-31146 — extra conditions dropped: userChrome.icon.global_menu */
+#troubleShooting {
+  --menuitem-image: url("chrome://global/skin/icons/more.svg");
+}
+
+/* leptonChrome.css:31147-31151 — extra conditions dropped: userChrome.icon.global_menu */
+#help_reportSiteIssue {
+  --menuitem-image: url("chrome://global/skin/icons/lightbulb.svg");
+}
+
+/* leptonChrome.css:31152-31156 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_HelpPopup_reportPhishingtoolmenu {
+  --menuitem-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+/* leptonChrome.css:31157-31161 — extra conditions dropped: userChrome.icon.global_menu */
+#menu_HelpPopup_reportPhishingErrortoolmenu {
+  --menuitem-image: url("../icons/checkmark-circle.svg");
+}
+
+/* leptonChrome.css:31162-31166 — extra conditions dropped: userChrome.icon.global_menu */
+#helpSwitchDevice {
+  --menuitem-image: url("../icons/add-device.svg");
+}
+
+/* leptonChrome.css:31167-31171 — extra conditions dropped: userChrome.icon.global_menu */
+#aboutName {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:31172-31188 — extra conditions dropped: userChrome.icon.library */
+/*= organizeButtonPopup ======================================================*/
+#newbookmark {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+#newfolder {
+  --menuitem-image: var(--uc-folder-icon);
+}
+#newseparator {
+  --menuitem-image: url("../icons/vertical-line.svg");
+}
+#orgUndo {
+  --menuitem-image: url("../icons/undo.svg");
+}
+/*= viewMenuPopup ============================================================*/
+/*= maintenanceButtonPopup ===================================================*/
+
+/* leptonChrome.css:31194-31198 — extra conditions dropped: userChrome.icon.library */
+#orgCut {
+  --menuitem-image: url("../icons/edit-cut.svg");
+}
+
+/* leptonChrome.css:31199-31203 — extra conditions dropped: userChrome.icon.library */
+#orgCopy {
+  --menuitem-image: url("../icons/edit-copy.svg");
+}
+
+/* leptonChrome.css:31204-31208 — extra conditions dropped: userChrome.icon.library */
+#orgPaste {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}
+
+/* leptonChrome.css:31209-31213 — extra conditions dropped: userChrome.icon.library */
+#orgDelete {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:31214-31218 — extra conditions dropped: userChrome.icon.library */
+#orgSelectAll {
+  --menuitem-image: url("../icons/select-all-on.svg");
+}
+
+/* leptonChrome.css:31219-31223 — extra conditions dropped: userChrome.icon.library */
+#orgClose {
+  --menuitem-image: url("chrome://global/skin/icons/close.svg");
+}
+
+/* leptonChrome.css:31224-31228 — extra conditions dropped: userChrome.icon.library */
+#viewColumns {
+  --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
+}
+
+/* leptonChrome.css:31229-31233 — extra conditions dropped: userChrome.icon.library */
+#viewSort {
+  --menuitem-image: url("../icons/text-sort-ascending.svg");
+}
+
+/* leptonChrome.css:31234-31238 — extra conditions dropped: userChrome.icon.library */
+#backupBookmarks {
+  --menuitem-image: url("../icons/datastore.svg");
+}
+
+/* leptonChrome.css:31244-31248 — extra conditions dropped: userChrome.icon.library */
+#fileImport {
+  --menuitem-image: url("../icons/toolbarButton-download.svg");
+}
+
+/* leptonChrome.css:31249-31253 — extra conditions dropped: userChrome.icon.library */
+#fileExport {
+  --menuitem-image: url("../icons/toolbarButton-upload.svg");
+}
+
+/* leptonChrome.css:31254-31258 — extra conditions dropped: userChrome.icon.library */
+#browserImport {
+  --menuitem-image: url("chrome://browser/skin/import.svg");
+}
+
+/* leptonChrome.css:31288-31301 */
+#menu_FileRestartItem {
+  --menuitem-image: url("../icons/refresh-cw.svg");
+}
+#toggle_status-dummybar {
+  --menuitem-image: url("../icons/pulse-square.svg");
+}
+menuitem.privatetab-icon {
+  --menuitem-image: url("../icons/private-favicon.svg");
+}
+#sidebar_waterfox_net-menuitem-_openAllBookmarksWithStructure {
+  --menuitem-image: url("../icons/organization-horizontal.svg");
+}
+
+/* leptonChrome.css:31313-31323 */
+#menu_newIdentity {
+  --menuitem-image: url("chrome://browser/skin/new_identity.svg");
+}
+#menu_newCircuit {
+  --menuitem-image: url("chrome://browser/skin/new_circuit.svg");
+}
+#torBrowserUserManual {
+  --menuitem-image: url("chrome://browser/skin/onion.svg");
+}
+
+/* leptonChrome.css:31349-31401 */
+#toggle_sharemode {
+  --menuitem-image: url("chrome://branding/content/about-logo-private.png");
+}
+#usercssloader-menu {
+  --menuitem-image: url("../icons/developer.svg");
+}
+#usercssloader-menupopup > menu[data-l10n-id="css-menu"] {
+  --menuitem-image: url("../icons/document-css.svg");
+}
+#usercssloader-submenupopup > menuitem[data-l10n-id="rebuild-css"] {
+  --menuitem-image: url("chrome://global/skin/icons/reload.svg");
+}
+#usercssloader-submenupopup > menuitem[data-l10n-id="make-browsercss-file"] {
+  --menuitem-image: url("../icons/edit-active.svg");
+}
+#usercssloader-submenupopup > menuitem[data-l10n-id="open-css-folder"] {
+  --menuitem-image: var(--uc-folder-icon);
+}
+#usercssloader-submenupopup > menuitem[data-l10n-id="edit-userChromeCss-editor"] {
+  --menuitem-image: url("chrome://browser/skin/window.svg");
+}
+#usercssloader-submenupopup > menuitem[data-l10n-id="edit-userContentCss-editor"] {
+  --menuitem-image: url("chrome://global/skin/icons/page-portrait.svg");
+}
+#context_toggleToPrivateContainer,
+#open_in_private_container {
+  --menuitem-image: url("../icons/private-favicon.svg");
+}
+#toggle_statusBar {
+  --menuitem-image: url("../icons/pulse-square.svg");
+}
+#muteMenu {
+  --menuitem-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
+  stroke: transparent !important;
+}
+#unloadWebpanelMenu {
+  --menuitem-image: var(--uc-tab-unload-icon);
+}
+#changeUAWebpanelMenu {
+  --menuitem-image: url("../icons/command-responsivemode.svg");
+  fill-opacity: 0;
+}
+#deleteWebpanelMenu {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+#run-ssb-contextmenu {
+  --menuitem-image: url("../icons/pwa-launch.svg");
+}
+#uninstall-ssb-contextmenu {
+  --menuitem-image: url("../icons/pwa-remove.svg");
+}

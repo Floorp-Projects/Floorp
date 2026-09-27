@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Dit verandert alleen de weergave op de Windows-taakbalk. Het maakt geen extra browservensters aan.",
             "taskbarPreviewsUnavailable": "Deze optie is uitsluitend beschikbaar voor Windows."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton Instellingen",
             "description": "Geavanceerde Lepton-thema-instellingen configureren",
-            "configureLepton": "Lepton configureren",
             "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimentele functies",
-                "description": "Deze instellingen zijn experimenteel en worden niet officieel ondersteund. Er kunnen problemen optreden.",
-                "leptonRepository": "Lepton is een css thema voor Firefox.",
-                "visitRepository": "Repositorypagina bezoeken"
+                "description": "Deze instellingen zijn experimenteel en worden niet officieel ondersteund. Er kunnen problemen optreden."
             },
             "autohide": {
                 "title": "Instellingen automatisch verbergen",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Zijbalk instellingen",
                 "overlap": "Zijbalk over website-inhoud tonen"
-            }
+            },
+            "configure": "Configure Lepton"
         },
         "tabSleepExclusion": {
             "title": "Tabbladslaapstand-uitzonderingen",

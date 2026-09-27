@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Isso altera apenas a exibição da barra de tarefas do Windows. Não cria janelas adicionais do navegador.",
             "taskbarPreviewsUnavailable": "Essa opção está disponível apenas no Windows."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Configurações do Lepton",
             "description": "Configurar as preferências avançadas do tema Lepton",
-            "configureLepton": "Configurar o Lepton",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Recursos experimentais",
-                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas.",
-                "leptonRepository": "O Lepton é um tema CSS para o Firefox.",
-                "visitRepository": "Visitar a página do repositório"
+                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas."
             },
             "autohide": {
                 "title": "Ocultar configurações automaticamente",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Configurações da barra lateral",
                 "overlap": "Mostrar barra lateral sobre o conteúdo do site"
-            }
+            },
+            "configure": "Configurar o Lepton"
         },
         "tabSleepExclusion": {
             "title": "Exclusão do modo de inatividade",

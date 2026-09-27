@@ -20,9 +20,12 @@
  *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases,
  *      palette restoration, and native-sidebar positioning compatibility.
  *      Applied only to the `lepton` / `photon` / `protonfix` designs.
- *   3. `FLOORP_ICON_PATCHES` — Floorp-only icon rules extracted from the
- *      vendored leptonChrome.css so the daily upstream sync cannot delete
- *      them. Lepton-family only (the IDs are Lepton-scoped).
+ *
+ * The Floorp-only icon rules that used to live here as `FLOORP_ICON_PATCHES`
+ * moved to the chrome-extras stylesheets
+ * (`ui-custom/styles/css/options/chrome-extras/{icon-disabled,icon-menu}.css`),
+ * which are design-agnostic and driven by the `uiCustomization.chromeExtras`
+ * settings instead of Lepton prefs. See `designs/chrome-extras.ts`.
  *
  * ## Design rule: never clobber a theme-provided value
  *
@@ -251,108 +254,11 @@ export const LEPTON_COMPAT_152_CSS = `
 `;
 
 /**
- * Floorp-specific icon rules extracted from
- * `skin/lepton/css/leptonChrome.css` lines 14596–14672.
+ * Combined Lepton-family stylesheet: color fix + Lepton-specific compat.
+ * Injected after Lepton's own sheets.
  *
- * Upstream Lepton does not know about these Floorp-only element IDs
- * (PWA/SSB, UserCSSLoader, webpanel, share mode, etc.). They were living
- * inside the vendored file, which means the daily `update_lepton.yml`
- * workflow would silently delete them whenever upstream restructured that
- * region. Hosting them here makes them independent of upstream syncs.
- *
- * The rules are duplicated verbatim from the vendored source (same `url()`
- * references resolve identically because this sheet is injected into the
- * same document and the relative `../icons` path is rewritten by
- * `replaceIconPaths()` at registration time). Duplicating intentionally
- * rather than deleting the vendored copy: the vendored copy disappears on
- * the next upstream sync, at which point this becomes the single source.
+ * The Floorp icon patches that used to be appended here now live in the
+ * design-agnostic chrome-extras stylesheets.
  */
-export const FLOORP_ICON_PATCHES = `
-/*= Floorp Browser (icon patches, extracted from leptonChrome.css) ==========*/
-#ssbPageAction-image {
-  list-style-image: url("../icons/pwa-install.svg");
-}
-#ssbPageAction-image[open-ssb="true"] {
-  list-style-image: url("../icons/pwa-launch.svg");
-}
-@media -moz-pref("userChrome.icon.panel") {
-  #rebootappmenu {
-    list-style-image: url("../icons/refresh-cw.svg");
-  }
-  #openprofiledir {
-    list-style-image: var(--uc-folder-icon);
-  }
-  #appMenu-ssb-button {
-    list-style-image: url("../icons/pwa-manage.svg");
-  }
-  #appMenu-install-or-open-ssb-current-page-button {
-    list-style-image: url("../icons/pwa-install.svg");
-  }
-  #appMenu-install-or-open-ssb-current-page-button[open-ssb="true"] {
-    list-style-image: url("../icons/pwa-launch.svg");
-  }
-}
-@media -moz-pref("userChrome.icon.menu") {
-  #toggle_sharemode {
-    --menuitem-image: url("chrome://branding/content/about-logo-private.png");
-  }
-  #usercssloader-menu {
-    --menuitem-image: url("../icons/developer.svg");
-  }
-  #usercssloader-menupopup > menu[data-l10n-id="css-menu"] {
-    --menuitem-image: url("../icons/document-css.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="rebuild-css"] {
-    --menuitem-image: url("chrome://global/skin/icons/reload.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="make-browsercss-file"] {
-    --menuitem-image: url("../icons/edit-active.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="open-css-folder"] {
-    --menuitem-image: var(--uc-folder-icon);
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userChromeCss-editor"] {
-    --menuitem-image: url("chrome://browser/skin/window.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userContentCss-editor"] {
-    --menuitem-image: url("chrome://global/skin/icons/page-portrait.svg");
-  }
-  #context_toggleToPrivateContainer,
-  #open_in_private_container {
-    --menuitem-image: url("../icons/private-favicon.svg");
-  }
-  #toggle_statusBar {
-    --menuitem-image: url("../icons/pulse-square.svg");
-  }
-  #muteMenu {
-    --menuitem-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
-    stroke: transparent !important;
-  }
-  #unloadWebpanelMenu {
-    --menuitem-image: var(--uc-tab-unload-icon);
-  }
-  #changeUAWebpanelMenu {
-    --menuitem-image: url("../icons/command-responsivemode.svg");
-    fill-opacity: 0;
-  }
-  #deleteWebpanelMenu {
-    --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-  }
-  #run-ssb-contextmenu {
-    --menuitem-image: url("../icons/pwa-launch.svg");
-  }
-  #uninstall-ssb-contextmenu {
-    --menuitem-image: url("../icons/pwa-remove.svg");
-  }
-}
-`;
-
-/**
- * Combined Lepton-family stylesheet: color fix + Lepton-specific compat +
- * Floorp icon patches. Injected after Lepton's own sheets.
- */
-export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS +
-  "\n" +
-  LEPTON_COMPAT_152_CSS +
-  "\n" +
-  FLOORP_ICON_PATCHES;
+export const LEPTON_COMPAT_CSS =
+  GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS;

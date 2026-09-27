@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "이 설정은 Windows 작업 표시줄의 표시 방식만 변경합니다. 별도의 브라우저 창을 더 만들지는 않습니다.",
             "taskbarPreviewsUnavailable": "이 설정은 Windows에서만 이용할 수 있습니다."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton 설정",
             "description": "고급 Lepton 테마 환경 설정 구성",
-            "configureLepton": "Lepton 구성",
             "back": "뒤로 가기",
             "experimentalWarning": {
                 "title": "⚠️ 실험 기능",
-                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다.",
-                "leptonRepository": "Lepton은 Firefox용 CSS 테마입니다.",
-                "visitRepository": "리포지토리 페이지 방문"
+                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다."
             },
             "autohide": {
                 "title": "자동 숨기기 설정",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "사이드바 설정",
                 "overlap": "웹사이트 콘텐츠 위에 사이드바 표시"
-            }
+            },
+            "configure": "Lepton 구성"
         },
         "tabSleepExclusion": {
             "title": "탭 절전 제외",

@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton Settings",
             "description": "Configure advanced Lepton theme preferences",
-            "configureLepton": "Configure Lepton",
             "back": "Back",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "These settings are experimental and not officially supported. Issues may occur."
             },
             "autohide": {
                 "title": "Auto-hide Settings",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Mostra la Barra Laterale sul contenuto del sito web"
-            }
+            },
+            "configure": "Configure Lepton"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",

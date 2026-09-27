@@ -123,32 +123,27 @@ export default function Page() {
     });
   }, [cloneDesignSettings, hasLoadedDefaults, watchAll, retry]);
 
-  const leptonSettingsButton = (
-    <div className={styles.lepton}>
+  const chromeExtrasSettingsButton = (
+    <div className={styles.chromeExtras}>
       <div className={styles.row}>
         <div>
           <h3 className="font-medium mb-1">
-            {t("design.lepton-preferences.title")}
+            {t("design.chrome-extras.title")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {t("design.lepton-preferences.description")}
+            {t("design.chrome-extras.description")}
           </p>
         </div>
         <Button
           type="button"
-          onClick={() => navigate("/features/design/lepton")}
+          onClick={() => navigate("/features/design/chrome-extras")}
           variant="secondary"
         >
-          {t("design.lepton-preferences.configureLepton")}
+          {t("design.chrome-extras.configure")}
         </Button>
       </div>
     </div>
   );
-
-  // Check if current design supports Lepton settings
-  const isLeptonCompatible = watchAll &&
-    watchAll.design &&
-    ["protonfix", "photon", "lepton"].includes(watchAll.design);
 
   return (
     <div className={`floorp-settings-page ${styles.page}`}>
@@ -189,7 +184,7 @@ export default function Page() {
             className={styles.sections}
           >
             <Interface />
-            {isLeptonCompatible && leptonSettingsButton}
+            {chromeExtrasSettingsButton}
             <Tabbar />
             <Tab />
             <TabWindowBehavior />

@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Ini hanya mengubah tampilan bilah tugas Windows. Ini tidak membuat jendela peramban baru.",
             "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Pengaturan Lepton",
             "description": "Atur preferensi lanjutan tema Lepton",
-            "configureLepton": "Atur Lepton",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
-                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi.",
-                "leptonRepository": "Lepton adalah tema CSS untuk Firefox.",
-                "visitRepository": "Kunjungi Halaman Repositori"
+                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi."
             },
             "autohide": {
                 "title": "Sembunyikan Pengaturan Otomatis",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            }
+            },
+            "configure": "Atur Lepton"
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",

@@ -10,7 +10,6 @@ import { Switch } from "@/components/common/switch.tsx";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
-  ExternalLink,
   Eye,
   EyeOff,
   LayoutGrid,
@@ -18,70 +17,47 @@ import {
   Settings,
   Sidebar,
 } from "lucide-react";
+import { getChromeExtras, saveChromeExtras } from "../dataManager.ts";
 import {
-  getLeptonSettings,
-  type LeptonFormData,
-  saveLeptonSettings,
-} from "../dataManager.ts";
+  CHROME_EXTRAS_DEFAULTS,
+  type ChromeExtrasKey,
+  type ChromeExtrasSettings,
+} from "#features-chrome/common/designs/chrome-extras.ts";
 
-interface LeptonSettingsProps {
+interface ChromeExtrasSettingsProps {
   onClose?: () => void;
 }
 
-export function LeptonSettings({ onClose }: LeptonSettingsProps) {
+export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<LeptonFormData>({
-    autohideTab: false,
-    autohideNavbar: false,
-    autohideSidebar: false,
-    autohideBackButton: false,
-    autohideForwardButton: false,
-    autohidePageAction: false,
-    hiddenTabIcon: false,
-    hiddenTabbar: false,
-    hiddenNavbar: false,
-    hiddenSidebarHeader: false,
-    hiddenUrlbarIconbox: false,
-    hiddenBookmarkbarIcon: false,
-    hiddenBookmarkbarLabel: false,
-    hiddenDisabledMenu: false,
-    iconDisabled: false,
-    iconMenu: false,
-    centeredTab: false,
-    centeredUrlbar: false,
-    centeredBookmarkbar: false,
-    urlViewMoveIconToLeft: false,
-    urlViewGoButtonWhenTyping: false,
-    urlViewAlwaysShowPageActions: false,
-    tabbarAsTitlebar: false,
-    tabbarOneLiner: false,
-    sidebarOverlap: false,
-  });
+  const [settings, setSettings] = useState<ChromeExtrasSettings>(
+    CHROME_EXTRAS_DEFAULTS,
+  );
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const leptonSettings = await getLeptonSettings();
-        setSettings(leptonSettings);
+        const chromeExtras = await getChromeExtras();
+        setSettings(chromeExtras);
       } catch (error) {
-        console.error("Failed to load Lepton settings:", error);
+        console.error("[ChromeExtras] Failed to load settings:", error);
       }
     };
     loadSettings();
   }, []);
 
   const handleSettingChange = async (
-    key: keyof LeptonFormData,
+    key: ChromeExtrasKey,
     value: boolean,
   ) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
 
     try {
-      await saveLeptonSettings(newSettings);
+      await saveChromeExtras(newSettings);
     } catch (error) {
-      console.error("Failed to save Lepton settings:", error);
+      console.error("[ChromeExtras] Failed to save settings:", error);
     }
   };
 
@@ -90,10 +66,10 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
       <div className="flex items-center justify-between">
         <div className="flex flex-col items-start">
           <h1 className="text-3xl font-bold mb-2">
-            {t("design.lepton-preferences.title")}
+            {t("design.chrome-extras.title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t("design.lepton-preferences.description")}
+            {t("design.chrome-extras.description")}
           </p>
         </div>
         <Button
@@ -101,7 +77,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           type="button"
           variant="primary"
         >
-          {t("design.lepton-preferences.back")}
+          {t("design.chrome-extras.back")}
         </Button>
       </div>
 
@@ -109,29 +85,11 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
         <div className="flex flex-col space-y-3">
           <h2 className="text-base font-semibold text-yellow-800 dark:text-yellow-200">
-            {t("design.lepton-preferences.experimentalWarning.title")}
+            {t("design.chrome-extras.experimentalWarning.title")}
           </h2>
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
-            {t("design.lepton-preferences.experimentalWarning.description")}
+            {t("design.chrome-extras.experimentalWarning.description")}
           </p>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              {t(
-                "design.lepton-preferences.experimentalWarning.leptonRepository",
-              )}
-              :
-            </span>
-            <a
-              href="https://github.com/black7375/Firefox-UI-Fix"
-              target="_blank"
-              className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-            >
-              {t(
-                "design.lepton-preferences.experimentalWarning.visitRepository",
-              )}
-              <ExternalLink className="size-4" />
-            </a>
-          </div>
         </div>
       </div>
 
@@ -141,13 +99,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <EyeOff className="size-5" />
-              {t("design.lepton-preferences.autohide.title")}
+              {t("design.chrome-extras.autohide.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-tab">
-                {t("design.lepton-preferences.autohide.tab")}
+                {t("design.chrome-extras.autohide.tab")}
               </label>
               <Switch
                 id="autohide-tab"
@@ -158,7 +116,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-navbar">
-                {t("design.lepton-preferences.autohide.navbar")}
+                {t("design.chrome-extras.autohide.navbar")}
               </label>
               <Switch
                 id="autohide-navbar"
@@ -169,7 +127,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-sidebar">
-                {t("design.lepton-preferences.autohide.sidebar")}
+                {t("design.chrome-extras.autohide.sidebar")}
               </label>
               <Switch
                 id="autohide-sidebar"
@@ -180,7 +138,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-back-button">
-                {t("design.lepton-preferences.autohide.backButton")}
+                {t("design.chrome-extras.autohide.backButton")}
               </label>
               <Switch
                 id="autohide-back-button"
@@ -191,7 +149,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-forward-button">
-                {t("design.lepton-preferences.autohide.forwardButton")}
+                {t("design.chrome-extras.autohide.forwardButton")}
               </label>
               <Switch
                 id="autohide-forward-button"
@@ -205,7 +163,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-page-action">
-                {t("design.lepton-preferences.autohide.pageAction")}
+                {t("design.chrome-extras.autohide.pageAction")}
               </label>
               <Switch
                 id="autohide-page-action"
@@ -222,13 +180,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Eye className="size-5" />
-              {t("design.lepton-preferences.hidden.title")}
+              {t("design.chrome-extras.hidden.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-tab-icon">
-                {t("design.lepton-preferences.hidden.tabIcon")}
+                {t("design.chrome-extras.hidden.tabIcon")}
               </label>
               <Switch
                 id="hidden-tab-icon"
@@ -239,7 +197,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-tabbar">
-                {t("design.lepton-preferences.hidden.tabbar")}
+                {t("design.chrome-extras.hidden.tabbar")}
               </label>
               <Switch
                 id="hidden-tabbar"
@@ -250,7 +208,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-navbar">
-                {t("design.lepton-preferences.hidden.navbar")}
+                {t("design.chrome-extras.hidden.navbar")}
               </label>
               <Switch
                 id="hidden-navbar"
@@ -261,7 +219,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-sidebar-header">
-                {t("design.lepton-preferences.hidden.sidebarHeader")}
+                {t("design.chrome-extras.hidden.sidebarHeader")}
               </label>
               <Switch
                 id="hidden-sidebar-header"
@@ -272,7 +230,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-urlbar-iconbox">
-                {t("design.lepton-preferences.hidden.urlbarIconbox")}
+                {t("design.chrome-extras.hidden.urlbarIconbox")}
               </label>
               <Switch
                 id="hidden-urlbar-iconbox"
@@ -283,7 +241,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-bookmarkbar-icon">
-                {t("design.lepton-preferences.hidden.bookmarkbarIcon")}
+                {t("design.chrome-extras.hidden.bookmarkbarIcon")}
               </label>
               <Switch
                 id="hidden-bookmarkbar-icon"
@@ -297,7 +255,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-bookmarkbar-label">
-                {t("design.lepton-preferences.hidden.bookmarkbarLabel")}
+                {t("design.chrome-extras.hidden.bookmarkbarLabel")}
               </label>
               <Switch
                 id="hidden-bookmarkbar-label"
@@ -310,7 +268,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-disabled-menu">
-                {t("design.lepton-preferences.hidden.disabledMenu")}
+                {t("design.chrome-extras.hidden.disabledMenu")}
               </label>
               <Switch
                 id="hidden-disabled-menu"
@@ -327,13 +285,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="size-5" />
-              {t("design.lepton-preferences.icon.title")}
+              {t("design.chrome-extras.icon.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="icon-disabled">
-                {t("design.lepton-preferences.icon.disabled")}
+                {t("design.chrome-extras.icon.disabled")}
               </label>
               <Switch
                 id="icon-disabled"
@@ -344,7 +302,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="icon-menu">
-                {t("design.lepton-preferences.icon.menu")}
+                {t("design.chrome-extras.icon.menu")}
               </label>
               <Switch
                 id="icon-menu"
@@ -361,13 +319,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Navigation className="size-5" />
-              {t("design.lepton-preferences.centered.title")}
+              {t("design.chrome-extras.centered.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="centered-tab">
-                {t("design.lepton-preferences.centered.tab")}
+                {t("design.chrome-extras.centered.tab")}
               </label>
               <Switch
                 id="centered-tab"
@@ -378,7 +336,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="centered-urlbar">
-                {t("design.lepton-preferences.centered.urlbar")}
+                {t("design.chrome-extras.centered.urlbar")}
               </label>
               <Switch
                 id="centered-urlbar"
@@ -389,7 +347,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="centered-bookmarkbar">
-                {t("design.lepton-preferences.centered.bookmarkbar")}
+                {t("design.chrome-extras.centered.bookmarkbar")}
               </label>
               <Switch
                 id="centered-bookmarkbar"
@@ -406,13 +364,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Navigation className="size-5" />
-              {t("design.lepton-preferences.urlView.title")}
+              {t("design.chrome-extras.urlView.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="url-view-move-icon-to-left">
-                {t("design.lepton-preferences.urlView.moveIconToLeft")}
+                {t("design.chrome-extras.urlView.moveIconToLeft")}
               </label>
               <Switch
                 id="url-view-move-icon-to-left"
@@ -426,7 +384,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="url-view-go-button-when-typing">
-                {t("design.lepton-preferences.urlView.goButtonWhenTyping")}
+                {t("design.chrome-extras.urlView.goButtonWhenTyping")}
               </label>
               <Switch
                 id="url-view-go-button-when-typing"
@@ -439,7 +397,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="url-view-always-show-page-actions">
-                {t("design.lepton-preferences.urlView.alwaysShowPageActions")}
+                {t("design.chrome-extras.urlView.alwaysShowPageActions")}
               </label>
               <Switch
                 id="url-view-always-show-page-actions"
@@ -458,13 +416,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <LayoutGrid className="size-5" />
-              {t("design.lepton-preferences.tabbar.title")}
+              {t("design.chrome-extras.tabbar.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="tabbar-as-titlebar">
-                {t("design.lepton-preferences.tabbar.asTitlebar")}
+                {t("design.chrome-extras.tabbar.asTitlebar")}
               </label>
               <Switch
                 id="tabbar-as-titlebar"
@@ -475,7 +433,7 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
             </div>
             <div className="flex items-center justify-between">
               <label htmlFor="tabbar-one-liner">
-                {t("design.lepton-preferences.tabbar.oneLiner")}
+                {t("design.chrome-extras.tabbar.oneLiner")}
               </label>
               <Switch
                 id="tabbar-one-liner"
@@ -492,13 +450,13 @@ export function LeptonSettings({ onClose }: LeptonSettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sidebar className="size-5" />
-              {t("design.lepton-preferences.sidebar.title")}
+              {t("design.chrome-extras.sidebar.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="sidebar-overlap">
-                {t("design.lepton-preferences.sidebar.overlap")}
+                {t("design.chrome-extras.sidebar.overlap")}
               </label>
               <Switch
                 id="sidebar-overlap"

@@ -25,9 +25,9 @@ const MouseGesture = lazy(() => import("@/app/gesture/page.tsx"));
 const KeyboardShortcut = lazy(() => import("@/app/keyboard-shortcut/page.tsx"));
 const Updates = lazy(() => import("@/app/updates/page.tsx"));
 const Performance = lazy(() => import("@/app/performance/page.tsx"));
-const LeptonSettings = lazy(() =>
-  import("@/app/design/components/LeptonSettings.tsx").then((module) => ({
-    default: module.LeptonSettings,
+const ChromeExtrasSettings = lazy(() =>
+  import("@/app/design/components/ChromeExtrasSettings.tsx").then((module) => ({
+    default: module.ChromeExtrasSettings,
   }))
 );
 const SearchPage = lazy(() => import("@/app/search/page.tsx"));
@@ -73,8 +73,14 @@ export default function App() {
                   <Route path="/overview/home" element={<Dashboard />} />
                   <Route path="/features/design" element={<Design />} />
                   <Route
+                    path="/features/design/chrome-extras"
+                    element={<ChromeExtrasSettings />}
+                  />
+                  <Route
                     path="/features/design/lepton"
-                    element={<LeptonSettings />}
+                    element={
+                      <Navigate to="/features/design/chrome-extras" replace />
+                    }
                   />
                   <Route path="/features/sidebar" element={<PanelSidebar />} />
                   <Route path="/features/workspaces" element={<Workspaces />} />

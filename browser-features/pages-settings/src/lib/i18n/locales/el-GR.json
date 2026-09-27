@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Ρυθμίσεις Lepton",
             "description": "Ρύθμιση των προηγμένων προτιμήσεων του θέματος Lepton",
-            "configureLepton": "Διαμόρφωση του Lepton",
             "back": "Πίσω",
             "experimentalWarning": {
                 "title": "⚠️ Πειραματικά χαρακτηριστικά",
-                "description": "Αυτές οι ρυθμίσεις είναι πειραματικές και δεν υποστηρίζονται επίσημα. Ενδέχεται να προκύψουν προβλήματα.",
-                "leptonRepository": "Το Lepton είναι ένα θέμα css για τον Firefox.",
-                "visitRepository": "Επισκεφθείτε τη σελίδα αποθετηρίου"
+                "description": "Αυτές οι ρυθμίσεις είναι πειραματικές και δεν υποστηρίζονται επίσημα. Ενδέχεται να προκύψουν προβλήματα."
             },
             "autohide": {
                 "title": "Ρυθμίσεις αυτόματης απόκρυψης",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Ρυθμίσεις πλευρικής γραμμής",
                 "overlap": "Εμφάνιση πλευρικής μπάρας πάνω από το περιεχόμενο του ιστότοπου"
-            }
+            },
+            "configure": "Διαμόρφωση του Lepton"
         },
         "tabSleepExclusion": {
             "title": "Εξαίρεση καρτέλας από αναστολή",
