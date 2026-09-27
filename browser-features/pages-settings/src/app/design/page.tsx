@@ -81,34 +81,31 @@ export default function Page() {
     });
   }, [cloneDesignSettings, hasLoadedDefaults, watchAll]);
 
-  const LeptonSettingsButton = () => {
+  // The chrome-extras toggles are design-agnostic since they were moved off the
+  // vendored Lepton stylesheet, so the entry point is shown for every design.
+  const ChromeExtrasSettingsButton = () => {
     return (
       <div className="bg-muted/50 p-4 rounded-lg">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium mb-1">
-              {t("design.lepton-preferences.title")}
+              {t("design.chrome-extras.title")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t("design.lepton-preferences.description")}
+              {t("design.chrome-extras.description")}
             </p>
           </div>
           <button
             type="button"
-            onClick={() => navigate("/features/design/lepton")}
+            onClick={() => navigate("/features/design/chrome-extras")}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/80"
           >
-            {t("design.lepton-preferences.configureLepton")}
+            {t("design.chrome-extras.configure")}
           </button>
         </div>
       </div>
     );
   };
-
-  // Check if current design supports Lepton settings
-  const isLeptonCompatible = watchAll &&
-    watchAll.design &&
-    ["protonfix", "photon", "lepton"].includes(watchAll.design);
 
   return (
     <div className="p-6 space-y-3">
@@ -124,7 +121,7 @@ export default function Page() {
       <FormProvider {...methods}>
         <form className="space-y-3 pl-6">
           <Interface />
-          {isLeptonCompatible && <LeptonSettingsButton />}
+          <ChromeExtrasSettingsButton />
           <Tabbar />
           <Tab />
           <TabWindowBehavior />

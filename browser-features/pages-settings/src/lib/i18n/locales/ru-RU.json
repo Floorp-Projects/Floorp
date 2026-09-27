@@ -130,16 +130,14 @@
             "minHeight": "Минимальная высота вкладки",
             "minHeightError": "Высота вкладки должна быть от {{min}} до {{max}} пикселей."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Настройки Lepton",
             "description": "Настройка дополнительных параметров темы Lepton",
-            "configureLepton": "Настройка Lepton",
+            "configure": "Настройка Lepton",
             "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Экспериментальные функции",
-                "description": "Эти настройки являются экспериментальными и официально не поддерживаются. Могут возникнуть проблемы.",
-                "leptonRepository": "Lepton — это css тема для Firefox.",
-                "visitRepository": "Открыть страницу репозитория"
+                "description": "Эти настройки являются экспериментальными и официально не поддерживаются. Могут возникнуть проблемы."
             },
             "autohide": {
                 "title": "Настройки автоскрытия",

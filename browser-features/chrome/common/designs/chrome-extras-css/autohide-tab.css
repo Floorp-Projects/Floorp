@@ -1,0 +1,34 @@
+/* Floorp chrome-extras: autohideTab
+ * Ported from vendored Lepton (leptonChrome.css 26140-26169, 3 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Only the `margin-bottom` behaviour is ported. The `autohide.tab.opacity`
+ *
+ * and `autohide.tab.blur` variants are separate Lepton prefs that Floorp
+ *
+ * does not expose.
+ */
+
+/* leptonChrome.css:26140-26144 */
+.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
+  margin-bottom: -64px;
+}
+
+/* leptonChrome.css:26155-26164 */
+.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
+  transition-timing-function: var(--animation-easing-function);
+  transition-duration: 0.2s;
+  transition-delay: 600ms;
+}
+.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]):is(:hover, :focus-within) {
+  transition-delay: 0s;
+}
+
+/* leptonChrome.css:26165-26169 */
+.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
+  transition-property: margin-bottom;
+}

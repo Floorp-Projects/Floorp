@@ -130,16 +130,14 @@
             "minHeight": "Altura mínima da aba",
             "minHeightError": "A altura da aba deve estar entre {{min}} e {{max}} pixels."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Configurações do Lepton",
             "description": "Configurar as preferências avançadas do tema Lepton",
-            "configureLepton": "Configurar o Lepton",
+            "configure": "Configurar o Lepton",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Recursos experimentais",
-                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas.",
-                "leptonRepository": "O Lepton é um tema CSS para o Firefox.",
-                "visitRepository": "Visitar a página do repositório"
+                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas."
             },
             "autohide": {
                 "title": "Ocultar configurações automaticamente",

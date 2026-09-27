@@ -130,16 +130,14 @@
             "minHeight": "最小标签宽度",
             "minHeightError": "标签高度必须在 {{min}} 和 {{max}} 像素之间。"
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton 设置",
             "description": "配置 Lepton 主题高级首选项",
-            "configureLepton": "配置 Lepton",
+            "configure": "配置 Lepton",
             "back": "后退",
             "experimentalWarning": {
                 "title": "⚠️ 实验功能",
-                "description": "这些设置是实验性的，不受官方支持，可能会出现问题。",
-                "leptonRepository": "Lepton 是一款适用于 Firefox 的 CSS 主题。",
-                "visitRepository": "访问仓库页面"
+                "description": "这些设置是实验性的，不受官方支持，可能会出现问题。"
             },
             "autohide": {
                 "title": "自动隐藏设置",

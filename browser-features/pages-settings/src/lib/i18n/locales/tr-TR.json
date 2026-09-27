@@ -130,16 +130,14 @@
             "minHeight": "Minimum sekme yüksekliği",
             "minHeightError": "Sekme yüksekliği {{min}} ile {{max}} piksel arasında olmalıdır."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton Ayarları",
             "description": "Gelişmiş Lepton tema tercihlerini yapılandırma",
-            "configureLepton": "Lepton'u Yapılandırma",
+            "configure": "Lepton'u Yapılandırma",
             "back": "Geri",
             "experimentalWarning": {
                 "title": "⚠️ Deneysel Özellikler",
-                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir.",
-                "leptonRepository": "Lepton, Firefox için bir css temasıdır.",
-                "visitRepository": "Depo Sayfasını Ziyaret Edin"
+                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir."
             },
             "autohide": {
                 "title": "Otomatik Gizleme Ayarları",

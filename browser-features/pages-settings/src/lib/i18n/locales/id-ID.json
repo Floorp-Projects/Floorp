@@ -130,16 +130,14 @@
             "minHeight": "Tinggi tab minimal",
             "minHeightError": "Tinggi tab harus di antara {{min}} dan {{max}} piksel."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Pengaturan Lepton",
             "description": "Atur preferensi lanjutan tema Lepton",
-            "configureLepton": "Atur Lepton",
+            "configure": "Atur Lepton",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
-                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi.",
-                "leptonRepository": "Lepton adalah tema CSS untuk Firefox.",
-                "visitRepository": "Kunjungi Halaman Repositori"
+                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi."
             },
             "autohide": {
                 "title": "Sembunyikan Pengaturan Otomatis",

@@ -1,0 +1,109 @@
+/* Floorp chrome-extras: scaffolding tokens
+ *
+ * Token-only sheet, always injected together with the chrome-extras styles.
+ * It defines nothing but `--uc-*` custom properties, so it is completely inert
+ * while no toggle that consumes them is enabled.
+ *
+ * The values are copied verbatim from vendored Lepton. That matters: when one of
+ * the Lepton-family designs is active, Lepton's own sheet defines the same names
+ * with the same values, and chrome-extras is injected after it. Keeping the
+ * values identical means a user switching between Lepton and another design sees
+ * no difference in the parts that overlap.
+ *
+ * Why these live here at all: Lepton defines them inside `@media
+ * (-moz-bool-pref: ...)` blocks, so they only exist while Lepton's CSS is
+ * loaded. Floorp needs them for the two sidebar toggles on every design.
+ *
+ * Source: browser-features/skin/lepton/css/leptonChrome.css
+ *   - `--uc-sidebar-*` / `--uc-autohide-sidebar-*` : lines 25156-25172
+ *   - `--uc-toolbarbutton-hide-size`              : lines 26067-26071
+ *   - `--uc-window-*`                             : lines 20291-20510
+ */
+
+:root {
+  /*= Sidebar ==================================================================
+   * Consumed by autohideSidebar and sidebarOverlap. */
+  /* Original: min-width 14em; width 18em; max-width 36em */
+  --uc-sidebar-width: 40px;
+  --uc-sidebar-activate-width: 18rem;
+  --uc-sidebar-activate-width-reverse: calc(
+    -1 * var(--uc-sidebar-activate-width)
+  );
+  --uc-sidebar-fullscreen-width: 4px;
+  --uc-sidebar-shadow-size: 1px;
+  --uc-sidebar-shadow-width: 0px;
+  --uc-sidebar-shadow-position: var(--uc-sidebar-shadow-position-default);
+  --uc-sidebar-shadow-position-default: calc(
+    var(--uc-sidebar-shadow-size) + var(--uc-sidebar-shadow-width)
+  );
+  --uc-sidebar-shadow-color: #28282f;
+  --uc-autohide-sidebar-speed: 750ms;
+  --uc-autohide-fullscreen-sidebar-speed: 1s;
+  --uc-autohide-sidebar-delay: 600ms; /* Wait 0.6s before hiding sidebar */
+
+  /*= Auto hide - back / forward button ========================================
+   * Relies on the Gecko 152 toolbarbutton padding aliases from
+   * designs/utils/gecko-152-var-aliases.css.ts. */
+  --uc-toolbarbutton-hide-size: calc(
+    -1 * (16px + (2 * (var(--toolbarbutton-outer-padding) + var(--toolbarbutton-inner-padding))))
+  );
+
+  /*= Window controls / drag space =============================================
+   * Consumed by tabbarOneLiner and tabbarAsTitlebar. */
+  --uc-window-control-width: 0px;
+  --uc-window-drag-space-pre: 0px;
+  --uc-window-drag-space-post: 0px;
+  --uc-window-control-space: calc(
+    var(--uc-window-control-width) + var(--uc-window-drag-space-post)
+  );
+
+  /*= Tab bar / nav bar heights ===============================================
+   * Consumed by tabbarOneLiner. */
+  --uc-tabbar-height: var(--tab-min-height);
+  --uc-tabbar-hide-height: calc(-1 * var(--uc-tabbar-height));
+}
+
+:root:is([tabsintitlebar], [customtitlebar], [sizemode="fullscreen"]) {
+  --uc-window-drag-space-pre: var(--uc-title-pre-spacer, 40px);
+  --uc-window-drag-space-post: var(--uc-title-post-spacer, 40px);
+}
+
+:root:is([tabsintitlebar][sizemode="maximized"], [customtitlebar][sizemode="maximized"], [sizemode="fullscreen"]) {
+  --uc-window-drag-space-pre: 0px;
+}
+
+@media (-moz-platform: windows) {
+  :root:is([tabsintitlebar], [customtitlebar], [sizemode="fullscreen"]) {
+    --uc-window-control-width: 138px;
+  }
+}
+
+/* Linux: one CSD button at a time, each widens the reserved space. */
+@media (-moz-gtk-csd-available) and (-moz-gtk-csd-minimize-button) {
+  :root:is([tabsintitlebar], [customtitlebar], [sizemode="fullscreen"]) {
+    --uc-window-control-width: 28px;
+  }
+}
+
+@media (-moz-gtk-csd-available) and (-moz-gtk-csd-maximize-button) {
+  :root:is([tabsintitlebar], [customtitlebar], [sizemode="fullscreen"]) {
+    --uc-window-control-width: 56px;
+  }
+}
+
+@media (-moz-gtk-csd-available) and (-moz-gtk-csd-close-button) {
+  :root:is([tabsintitlebar], [customtitlebar], [sizemode="fullscreen"]) {
+    --uc-window-control-width: 84px;
+  }
+}
+
+/* macOS: `layout.css.osx-font-smoothing.enabled` is a macOS-only pref, so the
+ * platform check is equivalent and keeps this sheet free of any pref gate. */
+@media (-moz-platform: macos) {
+  :root:is([tabsintitlebar], [customtitlebar]) {
+    --uc-window-control-width: 72px;
+  }
+  :root[sizemode="fullscreen"] {
+    --uc-window-control-space: 0px;
+  }
+}

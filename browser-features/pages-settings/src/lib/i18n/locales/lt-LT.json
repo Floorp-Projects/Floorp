@@ -130,16 +130,14 @@
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "„Lepton“ nustatymai",
             "description": "Configure advanced Lepton theme preferences",
-            "configureLepton": "Configure Lepton",
+            "configure": "Configure Lepton",
             "back": "Atgal",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "These settings are experimental and not officially supported. Issues may occur."
             },
             "autohide": {
                 "title": "Auto-hide Settings",

@@ -130,16 +130,14 @@
             "minHeight": "Hauteur minimale de l'onglet",
             "minHeightError": "La hauteur de l'onglet doit être comprise entre {{min}} et {{max}} pixels."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Paramètres de Lepton…",
             "description": "Configurer les préférences avancées du thème Lepton",
-            "configureLepton": "Configurer Lepton",
+            "configure": "Configurer Lepton",
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
-                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir.",
-                "leptonRepository": "Lepton est un thème css pour Firefox.",
-                "visitRepository": "Visiter la page du dépôt"
+                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir."
             },
             "autohide": {
                 "title": "Masquer automatiquement les paramètres",

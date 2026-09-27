@@ -14,7 +14,7 @@ import ProfileAndAccount from "@/app/accounts/page.tsx";
 import MouseGesture from "@/app/gesture/page.tsx";
 import KeyboardShortcut from "@/app/keyboard-shortcut/page.tsx";
 import Updates from "@/app/updates/page.tsx";
-import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
+import { ChromeExtrasSettings } from "@/app/design/components/ChromeExtrasSettings.tsx";
 import { AppBackground } from "@/components/app-background.tsx";
 import SearchPage from "@/app/search/page.tsx";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
@@ -43,8 +43,14 @@ export default function App() {
               <Route path="/overview/home" element={<Dashboard />} />
               <Route path="/features/design" element={<Design />} />
               <Route
+                path="/features/design/chrome-extras"
+                element={<ChromeExtrasSettings />}
+              />
+              {/* The route was `/features/design/lepton` while these toggles were
+                  still driven by the vendored Lepton stylesheet. */}
+              <Route
                 path="/features/design/lepton"
-                element={<LeptonSettings />}
+                element={<Navigate to="/features/design/chrome-extras" replace />}
               />
               <Route path="/features/sidebar" element={<PanelSidebar />} />
               <Route path="/features/workspaces" element={<Workspaces />} />

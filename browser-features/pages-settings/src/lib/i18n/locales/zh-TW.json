@@ -130,16 +130,14 @@
             "minHeight": "最小分頁高度",
             "minHeightError": "分頁高度必須介於 {{min}} 和 {{max}} 像素之間。"
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton 設定",
             "description": "Lepton 進階主題偏好設定",
-            "configureLepton": "設定 Lepton",
+            "configure": "設定 Lepton",
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
-                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
-                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
-                "visitRepository": "訪問儲存庫頁面"
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。"
             },
             "autohide": {
                 "title": "自動隱藏設定",

@@ -130,16 +130,14 @@
             "minHeight": "Minsta flikhöjd",
             "minHeightError": "Flikens höjd måste vara mellan {{min}} och {{max}} pixlar."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Lepton inställningar",
             "description": "Konfigurera avancerade Lepton temainställningar",
-            "configureLepton": "Konfigurera Lepton",
+            "configure": "Konfigurera Lepton",
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
-                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå.",
-                "leptonRepository": "Lepton är ett css-tema för Firefox.",
-                "visitRepository": "Besök förråd sidan"
+                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå."
             },
             "autohide": {
                 "title": "Dölj inställningar automatiskt",

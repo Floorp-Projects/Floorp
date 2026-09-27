@@ -20,7 +20,7 @@ import {
 
 import Dashboard from "@/app/dashboard/page.tsx";
 import Design from "@/app/design/page.tsx";
-import { LeptonSettings } from "@/app/design/components/LeptonSettings.tsx";
+import { ChromeExtrasSettings } from "@/app/design/components/ChromeExtrasSettings.tsx";
 import PanelSidebar from "@/app/sidebar/page.tsx";
 import Workspaces from "@/app/workspaces/page.tsx";
 import ProgressiveWebApp from "@/app/pwa/page.tsx";
@@ -61,13 +61,13 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     Component: Design,
   },
   {
-    id: "design-lepton",
-    route: "/features/design/lepton",
-    titleKey: "design.lepton-preferences.title",
-    descriptionKey: "design.lepton-preferences.description",
+    id: "design-chrome-extras",
+    route: "/features/design/chrome-extras",
+    titleKey: "design.chrome-extras.title",
+    descriptionKey: "design.chrome-extras.description",
     icon: Sparkles,
     priority: 60,
-    Component: LeptonSettings,
+    Component: ChromeExtrasSettings,
   },
   {
     id: "panel-sidebar",

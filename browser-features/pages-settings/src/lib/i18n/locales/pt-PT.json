@@ -130,16 +130,14 @@
             "minHeight": "Altura mínima do separador",
             "minHeightError": "A altura do separador deve situar-se entre {{min}} e {{max}} píxeis."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Definições de Lepton",
             "description": "Configurar as preferências avançadas do tema Lepton",
-            "configureLepton": "Configurar o Lepton",
+            "configure": "Configurar o Lepton",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Funcionalidades Experimentais",
-                "description": "Estas definições são experimentais e não são suportadas oficialmente. Podem ocorrer problemas.",
-                "leptonRepository": "Lepton é um tema css para o Firefox.",
-                "visitRepository": "Visitar a página do repositório"
+                "description": "Estas definições são experimentais e não são suportadas oficialmente. Podem ocorrer problemas."
             },
             "autohide": {
                 "title": "Definições de ocultação automática",

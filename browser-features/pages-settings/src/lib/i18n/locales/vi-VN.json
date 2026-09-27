@@ -130,16 +130,14 @@
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Cài đặt Lepton",
             "description": "Thay đổi các cài đặt nâng cao của Lepton",
-            "configureLepton": "Tùy chỉnh Lepton",
+            "configure": "Tùy chỉnh Lepton",
             "back": "Quay lại",
             "experimentalWarning": {
                 "title": "⚠️ Tính năng thử nghiệm",
-                "description": "Các tính năng sau là thử nghiệm và không được hỗ trợ chính thứ. Có thể có vấn đề nảy sinh.",
-                "leptonRepository": "Lepton là giao diện CSS cho Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "Các tính năng sau là thử nghiệm và không được hỗ trợ chính thứ. Có thể có vấn đề nảy sinh."
             },
             "autohide": {
                 "title": "Auto-hide Settings",

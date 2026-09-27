@@ -130,16 +130,14 @@
             "minHeight": "Altura mínima de la pestaña",
             "minHeightError": "La altura de la pestaña debe estar entre {{min}} y {{max}} píxeles."
         },
-        "lepton-preferences": {
+        "chrome-extras": {
             "title": "Configuración de Lepton",
             "description": "Configurar las preferencias avanzadas del tema Lepton",
-            "configureLepton": "Configurar Lepton",
+            "configure": "Configurar Lepton",
             "back": "Atrás",
             "experimentalWarning": {
                 "title": "⚠️ Características experimentales",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "These settings are experimental and not officially supported. Issues may occur."
             },
             "autohide": {
                 "title": "Auto-hide Settings",
