@@ -841,6 +841,9 @@ jobs:
             *) echo "Web App Shim lacks $expected_slice slice: $shim_slices" >&2; exit 1 ;;
           esac
 
+          python3 ./tools/app-shim/sync-omnijar-patches.py --verify \
+            --resources "$app_bundle/Contents/Resources" --patch-dir ./tools/patches
+
           codesign_log="$RUNNER_TEMP/floorp-codesign-verification.txt"
           if [[ "$VALIDATION_ONLY" == "true" ]]; then
             reject_validation_signature() {

@@ -371,6 +371,34 @@ export class MacAppShimInstaller {
     await this.clearGeneratedQuarantine(path);
   }
 
+  private async matchShimArchitecture(path: string): Promise<void> {
+    if (!Services.appinfo.XPCOMABI.startsWith("x86_64")) return;
+    // LaunchServices chooses arm64 for a universal PWA app on Apple Silicon,
+    // even when its Floorp host runs under Rosetta. The Runtime pins the
+    // installed Shim's x86_64 code hash in that host. Keep the browser's
+    // bundled helper universal, but sign this per-profile app with one slice.
+    const { Subprocess } = ChromeUtils.importESModule(
+      "resource://gre/modules/Subprocess.sys.mjs",
+    );
+    const process = await Subprocess.call({
+      command: "/usr/bin/lipo",
+      arguments: ["-thin", "x86_64", path, "-output", path],
+      stderr: "stdout",
+    });
+    let output = "";
+    for (;;) {
+      const chunk = await process.stdout.readString();
+      if (!chunk) break;
+      output = (output + chunk).slice(-16384);
+    }
+    const { exitCode } = await process.wait();
+    if (exitCode !== 0) {
+      throw new Error(
+        `[MacAppShimInstaller] x86_64 Shim preparation failed (${exitCode}): ${output}`,
+      );
+    }
+  }
+
   private async fingerprint(path: string): Promise<string | null> {
     return await IOUtils.exists(path)
       ? this.service.fingerprintBundle(path)
@@ -542,6 +570,7 @@ export class MacAppShimInstaller {
         await IOUtils.makeDirectory(macOS, { createAncestors: true });
         await IOUtils.makeDirectory(resources);
         await IOUtils.copy(executable, PathUtils.join(macOS, "app-shim"));
+        await this.matchShimArchitecture(PathUtils.join(macOS, "app-shim"));
         await IOUtils.setPermissions(PathUtils.join(macOS, "app-shim"), 0o755);
         await IOUtils.copy(
           PathUtils.join(legacy.path, "Contents", "Resources", "app.icns"),

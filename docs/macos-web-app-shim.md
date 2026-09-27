@@ -167,16 +167,16 @@ the sealed host requirement contains the running architecture's code hash,
 while the native launcher validates that requirement against every architecture.
 For local arm64 cold-launch testing, use a separate test copy with an arm64-only
 browser executable and re-sign the entire copy. A locally Apple Development
-certificate-signed universal browser passed the same warm and cold Finder test
-on Apple Silicon. This does not validate the official Developer ID signature,
-notarized installer, or execution on Intel Mac. The final package verifier
-requires the native Shim on both architectures and checks its code signature.
-On Apple Silicon, the optional Rosetta test started the x86_64 browser but the
-native Shim process exited before authentication and the first window. The
-exit cause has not been established. This path remains unverified;
-the result does not establish a failure on an Intel Mac. Do not describe the
-experimental feature as fully validated for x86_64 until its native lifecycle
-passes on an Intel runner or the Rosetta failure is resolved.
+certificate-signed universal browser passed the warm and cold Finder tests on
+Apple Silicon. The same tests passed with the x86_64 browser under Rosetta after
+the installer made its per-profile Shim x86_64-only before signing it. macOS
+otherwise starts a universal Shim as arm64, while the x86_64 Runtime pins the
+installed bundle's x86_64 code hash; this mismatch prevents authentication.
+The browser package keeps its universal Shim helper so either host architecture
+can create its own app. The final package verifier checks both binary slices
+and every Runtime patch in the packaged omnijars. These local tests do not
+validate the official Developer ID signature, notarized installer, or
+execution on an Intel Mac.
 
 Use `--launch-services` for foreground tests: it opens the exact test bundle and
 verifies the actual browser PID, isolated profile and process start time before

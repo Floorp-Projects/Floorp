@@ -258,10 +258,22 @@ def main():
         identity = host_identities.get(pid)
         return identity is not None and identity in smoke.HostProcess._process_rows(pid)
 
+    def same_browser_command(observed, expected):
+        # LaunchServices can report the same /private/tmp executable as /tmp.
+        # Keep the full profile/app arguments exact while resolving that alias.
+        suffix = expected[len(str(binary)):]
+        return (observed.endswith(suffix) and
+                Path(observed[:-len(suffix)]).resolve() == binary)
+
     def remember_host(pid, command):
-        identity = smoke.wait_for("test host executable/profile command", lambda: next(
-            (row for row in smoke.HostProcess._process_rows(pid)
-             if row[0] == pid and row[2] == command), None), args.timeout)
+        def matching_host():
+            rows = smoke.HostProcess._process_rows(pid)
+            report.setdefault("observedHostCommands", {})[str(pid)] = [row[2] for row in rows]
+            return next((row for row in rows
+                         if row[0] == pid and same_browser_command(row[2], command)), None)
+
+        identity = smoke.wait_for("test host executable/profile command", matching_host,
+                                  args.timeout)
         host_identities[pid] = identity
         if host is None or pid != host.pid:
             queue = select.kqueue()
@@ -388,6 +400,13 @@ def main():
         if Path(executable_name).name != executable_name:
             raise RuntimeError("Installed Shim has an invalid executable name")
         shim_executable = bundle / "Contents/MacOS" / executable_name
+        shim_architectures = smoke.run("/usr/bin/lipo", "-archs", str(shim_executable)).split()
+        report["installedShimArchitectures"] = shim_architectures
+        if report["hostABIs"]["initialHost"].startswith("x86_64"):
+            if shim_architectures != ["x86_64"]:
+                raise RuntimeError("x86_64 browser installed a universal Shim")
+        elif "arm64" not in shim_architectures:
+            raise RuntimeError("arm64 browser installed a Shim without an arm64 slice")
         report["bundle"] = str(bundle)
         client.context("chrome")
         client.script(f"""
@@ -482,7 +501,7 @@ def main():
         fixture_shims = []
         for identity in smoke.HostProcess._process_rows():
             pid, _, command = identity
-            if command == cold_prefix:
+            if same_browser_command(command, cold_prefix):
                 host_identities.setdefault(pid, identity)
             if shim_executable is not None and command.startswith(
                 str(shim_executable) + " --host-service "
