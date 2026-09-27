@@ -24,6 +24,23 @@ import threading
 import time
 import traceback
 import uuid
+import zipfile
+
+
+def has_bundled_frontend(browser):
+    resources = browser / "Contents/Resources"
+    if (resources / "noraneko/noraneko.manifest").is_file():
+        return True
+    try:
+        with zipfile.ZipFile(resources / "omni.ja") as archive:
+            manifest = archive.read("chrome/chrome.manifest")
+            return (
+                b"resource noraneko noraneko/nora-resource/" in manifest
+                and "chrome/noraneko/nora-resource/modules/pwa/SsbCommandLineHandler.sys.mjs"
+                in archive.namelist()
+            )
+    except (OSError, KeyError, zipfile.BadZipFile):
+        return False
 
 
 def main():
@@ -35,9 +52,7 @@ def main():
                         metavar="0..60", help="Keep the verified cold window open briefly for manual inspection")
     args = parser.parse_args()
     browser = args.browser.resolve(strict=True)
-    if browser.suffix != ".app" or not (
-        browser / "Contents/Resources/noraneko/noraneko.manifest"
-    ).is_file():
+    if browser.suffix != ".app" or not has_bundled_frontend(browser):
         parser.error("A separately prepared browser with its full Floorp frontend is required")
     spec = importlib.util.spec_from_file_location(
         "runtime_smoke", Path(__file__).with_name("test-runtime.py")

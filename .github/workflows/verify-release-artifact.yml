@@ -830,6 +830,17 @@ jobs:
             *) echo "Universal binary lacks $expected_slice slice: $slices" >&2; exit 1 ;;
           esac
 
+          shim_binary="$app_bundle/Contents/MacOS/floorp-app-shim"
+          if [[ ! -x "$shim_binary" ]]; then
+            echo "Final Floorp app is missing its native Web App Shim" >&2
+            exit 1
+          fi
+          shim_slices="$(lipo -archs "$shim_binary")"
+          case " $shim_slices " in
+            *" $expected_slice "*) ;;
+            *) echo "Web App Shim lacks $expected_slice slice: $shim_slices" >&2; exit 1 ;;
+          esac
+
           codesign_log="$RUNNER_TEMP/floorp-codesign-verification.txt"
           if [[ "$VALIDATION_ONLY" == "true" ]]; then
             reject_validation_signature() {
@@ -928,7 +939,7 @@ jobs:
             )
             echo "Observed expected unsigned validation-only Floorp app"
           else
-            if ! codesign --verify --deep --strict --verbose=2 \
+            if ! codesign --verify --deep --strict --all-architectures --verbose=2 \
               "$app_bundle" > "$codesign_log" 2>&1; then
               cat "$codesign_log" >&2
               echo "Production Floorp app code signature verification failed" >&2
@@ -936,6 +947,22 @@ jobs:
             fi
             cat "$codesign_log"
             echo "Verified production Floorp app code signature"
+            if ! codesign --display --verbose=4 \
+              "$app_bundle" > "$codesign_log" 2>&1 ||
+               ! grep -q '^Authority=' "$codesign_log" ||
+               grep -q '^Signature=adhoc$' "$codesign_log"; then
+              cat "$codesign_log" >&2
+              echo "Production Floorp host must have a certificate-backed signature" >&2
+              exit 1
+            fi
+            if ! codesign --verify --strict --all-architectures --verbose=2 \
+              "$shim_binary" > "$codesign_log" 2>&1; then
+              cat "$codesign_log" >&2
+              echo "Production Web App Shim code signature verification failed" >&2
+              exit 1
+            fi
+            cat "$codesign_log"
+            echo "Verified production Web App Shim code signature"
           fi
 
           build_id2="$app_bundle/Contents/Resources/browser/buildid2"

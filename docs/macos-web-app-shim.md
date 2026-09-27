@@ -2,9 +2,9 @@
 
 This implementation adds a native, app-specific macOS process while keeping
 Gecko, profiles, cookies, and site storage in the existing Floorp parent
-process. It is experimental and disabled by default. The native backend must be
-built from source; adding JavaScript to an existing prebuilt Runtime cannot
-provide it.
+process. It is experimental and disabled by default. The native backend is
+included in the pinned Runtime `daily-1117`. Runtime artifacts from before the
+native backend was merged cannot provide it.
 
 ## Ownership
 
@@ -93,32 +93,16 @@ support. Browser-owned legacy Web App windows keep their previous behavior.
 
 ## Build
 
-The Runtime side is maintained as a source patch, like every other Runtime
-change in this repository: `.github/patches/floorp-runtime/common/macos-web-app-shim.patch`.
-It adds the Shim and host sources and modifies the Gecko files they integrate
-with. `package.yml` applies it when packaging, and `AGENTS.md` documents the
-convention.
+The pinned Runtime `daily-1117` already contains the Shim and host sources.
+Its build graph produces `floorp-app-shim`, registers `nsIMacWebAppService`,
+and includes the Shim in the macOS package manifest. Use the exact
+`source.commit` in `floorp-runtime.lock.json` for source builds, then build and
+package the matching Floorp frontend. Native changes require a newly built and
+published Runtime artifact; `package.yml` cannot recompile a prebuilt artifact.
 
-Use a separate, clean Runtime checkout at the exact `source.commit` from
-`floorp-runtime.lock.json` (currently
-`f3fbed8ede70e69526fe339e4a4433b6c9815889`). From that checkout:
-
-```sh
-git apply --check /absolute/path/to/noraneko/.github/patches/floorp-runtime/common/macos-web-app-shim.patch
-git apply /absolute/path/to/noraneko/.github/patches/floorp-runtime/common/macos-web-app-shim.patch
-```
-
-Then build that Runtime with a normal macOS browser source configuration and
-`./mach build`. Its build graph produces `floorp-app-shim`, registers
-`nsIMacWebAppService`, and includes the Shim in the macOS package manifest. Then
-build and package the matching Floorp frontend. A release requires publishing a
-new native Runtime artifact and updating the pinned artifact; the packaging
-workflow applies this patch to prebuilt sources, so source changes alone cannot
-deliver the native recompilation.
-
-The same sources live under `native/macos-app-shim/` for the isolated native
-build and its tests, which do not need a Gecko checkout. Keep the two in sync:
-the patch is generated from a Runtime checkout that has them staged.
+Reference sources under `native/macos-app-shim/` provide the isolated native
+build and tests without a Gecko checkout. Keep them aligned with the Runtime
+implementation.
 
 For repeated local builds, stage into a fresh packaging directory before signing.
 Signing changes file timestamps; an older signed staged executable can otherwise
@@ -171,10 +155,21 @@ LaunchServices, first with the same-profile browser running and then completely
 closed. It checks persistent session sharing, native ownership, fresh frames,
 and both browser exit statuses. Its test copy must contain the complete matching
 Floorp startup, modules, chrome resources and pages, with a valid local signature.
+It accepts both unpacked frontend resources and a packaged `omni.ja`.
 It also supplies conflicting restart/reset profile environment variables and
 checks that the unrelated profile directories remain untouched. Use
 `--inspect-seconds 60` to keep the verified cold window open briefly for manual
 inspection before automatic cleanup.
+
+An ad-hoc signed universal test browser currently fails Finder cold launch:
+the sealed host requirement contains the running architecture's code hash,
+while the native launcher validates that requirement against every architecture.
+For local arm64 cold-launch testing, use a separate test copy with an arm64-only
+browser executable and re-sign the entire copy. A locally Apple Development
+certificate-signed universal browser passed the same warm and cold Finder test
+on Apple Silicon. This does not validate the official Developer ID signature,
+notarized installer, or execution on Intel Mac. The final package verifier
+requires the native Shim on both architectures and checks its code signature.
 
 Use `--launch-services` for foreground tests: it opens the exact test bundle and
 verifies the actual browser PID, isolated profile and process start time before

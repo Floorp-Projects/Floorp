@@ -3,16 +3,16 @@
   "source": {
     "repository": "Floorp-Projects/Floorp-Runtime",
     "trackingRef": "nora-0.2.0",
-    "ref": "daily-1108",
-    "commit": "f3fbed8ede70e69526fe339e4a4433b6c9815889",
-    "tree": "9680c212741f0ba9a7d1276c00e226b68a46d4f3",
+    "ref": "daily-1117",
+    "commit": "1553b7b550dfe555684628d175e0c1701a785d0b",
+    "tree": "5bccc489d8faa894518f27fcd55a30115a3ae17e",
     "release": {
-      "id": 394143527,
+      "id": 397428022,
       "immutable": false
     },
     "materials": {
       "count": 53,
-      "totalBytes": 224465,
+      "totalBytes": 227664,
       "entries": [
         {
           "path": "browser/base/content/test/caps/browser.toml",
@@ -289,10 +289,10 @@
         {
           "path": "browser/components/customizableui/test/browser.toml",
           "role": "manifest",
-          "bytes": 12461,
+          "bytes": 12497,
           "mode": "100644",
-          "gitBlob": "29a8508997f276034e4dcb2d5010d3cebe102d0f",
-          "sha256": "a3bcb290db66d6caee3feee1fb6189ac82f1e943a066375e7e25bbeb93559691"
+          "gitBlob": "15e1e9b2b4b6e52bc81a1c78bb4b81d44f2a7337",
+          "sha256": "c7e81641f891bdc72a66ed3cb2205a7a9c3ca2195121b0b13c68f4913fdee91f"
         },
         {
           "path": "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js",
@@ -305,10 +305,10 @@
         {
           "path": "browser/components/customizableui/test/head.js",
           "role": "head-support",
-          "bytes": 18204,
+          "bytes": 18405,
           "mode": "100644",
-          "gitBlob": "eefd463a0bf8f4fa32d161b66e1271c6ab20f0b4",
-          "sha256": "36fc762920d513542af7246eb6461b75e95c18fe329cae70af6f8cfa26b78510"
+          "gitBlob": "def2a1a9737e7d0bf12f3a37394e2f063e17e033",
+          "sha256": "8698b06219839a5cfefcd560bfd5170e244284c27c90f53872bca98f89b380b5"
         },
         {
           "path": "browser/components/customizableui/test/support/test_967000_charEncoding_page.html",
@@ -329,10 +329,10 @@
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
           "role": "manifest",
-          "bytes": 20337,
+          "bytes": 20209,
           "mode": "100644",
-          "gitBlob": "6dbd1a29392e5c4aa39fc130fa0736e50348447a",
-          "sha256": "efd1dc34e9796075e9da6b873c5b6ca766fca76a464cb32ac4fc4a6732424757"
+          "gitBlob": "0811e490625c374f9950a8ceef0650871c06c6eb",
+          "sha256": "9e4333d99adff55d2274d6472d2277913b37c76e2bcc1e609b0a4539c74d951e"
         },
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
@@ -377,10 +377,10 @@
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/head.js",
           "role": "head-support",
-          "bytes": 15373,
+          "bytes": 14802,
           "mode": "100644",
-          "gitBlob": "ca0bf850f5e46c093376379b1df6f0e9b8ecd6ab",
-          "sha256": "34e572552ec18085d1022bd60bcff0337dcab9a541a3fda6f706c4dca604506f"
+          "gitBlob": "c6b01118f8899b7567b1f57d39f38177f35b9281",
+          "sha256": "acec32eefad1ba8a91fa6bc826f57a62b1321aed41a941c36db91cb42c4a52a2"
         },
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/helper_origin_attrs_testing.js",
@@ -393,18 +393,18 @@
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
           "role": "manifest",
-          "bytes": 2288,
+          "bytes": 2375,
           "mode": "100644",
-          "gitBlob": "21ac6f611e8d7620b3a7099842bb013479b9b264",
-          "sha256": "6130180f731702e6e38731f469c4edd287ec85868f574332b2649d146699503e"
+          "gitBlob": "fe866648a7730113dc0a2585e8c554028e3cfa35",
+          "sha256": "f2cc59bc13237930fdfaa52ef377c143e9fe3fbce08a10f89fffbdbc68966afc"
         },
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
           "role": "test",
-          "bytes": 2268,
+          "bytes": 2199,
           "mode": "100644",
-          "gitBlob": "ec6fb363f3729b3d1abc361c2f347261015fb816",
-          "sha256": "a6e3dc30bb51630173b9b12ef8099f28655a97a183a7c7797a2dda3d1918ef19"
+          "gitBlob": "8fae51a14770fea6c619bece034af147e83c1521",
+          "sha256": "f63e76a9c27d0bd2c1f16aad7e10d052d966e1008e350f4cf5dadbe79e3c2657"
         },
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/head.js",
@@ -417,10 +417,10 @@
         {
           "path": "browser/components/urlbar/tests/browser/head-common.js",
           "role": "support",
-          "bytes": 12377,
+          "bytes": 16020,
           "mode": "100644",
-          "gitBlob": "5acafc8a7267cf79b8143f86d1dd519239de887c",
-          "sha256": "ed7dc6963dfc255800a40f124e42a90346431feefc8fe72ec2e1b4b67d570db1"
+          "gitBlob": "77a6623169c587c20acd1c3c8605a6ea61fab277",
+          "sha256": "b6fcf392c4480608ca7d321392c391be33ea79086159c417032576384bb6d1dd"
         },
         {
           "path": "image/test/mochitest/blue.png",
@@ -660,19 +660,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 582317082,
+        "id": 591651673,
         "name": "floorp-linux-aarch64-moz-artifact.tar.xz",
-        "size": 73529772,
-        "sha256": "662ac03e899bf442144b63c886e60dcf910a25565cc10a2c0e223450a63b7b7c"
+        "size": 74554324,
+        "sha256": "0d62b3839c0c17f103addd08b8441b1eb0f3cb9f9dbfdbc6aacd3b21c38c6c54"
       },
       "applicationIniAsset": {
-        "id": 582317081,
+        "id": 591651679,
         "name": "linux-aarch64-application-ini.zip",
-        "size": 537,
-        "sha256": "46f00c2680a2d97d4d4a054dacea579a75a59a2730f65a6347b09dd8ae56d108"
+        "size": 535,
+        "sha256": "c2d83e7a66e330b6ceb7bbf35ff2768eb4cdc6f8537745b2a72c49fc3340a0b1"
       },
-      "version": "156.0.1",
-      "buildId": "20260922152932"
+      "version": "157.0",
+      "buildId": "20260926171135"
     },
     {
       "platform": "linux",
@@ -680,19 +680,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 582317083,
+        "id": 591651674,
         "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
-        "size": 84934580,
-        "sha256": "d27301886aab71968e981b431762e1da00aaff224641ef0e0fc6b1473f5ece9a"
+        "size": 85380988,
+        "sha256": "1f3cbd05e28d8ba00a14386c7d64f2de19ff9b8fe286ad59e662cc3125ae1e4a"
       },
       "applicationIniAsset": {
-        "id": 582317086,
+        "id": 591651680,
         "name": "linux-x86_64-application-ini.zip",
-        "size": 537,
-        "sha256": "c05d08e00b49b3e41ce8cdc41740464973607d310b3eeb3f19a892568a5f2e76"
+        "size": 535,
+        "sha256": "8659a334091177b1274dd392a9edd5e7529969659e72c18289f4f26d25148871"
       },
-      "version": "156.0.1",
-      "buildId": "20260922152932"
+      "version": "157.0",
+      "buildId": "20260926171135"
     },
     {
       "platform": "macos",
@@ -700,19 +700,19 @@
       "format": "dmg",
       "extractionPolicy": "dmg-floorp-app",
       "asset": {
-        "id": 582317090,
+        "id": 591651676,
         "name": "floorp-macOS-universal-moz-artifact.dmg",
-        "size": 183421703,
-        "sha256": "eadb84ad7d6ab5bec0988f91c1a9ad789d68ed48e673b67f5b61cfd37e653c9e"
+        "size": 184656021,
+        "sha256": "36e3df2f0b99810fb2fab832f9534072501790cfb84a931ad2bd5d7fbcdb858f"
       },
       "applicationIniAsset": {
-        "id": 582317088,
+        "id": 591651670,
         "name": "macOS-universal-application-ini.zip",
-        "size": 537,
-        "sha256": "039c4e705ece454b01d4e385578f8ec5c82f4cd905b7f9e52c00bf179386df2b"
+        "size": 535,
+        "sha256": "94b34b8093896bb05a422fe3a9fd8881b740d754f4ba2942c6389d5d674a6ea4"
       },
-      "version": "156.0.1",
-      "buildId": "20260922152932"
+      "version": "157.0",
+      "buildId": "20260926171135"
     },
     {
       "platform": "windows",
@@ -720,19 +720,19 @@
       "format": "zip",
       "extractionPolicy": "zip-direct-floorp",
       "asset": {
-        "id": 582317093,
+        "id": 591651678,
         "name": "floorp-windows-x86_64-moz-artifact.zip",
-        "size": 137252033,
-        "sha256": "9abce16dc9aec261d8148bdd7ec97b4aae7cd530e4358fa0d6b2031441c78bfa"
+        "size": 138496523,
+        "sha256": "3fb30c889afd7cdb0af3be2ba49bd1ad6fcbde9996161f4fe984f4705aba095e"
       },
       "applicationIniAsset": {
-        "id": 582317089,
+        "id": 591651677,
         "name": "windows-x86_64-application-ini.zip",
-        "size": 537,
-        "sha256": "ed6dca1c658d83608170203daed99d564a82adfcb4858d569458d634132c57a4"
+        "size": 535,
+        "sha256": "aac6f2288374772081f65f6bf3ff15210d2fbc26bfd3a05f16ebc359d4ed06d0"
       },
-      "version": "156.0.1",
-      "buildId": "20260922152932"
+      "version": "157.0",
+      "buildId": "20260926171135"
     }
   ]
 }
