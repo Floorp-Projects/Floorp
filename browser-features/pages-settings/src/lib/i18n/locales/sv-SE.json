@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Ikon inställningar",
-                "disabled": "Inaktivera Leptons sammanhangsmeny och panelmenyikoner",
-                "menu": "Aktivera Leptons sammanhangsberoende menyikoner"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centrerade inställningar",
@@ -194,7 +196,8 @@
             "sidebar": {
                 "title": "Sidofält inställningar",
                 "overlap": "Visa sidofält över webbplatsens innehåll"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Flik sömn uteslutning",

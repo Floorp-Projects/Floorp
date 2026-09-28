@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Geri",
             "experimentalWarning": {
                 "title": "⚠️ Deneysel Özellikler",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Simge Ayarları",
-                "disabled": "Lepton'un içerik menüsünü ve panel menü simgelerini devre dışı bırakın",
-                "menu": "Lepton'un içerik menüsü simgelerini etkinleştirin"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Ortaya Hizalama Ayarları",
@@ -194,7 +196,8 @@
             "sidebar": {
                 "title": "Kenar Çubuğu Ayarları",
                 "overlap": "Kenar Çubuğunu web sitesi içeriğinin üzerinde göster"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",

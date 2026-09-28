@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Atrás",
             "experimentalWarning": {
                 "title": "⚠️ Características experimentales",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centered Settings",
@@ -183,18 +185,19 @@
             "urlView": {
                 "title": "URL View Settings",
                 "moveIconToLeft": "Move Address Bar icons to the left side",
-                "goButtonWhenTyping": "Al escribir, mostrar botón «Ir»",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
                 "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
                 "title": "Tab Bar Settings",
-                "asTitlebar": "Barra de pestañas sobre barra de título",
+                "asTitlebar": "Tab Bar in the Title Bar",
                 "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",
