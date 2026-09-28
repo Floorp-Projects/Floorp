@@ -1,5 +1,5 @@
 import { Button } from "../../../../../../libs/ui/button.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -34,31 +34,65 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
   const [settings, setSettings] = useState<ChromeExtrasSettings>(
     CHROME_EXTRAS_DEFAULTS,
   );
+  const latestSettingsRef = useRef<ChromeExtrasSettings>(
+    CHROME_EXTRAS_DEFAULTS,
+  );
+  const pendingSavesRef = useRef(0);
+  const mountedRef = useRef(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    mountedRef.current = true;
+    setLoaded(false);
+    setLoadError(false);
     const loadSettings = async () => {
       try {
         const chromeExtras = await getChromeExtras();
+        if (!active) return;
+        latestSettingsRef.current = chromeExtras;
         setSettings(chromeExtras);
+        setLoaded(true);
       } catch (error) {
+        if (!active) return;
         console.error("[ChromeExtras] Failed to load settings:", error);
+        setLoadError(true);
       }
     };
-    loadSettings();
-  }, []);
+    void loadSettings();
+    return () => {
+      active = false;
+      mountedRef.current = false;
+    };
+  }, [loadAttempt]);
 
-  const handleSettingChange = async (
+  const persistSettings = (snapshot: ChromeExtrasSettings) => {
+    pendingSavesRef.current++;
+    setSaving(true);
+    setSaveError(false);
+    void saveChromeExtras(snapshot).then(() => {
+      if (mountedRef.current) setSaveError(false);
+    }).catch((error) => {
+      console.error("[ChromeExtras] Failed to save settings:", error);
+      if (mountedRef.current) setSaveError(true);
+    }).finally(() => {
+      pendingSavesRef.current--;
+      if (mountedRef.current) setSaving(pendingSavesRef.current > 0);
+    });
+  };
+
+  const handleSettingChange = (
     key: ChromeExtrasKey,
     value: boolean,
   ) => {
-    const newSettings = { ...settings, [key]: value };
+    const newSettings = { ...latestSettingsRef.current, [key]: value };
+    latestSettingsRef.current = newSettings;
     setSettings(newSettings);
-
-    try {
-      await saveChromeExtras(newSettings);
-    } catch (error) {
-      console.error("[ChromeExtras] Failed to save settings:", error);
-    }
+    persistSettings(newSettings);
   };
 
   return (
@@ -81,6 +115,33 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
         </Button>
       </div>
 
+      {loadError && (
+        <div className="space-y-2">
+          <p role="alert">{t("ui.loadError")}</p>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+          >
+            {t("ui.retry")}
+          </Button>
+        </div>
+      )}
+      {!loaded && !loadError && <p role="status">{t("ui.loading")}</p>}
+      {saveError && (
+        <div className="space-y-2">
+          <p role="alert">{t("ui.saveError")}</p>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={saving}
+            onClick={() => persistSettings(latestSettingsRef.current)}
+          >
+            {t("ui.retry")}
+          </Button>
+        </div>
+      )}
+
       {/* Experimental Warning */}
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
         <div className="flex flex-col space-y-3">
@@ -93,7 +154,11 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <fieldset
+        disabled={!loaded}
+        aria-busy={!loaded || saving}
+        className="space-y-6"
+      >
         {/* Auto-hide Settings */}
         <Card>
           <CardHeader>
@@ -260,10 +325,11 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               <Switch
                 id="hidden-bookmarkbar-label"
                 checked={settings.hiddenBookmarkbarLabel}
-                onChange={(e) => handleSettingChange(
-                  "hiddenBookmarkbarLabel",
-                  e.target.checked,
-                )}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "hiddenBookmarkbarLabel",
+                    e.target.checked,
+                  )}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -389,10 +455,11 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               <Switch
                 id="url-view-go-button-when-typing"
                 checked={settings.urlViewGoButtonWhenTyping}
-                onChange={(e) => handleSettingChange(
-                  "urlViewGoButtonWhenTyping",
-                  e.target.checked,
-                )}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "urlViewGoButtonWhenTyping",
+                    e.target.checked,
+                  )}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -402,10 +469,11 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               <Switch
                 id="url-view-always-show-page-actions"
                 checked={settings.urlViewAlwaysShowPageActions}
-                onChange={(e) => handleSettingChange(
-                  "urlViewAlwaysShowPageActions",
-                  e.target.checked,
-                )}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "urlViewAlwaysShowPageActions",
+                    e.target.checked,
+                  )}
               />
             </div>
           </CardContent>
@@ -467,7 +535,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </fieldset>
     </div>
   );
 }

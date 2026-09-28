@@ -5,7 +5,7 @@ Run from browser-features/skin/lepton/css:
     python3 ../../../../tools/gen-chrome-extras.py
 
 Writes one CSS file per toggle into
-browser-features/chrome/common/ui-custom/styles/css/options/chrome-extras/
+browser-features/chrome/common/designs/chrome-extras-css/
 
 A block is emitted only when its `@media` condition gates on exactly one Lepton
 toggle: the toggle itself must appear, and no other Lepton sub-option may appear
@@ -16,7 +16,7 @@ recorded in each generated header so the divergence stays auditable.
 
 Only `-moz-bool-pref:` gated blocks are considered. Vendored Lepton also uses a
 bare `-moz-pref(...)` form in a large region of the file; we do not port from
-there (see the module comment in designs/utils/chrome-extras.css.ts).
+there (see the module comment in designs/chrome-extras.ts).
 """
 
 from __future__ import annotations

@@ -121,10 +121,6 @@ function testStyleIdIsStable(): void {
  *  Gecko's own prefs (e.g. `widget.*.native-context-menus` in
  *  hidden-disabled-menu.css) are fine and are kept verbatim. */
 function testNoLeptonPrefGate(): void {
-  const all = [
-    CHROME_EXTRAS_SCAFFOLD_CSS,
-    ...Object.values(CHROME_EXTRAS_CSS),
-  ];
   for (
     const [key, css] of Object.entries({
       scaffold: CHROME_EXTRAS_SCAFFOLD_CSS,
@@ -159,7 +155,7 @@ function testEveryUsedUcTokenIsDefinedOrHasFallback(): void {
     ["scaffold", CHROME_EXTRAS_SCAFFOLD_CSS],
     ...Object.entries(CHROME_EXTRAS_CSS),
   ]);
-  for (const [key, css] of sheets) {
+  for (const css of sheets.values()) {
     for (const match of css.matchAll(declare)) {
       defined.add(match[1]);
     }
@@ -389,7 +385,7 @@ function testChromeExtrasDecode(): void {
       tabMinHeight: 30,
       tabMinWidth: 76,
       tabPinTitle: false,
-      tabDubleClickToClose: false,
+      tabDoubleClickToClose: false,
       tabOpenPosition: -1,
     },
     uiCustomization: {

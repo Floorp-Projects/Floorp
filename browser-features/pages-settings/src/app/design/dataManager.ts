@@ -6,7 +6,6 @@ import {
   type ChromeExtrasSettings,
 } from "#features-chrome/common/designs/chrome-extras.ts";
 
-
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
 const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
 
@@ -32,17 +31,24 @@ type StoredConfig = {
   };
 };
 
-async function readDesignConfigs(): Promise<StoredConfig> {
+let designConfigWriteQueue: Promise<unknown> = Promise.resolve();
+
+function queueDesignConfigWrite<T>(write: () => Promise<T>): Promise<T> {
+  const pending = designConfigWriteQueue.then(write, write);
+  designConfigWriteQueue = pending.catch(() => undefined);
+  return pending;
+}
+
+async function readDesignConfigs(): Promise<StoredConfig | null> {
   const raw = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
   if (!raw) {
-    return {};
+    return null;
   }
-  try {
-    return JSON.parse(raw) as StoredConfig;
-  } catch (error) {
-    console.error("[ChromeExtras] Failed to parse design configs:", error);
-    return {};
+  const parsed: unknown = JSON.parse(raw);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("[ChromeExtras] Invalid design configs");
   }
+  return parsed as StoredConfig;
 }
 
 /**
@@ -50,7 +56,11 @@ async function readDesignConfigs(): Promise<StoredConfig> {
  * stored config does not have.
  */
 export async function getChromeExtras(): Promise<ChromeExtrasSettings> {
+  await designConfigWriteQueue;
   const config = await readDesignConfigs();
+  if (!config) {
+    throw new Error("[ChromeExtras] Design configs are unavailable");
+  }
   const stored = config.uiCustomization?.chromeExtras;
   const result: ChromeExtrasSettings = { ...CHROME_EXTRAS_DEFAULTS };
   if (stored) {
@@ -71,25 +81,39 @@ export async function getChromeExtras(): Promise<ChromeExtrasSettings> {
  * owned by `saveDesignSettings()` below, which spreads `oldData.uiCustomization`
  * and therefore preserves `chromeExtras` untouched.
  */
-export async function saveChromeExtras(
+export function saveChromeExtras(
   settings: ChromeExtrasSettings,
 ): Promise<void> {
-  const config = await readDesignConfigs();
-  const newData = {
-    ...config,
-    uiCustomization: {
-      ...config.uiCustomization,
-      chromeExtras: { ...CHROME_EXTRAS_DEFAULTS, ...settings },
-    },
-  };
-  await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
+  return queueDesignConfigWrite(async () => {
+    const config = await readDesignConfigs();
+    if (!config) {
+      throw new Error("[ChromeExtras] Design configs are unavailable");
+    }
+    const newData = {
+      ...config,
+      uiCustomization: {
+        ...config.uiCustomization,
+        chromeExtras: { ...CHROME_EXTRAS_DEFAULTS, ...settings },
+      },
+    };
+    await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
+  });
 }
 
 interface SaveDesignSettingsOptions {
   hasTabStyleChanged?: boolean;
 }
 
-export async function saveDesignSettings(
+export function saveDesignSettings(
+  settings: DesignFormData,
+  options: SaveDesignSettingsOptions = {},
+): Promise<null | void> {
+  return queueDesignConfigWrite(() =>
+    saveDesignSettingsUnqueued(settings, options)
+  );
+}
+
+async function saveDesignSettingsUnqueued(
   settings: DesignFormData,
   options: SaveDesignSettingsOptions = {},
 ): Promise<null | void> {
@@ -188,6 +212,7 @@ export async function saveDesignSettings(
 }
 
 export async function getDesignSettings(): Promise<DesignFormData | null> {
+  await designConfigWriteQueue;
   const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
   if (!result) {
     return null;
