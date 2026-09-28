@@ -23,39 +23,44 @@ import {
 import { route, toggle } from "./settings.test.ts";
 const GESTURE = "floorp.mousegesture.config";
 const SHORTCUT = "floorp.keyboardshortcut.config";
-const leptonFields = [
-  ["autohide-tab", "autohide.tab"],
-  ["autohide-navbar", "autohide.navbar"],
-  ["autohide-sidebar", "autohide.sidebar"],
-  ["autohide-back-button", "autohide.back_button"],
-  ["autohide-forward-button", "autohide.forward_button"],
-  ["autohide-page-action", "autohide.page_action"],
-  ["hidden-tab-icon", "hidden.tab_icon"],
-  ["hidden-tabbar", "hidden.tabbar"],
-  ["hidden-navbar", "hidden.navbar"],
-  ["hidden-sidebar-header", "hidden.sidebar_header"],
-  ["hidden-urlbar-iconbox", "hidden.urlbar_iconbox"],
-  ["hidden-bookmarkbar-icon", "hidden.bookmarkbar_icon"],
-  ["hidden-bookmarkbar-label", "hidden.bookmarkbar_label"],
-  ["hidden-disabled-menu", "hidden.disabled_menu"],
-  ["icon-disabled", "icon.disabled"],
-  ["icon-menu", "icon.menu"],
-  ["centered-tab", "centered.tab"],
-  ["centered-urlbar", "centered.urlbar"],
-  ["centered-bookmarkbar", "centered.bookmarkbar"],
-  ["url-view-move-icon-to-left", "urlView.move_icon_to_left"],
-  ["url-view-go-button-when-typing", "urlView.go_button_when_typing"],
-  ["url-view-always-show-page-actions", "urlView.always_show_page_actions"],
-  ["tabbar-as-titlebar", "tabbar.as_titlebar"],
-  ["tabbar-one-liner", "tabbar.one_liner"],
-  ["sidebar-overlap", "sidebar.overlap"],
-];
-async function lepton() {
+const DESIGN = "floorp.design.configs";
+const chromeExtrasFields = [
+  ["autohide-tab", "autohideTab"],
+  ["autohide-navbar", "autohideNavbar"],
+  ["autohide-sidebar", "autohideSidebar"],
+  ["autohide-back-button", "autohideBackButton"],
+  ["autohide-forward-button", "autohideForwardButton"],
+  ["autohide-page-action", "autohidePageAction"],
+  ["hidden-tab-icon", "hiddenTabIcon"],
+  ["hidden-tabbar", "hiddenTabbar"],
+  ["hidden-navbar", "hiddenNavbar"],
+  ["hidden-sidebar-header", "hiddenSidebarHeader"],
+  ["hidden-urlbar-iconbox", "hiddenUrlbarIconbox"],
+  ["hidden-bookmarkbar-icon", "hiddenBookmarkbarIcon"],
+  ["hidden-bookmarkbar-label", "hiddenBookmarkbarLabel"],
+  ["hidden-disabled-menu", "hiddenDisabledMenu"],
+  ["icon-disabled", "iconDisabled"],
+  ["icon-menu", "iconMenu"],
+  ["centered-tab", "centeredTab"],
+  ["centered-urlbar", "centeredUrlbar"],
+  ["centered-bookmarkbar", "centeredBookmarkbar"],
+  ["url-view-move-icon-to-left", "urlViewMoveIconToLeft"],
+  ["url-view-go-button-when-typing", "urlViewGoButtonWhenTyping"],
+  ["url-view-always-show-page-actions", "urlViewAlwaysShowPageActions"],
+  ["tabbar-as-titlebar", "tabbarAsTitlebar"],
+  ["tabbar-one-liner", "tabbarOneLiner"],
+  ["sidebar-overlap", "sidebarOverlap"],
+] as const;
+async function chromeExtras() {
   await route("features/design", "#favicon-color");
-  await button("Configure Lepton");
+  await button("Open UI extension settings");
   await until(
     () => document.querySelector("#autohide-tab"),
-    "Lepton not opened",
+    "UI extension settings did not open",
+  );
+  await until(
+    () => !document.querySelector("fieldset[disabled]"),
+    "UI extension settings are still loading",
   );
 }
 async function gesture() {
@@ -68,20 +73,132 @@ export async function runAdvancedTests() {
     15000,
   );
   const tests: TestCase[] = [];
-  for (const [id, pref] of leptonFields) {
+  tests.push({
+    name: "UI extension settings are available with Proton selected",
+    fn: async () => {
+      await route("features/design", "#favicon-color");
+      await click('input[name="design"][value="proton"]');
+      await until(
+        () => valueAt(DESIGN, "globalConfigs.userInterface") === "proton",
+        "Proton selection did not save",
+      );
+      await chromeExtras();
+      await route("features/design", "#favicon-color");
+      await click('input[name="design"][value="lepton"]');
+      await until(
+        () => valueAt(DESIGN, "globalConfigs.userInterface") === "lepton",
+        "Lepton selection did not restore",
+      );
+    },
+  });
+  for (const [id, key] of chromeExtrasFields) {
     tests.push({
-      name: `Lepton ${pref} saves and reloads`,
+      name: `UI extension ${key} saves and reloads`,
       fn: async () => {
-        await lepton();
-        await toggle(`#${id}`, `userChrome.${pref}`);
-        await lepton();
-        await until(
-          () => element<HTMLInputElement>(`#${id}`).checked,
-          "Lepton selection did not reload",
+        const path = `uiCustomization.chromeExtras.${key}`;
+        await chromeExtras();
+        const expected = !element<HTMLInputElement>(`#${id}`).checked;
+        await toggle(`#${id}`, DESIGN, path);
+        await chromeExtras();
+        assertEquals(
+          element<HTMLInputElement>(`#${id}`).checked,
+          expected,
+          `${key} did not reload from the design config`,
         );
       },
     });
   }
+  tests.push({
+    name: "Rapid UI extension changes preserve both settings",
+    fn: async () => {
+      await chromeExtras();
+      const tab = element<HTMLInputElement>("#autohide-tab");
+      const navbar = element<HTMLInputElement>("#autohide-navbar");
+      const expectedTab = !tab.checked;
+      const expectedNavbar = !navbar.checked;
+      tab.click();
+      navbar.click();
+      await until(
+        () =>
+          valueAt(DESIGN, "uiCustomization.chromeExtras.autohideTab") ===
+            expectedTab &&
+          valueAt(DESIGN, "uiCustomization.chromeExtras.autohideNavbar") ===
+            expectedNavbar,
+        "Rapid changes did not both save",
+      );
+      await chromeExtras();
+      assertEquals(
+        element<HTMLInputElement>("#autohide-tab").checked,
+        expectedTab,
+        "Tab setting survived reload",
+      );
+      assertEquals(
+        element<HTMLInputElement>("#autohide-navbar").checked,
+        expectedNavbar,
+        "Navbar setting survived reload",
+      );
+      assertEquals(json(DESIGN).futureKey, "keep", "Unrelated config survived");
+    },
+  });
+  tests.push({
+    name: "UI extension load failure disables editing and can retry",
+    fn: async () => {
+      await route("features/design", "#favicon-color");
+      const before = prefs.get(DESIGN);
+      faults.read = DESIGN;
+      try {
+        await button("Open UI extension settings");
+        await until(
+          () => document.querySelector('[role="alert"]'),
+          "Load failure was not shown",
+        );
+        assert(
+          element("#autohide-tab").matches(":disabled"),
+          "Editing stayed enabled after a failed load",
+        );
+        assertEquals(prefs.get(DESIGN), before, "Failed load changed config");
+      } finally {
+        faults.read = "";
+      }
+      await button("Retry");
+      await until(
+        () => !element("#autohide-tab").matches(":disabled"),
+        "Retry did not enable editing",
+      );
+    },
+  });
+  tests.push({
+    name: "UI extension save failure is visible and retry preserves edit",
+    fn: async () => {
+      await chromeExtras();
+      const before = valueAt(
+        DESIGN,
+        "uiCustomization.chromeExtras.hiddenTabbar",
+      );
+      faults.write = DESIGN;
+      try {
+        await click("#hidden-tabbar");
+        await until(
+          () => document.querySelector('[role="alert"]'),
+          "Save failure was not shown",
+        );
+        assertEquals(
+          element<HTMLInputElement>("#hidden-tabbar").checked,
+          !before,
+          "Failed edit remains visible",
+        );
+      } finally {
+        faults.write = "";
+      }
+      await button("Retry");
+      await until(
+        () =>
+          valueAt(DESIGN, "uiCustomization.chromeExtras.hiddenTabbar") ===
+            !before,
+        "Retry did not save the edit",
+      );
+    },
+  });
   tests.push({
     name: "Tab sleep exclusion toggles and adds/removes patterns",
     fn: async () => {

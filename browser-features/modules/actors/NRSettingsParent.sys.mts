@@ -1,3 +1,45 @@
+// Open a URL in a new tab from the browser window. A plain <a target="_blank">
+// click inside a system-principal about page (about:hub) opens about:blank, so
+// the page routes external links here instead. See Floorp issue #2787.
+function openExternalLinkInBrowser(
+  actor: NRSettingsParent,
+  url: string,
+): boolean {
+  try {
+    const uri = Services.io.newURI(url);
+    if (!uri.schemeIs("http") && !uri.schemeIs("https")) {
+      return false;
+    }
+    const browser = actor.browsingContext?.top?.embedderElement;
+    const win = browser?.ownerGlobal as
+      | (Window & {
+        openTrustedLinkIn?: (
+          url: string,
+          where: string,
+          options: {
+            triggeringPrincipal: unknown;
+            relatedToCurrent: boolean;
+            allowInheritPrincipal: boolean;
+          },
+        ) => void;
+      })
+      | undefined;
+    if (!win || typeof win.openTrustedLinkIn !== "function") {
+      return false;
+    }
+    win.openTrustedLinkIn(uri.spec, "tab", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      relatedToCurrent: true,
+      // Never let the new content tab inherit the system principal.
+      allowInheritPrincipal: false,
+    });
+    return true;
+  } catch (error) {
+    console.error("[noraneko] openExternalLinkInBrowser failed", error);
+    return false;
+  }
+}
+
 //TODO: make reject when the name is invalid
 export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
@@ -9,6 +51,26 @@ export class NRSettingsParent extends JSWindowActorParent {
   ): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
+      case "openExternalLink": {
+        const url = data && typeof data.url === "string" ? data.url : null;
+        const context = this.browsingContext;
+        const manager = this.manager;
+        const uri = manager?.documentURI;
+        const isSettingsPage = !!uri && (
+          (uri.schemeIs("chrome") && uri.host === "noraneko-settings") ||
+          uri.spec.split(/[?#]/)[0] === "about:hub" ||
+          (uri.schemeIs("http") &&
+            (uri.host === "localhost" || uri.host === "127.0.0.1") &&
+            [5183, 5186, 5187, 5188].includes(uri.port))
+        );
+        if (
+          url && isSettingsPage && context && !context.parent &&
+          context.currentWindowGlobal === manager
+        ) {
+          openExternalLinkInBrowser(this, url);
+        }
+        break;
+      }
       case "getWebAppLifecycleSettings": {
         const { NativeAppRuntime } = ChromeUtils.importESModule(
           "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",

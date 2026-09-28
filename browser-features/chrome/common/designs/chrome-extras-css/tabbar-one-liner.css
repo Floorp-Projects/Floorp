@@ -1,0 +1,116 @@
+/* Floorp chrome-extras: tabbarOneLiner
+ *
+ * Ported with the Lepton variables inlined and the sub-options dropped.
+ *
+ * Source: leptonChrome.css:5191-5300 (`@media -moz-pref("userChrome.tabbar.one_liner")`
+ * → `@media not -moz-pref("userChrome.tabbar.one_liner.responsive")`). That is
+ * Lepton's default configuration; the whole region runs to ~2,500 lines because
+ * every combination of `responsive` / `combine_navbar` / `tabbar_first` /
+ * `fill_urlbar` / `on_bottom` is spelled out separately.
+ *
+ * Which branch was taken (and why):
+ *  - `responsive` OFF  → the fixed-width layout, no media query;
+ *  - `combine_navbar` OFF → nav-bar and TabsToolbar stay separate toolbars;
+ *  - `tabbar_first` OFF  → nav-bar first, tab bar after it;
+ *  - `fill_urlbar` OFF   → `--uc-navbar-width-origin: 40vw`.
+ *
+ * Those four are Lepton-only sub-options that Floorp does not expose, so the
+ * default branch is what ships here. `--uc-tabbar-height` and
+ * `--uc-tabbar-hide-height` come from scaffold.css; every other `--uc-*` token
+ * is inlined as a literal below.
+ */
+
+:root {
+  --uc-navbar-width-origin: 40vw;
+  --uc-navbar-width: var(--uc-navbar-width-origin);
+  --uc-tabbar-width: calc(100vw - var(--uc-navbar-width));
+  --uc-navbar-margin: calc(var(--uc-navbar-width) + var(--uc-navbar-gap, 0px));
+  --uc-navbar-gap: 10px;
+  --uc-navbar-block: 1.5px;
+}
+
+:root[uidensity="compact"] {
+  --uc-navbar-block: 1px;
+}
+
+:root[uidensity="touch"] {
+  --uc-navbar-block: 3px;
+}
+
+#nav-bar {
+  --uc-navbar-double-block: calc(2 * var(--uc-navbar-block, 0px));
+  height: calc(var(--uc-tabbar-height) - var(--uc-navbar-double-block)) !important;
+  margin-top: calc(var(--uc-tabbar-hide-height) + var(--uc-navbar-double-block)) !important;
+  margin-bottom: var(--uc-navbar-block, 0px) !important;
+}
+
+#titlebar,
+#toolbar-menubar,
+#TabsToolbar {
+  transform: translateY(var(--uc-navbar-block, 0px));
+}
+
+#TabsToolbar > .titlebar-buttonbox-container {
+  transform: translateY(calc(-1 * var(--uc-navbar-block, 0px)));
+}
+
+#navigator-toolbox {
+  position: relative;
+  z-index: 2;
+}
+
+#nav-bar {
+  --toolbarbutton-inner-padding: 6px; /* Original: 8px */
+  border-radius: var(--uc-rounding-toolbar, var(--tab-border-radius, 4px));
+}
+
+#nav-bar,
+#nav-bar-customization-target {
+  align-items: center;
+  -moz-box-align: center;
+}
+
+#urlbar-container {
+  min-height: calc(var(--urlbar-container-height) - 2px) !important;
+}
+
+#urlbar-container {
+  min-width: calc(
+    var(--uc-oneliner-urlbar-base-width, 50px) + 24px + 2 * var(--toolbarbutton-inner-padding)
+  ) !important;
+}
+
+#urlbar[breakout][breakout-extend] {
+  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding))) !important;
+}
+
+#PersonalToolbar {
+  position: relative;
+  z-index: -1;
+}
+
+toolbarspring.chromeclass-toolbar-additional {
+  display: none !important;
+}
+
+/* `tabbar_first` OFF: nav-bar first. */
+#TabsToolbar {
+  margin-inline-start: var(--uc-navbar-margin) !important;
+}
+
+#nav-bar {
+  margin-inline-end: var(--uc-tabbar-width) !important;
+}
+
+.titlebar-spacer[type="pre-tabs"] {
+  display: none !important;
+}
+
+/*= Window controls - move to toolbar =========================================
+ * leptonChrome.css:6566-6571. scoped to Windows by the enclosing
+ * `@media (-moz-platform: windows)` in the source. */
+@media (-moz-platform: windows) {
+  #nav-bar {
+    margin-inline-start: var(--uc-window-drag-space-pre) !important;
+  }
+}

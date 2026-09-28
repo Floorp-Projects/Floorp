@@ -126,7 +126,7 @@
 .row > :last-child {
   flex-shrink: 0;
 }
-.lepton {
+.chromeExtras {
   padding: 0 0 32px 260px;
 }
 .section :global(.flex):has(> input[type=radio]) {
@@ -162,7 +162,7 @@
   white-space: nowrap;
 }
 @container (max-width:900px) {
-  .lepton {
+  .chromeExtras {
     padding-inline-start: 0;
   }
 }

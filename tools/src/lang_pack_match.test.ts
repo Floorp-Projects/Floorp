@@ -21,3 +21,23 @@ Deno.test("does not substitute an unrelated regional language pack", () => {
   assertEquals(findRequestedLangPack(packs, "pt-AO"), null);
   assertEquals(findRequestedLangPack(null, "ja"), null);
 });
+
+Deno.test("prefers a matching region when the request includes a script", () => {
+  const chinesePacks = [
+    { target_locale: "zh" },
+    { target_locale: "zh-CN" },
+    { target_locale: "zh-TW" },
+  ];
+  assertEquals(
+    findRequestedLangPack(chinesePacks, "zh-Hant-TW"),
+    chinesePacks[2],
+  );
+  assertEquals(
+    findRequestedLangPack(chinesePacks, "zh-Hans-CN"),
+    chinesePacks[1],
+  );
+  assertEquals(
+    findRequestedLangPack(chinesePacks, "zh-Hant-HK"),
+    chinesePacks[0],
+  );
+});

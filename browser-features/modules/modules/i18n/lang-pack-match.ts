@@ -14,7 +14,19 @@ export function findRequestedLangPack<T extends { target_locale: string }>(
   );
   if (exact) return exact;
 
-  const language = locale.split("-")[0];
+  const subtags = locale.split("-");
+  const language = subtags[0];
+  // Script-qualified requests such as zh-Hant-TW use the regional pack zh-TW.
+  const region = subtags.slice(1).find((subtag) =>
+    /^[A-Za-z]{2}$/.test(subtag) || /^\d{3}$/.test(subtag)
+  );
+  if (region) {
+    const regional = available?.find((pack) =>
+      pack.target_locale.toLowerCase() ===
+        `${language}-${region}`.toLowerCase()
+    );
+    if (regional) return regional;
+  }
   if (language === locale) return null;
   return available?.find((pack) =>
     pack.target_locale.toLowerCase() === language.toLowerCase()

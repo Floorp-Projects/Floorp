@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Lepton 设置",
-            "description": "配置 Lepton 主题高级首选项",
-            "configureLepton": "配置 Lepton",
+        "chrome-extras": {
             "back": "后退",
             "experimentalWarning": {
                 "title": "⚠️ 实验功能",
-                "description": "这些设置是实验性的，不受官方支持，可能会出现问题。",
-                "leptonRepository": "Lepton 是一款适用于 Firefox 的 CSS 主题。",
-                "visitRepository": "访问仓库页面"
+                "description": "这些设置是实验性的，不受官方支持，可能会出现问题。"
             },
             "autohide": {
                 "title": "自动隐藏设置",

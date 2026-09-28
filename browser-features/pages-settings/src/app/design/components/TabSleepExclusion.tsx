@@ -111,7 +111,7 @@ export function TabSleepExclusion() {
           {t("design.tabSleepExclusion.title")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-3">
         {/* Description */}
         <p className="text-sm text-muted-foreground leading-relaxed">
           {t("design.tabSleepExclusion.description")}

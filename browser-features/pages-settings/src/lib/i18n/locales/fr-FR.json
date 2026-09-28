@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "Cela ne change que l'affichage de la barre des tâches de Windows. Il ne crée pas de fenêtres de navigateur additionnelles.",
             "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
         },
-        "lepton-preferences": {
-            "title": "Paramètres de Lepton…",
-            "description": "Configurer les préférences avancées du thème Lepton",
-            "configureLepton": "Configurer Lepton",
+        "chrome-extras": {
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
-                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir.",
-                "leptonRepository": "Lepton est un thème css pour Firefox.",
-                "visitRepository": "Visiter la page du dépôt"
+                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir."
             },
             "autohide": {
                 "title": "Masquer automatiquement les paramètres",

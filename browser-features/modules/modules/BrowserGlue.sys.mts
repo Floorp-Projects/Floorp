@@ -88,8 +88,10 @@ const JS_WINDOW_ACTORS: {
       ...DEVELOPMENT_LOOPBACK_MATCHES,
       // Keep settings actor matching limited to loopback development pages.
       // Ordinary HTTP pages must not instantiate this privileged bridge.
-      // The packaged settings chrome route remains available for production.
+      // The packaged settings chrome route and its about:hub alias remain
+      // available for production.
       "chrome://noraneko-settings/*",
+      "about:hub*",
     ],
     ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },

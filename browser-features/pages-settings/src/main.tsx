@@ -6,6 +6,9 @@ import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider.tsx";
 import { I18nProvider } from "@/lib/i18n/I18nProvider.tsx";
 import { FloorpUIProvider } from "../../../libs/ui/provider.tsx";
+import { installExternalLinkHandler } from "../../../libs/ui/open-external.ts";
+
+installExternalLinkHandler();
 
 const getInitialEntry = () => {
   const hash = globalThis.location.hash.slice(1);

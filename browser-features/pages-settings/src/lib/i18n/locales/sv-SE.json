@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "Detta ändrar bara hur Windows aktivitetsfältet visas. Det skapar inte ytterligare webbläsarfönster.",
             "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
         },
-        "lepton-preferences": {
-            "title": "Lepton inställningar",
-            "description": "Konfigurera avancerade Lepton temainställningar",
-            "configureLepton": "Konfigurera Lepton",
+        "chrome-extras": {
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
-                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå.",
-                "leptonRepository": "Lepton är ett css-tema för Firefox.",
-                "visitRepository": "Besök förråd sidan"
+                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå."
             },
             "autohide": {
                 "title": "Dölj inställningar automatiskt",

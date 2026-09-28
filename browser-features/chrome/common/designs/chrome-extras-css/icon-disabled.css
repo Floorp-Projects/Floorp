@@ -1,0 +1,1048 @@
+/* Floorp chrome-extras: iconDisabled
+ * Ported from vendored Lepton (leptonChrome.css 27249-31348, 153 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * This sheet is applied while icons are ENABLED, i.e. when the toggle is
+ *
+ * OFF — Lepton's gate was `@media not (-moz-bool-pref:
+ *
+ * "userChrome.icon.disabled")`. The `icon.library` and
+ *
+ * `tab.connect_to_window` variants are Lepton-only sub-options and are not
+ *
+ * ported.
+ *
+ *
+ *
+ * `icon.panel` blocks ARE kept: they carry the Floorp-only panel menu IDs
+ *
+ * (`#rebootappmenu`, `#appMenu-ssb-button`, ...) that used to live in
+ *
+ * `FLOORP_ICON_PATCHES` and would otherwise be lost.
+ */
+
+/* leptonChrome.css:27249-27274 */
+/** Icons - List **************************************************************/
+:root {
+  --uc-folder-icon: url("chrome://global/skin/icons/folder.svg");
+  --uc-tab-icon: url("../icons/tab.svg");
+  --uc-tab-copy-icon: url("../icons/tab-copy.svg");
+  --uc-tab-unload-icon: url("../icons/tab-unload.svg");
+  --uc-tab-multiple-icon: url("../icons/tab-desktop-multiple.svg");
+  --uc-tab-close-icon: url("../icons/close-tab.svg");
+  --uc-tab-close-duplicate-icon: url("../icons/close-duplicate-tabs.svg");
+  --uc-new-tab-icon: url("../icons/new-tab.svg");
+  --uc-new-tab-forward-icon: url("../icons/new-tab-forward.svg");
+  --uc-new-tab-skip-forward-icon: url("../icons/new-tab-skip-forward.svg");
+  --uc-new-tab-multiple-icon: url("../icons/new-tab-multiple.svg");
+  --uc-sidebar-icon: url("chrome://browser/skin/sidebars.svg");
+  --uc-sidebar-icon-reverse: url("chrome://browser/skin/sidebars-right.svg");
+}
+/** Library - Icons Replace ***************************************************/
+/** Panel - Icons *************************************************************/
+/** Menu - Icons Layout *******************************************************/
+/** Icons - 1.25px Stroke Width ***********************************************/
+/** Icons for fork browsers ***************************************************/
+/*= Waterfox =================================================================*/
+/*= Tor Browser ==============================================================*/
+/*= Floorp Browser ===========================================================*/
+
+/* leptonChrome.css:27293-27300 */
+@supports selector(:has(a)) {
+  :root:has(#sidebar-box:is([positionend], [sidebar-positionend])) {
+    --uc-sidebar-icon: url("chrome://browser/skin/sidebars-right.svg");
+    --uc-sidebar-icon-reverse: url("chrome://browser/skin/sidebars.svg");
+  }
+}
+
+/* leptonChrome.css:27301-27305 */
+#TabsToolbar #new-tab-button {
+  --uc-new-tab-icon: url(chrome://global/skin/icons/plus.svg);
+}
+
+/* leptonChrome.css:27306-27311 */
+.urlbarView-row[source="tabs"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
+#urlbar-engine-one-off-item-tabs {
+  list-style-image: var(--uc-tab-icon) !important;
+}
+
+/* leptonChrome.css:27484-27530 — extra conditions dropped: userChrome.icon.panel */
+/*= Padding ==================================================================*/
+:root {
+  --arrowpanel-menuicon-padding: 8px;
+  --arrowpanel-menublank-padding: calc(
+    var(--arrowpanel-menuicon-padding) * 2 + var(--arrowpanel-menuitem-padding-inline)
+  ) !important;
+  --arrowpanel-menuimageblank-padding: calc(var(--arrowpanel-menuitem-padding-inline) - 2px) !important;
+  --arrowpanel-menuimageblank-padding-block: calc(var(--arrowpanel-menuitem-padding-block) - 2px) !important;
+}
+.subviewbutton > .toolbarbutton-icon {
+  width: 16px;
+}
+/* Icons Color */
+/*= Panel - Main =============================================================*/
+/*= Panel - Account ==========================================================*/
+/* Default */
+/* Change Separator */
+/*= Panel - Bookmark =========================================================*/
+/*= Panel - History ==========================================================*/
+/*= Panel - More tools =======================================================*/
+/* Web Developer Tools */
+/* Task Manager */
+/* Remote Debugging - Edge bug.svg */
+/* Browser Toolbox - Edge webdeveloper.svg */
+/* Browser Content Toolbox */
+/* Browser Console */
+/* Responsive Design Mode */
+/* Eyedropper */
+/* Page Source - Edge file-search.svg */
+/* Extensions for Devel */
+/*= Panel - Help =============================================================*/
+/*= Panel - Library ==========================================================*/
+/*= Panel - Downloads ========================================================*/
+/*= Toolbar - Overflow Menu ==================================================*/
+/*= Tabbar - All Tab Menu ====================================================*/
+/*= BMB_bookmarksPopup =======================================================*/
+/* BMB_bookmarksToolbarPopup */
+/*= protections-popup ========================================================*/
+/*= identity-popup ===========================================================*/
+/*= sidebarMenu-popup ========================================================*/
+/*= sidebar-context-menu =====================================================*/
+/*= chrome://browser/content/syncedtabs/sidebar.xhtml ========================*/
+/*= unified-extensions-view ===================================================*/
+/*= Compatibility ============================================================*/
+/*= Tab Mix Plus =============================================================*/
+
+/* leptonChrome.css:27531-27544 — extra conditions dropped: userChrome.icon.panel */
+:root {
+  /* Global */
+  --arrowpanel-menuicon-paddingx2: calc(var(--arrowpanel-menuicon-padding) * 2);
+  /* General Panel */
+  --arrowpanel-menublank-padding: calc(var(--arrowpanel-menuicon-paddingx2) + 8px) !important;
+  --arrowpanel-menuimageblank-padding: calc(var(--arrowpanel-menuitem-padding-inline) - 2px) !important;
+  /* Blank Menu Left Padding */
+  --arrowpanel-menuimageblank-padding-horizontal: calc(
+    var(--arrowpanel-menuicon-paddingx2) + var(--arrowpanel-menuitem-padding-inline)
+  );
+  --arrowpanel-menuitemblank-padding: calc(var(--arrowpanel-menuitem-padding-block) + 1px);
+}
+
+/* leptonChrome.css:27545-27550 — extra conditions dropped: userChrome.icon.panel */
+#downloadsHistory .button-text,
+.subviewbutton > .toolbarbutton-text {
+  padding-inline-start: var(--arrowpanel-menuicon-padding) !important;
+}
+
+/* leptonChrome.css:27551-27557 — extra conditions dropped: userChrome.icon.panel */
+.toolbaritem-combined-buttons:not(.unified-extensions-item)
+  > .subviewbutton:not(.subviewbutton-iconic)
+  > .toolbarbutton-text {
+  padding-inline-start: 0 !important;
+}
+
+/* leptonChrome.css:27558-27564 — extra conditions dropped: userChrome.icon.panel */
+#panelMenu_bookmarksMenu .subviewbutton[disabled="true"],
+#appMenu_historyMenu .subviewbutton[disabled="true"] {
+  margin-inline-start: 0 !important;
+  padding-inline-start: 0 !important;
+}
+
+/* leptonChrome.css:27565-27570 — extra conditions dropped: userChrome.icon.panel */
+#panelMenu_bookmarksMenu .subviewbutton[disabled="true"] .toolbarbutton-text,
+#appMenu_historyMenu .subviewbutton[disabled="true"] .toolbarbutton-text {
+  padding-inline-start: var(--arrowpanel-menublank-padding) !important;
+}
+
+/* leptonChrome.css:27571-27576 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-proton-update-banner .toolbarbutton-text {
+  margin-inline-start: 0 !important;
+  padding-inline-start: 0 !important; /* FF v107 */
+}
+
+/* leptonChrome.css:27577-27586 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-multiView .subviewbutton::before,
+#appMenu-proton-update-banner::before {
+  display: inline-flex;
+  display: -moz-inline-box;
+  margin-inline-end: var(--arrowpanel-menuicon-padding);
+  width: 16px;
+  height: 16px;
+}
+
+/* leptonChrome.css:27587-27592 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-proton-update-banner {
+  margin-bottom: 2px !important;
+  padding-inline-start: var(--arrowpanel-menuitem-padding-inline) !important;
+}
+
+/* leptonChrome.css:27593-27601 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-fxa-status2,
+#appMenu-zoom-controls2,
+#appMenu-zoom-controls {
+  align-items: center;
+  padding-top: var(--arrowpanel-menuimageblank-padding-block) !important;
+  padding-bottom: var(--arrowpanel-menuimageblank-padding-block) !important;
+}
+
+/* leptonChrome.css:27602-27607 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-zoom-controls2::before,
+#appMenu-zoom-controls::before {
+  margin-inline-end: 0 !important;
+}
+
+/* leptonChrome.css:27608-27615 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-zoomReduce-button2,
+#appMenu-zoomReset-button2,
+#appMenu-zoomEnlarge-button2,
+#appMenu-fullscreen-button2 {
+  --arrowpanel-menuitem-padding-block: 0px;
+}
+
+/* leptonChrome.css:27616-27620 — extra conditions dropped: userChrome.icon.panel */
+.subviewbutton[type="checkbox"]:not([checked="true"], #allTabsMenu_sortTabsButton) > .toolbarbutton-text {
+  margin-left: 16px !important;
+}
+
+/* leptonChrome.css:27621-27630 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-multiView .subviewbutton::before,
+#appMenu-proton-update-banner::before,
+#downloadsHistory .button-icon,
+.subviewbutton:not(#appMenu-proton-update-banner) > image {
+  fill: currentColor !important;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity) !important;
+  -moz-context-properties: fill, fill-opacity, stroke !important;
+}
+
+/* leptonChrome.css:27631-27636 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
+  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace)) !important;
+}
+
+/* leptonChrome.css:27637-27642 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-zoomReduce-button2:not([disabled], [open], :active):is(:hover) > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2:not([disabled], [open], :active):is(:hover) > .toolbarbutton-icon {
+  stroke: var(--button-hover-bgcolor) !important;
+}
+
+/* leptonChrome.css:27643-27648 — extra conditions dropped: userChrome.icon.panel */
+.subviewbutton[disabled="true"] > image {
+  /* Ghost icons when disabled */
+  opacity: 0.4;
+}
+
+/* leptonChrome.css:27649-27657 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-proton-addon-banners > .addon-banner-item > .toolbarbutton-icon {
+  display: inline-flex !important;
+  display: -moz-inline-box !important;
+  margin-inline-start: var(--arrowpanel-menuicon-padding);
+  order: -1 !important;
+  -moz-box-ordinal-group: 0 !important;
+}
+
+/* leptonChrome.css:27658-27662 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-addon-banners > .addon-banner-item > .toolbarbutton-icon {
+  display: inline-flex !important;
+}
+
+/* leptonChrome.css:27663-27669 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-update-banner::before,
+#appMenu-proton-update-banner::before {
+  content: url("../icons/whatsnew.svg");
+  margin-inline-end: 0px !important;
+}
+
+/* leptonChrome.css:27670-27675 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-fxa-status2::before {
+  /* Don't exist img tag */
+  content: url("chrome://browser/skin/fxa/avatar-empty.svg");
+}
+
+/* leptonChrome.css:27676-27680 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-fxa-status2:is([fxastatus="signedin"], [fxastatus="unverified"], [fxastatus="login-failed"])::before {
+  display: none;
+}
+
+/* leptonChrome.css:27681-27690 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-fxa-status2:is([fxastatus="signedin"], [fxastatus="unverified"], [fxastatus="login-failed"])
+  #appMenu-fxa-label2::before {
+  /* url("https://profile.accounts.firefox.com/v1/avatar/a") */
+  content: "";
+  border-radius: 50% !important;
+  background-size: 16px !important;
+  background-image: var(--avatar-image-url) !important;
+}
+
+/* leptonChrome.css:27691-27696 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-profiles-button > image,
+#appMenu-empty-profiles-button > image {
+  fill: transparent !important;
+}
+
+/* leptonChrome.css:27697-27702 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-empty-profiles-button,
+#PanelUI-fxa-menu-empty-profiles-button {
+  list-style-image: url("chrome://browser/content/profiles/assets/16_heart.svg");
+}
+
+/* leptonChrome.css:27703-27707 — extra conditions dropped: userChrome.icon.panel */
+#profiles-manage-profiles-button {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:27708-27712 — extra conditions dropped: userChrome.icon.panel */
+#new-tab-button {
+  list-style-image: var(--uc-new-tab-icon) !important;
+}
+
+/* leptonChrome.css:27731-27747 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-new-tab-button2,
+#appMenu-passwords-button,
+#appMenu-extensions-themes-button,
+#appMenu-save-file-button2,
+#appMenu-find-button2,
+#appMenu-more-button2,
+#appMenu-help-button2,
+#appMenu-quit-button2 {
+  padding-top: var(--arrowpanel-menuitemblank-padding-block) !important;
+  padding-bottom: var(--arrowpanel-menuitemblank-padding-block) !important;
+}
+#appMenu-zoom-controls2,
+#appMenu-zoom-controls {
+  padding-inline-start: var(--arrowpanel-menuimageblank-padding-horizontal) !important;
+}
+
+/* leptonChrome.css:27748-27752 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-new-window-button2 {
+  list-style-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:27753-27757 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-new-private-window-button2 {
+  list-style-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+
+/* leptonChrome.css:27758-27762 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-bookmarks-button {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:27763-27767 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-history-button {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:27768-27772 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-downloads-button {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+/* leptonChrome.css:27782-27786 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-print-button2 {
+  list-style-image: url("chrome://global/skin/icons/print.svg");
+}
+
+/* leptonChrome.css:27802-27806 — extra conditions dropped: userChrome.icon.panel */
+#save-page-button {
+  list-style-image: url("../icons/toolbarButton-download.svg") !important;
+}
+
+/* leptonChrome.css:27807-27811 — extra conditions dropped: userChrome.icon.panel */
+#open-file-button {
+  list-style-image: url("../icons/toolbarButton-upload.svg") !important;
+}
+
+/* leptonChrome.css:27812-27816 — extra conditions dropped: userChrome.icon.panel */
+#cut-button {
+  list-style-image: url("../icons/edit-cut.svg") !important;
+}
+
+/* leptonChrome.css:27817-27821 — extra conditions dropped: userChrome.icon.panel */
+#copy-button {
+  list-style-image: url("../icons/edit-copy.svg") !important;
+}
+
+/* leptonChrome.css:27822-27826 — extra conditions dropped: userChrome.icon.panel */
+#paste-button {
+  list-style-image: url("../icons/edit-paste.svg") !important;
+}
+
+/* leptonChrome.css:27827-27831 — extra conditions dropped: userChrome.icon.panel */
+#characterencoding-button {
+  list-style-image: url("../icons/characterEncoding.svg") !important;
+}
+
+/* leptonChrome.css:27832-27836 — extra conditions dropped: userChrome.icon.panel */
+#screenshot-button {
+  list-style-image: url("../icons/screenshot-1.svg") !important;
+}
+
+/* leptonChrome.css:27837-27841 — extra conditions dropped: userChrome.icon.panel */
+#email-link-button {
+  list-style-image: url("../icons/mail.svg") !important;
+}
+
+/* leptonChrome.css:27842-27846 — extra conditions dropped: userChrome.icon.panel */
+#panic-button {
+  list-style-image: url("../icons/forget.svg") !important;
+}
+
+/* leptonChrome.css:27847-27851 — extra conditions dropped: userChrome.icon.panel */
+#profiler-button-button > .toolbarbutton-icon {
+  list-style-image: url("../icons/performance.svg") !important;
+}
+
+/* leptonChrome.css:27852-27856 — extra conditions dropped: userChrome.icon.panel */
+#developer-button {
+  list-style-image: url("../icons/wrench-filled.svg") !important;
+}
+
+/* leptonChrome.css:27857-27861 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-settings-button {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:27876-27882 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-connect-device-button .toolbarbutton-icon,
+#PanelUI-fxa-menu-account-signout-button .toolbarbutton-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* leptonChrome.css:27883-27895 — extra conditions dropped: userChrome.icon.panel */
+#fxa-manage-account-button::before {
+  content: "";
+  display: inline-flex;
+  display: -moz-inline-box;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50%;
+  background-size: 32px;
+  background-image: var(--avatar-image-url);
+  margin-inline-end: var(--arrowpanel-menuicon-padding);
+}
+
+/* leptonChrome.css:27908-27915 — extra conditions dropped: userChrome.icon.panel */
+.syncNowBtn {
+  visibility: visible !important;
+  order: -1 !important;
+  -moz-box-ordinal-group: 0 !important;
+  margin-inline-end: var(--arrowpanel-menuicon-padding);
+}
+
+/* leptonChrome.css:27916-27920 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-setup-sync-button {
+  list-style-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* leptonChrome.css:27921-27927 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
+#PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
+.syncNowBtn[syncstatus="active"] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg") !important;
+}
+
+/* leptonChrome.css:27928-27932 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-connect-device-button {
+  list-style-image: url("../icons/add-device.svg");
+}
+
+/* leptonChrome.css:27933-27937 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-sendtab-button {
+  list-style-image: url("../icons/send-to-device.svg");
+}
+
+/* leptonChrome.css:27938-27942 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-sync-prefs-button {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:27943-27947 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu-account-signout-button {
+  list-style-image: url("../icons/sign-out.svg");
+}
+
+/* leptonChrome.css:27948-27964 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-remotetabs-view-managedevices::before {
+  /* Box */
+  content: "";
+  padding-inline-end: 16px;
+  padding-block: 1px;
+  margin-inline-end: var(--arrowpanel-menuicon-padding);
+  /* Color */
+  fill: currentColor;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+  -moz-context-properties: fill, fill-opacity, stroke;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:27965-27972 — extra conditions dropped: userChrome.icon.panel */
+.PanelUI-remotetabs-notabsforclient-label {
+  margin-inline-start: calc(
+    var(--arrowpanel-menuicon-padding) + var(--arrowpanel-menuitem-padding-inline)
+  ) !important;
+  padding-inline-start: var(--arrowpanel-menublank-padding) !important;
+}
+
+/* leptonChrome.css:27973-27982 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu::before {
+  content: "";
+  display: flex;
+  display: -moz-box;
+  border-bottom: 1px solid var(--panel-separator-color);
+  margin: var(--panel-separator-margin);
+  padding: 0;
+}
+
+/* leptonChrome.css:27983-27987 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-signedin-panel[hidden="true"] + #PanelUI-fxa-cta-menu #PanelUI-products-separator {
+  display: none;
+}
+
+/* leptonChrome.css:27988-27994 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-fxa-menu > :first-child,
+#fxa-manage-account-button {
+  order: -1;
+  -moz-box-ordinal-group: 0;
+}
+
+/* leptonChrome.css:27995-27999 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-sign-out-separator {
+  display: none;
+}
+
+/* leptonChrome.css:28000-28005 — extra conditions dropped: userChrome.icon.panel */
+.pageAction-sendToDevice-device.subviewbutton.sync-menuitem.sendtab-target[clientType=""],
+.sendToDevice-device.subviewbutton.sync-menuitem.sendtab-target[clientType=""] {
+  list-style-image: url("../icons/send-to-device.svg");
+}
+
+/* leptonChrome.css:28006-28011 — extra conditions dropped: userChrome.icon.panel */
+.pageAction-sendToDevice-device.subviewbutton.sync-menuitem.sendtab-target:not([clientType]),
+.sendToDevice-device.subviewbutton.sync-menuitem.sendtab-target:not([clientType]) {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:28012-28028 — extra conditions dropped: userChrome.icon.panel */
+.sendToDevice-device[clientType="phone"] {
+  list-style-image: url("../icons/device-phone.svg") !important;
+}
+.sendToDevice-device[clientType="tablet"] {
+  list-style-image: url("../icons/device-tablet.svg") !important;
+}
+.sendToDevice-device[clientType="desktop"] {
+  list-style-image: url("../icons/device-desktop.svg") !important;
+}
+.sendToDevice-device[clientType="tv"] {
+  list-style-image: url("../icons/device-tv.svg") !important;
+}
+.sendToDevice-device[clientType="vr"] {
+  list-style-image: url("../icons/device-vr.svg") !important;
+}
+
+/* leptonChrome.css:28029-28033 — extra conditions dropped: userChrome.icon.panel */
+#panelMenuBookmarkThisPage {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+/* leptonChrome.css:28034-28038 — extra conditions dropped: userChrome.icon.panel */
+panelMenuBookmarkThisPage[starred] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:28039-28043 — extra conditions dropped: userChrome.icon.panel */
+#panelMenu_searchBookmarks {
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:28044-28048 — extra conditions dropped: userChrome.icon.panel */
+#panelMenu_viewBookmarksToolbar {
+  list-style-image: url("../icons/bookmarks-toolbar-alt.svg");
+}
+
+/* leptonChrome.css:28049-28053 — extra conditions dropped: userChrome.icon.panel */
+#panelMenu_showAllBookmarks {
+  list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+/* leptonChrome.css:28054-28058 — extra conditions dropped: userChrome.icon.panel */
+#appMenuRecentlyClosedTabs {
+  list-style-image: var(--uc-tab-icon);
+}
+
+/* leptonChrome.css:28059-28063 — extra conditions dropped: userChrome.icon.panel */
+#appMenuRecentlyClosedWindows {
+  list-style-image: url("chrome://browser/skin/window.svg");
+}
+
+/* leptonChrome.css:28064-28068 — extra conditions dropped: userChrome.icon.panel */
+#appMenuSearchHistory {
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:28069-28074 — extra conditions dropped: userChrome.icon.panel */
+#appMenuRestoreSession,
+#appMenu-restoreSession {
+  list-style-image: url("../icons/restore-session.svg");
+}
+
+/* leptonChrome.css:28075-28079 — extra conditions dropped: userChrome.icon.panel */
+#appMenuClearRecentHistory {
+  list-style-image: url("../icons/forget.svg");
+}
+
+/* leptonChrome.css:28080-28084 — extra conditions dropped: userChrome.icon.panel */
+#PanelUI-historyMore {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:28085-28089 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-library-recentlyClosedTabs {
+  list-style-image: url("../icons/movetowindow-16.svg");
+}
+
+/* leptonChrome.css:28090-28094 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-library-recentlyClosedWindows {
+  list-style-image: url("../icons/restore-session.svg");
+}
+
+/* leptonChrome.css:28095-28099 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-moreTools-button {
+  list-style-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:28100-28105 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-child(1),
+#PanelUI-developer-tools-view .subviewbutton:nth-child(1) {
+  list-style-image: url("../icons/developer.svg");
+}
+
+/* leptonChrome.css:28106-28111 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-child(2),
+#PanelUI-developer-tools-view .subviewbutton:nth-child(2) {
+  list-style-image: url("../icons/performance.svg");
+}
+
+/* leptonChrome.css:28112-28117 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-child(3),
+#PanelUI-developer-tools-view .subviewbutton:nth-child(3) {
+  list-style-image: url("../icons/bug.svg");
+}
+
+/* leptonChrome.css:28118-28123 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-child(4),
+#PanelUI-developer-tools-view .subviewbutton:nth-child(4) {
+  list-style-image: url("../icons/window-dev-tools.svg");
+}
+
+/* leptonChrome.css:28124-28129 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-child(5),
+#PanelUI-developer-tools-view .subviewbutton:nth-child(5) {
+  list-style-image: url("../icons/command-frames.svg");
+}
+
+/* leptonChrome.css:28130-28135 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-last-child(5),
+#PanelUI-developer-tools-view .subviewbutton:nth-last-child(5) {
+  list-style-image: url("../icons/command-console.svg");
+}
+
+/* leptonChrome.css:28136-28141 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-last-child(4),
+#PanelUI-developer-tools-view .subviewbutton:nth-last-child(4) {
+  list-style-image: url("../icons/command-responsivemode.svg");
+}
+
+/* leptonChrome.css:28142-28147 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-last-child(3),
+#PanelUI-developer-tools-view .subviewbutton:nth-last-child(3) {
+  list-style-image: url("../icons/command-eyedropper.svg");
+}
+
+/* leptonChrome.css:28148-28153 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-last-child(2),
+#PanelUI-developer-tools-view .subviewbutton:nth-last-child(2) {
+  list-style-image: url("../icons/document-search.svg");
+}
+
+/* leptonChrome.css:28154-28159 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:nth-last-child(1),
+#PanelUI-developer-tools-view .subviewbutton:nth-last-child(1) {
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
+/* leptonChrome.css:28160-28164 — extra conditions dropped: userChrome.icon.panel */
+#appmenu-developer-tools-view .subviewbutton:last-child {
+  margin-bottom: 6px !important;
+}
+
+/* leptonChrome.css:28165-28169 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_menu_openHelp {
+  list-style-image: url("chrome://global/skin/icons/help.svg");
+}
+
+/* leptonChrome.css:28170-28174 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_feedbackPage {
+  list-style-image: url("../icons/send.svg");
+}
+
+/* leptonChrome.css:28175-28179 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_helpSafeMode {
+  list-style-image: url("chrome://devtools/skin/images/debugging-workers.svg");
+}
+
+/* leptonChrome.css:28180-28184 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_troubleShooting {
+  list-style-image: url("chrome://global/skin/icons/more.svg");
+}
+
+/* leptonChrome.css:28185-28190 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-report-broken-site-button,
+#appMenu_help_reportSiteIssue {
+  list-style-image: url("chrome://global/skin/icons/lightbulb.svg");
+}
+
+/* leptonChrome.css:28191-28195 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_menu_HelpPopup_reportPhishingtoolmenu {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+/* leptonChrome.css:28196-28200 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_helpSwitchDevice {
+  list-style-image: url("../icons/add-device.svg");
+}
+
+/* leptonChrome.css:28201-28205 — extra conditions dropped: userChrome.icon.panel */
+#appMenu_aboutName {
+  list-style-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:28206-28210 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-library-bookmarks-button {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:28211-28215 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-library-history-button {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:28216-28220 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-library-downloads-button {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+/* leptonChrome.css:28221-28225 — extra conditions dropped: userChrome.icon.panel */
+#downloadsHistory {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+/* leptonChrome.css:28226-28231 — extra conditions dropped: userChrome.icon.panel */
+#downloadsHistory .box-inherit.button-box {
+  display: inline-flex !important;
+  display: -moz-inline-box !important;
+}
+
+/* leptonChrome.css:28232-28236 — extra conditions dropped: userChrome.icon.panel */
+#overflowMenu-customize-button {
+  list-style-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:28237-28241 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-undoCloseTab {
+  list-style-image: url("../icons/undo.svg");
+}
+
+/* leptonChrome.css:28242-28246 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-searchTabs {
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:28247-28251 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-syncedTabs {
+  list-style-image: url("../icons/synced-tabs.svg");
+}
+
+/* leptonChrome.css:28252-28256 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-closeDuplicateTabs {
+  list-style-image: var(--uc-tab-close-duplicate-icon);
+}
+
+/* leptonChrome.css:28257-28261 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-containerTabsButton {
+  list-style-image: url("../icons/container-openin-16.svg");
+}
+
+/* leptonChrome.css:28262-28266 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-hiddenTabsButton {
+  list-style-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:28267-28271 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu-containerTabsView .subviewbutton:last-child {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:28272-28279 — extra conditions dropped: userChrome.icon.panel */
+#BMB_viewBookmarksSidebar {
+  --menuitem-image: var(--uc-sidebar-icon);
+}
+#BMB_viewBookmarksSidebar[data-l10n-args='{"isVisible":true}'] {
+  --menuitem-image: url("chrome://global/skin/icons/close.svg");
+}
+
+/* leptonChrome.css:28280-28284 — extra conditions dropped: userChrome.icon.panel */
+#BMB_searchBookmarks {
+  --menuitem-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+
+/* leptonChrome.css:28285-28290 — extra conditions dropped: userChrome.icon.panel */
+#BMB_bookmarksShowAllTop,
+#BMB_bookmarksShowAll {
+  --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+/* leptonChrome.css:28291-28295 — extra conditions dropped: userChrome.icon.panel */
+#BMB_bookmarksToolbar {
+  --menuitem-image: url("../icons/bookmarks-toolbar-alt.svg");
+}
+
+/* leptonChrome.css:28296-28304 — extra conditions dropped: userChrome.icon.panel */
+#BMB_bookmarksShowAllTop {
+  list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg") !important;
+}
+#BMB_bookmarksShowAllTop > .menu-iconic-left {
+  display: flex !important;
+  display: -moz-box !important;
+}
+
+/* leptonChrome.css:28305-28312 — extra conditions dropped: userChrome.icon.panel */
+#BMB_viewBookmarksToolbar[data-l10n-args='{"isVisible":true}'] {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+#BMB_viewBookmarksToolbar[data-l10n-args='{"isVisible":false}'] {
+  --menuitem-image: url("../icons/eye-show.svg");
+}
+
+/* leptonChrome.css:28313-28320 — extra conditions dropped: userChrome.icon.panel */
+#protections-popup-settings-button > .protections-popup-settings-icon,
+#protections-popup-show-report-button > .protections-popup-show-report-icon {
+  -moz-context-properties: fill, fill-opacity, stroke;
+  fill: currentColor;
+  margin-inline-end: 1em;
+}
+
+/* leptonChrome.css:28321-28325 — extra conditions dropped: userChrome.icon.panel */
+#protections-popup-report-broken-site-button {
+  list-style-image: url("chrome://global/skin/icons/lightbulb.svg");
+}
+
+/* leptonChrome.css:28326-28331 — extra conditions dropped: userChrome.icon.panel */
+#protections-popup-settings-button > .protections-popup-settings-icon,
+#protections-popup-multiView .panel-subview-footer-button {
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:28332-28337 — extra conditions dropped: userChrome.icon.panel */
+#protections-popup-show-report-button > .protections-popup-show-report-icon {
+  /* chrome://browser/skin/controlcenter/dashboard.svg */
+  list-style-image: url("../icons/dashboard.svg");
+}
+
+/* leptonChrome.css:28338-28343 — extra conditions dropped: userChrome.icon.panel */
+#identity-popup-clear-sitedata-button,
+#identity-popup-more-info {
+  padding-inline: 5px !important;
+}
+
+/* leptonChrome.css:28344-28348 — extra conditions dropped: userChrome.icon.panel */
+#identity-popup-securityView-body {
+  margin-inline-start: 32px !important; /* Original: 10px */
+}
+
+/* leptonChrome.css:28349-28353 — extra conditions dropped: userChrome.icon.panel */
+#identity-popup-clear-sitedata-button {
+  list-style-image: url("../icons/broom.svg");
+}
+
+/* leptonChrome.css:28354-28361 — extra conditions dropped: userChrome.icon.panel */
+#identity-popup-more-info.subviewbutton {
+  list-style-image: url("chrome://global/skin/icons/info.svg");
+}
+#identity-popup-more-info:is(menuitem) {
+  --menuitem-image: url("chrome://global/skin/icons/info.svg");
+}
+
+/* leptonChrome.css:28362-28369 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-switcher-bookmarks.subviewbutton {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+#sidebar-switcher-bookmarks:is(menuitem) {
+  --menuitem-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+/* leptonChrome.css:28370-28377 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-switcher-history.subviewbutton {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+#sidebar-switcher-history:is(menuitem) {
+  --menuitem-image: url("chrome://browser/skin/history.svg");
+}
+
+/* leptonChrome.css:28378-28385 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-switcher-tabs.subviewbutton {
+  list-style-image: url("../icons/synced-tabs.svg");
+}
+#sidebar-switcher-tabs:is(menuitem) {
+  --menuitem-image: url("../icons/synced-tabs.svg");
+}
+
+/* leptonChrome.css:28386-28393 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-switcher-genai-chat.subviewbutton {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+#sidebar-switcher-genai-chat:is(menuitem) {
+  --menuitem-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+
+/* leptonChrome.css:28394-28401 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-reverse-position.subviewbutton {
+  list-style-image: var(--uc-sidebar-icon-reverse);
+}
+#sidebar-reverse-position:is(menuitem) {
+  --menuitem-image: var(--uc-sidebar-icon-reverse);
+}
+
+/* leptonChrome.css:28402-28409 — extra conditions dropped: userChrome.icon.panel */
+#sidebarMenu-popup > *.subviewbutton[data-l10n-id="sidebar-menu-close"] {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+#sidebarMenu-popup > *:is(menuitem)[data-l10n-id="sidebar-menu-close"] {
+  --menuitem-image: url("chrome://global/skin/icons/close.svg");
+}
+
+/* leptonChrome.css:28410-28414 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-manage-extension {
+  --menuitem-image: url("chrome://global/skin/icons/settings.svg");
+}
+
+/* leptonChrome.css:28415-28419 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-remove-extension {
+  --menuitem-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+/* leptonChrome.css:28420-28424 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-report-extension {
+  --menuitem-image: url("../icons/send.svg");
+}
+
+/* leptonChrome.css:28425-28429 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-unpin-extension {
+  --menuitem-image: url("../icons/unpin-tab.svg");
+}
+
+/* leptonChrome.css:28430-28434 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-hide-sidebar {
+  --menuitem-image: url("../icons/eye-hide.svg");
+}
+
+/* leptonChrome.css:28435-28439 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-customize-sidebar {
+  --menuitem-image: url("chrome://browser/skin/customize.svg");
+}
+
+/* leptonChrome.css:28440-28444 — extra conditions dropped: userChrome.icon.panel */
+#sidebar-context-menu-enable-vertical-tabs {
+  --menuitem-image: url("chrome://browser/skin/sidebar-collapsed.svg");
+}
+
+/* leptonChrome.css:28445-28449 — extra conditions dropped: userChrome.icon.panel */
+.item.client[clientType="phone"] > .item-title-container > .item-icon-container {
+  background-image: url("../icons/device-phone.svg") !important;
+}
+
+/* leptonChrome.css:28450-28454 — extra conditions dropped: userChrome.icon.panel */
+.item.client[clientType="tablet"] > .item-title-container > .item-icon-container {
+  background-image: url("../icons/device-tablet.svg") !important;
+}
+
+/* leptonChrome.css:28455-28459 — extra conditions dropped: userChrome.icon.panel */
+.item.client[clientType="desktop"] > .item-title-container > .item-icon-container {
+  background-image: url("../icons/device-desktop.svg") !important;
+}
+
+/* leptonChrome.css:28460-28464 — extra conditions dropped: userChrome.icon.panel */
+.item.client[clientType="tv"] > .item-title-container > .item-icon-container {
+  background-image: url("../icons/device-tv.svg") !important;
+}
+
+/* leptonChrome.css:28465-28469 — extra conditions dropped: userChrome.icon.panel */
+.item.client[clientType="vr"] > .item-title-container > .item-icon-container {
+  background-image: url("../icons/device-vr.svg") !important;
+}
+
+/* leptonChrome.css:28470-28474 — extra conditions dropped: userChrome.icon.panel */
+#unified-extensions-manage-extensions {
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}
+
+/* leptonChrome.css:28475-28482 — extra conditions dropped: userChrome.icon.panel */
+.sync-engine-tabs .checkbox-icon,
+.sync-engine-tabs.sync-engine-image,
+#sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
+#sync-button {
+  list-style-image: url("../icons/synced-tabs.svg") !important;
+}
+
+/* leptonChrome.css:28483-28487 — extra conditions dropped: userChrome.icon.panel */
+#allTabsMenu_sortTabsButton {
+  list-style-image: url("../icons/text-sort-ascending.svg");
+}
+
+/* leptonChrome.css:31283-31287 — extra conditions dropped: userChrome.icon.panel */
+#appMenu-restart-button {
+  list-style-image: url("../icons/refresh-cw.svg") !important;
+}
+
+/* leptonChrome.css:31302-31312 — extra conditions dropped: userChrome.icon.panel */
+#appMenuNewIdentity {
+  list-style-image: url("chrome://browser/skin/new_identity.svg");
+}
+#appMenuNewCircuit {
+  list-style-image: url("chrome://browser/skin/new_circuit.svg");
+}
+#appMenu_torBrowserUserManual {
+  list-style-image: url("chrome://browser/skin/onion.svg");
+}
+
+/* leptonChrome.css:31324-31331 */
+#ssbPageAction-image {
+  list-style-image: url("../icons/pwa-install.svg");
+}
+#ssbPageAction-image[open-ssb="true"] {
+  list-style-image: url("../icons/pwa-launch.svg");
+}
+
+/* leptonChrome.css:31332-31348 — extra conditions dropped: userChrome.icon.panel */
+#rebootappmenu {
+  list-style-image: url("../icons/refresh-cw.svg");
+}
+#openprofiledir {
+  list-style-image: var(--uc-folder-icon);
+}
+#appMenu-ssb-button {
+  list-style-image: url("../icons/pwa-manage.svg");
+}
+#appMenu-install-or-open-ssb-current-page-button {
+  list-style-image: url("../icons/pwa-install.svg");
+}
+#appMenu-install-or-open-ssb-current-page-button[open-ssb="true"] {
+  list-style-image: url("../icons/pwa-launch.svg");
+}

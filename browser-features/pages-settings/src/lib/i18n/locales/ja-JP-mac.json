@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウインドウは作成されません。",
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
-        "lepton-preferences": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
-            "configureLepton": "Lepton の設定",
+        "chrome-extras": {
+            "title": "UI 拡張設定",
+            "description": "選択中のデザインに、追加の UI 調整を適用します",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
-                "visitRepository": "リポジトリのページを開く"
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。"
             },
             "autohide": {
                 "title": "自動非表示の設定",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
-                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+                "disabled": "コンテキストメニューとパネルメニューのアイコン表示を無効にする",
+                "menu": "コンテキストメニューのアイコン表示を有効にする"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
-            }
+            },
+            "configure": "UI 拡張設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",

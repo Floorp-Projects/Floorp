@@ -4,7 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createEffect } from "solid-js";
-import { config } from "#features-chrome/common/designs/configs.ts";
+import {
+  config,
+  getChromeExtrasSettings,
+} from "#features-chrome/common/designs/configs.ts";
+import {
+  buildChromeExtrasCSS,
+  CHROME_EXTRAS_STYLE_ID,
+} from "#features-chrome/common/designs/chrome-extras.ts";
 
 import navbarBottomCSS from "./css/options/navbar-botttom.css?inline";
 import movePageInsideSearchbarCSS from "./css/options/move_page_inside_searchbar.css?inline";
@@ -30,6 +37,9 @@ export class StyleManager {
     this.setupSpecialEffects();
     this.setupMultirowTabEffects();
     this.setupBookmarkBarEffects();
+    // Chrome extras goes LAST so its stylesheet ends up at the end of <head> and
+    // wins over both the design CSS and the options above.
+    this.setupChromeExtrasEffects();
   }
 
   private setupNavbarEffects() {
@@ -65,8 +75,6 @@ export class StyleManager {
         deleteBorderCSS,
         config().uiCustomization.display.deleteBrowserBorder,
       );
-
-
     });
   }
 
@@ -146,6 +154,51 @@ export class StyleManager {
     } else {
       this.removeStyle(id);
     }
+  }
+
+  /**
+   * Move an existing style element to the end of `<head>` so it keeps winning
+   * the cascade. Moving a node does not re-parse its stylesheet.
+   *
+   * Public because the design sheets can land after ours (see
+   * `setupChromeExtrasEffects`), so re-appending is part of this class's
+   * contract rather than an internal detail.
+   */
+  reappendStyle(id: string) {
+    if (!document) {
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element && document.head) {
+      document.head.appendChild(element);
+    }
+  }
+
+  /**
+   * The 25 chrome-extras toggles. All of them share one `<style>` whose content
+   * is rebuilt whenever a toggle changes — see `designs/chrome-extras.ts`.
+   *
+   * The second effect exists because of how the design sheets are inserted:
+   * `browser-design-element.tsx` renders them through `<For>` inside
+   * `solid-js/universal`, and when the design changes the reconciler anchors on
+   * "the sibling after the last old link". Under `proton` the following `<Show>`
+   * renders nothing, so that anchor is `null` and `insertBefore(node, null)`
+   * appends the new `<link>` at the END of `<head>` — after this stylesheet.
+   * Re-appending on every design change puts chrome-extras back on top.
+   */
+  private setupChromeExtrasEffects() {
+    createEffect(() => {
+      const css = buildChromeExtrasCSS(
+        getChromeExtrasSettings(),
+        config().globalConfigs.userInterface,
+      );
+      this.applyStyle(CHROME_EXTRAS_STYLE_ID, css, true);
+    });
+
+    createEffect(() => {
+      void config().globalConfigs.userInterface;
+      this.reappendStyle(CHROME_EXTRAS_STYLE_ID);
+    });
   }
 
   private createStyle(id: string, cssContent: string) {
