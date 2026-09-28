@@ -4,6 +4,7 @@ import { AppRegistry } from "./AppRegistry.sys.mts";
 import { getMacAppBundle, MacOSSupport } from "./supports/MacOS.sys.mts";
 import type { MacAppOptions, MacAppStore } from "./supports/MacOS.sys.mts";
 import { selectMacAppIntegration } from "#libs/pwa/appRegistry.ts";
+import { MacAppShimExperiment } from "./MacAppShimExperiment.sys.mts";
 import { classifyBundleRecovery } from "#libs/pwa/bundleRecovery.ts";
 import type {
   AppRegistryState,
@@ -168,10 +169,7 @@ export class MacAppShimInstaller {
   private supported(): MacAppShimCapabilities | null {
     if (
       Services.appinfo.OS !== "Darwin" ||
-      !Services.prefs.getBoolPref(
-        "floorp.browser.nativeApp.appShim.enabled",
-        false,
-      ) ||
+      !MacAppShimExperiment.isEnabled() ||
       this.service.protocolVersion !== 1
     ) return null;
     const capabilities = JSON.parse(
