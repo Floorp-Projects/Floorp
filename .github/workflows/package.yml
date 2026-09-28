@@ -140,6 +140,8 @@ on:
     secrets:
       runtime_artifact_token:
         required: false
+      PAT:
+        required: false
       SIGNPATH_API_TOKEN:
         required: false
       APPLE_DEVELOPER_P12_BASE64:
