@@ -119,6 +119,10 @@ export type ChromeExtrasKey = (typeof CHROME_EXTRAS_KEYS)[number];
 
 export type ChromeExtrasSettings = Record<ChromeExtrasKey, boolean>;
 
+export function isLeptonFamilyDesign(design: string): boolean {
+  return design === "lepton" || design === "photon" || design === "protonfix";
+}
+
 /** Defaults for a fresh profile: every toggle off. */
 export const CHROME_EXTRAS_DEFAULTS: ChromeExtrasSettings = {
   autohideTab: false,
@@ -224,10 +228,17 @@ const ICON_DEPENDENT_KEYS: ReadonlySet<ChromeExtrasKey> = new Set([
  * Returns the scaffold, the base icon rules while icons are enabled, and every
  * enabled toggle's rules in `CHROME_EXTRAS_KEYS` order. `iconDisabled` has the
  * opposite polarity from the other toggles: its sheet comes from Lepton's
- * `not userChrome.icon.disabled` blocks.
+ * `not userChrome.icon.disabled` blocks. Outside the Lepton family, the base
+ * icons require an explicit `iconMenu` choice so a fresh design stays intact.
  */
-export function buildChromeExtrasCSS(settings: ChromeExtrasSettings): string {
-  const iconsEnabled = !settings.iconDisabled;
+export function buildChromeExtrasCSS(
+  settings: ChromeExtrasSettings,
+  design: string,
+): string {
+  // Lepton already shows its icon set by default. Other designs keep their
+  // original appearance until the user opts into menu icons.
+  const iconsEnabled = !settings.iconDisabled &&
+    (isLeptonFamilyDesign(design) || settings.iconMenu);
   const parts: string[] = [CHROME_EXTRAS_SCAFFOLD_CSS];
 
   for (const key of CHROME_EXTRAS_KEYS) {

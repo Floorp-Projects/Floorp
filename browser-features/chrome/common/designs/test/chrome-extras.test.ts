@@ -55,6 +55,13 @@ function toggles(patch: Partial<Record<string, boolean>>) {
   return { ...CHROME_EXTRAS_DEFAULTS, ...patch };
 }
 
+function cssFor(
+  patch: Partial<Record<string, boolean>>,
+  design = "lepton",
+): string {
+  return buildChromeExtrasCSS(toggles(patch), design);
+}
+
 /** Drop `/* ... *\/` comments so assertions look at rules, not at the
  *  provenance notes every generated file carries. */
 function stripComments(css: string): string {
@@ -300,7 +307,7 @@ function testNativeImplementationsAvoidLeptonLayoutTokens(): void {
 // ---------------------------------------------------------------------------
 
 function testBuildEmitsScaffoldEvenWithNothingEnabled(): void {
-  const css = buildChromeExtrasCSS(toggles({}));
+  const css = cssFor({});
   assert(
     css.includes(CHROME_EXTRAS_SCAFFOLD_CSS.trim()),
     "the scaffold is always present (it is inert until a consumer is enabled)",
@@ -308,7 +315,7 @@ function testBuildEmitsScaffoldEvenWithNothingEnabled(): void {
 }
 
 function testBuildIncludesOnlyEnabledToggles(): void {
-  const css = buildChromeExtrasCSS(toggles({ hiddenTabbar: true }));
+  const css = cssFor({ hiddenTabbar: true });
   assert(
     css.includes("#TabsToolbar"),
     "an enabled toggle's rules must be present",
@@ -334,19 +341,17 @@ function testSidebarLayoutVariants(): void {
     );
   };
 
-  const overlap = buildChromeExtrasCSS(toggles({ sidebarOverlap: true }));
+  const overlap = cssFor({ sidebarOverlap: true });
   expectVariant(overlap, "overlapOnly", true);
   expectVariant(overlap, "autohideOnly", false);
   expectVariant(overlap, "combined", false);
 
-  const autohide = buildChromeExtrasCSS(toggles({ autohideSidebar: true }));
+  const autohide = cssFor({ autohideSidebar: true });
   expectVariant(autohide, "autohideOnly", true);
   expectVariant(autohide, "overlapOnly", false);
   expectVariant(autohide, "combined", false);
 
-  const combined = buildChromeExtrasCSS(
-    toggles({ autohideSidebar: true, sidebarOverlap: true }),
-  );
+  const combined = cssFor({ autohideSidebar: true, sidebarOverlap: true });
   assert(
     combined.includes(CHROME_EXTRAS_CSS.autohideSidebar),
     "combined layout includes the auto-hide base rules",
@@ -395,13 +400,11 @@ function testRightSidebarMarkerCompatibility(): void {
 
 function testCombinedSidebarUsesCollapsedWidth(): void {
   const style = document.createElement("style");
-  style.textContent = buildChromeExtrasCSS(
-    toggles({
-      autohideSidebar: true,
-      sidebarOverlap: true,
-      iconDisabled: true,
-    }),
-  );
+  style.textContent = cssFor({
+    autohideSidebar: true,
+    sidebarOverlap: true,
+    iconDisabled: true,
+  });
   const sidebarBox = document.createXULElement("box");
   sidebarBox.id = "sidebar-box";
   const sidebar = document.createXULElement("box");
@@ -432,15 +435,13 @@ function testCombinedSidebarUsesCollapsedWidth(): void {
 
 /** `iconMenu` only means anything while the icon rules are active. */
 function testIconMenuIsSkippedWhenIconsDisabled(): void {
-  const withIcons = buildChromeExtrasCSS(toggles({ iconMenu: true }));
+  const withIcons = cssFor({ iconMenu: true });
   assert(
     withIcons.includes("#usercssloader-menu"),
     "iconMenu rules apply while icons are enabled",
   );
 
-  const withoutIcons = buildChromeExtrasCSS(
-    toggles({ iconMenu: true, iconDisabled: true }),
-  );
+  const withoutIcons = cssFor({ iconMenu: true, iconDisabled: true });
   assert(
     !withoutIcons.includes("#usercssloader-menu"),
     "iconMenu rules must be dropped when iconDisabled is on",
@@ -449,17 +450,38 @@ function testIconMenuIsSkippedWhenIconsDisabled(): void {
 
 /** The `iconDisabled` sheet was extracted from a negated Lepton pref gate. */
 function testBaseIconRulesFollowIconDisabledPolarity(): void {
-  const enabled = buildChromeExtrasCSS(toggles({}));
+  const enabled = cssFor({});
   assert(
     enabled.includes(CHROME_EXTRAS_CSS.iconDisabled),
     "base icon rules must be present while iconDisabled is off",
   );
 
-  const disabled = buildChromeExtrasCSS(toggles({ iconDisabled: true }));
+  const disabled = cssFor({ iconDisabled: true });
   assert(
     !disabled.includes(CHROME_EXTRAS_CSS.iconDisabled),
     "base icon rules must be absent while iconDisabled is on",
   );
+}
+
+function testNonLeptonIconsRequireOptIn(): void {
+  for (const design of ["proton", "fluerial"]) {
+    assert(
+      !cssFor({}, design).includes(CHROME_EXTRAS_CSS.iconDisabled),
+      `${design} must keep its original icon appearance by default`,
+    );
+    assert(
+      cssFor({ iconMenu: true }, design).includes(
+        CHROME_EXTRAS_CSS.iconDisabled,
+      ),
+      `${design} can opt into the ported icons`,
+    );
+    assert(
+      !cssFor({ iconMenu: true, iconDisabled: true }, design).includes(
+        CHROME_EXTRAS_CSS.iconDisabled,
+      ),
+      `${design} respects iconDisabled after opting in`,
+    );
+  }
 }
 
 /**
@@ -557,14 +579,49 @@ function testDeepMergeFillsMissingChromeExtras(): void {
   );
 }
 
-/** With no pref set at all the migration yields the all-off defaults. */
-function testLegacyMigrationDefaultsToOff(): void {
+/** Every migrated toggle has a boolean value, including the icon default. */
+function testLegacyMigrationYieldsBooleans(): void {
   const migrated = getOldChromeExtrasConfig();
   for (const key of CHROME_EXTRAS_KEYS) {
     assert(
       typeof migrated[key] === "boolean",
       `migrated ${key} must be a boolean`,
     );
+  }
+}
+
+function testIconMenuMigrationKeepsEffectiveDefault(): void {
+  const pref = LEGACY_CHROME_EXTRAS_PREFS.iconMenu;
+  const hadUserValue = Services.prefs.prefHasUserValue(pref);
+  const previousValue = Services.prefs.getBoolPref(pref, false);
+  try {
+    if (hadUserValue) Services.prefs.clearUserPref(pref);
+    for (const design of ["lepton", "photon", "protonfix"]) {
+      assertEquals(
+        getOldChromeExtrasConfig(design).iconMenu,
+        true,
+        `${design} keeps Lepton's menu icon default before user.js is applied`,
+      );
+    }
+    for (const design of ["proton", "fluerial"]) {
+      assertEquals(
+        getOldChromeExtrasConfig(design).iconMenu,
+        false,
+        `${design} does not inherit Lepton's menu icon default`,
+      );
+    }
+    Services.prefs.setBoolPref(pref, false);
+    assertEquals(
+      getOldChromeExtrasConfig("lepton").iconMenu,
+      false,
+      "an explicit off choice overrides Lepton's default",
+    );
+  } finally {
+    if (hadUserValue) {
+      Services.prefs.setBoolPref(pref, previousValue);
+    } else {
+      Services.prefs.clearUserPref(pref);
+    }
   }
 }
 
@@ -709,17 +766,23 @@ function injectedStyle(): HTMLElement | null {
 }
 
 function withStyleManager(fn: (manager: StyleManager) => void): void {
+  const mountedStyle = injectedStyle();
   createRoot((dispose) => {
     const manager = new StyleManager();
-    manager.setupStyleEffects();
-    fn(manager);
-    dispose();
+    try {
+      manager.setupStyleEffects();
+      fn(manager);
+    } finally {
+      dispose();
+      injectedStyle()?.remove();
+      if (mountedStyle) document.head.appendChild(mountedStyle);
+    }
   });
 }
 
 /** With everything off the sheet still exists (the scaffold is always there). */
 function testStylesheetIsAlwaysInjected(): void {
-  const before = injectedStyle();
+  const mountedStyle = injectedStyle();
   withStyleManager(() => {
     const style = injectedStyle();
     assert(style !== null, "the chrome-extras style element must be injected");
@@ -732,9 +795,11 @@ function testStylesheetIsAlwaysInjected(): void {
       "an empty configuration must still carry the scaffold",
     );
   });
-  if (before) {
-    document.head.appendChild(before);
-  }
+  assertEquals(
+    document.querySelectorAll(`[id="${CHROME_EXTRAS_STYLE_ID}"]`).length,
+    mountedStyle ? 1 : 0,
+    "the test manager must not leave a duplicate style element",
+  );
 }
 
 /** Turning a toggle on must add its rules; turning it off must remove them. */
@@ -769,27 +834,30 @@ function testReappendStyleMovesToEndOfHead(): void {
     const probe = document.createElement("style");
     probe.id = "floorp-chrome-extras-cascade-probe";
     document.head.appendChild(probe);
-    assert(
-      document.head.lastElementChild?.id === probe.id,
-      "the probe must be last before re-appending",
-    );
+    try {
+      assert(
+        document.head.lastElementChild?.id === probe.id,
+        "the probe must be last before re-appending",
+      );
 
-    manager.reappendStyle(CHROME_EXTRAS_STYLE_ID);
+      manager.reappendStyle(CHROME_EXTRAS_STYLE_ID);
 
-    assert(
-      document.head.lastElementChild?.id === CHROME_EXTRAS_STYLE_ID,
-      "reappendStyle must move the sheet to the end of <head>",
-    );
-    assert(
-      injectedStyle() === style,
-      "reappendStyle must move the same node, not recreate it",
-    );
-    const before = style?.textContent ?? "";
-    assert(
-      before.includes("--uc-sidebar-width"),
-      "moving the node must not clear its content",
-    );
-    probe.remove();
+      assert(
+        document.head.lastElementChild?.id === CHROME_EXTRAS_STYLE_ID,
+        "reappendStyle must move the sheet to the end of <head>",
+      );
+      assert(
+        injectedStyle() === style,
+        "reappendStyle must move the same node, not recreate it",
+      );
+      const before = style?.textContent ?? "";
+      assert(
+        before.includes("--uc-sidebar-width"),
+        "moving the node must not clear its content",
+      );
+    } finally {
+      probe.remove();
+    }
   });
 }
 
@@ -852,6 +920,10 @@ export async function runAllTests(): Promise<void> {
       fn: testBaseIconRulesFollowIconDisabledPolarity,
     },
     {
+      name: "non-Lepton icons require opt-in",
+      fn: testNonLeptonIconsRequireOptIn,
+    },
+    {
       name: "go button selector is class based",
       fn: testGoButtonSelectorIsClassBased,
     },
@@ -861,8 +933,12 @@ export async function runAllTests(): Promise<void> {
       fn: testDeepMergeFillsMissingChromeExtras,
     },
     {
-      name: "legacy migration defaults to off",
-      fn: testLegacyMigrationDefaultsToOff,
+      name: "legacy migration yields booleans",
+      fn: testLegacyMigrationYieldsBooleans,
+    },
+    {
+      name: "icon menu migration keeps the design default",
+      fn: testIconMenuMigrationKeepsEffectiveDefault,
     },
     {
       name: "legacy Lepton prefs follow new settings",

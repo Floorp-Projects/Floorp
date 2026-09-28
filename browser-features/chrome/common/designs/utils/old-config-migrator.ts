@@ -8,6 +8,7 @@ import {
   CHROME_EXTRAS_KEYS,
   type ChromeExtrasKey,
   type ChromeExtrasSettings,
+  isLeptonFamilyDesign,
 } from "../chrome-extras.ts";
 
 /**
@@ -15,12 +16,10 @@ import {
  * keyed by their chrome-extras key. Seeding from these is what makes an
  * upgrade keep the user's choices.
  *
- * Read with `getBoolPref(pref, default)` rather than `prefHasUserValue()`: the
- * Lepton user.js writes `userChrome.icon.menu = true` to the *default* branch
- * when a Lepton-family design is selected, so for that one key the default
- * branch value is the user's effective setting and has to survive the move.
- * Every other key defaults to `false` in the bundled user.js, so the plain
- * default is correct for them.
+ * Lepton's user.js writes `userChrome.icon.menu = true` to the default branch.
+ * Config migration can run before that user.js is applied, so the iconMenu
+ * fallback follows the selected design unless the user set the pref directly.
+ * Every other key defaults to `false` in the bundled user.js.
  */
 export const LEGACY_CHROME_EXTRAS_PREFS: Record<ChromeExtrasKey, string> = {
   autohideTab: "userChrome.autohide.tab",
@@ -65,10 +64,41 @@ export const LEGACY_ALIASES: Partial<Record<ChromeExtrasKey, string[]>> = {
  * already stored in `floorp.design.configs` win, so this only has an effect on
  * the first run after the upgrade.
  */
-export function getOldChromeExtrasConfig(): ChromeExtrasSettings {
+function getMigrationDesign(): string {
+  try {
+    const raw = Services.prefs.getStringPref("floorp.design.configs", "");
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        typeof parsed === "object" && parsed !== null &&
+        "globalConfigs" in parsed
+      ) {
+        const globalConfigs = parsed.globalConfigs;
+        if (
+          typeof globalConfigs === "object" && globalConfigs !== null &&
+          "userInterface" in globalConfigs &&
+          typeof globalConfigs.userInterface === "string"
+        ) {
+          return globalConfigs.userInterface;
+        }
+      }
+    }
+  } catch {
+    // The normal config loader reports invalid stored JSON. Use legacy prefs.
+  }
+  return getOldInterfaceConfig();
+}
+
+export function getOldChromeExtrasConfig(
+  design = getMigrationDesign(),
+): ChromeExtrasSettings {
   const result: ChromeExtrasSettings = { ...CHROME_EXTRAS_DEFAULTS };
   for (const key of Object.keys(result) as ChromeExtrasKey[]) {
     const pref = LEGACY_CHROME_EXTRAS_PREFS[key];
+    if (key === "iconMenu" && !Services.prefs.prefHasUserValue(pref)) {
+      result.iconMenu = isLeptonFamilyDesign(design);
+      continue;
+    }
     if (Services.prefs.getBoolPref(pref, CHROME_EXTRAS_DEFAULTS[key])) {
       result[key] = true;
       continue;

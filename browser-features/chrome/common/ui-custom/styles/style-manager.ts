@@ -75,8 +75,6 @@ export class StyleManager {
         deleteBorderCSS,
         config().uiCustomization.display.deleteBrowserBorder,
       );
-
-
     });
   }
 
@@ -190,7 +188,10 @@ export class StyleManager {
    */
   private setupChromeExtrasEffects() {
     createEffect(() => {
-      const css = buildChromeExtrasCSS(getChromeExtrasSettings());
+      const css = buildChromeExtrasCSS(
+        getChromeExtrasSettings(),
+        config().globalConfigs.userInterface,
+      );
       this.applyStyle(CHROME_EXTRAS_STYLE_ID, css, true);
     });
 
