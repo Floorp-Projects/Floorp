@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
         },
         "chrome-extras": {
-            "title": "Paramètres de Lepton…",
-            "description": "Configurer les préférences avancées du thème Lepton",
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Paramètres de la barre latérale",
                 "overlap": "Afficher la barre latérale sur le contenu du site web"
-            },
-            "configure": "Configurer Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Exclusion de mise en veille par onglet",

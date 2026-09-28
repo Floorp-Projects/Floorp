@@ -39,9 +39,10 @@
  *     python3 ../../../../tools/gen-chrome-extras.py
  *
  * The generator only takes blocks that gate on a single Lepton toggle; blocks
- * that AND several toggles together are layout combinations and are left to the
- * native implementations. Everything it drops is listed in the header of the
- * generated file, so the divergence from upstream stays auditable.
+ * that AND several toggles together are layout combinations. The sidebar
+ * overlap/auto-hide combination has its own sheet; the other combinations are
+ * left to the native implementations. Omissions are listed in generated file
+ * headers so the divergence from upstream stays auditable.
  *
  * Three keys are Floorp-native rather than ported — `autohideNavbar`,
  * `tabbarAsTitlebar` and `tabbarOneLiner`. Lepton implements them inside ~2,500
@@ -54,6 +55,7 @@ import autohideForwardButtonCSS from "./chrome-extras-css/autohide-forward-butto
 import autohideNavbarCSS from "./chrome-extras-css/autohide-navbar.css?inline";
 import autohidePageActionCSS from "./chrome-extras-css/autohide-page-action.css?inline";
 import autohideSidebarCSS from "./chrome-extras-css/autohide-sidebar.css?inline";
+import autohideSidebarOnlyCSS from "./chrome-extras-css/autohide-sidebar-only.css?inline";
 import autohideTabCSS from "./chrome-extras-css/autohide-tab.css?inline";
 import centeredBookmarkbarCSS from "./chrome-extras-css/centered-bookmarkbar.css?inline";
 import centeredTabCSS from "./chrome-extras-css/centered-tab.css?inline";
@@ -70,6 +72,8 @@ import iconDisabledCSS from "./chrome-extras-css/icon-disabled.css?inline";
 import iconMenuCSS from "./chrome-extras-css/icon-menu.css?inline";
 import scaffoldCSS from "./chrome-extras-css/scaffold.css?inline";
 import sidebarOverlapCSS from "./chrome-extras-css/sidebar-overlap.css?inline";
+import sidebarOverlapOnlyCSS from "./chrome-extras-css/sidebar-overlap-only.css?inline";
+import sidebarOverlapAutohideCSS from "./chrome-extras-css/sidebar-overlap-autohide.css?inline";
 import tabbarAsTitlebarCSS from "./chrome-extras-css/tabbar-as-titlebar.css?inline";
 import tabbarOneLinerCSS from "./chrome-extras-css/tabbar-one-liner.css?inline";
 import urlViewAlwaysShowPageActionsCSS from "./chrome-extras-css/url-view-always-show-page-actions.css?inline";
@@ -202,6 +206,13 @@ export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   tabbarOneLiner: tabbarOneLinerCSS,
 };
 
+/** Layout rules selected by the sidebar toggle combination. */
+export const CHROME_EXTRAS_SIDEBAR_VARIANTS = {
+  autohideOnly: autohideSidebarOnlyCSS,
+  overlapOnly: sidebarOverlapOnlyCSS,
+  combined: sidebarOverlapAutohideCSS,
+} as const;
+
 /** Toggles that only make sense while the Lepton icon rules are active. */
 const ICON_DEPENDENT_KEYS: ReadonlySet<ChromeExtrasKey> = new Set([
   "iconMenu",
@@ -233,6 +244,14 @@ export function buildChromeExtrasCSS(settings: ChromeExtrasSettings): string {
       continue;
     }
     parts.push(CHROME_EXTRAS_CSS[key]);
+  }
+
+  if (settings.autohideSidebar && settings.sidebarOverlap) {
+    parts.push(CHROME_EXTRAS_SIDEBAR_VARIANTS.combined);
+  } else if (settings.autohideSidebar) {
+    parts.push(CHROME_EXTRAS_SIDEBAR_VARIANTS.autohideOnly);
+  } else if (settings.sidebarOverlap) {
+    parts.push(CHROME_EXTRAS_SIDEBAR_VARIANTS.overlapOnly);
   }
 
   return parts.join("\n");

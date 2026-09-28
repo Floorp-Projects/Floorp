@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
         },
         "chrome-extras": {
-            "title": "Lepton inställningar",
-            "description": "Konfigurera avancerade Lepton temainställningar",
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Sidofält inställningar",
                 "overlap": "Visa sidofält över webbplatsens innehåll"
-            },
-            "configure": "Konfigurera Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Flik sömn uteslutning",

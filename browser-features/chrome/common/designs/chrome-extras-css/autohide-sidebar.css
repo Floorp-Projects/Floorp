@@ -1,16 +1,14 @@
 /* Floorp chrome-extras: autohideSidebar
- * Ported from vendored Lepton (leptonChrome.css 26958-27081, 3 block(s)).
+ * Ported from vendored Lepton (leptonChrome.css 26958-26967, 1 block(s)).
  *
  * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
  * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
  * That also drops Floorp's dependency on the vendored file, which
  * update_lepton.yml re-syncs from upstream every day.
  *
- * Needs the `--uc-sidebar-*` tokens from scaffold.css. Lepton's dedicated
+ * Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and
  *
- * `sidebar.overlap and autohide.sidebar` combination block is not ported;
- *
- * with both toggles on, the two sheets merge instead.
+ * combined layout rules are injected separately by chrome-extras.ts.
  */
 
 /* leptonChrome.css:26958-26967 */
@@ -23,52 +21,21 @@
   max-width: var(--uc-sidebar-activate-width) !important;
 }
 
-/* leptonChrome.css:27034-27059 */
+/* leptonChrome.css:25178-25194 (shared by both sidebar toggles) */
 #sidebar-box {
-  --uc-sidebar-fullscreen-margin: calc(var(--uc-sidebar-fullscreen-width) + var(--uc-sidebar-activate-width-reverse));
-  overflow: hidden;
-  will-change: min-width, max-width;
+  --uc-sidebar-shadow-color: #28282f;
+  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
+  position: relative !important;
+  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px var(--uc-sidebar-shadow-color);
 }
-#sidebar-box:is(:hover, :focus-within),
-#sidebar-box:has(#sidebar-switcher-target.active) {
-  min-width: var(--uc-sidebar-activate-width) !important;
-  max-width: var(--uc-sidebar-activate-width) !important;
+#sidebar-box:is([positionend], [sidebar-positionend]) {
+  --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));
 }
-:root[inFullscreen="true"] #sidebar-box:not([positionend]) {
-  margin-inline-start: var(--uc-sidebar-fullscreen-margin) !important;
-  will-change: margin-inline-start;
+#sidebar {
+  display: block;
 }
-:root[inFullscreen="true"] #sidebar-box:not([positionend]):is(:hover, :focus-within) {
-  margin-inline-start: 0 !important;
-}
-:root[inFullscreen="true"] #sidebar-box[positionend] {
-  margin-inline-end: var(--uc-sidebar-fullscreen-margin) !important;
-  will-change: margin-inline-end;
-}
-:root[inFullscreen="true"] #sidebar-box[positionend]:is(:hover, :focus-within) {
-  margin-inline-end: 0 !important;
-}
-
-/* leptonChrome.css:27060-27081 */
-#sidebar-box {
-  transition: min-width var(--uc-autohide-sidebar-speed) var(--animation-easing-function)
-      var(--uc-autohide-sidebar-delay),
-    max-width var(--uc-autohide-sidebar-speed) var(--animation-easing-function) var(--uc-autohide-sidebar-delay) !important;
-}
-#sidebar-box:is(:hover, :focus-within),
-#sidebar-box:has(#sidebar-switcher-target.active) {
-  transition-delay: 0ms !important;
-}
-:root[inFullscreen="true"] #sidebar-box {
-  transition: margin-inline-start var(--uc-autohide-fullscreen-sidebar-speed) var(--animation-easing-function)
-    var(--uc-autohide-sidebar-delay) !important;
-}
-:root[inFullscreen="true"] #sidebar-box[positionend] {
-  transition-property: margin-inline-end !important;
-}
-:root[inFullscreen="true"] #sidebar-box:is(:hover, :focus-within),
-:root[inFullscreen="true"] #sidebar-box:has(#sidebar-switcher-target.active) {
-  transition-delay: 0ms !important;
+#main-window > body > box {
+  z-index: 2 !important;
 }
 
 /* leptonChrome.css:25174-25176 (shared with sidebar-overlap.css) */

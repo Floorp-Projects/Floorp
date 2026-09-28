@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "Deze optie is uitsluitend beschikbaar voor Windows."
         },
         "chrome-extras": {
-            "title": "Lepton Instellingen",
-            "description": "Geavanceerde Lepton-thema-instellingen configureren",
             "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimentele functies",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Zijbalk instellingen",
                 "overlap": "Zijbalk over website-inhoud tonen"
-            },
-            "configure": "Configure Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Tabbladslaapstand-uitzonderingen",

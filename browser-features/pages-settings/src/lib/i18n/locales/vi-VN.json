@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
-            "title": "Cài đặt Lepton",
-            "description": "Thay đổi các cài đặt nâng cao của Lepton",
             "back": "Quay lại",
             "experimentalWarning": {
                 "title": "⚠️ Tính năng thử nghiệm",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Hiện thanh lề đè lên nội dung trang web"
-            },
-            "configure": "Tùy chỉnh Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",

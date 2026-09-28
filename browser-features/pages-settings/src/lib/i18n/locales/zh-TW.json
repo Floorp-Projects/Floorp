@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
         },
         "chrome-extras": {
-            "title": "Lepton 設定",
-            "description": "Lepton 進階主題偏好設定",
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "側邊欄設定",
                 "overlap": "在網站內容上顯示側邊欄"
-            },
-            "configure": "設定 Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "排除分頁睡眠",

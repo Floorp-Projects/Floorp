@@ -53,7 +53,7 @@
 
 /* leptonChrome.css:27293-27300 */
 @supports selector(:has(a)) {
-  :root:has(#sidebar-box[positionend]) {
+  :root:has(#sidebar-box:is([positionend], [sidebar-positionend])) {
     --uc-sidebar-icon: url("chrome://browser/skin/sidebars-right.svg");
     --uc-sidebar-icon-reverse: url("chrome://browser/skin/sidebars.svg");
   }

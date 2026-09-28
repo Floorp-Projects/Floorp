@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
-            "title": "Definições de Lepton",
-            "description": "Configurar as preferências avançadas do tema Lepton",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Funcionalidades Experimentais",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Definições da barra lateral",
                 "overlap": "Mostrar barra lateral sobre o conteúdo do sítio Web"
-            },
-            "configure": "Configurar o Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Separador Exclusão do sono",

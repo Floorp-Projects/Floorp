@@ -144,8 +144,8 @@
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
         "chrome-extras": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
+            "title": "UI 拡張設定",
+            "description": "選択中のデザインに、追加の UI 調整を適用します",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
@@ -197,7 +197,7 @@
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
             },
-            "configure": "Lepton の設定"
+            "configure": "UI 拡張設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",

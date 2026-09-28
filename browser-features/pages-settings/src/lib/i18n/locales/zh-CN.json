@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
-            "title": "Lepton 设置",
-            "description": "配置 Lepton 主题高级首选项",
             "back": "后退",
             "experimentalWarning": {
                 "title": "⚠️ 实验功能",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "侧边栏设置",
                 "overlap": "在网站内容上显示侧边栏"
-            },
-            "configure": "配置 Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "标签页卸载排除",

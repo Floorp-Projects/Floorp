@@ -22,7 +22,9 @@ LOCALES = "browser-features/pages-settings/src/lib/i18n/locales/*.json"
 OLD = "lepton-preferences"
 NEW = "chrome-extras"
 
-# English and Japanese are re-worded: the strings mentioned Lepton by name.
+# Locales with reviewed design-agnostic copy keep their own strings. Other
+# locales omit these three keys and use i18next's en-US fallback rather than
+# showing copy that incorrectly says the settings only apply to Lepton.
 OVERRIDES = {
     "en-US": {
         "title": "UI Extension Settings",
@@ -36,7 +38,19 @@ OVERRIDES = {
         "description": "選択中のデザインに、追加の UI 調整を適用します",
         "configure": "UI 拡張設定を開く",
     },
+    "en-GB": {
+        "title": "UI Extension Settings",
+        "description": "Apply optional UI tweaks on top of the currently selected design",
+        "configure": "Open UI extension settings",
+    },
+    "ja-JP-mac": {
+        "title": "UI 拡張設定",
+        "description": "選択中のデザインに、追加の UI 調整を適用します",
+        "configure": "UI 拡張設定を開く",
+    },
 }
+
+DESIGN_AGNOSTIC_KEYS = ("title", "description", "configure")
 
 # Keys dropped because the UI that used them is gone.
 DROP_KEYS = ("leptonRepository", "visitRepository")
@@ -49,6 +63,10 @@ def rewrite_block(block: object, locale: str) -> collections.OrderedDict:
     assert isinstance(block, collections.OrderedDict)
     out = collections.OrderedDict()
     for key, value in block.items():
+        if key in DESIGN_AGNOSTIC_KEYS and locale not in OVERRIDES:
+            continue
+        if key in RENAME_KEYS and locale not in OVERRIDES:
+            continue
         if key in RENAME_KEYS:
             out[RENAME_KEYS[key]] = value
         elif key in DROP_KEYS:
@@ -75,6 +93,9 @@ def rename_namespace(node: object, locale: str) -> None:
             )
             node.clear()
             node.update(rebuilt)
+            return
+        if NEW in node:
+            node[NEW] = rewrite_block(node[NEW], locale)
             return
         for value in node.values():
             rename_namespace(value, locale)

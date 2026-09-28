@@ -20,6 +20,7 @@ import {
   CHROME_EXTRAS_DEFAULTS,
   CHROME_EXTRAS_KEYS,
   CHROME_EXTRAS_SCAFFOLD_CSS,
+  CHROME_EXTRAS_SIDEBAR_VARIANTS,
   CHROME_EXTRAS_STYLE_ID,
 } from "../chrome-extras.ts";
 import {
@@ -93,6 +94,9 @@ function testEveryKeyHasCss(): void {
       `CHROME_EXTRAS_CSS has an unknown key: ${key}`,
     );
   }
+  for (const [key, css] of Object.entries(CHROME_EXTRAS_SIDEBAR_VARIANTS)) {
+    assert(css.trim().length > 0, `${key} sidebar variant must have CSS`);
+  }
 }
 
 function testDefaultsAreAllOff(): void {
@@ -125,6 +129,7 @@ function testNoLeptonPrefGate(): void {
     const [key, css] of Object.entries({
       scaffold: CHROME_EXTRAS_SCAFFOLD_CSS,
       ...CHROME_EXTRAS_CSS,
+      ...CHROME_EXTRAS_SIDEBAR_VARIANTS,
     })
   ) {
     const rules = stripComments(css);
@@ -154,6 +159,7 @@ function testEveryUsedUcTokenIsDefinedOrHasFallback(): void {
   const sheets = new Map<string, string>([
     ["scaffold", CHROME_EXTRAS_SCAFFOLD_CSS],
     ...Object.entries(CHROME_EXTRAS_CSS),
+    ...Object.entries(CHROME_EXTRAS_SIDEBAR_VARIANTS),
   ]);
   for (const css of sheets.values()) {
     for (const match of css.matchAll(declare)) {
@@ -198,6 +204,7 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
     const css of [
       CHROME_EXTRAS_SCAFFOLD_CSS,
       ...Object.values(CHROME_EXTRAS_CSS),
+      ...Object.values(CHROME_EXTRAS_SIDEBAR_VARIANTS),
     ]
   ) {
     for (const match of css.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gm)) {
@@ -310,6 +317,117 @@ function testBuildIncludesOnlyEnabledToggles(): void {
     !css.includes("var(--uc-sidebar-width)"),
     "a disabled toggle's rules must be absent",
   );
+}
+
+/** Lepton has three distinct sidebar layouts; merging their rules breaks
+ * auto-hide because the overlap-only width overrides the collapsed width. */
+function testSidebarLayoutVariants(): void {
+  const expectVariant = (
+    css: string,
+    variant: keyof typeof CHROME_EXTRAS_SIDEBAR_VARIANTS,
+    expected: boolean,
+  ) => {
+    assertEquals(
+      css.includes(CHROME_EXTRAS_SIDEBAR_VARIANTS[variant]),
+      expected,
+      `${variant} should ${expected ? "be present" : "be absent"}`,
+    );
+  };
+
+  const overlap = buildChromeExtrasCSS(toggles({ sidebarOverlap: true }));
+  expectVariant(overlap, "overlapOnly", true);
+  expectVariant(overlap, "autohideOnly", false);
+  expectVariant(overlap, "combined", false);
+
+  const autohide = buildChromeExtrasCSS(toggles({ autohideSidebar: true }));
+  expectVariant(autohide, "autohideOnly", true);
+  expectVariant(autohide, "overlapOnly", false);
+  expectVariant(autohide, "combined", false);
+
+  const combined = buildChromeExtrasCSS(
+    toggles({ autohideSidebar: true, sidebarOverlap: true }),
+  );
+  assert(
+    combined.includes(CHROME_EXTRAS_CSS.autohideSidebar),
+    "combined layout includes the auto-hide base rules",
+  );
+  assert(
+    combined.includes(CHROME_EXTRAS_CSS.sidebarOverlap),
+    "combined layout includes the overlap base rules",
+  );
+  assert(
+    CHROME_EXTRAS_CSS.autohideSidebar.includes(
+      "min-width: var(--uc-sidebar-width)",
+    ),
+    "auto-hide keeps the collapsed sidebar width",
+  );
+  assert(
+    !CHROME_EXTRAS_CSS.sidebarOverlap.includes(
+      "min-width: var(--uc-sidebar-activate-width)",
+    ),
+    "overlap base rules must not force the expanded width in combined mode",
+  );
+  expectVariant(combined, "combined", true);
+  expectVariant(combined, "overlapOnly", false);
+  expectVariant(combined, "autohideOnly", false);
+}
+
+/** Gecko 152 renamed the right-sidebar marker. Each sidebar rule that checks
+ * its position must accept the current marker and the older Lepton marker. */
+function testRightSidebarMarkerCompatibility(): void {
+  for (
+    const [key, css] of Object.entries({
+      overlap: CHROME_EXTRAS_CSS.sidebarOverlap,
+      autohideOnly: CHROME_EXTRAS_SIDEBAR_VARIANTS.autohideOnly,
+      iconBase: CHROME_EXTRAS_CSS.iconDisabled,
+    })
+  ) {
+    assert(
+      css.includes("[sidebar-positionend]"),
+      `${key} must recognize Gecko's current right-sidebar marker`,
+    );
+    assert(
+      !css.includes("#sidebar-box[positionend]"),
+      `${key} must not depend on the old marker alone`,
+    );
+  }
+}
+
+function testCombinedSidebarUsesCollapsedWidth(): void {
+  const style = document.createElement("style");
+  style.textContent = buildChromeExtrasCSS(
+    toggles({
+      autohideSidebar: true,
+      sidebarOverlap: true,
+      iconDisabled: true,
+    }),
+  );
+  const sidebarBox = document.createXULElement("box");
+  sidebarBox.id = "sidebar-box";
+  const sidebar = document.createXULElement("box");
+  sidebar.id = "sidebar";
+  sidebarBox.appendChild(sidebar);
+  document.head.appendChild(style);
+  document.documentElement.appendChild(sidebarBox);
+  try {
+    const boxStyle = getComputedStyle(sidebarBox);
+    const sidebarStyle = getComputedStyle(sidebar);
+    assert(boxStyle !== null, "sidebar box must have computed styles");
+    assert(sidebarStyle !== null, "sidebar content must have computed styles");
+    assertEquals(
+      boxStyle.minWidth,
+      "40px",
+      "combined mode keeps the sidebar box collapsed until hover",
+    );
+    assertEquals(
+      sidebarStyle.minWidth,
+      "40px",
+      "combined mode keeps the sidebar content collapsed until hover",
+    );
+  } finally {
+    sidebarBox.remove();
+    style.remove();
+  }
 }
 
 /** `iconMenu` only means anything while the icon rules are active. */
@@ -712,6 +830,18 @@ export async function runAllTests(): Promise<void> {
     {
       name: "build includes only enabled toggles",
       fn: testBuildIncludesOnlyEnabledToggles,
+    },
+    {
+      name: "sidebar layout combinations remain distinct",
+      fn: testSidebarLayoutVariants,
+    },
+    {
+      name: "right-sidebar marker supports Gecko 152",
+      fn: testRightSidebarMarkerCompatibility,
+    },
+    {
+      name: "combined sidebar remains collapsed until hover",
+      fn: testCombinedSidebarUsesCollapsedWidth,
     },
     {
       name: "icon menu is skipped when icons disabled",

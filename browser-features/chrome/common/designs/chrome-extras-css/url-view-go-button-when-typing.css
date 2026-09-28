@@ -5,15 +5,15 @@
  * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
  * That also drops Floorp's dependency on the vendored file, which
  * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Gecko 152 changed the URL bar nodes from IDs to classes. The selectors
+ *
+ * are rewritten to target the current .urlbar-input-container and
+ *
+ * .urlbar-go-button nodes.
  */
 
-/* leptonChrome.css:25108-25112
- *
- * Selector corrected for Gecko 152: `UrlbarInput.mjs` now builds these two
- * nodes as plain `<div>`s carrying only classes — neither has an `id` any
- * more. Verbatim from Lepton the rule therefore matched nothing and the
- * toggle was silently a no-op; `.urlbar-input-container` / `.urlbar-go-button`
- * are the same two nodes, now addressed by class. */
+/* leptonChrome.css:25108-25112 */
 .urlbar-input-container[pageproxystate="invalid"] .urlbar-go-button {
   display: block !important;
 }

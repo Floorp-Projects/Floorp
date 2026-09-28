@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
-            "title": "Lepton Ayarları",
-            "description": "Gelişmiş Lepton tema tercihlerini yapılandırma",
             "back": "Geri",
             "experimentalWarning": {
                 "title": "⚠️ Deneysel Özellikler",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Kenar Çubuğu Ayarları",
                 "overlap": "Kenar Çubuğunu web sitesi içeriğinin üzerinde göster"
-            },
-            "configure": "Lepton'u Yapılandırma"
+            }
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",

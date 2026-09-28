@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
         "chrome-extras": {
-            "title": "Pengaturan Lepton",
-            "description": "Atur preferensi lanjutan tema Lepton",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            },
-            "configure": "Atur Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",

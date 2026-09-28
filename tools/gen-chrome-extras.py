@@ -11,8 +11,9 @@ A block is emitted only when its `@media` condition gates on exactly one Lepton
 toggle: the toggle itself must appear, and no other Lepton sub-option may appear
 as a positive term. `not (...)`-wrapped terms only narrow a block, so they are
 ignored. Blocks that AND several Lepton toggles together are layout
-combinations and are left to the native implementations; the omissions are
-recorded in each generated header so the divergence stays auditable.
+combinations and are left to the native implementations. The sidebar overlap
+and auto-hide combination is extracted explicitly into its own sheet; other
+omissions are recorded in each generated header.
 
 Only `-moz-bool-pref:` gated blocks are considered. Vendored Lepton also uses a
 bare `-moz-pref(...)` form in a large region of the file; we do not port from
@@ -170,7 +171,15 @@ def emit(
     print(f"  {fname}: {len(body.splitlines())} lines")
 
 
-def select(pref: str, polarity: str = "positive", allow: list[str] | None = None):
+def select(
+    pref: str,
+    polarity: str = "positive",
+    allow: list[str] | None = None,
+    require_positive: list[str] | None = None,
+    require_negative: list[str] | None = None,
+    forbid_negative: list[str] | None = None,
+    require_and: bool = False,
+):
     """Blocks whose condition gates on exactly `pref`.
 
     `polarity` is "positive" for `-moz-bool-pref: "pref"` and "negative" for
@@ -183,6 +192,14 @@ def select(pref: str, polarity: str = "positive", allow: list[str] | None = None
         pos, neg = split_terms(cond)
         own = pos if polarity == "positive" else neg
         if pref not in own:
+            continue
+        if any(p not in pos for p in require_positive or []):
+            continue
+        if any(p not in neg for p in require_negative or []):
+            continue
+        if any(p in neg for p in forbid_negative or []):
+            continue
+        if require_and and " and " not in cond:
             continue
         # What else must be true for the block to match is always the set of
         # *positive* terms. `not (...)` terms only narrow a block, so they never
@@ -204,13 +221,20 @@ def write(
     hit,
     notes: list[str] | None = None,
     extra: str = "",
+    respect_reduced_motion: bool = False,
 ) -> None:
     parts = []
+    conditions = {s: cond for s, _e, cond, _body, _indent in top_blocks()}
     for s, e, dropped, body, indent in hit:
         note = f"/* leptonChrome.css:{s}-{e}"
         if dropped:
             note += f" — extra conditions dropped: {', '.join(dropped)}"
-        parts.append(note + " */\n" + unwrap(body, indent))
+        rules = unwrap(body, indent)
+        if (respect_reduced_motion and
+                "prefers-reduced-motion: no-preference" in conditions[s]):
+            rules = "@media (prefers-reduced-motion: no-preference) {\n" + \
+                "\n".join("  " + line for line in rules.splitlines()) + "\n}"
+        parts.append(note + " */\n" + rules)
     prov = (
         f"leptonChrome.css {hit[0][0]}-{hit[-1][1]}, {len(hit)} block(s)"
         if hit else "n/a"
@@ -218,6 +242,18 @@ def write(
     body = "\n\n".join(parts) if parts else "/* no rules */"
     if extra:
         body += "\n\n" + extra.rstrip() + "\n"
+    # Gecko 152 uses a presence-only sidebar-positionend attribute. Keep the
+    # old marker too for vendored Lepton and older Runtime versions.
+    body = body.replace(
+        "#sidebar-box:not([positionend])",
+        "#sidebar-box:not(:is([positionend], [sidebar-positionend]))",
+    ).replace(
+        "#sidebar-box[positionend]",
+        "#sidebar-box:is([positionend], [sidebar-positionend])",
+    )
+    if fname == "url-view-go-button-when-typing.css":
+        body = body.replace("#urlbar-input-container", ".urlbar-input-container")
+        body = body.replace("#urlbar-go-button", ".urlbar-go-button")
     emit(fname, key, prov, body, notes)
 
 
@@ -242,13 +278,35 @@ def main() -> int:
 #sidebar-splitter {
   display: none !important;
 }"""
+    SIDEBAR_SHARED = """/* leptonChrome.css:25178-25194 (shared by both sidebar toggles) */
+#sidebar-box {
+  --uc-sidebar-shadow-color: #28282f;
+  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
+  position: relative !important;
+  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px var(--uc-sidebar-shadow-color);
+}
+#sidebar-box[positionend] {
+  --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));
+}
+#sidebar {
+  display: block;
+}
+#main-window > body > box {
+  z-index: 2 !important;
+}"""
+    sidebar_extra = SIDEBAR_SHARED + "\n\n" + SIDEBAR_SPLITTER
 
     write("autohide-sidebar.css", "autohideSidebar",
-          select("userChrome.autohide.sidebar"), [
-        "Needs the `--uc-sidebar-*` tokens from scaffold.css. Lepton's dedicated",
-        "`sidebar.overlap and autohide.sidebar` combination block is not ported;",
-        "with both toggles on, the two sheets merge instead.",
-    ], extra=SIDEBAR_SPLITTER)
+          select("userChrome.autohide.sidebar", forbid_negative=[
+              "userChrome.sidebar.overlap",
+          ]), [
+        "Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and",
+        "combined layout rules are injected separately by chrome-extras.ts.",
+    ], extra=sidebar_extra)
+    write("autohide-sidebar-only.css", "autohideSidebar (without overlap)",
+          select("userChrome.autohide.sidebar", require_negative=[
+              "userChrome.sidebar.overlap",
+          ]), respect_reduced_motion=True)
     write("autohide-back-button.css", "autohideBackButton",
           select("userChrome.autohide.back_button"), [
         "Lepton wraps these in",
@@ -297,7 +355,11 @@ def main() -> int:
     write("url-view-move-icon-to-left.css", "urlViewMoveIconToLeft",
           select("userChrome.urlView.move_icon_to_left"))
     write("url-view-go-button-when-typing.css", "urlViewGoButtonWhenTyping",
-          select("userChrome.urlView.go_button_when_typing"))
+          select("userChrome.urlView.go_button_when_typing"), [
+        "Gecko 152 changed the URL bar nodes from IDs to classes. The selectors",
+        "are rewritten to target the current .urlbar-input-container and",
+        ".urlbar-go-button nodes.",
+    ])
     write("url-view-always-show-page-actions.css",
           "urlViewAlwaysShowPageActions",
           select("userChrome.urlbar.always_show_page_actions"), [
@@ -305,11 +367,26 @@ def main() -> int:
         "Floorp's settings page wrote `userChrome.urlView.always_show_page_actions`,",
         "so the toggle never did anything. Porting from the Lepton name fixes it.",
     ])
-    write("sidebar-overlap.css", "sidebarOverlap", select("userChrome.sidebar.overlap"), [
-        "Needs the `--uc-sidebar-*` tokens from scaffold.css. Lepton's dedicated",
-        "`sidebar.overlap and autohide.sidebar` combination block is not ported;",
-        "with both toggles on, the two sheets merge instead.",
-    ], extra=SIDEBAR_SPLITTER)
+    write("sidebar-overlap.css", "sidebarOverlap",
+          select("userChrome.sidebar.overlap", forbid_negative=[
+              "userChrome.autohide.sidebar",
+          ]), [
+        "Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and",
+        "combined layout rules are injected separately by chrome-extras.ts.",
+    ], extra=sidebar_extra)
+    write("sidebar-overlap-only.css", "sidebarOverlap (without auto-hide)",
+          select("userChrome.sidebar.overlap", require_negative=[
+              "userChrome.autohide.sidebar",
+          ]), respect_reduced_motion=True)
+    write("sidebar-overlap-autohide.css", "sidebarOverlap + autohideSidebar",
+          select("userChrome.autohide.sidebar", allow=[
+              "userChrome.sidebar.overlap",
+          ], require_positive=[
+              "userChrome.sidebar.overlap",
+          ], require_and=True), [
+        "This combination preserves Lepton's collapsed and expanded widths",
+        "when both Floorp sidebar toggles are enabled.",
+    ], respect_reduced_motion=True)
 
     write("icon-disabled.css", "iconDisabled",
           select("userChrome.icon.disabled", polarity="negative",

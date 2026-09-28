@@ -144,8 +144,6 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
-            "title": "Lepton Settings",
-            "description": "Configure advanced Lepton theme preferences",
             "back": "Back",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
@@ -196,8 +194,7 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            },
-            "configure": "Configure Lepton"
+            }
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",
