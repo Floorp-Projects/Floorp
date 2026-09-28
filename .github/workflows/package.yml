@@ -229,15 +229,15 @@ jobs:
         ${{ steps.upload-deb.outputs.artifact-digest &&
             format('sha256:{0}', steps.upload-deb.outputs.artifact-digest) || '' }}
     steps:
-      - name: Require dedicated Runtime artifact token
+      - name: Require Runtime artifact token
         if: ${{ inputs.provenance_mode != 'legacy' }}
         shell: bash
         env:
-          RUNTIME_ARTIFACT_TOKEN: ${{ secrets.runtime_artifact_token }}
+          RUNTIME_ARTIFACT_TOKEN: ${{ secrets.runtime_artifact_token || secrets.PAT }}
         run: |
           set -euo pipefail
           if [[ -z "$RUNTIME_ARTIFACT_TOKEN" ]]; then
-            echo "stable v2 requires the dedicated runtime_artifact_token secret" >&2
+            echo "stable v2 requires runtime_artifact_token or PAT with Floorp-Runtime Actions read access" >&2
             exit 1
           fi
 
@@ -265,7 +265,7 @@ jobs:
           CURRENT_FLOORP_REF: ${{ github.ref }}
           FLOORP_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         with:
-          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           script: |
             const fail = (message) => {
               core.setFailed(message);
@@ -633,7 +633,7 @@ jobs:
         with:
           repository: ${{ steps.provenance.outputs.runtime_repository }}
           ref: ${{ steps.provenance.outputs.runtime_ref }}
-          token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           persist-credentials: false
           submodules: "recursive"
 
@@ -694,7 +694,7 @@ jobs:
         with:
           artifact-ids: ${{ steps.provenance.outputs.runtime_artifact_id }}
           run-id: ${{ steps.provenance.outputs.runtime_workflow_run_id }}
-          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token }}
+          github-token: ${{ inputs.provenance_mode == 'legacy' && github.token || secrets.runtime_artifact_token || secrets.PAT }}
           repository: ${{ steps.provenance.outputs.runtime_repository }}
           path: ${{ runner.temp }}/floorp-runtime-v2
           merge-multiple: true
@@ -1421,18 +1421,6 @@ jobs:
           done
 
           if [[ "$CANON_PLATFORM" == "macOS-x86_64" ]]; then
-            for patch_file in "${patch_files[@]}"; do
-              for resource_dir in "$DIST_ROOT"/*.app/Contents/Resources; do
-                if patch --batch --follow-symlinks --reverse --forward --fuzz=0 --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                  echo "Already applied by the Runtime source build: $patch_file"
-                elif patch --batch --forward --fuzz=0 --follow-symlinks --dry-run -d "$resource_dir" -p1 < "$patch_file"; then
-                  patch --batch --forward --fuzz=0 --follow-symlinks -d "$resource_dir" -p1 < "$patch_file"
-                else
-                  echo "Dry-run failed for $patch_file in $resource_dir" >&2
-                  exit 1
-                fi
-              done
-            done
             shopt -s nullglob
             for app_bundle in "$DIST_ROOT"/*.app "$DIST_ROOT"/floorp/*.app; do
               if [ -d "$app_bundle/Contents/Resources" ]; then
@@ -1857,19 +1845,46 @@ jobs:
               mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               ;;
             "macOS-x86_64")
-              if [ "${{inputs.skip_signing}}" == "true" ]; then
-                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              if [ "${{inputs.beta}}" == "true" ]; then
+                DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
+                BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
+                VOLUME_NAME="Floorp Daylight Installer"
               else
-                mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
-                mv obj-artifact-build-output/dist/$INSTALLER_PATH ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
-                ./mach python -m mozbuild.action.unpack_dmg ~/noraneko-installer/$OUTPUT_INSTALLER_NAME ~/mac-code-signing/old
+                DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/DS_Store"
+                BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/background.tiff"
+                VOLUME_NAME="Floorp Installer"
+              fi
+              mkdir -p ~/mac-code-signing/old ~/mac-code-signing/new
+              shopt -s nullglob
+              installers=(obj-artifact-build-output/dist/$INSTALLER_PATH)
+              shopt -u nullglob
+              if (( ${#installers[@]} != 1 )); then
+                echo "Expected exactly one macOS DMG, found ${#installers[@]}" >&2
+                exit 1
+              fi
+              mv -- "${installers[0]}" ~/mac-code-signing/original.dmg
+              ./mach python -m mozbuild.action.unpack_dmg \
+                ~/mac-code-signing/original.dmg ~/mac-code-signing/old
+              APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d -print -quit)
+              if [ -z "$APP_FILE" ]; then
+                echo "No macOS app bundle found in packaged DMG" >&2
+                exit 1
+              fi
+              python3 "$GITHUB_WORKSPACE/noraneko/tools/app-shim/sync-omnijar-patches.py" --sync \
+                --resources "$APP_FILE/Contents/Resources" \
+                --patch-dir "$GITHUB_WORKSPACE/noraneko/tools/patches"
+              if [ "${{inputs.skip_signing}}" == "true" ]; then
+                ./mach python -m mozbuild.action.make_dmg \
+                  --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" \
+                  --volume-name "$VOLUME_NAME" \
+                  ~/mac-code-signing/old ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
+              else
                 cargo install apple-codesign --locked
                 echo ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }} > floorp-cert.txt
                 base64 --decode floorp-cert.txt > floorpCert.p12
                 echo ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }} > floorpCertPassword.passwd
                 echo ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }} > provisioning-profile.txt
                 base64 --decode provisioning-profile.txt > Floorp.provisionprofile
-                APP_FILE=$(find ~/mac-code-signing/old -name "*.app" -type d | head -n 1)
                 echo "Found app file: $APP_FILE"
 
                 # Show rcodesign version for diagnostics
@@ -2017,29 +2032,20 @@ jobs:
                 # entitlements slot for post-sign grepping, so rely on the pre-sign XML
                 # check above plus mach's built-in verification instead.
 
-                if [ "${{inputs.beta}}" == "true" ]; then
-                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/DS_Store"
-                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/daylight/background.tiff"
-                  VOLUME_NAME="Floorp Daylight Installer"
-                else
-                  DS_STORE_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/DS_Store"
-                  BACKGROUND_PATH="$GITHUB_WORKSPACE/noraneko/.github/workflows/assets/mac/official/background.tiff"
-                  VOLUME_NAME="Floorp Installer"
-                fi
                 ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
                 printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
                 rcodesign notary-submit \
                   --api-key-file ~/mac-code-signing/key.json \
                   --wait \
                   ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
-                DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) | head -n 1)
-                if [ -z "$DIST_DIR" ]; then
-                  DIST_DIR="obj-artifact-build-output/dist"
-                fi
-                rm -rf "$DIST_DIR"/*.app
-                cp -r ~/mac-code-signing/old/*.app "$DIST_DIR"
                 mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               fi
+              DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) -print -quit)
+              if [ -z "$DIST_DIR" ]; then
+                DIST_DIR="obj-artifact-build-output/dist"
+              fi
+              rm -rf "$DIST_DIR"/*.app
+              cp -r "$APP_FILE" "$DIST_DIR/"
               ;;
             *)
               echo "Unsupported canonical platform for installer preparation: $CANON_PLATFORM" >&2
@@ -2240,6 +2246,9 @@ jobs:
               echo "macOS app bundle not found for MAR packaging" >&2
               exit 1
             fi
+            python3 "$GITHUB_WORKSPACE/noraneko/tools/app-shim/sync-omnijar-patches.py" --verify \
+              --resources "$APP_FILE/Contents/Resources" \
+              --patch-dir "$GITHUB_WORKSPACE/noraneko/tools/patches"
             MAR="$OBJ_PATH/dist/host/bin/mar" \
             MOZ_PRODUCT_VERSION="$VERSION" \
             MAR_CHANNEL_ID="$CHANNEL_ID" \

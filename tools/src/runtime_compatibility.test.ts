@@ -4,7 +4,7 @@ import { assertEquals } from "@std/assert";
 
 // Production patches source modules before packaging; local browser tests patch
 // extracted modules. Keep the actual changes identical across both build paths.
-Deno.test("Firefox 156 session and split patches match in production and local builds", async () => {
+Deno.test("Firefox 157 session and split patches match in production and local builds", async () => {
   const source = await Deno.readTextFile(
     ".github/patches/floorp-runtime/common/tab-state-and-split-view.patch",
   );
