@@ -1,0 +1,20 @@
+/* Floorp chrome-extras: urlViewAlwaysShowPageActions
+ * Ported from vendored Lepton (leptonChrome.css 25089-25094, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Lepton gates this on `userChrome.urlbar.always_show_page_actions` while
+ *
+ * Floorp's settings page wrote `userChrome.urlView.always_show_page_actions`,
+ *
+ * so the toggle never did anything. Porting from the Lepton name fixes it.
+ */
+
+/* leptonChrome.css:25089-25094 */
+#urlbar:not([breakout-extend="true"]) #pageActionButton {
+  display: block !important;
+  visibility: visible !important;
+}

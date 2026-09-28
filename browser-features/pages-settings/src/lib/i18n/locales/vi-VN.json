@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Cài đặt Lepton",
-            "description": "Thay đổi các cài đặt nâng cao của Lepton",
-            "configureLepton": "Tùy chỉnh Lepton",
+        "chrome-extras": {
             "back": "Quay lại",
             "experimentalWarning": {
                 "title": "⚠️ Tính năng thử nghiệm",
-                "description": "Các tính năng sau là thử nghiệm và không được hỗ trợ chính thứ. Có thể có vấn đề nảy sinh.",
-                "leptonRepository": "Lepton là giao diện CSS cho Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "Các tính năng sau là thử nghiệm và không được hỗ trợ chính thứ. Có thể có vấn đề nảy sinh."
             },
             "autohide": {
                 "title": "Auto-hide Settings",

@@ -6,12 +6,16 @@ editing a sibling Floorp-Runtime checkout. Validate patches against the source
 commit in `floorp-runtime.lock.json`, using an isolated checkout or source fixture.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
-session state and N-way split layouts on Firefox 156. The tabbrowser and
+session state and N-way split layouts on Firefox 157. The tabbrowser and
 sessionstore implementations now live in `moz-src` modules; SessionStore is a
 class with private methods. Matching `tools/patches` files cover local builds.
 Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
+
+`macos-artifact-app-shim.patch` carries the Runtime's native App Shim executable
+from the macOS Runtime DMG into the artifact build. The package manifest already
+requires that executable; omitting it prevents the final app from being built.
 
 `release-notes-guards.patch` adds the confirmed release-notes choice to the existing
 extension guard mechanism and includes an xpcshell regression test. It composes

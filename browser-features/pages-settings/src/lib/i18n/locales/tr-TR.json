@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Lepton Ayarları",
-            "description": "Gelişmiş Lepton tema tercihlerini yapılandırma",
-            "configureLepton": "Lepton'u Yapılandırma",
+        "chrome-extras": {
             "back": "Geri",
             "experimentalWarning": {
                 "title": "⚠️ Deneysel Özellikler",
-                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir.",
-                "leptonRepository": "Lepton, Firefox için bir css temasıdır.",
-                "visitRepository": "Depo Sayfasını Ziyaret Edin"
+                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir."
             },
             "autohide": {
                 "title": "Otomatik Gizleme Ayarları",

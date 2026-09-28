@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Настройки Lepton",
-            "description": "Настройка дополнительных параметров темы Lepton",
-            "configureLepton": "Настройка Lepton",
+        "chrome-extras": {
             "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Экспериментальные функции",
-                "description": "Эти настройки являются экспериментальными и официально не поддерживаются. Могут возникнуть проблемы.",
-                "leptonRepository": "Lepton — это css тема для Firefox.",
-                "visitRepository": "Открыть страницу репозитория"
+                "description": "Эти настройки являются экспериментальными и официально не поддерживаются. Могут возникнуть проблемы."
             },
             "autohide": {
                 "title": "Настройки автоскрытия",

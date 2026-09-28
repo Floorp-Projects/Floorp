@@ -93,21 +93,21 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-1108");
+  assertEquals(canonicalLock.source.ref, "daily-1117");
   assertEquals(
     canonicalLock.source.commit,
-    "f3fbed8ede70e69526fe339e4a4433b6c9815889",
+    "1553b7b550dfe555684628d175e0c1701a785d0b",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "9680c212741f0ba9a7d1276c00e226b68a46d4f3",
+    "5bccc489d8faa894518f27fcd55a30115a3ae17e",
   );
   assertEquals(canonicalLock.source.release, {
-    id: 394143527,
+    id: 397428022,
     immutable: false,
   });
   assertEquals(canonicalLock.source.materials.count, 53);
-  assertEquals(canonicalLock.source.materials.totalBytes, 224465);
+  assertEquals(canonicalLock.source.materials.totalBytes, 227664);
   assertEquals(canonicalLock.source.tests.count, 8);
   assertEquals(canonicalLock.source.tests.totalTasks, 16);
   assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
@@ -149,51 +149,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       tuple: "linux/aarch64",
-      assetId: 582317082,
-      assetSize: 73529772,
+      assetId: 591651673,
+      assetSize: 74554324,
       assetSha:
-        "662ac03e899bf442144b63c886e60dcf910a25565cc10a2c0e223450a63b7b7c",
-      iniId: 582317081,
-      iniSize: 537,
+        "0d62b3839c0c17f103addd08b8441b1eb0f3cb9f9dbfdbc6aacd3b21c38c6c54",
+      iniId: 591651679,
+      iniSize: 535,
       iniSha:
-        "46f00c2680a2d97d4d4a054dacea579a75a59a2730f65a6347b09dd8ae56d108",
-      buildId: "20260922152932",
+        "c2d83e7a66e330b6ceb7bbf35ff2768eb4cdc6f8537745b2a72c49fc3340a0b1",
+      buildId: "20260926171135",
     },
     {
       tuple: "linux/x86_64",
-      assetId: 582317083,
-      assetSize: 84934580,
+      assetId: 591651674,
+      assetSize: 85380988,
       assetSha:
-        "d27301886aab71968e981b431762e1da00aaff224641ef0e0fc6b1473f5ece9a",
-      iniId: 582317086,
-      iniSize: 537,
+        "1f3cbd05e28d8ba00a14386c7d64f2de19ff9b8fe286ad59e662cc3125ae1e4a",
+      iniId: 591651680,
+      iniSize: 535,
       iniSha:
-        "c05d08e00b49b3e41ce8cdc41740464973607d310b3eeb3f19a892568a5f2e76",
-      buildId: "20260922152932",
+        "8659a334091177b1274dd392a9edd5e7529969659e72c18289f4f26d25148871",
+      buildId: "20260926171135",
     },
     {
       tuple: "macos/universal",
-      assetId: 582317090,
-      assetSize: 183421703,
+      assetId: 591651676,
+      assetSize: 184656021,
       assetSha:
-        "eadb84ad7d6ab5bec0988f91c1a9ad789d68ed48e673b67f5b61cfd37e653c9e",
-      iniId: 582317088,
-      iniSize: 537,
+        "36e3df2f0b99810fb2fab832f9534072501790cfb84a931ad2bd5d7fbcdb858f",
+      iniId: 591651670,
+      iniSize: 535,
       iniSha:
-        "039c4e705ece454b01d4e385578f8ec5c82f4cd905b7f9e52c00bf179386df2b",
-      buildId: "20260922152932",
+        "94b34b8093896bb05a422fe3a9fd8881b740d754f4ba2942c6389d5d674a6ea4",
+      buildId: "20260926171135",
     },
     {
       tuple: "windows/x86_64",
-      assetId: 582317093,
-      assetSize: 137252033,
+      assetId: 591651678,
+      assetSize: 138496523,
       assetSha:
-        "9abce16dc9aec261d8148bdd7ec97b4aae7cd530e4358fa0d6b2031441c78bfa",
-      iniId: 582317089,
-      iniSize: 537,
+        "3fb30c889afd7cdb0af3be2ba49bd1ad6fcbde9996161f4fe984f4705aba095e",
+      iniId: 591651677,
+      iniSize: 535,
       iniSha:
-        "ed6dca1c658d83608170203daed99d564a82adfcb4858d569458d634132c57a4",
-      buildId: "20260922152932",
+        "aac6f2288374772081f65f6bf3ff15210d2fbc26bfd3a05f16ebc359d4ed06d0",
+      buildId: "20260926171135",
     },
   ];
 
@@ -212,7 +212,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["156.0.1", "156.0.1", "156.0.1", "156.0.1"],
+    ["157.0", "157.0", "157.0", "157.0"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,

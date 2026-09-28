@@ -143,16 +143,11 @@
             "taskbarPreviewsDescription": "此更改僅會變更 Windows 工作列的顯示，並不會建立額外的瀏覽器視窗。",
             "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
         },
-        "lepton-preferences": {
-            "title": "Lepton 設定",
-            "description": "Lepton 進階主題偏好設定",
-            "configureLepton": "設定 Lepton",
+        "chrome-extras": {
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
-                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
-                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
-                "visitRepository": "訪問儲存庫頁面"
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。"
             },
             "autohide": {
                 "title": "自動隱藏設定",
