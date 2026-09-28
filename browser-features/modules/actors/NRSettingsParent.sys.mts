@@ -58,6 +58,7 @@ export class NRSettingsParent extends JSWindowActorParent {
         const uri = manager?.documentURI;
         const isSettingsPage = !!uri && (
           (uri.schemeIs("chrome") && uri.host === "noraneko-settings") ||
+          uri.spec.split(/[?#]/)[0] === "about:hub" ||
           (uri.schemeIs("http") &&
             (uri.host === "localhost" || uri.host === "127.0.0.1") &&
             [5183, 5186, 5187, 5188].includes(uri.port))
