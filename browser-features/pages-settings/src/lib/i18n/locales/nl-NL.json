@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "Deze optie is uitsluitend beschikbaar voor Windows."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimentele functies",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Pictograminstellingen",
-                "disabled": "Lepton-pictogrammen voor snelmenu en paneelmenu uitschakelen",
-                "menu": "Lepton-pictogrammen voor snelmenu inschakelen"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Gecentreerde instellingen",
@@ -194,7 +196,8 @@
             "sidebar": {
                 "title": "Zijbalk instellingen",
                 "overlap": "Zijbalk over website-inhoud tonen"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tabbladslaapstand-uitzonderingen",
@@ -483,8 +486,8 @@
         "otherSettings": "Overige instellingen",
         "showToolbar": "Werkbalk weergeven",
         "showToolbarDescription": "De werkbalk weergeven in vensters van Progressive Web Apps",
-        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
-        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
+        "keepRunningAfterBrowserQuit": "Web-apps blijven uitvoeren na het afsluiten van {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Sluit browservensters en houd actieve web-apps geopend. Schakel dit uit om ze samen af te sluiten. Het afsluiten van een web-app sluit alleen die app. Bij het opnieuw starten van {{productName}} of het uitloggen worden alle apps gesloten.",
         "installedApps": "Geïnstalleerde apps",
         "noInstalledApps": "Er zijn geen Progressive Web Apps geïnstalleerd",
         "removeApp": "App verwijderen",
@@ -504,10 +507,10 @@
         "containerDeleted": "Container verwijderd",
         "resetContainer": "Opnieuw instellen",
         "save": "Opslaan",
-        "errorRenaming": "Could not rename this Web App.",
-        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorRenaming": "Kan deze web-app niet hernoemen.",
+        "errorUninstalling": "Kan deze web-app niet verwijderen.",
         "errorSettingContainer": "Container instellen mislukt",
-        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
+        "nativeContainerFixed": "Deze macOS web-app behoudt de container die bij de installatie is gekozen. Het wijzigen van de container wordt nog niet ondersteund. De huidige inlog- en websitegegevens zijn behouden."
     },
     "floorpOS": {
         "title": "Floorp OS",

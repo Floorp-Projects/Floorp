@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Tilbake",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disable Lepton's context menu and panel menu icons",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centered Settings",
@@ -194,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",

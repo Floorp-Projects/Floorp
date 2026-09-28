@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
@@ -171,8 +173,8 @@
             },
             "icon": {
                 "title": "Pengaturan Ikon",
-                "disabled": "Nonaktifkan menu konteks dan ikon menu panel Lepton",
-                "menu": "Aktifkan ion menu konteks Lepton"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centered Settings",
@@ -194,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Show Sidebar over website content"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",
@@ -483,8 +486,8 @@
         "otherSettings": "Pengaturan Lainnya",
         "showToolbar": "Tampilkan Bilah Alat",
         "showToolbarDescription": "Tampilkan bilah alat di jendela Aplikasi Web Progresif",
-        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
-        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
+        "keepRunningAfterBrowserQuit": "Jaga Aplikasi Web tetap terbuka setelah menutup {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Tutup jendela peramban dan biarkan Aplikasi Web yang sedang berjalan tetap terbuka. Matikan opsi ini untuk menutup semuanya sekaligus. Menutup Aplikasi Web hanya akan menutup aplikasi tersebut. Memulai ulang {{productName}} atau keluar dari akun akan menutup semua aplikasi.",
         "installedApps": "Aplikasi Terpasang",
         "noInstalledApps": "Tidak ada PWA terpasang",
         "removeApp": "Hapus Aplikasi",
@@ -504,10 +507,10 @@
         "containerDeleted": "Kontainer dihapus",
         "resetContainer": "Setel Ulang",
         "save": "Simpan",
-        "errorRenaming": "Could not rename this Web App.",
-        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorRenaming": "Tidak bisa mengganti nama Aplikasi Web ini.",
+        "errorUninstalling": "Tidak bisa menghapus Aplikasi Web ini.",
         "errorSettingContainer": "Gagal mengatur kontainer",
-        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
+        "nativeContainerFixed": "Aplikasi Web macOS ini tetap menggunakan kontainer terpilih saat dipasang. Penggantian kontainer belum didukung. Data login dan situs tetap tersimpan."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

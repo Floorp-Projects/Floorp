@@ -144,6 +144,8 @@
             "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
         },
         "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
@@ -163,38 +165,39 @@
                 "tabIcon": "Masquer les icônes des onglets",
                 "tabbar": "Masquer la barre d'onglets",
                 "navbar": "Masquer la barre d'outils",
-                "sidebarHeader": "Masquer les en-têtes de la barre latérale",
-                "urlbarIconbox": "Masquer les icônes de la barre d'adresse",
-                "bookmarkbarIcon": "Masquer les icônes de la barre des marque-pages",
-                "bookmarkbarLabel": "Masquer les libellés de la barre des marque-pages",
-                "disabledMenu": "Masquer les éléments désactivés du menu contextuel"
+                "sidebarHeader": "Hide Sidebar Headers",
+                "urlbarIconbox": "Hide Address Bar icons",
+                "bookmarkbarIcon": "Hide Bookmarks Bar icons",
+                "bookmarkbarLabel": "Hide Bookmarks Bar labels",
+                "disabledMenu": "Hide disabled context menu items"
             },
             "icon": {
-                "title": "Paramètres d'icône",
-                "disabled": "Désactiver le menu contextuel de Lepton et les icônes de menu du panneau",
-                "menu": "Activer les icônes du menu contextuel de Lepton"
+                "title": "Icon Settings",
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
-                "title": "Paramètres centrés",
-                "tab": "Centrer les titres dans les onglets",
-                "urlbar": "Centrer le texte dans la barre d'adresse",
-                "bookmarkbar": "Centrer les éléments de la barre de marque-pages"
+                "title": "Centered Settings",
+                "tab": "Center labels in tabs",
+                "urlbar": "Center text in the Address Bar",
+                "bookmarkbar": "Center Bookmarks Bar items"
             },
             "urlView": {
-                "title": "Paramètres de l'affichage de l'URL",
-                "moveIconToLeft": "Déplacer les icônes de la barre d'adresse vers la gauche",
-                "goButtonWhenTyping": "Lors de la saisie, afficher un bouton \"Aller\"",
-                "alwaysShowPageActions": "Toujours afficher les actions de la page dans la barre d'adresse"
+                "title": "URL View Settings",
+                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "goButtonWhenTyping": "When typing, show a \"Go\" button",
+                "alwaysShowPageActions": "Always show page actions in the Address Bar"
             },
             "tabbar": {
-                "title": "Paramètres de la barre d'onglets",
-                "asTitlebar": "Barre d'onglets dans la barre de titre",
-                "oneLiner": "Combiner la barre d'onglets et la barre d'outils"
+                "title": "Tab Bar Settings",
+                "asTitlebar": "Tab Bar in the Title Bar",
+                "oneLiner": "Combine Tab Bar and Toolbar"
             },
             "sidebar": {
-                "title": "Paramètres de la barre latérale",
-                "overlap": "Afficher la barre latérale sur le contenu du site web"
-            }
+                "title": "Sidebar Settings",
+                "overlap": "Show Sidebar over website content"
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Exclusion de mise en veille par onglet",
