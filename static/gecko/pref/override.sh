@@ -96,9 +96,11 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
         # Check for existing pref or lockPref
         if grep -q "pref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
-            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+            replacement=$(printf '%s' "$func_name(\"$pref_name\", $formatted_value);" | sed 's/[&|\\]/\\&/g')
+            sed -i.bak "s|pref(\"$escaped_pref_name\"[^)]*);|$replacement|" "$TEMP_FILE"
         elif grep -q "lockPref(\"$escaped_pref_name\"" "$TEMP_FILE"; then
-            sed -i.bak "s|lockPref(\"$escaped_pref_name\"[^)]*);|$func_name(\"$pref_name\", $formatted_value);|" "$TEMP_FILE"
+            replacement=$(printf '%s' "$func_name(\"$pref_name\", $formatted_value);" | sed 's/[&|\\]/\\&/g')
+            sed -i.bak "s|lockPref(\"$escaped_pref_name\"[^)]*);|$replacement|" "$TEMP_FILE"
         else
             # Add as new preference
             NEW_PREFS+=("$func_name(\"$pref_name\", $formatted_value);")
