@@ -514,9 +514,23 @@ export class ExperimentsClient {
       return this;
     }
 
+    if (!this.manifestAvailable) {
+      console.error("Invalid experiments.json; using cached assignments");
+      return this;
+    }
+
     const now = this.now();
     let changed = false;
     let disabledChanged = false;
+
+    // A successfully fetched manifest is authoritative. Do not revive removed
+    // experiments from cached assignments during a later offline startup.
+    const manifestIds = new Set(this.experiments.map((exp) => exp.id));
+    for (const experimentId of Object.keys(this.assignments)) {
+      if (manifestIds.has(experimentId)) continue;
+      delete this.assignments[experimentId];
+      changed = true;
+    }
 
     // Check if participation policy has changed
     const currentPolicy = this.getPrefString(

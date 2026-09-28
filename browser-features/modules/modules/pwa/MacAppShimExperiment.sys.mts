@@ -30,9 +30,11 @@ export const MacAppShimExperiment = {
           getCachedEnrollment(id: string): MacAppShimCachedEnrollment;
         };
       };
-      const enrollment = Experiments.getAllExperiments().find(
-        (experiment) => experiment.id === MAC_APP_SHIM_EXPERIMENT_ID,
-      ) ?? null;
+      const enrollment = Experiments.manifestAvailable
+        ? Experiments.getAllExperiments().find(
+          (experiment) => experiment.id === MAC_APP_SHIM_EXPERIMENT_ID,
+        ) ?? null
+        : null;
       const cachedEnrollment = !Experiments.manifestAvailable
         ? Experiments.getCachedEnrollment(MAC_APP_SHIM_EXPERIMENT_ID)
         : null;
