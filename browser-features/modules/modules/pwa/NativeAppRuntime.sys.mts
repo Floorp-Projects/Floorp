@@ -8,6 +8,7 @@ import type {
 import type { AppLifecycleSnapshot } from "#libs/pwa/appLifecycleTypes.ts";
 import { AppLifecycle } from "./AppLifecycle.sys.mts";
 import { MacAppShimInstaller } from "./MacAppShimInstaller.sys.mts";
+import { MacAppShimExperiment } from "./MacAppShimExperiment.sys.mts";
 import type { MacAppShimInstallerPaths } from "./MacAppShimInstaller.sys.mts";
 
 const { AppConstants } = ChromeUtils.importESModule(
@@ -17,7 +18,6 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 const CONTRACT = "@floorp.org/mac-web-app-service;1";
-const ENABLED = "floorp.browser.nativeApp.appShim.enabled";
 const EVENT_TOPIC = "floorp-web-app-shim-event";
 const BROWSER_QUIT_TOPIC = "floorp-browser-quit-requested";
 const PRESENTATION_FAILED_TOPIC = "floorp-web-app-presentation-failed";
@@ -160,7 +160,7 @@ export class MacNativeAppRuntime {
     if (this.service) return true;
     if (
       AppConstants.platform !== "macosx" ||
-      !Services.prefs.getBoolPref(ENABLED, false) || !(CONTRACT in Cc)
+      !MacAppShimExperiment.isEnabled() || !(CONTRACT in Cc)
     ) return false;
     const interfaces = Ci as unknown as Record<string, nsIID>;
     const service = Cc[CONTRACT].getService(

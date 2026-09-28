@@ -1,0 +1,11 @@
+diff --git a/taskcluster/config.yml b/taskcluster/config.yml
+--- a/taskcluster/config.yml
++++ b/taskcluster/config.yml
+@@ -967,6 +967,7 @@ mac-signing:
+                       - "/Contents/MacOS/XUL"
+                       - "/Contents/MacOS/pingsender"
+                       - "/Contents/MacOS/nmhproxy"
++                      - "/Contents/MacOS/floorp-app-shim"
+                       - "/Contents/MacOS/*.dylib"
+                       - "/Contents/Resources/gmp-clearkey/*/*.dylib"
+                       - "/Contents/Frameworks/ChannelPrefs.framework"
