@@ -157,11 +157,12 @@ export class MacNativeAppRuntime {
   }
 
   private initialize(): boolean {
-    if (this.service) return true;
     if (
       AppConstants.platform !== "macosx" ||
-      !MacAppShimExperiment.isEnabled() || !(CONTRACT in Cc)
+      !MacAppShimExperiment.isEnabled()
     ) return false;
+    if (this.service) return true;
+    if (!(CONTRACT in Cc)) return false;
     const interfaces = Ci as unknown as Record<string, nsIID>;
     const service = Cc[CONTRACT].getService(
       interfaces.nsIMacWebAppService,
@@ -181,7 +182,7 @@ export class MacNativeAppRuntime {
     }
     this.unregisterLifecycle = AppLifecycle.registerAdapter({
       getCapabilities: () =>
-        this.service && !this.shuttingDown
+        this.service && !this.shuttingDown && MacAppShimExperiment.isEnabled()
           ? {
             protocolVersion: 1,
             sharedProfile: true,
