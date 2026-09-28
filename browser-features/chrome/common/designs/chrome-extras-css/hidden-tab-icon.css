@@ -1,0 +1,17 @@
+/* Floorp chrome-extras: hiddenTabIcon
+ * Ported from vendored Lepton (leptonChrome.css 27156-27160, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * The `hidden.tab_icon.always` variant (hides .tab-icon-stack instead of
+ *
+ * .tab-icon-image) is not ported (Lepton-only sub-option).
+ */
+
+/* leptonChrome.css:27156-27160 */
+.tabbrowser-tab:not([pinned="true"]) .tab-icon-image {
+  display: none;
+}

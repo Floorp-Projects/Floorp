@@ -1,0 +1,14 @@
+/* Floorp chrome-extras: centeredBookmarkbar
+ * Ported from vendored Lepton (leptonChrome.css 26060-26065, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ */
+
+/* leptonChrome.css:26060-26065 */
+#PlacesToolbarItems {
+  display: flex !important;
+  justify-content: safe center !important;
+}

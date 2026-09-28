@@ -1,0 +1,19 @@
+/* Floorp chrome-extras: urlViewGoButtonWhenTyping
+ * Ported from vendored Lepton (leptonChrome.css 25108-25112, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Gecko 152 changed the URL bar nodes from IDs to classes. The selectors
+ *
+ * are rewritten to target the current .urlbar-input-container and
+ *
+ * .urlbar-go-button nodes.
+ */
+
+/* leptonChrome.css:25108-25112 */
+.urlbar-input-container[pageproxystate="invalid"] .urlbar-go-button {
+  display: block !important;
+}
