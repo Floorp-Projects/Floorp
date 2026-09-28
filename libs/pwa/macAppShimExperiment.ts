@@ -15,13 +15,24 @@ export interface MacAppShimEnrollment {
     | "control";
 }
 
+export interface MacAppShimCachedEnrollment {
+  variantId: string | null;
+  disabled: boolean;
+  optedOut: boolean;
+}
+
 export function resolveMacAppShimEnabled(
   os: string,
   userPreference: boolean | null,
   enrollment: MacAppShimEnrollment | null,
+  cachedEnrollment: MacAppShimCachedEnrollment | null = null,
 ): boolean {
   if (os !== "Darwin") return false;
   if (userPreference !== null) return userPreference;
+  if (!enrollment) {
+    return cachedEnrollment?.variantId === "enabled" &&
+      !cachedEnrollment.disabled && !cachedEnrollment.optedOut;
+  }
   return enrollment?.isActive === true &&
     enrollment.currentVariantId === "enabled" &&
     (enrollment.enrollmentStatus === "enrolled" ||
