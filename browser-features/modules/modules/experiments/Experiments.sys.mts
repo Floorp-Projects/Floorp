@@ -77,9 +77,8 @@ export class ExperimentsClient {
    * shared object is returned.
    */
   static getInstance(): ExperimentsClient {
-    if (!ExperimentsClient.instance) {
+    if (!ExperimentsClient.instance)
       ExperimentsClient.instance = new ExperimentsClient();
-    }
     return ExperimentsClient.instance;
   }
 
@@ -146,9 +145,8 @@ export class ExperimentsClient {
 
   private clearPref(key: string): boolean {
     try {
-      if (Services.prefs.prefHasUserValue(key)) {
+      if (Services.prefs.prefHasUserValue(key))
         Services.prefs.clearUserPref(key);
-      }
       return true;
     } catch (e) {
       console.error(`Failed to clear experiment pref "${key}": ${String(e)}`);
@@ -347,9 +345,10 @@ export class ExperimentsClient {
     // Default policy: follow rollout percentage
     const salt = exp.salt || exp.id || "";
     const userPercent = this.percentFromHash(installId + "::" + salt);
-    const rollout = typeof exp.rollout === "number"
-      ? Math.max(0, Math.min(100, exp.rollout))
-      : 100;
+    const rollout =
+      typeof exp.rollout === "number"
+        ? Math.max(0, Math.min(100, exp.rollout))
+        : 100;
 
     if (userPercent >= rollout) {
       const control = variants.find((v: Variant) => v.id === "control");
@@ -469,8 +468,8 @@ export class ExperimentsClient {
     this.manifestAvailable = false;
     const prefUrl = this.getPrefString(MANIFEST_URL_PREF, null);
     this.experimentsUrl = prefUrl || DEFAULT_EXPERIMENTS_URL;
-    this.installId = options.installId ||
-      this.getPrefString(INSTALLID_PREF, null) || null;
+    this.installId =
+      options.installId || this.getPrefString(INSTALLID_PREF, null) || null;
     if (!this.installId) {
       const gen = Math.floor(Math.random() * 1e9) + "-" + Date.now();
       this.installId = gen;
@@ -564,8 +563,8 @@ export class ExperimentsClient {
       // 1. No previous assignment, OR
       // 2. InstallId changed, OR
       // 3. Participation policy changed (need to recalculate all variants)
-      const shouldReassign = !prev || prev.installId !== this.installId ||
-        policyChanged;
+      const shouldReassign =
+        !prev || prev.installId !== this.installId || policyChanged;
 
       if (!shouldReassign) continue;
 
@@ -597,9 +596,7 @@ export class ExperimentsClient {
           .catch((e) => {
             // This is defensive, as fetchAndCacheConfig handles its own errors.
             console.error(
-              `Unexpected error pre-fetching config for ${exp.id}: ${
-                String(e)
-              }`,
+              `Unexpected error pre-fetching config for ${exp.id}: ${String(e)}`,
             );
           });
       }
@@ -651,7 +648,8 @@ export class ExperimentsClient {
   ): Variant | null {
     const exp = this.getExperimentById(experimentId);
     if (!exp) return null;
-    const vid = variantId ||
+    const vid =
+      variantId ||
       (this.assignments[experimentId] &&
         this.assignments[experimentId].variantId) ||
       null;
@@ -686,7 +684,8 @@ export class ExperimentsClient {
     experimentId: string,
     variantId?: string | null,
   ): unknown | null {
-    const vid = variantId ||
+    const vid =
+      variantId ||
       (this.assignments[experimentId] &&
         this.assignments[experimentId].variantId) ||
       null;
@@ -703,12 +702,10 @@ export class ExperimentsClient {
     try {
       // Attempt to clear prefs and collect any failures rather than throwing.
       if (!this.clearPref(ASSIGNMENTS_PREF)) errors.push(ASSIGNMENTS_PREF);
-      if (!this.clearPref(DISABLED_EXPERIMENTS_PREF)) {
+      if (!this.clearPref(DISABLED_EXPERIMENTS_PREF))
         errors.push(DISABLED_EXPERIMENTS_PREF);
-      }
-      if (!this.clearPref(FORCE_ENROLLED_EXPERIMENTS_PREF)) {
+      if (!this.clearPref(FORCE_ENROLLED_EXPERIMENTS_PREF))
         errors.push(FORCE_ENROLLED_EXPERIMENTS_PREF);
-      }
       if (!this.clearPref(LAST_POLICY_PREF)) errors.push(LAST_POLICY_PREF);
       // Clear all cached configuration preferences
       const configPrefs = Services.prefs.getChildList(CONFIG_CACHE_PREFIX);
