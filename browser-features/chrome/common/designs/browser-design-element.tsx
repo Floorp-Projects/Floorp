@@ -6,8 +6,9 @@
 import { createEffect, createMemo, For, onCleanup, Show } from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
-import { config } from "./configs.ts";
+import { config, getChromeExtrasSettings } from "./configs.ts";
 import { getCSSFromConfig } from "./utils/css.ts";
+import { syncLegacyChromeExtrasPrefs } from "./utils/old-config-migrator.ts";
 import { TAB_COLOR_LIKE_TOOLBAR_CSS } from "./utils/tab-color-like-toolbar.css.ts";
 // Gecko 152 renamed many CSS variables; Floorp's own components (statusbar,
 // panel-sidebar, workspaces, ...) still reference the pre-152 names. These
@@ -38,6 +39,17 @@ export function BrowserDesignElement() {
     const { userjs } = getCSS();
     if (userjs) {
       applyUserJS(userjs);
+    }
+  });
+
+  // The Lepton-family designs still load pref-gated vendor CSS. Mirror the
+  // migrated settings after applying user.js so turning a toggle off also
+  // turns off the corresponding legacy rule.
+  createEffect(() => {
+    const design = config().globalConfigs.userInterface;
+    const settings = getChromeExtrasSettings();
+    if (design === "lepton" || design === "photon" || design === "protonfix") {
+      syncLegacyChromeExtrasPrefs(settings);
     }
   });
 
@@ -151,9 +163,11 @@ export function BrowserDesignElement() {
   return (
     <>
       <style>{styleBrowser}</style>
-      {/* Gecko 152 variable aliases — Floorp-wide, applied to every design.
+      {
+        /* Gecko 152 variable aliases — Floorp-wide, applied to every design.
           Keep this BEFORE theme-specific chrome styles so per-theme rules can
-          still override. */}
+          still override. */
+      }
       <style>{GECKO_152_VAR_ALIASES_CSS}</style>
       <For each={chromeStyleUrls()}>
         {(url) => <link rel="stylesheet" href={url} />}

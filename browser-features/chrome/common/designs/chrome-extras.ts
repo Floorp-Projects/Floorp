@@ -210,16 +210,22 @@ const ICON_DEPENDENT_KEYS: ReadonlySet<ChromeExtrasKey> = new Set([
 /**
  * Assemble the single chrome-extras stylesheet for the given settings.
  *
- * Returns the scaffold plus every enabled toggle's rules, in
- * `CHROME_EXTRAS_KEYS` order. Keeping this in one place means the polarity
- * rules (icons enabled/disabled) and the ordering rules are stated once instead
- * of being re-derived by the caller.
+ * Returns the scaffold, the base icon rules while icons are enabled, and every
+ * enabled toggle's rules in `CHROME_EXTRAS_KEYS` order. `iconDisabled` has the
+ * opposite polarity from the other toggles: its sheet comes from Lepton's
+ * `not userChrome.icon.disabled` blocks.
  */
 export function buildChromeExtrasCSS(settings: ChromeExtrasSettings): string {
   const iconsEnabled = !settings.iconDisabled;
   const parts: string[] = [CHROME_EXTRAS_SCAFFOLD_CSS];
 
   for (const key of CHROME_EXTRAS_KEYS) {
+    if (key === "iconDisabled") {
+      if (iconsEnabled) {
+        parts.push(CHROME_EXTRAS_CSS.iconDisabled);
+      }
+      continue;
+    }
     if (!settings[key]) {
       continue;
     }

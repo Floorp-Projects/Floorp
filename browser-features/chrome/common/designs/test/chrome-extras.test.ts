@@ -23,11 +23,18 @@ import {
   CHROME_EXTRAS_STYLE_ID,
 } from "../chrome-extras.ts";
 import {
+  config,
   deepMerge,
   getChromeExtrasSettings,
+  setConfig,
   updateChromeExtrasSetting,
 } from "../configs.ts";
-import { getOldChromeExtrasConfig } from "../utils/old-config-migrator.ts";
+import {
+  getOldChromeExtrasConfig,
+  LEGACY_ALIASES,
+  LEGACY_CHROME_EXTRAS_PREFS,
+  syncLegacyChromeExtrasPrefs,
+} from "../utils/old-config-migrator.ts";
 import { StyleManager } from "#features-chrome/common/ui-custom/styles/style-manager.ts";
 import {
   assert,
@@ -118,7 +125,12 @@ function testNoLeptonPrefGate(): void {
     CHROME_EXTRAS_SCAFFOLD_CSS,
     ...Object.values(CHROME_EXTRAS_CSS),
   ];
-  for (const [key, css] of Object.entries({ scaffold: CHROME_EXTRAS_SCAFFOLD_CSS, ...CHROME_EXTRAS_CSS })) {
+  for (
+    const [key, css] of Object.entries({
+      scaffold: CHROME_EXTRAS_SCAFFOLD_CSS,
+      ...CHROME_EXTRAS_CSS,
+    })
+  ) {
     const rules = stripComments(css);
     assert(
       !rules.includes('-moz-bool-pref: "userChrome.'),
@@ -186,7 +198,12 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
   ];
   // `--toolbarbutton-inner-padding` excluded: see the assertion below.
   const declared = new Set<string>();
-  for (const css of [CHROME_EXTRAS_SCAFFOLD_CSS, ...Object.values(CHROME_EXTRAS_CSS)]) {
+  for (
+    const css of [
+      CHROME_EXTRAS_SCAFFOLD_CSS,
+      ...Object.values(CHROME_EXTRAS_CSS),
+    ]
+  ) {
     for (const match of css.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gm)) {
       declared.add(match[1]);
     }
@@ -217,13 +234,15 @@ function testExternalFirefoxTokensAreNotDefinedLocally(): void {
 
 /** The scaffold must carry the tokens the ported sidebar rules rely on. */
 function testScaffoldDefinesSidebarAndToolbarbuttonTokens(): void {
-  for (const token of [
-    "--uc-sidebar-width",
-    "--uc-sidebar-activate-width",
-    "--uc-toolbarbutton-hide-size",
-    "--uc-tabbar-height",
-    "--uc-window-control-space",
-  ]) {
+  for (
+    const token of [
+      "--uc-sidebar-width",
+      "--uc-sidebar-activate-width",
+      "--uc-toolbarbutton-hide-size",
+      "--uc-tabbar-height",
+      "--uc-window-control-space",
+    ]
+  ) {
     assert(
       CHROME_EXTRAS_SCAFFOLD_CSS.includes(`${token}:`),
       `scaffold must define ${token}`,
@@ -246,11 +265,13 @@ function testNativeImplementationsAvoidLeptonLayoutTokens(): void {
   };
   const scaffoldTokens = defined(CHROME_EXTRAS_SCAFFOLD_CSS);
 
-  for (const key of [
-    "autohideNavbar",
-    "tabbarAsTitlebar",
-    "tabbarOneLiner",
-  ] as const) {
+  for (
+    const key of [
+      "autohideNavbar",
+      "tabbarAsTitlebar",
+      "tabbarOneLiner",
+    ] as const
+  ) {
     const css = CHROME_EXTRAS_CSS[key];
     const own = defined(css);
     for (const match of css.matchAll(/var\((--uc-[a-z0-9-]+)(,)?/g)) {
@@ -309,6 +330,21 @@ function testIconMenuIsSkippedWhenIconsDisabled(): void {
   assert(
     !withoutIcons.includes("#usercssloader-menu"),
     "iconMenu rules must be dropped when iconDisabled is on",
+  );
+}
+
+/** The `iconDisabled` sheet was extracted from a negated Lepton pref gate. */
+function testBaseIconRulesFollowIconDisabledPolarity(): void {
+  const enabled = buildChromeExtrasCSS(toggles({}));
+  assert(
+    enabled.includes(CHROME_EXTRAS_CSS.iconDisabled),
+    "base icon rules must be present while iconDisabled is off",
+  );
+
+  const disabled = buildChromeExtrasCSS(toggles({ iconDisabled: true }));
+  assert(
+    !disabled.includes(CHROME_EXTRAS_CSS.iconDisabled),
+    "base icon rules must be absent while iconDisabled is on",
   );
 }
 
@@ -415,6 +451,121 @@ function testLegacyMigrationDefaultsToOff(): void {
       typeof migrated[key] === "boolean",
       `migrated ${key} must be a boolean`,
     );
+  }
+}
+
+/** A disabled new toggle must also disable the pref-gated vendored rule. */
+function testLegacyLeptonPrefsFollowNewSettings(): void {
+  const prefNames = [
+    ...new Set([
+      ...Object.values(LEGACY_CHROME_EXTRAS_PREFS),
+      ...Object.values(LEGACY_ALIASES).flat(),
+    ]),
+  ];
+  const previous = prefNames.map((name) => ({
+    name,
+    hasUserValue: Services.prefs.prefHasUserValue(name),
+    value: Services.prefs.getBoolPref(name, false),
+  }));
+
+  try {
+    syncLegacyChromeExtrasPrefs(toggles({
+      iconDisabled: true,
+      iconMenu: false,
+      hiddenTabbar: true,
+      urlViewAlwaysShowPageActions: true,
+    }));
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.icon.disabled"),
+      true,
+      "disabling native icons must also disable Lepton icons",
+    );
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.icon.menu"),
+      false,
+      "disabling native menu icons must also disable Lepton menu icons",
+    );
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.hidden.tabbar"),
+      true,
+      "enabling the native hidden tabbar must also enable Lepton's rule",
+    );
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.urlbar.always_show_page_actions"),
+      true,
+      "Lepton's alias must follow the new setting",
+    );
+
+    syncLegacyChromeExtrasPrefs(toggles({}));
+    for (const name of prefNames) {
+      assertEquals(
+        Services.prefs.getBoolPref(name),
+        false,
+        `${name} must turn off with the new setting`,
+      );
+    }
+  } finally {
+    for (const pref of previous) {
+      if (pref.hasUserValue) {
+        Services.prefs.setBoolPref(pref.name, pref.value);
+      } else {
+        Services.prefs.clearUserPref(pref.name);
+      }
+    }
+  }
+}
+
+/** Exercise the mounted design effect, not just the compatibility helper. */
+async function testLiveLeptonToggleTurnsOffOldRule(): Promise<void> {
+  const before = config();
+  try {
+    setConfig((prev) => ({
+      ...prev,
+      globalConfigs: { ...prev.globalConfigs, userInterface: "lepton" },
+      uiCustomization: {
+        ...prev.uiCustomization,
+        chromeExtras: {
+          ...getChromeExtrasSettings(),
+          iconMenu: true,
+          iconDisabled: false,
+        },
+      },
+    }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.icon.menu"),
+      true,
+      "turning on native menu icons must enable Lepton's legacy rule",
+    );
+    assert(
+      (injectedStyle()?.textContent ?? "").includes(
+        CHROME_EXTRAS_CSS.iconDisabled,
+      ),
+      "the mounted style manager must include base icons when enabled",
+    );
+
+    updateChromeExtrasSetting("iconMenu", false);
+    updateChromeExtrasSetting("iconDisabled", true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.icon.menu"),
+      false,
+      "turning off native menu icons must disable Lepton's legacy rule",
+    );
+    assertEquals(
+      Services.prefs.getBoolPref("userChrome.icon.disabled"),
+      true,
+      "disabling icons must also disable the vendored icon sheet",
+    );
+    assert(
+      !(injectedStyle()?.textContent ?? "").includes(
+        CHROME_EXTRAS_CSS.iconDisabled,
+      ),
+      "the mounted style manager must remove base icons when disabled",
+    );
+  } finally {
+    setConfig(before);
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }
 
@@ -534,7 +685,10 @@ function testReappendStyleMovesToEndOfHead(): void {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
-    { name: "key set is complete and unique", fn: testKeySetIsCompleteAndUnique },
+    {
+      name: "key set is complete and unique",
+      fn: testKeySetIsCompleteAndUnique,
+    },
     { name: "every key has css", fn: testEveryKeyHasCss },
     { name: "defaults are all off", fn: testDefaultsAreAllOff },
     { name: "style id is stable", fn: testStyleIdIsStable },
@@ -567,7 +721,14 @@ export async function runAllTests(): Promise<void> {
       name: "icon menu is skipped when icons disabled",
       fn: testIconMenuIsSkippedWhenIconsDisabled,
     },
-    { name: "go button selector is class based", fn: testGoButtonSelectorIsClassBased },
+    {
+      name: "base icon rules follow iconDisabled polarity",
+      fn: testBaseIconRulesFollowIconDisabledPolarity,
+    },
+    {
+      name: "go button selector is class based",
+      fn: testGoButtonSelectorIsClassBased,
+    },
     { name: "chrome extras decode", fn: testChromeExtrasDecode },
     {
       name: "deep merge fills missing chrome extras",
@@ -577,12 +738,26 @@ export async function runAllTests(): Promise<void> {
       name: "legacy migration defaults to off",
       fn: testLegacyMigrationDefaultsToOff,
     },
-    { name: "chrome extras store round trip", fn: testChromeExtrasStoreRoundTrip },
+    {
+      name: "legacy Lepton prefs follow new settings",
+      fn: testLegacyLeptonPrefsFollowNewSettings,
+    },
+    {
+      name: "live Lepton toggle turns off old rule",
+      fn: testLiveLeptonToggleTurnsOffOldRule,
+    },
+    {
+      name: "chrome extras store round trip",
+      fn: testChromeExtrasStoreRoundTrip,
+    },
     {
       name: "stylesheet is always injected",
       fn: testStylesheetIsAlwaysInjected,
     },
-    { name: "toggling updates the stylesheet", fn: testTogglingUpdatesTheStylesheet },
+    {
+      name: "toggling updates the stylesheet",
+      fn: testTogglingUpdatesTheStylesheet,
+    },
     {
       name: "reappend style moves to end of head",
       fn: testReappendStyleMovesToEndOfHead,

@@ -5,6 +5,7 @@
 
 import {
   CHROME_EXTRAS_DEFAULTS,
+  CHROME_EXTRAS_KEYS,
   type ChromeExtrasKey,
   type ChromeExtrasSettings,
 } from "../chrome-extras.ts";
@@ -21,7 +22,7 @@ import {
  * Every other key defaults to `false` in the bundled user.js, so the plain
  * default is correct for them.
  */
-const LEGACY_CHROME_EXTRAS_PREFS: Record<ChromeExtrasKey, string> = {
+export const LEGACY_CHROME_EXTRAS_PREFS: Record<ChromeExtrasKey, string> = {
   autohideTab: "userChrome.autohide.tab",
   autohideNavbar: "userChrome.autohide.navbar",
   autohideSidebar: "userChrome.autohide.sidebar",
@@ -53,7 +54,7 @@ const LEGACY_CHROME_EXTRAS_PREFS: Record<ChromeExtrasKey, string> = {
 };
 
 /** Extra legacy pref names accepted for keys whose name was wrong upstream. */
-const LEGACY_ALIASES: Partial<Record<ChromeExtrasKey, string[]>> = {
+export const LEGACY_ALIASES: Partial<Record<ChromeExtrasKey, string[]>> = {
   urlViewAlwaysShowPageActions: ["userChrome.urlbar.always_show_page_actions"],
 };
 
@@ -80,6 +81,37 @@ export function getOldChromeExtrasConfig(): ChromeExtrasSettings {
     }
   }
   return result;
+}
+
+/**
+ * Keep the vendored Lepton stylesheet in step with the new config. Lepton,
+ * Photon, and ProtonFix still load that stylesheet, whose old `userChrome.*`
+ * media queries can otherwise keep a rule active after its new toggle is
+ * switched off. The new config remains the source of truth; these prefs are
+ * only a compatibility bridge until the vendored rules can be removed.
+ *
+ * Write a user value even when the current default already matches. Applying
+ * Lepton's user.js again can change the default branch without changing the
+ * design config, and a user value must keep the two in sync.
+ */
+export function syncLegacyChromeExtrasPrefs(
+  settings: ChromeExtrasSettings,
+): void {
+  for (const key of CHROME_EXTRAS_KEYS) {
+    const value = settings[key];
+    const prefs = [
+      LEGACY_CHROME_EXTRAS_PREFS[key],
+      ...(LEGACY_ALIASES[key] ?? []),
+    ];
+    for (const pref of prefs) {
+      if (
+        !Services.prefs.prefHasUserValue(pref) ||
+        Services.prefs.getBoolPref(pref, !value) !== value
+      ) {
+        Services.prefs.setBoolPref(pref, value);
+      }
+    }
+  }
 }
 
 export const getOldInterfaceConfig = () => {
