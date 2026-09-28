@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-/// <reference lib="deno.ns" />
 
 import { assertEquals } from "@std/assert";
-import { findRequestedLangPack } from "./lang-pack-match.ts";
+import { findRequestedLangPack } from "../../browser-features/modules/modules/i18n/lang-pack-match.ts";
 
 const packs = [
   { target_locale: "ja" },
