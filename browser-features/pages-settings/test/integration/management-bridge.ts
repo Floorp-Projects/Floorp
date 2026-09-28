@@ -50,18 +50,25 @@ export function setupManagement() {
   );
   expose("NRRenameSsb", (id: string, name: string) => {
     if (management.fail === "rename") {
-      throw new Error("Injected rename failure");
+      return Promise.resolve("failed");
     }
     management.apps[id].name = name;
     calls.push({ method: "NRRenameSsb", args: [id, name] });
+    return Promise.resolve("ok");
   });
   expose("NRSetSsbContainer", (id: string, container: number) => {
+    if (management.fail === "native-context") {
+      return Promise.resolve("native-context-fixed");
+    }
     management.apps[id].userContextId = container;
     calls.push({ method: "NRSetSsbContainer", args: [id, container] });
+    return Promise.resolve("ok");
   });
   expose("NRUninstallSsb", (id: string) => {
+    if (management.fail === "uninstall") return Promise.resolve("failed");
     delete management.apps[id];
     calls.push({ method: "NRUninstallSsb", args: [id] });
+    return Promise.resolve("ok");
   });
   expose("OSAutomotor", {
     getStatus: () =>

@@ -41,7 +41,12 @@ export class NRWelcomePageChild extends JSWindowActorChild {
   }
 
   openExternalLink(url: string) {
-    if (typeof url !== "string" || !url) {
+    if (typeof url !== "string") {
+      return;
+    }
+    try {
+      if (!/^https?:$/i.test(new URL(url).protocol)) return;
+    } catch {
       return;
     }
     this.sendAsyncMessage("WelcomePage:openExternalLink", { url });

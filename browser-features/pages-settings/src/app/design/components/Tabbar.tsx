@@ -119,7 +119,7 @@ export function Tabbar() {
           <p className="text-sm text-muted-foreground mb-4">
             {t("design.positionDescription")}
           </p>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             {[
               { value: "default", label: "design.default" },
               { value: "hide-horizontal-tabbar", label: "design.hideTabBar" },

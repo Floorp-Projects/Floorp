@@ -8,6 +8,7 @@ import {
   pngToIcns,
 } from "../MacOS.sys.mts";
 import type { Manifest } from "../../type.ts";
+import type { MacAppShimCapabilities } from "#libs/pwa/appRegistryTypes.ts";
 import { DataManager } from "../../../../../chrome/common/pwa/dataStore.ts";
 import {
   assert,
@@ -89,6 +90,260 @@ class TestStore extends DataManager {
 
 export async function runAllTests(): Promise<void> {
   await runTests("MacOS.test.mts", [
+    ...(["Contents", "Contents/Resources"] as const).map((markerDirectory) => ({
+      name:
+        `legacy install and repair preserve ${markerDirectory} native metadata with the feature disabled`,
+      async fn() {
+        const pref = "floorp.browser.nativeApp.appShim.enabled";
+        const hadValue = Services.prefs.prefHasUserValue(pref);
+        const oldValue = Services.prefs.getBoolPref(pref, false);
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-native-marker-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const support = new TestMacOSSupport(options);
+        const bundle = await getMacAppBundle(ssb, options);
+        const renamed = { ...ssb, name: "Renamed Native App" };
+        const renamedBundle = await getMacAppBundle(renamed, options);
+        const store = new TestStore(
+          PathUtils.join(root, "profile", "ssb", "ssb.json"),
+        );
+        try {
+          Services.prefs.setBoolPref(pref, false);
+          await support.install(ssb, store);
+          const markerPath = PathUtils.join(
+            bundle.path,
+            ...markerDirectory.split("/"),
+            "floorp.json",
+          );
+          if (markerDirectory === "Contents/Resources") {
+            await IOUtils.remove(
+              PathUtils.join(bundle.path, "Contents", "floorp.json"),
+            );
+          }
+          await IOUtils.writeJSON(markerPath, {
+            version: 4,
+            integration: "app-shim",
+            profileDir: options.profileDir,
+            ssb,
+          });
+          const marker = await IOUtils.readUTF8(markerPath);
+          const plistPath = PathUtils.join(
+            bundle.path,
+            "Contents",
+            "Info.plist",
+          );
+          await IOUtils.writeUTF8(plistPath, "signed-native-sentinel");
+          await store.saveSsbData(renamed);
+          assertEquals(
+            await support.findNativeAppBundle(renamed),
+            bundle.path,
+            "native discovery preserves identity after rename without a registry",
+          );
+          await support.install(renamed, store);
+          await support.repair(renamed, store);
+          assertEquals(
+            await IOUtils.readUTF8(markerPath),
+            marker,
+            "native marker is untouched",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(plistPath),
+            "signed-native-sentinel",
+            "legacy repair never invalidates the native signature",
+          );
+          assert(
+            !await IOUtils.exists(renamedBundle.path),
+            "rename does not create a duplicate shell launcher",
+          );
+          assertEquals(
+            support.iconWrites,
+            1,
+            "native app repair does not rewrite resources",
+          );
+        } finally {
+          try {
+            await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+          } finally {
+            if (hadValue) Services.prefs.setBoolPref(pref, oldValue);
+            else Services.prefs.clearUserPref(pref);
+          }
+        }
+      },
+    })),
+    {
+      name:
+        "missing native capabilities leave launchers and profiles untouched",
+      async fn() {
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-capability-${crypto.randomUUID()}`,
+        );
+        const support = new TestMacOSSupport({
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        });
+        assertEquals(
+          await support.prepareAppShimRegistration(ssb, null),
+          null,
+          "missing native service keeps legacy integration",
+        );
+        assertEquals(
+          await support.prepareAppShimRegistration(ssb, {
+            protocolVersion: 1,
+            authenticatedTransport: true,
+            nativeWindowOwnership: false,
+            sharedBrowserProfile: true,
+            transactionalInstall: true,
+          }),
+          null,
+          "partial native support keeps legacy integration",
+        );
+        assert(
+          !await IOUtils.exists(root),
+          "unsupported Runtime performs no I/O",
+        );
+      },
+    },
+    {
+      name: "explicit shim enrollment preserves legacy identity and user data",
+      async fn() {
+        // The registry binds normalized macOS paths. Other hosts still run the
+        // capability fallback and portable legacy launcher tests below.
+        if (Services.appinfo.OS !== "Darwin") return;
+        const root = PathUtils.join(
+          PathUtils.tempDir,
+          `floorp-mac-registry-${crypto.randomUUID()}`,
+        );
+        const options: MacAppOptions = {
+          applicationsDir: PathUtils.join(root, "Applications"),
+          profileDir: PathUtils.join(root, "profile"),
+          executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
+        };
+        const capabilities: MacAppShimCapabilities = {
+          protocolVersion: 1,
+          authenticatedTransport: true,
+          nativeWindowOwnership: true,
+          sharedBrowserProfile: true,
+          transactionalInstall: true,
+        };
+        const support = new TestMacOSSupport(options);
+        const app = { ...ssb, name: "既存 App", userContextId: 3 };
+        const bundle = await getMacAppBundle(app, options);
+        const metadataDirectory = PathUtils.join(options.profileDir, "ssb");
+        const legacyStore = PathUtils.join(metadataDirectory, "ssb.json");
+        const registryFile = PathUtils.join(
+          metadataDirectory,
+          "app-registry.json",
+        );
+        const legacyData = JSON.stringify({ existing: app });
+        try {
+          await IOUtils.makeDirectory(metadataDirectory, {
+            createAncestors: true,
+          });
+          await IOUtils.writeUTF8(legacyStore, legacyData);
+          await support.install(app);
+          const launcherFile = PathUtils.join(
+            bundle.path,
+            "Contents",
+            "MacOS",
+            "launcher",
+          );
+          const originalLauncher = await IOUtils.readUTF8(launcherFile);
+          const state = await support.prepareAppShimRegistration(
+            app,
+            capabilities,
+          );
+          assert(
+            state !== null,
+            "native coordinator can enroll an owned bundle",
+          );
+          assertEquals(state!.apps[0].installId, app.id, "keeps SSB ID");
+          assertEquals(
+            state!.apps[0].bundleId,
+            bundle.bundleId,
+            "keeps Dock identity",
+          );
+          assertEquals(
+            state!.apps[0].bundlePath,
+            bundle.path,
+            "keeps existing path",
+          );
+          assertEquals(
+            state!.apps[0].userContextId,
+            3,
+            "keeps container identity",
+          );
+          assertEquals(
+            state!.apps[0].integration,
+            "launcher",
+            "enrollment is not a native migration",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(legacyStore),
+            legacyData,
+            "leaves SSB data untouched",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(launcherFile),
+            originalLauncher,
+            "leaves working launcher untouched",
+          );
+          const repeated = await support.prepareAppShimRegistration(
+            app,
+            capabilities,
+          );
+          assertEquals(
+            repeated!.profile.id,
+            state!.profile.id,
+            "stable profile identity",
+          );
+          assertEquals(
+            repeated!.revision,
+            1,
+            "unchanged metadata does not rewrite",
+          );
+
+          // A damaged optional registry must neither be silently reset nor
+          // prevent the established install/repair path from continuing.
+          await IOUtils.writeUTF8(registryFile, "null");
+          let rejected = false;
+          try {
+            await support.prepareAppShimRegistration(app, capabilities);
+          } catch {
+            rejected = true;
+          }
+          assert(
+            rejected,
+            "corrupt registry fails closed for native enrollment",
+          );
+          await support.install(app);
+          assertEquals(
+            await IOUtils.readUTF8(registryFile),
+            "null",
+            "corrupt registry is preserved",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(launcherFile),
+            originalLauncher,
+            "legacy install remains usable",
+          );
+          await support.uninstall(app);
+          assert(
+            !await IOUtils.exists(bundle.path),
+            "legacy uninstall remains usable",
+          );
+        } finally {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+      },
+    },
     {
       name:
         "plist filters forbidden XML code points and preserves valid non-BMP text",
@@ -397,12 +652,14 @@ export async function runAllTests(): Promise<void> {
         const originalRead = IOUtils.readJSON;
         const originalRemove = IOUtils.remove;
         const events: string[] = [];
+        let recordedOwnershipRead = false;
         const operations: Promise<void>[] = [];
         try {
           await support.install(app);
           IOUtils.readJSON = async (file, opts) => {
             const data = await originalRead.call(IOUtils, file, opts);
-            if (file === marker) {
+            if (file === marker && !recordedOwnershipRead) {
+              recordedOwnershipRead = true;
               events.push("validate");
               entered.resolve();
               await release.promise;

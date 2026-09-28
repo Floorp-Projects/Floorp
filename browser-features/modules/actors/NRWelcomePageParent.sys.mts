@@ -6,14 +6,33 @@
 // Open a URL in a new tab from the browser window. A plain <a target="_blank">
 // click inside a system-principal about page (about:welcome) opens about:blank,
 // so the page routes external links here instead. See Floorp issue #2787.
-// deno-lint-ignore no-explicit-any
-function openExternalLinkInBrowser(url: string): boolean {
+function openExternalLinkInBrowser(
+  actor: NRWelcomePageParent,
+  url: string,
+): boolean {
   try {
-    const win = Services.wm.getMostRecentWindow("navigator:browser") as any;
+    const uri = Services.io.newURI(url);
+    if (!uri.schemeIs("http") && !uri.schemeIs("https")) {
+      return false;
+    }
+    const browser = actor.browsingContext?.top?.embedderElement;
+    const win = browser?.ownerGlobal as
+      | (Window & {
+        openTrustedLinkIn?: (
+          url: string,
+          where: string,
+          options: {
+            triggeringPrincipal: unknown;
+            relatedToCurrent: boolean;
+            allowInheritPrincipal: boolean;
+          },
+        ) => void;
+      })
+      | undefined;
     if (!win || typeof win.openTrustedLinkIn !== "function") {
       return false;
     }
-    win.openTrustedLinkIn(url, "tab", {
+    win.openTrustedLinkIn(uri.spec, "tab", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       relatedToCurrent: true,
       // Never let the new content tab inherit the system principal.
@@ -32,8 +51,20 @@ export class NRWelcomePageParent extends JSWindowActorParent {
       case "WelcomePage:openExternalLink": {
         const data = message.data as { url?: unknown } | undefined;
         const url = typeof data?.url === "string" ? data.url : "";
-        if (url) {
-          openExternalLinkInBrowser(url);
+        const context = this.browsingContext;
+        const manager = this.manager;
+        const uri = manager?.documentURI;
+        const isWelcomePage = !!uri && (
+          uri.spec.split(/[?#]/)[0] === "about:welcome" ||
+          (uri.schemeIs("chrome") && uri.host === "noraneko-welcome") ||
+          (uri.schemeIs("http") && uri.port === 5187 &&
+            (uri.host === "localhost" || uri.host === "127.0.0.1"))
+        );
+        if (
+          url && isWelcomePage && context && !context.parent &&
+          context.currentWindowGlobal === manager
+        ) {
+          openExternalLinkInBrowser(this, url);
         }
         break;
       }

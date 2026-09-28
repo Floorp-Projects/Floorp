@@ -59,6 +59,13 @@ function browserStillShowsUrl(browser: Browser, expectedUrl: string): boolean {
   }
 }
 
+type AppManagementRequest = {
+  id: string;
+  newName?: string;
+  claimed?: boolean;
+  complete?: (success: boolean) => void;
+};
+
 export class SiteSpecificBrowserManager {
   private ssbRunner: SsbRunner;
   static instance: SiteSpecificBrowserManager | null = null;
@@ -72,17 +79,34 @@ export class SiteSpecificBrowserManager {
 
     globalThis.gBrowser.addTabsProgressListener(this.listener);
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.renameSsb(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.newName as string,
-      );
+    Services.obs.addObserver(async (subject: nsISupports | null) => {
+      const request =
+        (subject as { wrappedJSObject?: AppManagementRequest } | null)
+          ?.wrappedJSObject;
+      if (!request || request.claimed) return;
+      request.claimed = true;
+      try {
+        const renamed = await this.renameSsb(request.id, request.newName ?? "");
+        request.complete?.(renamed);
+      } catch (error) {
+        console.error("[SiteSpecificBrowserManager] Rename failed:", error);
+        request.complete?.(false);
+      }
     }, "nora-ssb-rename");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.uninstallById(subject?.wrappedJSObject?.id as string);
+    Services.obs.addObserver(async (subject: nsISupports | null) => {
+      const request =
+        (subject as { wrappedJSObject?: AppManagementRequest } | null)
+          ?.wrappedJSObject;
+      if (!request || request.claimed) return;
+      request.claimed = true;
+      try {
+        await this.uninstallById(request.id);
+        request.complete?.(true);
+      } catch (error) {
+        console.error("[SiteSpecificBrowserManager] Uninstall failed:", error);
+        request.complete?.(false);
+      }
     }, "nora-ssb-uninstall");
   }
 
@@ -433,6 +457,17 @@ export class SiteSpecificBrowserManager {
       short_name: newName,
     };
 
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      return await new MacOSSupport().rename(
+        ssbObj,
+        updatedManifest,
+        this.dataManager,
+      );
+    }
+
     await this.uninstall(ssbObj);
     await this.install(updatedManifest);
 
@@ -454,33 +489,74 @@ export class SiteSpecificBrowserManager {
       return false;
     }
 
-    const ssbObj = await this.getSsbObj(id);
-    if (!ssbObj) {
-      return false;
+    if (!Number.isSafeInteger(userContextId) || userContextId < 0) return false;
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      if (await new MacOSSupport().findNativeAppBundle({ id })) return false;
     }
-
-    const oldKey = DataManagerClass.buildKey(
-      ssbObj.start_url,
-      ssbObj.userContextId ?? 0,
-    );
-
-    const updatedManifest: Manifest = {
-      ...ssbObj,
-      userContextId: userContextId > 0 ? userContextId : undefined,
-    };
-
-    const newKey = DataManagerClass.buildKey(
-      ssbObj.start_url,
-      userContextId > 0 ? userContextId : 0,
-    );
-    if (newKey !== oldKey) {
-      const currentSsbData = await this.dataManager.getCurrentSsbData();
-      if (currentSsbData[newKey]) {
+    const update = async () => {
+      const ssbObj = await this.getSsbObj(id);
+      if (!ssbObj) {
         return false;
       }
-    }
 
-    return await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      if (AppConstants.platform === "macosx") {
+        const { MacOSSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+        );
+        if (await new MacOSSupport().findNativeAppBundle(ssbObj)) return false;
+      }
+
+      const oldKey = DataManagerClass.buildKey(
+        ssbObj.start_url,
+        ssbObj.userContextId ?? 0,
+      );
+
+      const updatedManifest: Manifest = {
+        ...ssbObj,
+        userContextId: userContextId > 0 ? userContextId : undefined,
+      };
+
+      const newKey = DataManagerClass.buildKey(
+        ssbObj.start_url,
+        userContextId > 0 ? userContextId : 0,
+      );
+      if (newKey !== oldKey) {
+        const currentSsbData = await this.dataManager.getCurrentSsbData();
+        if (currentSsbData[newKey]) {
+          return false;
+        }
+      }
+
+      const moved = await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      if (moved && AppConstants.platform === "macosx") {
+        try {
+          const { AppRegistry } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/pwa/AppRegistry.sys.mjs",
+          );
+          await AppRegistry.getForProfile().updateLegacyUserContext(
+            id,
+            ssbObj.userContextId ?? 0,
+            userContextId,
+          );
+        } catch (error) {
+          console.warn(
+            "[SiteSpecificBrowserManager] Could not reconcile optional launcher metadata:",
+            error,
+          );
+        }
+      }
+      return moved;
+    };
+    if (AppConstants.platform === "macosx") {
+      const { NativeAppRuntime } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+      );
+      return await NativeAppRuntime.withMutation(id, update) ?? false;
+    }
+    return await update();
   }
 
   public useOSIntegration() {

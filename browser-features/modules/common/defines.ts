@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { Experiment } from "../modules/experiments/types.ts";
+import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -40,6 +41,7 @@ export interface AvailableExperiment {
 }
 
 export interface NRSettingsParentFunctions {
+  getWebAppLifecycleSettings(): Promise<AppLifecycleSettings>;
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
   getStringPref(prefName: string): Promise<string | null>;

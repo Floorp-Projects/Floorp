@@ -81,7 +81,12 @@ export class NRSettingsChild extends JSWindowActorChild {
   }
 
   NROpenExternalLink(url: string): void {
-    if (typeof url !== "string" || !url) {
+    if (typeof url !== "string") {
+      return;
+    }
+    try {
+      if (!/^https?:$/i.test(new URL(url).protocol)) return;
+    } catch {
       return;
     }
     this.sendQuery("openExternalLink", { url }).catch((error) =>
@@ -103,6 +108,9 @@ export class NRSettingsChild extends JSWindowActorChild {
       NRSettingsParentFunctions
     >(
       {
+        getWebAppLifecycleSettings: () => {
+          return this.sendQuery("getWebAppLifecycleSettings");
+        },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },

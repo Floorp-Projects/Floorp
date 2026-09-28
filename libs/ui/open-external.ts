@@ -13,27 +13,6 @@
 // `NROpenExternalLink` into the page, which asks the parent process to open the
 // tab. See https://github.com/Floorp-Projects/Floorp/issues/2787.
 
-declare const Services: {
-  wm: {
-    getMostRecentWindow(aWindowType: string): unknown;
-  };
-  scriptSecurityManager: {
-    getSystemPrincipal(): unknown;
-  };
-};
-
-interface TrustedLinkBrowserWindow {
-  openTrustedLinkIn(
-    url: string,
-    where: string,
-    params: {
-      triggeringPrincipal: unknown;
-      relatedToCurrent: boolean;
-      allowInheritPrincipal: boolean;
-    },
-  ): void;
-}
-
 /**
  * Open `url` in a new tab.
  *
@@ -41,7 +20,11 @@ interface TrustedLinkBrowserWindow {
  *   so the caller should let the default anchor behaviour run.
  */
 export function openExternalLink(url: string): boolean {
-  if (!url) {
+  try {
+    if (!/^https?:$/i.test(new URL(url).protocol)) {
+      return false;
+    }
+  } catch {
     return false;
   }
 
@@ -58,24 +41,7 @@ export function openExternalLink(url: string): boolean {
     }
   }
 
-  // Fallback: when the page happens to have direct access to the browser window
-  // (e.g. a privileged page running in the parent process).
-  try {
-    const win = Services.wm.getMostRecentWindow(
-      "navigator:browser",
-    ) as TrustedLinkBrowserWindow | null;
-    if (!win || typeof win.openTrustedLinkIn !== "function") {
-      return false;
-    }
-    win.openTrustedLinkIn(url, "tab", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      relatedToCurrent: true,
-      allowInheritPrincipal: false,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 /**
@@ -100,8 +66,7 @@ export function installExternalLinkHandler(): void {
       }
       const path = (event.composedPath?.() ?? []) as EventTarget[];
       const anchor = path.find(
-        (node): node is HTMLAnchorElement =>
-          node instanceof HTMLAnchorElement,
+        (node): node is HTMLAnchorElement => node instanceof HTMLAnchorElement,
       );
       if (!anchor || anchor.target !== "_blank") {
         return;

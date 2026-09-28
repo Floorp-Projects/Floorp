@@ -11,6 +11,7 @@ import { useFormContext } from "react-hook-form";
 import { ExternalLink, Settings } from "lucide-react";
 import { useState } from "react";
 import { RestartModal } from "@/components/common/restart-modal.tsx";
+import { AppLifecycleSettings } from "./AppLifecycleSettings.tsx";
 
 export function Preferences() {
   const { t } = useTranslation();
@@ -91,8 +92,7 @@ export function Preferences() {
               />
             </div>
           </div>
-
-
+          <AppLifecycleSettings />
         </CardContent>
       </Card>
     </>

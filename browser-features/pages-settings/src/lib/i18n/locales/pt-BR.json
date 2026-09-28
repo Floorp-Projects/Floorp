@@ -488,6 +488,8 @@
         "otherSettings": "Outras configurações",
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
+        "keepRunningAfterBrowserQuit": "Manter aplicativos web em execução após encerrar o {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Feche as janelas do navegador e mantenha abertos os aplicativos da Web em execução. Desative essa opção para fechá-los ao mesmo tempo. Ao fechar um aplicativo da Web, apenas esse aplicativo é encerrado. Reiniciar o {{productName}} ou fazer logout fecha todos os aplicativos.",
         "installedApps": "Aplicativos instalados",
         "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
@@ -507,7 +509,10 @@
         "containerDeleted": "Contêiner excluído",
         "resetContainer": "Redefinir",
         "save": "Salvar",
-        "errorSettingContainer": "Falha ao definir contêiner"
+        "errorRenaming": "Não foi possível renomear este aplicativo web.",
+        "errorUninstalling": "Não foi possível desinstalar este aplicativo web.",
+        "errorSettingContainer": "Falha ao definir contêiner",
+        "nativeContainerFixed": "Este aplicativo web para macOS mantém o contêiner escolhido no momento da instalação. Ainda não é possível alterá-lo. Os dados atuais de login e do site foram mantidos."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { Manifest } from "../type.ts";
+import type { AppMutationScope } from "../NativeAppRuntime.sys.mts";
 import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
+import { selectMacAppIntegration } from "#libs/pwa/appRegistry.ts";
+import type {
+  AppRegistryState,
+  MacAppShimCapabilities,
+} from "#libs/pwa/appRegistryTypes.ts";
 
 export type MacAppOptions = {
   applicationsDir: string;
@@ -9,7 +15,7 @@ export type MacAppOptions = {
   executable: string;
 };
 
-type MacAppStore = {
+export type MacAppStore = {
   getCurrentSsbData(): Promise<Record<string, Manifest>>;
   saveSsbData(ssb: Manifest): Promise<void>;
   removeSsbData(key: string): Promise<void>;
@@ -100,7 +106,7 @@ ${
       ssb.id,
     ].map(quoteShell).join(" ")
   }\n`;
-  return { path, plist, launcher };
+  return { path, plist, launcher, bundleId: entries.CFBundleIdentifier };
 }
 
 // A 512px PNG representation in an ICNS container (ic09).
@@ -116,6 +122,7 @@ export function pngToIcns(png: Uint8Array): Uint8Array {
 }
 
 export class MacOSSupport {
+  private static operations = new Map<string, Promise<void>>();
   private static pending = new Map<string, Promise<void>>();
 
   constructor(private options?: MacAppOptions) {}
@@ -133,25 +140,104 @@ export class MacOSSupport {
   private static async enqueue(
     path: string,
     operation: () => Promise<void>,
+    queue: Map<string, Promise<void>> = MacOSSupport.pending,
   ): Promise<void> {
     // Keep both filesystem and store changes ordered across browser windows.
     // A failed operation must not prevent a later repair or explicit reinstall.
-    const previous = MacOSSupport.pending.get(path) ?? Promise.resolve();
+    const previous = queue.get(path) ?? Promise.resolve();
     const pending = previous.catch(() => {}).then(operation);
-    MacOSSupport.pending.set(path, pending);
+    queue.set(path, pending);
     try {
       await pending;
     } finally {
-      if (MacOSSupport.pending.get(path) === pending) {
-        MacOSSupport.pending.delete(path);
+      if (queue.get(path) === pending) {
+        queue.delete(path);
       }
     }
   }
 
+  /** Discover owned native bundles even if the opt-in preference was disabled. */
+  async findNativeAppBundle(ssb: Pick<Manifest, "id">): Promise<string | null> {
+    const options = this.getOptions();
+    let found: string | null = null;
+    try {
+      const { AppRegistry } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/AppRegistry.sys.mjs",
+      );
+      const state: AppRegistryState | null = await AppRegistry.getForProfile(
+        options.profileDir,
+      ).read();
+      const registered = state?.apps.find((app) => app.installId === ssb.id);
+      if (
+        registered &&
+        (registered.integration === "app-shim" || registered.pendingMigration)
+      ) {
+        found = registered.bundlePath;
+      }
+    } catch (error) {
+      console.warn(
+        "[MacOSSupport] Could not read optional native registration:",
+        error,
+      );
+    }
+    if (!await IOUtils.exists(options.applicationsDir)) return found;
+    const candidates = await IOUtils.getChildren(options.applicationsDir);
+    for (const path of candidates) {
+      if (
+        !path.endsWith(".app") ||
+        PathUtils.filename(path).startsWith(".floorp-")
+      ) continue;
+      const nativeMarker = PathUtils.join(
+        path,
+        "Contents",
+        "Resources",
+        "floorp.json",
+      );
+      const markerPath = await IOUtils.exists(nativeMarker)
+        ? nativeMarker
+        : PathUtils.join(path, "Contents", "floorp.json");
+      if (!await IOUtils.exists(markerPath)) continue;
+      let marker: {
+        integration?: string;
+        profileDir?: string;
+        ssb?: { id?: string };
+      };
+      try {
+        marker = await IOUtils.readJSON(markerPath) as typeof marker;
+      } catch {
+        continue;
+      }
+      if (
+        marker?.integration === "app-shim" &&
+        marker.profileDir === options.profileDir && marker.ssb?.id === ssb.id
+      ) {
+        if (found && found !== path) {
+          throw new Error(
+            "[MacOSSupport] Multiple native bundles claim the same installed app",
+          );
+        }
+        found = path;
+      }
+    }
+    return found;
+  }
+
   async install(ssb: Manifest, store?: MacAppStore): Promise<void> {
     const options = this.getOptions();
-    const bundle = await getMacAppBundle(ssb, options);
-    await MacOSSupport.enqueue(bundle.path, async () => {
+    await MacOSSupport.enqueue(
+      `${options.profileDir}:${ssb.id}`,
+      () => this.installForAppShim(ssb, store),
+      MacOSSupport.operations,
+    );
+  }
+
+  /** Native preparation shares the filesystem queue, without waiting behind a
+   * public mutation that may itself be waiting for that launch to cancel. */
+  async installForAppShim(ssb: Manifest, store?: MacAppStore): Promise<void> {
+    const options = this.getOptions();
+    await MacOSSupport.enqueue(`${options.profileDir}:${ssb.id}`, async () => {
+      const bundle = await getMacAppBundle(ssb, options);
+      if (await this.findNativeAppBundle(ssb)) return;
       await this.writeBundle(ssb, options, bundle);
       await store?.saveSsbData(ssb);
     });
@@ -159,16 +245,75 @@ export class MacOSSupport {
 
   async repair(ssb: Manifest, store: MacAppStore): Promise<void> {
     const options = this.getOptions();
-    const bundle = await getMacAppBundle(ssb, options);
-    await MacOSSupport.enqueue(bundle.path, async () => {
-      const apps = await store.getCurrentSsbData();
-      const current = Object.values(apps).find((app) => app.id === ssb.id);
-      if (!current) return;
-      const currentBundle = await getMacAppBundle(current, options);
-      // A window opened before a rename must not recreate the old launcher.
-      if (currentBundle.path !== bundle.path) return;
-      await this.writeBundle(current, options, currentBundle);
+    const key = `${options.profileDir}:${ssb.id}`;
+    await MacOSSupport.enqueue(
+      key,
+      () =>
+        MacOSSupport.enqueue(key, async () => {
+          const bundle = await getMacAppBundle(ssb, options);
+          const apps = await store.getCurrentSsbData();
+          const current = Object.values(apps).find((app) => app.id === ssb.id);
+          if (!current) return;
+          if (await this.findNativeAppBundle(current)) return;
+          const currentBundle = await getMacAppBundle(current, options);
+          // A window opened before a rename must not recreate the old launcher.
+          if (currentBundle.path !== bundle.path) return;
+          await this.writeBundle(current, options, currentBundle);
+        }),
+      MacOSSupport.operations,
+    );
+  }
+
+  /**
+   * Explicit opt-in from the native integration coordinator. An unsupported
+   * Runtime returns null before reading or changing either profile or app.
+   * Register only an intact, owned launcher; migration itself belongs to the
+   * native installer and must preserve this existing bundle ID and path.
+   */
+  async prepareAppShimRegistration(
+    ssb: Manifest,
+    capabilities: MacAppShimCapabilities | null,
+  ): Promise<AppRegistryState | null> {
+    if (selectMacAppIntegration(capabilities) !== "app-shim") return null;
+    const options = this.getOptions();
+    let result: AppRegistryState | null = null;
+    await MacOSSupport.enqueue(`${options.profileDir}:${ssb.id}`, async () => {
+      const bundle = await getMacAppBundle(ssb, options);
+      const contents = PathUtils.join(bundle.path, "Contents");
+      const marker = await IOUtils.readJSON(
+        PathUtils.join(contents, "floorp.json"),
+      ) as {
+        profileDir?: string;
+        ssb?: { id?: string; userContextId?: number };
+      };
+      if (
+        !marker || marker.profileDir !== options.profileDir ||
+        marker.ssb?.id !== ssb.id ||
+        (marker.ssb.userContextId ?? 0) !== (ssb.userContextId ?? 0) ||
+        await IOUtils.readUTF8(PathUtils.join(contents, "Info.plist")) !==
+          bundle.plist ||
+        await IOUtils.readUTF8(
+            PathUtils.join(contents, "MacOS", "launcher"),
+          ) !== bundle.launcher
+      ) {
+        throw new Error(
+          "[MacOSSupport] Cannot migrate an unowned or stale launcher",
+        );
+      }
+      const { AppRegistry } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/AppRegistry.sys.mjs",
+      );
+      result = await AppRegistry.getForProfile(options.profileDir)
+        .ensureLegacyApp({
+          installId: ssb.id,
+          name: ssb.name,
+          startUrl: ssb.start_url,
+          userContextId: ssb.userContextId ?? 0,
+          bundleId: bundle.bundleId,
+          bundlePath: bundle.path,
+        });
     });
+    return result;
   }
 
   private async writeBundle(
@@ -180,6 +325,17 @@ export class MacOSSupport {
     const macOS = PathUtils.join(contents, "MacOS");
     const resources = PathUtils.join(contents, "Resources");
     const markerPath = PathUtils.join(contents, "floorp.json");
+    const nativeMarker = PathUtils.join(resources, "floorp.json");
+    if (await IOUtils.exists(nativeMarker)) {
+      const existing = await IOUtils.readJSON(nativeMarker) as {
+        integration?: string;
+      };
+      if (existing?.integration === "app-shim") {
+        throw new Error(
+          "[MacOSSupport] Refusing to overwrite a signed native bundle with a launcher",
+        );
+      }
+    }
     // Version 3 launches the browser bundle through LaunchServices and clears
     // quarantine inherited from a downloaded Floorp. Bumping the marker forces
     // repair of older bundles whose generated files otherwise look complete.
@@ -198,6 +354,14 @@ export class MacOSSupport {
       markerPath,
     ];
     if (await IOUtils.exists(markerPath)) {
+      const existing = await IOUtils.readJSON(markerPath) as {
+        integration?: string;
+      };
+      if (existing?.integration === "app-shim") {
+        throw new Error(
+          "[MacOSSupport] Refusing to overwrite a signed native bundle with a launcher",
+        );
+      }
       if (
         await IOUtils.readUTF8(markerPath) === marker &&
         await IOUtils.exists(executable) && await IOUtils.exists(icon) &&
@@ -298,13 +462,106 @@ export class MacOSSupport {
 
   async uninstall(ssb: Manifest, store?: MacAppStore): Promise<void> {
     const options = this.getOptions();
-    const { path } = await getMacAppBundle(ssb, options);
-    await MacOSSupport.enqueue(path, async () => {
+    await MacOSSupport.enqueue(`${options.profileDir}:${ssb.id}`, async () => {
+      const { NativeAppRuntime } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+      );
+      // Reserve mutation before asynchronous discovery: an opening app may not
+      // have enrolled in the native registry yet. No filesystem lock is held
+      // while its preparation and cancellation finish.
+      const removed = await NativeAppRuntime.withMutation(
+        ssb.id,
+        async (scope: AppMutationScope) => {
+          if (await this.findNativeAppBundle(ssb)) {
+            const { MacAppShimInstaller } = ChromeUtils.importESModule(
+              "resource://noraneko/modules/pwa/MacAppShimInstaller.sys.mjs",
+            );
+            await MacAppShimInstaller.forMaintenance(options).uninstall(
+              ssb,
+              store,
+              scope,
+            );
+          } else {
+            await this.uninstallAfterAppShimRollback(ssb, store);
+          }
+          return true;
+        },
+      );
+      if (removed !== true) {
+        throw new Error(
+          "[MacOSSupport] App declined to close; uninstall cancelled",
+        );
+      }
+    }, MacOSSupport.operations);
+  }
+
+  /** Used after native rollback while the public operation remains reserved. */
+  async uninstallAfterAppShimRollback(
+    ssb: Manifest,
+    store?: MacAppStore,
+  ): Promise<void> {
+    const options = this.getOptions();
+    await MacOSSupport.enqueue(`${options.profileDir}:${ssb.id}`, async () => {
+      if (await this.findNativeAppBundle(ssb)) {
+        throw new Error(
+          "[MacOSSupport] Native bundle still requires native uninstall",
+        );
+      }
+      const { path } = await getMacAppBundle(ssb, options);
       await this.removeBundle(ssb, options, path);
       await store?.removeSsbData(
         buildSsbKey(ssb.start_url, ssb.userContextId ?? 0),
       );
+      // Optional enrollment must never make a legacy uninstaller unusable.
+      try {
+        const { AppRegistry } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/AppRegistry.sys.mjs",
+        );
+        await AppRegistry.getForProfile(options.profileDir).forgetApp(
+          ssb.id,
+          path,
+        );
+      } catch (error) {
+        console.warn(
+          "[MacOSSupport] Could not clear optional legacy registration:",
+          error,
+        );
+      }
     });
+  }
+
+  async rename(
+    ssb: Manifest,
+    updated: Manifest,
+    store: MacAppStore,
+  ): Promise<boolean> {
+    const options = this.getOptions();
+    let result = false;
+    await MacOSSupport.enqueue(`${options.profileDir}:${ssb.id}`, async () => {
+      const { NativeAppRuntime } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+      );
+      result = await NativeAppRuntime.withMutation(
+        ssb.id,
+        async (scope: AppMutationScope) => {
+          if (await this.findNativeAppBundle(ssb)) {
+            const { MacAppShimInstaller } = ChromeUtils.importESModule(
+              "resource://noraneko/modules/pwa/MacAppShimInstaller.sys.mjs",
+            );
+            return await MacAppShimInstaller.forMaintenance(options).rename(
+              ssb,
+              updated,
+              store,
+              scope,
+            );
+          }
+          await this.uninstallAfterAppShimRollback(ssb, store);
+          await this.installForAppShim(updated, store);
+          return true;
+        },
+      ) === true;
+    }, MacOSSupport.operations);
+    return result;
   }
 
   private async removeBundle(

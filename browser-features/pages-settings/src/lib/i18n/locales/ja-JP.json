@@ -488,6 +488,8 @@
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウィンドウにツールバーを表示します",
+        "keepRunningAfterBrowserQuit": "{{productName}} の終了後もウェブアプリを起動し続ける",
+        "keepRunningAfterBrowserQuitDescription": "ブラウザーのウィンドウを閉じても、実行中のウェブアプリは開いたままになります。無効にすると、ウェブアプリも一緒に終了します。ウェブアプリを終了すると、そのアプリのみが閉じられます。 {{productName}} を再起動するか、ログアウトすると、すべてのアプリが閉じられます。",
         "installedApps": "インストール済みのアプリ",
         "noInstalledApps": "プログレッシブウェブアプリがインストールされていません",
         "removeApp": "アプリを削除",
@@ -507,7 +509,10 @@
         "containerDeleted": "コンテナーが削除されました",
         "resetContainer": "リセット",
         "save": "保存",
-        "errorSettingContainer": "コンテナーの設定に失敗しました"
+        "errorRenaming": "このウェブアプリの名前を変更できませんでした。",
+        "errorUninstalling": "このウェブアプリをアンインストールできませんでした。",
+        "errorSettingContainer": "コンテナーの設定に失敗しました",
+        "nativeContainerFixed": "この macOS ウェブアプリは、インストール時に使用されていたコンテナーを維持します。現時点では後からコンテナーを変更できません。現在のログイン情報とサイトデータは保持されています。"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
