@@ -8,7 +8,11 @@ import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import type { Browser, Manifest } from "./type";
 import type { PwaService } from "./pwaService";
-import { getContainerLabel, getUserContextIdForBrowser, isContainerExperimentEnabled } from "./containerUtils.ts";
+import {
+  getContainerLabel,
+  getUserContextIdForBrowser,
+  isContainerExperimentEnabled,
+} from "./containerUtils.ts";
 import { SsbContainerSelect } from "./SsbContainerSelect.tsx";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -17,7 +21,7 @@ export class SsbPanelView {
   private static installedApps = createSignal<Manifest[]>([]);
   private static selectedContainerId = createSignal(0);
   private static panelIsInstalled = createSignal(false);
-  private static subviewSessionActive = false;
+  private static installStateRequest = 0;
   private static pwaService: PwaService;
   private isOpen = createSignal<boolean>(false);
   private isRendered = false;
@@ -82,13 +86,9 @@ export class SsbPanelView {
 
   private static async showSsbPanelSubView() {
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
-
-    if (!SsbPanelView.subviewSessionActive) {
-      SsbPanelView.subviewSessionActive = true;
-      const tabContainerId = getUserContextIdForBrowser(browser);
-      SsbPanelView.selectedContainerId[1](tabContainerId);
-      void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
-    }
+    const tabContainerId = getUserContextIdForBrowser(browser);
+    SsbPanelView.selectedContainerId[1](tabContainerId);
+    await SsbPanelView.updatePanelInstallState(browser, tabContainerId);
 
     await globalThis.PanelUI.showSubView(
       "PanelUI-ssb",
@@ -98,17 +98,28 @@ export class SsbPanelView {
     await SsbPanelView.updateInstalledApps();
   }
 
-  private static resetSubviewSession() {
-    SsbPanelView.subviewSessionActive = false;
-  }
-
   private static async updatePanelInstallState(
     browser: Browser,
     userContextId: number,
   ) {
-    const installed = await SsbPanelView.pwaService
-      .checkPageIsInstalledForContainer(browser, userContextId);
-    SsbPanelView.panelIsInstalled[1](installed);
+    const request = ++SsbPanelView.installStateRequest;
+    const pageUrl = browser.currentURI.spec;
+    try {
+      const installed = await SsbPanelView.pwaService
+        .checkPageIsInstalledForContainer(browser, userContextId);
+      if (
+        request === SsbPanelView.installStateRequest &&
+        globalThis.gBrowser.selectedBrowser === browser &&
+        browser.currentURI.spec === pageUrl
+      ) {
+        SsbPanelView.panelIsInstalled[1](installed);
+      }
+    } catch (error) {
+      console.error("[SsbPanelView] Could not check installed app:", error);
+      if (request === SsbPanelView.installStateRequest) {
+        SsbPanelView.panelIsInstalled[1](false);
+      }
+    }
   }
 
   private static async updateInstalledApps() {
@@ -201,10 +212,7 @@ export class SsbPanelView {
           closemenu="none"
           onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
-        <xul:panelview
-          id="PanelUI-ssb"
-          onViewHiding={() => SsbPanelView.resetSubviewSession()}
-        >
+        <xul:panelview id="PanelUI-ssb">
           <xul:vbox id="ssb-subview-body" class="panel-subview-body">
             <xul:vbox id="ssb-install-section" class="ssb-menu-install-section">
               {isContainerExperimentEnabled() && (
