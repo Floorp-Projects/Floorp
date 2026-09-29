@@ -8,7 +8,11 @@ import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import type { Browser, Manifest } from "./type";
 import type { PwaService } from "./pwaService";
-import { getContainerLabel, getUserContextIdForBrowser, isContainerExperimentEnabled } from "./containerUtils.ts";
+import {
+  getContainerLabel,
+  getUserContextIdForBrowser,
+  isContainerExperimentEnabled,
+} from "./containerUtils.ts";
 import { SsbContainerSelect } from "./SsbContainerSelect.tsx";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -16,8 +20,8 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 export class SsbPanelView {
   private static installedApps = createSignal<Manifest[]>([]);
   private static selectedContainerId = createSignal(0);
-  private static panelIsInstalled = createSignal(false);
-  private static subviewSessionActive = false;
+  private static panelIsInstalled = createSignal<boolean | null>(null);
+  private static installStateRequest = 0;
   private static pwaService: PwaService;
   private isOpen = createSignal<boolean>(false);
   private isRendered = false;
@@ -28,6 +32,35 @@ export class SsbPanelView {
 
     createRootHMR(() => {
       const [, setIsOpen] = this.isOpen;
+      const refreshCurrentPage = (resetContainer: boolean) => {
+        if (
+          document.getElementById("PanelUI-ssb")?.getAttribute("visible") !==
+            "true"
+        ) {
+          return;
+        }
+        const browser = globalThis.gBrowser.selectedBrowser as Browser;
+        const userContextId = resetContainer
+          ? getUserContextIdForBrowser(browser)
+          : SsbPanelView.selectedContainerId[0]();
+        if (resetContainer) SsbPanelView.selectedContainerId[1](userContextId);
+        void SsbPanelView.updatePanelInstallState(browser, userContextId);
+      };
+      const onTabSelect = () => refreshCurrentPage(true);
+      const progressListener = {
+        // addTabsProgressListener passes the browser before nsIWebProgressListener args.
+        onLocationChange: (...args: unknown[]) => {
+          const browser = args[0] as Browser;
+          if (browser === globalThis.gBrowser.selectedBrowser) {
+            refreshCurrentPage(false);
+          }
+        },
+      };
+      globalThis.gBrowser.tabContainer.addEventListener(
+        "TabSelect",
+        onTabSelect,
+      );
+      globalThis.gBrowser.addTabsProgressListener(progressListener);
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (
@@ -49,7 +82,14 @@ export class SsbPanelView {
         attributes: true,
       });
 
-      onCleanup(() => observer.disconnect());
+      onCleanup(() => {
+        observer.disconnect();
+        globalThis.gBrowser.tabContainer.removeEventListener(
+          "TabSelect",
+          onTabSelect,
+        );
+        globalThis.gBrowser.removeTabsProgressListener(progressListener);
+      });
     }, import.meta.hot);
   }
 
@@ -82,33 +122,56 @@ export class SsbPanelView {
 
   private static async showSsbPanelSubView() {
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
-
-    if (!SsbPanelView.subviewSessionActive) {
-      SsbPanelView.subviewSessionActive = true;
-      const tabContainerId = getUserContextIdForBrowser(browser);
-      SsbPanelView.selectedContainerId[1](tabContainerId);
-      void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
-    }
+    const pageUrl = browser.currentURI.spec;
+    const tabContainerId = getUserContextIdForBrowser(browser);
+    SsbPanelView.selectedContainerId[1](tabContainerId);
+    void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
 
     await globalThis.PanelUI.showSubView(
       "PanelUI-ssb",
       document?.getElementById("appMenu-ssb-button"),
     );
 
-    await SsbPanelView.updateInstalledApps();
-  }
+    if (
+      globalThis.gBrowser.selectedBrowser !== browser ||
+      browser.currentURI.spec !== pageUrl
+    ) {
+      const currentBrowser = globalThis.gBrowser.selectedBrowser as Browser;
+      const currentContainerId = currentBrowser === browser
+        ? SsbPanelView.selectedContainerId[0]()
+        : getUserContextIdForBrowser(currentBrowser);
+      if (currentBrowser !== browser) {
+        SsbPanelView.selectedContainerId[1](currentContainerId);
+      }
+      void SsbPanelView.updatePanelInstallState(
+        currentBrowser,
+        currentContainerId,
+      );
+    }
 
-  private static resetSubviewSession() {
-    SsbPanelView.subviewSessionActive = false;
+    await SsbPanelView.updateInstalledApps();
   }
 
   private static async updatePanelInstallState(
     browser: Browser,
     userContextId: number,
   ) {
-    const installed = await SsbPanelView.pwaService
-      .checkPageIsInstalledForContainer(browser, userContextId);
-    SsbPanelView.panelIsInstalled[1](installed);
+    const request = ++SsbPanelView.installStateRequest;
+    const pageUrl = browser.currentURI.spec;
+    SsbPanelView.panelIsInstalled[1](null);
+    try {
+      const installed = await SsbPanelView.pwaService
+        .checkPageIsInstalledForContainer(browser, userContextId);
+      if (
+        request === SsbPanelView.installStateRequest &&
+        globalThis.gBrowser.selectedBrowser === browser &&
+        browser.currentURI.spec === pageUrl
+      ) {
+        SsbPanelView.panelIsInstalled[1](installed);
+      }
+    } catch (error) {
+      console.error("[SsbPanelView] Could not check installed app:", error);
+    }
   }
 
   private static async updateInstalledApps() {
@@ -201,10 +264,7 @@ export class SsbPanelView {
           closemenu="none"
           onCommand={() => SsbPanelView.showSsbPanelSubView()}
         />
-        <xul:panelview
-          id="PanelUI-ssb"
-          onViewHiding={() => SsbPanelView.resetSubviewSession()}
-        >
+        <xul:panelview id="PanelUI-ssb">
           <xul:vbox id="ssb-subview-body" class="panel-subview-body">
             <xul:vbox id="ssb-install-section" class="ssb-menu-install-section">
               {isContainerExperimentEnabled() && (
@@ -218,11 +278,17 @@ export class SsbPanelView {
               <xul:toolbarbutton
                 id="appMenu-install-or-open-ssb-current-page-button"
                 class="subviewbutton"
+                {...{
+                  disabled: panelIsInstalled() === null ? "true" : undefined,
+                }}
                 label={panelIsInstalled()
                   ? translations().openCurrent
                   : translations().installCurrent}
-                onCommand={() =>
-                  SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
+                onCommand={() => {
+                  if (panelIsInstalled() !== null) {
+                    SsbPanelView.handleInstallOrRunCurrentPageAsSsb();
+                  }
+                }}
               />
             </xul:vbox>
             <xul:toolbarseparator />

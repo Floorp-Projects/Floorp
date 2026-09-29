@@ -77,13 +77,21 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    globalThis.gBrowser.addTabsProgressListener(this.listener);
+    // A native mutation closes the PWA window. Handle management requests
+    // from the window that owns the data manager's pending store writes.
+    const ownerWindow = Cu.getGlobalForObject(dataManager) as Window;
+    const tabBrowser = ownerWindow.gBrowser;
+    tabBrowser.addTabsProgressListener(this.listener);
 
-    Services.obs.addObserver(async (subject: nsISupports | null) => {
+    const canHandleManagementRequest = () =>
+      !ownerWindow.closed &&
+      !ownerWindow.document.documentElement.hasAttribute("taskbartab");
+
+    const renameObserver = async (subject: nsISupports | null) => {
       const request =
         (subject as { wrappedJSObject?: AppManagementRequest } | null)
           ?.wrappedJSObject;
-      if (!request || request.claimed) return;
+      if (!request || request.claimed || !canHandleManagementRequest()) return;
       request.claimed = true;
       try {
         const renamed = await this.renameSsb(request.id, request.newName ?? "");
@@ -92,13 +100,13 @@ export class SiteSpecificBrowserManager {
         console.error("[SiteSpecificBrowserManager] Rename failed:", error);
         request.complete?.(false);
       }
-    }, "nora-ssb-rename");
+    };
 
-    Services.obs.addObserver(async (subject: nsISupports | null) => {
+    const uninstallObserver = async (subject: nsISupports | null) => {
       const request =
         (subject as { wrappedJSObject?: AppManagementRequest } | null)
           ?.wrappedJSObject;
-      if (!request || request.claimed) return;
+      if (!request || request.claimed || !canHandleManagementRequest()) return;
       request.claimed = true;
       try {
         await this.uninstallById(request.id);
@@ -107,7 +115,18 @@ export class SiteSpecificBrowserManager {
         console.error("[SiteSpecificBrowserManager] Uninstall failed:", error);
         request.complete?.(false);
       }
-    }, "nora-ssb-uninstall");
+    };
+
+    Services.obs.addObserver(renameObserver, "nora-ssb-rename");
+    Services.obs.addObserver(uninstallObserver, "nora-ssb-uninstall");
+    ownerWindow.addEventListener("unload", () => {
+      Services.obs.removeObserver(renameObserver, "nora-ssb-rename");
+      Services.obs.removeObserver(uninstallObserver, "nora-ssb-uninstall");
+      tabBrowser.removeTabsProgressListener(this.listener);
+      if (SiteSpecificBrowserManager.instance === this) {
+        SiteSpecificBrowserManager.instance = null;
+      }
+    }, { once: true });
   }
 
   private listener = {
