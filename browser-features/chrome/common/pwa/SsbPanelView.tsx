@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, For, onCleanup } from "solid-js";
+import { createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import type { Browser, Manifest } from "./type";
@@ -208,13 +208,6 @@ export class SsbPanelView {
     const [selectedContainerId] = SsbPanelView.selectedContainerId;
     const [panelIsInstalled] = SsbPanelView.panelIsInstalled;
 
-    createEffect(() => {
-      document?.getElementById(
-        "appMenu-install-or-open-ssb-current-page-button",
-      )
-        ?.toggleAttribute("disabled", panelIsInstalled() === null);
-    });
-
     return (
       <>
         <xul:toolbarbutton
@@ -238,6 +231,9 @@ export class SsbPanelView {
               <xul:toolbarbutton
                 id="appMenu-install-or-open-ssb-current-page-button"
                 class="subviewbutton"
+                {...{
+                  disabled: panelIsInstalled() === null ? "true" : undefined,
+                }}
                 label={panelIsInstalled()
                   ? translations().openCurrent
                   : translations().installCurrent}
