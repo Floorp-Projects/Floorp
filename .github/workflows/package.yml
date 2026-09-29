@@ -2388,7 +2388,7 @@ jobs:
 
   macos-native-resign-diagnostic:
     if: ${{ inputs.macos_resign_artifact_id != '' && inputs.macos_resign_artifact_run_id != '' }}
-    runs-on: macos-14
+    runs-on: macos-26
     steps:
       - name: Download signed macOS installer for diagnosis
         uses: actions/download-artifact@v4
