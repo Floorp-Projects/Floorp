@@ -180,22 +180,22 @@ on:
         value: ${{ jobs.main.outputs.expected_build_id }}
       installer_artifact_name:
         description: "Final installer/package artifact name"
-        value: ${{ jobs.macos-finalize.outputs.installer_artifact_name || jobs.main.outputs.installer_artifact_name }}
+        value: ${{ jobs.macos-ticket-verify.outputs.installer_artifact_name || jobs.main.outputs.installer_artifact_name }}
       installer_artifact_id:
         description: "Final installer/package artifact ID"
-        value: ${{ jobs.macos-finalize.outputs.installer_artifact_id || jobs.main.outputs.installer_artifact_id }}
+        value: ${{ jobs.macos-ticket-verify.outputs.installer_artifact_id || jobs.main.outputs.installer_artifact_id }}
       installer_artifact_digest:
         description: "Final installer/package artifact digest"
-        value: ${{ jobs.macos-finalize.outputs.installer_artifact_digest || jobs.main.outputs.installer_artifact_digest }}
+        value: ${{ jobs.macos-ticket-verify.outputs.installer_artifact_digest || jobs.main.outputs.installer_artifact_digest }}
       mar_artifact_name:
         description: "Full MAR artifact name"
-        value: ${{ jobs.macos-finalize.outputs.mar_artifact_name || jobs.main.outputs.mar_artifact_name }}
+        value: ${{ jobs.macos-ticket-verify.outputs.mar_artifact_name || jobs.main.outputs.mar_artifact_name }}
       mar_artifact_id:
         description: "Full MAR artifact ID"
-        value: ${{ jobs.macos-finalize.outputs.mar_artifact_id || jobs.main.outputs.mar_artifact_id }}
+        value: ${{ jobs.macos-ticket-verify.outputs.mar_artifact_id || jobs.main.outputs.mar_artifact_id }}
       mar_artifact_digest:
         description: "Full MAR artifact digest"
-        value: ${{ jobs.macos-finalize.outputs.mar_artifact_digest || jobs.main.outputs.mar_artifact_digest }}
+        value: ${{ jobs.macos-ticket-verify.outputs.mar_artifact_digest || jobs.main.outputs.mar_artifact_digest }}
       deb_artifact_name:
         description: "Linux x64 DEB artifact name, otherwise empty"
         value: ${{ jobs.main.outputs.deb_artifact_name }}
@@ -2511,6 +2511,9 @@ jobs:
           fi
           hdiutil create -volname "$volume_name" -srcfolder "$stage" \
             -fs HFS+ -format UDZO -ov "$output/floorp-macOS-universal.dmg"
+          codesign --sign "$identity" --keychain "$keychain" --timestamp \
+            -i app.floorp.Floorp.installer "$output/floorp-macOS-universal.dmg"
+          codesign --verify --verbose=2 "$output/floorp-macOS-universal.dmg"
 
       - name: Upload native signed macOS stage
         id: upload-native-stage
@@ -2530,14 +2533,7 @@ jobs:
           needs.main.outputs.platform_key == 'mac' && !inputs.skip_signing }}
     runs-on: ubuntu-22.04
     outputs:
-      installer_artifact_name: noraneko-mac-universal-installer
-      installer_artifact_id: ${{ steps.upload-final-installer.outputs.artifact-id }}
-      installer_artifact_digest: >-
-        ${{ format('sha256:{0}', steps.upload-final-installer.outputs.artifact-digest) }}
-      mar_artifact_name: floorp-mac-universal-mar-full
-      mar_artifact_id: ${{ steps.upload-final-mar.outputs.artifact-id }}
-      mar_artifact_digest: >-
-        ${{ format('sha256:{0}', steps.upload-final-mar.outputs.artifact-digest) }}
+      stage_artifact_id: ${{ steps.upload-notarized-stage.outputs.artifact-id }}
     steps:
       - name: Download native signed macOS package
         uses: actions/download-artifact@v4
@@ -2603,23 +2599,19 @@ jobs:
           metadata["mar_shasum"] = hashlib.sha512(mar.read_bytes()).hexdigest()
           Path(sys.argv[3]).write_text(json.dumps(metadata, indent=2) + "\n")
           PY
+          stage="$RUNNER_TEMP/floorp-notarized-stage"
+          mkdir -p "$stage"
+          cp "$native/floorp-macOS-universal.dmg" "$mar" "$out/meta.json" "$stage/"
 
-      - name: Upload final native signed installer
-        id: upload-final-installer
+      - name: Upload notarized macOS stage
+        id: upload-notarized-stage
         uses: actions/upload-artifact@v4
         with:
-          name: noraneko-mac-universal-installer
-          path: ${{ runner.temp }}/native-package/floorp-macOS-universal.dmg
+          name: floorp-macos-notarized-stage
+          path: ${{ runner.temp }}/floorp-notarized-stage/*
           compression-level: 0
           if-no-files-found: error
-
-      - name: Upload final native signed MAR
-        id: upload-final-mar
-        uses: actions/upload-artifact@v4
-        with:
-          name: floorp-mac-universal-mar-full
-          path: ${{ runner.temp }}/floorp-final-package/*
-          if-no-files-found: error
+          retention-days: 2
 
   macos-ticket-verify:
     needs: [main, macos-finalize]
@@ -2628,21 +2620,54 @@ jobs:
           needs.macos-finalize.result == 'success' &&
           needs.main.outputs.platform_key == 'mac' && !inputs.skip_signing }}
     runs-on: macos-26
+    outputs:
+      installer_artifact_name: noraneko-mac-universal-installer
+      installer_artifact_id: ${{ steps.upload-final-installer.outputs.artifact-id }}
+      installer_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-final-installer.outputs.artifact-digest) }}
+      mar_artifact_name: floorp-mac-universal-mar-full
+      mar_artifact_id: ${{ steps.upload-final-mar.outputs.artifact-id }}
+      mar_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-final-mar.outputs.artifact-digest) }}
     steps:
-      - name: Download final notarized macOS installer
+      - name: Download notarized macOS stage
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: ${{ needs.macos-finalize.outputs.installer_artifact_id }}
+          artifact-ids: ${{ needs.macos-finalize.outputs.stage_artifact_id }}
           run-id: ${{ github.run_id }}
           github-token: ${{ github.token }}
           merge-multiple: true
-          path: ${{ runner.temp }}/final-installer
+          path: ${{ runner.temp }}/notarized-stage
 
       - name: Verify attached notarization ticket and disk image
         shell: bash
         run: |
           set -euo pipefail
-          dmg="$RUNNER_TEMP/final-installer/floorp-macOS-universal.dmg"
+          dmg="$RUNNER_TEMP/notarized-stage/floorp-macOS-universal.dmg"
           test -s "$dmg"
+          test -s "$RUNNER_TEMP/notarized-stage/floorp-mac-universal-full.mar"
+          test -s "$RUNNER_TEMP/notarized-stage/meta.json"
           xcrun stapler validate "$dmg"
+          codesign --verify --verbose=2 "$dmg"
+          spctl --assess --type open --context context:primary-signature \
+            --verbose=4 "$dmg"
           hdiutil verify "$dmg"
+
+      - name: Upload final native signed installer
+        id: upload-final-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-mac-universal-installer
+          path: ${{ runner.temp }}/notarized-stage/floorp-macOS-universal.dmg
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload final native signed MAR
+        id: upload-final-mar
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-mac-universal-mar-full
+          path: |
+            ${{ runner.temp }}/notarized-stage/floorp-mac-universal-full.mar
+            ${{ runner.temp }}/notarized-stage/meta.json
+          if-no-files-found: error
