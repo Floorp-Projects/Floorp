@@ -2434,6 +2434,7 @@ jobs:
           artifact-ids: ${{ inputs.macos_resign_artifact_id || needs.main.outputs.installer_artifact_id }}
           run-id: ${{ inputs.macos_resign_artifact_run_id || github.run_id }}
           github-token: ${{ github.token }}
+          merge-multiple: true
           path: ${{ runner.temp }}/input
 
       - name: Re-sign browser root with native macOS codesign
@@ -2557,12 +2558,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ needs.macos-native-sign.outputs.stage_artifact_id }}
+          merge-multiple: true
           path: ${{ runner.temp }}/native-package
 
       - name: Download finalizer tools from package job
         uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ needs.main.outputs.macos_stage_artifact_id }}
+          merge-multiple: true
           path: ${{ runner.temp }}/finalizer-tools
 
       - name: Notarize native signed DMG and build matching full MAR
