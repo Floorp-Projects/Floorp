@@ -191,11 +191,11 @@
             "tabbar": {
                 "title": "Tab Bar Settings",
                 "asTitlebar": "Fanelinje i titellinjen",
-                "oneLiner": "Combine Tab Bar and Toolbar"
+                "oneLiner": "Kombiner fanelinje og værktøjslinje"
             },
             "sidebar": {
                 "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
+                "overlap": "Vis sidepanel over sideindhold"
             },
             "configure": "Open UI extension settings"
         },

@@ -144,8 +144,8 @@
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
         "chrome-extras": {
-            "title": "UI Extension Settings",
-            "description": "Apply optional UI tweaks on top of the currently selected design",
+            "title": "UI 拡張機能の設定",
+            "description": "現在選択されているデザインに追加の UI 調整を適用する",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
@@ -173,8 +173,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Disable context menu and panel menu icons",
-                "menu": "Enable context menu icons"
+                "disabled": "コンテキストメニューとパネルメニューのアイコン表示を無効にする",
+                "menu": "コンテキストメニューのアイコン表示を有効にする"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -197,7 +197,7 @@
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
             },
-            "configure": "Open UI extension settings"
+            "configure": "UI 拡張機能の設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
