@@ -2580,8 +2580,7 @@ jobs:
             --wait "$native/floorp-macOS-universal.dmg"
           rm -f "$key_file"
           # Keep Gatekeeper's notarization proof available on offline first launch.
-          xcrun stapler staple "$native/floorp-macOS-universal.dmg"
-          xcrun stapler validate "$native/floorp-macOS-universal.dmg"
+          "$tools/rcodesign" staple "$native/floorp-macOS-universal.dmg"
 
           tar -xzf "$native/Floorp.app.tar.gz" -C "$app_dir"
           app="$app_dir/Floorp.app"
@@ -2621,3 +2620,29 @@ jobs:
           name: floorp-mac-universal-mar-full
           path: ${{ runner.temp }}/floorp-final-package/*
           if-no-files-found: error
+
+  macos-ticket-verify:
+    needs: [main, macos-finalize]
+    if: >-
+      ${{ needs.main.result == 'success' &&
+          needs.macos-finalize.result == 'success' &&
+          needs.main.outputs.platform_key == 'mac' && !inputs.skip_signing }}
+    runs-on: macos-26
+    steps:
+      - name: Download final notarized macOS installer
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.macos-finalize.outputs.installer_artifact_id }}
+          run-id: ${{ github.run_id }}
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/final-installer
+
+      - name: Verify attached notarization ticket and disk image
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$RUNNER_TEMP/final-installer/floorp-macOS-universal.dmg"
+          test -s "$dmg"
+          xcrun stapler validate "$dmg"
+          hdiutil verify "$dmg"
