@@ -42,7 +42,7 @@ export default class Pwa extends NoraComponentBase {
       onDelayedStartup,
       "browser-delayed-startup-finished",
     );
-    window.addEventListener("unload", () => {
+    globalThis.addEventListener("unload", () => {
       Services.obs.removeObserver(
         onDelayedStartup,
         "browser-delayed-startup-finished",

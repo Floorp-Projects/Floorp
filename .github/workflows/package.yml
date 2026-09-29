@@ -185,22 +185,22 @@ on:
         value: ${{ jobs.main.outputs.expected_build_id }}
       installer_artifact_name:
         description: "Final installer/package artifact name"
-        value: ${{ jobs.main.outputs.installer_artifact_name }}
+        value: ${{ jobs.macos-finalize.outputs.installer_artifact_name || jobs.main.outputs.installer_artifact_name }}
       installer_artifact_id:
         description: "Final installer/package artifact ID"
-        value: ${{ jobs.main.outputs.installer_artifact_id }}
+        value: ${{ jobs.macos-finalize.outputs.installer_artifact_id || jobs.main.outputs.installer_artifact_id }}
       installer_artifact_digest:
         description: "Final installer/package artifact digest"
-        value: ${{ jobs.main.outputs.installer_artifact_digest }}
+        value: ${{ jobs.macos-finalize.outputs.installer_artifact_digest || jobs.main.outputs.installer_artifact_digest }}
       mar_artifact_name:
         description: "Full MAR artifact name"
-        value: ${{ jobs.main.outputs.mar_artifact_name }}
+        value: ${{ jobs.macos-finalize.outputs.mar_artifact_name || jobs.main.outputs.mar_artifact_name }}
       mar_artifact_id:
         description: "Full MAR artifact ID"
-        value: ${{ jobs.main.outputs.mar_artifact_id }}
+        value: ${{ jobs.macos-finalize.outputs.mar_artifact_id || jobs.main.outputs.mar_artifact_id }}
       mar_artifact_digest:
         description: "Full MAR artifact digest"
-        value: ${{ jobs.main.outputs.mar_artifact_digest }}
+        value: ${{ jobs.macos-finalize.outputs.mar_artifact_digest || jobs.main.outputs.mar_artifact_digest }}
       deb_artifact_name:
         description: "Linux x64 DEB artifact name, otherwise empty"
         value: ${{ jobs.main.outputs.deb_artifact_name }}
@@ -241,6 +241,7 @@ jobs:
       deb_artifact_digest: >-
         ${{ steps.upload-deb.outputs.artifact-digest &&
             format('sha256:{0}', steps.upload-deb.outputs.artifact-digest) || '' }}
+      macos_stage_artifact_id: ${{ steps.upload-macos-finalizer-tools.outputs.artifact-id }}
     steps:
       - name: Require Runtime artifact token
         if: ${{ inputs.provenance_mode != 'legacy' }}
@@ -2046,11 +2047,6 @@ jobs:
                 # check above plus mach's built-in verification instead.
 
                 ./mach python -m mozbuild.action.make_dmg --dsstore "$DS_STORE_PATH" --background "$BACKGROUND_PATH" --volume-name "$VOLUME_NAME" ~/mac-code-signing/old ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
-                printf '%s\n' '${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}' > ~/mac-code-signing/key.json
-                rcodesign notary-submit \
-                  --api-key-file ~/mac-code-signing/key.json \
-                  --wait \
-                  ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME
                 mv ~/mac-code-signing/new/$OUTPUT_INSTALLER_NAME ~/noraneko-installer/$OUTPUT_INSTALLER_NAME
               fi
               DIST_DIR=$(find obj-artifact-build-output/dist -maxdepth 1 -type d \( -name "noraneko" -o -name "floorp" \) -print -quit)
@@ -2371,7 +2367,10 @@ jobs:
         id: upload-installer
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact-contract.outputs.installer_artifact_name }}
+          name: >-
+            ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing &&
+                format('{0}-pre-native', steps.artifact-contract.outputs.installer_artifact_name) ||
+                steps.artifact-contract.outputs.installer_artifact_name }}
           path: ${{ env.INSTALLER_UPLOAD_PATH }}
           compression-level: 9
           if-no-files-found: error
@@ -2381,20 +2380,54 @@ jobs:
         id: upload-mar
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact-contract.outputs.mar_artifact_name }}
+          name: >-
+            ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing &&
+                format('{0}-pre-native', steps.artifact-contract.outputs.mar_artifact_name) ||
+                steps.artifact-contract.outputs.mar_artifact_name }}
           path: ~/noraneko-publish/*
           if-no-files-found: error
           overwrite: true
 
-  macos-native-resign-diagnostic:
-    if: ${{ inputs.macos_resign_artifact_id != '' && inputs.macos_resign_artifact_run_id != '' }}
+      - name: Stage macOS finalizer tools and metadata
+        if: ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/floorp-macos-finalizer-tools"
+          mkdir -p "$stage/update-packaging"
+          install -m 0755 obj-artifact-build-output/dist/host/bin/mar "$stage/mar"
+          install -m 0755 "$(command -v rcodesign)" "$stage/rcodesign"
+          cp tools/update-packaging/make_full_update.sh \
+             tools/update-packaging/common.sh "$stage/update-packaging/"
+          cp "$HOME/noraneko-publish/meta.json" "$stage/meta.json"
+
+      - name: Upload macOS finalizer tools
+        if: ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+        id: upload-macos-finalizer-tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-macos-finalizer-tools
+          path: ${{ runner.temp }}/floorp-macos-finalizer-tools/*
+          if-no-files-found: error
+          retention-days: 2
+
+  macos-native-sign:
+    needs: main
+    if: >-
+      ${{ always() &&
+          ((inputs.macos_resign_artifact_id != '' &&
+            inputs.macos_resign_artifact_run_id != '') ||
+           (needs.main.result == 'success' && inputs.platform == 'macOS-x64' &&
+            !inputs.skip_signing)) }}
     runs-on: macos-26
+    outputs:
+      stage_artifact_id: ${{ steps.upload-native-stage.outputs.artifact-id }}
     steps:
       - name: Download signed macOS installer for diagnosis
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: ${{ inputs.macos_resign_artifact_id }}
-          run-id: ${{ inputs.macos_resign_artifact_run_id }}
+          artifact-ids: ${{ inputs.macos_resign_artifact_id || needs.main.outputs.installer_artifact_id }}
+          run-id: ${{ inputs.macos_resign_artifact_run_id || github.run_id }}
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/input
 
@@ -2414,16 +2447,20 @@ jobs:
             exit 1
           fi
           mount_point="$RUNNER_TEMP/floorp-input-volume"
-          mkdir -p "$mount_point" "$RUNNER_TEMP/floorp-output"
+          stage="$RUNNER_TEMP/floorp-volume-stage"
+          output="$RUNNER_TEMP/floorp-native-output"
+          mkdir -p "$mount_point" "$stage" "$output"
           hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$input_dmg"
           trap 'hdiutil detach "$mount_point" -quiet || true' EXIT
-          app_source="$(find "$mount_point" -name '*.app' -type d -print -quit)"
-          if [[ -z "$app_source" ]]; then
+          ditto "$mount_point" "$stage"
+          shopt -s nullglob
+          apps=("$stage"/*.app)
+          shopt -u nullglob
+          if (( ${#apps[@]} != 1 )); then
             echo "Installer has no application bundle" >&2
             exit 1
           fi
-          app="$RUNNER_TEMP/floorp-output/$(basename "$app_source")"
-          ditto "$app_source" "$app"
+          app="${apps[0]}"
           hdiutil detach "$mount_point" -quiet
 
           original_team="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
@@ -2475,12 +2512,116 @@ jobs:
             exit 1
           fi
           printf '%s\n' "$arm_details" | grep -E '^(Page size=|Authority=|TeamIdentifier=|Runtime Version=)'
-          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/floorp-native-resigned.zip"
+          tar -C "$stage" -czf "$output/Floorp.app.tar.gz" "$(basename "$app")"
+          volume_name="Floorp Installer"
+          if [[ "${{ inputs.beta }}" == "true" ]]; then
+            volume_name="Floorp Daylight Installer"
+          fi
+          hdiutil create -volname "$volume_name" -srcfolder "$stage" \
+            -fs HFS+ -format UDZO -ov "$output/floorp-macOS-universal.dmg"
 
-      - name: Upload native signed diagnostic app
+      - name: Upload native signed macOS stage
+        id: upload-native-stage
         uses: actions/upload-artifact@v4
         with:
-          name: floorp-macos-native-resigned-diagnostic
-          path: ${{ runner.temp }}/floorp-native-resigned.zip
+          name: floorp-macos-native-signed-stage
+          path: ${{ runner.temp }}/floorp-native-output/*
           if-no-files-found: error
+          compression-level: 0
           retention-days: 2
+
+  macos-finalize:
+    needs: [main, macos-native-sign]
+    if: >-
+      ${{ needs.main.result == 'success' &&
+          needs.macos-native-sign.result == 'success' &&
+          inputs.macos_resign_artifact_id == '' &&
+          inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+    runs-on: ubuntu-22.04
+    outputs:
+      installer_artifact_name: noraneko-mac-universal-installer
+      installer_artifact_id: ${{ steps.upload-final-installer.outputs.artifact-id }}
+      installer_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-final-installer.outputs.artifact-digest) }}
+      mar_artifact_name: floorp-mac-universal-mar-full
+      mar_artifact_id: ${{ steps.upload-final-mar.outputs.artifact-id }}
+      mar_artifact_digest: >-
+        ${{ format('sha256:{0}', steps.upload-final-mar.outputs.artifact-digest) }}
+    steps:
+      - name: Download native signed macOS package
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.macos-native-sign.outputs.stage_artifact_id }}
+          path: ${{ runner.temp }}/native-package
+
+      - name: Download finalizer tools from package job
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.main.outputs.macos_stage_artifact_id }}
+          path: ${{ runner.temp }}/finalizer-tools
+
+      - name: Notarize native signed DMG and build matching full MAR
+        shell: bash
+        env:
+          APPLE_DEVELOPER_API_KEY_JSON: ${{ secrets.APPLE_DEVELOPER_API_KEY_JSON }}
+        run: |
+          set -euo pipefail
+          : "${APPLE_DEVELOPER_API_KEY_JSON:?Missing Apple notary API key}"
+          native="$RUNNER_TEMP/native-package"
+          tools="$RUNNER_TEMP/finalizer-tools"
+          out="$RUNNER_TEMP/floorp-final-package"
+          app_dir="$RUNNER_TEMP/floorp-final-app"
+          mkdir -p "$out" "$app_dir"
+          test -s "$native/floorp-macOS-universal.dmg"
+          test -s "$native/Floorp.app.tar.gz"
+          chmod +x "$tools/mar" "$tools/rcodesign" \
+            "$tools/update-packaging/make_full_update.sh"
+          test -x "$tools/mar"
+          test -x "$tools/rcodesign"
+          test -s "$tools/meta.json"
+
+          key_file="$RUNNER_TEMP/floorp-notary-key.json"
+          printf '%s\n' "$APPLE_DEVELOPER_API_KEY_JSON" > "$key_file"
+          chmod 600 "$key_file"
+          "$tools/rcodesign" notary-submit --api-key-file "$key_file" \
+            --wait "$native/floorp-macOS-universal.dmg"
+          rm -f "$key_file"
+
+          tar -xzf "$native/Floorp.app.tar.gz" -C "$app_dir"
+          app="$app_dir/Floorp.app"
+          test -f "$app/Contents/Resources/precomplete"
+          version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$tools/meta.json")"
+          channel="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["channel"])' "$tools/meta.json")"
+          mar="$out/floorp-mac-universal-full.mar"
+          MAR="$tools/mar" MOZ_PRODUCT_VERSION="$version" MAR_CHANNEL_ID="$channel" \
+            bash "$tools/update-packaging/make_full_update.sh" "$mar" "$app"
+          test -s "$mar"
+          python3 - "$tools/meta.json" "$mar" "$out/meta.json" <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          import sys
+
+          metadata = json.loads(Path(sys.argv[1]).read_text())
+          mar = Path(sys.argv[2])
+          metadata["mar_size"] = mar.stat().st_size
+          metadata["mar_shasum"] = hashlib.sha512(mar.read_bytes()).hexdigest()
+          Path(sys.argv[3]).write_text(json.dumps(metadata, indent=2) + "\n")
+          PY
+
+      - name: Upload final native signed installer
+        id: upload-final-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-mac-universal-installer
+          path: ${{ runner.temp }}/native-package/floorp-macOS-universal.dmg
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload final native signed MAR
+        id: upload-final-mar
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-mac-universal-mar-full
+          path: ${{ runner.temp }}/floorp-final-package/*
+          if-no-files-found: error
