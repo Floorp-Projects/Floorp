@@ -74,6 +74,11 @@ on:
         required: false
         default: false
         description: "Skip code signing process"
+      signed_validation:
+        type: boolean
+        required: false
+        default: false
+        description: "Allow a signed, package-only stable v2 validation run"
       macos_resign_artifact_run_id:
         type: string
         required: false
@@ -263,6 +268,7 @@ jobs:
           TARGET_PLATFORM: ${{ inputs.platform }}
           IS_BETA: ${{ inputs.beta }}
           SKIP_SIGNING: ${{ inputs.skip_signing }}
+          SIGNED_VALIDATION: ${{ inputs.signed_validation || false }}
           LEGACY_RUNTIME_RUN_ID: ${{ inputs.runtime_artifact_workflow_run_id }}
           RUNTIME_REPOSITORY: ${{ inputs.runtime_repository }}
           RUNTIME_WORKFLOW_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
@@ -463,11 +469,10 @@ jobs:
             if (mode === "stable-v2" && process.env.SKIP_SIGNING !== "false") {
               fail("stable-v2 requires skip_signing=false");
             }
-            if (
-              mode === "stable-v2-validation" &&
-              process.env.SKIP_SIGNING !== "true"
-            ) {
-              fail("stable-v2-validation requires skip_signing=true");
+            if (mode === "stable-v2-validation" &&
+                process.env.SKIP_SIGNING !== "true" &&
+                process.env.SIGNED_VALIDATION !== "true") {
+              fail("stable-v2-validation requires skip_signing=true unless signed_validation=true");
             }
 
             const runtimeRepository = required(
