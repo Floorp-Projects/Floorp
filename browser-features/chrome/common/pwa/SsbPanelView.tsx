@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, For, onCleanup } from "solid-js";
+import { createEffect, createSignal, For, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { createRootHMR, render } from "@nora/solid-xul";
 import type { Browser, Manifest } from "./type";
@@ -20,7 +20,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 export class SsbPanelView {
   private static installedApps = createSignal<Manifest[]>([]);
   private static selectedContainerId = createSignal(0);
-  private static panelIsInstalled = createSignal(false);
+  private static panelIsInstalled = createSignal<boolean | null>(null);
   private static installStateRequest = 0;
   private static pwaService: PwaService;
   private isOpen = createSignal<boolean>(false);
@@ -88,7 +88,7 @@ export class SsbPanelView {
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
     const tabContainerId = getUserContextIdForBrowser(browser);
     SsbPanelView.selectedContainerId[1](tabContainerId);
-    await SsbPanelView.updatePanelInstallState(browser, tabContainerId);
+    void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
 
     await globalThis.PanelUI.showSubView(
       "PanelUI-ssb",
@@ -104,6 +104,7 @@ export class SsbPanelView {
   ) {
     const request = ++SsbPanelView.installStateRequest;
     const pageUrl = browser.currentURI.spec;
+    SsbPanelView.panelIsInstalled[1](null);
     try {
       const installed = await SsbPanelView.pwaService
         .checkPageIsInstalledForContainer(browser, userContextId);
@@ -116,7 +117,11 @@ export class SsbPanelView {
       }
     } catch (error) {
       console.error("[SsbPanelView] Could not check installed app:", error);
-      if (request === SsbPanelView.installStateRequest) {
+      if (
+        request === SsbPanelView.installStateRequest &&
+        globalThis.gBrowser.selectedBrowser === browser &&
+        browser.currentURI.spec === pageUrl
+      ) {
         SsbPanelView.panelIsInstalled[1](false);
       }
     }
@@ -203,6 +208,13 @@ export class SsbPanelView {
     const [selectedContainerId] = SsbPanelView.selectedContainerId;
     const [panelIsInstalled] = SsbPanelView.panelIsInstalled;
 
+    createEffect(() => {
+      document?.getElementById(
+        "appMenu-install-or-open-ssb-current-page-button",
+      )
+        ?.toggleAttribute("disabled", panelIsInstalled() === null);
+    });
+
     return (
       <>
         <xul:toolbarbutton
@@ -229,8 +241,11 @@ export class SsbPanelView {
                 label={panelIsInstalled()
                   ? translations().openCurrent
                   : translations().installCurrent}
-                onCommand={() =>
-                  SsbPanelView.handleInstallOrRunCurrentPageAsSsb()}
+                onCommand={() => {
+                  if (panelIsInstalled() !== null) {
+                    SsbPanelView.handleInstallOrRunCurrentPageAsSsb();
+                  }
+                }}
               />
             </xul:vbox>
             <xul:toolbarseparator />
