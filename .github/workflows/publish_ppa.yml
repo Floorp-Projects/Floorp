@@ -123,8 +123,8 @@ jobs:
           PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
           PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
           PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
-          CF_API_TOKEN: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
-          CF_ZONE_ID: ${{ secrets.CLOULDFLARE_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         run: |
           set -euo pipefail
           echo "::add-mask::$KEYMASK"
