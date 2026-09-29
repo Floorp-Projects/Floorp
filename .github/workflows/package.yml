@@ -2464,8 +2464,16 @@ jobs:
             echo "Native signature team differs from original Developer ID team" >&2
             exit 1
           fi
-          arm_details="$(codesign --architecture arm64 -dv --verbose=5 "$app" 2>&1)"
-          printf '%s\n' "$arm_details" | grep -q '^Page size=16384$'
+          echo "Native signature retains the Developer ID team"
+          if ! arm_details="$(codesign --architecture arm64 -dv --verbose=5 "$app" 2>&1)"; then
+            printf '%s\n' "$arm_details" >&2
+            exit 1
+          fi
+          if ! grep -q '^Page size=16384$' <<< "$arm_details"; then
+            printf '%s\n' "$arm_details" >&2
+            echo "Native arm64 signature does not use 16 KB pages" >&2
+            exit 1
+          fi
           printf '%s\n' "$arm_details" | grep -E '^(Page size=|Authority=|TeamIdentifier=|Runtime Version=)'
           ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/floorp-native-resigned.zip"
 
