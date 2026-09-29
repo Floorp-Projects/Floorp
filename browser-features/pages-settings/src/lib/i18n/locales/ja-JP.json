@@ -144,7 +144,7 @@
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
         "chrome-extras": {
-            "title": "UI 拡張機能の設定",
+            "title": "UI 拡張設定",
             "description": "現在選択されているデザインに追加の UI 調整を適用する",
             "back": "戻る",
             "experimentalWarning": {
@@ -197,7 +197,7 @@
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
             },
-            "configure": "UI 拡張機能の設定を開く"
+            "configure": "UI 拡張設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
