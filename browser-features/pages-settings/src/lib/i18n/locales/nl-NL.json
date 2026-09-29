@@ -144,8 +144,8 @@
             "taskbarPreviewsUnavailable": "Deze optie is uitsluitend beschikbaar voor Windows."
         },
         "chrome-extras": {
-            "title": "UI Extension Settings",
-            "description": "Apply optional UI tweaks on top of the currently selected design",
+            "title": "Instellingen UI-uitbreidingen",
+            "description": "Pas optionele UI-aanpassingen toe op het huidige geselecteerde ontwerp",
             "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimentele functies",
@@ -173,8 +173,8 @@
             },
             "icon": {
                 "title": "Pictograminstellingen",
-                "disabled": "Disable context menu and panel menu icons",
-                "menu": "Enable context menu icons"
+                "disabled": "Pictogrammen van contextmenu en paneelmenu uitschakelen",
+                "menu": "Pictogrammen contextmenu inschakelen"
             },
             "centered": {
                 "title": "Gecentreerde instellingen",
@@ -197,7 +197,7 @@
                 "title": "Zijbalk instellingen",
                 "overlap": "Zijbalk over website-inhoud tonen"
             },
-            "configure": "Open UI extension settings"
+            "configure": "Open UI-extensie instellingen"
         },
         "tabSleepExclusion": {
             "title": "Tabbladslaapstand-uitzonderingen",
