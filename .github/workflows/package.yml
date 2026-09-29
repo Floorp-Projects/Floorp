@@ -74,6 +74,16 @@ on:
         required: false
         default: false
         description: "Skip code signing process"
+      macos_resign_artifact_run_id:
+        type: string
+        required: false
+        default: ""
+        description: "Diagnostic only: run ID of a signed macOS installer artifact"
+      macos_resign_artifact_id:
+        type: string
+        required: false
+        default: ""
+        description: "Diagnostic only: signed macOS installer artifact ID"
 
   workflow_call:
     inputs:
@@ -209,6 +219,7 @@ permissions:
 
 jobs:
   main:
+    if: ${{ inputs.macos_resign_artifact_id == '' }}
     runs-on: ubuntu-22.04
     outputs:
       run_id: ${{ github.run_id }}
@@ -2374,3 +2385,89 @@ jobs:
           path: ~/noraneko-publish/*
           if-no-files-found: error
           overwrite: true
+
+  macos-native-resign-diagnostic:
+    if: ${{ inputs.macos_resign_artifact_id != '' && inputs.macos_resign_artifact_run_id != '' }}
+    runs-on: macos-14
+    steps:
+      - name: Download signed macOS installer for diagnosis
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ inputs.macos_resign_artifact_id }}
+          run-id: ${{ inputs.macos_resign_artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/input
+
+      - name: Re-sign browser root with native macOS codesign
+        shell: bash
+        env:
+          APPLE_DEVELOPER_P12_BASE64: ${{ secrets.APPLE_DEVELOPER_P12_BASE64 }}
+          APPLE_DEVELOPER_P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${APPLE_DEVELOPER_P12_BASE64:?Missing Developer ID certificate}"
+          : "${APPLE_DEVELOPER_P12_PASSWORD:?Missing Developer ID certificate password}"
+
+          input_dmg="$(find "$RUNNER_TEMP/input" -type f -name '*.dmg' -print -quit)"
+          if [[ -z "$input_dmg" ]]; then
+            echo "Expected a macOS installer DMG" >&2
+            exit 1
+          fi
+          mount_point="$RUNNER_TEMP/floorp-input-volume"
+          mkdir -p "$mount_point" "$RUNNER_TEMP/floorp-output"
+          hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$input_dmg"
+          trap 'hdiutil detach "$mount_point" -quiet || true' EXIT
+          app_source="$(find "$mount_point" -name '*.app' -type d -print -quit)"
+          if [[ -z "$app_source" ]]; then
+            echo "Installer has no application bundle" >&2
+            exit 1
+          fi
+          app="$RUNNER_TEMP/floorp-output/$(basename "$app_source")"
+          ditto "$app_source" "$app"
+          hdiutil detach "$mount_point" -quiet
+
+          original_team="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
+          if [[ -z "$original_team" ]]; then
+            echo "Input application lacks a Developer ID team" >&2
+            exit 1
+          fi
+          entitlements="$RUNNER_TEMP/browser-entitlements.plist"
+          codesign -d --entitlements :- "$app" 2>/dev/null > "$entitlements"
+          plutil -lint "$entitlements"
+
+          keychain="$RUNNER_TEMP/floorp-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          p12="$RUNNER_TEMP/floorp-signing.p12"
+          printf '%s' "$APPLE_DEVELOPER_P12_BASE64" | base64 -D > "$p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security import "$p12" -k "$keychain" -P "$APPLE_DEVELOPER_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain"
+          rm -f "$p12"
+
+          identity="$(security find-identity -v -p codesigning "$keychain" | sed -nE 's/^[[:space:]]*[0-9]+\) ([A-F0-9]{40}) \"Developer ID Application:.*/\1/p' | head -n 1)"
+          if [[ -z "$identity" ]]; then
+            echo "Imported certificate has no Developer ID Application signing identity" >&2
+            exit 1
+          fi
+          codesign --force --sign "$identity" --keychain "$keychain" \
+            --options runtime --timestamp --entitlements "$entitlements" "$app"
+          codesign --verify --deep --strict --all-architectures --verbose=2 "$app"
+          actual_team="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
+          if [[ "$actual_team" != "$original_team" ]]; then
+            echo "Native signature team differs from original Developer ID team" >&2
+            exit 1
+          fi
+          arm_details="$(codesign --architecture arm64 -dv --verbose=5 "$app" 2>&1)"
+          printf '%s\n' "$arm_details" | grep -q '^Page size=16384$'
+          printf '%s\n' "$arm_details" | grep -E '^(Page size=|Authority=|TeamIdentifier=|Runtime Version=)'
+          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/floorp-native-resigned.zip"
+
+      - name: Upload native signed diagnostic app
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-macos-native-resigned-diagnostic
+          path: ${{ runner.temp }}/floorp-native-resigned.zip
+          if-no-files-found: error
+          retention-days: 2
