@@ -79,16 +79,6 @@ on:
         required: false
         default: false
         description: "Allow a signed, package-only stable v2 validation run"
-      macos_resign_artifact_run_id:
-        type: string
-        required: false
-        default: ""
-        description: "Diagnostic only: run ID of a signed macOS installer artifact"
-      macos_resign_artifact_id:
-        type: string
-        required: false
-        default: ""
-        description: "Diagnostic only: signed macOS installer artifact ID"
 
   workflow_call:
     inputs:
@@ -224,7 +214,6 @@ permissions:
 
 jobs:
   main:
-    if: ${{ inputs.macos_resign_artifact_id == '' }}
     runs-on: ubuntu-22.04
     outputs:
       run_id: ${{ github.run_id }}
@@ -2373,7 +2362,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: >-
-            ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing &&
+            ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing &&
                 format('{0}-pre-native', steps.artifact-contract.outputs.installer_artifact_name) ||
                 steps.artifact-contract.outputs.installer_artifact_name }}
           path: ${{ env.INSTALLER_UPLOAD_PATH }}
@@ -2386,7 +2375,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: >-
-            ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing &&
+            ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing &&
                 format('{0}-pre-native', steps.artifact-contract.outputs.mar_artifact_name) ||
                 steps.artifact-contract.outputs.mar_artifact_name }}
           path: ~/noraneko-publish/*
@@ -2394,7 +2383,7 @@ jobs:
           overwrite: true
 
       - name: Stage macOS finalizer tools and metadata
-        if: ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+        if: ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing }}
         shell: bash
         run: |
           set -euo pipefail
@@ -2407,7 +2396,7 @@ jobs:
           cp "$HOME/noraneko-publish/meta.json" "$stage/meta.json"
 
       - name: Upload macOS finalizer tools
-        if: ${{ inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+        if: ${{ steps.provenance.outputs.platform_key == 'mac' && !inputs.skip_signing }}
         id: upload-macos-finalizer-tools
         uses: actions/upload-artifact@v4
         with:
@@ -2419,20 +2408,17 @@ jobs:
   macos-native-sign:
     needs: main
     if: >-
-      ${{ always() &&
-          ((inputs.macos_resign_artifact_id != '' &&
-            inputs.macos_resign_artifact_run_id != '') ||
-           (needs.main.result == 'success' && inputs.platform == 'macOS-x64' &&
-            !inputs.skip_signing)) }}
+      ${{ needs.main.result == 'success' &&
+          needs.main.outputs.platform_key == 'mac' && !inputs.skip_signing }}
     runs-on: macos-26
     outputs:
       stage_artifact_id: ${{ steps.upload-native-stage.outputs.artifact-id }}
     steps:
-      - name: Download signed macOS installer for diagnosis
+      - name: Download signed macOS installer
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: ${{ inputs.macos_resign_artifact_id || needs.main.outputs.installer_artifact_id }}
-          run-id: ${{ inputs.macos_resign_artifact_run_id || github.run_id }}
+          artifact-ids: ${{ needs.main.outputs.installer_artifact_id }}
+          run-id: ${{ github.run_id }}
           github-token: ${{ github.token }}
           merge-multiple: true
           path: ${{ runner.temp }}/input
@@ -2541,8 +2527,7 @@ jobs:
     if: >-
       ${{ needs.main.result == 'success' &&
           needs.macos-native-sign.result == 'success' &&
-          inputs.macos_resign_artifact_id == '' &&
-          inputs.platform == 'macOS-x64' && !inputs.skip_signing }}
+          needs.main.outputs.platform_key == 'mac' && !inputs.skip_signing }}
     runs-on: ubuntu-22.04
     outputs:
       installer_artifact_name: noraneko-mac-universal-installer
