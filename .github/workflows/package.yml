@@ -2579,6 +2579,9 @@ jobs:
           "$tools/rcodesign" notary-submit --api-key-file "$key_file" \
             --wait "$native/floorp-macOS-universal.dmg"
           rm -f "$key_file"
+          # Keep Gatekeeper's notarization proof available on offline first launch.
+          xcrun stapler staple "$native/floorp-macOS-universal.dmg"
+          xcrun stapler validate "$native/floorp-macOS-universal.dmg"
 
           tar -xzf "$native/Floorp.app.tar.gz" -C "$app_dir"
           app="$app_dir/Floorp.app"
