@@ -32,6 +32,35 @@ export class SsbPanelView {
 
     createRootHMR(() => {
       const [, setIsOpen] = this.isOpen;
+      const refreshCurrentPage = (resetContainer: boolean) => {
+        if (
+          document.getElementById("PanelUI-ssb")?.getAttribute("visible") !==
+            "true"
+        ) {
+          return;
+        }
+        const browser = globalThis.gBrowser.selectedBrowser as Browser;
+        const userContextId = resetContainer
+          ? getUserContextIdForBrowser(browser)
+          : SsbPanelView.selectedContainerId[0]();
+        if (resetContainer) SsbPanelView.selectedContainerId[1](userContextId);
+        void SsbPanelView.updatePanelInstallState(browser, userContextId);
+      };
+      const onTabSelect = () => refreshCurrentPage(true);
+      const progressListener = {
+        // addTabsProgressListener passes the browser before nsIWebProgressListener args.
+        onLocationChange: (...args: unknown[]) => {
+          const browser = args[0] as Browser;
+          if (browser === globalThis.gBrowser.selectedBrowser) {
+            refreshCurrentPage(false);
+          }
+        },
+      };
+      globalThis.gBrowser.tabContainer.addEventListener(
+        "TabSelect",
+        onTabSelect,
+      );
+      globalThis.gBrowser.addTabsProgressListener(progressListener);
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (
@@ -53,7 +82,14 @@ export class SsbPanelView {
         attributes: true,
       });
 
-      onCleanup(() => observer.disconnect());
+      onCleanup(() => {
+        observer.disconnect();
+        globalThis.gBrowser.tabContainer.removeEventListener(
+          "TabSelect",
+          onTabSelect,
+        );
+        globalThis.gBrowser.removeTabsProgressListener(progressListener);
+      });
     }, import.meta.hot);
   }
 
@@ -86,6 +122,7 @@ export class SsbPanelView {
 
   private static async showSsbPanelSubView() {
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
+    const pageUrl = browser.currentURI.spec;
     const tabContainerId = getUserContextIdForBrowser(browser);
     SsbPanelView.selectedContainerId[1](tabContainerId);
     void SsbPanelView.updatePanelInstallState(browser, tabContainerId);
@@ -94,6 +131,23 @@ export class SsbPanelView {
       "PanelUI-ssb",
       document?.getElementById("appMenu-ssb-button"),
     );
+
+    if (
+      globalThis.gBrowser.selectedBrowser !== browser ||
+      browser.currentURI.spec !== pageUrl
+    ) {
+      const currentBrowser = globalThis.gBrowser.selectedBrowser as Browser;
+      const currentContainerId = currentBrowser === browser
+        ? SsbPanelView.selectedContainerId[0]()
+        : getUserContextIdForBrowser(currentBrowser);
+      if (currentBrowser !== browser) {
+        SsbPanelView.selectedContainerId[1](currentContainerId);
+      }
+      void SsbPanelView.updatePanelInstallState(
+        currentBrowser,
+        currentContainerId,
+      );
+    }
 
     await SsbPanelView.updateInstalledApps();
   }
@@ -117,13 +171,6 @@ export class SsbPanelView {
       }
     } catch (error) {
       console.error("[SsbPanelView] Could not check installed app:", error);
-      if (
-        request === SsbPanelView.installStateRequest &&
-        globalThis.gBrowser.selectedBrowser === browser &&
-        browser.currentURI.spec === pageUrl
-      ) {
-        SsbPanelView.panelIsInstalled[1](false);
-      }
     }
   }
 
