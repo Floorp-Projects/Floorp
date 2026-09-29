@@ -19,9 +19,40 @@ import { SiteSpecificBrowserManager } from "./ssbManager.ts";
 @noraComponent(import.meta.hot)
 export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
+  private initialized = false;
 
   init() {
     if (!enabled()) return;
+    // Finder can open a PWA window before Firefox has installed gBrowser on
+    // that window. Initializing the manager earlier aborts the whole module.
+    if (globalThis.gBrowser) {
+      this.initialize();
+      return;
+    }
+
+    const onDelayedStartup = (subject: nsISupports | null) => {
+      if (subject !== window) return;
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+      this.initialize();
+    };
+    Services.obs.addObserver(
+      onDelayedStartup,
+      "browser-delayed-startup-finished",
+    );
+    globalThis.addEventListener("unload", () => {
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+    }, { once: true });
+  }
+
+  private initialize(): void {
+    if (this.initialized || !globalThis.gBrowser || window.closed) return;
+    this.initialized = true;
     const manifestProcesser = new ManifestProcesser();
     const dataManager = new DataManager();
     const ssbManager = new SiteSpecificBrowserManager(
