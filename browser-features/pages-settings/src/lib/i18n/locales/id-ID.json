@@ -144,7 +144,7 @@
             "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
         "chrome-extras": {
-            "title": "UI Extension Settings",
+            "title": "Pengaturan Ekstensi UI",
             "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Kembali",
             "experimentalWarning": {
@@ -173,31 +173,31 @@
             },
             "icon": {
                 "title": "Pengaturan Ikon",
-                "disabled": "Disable context menu and panel menu icons",
-                "menu": "Enable context menu icons"
+                "disabled": "Nonaktifkan ikon menu konteks dan menu panel",
+                "menu": "Aktifkan ikon menu konteks"
             },
             "centered": {
                 "title": "Centered Settings",
                 "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
+                "urlbar": "Ratakan teks di Bilah Alamat ke tengah",
                 "bookmarkbar": "Tengahkan item Bilah Markah"
             },
             "urlView": {
-                "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "title": "Pengaturan Tampilan URL",
+                "moveIconToLeft": "Pindahkan ikon bilah alamat ke sisi kiri",
                 "goButtonWhenTyping": "Saat mengetik, tampilkan tombol \"Kunjungi\"",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "alwaysShowPageActions": "Selalu tampilkan tindakan halaman di bilah alamat"
             },
             "tabbar": {
-                "title": "Tab Bar Settings",
+                "title": "Pengaturan Bilah Tab",
                 "asTitlebar": "Bilah Tab di Bilah Judul",
                 "oneLiner": "Gabungkan Bilah Tab dan Bilah Alat"
             },
             "sidebar": {
-                "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
+                "title": "Pengaturan Bilah Samping",
+                "overlap": "Tampilkan bilah samping di atas konten situs web"
             },
-            "configure": "Open UI extension settings"
+            "configure": "Buka pengaturan ekstensi UI"
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",
