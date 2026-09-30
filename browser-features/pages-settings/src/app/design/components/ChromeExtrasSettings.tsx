@@ -261,6 +261,31 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               />
             </div>
             <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-close-button">
+                {t("design.chrome-extras.hidden.tabCloseButton")}
+              </label>
+              <Switch
+                id="hidden-tab-close-button"
+                checked={settings.hiddenTabCloseButton}
+                onChange={(e) =>
+                  handleSettingChange("hiddenTabCloseButton", e.target.checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-audio-indicator">
+                {t("design.chrome-extras.hidden.tabAudioIndicator")}
+              </label>
+              <Switch
+                id="hidden-tab-audio-indicator"
+                checked={settings.hiddenTabAudioIndicator}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "hiddenTabAudioIndicator",
+                    e.target.checked,
+                  )}
+              />
+            </div>
+            <div className="flex items-center justify-between">
               <label htmlFor="hidden-tabbar">
                 {t("design.chrome-extras.hidden.tabbar")}
               </label>

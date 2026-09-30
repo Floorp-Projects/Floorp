@@ -32,6 +32,8 @@ const chromeExtrasFields = [
   ["autohide-forward-button", "autohideForwardButton"],
   ["autohide-page-action", "autohidePageAction"],
   ["hidden-tab-icon", "hiddenTabIcon"],
+  ["hidden-tab-close-button", "hiddenTabCloseButton"],
+  ["hidden-tab-audio-indicator", "hiddenTabAudioIndicator"],
   ["hidden-tabbar", "hiddenTabbar"],
   ["hidden-navbar", "hiddenNavbar"],
   ["hidden-sidebar-header", "hiddenSidebarHeader"],

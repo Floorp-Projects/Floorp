@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 //
-// Chrome extras — the 25 UI toggles that used to be Lepton-specific.
+// Chrome extras — the 27 UI toggles, most of which used to be Lepton-specific.
 //
 // They used to be stored as `userChrome.*` bool prefs and implemented inside the
 // vendored Lepton stylesheet, so they only existed for the Lepton-family
@@ -75,8 +75,8 @@ function stripComments(css: string): string {
 function testKeySetIsCompleteAndUnique(): void {
   assertEquals(
     CHROME_EXTRAS_KEYS.length,
-    25,
-    "there are exactly 25 chrome-extras toggles",
+    27,
+    "there are exactly 27 chrome-extras toggles",
   );
   const unique = new Set<string>(CHROME_EXTRAS_KEYS);
   assertEquals(
@@ -591,7 +591,7 @@ function testLegacyMigrationYieldsBooleans(): void {
 }
 
 function testIconMenuMigrationKeepsEffectiveDefault(): void {
-  const pref = LEGACY_CHROME_EXTRAS_PREFS.iconMenu;
+  const pref = LEGACY_CHROME_EXTRAS_PREFS.iconMenu!;
   const hadUserValue = Services.prefs.prefHasUserValue(pref);
   const previousValue = Services.prefs.getBoolPref(pref, false);
   try {
@@ -629,7 +629,7 @@ function testIconMenuMigrationKeepsEffectiveDefault(): void {
 function testLegacyLeptonPrefsFollowNewSettings(): void {
   const prefNames = [
     ...new Set([
-      ...Object.values(LEGACY_CHROME_EXTRAS_PREFS),
+      ...Object.values(LEGACY_CHROME_EXTRAS_PREFS) as string[],
       ...Object.values(LEGACY_ALIASES).flat(),
     ]),
   ];

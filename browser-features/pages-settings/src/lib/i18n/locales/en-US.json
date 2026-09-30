@@ -163,6 +163,8 @@
             "hidden": {
                 "title": "Hide Settings",
                 "tabIcon": "Hide tab icons",
+                "tabCloseButton": "Hide tab close buttons",
+                "tabAudioIndicator": "Hide tab audio indicators",
                 "tabbar": "Hide Tab Bar",
                 "navbar": "Hide Toolbar",
                 "sidebarHeader": "Hide Sidebar Headers",

@@ -48,6 +48,8 @@
  * `tabbarAsTitlebar` and `tabbarOneLiner`. Lepton implements them inside ~2,500
  * lines of nested gates over its own `--uc-*` layout variables; see the comments
  * in those files for what was kept, what was inlined, and what was dropped.
+ *
+ * `hiddenTabCloseButton` and `hiddenTabAudioIndicator` are Floorp-only.
  */
 
 import autohideBackButtonCSS from "./chrome-extras-css/autohide-back-button.css?inline";
@@ -65,6 +67,8 @@ import hiddenBookmarkbarLabelCSS from "./chrome-extras-css/hidden-bookmarkbar-la
 import hiddenDisabledMenuCSS from "./chrome-extras-css/hidden-disabled-menu.css?inline";
 import hiddenNavbarCSS from "./chrome-extras-css/hidden-navbar.css?inline";
 import hiddenSidebarHeaderCSS from "./chrome-extras-css/hidden-sidebar-header.css?inline";
+import hiddenTabAudioIndicatorCSS from "./chrome-extras-css/hidden-tab-audio-indicator.css?inline";
+import hiddenTabCloseButtonCSS from "./chrome-extras-css/hidden-tab-close-button.css?inline";
 import hiddenTabIconCSS from "./chrome-extras-css/hidden-tab-icon.css?inline";
 import hiddenTabbarCSS from "./chrome-extras-css/hidden-tabbar.css?inline";
 import hiddenUrlbarIconboxCSS from "./chrome-extras-css/hidden-urlbar-iconbox.css?inline";
@@ -95,6 +99,8 @@ export const CHROME_EXTRAS_KEYS = [
   "autohideSidebar",
   "autohideNavbar",
   "hiddenTabIcon",
+  "hiddenTabCloseButton",
+  "hiddenTabAudioIndicator",
   "hiddenTabbar",
   "hiddenNavbar",
   "hiddenSidebarHeader",
@@ -132,6 +138,8 @@ export const CHROME_EXTRAS_DEFAULTS: ChromeExtrasSettings = {
   autohideSidebar: false,
   autohideNavbar: false,
   hiddenTabIcon: false,
+  hiddenTabCloseButton: false,
+  hiddenTabAudioIndicator: false,
   hiddenTabbar: false,
   hiddenNavbar: false,
   hiddenSidebarHeader: false,
@@ -186,6 +194,8 @@ export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   autohideSidebar: autohideSidebarCSS,
   autohideNavbar: autohideNavbarCSS,
   hiddenTabIcon: hiddenTabIconCSS,
+  hiddenTabCloseButton: hiddenTabCloseButtonCSS,
+  hiddenTabAudioIndicator: hiddenTabAudioIndicatorCSS,
   hiddenTabbar: hiddenTabbarCSS,
   hiddenNavbar: hiddenNavbarCSS,
   hiddenSidebarHeader: hiddenSidebarHeaderCSS,
