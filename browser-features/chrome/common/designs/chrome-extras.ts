@@ -49,7 +49,7 @@
  * lines of nested gates over its own `--uc-*` layout variables; see the comments
  * in those files for what was kept, what was inlined, and what was dropped.
  *
- * `hiddenTabCloseButton` and `hiddenTabAudioIndicator` are Floorp-only.
+ * The `hiddenTab*` toggles other than `hiddenTabIcon` are Floorp-only.
  */
 
 import autohideBackButtonCSS from "./chrome-extras-css/autohide-back-button.css?inline";
@@ -67,9 +67,12 @@ import hiddenBookmarkbarLabelCSS from "./chrome-extras-css/hidden-bookmarkbar-la
 import hiddenDisabledMenuCSS from "./chrome-extras-css/hidden-disabled-menu.css?inline";
 import hiddenNavbarCSS from "./chrome-extras-css/hidden-navbar.css?inline";
 import hiddenSidebarHeaderCSS from "./chrome-extras-css/hidden-sidebar-header.css?inline";
+import hiddenTabAttentionIndicatorCSS from "./chrome-extras-css/hidden-tab-attention-indicator.css?inline";
 import hiddenTabAudioIndicatorCSS from "./chrome-extras-css/hidden-tab-audio-indicator.css?inline";
 import hiddenTabCloseButtonCSS from "./chrome-extras-css/hidden-tab-close-button.css?inline";
 import hiddenTabIconCSS from "./chrome-extras-css/hidden-tab-icon.css?inline";
+import hiddenTabNoteIconCSS from "./chrome-extras-css/hidden-tab-note-icon.css?inline";
+import hiddenTabSharingIndicatorCSS from "./chrome-extras-css/hidden-tab-sharing-indicator.css?inline";
 import hiddenTabbarCSS from "./chrome-extras-css/hidden-tabbar.css?inline";
 import hiddenUrlbarIconboxCSS from "./chrome-extras-css/hidden-urlbar-iconbox.css?inline";
 import iconDisabledCSS from "./chrome-extras-css/icon-disabled.css?inline";
@@ -101,6 +104,9 @@ export const CHROME_EXTRAS_KEYS = [
   "hiddenTabIcon",
   "hiddenTabCloseButton",
   "hiddenTabAudioIndicator",
+  "hiddenTabSharingIndicator",
+  "hiddenTabNoteIcon",
+  "hiddenTabAttentionIndicator",
   "hiddenTabbar",
   "hiddenNavbar",
   "hiddenSidebarHeader",
@@ -140,6 +146,9 @@ export const CHROME_EXTRAS_DEFAULTS: ChromeExtrasSettings = {
   hiddenTabIcon: false,
   hiddenTabCloseButton: false,
   hiddenTabAudioIndicator: false,
+  hiddenTabSharingIndicator: false,
+  hiddenTabNoteIcon: false,
+  hiddenTabAttentionIndicator: false,
   hiddenTabbar: false,
   hiddenNavbar: false,
   hiddenSidebarHeader: false,
@@ -196,6 +205,9 @@ export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   hiddenTabIcon: hiddenTabIconCSS,
   hiddenTabCloseButton: hiddenTabCloseButtonCSS,
   hiddenTabAudioIndicator: hiddenTabAudioIndicatorCSS,
+  hiddenTabSharingIndicator: hiddenTabSharingIndicatorCSS,
+  hiddenTabNoteIcon: hiddenTabNoteIconCSS,
+  hiddenTabAttentionIndicator: hiddenTabAttentionIndicatorCSS,
   hiddenTabbar: hiddenTabbarCSS,
   hiddenNavbar: hiddenNavbarCSS,
   hiddenSidebarHeader: hiddenSidebarHeaderCSS,

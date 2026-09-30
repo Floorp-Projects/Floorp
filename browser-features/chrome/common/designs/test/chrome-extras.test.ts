@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 //
-// Chrome extras — the 27 UI toggles, most of which used to be Lepton-specific.
+// Chrome extras — the 30 UI toggles, most of which used to be Lepton-specific.
 //
 // They used to be stored as `userChrome.*` bool prefs and implemented inside the
 // vendored Lepton stylesheet, so they only existed for the Lepton-family
@@ -75,8 +75,8 @@ function stripComments(css: string): string {
 function testKeySetIsCompleteAndUnique(): void {
   assertEquals(
     CHROME_EXTRAS_KEYS.length,
-    27,
-    "there are exactly 27 chrome-extras toggles",
+    30,
+    "there are exactly 30 chrome-extras toggles",
   );
   const unique = new Set<string>(CHROME_EXTRAS_KEYS);
   assertEquals(
