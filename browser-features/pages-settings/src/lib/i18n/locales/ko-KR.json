@@ -144,8 +144,8 @@
             "taskbarPreviewsUnavailable": "이 설정은 Windows에서만 이용할 수 있습니다."
         },
         "chrome-extras": {
-            "title": "UI Extension Settings",
-            "description": "Apply optional UI tweaks on top of the currently selected design",
+            "title": "UI 확장 설정",
+            "description": "현재 선택한 디자인에서 추가로 UI 조정",
             "back": "뒤로 가기",
             "experimentalWarning": {
                 "title": "⚠️ 실험 기능",
@@ -173,8 +173,8 @@
             },
             "icon": {
                 "title": "아이콘 설정",
-                "disabled": "Disable context menu and panel menu icons",
-                "menu": "Enable context menu icons"
+                "disabled": "컨텍스트 메뉴 및 패널 메뉴 아이콘 비활성화하기",
+                "menu": "컨텍스트 메뉴 아이콘 활성화하기"
             },
             "centered": {
                 "title": "중앙 설정",
@@ -197,7 +197,7 @@
                 "title": "사이드바 설정",
                 "overlap": "웹사이트 콘텐츠 위에 사이드바 표시"
             },
-            "configure": "Open UI extension settings"
+            "configure": "UI 확장 설정 열기"
         },
         "tabSleepExclusion": {
             "title": "탭 절전 제외",
