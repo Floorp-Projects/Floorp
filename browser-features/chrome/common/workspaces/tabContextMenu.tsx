@@ -75,7 +75,7 @@ export class WorkspacesTabContextMenu {
       <xul:menu
         id="context_MoveTabToOtherWorkspace"
         label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
-        accesskey="D"
+        accesskey="k"
       >
         <xul:menupopup
           id="WorkspacesTabContextMenu"
