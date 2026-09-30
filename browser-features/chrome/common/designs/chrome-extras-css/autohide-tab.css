@@ -19,16 +19,20 @@
 }
 
 /* leptonChrome.css:26155-26164 */
-.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
-  transition-timing-function: var(--animation-easing-function);
-  transition-duration: 0.2s;
-  transition-delay: 600ms;
-}
-.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]):is(:hover, :focus-within) {
-  transition-delay: 0s;
+@media (prefers-reduced-motion: no-preference) {
+  .tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
+    transition-timing-function: var(--animation-easing-function);
+    transition-duration: 0.2s;
+    transition-delay: 600ms;
+  }
+  .tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]):is(:hover, :focus-within) {
+    transition-delay: 0s;
+  }
 }
 
 /* leptonChrome.css:26165-26169 */
-.tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
-  transition-property: margin-bottom;
+@media (prefers-reduced-motion: no-preference) {
+  .tabbrowser-tab:not([multiselected]) .tab-content:not(:hover):not([selected]) {
+    transition-property: margin-bottom;
+  }
 }

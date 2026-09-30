@@ -130,7 +130,8 @@ function testStyleIdIsStable(): void {
 
 /** No sheet may gate on a `userChrome.` pref — that is the Lepton dependency.
  *  Gecko's own prefs (e.g. `widget.*.native-context-menus` in
- *  hidden-disabled-menu.css) are fine and are kept verbatim. */
+ *  hidden-disabled-menu.css) are fine and are kept as `-moz-pref()`, since
+ *  Gecko no longer matches `-moz-bool-pref`. */
 function testNoLeptonPrefGate(): void {
   for (
     const [key, css] of Object.entries({
@@ -147,6 +148,10 @@ function testNoLeptonPrefGate(): void {
     assert(
       !rules.includes('-moz-pref("userChrome.'),
       `${key} must not gate on a userChrome.* pref with -moz-pref`,
+    );
+    assert(
+      !rules.includes("-moz-bool-pref"),
+      `${key} must use -moz-pref(); -moz-bool-pref never matches`,
     );
   }
 }
