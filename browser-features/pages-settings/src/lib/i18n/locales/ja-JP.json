@@ -145,7 +145,7 @@
         },
         "chrome-extras": {
             "title": "UI 拡張設定",
-            "description": "現在選択されているデザインに追加の UI 調整を適用する",
+            "description": "現在選択されているデザインに追加の UI 調整を適用します",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
