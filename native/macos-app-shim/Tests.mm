@@ -372,6 +372,34 @@ void TestNativeView() {
   Expect(nativeTransform.m14 == 0.01 && nativeTransform.m24 == 0.02 && nativeTransform.m34 == 0.03 &&
       nativeTransform.m43 == 17 && nativeTransform.m41 == 12 && nativeTransform.m42 == 33 && nativeTransform.m44 == 1.5,
       "perspective and Z units match authoritative NativeLayerCA conversion");
+  NSMutableDictionary* scrolled = [raw mutableCopy];
+  scrolled[@"frameId"] = @5;
+  scrolled[@"layerId"] = @5;
+  scrolled[@"zOrder"] = @5;
+  scrolled[@"positionX"] = @0;
+  scrolled[@"positionY"] = @79872;
+  scrolled[@"transform16"] = @[@1,@0,@0,@0, @0,@1,@0,@0, @0,@0,@1,@0, @0,@(-79855),@0,@1];
+  Expect([view beginFrame:@{@"frameId": @5}] && [view setLayer:scrolled surfacePort:MACH_PORT_NULL] &&
+      [view commitFrame:@{@"frameId": @5}], "long page accepts an on-screen tile with large world coordinates");
+  nativeTransform = view.layer.sublayers.lastObject.sublayers.firstObject.sublayers.firstObject.transform;
+  Expect(nativeTransform.m42 == 8.5, "long page transforms into the visible viewport");
+  scrolled[@"frameId"] = @6;
+  scrolled[@"positionY"] = @2000128;
+  scrolled[@"transform16"] = @[@1,@0,@0,@0, @0,@1,@0,@0, @0,@0,@1,@0, @0,@(-2000111),@0,@1];
+  Expect([view beginFrame:@{@"frameId": @6}] && [view setLayer:scrolled surfacePort:MACH_PORT_NULL] &&
+      [view commitFrame:@{@"frameId": @6}], "world translation is not limited to one million pixels");
+  nativeTransform = view.layer.sublayers.lastObject.sublayers.firstObject.sublayers.firstObject.transform;
+  Expect(nativeTransform.m42 == 8.5, "large translation retains viewport precision");
+  scrolled[@"frameId"] = @7;
+  Expect([view beginFrame:@{@"frameId": @7}], "begin coordinate validation frame");
+  scrolled[@"positionY"] = @2147483648.0;
+  Expect(![view setLayer:scrolled surfacePort:MACH_PORT_NULL], "world position outside the sender's int32 domain is rejected");
+  scrolled[@"positionY"] = @2000128;
+  scrolled[@"sizeHeight"] = @32769;
+  Expect(![view setLayer:scrolled surfacePort:MACH_PORT_NULL], "large world coordinates do not relax surface dimensions");
+  scrolled[@"sizeHeight"] = @8;
+  Expect([view setLayer:scrolled surfacePort:MACH_PORT_NULL] && [view commitFrame:@{@"frameId": @7}],
+      "valid geometry remains usable after invalid input is rejected");
   Expect([view setEditorState:@{@"revision": @1, @"text": @"日本語", @"selectionStart": @3,
       @"selectionLength": @0, @"caretX": @20, @"caretY": @30, @"caretWidth": @1,
       @"caretHeight": @18, @"editable": @YES}], "editor cache accepts Japanese text");
@@ -395,6 +423,27 @@ void TestNativeView() {
   substring = [view attributedSubstringForProposedRange:NSMakeRange(40001, 10) actualRange:&actual];
   Expect([substring.string isEqual:@"本語"] && actual.location == 40001 && view.selectedRange.location == 40003,
       "IME absolute text offsets round trip");
+  [view setMarkedText:@"あ" selectedRange:NSMakeRange(1, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(NSEqualRanges(view.markedRange, NSMakeRange(40003, 1)) &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40004, 0)), "IME selection follows the marked text's relative caret");
+  Expect([view setEditorState:@{@"revision": @3, @"text": @"日本語あ", @"textOffset": @40000,
+      @"selectionStart": @40004, @"selectionLength": @0, @"markedStart": @40003, @"markedLength": @1,
+      @"caretX": @20, @"caretY": @30, @"caretWidth": @1, @"caretHeight": @18, @"editable": @YES}],
+      "Gecko acknowledges the first composition update");
+  [view setMarkedText:@"あい" selectedRange:NSMakeRange(2, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(NSEqualRanges(view.markedRange, NSMakeRange(40003, 2)) &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40005, 0)), "composition update preserves its start after a Gecko acknowledgement");
+  [view setMarkedText:@"あい" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(NSEqualRanges(view.markedRange, NSMakeRange(40003, 2)) &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40003, 1)), "selected clause uses a composition-relative range");
+  [view unmarkText];
+  [view setMarkedText:@"漢" selectedRange:NSMakeRange(1, 0) replacementRange:NSMakeRange(40001, 1)];
+  Expect(NSEqualRanges(view.markedRange, NSMakeRange(40001, 1)) &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40002, 0)), "explicit replacement determines the composition start");
+  NSUInteger validEventCount = events.count;
+  [view setMarkedText:@"あい" selectedRange:NSMakeRange(2, 0) replacementRange:NSMakeRange(UINT32_MAX, 0)];
+  Expect(events.count == validEventCount, "composition offset overflow does not reach the host");
+  [view unmarkText];
   view.inputEnabled = NO;
   NSUInteger eventCount = events.count;
   [view insertText:@"ignored" replacementRange:NSMakeRange(NSNotFound, 0)];

@@ -32,6 +32,17 @@ readback. Per-window native overlay composition is disabled for these widgets,
 so unsupported YUV video overlay surfaces are not exported. HDR and protected
 video require separate validation and support.
 
+The macOS compositor options must propagate the Widget's native-compositing
+policy, and the reported WebRender compositor must honor the same option.
+`macos-app-shim-pwa-input-and-compositor.patch` carries this native fix. The Shim
+accepts int32 world coordinates and translations before applying the viewport
+transform, while preserving surface dimensions and memory limits.
+
+Phased trackpad input uses Gecko's pan/APZ and history-swipe handling, including
+the system swipe setting and content's horizontal scrollability. Phase-less
+wheel input keeps its wheel path. The IME client maintains the composition start
+across updates and applies selection offsets relative to that start.
+
 ## Launch and installation
 
 The existing installation ID and bundle identifier are retained. The app

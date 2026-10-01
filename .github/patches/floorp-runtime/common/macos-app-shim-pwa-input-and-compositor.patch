@@ -1,0 +1,430 @@
+diff --git a/gfx/webrender_bindings/RenderCompositorNative.cpp b/gfx/webrender_bindings/RenderCompositorNative.cpp
+index fa57f2512bb..e4fffa56b37 100644
+--- a/gfx/webrender_bindings/RenderCompositorNative.cpp
++++ b/gfx/webrender_bindings/RenderCompositorNative.cpp
+@@ -108,7 +108,8 @@ bool RenderCompositorNative::Resume() { return true; }
+ 
+ inline layers::WebRenderCompositor RenderCompositorNative::CompositorType()
+     const {
+-  if (gfx::gfxVars::UseWebRenderCompositor()) {
++  if (gfx::gfxVars::UseWebRenderCompositor() &&
++      mWidget->GetCompositorOptions().AllowNativeCompositor()) {
+ #if defined(XP_DARWIN)
+     return layers::WebRenderCompositor::CORE_ANIMATION;
+ #elif defined(MOZ_WAYLAND)
+diff --git a/widget/cocoa/appshim/MacWebAppInput.h b/widget/cocoa/appshim/MacWebAppInput.h
+index 3338f985a6c..269fedaed7d 100644
+--- a/widget/cocoa/appshim/MacWebAppInput.h
++++ b/widget/cocoa/appshim/MacWebAppInput.h
+@@ -14,15 +14,15 @@
+ 
+ @class NSDictionary;
+ @class NSEvent;
+-class nsIWidget;
+ 
+ namespace mozilla::widget {
++class MacWebAppWidget;
+ 
+ /** Main-thread adapter for authenticated events from one native Shim window. */
+ class MacWebAppInput final : public TextEventDispatcherListener {
+  public:
+   NS_DECL_ISUPPORTS
+-  MacWebAppInput(nsIWidget* aWidget,
++  MacWebAppInput(MacWebAppWidget* aWidget,
+                  std::function<void(NSDictionary*)> aSendEditorState);
+   void Handle(NSDictionary* aPayload);
+   void UpdateEditorState();
+@@ -52,7 +52,7 @@ class MacWebAppInput final : public TextEventDispatcherListener {
+ 
+   // The widget retains this listener; OnDestroy clears the raw pointer before
+   // the widget tears down its TextEventDispatcher and callback owner.
+-  nsIWidget* mWidget;
++  MacWebAppWidget* mWidget;
+   std::function<void(NSDictionary*)> mSendEditorState;
+   NSEvent* mLastKeyEvent =
+       nullptr;  // Retained; this file uses Gecko's MRC input helpers.
+diff --git a/widget/cocoa/appshim/MacWebAppInput.mm b/widget/cocoa/appshim/MacWebAppInput.mm
+index 47b32e89973..772f856d3d2 100644
+--- a/widget/cocoa/appshim/MacWebAppInput.mm
++++ b/widget/cocoa/appshim/MacWebAppInput.mm
+@@ -4,6 +4,7 @@
+ 
+ // Compile without ARC: Gecko's TextInputHandler includes MRC Cocoa helpers.
+ #include "MacWebAppInput.h"
++#include "MacWebAppWidget.h"
+ 
+ #import <Cocoa/Cocoa.h>
+ #include <algorithm>
+@@ -12,6 +13,7 @@
+ #include "NativeKeyBindings.h"
+ #include "Protocol.h"
+ #include "TextInputHandler.h"
++#include "nsCocoaUtils.h"
+ #include "mozilla/AutoRestore.h"
+ #include "mozilla/widget/IMEData.h"
+ #include "mozilla/MiscEvents.h"
+@@ -113,7 +115,7 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+                   nsISupportsWeakReference)
+ 
+ MacWebAppInput::MacWebAppInput(
+-    nsIWidget* aWidget, std::function<void(NSDictionary*)> aSendEditorState)
++    MacWebAppWidget* aWidget, std::function<void(NSDictionary*)> aSendEditorState)
+     : mWidget(aWidget), mSendEditorState(std::move(aSendEditorState)) {}
+ 
+ MacWebAppInput::~MacWebAppInput() { OnDestroy(); }
+@@ -186,15 +188,32 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+   if ([kind isEqualToString:@"scroll"]) {
+     double dx, dy;
+     bool precise;
+-    uint32_t momentum;
++    uint32_t phase, momentum;
++    double timestamp;
++    bool swipeEnabled = false;
+     if (!ReadNumber(aPayload, @"deltaX", &dx, -65536, 65536) ||
+         !ReadNumber(aPayload, @"deltaY", &dy, -65536, 65536) ||
+         !Boolean(aPayload, @"precise", &precise) ||
+-        !ReadUInt(aPayload, @"momentumPhase", &momentum, true))
++        !ReadUInt(aPayload, @"phase", &phase, true) ||
++        !ReadUInt(aPayload, @"momentumPhase", &momentum, true) ||
++        !ReadNumber(aPayload, @"timestamp", &timestamp, 0, 1e12) ||
++        (aPayload[@"swipeEnabled"] && !Boolean(aPayload, @"swipeEnabled", &swipeEnabled)))
+       return;
++    if (!aPayload[@"swipeEnabled"])
++      swipeEnabled = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
++    if (precise && (phase != NSEventPhaseNone || momentum != NSEventPhaseNone)) {
++      PanGestureInput pan = nsCocoaUtils::CreatePanGestureEvent(
++          NSEventPhase(phase), NSEventPhase(momentum), swipeEnabled,
++          nsCocoaUtils::GetEventTimeStamp(timestamp), ScreenPoint(point.x, point.y),
++          ScreenPoint(-dx * scale, -dy * scale), gfx::IntPoint(),
++          GeckoModifiers(modifiers));
++      mWidget->DispatchPanGestureInput(pan);
++      return;
++    }
+     WidgetWheelEvent event(true, eWheel, mWidget);
+     event.mRefPoint = point;
+     event.mModifiers = GeckoModifiers(modifiers);
++    event.mTimeStamp = nsCocoaUtils::GetEventTimeStamp(timestamp);
+     event.mDeltaMode = precise ? 0 : 1;
+     event.mDeltaX = -dx * (precise ? scale : 1);
+     event.mDeltaY = -dy * (precise ? scale : 1);
+diff --git a/widget/cocoa/appshim/MacWebAppWidget.h b/widget/cocoa/appshim/MacWebAppWidget.h
+index bc6fcb0b13a..8b2b8ee757f 100644
+--- a/widget/cocoa/appshim/MacWebAppWidget.h
++++ b/widget/cocoa/appshim/MacWebAppWidget.h
+@@ -44,6 +44,7 @@ class MacWebAppWidget final : public nsIWidget, public nsIObserver {
+   void SetFocus(Raise, dom::CallerType) override;
+   LayoutDeviceIntRect GetBounds() override { return mBounds; }
+   void Invalidate(const LayoutDeviceIntRect&) override;
++  void DispatchPanGestureInput(PanGestureInput&);
+   nsresult SetTitle(const nsAString&) override;
+   void SetCursor(const Cursor&) override;
+   LayoutDeviceIntPoint WidgetToScreenOffset() override { return mBounds.TopLeft(); }
+diff --git a/widget/cocoa/appshim/MacWebAppWidget.mm b/widget/cocoa/appshim/MacWebAppWidget.mm
+index 4916c301f8b..d5d465bdf91 100644
+--- a/widget/cocoa/appshim/MacWebAppWidget.mm
++++ b/widget/cocoa/appshim/MacWebAppWidget.mm
+@@ -2,15 +2,20 @@
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ #include "MacWebAppWidget.h"
++#include "InputData.h"
+ #include "MacWebAppInput.h"
+ #include "MacWebAppPresentation.h"
+ #include "MacWebAppService.h"
+ #include "Protocol.h"
+ #include "mozilla/Monitor.h"
++#include "mozilla/MouseEvents.h"
+ #include "mozilla/AutoRestore.h"
+ #include "mozilla/Services.h"
++#include "mozilla/SwipeTracker.h"
+ #include "mozilla/gfx/GPUProcessManager.h"
+ #include "mozilla/layers/CompositorThread.h"
++#include "mozilla/layers/APZInputBridge.h"
++#include "mozilla/layers/IAPZCTreeManager.h"
+ #include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
+ #include "mozilla/layers/PNativeLayerRemote.h"
+ #include "mozilla/widget/CocoaCompositorWidget.h"
+@@ -437,6 +442,26 @@ static bool Send(const nsACString& aAppId, MessageType aType,
+   (void)gfxPlatform::GetPlatform();
+   nsIWidget::CreateCompositor(aWidth, aHeight);
+ }
++void MacWebAppWidget::DispatchPanGestureInput(PanGestureInput& aEvent) {
++  RefPtr<MacWebAppWidget> self(this);
++  if (Destroyed()) return;
++  if (mSwipeTracker &&
++      mSwipeTracker->ProcessEvent(aEvent) == nsEventStatus_eConsumeNoDefault)
++    return;
++  if (Destroyed()) return;
++  if (mAPZC) {
++    APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
++    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) return;
++    WidgetWheelEvent event = MayStartSwipeForAPZ(aEvent, result);
++    if (!Destroyed() && event.mMessage == eWheel &&
++        (event.mDeltaX != 0 || event.mDeltaY != 0))
++      ProcessUntransformedAPZEvent(&event, result);
++  } else if (!MayStartSwipeForNonAPZ(aEvent) && !Destroyed()) {
++    WidgetWheelEvent event = aEvent.ToWidgetEvent(this);
++    if (event.mMessage == eWheel && (event.mDeltaX != 0 || event.mDeltaY != 0))
++      DispatchEvent(&event);
++  }
++}
+ void MacWebAppWidget::GetCompositorWidgetInitData(CompositorWidgetInitData* aData) {
+   if (RefPtr<NativeLayerRootRemoteMacParent> actor = std::move(mRemoteRoot)) {
+     CompositorThread()->Dispatch(NewRunnableMethod("MacWebAppWidget::CloseRemoteRoot",
+diff --git a/widget/cocoa/appshim/shim/ShimView.mm b/widget/cocoa/appshim/shim/ShimView.mm
+index 256869bf43d..d0f0fac4c00 100644
+--- a/widget/cocoa/appshim/shim/ShimView.mm
++++ b/widget/cocoa/appshim/shim/ShimView.mm
+@@ -6,6 +6,7 @@
+ #import <QuartzCore/QuartzCore.h>
+ #import <Carbon/Carbon.h>
+ #include <algorithm>
++#include <cstdint>
+ #include <map>
+ #include <memory>
+ #include <set>
+@@ -167,8 +168,8 @@ bool ParseRawLayer(NSDictionary* payload, LayerState* state) {
+     if (payload[key] && (!ReadBool(payload[key], &value) || value)) return false;
+   }
+   double x, y;
+-  if (!ReadNumber(payload, @"positionX", &x, -65536, 65536) ||
+-      !ReadNumber(payload, @"positionY", &y, -65536, 65536) ||
++  if (!ReadNumber(payload, @"positionX", &x, INT32_MIN, INT32_MAX) ||
++      !ReadNumber(payload, @"positionY", &y, INT32_MIN, INT32_MAX) ||
+       !ReadNumber(payload, @"sizeWidth", &state->sizeWidth, 0, 32768) ||
+       !ReadNumber(payload, @"sizeHeight", &state->sizeHeight, 0, 32768) ||
+       !ReadRect(payload[@"displayRect"], &state->display)) return false;
+@@ -179,7 +180,9 @@ bool ParseRawLayer(NSDictionary* payload, LayerState* state) {
+     NSArray* values = payload[@"transform16"];
+     if (![values isKindOfClass:NSArray.class] || values.count != 16) return false;
+     for (NSUInteger i = 0; i < 16; ++i) {
+-      if (!ReadNumber(@{@"v":values[i]}, @"v", &matrix[i], -1e6, 1e6)) return false;
++      double minimum = i >= 12 && i <= 14 ? INT32_MIN : -1e6;
++      double maximum = i >= 12 && i <= 14 ? INT32_MAX : 1e6;
++      if (!ReadNumber(@{@"v":values[i]}, @"v", &matrix[i], minimum, maximum)) return false;
+     }
+   }
+   for (int column = 0; column < 4; ++column) {
+@@ -633,6 +636,7 @@ - (void)scrollWheel:(NSEvent*)event {
+       @"deltaX": @(event.scrollingDeltaX), @"deltaY": @(event.scrollingDeltaY),
+       @"precise": @(event.hasPreciseScrollingDeltas), @"phase": @(event.phase),
+       @"momentumPhase": @(event.momentumPhase), @"modifiers": @(event.modifierFlags),
++      @"swipeEnabled": @([NSEvent isSwipeTrackingFromScrollEventsEnabled]),
+       @"timestamp": @(event.timestamp)}];
+ }
+ - (void)keyEvent:(NSEvent*)event kind:(NSString*)kind {
+@@ -671,10 +675,14 @@ - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange
+   NSString* text = PlainText(value);
+   if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
+       selected.length > text.length - selected.location) return;
++  NSUInteger markedStart = replacement.location != NSNotFound ? replacement.location
++      : [self hasMarkedText] ? _markedRange.location : _selectedRange.location;
++  if (markedStart > UINT32_MAX - text.length) return;
+   [self emit:MessageType::Input payload:@{@"kind": @"setMarkedText", @"text": text,
+       @"selected": RangePayload(selected), @"replacement": RangePayload(replacement),
+       @"editorRevision": @(_editorRevision)}];
+-  _markedRange = NSMakeRange(_selectedRange.location, text.length);
++  _markedRange = NSMakeRange(markedStart, text.length);
++  _selectedRange = NSMakeRange(markedStart + selected.location, selected.length);
+ }
+ - (void)unmarkText {
+   if ([self hasMarkedText]) [self emit:MessageType::Input payload:@{@"kind": @"unmarkText", @"editorRevision": @(_editorRevision)}];
+diff --git a/widget/cocoa/nsCocoaUtils.h b/widget/cocoa/nsCocoaUtils.h
+index 3a4f96a4ed8..302537e0885 100644
+--- a/widget/cocoa/nsCocoaUtils.h
++++ b/widget/cocoa/nsCocoaUtils.h
+@@ -500,6 +500,12 @@ class nsCocoaUtils {
+       const mozilla::ScreenPoint& aPreciseDelta,
+       const mozilla::gfx::IntPoint& aLineOrPageDelta,
+       mozilla::Modifiers aModifiers);
++  static mozilla::PanGestureInput CreatePanGestureEvent(
++      NSEventPhase aPhase, NSEventPhase aMomentumPhase, bool aSwipeEnabled,
++      mozilla::TimeStamp aTimeStamp, const mozilla::ScreenPoint& aPanStartPoint,
++      const mozilla::ScreenPoint& aPreciseDelta,
++      const mozilla::gfx::IntPoint& aLineOrPageDelta,
++      mozilla::Modifiers aModifiers);
+ 
+   /**
+    * Return true if aAvailableType is a valid NSPasteboard type.
+diff --git a/widget/cocoa/nsCocoaUtils.mm b/widget/cocoa/nsCocoaUtils.mm
+index a17f4eb28e7..9900f2ea35f 100644
+--- a/widget/cocoa/nsCocoaUtils.mm
++++ b/widget/cocoa/nsCocoaUtils.mm
+@@ -1516,8 +1516,9 @@ static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
+   NS_DispatchToMainThread(runnable.forget());
+ }
+ 
+-static PanGestureInput::PanGestureType PanGestureTypeForEvent(NSEvent* aEvent) {
+-  switch ([aEvent phase]) {
++static PanGestureInput::PanGestureType PanGestureTypeForPhases(
++    NSEventPhase aPhase, NSEventPhase aMomentumPhase) {
++  switch (aPhase) {
+     case NSEventPhaseMayBegin:
+       return PanGestureInput::PANGESTURE_MAYSTART;
+     case NSEventPhaseCancelled:
+@@ -1529,7 +1530,7 @@ static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
+     case NSEventPhaseEnded:
+       return PanGestureInput::PANGESTURE_END;
+     case NSEventPhaseNone:
+-      switch ([aEvent momentumPhase]) {
++      switch (aMomentumPhase) {
+         case NSEventPhaseBegan:
+           return PanGestureInput::PANGESTURE_MOMENTUMSTART;
+         case NSEventPhaseChanged:
+@@ -1566,17 +1567,29 @@ bool static ShouldConsiderStartingSwipeFromEvent(NSEvent* anEvent) {
+     NSEvent* aNativeEvent, TimeStamp aTimeStamp,
+     const ScreenPoint& aPanStartPoint, const ScreenPoint& aPreciseDelta,
+     const gfx::IntPoint& aLineOrPageDelta, Modifiers aModifiers) {
+-  PanGestureInput::PanGestureType type = PanGestureTypeForEvent(aNativeEvent);
++  return CreatePanGestureEvent(
++      [aNativeEvent phase], [aNativeEvent momentumPhase],
++      ShouldConsiderStartingSwipeFromEvent(aNativeEvent), aTimeStamp,
++      aPanStartPoint, aPreciseDelta, aLineOrPageDelta, aModifiers);
++}
++
++PanGestureInput nsCocoaUtils::CreatePanGestureEvent(
++    NSEventPhase aPhase, NSEventPhase aMomentumPhase, bool aSwipeEnabled,
++    TimeStamp aTimeStamp, const ScreenPoint& aPanStartPoint,
++    const ScreenPoint& aPreciseDelta, const gfx::IntPoint& aLineOrPageDelta,
++    Modifiers aModifiers) {
++  PanGestureInput::PanGestureType type =
++      PanGestureTypeForPhases(aPhase, aMomentumPhase);
+   // Always force zero deltas on event types that shouldn't cause any scrolling,
+   // so that we don't dispatch DOM wheel events for them.
+   bool shouldIgnoreDeltas = type == PanGestureInput::PANGESTURE_MAYSTART ||
+                             type == PanGestureInput::PANGESTURE_CANCELLED;
+ 
+-  PanGestureInput panEvent(
+-      type, aTimeStamp, aPanStartPoint,
+-      !shouldIgnoreDeltas ? aPreciseDelta : ScreenPoint(), aModifiers,
+-      PanGestureInput::IsEligibleForSwipe(
+-          ShouldConsiderStartingSwipeFromEvent(aNativeEvent)));
++  PanGestureInput panEvent(type, aTimeStamp, aPanStartPoint,
++                           !shouldIgnoreDeltas ? aPreciseDelta : ScreenPoint(),
++                           aModifiers,
++                           PanGestureInput::IsEligibleForSwipe(
++                               aSwipeEnabled && aPhase == NSEventPhaseBegan));
+ 
+   if (!shouldIgnoreDeltas) {
+     panEvent.SetLineOrPageDeltas(aLineOrPageDelta.x, aLineOrPageDelta.y);
+diff --git a/widget/nsIWidget.cpp b/widget/nsIWidget.cpp
+index c8c26f1e1b5..a8ff28d852e 100644
+--- a/widget/nsIWidget.cpp
++++ b/widget/nsIWidget.cpp
+@@ -541,7 +541,8 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChild(
+     case WidgetType::Native: {
+ #ifdef XP_MACOSX
+       if (IsMacWebAppWidget()) {
+-        widget = static_cast<mozilla::widget::MacWebAppWidget*>(this)->CreateMacWebAppWindow();
++        widget = static_cast<mozilla::widget::MacWebAppWidget*>(this)
++                     ->CreateMacWebAppWindow();
+       } else
+ #endif
+       {
+@@ -1513,6 +1514,8 @@ already_AddRefed<WebRenderLayerManager> nsIWidget::CreateCompositorSession(
+           gfx::gfxVars::AllowSoftwareWebRenderOGL());
+     }
+     options.SetAllowNativeCompositor(WidgetTypeSupportsNativeCompositing());
++#elif defined(XP_MACOSX)
++    options.SetAllowNativeCompositor(WidgetTypeSupportsNativeCompositing());
+ #endif
+ 
+ #ifdef MOZ_WIDGET_ANDROID
+diff --git a/widget/tests/gtest/TestMacWebAppPanGesture.mm b/widget/tests/gtest/TestMacWebAppPanGesture.mm
+new file mode 100644
+index 00000000000..3a1c513f17b
+--- /dev/null
++++ b/widget/tests/gtest/TestMacWebAppPanGesture.mm
+@@ -0,0 +1,78 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "gtest/gtest.h"
++#include "nsCocoaUtils.h"
++
++using namespace mozilla;
++
++TEST(MacWebAppPanGesture, TransportedPhases)
++{
++  using Type = PanGestureInput::PanGestureType;
++  struct Case {
++    NSEventPhase phase;
++    NSEventPhase momentum;
++    Type type;
++    bool zeroDelta;
++  };
++  const Case cases[] = {
++      {NSEventPhaseMayBegin, NSEventPhaseNone,
++       PanGestureInput::PANGESTURE_MAYSTART, true},
++      {NSEventPhaseCancelled, NSEventPhaseNone,
++       PanGestureInput::PANGESTURE_CANCELLED, true},
++      {NSEventPhaseBegan, NSEventPhaseNone, PanGestureInput::PANGESTURE_START,
++       false},
++      {NSEventPhaseChanged, NSEventPhaseNone, PanGestureInput::PANGESTURE_PAN,
++       false},
++      {NSEventPhaseEnded, NSEventPhaseNone, PanGestureInput::PANGESTURE_END,
++       false},
++      {NSEventPhaseNone, NSEventPhaseBegan,
++       PanGestureInput::PANGESTURE_MOMENTUMSTART, false},
++      {NSEventPhaseNone, NSEventPhaseChanged,
++       PanGestureInput::PANGESTURE_MOMENTUMPAN, false},
++      {NSEventPhaseNone, NSEventPhaseEnded,
++       PanGestureInput::PANGESTURE_MOMENTUMEND, false},
++  };
++  const TimeStamp time = TimeStamp::Now();
++  const ScreenPoint position(12, 18);
++  const ScreenPoint displacement(-64, 6);
++  for (const auto& test : cases) {
++    PanGestureInput pan = nsCocoaUtils::CreatePanGestureEvent(
++        test.phase, test.momentum, true, time, position, displacement,
++        gfx::IntPoint(-2, 1), MODIFIER_SHIFT);
++    EXPECT_EQ(pan.mType, test.type);
++    EXPECT_EQ(pan.mTimeStamp, time);
++    EXPECT_EQ(pan.mPanStartPoint, position);
++    EXPECT_EQ(pan.mPanDisplacement,
++              test.zeroDelta ? ScreenPoint() : displacement);
++    EXPECT_EQ(pan.modifiers, MODIFIER_SHIFT);
++    EXPECT_EQ(pan.mLineOrPageDeltaX, test.zeroDelta ? 0 : -2);
++    EXPECT_EQ(pan.mLineOrPageDeltaY, test.zeroDelta ? 0 : 1);
++    pan.SetHandledByAPZ(true);
++    pan.SetOverscrollBehaviorAllowsSwipe(true);
++    EXPECT_EQ(pan.AllowsSwipe(), test.phase == NSEventPhaseBegan);
++  }
++}
++
++TEST(MacWebAppPanGesture, DisabledHistorySwipe)
++{
++  PanGestureInput pan = nsCocoaUtils::CreatePanGestureEvent(
++      NSEventPhaseBegan, NSEventPhaseNone, false, TimeStamp::Now(),
++      ScreenPoint(12, 18), ScreenPoint(-64, 6), gfx::IntPoint(), 0);
++  pan.SetHandledByAPZ(true);
++  pan.SetOverscrollBehaviorAllowsSwipe(true);
++  EXPECT_FALSE(pan.AllowsSwipe());
++  EXPECT_EQ(pan.mPanDisplacement, ScreenPoint(-64, 6));
++}
++
++TEST(MacWebAppPanGesture, VerticalPanDoesNotStartHistorySwipe)
++{
++  PanGestureInput pan = nsCocoaUtils::CreatePanGestureEvent(
++      NSEventPhaseBegan, NSEventPhaseNone, true, TimeStamp::Now(),
++      ScreenPoint(12, 18), ScreenPoint(-19, 6), gfx::IntPoint(), 0);
++  pan.SetHandledByAPZ(true);
++  pan.SetOverscrollBehaviorAllowsSwipe(true);
++  EXPECT_FALSE(pan.AllowsSwipe());
++  EXPECT_EQ(pan.mPanDisplacement, ScreenPoint(-19, 6));
++}
+diff --git a/widget/tests/gtest/moz.build b/widget/tests/gtest/moz.build
+index c870dbd1039..c7f681f3572 100644
+--- a/widget/tests/gtest/moz.build
++++ b/widget/tests/gtest/moz.build
+@@ -12,6 +12,9 @@ UNIFIED_SOURCES = [
+ ]
+ 
+ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
++    SOURCES += [
++        "TestMacWebAppPanGesture.mm",
++    ]
+     UNIFIED_SOURCES += [
+         "TestNativeKeyBindings.cpp",
+     ]

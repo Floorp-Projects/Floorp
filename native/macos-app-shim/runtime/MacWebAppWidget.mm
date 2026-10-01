@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MacWebAppWidget.h"
+#include "InputData.h"
 #include "MacWebAppInput.h"
 #include "MacWebAppPresentation.h"
 #include "MacWebAppService.h"
 #include "Protocol.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Services.h"
+#include "mozilla/SwipeTracker.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/APZInputBridge.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
 #include "mozilla/layers/PNativeLayerRemote.h"
 #include "mozilla/widget/CocoaCompositorWidget.h"
@@ -436,6 +441,26 @@ NS_IMETHODIMP MacWebAppWidget::Observe(nsISupports*, const char* aTopic,
 void MacWebAppWidget::CreateCompositor(int aWidth, int aHeight) {
   (void)gfxPlatform::GetPlatform();
   nsIWidget::CreateCompositor(aWidth, aHeight);
+}
+void MacWebAppWidget::DispatchPanGestureInput(PanGestureInput& aEvent) {
+  RefPtr<MacWebAppWidget> self(this);
+  if (Destroyed()) return;
+  if (mSwipeTracker &&
+      mSwipeTracker->ProcessEvent(aEvent) == nsEventStatus_eConsumeNoDefault)
+    return;
+  if (Destroyed()) return;
+  if (mAPZC) {
+    APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
+    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) return;
+    WidgetWheelEvent event = MayStartSwipeForAPZ(aEvent, result);
+    if (!Destroyed() && event.mMessage == eWheel &&
+        (event.mDeltaX != 0 || event.mDeltaY != 0))
+      ProcessUntransformedAPZEvent(&event, result);
+  } else if (!MayStartSwipeForNonAPZ(aEvent) && !Destroyed()) {
+    WidgetWheelEvent event = aEvent.ToWidgetEvent(this);
+    if (event.mMessage == eWheel && (event.mDeltaX != 0 || event.mDeltaY != 0))
+      DispatchEvent(&event);
+  }
 }
 void MacWebAppWidget::GetCompositorWidgetInitData(CompositorWidgetInitData* aData) {
   if (RefPtr<NativeLayerRootRemoteMacParent> actor = std::move(mRemoteRoot)) {

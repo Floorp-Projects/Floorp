@@ -17,6 +17,21 @@ or partially applied patches still fail the build.
 from the macOS Runtime DMG into the artifact build. The package manifest already
 requires that executable; omitting it prevents the final app from being built.
 
+`macos-app-shim-pwa-input-and-compositor.patch` propagates the macOS Widget's
+native-compositor policy and keeps the reported backend consistent with it.
+PWA windows therefore composite video into their BGRA surface. It also aligns
+Shim world coordinates with the sender's int32 domain, preserves IME composition
+and selection ranges, and routes phased trackpad input through Gecko's APZ and
+history-swipe handling. The canonical Shim files in `native/macos-app-shim/`
+must stay in sync with this patch. Native View regressions are covered by
+`deno task app-shim:build --test`; Runtime phase conversion is covered by
+`./mach gtest MacWebAppPanGesture.*`.
+
+This patch requires a freshly compiled native Runtime, including XUL and
+`floorp-app-shim`. Applying it while packaging older prebuilt native artifacts
+does not update those binaries. Existing installed PWAs also need their verified
+Shim executable refreshed or reinstalled to receive the coordinate and IME fixes.
+
 `release-notes-guards.patch` adds the confirmed release-notes choice to the existing
 extension guard mechanism and includes an xpcshell regression test. It composes
 the Floorp guard with existing enterprise guards without replacing their settings.

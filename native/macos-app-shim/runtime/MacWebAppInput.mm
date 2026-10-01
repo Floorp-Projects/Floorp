@@ -4,6 +4,7 @@
 
 // Compile without ARC: Gecko's TextInputHandler includes MRC Cocoa helpers.
 #include "MacWebAppInput.h"
+#include "MacWebAppWidget.h"
 
 #import <Cocoa/Cocoa.h>
 #include <algorithm>
@@ -12,6 +13,7 @@
 #include "NativeKeyBindings.h"
 #include "Protocol.h"
 #include "TextInputHandler.h"
+#include "nsCocoaUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/widget/IMEData.h"
 #include "mozilla/MiscEvents.h"
@@ -113,7 +115,7 @@ NS_IMPL_ISUPPORTS(MacWebAppInput, TextEventDispatcherListener,
                   nsISupportsWeakReference)
 
 MacWebAppInput::MacWebAppInput(
-    nsIWidget* aWidget, std::function<void(NSDictionary*)> aSendEditorState)
+    MacWebAppWidget* aWidget, std::function<void(NSDictionary*)> aSendEditorState)
     : mWidget(aWidget), mSendEditorState(std::move(aSendEditorState)) {}
 
 MacWebAppInput::~MacWebAppInput() { OnDestroy(); }
@@ -186,15 +188,32 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
   if ([kind isEqualToString:@"scroll"]) {
     double dx, dy;
     bool precise;
-    uint32_t momentum;
+    uint32_t phase, momentum;
+    double timestamp;
+    bool swipeEnabled = false;
     if (!ReadNumber(aPayload, @"deltaX", &dx, -65536, 65536) ||
         !ReadNumber(aPayload, @"deltaY", &dy, -65536, 65536) ||
         !Boolean(aPayload, @"precise", &precise) ||
-        !ReadUInt(aPayload, @"momentumPhase", &momentum, true))
+        !ReadUInt(aPayload, @"phase", &phase, true) ||
+        !ReadUInt(aPayload, @"momentumPhase", &momentum, true) ||
+        !ReadNumber(aPayload, @"timestamp", &timestamp, 0, 1e12) ||
+        (aPayload[@"swipeEnabled"] && !Boolean(aPayload, @"swipeEnabled", &swipeEnabled)))
       return;
+    if (!aPayload[@"swipeEnabled"])
+      swipeEnabled = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
+    if (precise && (phase != NSEventPhaseNone || momentum != NSEventPhaseNone)) {
+      PanGestureInput pan = nsCocoaUtils::CreatePanGestureEvent(
+          NSEventPhase(phase), NSEventPhase(momentum), swipeEnabled,
+          nsCocoaUtils::GetEventTimeStamp(timestamp), ScreenPoint(point.x, point.y),
+          ScreenPoint(-dx * scale, -dy * scale), gfx::IntPoint(),
+          GeckoModifiers(modifiers));
+      mWidget->DispatchPanGestureInput(pan);
+      return;
+    }
     WidgetWheelEvent event(true, eWheel, mWidget);
     event.mRefPoint = point;
     event.mModifiers = GeckoModifiers(modifiers);
+    event.mTimeStamp = nsCocoaUtils::GetEventTimeStamp(timestamp);
     event.mDeltaMode = precise ? 0 : 1;
     event.mDeltaX = -dx * (precise ? scale : 1);
     event.mDeltaY = -dy * (precise ? scale : 1);

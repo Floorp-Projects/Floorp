@@ -44,6 +44,7 @@ class MacWebAppWidget final : public nsIWidget, public nsIObserver {
   void SetFocus(Raise, dom::CallerType) override;
   LayoutDeviceIntRect GetBounds() override { return mBounds; }
   void Invalidate(const LayoutDeviceIntRect&) override;
+  void DispatchPanGestureInput(PanGestureInput&);
   nsresult SetTitle(const nsAString&) override;
   void SetCursor(const Cursor&) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override { return mBounds.TopLeft(); }
