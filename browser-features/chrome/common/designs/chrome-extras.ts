@@ -177,6 +177,12 @@ export const CHROME_EXTRAS_SCAFFOLD_CSS = scaffoldCSS;
  */
 export const CHROME_EXTRAS_STYLE_ID = "floorp-chrome-extras";
 
+/** Derived toggle for Firefox's sidebar headers in child documents/shadow DOM.
+ * The design config remains authoritative; the Runtime's component CSS reads
+ * this mirror because the browser.xhtml stylesheet cannot reach those nodes. */
+export const CHROME_EXTRAS_SIDEBAR_HEADER_PREF =
+  "floorp.chrome-extras.hidden-sidebar-header";
+
 /** Per-toggle sheets, with the Lepton icon paths already resolved. */
 export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   autohideTab: autohideTabCSS,
