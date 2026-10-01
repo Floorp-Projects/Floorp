@@ -144,8 +144,8 @@
             "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
         },
         "chrome-extras": {
-            "title": "UI Extension Settings",
-            "description": "Apply optional UI tweaks on top of the currently selected design",
+            "title": "Paramètres d'extension d'interface utilisateur",
+            "description": "Appliquer les modifications facultatives de l'interface utilisateur au-dessus du design actuellement sélectionné",
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
@@ -173,8 +173,8 @@
             },
             "icon": {
                 "title": "Paramètres d'icône",
-                "disabled": "Disable context menu and panel menu icons",
-                "menu": "Enable context menu icons"
+                "disabled": "Désactiver les icônes du menu contextuel et du menu du panneau",
+                "menu": "Activer les icônes du menu contextuel"
             },
             "centered": {
                 "title": "Paramètres centrés",
@@ -197,7 +197,7 @@
                 "title": "Paramètres de la barre latérale",
                 "overlap": "Afficher la barre latérale sur le contenu du site web"
             },
-            "configure": "Open UI extension settings"
+            "configure": "Ouvrir les paramètres de l'extension d'interface utilisateur"
         },
         "tabSleepExclusion": {
             "title": "Exclusion de mise en veille par onglet",
@@ -486,8 +486,8 @@
         "otherSettings": "Paramètres supplémentaires",
         "showToolbar": "Afficher la barre d'outils",
         "showToolbarDescription": "Afficher la barre d'outils dans les fenêtres d'applications Web",
-        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
-        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
+        "keepRunningAfterBrowserQuit": "Maintenir les applications Web en cours d'exécution après avoir quitté {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Fermez les fenêtres du navigateur et laissez les applications Web en cours d'exécution ouvertes. Désactivez cette option pour les fermer toutes en même temps. La fermeture d'une application Web ferme uniquement celle-ci. Le redémarrage de {{productName}} ou la déconnexion entraîne la fermeture de toutes les applications.",
         "installedApps": "Applications installées",
         "noInstalledApps": "Aucune application Web installée",
         "removeApp": "Supprimer l'application",
@@ -507,10 +507,10 @@
         "containerDeleted": "Conteneur supprimé",
         "resetContainer": "Réinitialiser",
         "save": "Enregistrer",
-        "errorRenaming": "Could not rename this Web App.",
-        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorRenaming": "Impossible de renommer cette application Web.",
+        "errorUninstalling": "Impossible de désinstaller cette application Web.",
         "errorSettingContainer": "Échec de la définition du conteneur",
-        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
+        "nativeContainerFixed": "Cette application Web macOS conserve le conteneur sélectionné lors de son installation. La modification de ce conteneur n'est pas encore prise en charge. Les données de connexion et les données du site actuelles ont été conservées."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
