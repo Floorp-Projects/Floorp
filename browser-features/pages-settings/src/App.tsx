@@ -12,6 +12,10 @@ import { Header } from "@/header/header.tsx";
 import useHashSync from "@/hooks/useHashSync.ts";
 import { StandardUIProvider } from "../../../libs/ui/standard-provider.tsx";
 import { useSettingFocus } from "@/hooks/useSettingFocus.ts";
+import {
+  ContextMenuAvailabilityGate,
+  ContextMenuAvailabilityProvider,
+} from "@/lib/experiments/context-menu-availability.tsx";
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
@@ -34,6 +38,14 @@ const ChromeExtrasSettings = lazy(() =>
 const SearchPage = lazy(() => import("@/app/search/page.tsx"));
 
 export default function App() {
+  return (
+    <ContextMenuAvailabilityProvider>
+      <SettingsApp />
+    </ContextMenuAvailabilityProvider>
+  );
+}
+
+function SettingsApp() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   useEffect(() => {
@@ -83,8 +95,14 @@ export default function App() {
                       <Navigate to="/features/design/chrome-extras" replace />
                     }
                   />
-                  <Route path="/features/sidebar" element={<PanelSidebar />} />
-                  <Route path="/features/workspaces" element={<Workspaces />} />
+                  <Route
+                    path="/features/sidebar"
+                    element={<PanelSidebar />}
+                  />
+                  <Route
+                    path="/features/workspaces"
+                    element={<Workspaces />}
+                  />
                   <Route
                     path="/features/webapps"
                     element={<ProgressiveWebApp />}
@@ -101,7 +119,11 @@ export default function App() {
                   />
                   <Route
                     path="/features/context-menu"
-                    element={<ContextMenuSettings />}
+                    element={
+                      <ContextMenuAvailabilityGate>
+                        <ContextMenuSettings />
+                      </ContextMenuAvailabilityGate>
+                    }
                   />
                   <Route
                     path="/features/performance"

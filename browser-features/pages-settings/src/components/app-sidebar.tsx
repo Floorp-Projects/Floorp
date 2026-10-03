@@ -1,4 +1,5 @@
 import type * as React from "react";
+import type {} from "@/types/settings_format.d.ts";
 import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
@@ -23,12 +24,17 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
-import { NavFeatures, type Feature } from "@/components/nav-features.tsx";
+import { type Feature, NavFeatures } from "@/components/nav-features.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { rpc } from "../lib/rpc/rpc.ts";
+import {
+  CONTEXT_MENU_SETTINGS_ROUTE,
+  useContextMenuAvailability,
+} from "@/lib/experiments/context-menu-availability.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
+  const contextMenuAvailable = useContextMenuAvailability() === "available";
 
   const overview = [
     { title: t("pages.home"), url: "/overview/home", icon: House },
@@ -86,11 +92,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/shortcuts",
       icon: Option,
     },
-    {
-      title: t("pages.contextMenu"),
-      url: "/features/context-menu",
-      icon: Menu,
-    },
+    ...(contextMenuAvailable
+      ? [{
+        title: t("pages.contextMenu"),
+        url: CONTEXT_MENU_SETTINGS_ROUTE,
+        icon: Menu,
+      }]
+      : []),
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
     // Floorp OS entry is conditional based on pref floorp.os.hidden
     ...(isFloorpOSVisible
@@ -112,7 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/accounts",
       icon: UserRoundPen,
     },
-  ], [isFloorpOSVisible, t]);
+  ], [contextMenuAvailable, isFloorpOSVisible, t]);
 
   const about: Feature[] = [
     {
@@ -120,7 +128,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "",
       icon: Settings,
       isExternal: true,
-      onClick: () => globalThis.NRAddTab("about:preferences"),
+      onClick: () =>
+        (globalThis as unknown as Window).NRAddTab("about:preferences"),
     },
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
     { title: t("pages.updates"), url: "/about/updates", icon: RefreshCw },

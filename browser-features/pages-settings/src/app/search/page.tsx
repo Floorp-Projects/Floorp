@@ -11,6 +11,10 @@ import {
 } from "@/components/common/card.tsx";
 import { cn } from "@/lib/utils.ts";
 import {
+  CONTEXT_MENU_SETTINGS_ROUTE,
+  useContextMenuAvailability,
+} from "@/lib/experiments/context-menu-availability.tsx";
+import {
   buildSearchDocuments,
   normalizeSearchText,
   type SettingsSearchDocument,
@@ -150,6 +154,7 @@ function buildSearchResults(
 export default function SearchPage() {
   const { t, i18n } = useTranslation();
   const query = useSearchQuery();
+  const contextMenuAvailable = useContextMenuAvailability() === "available";
 
   const documents = useMemo(
     () => buildSearchDocuments(i18n),
@@ -157,8 +162,15 @@ export default function SearchPage() {
   );
 
   const results = useMemo(
-    () => buildSearchResults(documents, query),
-    [documents, query],
+    () =>
+      buildSearchResults(
+        documents.filter((document) =>
+          contextMenuAvailable ||
+          document.route.split("?")[0] !== CONTEXT_MENU_SETTINGS_ROUTE
+        ),
+        query,
+      ),
+    [contextMenuAvailable, documents, query],
   );
 
   const hasQuery = normalizeSearchText(query).length > 0;
