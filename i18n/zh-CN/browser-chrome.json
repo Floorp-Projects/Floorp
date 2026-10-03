@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "移动标签页到另一个工作区",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "在另一工作区打开链接",
       "noOtherWorkspace": "无可用的工作区"
     },

@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Mover aba para outra espaço de trabalho",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Abrir link em outro espaço de trabalho",
       "noOtherWorkspace": "Não há outros espaços de trabalho disponíveis"
     },
