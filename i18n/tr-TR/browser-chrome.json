@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Sekmeyi Başka Bir Çalışma Alanına Taşı",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Bağlantıyı Başka Bir Çalışma Alanında Aç",
       "noOtherWorkspace": "No other workspaces available"
     },

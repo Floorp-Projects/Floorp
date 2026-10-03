@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Flyt fane til andet arbejdsområde",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Open Link in Another Workspace",
       "noOtherWorkspace": "No other workspaces available"
     },

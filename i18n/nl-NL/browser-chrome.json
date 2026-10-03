@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Open link in een andere workspace",
       "noOtherWorkspace": "Geen andere workspace beschikbaar"
     },
