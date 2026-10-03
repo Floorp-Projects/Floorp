@@ -24,14 +24,18 @@
 }
 
 /* leptonChrome.css:26121-26126 */
-#page-action-buttons > .urlbar-page-action {
-  transition: margin-inline-end 50ms var(--animation-easing-function) 900ms,
-    opacity 1.5s var(--animation-easing-function) 600ms !important;
+@media (prefers-reduced-motion: no-preference) {
+  #page-action-buttons > .urlbar-page-action {
+    transition: margin-inline-end 50ms var(--animation-easing-function) 900ms,
+      opacity 1.5s var(--animation-easing-function) 600ms !important;
+  }
 }
 
 /* leptonChrome.css:26133-26139 */
-#urlbar-container:is(:hover, :focus-within) #page-action-buttons > .urlbar-page-action,
-.urlbar-page-action[open],
-.urlbar-page-action[open] ~ .urlbar-page-action {
-  transition-delay: 0s !important;
+@media (prefers-reduced-motion: no-preference) {
+  #urlbar-container:is(:hover, :focus-within) #page-action-buttons > .urlbar-page-action,
+  .urlbar-page-action[open],
+  .urlbar-page-action[open] ~ .urlbar-page-action {
+    transition-delay: 0s !important;
+  }
 }

@@ -25,6 +25,7 @@
 #nora-statusbar #status-text {
   padding-inline: 8px; /* px-2 */
   overflow: hidden;
+  order: 1;
 }
 
 #toggle_nora-statusbar {

@@ -440,10 +440,12 @@
 }
 
 /* leptonChrome.css:27921-27927 — extra conditions dropped: userChrome.icon.panel */
-#PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
-#PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
-.syncNowBtn[syncstatus="active"] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg") !important;
+@media (prefers-reduced-motion: reduce) {
+  #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
+  #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
+  .syncNowBtn[syncstatus="active"] {
+    list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg") !important;
+  }
 }
 
 /* leptonChrome.css:27928-27932 — extra conditions dropped: userChrome.icon.panel */
@@ -815,12 +817,14 @@ panelMenuBookmarkThisPage[starred] {
 }
 
 /* leptonChrome.css:28296-28304 — extra conditions dropped: userChrome.icon.panel */
-#BMB_bookmarksShowAllTop {
-  list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg") !important;
-}
-#BMB_bookmarksShowAllTop > .menu-iconic-left {
-  display: flex !important;
-  display: -moz-box !important;
+@media (-moz-pref("layout.css.osx-font-smoothing.enabled")) {
+  #BMB_bookmarksShowAllTop {
+    list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg") !important;
+  }
+  #BMB_bookmarksShowAllTop > .menu-iconic-left {
+    display: flex !important;
+    display: -moz-box !important;
+  }
 }
 
 /* leptonChrome.css:28305-28312 — extra conditions dropped: userChrome.icon.panel */

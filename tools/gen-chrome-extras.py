@@ -15,6 +15,11 @@ combinations and are left to the native implementations. The sidebar overlap
 and auto-hide combination is extracted explicitly into its own sheet; other
 omissions are recorded in each generated header.
 
+Only the Lepton toggle terms are removed from a block's `@media` condition.
+Platform and motion terms (`-moz-platform`, `-moz-gtk-csd-available`,
+`prefers-reduced-motion`, non-Lepton prefs) are kept, with `-moz-bool-pref:`
+rewritten to `-moz-pref()` because current Gecko no longer matches the former.
+
 Only `-moz-bool-pref:` gated blocks are considered. Vendored Lepton also uses a
 bare `-moz-pref(...)` form in a large region of the file; we do not port from
 there (see the module comment in designs/chrome-extras.ts).
@@ -122,6 +127,61 @@ def split_terms(cond: str) -> tuple[list[str], list[str]]:
     return pos, neg
 
 
+def split_top(text: str, sep: str) -> list[str]:
+    """Split on `sep` where it is not inside parentheses."""
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif depth == 0 and text.startswith(sep, i):
+            parts.append(text[start:i].strip())
+            start = i + len(sep)
+            i = start
+            continue
+        i += 1
+    parts.append(text[start:].strip())
+    return parts
+
+
+def residual_condition(cond: str) -> str:
+    """The block's media query without its Lepton toggle terms.
+
+    Empty when some query in the list needs nothing but Lepton toggles, since
+    the whole list is then always true.
+    """
+    queries: list[str] = []
+    for query in split_top(cond.strip().removeprefix("@media").strip(), ","):
+        terms = [t for t in split_top(query, " and ") if "userChrome." not in t]
+        if not terms:
+            return ""
+        queries.append(" and ".join(dict.fromkeys(terms)))
+    return re.sub(
+        r'-moz-bool-pref:\s*"([^"]+)"', r'-moz-pref("\1")',
+        ", ".join(dict.fromkeys(queries)),
+    )
+
+
+assert residual_condition(
+    '@media (not (-moz-bool-pref: "userChrome.icon.disabled")) and '
+    '(-moz-bool-pref: "userChrome.icon.menu") and '
+    '(-moz-bool-pref: "layout.css.osx-font-smoothing.enabled")'
+) == '(-moz-pref("layout.css.osx-font-smoothing.enabled"))'
+assert residual_condition(
+    '@media (-moz-bool-pref: "userChrome.x") and (-moz-platform: windows) and '
+    '(-moz-platform: windows), (-moz-bool-pref: "userChrome.x") and '
+    '(-moz-gtk-csd-available)'
+) == "(-moz-platform: windows), (-moz-gtk-csd-available)"
+assert residual_condition(
+    '@media (-moz-bool-pref: "userChrome.x"), (-moz-platform: windows)'
+) == ""
+
+
 def unwrap(body: list[str], indent: int) -> str:
     """Drop the block's own indentation level, trim blank edges."""
     pad = "  " * (indent + 1)
@@ -221,7 +281,6 @@ def write(
     hit,
     notes: list[str] | None = None,
     extra: str = "",
-    respect_reduced_motion: bool = False,
 ) -> None:
     parts = []
     conditions = {s: cond for s, _e, cond, _body, _indent in top_blocks()}
@@ -230,10 +289,11 @@ def write(
         if dropped:
             note += f" — extra conditions dropped: {', '.join(dropped)}"
         rules = unwrap(body, indent)
-        if (respect_reduced_motion and
-                "prefers-reduced-motion: no-preference" in conditions[s]):
-            rules = "@media (prefers-reduced-motion: no-preference) {\n" + \
-                "\n".join("  " + line for line in rules.splitlines()) + "\n}"
+        residual = residual_condition(conditions[s])
+        if residual:
+            rules = f"@media {residual} {{\n" + "\n".join(
+                "  " + line if line else line for line in rules.splitlines()
+            ) + "\n}"
         parts.append(note + " */\n" + rules)
     prov = (
         f"leptonChrome.css {hit[0][0]}-{hit[-1][1]}, {len(hit)} block(s)"
@@ -306,7 +366,7 @@ def main() -> int:
     write("autohide-sidebar-only.css", "autohideSidebar (without overlap)",
           select("userChrome.autohide.sidebar", require_negative=[
               "userChrome.sidebar.overlap",
-          ]), respect_reduced_motion=True)
+          ]))
     write("autohide-back-button.css", "autohideBackButton",
           select("userChrome.autohide.back_button"), [
         "Lepton wraps these in",
@@ -377,7 +437,7 @@ def main() -> int:
     write("sidebar-overlap-only.css", "sidebarOverlap (without auto-hide)",
           select("userChrome.sidebar.overlap", require_negative=[
               "userChrome.autohide.sidebar",
-          ]), respect_reduced_motion=True)
+          ]))
     write("sidebar-overlap-autohide.css", "sidebarOverlap + autohideSidebar",
           select("userChrome.autohide.sidebar", allow=[
               "userChrome.sidebar.overlap",
@@ -386,7 +446,7 @@ def main() -> int:
           ], require_and=True), [
         "This combination preserves Lepton's collapsed and expanded widths",
         "when both Floorp sidebar toggles are enabled.",
-    ], respect_reduced_motion=True)
+    ])
 
     write("icon-disabled.css", "iconDisabled",
           select("userChrome.icon.disabled", polarity="negative",
