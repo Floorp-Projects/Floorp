@@ -6,6 +6,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <Carbon/Carbon.h>
 #include <algorithm>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <set>
@@ -167,8 +168,8 @@ bool ParseRawLayer(NSDictionary* payload, LayerState* state) {
     if (payload[key] && (!ReadBool(payload[key], &value) || value)) return false;
   }
   double x, y;
-  if (!ReadNumber(payload, @"positionX", &x, -65536, 65536) ||
-      !ReadNumber(payload, @"positionY", &y, -65536, 65536) ||
+  if (!ReadNumber(payload, @"positionX", &x, INT32_MIN, INT32_MAX) ||
+      !ReadNumber(payload, @"positionY", &y, INT32_MIN, INT32_MAX) ||
       !ReadNumber(payload, @"sizeWidth", &state->sizeWidth, 0, 32768) ||
       !ReadNumber(payload, @"sizeHeight", &state->sizeHeight, 0, 32768) ||
       !ReadRect(payload[@"displayRect"], &state->display)) return false;
@@ -179,7 +180,9 @@ bool ParseRawLayer(NSDictionary* payload, LayerState* state) {
     NSArray* values = payload[@"transform16"];
     if (![values isKindOfClass:NSArray.class] || values.count != 16) return false;
     for (NSUInteger i = 0; i < 16; ++i) {
-      if (!ReadNumber(@{@"v":values[i]}, @"v", &matrix[i], -1e6, 1e6)) return false;
+      double minimum = i >= 12 && i <= 14 ? INT32_MIN : -1e6;
+      double maximum = i >= 12 && i <= 14 ? INT32_MAX : 1e6;
+      if (!ReadNumber(@{@"v":values[i]}, @"v", &matrix[i], minimum, maximum)) return false;
     }
   }
   for (int column = 0; column < 4; ++column) {
@@ -633,6 +636,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
       @"deltaX": @(event.scrollingDeltaX), @"deltaY": @(event.scrollingDeltaY),
       @"precise": @(event.hasPreciseScrollingDeltas), @"phase": @(event.phase),
       @"momentumPhase": @(event.momentumPhase), @"modifiers": @(event.modifierFlags),
+      @"swipeEnabled": @([NSEvent isSwipeTrackingFromScrollEventsEnabled]),
       @"timestamp": @(event.timestamp)}];
 }
 - (void)keyEvent:(NSEvent*)event kind:(NSString*)kind {
@@ -671,10 +675,14 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   NSString* text = PlainText(value);
   if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
       selected.length > text.length - selected.location) return;
+  NSUInteger markedStart = replacement.location != NSNotFound ? replacement.location
+      : [self hasMarkedText] ? _markedRange.location : _selectedRange.location;
+  if (markedStart > UINT32_MAX - text.length) return;
   [self emit:MessageType::Input payload:@{@"kind": @"setMarkedText", @"text": text,
       @"selected": RangePayload(selected), @"replacement": RangePayload(replacement),
       @"editorRevision": @(_editorRevision)}];
-  _markedRange = NSMakeRange(_selectedRange.location, text.length);
+  _markedRange = NSMakeRange(markedStart, text.length);
+  _selectedRange = NSMakeRange(markedStart + selected.location, selected.length);
 }
 - (void)unmarkText {
   if ([self hasMarkedText]) [self emit:MessageType::Input payload:@{@"kind": @"unmarkText", @"editorRevision": @(_editorRevision)}];

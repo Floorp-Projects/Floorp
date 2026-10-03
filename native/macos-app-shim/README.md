@@ -309,6 +309,7 @@ ad-hoc signed browser and bundled Shim. It verified a distinct authenticated
 Shim process owning the native window, the requested 900×700 default geometry,
 actual Gecko frame/repaint acknowledgements, shared HttpOnly cookies and local
 storage, native AppKit text input reaching Gecko, and reverse cookie sharing.
+
 With LaunchServices startup, the Shim became the key, unoccluded application
 window. An exact-window capture was inspected and showed readable Gecko chrome,
 the fixture heading and input, and a transformed rounded tile. Window closure
@@ -316,6 +317,14 @@ and service shutdown completed without the earlier nonempty-layer-root crash;
 the harness then terminated its test host with its requested SIGTERM. Evidence
 is in `_dist/app-shim-runtime-smoke/run-uilwql9b/report.json`. This direct test uses
 ordinary browser chrome and does not establish the complete Floorp PWA frontend.
+
+On 2026-10-04, the source-built arm64 Runtime also passed the isolated
+`tools/app-shim/test-popups-and-overscroll.py` regression. With native-menu
+preferences enabled, moved PWA windows presented select popups at the correct
+position and width at 100% and 150% zoom, and option commands reached the page.
+Injected phased trackpad packets produced APZ top-edge overscroll, presented
+compositor frames, and settled back to zero scroll offset. Physical trackpad
+gestures remain unverified.
 
 The final signed package also passed frontend lifecycle runs `run-5o38ue6c`
 (keep apps running) and `run-f602_v7x` (quit all). Both exercised the real signed
@@ -355,13 +364,13 @@ foreground activation on an unlocked desktop.
 | Rendering | IOSurface Mach transfer; atomic CALayer transactions; crop, scale, full transform, color layers, rounded clip, flipped sampling and removal; actual Gecko frames, repaint acknowledgements and a visually inspected full-window fixture | Detailed visual comparison, retained-surface stress, GPU restart, sleep/wake and display changes |
 | Supported surface formats | Single-plane 32-bit BGRA with bounded dimensions and memory; explicit rejection of unsupported formats | HDR, DRM and other pixel formats are unimplemented |
 | Focus and geometry | First-responder hooks, key-window reports, coordinate/backing-scale reports, cooperative activation and hide/show controls; default 900×700 Runtime geometry and foreground activation through LaunchServices; stale geometry request rejection and unchanged-frame acknowledgement | Tab traversal, multi-display coordinates, fullscreen, minimize/maximize and app switching are untested |
-| Pointer and wheel | Mouse hooks and wheel deltas/phases are serialized; a native view mouse event is tested | Real Gecko click/scroll behavior and APZ integration are untested; magnify/rotate/swipe, pointer lock and explicit capture are unimplemented |
+| Pointer and wheel | Mouse hooks and wheel deltas/phases are serialized; a native view mouse event is tested; Gecko select opening through WebDriver and APZ overscroll/snap-back through phased input packets | Physical trackpad scrolling and history gestures need validation; magnify/rotate, pointer lock and explicit capture are unimplemented |
 | Keyboard and IME | Raw key hooks and `NSTextInputClient`; targeted native keyboard events reach Gecko through AppKit and authenticated Mach; Japanese marked/committed callback tests; bounded surrounding-text offsets and caret queries | Actual Japanese input sources, candidate windows, dead keys, emoji, dictation, composition cancellation and rapid asynchronous cache changes are untested |
 | Password input | Host sends masked context; secure event input is paired with editable password focus and released on blur/disconnect | OS-level secure-input behavior and password-field transitions need end-to-end validation |
 | Cursor | Whitelisted public NSCursor mappings and view-confined cursor rectangles; unknown names/image paths rejected; custom images use standard fallback | Actual Gecko hover, overlapping windows and cursor restoration need integration tests; custom image cursors remain unsupported |
 | Drag and drop | Ordinary mouse-drag events are forwarded | OS drag sessions, `NSDraggingDestination`, pasteboard payloads, file promises and cross-app dropping are unimplemented |
 | Accessibility | Native AppKit window and menu structures exist | A remote Gecko accessibility tree, hit testing, actions, text ranges and notifications for VoiceOver are unimplemented; visible page content is not accessible through this Shim yet |
-| Menus and clipboard | Per-app application/File/Edit/Window menus; hide, quit, close, minimize and edit-command hooks | Gecko command routing and clipboard behavior need integration tests; dynamic enablement, Services, menu localization and full native context-menu behavior are incomplete |
+| Menus and clipboard | Per-app application/File/Edit/Window menus; hide, quit, close, minimize and edit-command hooks; Shim-presented select popup geometry, frames, and option commands with native-menu preferences enabled | Broader Gecko command routing and clipboard behavior need integration tests; dynamic enablement, Services, menu localization and full native context-menu behavior are incomplete |
 | Dialogs and permissions | Native child dialog windows can be created | File/color pickers, printing, JavaScript dialogs, authentication and permission prompts must be routed to the correct app; native browser services are not yet bridged |
 | Cold launch | Signed temporary host launch with literal argument paths and UUID braces; remoting and restart/reset profile overrides removed; wrong identity rejected; bundled Floorp PWA warm and cold Finder launches share the same persistent session and exit cleanly | Another profile active, browser moved/updated, repeated Finder reopening and unlocked foreground activation need scenario testing |
 | Lifecycle | App-local quit/close requests await host decisions; real Gecko window closure and service shutdown without a host crash; native process kill/recovery preserves the page and form; actual beforeunload veto; app-only quit, browser keepalive and quit-all setting; last app exits the idle runtime | Background host activation/menu restoration beyond the exercised paths, restart and macOS logout need whole-product tests |

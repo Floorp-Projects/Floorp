@@ -14,15 +14,15 @@
 
 @class NSDictionary;
 @class NSEvent;
-class nsIWidget;
 
 namespace mozilla::widget {
+class MacWebAppWidget;
 
 /** Main-thread adapter for authenticated events from one native Shim window. */
 class MacWebAppInput final : public TextEventDispatcherListener {
  public:
   NS_DECL_ISUPPORTS
-  MacWebAppInput(nsIWidget* aWidget,
+  MacWebAppInput(MacWebAppWidget* aWidget,
                  std::function<void(NSDictionary*)> aSendEditorState);
   void Handle(NSDictionary* aPayload);
   void UpdateEditorState();
@@ -52,7 +52,7 @@ class MacWebAppInput final : public TextEventDispatcherListener {
 
   // The widget retains this listener; OnDestroy clears the raw pointer before
   // the widget tears down its TextEventDispatcher and callback owner.
-  nsIWidget* mWidget;
+  MacWebAppWidget* mWidget;
   std::function<void(NSDictionary*)> mSendEditorState;
   NSEvent* mLastKeyEvent =
       nullptr;  // Retained; this file uses Gecko's MRC input helpers.
