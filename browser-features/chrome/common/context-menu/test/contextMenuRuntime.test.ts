@@ -3157,6 +3157,89 @@ async function testControllerObservesNativeMutationsWithoutOverlayLoop(): Promis
   }
 }
 
+async function testControllerIgnoresReactiveNoOpAttributeWrites(): Promise<
+  void
+> {
+  const popup = appendPopup();
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"], hidden: ["test.a"] }),
+  );
+  const workspaceItem = appendTestNode("menuitem", "runtime-c");
+  let nativeLabel = "Move to workspace";
+  let reactions = 0;
+  workspaceItem.setAttribute("label", nativeLabel);
+  popup.append(
+    appendTestNode("menuitem", "runtime-a"),
+    appendTestNode("menuitem", "runtime-b"),
+    workspaceItem,
+  );
+  // Mirror Workspaces' real tab-menu observer: every structural change writes
+  // its translated label, even if it is unchanged. The fixture queues controller
+  // reconciliations explicitly, so the regression cannot hang the test runner.
+  const nativeObserver = new MutationObserver(() => {
+    reactions++;
+    if (reactions > 8) {
+      nativeObserver.disconnect();
+      return;
+    }
+    workspaceItem.setAttribute("label", nativeLabel);
+  });
+  nativeObserver.observe(popup, { childList: true });
+  try {
+    fixture.controller.attach();
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runPopupShowingReconcile(fixture.callbacks);
+    await flushMutationObservers();
+    assert(reactions > 0, "the native observer reacts to Floorp's reorder");
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "rewriting the same native label must not schedule another reorder",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-b,runtime-a,runtime-c",
+      "the customization remains applied after the observer reaction",
+    );
+
+    workspaceItem.setAttribute("label", "Temporary label");
+    workspaceItem.setAttribute("label", nativeLabel);
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "an attribute changed and restored in one mutation batch is a no-op",
+    );
+
+    nativeLabel = "Move to another workspace";
+    workspaceItem.setAttribute("label", nativeLabel);
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      1,
+      "a genuinely changed label must still refresh the catalog",
+    );
+    runNextMicrotask(fixture.callbacks);
+    await flushMutationObservers();
+    assertEquals(
+      fixture.callbacks.length,
+      0,
+      "the refreshed reorder also settles without an observer feedback loop",
+    );
+    const items = fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0]
+      ?.containers[0]?.items;
+    assertEquals(
+      items?.find((item) => item.key === "test.c")?.label,
+      nativeLabel,
+      "the catalog contains the latest real native label",
+    );
+  } finally {
+    nativeObserver.disconnect();
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
 async function testCancelledPopupHidingRestoresOverlayAndObserver(): Promise<
   void
 > {
@@ -3256,6 +3339,10 @@ async function testRootObserverExcludesNestedPopupBoundary(): Promise<void> {
 }
 
 const tests: TestCase[] = [
+  {
+    name: "controller ignores reactive no-op attribute writes without looping",
+    fn: testControllerIgnoresReactiveNoOpAttributeWrites,
+  },
   {
     name: "controller seeds menus parsed after early actor attachment",
     fn: testControllerSeedsMenusParsedAfterActorAttachment,

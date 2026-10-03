@@ -362,9 +362,7 @@ export class ContextMenuController {
     this.stopObservingPopup(popup);
     const observer = new this.#window.MutationObserver(
       (records: MutationRecord[]) => {
-        if (
-          !records.some((record) => this.isMutationInPopupLevel(popup, record))
-        ) {
+        if (!this.hasEffectiveMutation(popup, records)) {
           return;
         }
         if (this.#destroyed || !isPopupActive(popup)) {
@@ -381,9 +379,35 @@ export class ContextMenuController {
       childList: true,
       subtree: true,
       attributes: true,
+      attributeOldValue: true,
       attributeFilter: NATIVE_MUTATION_ATTRIBUTES,
     });
     this.#mutationObservers.set(popup, observer);
+  }
+
+  private hasEffectiveMutation(
+    popup: Element,
+    records: readonly MutationRecord[],
+  ): boolean {
+    const seenAttributes = new Map<Element, Set<string>>();
+    for (const record of records) {
+      if (!this.isMutationInPopupLevel(popup, record)) continue;
+      if (record.type !== "attributes") return true;
+      const name = record.attributeName;
+      if (!name) continue;
+      const element = record.target as Element;
+      const names = seenAttributes.get(element) ?? new Set<string>();
+      if (names.has(name)) continue;
+      names.add(name);
+      seenAttributes.set(element, names);
+      // Reordering can wake other menu observers, such as Workspaces, which
+      // rewrite the existing label. Reacting to that write would reorder again
+      // and starve the browser in a MutationObserver loop. Compare the first
+      // old value in the batch with the final value, including change/revert
+      // sequences, while still reconciling actual native attribute changes.
+      if (record.oldValue !== element.getAttribute(name)) return true;
+    }
+    return false;
   }
 
   private isMutationInPopupLevel(
