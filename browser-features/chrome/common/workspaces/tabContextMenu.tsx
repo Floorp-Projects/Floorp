@@ -8,9 +8,13 @@ import type { WorkspacesService } from "./workspacesService.ts";
 import { workspacesDataStore } from "./data/data.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { onCleanup } from "solid-js";
+import { getWorkspaceMenuAccessKey } from "./utils/menu-accesskey.ts";
 
 const translationKeys = {
   moveTabToAnotherWorkspace: "workspaces.menu.moveTabToAnotherWorkspace",
+  moveTabToAnotherWorkspaceAccessKey:
+    "workspaces.menu.moveTabToAnotherWorkspaceAccessKey",
   invalidWorkspaceID: "workspaces.error.invalidWorkspaceID",
 };
 
@@ -42,9 +46,10 @@ export class WorkspacesTabContextMenu {
     }
 
     try {
-      render(() => this.contextMenu(), parentElem, {
+      const dispose = render(() => this.contextMenu(), parentElem, {
         marker: marker?.parentElement === parentElem ? marker : undefined,
       });
+      onCleanup(dispose);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -55,6 +60,36 @@ export class WorkspacesTabContextMenu {
 
     addI18nObserver(() => {
       this.updateContextMenu();
+    });
+
+    const onPopupShown = (event: Event) => {
+      if (event.target === parentElem) {
+        this.updateContextMenu();
+      }
+    };
+    parentElem.addEventListener("popupshown", onPopupShown);
+
+    // Native Fluent strings are lazy, and selection changes hide/show commands.
+    const observer = new MutationObserver((mutations) => {
+      if (
+        mutations.some(({ target, type }) =>
+          (type === "childList" && target === parentElem) ||
+          (target instanceof Element && target.parentElement === parentElem &&
+            target.id !== "context_MoveTabToOtherWorkspace")
+        )
+      ) {
+        this.updateContextMenu();
+      }
+    });
+    observer.observe(parentElem, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["accesskey", "hidden", "collapsed", "style", "class"],
+    });
+    onCleanup(() => {
+      parentElem.removeEventListener("popupshown", onPopupShown);
+      observer.disconnect();
     });
   }
 
@@ -67,6 +102,15 @@ export class WorkspacesTabContextMenu {
         "label",
         getTranslatedText(translationKeys.moveTabToAnotherWorkspace),
       );
+      const accessKey = getWorkspaceMenuAccessKey(
+        menuElem,
+        getTranslatedText(translationKeys.moveTabToAnotherWorkspaceAccessKey),
+      );
+      if (accessKey) {
+        menuElem.setAttribute("accesskey", accessKey);
+      } else {
+        menuElem.removeAttribute("accesskey");
+      }
     }
   }
 
@@ -75,7 +119,9 @@ export class WorkspacesTabContextMenu {
       <xul:menu
         id="context_MoveTabToOtherWorkspace"
         label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
-        accesskey="D"
+        accesskey={getTranslatedText(
+          translationKeys.moveTabToAnotherWorkspaceAccessKey,
+        )}
       >
         <xul:menupopup
           id="WorkspacesTabContextMenu"
@@ -110,7 +156,9 @@ export class WorkspacesTabContextMenu {
     for (const workspaceId of excludeHasTabWorkspaceIdWorkspaces) {
       if (!this.ctx.isWorkspaceID(workspaceId)) {
         console.error(
-          `${getTranslatedText(translationKeys.invalidWorkspaceID)}: ${workspaceId}`,
+          `${
+            getTranslatedText(translationKeys.invalidWorkspaceID)
+          }: ${workspaceId}`,
         );
         continue;
       }
