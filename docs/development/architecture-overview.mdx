@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "238378f3400cb509d0136b0fd3009782579f3039"
+floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
 generated: true
 ---
 # Architecture Overview
@@ -26,7 +26,7 @@ The startup bridge is owned by `bridge/startup/src/chrome_root.ts:51-52`. It sel
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:38` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:41` on port 5181.
 
 ## Privileged Modules And Window Actors
 
@@ -105,7 +105,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 16 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 17 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 

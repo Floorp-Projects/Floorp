@@ -94,6 +94,30 @@ Deno.test("extractSettingsRoutes normalizes displayed route paths", () => {
   );
 });
 
+Deno.test("extractSettingsRoutes preserves pages behind a route guard", () => {
+  const routes = extractSettingsRoutes(`
+import ContextMenuSettings from "@/app/context-menu/page.tsx";
+<Route
+  path="/features/context-menu"
+  element={
+    <AvailabilityGate>
+      <ContextMenuSettings />
+    </AvailabilityGate>
+  }
+/>
+<Route path="/overview/home" element={<Dashboard />} />
+  `);
+
+  assertEquals(routes.map(({ route, component }) => ({ route, component })), [
+    {
+      route: "/features/context-menu",
+      component: "@/app/context-menu/page.tsx",
+    },
+    { route: "/overview/home", component: "Dashboard" },
+  ]);
+  assertEquals(routes[0].source.line, 4);
+});
+
 Deno.test("extractBridgeLoader reads loader URLs from chrome root source", () => {
   const loader = extractBridgeLoader(`
     const isTestOwner = import.meta.env.MODE === "test" &&

@@ -30,6 +30,9 @@ const chakraReactDir = realpathSync(
 const emotionReactDir = realpathSync(
   r("../../libs/ui/node_modules/@emotion/react"),
 );
+const reactRouterDomDir = realpathSync(
+  r("../../browser-features/pages-settings/node_modules/react-router-dom"),
+);
 
 export default defineConfig({
   cacheDir: "../../node_modules/.vite/loader-features",
@@ -225,6 +228,7 @@ export default defineConfig({
       "react-dom",
       "react-dom/client",
       "react-i18next",
+      "react-router-dom",
       "react/jsx-runtime",
       "tailwind-merge",
       "solid-js",
@@ -249,6 +253,7 @@ export default defineConfig({
     alias: [
       { find: "@chakra-ui/react", replacement: chakraReactDir },
       { find: "@emotion/react", replacement: emotionReactDir },
+      { find: "react-router-dom", replacement: reactRouterDomDir },
       {
         find: "@dnd-kit/accessibility",
         replacement: dndKitAccessibilityDir,

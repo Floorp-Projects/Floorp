@@ -2,9 +2,31 @@
 
 # Context Menu Customization
 
-Open `about:hub#/features/context-menu` and enable context-menu customization.
-Choose a browser surface and context profile, then hide commands with their
-visibility switches or change their order.
+The settings are available to participants in the `context_menu_customization`
+Floorp Flasco with the `enabled` variant. When available, open
+`about:hub#/features/context-menu` and enable context-menu customization. Choose
+a browser surface and context profile, then hide commands with their visibility
+switches or change their order.
+
+## Flasco visibility
+
+The sidebar entry, settings search results, and direct settings route use the
+same participation check. Non-participants, disabled or inactive experiments,
+control variants, and the **Never participate** policy hide the settings. A
+direct visit then returns to the Hub home page. Failed participation checks also
+keep the settings hidden.
+
+Changing participation updates the settings visibility. This is a display gate:
+saved menu customizations and their enabled preference are retained, and the
+browser continues applying an already enabled layout even when the settings are
+hidden.
+
+A reference manifest entry is provided in
+[`experiments.sample.json`](../browser-features/chrome/common/context-menu/experiments.sample.json).
+It starts at zero rollout and can be enabled through the Flasco participation
+controls after the entry is published. The sample is not deployed automatically;
+the experiment must be added to the server's Flasco manifest to become
+available.
 
 ## Arrange menu items
 
@@ -33,8 +55,8 @@ restores the native menus while retaining your saved configuration.
 
 The feature affects browser-owned menus. Website menus, extension-owned items,
 and protected native entries retain their own behavior. Configuration is saved
-in `floorp.contextMenu.config`; `floorp.contextMenu.enabled` controls whether the
-reversible visibility and ordering overlay is applied.
+in `floorp.contextMenu.config`; `floorp.contextMenu.enabled` controls whether
+the reversible visibility and ordering overlay is applied.
 
 The runtime controller lives in
 `browser-features/chrome/common/context-menu/controller.ts`; the editor lives in
