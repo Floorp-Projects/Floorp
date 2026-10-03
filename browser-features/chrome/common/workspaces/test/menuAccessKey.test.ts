@@ -202,15 +202,17 @@ async function testLanguageChangeUpdatesLabelAndKey(): Promise<void> {
       if (typeof originalKey === "string") {
         i18next.addResource("ja-JP", "browser-chrome", key, originalKey);
       } else {
-        const menuResources: object = i18next.getResource(
+        const menuResources: unknown = i18next.getResource(
           "ja-JP",
           "browser-chrome",
           "workspaces.menu",
         );
-        Reflect.deleteProperty(
-          menuResources,
-          "moveTabToAnotherWorkspaceAccessKey",
-        );
+        if (typeof menuResources === "object" && menuResources !== null) {
+          Reflect.deleteProperty(
+            menuResources,
+            "moveTabToAnotherWorkspaceAccessKey",
+          );
+        }
       }
       await i18next.changeLanguage(originalLocale);
       setLanguage(originalLocale);
@@ -227,16 +229,18 @@ async function testPendingTranslationUsesSourceFallback(): Promise<void> {
       "browser-chrome",
       key,
     );
-    const menuResources: object = i18next.getResource(
+    const menuResources: unknown = i18next.getResource(
       "zh-CN",
       "browser-chrome",
       "workspaces.menu",
     );
     try {
-      Reflect.deleteProperty(
-        menuResources,
-        "moveTabToAnotherWorkspaceAccessKey",
-      );
+      if (typeof menuResources === "object" && menuResources !== null) {
+        Reflect.deleteProperty(
+          menuResources,
+          "moveTabToAnotherWorkspaceAccessKey",
+        );
+      }
       if (originalLocale === "zh-CN") {
         await i18next.changeLanguage("en-US");
         setLanguage("en-US");
