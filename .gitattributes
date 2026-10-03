@@ -1,2 +1,5 @@
 * text=auto
 *.patch text eol=lf
+# Generated docs and the shared Notes contract must retain canonical bytes.
+docs/**/*.mdx text eol=lf
+browser-features/pages-notes/test/fixtures/floorp-notes-merge-v1.json text eol=lf

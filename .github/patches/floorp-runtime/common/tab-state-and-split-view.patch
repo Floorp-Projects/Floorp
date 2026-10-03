@@ -1,0 +1,592 @@
+diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+index e41d07a03d5..1a06b53b97e 100644
+--- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -4975,6 +4975,45 @@ export class Tabbrowser {
+     for (var i = 0; i < tabDataList.length; i++) {
+       let tabData = tabDataList[i];
+ 
++      let isPrivateContainerPlaceholder = false;
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * START
++       */
++      if (
++        tabData.floorpDisableHistory === true ||
++        tabData.floorpDisableHistory === "true"
++      ) {
++        isPrivateContainerPlaceholder = true;
++        let sanitizedTabData = { entries: [] };
++        for (let property of ["lastAccessed", "groupId", "splitViewId"]) {
++          if (property in tabData) {
++            sanitizedTabData[property] = tabData[property];
++          }
++        }
++        tabDataList[i] = tabData = sanitizedTabData;
++      }
++
++      let floorpWorkspaceId = tabData.floorpWorkspaceId;
++      let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
++      let floorpSSB = tabData.floorpSSB;
++
++      if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
++        try {
++          floorpWorkspaceId = JSON.parse(
++            Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
++          ).defaultID;
++        } catch {
++          console.warn("Floorp: failed to parse the workspace store");
++        }
++      }
++      /**
++       * * NORANEKO PATCH - 0.1.19
++       * * [WORKSPACES]
++       * * END
++       */
++
+       let userContextId = tabData.userContextId;
+       let select = i == selectTab - 1;
+       let tab;
+@@ -4992,6 +5031,36 @@ export class Tabbrowser {
+       ) {
+         tabWasReused = true;
+         tab = this.selectedTab;
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
++        }
++
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
++
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
++        }
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
+         if (!tabData.pinned) {
+           this.unpinTab(tab);
+         } else {
+@@ -5036,6 +5105,37 @@ export class Tabbrowser {
+           preferredRemoteType,
+         });
+ 
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * START
++         */
++        if (floorpWorkspaceId) {
++          tab.setAttribute("floorpWorkspaceId", floorpWorkspaceId);
++        } else {
++          tab.removeAttribute("floorpWorkspaceId");
++        }
++
++        if (floorpLastShowWorkspaceId) {
++          tab.setAttribute(
++            "floorpWorkspaceLastShowId",
++            floorpLastShowWorkspaceId
++          );
++        } else {
++          tab.removeAttribute("floorpWorkspaceLastShowId");
++        }
++
++        if (floorpSSB) {
++          tab.setAttribute("floorpSSB", floorpSSB);
++        } else {
++          tab.removeAttribute("floorpSSB");
++        }
++        /**
++         * * NORANEKO PATCH - 0.1.19
++         * * [WORKSPACES]
++         * * END
++         */
++
+         if (select) {
+           tabToSelect = tab;
+         }
+diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
+index 4947351aad5..85dfdcafb5f 100644
+--- a/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -221,6 +221,13 @@ const RESTORE_TAB_CONTENT_REASON = {
+ // 'browser.startup.page' preference value to resume the previous session.
+ const BROWSER_STARTUP_RESUME_SESSION = 3;
+ 
++function isFloorpPrivateContainerTabState(tabState) {
++  return (
++    tabState?.floorpDisableHistory === true ||
++    tabState?.floorpDisableHistory === "true"
++  );
++}
++
+ // Used by SessionHistoryListener.
+ const kNoIndex = Number.MAX_SAFE_INTEGER;
+ const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
+@@ -687,6 +694,7 @@ class _SessionStore {
+     if (state) {
+       // Initialize the splitViewId counter and migrate any string-based splitViewIds
+       this.#initSplitViewIds(state);
++      this._sanitizeFloorpPrivateContainerRootState(state);
+ 
+       try {
+         // If we're doing a DEFERRED session, then we want to pull pinned tabs
+@@ -3395,6 +3403,7 @@ class _SessionStore {
+     // Initialize counter and migrate splitViewIds from persisted given state
+     this.#maxSplitViewId = 0;
+     this.#initSplitViewIds(state);
++    this._sanitizeFloorpPrivateContainerRootState(state);
+ 
+     this.#browserSetState = true;
+ 
+@@ -5707,6 +5716,239 @@ class _SessionStore {
+     return tabData;
+   }
+ 
++  _sanitizeFloorpPrivateContainerSplitViews(tabStates, splitViews) {
++    let splitViewTabCounts = new Map();
++    for (let tabState of tabStates) {
++      if (tabState.splitViewId === undefined) {
++        continue;
++      }
++      splitViewTabCounts.set(
++        tabState.splitViewId,
++        (splitViewTabCounts.get(tabState.splitViewId) ?? 0) + 1
++      );
++    }
++
++    for (let tabState of tabStates) {
++      if ((splitViewTabCounts.get(tabState.splitViewId) ?? 0) < 2) {
++        delete tabState.splitViewId;
++      }
++    }
++
++    if (!Array.isArray(splitViews)) {
++      return splitViews;
++    }
++
++    return splitViews.flatMap(splitView => {
++      let numberOfTabs = splitViewTabCounts.get(splitView.id) ?? 0;
++      if (numberOfTabs < 2) {
++        return [];
++      }
++      splitView.numberOfTabs = numberOfTabs;
++      return splitView;
++    });
++  }
++
++  _sanitizeFloorpPrivateContainerTabGroups(tabGroups) {
++    if (!Array.isArray(tabGroups)) {
++      return tabGroups;
++    }
++
++    return tabGroups.flatMap(tabGroup => {
++      if (!Array.isArray(tabGroup.tabs)) {
++        return tabGroup;
++      }
++
++      tabGroup.tabs = tabGroup.tabs.filter(
++        tabData => !isFloorpPrivateContainerTabState(tabData.state)
++      );
++      if (!tabGroup.tabs.length) {
++        return [];
++      }
++
++      let tabStates = tabGroup.tabs.map(tabData => tabData.state);
++      tabGroup.splitViews = this._sanitizeFloorpPrivateContainerSplitViews(
++        tabStates,
++        tabGroup.splitViews
++      );
++      return tabGroup;
++    });
++  }
++
++  _sanitizeFloorpPrivateContainerClosedData(winData) {
++    if (!winData) {
++      return;
++    }
++
++    if (Array.isArray(winData._closedTabs)) {
++      winData._closedTabs = winData._closedTabs.filter(
++        tabData => !isFloorpPrivateContainerTabState(tabData.state)
++      );
++    }
++    winData.closedGroups = this._sanitizeFloorpPrivateContainerTabGroups(
++      winData.closedGroups
++    );
++  }
++
++  _sanitizeFloorpPrivateContainerWindowState(winData) {
++    if (!winData || !Array.isArray(winData.tabs)) {
++      return false;
++    }
++
++    let originalTabs = winData.tabs;
++    let tabs = originalTabs.filter(
++      tabState => !isFloorpPrivateContainerTabState(tabState)
++    );
++    if (tabs.length == originalTabs.length) {
++      return false;
++    }
++
++    let originalSelectedIndex = parseInt(winData.selected || 1, 10) - 1;
++    if (!Number.isInteger(originalSelectedIndex)) {
++      originalSelectedIndex = 0;
++    }
++    originalSelectedIndex = Math.max(
++      0,
++      Math.min(originalSelectedIndex, originalTabs.length - 1)
++    );
++
++    let selectedTab = originalTabs[originalSelectedIndex];
++    let selectedIndex = tabs.indexOf(selectedTab);
++    if (selectedIndex == -1) {
++      for (let index = originalSelectedIndex - 1; index >= 0; index--) {
++        if (!isFloorpPrivateContainerTabState(originalTabs[index])) {
++          selectedIndex = tabs.indexOf(originalTabs[index]);
++          break;
++        }
++      }
++    }
++    if (selectedIndex == -1 && tabs.length) {
++      selectedIndex = 0;
++    }
++
++    winData.tabs = tabs;
++    winData.selected = selectedIndex + 1;
++
++    if (Array.isArray(winData.groups)) {
++      let groupIds = new Set(
++        tabs.map(tabState => tabState.groupId).filter(Boolean)
++      );
++      winData.groups = winData.groups.filter(group => groupIds.has(group.id));
++    }
++    winData.splitViews = this._sanitizeFloorpPrivateContainerSplitViews(
++      tabs,
++      winData.splitViews
++    );
++    return true;
++  }
++
++  _sanitizeFloorpPrivateContainerClosedWindowState(winData) {
++    let removedOpenTab =
++      this._sanitizeFloorpPrivateContainerWindowState(winData);
++    this._sanitizeFloorpPrivateContainerClosedData(winData);
++
++    if (!removedOpenTab) {
++      return true;
++    }
++
++    if (!winData.tabs?.length) {
++      winData.selected = 0;
++      delete winData.title;
++      return Boolean(
++        winData._closedTabs?.length || winData.closedGroups?.length
++      );
++    }
++
++    let selectedTabState = winData.tabs[winData.selected - 1];
++    let entries = selectedTabState?.entries ?? [];
++    let activeIndex = (selectedTabState?.index || entries.length) - 1;
++    activeIndex = Math.max(0, Math.min(activeIndex, entries.length - 1));
++    let activeEntry = entries[activeIndex];
++    if (activeEntry) {
++      winData.title = activeEntry.title || activeEntry.url;
++    } else {
++      delete winData.title;
++    }
++    return true;
++  }
++
++  _sanitizeFloorpPrivateContainerOpenWindows(root) {
++    if (!Array.isArray(root.windows)) {
++      return;
++    }
++
++    let originalWindows = root.windows;
++    let originalSelectedIndex = parseInt(root.selectedWindow || 1, 10) - 1;
++    if (!Number.isInteger(originalSelectedIndex)) {
++      originalSelectedIndex = 0;
++    }
++    originalSelectedIndex = Math.max(
++      0,
++      Math.min(originalSelectedIndex, originalWindows.length - 1)
++    );
++
++    let privateOnlyEmptyWindows = new Set();
++    for (let winData of originalWindows) {
++      let removedOpenTab =
++        this._sanitizeFloorpPrivateContainerWindowState(winData);
++      this._sanitizeFloorpPrivateContainerClosedData(winData);
++      if (removedOpenTab && !winData.tabs.length) {
++        winData.selected = 0;
++        delete winData.title;
++        if (!winData._closedTabs?.length && !winData.closedGroups?.length) {
++          privateOnlyEmptyWindows.add(winData);
++        }
++      }
++    }
++
++    let windows = originalWindows.filter(
++      winData => !privateOnlyEmptyWindows.has(winData)
++    );
++    if (!windows.length && privateOnlyEmptyWindows.size) {
++      windows.push(
++        originalWindows[originalSelectedIndex] ?? originalWindows[0]
++      );
++    }
++
++    let selectedWindow = originalWindows[originalSelectedIndex];
++    let selectedIndex = windows.indexOf(selectedWindow);
++    if (selectedIndex == -1) {
++      for (let index = originalSelectedIndex - 1; index >= 0; index--) {
++        if (windows.includes(originalWindows[index])) {
++          selectedIndex = windows.indexOf(originalWindows[index]);
++          break;
++        }
++      }
++    }
++    if (selectedIndex == -1 && windows.length) {
++      selectedIndex = 0;
++    }
++
++    root.windows = windows;
++    root.selectedWindow = selectedIndex + 1;
++  }
++
++  _sanitizeFloorpPrivateContainerRootState(state) {
++    for (let root of [
++      state?.deferredInitialState,
++      state?.lastSessionState,
++      state,
++    ]) {
++      if (!root) {
++        continue;
++      }
++
++      this._sanitizeFloorpPrivateContainerOpenWindows(root);
++      if (Array.isArray(root._closedWindows)) {
++        root._closedWindows = root._closedWindows.filter(winData =>
++          this._sanitizeFloorpPrivateContainerClosedWindowState(winData)
++        );
++      }
++      root.savedGroups = this._sanitizeFloorpPrivateContainerTabGroups(
++        root.savedGroups
++      );
++    }
++  }
++
+   #initSplitViewIds(state) {
+     if (this.#maxSplitViewId > 0) {
+       this.#log.error(
+@@ -5845,6 +6087,9 @@ class _SessionStore {
+       winData.tabs = [];
+     }
+ 
++    this._sanitizeFloorpPrivateContainerWindowState(winData);
++    this._sanitizeFloorpPrivateContainerClosedData(winData);
++
+     // See SessionStore.#restoreTabs for a description of what
+     // selectTab represents.
+     let selectTab = 0;
+@@ -6168,6 +6413,8 @@ class _SessionStore {
+       return;
+     }
+ 
++    this._sanitizeFloorpPrivateContainerRootState(root);
++
+     // Restore closed windows if any.
+     if (root._closedWindows) {
+       this.#closedWindows = root._closedWindows;
+@@ -7360,6 +7607,10 @@ class _SessionStore {
+    *          Whether the tab state is worth saving
+    */
+   #shouldSaveTabState(aTabState) {
++    if (isFloorpPrivateContainerTabState(aTabState)) {
++      return false;
++    }
++
+     // If the tab has only a transient about: history entry, no other
+     // session history, and no userTypedValue, then we don't actually want to
+     // store this tab's data.
+@@ -7487,7 +7738,9 @@ class _SessionStore {
+   #prepDataForDeferredRestore(startupState) {
+     // Make sure that we don't modify the global state as provided by
+     // SessionStartup.state.
+     let state = Cu.cloneInto(startupState, {});
++    this._sanitizeFloorpPrivateContainerRootState(state);
++
+     let hasPinnedTabs = false;
+     let defaultState = {
+       windows: [],
+@@ -7545,6 +7798,16 @@ class _SessionStore {
+           // We don't want to increment tIndex here.
+           continue;
+         } else if (window.tabs[tIndex].groupId) {
++          let tabToAdd = window.tabs[tIndex];
++          if (!this.#shouldSaveTabState(tabToAdd)) {
++            if (isFloorpPrivateContainerTabState(tabToAdd)) {
++              this._sanitizeFloorpPrivateContainerWindowState(window);
++              continue;
++            }
++            tIndex++;
++            continue;
++          }
++
+           // Convert any open groups into saved groups.
+           let groupStateToSave = window.groups.find(
+             groupState => groupState.id == window.tabs[tIndex].groupId
+@@ -7558,7 +7821,6 @@ class _SessionStore {
+             groupToSave.removeAfterRestore = true;
+             groupsToSave.set(groupStateToSave.id, groupToSave);
+           }
+-          let tabToAdd = window.tabs[tIndex];
+           groupToSave.tabs.push(this.formatTabStateForSavedGroup(tabToAdd));
+         } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
+           // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
+@@ -7659,6 +7921,24 @@ class _SessionStore {
+           continue;
+         }
+       }
++
++      if (!window.tabs.length) {
++        let removedWindowIndex = wIndex + 1;
++        state.windows.splice(wIndex, 1);
++
++        if (removedWindowIndex < state.selectedWindow) {
++          state.selectedWindow -= 1;
++        } else if (
++          removedWindowIndex == state.selectedWindow &&
++          state.windows.length
++        ) {
++          state.selectedWindow = Math.min(
++            removedWindowIndex,
++            state.windows.length
++          );
++        }
++        continue;
++      }
+       wIndex++;
+     }
+ 
+diff --git a/browser/components/sessionstore/TabState.sys.mjs b/browser/components/sessionstore/TabState.sys.mjs
+index 68e8cb51e3b..1f9cf0cbdc8 100644
+--- a/browser/components/sessionstore/TabState.sys.mjs
++++ b/browser/components/sessionstore/TabState.sys.mjs
+@@ -169,6 +169,24 @@ class _TabState {
+     let tabData = { entries: [], lastAccessed: tab.lastAccessed };
+     let browser = tab.linkedBrowser;
+ 
++    /*@nora:inject:start*/
++    // WorkspaceId
++    tabData.floorpWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceId"
++    );
++    // lastShowWorkspaceId
++    tabData.floorpLastShowWorkspaceId = tab.getAttribute(
++      "floorpWorkspaceLastShowId"
++    );
++
++    // Private Container
++    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
++    // Split View Group
++    tabData.floorpSplitViewGroupId = tab.getAttribute(
++      "floorpSplitViewGroupId"
++    );
++    /*@nora:inject:end*/
++
+     if (tab.pinned) {
+       tabData.pinned = true;
+     }
+diff --git a/browser/themes/shared/tabbrowser/content-area.css b/browser/themes/shared/tabbrowser/content-area.css
+index cb629200627..2f2bfe0bd3e 100644
+--- a/browser/themes/shared/tabbrowser/content-area.css
++++ b/browser/themes/shared/tabbrowser/content-area.css
+@@ -388,8 +388,8 @@
+     --panel-min-width: 140px;
+     min-width: var(--panel-min-width);
+     max-width: calc(100% - var(--panel-min-width));
+-    flex: 1;
+-    width: 49.4%;
++    flex: 1 1 0;
++    width: auto;
+   }
+ 
+   &[splitview] {
+@@ -444,18 +444,30 @@
+       }
+     }
+ 
++    /* Column ordering for N-way split */
++    /* First panel - no start margin */
+     .split-view-panel[column="0"] {
+-      order: 0;
+-      margin-inline-end: 0;
++      order: var(--panel-order, 0);
+ 
+       @media not (-moz-platform: macos) {
+         z-index: 1;
+       }
+     }
+ 
++    /* Last panel - no end margin (detected via :last-child in flex) */
++    .split-view-panel:last-child {
++      margin-inline-end: 0;
++    }
++
++    /* All panels use order from attribute or CSS variable */
++    .split-view-panel {
++      order: var(--panel-order);
++    }
++
++    /* Splitters position between panels */
+     .split-view-splitter {
+-      order: 1;
+       flex: none;
++      order: var(--splitter-order);
+       -moz-user-focus: normal;
+       border-color: transparent;
+ 
+@@ -464,9 +476,21 @@
+       }
+     }
+ 
+-    .split-view-panel[column="1"] {
+-      order: 2;
+-      margin-inline-start: 0;
++    /* Layout mode support */
++    &[split-view-layout="vertical"] {
++      flex-direction: column;
++    }
++
++    &[split-view-layout="grid-2x2"] {
++      display: grid;
++      grid-template-columns: 1fr 1fr;
++      grid-template-rows: 1fr 1fr;
++    }
++
++    &[split-view-layout="grid-3x2"] {
++      display: grid;
++      grid-template-columns: 1fr 1fr 1fr;
++      grid-template-rows: 1fr 1fr;
+     }
+ 
+     /* Panels with a custom width shouldn't grow. */

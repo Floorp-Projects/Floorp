@@ -38,23 +38,8 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-type Variant = {
-  id: string;
-  weight?: number;
-  configUrl?: string;
-  [k: string]: unknown;
-};
-export type Experiment = {
-  id: string;
-  name?: string;
-  description?: string;
-  salt?: string;
-  rollout?: number;
-  start?: string;
-  end?: string;
-  variants?: Variant[];
-  [k: string]: unknown;
-};
+import type { Experiment, Variant } from "./types.ts";
+export type { Experiment } from "./types.ts";
 type Assignment = {
   installId: string | null;
   variantId: string | null;
@@ -65,6 +50,7 @@ type ConfigStore = { fetchedAt: string; config: unknown };
 export class ExperimentsClient {
   experimentsUrl: string | null = null;
   experiments: Experiment[] = [];
+  manifestAvailable = false;
   assignments: Record<string, Assignment> = {};
   configs: Record<string, unknown> = {};
   installId: string | null = null;
@@ -479,6 +465,7 @@ export class ExperimentsClient {
   async init(
     options: { installId?: string; timeoutMs?: number } = {},
   ): Promise<this> {
+    this.manifestAvailable = false;
     const prefUrl = this.getPrefString(MANIFEST_URL_PREF, null);
     this.experimentsUrl = prefUrl || DEFAULT_EXPERIMENTS_URL;
     this.installId =
@@ -512,6 +499,7 @@ export class ExperimentsClient {
               exp !== null &&
               typeof (exp as Record<string, unknown>).id === "string",
           );
+          this.manifestAvailable = true;
         } else {
           this.experiments = [];
         }
@@ -526,9 +514,23 @@ export class ExperimentsClient {
       return this;
     }
 
+    if (!this.manifestAvailable) {
+      console.error("Invalid experiments.json; using cached assignments");
+      return this;
+    }
+
     const now = this.now();
     let changed = false;
     let disabledChanged = false;
+
+    // A successfully fetched manifest is authoritative. Do not revive removed
+    // experiments from cached assignments during a later offline startup.
+    const manifestIds = new Set(this.experiments.map((exp) => exp.id));
+    for (const experimentId of Object.keys(this.assignments)) {
+      if (manifestIds.has(experimentId)) continue;
+      delete this.assignments[experimentId];
+      changed = true;
+    }
 
     // Check if participation policy has changed
     const currentPolicy = this.getPrefString(
@@ -672,6 +674,23 @@ export class ExperimentsClient {
   /** Return stored assignment for an experiment (or null) */
   getAssignment(experimentId: string): Assignment | null {
     return this.assignments[experimentId] || null;
+  }
+
+  /** Read an assignment even before init() loads profile-backed state. */
+  getCachedEnrollment(experimentId: string): {
+    variantId: string | null;
+    disabled: boolean;
+    optedOut: boolean;
+  } {
+    const assignment = this.getAssignment(experimentId) ??
+      this.loadAssignmentsFromPrefs()[experimentId];
+    return {
+      variantId: assignment?.variantId ?? null,
+      disabled: this.disabledExperiments.has(experimentId) ||
+        this.loadDisabledExperiments().has(experimentId),
+      optedOut: this.getPrefString(PARTICIPATION_POLICY_PREF, "default") ===
+        "never",
+    };
   }
 
   /** Return cached config from prefs. Does not perform network fetch. */

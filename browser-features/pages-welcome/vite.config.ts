@@ -1,5 +1,7 @@
+import { fontLicensesPlugin } from "../../libs/ui/vite-font-licenses.ts";
 import process from "node:process";
-import { defineConfig } from "vite";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -11,7 +13,11 @@ export default defineConfig(({ command }) => {
   return {
     cacheDir: "../../node_modules/.vite/pages-welcome",
     build: {
+      assetsInlineLimit: 0,
       outDir: "_dist",
+    },
+    resolve: {
+      dedupe: ["react", "react-dom"],
     },
     plugins: [
       tailwindcss(),
@@ -19,6 +25,7 @@ export default defineConfig(({ command }) => {
         jsxImportSource: "react",
       }),
       tsconfigPaths(),
+      fontLicensesPlugin(),
       genJarmnPlugin("content-welcome", "noraneko-welcome", "content"),
       disableCspInDevPlugin(command === "serve"),
     ],
@@ -26,6 +33,12 @@ export default defineConfig(({ command }) => {
       include: ["react", "react-dom", "react/jsx-runtime"],
     },
     server: {
+      fs: {
+        allow: [
+          searchForWorkspaceRoot(process.cwd()),
+          fileURLToPath(new URL("../../libs/ui", import.meta.url)),
+        ],
+      },
       hmr: {
         overlay: true,
       },

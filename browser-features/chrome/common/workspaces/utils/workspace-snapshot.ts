@@ -27,7 +27,7 @@ const createSessionStoreImporter = (): SessionStoreImporter => {
   return () => {
     if (!cache) {
       const module = ChromeUtils.importESModule(
-        "resource:///modules/sessionstore/SessionStore.sys.mjs",
+        "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
       ) as { SessionStore: SessionStoreModule };
       cache = module.SessionStore;
     }

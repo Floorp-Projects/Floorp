@@ -4,6 +4,7 @@ import {
   BadgeInfo,
   Briefcase,
   Cpu,
+  Gauge,
   Grip,
   House,
   Menu,
@@ -101,6 +102,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ]
       : []),
+    {
+      title: t("pages.performance"),
+      url: "/features/performance",
+      icon: Gauge,
+    },
     {
       title: t("pages.profileAndAccount"),
       url: "/features/accounts",

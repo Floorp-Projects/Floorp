@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { act } from "react";
+import { StandardUIProvider } from "../../../../../libs/ui/standard-provider.tsx";
 import { createRoot, type Root } from "react-dom/client";
 import i18next, { type i18n } from "i18next";
 import { I18nextProvider, initReactI18next } from "react-i18next";
@@ -180,20 +181,22 @@ async function renderEditor(
   const root = createRoot(host);
   const render = (catalog: ContextMenuCatalogSnapshot, refreshing: boolean) => {
     root.render(
-      <I18nextProvider i18n={i18nInstance}>
-        <ContextMenuEditor
-          catalog={catalog}
-          config={createDefaultContextMenuConfig()}
-          refreshing={refreshing}
-          reloadCatalog={() => Promise.resolve()}
-          moveItem={() => Promise.resolve(true)}
-          moveItemBefore={(_target, _items, activeKey, beforeKey) =>
-            moveItemBefore(activeKey, beforeKey)}
-          setItemVisible={() => Promise.resolve(true)}
-          setProfileIndependent={() => Promise.resolve(true)}
-          resetProfile={() => Promise.resolve(true)}
-        />
-      </I18nextProvider>,
+      <StandardUIProvider>
+        <I18nextProvider i18n={i18nInstance}>
+          <ContextMenuEditor
+            catalog={catalog}
+            config={createDefaultContextMenuConfig()}
+            refreshing={refreshing}
+            reloadCatalog={() => Promise.resolve()}
+            moveItem={() => Promise.resolve(true)}
+            moveItemBefore={(_target, _items, activeKey, beforeKey) =>
+              moveItemBefore(activeKey, beforeKey)}
+            setItemVisible={() => Promise.resolve(true)}
+            setProfileIndependent={() => Promise.resolve(true)}
+            resetProfile={() => Promise.resolve(true)}
+          />
+        </I18nextProvider>
+      </StandardUIProvider>,
     );
   };
   await act(() => render(TEST_CATALOG, false));

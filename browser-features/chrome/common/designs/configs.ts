@@ -11,6 +11,12 @@ import {
   type Setter,
 } from "solid-js";
 import {
+  CHROME_EXTRAS_DEFAULTS,
+  type ChromeExtrasKey,
+  type ChromeExtrasSettings,
+} from "./chrome-extras.ts";
+import {
+  getOldChromeExtrasConfig,
   getOldInterfaceConfig,
   getOldTabbarPositionConfig,
   getOldTabbarStyleConfig,
@@ -24,6 +30,20 @@ export function isPlainObject(
   value: unknown,
 ): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Normalize saved keys before merging defaults, including explicit false values. */
+export function migrateDesignConfig(value: unknown): unknown {
+  if (!isPlainObject(value) || !isPlainObject(value.tab)) return value;
+  const tab = { ...value.tab };
+  if (
+    typeof tab.tabDoubleClickToClose !== "boolean" &&
+    typeof tab.tabDubleClickToClose === "boolean"
+  ) {
+    tab.tabDoubleClickToClose = tab.tabDubleClickToClose;
+  }
+  delete tab.tabDubleClickToClose;
+  return { ...value, tab };
 }
 
 export function deepMerge<T extends Record<string, unknown>>(
@@ -109,6 +129,7 @@ export function getOldUICustomizationConfig() {
       qrCode: {
         disableButton: false,
       },
+      chromeExtras: getOldChromeExtrasConfig(),
     };
   } catch (e) {
     console.error("Failed to get UI customization config:", e);
@@ -182,7 +203,7 @@ export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
           "floorp.tabs.showPinnedTabsTitle",
           false,
         ),
-        tabDubleClickToClose: Services.prefs.getBoolPref(
+        tabDoubleClickToClose: Services.prefs.getBoolPref(
           "browser.tabs.closeTabByDblclick",
           false,
         ),
@@ -218,7 +239,7 @@ export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         tabMinHeight: 30,
         tabMinWidth: 76,
         tabPinTitle: false,
-        tabDubleClickToClose: false,
+        tabDoubleClickToClose: false,
         tabOpenPosition: -1,
       },
       uiCustomization: {
@@ -245,6 +266,7 @@ export function createDefaultOldObjectConfigs(): TFloorpDesignConfigs {
         qrCode: {
           disableButton: false,
         },
+        chromeExtras: { ...CHROME_EXTRAS_DEFAULTS },
       },
     };
   }
@@ -273,7 +295,7 @@ function createConfig(): [
     );
     const parsedConfig = JSON.parse(configStr);
     // Merge existing config with defaults to tolerate newly added fields
-    const merged = deepMerge(defaultConfig, parsedConfig);
+    const merged = deepMerge(defaultConfig, migrateDesignConfig(parsedConfig));
     // Ensure backward compatibility: set default position if missing
     if (
       merged.uiCustomization?.bookmarkBar &&
@@ -296,7 +318,7 @@ function createConfig(): [
         getOldConfigs,
       );
       const parsedConfig = JSON.parse(configStr);
-      const merged = deepMerge(defaultConfig, parsedConfig);
+      const merged = deepMerge(defaultConfig, migrateDesignConfig(parsedConfig));
       // Ensure backward compatibility: set default position if missing
       if (
         merged.uiCustomization?.bookmarkBar &&
@@ -473,5 +495,59 @@ export function getUICustomizationSetting<T>(
       e,
     );
     return defaultValue;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chrome extras
+// ---------------------------------------------------------------------------
+
+/**
+ * Read the chrome-extras toggles, falling back to the per-key default for
+ * anything the stored config does not carry (older profiles, or a key added
+ * after the config was written).
+ */
+export function getChromeExtrasSettings(): ChromeExtrasSettings {
+  const stored = config().uiCustomization.chromeExtras;
+  const result = { ...CHROME_EXTRAS_DEFAULTS };
+  if (stored) {
+    for (const key of Object.keys(CHROME_EXTRAS_DEFAULTS) as ChromeExtrasKey[]) {
+      const value = stored[key];
+      if (typeof value === "boolean") {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Flip one chrome-extras toggle.
+ *
+ * Implemented directly against `setConfig` rather than through
+ * `updateUICustomizationSetting()`: that helper is generic over
+ * `keyof TFloorpDesignConfigs["uiCustomization"]`, and `chromeExtras` lives in a
+ * separate `t.partial` of the intersection, which io-ts types as optional and
+ * which collapses the key union to `never`.
+ */
+export function updateChromeExtrasSetting(
+  key: ChromeExtrasKey,
+  value: boolean,
+): void {
+  try {
+    setConfig((prev) => {
+      const newConfig = Object.assign({}, prev);
+      const uiCustomization = Object.assign({}, prev.uiCustomization);
+      const stored = (uiCustomization.chromeExtras ??
+        CHROME_EXTRAS_DEFAULTS) as Record<string, boolean>;
+      uiCustomization.chromeExtras = Object.assign({}, stored, { [key]: value });
+      newConfig.uiCustomization = uiCustomization;
+      return newConfig;
+    });
+  } catch (e) {
+    console.error(
+      `Failed to update chrome extras setting "${String(key)}":`,
+      e,
+    );
   }
 }

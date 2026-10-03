@@ -19,7 +19,6 @@
 // non-destructive LWT contract that was the whole point of the rewrite.
 
 import {
-  FLOORP_ICON_PATCHES,
   GECKO_152_COLOR_FIX_CSS,
   LEPTON_COMPAT_152_CSS,
   LEPTON_COMPAT_CSS,
@@ -60,7 +59,7 @@ function makeConfig(
       tabMinHeight: 30,
       tabMinWidth: 76,
       tabPinTitle: false,
-      tabDubleClickToClose: false,
+      tabDoubleClickToClose: false,
       tabOpenPosition: -1,
     },
     uiCustomization: {
@@ -156,6 +155,14 @@ function testRenamedVarsTableIsCanonical(): void {
     [
       "--toolbarbutton-active-background",
       "--toolbarbutton-background-color-active",
+    ],
+    [
+      "--toolbarbutton-outer-padding",
+      "--toolbarbutton-padding-outer",
+    ],
+    [
+      "--toolbarbutton-inner-padding",
+      "--toolbarbutton-padding-inner",
     ],
     ["--arrowpanel-background", "--panel-background-color"],
     ["--arrowpanel-color", "--panel-text-color"],
@@ -668,57 +675,17 @@ function testCompatPreservesLeftAndLegacySidebarSemantics(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Tests — Floorp-specific icon patches are preserved out-of-vendor
+// Tests — bundled compat export
 // ---------------------------------------------------------------------------
 
-function testFloorpIconPatchesPresent(): void {
-  const floorpIds = [
-    "#ssbPageAction-image",
-    "#usercssloader-menu",
-    "#unloadWebpanelMenu",
-    "#changeUAWebpanelMenu",
-    "#deleteWebpanelMenu",
-    "#toggle_sharemode",
-    "#run-ssb-contextmenu",
-    "#uninstall-ssb-contextmenu",
-  ];
-  for (const id of floorpIds) {
-    assert(
-      FLOORP_ICON_PATCHES.includes(id),
-      `Floorp icon patch for ${id} should be preserved in the compat layer`,
-    );
-  }
-}
-
-/** Bundled export is the sum of the color fix, the Lepton compat, and the
- *  icon patches. */
-function testBundledCompatIsColorPlusLeptonPlusIcons(): void {
+/** Bundled export is the sum of the color fix and the Lepton compat. The
+ *  Floorp icon patches that used to be appended here moved to the
+ *  design-agnostic chrome-extras stylesheets. */
+function testBundledCompatIsColorPlusLepton(): void {
   assertEquals(
     LEPTON_COMPAT_CSS,
-    GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS + "\n" +
-      FLOORP_ICON_PATCHES,
-    "LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat + icon patches",
-  );
-}
-
-/** The icon patches ride along with the Lepton family only (the IDs are
- *  Lepton-scoped). */
-function testLeptonThemesIncludeFloorpIconPatches(): void {
-  for (const theme of ["lepton", "photon", "protonfix"] as const) {
-    const css = getInlineChromeCss(theme);
-    assert(
-      css.includes("#usercssloader-menu"),
-      `${theme} should include the Floorp icon patches`,
-    );
-  }
-}
-
-/** fluerial gets the color fix but NOT the Lepton icon patches. */
-function testFluerialExcludesLeptonIconPatches(): void {
-  const css = getInlineChromeCss("fluerial");
-  assert(
-    !css.includes("#usercssloader-menu"),
-    "fluerial must NOT include the Lepton-scoped Floorp icon patches",
+    GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS,
+    "LEPTON_COMPAT_CSS must bundle the color fix + Lepton compat",
   );
 }
 
@@ -815,19 +782,10 @@ export async function runAllTests(): Promise<void> {
       name: "right-sidebar compat preserves left and legacy semantics",
       fn: testCompatPreservesLeftAndLegacySidebarSemantics,
     },
-    // icon patches
-    { name: "floorp icon patches present", fn: testFloorpIconPatchesPresent },
+    // bundled compat export (icon patches moved to chrome-extras)
     {
-      name: "bundled compat is color + lepton + icons",
-      fn: testBundledCompatIsColorPlusLeptonPlusIcons,
-    },
-    {
-      name: "lepton themes include floorp icon patches",
-      fn: testLeptonThemesIncludeFloorpIconPatches,
-    },
-    {
-      name: "fluerial excludes lepton icon patches",
-      fn: testFluerialExcludesLeptonIconPatches,
+      name: "bundled compat is color fix + lepton compat",
+      fn: testBundledCompatIsColorPlusLepton,
     },
   ]);
 }

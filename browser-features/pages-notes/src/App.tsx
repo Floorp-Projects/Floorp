@@ -101,19 +101,16 @@ function App() {
   useEffect(() => {
     if (isLoading) return;
 
-    const onPrefChanged = async (prefName: string) => {
-      // Skip if this change was triggered by our own save or merge
-      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
-        return;
-      }
-
+    const applyExternalPrefChange = async (
+      prefName: string,
+      remoteStr: string | null,
+    ) => {
       console.info(
         `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
       );
 
       try {
         // 1. Read remote notes from the pref (what sync just wrote)
-        const remoteStr = await rpc.getStringPref(NOTES_PREF_NAME);
         if (!remoteStr) return; // Empty or null — nothing to merge
         const remoteNotes = notesDataToNotes(
           JSON.parse(remoteStr) as NotesData,
@@ -140,10 +137,13 @@ function App() {
           isWritingFromSyncRef.current = false;
         }
 
-        // 6. Save updated sync state
-        await saveSyncState(syncStateFromNotes(result.merged));
+        // 6. Advance the merge base only to data that Firefox Sync actually
+        // delivered from the server. `result.merged` may still be awaiting a
+        // later upload, so treating it as synced here can hide a real conflict.
+        await saveSyncState(syncStateFromNotes(remoteNotes));
 
         // 7. Update React state with merged notes
+        notesRef.current = result.merged;
         setNotes(result.merged);
 
         // 8. Preserve selected note if it still exists, otherwise select first
@@ -164,6 +164,27 @@ function App() {
       } catch (err) {
         console.error("[Floorp Notes] Failed to apply sync merge:", err);
       }
+    };
+
+    // Capture each server-delivered value as soon as its observer fires, then
+    // apply snapshots in notification order. Direct pref observers do not await
+    // async callbacks, so allowing merges to overlap could let an older callback
+    // overwrite a newer server-confirmed merge base.
+    let syncMergeQueue: Promise<void> = Promise.resolve();
+    const onPrefChanged = (prefName: string) => {
+      // Skip if this change was triggered by our own save or merge
+      if (isWritingFromLocalRef.current || isWritingFromSyncRef.current) {
+        return;
+      }
+
+      syncMergeQueue = Promise.all([
+        syncMergeQueue,
+        rpc.getStringPref(NOTES_PREF_NAME),
+      ])
+        .then(([, remoteStr]) => applyExternalPrefChange(prefName, remoteStr))
+        .catch((err) => {
+          console.error("[Floorp Notes] Failed to queue sync merge:", err);
+        });
     };
 
     console.debug("[Floorp Notes] Registering sync pref observer…");
@@ -194,31 +215,8 @@ function App() {
     try {
       setSaveStatus("saving");
       await saveNotes(buildNotesData(notesToSave));
-
-      // Update sync base after local save.
-      // NOTE: We advance lastSyncedSnapshots on local save so that the next
-      // incoming sync can diff against what we just wrote. This means a true
-      // conflict (local edit + remote edit to the same note between syncs)
-      // will be detected and a conflict copy created, which is the desired
-      // behaviour. The trade-off is that if the remote side never receives
-      // our change (e.g. sync is disabled), a subsequent remote change to the
-      // same note would appear as a unilateral remote edit rather than a
-      // conflict. This is acceptable because Firefox Sync is expected to
-      // deliver the local change before the remote one arrives.
-      try {
-        const syncState = await loadSyncState();
-        const updatedState = syncStateFromNotes(notesToSave);
-        syncState.lastSyncedSnapshots = updatedState.lastSyncedSnapshots;
-        syncState.lastSyncTime = updatedState.lastSyncTime;
-        await saveSyncState(syncState);
-      } catch (syncErr) {
-        // Non-critical: sync state update failure shouldn't block the UI
-        console.warn(
-          "[Floorp Notes] Failed to update sync state after save:",
-          syncErr,
-        );
-      }
-
+      // A pref write is only a local save. The merge base must remain at the
+      // last server-delivered snapshot until Sync confirms newer remote data.
       setSaveStatus("saved");
     } catch (error) {
       console.error("Failed to save note data:", error);

@@ -156,19 +156,25 @@ class RecordingReporter implements ContextMenuCatalogReporter {
   }
 }
 
-function createControllerFixture(config: ContextMenuConfig): {
+function createControllerFixture(
+  config: ContextMenuConfig,
+  targetWindow: Window = window,
+): {
   controller: ContextMenuController;
   callbacks: Array<() => void>;
   reporter: RecordingReporter;
 } {
-  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  const registry = new ContextMenuRegistry([{
+    ...createTestAdapter(),
+    documentURIs: [targetWindow.document.documentURI],
+  }]);
   const configStore = new ContextMenuConfigStore(
     new FakePreferenceSource(config),
   );
   const callbacks: Array<() => void> = [];
   const reporter = new RecordingReporter();
   const controller = new ContextMenuController({
-    window,
+    window: targetWindow,
     registry,
     configStore,
     catalogReporter: reporter,
@@ -379,6 +385,85 @@ function testControllerSeedsInitialPopupWithoutClaimingComplete(): void {
     fixture.controller.destroy();
     popup.remove();
   }
+}
+
+function testControllerSeedsMenusParsedAfterActorAttachment(): void {
+  // Isolate DOMContentLoaded from the live browser document: dispatching it on
+  // browser.xhtml would also rerun unrelated browser startup listeners.
+  const targetDocument = document.implementation.createHTMLDocument();
+  Object.defineProperty(targetDocument, "readyState", { value: "loading" });
+  const targetWindow = new Proxy(window, {
+    get(target, property) {
+      if (property === "document") return targetDocument;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+  const fixture = createControllerFixture(
+    createConfig({ order: ["test.b", "test.a"], hidden: ["test.a"] }),
+    targetWindow,
+  );
+  try {
+    fixture.controller.attach();
+    assertEquals(
+      fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0]?.containers[0]
+        ?.items.length,
+      0,
+      "an actor attaching before menu parsing initially has no rows",
+    );
+
+    const popup = targetDocument.createElement("menupopup");
+    popup.id = TEST_POPUP_ID;
+    const first = appendTestNode("menuitem", "runtime-a");
+    popup.append(first, appendTestNode("menuitem", "runtime-b"));
+    targetDocument.body.appendChild(popup);
+    targetDocument.dispatchEvent(new Event("DOMContentLoaded"));
+
+    const seededRoot = fixture.reporter.reports.at(-1)?.surfaces[0]?.profiles[0]
+      ?.containers[0];
+    assertEquals(
+      seededRoot?.items.map((item) => item.key).join(","),
+      "test.a,test.b",
+      "the parsed menus become available without first opening a popup",
+    );
+    assertEquals(
+      seededRoot?.complete,
+      false,
+      "document readiness captures a provisional catalog, not a click context",
+    );
+    assertEquals(
+      childMarkers(popup),
+      "runtime-a,runtime-b",
+      "document readiness never applies user ordering to a closed menu",
+    );
+    assert(
+      !first.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "document readiness never applies user visibility to a closed menu",
+    );
+    const reportCount = fixture.reporter.reports.length;
+    targetDocument.dispatchEvent(new Event("DOMContentLoaded"));
+    assertEquals(
+      fixture.reporter.reports.length,
+      reportCount,
+      "the readiness listener is removed after its first catalog refresh",
+    );
+  } finally {
+    fixture.controller.destroy();
+  }
+
+  const destroyedFixture = createControllerFixture(
+    DEFAULT_CONTEXT_MENU_CONFIG,
+    targetWindow,
+  );
+  destroyedFixture.controller.attach();
+  destroyedFixture.controller.destroy();
+  const reportCount = destroyedFixture.reporter.reports.length;
+  targetDocument.dispatchEvent(new Event("DOMContentLoaded"));
+  assertEquals(
+    destroyedFixture.reporter.reports.length,
+    reportCount,
+    "destroying an actor before document readiness cannot republish its owner",
+  );
 }
 
 function testCatalogSeedDoesNotRegressToEmptyClone(): void {
@@ -3171,6 +3256,10 @@ async function testRootObserverExcludesNestedPopupBoundary(): Promise<void> {
 }
 
 const tests: TestCase[] = [
+  {
+    name: "controller seeds menus parsed after early actor attachment",
+    fn: testControllerSeedsMenusParsedAfterActorAttachment,
+  },
   {
     name: "config parser and dormant profile semantics",
     fn: testConfigParsingAndDormantProfiles,

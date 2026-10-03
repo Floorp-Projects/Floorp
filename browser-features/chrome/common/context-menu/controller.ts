@@ -79,6 +79,19 @@ export class ContextMenuController {
   #attached = false;
   #destroyed = false;
 
+  readonly #onDOMContentLoaded: EventListener = (event) => {
+    if (event.target !== this.#document || this.#destroyed) return;
+    this.#document.removeEventListener(
+      "DOMContentLoaded",
+      this.#onDOMContentLoaded,
+    );
+    this.seedInitialCatalog();
+    this.#catalogReporter.report(
+      this.#ownerId,
+      this.#catalogBuilder.snapshot(),
+    );
+  };
+
   readonly #onPopupShowing: EventListener = (event) => {
     const popup = this.getEventTarget(event);
     if (!popup) return;
@@ -175,6 +188,15 @@ export class ContextMenuController {
       }
     });
     this.#configStore.start();
+    // Secondary-document Window Actors can attach at DOMDocElementInserted,
+    // before the parser has created any menus. Capture their static rows once
+    // parsing finishes so they are available without opening every popup first.
+    if (this.#document.readyState === "loading") {
+      this.#document.addEventListener(
+        "DOMContentLoaded",
+        this.#onDOMContentLoaded,
+      );
+    }
     this.seedInitialCatalog();
     this.#catalogReporter.report(
       this.#ownerId,
@@ -215,6 +237,10 @@ export class ContextMenuController {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
+    this.#document.removeEventListener(
+      "DOMContentLoaded",
+      this.#onDOMContentLoaded,
+    );
     if (this.#attached) {
       this.#document.removeEventListener(
         "popupshowing",

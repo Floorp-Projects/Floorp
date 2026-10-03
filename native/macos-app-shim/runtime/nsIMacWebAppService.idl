@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIDOMWindowProxy;
+
+[scriptable, function, uuid(4d9f6914-117b-4aeb-a847-10a5a4d873ad)]
+interface nsIMacWebAppWindowFactory : nsISupports {
+  nsISupports createWindow();
+};
+
+[scriptable, uuid(43cd095f-a547-4df0-a2db-9c1c910ecde8)]
+interface nsIMacWebAppService : nsISupports {
+  readonly attribute unsigned long protocolVersion;
+  readonly attribute AUTF8String capabilitiesJSON;
+  readonly attribute AUTF8String hostIdentityJSON;
+
+  AUTF8String configure(in AUTF8String profileId);
+  void registerApp(in AUTF8String appId, in AString bundlePath);
+  void launchApp(in AUTF8String appId);
+  void cancelLaunch(in AUTF8String appId);
+  void adoptAppBundlePath(in AUTF8String appId, in AString bundlePath);
+  void stop();
+  AUTF8String getAppIdForWindow(in mozIDOMWindowProxy window);
+
+  AUTF8String fingerprintBundle(in AString bundlePath);
+  AUTF8String verifyAppBundle(in AUTF8String appId, in AString bundlePath);
+  void moveStagedBundle(in AString stagedPath, in AString backupPath,
+                        in AUTF8String expectedFingerprint);
+  void retireAppBundle(in AString livePath, in AString stagedPath,
+                       in AUTF8String expectedFingerprint);
+  void exchangeAppBundles(in AString livePath, in AString backupPath,
+                          in AUTF8String expectedLiveFingerprint,
+                          in AUTF8String expectedBackupFingerprint);
+  void removeStagedBundle(in AString bundlePath,
+                          in AUTF8String expectedFingerprint);
+
+  nsISupports withWindowContext(in AUTF8String appId,
+                               in nsIMacWebAppWindowFactory factory);
+
+  [binaryname(SendControlFromScript)]
+  void sendControl(in AUTF8String appId, in unsigned long type,
+                   in AUTF8String payload);
+};

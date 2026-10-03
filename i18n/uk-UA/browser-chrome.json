@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Відкрити у розділеному вигляді",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"

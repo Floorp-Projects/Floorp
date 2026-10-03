@@ -1,0 +1,17 @@
+/* Floorp chrome-extras: hiddenSidebarHeader
+ * Ported from vendored Lepton (leptonChrome.css 27177-27181, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * The `hidden.sidebar_header.vertical_tab_only` variant is not ported
+ *
+ * (Lepton-only sub-option).
+ */
+
+/* leptonChrome.css:27177-27181 */
+#sidebar-header {
+  display: none !important;
+}

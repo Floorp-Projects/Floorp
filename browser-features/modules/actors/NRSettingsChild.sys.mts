@@ -35,7 +35,8 @@ export class NRSettingsChild extends JSWindowActorChild {
         document.location.port === "5186" ||
         document.location.port === "5187" ||
         document.location.port === "5188" ||
-        document.location.href.startsWith("chrome://noraneko-settings/")
+        document.location.href.startsWith("chrome://noraneko-settings/") ||
+        document.location.href.split(/[?#]/)[0] === "about:hub"
       )
     ) {
       return false;
@@ -61,6 +62,11 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
+    if (typeof page.NROpenExternalLink !== "function") {
+      Cu.exportFunction(this.NROpenExternalLink.bind(this), window, {
+        defineAs: "NROpenExternalLink",
+      });
+    }
     return true;
   }
 
@@ -85,6 +91,20 @@ export class NRSettingsChild extends JSWindowActorChild {
     return true;
   }
 
+  NROpenExternalLink(url: string): void {
+    if (typeof url !== "string") {
+      return;
+    }
+    try {
+      if (!/^https?:$/i.test(new URL(url).protocol)) return;
+    } catch {
+      return;
+    }
+    this.sendQuery("openExternalLink", { url }).catch((error) =>
+      console.error("[noraneko] NROpenExternalLink failed", error)
+    );
+  }
+
   sendToPage: ((data: string) => void) | null = null;
 
   NRSettingsSend(data: string) {
@@ -104,6 +124,9 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         getContextMenuCatalogRevision: (): Promise<number> => {
           return this.NRSGetContextMenuCatalogRevision();
+        },
+        getWebAppLifecycleSettings: () => {
+          return this.sendQuery("getWebAppLifecycleSettings");
         },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });

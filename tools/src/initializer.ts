@@ -404,6 +404,55 @@ async function prepareLockedMacInfoPlist(
   );
 }
 
+export async function prepareDebugMacInfoPlist(
+  treeRoot: string,
+  finalBinRoot: string,
+): Promise<void> {
+  const appRoot = path.join(
+    treeRoot,
+    BRANDING.base_name,
+    `${BRANDING.display_name}.app`,
+  );
+  const infoPlist = path.join(appRoot, "Contents", "Info.plist");
+  const info = await Deno.lstat(infoPlist);
+  if (!info.isFile || info.isSymlink) {
+    throw new Error(
+      `Debug macOS Info.plist is not a regular file: ${infoPlist}`,
+    );
+  }
+
+  const finalDeveloperPath = path.join(finalBinRoot, BRANDING.base_name);
+  const escapedFinalPath = escapeXmlText(finalDeveloperPath);
+  let content = await Deno.readTextFile(infoPlist);
+  for (const key of LOCKED_MAC_DEVELOPER_KEYS) {
+    content = setSinglePlistString(content, key, escapedFinalPath);
+  }
+  await Deno.writeTextFile(infoPlist, content);
+
+  const verifiedContent = await Deno.readTextFile(infoPlist);
+  for (const key of LOCKED_MAC_DEVELOPER_KEYS) {
+    const values = [
+      ...verifiedContent.matchAll(plistStringPairPattern(key, true)),
+    ].map((match) => match[1]);
+    if (values.length !== 1 || values[0] !== escapedFinalPath) {
+      throw new Error(
+        `Debug macOS Info.plist ${key} did not verify as the final Runtime path ${finalDeveloperPath}.`,
+      );
+    }
+  }
+
+  const stagingDeveloperPath = path.join(treeRoot, BRANDING.base_name);
+  if (
+    path.resolve(treeRoot) !== path.resolve(finalBinRoot) &&
+    (verifiedContent.includes(stagingDeveloperPath) ||
+      verifiedContent.includes(escapeXmlText(stagingDeveloperPath)))
+  ) {
+    throw new Error(
+      `Debug macOS Info.plist still contains staging path ${stagingDeveloperPath}.`,
+    );
+  }
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -1849,7 +1898,7 @@ async function installDebugRuntime(): Promise<void> {
     await Deno.mkdir(stageRoot, { recursive: true });
     await Deno.mkdir(downloadRoot, { recursive: true });
     await downloadBin(binArchive.filename, entry, archivePath);
-    await decompressBin(stageRoot, archivePath);
+    await decompressBin(stageRoot, archivePath, BIN_ROOT_DIR);
     await assertSafeFilesystemTree(stageRoot);
     const identity = await assertDebugRuntimeTree(stageRoot);
     const marker: DebugRuntimeMarker = {
@@ -2035,9 +2084,27 @@ async function extractNestedZip(
   }
 }
 
+export async function copyDebugMacAppFromMountedDmg(
+  mountPoint: string,
+  destinationRoot: string,
+): Promise<void> {
+  const floorpRoot = path.join(destinationRoot, BRANDING.base_name);
+  await Deno.mkdir(floorpRoot, { recursive: true });
+  const expectedAppName = `${BRANDING.display_name}.app`;
+  const sourceApp = await findSingleTopLevelAppDirectory(
+    mountPoint,
+    expectedAppName,
+  );
+  await copyDirectoryTreeSafely(
+    sourceApp,
+    path.join(floorpRoot, expectedAppName),
+  );
+}
+
 export async function decompressBin(
   destinationRoot = BIN_ROOT_DIR,
   archivePathOverride?: string,
+  finalBinRoot = destinationRoot,
 ): Promise<void> {
   const binArchive = getBinArchive();
   let archivePath = archivePathOverride
@@ -2084,53 +2151,35 @@ export async function decompressBin(
           const mountPoint = await Deno.makeTempDir({
             prefix: "nora_dmg_mount_",
           });
+          let attached = false;
           try {
             runCommand("hdiutil", [
               "attach",
+              "-readonly",
               "-nobrowse",
               "-quiet",
               "-mountpoint",
               mountPoint,
               archivePath,
             ]);
-            const subdir = path.join(destinationRoot, BRANDING.base_name);
-            Deno.mkdirSync(subdir, { recursive: true });
-            runCommand("cp", ["-a", `${mountPoint}/.`, subdir]);
-
-            // Rename any .app to BRANDING.display_name.app
-            for (const entry of Deno.readDirSync(subdir)) {
-              if (entry.isDirectory && entry.name.endsWith(".app")) {
-                const oldPath = path.join(subdir, entry.name);
-                const newName = BRANDING.display_name + ".app";
-                const newPath = path.join(subdir, newName);
-                if (entry.name !== newName) {
-                  logger.info(`Renaming ${entry.name} to ${newName}`);
-                  Deno.renameSync(oldPath, newPath);
-                }
-              }
-            }
+            attached = true;
+            await copyDebugMacAppFromMountedDmg(mountPoint, destinationRoot);
 
             try {
               runCommand("xattr", ["-rc", destinationRoot]);
             } catch {
               // xattr might not be present; ignore
             }
-            runCommand("chmod", ["-R", "755", destinationRoot]);
-            // Patch Info.plist to inject developer repo/obj path equal to
-            // the extracted directory so GetRepoDir can find it without
-            // editing C++ sources.
-            try {
-              const macUtils = await import("./macos_utils.ts");
-              await macUtils.patchAppInfoPlists(subdir, subdir, subdir);
-            } catch (e) {
-              const msg = e instanceof Error ? e.message : String(e);
-              logger.warn(`macOS Info.plist patch skipped: ${msg}`);
-            }
+            await prepareDebugMacInfoPlist(destinationRoot, finalBinRoot);
           } finally {
             try {
-              runCommand("hdiutil", ["detach", "-quiet", mountPoint]);
-            } catch {
-              // ignore detach failures
+              if (attached) {
+                runCommand("hdiutil", ["detach", "-quiet", mountPoint]);
+              }
+            } finally {
+              await Deno.remove(mountPoint, { recursive: true }).catch(
+                () => {},
+              );
             }
           }
           break;

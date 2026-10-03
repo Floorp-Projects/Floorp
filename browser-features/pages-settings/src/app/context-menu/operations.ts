@@ -401,7 +401,7 @@ export function setContextMenuProfileIndependent(
     independent,
     // A newly-independent profile starts with the shared layout. Retain an
     // older independent layout when the switch is turned off and on again.
-    containers: independent && Object.keys(retainedContainers).length === 0
+    containers: independent && !currentProfile
       ? Object.fromEntries(
         Object.entries(surface.base).map(([key, value]) => [
           key,

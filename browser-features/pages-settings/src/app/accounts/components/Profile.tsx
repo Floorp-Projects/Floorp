@@ -1,3 +1,4 @@
+import styles from "@/components/common/settings-sections.module.css";
 import {
   Card,
   CardContent,
@@ -7,6 +8,8 @@ import {
 import { useTranslation } from "react-i18next";
 import type { AccountsFormData } from "@/types/pref";
 import { ExternalLink, User } from "lucide-react";
+import { useState } from "react";
+import { openCurrentProfileDirectory } from "../dataManager.ts";
 
 type ProfileProps = {
   accountAndProfileData: AccountsFormData | null;
@@ -14,16 +17,17 @@ type ProfileProps = {
 
 export function Profile({ accountAndProfileData }: ProfileProps) {
   const { t } = useTranslation();
+  const [openError, setOpenError] = useState(false);
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="size-5" />
           {t("accounts.profileManagement")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`${styles.details} space-y-6`}>
         <p className="text-base-content/90">
           {t("accounts.profileManagementDescription")}
         </p>
@@ -42,26 +46,32 @@ export function Profile({ accountAndProfileData }: ProfileProps) {
           </p>
         </div>
 
-        <div className="flex gap-4">
+        <div className={styles.actions}>
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               globalThis.NRAddTab("about:profiles");
             }}
-            className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+            className={styles.link}
           >
             {t("accounts.openProfileManager")}
             <ExternalLink className="size-4" />
           </a>
           <a
             href="#"
-            className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
+            onClick={async (event) => {
+              event.preventDefault();
+              try { setOpenError(!await openCurrentProfileDirectory()); }
+              catch { setOpenError(true); }
+            }}
+            className={styles.link}
           >
             {t("accounts.openProfileSaveLocation")}
             <ExternalLink className="size-4" />
           </a>
         </div>
+        {openError && <p role="alert" className="floorp-notice floorp-notice-error">{t("ui.loadError")}</p>}
       </CardContent>
     </Card>
   );

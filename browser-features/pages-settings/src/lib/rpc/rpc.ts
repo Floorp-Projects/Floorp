@@ -7,24 +7,13 @@ import type {
 } from "../../../../modules/common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import { createBirpc } from "birpc";
+import { usesSettingsActor } from "../../../../../libs/ui/settings-rpc-origin.ts";
+import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 
 type SettingsPageParentFunctions =
   & NRSettingsParentFunctions
   & NRSettingsAtomicPreferenceFunctions
   & NRContextMenuSettingsFunctions;
-
-interface LegacySettingsDirectFunctions {
-  selectFolder(): Promise<null>;
-  getRandomImageFromFolder(path: string): Promise<null>;
-  sendToNRPanelSidebarChild(
-    method: string,
-    ...args: unknown[]
-  ): Promise<unknown>;
-}
-
-type SettingsPageDirectFunctions =
-  & SettingsPageParentFunctions
-  & LegacySettingsDirectFunctions;
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
@@ -86,22 +75,9 @@ function readDirectPreference<T extends boolean | string>(
   });
 }
 
-interface DirectActor {
-  [method: string]: (...args: unknown[]) => unknown;
-}
-
 declare const Services: { prefs: DirectPreferenceService };
 declare const ChromeUtils: {
   importESModule(moduleUri: string): unknown;
-};
-declare const Cu: {
-  getGlobalForObject(value: unknown): {
-    browsingContext: {
-      currentWindowGlobal: {
-        getActor(name: string): DirectActor;
-      };
-    };
-  };
 };
 declare global {
   interface Window {
@@ -137,9 +113,8 @@ function waitForSettingsBridge(): Promise<Window> {
   });
 }
 
-const isLocalhost5183 = /(?:localhost|127\.0\.0\.1):5183/.test(
-  import.meta.url ?? "",
-);
+// about:hub is privileged even when its scripts are served by Vite.
+const isLocalhost5183 = usesSettingsActor(globalThis.location.href, "5183");
 
 export function createSettingsBridgeTransport(
   resolveBridge: () => Promise<Window> = waitForSettingsBridge,
@@ -197,7 +172,18 @@ function sendSettingsBridgeMessage(data: string): Promise<void> {
   return settingsBridgeTransport.post(data);
 }
 
-const directServicesFunctions: SettingsPageDirectFunctions = {
+const directServicesFunctions: SettingsPageParentFunctions = {
+  getWebAppLifecycleSettings: () => {
+    const { NativeAppRuntime } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+    ) as { NativeAppRuntime: { isAvailable(): boolean } };
+    const { AppLifecycle } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/AppLifecycle.sys.mjs",
+    ) as { AppLifecycle: { getSettings(): AppLifecycleSettings } };
+    // Register the native runtime before querying adapter support.
+    NativeAppRuntime.isAvailable();
+    return Promise.resolve(AppLifecycle.getSettings());
+  },
   getContextMenuCatalog: () => {
     const { ContextMenuCatalogService } = ChromeUtils.importESModule(
       "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
@@ -270,29 +256,6 @@ const directServicesFunctions: SettingsPageDirectFunctions = {
       () => Services.prefs.getStringPref(prefName),
       (value) => Services.prefs.setStringPref(prefName, value),
     ),
-  // フォルダ選択関連のメソッド
-  selectFolder: () => {
-    return Promise.resolve(null);
-  },
-  getRandomImageFromFolder: (_path) => {
-    return Promise.resolve(null);
-  },
-  // Actor通信用メソッド
-  sendToNRPanelSidebarChild: async (method, ...args) => {
-    try {
-      // NRPanelSidebarParentアクターを取得
-      const windowGlobal = Cu.getGlobalForObject(Services);
-      const actor = windowGlobal.browsingContext.currentWindowGlobal.getActor(
-        "NRPanelSidebar",
-      );
-
-      // メソッドを実行
-      return await actor[method](...args);
-    } catch (error) {
-      console.error(`Error calling NRPanelSidebarChild.${method}:`, error);
-      throw error;
-    }
-  },
 };
 
 export const rpc = isLocalhost5183

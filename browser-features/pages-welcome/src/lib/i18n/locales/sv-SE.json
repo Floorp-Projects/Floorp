@@ -1,169 +1,487 @@
 {
-    "navigation": {
-        "welcome": "Välkommen",
-        "language": "Språk",
-        "languageSupport": "Språkstöd",
-        "features": "Funktioner",
-        "featureIntroduction": "Funktion introduktion",
-        "hub": "Floorp Hub",
-        "hubIntro": "Om Floorp Hub",
-        "customize": "Anpassa",
-        "initialSettings": "Initiala inställningar",
-        "complete": "Slutförd",
-        "previous": "Föregående",
-        "next": "Nästa"
+  "setupRich": {
+    "selected": "Vald",
+    "languageActive": "Används för menyer och inställningar",
+    "palettePreview": "Färgförhandsgranskning",
+    "searchDestination": "Sökleverantör för adressfältet",
+    "enlarge": "Förstora {{feature}} skärmdump",
+    "enlargeShort": "Visa större",
+    "closePreview": "Stäng förhandsgranskning",
+    "actualScreenshot": "En faktisk särmdump från Floorp. Utseendet kan variera beroende på vilken version du har och dina inställningar."
+  },
+  "setupV5": {
+    "back": "Tillbaka",
+    "supportLabels": {
+      "disabled": "Öppna inte automatiskt",
+      "blocking": "Öppna med mina blockeringsinställningar",
+      "support": "Tillåt reklam för att stödja Floorp"
     },
-    "hubPage": {
-        "title": "Om Floorp Hub",
-        "subtitle": "En central plats för Floorp-specifika inställningar.",
-        "sectionTitle": "Floorp Hub",
-        "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
-        "openHub": "Öppna about:hub",
-        "openPreferences": "Öppna inställningar (about:preferences)",
-        "tip": "Tips: du kan också komma åt Floorp Hub från sidofältet för inställningar i Firefox.",
-        "features": {
-            "dedicated": "Dedikerat Floorp-inställningscenter",
-            "accessible": "Tillgängligt från about:hub eller Firefox inställningar",
-            "centralized": "Alla Floorp-specifika alternativ på ett ställe"
-        }
+    "supportNotice": "Detta är ett utkast val. Det träder i kraft när du klickar på ”Börja använda Floorp” på nästa sida. Om du avslutar inställningarna innan dess behålls dina nuvarande inställningar.",
+    "steps": [
+      "Välkommen",
+      "Språk",
+      "Funktioner",
+      "Floorp Hub",
+      "Inställningar",
+      "Support",
+      "Slutför"
+    ],
+    "pages": [
+      {
+        "title": "Välkommen\ntill Floorp.",
+        "description": "Gör så att din webbläsare jobbar som du gör.",
+        "hint": "Denna guide introducerar funktioner och hjälper dig att välja dina första inställningar."
+      },
+      {
+        "title": "Börja på språket\ndu kan bäst.",
+        "description": "Kontrollera vilket språk som visas i Floorp och ändra det vid behov.",
+        "hint": "Ditt valda språk träder i kraft omedelbart."
+      },
+      {
+        "title": "Utforska vad\nFloorp kan göra.",
+        "description": "Separata uppgifter, visa sidor sida vid sida och arbeta snabbare. Utforska de funktioner som intresserar dig.",
+        "hint": "Du kan justera dessa funktioner i inställningarna senare."
+      },
+      {
+        "title": "Dina inställningar,\ni Floorp Hub.",
+        "description": "Justera Floorp specifika funktioner på en plats.",
+        "hint": "Du kan öppna den när som helst efter installationen."
+      },
+      {
+        "title": "Gör utseende\noch sök din egen.",
+        "description": "Välj det tema och den sökmotor som du använder varje dag.",
+        "hint": "Du kan ändra dem senare i Floorp Hub eller i Firefox inställningarna."
+      },
+      {
+        "title": "Uppdateringar och\nstöd Floorp.",
+        "description": "Reklamintäkter stöder Floorps utveckling och drift. Välj hur släppanteckningar öppnas.",
+        "hint": "Du kan ändra detta senare under ”Uppdateringar och experiment”."
+      },
+      {
+        "title": "Du är redo\natt surfa.",
+        "description": "Granska dina val och börja använda Floorp.",
+        "hint": "Du kan fortfarande ändra dina inställningar senare."
+      }
+    ],
+    "startTitle": "Innan du börjar",
+    "startItems": [
+      {
+        "title": "Kontrollera ditt visningsspråk",
+        "description": "Börja med det språk du använder varje dag."
+      },
+      {
+        "title": "Välj de inställningar som passar dig",
+        "description": "Välj ditt tema och sökmotor."
+      },
+      {
+        "title": "Gör dig redo att surfa",
+        "description": "Kontrollera dina val innan du börjar."
+      }
+    ],
+    "changeLater": "Du kan ändra dessa inställningar senare.",
+    "languageTitle": "Visningsspråk",
+    "languageLabel": "Floorp visningsspråk",
+    "languageHint": "Används för menyer och inställningar.",
+    "languageNotice": "Vissa tillägg stöder kanske inte språkbyte.",
+    "languageCurrent": "Använder {{language}}",
+    "featuresTitle": "Upptäck funktionerna",
+    "hubTitle": "Hitta det du vill justera",
+    "hubItems": [
+      {
+        "title": "Flikar och utseende",
+        "description": "Fliklayout och webbläsarens utseende"
+      },
+      {
+        "title": "Arbetsytor",
+        "description": "Växla uppgifter och organisera flikar"
+      },
+      {
+        "title": "Musgester",
+        "description": "Genvägar till ofta använda åtgärder"
+      }
+    ],
+    "openHub": "Öppna Floorp Hub",
+    "openPreferences": "Öppna Firefox inställningar",
+    "newTab": "Öppnas i en ny flik.",
+    "hubAddress": "Du kan också skriva in about:hub i adressfältet.",
+    "customizeTitle": "Dina första inställningar",
+    "searchHint": "Används när du söker från adressfältet.",
+    "supportTitle": "Släpp anteckningar efter uppdateringar",
+    "scopeTitle": "Omfattning vid godkännande av reklam",
+    "summaryTitle": "Granska dina inställningar",
+    "change": "Ändra",
+    "defaultTitle": "Gör Floorp till din vardagswebbläsare",
+    "defaultHint": "Ställ in så att länkar öppnas i Floorp.",
+    "getStarted": "Börja använda Floorp",
+    "finishNotice": "“Börja använda Floorp” bekräftar ditt släppanteckningar val."
+  },
+  "releaseNotes": {
+    "prompt": {
+      "title": "Ett nytt val.\nStöd det som kommer härnäst.",
+      "description": "Reklamintäkterna finansierar utvecklingen och driften av Floorp. Nu kan du välja hur släppanteckningar ska öppnas och hur blockerare ska fungera på Floorp-bloggen.",
+      "hint": "Dina inställningar förblir oförändrade tills du sparar ett val. Du kan ändra dem senare under ”Uppdateringar & experiment”.",
+      "choiceTitle": "Välj hur släppanteckningar ska öppnas",
+      "choiceDescription": "Välj automatisk visning efter uppdateringar och hur dina blockerare fungerar på Floorp blogg.",
+      "dismiss": "Inte nu"
     },
-    "customize": {
-        "title": "Anpassa Floorp",
-        "description": "Anpassa till dina önskade inställningar. Du kan alltid ändra dem senare från Floorp Hub eller inställningssidan.",
-        "appearance": {
-            "title": "Utseende inställningar",
-            "description": "Du kan anpassa Floorps utseende efter dina önskemål. Välj ett ljust eller mörkt tema, eller låt det växla automatiskt baserat på dina systeminställningar."
-        },
-        "themes": {
-            "light": "Ljust",
-            "dark": "Mörkt",
-            "system": "Följ systeminställningar"
-        },
-        "themeInfo": {
-            "light": "Ljust tema",
-            "dark": "Mörkt tema",
-            "system": "Systeminställning"
-        },
-        "searchEngine": {
-            "title": "Standard sökmotor",
-            "default": "Standard",
-            "search": "Sök",
-            "noEnginesFound": "Inga sökmotorer hittades."
-        },
-        "floorpHub": {
-            "title": "Floorp Hub",
-            "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
-            "openHub": "Öppna about:hub",
-            "openPreferences": "Öppna inställningar (about:preferences)"
-        }
+    "learnMore": "Läs mer om vår finansiering och denna verksamhetsmiljö (japanska)",
+    "title": "Släpp anteckningar och stödjande av Floorp",
+    "description": "Annonsintäkterna finansierar utvecklingen och driften av Floorp. Välj hur du vill öppna versionsinformationen efter uppdateringar. Du kan ändra detta senare under Inställningar → Uppdateringar och experiment.",
+    "disabled": {
+      "label": "Öppna inte automatiskt",
+      "description": "Öppna inte versionsfakta efter uppdateringar. Håll dina blockeringsinställningar när du besöker bloggen."
+    },
+    "blocking": {
+      "label": "Öppna med dina blockeringsinställningar",
+      "description": "Håll dina tillägg konfigurerade. Detta installerar eller aktiverar inte en annonsblockerare."
+    },
+    "support": {
+      "label": "Tillåt annonser för att stödja Floorp (rekommenderas)",
+      "description": "Förhindra uBlock Origin, AdGuard, Adblock Plus, AdBlock och Ghostery från att filtrera Floorp blogg."
+    },
+    "scope": "Detta undantag gäller alla HTTPS-besök på blog.floorp.app, inklusive sidor som öppnas manuellt. Det påverkar även spårningsskyddet och anpassade filter i de fem angivna tilläggen. Övriga tillägg påverkas inte av den här inställningen. Andra skyddsverktyg kan fortfarande blockera annonser. Ladda om öppna bloggsidor efter att du har ändrat den här inställningen.",
+    "currentSetting": "Nuvarande inställning: {{mode}}",
+    "applyOnConfirm": "Ditt val träder i kraft först när du bekräftar det. Om du stänger den här sidan behålls din nuvarande inställning.",
+    "changeSelection": "Ändra val",
+    "applyOnFinish": "Detta är ett utkast val. Det träder i kraft när du avslutar installationen på nästa skärm. Stänger installationen innan du behåller din nuvarande inställning.",
+    "confirm": "Spara val",
+    "dismiss": "Behåll nuvarande inställningar",
+    "error": "Kunde inte ladda eller spara ditt val. Öppna sidan igen och försök igen."
+  },
+  "navigation": {
+    "support": "Stöd Floorp",
+    "welcome": "Välkommen",
+    "language": "Språk",
+    "languageSupport": "Språkstöd",
+    "features": "Funktioner",
+    "featureIntroduction": "Funktion introduktion",
+    "hub": "Floorp Hub",
+    "hubIntro": "Om Floorp Hub",
+    "customize": "Anpassa",
+    "initialSettings": "Initiala inställningar",
+    "complete": "Slutförd",
+    "previous": "Föregående",
+    "next": "Nästa"
+  },
+  "hubPage": {
+    "title": "Om Floorp Hub",
+    "subtitle": "En central plats för Floorp-specifika inställningar.",
+    "sectionTitle": "Floorp Hub",
+    "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
+    "openHub": "Öppna about:hub",
+    "openPreferences": "Öppna inställningar (about:preferences)",
+    "tip": "Tips: du kan också komma åt Floorp Hub från sidofältet för inställningar i Firefox.",
+    "features": {
+      "dedicated": "Dedikerat Floorp-inställningscenter",
+      "accessible": "Tillgängligt från about:hub eller Firefox inställningar",
+      "centralized": "Alla Floorp-specifika alternativ på ett ställe"
+    }
+  },
+  "customize": {
+    "title": "Anpassa Floorp",
+    "description": "Anpassa till dina önskade inställningar. Du kan alltid ändra dem senare från Floorp Hub eller inställningssidan.",
+    "appearance": {
+      "title": "Utseende inställningar",
+      "description": "Du kan anpassa Floorps utseende efter dina önskemål. Välj ett ljust eller mörkt tema, eller låt det växla automatiskt baserat på dina systeminställningar."
+    },
+    "themes": {
+      "light": "Ljust",
+      "dark": "Mörkt",
+      "system": "Följ systeminställningar"
+    },
+    "themeInfo": {
+      "light": "Ljust tema",
+      "dark": "Mörkt tema",
+      "system": "Systeminställning"
+    },
+    "searchEngine": {
+      "title": "Standard sökmotor",
+      "default": "Standard",
+      "search": "Sök",
+      "noEnginesFound": "Inga sökmotorer hittades."
+    },
+    "floorpHub": {
+      "title": "Floorp Hub",
+      "description": "Floorp Hub är ett dedikerat inställningscenter för Floorp-specifika alternativ. Du kan öppna det genom att navigera till 'about:hub'. Det kan också nås från vänstra sidofältet i Firefox inställningssida på 'about:preferences'.",
+      "openHub": "Öppna about:hub",
+      "openPreferences": "Öppna inställningar (about:preferences)"
+    }
+  },
+  "finish": {
+    "title": "Inställning färdig!",
+    "subtitle": "Grattis! Du har slutfört installationen av Floorp. Njut av en bekväm och säker webbupplevelse.",
+    "nextSteps": {
+      "title": "Nästa steg (valfritt)",
+      "setDefault": "Ange som standardwebbläsare",
+      "documentation": "Dokumentation"
+    },
+    "getStarted": "Kom igång med Floorp",
+    "hint": "För mer detaljerade inställningar kan du anpassa via alternativet Inställningar i menyknappen längst upp till höger."
+  },
+  "setupGuide": {
+    "welcome": "Välkommen till Floorp.",
+    "description": "Gör så att din webbläsare jobbar som du gör.",
+    "introduction": "Denna guide introducerar Floorps funktioner och hjälper dig att välja dina första inställningar.",
+    "start": "Börja anpassning",
+    "next": "Nästa, kontrollera ditt visningsspråk.",
+    "progress": "Steg {{current}} / {{total}}",
+    "title": "Vad denna guide omfattar",
+    "subtitle": "Utforska funktionerna och välj de inställningar som passar dig bäst.",
+    "discover": {
+      "title": "Upptäck Floorps funktioner",
+      "description": "Upptäck olika sätt att organisera flikar och anpassa din webbläsare."
+    },
+    "personalize": {
+      "title": "Välj dina inställningar",
+      "description": "Anpassa utseendet och kontrollerna efter dina önskemål."
     },
     "finish": {
-        "title": "Inställning färdig!",
-        "subtitle": "Grattis! Du har slutfört installationen av Floorp. Njut av en bekväm och säker webbupplevelse.",
-        "nextSteps": {
-            "title": "Nästa steg (valfritt)",
-            "setDefault": "Ange som standardwebbläsare",
-            "documentation": "Dokumentation"
-        },
-        "getStarted": "Kom igång med Floorp",
-        "hint": "För mer detaljerade inställningar kan du anpassa via alternativet Inställningar i menyknappen längst upp till höger."
-    },
-    "welcomePage": {
-        "welcome": "Välkommen till Floorp!",
-        "description": "Floorp är en snabb och användarvänlig webbläsare som lägger stor vikt vid integritet och säkerhet. I den här guiden får du en introduktion till de viktigaste funktionerna och inställningarna i Floorp.",
-        "readyToStart": "När du är klar klickar du på knappen nedan för att fortsätta.",
-        "features": "Floorp funktioner",
-        "privacy": "Integritet",
-        "privacyDesc": "Skyddar din data",
-        "speed": "Hastighet",
-        "speedDesc": "Optimerad prestanda",
-        "customization": "Anpassningar",
-        "customizationDesc": "Ordna efter dina preferenser",
-        "start": "Kom igång"
-    },
-    "localizationPage": {
-        "title": "Floorp talar ditt språk",
-        "subtitle": "Kontrollera språkinställningar och ändra om det behövs",
-        "languageSettings": "Språkinställningar",
-        "languageChanged": "Språket har ändrats!",
-        "currentLanguageInfo": "Nuvarande språkinformation",
-        "systemLanguage": "Systemspråk",
-        "floorpLanguage": "Floorp Språk",
-        "selectLanguage": "Välj språk",
-        "useSystemLanguage": "Använd systemets språk",
-        "multilingual": "Flerspråksstöd",
-        "chooseLanguage": "Välj bland ett brett utbud av språk",
-        "languageChangeNotice": "Om du byter språk kommer det nya språket att tillämpas utan att Floorp behöver startas om. Vissa tillägg kanske inte stöder språkändringar."
-    },
-    "featuresPage": {
-        "title": "Huvudfunktioner för Floorp",
-        "subtitle": "Floorp kommer med många användbara funktioner. Kolla in översikt för funktioner!",
-        "panelSidebar": {
-            "title": "Panel sidofält",
-            "description": "Få tillgång till praktiska funktioner från sidofältet till höger när du surfar. Du kan placera webbpaneler, anteckningsfunktioner, tillägg, bokmärken etc. i sidofältet.",
-            "features": [
-                "Fäst webbplatser till sidofältet",
-                "Gör snabba anteckningar med Floorp anteckningar medan du surfar",
-                "Stöder behållare"
-            ]
-        },
-        "workspaces": {
-            "title": "Arbetsytor",
-            "description": "Organisera flera flikuppsättningar för att effektivisera ditt arbete. Växla snabbt mellan arbetsytor med distinkta ikoner och namn. Åtkomst via knappen för arbetsytor längst upp till vänster.",
-            "features": [
-                "Kategorisera efter syfte: arbete, privat, etc.",
-                "Visuell identifiering med anpassade ikoner",
-                "Hantera flikar på ett enkelt sätt"
-            ]
-        },
-        "pwa": {
-            "title": "Stöd för progressiva webbapplikationer",
-            "description": "På Windows kan du lägga till PWA-kompatibla webbplatser som skrivbordsprogram när du besöker dem. Regelbundna webbplatser kan också installeras.",
-            "features": [
-                "Körs självständigt som skrivbordsappar",
-                "Kan fästas i aktivitetsfältet",
-                "Firefox-tillägg fungerar också"
-            ]
-        },
-        "mouseGesture": {
-            "title": "Musgester",
-            "description": "Kontrollera din webbläsare på ett mer intuitivt sätt med inbyggd funktionalitet för musgester. Utför gester genom att hålla högerklicksknappen intryckt och flytta musen.",
-            "features": [
-                "Arbeta utan kortkommandon på tangentbordet",
-                "Helt anpassningsbara gester",
-                "Snabbt navigera sidor och historik"
-            ]
-        },
-        "notebook": "Anteckningsbok",
-        "nextTab": "Gå till nästa flik"
-    },
-    "finishPage": {
-        "title": "Inställning färdig!",
-        "subtitle": "Grattis! Du har slutfört installationen av Floorp. Du kan nu njuta av bekväm och säker internetsurfning.",
-        "nextSteps": "Nästa steg (valfritt)",
-        "defaultBrowser": "Ange som standardwebbläsare",
-        "support": "Support",
-        "documentation": "Dokumentation",
-        "getStarted": "Kom igång med Floorp",
-        "hint": "För mer detaljerade inställningar kan du anpassa via alternativet Inställningar i menyknappen längst upp till höger.",
-        "resourcesLabel": "Resurser",
-        "defaultBrowserSuccess": "Floorp har ställts in som din standardwebbläsare!"
-    },
-    "whatsNew": {
-        "title": "Välkommen till Floorp {{version}}!",
-        "subtitle": "Kolla in vad som är nytt i Floorp!",
-        "tags": {
-            "settings": "Inställningar",
-            "productivity": "Produktivitet",
-            "workspaces": "Arbetsytor",
-            "pwa": "PWA",
-            "gestures": "Gester"
-        },
-        "footer": {
-            "follow": "Följ",
-            "privacy": "Sekretess och villkor",
-            "about": "Om Floorp",
-            "copyright": "© {{year}} Projekt. Alla rättigheter reserverade."
-        }
+      "title": "Gör dig redo att surfa",
+      "description": "Granska dina val och börja surfa."
     }
+  },
+  "welcomePage": {
+    "welcome": "Välkommen till Floorp!",
+    "description": "Floorp är en snabb och användarvänlig webbläsare som lägger stor vikt vid integritet och säkerhet. I den här guiden får du en introduktion till de viktigaste funktionerna och inställningarna i Floorp.",
+    "readyToStart": "När du är klar klickar du på knappen nedan för att fortsätta.",
+    "features": "Floorp funktioner",
+    "privacy": "Integritet",
+    "privacyDesc": "Skyddar din data",
+    "speed": "Hastighet",
+    "speedDesc": "Optimerad prestanda",
+    "customization": "Anpassningar",
+    "customizationDesc": "Ordna efter dina preferenser",
+    "start": "Kom igång"
+  },
+  "localizationPage": {
+    "title": "Floorp talar ditt språk",
+    "subtitle": "Kontrollera språkinställningar och ändra om det behövs",
+    "languageSettings": "Språkinställningar",
+    "languageChanged": "Språket har ändrats!",
+    "currentLanguageInfo": "Nuvarande språkinformation",
+    "systemLanguage": "Systemspråk",
+    "floorpLanguage": "Floorp Språk",
+    "selectLanguage": "Välj språk",
+    "useSystemLanguage": "Använd systemets språk",
+    "multilingual": "Flerspråksstöd",
+    "chooseLanguage": "Välj bland ett brett utbud av språk",
+    "languageChangeNotice": "Om du byter språk kommer det nya språket att tillämpas utan att Floorp behöver startas om. Vissa tillägg kanske inte stöder språkändringar."
+  },
+  "featuresPage": {
+    "title": "Huvudfunktioner för Floorp",
+    "subtitle": "Floorp kommer med många användbara funktioner. Kolla in översikt för funktioner!",
+    "panelSidebar": {
+      "title": "Panel sidofält",
+      "description": "Få tillgång till praktiska funktioner från sidofältet till höger när du surfar. Du kan placera webbpaneler, anteckningsfunktioner, tillägg, bokmärken etc. i sidofältet.",
+      "features": [
+        "Fäst webbplatser till sidofältet",
+        "Gör snabba anteckningar med Floorp anteckningar medan du surfar",
+        "Stöder behållare"
+      ]
+    },
+    "workspaces": {
+      "title": "Arbetsytor",
+      "description": "Organisera flera flikuppsättningar för att effektivisera ditt arbete. Växla snabbt mellan arbetsytor med distinkta ikoner och namn. Åtkomst via knappen för arbetsytor längst upp till vänster.",
+      "features": [
+        "Kategorisera efter syfte: arbete, privat, etc.",
+        "Visuell identifiering med anpassade ikoner",
+        "Hantera flikar på ett enkelt sätt"
+      ]
+    },
+    "pwa": {
+      "title": "Stöd för progressiva webbapplikationer",
+      "description": "På Windows kan du lägga till PWA-kompatibla webbplatser som skrivbordsprogram när du besöker dem. Regelbundna webbplatser kan också installeras.",
+      "features": [
+        "Körs självständigt som skrivbordsappar",
+        "Kan fästas i aktivitetsfältet",
+        "Firefox-tillägg fungerar också"
+      ]
+    },
+    "mouseGesture": {
+      "title": "Musgester",
+      "description": "Kontrollera din webbläsare på ett mer intuitivt sätt med inbyggd funktionalitet för musgester. Utför gester genom att hålla högerklicksknappen intryckt och flytta musen.",
+      "features": [
+        "Arbeta utan kortkommandon på tangentbordet",
+        "Helt anpassningsbara gester",
+        "Snabbt navigera sidor och historik"
+      ]
+    },
+    "notebook": "Anteckningsbok",
+    "nextTab": "Gå till nästa flik"
+  },
+  "finishPage": {
+    "title": "Inställning färdig!",
+    "subtitle": "Grattis! Du har slutfört installationen av Floorp. Du kan nu njuta av bekväm och säker internetsurfning.",
+    "nextSteps": "Nästa steg (valfritt)",
+    "defaultBrowser": "Ange som standardwebbläsare",
+    "support": "Support",
+    "documentation": "Dokumentation",
+    "getStarted": "Kom igång med Floorp",
+    "hint": "För mer detaljerade inställningar kan du anpassa via alternativet Inställningar i menyknappen längst upp till höger.",
+    "resourcesLabel": "Resurser",
+    "defaultBrowserSuccess": "Floorp har ställts in som din standardwebbläsare!"
+  },
+  "whatsNew": {
+    "title": "Välkommen till Floorp {{version}}!",
+    "subtitle": "Kolla in vad som är nytt i Floorp!",
+    "tags": {
+      "settings": "Inställningar",
+      "productivity": "Produktivitet",
+      "workspaces": "Arbetsytor",
+      "pwa": "PWA",
+      "gestures": "Gester"
+    },
+    "footer": {
+      "follow": "Följ",
+      "terms": "Användarvillkor",
+      "privacy": "Integritetspolicy",
+      "about": "Om Floorp",
+      "copyright": "© {{year}} Projekt. Alla rättigheter reserverade."
+    }
+  },
+  "ui": {
+    "retry": "Försök igen",
+    "loadError": "Kunde inte ladda dessa inställningar. Försök igen.",
+    "skipToContent": "Hoppa till innehåll",
+    "loading": "Laddar…",
+    "setupProgress": "Installationsförlopp",
+    "stepNavigation": "Konfigurera navigering",
+    "settingsNavigation": "Inställningar navigering",
+    "openNavigation": "Öppna navigering",
+    "closeNavigation": "Stäng navigering",
+    "saveError": "Kunde inte spara. Försök igen."
+  },
+  "featureDemo": {
+    "label": "Interaktivt demo",
+    "close": "Stäng panel",
+    "cancel": "Avbryt",
+    "reset": "Återställ demo",
+    "play": "Titta på gest",
+    "replay": "Titta igen",
+    "workspaces": {
+      "title": "Växla arbetsytor",
+      "instruction": "Öppna arbetsytaknappen längst upp till vänster, välj sedan en arbetsyta.",
+      "names": [
+        "Arbete",
+        "Personligt",
+        "Inlärning"
+      ],
+      "tabs": [
+        [
+          "Projekt",
+          "E-post",
+          "Kalender"
+        ],
+        [
+          "Resa",
+          "Recept",
+          "Musik"
+        ],
+        [
+          "Anteckningar",
+          "Ordbok",
+          "Resurser"
+        ]
+      ],
+      "result": "Visar flikar för {{name}}.",
+      "benefit": "Växla mellan dina arbets och personliga flikar som en grupp.",
+      "guideOpen": "Öppna arbete knappen.",
+      "guideSelect": "Välj personlig.",
+      "guideDone": "Flikarna ovan har kopplats ihop.",
+      "openHint": "1 öppen här",
+      "selectHint": "2 Välj personlig",
+      "pages": [
+        {
+          "category": "Teamarbete",
+          "title": "Den här veckans projekt",
+          "description": "Samla uppgifter och framsteg på ett ställe.",
+          "items": [
+            "Samla in idéer för projektet",
+            "Granska designen",
+            "Förbered dig för nästa möte"
+          ]
+        },
+        {
+          "category": "Helgplaner",
+          "title": "Vart bär det av härnäst?",
+          "description": "Samla dina favoritplatser och planera din nästa resa.",
+          "items": [
+            "Hitta ett café vid havet",
+            "Upptäck en ny stad",
+            "Gör en packlista"
+          ]
+        },
+        {
+          "category": "Studera anteckningar",
+          "title": "Dagens inlärningsanteckningar",
+          "description": "Försök att uttrycka det du har lärt dig med dina egna ord.",
+          "items": [
+            "Sammanfatta de viktigaste punkterna",
+            "Skriv ner nya ord",
+            "Lista över frågor att undersöka härnäst"
+          ]
+        }
+      ]
+    },
+    "panelSidebar": {
+      "title": "Öppna en webbplats bredvid din sida",
+      "instruction": "Använd musikikonen till höger för att öppna eller stänga den sparade webbplatsen.",
+      "article": "Fortsätt utforska",
+      "music": "Musik",
+      "favorites": "Favoriter",
+      "tracks": [
+        "Månbelyst",
+        "Blå timme",
+        "Lätt bris"
+      ],
+      "play": "Prova uppspelning (inget ljud)",
+      "stop": "Stoppa uppspelning",
+      "toggle": "Växla musikpanelen",
+      "open": "Din sida och den sparade webbplatsen visas bredvid varandra.",
+      "closed": "Öppna panelen igen genom att klicka på musikikonen till höger.",
+      "benefit": "Öppna en annan webbplats bredvid den sida du tittar på."
+    },
+    "pwa": {
+      "title": "Förvandla en favoritsida till en app",
+      "instruction": "Prova att installera från ikonen till höger i adressfältet.",
+      "icon": "Öppna webbapp installationsmenyn",
+      "open": "Öppna app",
+      "install": "Installera app",
+      "calendar": "Kalender",
+      "result": "Exempel på ett fristående appfönster",
+      "benefit": "Öppna en webbplats som en app i ett separat fönster.",
+      "tab": "Webbappar"
+    },
+    "mouseGesture": {
+      "title": "Navigera med en musgest",
+      "steps": [
+        "Håll den högra knappen",
+        "Flytta vänster",
+        "Släpp knappen"
+      ],
+      "previous": "Föregående sida",
+      "current": "Nuvarande sida",
+      "result": "← Återvände till föregående sida (demo)",
+      "hint": "Ett exempel på standard tillbaka gesten.",
+      "enable": "Aktivera musgester i inställningarna för att kunna använda den här funktionen.",
+      "benefit": "Håll höger musknapp och flytta musen för att utföra åtgärder som bakåt."
+    }
+  },
+  "welcomeMotion": {
+    "steps": [
+      "Kontrollera språk",
+      "Välj utseende",
+      "Kom igång"
+    ],
+    "descriptions": [
+      "Kontrollera önskat visningsspråk.",
+      "Välj ett tema och sökmotor.",
+      "Granska dina val och börja använda Floorp."
+    ],
+    "replay": "Titta igen"
+  },
+  "demoPlayback": {
+    "pause": "Pausa",
+    "play": "Spela / fortsätt"
+  }
 }

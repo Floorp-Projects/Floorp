@@ -200,7 +200,7 @@ export function extractBridgeLoader(
     devLoaderUrl,
     testLoaderUrl,
     productionLoader,
-    source: source(pathFromRoot, chromeRootText, devLoaderUrl),
+    source: source(pathFromRoot, chromeRootText, "const isTestOwner"),
   };
 }
 

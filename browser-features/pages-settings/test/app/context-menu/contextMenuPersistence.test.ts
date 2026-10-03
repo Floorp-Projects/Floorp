@@ -1023,6 +1023,43 @@ function testProfileResetPreservesUnrelatedChanges(): void {
   );
 }
 
+function testProfileSwitchRetainsEmptyIndependentLayout(): void {
+  const independent = setContextMenuProfileIndependent(
+    createDefaultContextMenuConfig(),
+    TARGET.surfaceKey,
+    TARGET.profileKey,
+    true,
+  );
+  const shared = setContextMenuProfileIndependent(
+    independent,
+    TARGET.surfaceKey,
+    TARGET.profileKey,
+    false,
+  );
+  const changedShared = setContextMenuItemHidden(
+    shared,
+    TARGET,
+    "shared-only-item",
+    true,
+  );
+  const restored = setContextMenuProfileIndependent(
+    changedShared,
+    TARGET.surfaceKey,
+    TARGET.profileKey,
+    true,
+  );
+  assertEquals(
+    getContextMenuLevelOverride(restored, TARGET).hidden?.length ?? 0,
+    0,
+    "an empty retained independent layout does not inherit later shared changes",
+  );
+  assertEquals(
+    restored.surfaces[TARGET.surfaceKey].base.root.hidden?.[0],
+    "shared-only-item",
+    "restoring the independent layout preserves shared changes",
+  );
+}
+
 const tests: TestCase[] = [
   {
     name: "projected state and serial commit",
@@ -1107,6 +1144,10 @@ const tests: TestCase[] = [
   {
     name: "profile switch retains dormant containers",
     fn: testProfileSwitchRetainsDormantContainers,
+  },
+  {
+    name: "profile switch retains empty independent layouts",
+    fn: testProfileSwitchRetainsEmptyIndependentLayout,
   },
   {
     name: "profile reset preserves unrelated settings",

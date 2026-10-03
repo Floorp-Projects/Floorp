@@ -432,6 +432,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Bölünmüş Görünümde Aç",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"

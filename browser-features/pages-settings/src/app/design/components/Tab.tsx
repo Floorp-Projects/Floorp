@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import {
   Card,
   CardContent,
@@ -15,7 +16,7 @@ export function Tab() {
   const { getValues, setValue } = useFormContext();
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LayoutGrid className="size-5" />
@@ -27,10 +28,10 @@ export function Tab() {
           <h3 className="text-base font-medium mb-2">
             {t("design.tab.scroll")}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-3">
             {t("design.tab.scrollDescription")}
           </p>
-          <div className="space-y-4">
+          <div>
             <div className="flex items-center justify-between gap-2">
               <label htmlFor="scroll-tab">{t("design.tab.scrollTab")}</label>
               <Switch
@@ -79,10 +80,10 @@ export function Tab() {
           <h3 className="text-base font-medium mb-2">
             {t("design.tab.openPosition")}
           </h3>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-muted-foreground mb-3">
             {t("design.tab.openPositionDescription")}
           </p>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             {[
               { value: -1, label: "design.tab.openDefault" },
               { value: 0, label: "design.tab.openLast" },
@@ -129,8 +130,8 @@ export function Tab() {
           </label>
           <Switch
             id="double-click-close"
-            checked={!!getValues("tabDubleClickToClose")}
-            onChange={(e) => setValue("tabDubleClickToClose", e.target.checked)}
+            checked={!!getValues("tabDoubleClickToClose")}
+            onChange={(e) => setValue("tabDoubleClickToClose", e.target.checked)}
           />
         </div>
 

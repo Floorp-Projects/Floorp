@@ -35,6 +35,7 @@
         "mouseGesture": "マウスジェスチャー",
         "contextMenu": "コンテキストメニュー",
         "keyboardShortcut": "キーボードショートカット",
+        "performance": "パフォーマンス",
         "search": {
             "title": "検索の設定",
             "resultsFor": "[{{query}}] の検索結果",
@@ -143,16 +144,13 @@
             "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウィンドウは作成されません。",
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
-        "lepton-preferences": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
-            "configureLepton": "Lepton の設定",
+        "chrome-extras": {
+            "title": "UI 拡張設定",
+            "description": "現在選択されているデザインに追加の UI 調整を適用します",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
-                "visitRepository": "リポジトリのページを開く"
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。"
             },
             "autohide": {
                 "title": "自動非表示の設定",
@@ -176,8 +174,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
-                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+                "disabled": "コンテキストメニューとパネルメニューのアイコン表示を無効にする",
+                "menu": "コンテキストメニューのアイコン表示を有効にする"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -199,7 +197,8 @@
             "sidebar": {
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
-            }
+            },
+            "configure": "UI 拡張設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
@@ -217,6 +216,7 @@
             "exampleFullUrl": "Gmail の URL のみに反応"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "タブスタックは垂直タブでは利用できません。設定内容は保持され、水平タブに変更した際に適用されます。",
             "title": "タブスタック",
             "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
             "enableOrDisable": "有効化/無効化",
@@ -330,6 +330,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "この設定とご支援についての詳細を読む",
+            "title": "更新後のリリースノート",
+            "description": "Floorp の更新後にリリースノートを開く方法を選択します。",
+            "disabled": {
+                "label": "自動で開かない",
+                "description": "更新後にリリースノートを開きません。ブログを閲覧する際は、お使いのブロッカーの設定が適用されます。"
+            },
+            "blocking": {
+                "label": "ブロッカーの設定を維持して開く",
+                "description": "お使いの拡張機能をそのままにリリースノートを開きます。広告ブロッカーを自動でインストールまたは有効化することはありません。"
+            },
+            "support": {
+                "label": "Floorp を支援するために、広告を許可して開く (おすすめ)",
+                "description": "uBlock Origin、AdGuard、Adblock Plus、AdBlock、Ghostery が、Floorp ブログをフィルタリングするのを防ぎます。"
+            },
+            "supportMessage": "リリースノートからの広告収入は、Floorpの開発と運営を支えています。皆様のご都合に沿った形でのご支援に、心より感謝申し上げます。",
+            "scope": "この制限は、手動で開いた場合を含む blog.floorp.app 上のすべての HTTPS ページに適用され、広告ブロックやトラッキング保護、カスタムフィルター機能に影響します。他の拡張機能はこの設定による制限を受けません。他の保護ツールによって広告がブロックされる場合があります。設定を変更した後は、開いているブログページを再読み込みしてください。",
+            "error": "設定の読み込み、または保存に失敗しました。このページを再度開いて、もう一度お試しください。"
+        },
         "title": "更新と実験",
         "description": "更新に関する設定と実験的な機能への参加を管理します。",
         "experiments": {
@@ -467,6 +487,8 @@
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウィンドウにツールバーを表示します",
+        "keepRunningAfterBrowserQuit": "{{productName}} の終了後もウェブアプリを起動し続ける",
+        "keepRunningAfterBrowserQuitDescription": "ブラウザーのウィンドウを閉じても、実行中のウェブアプリは開いたままになります。無効にすると、ウェブアプリも一緒に終了します。ウェブアプリを終了すると、そのアプリのみが閉じられます。 {{productName}} を再起動するか、ログアウトすると、すべてのアプリが閉じられます。",
         "installedApps": "インストール済みのアプリ",
         "noInstalledApps": "プログレッシブウェブアプリがインストールされていません",
         "removeApp": "アプリを削除",
@@ -486,7 +508,10 @@
         "containerDeleted": "コンテナーが削除されました",
         "resetContainer": "リセット",
         "save": "保存",
-        "errorSettingContainer": "コンテナーの設定に失敗しました"
+        "errorRenaming": "このウェブアプリの名前を変更できませんでした。",
+        "errorUninstalling": "このウェブアプリをアンインストールできませんでした。",
+        "errorSettingContainer": "コンテナーの設定に失敗しました",
+        "nativeContainerFixed": "この macOS ウェブアプリは、インストール時に使用されていたコンテナーを維持します。現時点では後からコンテナーを変更できません。現在のログイン情報とサイトデータは保持されています。"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -831,5 +856,55 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "performance": {
+        "title": "パフォーマンス",
+        "description": "ブラウザーによるシステムリソースの使用方法に影響する設定を変更します。",
+        "idleReclaim": {
+            "title": "待機時のメモリー解放",
+            "description": "実験的な機能であり、既定では無効です。有効にすると、キーボードやマウスの入力が一定時間ない場合、メモリー使用量の削減を試みます。解放されるメモリー使用量は、使用中のページによって異なります。",
+            "enable": "ブラウザーが待機状態の間にメモリーを解放する",
+            "idleThreshold": "解放までの待機時間 (秒)",
+            "minInterval": "再度解放するまでの最小の間隔 (秒)",
+            "minResident": "メモリー使用量が次を超えた場合にのみ解放する (MB)",
+            "cost": "動画再生、通話、画面共有は解放を妨げません。解放処理により、使用を再開する際などにブラウザーの動作が一時停止する場合があります。間隔を短くするほど解放頻度が高まります。",
+            "saveFailed": "この設定を保存できませんでした。以前の値が復元されました。"
+        }
+    },
+    "ui": {
+        "skipToContent": "本文へ移動",
+        "loading": "読み込み中...",
+        "setupProgress": "セットアップの進捗",
+        "stepNavigation": "セットアップのナビゲーション",
+        "settingsNavigation": "設定のナビゲーション",
+        "openNavigation": "ナビゲーションを開く",
+        "closeNavigation": "ナビゲーションを閉じる",
+        "saveError": "保存できませんでした。もう一度お試しください。",
+        "retry": "やりなおす",
+        "loadError": "設定を読み込めませんでした。このページを再読み込みしてください。"
+    },
+    "settingsHome": {
+        "title": "Floorp を自分好みに",
+        "description": "見た目や操作方法を、自分の使いやすい形に調整しましょう。",
+        "open": "設定を見る",
+        "manage": "ブラウザーの管理",
+        "descriptions": {
+            "tabAndAppearance": "テーマとタブの外観を調整します",
+            "workspaces": "仕事とプライベートでタブバーを切り替えられます",
+            "browserSidebar": "現在のページの横に別のサイトを開けます",
+            "mouseGesture": "マウスの動きにアクションを割り当てられます",
+            "keyboardShortcuts": "キーボードショートカットにアクションを割り当てられます",
+            "performance": "メモリー使用量を調整します"
+        },
+        "resources": {
+            "privacy": "プライバシーについて",
+            "extensions": "拡張機能を管理",
+            "help": "ヘルプを見る"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "外観と動作",
+        "reset": "ワークスペースをリセット",
+        "help": "使い方"
     }
 }

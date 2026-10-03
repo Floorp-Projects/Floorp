@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, RotateCcw } from "lucide-react";
+import { LoaderCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/common/button.tsx";
 import {
   Card,
@@ -24,18 +24,17 @@ export default function ContextMenuSettings() {
   const [confirmResetAll, setConfirmResetAll] = useState(false);
 
   return (
-    <div className="space-y-3 p-6">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold">
-          <Menu className="size-7" />
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">
           {t("pages.contextMenu")}
         </h1>
-        <p className="mb-8 text-sm">
+        <p className="floorp-page-description">
           {t("contextMenu.description")}
         </p>
       </div>
 
-      <div className="space-y-3 pl-6">
+      <div className="floorp-settings-sections">
         <div
           className="min-h-6 text-sm"
           aria-live="polite"
@@ -152,7 +151,10 @@ export default function ContextMenuSettings() {
           ? (
             <Card>
               <CardContent className="py-8 text-center text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm mr-2" />
+                <LoaderCircle
+                  className="mr-2 inline-block size-4 animate-spin"
+                  aria-hidden="true"
+                />
                 {t("contextMenu.loadingCatalog")}
               </CardContent>
             </Card>

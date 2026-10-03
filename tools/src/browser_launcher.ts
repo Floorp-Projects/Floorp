@@ -37,6 +37,8 @@ export interface BrowserLaunchOptions {
   port?: number;
   marionette?: boolean;
   profilePath?: string;
+  /** Explicit initial page, avoiding a profile's default about: page in dev. */
+  initialUrl?: string;
 }
 
 export interface IsolatedBrowserLaunchOptions {
@@ -346,6 +348,9 @@ export function browserCommand(options: BrowserLaunchOptions = {}): string[] {
   }
   if (noRemote) {
     args.push("--no-remote");
+  }
+  if (options.initialUrl) {
+    args.push("--new-window", options.initialUrl);
   }
   return args;
 }

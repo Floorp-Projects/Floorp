@@ -361,6 +361,72 @@ function testTimerCancellationPreventsLateTarget(): void {
   }
 }
 
+function testUnloadedTabOnlyReloadsOnActivation(): void {
+  const fixture = createFixture(true);
+  const controller = new HoverReloadController(fixture.options);
+  try {
+    const tab = fixture.tabs[1];
+    tab.setAttribute("pending", "true");
+    controller.start();
+    hover(tab);
+    assertEquals(glyphFor(tab), null, "unloaded tabs must wait for the delay");
+    assertEquals(fixture.clock.scheduledDelays.at(-1), 700);
+    fixture.clock.runAll();
+    const glyph = glyphFor(tab);
+    assert(glyph !== null, "unloaded tab should expose the reload target");
+    assertEquals(fixture.reloads.length, 0, "hover must not load the tab");
+    assert(tab.hasAttribute("pending"), "hover must retain pending state");
+
+    glyph.dispatchEvent(
+      new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+      }),
+    );
+    glyph.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
+    );
+    assertEquals(fixture.reloads.length, 1, "activation should reload once");
+    assertEquals(fixture.reloads[0], tab, "only the hovered tab should reload");
+    assertEquals(fixture.browser.selectedTab, fixture.tabs[0]);
+
+    tab.removeAttribute("pending");
+    tab.setAttribute("busy", "true");
+    fixture.mutationObservers.at(-1)?.trigger();
+    assertEquals(glyphFor(tab), null, "loading must still hide the target");
+    glyph.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
+    assertEquals(
+      fixture.reloads.length,
+      1,
+      "stale target must not reload again",
+    );
+  } finally {
+    controller.destroy();
+    fixture.cleanup();
+  }
+}
+
+function testUnloadingDuringHoverKeepsTarget(): void {
+  const fixture = createFixture(true);
+  const controller = new HoverReloadController(fixture.options);
+  try {
+    controller.start();
+    const tab = fixture.tabs[1];
+    hover(tab);
+    tab.setAttribute("pending", "true");
+    tab.dispatchEvent(new Event("TabAttrModified", { bubbles: true }));
+    fixture.clock.runAll();
+    assert(glyphFor(tab) !== null, "unloading during hover must allow reload");
+    assertEquals(fixture.reloads.length, 0, "state changes must not load tabs");
+    leave(tab);
+    assertEquals(glyphFor(tab), null, "leaving an unloaded tab removes target");
+  } finally {
+    controller.destroy();
+    fixture.cleanup();
+  }
+}
+
 function testRawMouseEventsDoNotOwnHoverState(): void {
   const fixture = createFixture(true);
   const controller = new HoverReloadController(fixture.options);
@@ -785,6 +851,14 @@ export async function runAllTests(): Promise<void> {
     {
       name: "leaving before delay cancels target",
       fn: testTimerCancellationPreventsLateTarget,
+    },
+    {
+      name: "unloaded tabs reload only on activation",
+      fn: testUnloadedTabOnlyReloadsOnActivation,
+    },
+    {
+      name: "unloading during hover keeps the reload target",
+      fn: testUnloadingDuringHoverKeepsTarget,
     },
     {
       name: "raw mouse events do not own native hover state",

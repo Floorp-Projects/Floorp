@@ -56,6 +56,8 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
+import { Select } from "@/components/common/dropdown.tsx";
+import { Input } from "@/components/common/input.tsx";
 import {
   type ContextMenuLevelTarget,
   getContextMenuLevelOverride,
@@ -173,20 +175,20 @@ const MenuItemContent = memo(function MenuItemContent({
       <div className="min-w-0 flex-1 basis-48">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="truncate font-medium">{label}</span>
-          <span className="badge badge-sm badge-ghost">
+          <span className="floorp-tag text-xs">
             {t(`contextMenu.kind.${item.kind}`)}
           </span>
-          <span className="badge badge-sm badge-outline">
+          <span className="floorp-tag text-xs">
             {t(`contextMenu.source.${item.source}`)}
           </span>
           {item.nativeHidden && (
-            <span className="badge badge-sm badge-warning gap-1">
+            <span className="floorp-tag gap-1 text-xs text-warning">
               <EyeOff className="size-3" />
               {t("contextMenu.nativeHidden")}
             </span>
           )}
           {!movable && (
-            <span className="badge badge-sm badge-neutral">
+            <span className="floorp-tag text-xs">
               {t("contextMenu.notMovable")}
             </span>
           )}
@@ -199,57 +201,65 @@ const MenuItemContent = memo(function MenuItemContent({
       {movable && (
         <div className="flex shrink-0 items-center gap-1">
           <div
-            className="join"
+            className="flex flex-wrap items-center gap-1"
             role="group"
             aria-label={t("contextMenu.moveItem", { label })}
           >
-            <button
+            <Button
               type="button"
-              className="btn btn-ghost btn-sm btn-square join-item"
+              variant="ghost"
+              size="sm"
+              className="size-9 p-0"
               disabled={disabled || movementDisabled || !canMoveUp}
               onClick={onMoveUp}
               aria-label={t("contextMenu.moveItemUp", { label })}
               title={t("contextMenu.moveUp")}
             >
               <ChevronUp className="size-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn btn-ghost btn-sm btn-square join-item"
+              variant="ghost"
+              size="sm"
+              className="size-9 p-0"
               disabled={disabled || movementDisabled || !canMoveDown}
               onClick={onMoveDown}
               aria-label={t("contextMenu.moveItemDown", { label })}
               title={t("contextMenu.moveDown")}
             >
               <ChevronDown className="size-4" />
-            </button>
+            </Button>
           </div>
           {!placementActive && (
-            <button
+            <Button
               ref={moveButtonRef}
               type="button"
-              className="btn btn-ghost btn-sm shrink-0"
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
               disabled={disabled || !canChooseDestination}
               onClick={onStartPlacement}
               aria-label={t("contextMenu.moveDestinationFor", { label })}
             >
               {t("contextMenu.moveToDestination")}
-            </button>
+            </Button>
           )}
         </div>
       )}
 
       {childContainerAvailable && (
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost btn-sm shrink-0"
+          variant="ghost"
+          size="sm"
+          className="shrink-0"
           disabled={disabled || placementActive}
           onClick={onOpenChild}
           aria-label={t("contextMenu.openSubmenu", { label })}
         >
           {t("contextMenu.editSubmenu")}
           <ChevronRight className="size-4" />
-        </button>
+        </Button>
       )}
 
       {hideable
@@ -264,7 +274,7 @@ const MenuItemContent = memo(function MenuItemContent({
         )
         : (
           <span
-            className="badge badge-sm badge-ghost shrink-0"
+            className="floorp-tag shrink-0 text-xs"
             aria-label={t("contextMenu.itemVisibilityUnavailable", { label })}
           >
             {item.kind === "separator"
@@ -326,10 +336,12 @@ function SortableMenuItem({
       }}
       className={rowClassName(visible, isDragging, isMovingSource)}
     >
-      <button
+      <Button
         ref={setActivatorNodeRef}
         type="button"
-        className="btn btn-ghost btn-sm btn-square shrink-0 cursor-grab touch-none disabled:cursor-not-allowed"
+        variant="ghost"
+        size="sm"
+        className="size-9 shrink-0 cursor-grab touch-none p-0 disabled:cursor-not-allowed"
         disabled={disabled || !movable}
         aria-label={movable
           ? t("contextMenu.dragItem", { label })
@@ -338,7 +350,7 @@ function SortableMenuItem({
         {...listeners}
       >
         <GripVertical className="size-4" />
-      </button>
+      </Button>
       <MenuItemContent
         item={item}
         visible={visible}
@@ -932,12 +944,12 @@ export function ContextMenuEditor({
           </Button>
         </CardHeader>
         <CardContent className="space-y-5">
-          <label className="form-control w-full">
-            <span className="label-text mb-2 text-sm font-medium">
+          <label className="flex w-full flex-col">
+            <span className="mb-2 text-sm font-medium">
               {t("contextMenu.surface")}
             </span>
-            <select
-              className="select select-bordered w-full"
+            <Select
+              className="w-full"
               value={selectedSurface.key}
               onChange={(event) => {
                 cancelPlacement(false, true);
@@ -953,7 +965,7 @@ export function ContextMenuEditor({
                   {surface.label || surface.key}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           {selectedSurface.profiles.length === 0
@@ -973,15 +985,14 @@ export function ContextMenuEditor({
                   aria-label={t("contextMenu.profile")}
                 >
                   {selectedSurface.profiles.map((profile) => (
-                    <button
+                    <Button
                       key={profile.key}
                       type="button"
                       aria-pressed={profile.key === selectedProfile?.key}
-                      className={`btn btn-sm ${
-                        profile.key === selectedProfile?.key
-                          ? "btn-primary"
-                          : "btn-ghost"
-                      }`}
+                      size="sm"
+                      variant={profile.key === selectedProfile?.key
+                        ? "primary"
+                        : "ghost"}
                       onClick={() => {
                         cancelPlacement(false, true);
                         setSelectedProfileKey(profile.key);
@@ -991,7 +1002,7 @@ export function ContextMenuEditor({
                       }}
                     >
                       {profile.label || profile.key}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1054,10 +1065,10 @@ export function ContextMenuEditor({
                     : t("contextMenu.editingShared")}
                 </CardDescription>
               </div>
-              <label className="form-control w-full sm:w-64">
+              <label className="flex w-full flex-col sm:w-64">
                 <span className="sr-only">{t("contextMenu.container")}</span>
-                <select
-                  className="select select-bordered select-sm w-full"
+                <Select
+                  className="w-full"
                   value={selectedContainer.key}
                   onChange={(event) => {
                     cancelPlacement(false, true);
@@ -1071,7 +1082,7 @@ export function ContextMenuEditor({
                       {container.label || container.key}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
             </div>
           </CardHeader>
@@ -1091,21 +1102,20 @@ export function ContextMenuEditor({
                 {t("contextMenu.viewMode")}
               </p>
               <div
-                className="join"
+                className="flex flex-wrap items-center gap-1"
                 role="group"
                 aria-label={t("contextMenu.viewMode")}
               >
                 {(["current", "all"] as const).map((mode) => (
-                  <button
+                  <Button
                     key={mode}
                     type="button"
                     aria-pressed={effectiveViewMode === mode}
                     aria-controls="context-menu-items-list"
                     disabled={placementOrigin !== null ||
                       (!selectedContainer.complete && mode === "current")}
-                    className={`btn btn-sm join-item ${
-                      effectiveViewMode === mode ? "btn-primary" : "btn-ghost"
-                    }`}
+                    size="sm"
+                    variant={effectiveViewMode === mode ? "primary" : "ghost"}
                     onClick={() => {
                       setViewMode(mode);
                       setMoveStatus("");
@@ -1116,7 +1126,7 @@ export function ContextMenuEditor({
                         ? "contextMenu.viewCurrent"
                         : "contextMenu.viewAll",
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <p className="text-sm text-base-content/60">
@@ -1165,11 +1175,11 @@ export function ContextMenuEditor({
               {moveStatus}
             </div>
 
-            <label className="input input-bordered flex w-full items-center gap-2">
+            <label className="flex w-full items-center gap-2">
               <Search className="size-4 text-base-content/50" />
-              <input
+              <Input
                 type="search"
-                className="grow"
+                className="min-w-0 grow"
                 aria-label={t("contextMenu.searchItems")}
                 value={query}
                 disabled={placementOrigin !== null}

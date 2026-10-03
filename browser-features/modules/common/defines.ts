@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
+import type { Experiment } from "../modules/experiments/types.ts";
+import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 
 export interface PrefGetParams {
@@ -52,6 +53,7 @@ export interface AvailableExperiment {
 }
 
 export interface NRSettingsParentFunctions {
+  getWebAppLifecycleSettings(): Promise<AppLifecycleSettings>;
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
   getStringPref(prefName: string): Promise<string | null>;

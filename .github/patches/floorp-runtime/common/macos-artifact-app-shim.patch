@@ -1,0 +1,10 @@
+diff --git a/python/mozbuild/mozbuild/artifacts.py b/python/mozbuild/mozbuild/artifacts.py
+--- a/python/mozbuild/mozbuild/artifacts.py
++++ b/python/mozbuild/mozbuild/artifacts.py
+@@ -775,5 +775,6 @@ class MacArtifactJob(ArtifactJob):
+                 "{product}",
+                 "{product}-bin",
++                "floorp-app-shim",
+                 "*.dylib",
+                 "nmhproxy",
+                 "pingsender",
