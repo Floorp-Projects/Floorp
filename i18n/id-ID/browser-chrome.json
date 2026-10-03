@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Buka Tautan di Ruang Kerja Lain",
       "noOtherWorkspace": "Tidak ada ruang kerja lain yang tersedia"
     },

@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tab in anderen Arbeitsbereich verschieben",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Link in anderem Arbeitsbereich öffnen",
       "noOtherWorkspace": "Keine anderen Arbeitsbereiche verfügbar"
     },

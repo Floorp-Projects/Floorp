@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Mover o separador para outro espaço de trabalho",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Abrir uma ligação noutro espaço de trabalho",
       "noOtherWorkspace": "Não existem outros espaços de trabalho disponíveis"
     },

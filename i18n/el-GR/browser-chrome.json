@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Μετακίνηση καρτέλας σε άλλο χώρο εργασίας",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Άνοιγμα συνδέσμου σε άλλο χώρο εργασίας",
       "noOtherWorkspace": "Δεν υπάρχουν άλλοι διαθέσιμοι χώροι εργασίας"
     },

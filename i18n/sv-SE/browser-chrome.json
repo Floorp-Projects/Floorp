@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Öppna länk i en annan arbetsyta",
       "noOtherWorkspace": "Inga andra arbetsytor tillgängliga"
     },

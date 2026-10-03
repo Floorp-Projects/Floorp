@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Перемістити вкладку в іншу робочу область",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Відкрити посилання в іншому робочому просторі",
       "noOtherWorkspace": "No other workspaces available"
     },
