@@ -46,9 +46,10 @@ export class WorkspacesTabContextMenu {
     }
 
     try {
-      render(() => this.contextMenu(), parentElem, {
+      const dispose = render(() => this.contextMenu(), parentElem, {
         marker: marker?.parentElement === parentElem ? marker : undefined,
       });
+      onCleanup(dispose);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -84,7 +85,7 @@ export class WorkspacesTabContextMenu {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ["accesskey", "hidden", "collapsed"],
+      attributeFilter: ["accesskey", "hidden", "collapsed", "style", "class"],
     });
     onCleanup(() => {
       parentElem.removeEventListener("popupshown", onPopupShown);

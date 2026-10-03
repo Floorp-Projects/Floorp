@@ -2,6 +2,10 @@
 // @colocated-env browser
 
 import { getWorkspaceMenuAccessKey } from "../utils/menu-accesskey.ts";
+import { WorkspacesTabContextMenu } from "../tabContextMenu.tsx";
+import type { WorkspacesService } from "../workspacesService.ts";
+import type { TabContextMenuPopup } from "./menu-accesskey-test-types.ts";
+import { createRoot } from "solid-js";
 import i18next from "i18next";
 import { setLanguage } from "#i18n/config-browser-chrome.ts";
 import {
@@ -31,6 +35,49 @@ function addCommand(popup: Element, key: string): Element {
   command.setAttribute("accesskey", key);
   popup.appendChild(command);
   return command;
+}
+
+async function withTabMenu(
+  test: (menu: Element, popup: TabContextMenuPopup) => Promise<void>,
+): Promise<void> {
+  const ids = [
+    "tabContextMenu",
+    "context_moveTabOptions",
+    "context_MoveTabToOtherWorkspace",
+    "WorkspacesTabContextMenu",
+  ];
+  const existingElements = ids.map((id) => ({
+    id,
+    element: document.getElementById(id),
+  }));
+  for (const { element } of existingElements) {
+    element?.removeAttribute("id");
+  }
+  const popup = document.createXULElement("menupopup") as TabContextMenuPopup;
+  popup.id = "tabContextMenu";
+  const marker = document.createXULElement("menu");
+  marker.id = "context_moveTabOptions";
+  marker.setAttribute("label", "Other tab commands");
+  popup.appendChild(marker);
+  document.documentElement.appendChild(popup);
+  let dispose = () => {};
+  try {
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      // Parent-menu tests do not open the workspace submenu or use the service.
+      new WorkspacesTabContextMenu(Object.create(null) as WorkspacesService);
+    });
+    const menu = popup.querySelector("#context_MoveTabToOtherWorkspace");
+    assert(menu, "the isolated workspace tab menu must be initialized");
+    await test(menu, popup);
+  } finally {
+    popup.hidePopup();
+    dispose();
+    popup.remove();
+    for (const { id, element } of existingElements) {
+      element?.setAttribute("id", id);
+    }
+  }
 }
 
 function testLocalizedKeyIsPreferred(): void {
@@ -124,124 +171,163 @@ function testExhaustedKeys(): void {
 }
 
 async function testLanguageChangeUpdatesLabelAndKey(): Promise<void> {
-  const menu = document.getElementById("context_MoveTabToOtherWorkspace");
-  assert(menu, "the workspace tab menu must be initialized");
-  const key = "workspaces.menu.moveTabToAnotherWorkspaceAccessKey";
-  const originalLocale = i18next.language;
-  const originalKey: unknown = i18next.getResource(
-    "ja-JP",
-    "browser-chrome",
-    key,
-  );
-  try {
-    if (originalLocale === "ja-JP") {
-      await i18next.changeLanguage("en-US");
-      setLanguage("en-US");
-    }
-    i18next.addResource("ja-JP", "browser-chrome", key, "J");
-    await i18next.changeLanguage("ja-JP");
-    setLanguage("ja-JP");
-    await Promise.resolve();
-    assertEquals(
-      menu.getAttribute("label"),
-      i18next.t("workspaces.menu.moveTabToAnotherWorkspace"),
-      "locale changes must update the label",
+  await withTabMenu(async (menu) => {
+    const key = "workspaces.menu.moveTabToAnotherWorkspaceAccessKey";
+    const originalLocale = i18next.language;
+    const originalKey: unknown = i18next.getResource(
+      "ja-JP",
+      "browser-chrome",
+      key,
     );
-    assertEquals(
-      menu.getAttribute("accesskey"),
-      "J",
-      "locale changes must also update the access key",
-    );
-  } finally {
-    if (typeof originalKey === "string") {
-      i18next.addResource("ja-JP", "browser-chrome", key, originalKey);
-    } else {
-      const menuResources: object = i18next.getResource(
-        "ja-JP",
-        "browser-chrome",
-        "workspaces.menu",
+    try {
+      if (originalLocale === "ja-JP") {
+        await i18next.changeLanguage("en-US");
+        setLanguage("en-US");
+      }
+      i18next.addResource("ja-JP", "browser-chrome", key, "J");
+      await i18next.changeLanguage("ja-JP");
+      setLanguage("ja-JP");
+      await Promise.resolve();
+      assertEquals(
+        menu.getAttribute("label"),
+        i18next.t("workspaces.menu.moveTabToAnotherWorkspace"),
+        "locale changes must update the label",
       );
+      assertEquals(
+        menu.getAttribute("accesskey"),
+        "J",
+        "locale changes must also update the access key",
+      );
+    } finally {
+      if (typeof originalKey === "string") {
+        i18next.addResource("ja-JP", "browser-chrome", key, originalKey);
+      } else {
+        const menuResources: object = i18next.getResource(
+          "ja-JP",
+          "browser-chrome",
+          "workspaces.menu",
+        );
+        Reflect.deleteProperty(
+          menuResources,
+          "moveTabToAnotherWorkspaceAccessKey",
+        );
+      }
+      await i18next.changeLanguage(originalLocale);
+      setLanguage(originalLocale);
+    }
+  });
+}
+
+async function testPendingTranslationUsesSourceFallback(): Promise<void> {
+  await withTabMenu(async (menu) => {
+    const key = "workspaces.menu.moveTabToAnotherWorkspaceAccessKey";
+    const originalLocale = i18next.language;
+    const originalKey: unknown = i18next.getResource(
+      "zh-CN",
+      "browser-chrome",
+      key,
+    );
+    const menuResources: object = i18next.getResource(
+      "zh-CN",
+      "browser-chrome",
+      "workspaces.menu",
+    );
+    try {
       Reflect.deleteProperty(
         menuResources,
         "moveTabToAnotherWorkspaceAccessKey",
       );
+      if (originalLocale === "zh-CN") {
+        await i18next.changeLanguage("en-US");
+        setLanguage("en-US");
+      }
+      await i18next.changeLanguage("zh-CN");
+      setLanguage("zh-CN");
+      await Promise.resolve();
+      assertEquals(
+        i18next.t(key),
+        "K",
+        "pending Crowdin translations must use the English source key",
+      );
+      const accessKey = menu.getAttribute("accesskey");
+      assert(
+        accessKey,
+        "pending translations must keep an available access key",
+      );
+      assertEquals(
+        Array.from(accessKey).length,
+        1,
+        "a missing locale key must not expose the translation identifier",
+      );
+    } finally {
+      if (typeof originalKey === "string") {
+        i18next.addResource("zh-CN", "browser-chrome", key, originalKey);
+      }
+      await i18next.changeLanguage(originalLocale);
+      setLanguage(originalLocale);
     }
-    await i18next.changeLanguage(originalLocale);
-    setLanguage(originalLocale);
-  }
-}
-
-async function testPendingTranslationUsesSourceFallback(): Promise<void> {
-  const menu = document.getElementById("context_MoveTabToOtherWorkspace");
-  assert(menu, "the workspace tab menu must be initialized");
-  const key = "workspaces.menu.moveTabToAnotherWorkspaceAccessKey";
-  const originalLocale = i18next.language;
-  const originalKey: unknown = i18next.getResource(
-    "zh-CN",
-    "browser-chrome",
-    key,
-  );
-  const menuResources: object = i18next.getResource(
-    "zh-CN",
-    "browser-chrome",
-    "workspaces.menu",
-  );
-  try {
-    Reflect.deleteProperty(menuResources, "moveTabToAnotherWorkspaceAccessKey");
-    if (originalLocale === "zh-CN") {
-      await i18next.changeLanguage("en-US");
-      setLanguage("en-US");
-    }
-    await i18next.changeLanguage("zh-CN");
-    setLanguage("zh-CN");
-    await Promise.resolve();
-    assertEquals(
-      i18next.t(key),
-      "K",
-      "pending Crowdin translations must use the English source key",
-    );
-    const accessKey = menu.getAttribute("accesskey");
-    assert(accessKey, "pending translations must keep an available access key");
-    assertEquals(
-      Array.from(accessKey).length,
-      1,
-      "a missing locale key must not expose the translation identifier",
-    );
-  } finally {
-    if (typeof originalKey === "string") {
-      i18next.addResource("zh-CN", "browser-chrome", key, originalKey);
-    }
-    await i18next.changeLanguage(originalLocale);
-    setLanguage(originalLocale);
-  }
+  });
 }
 
 async function testLateNativeKeysAreRechecked(): Promise<void> {
-  const menu = document.getElementById("context_MoveTabToOtherWorkspace");
-  assert(menu?.parentElement, "the workspace tab menu must be initialized");
-  const popup = menu.parentElement;
-  const originalKey = menu.getAttribute("accesskey");
-  assert(originalKey, "the workspace menu must have a key");
-  const command = document.createXULElement("menuitem");
-  try {
-    popup.appendChild(command);
-    command.setAttribute("accesskey", originalKey.toLowerCase());
+  await withTabMenu(async (menu, popup) => {
+    const originalKey = menu.getAttribute("accesskey");
+    assert(originalKey, "the workspace menu must have a key");
+    const command = document.createXULElement("menuitem");
+    try {
+      popup.appendChild(command);
+      command.setAttribute("accesskey", originalKey.toLowerCase());
+      await Promise.resolve();
+      const updatedKey = menu.getAttribute("accesskey");
+      assert(updatedKey, "an available fallback must be retained");
+      assert(
+        updatedKey.toLowerCase() !== originalKey.toLowerCase(),
+        "a late native Fluent key must not collide with the workspace key",
+      );
+    } finally {
+      command.remove();
+      await Promise.resolve();
+    }
+    assertEquals(
+      menu.getAttribute("accesskey"),
+      originalKey,
+      "removing the conflicting command must restore the preferred key",
+    );
+  });
+}
+
+async function testCssVisibilityChangesAreRechecked(): Promise<void> {
+  await withTabMenu(async (menu, popup) => {
+    const originalKey = menu.getAttribute("accesskey");
+    assert(originalKey, "the workspace menu must have a key");
+    const command = addCommand(popup, originalKey.toLowerCase());
+    command.setAttribute("label", "Native command");
+    command.setAttribute("style", "display: none !important");
+    await new Promise<void>((resolve) => {
+      popup.addEventListener("popupshown", () => resolve(), { once: true });
+      popup.openPopup(gBrowser.selectedTab, "after_start", 0, 0, true, false);
+    });
+    assertEquals(
+      menu.getAttribute("accesskey"),
+      originalKey,
+      "a command hidden with CSS must not consume the key",
+    );
+    command.removeAttribute("style");
     await Promise.resolve();
     const updatedKey = menu.getAttribute("accesskey");
     assert(updatedKey, "an available fallback must be retained");
     assert(
       updatedKey.toLowerCase() !== originalKey.toLowerCase(),
-      "a late native Fluent key must not collide with the workspace key",
+      "a native command revealed through CSS must trigger collision avoidance",
     );
-  } finally {
-    command.remove();
+    command.setAttribute("style", "display: none !important");
     await Promise.resolve();
-  }
-  assertEquals(
-    menu.getAttribute("accesskey"),
-    originalKey,
-    "removing the conflicting command must restore the preferred key",
-  );
+    assertEquals(
+      menu.getAttribute("accesskey"),
+      originalKey,
+      "hiding the conflicting command must restore the preferred key",
+    );
+  });
 }
 
 export async function runAllTests(): Promise<void> {
@@ -268,6 +354,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "pending Crowdin translations use source fallback",
       fn: testPendingTranslationUsesSourceFallback,
+    },
+    {
+      name: "CSS visibility changes recheck the key",
+      fn: testCssVisibilityChangesAreRechecked,
     },
   ];
   await runTests("menuAccessKey.test.ts", tests);
