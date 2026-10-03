@@ -1,9 +1,19 @@
 import { createBirpc } from "birpc";
 import type {
+  NRContextMenuSettingsFunctions,
+  NRSettingsAtomicPreferenceFunctions,
   NRSettingsParentFunctions,
+  PrefCompareAndSetResult,
   PrefGetParams,
+  PrefReadResult,
   PrefSetParams,
 } from "../common/defines.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+
+type SettingsPageParentFunctions =
+  & NRSettingsParentFunctions
+  & NRSettingsAtomicPreferenceFunctions
+  & NRContextMenuSettingsFunctions;
 
 export class NRSettingsChild extends JSWindowActorChild {
   private static readonly MAX_INSTALL_ATTEMPTS = 200;
@@ -106,9 +116,15 @@ export class NRSettingsChild extends JSWindowActorChild {
   NRSettingsRegisterReceiveCallback(callback: (data: string) => void) {
     this.rpc = createBirpc<
       Record<PropertyKey, never>,
-      NRSettingsParentFunctions
+      SettingsPageParentFunctions
     >(
       {
+        getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
+          return this.NRSGetContextMenuCatalog();
+        },
+        getContextMenuCatalogRevision: (): Promise<number> => {
+          return this.NRSGetContextMenuCatalogRevision();
+        },
         getWebAppLifecycleSettings: () => {
           return this.sendQuery("getWebAppLifecycleSettings");
         },
@@ -121,6 +137,20 @@ export class NRSettingsChild extends JSWindowActorChild {
         getStringPref: (prefName: string): Promise<string | null> => {
           return this.NRSPrefGet({ prefName, prefType: "string" });
         },
+        getBoolPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<boolean>> => {
+          return this.sendQuery("getBoolPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<boolean>>;
+        },
+        getStringPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<string>> => {
+          return this.sendQuery("getStringPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<string>>;
+        },
         setBoolPref: (prefName: string, prefValue: boolean): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "boolean" });
         },
@@ -129,6 +159,28 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
+        },
+        compareAndSetBoolPref: (
+          prefName: string,
+          expectedValue: boolean | null,
+          prefValue: boolean,
+        ): Promise<PrefCompareAndSetResult<boolean>> => {
+          return this.sendQuery("compareAndSetBoolPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<boolean>>;
+        },
+        compareAndSetStringPref: (
+          prefName: string,
+          expectedValue: string | null,
+          prefValue: string,
+        ): Promise<PrefCompareAndSetResult<string>> => {
+          return this.sendQuery("compareAndSetStringPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<string>>;
         },
       },
       {
@@ -141,6 +193,24 @@ export class NRSettingsChild extends JSWindowActorChild {
         deserialize: (v) => JSON.parse(v),
       },
     );
+  }
+
+  async NRSGetContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot> {
+    try {
+      return await this.sendQuery(
+        "getContextMenuCatalog",
+      ) as ContextMenuCatalogSnapshot;
+    } catch (error) {
+      console.error(
+        "[ContextMenuCatalog] Failed to read the catalog through NRSettings:",
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async NRSGetContextMenuCatalogRevision(): Promise<number> {
+    return await this.sendQuery("getContextMenuCatalogRevision") as number;
   }
 
   async NRSPrefGet(params: {
@@ -178,6 +248,9 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefGet:", error);
+      // Keep the legacy preference-read bridge fail-soft. Existing settings
+      // pages use null to select defaults or an unavailable state. New settings
+      // that need typed failures use the explicit preference-state methods.
       return null;
     }
   }
@@ -204,6 +277,10 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefSet:", error);
+      // Keep the legacy preference-write bridge fail-soft. Several existing
+      // settings pages intentionally fire-and-forget these writes, so changing
+      // this compatibility API to reject would create unhandled promises. New
+      // settings that need actionable failures use the typed atomic methods.
       return null;
     }
   }

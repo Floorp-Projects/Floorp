@@ -23,6 +23,7 @@ const About = lazy(() => import("./app/about/noraneko.tsx"));
 const ProfileAndAccount = lazy(() => import("@/app/accounts/page.tsx"));
 const MouseGesture = lazy(() => import("@/app/gesture/page.tsx"));
 const KeyboardShortcut = lazy(() => import("@/app/keyboard-shortcut/page.tsx"));
+const ContextMenuSettings = lazy(() => import("@/app/context-menu/page.tsx"));
 const Updates = lazy(() => import("@/app/updates/page.tsx"));
 const Performance = lazy(() => import("@/app/performance/page.tsx"));
 const ChromeExtrasSettings = lazy(() =>
@@ -97,6 +98,10 @@ export default function App() {
                   <Route
                     path="/features/shortcuts"
                     element={<KeyboardShortcut />}
+                  />
+                  <Route
+                    path="/features/context-menu"
+                    element={<ContextMenuSettings />}
                   />
                   <Route
                     path="/features/performance"

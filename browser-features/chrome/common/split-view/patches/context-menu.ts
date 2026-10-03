@@ -102,6 +102,10 @@ export function initContextMenu(logger: ConsoleInstance): void {
         if (addPaneItem) {
           addPaneItem.id = "floorp_addPaneToSplitView";
           addPaneItem.setAttribute(
+            "data-floorp-context-menu-key",
+            "floorp.split-view.add-pane",
+          );
+          addPaneItem.setAttribute(
             "label",
             t("splitView.contextMenu.addPane"),
           );
@@ -147,6 +151,10 @@ export function initContextMenu(logger: ConsoleInstance): void {
         moveMenu = document?.createXULElement("menu") as XULElement;
         if (moveMenu) {
           moveMenu.id = "floorp_moveTabToPane";
+          moveMenu.setAttribute(
+            "data-floorp-context-menu-key",
+            "floorp.split-view.move-pane",
+          );
           moveMenu.setAttribute(
             "label",
             t("splitView.contextMenu.moveToPane"),
@@ -252,6 +260,10 @@ function onMoveToPanePopupShowing(logger: ConsoleInstance): void {
         n: String(i + 1),
         title: tabTitle,
       }),
+    );
+    item.setAttribute(
+      "data-floorp-context-menu-key",
+      `floorp.split-view.move-to-pane.${i + 1}`,
     );
     // Capture tab references (not indices) to avoid stale closure issues
     // if tabs are reordered between popup showing and command execution.

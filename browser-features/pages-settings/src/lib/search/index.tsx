@@ -10,6 +10,7 @@ import {
   House,
   Keyboard,
   List,
+  Menu,
   MousePointer,
   PanelLeft,
   PencilRuler,
@@ -91,6 +92,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: Keyboard,
     priority: 75,
     textKey: "keyboardShortcut",
+  },
+  {
+    id: "context-menu",
+    route: "/features/context-menu",
+    titleKey: "pages.contextMenu",
+    descriptionKey: "contextMenu.description",
+    icon: Menu,
+    priority: 72,
+    textKey: "contextMenu",
   },
   {
     id: "web-apps",
@@ -214,10 +224,12 @@ export function buildSearchDocuments(
     );
     const textContent = renderedText ||
       sanitizeWhitespace(`${description} ${title}`);
-    const preview = (definition.id.startsWith("field:") ? description : description || renderedText || title).slice(
-      0,
-      PREVIEW_LENGTH,
-    );
+    const preview = (definition.id.startsWith("field:")
+      ? description
+      : description || renderedText || title).slice(
+        0,
+        PREVIEW_LENGTH,
+      );
 
     return {
       id: definition.id,

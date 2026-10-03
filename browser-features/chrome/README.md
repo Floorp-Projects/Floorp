@@ -8,6 +8,9 @@ When build, placed on noraneko/content
 
 This component handles almost all of Noraneko's core code.
 
+For menu customization behavior and settings, see the
+[context menu customization guide](../../docs/context-menu-customization.md).
+
 If you are to make feature modifying preferences, or other internal html, go to
 `root/apps/main/about/`.
 

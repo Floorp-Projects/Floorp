@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { defineConfig } from "vite";
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
@@ -10,6 +11,25 @@ import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
 };
+
+const dndKitCoreDir = realpathSync(
+  r("../../browser-features/pages-settings/node_modules/@dnd-kit/core"),
+);
+const dndKitAccessibilityDir = realpathSync(
+  path.join(path.dirname(dndKitCoreDir), "accessibility"),
+);
+const REACT_UI_PATH =
+  /[\\/](?:browser-features[\\/]pages-settings|libs[\\/]ui)[\\/]/;
+// An explicit SWC include replaces its default source-extension filter. Keep
+// CSS modules and other assets in Vite's own transform pipeline.
+const REACT_UI_SOURCE_PATH =
+  /[\\/](?:browser-features[\\/]pages-settings|libs[\\/]ui)[\\/].*\.[cm]?[jt]sx?(?:\?.*)?$/;
+const chakraReactDir = realpathSync(
+  r("../../libs/ui/node_modules/@chakra-ui/react"),
+);
+const emotionReactDir = realpathSync(
+  r("../../libs/ui/node_modules/@emotion/react"),
+);
 
 export default defineConfig({
   cacheDir: "../../node_modules/.vite/loader-features",
@@ -98,7 +118,7 @@ export default defineConfig({
     // deno(),
 
     swc.vite({
-      exclude: ["*solid-xul*", "*solid-js*"],
+      exclude: ["*solid-xul*", "*solid-js*", REACT_UI_PATH],
       jsc: {
         target: "esnext",
         parser: {
@@ -112,7 +132,30 @@ export default defineConfig({
       },
     }),
 
+    // Hub tests and shared UI are loaded directly into a privileged document instead
+    // of through Vite's HTML pipeline. Compile their React JSX without Fast
+    // Refresh so the output does not depend on the injected refresh preamble.
+    swc.vite({
+      include: REACT_UI_SOURCE_PATH,
+      jsc: {
+        target: "esnext",
+        parser: {
+          syntax: "typescript",
+          tsx: true,
+          decorators: true,
+        },
+        transform: {
+          react: {
+            runtime: "automatic",
+            development: false,
+            refresh: false,
+          },
+        },
+      },
+    }),
+
     solidPlugin({
+      exclude: REACT_UI_PATH,
       solid: {
         generate: "universal",
         moduleName: "@nora/solid-xul",
@@ -155,12 +198,35 @@ export default defineConfig({
   optimizeDeps: {
     ignoreOutdatedRequests: true,
     noDiscovery: true,
+    esbuildOptions: {
+      // The workspace uses isolated symlinks. Following them lets the browser
+      // test bundle resolve each package's transitive dependencies from its
+      // real Deno npm cache location.
+      preserveSymlinks: false,
+    },
     include: [
       // Page tests import React helpers (for example the settings search index).
       // With discovery disabled, CJS React must be explicitly converted to ESM.
       "react",
       "react/jsx-runtime",
       "./node_modules/@nora",
+      // Shared settings controls depend on Chakra and Emotion. Discovery is
+      // disabled, so prebundle their CJS transitive dependencies explicitly.
+      "@chakra-ui/react",
+      "@emotion/react",
+      "@dnd-kit/core",
+      "@dnd-kit/modifiers",
+      "@dnd-kit/sortable",
+      "@dnd-kit/utilities",
+      "clsx",
+      "i18next",
+      "lucide-react",
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react-i18next",
+      "react/jsx-runtime",
+      "tailwind-merge",
       "solid-js",
       "solid-js/web",
       "solid-js/store",
@@ -181,6 +247,12 @@ export default defineConfig({
     ],
     preserveSymlinks: true,
     alias: [
+      { find: "@chakra-ui/react", replacement: chakraReactDir },
+      { find: "@emotion/react", replacement: emotionReactDir },
+      {
+        find: "@dnd-kit/accessibility",
+        replacement: dndKitAccessibilityDir,
+      },
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
       {
         find: "@nora/solid-xul",
@@ -211,6 +283,10 @@ export default defineConfig({
       {
         find: "#firefox-tests",
         replacement: r("../../_dist/firefox-tests/files"),
+      },
+      {
+        find: "@",
+        replacement: r("../../browser-features/pages-settings/src"),
       },
       {
         find: "#libs",

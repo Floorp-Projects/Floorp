@@ -7,6 +7,7 @@ import {
   Gauge,
   Grip,
   House,
+  Menu,
   MousePointer,
   Option,
   PanelLeft,
@@ -84,6 +85,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.keyboardShortcuts"),
       url: "/features/shortcuts",
       icon: Option,
+    },
+    {
+      title: t("pages.contextMenu"),
+      url: "/features/context-menu",
+      icon: Menu,
     },
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
     // Floorp OS entry is conditional based on pref floorp.os.hidden
