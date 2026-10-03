@@ -67,7 +67,13 @@ function createPopupForDocument(
     const parent = appendTestNode("toolbarbutton", parentId);
     parent.appendChild(popup);
   }
-  const ownerDocument = { documentURI };
+  const ownerDocument = new Proxy(document, {
+    get(target, property) {
+      if (property === "documentURI") return documentURI;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
   return new Proxy(popup, {
     get(target, property) {
       if (property === "ownerDocument") return ownerDocument;
@@ -718,6 +724,259 @@ function testCatalogUsesLocalizedAccessibleLabels(): void {
   } finally {
     popup.remove();
   }
+}
+
+function createCatalogLabelFixture(
+  createLocalization?: ConstructorParameters<
+    typeof ContextMenuCatalogBuilder
+  >[1],
+) {
+  const ownerDocument = document.implementation.createHTMLDocument(
+    "Catalog labels",
+  );
+  const popup = ownerDocument.createElement("div");
+  popup.id = TEST_POPUP_ID;
+  ownerDocument.body.appendChild(popup);
+  const adapter = createTestAdapter();
+  adapter.documentURIs = [ownerDocument.documentURI];
+  const registry = new ContextMenuRegistry([adapter]);
+  const builder = new ContextMenuCatalogBuilder(registry, createLocalization);
+  const surface = registry.resolvePopup(popup, window);
+  assert(surface !== null, "isolated catalog popup resolves");
+  const append = (id: string, messageId: string) => {
+    const item = ownerDocument.createElement("menuitem");
+    item.id = id;
+    item.setAttribute("data-lazy-l10n-id", messageId);
+    popup.appendChild(item);
+    return item;
+  };
+  const labels = () =>
+    builder.record(surface).surfaces[0].profiles[0].containers[0].items.map(
+      (item) => item.label,
+    );
+  return { ownerDocument, popup, builder, surface, append, labels };
+}
+
+function testCatalogResolvesNativeLazyFluentLabelsWithoutChangingDOM(): void {
+  const fixture = createCatalogLabelFixture();
+  const reload = fixture.append("runtime-a", "reload-tab");
+  const close = fixture.append("runtime-b", "tab-context-close-n-tabs");
+  close.setAttribute("data-l10n-args", '{"tabCount":3}');
+  const before = fixture.popup.outerHTML;
+  const nativeMessages = new Localization(["browser/tabContextMenu.ftl"], true)
+    .formatMessagesSync([
+      "reload-tab",
+      { id: "tab-context-close-n-tabs", args: { tabCount: 3 } },
+    ]);
+  const expectedLabels = nativeMessages.map((message) =>
+    message?.attributes?.find((attribute) => attribute.name === "label")?.value
+  );
+  assert(
+    expectedLabels.every(Boolean),
+    "native Fluent resources provide labels",
+  );
+  fixture.builder.seed(fixture.surface);
+  const initial =
+    fixture.builder.snapshot().surfaces[0].profiles[0].containers[0];
+  assertEquals(
+    initial.items.map((item) => item.label).join("|"),
+    expectedLabels.join("|"),
+    "the cold catalog formats native Fluent label attributes and arguments",
+  );
+  assertEquals(
+    initial.complete,
+    false,
+    "localization does not mark a popup as opened",
+  );
+  assertEquals(
+    fixture.popup.outerHTML,
+    before,
+    "catalog translation leaves native DOM untouched",
+  );
+  assertEquals(
+    reload.getAttribute("data-l10n-id"),
+    null,
+    "native translation stays lazy",
+  );
+}
+
+function testCatalogCachesLocalizationAndInvalidatesChangedResources(): void {
+  const resourcesSeen: string[][] = [];
+  const requests: L10nKey[] = [];
+  const fixture = createCatalogLabelFixture((resources) => {
+    resourcesSeen.push(resources);
+    return {
+      formatMessagesSync(keys) {
+        const key = Array.from(keys)[0];
+        requests.push(key);
+        const args = typeof key === "string" ? null : key.args;
+        return [{
+          value: "Message body",
+          attributes: [
+            { name: "aria-label", value: "Accessible fallback" },
+            { name: "label", value: `Translated ${args?.count ?? 1}` },
+          ],
+        }];
+      },
+    };
+  });
+  const resource = fixture.ownerDocument.createElement("link");
+  resource.rel = "localization";
+  resource.setAttribute("href", "browser/test-catalog.ftl");
+  fixture.ownerDocument.head.appendChild(resource);
+  const item = fixture.append("runtime-a", "test-lazy-label");
+  item.setAttribute("data-l10n-id", "test-current-label");
+  item.setAttribute("data-l10n-args", '{"count":2}');
+  assertEquals(
+    fixture.labels()[0],
+    "Translated 2",
+    "Fluent label attributes beat message bodies",
+  );
+  fixture.labels();
+  assertEquals(
+    resourcesSeen.length,
+    1,
+    "one Localization instance is reused per document",
+  );
+  assertEquals(
+    requests.length,
+    1,
+    "successful labels are reused for the same ID and arguments",
+  );
+  assertEquals(
+    (requests[0] as L10nIdArgs).id,
+    "test-current-label",
+    "current native Fluent IDs beat stale lazy IDs",
+  );
+  assert(
+    resourcesSeen[0].includes("browser/test-catalog.ftl"),
+    "document resources are included",
+  );
+  assert(
+    resourcesSeen[0].includes("browser/tabContextMenu.ftl"),
+    "lazy tab resources are included",
+  );
+
+  item.setAttribute("label", "Native dynamic label");
+  assertEquals(
+    fixture.labels()[0],
+    "Native dynamic label",
+    "native labels beat cached translations",
+  );
+  item.removeAttribute("label");
+  item.setAttribute("aria-label", "Native accessible label");
+  assertEquals(
+    fixture.labels()[0],
+    "Native accessible label",
+    "native accessible labels beat cached translations",
+  );
+  assertEquals(requests.length, 1, "native labels do not invoke the formatter");
+  item.removeAttribute("aria-label");
+  item.setAttribute("data-l10n-args", '{"count":3}');
+  assertEquals(
+    fixture.labels()[0],
+    "Translated 3",
+    "changed arguments are formatted separately",
+  );
+  assertEquals(
+    requests.length,
+    2,
+    "argument changes invalidate the label cache key",
+  );
+
+  resource.setAttribute("href", "browser/changed-catalog.ftl");
+  fixture.labels();
+  assertEquals(
+    resourcesSeen.length,
+    2,
+    "changed resource IDs recreate the document localizer",
+  );
+  assertEquals(
+    requests.length,
+    3,
+    "changed resources invalidate successful label entries",
+  );
+}
+
+function testCatalogLocalizationFailuresPreserveRows(): void {
+  let calls = 0;
+  const fixture = createCatalogLabelFixture(() => ({
+    formatMessagesSync(keys) {
+      calls++;
+      const key = Array.from(keys)[0];
+      const id = typeof key === "string" ? key : key.id;
+      if (id === "format-failure") throw new Error("Unavailable localization");
+      if (id === "accessible-label") {
+        return [{
+          attributes: [{
+            name: "aria-label",
+            value: "Fluent accessible label",
+          }],
+        }];
+      }
+      return [null];
+    },
+  }));
+  const item = fixture.append("runtime-a", "invalid-args-label");
+  for (
+    const args of [
+      "{",
+      "[]",
+      '"text"',
+      '{"count":true}',
+      '{"count":{}}',
+      '{"count":1e999}',
+    ]
+  ) {
+    item.setAttribute("data-l10n-args", args);
+    assertEquals(
+      fixture.labels()[0],
+      "invalid-args-label",
+      "invalid Fluent metadata keeps the identifier fallback",
+    );
+  }
+  assertEquals(
+    calls,
+    0,
+    "invalid metadata is never sent to the Fluent formatter",
+  );
+  item.removeAttribute("data-l10n-args");
+  item.setAttribute("data-lazy-l10n-id", "invalid message id");
+  assertEquals(
+    fixture.labels()[0],
+    "invalid message id",
+    "invalid IDs preserve the old fallback",
+  );
+  assertEquals(calls, 0, "invalid identifiers do not invoke localization");
+  item.setAttribute("data-lazy-l10n-id", "format-failure");
+  fixture.append("runtime-b", "missing-message");
+  fixture.append("runtime-c", "accessible-label");
+  assertEquals(
+    fixture.labels().join("|"),
+    "format-failure|missing-message|Fluent accessible label",
+    "failed and missing messages do not block other rows",
+  );
+
+  let available = false;
+  const unavailable = createCatalogLabelFixture(() => {
+    if (!available) throw new Error("Localization API unavailable");
+    return {
+      formatMessagesSync:
+        () => [{ attributes: [{ name: "label", value: "Recovered label" }] }],
+    };
+  });
+  unavailable.append("runtime-a", "unavailable-message");
+  assertEquals(
+    unavailable.labels()[0],
+    "unavailable-message",
+    "constructor failures retain the existing row fallback",
+  );
+  available = true;
+  assertEquals(
+    unavailable.labels()[0],
+    "Recovered label",
+    "a later capture retries unavailable localization",
+  );
 }
 
 function testCatalogProtectsDuplicateStableKeys(): void {
@@ -3374,6 +3633,18 @@ const tests: TestCase[] = [
   {
     name: "catalog uses localized accessible labels",
     fn: testCatalogUsesLocalizedAccessibleLabels,
+  },
+  {
+    name: "catalog resolves native lazy Fluent labels without changing DOM",
+    fn: testCatalogResolvesNativeLazyFluentLabelsWithoutChangingDOM,
+  },
+  {
+    name: "catalog caches localization and invalidates changed resources",
+    fn: testCatalogCachesLocalizationAndInvalidatesChangedResources,
+  },
+  {
+    name: "catalog localization failures preserve rows",
+    fn: testCatalogLocalizationFailuresPreserveRows,
   },
   {
     name: "duplicate stable keys are protected in the catalog",

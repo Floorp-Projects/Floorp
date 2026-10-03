@@ -52,12 +52,20 @@ function getLocale(): string {
   }
 }
 
-function getItemLabel(element: Element, fallback: string): string {
+function getItemLabel(
+  element: Element,
+  fallback: string,
+  localize: (element: Element) => string | null,
+): string {
   if (element.localName === "menuseparator") return "";
+  for (const attribute of ["label", "aria-label"]) {
+    const label = element.getAttribute(attribute)?.trim();
+    if (label) return label;
+  }
+  const localized = localize(element);
+  if (localized) return localized;
   for (
     const candidate of [
-      element.getAttribute("label"),
-      element.getAttribute("aria-label"),
       element.getAttribute("data-l10n-id"),
       element.getAttribute("data-lazy-l10n-id"),
       element.id,
@@ -69,14 +77,18 @@ function getItemLabel(element: Element, fallback: string): string {
   return fallback;
 }
 
-function getContainerLabel(surface: ResolvedContextMenuSurface): string {
+function getContainerLabel(
+  surface: ResolvedContextMenuSurface,
+  localize: (element: Element) => string | null,
+): string {
   if (surface.popup === surface.rootPopup) return surface.adapter.label;
   if (surface.popup.localName === "menugroup") {
-    return getItemLabel(surface.popup, surface.containerKey);
+    return getItemLabel(surface.popup, surface.containerKey, localize);
   }
   return getItemLabel(
     surface.popup.parentElement ?? surface.popup,
     surface.containerKey,
+    localize,
   );
 }
 
@@ -140,10 +152,28 @@ export class OptionalContextMenuCatalogReporter
 export class ContextMenuCatalogBuilder {
   readonly #registry: ContextMenuRegistry;
   readonly #surfaces = new Map<string, ContextMenuSurfaceDescriptor>();
+  readonly #createLocalization: (
+    resources: string[],
+  ) => Pick<Localization, "formatMessagesSync">;
+  readonly #localizations = new WeakMap<Document, {
+    signature: string;
+    localization: Pick<Localization, "formatMessagesSync">;
+    labels: Map<string, string>;
+  }>();
   #revision = 0;
 
-  constructor(registry: ContextMenuRegistry) {
+  constructor(
+    registry: ContextMenuRegistry,
+    createLocalization: (
+      resources: string[],
+    ) => Pick<Localization, "formatMessagesSync"> = (resources) =>
+      new Localization(
+        resources.map((path) => ({ path, optional: true })),
+        true,
+      ),
+  ) {
     this.#registry = registry;
+    this.#createLocalization = createLocalization;
     for (const adapter of registry.adapters) {
       this.#surfaces.set(adapter.key, {
         key: adapter.key,
@@ -160,6 +190,76 @@ export class ContextMenuCatalogBuilder {
         })),
       });
     }
+  }
+
+  private getLabelLocalizer(
+    document: Document,
+  ): (element: Element) => string | null {
+    // Tab labels stay lazy until native tab interaction. Read Fluent directly
+    // for the initial catalog without opening or translating Firefox's DOM.
+    const resources = [
+      ...new Set([
+        ...Array.from(document.querySelectorAll('link[rel="localization"]'))
+          .map((link) => link.getAttribute("href")?.trim())
+          .filter((path): path is string => Boolean(path)),
+        "browser/tabContextMenu.ftl",
+      ]),
+    ];
+    const signature = JSON.stringify([
+      Services.locale.appLocalesAsBCP47,
+      resources,
+    ]);
+
+    return (element) => {
+      const id = element.getAttribute("data-l10n-id")?.trim() ||
+        element.getAttribute("data-lazy-l10n-id")?.trim();
+      if (!id || !/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(id)) return null;
+      try {
+        const serializedArgs = element.getAttribute("data-l10n-args");
+        const args: unknown = serializedArgs === null
+          ? null
+          : JSON.parse(serializedArgs);
+        if (
+          args !== null &&
+          (typeof args !== "object" || Array.isArray(args) ||
+            Object.values(args).some((value) =>
+              value !== null && typeof value !== "string" &&
+              !(typeof value === "number" && Number.isFinite(value))
+            ))
+        ) return null;
+
+        let cached = this.#localizations.get(document);
+        if (!cached || cached.signature !== signature) {
+          cached = {
+            signature,
+            localization: this.#createLocalization(resources),
+            labels: new Map(),
+          };
+          this.#localizations.set(document, cached);
+        }
+        const key = JSON.stringify([id, args]);
+        const existing = cached.labels.get(key);
+        if (existing) return existing;
+        const message = cached.localization.formatMessagesSync([
+          { id, args: args as L10nArgs | null },
+        ])[0];
+        const label = ["label", "aria-label"].map((name) =>
+          message?.attributes?.find((attribute) =>
+            attribute.name === name
+          )
+            ?.value.trim()
+        ).find(Boolean) || message?.value?.trim();
+        if (!label) return null;
+        // Argument values can be generated from arbitrary native context.
+        // Bound the cache while retaining the normal static menu labels.
+        if (cached.labels.size >= 512) cached.labels.clear();
+        cached.labels.set(key, label);
+        return label;
+      } catch {
+        // Invalid metadata or unavailable resources must not drop menu rows.
+        return null;
+      }
+    };
   }
 
   record(surface: ResolvedContextMenuSurface): ContextMenuCatalogSnapshot {
@@ -192,6 +292,7 @@ export class ContextMenuCatalogBuilder {
     surface: ResolvedContextMenuSurface,
     complete: boolean,
   ): void {
+    const localize = this.getLabelLocalizer(surface.popup.ownerDocument);
     const items: ContextMenuItemDescriptor[] = [];
     const elements = Array.from(surface.popup.children);
     const identities = elements.map((element) =>
@@ -211,7 +312,7 @@ export class ContextMenuCatalogBuilder {
       items.push({
         key: identity.key,
         catalogInstanceId: `${index}:${identity.key}`,
-        label: getItemLabel(element, identity.key),
+        label: getItemLabel(element, identity.key, localize),
         kind: identity.kind,
         source: identity.source,
         // Runtime resolution deliberately refuses duplicate keys. Reflect the
@@ -250,7 +351,7 @@ export class ContextMenuCatalogBuilder {
     const containers = existingProfile?.containers.map(cloneContainer) ?? [];
     const nextContainer: ContextMenuContainerDescriptor = {
       key: surface.containerKey,
-      label: getContainerLabel(surface),
+      label: getContainerLabel(surface, localize),
       complete,
       items,
     };
