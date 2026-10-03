@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "タブを他のワークスペースに移動",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "リンクを別のワークスペースで開く",
       "noOtherWorkspace": "他のワークスペースがありません"
     },
