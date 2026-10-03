@@ -310,13 +310,6 @@ Shim process owning the native window, the requested 900×700 default geometry,
 actual Gecko frame/repaint acknowledgements, shared HttpOnly cookies and local
 storage, native AppKit text input reaching Gecko, and reverse cookie sharing.
 
-On 2026-10-04, the source-built arm64 Runtime also passed the isolated
-`tools/app-shim/test-popups-and-overscroll.py` regression. With native-menu
-preferences enabled, moved PWA windows presented select popups at the correct
-position and width at 100% and 150% zoom, and option commands reached the page.
-Injected phased trackpad packets produced APZ top-edge overscroll, presented
-compositor frames, and settled back to zero scroll offset. Physical trackpad
-gestures remain unverified.
 With LaunchServices startup, the Shim became the key, unoccluded application
 window. An exact-window capture was inspected and showed readable Gecko chrome,
 the fixture heading and input, and a transformed rounded tile. Window closure
@@ -324,6 +317,14 @@ and service shutdown completed without the earlier nonempty-layer-root crash;
 the harness then terminated its test host with its requested SIGTERM. Evidence
 is in `_dist/app-shim-runtime-smoke/run-uilwql9b/report.json`. This direct test uses
 ordinary browser chrome and does not establish the complete Floorp PWA frontend.
+
+On 2026-10-04, the source-built arm64 Runtime also passed the isolated
+`tools/app-shim/test-popups-and-overscroll.py` regression. With native-menu
+preferences enabled, moved PWA windows presented select popups at the correct
+position and width at 100% and 150% zoom, and option commands reached the page.
+Injected phased trackpad packets produced APZ top-edge overscroll, presented
+compositor frames, and settled back to zero scroll offset. Physical trackpad
+gestures remain unverified.
 
 The final signed package also passed frontend lifecycle runs `run-5o38ue6c`
 (keep apps running) and `run-f602_v7x` (quit all). Both exercised the real signed
