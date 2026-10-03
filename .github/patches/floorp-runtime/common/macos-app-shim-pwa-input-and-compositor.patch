@@ -12,6 +12,29 @@ index fa57f2512bb..e4fffa56b37 100644
  #if defined(XP_DARWIN)
      return layers::WebRenderCompositor::CORE_ANIMATION;
  #elif defined(MOZ_WAYLAND)
+diff --git a/widget/cocoa/NativeMenuSupport.mm b/widget/cocoa/NativeMenuSupport.mm
+index e24d82fcaef..224600b2187 100644
+--- a/widget/cocoa/NativeMenuSupport.mm
++++ b/widget/cocoa/NativeMenuSupport.mm
+@@ -9,6 +9,7 @@
+ #include "mozilla/StaticPrefs_browser.h"
+ #include "mozilla/StaticPrefs_widget.h"
+ #include "nsCocoaWindow.h"
++#include "nsContentUtils.h"
+ #include "nsMenuBarX.h"
+ 
+ namespace mozilla::widget {
+@@ -32,6 +33,10 @@
+ 
+ already_AddRefed<NativeMenu> NativeMenuSupport::CreateNativePopupMenu(
+     dom::Element* aPopup) {
++  if (nsIWidget* widget = nsContentUtils::WidgetForDocument(aPopup->OwnerDoc());
++      widget && widget->IsMacWebAppWidget()) {
++    return nullptr;
++  }
+   return MakeAndAddRef<NativeMenuMac>(aPopup);
+ }
+ 
 diff --git a/widget/cocoa/appshim/MacWebAppInput.h b/widget/cocoa/appshim/MacWebAppInput.h
 index 3338f985a6c..269fedaed7d 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.h

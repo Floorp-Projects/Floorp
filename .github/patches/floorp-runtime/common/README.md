@@ -21,11 +21,16 @@ requires that executable; omitting it prevents the final app from being built.
 native-compositor policy and keeps the reported backend consistent with it.
 PWA windows therefore composite video into their BGRA surface. It also aligns
 Shim world coordinates with the sender's int32 domain, preserves IME composition
-and selection ranges, and routes phased trackpad input through Gecko's APZ and
-history-swipe handling. The canonical Shim files in `native/macos-app-shim/`
-must stay in sync with this patch. Native View regressions are covered by
-`deno task app-shim:build --test`; Runtime phase conversion is covered by
-`./mach gtest MacWebAppPanGesture.*`.
+and selection ranges, and routes phased trackpad input through Gecko's APZ,
+overscroll, and history-swipe handling. PWA widgets bypass host-process AppKit
+popup menus, which require a local NSView, and use Gecko popups presented by the
+Shim instead. Ordinary browser menus keep their existing behavior and native
+menu preferences remain enabled. The canonical Shim files in
+`native/macos-app-shim/` must stay in sync with this patch. Native View regressions
+are covered by `deno task app-shim:build --test`; Runtime phase conversion is
+covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
+`tools/app-shim/test-popups-and-overscroll.py` runner checks popup positioning,
+zoom, option commands, and APZ overscroll against a source-built Runtime.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts

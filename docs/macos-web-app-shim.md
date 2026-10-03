@@ -38,10 +38,17 @@ policy, and the reported WebRender compositor must honor the same option.
 accepts int32 world coordinates and translations before applying the viewport
 transform, while preserving surface dimensions and memory limits.
 
-Phased trackpad input uses Gecko's pan/APZ and history-swipe handling, including
-the system swipe setting and content's horizontal scrollability. Phase-less
-wheel input keeps its wheel path. The IME client maintains the composition start
-across updates and applies selection offsets relative to that start.
+Phased trackpad input uses Gecko's pan/APZ, overscroll, and history-swipe handling,
+including the system swipe setting and content's horizontal scrollability.
+Phase-less wheel input keeps its wheel path. The IME client maintains the
+composition start across updates and applies selection offsets relative to that
+start.
+
+AppKit popup menus need an NSView in the process displaying the menu. PWA widgets
+have no host-process NSView, so `NativeMenuSupport::CreateNativePopupMenu` leaves
+their popups to Gecko and the Shim's native popup windows. This includes select
+dropdowns and context menus. Ordinary browser widgets retain their native menu
+policy; neither native-menu preference needs to be disabled.
 
 ## Launch and installation
 
@@ -141,6 +148,7 @@ After building and signing the local browser `.app`:
 ```sh
 python3 tools/app-shim/test-runtime.py --browser /absolute/path/to/Nightly.app --launch-services --capture-window
 python3 tools/app-shim/test-browser-modules.py --browser /absolute/path/to/Nightly.app
+python3 tools/app-shim/test-popups-and-overscroll.py --browser /absolute/path/to/Nightly.app
 python3 tools/app-shim/test-runtime.py --browser /absolute/path/to/Nightly.app --launch-services --frontend-modules bridge/loader-modules/_dist
 python3 tools/app-shim/test-runtime.py --browser /absolute/path/to/Nightly.app --launch-services --frontend-modules bridge/loader-modules/_dist --quit-all
 python3 tools/app-shim/test-cold-launch.py --browser /absolute/path/to/fully-bundled-Floorp.app
@@ -154,6 +162,14 @@ a subsequent content repaint, bidirectional cookie sharing, shared local
 storage, and real AppKit text input. Native event posting requires an existing
 macOS permission; a skipped input test reports a partial result, never a pass.
 JSON reports and browser logs are retained under `_dist`.
+
+The popup/overscroll runner keeps native select and anchored-menu preferences
+enabled. It moves the PWA window, checks select popup geometry at 100% and 150%
+zoom against the Shim's window acknowledgements, requires a presented popup
+frame, and checks that an option command reaches the page. It feeds phased
+trackpad packets into the Runtime input adapter and checks APZ's overscroll flag,
+snap-back completion, and subsequent compositor frames. This exercises the input
+and presentation paths; physical trackpad gestures still need manual validation.
 
 `--frontend-modules` also exercises the real installer, native-process recovery
 without replacing the live page, beforeunload cancellation, app-only quit, and
