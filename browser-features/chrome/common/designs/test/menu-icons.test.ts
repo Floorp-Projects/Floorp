@@ -7,19 +7,7 @@ import {
   CHROME_EXTRAS_DEFAULTS,
 } from "../chrome-extras.ts";
 import { assert, runTests } from "../../../test/utils/test_harness.ts";
-
-type Popup = Element & {
-  state: string;
-  openPopup(
-    anchor: Element | null,
-    position: string,
-    x: number,
-    y: number,
-    isContextMenu: boolean,
-    attributesOverride: boolean,
-  ): void;
-  hidePopup(): void;
-};
+import type { MenuIconPopup } from "./types.ts";
 
 async function testMenuGeometry(): Promise<void> {
   // Native Cocoa menus do not use DOM layout; this geometry test targets the
@@ -31,7 +19,7 @@ async function testMenuGeometry(): Promise<void> {
     "lepton",
   );
   const set = document.createXULElement("popupset");
-  const popup = document.createXULElement("menupopup") as Popup;
+  const popup = document.createXULElement("menupopup") as MenuIconPopup;
   popup.setAttribute("nonnative", "true");
   // Pin the image edge while retaining the production rules for text/gutter.
   popup.setAttribute("style", "--context-menu-background-padding: 6px;");
@@ -77,7 +65,9 @@ async function testMenuGeometry(): Promise<void> {
     assert(label, "Firefox must render the current .menu-text markup");
     const itemRect = plain.getBoundingClientRect();
     const labelRect = label.getBoundingClientRect();
-    const rtl = getComputedStyle(plain).direction === "rtl";
+    const computedStyle = getComputedStyle(plain);
+    assert(computedStyle, "the open menu item must expose computed styles");
+    const rtl = computedStyle.direction === "rtl";
     const textStart = rtl
       ? itemRect.right - labelRect.right
       : labelRect.left - itemRect.left;
