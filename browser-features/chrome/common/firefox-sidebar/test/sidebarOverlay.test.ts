@@ -385,27 +385,20 @@ async function testPendingOpenInvalidation(): Promise<void> {
     const originalShow = native.showInitially;
     let release: (() => void) | undefined;
     try {
-      for (const earlyReveal of [true, false]) {
+      for (const reopenBeforeCompletion of [true, false]) {
         let requested = false;
         let completed = false;
         native.showInitially = async (command) => {
           requested = true;
-          if (earlyReveal) {
-            // Gecko can leave this Promise pending forever if hide interrupts
-            // its first load. Our held completion intentionally does not await it.
-            void originalShow.call(native, command);
-          }
+          // Native _show starts synchronously. Gecko can leave its Promise pending
+          // forever if hide interrupts the load, so do not await it after cancel.
+          void originalShow.call(native, command);
           await new Promise<void>((resolve) => release = resolve);
-          const shown = earlyReveal
-            ? true
-            : await originalShow.call(native, command);
-          if (earlyReveal) {
-            element("sidebar-box").dispatchEvent(
-              new CustomEvent("SidebarShown", { bubbles: true }),
-            );
-          }
+          element("sidebar-box").dispatchEvent(
+            new CustomEvent("SidebarShown", { bubbles: true }),
+          );
           completed = true;
-          return shown;
+          return true;
         };
         await setModes(true, true);
         hover(true);
@@ -414,12 +407,10 @@ async function testPendingOpenInvalidation(): Promise<void> {
           "hover must start the delayed native open",
         );
         await settle();
-        if (earlyReveal) {
-          assert(
-            native.isOpen,
-            "native panel must be visible while its load is pending",
-          );
-        }
+        assert(
+          native.isOpen,
+          "native panel must be visible while its load is pending",
+        );
         const before = viewport();
         await setModes(false, false);
         assert(
@@ -430,7 +421,7 @@ async function testPendingOpenInvalidation(): Promise<void> {
           before,
           "disabling overlay during native loading must not briefly dock the panel",
         );
-        if (earlyReveal) {
+        if (reopenBeforeCompletion) {
           native.showInitially = originalShow;
           await setModes(true, true);
           hover(false);
@@ -509,6 +500,52 @@ async function testPendingOpenInvalidation(): Promise<void> {
           !firefoxSidebarOverlay.pinned,
         "a cancelled close completion must preserve the newer unpinned panel",
       );
+
+      for (const keepHoverEnabled of [false, true]) {
+        native.hide({ dismissPanel: false });
+        await setModes(false, false);
+        hover(false);
+        completed = false;
+        native.lastOpenedId = "viewBookmarksSidebar";
+        native.showInitially = async (command) => {
+          void originalShow.call(native, command);
+          await new Promise<void>((resolve) => release = resolve);
+          element("sidebar-box").dispatchEvent(
+            new CustomEvent("SidebarShown", { bubbles: true }),
+          );
+          completed = true;
+          return true;
+        };
+        await setModes(true, true);
+        hover(true);
+        await waitFor(
+          () => native.isOpen,
+          "manual handoff requires a pending hover opening",
+        );
+        if (!keepHoverEnabled) await setModes(false, false);
+        native.showInitially = originalShow;
+        const manualCommand = keepHoverEnabled
+          ? "viewHistorySidebar"
+          : "viewBookmarksSidebar";
+        await native.showInitially(manualCommand);
+        await settle();
+        release?.();
+        await waitFor(
+          () => completed,
+          "manual handoff must release old completion",
+        );
+        await settle();
+        assert(
+          native.isOpen && native.currentID === manualCommand,
+          "old hover completion must preserve a manually opened native panel",
+        );
+        if (keepHoverEnabled) {
+          assert(
+            firefoxSidebarOverlay?.expanded && firefoxSidebarOverlay.pinned,
+            "a manual command during pending hover must take ownership and pin",
+          );
+        }
+      }
     } finally {
       release?.();
       native.showInitially = originalShow;

@@ -45,6 +45,7 @@ export class FirefoxSidebarOverlayController {
   private escaped = false;
   private opening: SidebarOpeningRequest | undefined;
   private openingToken = 0;
+  private invokingNativeShow = false;
   private ignoreNextNativeClose = false;
   private requestGeneration = 0;
   private resizing = false;
@@ -186,8 +187,16 @@ export class FirefoxSidebarOverlayController {
     }, true);
     this.listen(document, "focusout", () => this.scheduleClose(), true);
     const nativeShowStarted = () => {
+      if (this.invokingNativeShow) return;
+      // Explicit native commands take ownership even when hover is disabled.
+      // An older cancelled load must never close a manually docked panel.
+      this.openingToken++;
+      if (this.opening) {
+        this.opening.hoverOwned = false;
+        this.invalidateOpening();
+      }
       if (
-        this.settings.hover && !this.opening &&
+        this.settings.hover &&
         !document.documentElement.hasAttribute("inDOMFullscreen")
       ) {
         this.escaped = false;
@@ -483,7 +492,16 @@ export class FirefoxSidebarOverlayController {
     };
     this.opening = request;
     try {
-      const nativeOpening = this.native.showInitially(commandID).then(
+      let nativeOpening: Promise<boolean>;
+      this.invokingNativeShow = true;
+      try {
+        // Native _show dispatches its start events synchronously. Later native
+        // commands remain distinguishable while this request is still loading.
+        nativeOpening = this.native.showInitially(commandID);
+      } finally {
+        this.invokingNativeShow = false;
+      }
+      const completion = nativeOpening.then(
         (shown) => {
           // A cancelled native load can still reveal its panel later. It only owns
           // that panel until a newer opening request has taken over.
@@ -493,7 +511,7 @@ export class FirefoxSidebarOverlayController {
           return shown;
         },
       );
-      await Promise.race([nativeOpening, cancellation.promise]);
+      await Promise.race([completion, cancellation.promise]);
       if (request.cancelled || this.opening !== request) return;
       this.trigger?.setAttribute(
         "aria-expanded",
