@@ -1,0 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Floorp chrome-extras: hiddenTabCloseButton. Lepton's clipped-tab hover
+ * rule uses two IDs and !important. Include both native tab containers under
+ * the browser window so this wins in horizontal and vertical layouts. */
+#tabbrowser-tabs .tab-close-button,
+#main-window #tabbrowser-tabs :is(#tabbrowser-arrowscrollbox, #pinned-tabs-container) .tab-close-button {
+  display: none !important;
+}
