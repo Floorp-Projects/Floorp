@@ -20,9 +20,10 @@ export function SearchInput(props: SearchInputProps) {
       const cmd = props.state!.activeCommand();
       const stepIndex = props.state!.currentStepIndex();
       const step = cmd?.steps?.[stepIndex];
-      return step?.placeholder ?? step?.label ?? i18next.t("commandPalette.placeholder", {
-        defaultValue: "Type a command...",
-      });
+      return step?.placeholder ?? step?.label ??
+        i18next.t("commandPalette.placeholder", {
+          defaultValue: "Type a command...",
+        });
     }
     return i18next.t("commandPalette.placeholder", {
       defaultValue: "Type a command...",
@@ -66,8 +67,21 @@ export function SearchInput(props: SearchInputProps) {
             defaultValue: "Back to commands",
           })}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 3L5 8L10 13"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
       )}

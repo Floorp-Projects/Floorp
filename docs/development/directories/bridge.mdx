@@ -1,0 +1,45 @@
+---
+title: "Bridge Directory"
+sidebar_label: "Bridge"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Overview
+
+The `bridge` directory contains the startup and loader infrastructure that connects Floorp's custom browser features to the underlying Firefox base. It handles selecting the appropriate code loader depending on the environment (development, test, or production) and bootstrapping the feature modules.
+
+## Startup Bridge
+
+The startup bridge is responsible for determining which loader to use when the browser chrome initializes.
+
+`bridge/startup/src/chrome_root.ts` acts as the entry point for this selection process. It distinguishes between three primary environments:
+
+- **Development**: Uses a local HTTP loader served by Vite, specifically `http://localhost:5181/loader/index.ts`.
+- **Test**: Uses a test-specific HTTP loader, `http://localhost:5181/loader/test/index.ts`.
+- **Production**: Loads the compiled production code directly from `chrome://noraneko/content/core.js`.
+
+## Loader Features
+
+The `bridge/loader-features/` directory contains the Vite configuration and the actual loader scripts that run in development and test environments.
+
+### Vite Configuration
+
+The loader dev server is configured in `bridge/loader-features/vite.config.ts`. It serves the loader scripts on port `5181`, which corresponds to the URLs used by the startup bridge for development and test environments.
+
+### Loader Entrypoint
+
+The main loader entrypoint is located at `bridge/loader-features/loader/index.ts`. When executed, it:
+
+1. Imports `BrowserGlue` to integrate with Firefox's module system.
+2. Initializes internationalization (i18n).
+3. Records the loader state.
+4. Filters enabled modules based on their configuration.
+5. Runs the lifecycle hooks for the enabled modules.
+
+### Module Registry
+
+`bridge/loader-features/loader/modules.ts` is responsible for building the module maps. It discovers and aggregates common and static module entries from the chrome feature globs, making them available for the loader to process.
+
+### Module Hooks
+
+`bridge/loader-features/loader/modules-hooks.ts` provides the mechanism for tracking module load states. It exposes `onModuleLoaded` promises and handles the internal resolution of module load states, allowing the system to wait for or react to specific modules being loaded.

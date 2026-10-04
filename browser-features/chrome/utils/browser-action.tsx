@@ -2,7 +2,8 @@
 
 // NOTICE: Do not add toolbar buttons code here. Create new folder or file for new toolbar buttons.
 
-import { render } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import type { ComponentChild } from "preact";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
@@ -11,6 +12,16 @@ const { CustomizableUI } = ChromeUtils.importESModule(
 
 // deno-lint-ignore no-namespace
 export namespace BrowserActionUtils {
+  const mounts = new Map<string, () => void>();
+  function mount(key: string, content: ComponentChild, parent: Element) {
+    mounts.get(key)?.();
+    const dispose = safeRender(content, parent);
+    mounts.set(key, dispose);
+    addDisposer(() => {
+      dispose();
+      if (mounts.get(key) === dispose) mounts.delete(key);
+    });
+  }
   export function createToolbarClickActionButton(
     widgetId: string,
     l10nId: string | null,
@@ -20,20 +31,8 @@ export namespace BrowserActionUtils {
     position: number | null = 0,
     onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
-    // Add style Element for toolbar button icon.
-    // This render is running every open browser window.
-    // Use a dedicated container instead of document.head directly:
-    // preact.render() replaces *all* children of its container, so mounting on
-    // document.head would destroy Firefox-internal <link>/<meta> nodes.
     if (styleElement && document?.head) {
-      const rootId = `nora-browser-action-style-root-${widgetId}`;
-      let styleRoot = document.getElementById(rootId) as HTMLElement | null;
-      if (!styleRoot) {
-        styleRoot = document.createElement("div");
-        styleRoot.id = rootId;
-        document.head.appendChild(styleRoot);
-      }
-      render(styleElement, styleRoot);
+      mount(`${widgetId}-style`, styleElement, document.head);
     }
 
     // Create toolbar button only once per profile. Subsequent window opens reuse
@@ -77,8 +76,7 @@ export namespace BrowserActionUtils {
         return;
       }
 
-      const hasUserCustomized =
-        typeof Services !== "undefined" &&
+      const hasUserCustomized = typeof Services !== "undefined" &&
         Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
 
       if (hasUserCustomized) {
@@ -105,28 +103,11 @@ export namespace BrowserActionUtils {
     position: number | null = 0,
   ) {
     if (styleElement && document?.head) {
-      const rootId = `nora-browser-action-style-root-${widgetId}`;
-      let styleRoot = document.getElementById(rootId) as HTMLElement | null;
-      if (!styleRoot) {
-        styleRoot = document.createElement("div");
-        styleRoot.id = rootId;
-        document.head.appendChild(styleRoot);
-      }
-      render(styleElement, styleRoot);
+      mount(`${widgetId}-style`, styleElement, document.head);
     }
-
     const popupSet = document?.getElementById("mainPopupSet");
     if (popupElement && popupSet) {
-      // Each widget gets its own container so that multiple createMenuToolbarButton
-      // calls don't clobber each other — preact.render() manages an entire container.
-      const containerId = `${widgetId}-popup-root`;
-      let container = document?.getElementById(containerId) as HTMLElement | null;
-      if (!container) {
-        container = document!.createXULElement("hbox") as HTMLElement;
-        container.id = containerId;
-        popupSet.appendChild(container);
-      }
-      render(popupElement, container);
+      mount(`${widgetId}-popup`, popupElement, popupSet);
     }
 
     const widget = CustomizableUI.getWidget(widgetId);
@@ -165,8 +146,7 @@ export namespace BrowserActionUtils {
         return;
       }
 
-      const hasUserCustomized =
-        typeof Services !== "undefined" &&
+      const hasUserCustomized = typeof Services !== "undefined" &&
         Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
 
       if (hasUserCustomized) {

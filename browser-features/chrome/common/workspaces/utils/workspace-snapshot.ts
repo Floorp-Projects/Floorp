@@ -27,7 +27,7 @@ const createSessionStoreImporter = (): SessionStoreImporter => {
   return () => {
     if (!cache) {
       const module = ChromeUtils.importESModule(
-        "resource:///modules/sessionstore/SessionStore.sys.mjs",
+        "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
       ) as { SessionStore: SessionStoreModule };
       cache = module.SessionStore;
     }
@@ -91,6 +91,25 @@ export const extractUrlFromState = (state: Record<string, unknown>): string | nu
     }
   }
   return null;
+};
+
+export const createWorkspaceSnapshotMetadata = (
+  workspaceId: TWorkspaceID,
+  workspace: {
+    name: string;
+    icon?: string | null | undefined;
+    userContextId: number;
+  },
+): TWorkspaceSnapshot["workspace"] => {
+  const metadata: TWorkspaceSnapshot["workspace"] = {
+    workspaceId,
+    name: workspace.name,
+    userContextId: workspace.userContextId ?? 0,
+  };
+  if (Object.hasOwn(workspace, "icon")) {
+    metadata.icon = workspace.icon;
+  }
+  return metadata;
 };
 
 const extractTitleFromTab = (
@@ -225,12 +244,7 @@ export const createWorkspaceSnapshot = async (
 
   return {
     capturedAt: Date.now(),
-    workspace: {
-      workspaceId,
-      name: workspace.name,
-      icon: workspace.icon ?? null,
-      userContextId: workspace.userContextId ?? 0,
-    },
+    workspace: createWorkspaceSnapshotMetadata(workspaceId, workspace),
     tabs,
   };
 };

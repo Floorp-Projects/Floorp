@@ -19,6 +19,15 @@ deno task test:smoke                # Smoke tests
 deno task dev-tool                  # Development utility CLI
 ```
 
+## Runtime changes
+
+Runtime changes must be maintained as patches, not direct edits to a sibling
+Floorp-Runtime checkout. Cross-platform source patches belong in
+`.github/patches/floorp-runtime/common/` and are applied by `package.yml`.
+Validate them against the source commit in `floorp-runtime.lock.json` in isolation.
+The package workflow uses prebuilt native artifacts; changes requiring native
+recompilation cannot be delivered through source patches in that step alone.
+
 ## Architecture (5 Layers)
 
 ```text
@@ -28,7 +37,7 @@ ESM Modules   <- .sys.mts files with direct Firefox API access, Window Actors
      |
 Bridge        <- startup scripts that load features from Vite dev servers (HTTP) or chrome://noraneko/ (prod)
      |
-Chrome UI     <- SolidJS -> XUL via custom solid-xul renderer, auto-discovered by import.meta.glob
+Chrome UI     <- Preact + Signals -> XUL via preact-xul adapter, auto-discovered by import.meta.glob
      |
 Pages         <- React + Tailwind full-page UIs (settings, new tab, welcome, notes, etc.)
 ```
@@ -38,7 +47,7 @@ The bridge (`bridge/startup/src/chrome_root.ts`) is the bootstrap: in dev/test m
 ## Tech Stack
 
 - **Runtime**: Deno 2.x (primary), Node.js 22 (some pages)
-- **Browser Chrome UI**: SolidJS + `@nora/solid-xul` (custom renderer that uses `document.createXULElement()` via `solid-js/universal`'s `createRenderer`)
+- **Browser Chrome UI**: Preact + `@preact/signals` + `@nora/preact-xul` (preserves native XUL nodes and browser-owned siblings)
 - **Settings/Pages UI**: React + Tailwind CSS
 - **Build**: Vite via custom `feles-build` system (`tools/feles-build.ts`)
 - **Language**: TypeScript (strict)
@@ -61,7 +70,7 @@ The bridge (`bridge/startup/src/chrome_root.ts`) is the bootstrap: in dev/test m
 
 | What               | Where                                                         | Framework   |
 | ------------------ | ------------------------------------------------------------- | ----------- |
-| Browser UI feature | `browser-features/chrome/common/{name}/`                      | SolidJS     |
+| Browser UI feature | `browser-features/chrome/common/{name}/`                      | Preact      |
 | Firefox API module | `browser-features/modules/modules/{name}.sys.mts`             | Firefox ESM |
 | Settings page      | `browser-features/pages-settings/src/app/{name}/`             | React       |
 | Actor (IPC)        | `browser-features/modules/actors/{Name}Parent\|Child.sys.mts` | Firefox ESM |
@@ -80,14 +89,14 @@ Separate types into dedicated `types.ts` files. Exception: `.sys.mts` files may 
 
 Never use `any`. Use explicit types or `unknown`.
 
-### SolidJS Pattern (Browser Chrome)
+### Preact Pattern (Browser Chrome)
 
 ```typescript
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
-import { render } from "@nora/solid-xul";
-import { createSignal } from "solid-js";
+import { render } from "@nora/preact-xul";
+import { signal } from "@preact/signals";
 
-@noraComponent(import.meta.hot)
+@noraComponent("MyFeature", import.meta.hot)
 export default class MyFeature extends NoraComponentBase {
   init(): void {
     /* ... */
@@ -95,8 +104,11 @@ export default class MyFeature extends NoraComponentBase {
 }
 ```
 
-- Always use `@noraComponent(import.meta.hot)` decorator for HMR support
-- Use `createSignal` / `createMemo` for reactive state -- never mutate variables directly
+- Always use `@noraComponent("MyFeature", import.meta.hot)` decorator for HMR support
+- Use `signal` / `computed` (`.value`) for reactive state. In Preact components, use `useSignal` / `useComputed` to retain state across rerenders.
+- Pass a component or factory to `render` / `safeRender`; computing the element first can lose signal subscriptions.
+- Use `rootEffect` / `addDisposer` within `createRootHMR` for services. Use Preact effect hooks for component subscriptions and return their cleanup callbacks. Async callbacks need an explicitly owned lifetime.
+- See `libs/preact-xul/README.md` for adapter contracts and current validation limits.
 
 ### Firefox ESM Modules (.sys.mts)
 

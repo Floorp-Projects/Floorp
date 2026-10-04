@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { segmentJapaneseText, isCJKLocale } from "./utils/budouxSegmenter.ts";
+import { isCJKLocale, segmentJapaneseText } from "./utils/budouxSegmenter.ts";
 
 export interface FuzzyTarget {
   id: string;
@@ -27,7 +27,9 @@ function singleWordScore(query: string, target: FuzzyTarget): number {
 
   if (label.includes(q)) return 60 + q.length;
 
-  if (target.keywords.some((kw) => kw.toLowerCase().includes(q))) return 50 + q.length;
+  if (target.keywords.some((kw) => kw.toLowerCase().includes(q))) {
+    return 50 + q.length;
+  }
 
   if (desc.includes(q)) return 30 + q.length;
 

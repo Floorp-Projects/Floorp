@@ -1,5 +1,14 @@
 import { rpc } from "./rpc/rpc.ts";
+import type { NoteSnapshot } from "./merge.ts";
 import type { Note } from "../types/note.ts";
+
+export {
+  canonicalData,
+  mergeNotesThreeWay,
+  precedes,
+  type MergeResult,
+  type NoteSnapshot,
+} from "./merge.ts";
 
 export const NOTES_PREF_NAME = "floorp.browser.note.memos";
 
@@ -65,27 +74,12 @@ export async function saveNotes(data: NotesData): Promise<void> {
 
 const SYNC_STATE_PREF = "floorp.browser.note.syncState";
 
-/** Snapshot of a note at the time of the last successful sync. */
-export interface NoteSnapshot {
-  id: string;
-  title: string;
-  content: string;
-  updatedAt: number;
-}
-
 /** Persistent sync state used as the "base" for three-way merge. */
 export interface SyncState {
   /** Snapshots keyed by note ID. */
   lastSyncedSnapshots: Record<string, NoteSnapshot>;
   /** Timestamp (ms since epoch) of the last successful sync. */
   lastSyncTime: number;
-}
-
-/** Result of a three-way merge operation. */
-export interface MergeResult {
-  merged: Note[];
-  hadConflicts: boolean;
-  conflictCount: number;
 }
 
 /** Creates an empty sync state (for first sync). */
@@ -164,160 +158,6 @@ export async function saveSyncState(state: SyncState): Promise<void> {
  * @param base   - Snapshots from the last successful sync
  * @returns Merge result with merged notes and conflict metadata
  */
-export function mergeNotesThreeWay(
-  local: Note[],
-  remote: Note[],
-  base: Record<string, NoteSnapshot>,
-): MergeResult {
-  console.debug(
-    `[Floorp Notes] Three-way merge: ${local.length} local, ${remote.length} remote, ${Object.keys(base).length} base snapshots`,
-  );
-
-  // Build lookup maps
-  const localMap = new Map<string, Note>();
-  for (const n of local) localMap.set(n.id, n);
-
-  const remoteMap = new Map<string, Note>();
-  for (const n of remote) remoteMap.set(n.id, n);
-
-  // Collect all unique IDs
-  const allIds = new Set<string>([
-    ...localMap.keys(),
-    ...remoteMap.keys(),
-    ...Object.keys(base),
-  ]);
-
-  const merged: Note[] = [];
-  const conflictCopies: Note[] = [];
-  let hadConflicts = false;
-
-  // Helper: check if a note changed from base
-  const hasChanged = (note: Note, baseSnap?: NoteSnapshot): boolean => {
-    if (!baseSnap) return true; // New note = definitely changed
-    return note.title !== baseSnap.title || note.content !== baseSnap.content;
-  };
-
-  for (const noteId of allIds) {
-    const localN = localMap.get(noteId);
-    const remoteN = remoteMap.get(noteId);
-    const baseS = base[noteId];
-
-    if (localN && remoteN && baseS) {
-      // ── Note exists on both sides (with base) ──
-      const localChanged = hasChanged(localN, baseS);
-      const remoteChanged = hasChanged(remoteN, baseS);
-
-      if (!localChanged && !remoteChanged) {
-        // No change on either side — take remote (canonical)
-        merged.push(remoteN);
-      } else if (localChanged && !remoteChanged) {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: local changed, keeping local`,
-        );
-        merged.push(localN);
-      } else if (!localChanged && remoteChanged) {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: remote changed, taking remote`,
-        );
-        merged.push(remoteN);
-      } else {
-        // ── BOTH changed → CONFLICT ──
-        hadConflicts = true;
-        const newerNote =
-          localN.updatedAt >= remoteN.updatedAt ? localN : remoteN;
-        const olderNote =
-          localN.updatedAt >= remoteN.updatedAt ? remoteN : localN;
-
-        console.warn(
-          `[Floorp Notes] CONFLICT on note ${noteId} '${newerNote.title.slice(0, 30)}' — ` +
-            `both sides changed, keeping newer (${new Date(newerNote.updatedAt).toISOString()}), ` +
-            `creating conflict copy of older (${new Date(olderNote.updatedAt).toISOString()})`,
-        );
-
-        merged.push(newerNote);
-
-        // Create conflict copy only if older version has actual content
-        if (olderNote.title || olderNote.content) {
-          conflictCopies.push({
-            id: crypto.randomUUID(),
-            title: olderNote.title
-              ? `${olderNote.title} (conflict)`
-              : "(conflict)",
-            content: olderNote.content,
-            createdAt: olderNote.createdAt,
-            updatedAt: olderNote.updatedAt,
-          });
-        }
-      }
-    } else if (!localN && remoteN && baseS) {
-      // ── Deleted locally, still exists remotely ──
-      if (hasChanged(remoteN, baseS)) {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: deleted locally but remote changed, keeping remote`,
-        );
-        merged.push(remoteN);
-      } else {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: deleted locally, remote unchanged, respecting deletion`,
-        );
-      }
-    } else if (localN && !remoteN && baseS) {
-      // ── Deleted remotely, still exists locally ──
-      if (hasChanged(localN, baseS)) {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: deleted remotely but local changed, keeping local`,
-        );
-        merged.push(localN);
-      } else {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: deleted remotely, local unchanged, respecting deletion`,
-        );
-      }
-    } else if (localN && !remoteN && !baseS) {
-      // ── New note: only on local (never synced before) ──
-      console.debug(`[Floorp Notes] note ${noteId}: new local note, keeping`);
-      merged.push(localN);
-    } else if (!localN && remoteN && !baseS) {
-      // ── New note: only on remote (never seen before) ──
-      console.debug(`[Floorp Notes] note ${noteId}: new remote note, adding`);
-      merged.push(remoteN);
-    } else if (localN && remoteN && !baseS) {
-      // ── Both exist but no base snapshot (first sync with existing notes) ──
-      if (localN.updatedAt >= remoteN.updatedAt) {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: no base, local is newer, keeping local`,
-        );
-        merged.push(localN);
-      } else {
-        console.debug(
-          `[Floorp Notes] note ${noteId}: no base, remote is newer, taking remote`,
-        );
-        merged.push(remoteN);
-      }
-    }
-    // else: both deleted (nil, nil, _) — nothing to do
-  }
-
-  // Append conflict copies at the end
-  if (conflictCopies.length > 0) {
-    merged.push(...conflictCopies);
-    console.warn(
-      `[Floorp Notes] Created ${conflictCopies.length} conflict copy note(s)`,
-    );
-  }
-
-  // Preserve local order; append new-remote and conflict copies at the end.
-  // Do NOT sort by updatedAt — that would destroy user's drag-and-drop reorder.
-  const result: Note[] = merged;
-
-  console.info(
-    `[Floorp Notes] Three-way merge result: ${result.length} notes ` +
-      `(${conflictCopies.length} conflict copies), hadConflicts=${hadConflicts}`,
-  );
-
-  return { merged: result, hadConflicts, conflictCount: conflictCopies.length };
-}
-
 // ──────────────────────────────────────────────────────────
 // Conversion helpers (NotesData ↔ Note[])
 // ──────────────────────────────────────────────────────────

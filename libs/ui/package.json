@@ -1,0 +1,11 @@
+{
+  "name": "@nora/ui",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@chakra-ui/react": "3.37.0",
+    "@emotion/react": "11.14.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}

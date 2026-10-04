@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import i18next from "i18next";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import type { TWorkspaceID } from "./utils/type.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { workspacesDataStore } from "./data/data.ts";
@@ -38,14 +39,23 @@ export class WorkspacesLinkContextMenu {
 
     try {
       // Build XUL elements directly to support marker-based insertion.
-      const menuEl = document?.createXULElement("menu") as unknown as XULElement;
+      const menuEl = document?.createXULElement(
+        "menu",
+      ) as unknown as XULElement;
       menuEl.id = WORKSPACE_MENU_ID;
+      addDisposer(() => menuEl.remove());
+      menuEl.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.workspaces.open-link",
+      );
       menuEl.setAttribute(
         "label",
         i18next.t("workspaces.menu.openLinkInWorkspace"),
       );
 
-      const popupEl = document?.createXULElement("menupopup") as unknown as XULElement;
+      const popupEl = document?.createXULElement(
+        "menupopup",
+      ) as unknown as XULElement;
       popupEl.id = WORKSPACE_MENU_POPUP_ID;
       popupEl.addEventListener("popupshowing", () => this.populateMenu());
       menuEl.appendChild(popupEl);
@@ -65,6 +75,7 @@ export class WorkspacesLinkContextMenu {
       return;
     }
 
+    addDisposer(() => this.cleanup());
     this.updateLabels();
     this.updateVisibility();
 
@@ -167,7 +178,9 @@ export class WorkspacesLinkContextMenu {
       popup.removeChild(popup.firstChild);
     }
 
-    const currentTab = globalThis.gBrowser?.selectedTab as unknown as XULElement | null;
+    const currentTab = globalThis.gBrowser?.selectedTab as unknown as
+      | XULElement
+      | null;
     const currentWorkspaceId = (currentTab &&
       this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(currentTab)) ||
       this.ctx.getSelectedWorkspaceID();
@@ -205,6 +218,12 @@ export class WorkspacesLinkContextMenu {
       }
       menuitem.classList.add("menuitem-iconic");
       menuitem.setAttribute("label", workspace.name);
+      menuitem.setAttribute(
+        "data-floorp-context-menu-key",
+        `floorp.workspaces.link.target.${
+          encodeURIComponent(String(workspaceId))
+        }`,
+      );
       const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       if (iconUrl) {
         menuitem.setAttribute("image", iconUrl);

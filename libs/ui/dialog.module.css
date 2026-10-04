@@ -1,0 +1,49 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(21 19 27 / .55);
+  z-index: 1400;
+}
+.positioner {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1401;
+}
+.content {
+  inline-size: min(100%, 520px);
+  max-block-size: calc(100dvh - 40px);
+  overflow: auto;
+  background: var(--floorp-surface);
+  color: var(--floorp-ink);
+  border: 1px solid var(--floorp-line);
+  border-block-start: 4px solid var(--floorp-brand);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: none;
+}
+.title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.content[data-wide="true"] {
+  inline-size: min(100%, 720px);
+}
+.body {
+  padding-block: 20px;
+}
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}

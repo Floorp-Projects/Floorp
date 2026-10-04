@@ -8,7 +8,11 @@ import { MenuPopup } from "./components/popup.tsx";
 import toolbarStyles from "./styles.css?inline";
 import type { ComponentChild } from "preact";
 import i18next from "i18next";
-import { createRootHMR } from "#features-chrome/utils/base";
+import {
+  addDisposer,
+  createNodeDisposer,
+  createRootHMR,
+} from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
@@ -44,6 +48,7 @@ const getTranslatedTexts = (): ProfileManagerTexts => {
 
 export class ProfileManagerService {
   private static _instance: ProfileManagerService | null = null;
+  private readonly buttonRoots = new WeakMap<Element, () => void>();
 
   static getInstance(): ProfileManagerService {
     if (!this._instance) this._instance = new ProfileManagerService();
@@ -85,7 +90,7 @@ export class ProfileManagerService {
 
   private updateButtonIfNeeded(): void {
     const aNode = this.getButtonNode();
-    if (!aNode) return;
+    if (!aNode || this.buttonRoots.has(aNode)) return;
 
     // Ensure a XUL tooltip element exists so we can update it like other features
     let tooltip = document?.getElementById("profile-manager-button-tooltip") as
@@ -99,7 +104,10 @@ export class ProfileManagerService {
       aNode.setAttribute("tooltip", "profile-manager-button-tooltip");
     }
 
-    createRootHMR(() => {
+    createRootHMR((dispose) => {
+      this.buttonRoots.set(aNode, dispose);
+      addDisposer(() => this.buttonRoots.delete(aNode));
+      createNodeDisposer(aNode, dispose);
       let texts: ProfileManagerTexts = getTranslatedTexts() ?? defaultTexts;
 
       addI18nObserver(() => {

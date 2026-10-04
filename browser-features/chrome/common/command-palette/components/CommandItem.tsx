@@ -39,12 +39,16 @@ export function CommandItem(props: CommandItemProps) {
     >
       <div class="command-palette-item-info">
         <span class="command-palette-item-label">
-          {segments.map((seg) =>
-            seg.matched ? (
-              <strong class="command-palette-match">{seg.text}</strong>
-            ) : (
-              seg.text
-            )
+          {segments.map((seg, index) =>
+            seg.matched
+              ? (
+                <strong key={index} class="command-palette-match">
+                  {seg.text}
+                </strong>
+              )
+              : (
+                seg.text
+              )
           )}
         </span>
         {props.command.description && (

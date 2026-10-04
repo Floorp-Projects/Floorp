@@ -10,7 +10,7 @@ import { isRight } from "fp-ts/Either";
 
 export function migrateWorkspacesData(): Promise<void> {
   const { SessionStore } = ChromeUtils.importESModule(
-    "resource:///modules/sessionstore/SessionStore.sys.mjs",
+    "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
   );
   const { NetUtil } = ChromeUtils.importESModule(
     "resource://gre/modules/NetUtil.sys.mjs",

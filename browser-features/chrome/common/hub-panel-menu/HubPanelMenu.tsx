@@ -6,7 +6,8 @@
 import { signal, useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import type { ComponentChild } from "preact";
-import { h, render } from "preact";
+import { h } from "preact";
+import { render } from "@nora/preact-xul";
 import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
@@ -14,6 +15,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 export class HubPanelMenu {
   private isOpen = signal<boolean>(false);
   private isRendered = false;
+  private disposeRender: (() => void) | undefined;
 
   constructor() {
     if (!this.panelUIButton) return;
@@ -40,7 +42,10 @@ export class HubPanelMenu {
         attributes: true,
       });
 
-      addDisposer(() => observer.disconnect());
+      addDisposer(() => {
+        observer.disconnect();
+        this.disposeRender?.();
+      });
     }, import.meta.hot);
   }
 
@@ -68,16 +73,23 @@ export class HubPanelMenu {
     if (!this.parentElement) return;
 
     this.isRendered = true;
-    render(h(HubPanelMenu.Render, null), this.parentElement!);
+    this.disposeRender = render(
+      h(HubPanelMenu.Render, null),
+      this.parentElement!,
+      { marker: this.beforeElement },
+    );
   }
 
   private static handleOpenHub() {
     const win = window;
-    // deno-lint-ignore no-explicit-any
-    win.gBrowser.selectedTab = win.gBrowser.addTab("about:hub", {
-      relatedToCurrent: true, // type def gap: @types/gecko missing this option
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    } as Parameters<typeof win.gBrowser.addTab>[1]);
+    win.gBrowser.selectedTab = win.gBrowser.addTab(
+      "about:hub",
+      {
+        relatedToCurrent: true, // type def gap: @types/gecko missing this option
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      } as Parameters<typeof win.gBrowser.addTab>[1],
+    );
     (win.PanelUI as unknown as { hide: () => void })?.hide();
   }
 
@@ -87,7 +99,7 @@ export class HubPanelMenu {
     });
 
     useEffect(() => {
-      addI18nObserver(() => {
+      return addI18nObserver(() => {
         translations.value = {
           title: i18next.t("hub.menu.title", { defaultValue: "Floorp Hub" }),
         };

@@ -18,7 +18,10 @@ interface CategorizedCommands {
   commands: PaletteCommand[];
 }
 
-const HIDDEN_CATEGORIES = new Set(["navigation-suggestion", "search-suggestion"]);
+const HIDDEN_CATEGORIES = new Set([
+  "navigation-suggestion",
+  "search-suggestion",
+]);
 
 export function CommandList(props: CommandListProps) {
   // Build category groups from props — recomputes on every render (props change

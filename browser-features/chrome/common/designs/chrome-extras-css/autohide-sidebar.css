@@ -1,0 +1,45 @@
+/* Floorp chrome-extras: autohideSidebar
+ * Ported from vendored Lepton (leptonChrome.css 26958-26967, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and
+ *
+ * combined layout rules are injected separately by chrome-extras.ts.
+ */
+
+/* leptonChrome.css:26958-26967 */
+#sidebar-box {
+  min-width: var(--uc-sidebar-width) !important;
+  max-width: var(--uc-sidebar-width) !important;
+}
+:root[inFullscreen="true"] #sidebar-box {
+  min-width: var(--uc-sidebar-activate-width) !important;
+  max-width: var(--uc-sidebar-activate-width) !important;
+}
+
+/* leptonChrome.css:25178-25194 (shared by both sidebar toggles) */
+#sidebar-box {
+  --uc-sidebar-shadow-color: #28282f;
+  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
+  position: relative !important;
+  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px
+    var(--uc-sidebar-shadow-color);
+}
+#sidebar-box:is([positionend], [sidebar-positionend]) {
+  --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));
+}
+#sidebar {
+  display: block;
+}
+#main-window > body > box {
+  z-index: 2 !important;
+}
+
+/* leptonChrome.css:25174-25176 (shared with sidebar-overlap.css) */
+#sidebar-splitter {
+  display: none !important;
+}

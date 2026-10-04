@@ -1,3 +1,4 @@
+import styles from "../design.module.css";
 import {
   Card,
   CardContent,
@@ -31,21 +32,21 @@ export function UICustomization() {
         )
         : null}
 
-      <Card>
+      <Card className={styles.section}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sliders className="size-5" />
             {t("design.uiCustomization.title")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-3">
           <div>
-            <h3 className="text-base font-medium mb-2">
+            <h3 className="text-base font-medium mb-4">
               {t("design.uiCustomization.navbar.title")}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block mb-2">
+                <label className="block">
                   {t("design.uiCustomization.navbar.positionWithExperiment")}
                 </label>
                 <div className="flex space-x-4">
@@ -94,7 +95,7 @@ export function UICustomization() {
             <h3 className="text-base font-medium mb-2">
               {t("design.uiCustomization.display.title")}
             </h3>
-            <div className="space-y-4">
+            <div>
               <div className="flex items-center justify-between gap-2">
                 <label htmlFor="disable-fullscreen-notification">
                   {t(
@@ -140,7 +141,7 @@ export function UICustomization() {
             <h3 className="text-base font-medium mb-2">
               {t("design.uiCustomization.newtab.title")}
             </h3>
-            <div className="space-y-4">
+            <div>
               <div className="flex items-center justify-between gap-2">
                 <label htmlFor="disable-floorp-start">
                   {t("design.uiCustomization.newtab.disableFloorpStart")}
@@ -161,7 +162,7 @@ export function UICustomization() {
             <h3 className="text-base font-medium mb-2">
               {t("design.uiCustomization.special.title")}
             </h3>
-            <div className="space-y-4">
+            <div>
               <div className="flex items-center justify-between gap-2">
                 <label htmlFor="optimize-for-tree-style-tab">
                   {t("design.uiCustomization.special.optimizeForTreeStyleTab")}
@@ -204,12 +205,12 @@ export function UICustomization() {
 
           {/* ブックマークバー */}
           <div>
-            <h3 className="text-base font-medium mb-2">
+            <h3 className="text-base font-medium mb-4">
               {t("design.uiCustomization.bookmarkBar.title")}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block mb-2">
+                <label className="block">
                   {t("design.uiCustomization.bookmarkBar.position")}
                 </label>
                 <div className="flex space-x-4">

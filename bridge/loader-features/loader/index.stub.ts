@@ -3,8 +3,8 @@
 // This file verifies that the preact + @preact/signals toolchain is correctly
 // configured before migrating the actual feature files.
 
-import { h, Fragment } from "@nora/preact-xul";
-import { signal, effect, computed } from "@preact/signals";
+import { Fragment, h } from "@nora/preact-xul";
+import { computed, effect, signal } from "@preact/signals";
 
 // Verify signal primitives resolve
 const _count = signal(0);
@@ -21,6 +21,6 @@ void Fragment;
 
 console.log("[noraneko-stub] Stage 0: preact-xul build environment OK");
 
-export default async function initScripts() {
+export default function initScripts() {
   console.log("[noraneko-stub] stub initScripts — Stage 0 placeholder");
 }

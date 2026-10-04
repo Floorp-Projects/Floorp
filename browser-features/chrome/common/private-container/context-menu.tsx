@@ -10,7 +10,7 @@ export function ContextMenu(): ComponentChild {
   const label = useSignal(i18next.t(translationKey));
 
   useEffect(() => {
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       label.value = i18next.t(translationKey);
     });
   }, []);
@@ -18,6 +18,7 @@ export function ContextMenu(): ComponentChild {
   return (
     <xul:menuitem
       id="context_toggleToPrivateContainer"
+      data-floorp-context-menu-key="floorp.private-container.reopen-tab"
       label={label.value}
       onCommand={() => {
         FloorpPrivateContainer.reopenInPrivateContainer();

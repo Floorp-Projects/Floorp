@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
-  "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
 );
 
 type Container = {

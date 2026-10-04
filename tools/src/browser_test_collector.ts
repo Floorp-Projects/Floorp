@@ -20,19 +20,35 @@ export interface BrowserTestResult {
   file: string;
   ok: boolean;
   durationMs: number;
-  mode: "import" | "runAllTests";
+  mode: "import" | "runAllTests" | "mozillaTasks";
+  source?: "downloaded-firefox";
+  upstreamPath?: string;
+  manifestPath?: string;
+  tasks?: Array<{
+    index: number;
+    name: string;
+    ok: boolean;
+    durationMs: number;
+    error?: string;
+  }>;
   error?: string;
+  timedOut?: boolean;
 }
 
 export interface BrowserTestCollection {
   results: BrowserTestResult[];
   discoveredFiles: string[];
+  aborted?: boolean;
+  abortReason?: string;
 }
 
 interface TestState {
   status: "running" | "done" | "error";
   results: BrowserTestResult[];
   discoveredFiles?: string[];
+  runId?: string;
+  aborted?: boolean;
+  abortReason?: string;
   error?: string;
 }
 
@@ -43,6 +59,38 @@ interface TestState {
 // Firefox wraps a long pref value.
 const PREF_REGEX =
   /user_pref\("nora\.tests\.state",\s*"((?:[^"\\]|\\[\s\S])*)"\)/;
+
+function normalizePrefsJsHexEscapesForJson(raw: string): string {
+  let output = "";
+
+  for (let index = 0; index < raw.length;) {
+    if (raw[index] !== "\\") {
+      output += raw[index];
+      index++;
+      continue;
+    }
+
+    const slashStart = index;
+    while (raw[index] === "\\") index++;
+    const slashCount = index - slashStart;
+    const hex = raw.slice(index + 1, index + 3);
+
+    if (
+      raw[index] === "x" &&
+      /^[0-9a-fA-F]{2}$/.test(hex) &&
+      slashCount % 2 === 1
+    ) {
+      output += "\\".repeat(slashCount - 1);
+      output += `\\u00${hex}`;
+      index += 3;
+      continue;
+    }
+
+    output += "\\".repeat(slashCount);
+  }
+
+  return output;
+}
 
 /**
  * Collect browser test results by reading the `nora.tests.state` pref
@@ -59,8 +107,9 @@ const PREF_REGEX =
  */
 export async function collectBrowserTestResultsFromPrefs(
   timeoutMs = PREFS_FILE_DEFAULT_TIMEOUT_MS,
+  expectedRunId?: string,
+  prefsPath = PATHS.profile_test + "/prefs.js",
 ): Promise<BrowserTestCollection> {
-  const prefsPath = PATHS.profile_test + "/prefs.js";
   const deadline = Date.now() + timeoutMs;
   let lastStatus = "(none)";
   let sawRunning = false;
@@ -77,27 +126,42 @@ export async function collectBrowserTestResultsFromPrefs(
         // unescapes the \".  Then we parse the resulting string as JSON to
         // get the TestState object.
         //
-        // Firefox may hex-encode certain characters (\xNN notation).
-        // We convert those back before the double JSON.parse.
-        //
-        // Strategy: first replace \x5c (backslash) with a temporary
-        // sentinel so that the generic hex decoder does not produce
-        // premature escape sequences. Then apply the generic decoder
-        // and restore the backslash as \\ (JSON-escaped) so JSON.parse
-        // correctly produces a single literal backslash.
-        const BACKSLASH_SENTINEL = "\x00BS";
-        const raw = match[1]
-          .replace(/\\x5c/g, BACKSLASH_SENTINEL)
-          .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
-            String.fromCharCode(parseInt(hex, 16)),
-          )
-          .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
-            String.fromCharCode(parseInt(hex, 16)),
-          )
-          .replaceAll(BACKSLASH_SENTINEL, "\\\\");
+        // Firefox may use JavaScript-only \xNN escapes in prefs.js. JSON
+        // accepts the equivalent \u00NN spelling, so translate only the
+        // escape syntax before parsing the outer string. Existing \uNNNN
+        // escapes must remain syntactic until JSON.parse handles them;
+        // decoding quotes or backslashes early would corrupt that wrapper.
+        const raw = normalizePrefsJsHexEscapesForJson(match[1]);
         const jsonString: string = JSON.parse(`"${raw}"`);
         const state: TestState = JSON.parse(jsonString);
         lastStatus = state.status;
+
+        if (expectedRunId) {
+          if (state.runId !== expectedRunId) {
+            await sleep(PREFS_FILE_POLL_INTERVAL_MS);
+            continue;
+          }
+
+          if (state.status === "done") {
+            return {
+              results: state.results,
+              discoveredFiles: state.discoveredFiles ?? [],
+              aborted: state.aborted,
+              abortReason: state.abortReason,
+            };
+          }
+
+          if (state.status === "error") {
+            throw new Error(
+              `Browser test runner encountered a fatal error: ${
+                state.error ?? "unknown"
+              }`,
+            );
+          }
+
+          await sleep(PREFS_FILE_POLL_INTERVAL_MS);
+          continue;
+        }
 
         // Phase 1: Wait for the browser-side runner to start a fresh run.
         // If the pref already contains "done" from a previous run we must
@@ -118,12 +182,16 @@ export async function collectBrowserTestResultsFromPrefs(
           return {
             results: state.results,
             discoveredFiles: state.discoveredFiles ?? [],
+            aborted: state.aborted,
+            abortReason: state.abortReason,
           };
         }
 
         if (state.status === "error") {
           throw new Error(
-            `Browser test runner encountered a fatal error: ${state.error ?? "unknown"}`,
+            `Browser test runner encountered a fatal error: ${
+              state.error ?? "unknown"
+            }`,
           );
         }
         // status === "running" — keep polling

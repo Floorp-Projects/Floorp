@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import { gTabbarStyleFunctions } from "./tabbbar-style-functions";
 
 export class TabbarStyleClass {
@@ -19,10 +19,9 @@ export class TabbarStyleClass {
       "floorp-tabbar-window-manage-container",
     );
 
-    gTabbarStyleFunctions.applyTabbarStyle();
-
-    effect(() => {
+    rootEffect(() => {
       gTabbarStyleFunctions.applyTabbarStyle();
+      return () => gTabbarStyleFunctions.revertToDefaultStyle();
     });
   }
 }

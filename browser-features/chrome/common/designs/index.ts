@@ -19,7 +19,7 @@ export default class Designs extends NoraComponentBase {
     }
 
     try {
-      safeRender(BrowserDesignElement(), head);
+      safeRender(BrowserDesignElement, head);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       this.logger.error("Failed to render browser design element.", reason);

@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { effect, signal } from "@preact/signals";
+import { signal, useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 import { render } from "@nora/preact-xul";
 import { CSSEntry } from "./cssEntry.ts";
@@ -26,7 +27,7 @@ export class ChromeCSSService {
   readCSS: Record<string, CSSEntry> = {};
   initialized = false;
 
-  cssFiles = signal<Array<{ name: string; entry: CSSEntry }>>([], );
+  cssFiles = signal<Array<{ name: string; entry: CSSEntry }>>([]);
 
   private dispose: (() => void) | null = null;
   // Disposers and cleanup hooks used by PanelMenu
@@ -272,6 +273,23 @@ export class ChromeCSSService {
     }
   }
 
+  launchCSSFolder(cssFolder: string): void {
+    if (AppConstants.platform === "macosx") {
+      const app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      app.initWithPath("/usr/bin/open");
+
+      const process = Cc["@mozilla.org/process/util;1"].createInstance(
+        Ci.nsIProcess,
+      );
+      process.init(app);
+      process.run(false, [cssFolder], 1);
+      return;
+    }
+
+    const file = FileUtils.File(cssFolder);
+    file.launch();
+  }
+
   async openFolder(): Promise<void> {
     try {
       const cssFolder = this.getCSSFolder();
@@ -281,21 +299,7 @@ export class ChromeCSSService {
         await IOUtils.makeDirectory(cssFolder);
       }
 
-      if (AppConstants.platform === "macosx") {
-        // macOS: Use 'open' command to open folder in Finder
-        const app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-        app.initWithPath("/usr/bin/open");
-
-        const process = Cc["@mozilla.org/process/util;1"].createInstance(
-          Ci.nsIProcess,
-        );
-        process.init(app);
-        process.run(false, [cssFolder], 1);
-      } else {
-        // Windows and Linux: Use traditional file.launch()
-        const file = FileUtils.File(cssFolder);
-        file.launch();
-      }
+      this.launchCSSFolder(cssFolder);
     } catch (error) {
       console.error("Error opening CSS folder:", error);
       // Fallback: Try to use file.launch() regardless of platform
@@ -532,6 +536,32 @@ export class ChromeCSSService {
     }
   }
 
+  promptForCSSFileName(defaultName: string): string | null {
+    const promptMsg = i18next.t("chrome_css.please_enter_filename") ??
+      "Please enter a filename";
+    return prompt(promptMsg, defaultName);
+  }
+
+  confirmOpenCreatedCSSFile(fileName: string): boolean {
+    const openMsg = i18next.t("chrome_css.open_file_in_editor") ??
+      `Open ${fileName} in editor?`;
+    return Services.prompt.confirm(
+      window as mozIDOMWindow,
+      i18next.t("chrome_css.file_created") ?? "File Created",
+      openMsg,
+    );
+  }
+
+  alertCSSFileCreated(fileName: string): void {
+    const createdMsg = i18next.t("chrome_css.file_created_successfully") ??
+      `File ${fileName} created successfully`;
+    Services.prompt.alert(
+      window as mozIDOMWindow,
+      i18next.t("chrome_css.file_created") ?? "File Created",
+      createdMsg,
+    );
+  }
+
   convertUTF8ToShiftJIS(utf8String: string): string {
     try {
       const decoder = new TextDecoder("utf-8");
@@ -553,10 +583,7 @@ export class ChromeCSSService {
 
     try {
       if (!fileName) {
-        const promptMsg = i18next.t("chrome_css.please_enter_filename") ??
-          "Please enter a filename";
-        const userInput = prompt(
-          promptMsg,
+        const userInput = this.promptForCSSFileName(
           new Date().getTime().toString(),
         );
 
@@ -591,25 +618,15 @@ export class ChromeCSSService {
         await this.getDefaultEditorPath();
 
       if (editorPath && await IOUtils.exists(editorPath)) {
-        const openMsg = i18next.t("chrome_css.open_file_in_editor") ??
-          `Open ${fileName} in editor?`;
-        const shouldOpen = Services.prompt.confirm(
-          window as mozIDOMWindow,
-          i18next.t("chrome_css.file_created") ?? "File Created",
-          openMsg,
-        );
+        // Ask user if they want to open the file for editing
+        const shouldOpen = this.confirmOpenCreatedCSSFile(fileName);
 
         if (shouldOpen) {
           this.edit(filePath);
         }
       } else {
-        const createdMsg = i18next.t("chrome_css.file_created_successfully") ??
-          `File ${fileName} created successfully`;
-        Services.prompt.alert(
-          window as mozIDOMWindow,
-          i18next.t("chrome_css.file_created") ?? "File Created",
-          createdMsg,
-        );
+        // If no editor is available, just notify that the file was created
+        this.alertCSSFileCreated(fileName);
       }
     } catch (error) {
       console.error("Error creating CSS file:", error);
@@ -719,7 +736,7 @@ import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
  * Wrapper component for Chrome CSS Menu
  */
 const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
-  const translations = signal({
+  const translations = useSignal({
     menu: i18next.t("chrome_css.menu"),
     rebuild: i18next.t("chrome_css.rebuild"),
     create: i18next.t("chrome_css.create"),
@@ -728,8 +745,8 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
     edit_user_content: i18next.t("chrome_css.edit_user_content"),
   });
 
-  createRootHMR(() => {
-    addI18nObserver(() => {
+  useEffect(() => {
+    return addI18nObserver(() => {
       translations.value = {
         menu: i18next.t("chrome_css.menu"),
         rebuild: i18next.t("chrome_css.rebuild"),
@@ -739,7 +756,7 @@ const ChromeCSSMenuWrapper = (props: { service: ChromeCSSService }) => {
         edit_user_content: i18next.t("chrome_css.edit_user_content"),
       };
     });
-  }, import.meta.hot);
+  }, []);
 
   const showSubView = async () => {
     try {
@@ -908,21 +925,21 @@ const CSSItem = (props: {
 const CSSKeyset = (props: { onRebuild: () => void }) => {
   const { onRebuild } = props;
 
-  effect(() => {
+  useEffect(() => {
     const handleRebuild = () => onRebuild();
     document!.addEventListener("css-rebuild", handleRebuild);
 
     return () => {
       document!.removeEventListener("css-rebuild", handleRebuild);
     };
-  });
+  }, [onRebuild]);
 
   return (
     <xul:key
       id="usercssloader-rebuild-key"
       key="R"
       modifiers="alt"
-      command="document.dispatchEvent(new CustomEvent('css-rebuild'))"
+      onCommand={() => document.dispatchEvent(new CustomEvent("css-rebuild"))}
     />
   );
 };

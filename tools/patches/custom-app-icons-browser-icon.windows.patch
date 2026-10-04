@@ -1,0 +1,256 @@
+--- a/browser/chrome/browser/content/browser/preferences/config/browser-icon.mjs
++++ b/browser/chrome/browser/content/browser/preferences/config/browser-icon.mjs
+@@ -4,12 +4,6 @@
+ 
+ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs";
+ import { SettingGroupManager } from "chrome://browser/content/preferences/config/SettingGroupManager.mjs";
+-import { DefaultBrowserHelper } from "chrome://browser/content/preferences/DefaultBrowserHelper.mjs";
+-
+-const { XPCOMUtils } = ChromeUtils.importESModule(
+-  "resource://gre/modules/XPCOMUtils.sys.mjs"
+-);
+-
+ const lazy = {};
+ ChromeUtils.defineESModuleGetters(lazy, {
+   CustomIconManager:
+@@ -31,104 +25,8 @@ function watchScheme(emitChange) {
+   COLOR_SCHEME_QUERY.addEventListener("change", emitChange);
+   return () => COLOR_SCHEME_QUERY.removeEventListener("change", emitChange);
+ }
+-XPCOMUtils.defineLazyServiceGetters(lazy, {
+-  WinTaskbar: ["@mozilla.org/windows-taskbar;1", Ci.nsIWinTaskbar],
+-});
+-
+ const PREF_ICON_ID = "browser.shell.customIcon.id";
+ 
+-// The default-browser and taskbar-pin state, resolved asynchronously. The Bonus
+-// icons are unlocked only when both are true; until then they stay disabled and
+-// the header promo offers a button for each missing action.
+-let gIsDefault = false;
+-let gIsPinned = false;
+-let gIconsUnlocked = false;
+-
+-// Re-render callbacks for the elements that depend on this state (the Bonus
+-// picker, its header promo, and the promo's action buttons), so they update
+-// together when the asynchronous check resolves.
+-const gUnlockListeners = new Set();
+-
+-// Unsubscribe handle for the shared DefaultBrowserHelper poll, held while any
+-// dependent element is alive so a single subscription is shared.
+-let gPollUnsubscribe = null;
+-
+-/**
+- * Recompute the default-browser / taskbar-pin state and, if anything changed,
+- * notify every dependent element to re-render.
+- */
+-async function refreshUnlockState() {
+-  let isDefault = false;
+-  let isPinned = false;
+-  try {
+-    isDefault = DefaultBrowserHelper.isBrowserDefault;
+-    // Reach the shell service through getShellService() (rather than the raw
+-    // XPCOM component) so tests can substitute it. Call the native pin check on
+-    // .shellService directly: ShellService is a Proxy that would forward the
+-    // method but invoke it with the wrong `this`.
+-    isPinned = await window
+-      .getShellService()
+-      .shellService.isCurrentAppPinnedToTaskbar(lazy.WinTaskbar.defaultGroupId);
+-  } catch (ex) {
+-    isDefault = false;
+-    isPinned = false;
+-  }
+-  let unlocked = isDefault && isPinned;
+-  if (
+-    isDefault !== gIsDefault ||
+-    isPinned !== gIsPinned ||
+-    unlocked !== gIconsUnlocked
+-  ) {
+-    gIsDefault = isDefault;
+-    gIsPinned = isPinned;
+-    gIconsUnlocked = unlocked;
+-    for (let notify of gUnlockListeners) {
+-      notify();
+-    }
+-  }
+-}
+-
+-/**
+- * setup() helper: register a re-render callback tied to the unlock state and
+- * kick off the (async) check. Returns the teardown function.
+- *
+- * While any dependent element is alive, subscribe (once) to the shared
+- * DefaultBrowserHelper poll so the unlock state also refreshes when the default
+- * browser changes outside this sub-pane (the OS, or the General pane's "Set as
+- * default"). The taskbar-pin half is re-checked as part of refreshUnlockState.
+- *
+- * @param {Function} emitChange Callback that triggers a re-render.
+- * @returns {() => void} Teardown that removes this listener and, once the last
+- *          listener is gone, unsubscribes from the default-browser poller.
+- */
+-function watchUnlockState(emitChange) {
+-  if (!gUnlockListeners.size && DefaultBrowserHelper.canCheck) {
+-    gPollUnsubscribe =
+-      DefaultBrowserHelper.pollForDefaultChanges(refreshUnlockState);
+-  }
+-  gUnlockListeners.add(emitChange);
+-  refreshUnlockState();
+-  return () => {
+-    gUnlockListeners.delete(emitChange);
+-    if (!gUnlockListeners.size && gPollUnsubscribe) {
+-      gPollUnsubscribe();
+-      gPollUnsubscribe = null;
+-    }
+-  };
+-}
+-
+-// Re-check the default/pinned state each time the user (re-)enters the Browser
+-// icon sub-pane, so a change made outside about:settings (setting default via
+-// the OS, pinning to the taskbar) is reflected without reloading the page. The
+-// first entry is already covered by the settings' setup(); this catches
+-// re-entry. "paneBrowserIcon" is the internal name of the "browserIcon" pane.
+-document.addEventListener("paneshown", event => {
+-  if (event.detail?.category === "paneBrowserIcon") {
+-    refreshUnlockState();
+-    lazy.CustomIconManager.refreshTaskbarButtons();
+-  }
+-});
+-
+ /**
+  * Build a moz-visual-picker option for a catalog icon.
+  *
+@@ -190,9 +88,6 @@ function resolveOptionPreviews(config) {
+ 
+ // Which ids each card owns. The active icon is a single value (the pref); each
+ // picker shows it only if it owns that id, otherwise it shows nothing selected.
+-function isBonusId(id) {
+-  return !!lazy.ICON_CATALOG[id]?.gated;
+-}
+ function isBasicId(id) {
+   let entry = lazy.ICON_CATALOG[id];
+   return !!entry && !entry.gated;
+@@ -235,71 +130,6 @@ Preferences.addSetting({
+   getControlConfig: resolveOptionPreviews,
+ });
+ 
+-// Bonus card picker: shows the active icon if it is a Bonus id, else nothing,
+-// and disables every option until the icons are unlocked.
+-Preferences.addSetting({
+-  id: "customBrowserIconBonus",
+-  deps: ["customIconIdPref"],
+-  get(_, { customIconIdPref }) {
+-    let id = customIconIdPref.value || "default";
+-    return isBonusId(id) ? id : "";
+-  },
+-  set: selectIcon,
+-  setup(emitChange) {
+-    let stopUnlock = watchUnlockState(emitChange);
+-    let stopScheme = watchScheme(emitChange);
+-    return () => {
+-      stopUnlock();
+-      stopScheme();
+-    };
+-  },
+-  getControlConfig(config) {
+-    resolveOptionPreviews(config);
+-    for (let option of config.options) {
+-      option.disabled = !gIconsUnlocked;
+-    }
+-    return config;
+-  },
+-});
+-
+-// Header promo on the Bonus card, shown only while the icons are locked.
+-Preferences.addSetting({
+-  id: "customBrowserIconRequirement",
+-  setup: watchUnlockState,
+-  visible: () => !gIconsUnlocked,
+-});
+-
+-// Success promo on the Bonus card, shown once the icons are unlocked (the
+-// inverse of customBrowserIconRequirement). Shares watchUnlockState so it
+-// re-renders when the async default/pin check resolves.
+-Preferences.addSetting({
+-  id: "customBrowserIconUnlocked",
+-  setup: watchUnlockState,
+-  visible: () => gIconsUnlocked,
+-});
+-
+-// Action buttons in the promo header. Each is shown only while its condition is
+-// unmet, performs that single action, then re-checks state so the UI (buttons,
+-// promo, Bonus picker) updates.
+-Preferences.addSetting({
+-  id: "browserIconSetDefaultButton",
+-  setup: watchUnlockState,
+-  visible: () => !gIsDefault,
+-  async onUserClick() {
+-    await DefaultBrowserHelper.setDefaultBrowser();
+-    refreshUnlockState();
+-  },
+-});
+-Preferences.addSetting({
+-  id: "browserIconPinButton",
+-  setup: watchUnlockState,
+-  visible: () => !gIsPinned,
+-  async onUserClick() {
+-    await window.getShellService().pinToTaskbar();
+-    refreshUnlockState();
+-  },
+-});
+-
+ SettingGroupManager.registerGroups({
+   browserIconBasic: {
+     l10nId: "appearance-browser-icon-basic-group",
+@@ -313,50 +143,4 @@ SettingGroupManager.registerGroups({
+       },
+     ],
+   },
+-  browserIconBonus: {
+-    l10nId: "appearance-browser-icon-bonus-group",
+-    headingLevel: 2,
+-    items: [
+-      {
+-        id: "customBrowserIconRequirement",
+-        l10nId: "appearance-browser-icon-requirement",
+-        control: "moz-promo",
+-        controlAttrs: {
+-          imagesrc: "chrome://global/skin/illustrations/kit-holding-lock.svg",
+-          imagewidth: "small",
+-          imagedisplay: "cover",
+-        },
+-        items: [
+-          {
+-            id: "browserIconSetDefaultButton",
+-            l10nId: "appearance-browser-icon-set-default-button",
+-            control: "moz-button",
+-            slot: "actions",
+-          },
+-          {
+-            id: "browserIconPinButton",
+-            l10nId: "appearance-browser-icon-pin-button",
+-            control: "moz-button",
+-            slot: "actions",
+-          },
+-        ],
+-      },
+-      {
+-        id: "customBrowserIconUnlocked",
+-        l10nId: "appearance-browser-icon-unlocked",
+-        control: "moz-promo",
+-        controlAttrs: {
+-          imagesrc: "chrome://global/skin/illustrations/kit-confetti.svg",
+-          imagewidth: "small",
+-          imagedisplay: "cover",
+-        },
+-      },
+-      {
+-        id: "customBrowserIconBonus",
+-        control: "moz-visual-picker",
+-        controlAttrs: { orientation: "vertical" },
+-        options: getOptions(true /* isGated */),
+-      },
+-    ],
+-  },
+ });
+
+
+

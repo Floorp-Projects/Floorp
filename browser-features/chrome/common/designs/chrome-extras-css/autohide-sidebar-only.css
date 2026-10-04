@@ -1,0 +1,62 @@
+/* Floorp chrome-extras: autohideSidebar (without overlap)
+ * Ported from vendored Lepton (leptonChrome.css 27034-27081, 2 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ */
+
+/* leptonChrome.css:27034-27059 */
+#sidebar-box {
+  --uc-sidebar-fullscreen-margin: calc(var(--uc-sidebar-fullscreen-width) + var(--uc-sidebar-activate-width-reverse));
+  overflow: hidden;
+  will-change: min-width, max-width;
+}
+#sidebar-box:is(:hover, :focus-within),
+#sidebar-box:has(#sidebar-switcher-target.active) {
+  min-width: var(--uc-sidebar-activate-width) !important;
+  max-width: var(--uc-sidebar-activate-width) !important;
+}
+:root[inFullscreen="true"] #sidebar-box:not(:is([positionend], [sidebar-positionend])) {
+  margin-inline-start: var(--uc-sidebar-fullscreen-margin) !important;
+  will-change: margin-inline-start;
+}
+:root[inFullscreen="true"] #sidebar-box:not(:is([positionend], [sidebar-positionend])):is(:hover, :focus-within) {
+  margin-inline-start: 0 !important;
+}
+:root[inFullscreen="true"] #sidebar-box:is([positionend], [sidebar-positionend]) {
+  margin-inline-end: var(--uc-sidebar-fullscreen-margin) !important;
+  will-change: margin-inline-end;
+}
+:root[inFullscreen="true"] #sidebar-box:is([positionend], [sidebar-positionend]):is(:hover, :focus-within) {
+  margin-inline-end: 0 !important;
+}
+
+/* leptonChrome.css:27060-27081 */
+@media (prefers-reduced-motion: no-preference) {
+  #sidebar-box {
+    transition: min-width var(--uc-autohide-sidebar-speed)
+      var(--animation-easing-function)
+      var(--uc-autohide-sidebar-delay),
+      max-width var(--uc-autohide-sidebar-speed)
+      var(--animation-easing-function) var(--uc-autohide-sidebar-delay)
+      !important;
+  }
+  #sidebar-box:is(:hover, :focus-within),
+  #sidebar-box:has(#sidebar-switcher-target.active) {
+    transition-delay: 0ms !important;
+  }
+  :root[inFullscreen="true"] #sidebar-box {
+    transition: margin-inline-start var(--uc-autohide-fullscreen-sidebar-speed)
+      var(--animation-easing-function)
+      var(--uc-autohide-sidebar-delay) !important;
+  }
+  :root[inFullscreen="true"] #sidebar-box:is([positionend], [sidebar-positionend]) {
+    transition-property: margin-inline-end !important;
+  }
+  :root[inFullscreen="true"] #sidebar-box:is(:hover, :focus-within),
+  :root[inFullscreen="true"] #sidebar-box:has(#sidebar-switcher-target.active) {
+    transition-delay: 0ms !important;
+  }
+}

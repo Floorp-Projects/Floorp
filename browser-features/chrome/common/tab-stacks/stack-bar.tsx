@@ -1,0 +1,429 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import { signal } from "@preact/signals";
+import { useLayoutEffect, useRef } from "preact/hooks";
+import styles from "./styles.css?inline";
+import { proxyDragLifecycle } from "./proxy-drag.ts";
+import type {
+  StackDataTransfer,
+  StackDragController,
+  StackSplitView,
+} from "./types.ts";
+
+/** Drag data type used by row-2 proxy drags (reorder / eject). */
+export const PROXY_DRAG_TYPE = "application/x-floorp-stack-tab";
+export const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
+/** Attribute stamped on every `tab-group` this feature presents as a stack. */
+export const STACK_ATTR = "data-floorp-stack";
+/** Per-tab drag identity attribute (stable for the tab's whole life). */
+export const TAB_DRAG_ID_ATTR = "data-floorp-tab-id";
+
+export function StackStyleElement() {
+  return <style>{styles}</style>;
+}
+
+export type StackTab = XULElement & {
+  label: string;
+  selected: boolean;
+  linkedPanel: string;
+  group: StackGroup | null;
+  splitview?: StackSplitView | null;
+  hidden?: boolean;
+  closing?: boolean;
+  multiselected?: boolean;
+  _dragData?: object;
+  isConnected?: boolean;
+  linkedBrowser?: {
+    currentURI?: { spec?: string };
+  };
+};
+
+export type StackGroup = XULElement & {
+  id: string;
+  label: string;
+  collapsed: boolean;
+  tabs: StackTab[];
+  addTabs: (tabs: StackTab[]) => void;
+  style: CSSStyleDeclaration;
+};
+
+export type TabBrowser = {
+  tabs: StackTab[];
+  selectedTab: StackTab;
+  tabGroups: StackGroup[];
+  tabContainer: XULElement & { tabDragAndDrop?: StackDragController };
+  tabGroupMenu?: { openEditModal: (group: StackGroup) => void };
+  removeTab: (tab: StackTab, opts?: Record<string, unknown>) => void;
+  removeTabs?: (tabs: StackTab[], opts?: Record<string, unknown>) => void;
+  addTab: (url: string, opts: Record<string, unknown>) => StackTab;
+  ungroupTab?: (tab: StackTab) => void;
+  clearMultiSelectedTabs?: () => void;
+  unlockClearMultiSelection?: () => void;
+  reloadTab?: (tab: StackTab) => void;
+  moveTabBefore?: (
+    tab: StackTab | StackGroup,
+    target: StackTab | StackGroup,
+  ) => void;
+  moveTabAfter?: (
+    tab: StackTab | StackGroup,
+    target: StackTab | StackGroup,
+  ) => void;
+  adoptTab?: (
+    tab: StackTab,
+    options: { tabIndex: number; selectTab: boolean },
+  ) => StackTab | null;
+};
+
+export const getGBrowser = (): TabBrowser | null =>
+  (globalThis as unknown as { gBrowser?: TabBrowser }).gBrowser ?? null;
+
+export const isVerticalTabMode = (
+  tabContainer: Element | null | undefined,
+): boolean => tabContainer?.getAttribute?.("orient") === "vertical";
+
+/** Bumped on any tab/group mutation so proxies re-read live tab state. */
+const version = signal(0);
+export const bumpStacksVersion = () => {
+  version.value += 1;
+};
+
+const activeGroup = signal<StackGroup | null>(null);
+
+export const getActiveGroup = () => activeGroup.value;
+
+/**
+ * The stack bar shows the group of the currently selected tab — but only
+ * groups we own (marked data-floorp-stack), including their split panes.
+ * Groups hidden by a workspace (`style.display === "none"`) must never
+ * surface their bar.
+ */
+export const syncActiveGroup = () => {
+  const gb = getGBrowser();
+  const group = gb?.selectedTab?.group ?? null;
+  const isOurs = !isVerticalTabMode(gb?.tabContainer) && group &&
+    (group as unknown as Element).getAttribute?.(STACK_ATTR) === "true" &&
+    group.style?.display !== "none";
+  activeGroup.value = isOurs ? group : null;
+};
+
+/** Remember the last selected tab per group so chip clicks feel right. */
+const lastSelectedInGroup = new WeakMap<StackGroup, StackTab>();
+
+export const rememberSelection = () => {
+  const gb = getGBrowser();
+  const tab = gb?.selectedTab;
+  const group = tab?.group;
+  if (tab && group) {
+    lastSelectedInGroup.set(group, tab);
+  }
+};
+
+/**
+ * Title shown on an unnamed stack chip: its first REACHABLE tab, as a
+ * stable anchor. Workspaces can park members hidden — never title the chip
+ * after a tab this workspace cannot even see.
+ */
+export const getGroupDisplayTitle = (group: StackGroup): string => {
+  const anchor = group.tabs.find((t) => !t.hidden) ?? group.tabs[0];
+  const label = anchor?.label ?? "";
+  return label.length > 60 ? `${label.slice(0, 60)}…` : label;
+};
+
+export const activateGroup = (group: StackGroup) => {
+  const gb = getGBrowser();
+  if (!gb) return;
+  const remembered = lastSelectedInGroup.get(group);
+  const usable = (t: StackTab | undefined): t is StackTab =>
+    !!t && t.isConnected !== false && t.group === group && !t.hidden;
+  // Never select a workspace-hidden member — that yanks the session into
+  // another workspace's state. First reachable tab is the fallback.
+  const target = usable(remembered)
+    ? remembered
+    : group.tabs.find((t) => usable(t)) ?? null;
+  if (target) {
+    gb.selectedTab = target;
+  }
+};
+
+const DEFAULT_FAVICON = "chrome://global/skin/icons/defaultFavicon.svg";
+
+/**
+ * Stable per-tab drag identity. NOT linkedPanel: that is null until a tab
+ * has a browser attached (lazy/session-restored tabs), so a first drag of
+ * an unloaded tab would carry an empty id. Stamped on demand and good for
+ * the tab's whole life.
+ */
+export const getTabDragId = (tab: StackTab): string => {
+  let id = tab.getAttribute(TAB_DRAG_ID_ATTR);
+  if (!id) {
+    id = `dt-${crypto.randomUUID()}`;
+    tab.setAttribute(TAB_DRAG_ID_ATTR, id);
+  }
+  return id;
+};
+
+export const findTabByDragId = (id: string): StackTab | undefined =>
+  getGBrowser()?.tabs.find((t) => t.getAttribute(TAB_DRAG_ID_ATTR) === id);
+
+/** Read the actual tab, including when its proxy belongs to another window. */
+export const getDraggedTab = (event: DragEvent): StackTab | null => {
+  const dt = event.dataTransfer as StackDataTransfer | null;
+  const tab = dt?.mozGetDataAt?.(TAB_DROP_TYPE, 0) as StackTab | null;
+  return tab?.localName === "tab" ? tab : null;
+};
+
+// Weak keys retain no closed groups and keep positions local to this window.
+const scrollPositions = new WeakMap<StackGroup, number>();
+
+/** Pixels per wheel/arrow notch for the overflow scroller. */
+const SCROLL_STEP_PX = 48;
+
+function StackTabProxy(props: { tab: StackTab }) {
+  version.value;
+  const split = (() => {
+    const panes =
+      props.tab.splitview?.tabs.filter((tab) =>
+        tab.group === props.tab.group && !tab.closing
+      ) ?? [];
+    const index = panes.indexOf(props.tab);
+    if (panes.length < 2 || index < 0) {
+      return null;
+    }
+    return {
+      position: index === 0
+        ? "first"
+        : index === panes.length - 1
+        ? "last"
+        : "middle",
+      active: panes.some((tab) => tab === getGBrowser()?.selectedTab),
+    };
+  })();
+  const label = () => {
+    return props.tab.label;
+  };
+  const icon = () => {
+    return props.tab.getAttribute("image") || DEFAULT_FAVICON;
+  };
+  const selected = () => {
+    return props.tab.selected ? "true" : "false";
+  };
+
+  return (
+    <xul:hbox
+      class="floorp-stack-tab"
+      align="center"
+      data-selected={selected()}
+      data-split-position={split?.position}
+      data-split-active={split?.active ? "true" : undefined}
+      data-floorp-drag-id={getTabDragId(props.tab)}
+      tooltiptext={label()}
+      context="tabContextMenu"
+      draggable
+      onDragStart={(event: DragEvent) => {
+        // Use the same native entry point as the all-tabs list. Native tab
+        // data MUST be the first flavor for cross-window drops and detach.
+        const gb = getGBrowser();
+        const controller = gb?.tabContainer.tabDragAndDrop;
+        // Proxies represent one member. Clear native multiselection so both
+        // the transfer and native movingTabs/detach paths move only that tab.
+        if (props.tab.multiselected) {
+          gb?.unlockClearMultiSelection?.();
+          gb?.clearMultiSelectedTabs?.();
+        }
+        controller?.startTabDrag(
+          event,
+          props.tab,
+          { fromTabList: true },
+        );
+        if (controller) {
+          proxyDragLifecycle.begin(
+            props.tab,
+            event.currentTarget as Element,
+            controller,
+          );
+        }
+        event.dataTransfer?.setData(PROXY_DRAG_TYPE, getTabDragId(props.tab));
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = "move";
+          try {
+            const ghost = document!.createElement("div");
+            ghost.className = "floorpStackDragGhost";
+            ghost.textContent = props.tab.label ?? "";
+            document!.documentElement?.appendChild(ghost);
+            event.dataTransfer.setDragImage(ghost, 12, 14);
+            setTimeout(() => ghost.remove(), 0);
+          } catch {
+            // default drag image
+          }
+        }
+      }}
+      onDragEnd={(event: DragEvent) => {
+        proxyDragLifecycle.end(props.tab, event);
+      }}
+      onClick={(event: MouseEvent) => {
+        if (event.button !== 0) return;
+        const gb = getGBrowser();
+        if (gb) {
+          gb.selectedTab = props.tab;
+        }
+      }}
+      onAuxClick={(event: MouseEvent) => {
+        if (event.button !== 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+        getGBrowser()?.removeTab(props.tab, { animate: false, byMouse: true });
+      }}
+    >
+      <xul:hbox class="floorp-stack-tab-iconbox" align="center">
+        <xul:image class="floorp-stack-tab-icon" src={icon()} />
+        <xul:toolbarbutton
+          class="floorp-stack-tab-close"
+          tooltiptext="Close tab"
+          onClick={(event: MouseEvent) => {
+            event.stopPropagation();
+            if (event.button !== 0) return;
+            getGBrowser()?.removeTab(props.tab, { animate: false });
+          }}
+        />
+      </xul:hbox>
+      <xul:label class="floorp-stack-tab-label" crop="end">
+        {label()}
+      </xul:label>
+      <xul:image
+        class="floorp-stack-tab-refresh"
+        src="chrome://global/skin/icons/reload.svg"
+        tooltiptext="Reload tab"
+        onMouseDown={(event: MouseEvent) => {
+          event.stopPropagation();
+          event.preventDefault();
+        }}
+        onClick={(event: MouseEvent) => {
+          event.stopPropagation();
+          if (event.button !== 0) return;
+          getGBrowser()?.reloadTab?.(props.tab);
+        }}
+      />
+    </xul:hbox>
+  );
+}
+
+function StackRow(props: { group: StackGroup }) {
+  version.value;
+  const tabs = [...props.group.tabs];
+  const scrollerRef = useRef<HTMLElement | null>(null);
+
+  const addTabToActiveGroup = () => {
+    const gb = getGBrowser();
+    const group = activeGroup.value;
+    if (!gb || !group) return;
+    try {
+      const newTabUrl =
+        (globalThis as unknown as { BROWSER_NEW_TAB_URL?: string })
+          .BROWSER_NEW_TAB_URL ?? "about:newtab";
+      const tab = gb.addTab(newTabUrl, {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+        skipAnimation: true,
+      });
+      group.addTabs([tab]);
+      gb.selectedTab = tab;
+    } catch (e) {
+      console.error("[tab-stacks] Failed to add tab to group:", e);
+    }
+  };
+
+  const scrollBy = (dir: number) => () => {
+    const scroller = scrollerRef.current;
+    scroller?.scrollBy({ left: dir * SCROLL_STEP_PX, behavior: "smooth" });
+  };
+
+  // The scroller is overflow-x:auto with a hidden scrollbar; this single
+  // wheel handler drives horizontal scrolling so a vertical wheel over the
+  // bar does not fight the tab strip's own vertical listeners.
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    scroller.scrollLeft = scrollPositions.get(props.group) ?? 0;
+    const savePosition = () =>
+      scrollPositions.set(props.group, scroller.scrollLeft);
+    scroller.addEventListener("scroll", savePosition);
+    const onWheel = (event: WheelEvent) => {
+      if (scroller.scrollWidth - scroller.clientWidth <= 1) return;
+      const vertical = Math.abs(event.deltaY) > Math.abs(event.deltaX);
+      let delta = vertical ? event.deltaY : event.deltaX;
+      if (vertical && getComputedStyle(scroller)?.direction === "rtl") {
+        delta *= -1;
+      }
+      if (delta === 0) return;
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        // Like the native arrowscrollbox, one line is one average tab width.
+        const items = scroller.querySelector("#floorp-stack-items");
+        const count = items?.children.length ?? 0;
+        const line = count ? items!.scrollWidth / count : SCROLL_STEP_PX;
+        if (Math.abs(delta * line) > scroller.clientWidth) {
+          delta = Math.sign(delta) *
+            Math.max(1, Math.floor(scroller.clientWidth / line));
+        }
+        delta *= line;
+      } else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        delta *= scroller.clientWidth;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      scroller.scrollLeft += delta;
+      savePosition();
+    };
+    scroller.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      savePosition();
+      scroller.removeEventListener("scroll", savePosition);
+      scroller.removeEventListener("wheel", onWheel);
+    };
+  }, [props.group]);
+
+  return (
+    <xul:hbox id="floorp-stack-bar" align="center">
+      <xul:toolbarbutton
+        id="floorp-stack-scroll-up"
+        class="floorp-stack-scrollbutton"
+        tooltiptext="Scroll tabs left"
+        onClick={scrollBy(-1)}
+      />
+      <xul:hbox id="floorp-stack-scroller" ref={scrollerRef}>
+        <xul:hbox id="floorp-stack-items" align="center">
+          {tabs.map((tab) => (
+            <StackTabProxy
+              key={getTabDragId(tab)}
+              tab={tab}
+            />
+          ))}
+        </xul:hbox>
+      </xul:hbox>
+      <xul:toolbarbutton
+        id="floorp-stack-scroll-down"
+        class="floorp-stack-scrollbutton"
+        tooltiptext="Scroll tabs right"
+        onClick={scrollBy(1)}
+      />
+      {
+        /* Outside the scroller and last in the row, which is where row 1
+          keeps the "+" it actually shows: #new-tab-button is a sibling
+          AFTER #tabbrowser-tabs, so it sits past the right arrow and never
+          scrolls away. */
+      }
+      <xul:toolbarbutton
+        id="floorp-stack-newtab"
+        tooltiptext="New tab in stack"
+        onClick={addTabToActiveGroup}
+      />
+    </xul:hbox>
+  );
+}
+
+export function StackBar() {
+  const group = activeGroup.value;
+  return group ? <StackRow key={group.id} group={group} /> : null;
+}

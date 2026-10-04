@@ -3,7 +3,11 @@
 import type { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
 import type { ClassDecorator } from "./decorator.d.ts";
-import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
+import {
+  addDisposer,
+  createRootHMR,
+  disposeRoot,
+} from "@nora/preact-xul/lifetime";
 export { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 
 // U+2063 before `@` needed
@@ -16,23 +20,66 @@ export { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
  * ```
  * @see {@link file://./../../vite.config.ts vite.config.ts} noraneko_component_hmr_support
  */
-/**
- * 自己申告式：class 名を明示渡しで安定取得。
- * SWC の TC39 stage 3 decorator transform が _clazz.name / ctx.name を
- * 一部 class で空にする問題を回避する。
- *
- * @example ⁣@noraComponent("BrowserShareMode", import.meta.hot)
- */
 export function noraComponent(
-  name: string,
-  aViteHotContext: ViteHotContext | undefined,
+  nameOrHot: string | ViteHotContext | undefined,
+  hot?: ViteHotContext,
 ): ClassDecorator<NoraComponentBase> {
-  return (_clazz, _ctx) => {
+  const aViteHotContext = typeof nameOrHot === "string" ? hot : nameOrHot;
+  return (_clazz, ctx) => {
+    const name = typeof nameOrHot === "string" ? nameOrHot : ctx.name;
+    if (typeof name !== "string" || !name) {
+      throw new Error("NoraComponent classes must have a name");
+    }
     if (_NoraComponentBase_viteHotContext.has(name)) {
       throw new Error(`Duplicate NoraComponent Name: ${name}`);
     }
+
     _NoraComponentBase_viteHotContext.set(name, aViteHotContext);
     console.debug("[nora@base] noraComponent " + name);
+
+    // Track which classes belong to this module's hot context.
+    if (aViteHotContext) {
+      let names = _classNamesByHotCtx.get(aViteHotContext);
+      if (!names) {
+        names = new Set();
+        _classNamesByHotCtx.set(aViteHotContext, names);
+      }
+      names.add(name);
+
+      // Register a single hot.dispose per module (Vite retains only the last
+      // dispose callback per module — see vite #16283 — so we register once at
+      // decoration time rather than per-instance in the constructor).
+      // This guarantees that when the module is hot-updated, every live
+      // instance's Preact root is torn down BEFORE the accept callback creates
+      // a fresh instance. Without this, monkey-patched state (e.g.
+      // TabDragDropManager's tabContainer listeners) leaks across HMR updates.
+      if (!aViteHotContext.data.__noraDisposeRegistered) {
+        aViteHotContext.data.__noraDisposeRegistered = true;
+        aViteHotContext.data.__preactXulExternalDisposeOwner = true;
+        aViteHotContext.dispose(() => {
+          const hotCtx = aViteHotContext!;
+          const classNames = _classNamesByHotCtx.get(hotCtx);
+          if (classNames) {
+            for (const className of classNames) {
+              _noraInstancesByName.delete(className);
+              _NoraComponentBase_viteHotContext.delete(className);
+            }
+            _classNamesByHotCtx.delete(hotCtx);
+          }
+          // Drain all Preact roots sharing this hot context. disposeRoot runs
+          // every registered disposer, which fires each instance's addDisposer
+          // (removing DOM nodes, event listeners, monkey-patches, etc.).
+          disposeRoot(hotCtx);
+          hotCtx.data.__noraDisposeRegistered = false;
+          hotCtx.data.__preactXulDisposeRegistered = false;
+          hotCtx.data.__preactXulExternalDisposeOwner = false;
+          nora_component_base_console.debug(
+            "hot.dispose: drained nora instances and Preact roots for",
+            classNames ? Array.from(classNames) : [],
+          );
+        });
+      }
+    }
   };
 }
 
@@ -44,23 +91,52 @@ const _NoraComponentBase_viteHotContext = new Map<
   string,
   ViteHotContext | undefined
 >();
+
+/**
+ * Registry of live NoraComponentBase instances, keyed by class name.
+ * Populated in the constructor, drained on HMR dispose (via the decorator's
+ * hot.dispose registration) and on individual instance cleanup.
+ */
+const _noraInstancesByName = new Map<string, Set<NoraComponentBase>>();
+
+/**
+ * Tracks which class names belong to which hot context, so the per-module
+ * HMR dispose handler only drains instances for classes defined in the module
+ * being hot-updated — not classes from unrelated modules.
+ */
+const _classNamesByHotCtx = new Map<ViteHotContext, Set<string>>();
+
 export abstract class NoraComponentBase {
   logger: ConsoleInstance;
   constructor() {
+    const name = this.constructor.name;
+
+    // Register this instance so the HMR dispose handler can find it later.
+    let instances = _noraInstancesByName.get(name);
+    if (!instances) {
+      instances = new Set();
+      _noraInstancesByName.set(name, instances);
+    }
+    instances.add(this);
+
     // support HMR
-    const hot = _NoraComponentBase_viteHotContext.get(this.constructor.name);
+    const hot = _NoraComponentBase_viteHotContext.get(name);
     // Initialize logger
     const _console = console.createInstance({
-      prefix: `nora@${kebabCase(this.constructor.name)}`,
+      prefix: `nora@${kebabCase(name)}`,
     });
     this.logger = _console;
 
-    // Run init with preact HMR support
+    // Run init with Preact HMR support
     createRootHMR(() => {
       this.init();
       addDisposer(() => {
-        nora_component_base_console.debug(`dispose ${this.constructor.name}`);
-        _NoraComponentBase_viteHotContext.delete(this.constructor.name);
+        nora_component_base_console.debug(`addDisposer ${name}`);
+        const instances = _noraInstancesByName.get(name);
+        instances?.delete(this);
+        if (instances?.size === 0) {
+          _noraInstancesByName.delete(name);
+        }
       });
     }, hot);
   }

@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "preact";
-import { effect } from "@preact/signals";
+import { h } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
+  isFloating,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
@@ -22,8 +24,6 @@ import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();
-  private panelContainers: Map<string, Element> = new Map();
-
   private get parentElement() {
     return document?.getElementById("panel-sidebar-browser-box") as unknown as
       | XULElement
@@ -43,27 +43,34 @@ export class CPanelSidebar {
   }
 
   constructor() {
-    effect(() => {
-      // Only clear selection marker from sidebar panels (not workspaces).
-      const currentCheckedPanels = Array.from(
-        document?.querySelectorAll(
-          ".panel-sidebar-panel[data-checked][data-panel-id]",
-        ) ?? [],
-      );
-      // Use forEach instead of map to avoid type error
-      (currentCheckedPanels as unknown as XULElement[]).forEach((panel) => {
-        panel.removeAttribute("data-checked");
-      });
+    const exec = () => {
+      rootEffect(() => {
+        // Only clear selection marker from sidebar panels (not workspaces).
+        const currentCheckedPanels = Array.from(
+          document?.querySelectorAll(
+            ".panel-sidebar-panel[data-checked][data-panel-id]",
+          ) ?? [],
+        );
+        // Use forEach instead of map to avoid type error
+        (currentCheckedPanels as XULElement[]).forEach((panel) => {
+          panel.removeAttribute("data-checked");
+        });
 
-      const currentPanel = this.getPanelData(selectedPanelId.value ?? "");
-      if (currentPanel) {
-        document
-          // Select by data-panel-id to avoid touching workspace entries.
-          ?.querySelector(
-            `.panel-sidebar-panel[data-panel-id="${currentPanel.id}"]`,
-          )
-          ?.setAttribute("data-checked", "true");
-      }
+        const currentPanel = this.getPanelData(selectedPanelId.value ?? "");
+        if (currentPanel) {
+          document
+            // Select by data-panel-id to avoid touching workspace entries.
+            ?.querySelector(
+              `.panel-sidebar-panel[data-panel-id="${currentPanel.id}"]`,
+            )
+            ?.setAttribute("data-checked", "true");
+        }
+      });
+    };
+    exec();
+    addDisposer(() => {
+      for (const dispose of this.panelDisposers.values()) dispose();
+      this.panelDisposers.clear();
     });
   }
 
@@ -76,7 +83,8 @@ export class CPanelSidebar {
         goIndex: () => void;
         reload: () => void;
         toggleMute: () => void;
-      }) | undefined;
+      })
+      | undefined;
   }
 
   public getPanelData(id: string): Panel | undefined {
@@ -99,8 +107,10 @@ export class CPanelSidebar {
   }
 
   private resetBrowsersFlex(): void {
-    for (const container of this.panelContainers.values()) {
-      (container as unknown as XULElement).removeAttribute("flex");
+    if (this.browsers) {
+      for (const browser of this.browsers as Iterable<XULElement>) {
+        (browser as XULElement).removeAttribute("flex");
+      }
     }
   }
 
@@ -109,7 +119,7 @@ export class CPanelSidebar {
       throw new Error("Parent element not found");
     }
 
-    // Dispose previous container for this panel if it exists
+    // Dispose previous root for this panel if it exists (safety for re-renders)
     const prevDispose = this.panelDisposers.get(panel.id);
     if (prevDispose) {
       try {
@@ -120,26 +130,16 @@ export class CPanelSidebar {
       this.panelDisposers.delete(panel.id);
     }
 
-    // Create a dedicated container so we can cleanly unmount
-    const container = document?.createXULElement("vbox") as unknown as XULElement;
-    container.setAttribute("flex", "1");
-    this.parentElement.appendChild(container);
-    this.panelContainers.set(panel.id, container);
-
-    render(this.createBrowserComponent(panel), container as unknown as Element);
-
-    this.panelDisposers.set(panel.id, () => {
-      render(null, container as unknown as Element);
-      container.remove();
-      this.panelContainers.delete(panel.id);
-    });
-
-    this.initBrowser(panel);
+    const dispose = safeRender(
+      h(() => this.createBrowserComponent(panel), {}),
+      this.parentElement as unknown as Element,
+    );
+    this.panelDisposers.set(panel.id, dispose);
   }
 
   private initBrowser(panel: Panel) {
     if (panel.type === "extension") {
-      const browser = this.getBrowserElement(panel.id) as unknown as XULElement & {
+      const browser = this.getBrowserElement(panel.id) as XULElement & {
         contentWindow: Window;
       };
 
@@ -154,19 +154,6 @@ export class CPanelSidebar {
       const sidebarAction = getExtensionSidebarAction(panel.extensionId);
 
       browser.addEventListener("DOMContentLoaded", () => {
-        const oa = globalThis.E10SUtils.predictOriginAttributes({ browser });
-        browser.setAttribute(
-          "remoteType",
-          globalThis.E10SUtils.getRemoteTypeForURI(
-            panel.url ?? "",
-            true,
-            false,
-            globalThis.E10SUtils.EXTENSION_REMOTE_TYPE,
-            null,
-            oa,
-          ),
-        );
-
         browser.contentWindow.loadPanel(
           panel.extensionId,
           sidebarAction.default_panel,
@@ -197,32 +184,40 @@ export class CPanelSidebar {
   }
 
   public showPanel(panel: Panel): void {
-    const container = this.panelContainers.get(panel.id);
-    if (container) {
-      this.resetBrowsersFlex();
-      container.setAttribute("flex", "1");
+    const browser = this.getBrowserElement(panel.id);
+    if (browser) {
+      browser.setAttribute("flex", "1");
       return;
     }
     this.renderBrowserComponent(panel);
   }
 
   public saveCurrentSidebarWidth() {
-    const currentWidth = this.sidebarElement?.getAttribute("width");
-    if (currentWidth) {
+    // Floating dimensions belong to panelSidebarConfig, never to panel.width.
+    if (isFloating.value) return;
+    const panelId = selectedPanelId.value;
+    // Persist the rendered size only after a completed, visible docked resize.
+    const currentWidth = this.sidebarElement?.getBoundingClientRect().width;
+    if (panelId && currentWidth && Number.isFinite(currentWidth)) {
+      const width = Math.round(currentWidth);
+      if (this.getPanelData(panelId)?.width === width) {
+        return;
+      }
       setPanelSidebarData((prev) =>
-        prev.map((panel) =>
-          panel.id === selectedPanelId.value
-            ? { ...panel, width: Number(currentWidth) }
-            : panel
-        )
+        prev.map((panel) => panel.id === panelId ? { ...panel, width } : panel)
       );
     }
   }
 
-  private setSidebarWidth(panel: Panel) {
+  public setSidebarWidth(panel: Panel) {
+    const config = panelSidebarConfig.value;
+    const dockedWidth = panel.width !== 0 ? panel.width : config.globalWidth;
+    const width = isFloating.value
+      ? config.floatingWidth ?? dockedWidth
+      : dockedWidth;
     this.sidebarElement?.style.setProperty(
       "width",
-      `${panel.width !== 0 ? panel.width : panelSidebarConfig.value.globalWidth}px`,
+      `${width}px`,
     );
   }
 
@@ -243,7 +238,7 @@ export class CPanelSidebar {
   }
 
   public unloadPanel(panelId: string) {
-    // Cleanup preact root for this panel if present
+    // Cleanup Solid root for this panel if present
     const dispose = this.panelDisposers.get(panelId);
     if (dispose) {
       try {
@@ -252,6 +247,11 @@ export class CPanelSidebar {
         console.warn("panel dispose failed", e);
       }
       this.panelDisposers.delete(panelId);
+    }
+
+    const browser = this.getBrowserElement(panelId);
+    if (browser) {
+      browser.remove();
     }
 
     setSelectedPanelId(null);

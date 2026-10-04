@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { signal, effect } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import type { Signal } from "@preact/signals";
 import {
-  type SplitViewConfig,
-  type SplitViewPaneSizes,
   DEFAULT_CONFIG,
   DEFAULT_PANE_SIZES,
   PREF_SPLIT_VIEW_CONFIG,
   PREF_SPLIT_VIEW_PANE_SIZES,
+  type SplitViewConfig,
+  type SplitViewPaneSizes,
 } from "./types.js";
 
 function deepEquals(a: unknown, b: unknown): boolean {
@@ -68,11 +68,10 @@ function parsePaneSizesPref(prefName: string): SplitViewPaneSizes {
       return DEFAULT_PANE_SIZES;
     }
     return {
-      flexRatios:
-        Array.isArray(raw.flexRatios) &&
-        raw.flexRatios.every((v: unknown) => typeof v === "number")
-          ? raw.flexRatios.map(clampRatio)
-          : DEFAULT_PANE_SIZES.flexRatios,
+      flexRatios: Array.isArray(raw.flexRatios) &&
+          raw.flexRatios.every((v: unknown) => typeof v === "number")
+        ? raw.flexRatios.map(clampRatio)
+        : DEFAULT_PANE_SIZES.flexRatios,
       gridColRatio: clampRatio(raw.gridColRatio),
       gridRowRatio: clampRatio(raw.gridRowRatio),
     };
@@ -111,11 +110,15 @@ export const splitViewConfig: Signal<SplitViewConfig> = makePrefSignal(
   PREF_SPLIT_VIEW_CONFIG,
   deepEquals,
 );
-export const setSplitViewConfig = (v: SplitViewConfig) => { splitViewConfig.value = v; };
+export const setSplitViewConfig = (v: SplitViewConfig) => {
+  splitViewConfig.value = v;
+};
 
 export const splitViewPaneSizes: Signal<SplitViewPaneSizes> = makePrefSignal(
   () => parsePaneSizesPref(PREF_SPLIT_VIEW_PANE_SIZES),
   PREF_SPLIT_VIEW_PANE_SIZES,
   deepEquals,
 );
-export const setSplitViewPaneSizes = (v: SplitViewPaneSizes) => { splitViewPaneSizes.value = v; };
+export const setSplitViewPaneSizes = (v: SplitViewPaneSizes) => {
+  splitViewPaneSizes.value = v;
+};

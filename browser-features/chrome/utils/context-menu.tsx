@@ -1,18 +1,14 @@
-import { render } from "preact";
 import type { ComponentChild } from "preact";
 import { safeRender } from "@nora/preact-xul";
+import { addDisposer, createRoot } from "@nora/preact-xul/lifetime";
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import i18next from "i18next";
+import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "#features-chrome/common/context-menu/style.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 // deno-lint-ignore no-namespace
 export namespace ContextMenuUtils {
-  const checkItems: (() => void)[] = [];
-  const contextMenuObserver: MutationObserver = new MutationObserver(() => {
-    contextMenuObserverFunc();
-  });
-
   function windowModalDialogElem(): XULElement | null {
     return document?.querySelector("#window-modal-dialog") as XULElement | null;
   }
@@ -44,6 +40,7 @@ export namespace ContextMenuUtils {
     runFunction: () => void,
     checkID: string,
     checkedFunction: () => void,
+    semanticKey?: string,
   ) {
     const container = contentAreaContextMenu();
     const targetNode = document?.getElementById(checkID) as XULElement | null;
@@ -52,52 +49,38 @@ export namespace ContextMenuUtils {
     ) as XULElement | null;
 
     if (!targetNode || !renderElement) {
-      console.warn("[ContextMenu]", `Element not found: ${!targetNode ? checkID : renderElementId}`);
+      console.warn(
+        "[ContextMenu]",
+        `Element not found: ${!targetNode ? checkID : renderElementId}`,
+      );
       return;
     }
 
-    // Imperative DOM insertion: preact's render() manages an entire container's
-    // content, so using it for multiple independent menu items would cause each
-    // call to overwrite the previous. Instead, create XUL elements directly.
-    if (container) {
-      const menuitem = document!.createXULElement("menuitem") as XULElement;
-      menuitem.setAttribute("id", id);
-      menuitem.setAttribute("label", i18next.t(l10n));
-      menuitem.addEventListener("command", runFunction);
-
-      // Preserve insertion position (before marker) if available
-      if (
-        renderElement?.parentElement === (container as unknown as Element)
-      ) {
-        (container as unknown as Element).insertBefore(menuitem, renderElement);
-      } else {
-        (container as unknown as Element).appendChild(menuitem);
-      }
-
-      // Live i18n update: update attribute directly
-      addI18nObserver(() => {
-        menuitem.setAttribute("label", i18next.t(l10n));
-      });
-    }
-
-    if (targetNode) {
-      contextMenuObserver.observe(targetNode, { attributes: true });
-    }
-    checkItems.push(checkedFunction);
-    contextMenuObserverFunc();
-  }
-
-  function contextMenuObserverFunc() {
-    for (const checkItem of checkItems) {
-      checkItem();
-    }
+    if (!container) return;
+    return createRoot((dispose) => {
+      safeRender(
+        ContextMenu(id, l10n, runFunction, semanticKey),
+        container as unknown as Element,
+        {
+          marker:
+            renderElement.parentElement === (container as unknown as Element)
+              ? renderElement
+              : undefined,
+        },
+      );
+      const observer = new MutationObserver(checkedFunction);
+      observer.observe(targetNode, { attributes: true });
+      addDisposer(() => observer.disconnect());
+      checkedFunction();
+      return dispose;
+    });
   }
 
   export function addToolbarContentMenuPopupSet(
     JSXElem: () => ComponentChild,
   ) {
     if (document?.body) {
-      safeRender(JSXElem() as import("preact").VNode, document.body);
+      safeRender(JSXElem, document.body);
     }
   }
 
@@ -113,7 +96,24 @@ export namespace ContextMenuUtils {
     }
 
     (() => {
-      for (const contextMenuSeparator of contextMenuSeparators()) {
+      const separators = contextMenuSeparators();
+      // Undo only the state this helper applied on an earlier opening. This
+      // lets the current Firefox visibility conditions be evaluated afresh
+      // without touching separators hidden by Firefox itself.
+      for (const contextMenuSeparator of separators) {
+        if (
+          contextMenuSeparator.hasAttribute(
+            FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+          )
+        ) {
+          contextMenuSeparator.hidden = false;
+          contextMenuSeparator.removeAttribute(
+            FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+          );
+        }
+      }
+
+      for (const contextMenuSeparator of separators) {
         const nextSibling = contextMenuSeparator.nextSibling as XULElement;
 
         if (
@@ -121,6 +121,12 @@ export namespace ContextMenuUtils {
           contextMenuSeparator.id !== "context-sep-navigation" &&
           contextMenuSeparator.id !== "context-sep-pdfjs-selectall"
         ) {
+          if (!contextMenuSeparator.hidden) {
+            contextMenuSeparator.setAttribute(
+              FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+              "true",
+            );
+          }
           contextMenuSeparator.hidden = true;
         }
       }
@@ -130,17 +136,18 @@ export namespace ContextMenuUtils {
 
 // Internal preact component for reactive label via @preact/signals
 function ContextMenuEl(
-  { id, l10n, runFunction }: {
+  { id, l10n, runFunction, semanticKey }: {
     id: string;
     l10n: string;
     runFunction: () => void;
+    semanticKey?: string;
   },
 ) {
   const label = useSignal(i18next.t(l10n));
 
   useEffect(() => {
     // Register i18n observer once on mount
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       label.value = i18next.t(l10n);
     });
   }, []);
@@ -149,6 +156,7 @@ function ContextMenuEl(
     <xul:menuitem
       label={label.value}
       id={id}
+      data-floorp-context-menu-key={semanticKey}
       onCommand={runFunction}
     />
   );
@@ -163,6 +171,14 @@ export function ContextMenu(
   id: string,
   l10n: string,
   runFunction: () => void,
+  semanticKey?: string,
 ): ComponentChild {
-  return <ContextMenuEl id={id} l10n={l10n} runFunction={runFunction} />;
+  return (
+    <ContextMenuEl
+      id={id}
+      l10n={l10n}
+      runFunction={runFunction}
+      semanticKey={semanticKey}
+    />
+  );
 }

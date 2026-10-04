@@ -2,10 +2,10 @@
 // @colocated-env browser
 
 import { zFloorpDesignConfigs } from "../type.ts";
-import { isRight, isLeft } from "fp-ts/Either";
+import { isLeft, isRight } from "fp-ts/Either";
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
@@ -31,7 +31,7 @@ function makeValidConfig(): Record<string, unknown> {
       tabMinHeight: 30,
       tabMinWidth: 76,
       tabPinTitle: false,
-      tabDubleClickToClose: false,
+      tabDoubleClickToClose: false,
       tabOpenPosition: -1,
     },
     uiCustomization: {

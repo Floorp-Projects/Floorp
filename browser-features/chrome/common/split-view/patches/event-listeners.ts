@@ -41,23 +41,28 @@ export function initSplitViewEvents(
       if (!tabpanels) return;
 
       const panels = gBrowser?.tabpanels?.splitViewPanels;
-      console.debug("[event-listeners:onSplitViewActivate:rAF]", "panel check", {
-        eventTabsLength: tabs.length,
-        splitViewPanelsLength: panels?.length ?? 0,
-        panelIds: panels?.join(", ") ?? "(none)",
-        match: tabs.length === panels?.length,
-      });
+      console.debug(
+        "[event-listeners:onSplitViewActivate:rAF]",
+        "panel check",
+        {
+          eventTabsLength: tabs.length,
+          splitViewPanelsLength: panels?.length ?? 0,
+          panelIds: panels?.join(", ") ?? "(none)",
+          match: tabs.length === panels?.length,
+        },
+      );
       if (!panels || panels.length < 2) return;
 
       const layout = resolveLayoutForSplitTabs(tabs);
-      const currentLayoutAttr =
-        tabpanels.getAttribute("split-view-layout") ?? "";
+      const currentLayoutAttr = tabpanels.getAttribute("split-view-layout") ??
+        "";
       const expectedLayoutResolved = getEffectiveSplitViewLayout(
         layout,
         panels.length,
       );
-      const expectedLayout =
-        expectedLayoutResolved === "horizontal" ? "" : expectedLayoutResolved;
+      const expectedLayout = expectedLayoutResolved === "horizontal"
+        ? ""
+        : expectedLayoutResolved;
 
       console.debug("[event-listeners:onSplitViewActivate:rAF]", "evaluating", {
         resolvedLayout: layout,
@@ -72,15 +77,23 @@ export function initSplitViewEvents(
           ".floorp-split-handle, .floorp-grid-handle",
         ).length;
         if (handleCount > 0) {
-          console.debug("[event-listeners:onSplitViewActivate:rAF]", "skipping (already correct)");
+          console.debug(
+            "[event-listeners:onSplitViewActivate:rAF]",
+            "skipping (already correct)",
+          );
           logger.debug(
-            `[onSplitViewActivate:rAF] layout already correct (${expectedLayout || "horizontal"}), handles=${handleCount}, skipping`,
+            `[onSplitViewActivate:rAF] layout already correct (${
+              expectedLayout || "horizontal"
+            }), handles=${handleCount}, skipping`,
           );
           return;
         }
       }
 
-      console.debug("[event-listeners:onSplitViewActivate:rAF]", "re-applying layout");
+      console.debug(
+        "[event-listeners:onSplitViewActivate:rAF]",
+        "re-applying layout",
+      );
       logger.debug(
         `[onSplitViewActivate:rAF] re-applying layout=${layout}, panels=${panels.length} (current="${currentLayoutAttr}", expected="${expectedLayout}")`,
       );

@@ -4,13 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { ContextMenu } from "./context-menu.tsx";
 import { StatusBarElem } from "./statusbar.tsx";
 import { StatusBarManager } from "./statusbar-manager.tsx";
-import {
-  noraComponent,
-  NoraComponentBase,
-} from "#features-chrome/utils/base";
+import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
 export let manager: StatusBarManager;
 
@@ -19,21 +17,26 @@ export default class StatusBar extends NoraComponentBase {
   init() {
     manager = new StatusBarManager();
     if (typeof document !== "undefined" && document?.body) {
-      const statusbarWrapper = document.createElement("div");
-      statusbarWrapper.style.display = "contents";
       const customizationContainer = document.getElementById(
         "customization-container",
       );
-      document.body.insertBefore(statusbarWrapper, customizationContainer);
-      render(StatusBarElem, statusbarWrapper);
+      render(StatusBarElem, document.body, { marker: customizationContainer });
       const mainPopupSet = document?.getElementById("mainPopupSet");
-      mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
+      let disposeContextMenu: (() => void) | undefined;
+      const handlePopupShowing = (event: Event) => {
+        disposeContextMenu ??= onPopupShowing(event);
+      };
+      mainPopupSet?.addEventListener("popupshowing", handlePopupShowing);
+      addDisposer(() => {
+        mainPopupSet?.removeEventListener("popupshowing", handlePopupShowing);
+        disposeContextMenu?.();
+      });
     }
     manager.init();
   }
 }
 
-function onPopupShowing(event: Event) {
+function onPopupShowing(event: Event): (() => void) | undefined {
   if (
     typeof document !== "undefined" &&
     document?.getElementById("toggle_statusBar")
@@ -51,10 +54,9 @@ function onPopupShowing(event: Event) {
       if (typeof document !== "undefined") {
         const separator = document?.getElementById("viewToolbarsMenuSeparator");
         if (separator && separator.parentElement) {
-          const contextMenuWrapper = document.createElement("div");
-          contextMenuWrapper.style.display = "contents";
-          separator.parentElement.insertBefore(contextMenuWrapper, separator);
-          render(ContextMenu, contextMenuWrapper);
+          return render(ContextMenu, separator.parentElement, {
+            marker: separator,
+          });
         }
       }
       break;

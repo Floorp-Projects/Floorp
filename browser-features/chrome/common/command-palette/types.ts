@@ -51,7 +51,9 @@ export interface NavHistoryQueryOptions {
 export interface ChromeWindow extends Window {
   gBrowser?: {
     selectedBrowser?: { contentPrincipal?: unknown };
+    selectedTab?: unknown;
     loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
+    addTab?(uri: string, options: Record<string, unknown>): unknown;
   };
 }
 
@@ -97,6 +99,15 @@ export interface CommandStep {
   label: string;
   placeholder: string;
   /**
+   * Decide whether this step participates in the current command flow.
+   * The predicate is re-evaluated after each saved input so later steps can
+   * depend on earlier answers.
+   */
+  shouldInclude?: (
+    args: Readonly<Record<string, string>>,
+    win: Window,
+  ) => boolean;
+  /**
    * Validate user input for this step.
    * Return `true` to pass, or a string error message to display.
    * Omit to skip validation.
@@ -111,7 +122,10 @@ export interface CommandStep {
    * If both `choices` and `choicesLoader` are defined, `choices` takes priority.
    * Use this for choices that need to be fetched asynchronously (e.g., search engines).
    */
-  choicesLoader?: () => Promise<CommandStepChoice[] | StepChoicesResult>;
+  choicesLoader?: (
+    win: Window,
+    args: Readonly<Record<string, string>>,
+  ) => Promise<CommandStepChoice[] | StepChoicesResult>;
 }
 
 export interface PaletteCommand {

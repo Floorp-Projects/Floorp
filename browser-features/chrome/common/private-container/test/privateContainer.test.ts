@@ -32,7 +32,7 @@ type ContextualIdentityServiceLike = {
 
 function getContextualIdentityService(): ContextualIdentityServiceLike {
   const mod = ChromeUtils.importESModule(
-    "resource://gre/modules/ContextualIdentityService.sys.mjs",
+    "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
   ) as { ContextualIdentityService: ContextualIdentityServiceLike };
   return mod.ContextualIdentityService;
 }

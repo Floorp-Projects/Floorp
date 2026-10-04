@@ -1,7 +1,8 @@
 diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+index 8ae8059..3e8dc05 100644
 --- ./browser/chrome/browser/content/browser/browser-init.js
 +++ ./browser/chrome/browser/content/browser/browser-init.js
-@@ -250,6 +250,14 @@ var gBrowserInit = {
+@@ -252,6 +252,24 @@ var gBrowserInit = {
    },
  
    onDOMContentLoaded() {
@@ -9,6 +10,16 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
 +      "floorpWebPanelId"
 +    );
 +    if (webPanelId) {
++      document.documentElement.setAttribute("taskbartab", webPanelId);
++      // A web panel still needs a real tabbrowser so WebExtensions can map
++      // its content browser to a tab and populate runtime.MessageSender.tab.
++      BrowserUtils.callModulesFromCategory(
++        {
++          categoryName: "browser-window-domcontentloaded-tabbrowser",
++          jsGlobal: globalThis,
++        },
++        window
++      );
 +      this.domContentLoaded = true;
 +      return;
 +    }
@@ -16,7 +27,7 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      // All of this needs setting up before we create the first remote browser.
      window.docShell.treeOwner
        .QueryInterface(Ci.nsIInterfaceRequestor)
-@@ -307,6 +315,13 @@ var gBrowserInit = {
+@@ -309,6 +327,13 @@ var gBrowserInit = {
    },
  
    onLoad() {
@@ -30,36 +41,23 @@ diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/ch
      gBrowser.addEventListener("DOMUpdateBlockedPopups", e =>
        PopupAndRedirectBlockerObserver.handleEvent(e)
      );
-@@ -1308,17 +1323,22 @@ var gBrowserInit = {
-       PanelUI.uninit();
+@@ -1157,6 +1182,18 @@ var gBrowserInit = {
+     // (e.g. if the window is being closed after browser.js loads but before the
+     // load completes). In that case, there's nothing to do here.
+     if (!this._loadHandled) {
++      let webPanelId = new URL(window.location.href).searchParams.get(
++        "floorpWebPanelId"
++      );
++      if (webPanelId && window.gBrowser) {
++        BrowserUtils.callModulesFromCategory(
++          {
++            categoryName: "browser-window-unload-tabbrowser",
++            jsGlobal: globalThis,
++          },
++          window
++        );
++      }
+       return;
      }
  
--    BrowserUtils.callModulesFromCategory(
--      {
--        categoryName: "browser-window-unload-tabbrowser",
--        jsGlobal: globalThis,
--      },
--      window
-+    let webPanelId = new URL(window.location.href).searchParams.get(
-+      "floorpWebPanelId"
-     );
--    window.XULBrowserWindow = null;
--    window.docShell.treeOwner
--      .QueryInterface(Ci.nsIInterfaceRequestor)
--      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-+    if (!webPanelId) {
-+      BrowserUtils.callModulesFromCategory(
-+        {
-+          categoryName: "browser-window-unload-tabbrowser",
-+          jsGlobal: globalThis,
-+        },
-+        window
-+      );
-+      window.XULBrowserWindow = null;
-+      window.docShell.treeOwner
-+        .QueryInterface(Ci.nsIInterfaceRequestor)
-+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-+    }
- 
-     BrowserUtils.callModulesFromCategory(
-       { categoryName: "browser-window-final-unload", jsGlobal: globalThis },
+     gGestureSupport.init(false);

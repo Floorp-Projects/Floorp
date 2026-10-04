@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { readNewTabClipboard } from "./clipboard.ts";
 import Workspaces from "#features-chrome/common/workspaces";
+import { resolveWorkspaceOpenLinkUserContext } from "./open-link-user-context.ts";
 
 console.log("Workspaces override loaded");
 
@@ -52,8 +54,8 @@ export const overrides = [
             "Workspaces: redirecting about:opentabs pane to about:newtab",
           );
           opentabsTab.linkedBrowser.fixupAndLoadURIString("about:newtab", {
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
           });
           return;
         }
@@ -78,40 +80,15 @@ export const overrides = [
       const workspaceUserContextId =
         gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
-      // Merge options, applying workspace container if:
-      // 1. Workspace has a container (userContextId > 0)
-      // 2. No userContextId is explicitly specified in options
-      // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
-      const baseOptions = options ?? {};
-      const hasExplicitUserContextId = "userContextId" in baseOptions;
-      const originalUserContextId =
-        typeof baseOptions.userContextId === "number"
-          ? baseOptions.userContextId
-          : undefined;
-
-      const potentialTargetBrowser = baseOptions.targetBrowser;
-      const targetBrowserUserContextId =
-        typeof potentialTargetBrowser === "object" &&
-        potentialTargetBrowser !== null &&
-        typeof (potentialTargetBrowser as { userContextId?: unknown })
-          .userContextId === "number"
-          ? (potentialTargetBrowser as { userContextId: number }).userContextId
-          : undefined;
-
-      const shouldRespectExistingContext =
-        where === "current" || targetBrowserUserContextId !== undefined;
-
-      const shouldApplyWorkspaceContainer =
-        workspaceUserContextId > 0 &&
-        !hasExplicitUserContextId &&
-        !shouldRespectExistingContext;
-
-      const mergedOptions = {
-        ...baseOptions,
-        userContextId: shouldApplyWorkspaceContainer
-          ? workspaceUserContextId
-          : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
-      };
+      const {
+        options: mergedOptions,
+        originalUserContextId,
+        shouldApplyWorkspaceContainer,
+      } = resolveWorkspaceOpenLinkUserContext(
+        options,
+        where,
+        workspaceUserContextId,
+      );
 
       console.debug("Workspaces: openTrustedLinkIn override", {
         url: typeof url === "string" ? url : url.spec,
@@ -140,41 +117,15 @@ export const overrides = [
         const workspaceUserContextId =
           gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
-        // Merge params, applying workspace container if:
-        // 1. Workspace has a container (userContextId > 0)
-        // 2. No userContextId is explicitly specified in params
-        // Note: If userContextId is explicitly set to 0 ("no container"), respect that choice
-        const baseParams = params ?? {};
-        const hasExplicitUserContextId = "userContextId" in baseParams;
-        const originalUserContextId =
-          typeof baseParams.userContextId === "number"
-            ? baseParams.userContextId
-            : undefined;
-
-        const potentialTargetBrowser = baseParams.targetBrowser;
-        const targetBrowserUserContextId =
-          typeof potentialTargetBrowser === "object" &&
-          potentialTargetBrowser !== null &&
-          typeof (potentialTargetBrowser as { userContextId?: unknown })
-            .userContextId === "number"
-            ? (potentialTargetBrowser as { userContextId: number })
-                .userContextId
-            : undefined;
-
-        const shouldRespectExistingContext =
-          where === "current" || targetBrowserUserContextId !== undefined;
-
-        const shouldApplyWorkspaceContainer =
-          workspaceUserContextId > 0 &&
-          !hasExplicitUserContextId &&
-          !shouldRespectExistingContext;
-
-        const mergedParams = {
-          ...baseParams,
-          userContextId: shouldApplyWorkspaceContainer
-            ? workspaceUserContextId
-            : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
-        };
+        const {
+          options: mergedParams,
+          originalUserContextId,
+          shouldApplyWorkspaceContainer,
+        } = resolveWorkspaceOpenLinkUserContext(
+          params,
+          where,
+          workspaceUserContextId,
+        );
 
         console.debug("Workspaces: openUILinkIn override", {
           url: typeof url === "string" ? url : url.spec,
@@ -197,8 +148,8 @@ export const overrides = [
     } = {}) => {
       const werePassedURL = !!url;
       url ??= globalThis.BROWSER_NEW_TAB_URL;
-      const searchClipboard =
-        globalThis.gMiddleClickNewTabUsesPasteboard && event?.button === 1;
+      const searchClipboard = globalThis.gMiddleClickNewTabUsesPasteboard &&
+        event?.button === 1;
 
       let relatedToCurrent = false;
       let where = "tab";
@@ -266,11 +217,31 @@ export const overrides = [
               [key: string]: unknown;
             };
             if (!werePassedURL && searchClipboard) {
-              let clipboard = globalThis.readFromClipboard();
-              clipboard =
-                globalThis.UrlbarUtils.stripUnsafeProtocolOnPaste(
-                  clipboard,
-                ).trim();
+              const clipboard = readNewTabClipboard(
+                () => globalThis.readFromClipboard?.() || "",
+                () => {
+                  const trans = Cc[
+                    "@mozilla.org/widget/transferable;1"
+                  ].createInstance(Ci.nsITransferable);
+                  const context = window.docShell?.QueryInterface?.(
+                    Ci.nsILoadContext,
+                  );
+                  if (!context) return "";
+                  trans.init(context);
+                  trans.addDataFlavor("text/plain");
+                  Services.clipboard.getData(
+                    trans,
+                    Ci.nsIClipboard.kGlobalClipboard,
+                  );
+                  const data: { value?: nsISupports } = {};
+                  trans.getTransferData("text/plain", data);
+                  return data.value?.QueryInterface?.(Ci.nsISupportsString)
+                    .data || "";
+                },
+                globalThis.UrlbarShared?.stripUnsafeProtocolOnPaste ??
+                  globalThis.UrlbarUtils?.stripUnsafeProtocolOnPaste,
+              );
+
               if (clipboard) {
                 url = clipboard;
                 options.allowThirdPartyFixup = true;

@@ -2,6 +2,7 @@
 
 import * as Initializer from "./src/initializer.ts";
 import * as Patcher from "./src/patcher.ts";
+import * as CustomAppIcons from "./src/custom_app_icons.ts";
 import * as Pref from "../static/gecko/pref/pref.ts";
 import * as Symlinker from "./src/symlinker.ts";
 import * as Update from "./src/update.ts";
@@ -30,8 +31,9 @@ function createReadyPipe(): ReadyPipe {
     }
 
     write(chunk: Uint8Array | string) {
-      const s =
-        typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      const s = typeof chunk === "string"
+        ? chunk
+        : new TextDecoder().decode(chunk);
       for (const cb of this.listeners) cb(s);
     }
 
@@ -52,7 +54,14 @@ async function runDev(): Promise<void> {
   logger.info("Starting development environment...");
 
   // Initial setup
-  await Initializer.run();
+  // Prefer the Debug FTP channel. Allow the locked Release runtime when the
+  // latest Debug runtime is incompatible with this checkout's patches.
+  await Initializer.run({
+    distribution: Deno.env.get("FLOORP_DEV_RUNTIME_DISTRIBUTION") === "release"
+      ? "release"
+      : "debug",
+  });
+  CustomAppIcons.run();
   Patcher.run("apply");
   Pref.run();
   Symlinker.run();
@@ -60,8 +69,11 @@ async function runDev(): Promise<void> {
   const buildid2 = Update.generateUuidV7();
   await Builder.run("dev", buildid2);
   Injector.run("dev");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: true,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -75,10 +87,18 @@ async function runDev(): Promise<void> {
   pipe.on("data", (chunk: string) => {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
-      // Launch browser
-      // deno-lint-ignore no-explicit-any
-      BrowserLauncher.run().catch((e: any) => {
+      // Launch browser; when it exits (or fails to launch), take the dev
+      // servers down with it — otherwise they keep listening on their
+      // ports and the next run dies with "port already in use".
+      BrowserLauncher.run({ initialUrl: "http://localhost:5183/" }).then(() => {
+        logger.info("Browser closed — shutting down dev servers.");
+        DevServer.shutdown();
+        Deno.exit(0);
+        // deno-lint-ignore no-explicit-any
+      }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+        DevServer.shutdown();
+        Deno.exit(1);
       });
     }
   });
@@ -90,11 +110,6 @@ async function runDev(): Promise<void> {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
-
-  // Wait until browser finishes; the BrowserLauncher.run call above is async but we don't await here
-  // After browser closed, shut down servers
-  // Simple polling to detect when ready was received and browser process done is not trivial here.
-  // Keep process alive until SIGINT or process termination from BrowserLauncher path
 }
 
 async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
@@ -110,6 +125,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
 
   // Initial setup
   await Initializer.run();
+  CustomAppIcons.run();
   Patcher.run("apply");
   Pref.run();
   Symlinker.run();
@@ -120,8 +136,11 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
 
   // Inject manifests but keep dev-style directory so dev servers and browser use the built assets
   Injector.run("stage");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: false,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: false });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -135,10 +154,19 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   pipe.on("data", (chunk: string) => {
     if (isDevServerReady(chunk)) {
       logger.success("Dev servers are ready.");
-      // Launch browser
-      // deno-lint-ignore no-explicit-any
-      BrowserLauncher.run({ marionette }).catch((e: any) => {
+      // Launch browser; when it exits (or fails to launch), take the dev
+      // servers down with it — otherwise ~9 vite servers keep listening
+      // on 5170-5190 after "Browser Closed" and the next stage run fails
+      // with "Port 5181 is already in use".
+      BrowserLauncher.run({ marionette }).then(() => {
+        logger.info("Browser closed — shutting down dev servers.");
+        DevServer.shutdown();
+        Deno.exit(0);
+        // deno-lint-ignore no-explicit-any
+      }).catch((e: any) => {
         logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+        DevServer.shutdown();
+        Deno.exit(1);
       });
     }
   });
@@ -150,8 +178,6 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
     logger.error(`Dev server failed: ${e?.message ?? e}`);
     Deno.exit(1);
   });
-
-  // Keep process alive until SIGINT or browser termination like runDev
 }
 
 async function runTest(): Promise<void> {
@@ -159,6 +185,7 @@ async function runTest(): Promise<void> {
 
   // Initial setup
   await Initializer.run();
+  CustomAppIcons.run();
   Patcher.run("apply");
   Pref.run();
   Symlinker.run();
@@ -166,8 +193,11 @@ async function runTest(): Promise<void> {
   const buildid2 = Update.generateUuidV7();
   await Builder.run("test", buildid2);
   Injector.run("dev");
-  await Injector.injectXhtmlFromTs(true);
-  DevEnvManager.setup();
+  await Injector.injectXhtmlFromTs({
+    devPages: true,
+    allowBrowserHttpLoader: true,
+  });
+  DevEnvManager.setup({ allowBrowserHttpLoader: true });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
@@ -211,7 +241,10 @@ async function runBuild(phase?: string): Promise<void> {
     await Builder.run("production", buildid2);
   } else if (optionsPhase === "after-mach") {
     // await Injector.createManifest("production", "_dist/noraneko");
-    await Injector.injectXhtmlFromTs(false, true);
+    await Injector.injectXhtmlFromTs({
+      isCI: true,
+      allowBrowserHttpLoader: false,
+    });
   } else {
     console.error(`Unknown phase: ${optionsPhase}`);
     Deno.exit(1);

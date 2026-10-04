@@ -1,33 +1,59 @@
 import { createBirpc } from "birpc";
 import type {
+  NRContextMenuSettingsFunctions,
+  NRSettingsAtomicPreferenceFunctions,
   NRSettingsParentFunctions,
+  PrefCompareAndSetResult,
   PrefGetParams,
+  PrefReadResult,
   PrefSetParams,
 } from "../common/defines.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+
+type SettingsPageParentFunctions =
+  & NRSettingsParentFunctions
+  & NRSettingsAtomicPreferenceFunctions
+  & NRContextMenuSettingsFunctions;
 
 export class NRSettingsChild extends JSWindowActorChild {
+  private static readonly MAX_INSTALL_ATTEMPTS = 200;
+  private static readonly INSTALL_RETRY_DELAY_MS = 50;
+
   rpc: ReturnType<typeof createBirpc> | null = null;
   constructor() {
     super();
   }
-  actorCreated() {
-    console.debug("NRSettingsChild created!");
+
+  private installPageApi(): boolean {
+    const document = this.document;
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
-      window?.location.port === "5186" ||
-      window?.location.port === "5187" ||
-      window?.location.port === "5188" ||
-      window?.location.href.startsWith("chrome://") ||
-      window?.location.href.startsWith("about:")
+      !document ||
+      !window ||
+      !(
+        document.location.port === "5183" ||
+        document.location.port === "5186" ||
+        document.location.port === "5187" ||
+        document.location.port === "5188" ||
+        document.location.href.startsWith("chrome://noraneko-settings/") ||
+        document.location.href.split(/[?#]/)[0] === "about:hub"
+      )
     ) {
-      console.debug("NRSettingsChild 5183 ! or Chrome Page!");
+      return false;
+    }
+
+    const page = window as unknown as Record<string, unknown>;
+    if (typeof page.NRSPing !== "function") {
       Cu.exportFunction(this.NRSPing.bind(this), window, {
         defineAs: "NRSPing",
       });
+    }
+    if (typeof page.NRSettingsSend !== "function") {
       Cu.exportFunction(this.NRSettingsSend.bind(this), window, {
         defineAs: "NRSettingsSend",
       });
+    }
+    if (typeof page.NRSettingsRegisterReceiveCallback !== "function") {
       Cu.exportFunction(
         this.NRSettingsRegisterReceiveCallback.bind(this),
         window,
@@ -36,9 +62,47 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
       );
     }
+    if (typeof page.NROpenExternalLink !== "function") {
+      Cu.exportFunction(this.NROpenExternalLink.bind(this), window, {
+        defineAs: "NROpenExternalLink",
+      });
+    }
+    return true;
+  }
+
+  private retryInstallPageApi(attempt = 0): void {
+    if (
+      this.installPageApi() ||
+      attempt >= NRSettingsChild.MAX_INSTALL_ATTEMPTS
+    ) {
+      return;
+    }
+    this.contentWindow?.setTimeout(
+      () => this.retryInstallPageApi(attempt + 1),
+      NRSettingsChild.INSTALL_RETRY_DELAY_MS,
+    );
+  }
+
+  actorCreated() {
+    console.debug("NRSettingsChild created!");
+    this.retryInstallPageApi();
   }
   NRSPing() {
     return true;
+  }
+
+  NROpenExternalLink(url: string): void {
+    if (typeof url !== "string") {
+      return;
+    }
+    try {
+      if (!/^https?:$/i.test(new URL(url).protocol)) return;
+    } catch {
+      return;
+    }
+    this.sendQuery("openExternalLink", { url }).catch((error) =>
+      console.error("[noraneko] NROpenExternalLink failed", error)
+    );
   }
 
   sendToPage: ((data: string) => void) | null = null;
@@ -52,9 +116,18 @@ export class NRSettingsChild extends JSWindowActorChild {
   NRSettingsRegisterReceiveCallback(callback: (data: string) => void) {
     this.rpc = createBirpc<
       Record<PropertyKey, never>,
-      NRSettingsParentFunctions
+      SettingsPageParentFunctions
     >(
       {
+        getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
+          return this.NRSGetContextMenuCatalog();
+        },
+        getContextMenuCatalogRevision: (): Promise<number> => {
+          return this.NRSGetContextMenuCatalogRevision();
+        },
+        getWebAppLifecycleSettings: () => {
+          return this.sendQuery("getWebAppLifecycleSettings");
+        },
         getBoolPref: (prefName: string): Promise<boolean | null> => {
           return this.NRSPrefGet({ prefName, prefType: "boolean" });
         },
@@ -64,6 +137,20 @@ export class NRSettingsChild extends JSWindowActorChild {
         getStringPref: (prefName: string): Promise<string | null> => {
           return this.NRSPrefGet({ prefName, prefType: "string" });
         },
+        getBoolPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<boolean>> => {
+          return this.sendQuery("getBoolPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<boolean>>;
+        },
+        getStringPrefState: (
+          prefName: string,
+        ): Promise<PrefReadResult<string>> => {
+          return this.sendQuery("getStringPrefState", {
+            name: prefName,
+          }) as Promise<PrefReadResult<string>>;
+        },
         setBoolPref: (prefName: string, prefValue: boolean): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "boolean" });
         },
@@ -72,6 +159,28 @@ export class NRSettingsChild extends JSWindowActorChild {
         },
         setStringPref: (prefName: string, prefValue: string): Promise<void> => {
           return this.NRSPrefSet({ prefName, prefValue, prefType: "string" });
+        },
+        compareAndSetBoolPref: (
+          prefName: string,
+          expectedValue: boolean | null,
+          prefValue: boolean,
+        ): Promise<PrefCompareAndSetResult<boolean>> => {
+          return this.sendQuery("compareAndSetBoolPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<boolean>>;
+        },
+        compareAndSetStringPref: (
+          prefName: string,
+          expectedValue: string | null,
+          prefValue: string,
+        ): Promise<PrefCompareAndSetResult<string>> => {
+          return this.sendQuery("compareAndSetStringPref", {
+            name: prefName,
+            expectedValue,
+            prefValue,
+          }) as Promise<PrefCompareAndSetResult<string>>;
         },
       },
       {
@@ -84,6 +193,24 @@ export class NRSettingsChild extends JSWindowActorChild {
         deserialize: (v) => JSON.parse(v),
       },
     );
+  }
+
+  async NRSGetContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot> {
+    try {
+      return await this.sendQuery(
+        "getContextMenuCatalog",
+      ) as ContextMenuCatalogSnapshot;
+    } catch (error) {
+      console.error(
+        "[ContextMenuCatalog] Failed to read the catalog through NRSettings:",
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async NRSGetContextMenuCatalogRevision(): Promise<number> {
+    return await this.sendQuery("getContextMenuCatalogRevision") as number;
   }
 
   async NRSPrefGet(params: {
@@ -121,6 +248,9 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefGet:", error);
+      // Keep the legacy preference-read bridge fail-soft. Existing settings
+      // pages use null to select defaults or an unavailable state. New settings
+      // that need typed failures use the explicit preference-state methods.
       return null;
     }
   }
@@ -147,10 +277,17 @@ export class NRSettingsChild extends JSWindowActorChild {
       });
     } catch (error) {
       console.error("Error in NRSPrefSet:", error);
+      // Keep the legacy preference-write bridge fail-soft. Several existing
+      // settings pages intentionally fire-and-forget these writes, so changing
+      // this compatibility API to reject would create unhandled promises. New
+      // settings that need actionable failures use the typed atomic methods.
       return null;
     }
   }
   handleEvent(_event: Event): void {
-    // No-op
+    // actorCreated can run before the final document URL is available. Retry
+    // after the document insertion/DOMContentLoaded events so HTTP-loaded
+    // settings pages always receive their RPC bridge.
+    this.retryInstallPageApi();
   }
 }

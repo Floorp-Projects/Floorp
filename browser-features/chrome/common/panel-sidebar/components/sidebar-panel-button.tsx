@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useState, useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
@@ -24,7 +24,13 @@ export function PanelSidebarButton(props: {
   const [faviconURL, setFaviconURL] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    getFaviconURLForPanel(props.panel).then(setFaviconURL);
+    let active = true;
+    getFaviconURLForPanel(props.panel).then((url) => {
+      if (active) setFaviconURL(url);
+    });
+    return () => {
+      active = false;
+    };
   }, [props.panel]);
 
   const handleDragStart = (e: DragEvent) => {

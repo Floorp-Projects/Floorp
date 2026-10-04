@@ -219,8 +219,10 @@ function testOrderSplitGroupTabsForRestore(): void {
     ["d", 3],
   ]);
 
-  const withPaneIndex = orderSplitGroupTabsForRestore(group, strip, (tab) =>
-    idx.get(tab),
+  const withPaneIndex = orderSplitGroupTabsForRestore(
+    group,
+    strip,
+    (tab) => idx.get(tab),
   );
   assertDeepEquals(
     withPaneIndex,

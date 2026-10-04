@@ -1,0 +1,67 @@
+/* Floorp chrome-extras: autohideNavbar
+ *
+ * Floorp-native implementation — NOT a port.
+ *
+ * Lepton implements this by shrinking `#nav-bar` with a negative
+ * `margin-bottom` derived from `--uc-navbar-height`, inside ~2,500 lines of
+ * nested `-moz-pref(...)` blocks that also require `--uc-tabbar-height`,
+ * `--uc-menubar-height`, `--uc-bm-height` and cross-references to eight other
+ * Lepton toggles. Transporting that whole layout system is not feasible, so the
+ * same *behaviour* (hide the toolbar until the pointer or focus returns to the
+ * toolbox) is expressed directly with the Lepton variables inlined.
+ *
+ * Works on every design because it only touches `#navigator-toolbox` and
+ * `#nav-bar`, which all designs share.
+ */
+
+#navigator-toolbox {
+  position: relative;
+}
+
+/* Hovering the toolbox must sit above the page. */
+#navigator-toolbox:is(:hover, :focus-within) {
+  z-index: 2;
+}
+
+#navigator-toolbox:is(:hover, :focus-within) #PersonalToolbar {
+  z-index: -1;
+}
+
+/* `--uc-navbar-height-default` is
+ * `calc(16px + 2 * (inner + outer padding))` — inlined below.
+ * `margin-bottom: 0` is what Lepton uses when `hiddenNavbar` is also on. */
+#nav-bar:not([customizing]) {
+  margin-bottom: calc(
+    -1 * (16px + 2 * (var(--toolbarbutton-inner-padding) +
+    var(--toolbarbutton-outer-padding)))
+  );
+  opacity: 0;
+  will-change: margin-bottom, opacity;
+}
+
+#navigator-toolbox:is(:hover, :focus-within) #nav-bar:not([customizing]) {
+  margin-bottom: 0;
+  opacity: 1;
+}
+
+/* A hidden toolbar must not swallow clicks meant for the page. */
+#navigator-toolbox:not(:hover, :focus-within) #nav-bar:not([customizing]) #urlbar {
+  pointer-events: none;
+}
+
+/* Keep the window draggable where the toolbar used to be. */
+#mainPopupSet:not(:hover) ~ #navigator-toolbox:not(:hover, :focus-within) #nav-bar:not([customizing]) {
+  -moz-window-dragging: no-drag;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #nav-bar:not([customizing]) {
+    transition:
+      margin-bottom 0.25s var(--animation-easing-function) 600ms,
+      opacity 0.25s var(--animation-easing-function) 600ms !important;
+  }
+
+  #navigator-toolbox:is(:hover, :focus-within) #nav-bar:not([customizing]) {
+    transition-delay: 0s !important;
+  }
+}

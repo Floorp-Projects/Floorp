@@ -12,10 +12,37 @@
 export interface WorkspaceInfo {
   id: string;
   name: string;
-  icon: string | null;
+  icon?: string | null | undefined;
   userContextId: number;
   isDefault: boolean;
   isSelected: boolean;
+}
+
+export interface StoredWorkspaceInfo {
+  name: string;
+  icon?: string | null | undefined;
+  userContextId: number;
+  isDefault?: boolean;
+  isSelected?: boolean;
+}
+
+export function buildWorkspaceInfo(
+  id: string,
+  workspace: StoredWorkspaceInfo,
+  defaultId: string,
+  currentId: string | null,
+): WorkspaceInfo {
+  const info: WorkspaceInfo = {
+    id,
+    name: workspace.name,
+    userContextId: workspace.userContextId,
+    isDefault: id === defaultId,
+    isSelected: id === currentId,
+  };
+  if (Object.hasOwn(workspace, "icon")) {
+    info.icon = workspace.icon;
+  }
+  return info;
 }
 
 export interface WorkspacesApiServiceType {
@@ -57,13 +84,7 @@ interface WorkspacesFuncs {
 function getWorkspaceData(): {
   data: Map<
     string,
-    {
-      name: string;
-      icon?: string | null;
-      userContextId: number;
-      isDefault?: boolean;
-      isSelected?: boolean;
-    }
+    StoredWorkspaceInfo
   >;
   order: string[];
   defaultID: string;
@@ -123,14 +144,7 @@ export const WorkspacesApiService: WorkspacesApiServiceType = {
     for (const id of wsData.order) {
       const ws = wsData.data.get(id);
       if (ws) {
-        workspaces.push({
-          id,
-          name: ws.name,
-          icon: ws.icon ?? null,
-          userContextId: ws.userContextId,
-          isDefault: id === wsData.defaultID,
-          isSelected: id === currentId,
-        });
+        workspaces.push(buildWorkspaceInfo(id, ws, wsData.defaultID, currentId));
       }
     }
 

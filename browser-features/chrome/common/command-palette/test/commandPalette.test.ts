@@ -7,27 +7,34 @@ import {
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
+import i18next from "i18next";
 import { fuzzyScore, fuzzySearch } from "../fuzzy.ts";
 import type { FuzzyTarget } from "../fuzzy.ts";
 import {
-  getPaletteCommands,
-  searchCommands,
   getCommand,
+  getPaletteCommands,
+  invalidateCache,
+  searchCommands,
 } from "../command-registry.ts";
 import { getHighlightSegments } from "../utils/highlight.ts";
 import { openUrlCommand } from "../multiInputCommand/open-url.ts";
 import {
-  searchWebCommand,
   loadSearchEngines,
+  searchWebCommand,
 } from "../multiInputCommand/search-web.ts";
 import {
-  reopenInContainerCommand,
   loadContainers,
+  reopenInContainerCommand,
 } from "../multiInputCommand/reopen-in-container.ts";
 import {
   getEnglishGestureKeywords,
   getEnglishStepCommandKeywords,
 } from "../utils/getEnglishKeywords.ts";
+import {
+  createTriggeringPrincipal,
+  type PaletteTargetContext,
+  parseUserContextChoice,
+} from "../utils/targetContext.ts";
 
 const makeTarget = (
   label: string,
@@ -42,38 +49,304 @@ const makeTarget = (
   keywords,
 });
 
-/** Verifies that getEnglishGestureKeywords returns an array of strings for all gesture command keys. */
-function testGetEnglishGestureKeywordsReturnsStrings(): void {
-  const keywords = getEnglishGestureKeywords("gecko-back");
-  assert(keywords.length > 0, "English keywords should return at least one item for gecko-back");
-  for (const kw of keywords) {
-    assert(typeof kw === "string", "All keywords should be strings");
-    assert(kw.length > 0, "Empty strings should not be included");
+const I18N_NAMESPACE = "browser-chrome";
+const ENGLISH_KEYWORD_RESOURCE_KEYS = [
+  "mouseGesture.actions.gecko-back",
+  "mouseGesture.descriptions.gecko-back",
+  "commandPalette.openUrl",
+  "commandPalette.openUrlDescription",
+] as const;
+
+function assertI18nextLanguageReady(language: "en-US" | "ja-JP"): void {
+  assert(
+    i18next.language === language || i18next.resolvedLanguage === language,
+    `i18next should switch to ${language}`,
+  );
+  assert(
+    i18next.hasResourceBundle(language, I18N_NAMESPACE),
+    `${language} ${I18N_NAMESPACE} resource bundle should be registered`,
+  );
+  for (const key of ENGLISH_KEYWORD_RESOURCE_KEYS) {
+    const value = i18next.getResource(language, I18N_NAMESPACE, key);
+    assert(
+      typeof value === "string" && value.length > 0,
+      `${language} should register ${key}`,
+    );
   }
 }
 
-/** Verifies that getEnglishStepCommandKeywords returns an array of strings for all step command keys. */
-function testGetEnglishStepCommandKeywordsReturnsStrings(): void {
-  const keywords = getEnglishStepCommandKeywords(
-    "commandPalette.openUrl",
-    "commandPalette.openUrlDescription",
-  );
-  assert(keywords.length > 0, "English keywords should return at least one item for openUrl");
-  for (const kw of keywords) {
-    assert(typeof kw === "string", "All keywords should be strings");
+async function withI18nextLanguage(
+  language: "en-US" | "ja-JP",
+  fn: () => void | Promise<void>,
+): Promise<void> {
+  const originalLanguage = i18next.language;
+  await i18next.changeLanguage(language);
+  invalidateCache();
+  assertI18nextLanguageReady(language);
+  try {
+    await fn();
+  } finally {
+    try {
+      await i18next.changeLanguage(originalLanguage || "en-US");
+    } finally {
+      invalidateCache();
+    }
   }
+}
+
+function assertKeywordTokens(
+  keywords: string[],
+  expectedTokens: string[],
+  context: string,
+): void {
+  assert(keywords.length > 0, `${context} should return keywords`);
+  for (const keyword of keywords) {
+    assert(
+      typeof keyword === "string",
+      `${context}: keyword should be a string`,
+    );
+    assert(keyword.length > 0, `${context}: keyword should not be empty`);
+  }
+  for (const token of expectedTokens) {
+    assert(
+      keywords.includes(token),
+      `${context}: expected token '${token}'`,
+    );
+  }
+}
+
+async function testAsyncFailurePropagation(): Promise<void> {
+  let rejected = false;
+  try {
+    await runTests("async-failure-contract", [
+      {
+        name: "async rejection canary",
+        fn: () => Promise.reject(new Error("expected async rejection")),
+      },
+    ]);
+  } catch (error) {
+    rejected = error instanceof Error &&
+      error.message.includes("expected async rejection");
+  }
+  assert(rejected, "runTests should reject when an async test rejects");
+}
+
+function testTriggeringPrincipalPreservesOriginAttributes(): void {
+  const securityManager = Services.scriptSecurityManager;
+  const sourcePrincipal = securityManager.createNullPrincipal({
+    privateBrowsingId: 1,
+    userContextId: 2,
+  });
+  const target = {
+    principal: sourcePrincipal,
+    originAttributes: { ...sourcePrincipal.originAttributes },
+  } as unknown as PaletteTargetContext;
+
+  const rebound = createTriggeringPrincipal(target, 0);
+  assertEquals(
+    rebound.originAttributes.privateBrowsingId,
+    1,
+    "privateBrowsingId should be preserved",
+  );
+  assertEquals(
+    rebound.originAttributes.userContextId,
+    0,
+    "only userContextId should change",
+  );
+}
+
+function testParseUserContextChoiceRejectsInvalidValues(): void {
+  assertEquals(
+    parseUserContextChoice("workspace", 4)?.userContextId,
+    4,
+    "workspace choice should use its target window's workspace container",
+  );
+  assertEquals(
+    parseUserContextChoice("0", 4)?.explicit,
+    true,
+    "No Container should be explicit",
+  );
+  assertEquals(
+    parseUserContextChoice("invalid", 4),
+    null,
+    "invalid container values should fail closed",
+  );
+}
+
+function testOpenUrlRejectsCurrentTabContainerOverride(): void {
+  let addTabCalls = 0;
+  let loadCalls = 0;
+  const targetWindow = {
+    gBrowser: {
+      addTab() {
+        addTabCalls++;
+        return {};
+      },
+      loadURI() {
+        loadCalls++;
+      },
+    },
+  } as unknown as Window;
+
+  openUrlCommand.fn(targetWindow, {
+    url: "https://example.com",
+    where: "current-tab",
+    container: "2",
+  });
+  assertEquals(addTabCalls, 0, "should not open a replacement tab");
+  assertEquals(loadCalls, 0, "should not navigate with an ignored override");
+}
+
+function createOpenUrlNavigationTarget(): {
+  targetWindow: Window;
+  addedUrls: string[];
+  createdTab: XULElement;
+  getLoadedUrl: () => string | null;
+  getSelectedTab: () => XULElement;
+} {
+  const sourcePrincipal = Services.scriptSecurityManager.createNullPrincipal(
+    {},
+  );
+  const targetTab = { isConnected: true } as XULElement;
+  const createdTab = { isConnected: true } as XULElement;
+  const addedUrls: string[] = [];
+  let loadedUrl: string | null = null;
+  let selectedTab = targetTab;
+  const targetBrowser = {
+    contentPrincipal: sourcePrincipal,
+    browsingContext: {
+      originAttributes: { ...sourcePrincipal.originAttributes },
+    },
+    loadURI(uri: nsIURI) {
+      loadedUrl = uri.spec;
+    },
+  };
+  const gBrowser = {
+    get selectedTab() {
+      return selectedTab;
+    },
+    set selectedTab(tab: XULElement) {
+      selectedTab = tab;
+    },
+    getBrowserForTab(tab: XULElement) {
+      return tab === targetTab ? targetBrowser : null;
+    },
+    addTab(url: string) {
+      addedUrls.push(url);
+      return createdTab;
+    },
+  } as unknown as GBrowser;
+
+  return {
+    targetWindow: { closed: false, gBrowser } as unknown as Window,
+    addedUrls,
+    createdTab,
+    getLoadedUrl: () => loadedUrl,
+    getSelectedTab: () => selectedTab,
+  };
+}
+
+function testOpenUrlPreservesExplicitScheme(): void {
+  const target = createOpenUrlNavigationTarget();
+
+  openUrlCommand.fn(target.targetWindow, {
+    url: "about:config",
+    where: "current-tab",
+  });
+
+  assertEquals(
+    target.getLoadedUrl(),
+    "about:config",
+    "scheme-only URLs should be passed to loadURI unchanged",
+  );
+  assertEquals(target.addedUrls.length, 0, "current-tab should not add a tab");
+}
+
+function testOpenUrlPrependsHttpsForBareHostname(): void {
+  const target = createOpenUrlNavigationTarget();
+
+  openUrlCommand.fn(target.targetWindow, {
+    url: "example.com",
+    where: "new-tab",
+  });
+
+  assertEquals(
+    target.addedUrls[0],
+    "https://example.com",
+    "bare hostnames should receive the HTTPS scheme",
+  );
+  assert(
+    target.getSelectedTab() === target.createdTab,
+    "the newly opened foreground tab should be selected",
+  );
+}
+
+/** Verifies that getEnglishGestureKeywords is locale-sensitive. */
+async function testGetEnglishGestureKeywordsLocaleBehavior(): Promise<void> {
+  await withI18nextLanguage("en-US", () => {
+    const keywords = getEnglishGestureKeywords("gecko-back");
+    assertEquals(
+      keywords.length,
+      0,
+      "en-US should not add duplicate English keywords for gecko-back",
+    );
+  });
+
+  await withI18nextLanguage("ja-JP", () => {
+    const keywords = getEnglishGestureKeywords("gecko-back");
+    assertKeywordTokens(
+      keywords,
+      ["back", "navigate", "previous", "page"],
+      "ja-JP gecko-back English keywords",
+    );
+  });
+}
+
+/** Verifies that getEnglishStepCommandKeywords is locale-sensitive. */
+async function testGetEnglishStepCommandKeywordsLocaleBehavior(): Promise<
+  void
+> {
+  await withI18nextLanguage("en-US", () => {
+    const keywords = getEnglishStepCommandKeywords(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    );
+    assertEquals(
+      keywords.length,
+      0,
+      "en-US should not add duplicate English keywords for openUrl",
+    );
+  });
+
+  await withI18nextLanguage("ja-JP", () => {
+    const keywords = getEnglishStepCommandKeywords(
+      "commandPalette.openUrl",
+      "commandPalette.openUrlDescription",
+    );
+    assertKeywordTokens(
+      keywords,
+      ["open url", "open", "url", "new", "tab"],
+      "ja-JP openUrl English keywords",
+    );
+  });
 }
 
 /** Verifies that getEnglishStepCommandKeywords returns an empty array for unrecognized i18n keys instead of throwing. */
 function testGetEnglishKeywordsGracefulFailure(): void {
   const gestureKw = getEnglishGestureKeywords("nonexistent-action-id");
-  assert(Array.isArray(gestureKw), "Should return an array for nonexistent gesture action");
+  assert(
+    Array.isArray(gestureKw),
+    "Should return an array for nonexistent gesture action",
+  );
 
   const stepKw = getEnglishStepCommandKeywords(
     "nonexistent.key",
     "nonexistent.desc",
   );
-  assert(Array.isArray(stepKw), "Should return an array for nonexistent step command key");
+  assert(
+    Array.isArray(stepKw),
+    "Should return an array for nonexistent step command key",
+  );
 }
 
 /** Verifies that every gesture action ID in getPaletteCommands() has a corresponding English keyword mapping. */
@@ -84,7 +357,10 @@ function testGestureCommandsHaveEnglishKeywords(): void {
   const hasBookmarkKeyword = bookmarkCmd!.keywords.some((kw) =>
     kw.toLowerCase().includes("bookmark")
   );
-  assert(hasBookmarkKeyword, "Bookmark command should contain 'bookmark' keyword");
+  assert(
+    hasBookmarkKeyword,
+    "Bookmark command should contain 'bookmark' keyword",
+  );
 }
 
 /** Verifies that searching by English keyword "bookmark" returns the bookmark command from getPaletteCommands(). */
@@ -210,8 +486,9 @@ const rawTests: TestCase[] = [
   {
     name: "fuzzySearch: respects limit parameter",
     fn() {
-      const items = Array.from({ length: 100 }, (_, i) =>
-        makeTarget(`Item ${i}`),
+      const items = Array.from(
+        { length: 100 },
+        (_, i) => makeTarget(`Item ${i}`),
       );
       const results = fuzzySearch("item", items, 5);
       assertEquals(results.length, 5, "should respect limit parameter");
@@ -321,9 +598,13 @@ const rawTests: TestCase[] = [
     fn() {
       const results = searchCommands("tab");
       assert(results.length > 0, "should find tab-related commands");
-      const labels = results.map((r) => r.label.toLowerCase());
       assert(
-        labels.some((l) => l.includes("tab")),
+        results.some((result) =>
+          result.id.includes("tab") ||
+          result.keywords.some((keyword) =>
+            keyword.toLowerCase().includes("tab")
+          )
+        ),
         "results should contain tab-related items",
       );
     },
@@ -472,8 +753,16 @@ const rawTests: TestCase[] = [
     name: "step commands have steps array with correct length",
     fn() {
       assert(
-        openUrlCommand.steps && openUrlCommand.steps.length === 2,
-        "open-url should have 2 steps",
+        openUrlCommand.steps && openUrlCommand.steps.length === 3,
+        "open-url should define 3 possible steps",
+      );
+      const containerStep = openUrlCommand.steps?.[2];
+      assert(
+        containerStep?.shouldInclude?.(
+          { where: "current-tab" },
+          window,
+        ) === false,
+        "open-url should skip the container step for current-tab",
       );
       assert(
         searchWebCommand.steps && searchWebCommand.steps.length === 3,
@@ -548,6 +837,27 @@ const rawTests: TestCase[] = [
       const validate = openUrlCommand.steps![0].validate!;
       const result = validate("https://example.com");
       assertEquals(result, true, "valid URL should return true");
+    },
+  },
+  {
+    name: "open-url validate accepts about URLs",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      assertEquals(
+        validate("about:config"),
+        true,
+        "about URLs should remain valid without ://",
+      );
+    },
+  },
+  {
+    name: "open-url validate rejects unsupported scheme-only URLs",
+    fn() {
+      const validate = openUrlCommand.steps![0].validate!;
+      assert(
+        typeof validate("javascript:alert(1)") === "string",
+        "unsupported scheme-only URLs should be rejected",
+      );
     },
   },
   {
@@ -671,11 +981,12 @@ const rawTests: TestCase[] = [
   {
     name: "historySwitcherCommand step choicesLoader returns StepChoicesResult",
     async fn() {
-      const { loadHistory } =
-        await import("../multiInputCommand/switcher/history-switcher.ts");
+      const { loadHistory } = await import(
+        "../multiInputCommand/switcher/history-switcher.ts"
+      );
       const result = await loadHistory();
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       assert(
         isResultObject,
         "loadHistory should return StepChoicesResult object",
@@ -685,11 +996,12 @@ const rawTests: TestCase[] = [
   {
     name: "StepChoicesResult pagination: hasMore is boolean when present",
     async fn() {
-      const { loadHistory } =
-        await import("../multiInputCommand/switcher/history-switcher.ts");
+      const { loadHistory } = await import(
+        "../multiInputCommand/switcher/history-switcher.ts"
+      );
       const result = await loadHistory();
-      const isResultObject =
-        typeof result === "object" && result !== null && "choices" in result;
+      const isResultObject = typeof result === "object" && result !== null &&
+        "choices" in result;
       if (!isResultObject) return;
 
       const stepResult = result as {
@@ -776,16 +1088,61 @@ const rawTests: TestCase[] = [
     },
   },
 
-  { name: "getEnglishGestureKeywords returns strings", fn: testGetEnglishGestureKeywordsReturnsStrings },
-  { name: "getEnglishStepCommandKeywords returns strings", fn: testGetEnglishStepCommandKeywordsReturnsStrings },
-  { name: "getEnglishKeywords graceful failure for missing keys", fn: testGetEnglishKeywordsGracefulFailure },
-  { name: "gesture commands have English keywords", fn: testGestureCommandsHaveEnglishKeywords },
-  { name: "search by English keyword: bookmark finds bookmark command", fn: testSearchByEnglishKeywordBookmark },
-  { name: "search by English keyword: reload finds reload command", fn: testSearchByEnglishKeywordReload },
-  { name: "search step command by English keyword", fn: testSearchStepCommandByEnglish },
-  { name: "English keyword score is lower than localized label score", fn: testEnglishKeywordScoreLowerThanLabel },
+  {
+    name: "getEnglishGestureKeywords respects current locale",
+    fn: testGetEnglishGestureKeywordsLocaleBehavior,
+  },
+  {
+    name: "getEnglishStepCommandKeywords respects current locale",
+    fn: testGetEnglishStepCommandKeywordsLocaleBehavior,
+  },
+  {
+    name: "getEnglishKeywords graceful failure for missing keys",
+    fn: testGetEnglishKeywordsGracefulFailure,
+  },
+  {
+    name: "gesture commands have English keywords",
+    fn: testGestureCommandsHaveEnglishKeywords,
+  },
+  {
+    name: "search by English keyword: bookmark finds bookmark command",
+    fn: testSearchByEnglishKeywordBookmark,
+  },
+  {
+    name: "search by English keyword: reload finds reload command",
+    fn: testSearchByEnglishKeywordReload,
+  },
+  {
+    name: "search step command by English keyword",
+    fn: testSearchStepCommandByEnglish,
+  },
+  {
+    name: "English keyword score is lower than localized label score",
+    fn: testEnglishKeywordScoreLowerThanLabel,
+  },
+  { name: "async test failures propagate", fn: testAsyncFailurePropagation },
+  {
+    name: "triggering principal preserves origin attributes",
+    fn: testTriggeringPrincipalPreservesOriginAttributes,
+  },
+  {
+    name: "container choices fail closed",
+    fn: testParseUserContextChoiceRejectsInvalidValues,
+  },
+  {
+    name: "open URL rejects current-tab container overrides",
+    fn: testOpenUrlRejectsCurrentTabContainerOverride,
+  },
+  {
+    name: "open URL preserves explicit schemes",
+    fn: testOpenUrlPreservesExplicitScheme,
+  },
+  {
+    name: "open URL prepends HTTPS for bare hostnames",
+    fn: testOpenUrlPrependsHttpsForBareHostname,
+  },
 ];
 
-export function runAllTests() {
-  runTests("commandPalette.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("commandPalette.test.ts", rawTests);
 }

@@ -6,7 +6,7 @@
 import i18next from "i18next";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
-  "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
 );
 
 // deno-lint-ignore no-namespace

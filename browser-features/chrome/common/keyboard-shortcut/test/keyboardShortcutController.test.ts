@@ -8,11 +8,11 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import { KeyboardShortcutController } from "../controller.ts";
 import {
-  setEnabled,
-  setConfig,
-  KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_CONFIG_PREF,
+  KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_SAFE_ERROR_HANDLING_PREF,
+  setConfig,
+  setEnabled,
 } from "../config.ts";
 import type { KeyboardShortcutConfig } from "../type.ts";
 
@@ -79,6 +79,8 @@ function dispatchKeyEvent(
     ctrlKey?: boolean;
     metaKey?: boolean;
     shiftKey?: boolean;
+    repeat?: boolean;
+    altGraph?: boolean;
   },
 ): KeyboardEvent {
   const event = new KeyboardEvent(type, {
@@ -88,9 +90,16 @@ function dispatchKeyEvent(
     ctrlKey: options.ctrlKey ?? false,
     metaKey: options.metaKey ?? false,
     shiftKey: options.shiftKey ?? false,
+    repeat: options.repeat ?? false,
     bubbles: true,
     cancelable: true,
   });
+  if (options.altGraph) {
+    Object.defineProperty(event, "getModifierState", {
+      configurable: true,
+      value: (modifier: string) => modifier === "AltGraph",
+    });
+  }
   target.dispatchEvent(event);
   return event;
 }
@@ -1323,6 +1332,46 @@ function testStatePreservedAfterUnmatchedKey(): void {
   });
 }
 
+function testWindowBlurClearsLostKeyUpState(): void {
+  withPrefs(() => {
+    const CTRL_D_CONFIG: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-d": {
+          key: "D",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "test-ctrl-d",
+        },
+      },
+    };
+    applyTestConfig(CTRL_D_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    // Simulate releasing D after a compositor/window switch. Floorp receives
+    // the keydown and blur, but no matching keyup.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      key: "d",
+      code: "KeyD",
+    });
+    fakeWin.dispatchEvent(new Event("blur"));
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      key: "x",
+      code: "KeyX",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "Ctrl+X must not trigger Ctrl+D after a lost keyup and window blur",
+    );
+
+    controller.destroy();
+  });
+}
+
 function testCapturePhaseBlocksBubbleListener(): void {
   withPrefs(() => {
     const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
@@ -1366,6 +1415,84 @@ function testCapturePhaseBlocksBubbleListener(): void {
 
     controller.destroy();
     fakeWin.removeEventListener("keydown", bubbleHandler);
+  });
+}
+
+function testPhysicalCodeMatchesNonLatinKey(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-physical-code": {
+          key: "KeyZ",
+          modifiers: { alt: true, ctrl: true, meta: false, shift: false },
+          action: "test-physical-code",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      key: "я",
+      code: "KeyZ",
+      ctrlKey: true,
+      altKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "matching uses physical KeyboardEvent.code instead of the layout key",
+    );
+    controller.destroy();
+  });
+}
+
+function testRepeatIsIgnored(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+      repeat: true,
+    });
+
+    assertEquals(event.defaultPrevented, false, "repeat keydown is ignored");
+    controller.destroy();
+  });
+}
+
+function testAltGraphIsNotCtrlAlt(): void {
+  withPrefs(() => {
+    const config: KeyboardShortcutConfig = {
+      enabled: true,
+      shortcuts: {
+        "test-ctrl-alt-z": {
+          key: "KeyZ",
+          modifiers: { alt: true, ctrl: true, meta: false, shift: false },
+          action: "test-ctrl-alt-z",
+        },
+      },
+    };
+    applyTestConfig(config);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin, null, "win");
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyZ",
+      ctrlKey: true,
+      altKey: true,
+      altGraph: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      false,
+      "AltGraph must not execute a Ctrl+Alt shortcut",
+    );
+    controller.destroy();
   });
 }
 
@@ -1559,11 +1686,21 @@ export async function runAllTests(): Promise<void> {
       name: "state preserved after unmatched key",
       fn: testStatePreservedAfterUnmatchedKey,
     },
+    {
+      name: "window blur clears lost keyup state",
+      fn: testWindowBlurClearsLostKeyUpState,
+    },
     // Capture phase priority
     {
       name: "capture phase blocks bubble listener",
       fn: testCapturePhaseBlocksBubbleListener,
     },
+    {
+      name: "physical code matches non-Latin key",
+      fn: testPhysicalCodeMatchesNonLatinKey,
+    },
+    { name: "repeat keydown is ignored", fn: testRepeatIsIgnored },
+    { name: "AltGraph is not Ctrl+Alt", fn: testAltGraphIsNotCtrlAlt },
   ];
 
   await runTests("keyboardShortcutController.test.ts", tests);

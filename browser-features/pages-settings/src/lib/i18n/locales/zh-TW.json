@@ -34,6 +34,7 @@
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
         "keyboardShortcut": "鍵盤快捷鍵",
+        "performance": "效能",
         "search": {
             "title": "搜尋設定",
             "resultsFor": "搜尋 {{query}} 的結果",
@@ -124,21 +125,31 @@
             "openNext": "在目前的分頁旁開啟",
             "other": "其他分頁設定",
             "doubleClickToClose": "連按兩下關閉分頁",
+            "tabDragToSplitCreate": "允許透過拖曳分頁來建立分割檢視",
             "minWidth": "最小分頁寬度",
             "minWidthError": "分頁寬度必須介於 {{min}} 和 {{max}} 像素之間。",
             "minHeight": "最小分頁高度",
             "minHeightError": "分頁高度必須介於 {{min}} 和 {{max}} 像素之間。"
         },
-        "lepton-preferences": {
-            "title": "Lepton 設定",
-            "description": "Lepton 進階主題偏好設定",
-            "configureLepton": "設定 Lepton",
+        "tabWindowBehavior": {
+            "title": "分頁與視窗的運作方式",
+            "description": "控制連結的開啟位置，並區分瀏覽器視窗與 Windows 工作列預覽。",
+            "openLinks": "開啟會要求在新視窗中開啟的連結",
+            "openLinksDescription": "選擇要求在新視窗開啟的連結應在當前視窗、新視窗或新分頁中開啟。",
+            "openCurrentWindowOrTab": "當前視窗或分頁",
+            "openNewWindow": "新視窗",
+            "openNewTab": "新分頁",
+            "taskbarPreviews": "在工作列上顯示分頁預覽",
+            "taskbarPreviewsDescription": "此更改僅會變更 Windows 工作列的顯示，並不會建立額外的瀏覽器視窗。",
+            "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
+        },
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
-                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
-                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
-                "visitRepository": "訪問儲存庫頁面"
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。"
             },
             "autohide": {
                 "title": "自動隱藏設定",
@@ -162,8 +173,8 @@
             },
             "icon": {
                 "title": "圖示設定",
-                "disabled": "停用 Lepton 的選單項目以及面板的圖示",
-                "menu": "啟用 Lepton 的選單項目圖示"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "居中設定",
@@ -185,7 +196,8 @@
             "sidebar": {
                 "title": "側邊欄設定",
                 "overlap": "在網站內容上顯示側邊欄"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "排除分頁睡眠",
@@ -201,6 +213,15 @@
             "exampleDomain": "匹配包含此網域的任何 URL",
             "exampleWildcard": "匹配 google.com 的所有子域",
             "exampleFullUrl": "僅匹配 Gmail URL"
+        },
+        "tabStacks": {
+            "unavailableInVerticalTabs": "在垂直分頁模式下，分頁堆無法使用。你的設定會被保留，並在切換回水平分頁模式時生效。",
+            "title": "分頁堆",
+            "description": "將分頁分組堆疊，在分頁列中以一圖示顯示，下方則排列其他分頁堆。",
+            "enableOrDisable": "啟用/停用",
+            "enableTabStacks": "啟用分頁堆",
+            "enableTabStacksDescription": "分頁堆會將分頁分組以圖示顯示在分頁列中。變更此設定後，必須重新啟動 {{productName}}。",
+            "needRestartDescriptionForEnableAndDisable": "要完全啟用或停用分頁堆，必須重新啟動 {{productName}}。"
         },
         "uiCustomization": {
             "title": "介面客製化",
@@ -299,9 +320,35 @@
         "openSourceLicense": "{{productName}} 是可在 Mozilla Public License 2.0 下使用的開放原始碼軟體，由 Firefox 開放原始碼專案和其他開放原始碼軟體促成。",
         "openSourceLicenseNotice": "開放原始碼授權",
         "versionInfo": "版本",
-        "license": "授權"
+        "license": "授權",
+        "noraneko": {
+            "logoAlt": "瀏覽器標誌",
+            "description": "Noraneko 是 Floorp 12 的測試版瀏覽器。Floorp 是以 Firefox 與 Noraneko 為基礎開發的。",
+            "communityCredit": "由 Noraneko 社群用 ❤ 製作",
+            "repositoryLabel": "GitHub 儲存庫：Floorp-Projects/Floorp"
+        }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "了解我們的資金來源及此計畫的背景（日文）",
+            "title": "歷來更新版本說明",
+            "description": "選擇 Floorp 在更新後如何開啟版本說明。",
+            "disabled": {
+                "label": "不要自動開啟",
+                "description": "版本說明將不會在更新後自動開啟。攔截設定在你造訪官方部落格時也會生效。"
+            },
+            "blocking": {
+                "label": "以你的廣告攔截器設定開啟",
+                "description": "在不限制擴充功能的情況下開啟版本說明。此操作不會開啟或安裝廣告攔截器。"
+            },
+            "support": {
+                "label": "開啟並顯示廣告來支持 Floorp（建議）",
+                "description": "阻止 uBlock Origin、AdGuard、Adblock Plus、AdBlock 及 Ghostery 過濾 Floorp 部落格的內容。"
+            },
+            "supportMessage": "版本說明中的廣告收入全部用於支持 Floorp 的開發與營運。感謝你以適合自己的方式支持我們。",
+            "scope": "此例外適用於所有透過 HTTPS 存取 blog.floorp.app 的情況，包括手動開啟的頁面。此設定亦會影響所列五款擴充功能中的追蹤防護與自訂篩選器。其他擴充功能不受此設定限制。其他防護工具仍可能阻擋廣告。變更此設定後，請重新載入已開啟的部落格頁面。",
+            "error": "無法載入或儲存此設定。請重新開啟此頁面並再次嘗試。"
+        },
         "title": "更新與實驗功能",
         "description": "管理更新設定和實驗功能參與。",
         "experiments": {
@@ -439,6 +486,8 @@
         "otherSettings": "其他設定",
         "showToolbar": "顯示工具列",
         "showToolbarDescription": "在 PWA 應用程式視窗中顯示工具列",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "已安裝的 PWA 應用程式",
         "noInstalledApps": "未安裝任何 PWA 應用程式",
         "removeApp": "移除 PWA 應用程式",
@@ -448,8 +497,20 @@
         "uninstallConfirmation": "移除此 PWA 應用程式",
         "uninstallWarning": "您確定要移除 \"{{name}}\" 嗎？",
         "cancel": "取消",
+        "close": "關閉",
         "rename": "重新命名",
-        "uninstall": "移除"
+        "uninstall": "移除",
+        "container": "容器",
+        "noContainer": "無容器",
+        "setContainer": "設定容器",
+        "containerDescription": "選擇此應用程式將在哪个 Firefox 容器中開啟。容器可隔離 Cookie 和網站資料。",
+        "containerDeleted": "容器已刪除",
+        "resetContainer": "重設",
+        "save": "儲存",
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "無法設定容器",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -468,7 +529,7 @@
             "stopped": "已停止",
             "enabledBadge": "已啟用",
             "disabledBadge": "已停用",
-            "serverToken": "Server Token",
+            "serverToken": "伺服器憑證",
             "copyToken": "複製"
         },
         "controlsCard": {
@@ -495,6 +556,8 @@
     },
     "mouseGesture": {
         "description": "使用滑鼠手勢控制瀏覽器。",
+        "saving": "保存滑鼠手勢設定…",
+        "saveError": "無法儲存滑鼠手勢設定。先前設定仍然有效。",
         "generalSettings": "一般設定",
         "generalSettingsDescription": "滑鼠手勢基本設定",
         "enabled": "啟用滑鼠手勢",
@@ -526,11 +589,15 @@
         "actionDescription": "手勢說明",
         "rockerGesturesEnabled": "啟用搖桿手勢",
         "rockerGesturesDescription": "按一下滑鼠右鍵並向左移動可返回，按一下滑鼠右鍵並向右移動可向前。(實驗性質)",
-        "rockerLeftRight": "Left → Right",
-        "rockerLeftRightDescription": "Hold left button, then click right button",
-        "rockerRightLeft": "Right → Left",
-        "rockerRightLeftDescription": "Hold right button, then click left button",
+        "rockerLeftRight": "左 → 右",
+        "rockerLeftRightDescription": "按住左鍵，然後點擊右鍵",
+        "rockerRightLeft": "右 → 左",
+        "rockerRightLeftDescription": "按住右鍵，然後點擊左鍵",
         "wheelGesturesEnabled": "啟用滾輪手勢",
+        "wheelScrollUp": "向上捲動",
+        "wheelScrollUpDescription": "按住右鍵的同時向上滾動滾輪時的動作",
+        "wheelScrollDown": "向下捲動",
+        "wheelScrollDownDescription": "按住右鍵的同時向下滾動滾輪時的操作",
         "actions": {
             "gecko-back": "返回",
             "gecko-forward": "前進",
@@ -606,8 +673,26 @@
             "gecko-scroll-to-bottom": "捲動至底端",
             "gecko-workspace-next": "切換到下一個工作空間",
             "gecko-workspace-previous": "切換到上一個工作空間",
-            "floorp-toggle-zen-mode": "Toggle Zen Mode",
-            "floorp-toggle-command-palette": "Toggle Command Palette"
+            "floorp-toggle-zen-mode": "開關 Zen 模式",
+            "gecko-close-other-tabs": "關閉其他分頁",
+            "gecko-close-tabs-to-start": "關閉左方所有分頁",
+            "gecko-close-tabs-to-end": "關閉左方所有分頁",
+            "gecko-scroll-line-up": "向上捲動",
+            "gecko-scroll-line-down": "向下捲動",
+            "floorp-toggle-command-palette": "開關指令面板",
+            "floorp-open-settings": "開啟設定",
+            "floorp-open-hub": "開啟 Floorp Hub",
+            "floorp-toggle-share-mode": "開關分享模式",
+            "floorp-copy-page-url-as-markdown": "以 Markdown 格式複製分頁網址",
+            "floorp-split-view-open-left": "在左側新增分割檢視",
+            "floorp-split-view-open-right": "在右側新增分割檢視",
+            "floorp-split-view-open-top": "在上方新增分割檢視",
+            "floorp-split-view-open-bottom": "在下方新增分割檢視",
+            "floorp-split-view-close": "關閉分割檢視",
+            "floorp-split-view-swap-panes": "交換分割檢視順序",
+            "floorp-split-view-cycle-layout": "輪換分割檢視佈局",
+            "floorp-split-view-add-pane": "新增分割檢視窗格",
+            "floorp-split-view-remove-pane": "移除分割檢視中的窗格"
         },
         "edit": "編輯",
         "duplicate": "複製",
@@ -642,6 +727,9 @@
         "action": "動作",
         "shortcut": "快速鍵",
         "actions": "動作",
+        "actionLabels": {
+            "floorp-edit-tab-url": "編輯分頁網址"
+        },
         "notSet": "未設定",
         "add": "新增",
         "edit": "編輯",
@@ -681,5 +769,55 @@
             "cancel": "取消",
             "cancelDescription": "取消編輯"
         }
+    },
+    "performance": {
+        "title": "效能",
+        "description": "影響瀏覽器使用系統資源之設定。",
+        "idleReclaim": {
+            "title": "閒置記憶體回收",
+            "description": "此功能屬實驗性質且預設為關閉。啟用後，系統會在一段時間內未偵測到鍵盤或滑鼠輸入時，嘗試減少記憶體使用量。回收的記憶體量取決於當前使用的頁面。",
+            "enable": "在瀏覽器閒置時回收記憶體",
+            "idleThreshold": "回收前的閒置時間（秒）",
+            "minInterval": "重新回收之間的最小間隔（秒）",
+            "minResident": "僅在記憶體使用超過 (MB) 時才進行回收",
+            "cost": "影片播放、通話及螢幕共享不會阻止記憶體回收。這可能會暫停瀏覽器，也包括你重新開始使用瀏覽器時。間隔時間越短，回收的頻率就越高。",
+            "saveFailed": "無法儲存此設定。已還原至先前的值。"
+        }
+    },
+    "ui": {
+        "skipToContent": "跳轉至內容",
+        "loading": "正在載入…",
+        "setupProgress": "安裝進度",
+        "stepNavigation": "安裝導覽",
+        "settingsNavigation": "設定導覽",
+        "openNavigation": "開啟導覽選單",
+        "closeNavigation": "關閉導覽選單",
+        "saveError": "無法儲存。請重試。",
+        "retry": "重試",
+        "loadError": "無法載入設定。請重新載入此頁面。"
+    },
+    "settingsHome": {
+        "title": "讓 Floorp 成為你想要的樣子",
+        "description": "根據瀏覽習慣來調整外觀與控制方式。",
+        "open": "探索設定",
+        "manage": "管理你的瀏覽器",
+        "descriptions": {
+            "tabAndAppearance": "調整主題與分頁外觀",
+            "workspaces": "在工作與個人分頁之間切換",
+            "browserSidebar": "在你的網頁旁開啟另一個網站",
+            "mouseGesture": "將動作指派給滑鼠手勢",
+            "keyboardShortcuts": "將動作指派給快捷鍵",
+            "performance": "調整記憶體使用量"
+        },
+        "resources": {
+            "privacy": "關於隱私",
+            "extensions": "擴充套件管理",
+            "help": "取得幫助"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "外觀與行為",
+        "reset": "重置工作空間",
+        "help": "如何使用"
     }
 }

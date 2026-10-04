@@ -4,6 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 import {
+  addDisposer,
+  createRootHMR,
   noraComponent,
   NoraComponentBase,
 } from "#features-chrome/utils/base";
@@ -25,11 +27,13 @@ export default class Workspaces extends NoraComponentBase {
   static windowWorkspacesMap: WeakMap<Window, WorkspacesService> =
     new WeakMap();
 
-  static getCtx(): WorkspacesService | null {
-    if (!window || !enabled.value) {
+  static getCtx(targetWindow?: Window): WorkspacesService | null {
+    const requestedWindow = targetWindow ??
+      (typeof window !== "undefined" ? window : null);
+    if (!requestedWindow || !enabled.value) {
       return null;
     }
-    return this.windowWorkspacesMap.get(window) || null;
+    return this.windowWorkspacesMap.get(requestedWindow) || null;
   }
 
   init(): void {
@@ -37,48 +41,55 @@ export default class Workspaces extends NoraComponentBase {
       return;
     }
 
+    let disposed = false;
+    addDisposer(() => {
+      disposed = true;
+    });
     migrateWorkspacesData().then(() => {
-      const iconCtx = new WorkspaceIcons();
-      const dataManagerCtx = new WorkspacesDataManager();
-      const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
-      const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
-      Workspaces.windowWorkspacesMap.set(window, ctx);
+      if (disposed) return;
+      createRootHMR(() => {
+        const iconCtx = new WorkspaceIcons();
+        const dataManagerCtx = new WorkspacesDataManager();
+        const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
+        const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
+        Workspaces.windowWorkspacesMap.set(window, ctx);
 
-      const observer = {
-        observe: (_subject: unknown, topic: string) => {
-          if (topic !== WORKSPACES_INIT_OBSERVER_TOPIC) {
-            return;
-          }
+        const observer = {
+          observe: (_subject: unknown, topic: string) => {
+            if (topic !== WORKSPACES_INIT_OBSERVER_TOPIC) {
+              return;
+            }
+            try {
+              ctx.resetWorkspaces();
+            } catch (error) {
+              console.error("Workspaces: failed to reset workspaces", error);
+            }
+          },
+        };
+
+        Services.obs.addObserver(observer, WORKSPACES_INIT_OBSERVER_TOPIC);
+
+        addDisposer(() => {
           try {
-            ctx.resetWorkspaces();
+            Services.obs.removeObserver(
+              observer,
+              WORKSPACES_INIT_OBSERVER_TOPIC,
+            );
           } catch (error) {
-            console.error("Workspaces: failed to reset workspaces", error);
+            console.debug(
+              "Workspaces: failed to remove initialization observer",
+              error,
+            );
           }
-        },
-      };
+          Workspaces.windowWorkspacesMap.delete(window);
+        });
 
-      Services.obs.addObserver(observer, WORKSPACES_INIT_OBSERVER_TOPIC);
-
-      import.meta.hot?.dispose(() => {
-        try {
-          Services.obs.removeObserver(
-            observer,
-            WORKSPACES_INIT_OBSERVER_TOPIC,
-          );
-        } catch (error) {
-          console.debug(
-            "Workspaces: failed to remove initialization observer",
-            error,
-          );
-        }
-        Workspaces.windowWorkspacesMap.delete(window);
-      });
-
-      new WorkspaceManageModal(ctx, iconCtx);
-      new WorkspacesToolbarButton(ctx);
-      new WorkspacesPopupContextMenu(ctx);
-      new WorkspacesTabContextMenu(ctx);
-      new WorkspacesLinkContextMenu(ctx);
+        new WorkspaceManageModal(ctx, iconCtx);
+        new WorkspacesToolbarButton(ctx);
+        new WorkspacesPopupContextMenu(ctx);
+        new WorkspacesTabContextMenu(ctx);
+        new WorkspacesLinkContextMenu(ctx);
+      }, import.meta.hot);
     });
   }
 }

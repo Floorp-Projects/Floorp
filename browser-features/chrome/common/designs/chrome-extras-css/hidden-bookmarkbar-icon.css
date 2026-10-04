@@ -1,0 +1,13 @@
+/* Floorp chrome-extras: hiddenBookmarkbarIcon
+ * Ported from vendored Lepton (leptonChrome.css 27224-27228, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ */
+
+/* leptonChrome.css:27224-27228 */
+#PlacesToolbarItems .bookmark-item > .toolbarbutton-icon {
+  display: none;
+}

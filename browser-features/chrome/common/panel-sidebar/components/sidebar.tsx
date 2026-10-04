@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "preact";
 import { safeRender } from "@nora/preact-xul";
-import { effect } from "@preact/signals";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import style from "./style.css?inline";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarSelectbox } from "./sidebar-selectbox";
@@ -41,7 +40,9 @@ function SidebarContent({ ctx }: SidebarContentProps) {
         <BrowserBox />
         {floating && <FloatingSplitter />}
       </xul:vbox>
-      {!floating && <SidebarSplitter />}
+      {!floating && (
+        <SidebarSplitter onResizeEnd={() => ctx.saveCurrentSidebarWidth()} />
+      )}
       <SidebarSelectbox ctx={ctx} />
     </>
   );
@@ -49,6 +50,8 @@ function SidebarContent({ ctx }: SidebarContentProps) {
 
 export class PanelSidebarElem {
   ctx: CPanelSidebar;
+  private readonly sidebarReady: Promise<void>;
+  private disposed = false;
 
   private get documentElement() {
     return document?.documentElement as unknown as XULElement;
@@ -56,9 +59,6 @@ export class PanelSidebarElem {
 
   constructor(ctx: CPanelSidebar) {
     this.ctx = ctx;
-    if (!isPanelSidebarEnabled.value) {
-      return;
-    }
     const parentElem = document?.getElementById("browser");
     const beforeElem = document?.getElementById("tabbrowser-tabbox");
 
@@ -67,39 +67,57 @@ export class PanelSidebarElem {
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
-    SidebarController.promiseInitialized.then(() => {
-      // Create a container for the sidebar and insert it before the tabbox
-      const sidebarContainer = document?.createXULElement("box") as unknown as XULElement;
-      if (parentElem && beforeElem?.parentElement === parentElem) {
-        parentElem.insertBefore(sidebarContainer, beforeElem);
-      } else if (parentElem) {
-        parentElem.appendChild(sidebarContainer);
-      }
-      render(<SidebarContent ctx={this.ctx} />, sidebarContainer as unknown as Element);
+    let disposeSidebar = () => {};
+    addDisposer(() => {
+      this.disposed = true;
+      disposeSidebar();
+    });
+    this.sidebarReady = SidebarController.promiseInitialized.then(() => {
+      if (this.disposed || !parentElem) return;
+      disposeSidebar = safeRender(
+        <SidebarContent ctx={this.ctx} />,
+        parentElem,
+        beforeElem?.parentElement === parentElem ? beforeElem : undefined,
+      );
     });
 
     if (document?.head) {
-      safeRender(<style>{style}</style>, document.head);
+      addDisposer(safeRender(<style>{style}</style>, document.head));
     }
 
-    effect(() => {
-      if (selectedPanelId.value === null) {
-        this.documentElement?.style.setProperty(
-          "--panel-sidebar-display",
-          "none",
-        );
-      } else {
-        this.documentElement?.style.setProperty(
-          "--panel-sidebar-display",
-          "flex",
-        );
-      }
+    rootEffect(() => {
+      this.documentElement?.style.setProperty(
+        "--panel-sidebar-display",
+        selectedPanelId.value === null ? "none" : "flex",
+      );
+    });
+
+    let wasEnabled = isPanelSidebarEnabled.peek();
+    rootEffect(() => {
+      const enabled = isPanelSidebarEnabled.value;
+      const shouldRestore = enabled && !wasEnabled;
+      wasEnabled = enabled;
+      if (shouldRestore) void this.restoreSelectedPanel();
     });
 
     this.setVerticalTabBgColor();
-    Services.prefs.addObserver("sidebar.verticalTabs", () => {
-      this.setVerticalTabBgColor();
-    });
+    const onVerticalTabs = () => this.setVerticalTabBgColor();
+    Services.prefs.addObserver("sidebar.verticalTabs", onVerticalTabs);
+    addDisposer(() =>
+      Services.prefs.removeObserver("sidebar.verticalTabs", onVerticalTabs)
+    );
+  }
+
+  private async restoreSelectedPanel() {
+    await this.sidebarReady;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve())
+    );
+    if (this.disposed || !isPanelSidebarEnabled.value) return;
+    const panel = this.ctx.getPanelData(selectedPanelId.value ?? "");
+    if (!panel) return;
+    this.ctx.setSidebarWidth(panel);
+    this.ctx.showPanel(panel);
   }
 
   private setVerticalTabBgColor() {

@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Mouse Gestures",
         "keyboardShortcut": "Keyboard Shortcuts",
+        "performance": "Performance",
         "search": {
             "title": "Search Settings",
             "resultsFor": "Search results for \"{{query}}\"",
@@ -124,21 +125,31 @@
             "openNext": "Open next to the current tab",
             "other": "Other Tab Settings",
             "doubleClickToClose": "Close tab by double-clicking",
+            "tabDragToSplitCreate": "Allow creating split view by dragging tabs",
             "minWidth": "Minimum tab width",
             "minWidthError": "Tab width must be between {{min}} and {{max}} pixels.",
             "minHeight": "Minimum tab height",
             "minHeightError": "Tab height must be between {{min}} and {{max}} pixels."
         },
-        "lepton-preferences": {
-            "title": "Lepton Settings",
-            "description": "Configure advanced Lepton theme preferences",
-            "configureLepton": "Configure Lepton",
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "New window",
+            "openNewTab": "New tab",
+            "taskbarPreviews": "Show tab previews in the taskbar",
+            "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
+            "taskbarPreviewsUnavailable": "This option is available on Windows only."
+        },
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Back",
             "experimentalWarning": {
                 "title": "⚠️ Experimental Features",
-                "description": "These settings are experimental and not officially supported. Issues may occur.",
-                "leptonRepository": "Lepton is a css theme for Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "These settings are experimental and not officially supported. Issues may occur."
             },
             "autohide": {
                 "title": "Auto-hide Settings",
@@ -162,8 +173,8 @@
             },
             "icon": {
                 "title": "Icon Settings",
-                "disabled": "Disabilita le icone del menu contestuale di Lepton",
-                "menu": "Enable Lepton's context menu icons"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centered Settings",
@@ -185,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Mostra la Barra Laterale sul contenuto del sito web"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",
@@ -201,6 +213,15 @@
             "exampleDomain": "Matches any URL containing this domain",
             "exampleWildcard": "Matches all subdomains of google.com",
             "exampleFullUrl": "Matches Gmail URLs only"
+        },
+        "tabStacks": {
+            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "Enable/Disable",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "UI Customization",
@@ -299,9 +320,35 @@
         "openSourceLicense": "{{productName}} is open-source software available under the Mozilla Public License 2.0, made possible by the Firefox open-source project and other open-source software.",
         "openSourceLicenseNotice": "Open Source License",
         "versionInfo": "Version",
-        "license": "License"
+        "license": "License",
+        "noraneko": {
+            "logoAlt": "Browser Logo",
+            "description": "Noraneko is a browser as testhead of Floorp 12. Floorp is based on Firefox & Noraneko.",
+            "communityCredit": "Made by Noraneko Community with ❤",
+            "repositoryLabel": "GitHub Repository: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Read about our funding and this setting (Japanese)",
+            "title": "Release notes after updates",
+            "description": "Choose how Floorp opens release notes after an update.",
+            "disabled": {
+                "label": "Do not open automatically",
+                "description": "Release notes will not open after updates. Your blocker settings apply when you visit the blog."
+            },
+            "blocking": {
+                "label": "Open with your blocker settings",
+                "description": "Open release notes without restricting your extensions. This does not install or enable an ad blocker."
+            },
+            "support": {
+                "label": "Open and allow ads to support Floorp (recommended)",
+                "description": "Prevent uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery from filtering the Floorp blog."
+            },
+            "supportMessage": "Advertising revenue from release notes supports Floorp development and operation. Thank you for supporting us in a way that works for you.",
+            "scope": "This exception applies to all HTTPS visits to blog.floorp.app, including manually opened pages. It also affects tracking protection and custom filters in the five listed extensions. Other extensions are not restricted by this setting. Other protection tools may still block ads. Reload open blog pages after changing this setting.",
+            "error": "Could not load or save this setting. Please reopen this page and try again."
+        },
         "title": "Updates & Experiments",
         "description": "Manage update settings and experimental features participation.",
         "experiments": {
@@ -439,6 +486,8 @@
         "otherSettings": "Other Settings",
         "showToolbar": "Show Toolbar",
         "showToolbarDescription": "Display the toolbar in Progressive Web App windows",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Installed Apps",
         "noInstalledApps": "No Progressive Web Apps installed",
         "removeApp": "Remove App",
@@ -448,8 +497,20 @@
         "uninstallConfirmation": "Uninstall Web App",
         "uninstallWarning": "Are you sure you want to uninstall \"{{name}}\"?",
         "cancel": "Cancel",
+        "close": "Close",
         "rename": "Rename",
-        "uninstall": "Uninstall"
+        "uninstall": "Uninstall",
+        "container": "Container",
+        "noContainer": "Nessuno spazio di lavoro",
+        "setContainer": "Set Container",
+        "containerDescription": "Choose which Firefox Container this app opens in. Containers isolate cookies and site data.",
+        "containerDeleted": "Container deleted",
+        "resetContainer": "Reset",
+        "save": "Save",
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Failed to set container",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -495,6 +556,8 @@
     },
     "mouseGesture": {
         "description": "Control your browser with mouse movements.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "General Settings",
         "generalSettingsDescription": "Basic mouse gesture settings",
         "enabled": "Enable mouse gestures",
@@ -531,6 +594,10 @@
         "rockerRightLeft": "Right → Left",
         "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Enable wheel gestures",
+        "wheelScrollUp": "Scroll Up",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Scroll Down",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -607,7 +674,25 @@
             "gecko-workspace-next": "Switch to Next Workspace",
             "gecko-workspace-previous": "Switch to Previous Workspace",
             "floorp-toggle-zen-mode": "Toggle Zen Mode",
-            "floorp-toggle-command-palette": "Toggle Command Palette"
+            "gecko-close-other-tabs": "Close Other Tabs",
+            "gecko-close-tabs-to-start": "Close Tabs to Left",
+            "gecko-close-tabs-to-end": "Close Tabs to Right",
+            "gecko-scroll-line-up": "Scroll Up",
+            "gecko-scroll-line-down": "Scroll Down",
+            "floorp-toggle-command-palette": "Toggle Command Palette",
+            "floorp-open-settings": "Open Settings",
+            "floorp-open-hub": "Open Floorp Hub",
+            "floorp-toggle-share-mode": "Toggle Share Mode",
+            "floorp-copy-page-url-as-markdown": "Copy Page URL as Markdown",
+            "floorp-split-view-open-left": "Split View Left",
+            "floorp-split-view-open-right": "Split View Right",
+            "floorp-split-view-open-top": "Split View Top",
+            "floorp-split-view-open-bottom": "Split View Bottom",
+            "floorp-split-view-close": "Close Split View",
+            "floorp-split-view-swap-panes": "Swap Split Panes",
+            "floorp-split-view-cycle-layout": "Cycle Split Layout",
+            "floorp-split-view-add-pane": "Add Pane to Split View",
+            "floorp-split-view-remove-pane": "Remove Pane from Split View"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",
@@ -642,6 +727,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",
@@ -681,5 +769,55 @@
             "cancel": "Cancel",
             "cancelDescription": "Cancel editing"
         }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Settings that affect how the browser uses system resources.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Experimental and off by default. When enabled, attempts to reduce memory use after a period without keyboard or mouse input. The amount reclaimed depends on the pages in use.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
+        }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "Loading…",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "Retry",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "About privacy",
+            "extensions": "Manage extensions",
+            "help": "Get help"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Appearance and behavior",
+        "reset": "Reset workspaces",
+        "help": "How to use"
     }
 }

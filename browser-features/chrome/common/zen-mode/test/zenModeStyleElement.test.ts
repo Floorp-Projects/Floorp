@@ -2,8 +2,12 @@
 // @colocated-env browser
 
 import { StyleElement } from "../styleElem.tsx";
+import {
+  attachZenModeToWindow,
+  destroyZenModeForWindow,
+  ZEN_MODE_STYLE_ID,
+} from "../zen-mode.tsx";
 import { render } from "@nora/preact-xul";
-import type { VNode } from "preact";
 import {
   assert,
   assertEquals,
@@ -11,15 +15,30 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-// Each call creates a dedicated wrapper div inside head and renders the vnode
-// into it. Preact replaces the wrapper's children on each render, so using a
-// fresh wrapper per call preserves all previous style elements in the DOM —
-// matching the test's expectation of additive rendering.
-function renderToHead(vnode: VNode): void {
-  const w = document.createElement("div");
-  w.style.display = "contents";
-  document.head.appendChild(w);
-  render(vnode, w);
+function createDisposableWindow(): Window {
+  const doc = document.implementation.createHTMLDocument(
+    "Zen style ownership test",
+  );
+  const eventTarget = new EventTarget();
+  const toolbox = doc.createElement("div");
+  toolbox.id = "navigator-toolbox";
+  doc.body!.appendChild(toolbox);
+
+  return {
+    document: doc,
+    closed: false,
+    innerWidth: 1000,
+    innerHeight: 800,
+    MutationObserver,
+    ResizeObserver,
+    requestAnimationFrame: globalThis.requestAnimationFrame.bind(globalThis),
+    cancelAnimationFrame: globalThis.cancelAnimationFrame.bind(globalThis),
+    setTimeout: globalThis.setTimeout.bind(globalThis),
+    clearTimeout: globalThis.clearTimeout.bind(globalThis),
+    addEventListener: eventTarget.addEventListener.bind(eventTarget),
+    removeEventListener: eventTarget.removeEventListener.bind(eventTarget),
+    gNavToolbox: toolbox,
+  } as unknown as Window;
 }
 
 function testStyleElementReturnsNode(): void {
@@ -32,19 +51,11 @@ function testStyleElementReturnsNode(): void {
   );
 }
 
-function testStyleElementCanBeCalledRepeatedly(): void {
-  const nodes = [StyleElement(), StyleElement(), StyleElement()];
-  assert(
-    nodes.every((node) => node !== null),
-    "repeated calls should continue returning nodes",
-  );
-}
-
 function testRenderedStyleContainsZenModeSelector(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  renderToHead(StyleElement());
+  render(() => StyleElement(), head);
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -63,7 +74,7 @@ function testStyleElementContainsValidSVGIcon(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  renderToHead(StyleElement());
+  render(() => StyleElement(), head);
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -90,7 +101,7 @@ function testStyleElementTargetsCorrectButtonId(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  renderToHead(StyleElement());
+  render(() => StyleElement(), head);
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -109,38 +120,25 @@ function testStyleElementTargetsCorrectButtonId(): void {
   }
 }
 
-function testStyleElementCanBeRenderedMultipleTimes(): void {
-  const head = document?.head;
-  assert(head !== null && head !== undefined, "document.head should exist");
-
-  const initialCount = head.querySelectorAll("style").length;
-
-  // Each renderToHead uses a fresh container so previous style elements persist
-  renderToHead(StyleElement());
-  renderToHead(StyleElement());
-  renderToHead(StyleElement());
-
-  const styleNodes = head.querySelectorAll("style");
+function testControllerOwnsSingleZenStylePerWindow(): void {
+  const testWindow = createDisposableWindow();
+  const first = attachZenModeToWindow(testWindow);
 
   try {
-    assert(
-      styleNodes.length >= initialCount + 3,
-      "should add at least 3 style elements after rendering 3 times",
+    const second = attachZenModeToWindow(testWindow);
+    assert(first !== null, "the test window should have a Zen controller");
+    assertEquals(
+      second,
+      first,
+      "the controller registry should be idempotent",
     );
-
-    // Verify only newly rendered style nodes have content
-    for (let i = initialCount; i < styleNodes.length; i++) {
-      const style = styleNodes.item(i);
-      assert(
-        (style.textContent ?? "").length > 0,
-        "each rendered style should have content",
-      );
-    }
+    assertEquals(
+      testWindow.document!.querySelectorAll(`#${ZEN_MODE_STYLE_ID}`).length,
+      1,
+      "Zen behavior CSS should be owned once per window, independent of menu rendering",
+    );
   } finally {
-    // Cleanup only styles rendered by this test
-    for (let i = initialCount; i < styleNodes.length; i++) {
-      styleNodes.item(i)?.remove();
-    }
+    destroyZenModeForWindow(testWindow, first ?? undefined);
   }
 }
 
@@ -148,7 +146,7 @@ function testStyleElementSVGContainsZenModeIcon(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  renderToHead(StyleElement());
+  render(() => StyleElement(), head);
   const styleNodes = head.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
@@ -176,10 +174,6 @@ export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "StyleElement returns node", fn: testStyleElementReturnsNode },
     {
-      name: "StyleElement can be called repeatedly",
-      fn: testStyleElementCanBeCalledRepeatedly,
-    },
-    {
       name: "rendered style contains zen mode selector",
       fn: testRenderedStyleContainsZenModeSelector,
     },
@@ -192,8 +186,8 @@ export async function runAllTests(): Promise<void> {
       fn: testStyleElementTargetsCorrectButtonId,
     },
     {
-      name: "StyleElement can be rendered multiple times",
-      fn: testStyleElementCanBeRenderedMultipleTimes,
+      name: "controller owns one Zen style per window",
+      fn: testControllerOwnsSingleZenStylePerWindow,
     },
     {
       name: "StyleElement SVG contains zen mode icon",

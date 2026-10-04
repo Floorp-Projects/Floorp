@@ -16,7 +16,7 @@
     "preact/compat": "npm:preact@^10.26.9/compat",
     "unplugin-swc": "npm:unplugin-swc@^1.5.9",
     "uuid": "npm:uuid@^13.0.0",
-    "vite": "npm:vite@^8",
+    "vite": "npm:vite@^7.3.0",
     "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.2.1",
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^4.3.0",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^6.0.3",

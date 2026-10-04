@@ -2844,6 +2844,7 @@ interface ProcessActorOptions {
   loadInDevToolsLoader?: boolean;
   parent?: ProcessActorSidedOptions;
   remoteTypes?: string[];
+  safeForUntrustedWebProcess?: boolean;
 }
 
 interface ProcessActorSidedOptions {
@@ -4311,6 +4312,7 @@ interface WindowActorOptions {
   messageManagerGroups?: string[];
   parent?: WindowActorSidedOptions;
   remoteTypes?: string[];
+  safeForUntrustedWebProcess?: boolean;
 }
 
 interface WindowActorSidedOptions {

@@ -1,0 +1,343 @@
+.updateHeader {
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  border-block-end: 1px solid var(--floorp-line);
+}
+.updateTitle {
+  padding: 40px;
+}
+.updateFooter {
+  padding: 32px max(24px, calc((100% - 1080px) / 2));
+  border-block-start: 1px solid var(--floorp-line);
+}
+.updateFooter h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.bulletList {
+  list-style: disc;
+  padding-inline-start: 24px;
+}
+.choiceContent {
+  padding-block: 24px;
+}
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--floorp-action);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (max-width: 1000px) {
+  .updateHeader {
+    grid-template-columns: 1fr;
+  }
+  .updateTitle {
+    padding: 32px 24px;
+  }
+}
+.shell {
+  min-block-size: 100vh;
+  background: var(--floorp-canvas);
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  min-block-size: 88px;
+}
+.brand {
+  padding: 24px 40px;
+  background: var(--floorp-brand-deep);
+  display: flex;
+  align-items: center;
+  border-inline-end: 8px solid var(--floorp-brand);
+}
+.progress {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  border-block-end: 1px solid var(--floorp-line);
+}
+.steps {
+  display: flex;
+  gap: 8px;
+  inline-size: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.steps li {
+  display: flex;
+  flex: 1;
+  min-inline-size: 0;
+}
+.step {
+  min-block-size: 44px;
+  inline-size: 100%;
+  border-block-end: 2px solid var(--floorp-line);
+  color: var(--floorp-muted);
+  padding: 8px 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.step[aria-current="step"] {
+  color: var(--floorp-ink);
+  border-color: var(--floorp-brand);
+  font-weight: 700;
+}
+.main {
+  min-inline-size: 0;
+  display: flex;
+  flex: 1;
+}
+.content {
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding: 40px;
+}
+.intro {
+  flex: 1;
+  display: grid;
+  grid-template-columns: calc(38% + 32px) minmax(0, 1fr);
+  position: relative;
+}
+.intro::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: calc(38% - 8px);
+  inline-size: 40px;
+  block-size: 8px;
+  background: var(--floorp-brand);
+}
+.invitation {
+  padding: clamp(32px, 4vw, 64px) 40px;
+  background: var(--floorp-brand-deep);
+  color: #fff;
+  border-inline-end: 8px solid var(--floorp-brand);
+  --floorp-focus: var(--floorp-focus-dark);
+}
+.invitation h1 {
+  white-space: pre-line;
+  font-size: clamp(30px, 3.5vw, 48px);
+  line-height: 1.25;
+  font-weight: 800;
+  max-inline-size: 12em;
+}
+.invitation p {
+  color: var(--floorp-on-purple-muted);
+  margin-block: 24px;
+  line-height: 1.8;
+}
+.invitation button {
+  background: var(--floorp-brand);
+  color: #fff;
+  box-shadow: none;
+}
+.invitation button:hover {
+  background: var(--floorp-brand-hover);
+}
+.progressLabel {
+  color: var(--floorp-muted);
+  font-size: 14px;
+}
+.invitation .nextHint {
+  font-size: 14px;
+  margin-block: 16px 0;
+}
+.featureIntroduction {
+  color: var(--floorp-muted);
+  margin-block-end: 24px;
+}
+.features {
+  padding: 48px 40px;
+}
+.features h2 {
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 700;
+  margin-block-end: 24px;
+}
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding-block: 28px;
+  border-block-start: 1px solid var(--floorp-line);
+}
+.feature > svg {
+  flex-shrink: 0;
+  color: var(--floorp-muted);
+}
+.feature h3 {
+  font-weight: 700;
+  font-size: 20px;
+  margin-block-end: 8px;
+}
+.feature p {
+  color: var(--floorp-muted);
+  line-height: 1.8;
+}
+.section {
+  padding-block: 24px;
+  border-block-start: 1px solid var(--floorp-line);
+  margin-block-start: 32px;
+}
+.section h2,
+.section legend {
+  font-size: 21px;
+  font-weight: 700;
+  margin-block-end: 12px;
+}
+.section p {
+  margin-block: 12px;
+  max-inline-size: 72ch;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.choice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-block-size: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--floorp-control-border);
+  border-radius: 6px;
+  background: var(--floorp-surface);
+  cursor: pointer;
+}
+.choice:has(input:checked) {
+  border-color: var(--floorp-action);
+  box-shadow: inset 3px 0 var(--floorp-action);
+}
+.choice input {
+  accent-color: var(--floorp-brand);
+  inline-size: 18px;
+  block-size: 18px;
+}
+.choice:has(input:disabled) {
+  opacity: .6;
+  cursor: not-allowed;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 20px;
+}
+.error {
+  color: var(--floorp-danger);
+}
+.featureStory {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 32px;
+  padding-block: 32px;
+  border-block-start: 1px solid var(--floorp-line);
+  margin-block-start: 24px;
+  align-items: center;
+}
+.featureStory:not(:has(figure)) {
+  grid-template-columns: 1fr;
+}
+.featureStory h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-block-end: 12px;
+}
+.featureStory p {
+  color: var(--floorp-muted);
+}
+.featureStory ul {
+  list-style: disc;
+  padding-inline-start: 20px;
+  margin-block-start: 16px;
+}
+.productFrame {
+  padding: 4px;
+  background: white;
+  border: 1px solid var(--floorp-line);
+  border-radius: 10px;
+  box-shadow: 0 24px 56px -28px rgb(26 16 46 / .42);
+}
+.productFrame img {
+  inline-size: 100%;
+  block-size: auto;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-block: 24px;
+}
+.links a {
+  color: var(--floorp-action);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-block-start: 1px solid var(--floorp-line);
+  padding-block: 24px;
+  margin-block-start: 32px;
+}
+.navigation > :last-child {
+  margin-inline-start: auto;
+}
+.content :global(h1) {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+@media (max-width: 1000px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+  .brand {
+    border-inline-end: 0;
+    border-block-end: 4px solid var(--floorp-brand);
+    padding: 20px;
+  }
+  .progress {
+    padding: 12px 20px;
+    overflow-x: auto;
+  }
+  .steps {
+    min-inline-size: 630px;
+  }
+  .intro {
+    grid-template-columns: 1fr;
+  }
+  .intro::before {
+    display: none;
+  }
+  .invitation {
+    padding: 40px 24px;
+    border-inline-end: 0;
+    border-block-end: 4px solid var(--floorp-brand);
+  }
+  .features,
+  .content {
+    padding: 32px 24px;
+  }
+  .featureStory {
+    grid-template-columns: 1fr;
+  }
+}

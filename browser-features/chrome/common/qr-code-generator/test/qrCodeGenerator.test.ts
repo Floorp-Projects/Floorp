@@ -24,7 +24,11 @@ function testQRCodeManagerConstruction(): void {
 
 function testShowPanelDefaultIsFalse(): void {
   const manager = new QRCodeManager();
-  assertEquals(manager.showPanel.value, false, "showPanel should default to false");
+  assertEquals(
+    manager.showPanel.value,
+    false,
+    "showPanel should default to false",
+  );
 }
 
 function testCurrentUrlDefaultIsEmpty(): void {
@@ -59,7 +63,7 @@ function testHideQRPanel(): void {
 
 function testSetCurrentUrlManually(): void {
   const manager = new QRCodeManager();
-  manager.currentUrl.value = ("https://example.com");
+  manager.currentUrl.value = "https://example.com";
   assertEquals(
     manager.currentUrl.value,
     "https://example.com",
@@ -117,8 +121,20 @@ function testUpdateCurrentTabUrl(): void {
   assert(!threw, "updateCurrentTabUrl should not throw");
 
   // If gBrowser is available and has a selected tab, currentUrl should be populated
-  if ((globalThis as Record<string, unknown>).gBrowser && ((globalThis as Record<string, unknown>).gBrowser as Record<string, unknown>)?.selectedTab) {
-    const selectedTab = ((globalThis as Record<string, unknown>).gBrowser as Record<string, unknown>).selectedTab as unknown as { linkedBrowser?: { currentURI?: { spec?: string } } };
+  if (
+    (globalThis as Record<string, unknown>).gBrowser &&
+    ((globalThis as Record<string, unknown>).gBrowser as Record<
+      string,
+      unknown
+    >)?.selectedTab
+  ) {
+    const selectedTab =
+      ((globalThis as Record<string, unknown>).gBrowser as Record<
+        string,
+        unknown
+      >).selectedTab as unknown as {
+        linkedBrowser?: { currentURI?: { spec?: string } };
+      };
     if (selectedTab?.linkedBrowser?.currentURI?.spec) {
       const url = manager.currentUrl.value;
       assert(
@@ -161,7 +177,11 @@ function testSetShowPanelDirectly(): void {
   assertEquals(manager.showPanel.value, true, "setShowPanel(true) should work");
 
   manager.showPanel.value = false;
-  assertEquals(manager.showPanel.value, false, "setShowPanel(false) should work");
+  assertEquals(
+    manager.showPanel.value,
+    false,
+    "setShowPanel(false) should work",
+  );
 }
 
 function testGenerateForUrlWithInvalidUrl(): void {
@@ -180,7 +200,9 @@ function testGenerateForUrlWithInvalidUrl(): void {
   let threw = false;
   try {
     invalidUrls.forEach((url) => {
-      const floorp = (globalThis as Record<string, unknown>).gFloorp as Record<string, unknown> | undefined;
+      const floorp = (globalThis as Record<string, unknown>).gFloorp as
+        | Record<string, unknown>
+        | undefined;
       const qrCode = floorp?.qrCode as Record<string, unknown> | undefined;
       if (typeof qrCode?.generateForUrl === "function") {
         (qrCode.generateForUrl as (url: string) => void)(url);
@@ -206,8 +228,12 @@ function testManagerWithSpecialCharactersInUrl(): void {
   let threw = false;
   try {
     specialUrls.forEach((url) => {
-      manager.currentUrl.value = (url);
-      assertEquals(manager.currentUrl.value, url, `URL ${url} should be set correctly`);
+      manager.currentUrl.value = url;
+      assertEquals(
+        manager.currentUrl.value,
+        url,
+        `URL ${url} should be set correctly`,
+      );
     });
   } catch {
     threw = true;
@@ -222,11 +248,19 @@ function testSignalReactivity(): void {
   const url1 = "https://example.com/1";
   const url2 = "https://example.com/2";
 
-  manager.currentUrl.value = (url1);
-  assertEquals(manager.currentUrl.value, url1, "currentUrl should update to url1");
+  manager.currentUrl.value = url1;
+  assertEquals(
+    manager.currentUrl.value,
+    url1,
+    "currentUrl should update to url1",
+  );
 
-  manager.currentUrl.value = (url2);
-  assertEquals(manager.currentUrl.value, url2, "currentUrl should update to url2");
+  manager.currentUrl.value = url2;
+  assertEquals(
+    manager.currentUrl.value,
+    url2,
+    "currentUrl should update to url2",
+  );
 
   manager.showPanel.value = true;
   assertEquals(manager.showPanel.value, true, "showPanel should be true");
@@ -247,18 +281,24 @@ function testGlobalBindingsAfterMultipleInstances(): void {
     "gFloorp.qrCode should be defined",
   );
   assert(
-    (g.gFloorpPageAction as Record<string, unknown> | undefined)?.qrCode !== undefined,
+    (g.gFloorpPageAction as Record<string, unknown> | undefined)?.qrCode !==
+      undefined,
     "gFloorpPageAction.qrCode should be defined",
   );
 
   // Methods should be callable
   let threw = false;
   try {
-    const qrCode = (g.gFloorp as Record<string, unknown>)?.qrCode as Record<string, unknown> | undefined;
+    const qrCode = (g.gFloorp as Record<string, unknown>)?.qrCode as
+      | Record<string, unknown>
+      | undefined;
     if (typeof qrCode?.show === "function") (qrCode.show as () => void)();
     if (typeof qrCode?.hide === "function") (qrCode.hide as () => void)();
-    const pageActionQrCode = (g.gFloorpPageAction as Record<string, unknown>)?.qrCode as Record<string, unknown> | undefined;
-    if (typeof pageActionQrCode?.onPopupShowing === "function") (pageActionQrCode.onPopupShowing as () => void)();
+    const pageActionQrCode = (g.gFloorpPageAction as Record<string, unknown>)
+      ?.qrCode as Record<string, unknown> | undefined;
+    if (typeof pageActionQrCode?.onPopupShowing === "function") {
+      (pageActionQrCode.onPopupShowing as () => void)();
+    }
   } catch {
     threw = true;
   }
@@ -269,19 +309,39 @@ function testManagerInitialState(): void {
   const manager = new QRCodeManager();
 
   // Verify all initial states
-  assertEquals(manager.showPanel.value, false, "showPanel should be false initially");
-  assertEquals(manager.currentUrl.value, "", "currentUrl should be empty initially");
-  assertEquals(typeof manager.showPanel, "object", "showPanel should be a preact signal");
-  assertEquals(typeof manager.currentUrl, "object", "currentUrl should be a preact signal");
+  assertEquals(
+    manager.showPanel.value,
+    false,
+    "showPanel should be false initially",
+  );
+  assertEquals(
+    manager.currentUrl.value,
+    "",
+    "currentUrl should be empty initially",
+  );
+  assertEquals(
+    typeof manager.showPanel,
+    "object",
+    "showPanel should be a preact signal",
+  );
+  assertEquals(
+    typeof manager.currentUrl,
+    "object",
+    "currentUrl should be a preact signal",
+  );
 }
 
 function testUrlWithEmptyString(): void {
   const manager = new QRCodeManager();
 
-  manager.currentUrl.value = ("https://example.com");
-  assertEquals(manager.currentUrl.value, "https://example.com", "URL should be set");
+  manager.currentUrl.value = "https://example.com";
+  assertEquals(
+    manager.currentUrl.value,
+    "https://example.com",
+    "URL should be set",
+  );
 
-  manager.currentUrl.value = ("");
+  manager.currentUrl.value = "";
   assertEquals(manager.currentUrl.value, "", "URL should be cleared");
 }
 
@@ -310,7 +370,11 @@ function testHidePanelMultipleTimes(): void {
   assertEquals(manager.showPanel.value, false, "showPanel should remain false");
 
   manager.hideQRPanel();
-  assertEquals(manager.showPanel.value, false, "showPanel should still be false");
+  assertEquals(
+    manager.showPanel.value,
+    false,
+    "showPanel should still be false",
+  );
 }
 
 function testUpdateCurrentTabUrlWithMissingBrowserProperties(): void {
@@ -367,14 +431,26 @@ export async function runAllTests(): Promise<void> {
     },
     { name: "init does not throw", fn: testInitDoesNotThrow },
     { name: "setShowPanel directly", fn: testSetShowPanelDirectly },
-    { name: "generateForUrl with invalid URL", fn: testGenerateForUrlWithInvalidUrl },
-    { name: "manager with special characters in URL", fn: testManagerWithSpecialCharactersInUrl },
+    {
+      name: "generateForUrl with invalid URL",
+      fn: testGenerateForUrlWithInvalidUrl,
+    },
+    {
+      name: "manager with special characters in URL",
+      fn: testManagerWithSpecialCharactersInUrl,
+    },
     { name: "signal reactivity", fn: testSignalReactivity },
-    { name: "global bindings after multiple instances", fn: testGlobalBindingsAfterMultipleInstances },
+    {
+      name: "global bindings after multiple instances",
+      fn: testGlobalBindingsAfterMultipleInstances,
+    },
     { name: "manager initial state", fn: testManagerInitialState },
     { name: "URL with empty string", fn: testUrlWithEmptyString },
     { name: "showPanel multiple times", fn: testShowPanelMultipleTimes },
     { name: "hidePanel multiple times", fn: testHidePanelMultipleTimes },
-    { name: "updateCurrentTabUrl with missing browser properties", fn: testUpdateCurrentTabUrlWithMissingBrowserProperties },
+    {
+      name: "updateCurrentTabUrl with missing browser properties",
+      fn: testUpdateCurrentTabUrlWithMissingBrowserProperties,
+    },
   ]);
 }

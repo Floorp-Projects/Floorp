@@ -15,7 +15,7 @@ export function QRCodePageActionButton(): ComponentChild {
   const tooltip = useSignal(i18next.t("qrcode-generate-page-action"));
 
   useEffect(() => {
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       tooltip.value = i18next.t("qrcode-generate-page-action");
     });
   }, []);

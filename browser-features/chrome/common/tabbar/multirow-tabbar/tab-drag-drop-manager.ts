@@ -1,4 +1,3 @@
-import { findChildIndex } from "./dom-utils.ts";
 import type { PinnedTabController } from "./pinned-tab-controller.ts";
 import type {
   FirefoxWindow,
@@ -14,6 +13,98 @@ declare const Services: ServicesType;
 declare const PrivateBrowsingUtils: PrivateBrowsingUtilsType;
 declare const TAB_DROP_TYPE: string;
 
+export type DropIndicatorTarget = {
+  tabIndex: number;
+  atEnd: boolean;
+};
+
+export function resolveDropIndicatorTarget(
+  dropIndex: number,
+  tabCount: number,
+): DropIndicatorTarget | null {
+  if (tabCount <= 0 || dropIndex < 0 || dropIndex > tabCount) {
+    return null;
+  }
+  return dropIndex === tabCount
+    ? { tabIndex: tabCount - 1, atEnd: true }
+    : { tabIndex: dropIndex, atEnd: false };
+}
+
+export function getTabDropIndex(
+  container: Element,
+  target: Element,
+  clientX: number,
+  isLtr: boolean,
+): number {
+  // Groups are DOM children too, but drop positions count every tab,
+  // including the tabs inside collapsed groups.
+  const tabs = Array.from(container.querySelectorAll("tab"));
+  if (target.localName === "tab-group") {
+    const lastTab = target.querySelector("tab:last-of-type");
+    const lastIndex = lastTab ? tabs.indexOf(lastTab) : -1;
+    return lastIndex < 0 ? -1 : lastIndex + 1;
+  }
+  const tabPos = tabs.indexOf(target);
+  if (tabPos < 0) return -1;
+  const rect = target.getBoundingClientRect();
+  const before = isLtr
+    ? clientX < rect.x + rect.width / 2
+    : clientX > rect.x + rect.width / 2;
+  return before ? tabPos : tabPos + 1;
+}
+
+export function cleanupOwnedDropIndicator(
+  indicator: XULElement | null,
+): void {
+  if (!indicator) return;
+
+  try {
+    indicator.hidden = true;
+  } catch (error) {
+    console.error(
+      "[TabDragDropManager] Failed to hide the drop indicator:",
+      error,
+    );
+  }
+
+  try {
+    indicator.style.removeProperty("transform");
+  } catch (error) {
+    console.error(
+      "[TabDragDropManager] Failed to clear the drop indicator transform:",
+      error,
+    );
+  }
+
+  try {
+    indicator.style.removeProperty("margin-inline-start");
+  } catch (error) {
+    console.error(
+      "[TabDragDropManager] Failed to clear the drop indicator margin:",
+      error,
+    );
+  }
+}
+
+export class DropIndicatorOwnership {
+  private indicator: XULElement | null = null;
+
+  acquire(indicator: XULElement): XULElement {
+    if (this.indicator === indicator) return indicator;
+
+    const previousIndicator = this.take();
+    cleanupOwnedDropIndicator(previousIndicator);
+    this.indicator = indicator;
+    return indicator;
+  }
+
+  take(): XULElement | null {
+    const indicator = this.indicator;
+    this.indicator = null;
+    return indicator;
+  }
+}
+
 export class TabDragDropManager {
   private lastKnownIndex: number | null = null;
   private groupToInsertTo: XULElement | null = null;
@@ -23,16 +114,21 @@ export class TabDragDropManager {
   private arrowScrollbox: XULElement | null = null;
   private originalGetDropIndex:
     | ((event: DragEvent) => number)
-    | undefined
-    | null = null;
+    | undefined;
   private originalGetDropEffectForTabDrag:
     | ((event: DragEvent) => string)
-    | undefined
-    | null = null;
-  private originalOnDragOver: ((event: DragEvent) => void) | undefined | null =
-    null;
+    | undefined;
+  private originalUnderscoreGetDropEffectForTabDrag:
+    | ((event: DragEvent) => string)
+    | undefined;
+  private hadOwnGetDropIndex = false;
+  private hadOwnGetDropEffectForTabDrag = false;
+  private hadOwnUnderscoreGetDropEffectForTabDrag = false;
   private dropEventListener: ((e: Event) => void) | null = null;
+  private dragOverEventListener: ((e: Event) => void) | null = null;
   private dragEndEventListener: ((e: Event) => void) | null = null;
+  private dragStartEventListener: ((e: Event) => void) | null = null;
+  private readonly dropIndicatorOwnership = new DropIndicatorOwnership();
 
   constructor(
     private readonly resolveTabsContainer: () => XULElement | null,
@@ -40,109 +136,207 @@ export class TabDragDropManager {
   ) {}
 
   install(arrowScrollbox: XULElement): void {
+    if (this.arrowScrollbox) {
+      this.uninstall();
+    }
     this.arrowScrollbox = arrowScrollbox;
 
     const tabContainer = gBrowser.tabContainer;
 
-    // Save original functions
+    // Save original functions. These live on `tabDragAndDrop` in current
+    // Firefox (the XBL `on_dragover` property just forwards to it), but older
+    // versions exposed them directly on the container — keep both fallbacks.
+    this.hadOwnGetDropIndex = Object.hasOwn(tabContainer, "_getDropIndex");
+    this.hadOwnGetDropEffectForTabDrag = Object.hasOwn(
+      tabContainer,
+      "getDropEffectForTabDrag",
+    );
+    this.hadOwnUnderscoreGetDropEffectForTabDrag = Object.hasOwn(
+      tabContainer,
+      "_getDropEffectForTabDrag",
+    );
     this.originalGetDropIndex = tabContainer._getDropIndex;
     this.originalGetDropEffectForTabDrag = tabContainer.getDropEffectForTabDrag;
-    this.originalOnDragOver = tabContainer.on_dragover;
+    this.originalUnderscoreGetDropEffectForTabDrag =
+      tabContainer._getDropEffectForTabDrag;
 
-    tabContainer._getDropIndex = (event: DragEvent): number => {
-      const tabToDropAt = this.getTabFromEventTarget(event);
-      if (!tabToDropAt) return 0;
-
-      if (!this.arrowScrollbox) return 0;
-      const tabPos = findChildIndex(this.arrowScrollbox, tabToDropAt);
-      const rect = tabToDropAt.getBoundingClientRect();
-      const isLtr = window.getComputedStyle(tabContainer).direction === "ltr";
-
-      if (isLtr) {
-        return event.clientX < rect.x + rect.width / 2 ? tabPos : tabPos + 1;
+    // Register the dragover/drop handlers in the CAPTURE phase so they run
+    // BEFORE Firefox's native tabDragAndDrop handlers. We can't override the
+    // native handlers by assigning to `on_dragover` / `_onDragOver` anymore —
+    // current Firefox routes those events directly to `tabDragAndDrop.handle_*`
+    // and ignores JS property assignments on XUL elements. Calling
+    // `stopPropagation()` inside the capture-phase handler blocks the native
+    // handler entirely.
+    this.dragOverEventListener = (e: Event) => {
+      if (!this.listenersActive) return;
+      try {
+        this.performTabDragOver(e as DragEvent);
+      } catch (error) {
+        console.error("[TabDragDropManager] dragover failed:", error);
+        this.deactivateDragSession();
       }
-      return event.clientX > rect.x + rect.width / 2 ? tabPos : tabPos + 1;
     };
+    tabContainer.addEventListener("dragover", this.dragOverEventListener, true);
 
-    tabContainer.addEventListener("dragstart", (event: Event) => {
+    this.dropEventListener = (e: Event) => {
+      if (!this.listenersActive) return;
+      const dragEvent = e as DragEvent;
+      dragEvent.preventDefault();
+      dragEvent.stopPropagation();
+      try {
+        this.performTabDropEvent(dragEvent);
+      } catch (error) {
+        console.error("[TabDragDropManager] drop failed:", error);
+      } finally {
+        this.deactivateDragSession();
+      }
+    };
+    tabContainer.addEventListener("drop", this.dropEventListener, true);
+
+    this.dragStartEventListener = (event: Event) => {
+      this.deactivateDragSession();
       const dragEvent = event as DragEvent;
       const tab = this.getTabFromEventTarget(dragEvent);
-      if (!tab || !this.arrowScrollbox) return;
+      if (!tab || !this.arrowScrollbox) {
+        return;
+      }
 
       const pinnedTabsCount = this.arrowScrollbox.querySelectorAll(
         ".tabbrowser-tab[newPin]",
       ).length;
-      this.draggedTabIndex = findChildIndex(this.arrowScrollbox, tab);
+      this.draggedTabIndex = Array.from(
+        this.arrowScrollbox.querySelectorAll("tab"),
+      ).indexOf(tab);
 
       const firstTab = document?.getElementsByClassName("tabbrowser-tab")[0];
-      if (
-        (firstTab &&
-          tabContainer.arrowScrollbox.clientHeight > firstTab.clientHeight) ||
-        pinnedTabsCount > 0
-      ) {
+      const isMultiRow = firstTab &&
+        tabContainer.arrowScrollbox.clientHeight > firstTab.clientHeight;
+      if (isMultiRow || pinnedTabsCount > 0) {
         gBrowser.visibleTabs.forEach((t: XULTab) => {
           t.style.setProperty("transform", "");
         });
 
-        if (!this.listenersActive) {
-          tabContainer.getDropEffectForTabDrag = (e: DragEvent) =>
-            this.orig_getDropEffectForTabDrag(e);
-          tabContainer._getDropEffectForTabDrag = (e: DragEvent) =>
-            this.orig_getDropEffectForTabDrag(e);
-          tabContainer.on_dragover = this.performTabDragOver;
-          tabContainer._onDragOver = this.performTabDragOver;
-          this.dropEventListener = (e: Event) => {
-            this.performTabDropEvent(e as DragEvent);
-          };
-          tabContainer.addEventListener("drop", this.dropEventListener);
-          this.listenersActive = true;
-        }
+        this.activateDragSession();
       }
-    });
+    };
+    tabContainer.addEventListener("dragstart", this.dragStartEventListener);
 
     this.dragEndEventListener = () => {
-      this.resetState();
-      this.draggedTabIndex = null;
+      this.deactivateDragSession();
     };
     tabContainer.addEventListener("dragend", this.dragEndEventListener);
   }
 
   uninstall(): void {
+    this.deactivateDragSession();
+
     if (!this.arrowScrollbox) return;
 
     const tabContainer = gBrowser.tabContainer;
 
-    // Restore original functions
-    if (this.originalGetDropIndex) {
-      tabContainer._getDropIndex = this.originalGetDropIndex;
+    // Remove capture-phase listeners
+    if (this.dragOverEventListener) {
+      tabContainer.removeEventListener(
+        "dragover",
+        this.dragOverEventListener,
+        true,
+      );
+      this.dragOverEventListener = null;
     }
-    if (this.originalGetDropEffectForTabDrag) {
-      tabContainer.getDropEffectForTabDrag =
-        this.originalGetDropEffectForTabDrag;
-      tabContainer._getDropEffectForTabDrag =
-        this.originalGetDropEffectForTabDrag;
-    }
-    if (this.originalOnDragOver) {
-      tabContainer.on_dragover = this.originalOnDragOver;
-      tabContainer._onDragOver = this.originalOnDragOver;
-    }
-
-    // Remove drop event listener
     if (this.dropEventListener) {
-      tabContainer.removeEventListener("drop", this.dropEventListener);
+      tabContainer.removeEventListener("drop", this.dropEventListener, true);
       this.dropEventListener = null;
     }
-
-    // Remove dragend event listener
+    if (this.dragStartEventListener) {
+      tabContainer.removeEventListener(
+        "dragstart",
+        this.dragStartEventListener,
+      );
+      this.dragStartEventListener = null;
+    }
     if (this.dragEndEventListener) {
       tabContainer.removeEventListener("dragend", this.dragEndEventListener);
       this.dragEndEventListener = null;
     }
 
     // Reset state
-    this.resetState();
-    this.listenersActive = false;
     this.arrowScrollbox = null;
+  }
+
+  private activateDragSession(): void {
+    const tabContainer = gBrowser.tabContainer;
+    tabContainer._getDropIndex = (event: DragEvent): number => {
+      const tabToDropAt = this.getTabFromEventTarget(event);
+      if (!tabToDropAt || !this.arrowScrollbox) return -1;
+      return getTabDropIndex(
+        this.arrowScrollbox,
+        tabToDropAt,
+        event.clientX,
+        window.getComputedStyle(tabContainer).direction === "ltr",
+      );
+    };
+    tabContainer.getDropEffectForTabDrag = (event: DragEvent) =>
+      this.orig_getDropEffectForTabDrag(event);
+    tabContainer._getDropEffectForTabDrag = (event: DragEvent) =>
+      this.orig_getDropEffectForTabDrag(event);
+    this.listenersActive = true;
+  }
+
+  private deactivateDragSession(): void {
+    const ownedIndicator = this.dropIndicatorOwnership.take();
+
+    try {
+      const tabContainer = gBrowser.tabContainer;
+      if (this.listenersActive) {
+        this.restoreOverride("_getDropIndex", () => {
+          if (this.hadOwnGetDropIndex) {
+            tabContainer._getDropIndex = this.originalGetDropIndex;
+          } else {
+            delete tabContainer._getDropIndex;
+          }
+        });
+        this.restoreOverride("getDropEffectForTabDrag", () => {
+          if (this.hadOwnGetDropEffectForTabDrag) {
+            tabContainer.getDropEffectForTabDrag =
+              this.originalGetDropEffectForTabDrag;
+          } else {
+            delete tabContainer.getDropEffectForTabDrag;
+          }
+        });
+        this.restoreOverride("_getDropEffectForTabDrag", () => {
+          if (this.hadOwnUnderscoreGetDropEffectForTabDrag) {
+            tabContainer._getDropEffectForTabDrag =
+              this.originalUnderscoreGetDropEffectForTabDrag;
+          } else {
+            delete tabContainer._getDropEffectForTabDrag;
+          }
+        });
+      }
+    } catch (error) {
+      console.error(
+        "[TabDragDropManager] Failed to access the tab container during cleanup:",
+        error,
+      );
+    } finally {
+      try {
+        cleanupOwnedDropIndicator(ownedIndicator);
+      } finally {
+        this.listenersActive = false;
+        this.draggedTabIndex = null;
+        this.resetState();
+      }
+    }
+  }
+
+  private restoreOverride(name: string, restore: () => void): void {
+    try {
+      restore();
+    } catch (error) {
+      console.error(
+        `[TabDragDropManager] Failed to restore ${name}:`,
+        error,
+      );
+    }
   }
 
   private getTabFromEventTarget(
@@ -154,8 +348,7 @@ export class TabDragDropManager {
       target = target.parentElement!;
     }
 
-    const tab =
-      (target as Element)?.closest("tab") ||
+    const tab = (target as Element)?.closest("tab") ||
       (target as Element)?.closest("tab-group");
     const selectedTab = gBrowser.selectedTab;
 
@@ -185,8 +378,9 @@ export class TabDragDropManager {
     event.stopPropagation();
 
     const tabContainer = gBrowser.tabContainer;
-    const indicator =
-      tabContainer.getElementsByClassName("tab-drop-indicator")[0];
+    const indicator = tabContainer.getElementsByClassName(
+      "tab-drop-indicator",
+    )[0] as XULElement | undefined;
 
     const effects = this.orig_getDropEffectForTabDrag(event);
     let tab: XULElement | null = null;
@@ -203,7 +397,7 @@ export class TabDragDropManager {
         ) {
           tabContainer.selectedItem = tab;
         }
-        (indicator as HTMLElement).hidden = true;
+        if (indicator) indicator.hidden = true;
         return;
       }
     }
@@ -224,58 +418,65 @@ export class TabDragDropManager {
         tabs,
         tab.querySelector("tab:first-of-type"),
       );
-      const groupEnd =
-        Array.prototype.indexOf.call(
-          tabs,
-          tab.querySelector("tab:last-of-type"),
-        ) + 1;
+      const groupEnd = Array.prototype.indexOf.call(
+        tabs,
+        tab.querySelector("tab:last-of-type"),
+      ) + 1;
       this.positionInGroup = groupEnd - groupStart;
       dropIndex = groupEnd;
     } else if (tab.parentElement?.nodeName === "tab-group") {
       this.groupToInsertTo = tab.parentElement as unknown as XULElement;
       const groupStart = tab.parentElement.querySelector("tab:first-of-type");
-      this.positionInGroup =
-        dropIndex - Array.prototype.indexOf.call(tabs, groupStart);
+      this.positionInGroup = dropIndex -
+        Array.prototype.indexOf.call(tabs, groupStart);
     } else {
       this.groupToInsertTo = null;
       this.positionInGroup = null;
     }
 
+    const indicatorTarget = resolveDropIndicatorTarget(dropIndex, tabs.length);
+    if (!indicatorTarget) {
+      if (indicator) indicator.hidden = true;
+      return;
+    }
+
+    this.lastKnownIndex = dropIndex;
+    if (!indicator) return;
+
     const ltr = window.getComputedStyle(tabContainer).direction === "ltr";
     const rect = tabContainer.arrowScrollbox.getBoundingClientRect();
 
-    this.lastKnownIndex = dropIndex;
-
-    let newMarginX: number;
-    let newMarginY: number;
-    if (dropIndex === tabs.length) {
-      const tabRect = tabs[dropIndex - 1].getBoundingClientRect();
-      newMarginX = ltr ? tabRect.right - rect.left : rect.right - tabRect.left;
-      newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
-      if (CSS.supports("offset-anchor", "left bottom")) {
-        newMarginY += rect.height / 2 - tabRect.height / 2;
-      }
-    } else if (dropIndex != null || dropIndex !== 0) {
-      const tabRect = tabs[dropIndex].getBoundingClientRect();
-      newMarginX = ltr ? tabRect.left - rect.left : rect.right - tabRect.right;
-      newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
-      if (CSS.supports("offset-anchor", "left bottom")) {
-        newMarginY += rect.height / 2 - tabRect.height / 2;
-      }
-    } else {
-      return;
+    // Anchor to the hovered edge, not the next tab in the flat list: that
+    // next tab can be hidden inside a collapsed group or on another row.
+    const isGroup = tab.localName === "tab-group";
+    const anchor = isGroup
+      ? tab.querySelector(
+        tab.hasAttribute("collapsed")
+          ? ".tab-group-label-container"
+          : "tab:last-of-type",
+      ) ?? tab
+      : tab;
+    const atEnd = isGroup ||
+      dropIndex === Array.prototype.indexOf.call(tabs, tab) + 1;
+    const tabRect = anchor.getBoundingClientRect();
+    let newMarginX = atEnd
+      ? (ltr ? tabRect.right - rect.left : rect.right - tabRect.left)
+      : (ltr ? tabRect.left - rect.left : rect.right - tabRect.right);
+    let newMarginY = tabRect.top + tabRect.height - rect.top - rect.height;
+    if (CSS.supports("offset-anchor", "left bottom")) {
+      newMarginY += rect.height / 2 - tabRect.height / 2;
     }
 
     newMarginX += indicator.clientWidth / 2;
     if (!ltr) newMarginX *= -1;
 
-    const htmlIndicator = indicator as HTMLElement;
-    htmlIndicator.hidden = false;
-    htmlIndicator.style.setProperty(
+    const ownedIndicator = this.dropIndicatorOwnership.acquire(indicator);
+    ownedIndicator.hidden = false;
+    ownedIndicator.style.setProperty(
       "transform",
       `translate(${Math.round(newMarginX)}px, ${Math.round(newMarginY)}px)`,
     );
-    htmlIndicator.style.setProperty(
+    ownedIndicator.style.setProperty(
       "margin-inline-start",
       -indicator.clientWidth + "px",
     );
@@ -298,8 +499,11 @@ export class TabDragDropManager {
     if (!tabsContainer) return;
 
     const allTabs = tabsContainer.querySelectorAll("tab");
-    if (this.lastKnownIndex !== null && this.lastKnownIndex >= allTabs.length) {
-      this.lastKnownIndex = allTabs.length - 1;
+    if (
+      this.lastKnownIndex === null || this.lastKnownIndex < 0 ||
+      this.lastKnownIndex > allTabs.length || allTabs.length === 0
+    ) {
+      return;
     }
 
     if (
@@ -308,11 +512,13 @@ export class TabDragDropManager {
     ) {
       const tabGroup = draggedTab.parentNode.parentNode
         .parentNode as unknown as XULElement;
-      const tabToMoveTo = allTabs[this.lastKnownIndex!];
+      const atEnd = this.lastKnownIndex === allTabs.length;
+      const tabToMoveTo =
+        allTabs[atEnd ? allTabs.length - 1 : this.lastKnownIndex];
       if (this.groupToInsertTo && "querySelectorAll" in tabGroup) {
         const tabs = Array.from(tabGroup.querySelectorAll("tab")) as XULTab[];
         this.moveTabsToGroup(tabs);
-      } else if (this.lastKnownIndex !== allTabs.length - 1) {
+      } else if (!atEnd) {
         gBrowser.moveTabBefore(tabGroup, tabToMoveTo as unknown as XULElement);
       } else {
         gBrowser.moveTabAfter(tabGroup, tabToMoveTo as unknown as XULElement);
@@ -329,6 +535,7 @@ export class TabDragDropManager {
       const selectedTabs = gBrowser.selectedTabs.filter(
         (t: XULTab | null) => t != null,
       ) as XULTab[];
+      if (selectedTabs.length === 0) return;
 
       const pinnedTabsCount = tabsContainer.querySelectorAll(
         ".tabbrowser-tab[newPin]",
@@ -345,11 +552,18 @@ export class TabDragDropManager {
           }
 
           gBrowser.pinTab(t);
-          const pinned = document?.querySelectorAll(
-            "#pinned-tabs-container .tabbrowser-tab",
+          const pinnedTabsContainer = document?.getElementById(
+            "pinned-tabs-container",
           );
-          if (pinned) {
-            this.pinnedTabs.migratePinnedTabs(tabsContainer, pinned);
+          const pinned = pinnedTabsContainer?.querySelectorAll(
+            ".tabbrowser-tab",
+          );
+          if (pinnedTabsContainer && pinned) {
+            this.pinnedTabs.migratePinnedTabs(
+              tabsContainer,
+              pinned,
+              pinnedTabsContainer,
+            );
           }
           setTimeout(() => {
             const tab = tabsContainer.querySelector(
@@ -376,26 +590,29 @@ export class TabDragDropManager {
         this.moveTabsToGroup(selectedTabs);
       } else {
         const updatedTabs = tabsContainer.querySelectorAll("tab");
-        let tabToMoveTo = updatedTabs[newIndex];
-        let shouldMoveAfter =
-          tabToMoveTo.parentElement?.nodeName === "tab-group";
-        if (shouldMoveAfter) {
-          tabToMoveTo = updatedTabs[newIndex - 1];
-        } else if (newIndex === updatedTabs.length - 1) {
-          shouldMoveAfter = true;
+        // Keep the end sentinel distinct from the boundary before the last
+        // tab. Clamping it would make both positions insert after that tab.
+        const shouldMoveAfter = newIndex === updatedTabs.length;
+        let tabToMoveTo: Element = updatedTabs[
+          shouldMoveAfter ? updatedTabs.length - 1 : newIndex
+        ];
+        if (tabToMoveTo.parentElement?.localName === "tab-group") {
+          tabToMoveTo = tabToMoveTo.parentElement;
         }
 
         selectedTabs.forEach((t: XULTab) => {
           if (t.hasAttribute("newPin")) {
             t.removeAttribute("newPin");
           }
-
-          if (!shouldMoveAfter) {
-            gBrowser.moveTabBefore(t, tabToMoveTo as unknown as XULElement);
-          } else {
-            gBrowser.moveTabAfter(t, tabToMoveTo as unknown as XULElement);
-          }
         });
+        // The reference can itself be selected. Native bulk movement chains
+        // each remaining tab after the previous one, preserving the block's
+        // order even when dropped back onto its own leading/interior edge.
+        if (shouldMoveAfter) {
+          gBrowser.moveTabsAfter(selectedTabs, tabToMoveTo as XULElement);
+        } else {
+          gBrowser.moveTabsBefore(selectedTabs, tabToMoveTo as XULElement);
+        }
       }
     }
 
@@ -417,34 +634,33 @@ export class TabDragDropManager {
 
     if (isMovingTabs) {
       const sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
+      // NOTE: `ownerGlobal` was removed from XUL elements in recent Firefox.
+      // Use `ownerDocument.defaultView` instead to obtain the chrome window.
+      const sourceWindow = sourceNode?.ownerDocument?.defaultView as
+        | FirefoxWindow
+        | undefined;
       if (
         XULElement.isInstance(sourceNode) &&
         sourceNode.localName === "tab" &&
-        sourceNode.ownerGlobal &&
+        sourceWindow &&
         sourceNode.ownerDocument?.documentElement &&
-        sourceNode.ownerGlobal.isChromeWindow &&
+        sourceWindow.isChromeWindow &&
         sourceNode.ownerDocument.documentElement.getAttribute("windowtype") ===
           "navigator:browser" &&
-        (sourceNode as XULTab).container ===
-          sourceNode.ownerGlobal.gBrowser.tabContainer
+        (sourceNode as XULTab).container === sourceWindow.gBrowser.tabContainer
       ) {
         if (
           PrivateBrowsingUtils.isWindowPrivate(window) !==
-          PrivateBrowsingUtils.isWindowPrivate(
-            sourceNode.ownerGlobal as unknown as FirefoxWindow,
-          )
+            PrivateBrowsingUtils.isWindowPrivate(sourceWindow)
         ) {
           return "none";
         }
 
-        if (
-          window.gMultiProcessBrowser !==
-          sourceNode.ownerGlobal.gMultiProcessBrowser
-        ) {
+        if (window.gMultiProcessBrowser !== sourceWindow.gMultiProcessBrowser) {
           return "none";
         }
 
-        if (window.gFissionBrowser !== sourceNode.ownerGlobal.gFissionBrowser) {
+        if (window.gFissionBrowser !== sourceWindow.gFissionBrowser) {
           return "none";
         }
 
@@ -468,13 +684,17 @@ export class TabDragDropManager {
         t.removeAttribute("newPin");
       }
       if (this.groupToInsertTo) {
-        gBrowser.moveTabToGroup(t, this.groupToInsertTo);
+        gBrowser.moveTabToExistingGroup(t, this.groupToInsertTo);
 
         if (tabInGroupToMoveTo) {
-          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as unknown as XULElement);
+          gBrowser.moveTabBefore(
+            t,
+            tabInGroupToMoveTo as unknown as XULElement,
+          );
         } else {
-          const lastTab =
-            this.groupToInsertTo.querySelector("tab:last-of-type");
+          const lastTab = this.groupToInsertTo.querySelector(
+            "tab:last-of-type",
+          );
           if (lastTab) {
             gBrowser.moveTabAfter(t, lastTab as unknown as XULElement);
           }

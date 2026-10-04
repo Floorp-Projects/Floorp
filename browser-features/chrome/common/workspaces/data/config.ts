@@ -3,14 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { signal, effect } from "@preact/signals";
+import { signal } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import type { Signal } from "@preact/signals";
 import {
   type TWorkspacesServicesConfigs,
   zWorkspacesServicesConfigs,
 } from "../utils/type.js";
 import { getOldConfigs } from "./old-config";
-import { createRootHMR } from "#features-chrome/utils/base";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import {
   WORKSPACE_ENABLED_PREF_NAME,
   WORKSPACED_CONFIG_PREF_NAME,
@@ -24,15 +25,15 @@ function createEnabled(): Signal<boolean> {
     Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true),
   );
 
-  effect(() => {
+  rootEffect(() => {
     const v = sig.value;
     Services.prefs.setBoolPref(WORKSPACE_ENABLED_PREF_NAME, v);
   });
 
-  const observer = () =>
-    (sig.value = Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME));
+  const observer =
+    () => (sig.value = Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME));
   Services.prefs.addObserver(WORKSPACE_ENABLED_PREF_NAME, observer);
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(WORKSPACE_ENABLED_PREF_NAME, observer);
   });
 
@@ -65,10 +66,9 @@ function buildInitialConfig(): TWorkspacesServicesConfigs {
     configResult.left,
   );
   return {
-    manageOnBms:
-      typeof mergedConfigs.manageOnBms === "boolean"
-        ? mergedConfigs.manageOnBms
-        : oldConfigs.manageOnBms,
+    manageOnBms: typeof mergedConfigs.manageOnBms === "boolean"
+      ? mergedConfigs.manageOnBms
+      : oldConfigs.manageOnBms,
     showWorkspaceNameOnToolbar:
       typeof mergedConfigs.showWorkspaceNameOnToolbar === "boolean"
         ? mergedConfigs.showWorkspaceNameOnToolbar
@@ -77,10 +77,9 @@ function buildInitialConfig(): TWorkspacesServicesConfigs {
       typeof mergedConfigs.closePopupAfterClick === "boolean"
         ? mergedConfigs.closePopupAfterClick
         : oldConfigs.closePopupAfterClick,
-    exitOnLastTabClose:
-      typeof mergedConfigs.exitOnLastTabClose === "boolean"
-        ? mergedConfigs.exitOnLastTabClose
-        : oldConfigs.exitOnLastTabClose,
+    exitOnLastTabClose: typeof mergedConfigs.exitOnLastTabClose === "boolean"
+      ? mergedConfigs.exitOnLastTabClose
+      : oldConfigs.exitOnLastTabClose,
   };
 }
 
@@ -88,7 +87,7 @@ function createConfig(): Signal<TWorkspacesServicesConfigs> {
   const oldConfigs = JSON.parse(getOldConfigs);
   const sig = signal<TWorkspacesServicesConfigs>(buildInitialConfig());
 
-  effect(() => {
+  rootEffect(() => {
     const v = sig.value;
     Services.prefs.setStringPref(
       WORKSPACED_CONFIG_PREF_NAME,
@@ -104,26 +103,25 @@ function createConfig(): Signal<TWorkspacesServicesConfigs> {
       const merged = { ...oldConfigs, ...parsedConfig };
       const result = zWorkspacesServicesConfigs.decode(merged);
       if (isRight(result)) {
-        sig.value = result.right;
+        if (JSON.stringify(sig.peek()) !== JSON.stringify(result.right)) {
+          sig.value = result.right;
+        }
       } else {
         console.error("Failed to decode workspace configuration:", result.left);
         sig.value = {
-          manageOnBms:
-            typeof merged.manageOnBms === "boolean"
-              ? merged.manageOnBms
-              : oldConfigs.manageOnBms,
+          manageOnBms: typeof merged.manageOnBms === "boolean"
+            ? merged.manageOnBms
+            : oldConfigs.manageOnBms,
           showWorkspaceNameOnToolbar:
             typeof merged.showWorkspaceNameOnToolbar === "boolean"
               ? merged.showWorkspaceNameOnToolbar
               : oldConfigs.showWorkspaceNameOnToolbar,
-          closePopupAfterClick:
-            typeof merged.closePopupAfterClick === "boolean"
-              ? merged.closePopupAfterClick
-              : oldConfigs.closePopupAfterClick,
-          exitOnLastTabClose:
-            typeof merged.exitOnLastTabClose === "boolean"
-              ? merged.exitOnLastTabClose
-              : oldConfigs.exitOnLastTabClose,
+          closePopupAfterClick: typeof merged.closePopupAfterClick === "boolean"
+            ? merged.closePopupAfterClick
+            : oldConfigs.closePopupAfterClick,
+          exitOnLastTabClose: typeof merged.exitOnLastTabClose === "boolean"
+            ? merged.exitOnLastTabClose
+            : oldConfigs.exitOnLastTabClose,
         };
       }
     } catch (e) {
@@ -134,7 +132,7 @@ function createConfig(): Signal<TWorkspacesServicesConfigs> {
     }
   };
   Services.prefs.addObserver(WORKSPACED_CONFIG_PREF_NAME, observer);
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(WORKSPACED_CONFIG_PREF_NAME, observer);
   });
 
@@ -151,20 +149,48 @@ const _configSignal: Signal<TWorkspacesServicesConfigs> = createRootHMR(
  * Proxy that preserves configStore.manageOnBms etc. access patterns
  * while subscribing components/effects to the underlying signal.
  */
-export const configStore: TWorkspacesServicesConfigs = new Proxy(
-  {} as TWorkspacesServicesConfigs,
-  {
-    get(_target, prop: string) {
-      return (_configSignal.value as Record<string, unknown>)[prop];
-    },
+export const configStore: TWorkspacesServicesConfigs = {
+  get manageOnBms() {
+    return _configSignal.value.manageOnBms;
   },
-);
-
-export const setConfigStore = (
-  v:
-    | TWorkspacesServicesConfigs
-    | ((prev: TWorkspacesServicesConfigs) => TWorkspacesServicesConfigs),
-): void => {
-  _configSignal.value =
-    typeof v === "function" ? v(_configSignal.value) : v;
+  get showWorkspaceNameOnToolbar() {
+    return _configSignal.value.showWorkspaceNameOnToolbar;
+  },
+  get closePopupAfterClick() {
+    return _configSignal.value.closePopupAfterClick;
+  },
+  get exitOnLastTabClose() {
+    return _configSignal.value.exitOnLastTabClose;
+  },
 };
+
+type ConfigUpdate =
+  | Partial<TWorkspacesServicesConfigs>
+  | ((prev: TWorkspacesServicesConfigs) => Partial<TWorkspacesServicesConfigs>);
+export function setConfigStore(update: ConfigUpdate): void;
+export function setConfigStore<K extends keyof TWorkspacesServicesConfigs>(
+  key: K,
+  value:
+    | TWorkspacesServicesConfigs[K]
+    | ((
+      previous: TWorkspacesServicesConfigs[K],
+    ) => TWorkspacesServicesConfigs[K]),
+): void;
+export function setConfigStore(
+  update: ConfigUpdate | keyof TWorkspacesServicesConfigs,
+  value?: boolean | ((previous: boolean) => boolean),
+): void {
+  const current = _configSignal.peek();
+  if (typeof update === "string") {
+    if (value === undefined) return;
+    _configSignal.value = {
+      ...current,
+      [update]: typeof value === "function" ? value(current[update]) : value,
+    };
+  } else {
+    _configSignal.value = {
+      ...current,
+      ...(typeof update === "function" ? update(current) : update),
+    };
+  }
+}

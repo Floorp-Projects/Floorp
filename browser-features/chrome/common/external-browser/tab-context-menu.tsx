@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "preact";
+import { render } from "@nora/preact-xul";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { externalBrowserService } from "./external-browser-service.ts";
@@ -33,7 +33,7 @@ export class ExternalBrowserTabContextMenu {
     const marker = document?.getElementById(MARKER_ID);
 
     try {
-      render(this.menu(), parentElem);
+      render(() => this.menu(), parentElem, { marker });
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -72,7 +72,11 @@ export class ExternalBrowserTabContextMenu {
 
   private menu() {
     return (
-      <xul:menu id={MENU_ID} label={t("externalBrowser.menu.openTabIn")}>
+      <xul:menu
+        id={MENU_ID}
+        label={t("externalBrowser.menu.openTabIn")}
+        data-floorp-context-menu-key="floorp.external-browser.open-tab"
+      >
         <xul:menupopup
           id={MENU_POPUP_ID}
           onPopupShowing={() => this.populateMenu()}
@@ -82,7 +86,9 @@ export class ExternalBrowserTabContextMenu {
   }
 
   private async populateMenu(): Promise<void> {
-    const popup = document?.getElementById(MENU_POPUP_ID) as unknown as XULElement | null;
+    const popup = document?.getElementById(MENU_POPUP_ID) as unknown as
+      | XULElement
+      | null;
     if (!popup) {
       return;
     }
@@ -127,6 +133,7 @@ export class ExternalBrowserTabContextMenu {
       t("externalBrowser.menu.defaultBrowser"),
       false,
       () => this.openInBrowser(url),
+      "floorp.external-browser.tab.default",
     );
     if (defaultItem) {
       popup.appendChild(defaultItem);
@@ -135,6 +142,10 @@ export class ExternalBrowserTabContextMenu {
     // Add separator
     const separator = document?.createXULElement?.("menuseparator");
     if (separator) {
+      separator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.external-browser.tab.separator",
+      );
       popup.appendChild(separator);
     }
 
@@ -144,6 +155,9 @@ export class ExternalBrowserTabContextMenu {
         browserInfo.name,
         false,
         () => this.openInBrowser(url, browserInfo.id),
+        `floorp.external-browser.tab.browser.${
+          encodeURIComponent(String(browserInfo.id))
+        }`,
       );
       if (menuItem) {
         popup.appendChild(menuItem);
@@ -155,6 +169,7 @@ export class ExternalBrowserTabContextMenu {
     label: string,
     disabled: boolean,
     onClick?: () => void,
+    contextMenuKey?: string,
   ): XULElement | null {
     const menuitem = document?.createXULElement?.("menuitem") as
       | XULElement
@@ -163,6 +178,9 @@ export class ExternalBrowserTabContextMenu {
       return null;
     }
     menuitem.setAttribute("label", label);
+    if (contextMenuKey) {
+      menuitem.setAttribute("data-floorp-context-menu-key", contextMenuKey);
+    }
     if (disabled) {
       menuitem.setAttribute("disabled", "true");
     }

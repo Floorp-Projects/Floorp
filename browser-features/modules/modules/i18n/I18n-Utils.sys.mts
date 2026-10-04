@@ -1,6 +1,7 @@
 const { LangPackMatcher } = ChromeUtils.importESModule(
-  "resource://gre/modules/LangPackMatcher.sys.mjs",
+  "moz-src:///intl/locale/LangPackMatcher.sys.mjs",
 );
+import { findRequestedLangPack } from "./lang-pack-match.ts";
 
 class i18nUtils {
   private static readonly LOCALE_OBSERVER_KEY = "intl:app-locales-changed";
@@ -29,16 +30,10 @@ class i18nUtils {
   }
 
   private async getLangPackInfoFromPref(): Promise<unknown | null> {
-    const requestedLocale = this.mapLocale(this.getRequestedLocaleFromPref);
-    const availableLangPacks =
-      await LangPackMatcher.mockable.getAvailableLangpacks();
-
-    for (const langPack of availableLangPacks) {
-      if (langPack.target_locale === requestedLocale) {
-        return langPack;
-      }
-    }
-    return null;
+    const requestedLocale = this.getRequestedLocaleFromPref;
+    const availableLangPacks = await LangPackMatcher.mockable
+      .getAvailableLangpacks();
+    return findRequestedLangPack(availableLangPacks, requestedLocale);
   }
 
   // Map of language-only codes to preferred BCP47 locales
@@ -179,15 +174,25 @@ class i18nUtils {
     if (refPref) {
       const langPackInfo = await this.getLangPackInfoFromPref();
       if (langPackInfo) {
-        await LangPackMatcher.ensureLangPackInstalled(langPackInfo);
+        const installed = await LangPackMatcher.ensureLangPackInstalled(
+          langPackInfo,
+        );
+        if (!installed) {
+          throw new Error("Requested language pack installation failed");
+        }
         return;
       }
     } else {
-      const langPackInfo =
-        await LangPackMatcher.negotiateLangPackForLanguageMismatch();
-      if (langPackInfo) {
+      const langPackInfo = await LangPackMatcher
+        .negotiateLangPackForLanguageMismatch();
+      if (langPackInfo?.langPack) {
         const langpack = langPackInfo.langPack;
-        await LangPackMatcher.ensureLangPackInstalled(langpack);
+        const installed = await LangPackMatcher.ensureLangPackInstalled(
+          langpack,
+        );
+        if (!installed) {
+          throw new Error("Negotiated language pack installation failed");
+        }
         return;
       }
     }

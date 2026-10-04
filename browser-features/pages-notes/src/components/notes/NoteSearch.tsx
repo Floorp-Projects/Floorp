@@ -14,6 +14,7 @@ export function NoteSearch({ value, onChange }: NoteSearchProps) {
       <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-base-content/50 mt-1" />
       <input
         type="search"
+        data-testid="notes-search"
         className="input input-sm input-bordered w-full pl-8 pr-8"
         placeholder={t("notes.search")}
         aria-label={t("notes.search")}

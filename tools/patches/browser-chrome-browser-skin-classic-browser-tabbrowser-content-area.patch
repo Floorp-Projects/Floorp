@@ -1,8 +1,8 @@
 diff --git a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-index dff8162..3021a59 100644
---- ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-+++ ./browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
-@@ -255,8 +255,8 @@
+index cb629200627..2f2bfe0bd3e 100644
+--- a/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
++++ b/browser/chrome/browser/skin/classic/browser/tabbrowser/content-area.css
+@@ -388,8 +388,8 @@
      --panel-min-width: 140px;
      min-width: var(--panel-min-width);
      max-width: calc(100% - var(--panel-min-width));
@@ -13,7 +13,7 @@ index dff8162..3021a59 100644
    }
  
    &[splitview] {
-@@ -316,9 +316,10 @@
+@@ -444,18 +444,30 @@
        }
      }
  
@@ -26,7 +26,6 @@ index dff8162..3021a59 100644
  
        @media not (-moz-platform: macos) {
          z-index: 1;
-@@ -332,9 +333,20 @@
        }
      }
  
@@ -48,7 +47,7 @@ index dff8162..3021a59 100644
        -moz-user-focus: normal;
        border-color: transparent;
  
-@@ -343,9 +355,21 @@
+@@ -464,9 +476,21 @@
        }
      }
  

@@ -9,26 +9,27 @@ import { disableCspInDevPlugin } from "../../libs/vite-plugin-disable-csp/plugin
 export default defineConfig(({ command }) => {
   if (command === "serve") process.env.NODE_ENV = "development";
   return {
-  base: "./",
-  build: {
-    outDir: "_dist",
-  },
-  plugins: [
-    tailwindcss(),
-    react({
-      jsxImportSource: "react",
-    }),
-    tsconfigPaths(),
-    genJarmnPlugin("content-newtab", "noraneko-newtab", "content"),
-    disableCspInDevPlugin(command === "serve"),
-  ],
-  optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime"],
-  },
-  server: {
-    hmr: {
-      overlay: true,
+    cacheDir: "../../node_modules/.vite/pages-newtab",
+    base: "./",
+    build: {
+      outDir: "_dist",
     },
-  },
+    plugins: [
+      tailwindcss(),
+      react({
+        jsxImportSource: "react",
+      }),
+      tsconfigPaths(),
+      genJarmnPlugin("content-newtab", "noraneko-newtab", "content"),
+      disableCspInDevPlugin(command === "serve"),
+    ],
+    optimizeDeps: {
+      include: ["react", "react-dom", "react/jsx-runtime"],
+    },
+    server: {
+      hmr: {
+        overlay: true,
+      },
+    },
   };
 });

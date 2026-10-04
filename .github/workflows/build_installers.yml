@@ -93,6 +93,16 @@ jobs:
           $tag = $release.tag_name
           Write-Host "Latest tag: $tag"
 
+          # Release provenance v2 makes the public asset set immutable. Keep a
+          # newly signed stub as a workflow artifact for a future explicit
+          # bundle-input path; never replace bytes after publication was verified.
+          $immutableManifest = $release.assets | Where-Object {
+            $_.name -eq 'release-manifest-set-v2.json'
+          }
+          if ($immutableManifest) {
+            throw "Refusing to mutate provenance-v2 release $tag"
+          }
+
           # Find asset id for the stub installer if present
           $asset = $release.assets | Where-Object { $_.name -eq $fileName }
           if ($asset) {

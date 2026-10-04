@@ -4,6 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as t from "io-ts";
+import { CHROME_EXTRAS_KEYS } from "./chrome-extras.ts";
+
+/**
+ * The 25 chrome-extras toggles. Declared as a separate `t.partial` on the
+ * `uiCustomization` intersection rather than inside its main `t.type`, so the
+ * many places that build a `TFloorpDesignConfigs` literal (tests, defaults) keep
+ * compiling: `t.partial` makes the whole category optional, and io-ts preserves
+ * unknown keys anyway.
+ *
+ * See `chrome-extras.ts` for what each toggle does.
+ */
+export const zChromeExtrasSettings = t.partial(
+  Object.fromEntries(
+    CHROME_EXTRAS_KEYS.map((key) => [key, t.boolean]),
+  ) as Record<
+    (typeof CHROME_EXTRAS_KEYS)[number],
+    t.BooleanC
+  >,
+);
 
 /** Design configs */
 export const zFloorpDesignConfigs = t.intersection([
@@ -59,7 +78,7 @@ export const zFloorpDesignConfigs = t.intersection([
         tabMinHeight: t.number,
         tabMinWidth: t.number,
         tabPinTitle: t.boolean,
-        tabDubleClickToClose: t.boolean,
+        tabDoubleClickToClose: t.boolean,
         tabOpenPosition: t.number,
       }),
       t.UnknownRecord,
@@ -112,6 +131,11 @@ export const zFloorpDesignConfigs = t.intersection([
       }),
       t.UnknownRecord,
     ]),
+  }),
+  t.partial({
+    uiCustomization: t.partial({
+      chromeExtras: zChromeExtrasSettings,
+    }),
   }),
   t.UnknownRecord,
 ]);

@@ -1,3 +1,5 @@
+import styles from "../design.module.css";
+import { Input } from "../../../../../../libs/ui/input.tsx";
 import {
   Card,
   CardContent,
@@ -13,7 +15,7 @@ export function Tabbar() {
   const { getValues, setValue } = useFormContext();
 
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Rows className="size-5" />
@@ -80,7 +82,7 @@ export function Tabbar() {
                     1 ~ 10
                   </span>
                 </label>
-                <input
+                <Input
                   type="number"
                   name="maxRow"
                   value={getValues("maxRow")}
@@ -96,11 +98,11 @@ export function Tabbar() {
           )}
         </div>
 
-        <div className="alert alert-warning alert-soft">
+        <div className="floorp-notice floorp-notice-warning">
           <span className="text-sm">
             {t("design.verticalTabIsRemovedFromBrowser")}{" "}
             <a
-              href="https://docs.floorp.app/docs/features/about-vertical-tab-bar"
+              href="https://docs.floorp.app/docs/features/tab-bar-layout"
               target="_blank"
               className="text-[var(--link-text-color)] hover:underline inline-flex items-center gap-2"
             >
@@ -117,7 +119,7 @@ export function Tabbar() {
           <p className="text-sm text-muted-foreground mb-4">
             {t("design.positionDescription")}
           </p>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             {[
               { value: "default", label: "design.default" },
               { value: "hide-horizontal-tabbar", label: "design.hideTabBar" },

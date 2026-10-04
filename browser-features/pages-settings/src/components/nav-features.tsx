@@ -4,9 +4,11 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  useSidebar,
 } from "@/components/common/sidebar.tsx";
 import { Link, useLocation } from "react-router-dom";
 import type * as React from "react";
+import styles from "./common/sidebar.module.css";
 
 // Discriminated union for feature items
 type BaseFeature = {
@@ -35,15 +37,14 @@ function InternalItem({
   feature: InternalFeature;
   isActive: boolean;
 }) {
+  const { setOpen } = useSidebar();
   return (
-    <div className="flex items-center gap-2 rounded-lg px-3 transition-colors">
+    <div>
       <Link
         to={feature.url}
-        className={`${
-          isActive
-            ? "bg-primary text-primary-content"
-            : "hover:bg-primary/30"
-        } w-full flex items-center rounded-lg p-3 text-left gap-3`}
+        onClick={() => setOpen(false)}
+        className={styles.link}
+        aria-current={isActive ? "page" : undefined}
       >
         <feature.icon className="size-4" />
         <span>{feature.title}</span>
@@ -54,12 +55,16 @@ function InternalItem({
 
 // External item renderer without SidebarMenuItem wrapper
 function ExternalItem({ feature }: { feature: ExternalFeature }) {
+  const { setOpen } = useSidebar();
   return (
-    <div className="flex items-center gap-2 rounded-lg px-3 transition-colors">
+    <div>
       <button
         type="button"
-        onClick={feature.onClick}
-        className="hover:bg-primary/30 w-full flex items-center rounded-lg p-3 text-left gap-3"
+        onClick={(event) => {
+          feature.onClick(event);
+          setOpen(false);
+        }}
+        className={styles.link}
       >
         <feature.icon className="size-4" />
         <span>{feature.title}</span>
@@ -91,11 +96,17 @@ export function NavFeatures({
             ? currentRoute === "/"
             : currentRoute.startsWith(featurePath);
 
-          if (feature.isExternal) {
+          if (feature.isExternal === true) {
             return <ExternalItem key={feature.title} feature={feature} />;
           }
 
-          return <InternalItem key={feature.title} feature={feature} isActive={isActive} />;
+          return (
+            <InternalItem
+              key={feature.title}
+              feature={feature}
+              isActive={isActive}
+            />
+          );
         })}
       </SidebarMenu>
     </SidebarGroup>

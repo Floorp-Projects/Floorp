@@ -34,6 +34,7 @@
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
         "keyboardShortcut": "キーボードショートカット",
+        "performance": "パフォーマンス",
         "search": {
             "title": "検索の設定",
             "resultsFor": "\"{{query}}\" の検索結果",
@@ -124,21 +125,31 @@
             "openNext": "現在のタブの隣に開く",
             "other": "その他のタブ設定",
             "doubleClickToClose": "ダブルクリックでタブを閉じる",
+            "tabDragToSplitCreate": "タブをドラッグして分割ビューを作成",
             "minWidth": "タブの最小幅",
             "minWidthError": "タブの幅は、 {{min}} から {{max}} ピクセルの間でなければなりません。",
             "minHeight": "タブの最小高さ",
             "minHeightError": "タブの高さは、 {{min}} から {{max}} ピクセルの間でなければなりません。"
         },
-        "lepton-preferences": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
-            "configureLepton": "Lepton の設定",
+        "tabWindowBehavior": {
+            "title": "タブとウインドウの動作",
+            "description": "リンクを開く場所を制御したり、ブラウザーウインドウと Windows タスクバーのタブプレビューを区別できます。",
+            "openLinks": "新規ウインドウで開くことを求めるリンク",
+            "openLinksDescription": "新規ウインドウで開くよう求めてくるリンクを、現在のウインドウ、新規ウインドウ、新規タブのどれで開くかを選択します。",
+            "openCurrentWindowOrTab": "現在のウインドウまたはタブ",
+            "openNewWindow": "新規ウインドウ",
+            "openNewTab": "新規タブ",
+            "taskbarPreviews": "タスクバーにタブのプレビューを表示",
+            "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウインドウは作成されません。",
+            "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
+        },
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
-                "visitRepository": "リポジトリのページを開く"
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。"
             },
             "autohide": {
                 "title": "自動非表示の設定",
@@ -162,8 +173,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
-                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -185,7 +196,8 @@
             "sidebar": {
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
@@ -201,6 +213,15 @@
             "exampleDomain": "このドメインを含む URL に反応",
             "exampleWildcard": "google.com のすべてのサブドメインに反応",
             "exampleFullUrl": "Gmail の URL のみに反応"
+        },
+        "tabStacks": {
+            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "title": "タブスタック",
+            "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
+            "enableOrDisable": "有効化/無効化",
+            "enableTabStacks": "タブスタックを有効にする",
+            "enableTabStacksDescription": "タブスタックは、グループ化されたタブをタブバー上のチップとして表示します。この設定を変更した後は、 {{productName}} の再起動が必要です。",
+            "needRestartDescriptionForEnableAndDisable": "タブスタック機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。"
         },
         "uiCustomization": {
             "title": "UI をカスタマイズ",
@@ -299,9 +320,35 @@
         "openSourceLicense": "{{productName}} は、 Mozilla Public License 2.0 の下で使用可能なオープンソースソフトウェアです。 Firefox オープンソースプロジェクトやその他のオープンソースソフトウェアによって実現されています。",
         "openSourceLicenseNotice": "オープンソースライセンス",
         "versionInfo": "バージョン",
-        "license": "ライセンス"
+        "license": "ライセンス",
+        "noraneko": {
+            "logoAlt": "ブラウザーのロゴ",
+            "description": "Noraneko は Floorp 12 のテストヘッドブラウザーです。Floorp は Firefox と Noraneko をベースにしています。",
+            "communityCredit": "Noraneko コミュニティより ❤ を込めて制作",
+            "repositoryLabel": "GitHub リポジトリ: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "この設定とご支援についての詳細を読む",
+            "title": "更新後のリリースノート",
+            "description": "Floorp の更新後にリリースノートを開く方法を選択します。",
+            "disabled": {
+                "label": "自動で開かない",
+                "description": "更新後にリリースノートを開きません。ブログを閲覧する際は、お使いのブロッカーの設定が適用されます。"
+            },
+            "blocking": {
+                "label": "ブロッカーの設定を維持して開く",
+                "description": "お使いの拡張機能をそのままにリリースノートを開きます。広告ブロッカーを自動でインストールまたは有効化することはありません。"
+            },
+            "support": {
+                "label": "Floorp を支援するために、広告を許可して開く (おすすめ)",
+                "description": "uBlock Origin、AdGuard、Adblock Plus、AdBlock、Ghostery が、Floorp ブログをフィルタリングするのを防ぎます。"
+            },
+            "supportMessage": "リリースノートからの広告収入は、Floorpの開発と運営を支えています。皆様のご都合に沿った形でのご支援に、心より感謝申し上げます。",
+            "scope": "この制限は、手動で開いた場合を含む blog.floorp.app 上のすべての HTTPS ページに適用され、広告ブロックやトラッキング保護、カスタムフィルター機能に影響します。他の拡張機能はこの設定による制限を受けません。他の保護ツールによって広告がブロックされる場合があります。設定を変更した後は、開いているブログページを再読み込みしてください。",
+            "error": "設定の読み込み、または保存に失敗しました。このページを再度開いて、もう一度お試しください。"
+        },
         "title": "更新と実験",
         "description": "更新に関する設定と実験的な機能への参加を管理します。",
         "experiments": {
@@ -439,6 +486,8 @@
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウインドウにツールバーを表示します",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "インストール済みのアプリ",
         "noInstalledApps": "プログレッシブウェブアプリがインストールされていません",
         "removeApp": "アプリを削除",
@@ -448,8 +497,20 @@
         "uninstallConfirmation": "ウェブアプリをアンインストール",
         "uninstallWarning": "本当に \"{{name}}\" をアンインストールしますか？",
         "cancel": "キャンセル",
+        "close": "閉じる",
         "rename": "名前を変更",
-        "uninstall": "アンインストール"
+        "uninstall": "アンインストール",
+        "container": "コンテナー",
+        "noContainer": "コンテナーなし",
+        "setContainer": "コンテナーを設定",
+        "containerDescription": "このアプリをどの Firefox コンテナーで開くかを選択します。コンテナーごとに Cookie やサイトデータを分離できます。",
+        "containerDeleted": "コンテナーが削除されました",
+        "resetContainer": "リセット",
+        "save": "保存",
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "コンテナーの設定に失敗しました",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -495,6 +556,8 @@
     },
     "mouseGesture": {
         "description": "マウス操作でブラウザーをコントロールします。",
+        "saving": "マウスジェスチャーの設定を保存中…",
+        "saveError": "マウスジェスチャーの設定を保存できませんでした。以前の設定を保持します。",
         "generalSettings": "一般設定",
         "generalSettingsDescription": "マウスジェスチャーの基本設定",
         "enabled": "マウスジェスチャーを有効にする",
@@ -531,6 +594,10 @@
         "rockerRightLeft": "右 → 左",
         "rockerRightLeftDescription": "右ボタンを押したまま、左ボタンをクリック",
         "wheelGesturesEnabled": "ホイールジェスチャーを有効にする",
+        "wheelScrollUp": "上にスクロール",
+        "wheelScrollUpDescription": "右ボタンを押したままホイールを上にスクロールしたときのアクション",
+        "wheelScrollDown": "下にスクロール",
+        "wheelScrollDownDescription": "右ボタンを押したままホイールを下にスクロールしたときのアクション",
         "actions": {
             "gecko-back": "戻る",
             "gecko-forward": "進む",
@@ -607,7 +674,25 @@
             "gecko-workspace-next": "次のワークスペースに切り替える",
             "gecko-workspace-previous": "前のワークスペースに切り替える",
             "floorp-toggle-zen-mode": "禅モードの表示を切り替える",
-            "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える"
+            "gecko-close-other-tabs": "他のタブをすべて閉じる",
+            "gecko-close-tabs-to-start": "左側のタブをすべて閉じる",
+            "gecko-close-tabs-to-end": "右側のタブをすべて閉じる",
+            "gecko-scroll-line-up": "上にスクロール",
+            "gecko-scroll-line-down": "下にスクロール",
+            "floorp-toggle-command-palette": "コマンドパレットの表示を切り替える",
+            "floorp-open-settings": "設定",
+            "floorp-open-hub": "Floorp Hub を開く",
+            "floorp-toggle-share-mode": "共有モードの表示を切り替える",
+            "floorp-copy-page-url-as-markdown": "ページの URL を Markdown 形式でコピー",
+            "floorp-split-view-open-left": "分割ビューで左側に開く",
+            "floorp-split-view-open-right": "分割ビューで右側に開く",
+            "floorp-split-view-open-top": "分割ビューで上側に開く",
+            "floorp-split-view-open-bottom": "分割ビューで下側に開く",
+            "floorp-split-view-close": "分割ビューを閉じる",
+            "floorp-split-view-swap-panes": "分割ビューの区分けを入れ替える",
+            "floorp-split-view-cycle-layout": "分割ビューの区分けを回す",
+            "floorp-split-view-add-pane": "分割ビューに区分けを追加",
+            "floorp-split-view-remove-pane": "分割ビューから区分けを削除"
         },
         "edit": "編集",
         "duplicate": "複製",
@@ -642,6 +727,9 @@
         "action": "アクション",
         "shortcut": "ショートカット",
         "actions": "アクション",
+        "actionLabels": {
+            "floorp-edit-tab-url": "タブの URL を編集"
+        },
         "notSet": "未設定",
         "add": "追加",
         "edit": "編集",
@@ -681,5 +769,55 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "performance": {
+        "title": "パフォーマンス",
+        "description": "ブラウザーによるシステムリソースの使用方法に影響する設定を変更します。",
+        "idleReclaim": {
+            "title": "待機時のメモリー解放",
+            "description": "実験的な機能であり、デフォルトでは無効です。有効にすると、キーボードやマウスの入力が一定時間ない場合、メモリー使用量の削減を試みます。解放されるメモリー使用量は、使用中のページによって異なります。",
+            "enable": "ブラウザーが待機状態の間にメモリーを解放する",
+            "idleThreshold": "解放までの待機時間 (秒)",
+            "minInterval": "再度解放するまでの最小の間隔 (秒)",
+            "minResident": "メモリー使用量が次を超えた場合にのみ解放する (MB)",
+            "cost": "動画再生、通話、画面共有は解放を妨げません。解放処理により、使用を再開する際などにブラウザーの動作が一時停止する場合があります。間隔を短くするほど解放頻度が高まります。",
+            "saveFailed": "この設定を保存できませんでした。以前の値が復元されました。"
+        }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "読み込み中...",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "やりなおす",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "About privacy",
+            "extensions": "Manage extensions",
+            "help": "Get help"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Appearance and behavior",
+        "reset": "Reset workspaces",
+        "help": "How to use"
     }
 }

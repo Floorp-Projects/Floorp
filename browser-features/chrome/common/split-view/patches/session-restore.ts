@@ -398,13 +398,17 @@ export function applySplitViewSessionMarkersForTabs(
     setPaneIndexOnTab(tab, i, ss);
   }
 
-  const layout = getPersistedGroupLayout(groupId) ?? splitViewConfig.value.layout;
+  const layout = getPersistedGroupLayout(groupId) ??
+    splitViewConfig.value.layout;
   setPersistedGroupLayout(groupId, layout);
-  const paneSizes = getPersistedGroupPaneSizes(groupId) ?? splitViewPaneSizes.value;
+  const paneSizes = getPersistedGroupPaneSizes(groupId) ??
+    splitViewPaneSizes.value;
   setPersistedGroupPaneSizes(groupId, paneSizes);
 
   logger.debug(
-    `[session-restore:markers] source=${source} groupId=${groupId}, tabs=${tabs.length}, layout=${layout}, linkedPanels=[${tabs.map((t) => t.linkedPanel).join(", ")}]`,
+    `[session-restore:markers] source=${source} groupId=${groupId}, tabs=${tabs.length}, layout=${layout}, linkedPanels=[${
+      tabs.map((t) => t.linkedPanel).join(", ")
+    }]`,
   );
 }
 
@@ -498,7 +502,10 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
   );
 
   logger.debug(
-    `[session-restore:restore] restorableGroups=${groupsToRestore.map((group) => `${group.groupId}(${group.tabs.length})`).join(", ") || "none"}`,
+    `[session-restore:restore] restorableGroups=${
+      groupsToRestore.map((group) => `${group.groupId}(${group.tabs.length})`)
+        .join(", ") || "none"
+    }`,
   );
 
   if (groupsToRestore.length === 0) {
@@ -527,7 +534,9 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
       });
       logger.debug(
         `[session-restore:restore] addTabSplitView ok: ${group.tabs.length} pane(s), ` +
-          `groupId=${group.groupId}, wrapper=${wrapper ? "created" : "null"}, ` +
+          `groupId=${group.groupId}, wrapper=${
+            wrapper ? "created" : "null"
+          }, ` +
           `linkedPanels=[${group.tabs.map((t) => t.linkedPanel).join(", ")}]`,
       );
       restoredTabs.push(...group.tabs);
@@ -549,7 +558,9 @@ function restoreSplitViewFromSession(logger: ConsoleInstance): void {
   clearSplitViewGroupMarkersExcept(allTabs, restoredTabs, ss);
 }
 
-export function initSessionRestore(logger: ConsoleInstance): (() => void) | void {
+export function initSessionRestore(
+  logger: ConsoleInstance,
+): (() => void) | void {
   const tabContainer = getGBrowser()?.tabContainer;
   if (!tabContainer) {
     logger.warn("[session-restore] init skip: no tabContainer");
@@ -626,7 +637,9 @@ export function initSessionRestore(logger: ConsoleInstance): (() => void) | void
       false,
     );
   } catch (e) {
-    logger.error(`[session-restore] addObserver(sessionstore-windows-restored): ${e}`);
+    logger.error(
+      `[session-restore] addObserver(sessionstore-windows-restored): ${e}`,
+    );
   }
 
   logger.debug(

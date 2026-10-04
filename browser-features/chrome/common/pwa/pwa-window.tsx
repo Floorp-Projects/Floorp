@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR } from "#features-chrome/utils/base";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import { render } from "preact";
-import { signal, effect } from "@preact/signals";
+import { signal } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
@@ -15,6 +16,7 @@ import {
   SsbWindowContainerIndicator,
 } from "./SsbWindowContainerIndicator.tsx";
 import { isContainerExperimentEnabled } from "./containerUtils.ts";
+import { updatePwaToolbarVisibility } from "./toolbarVisibility.ts";
 
 export class PwaWindowSupport {
   private ssbId = signal<string | null>(null);
@@ -58,10 +60,16 @@ export class PwaWindowSupport {
       attributeFilter: ["taskbartab"],
     });
 
-    globalThis.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       observer.disconnect();
       tryStart();
     }, 500);
+    createRootHMR(() => {
+      addDisposer(() => {
+        clearTimeout(timer);
+        observer.disconnect();
+      });
+    }, import.meta.hot);
   }
 
   private async getSsb() {
@@ -101,7 +109,11 @@ export class PwaWindowSupport {
   private initializeWindow(): void {
     globalThis.floorpSsbWindow = true;
     this.configureTitlebarBehavior();
-    this.updateToolbarVisibility(this.shouldShowToolbar());
+    createRootHMR(() => {
+      rootEffect(() => {
+        updatePwaToolbarVisibility(document, this.shouldShowToolbar());
+      });
+    }, import.meta.hot);
   }
 
   private setupSignals(ssbIdAttr: string): void {
@@ -191,13 +203,6 @@ export class PwaWindowSupport {
     }
 
     await this.ensureContainerIndicator(userContextId);
-
-    createRootHMR(() => {
-      effect(() => {
-        this.shouldShowToolbar();
-        this.updateToolbarVisibility(this.shouldShowToolbar());
-      });
-    }, import.meta.hot);
   }
 
   private async ensureContainerIndicator(
@@ -205,7 +210,9 @@ export class PwaWindowSupport {
   ): Promise<void> {
     document?.getElementById("ssb-container-toolbar")?.remove();
 
-    const allIndicators = document?.querySelectorAll("#ssb-container-indicator");
+    const allIndicators = document?.querySelectorAll(
+      "#ssb-container-indicator",
+    );
     if (allIndicators && allIndicators.length > 1) {
       for (let i = 1; i < allIndicators.length; i++) {
         allIndicators[i].remove();
@@ -251,7 +258,10 @@ export class PwaWindowSupport {
     );
     const indicatorContainer = document?.createElement("span") as HTMLElement;
     navBar.insertBefore(indicatorContainer, marker);
-    render(<SsbWindowContainerIndicator userContextId={userContextId} />, indicatorContainer);
+    render(
+      <SsbWindowContainerIndicator userContextId={userContextId} />,
+      indicatorContainer,
+    );
   }
 
   private getUserContextIdFromArgs(): number {
@@ -273,7 +283,7 @@ export class PwaWindowSupport {
 
   private applyUserContext(userContextId: number): void {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
-      "resource://gre/modules/ContextualIdentityService.sys.mjs",
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
     const containers = ContextualIdentityService.getPublicIdentities();
     const exists = containers.some(
@@ -329,17 +339,19 @@ export class PwaWindowSupport {
 
   private renderStyles(): void {
     createRootHMR(() => {
-      let styleRoot = document?.getElementById("floorp-pwa-window-style-root") as HTMLElement | null;
+      let styleRoot = document?.getElementById(
+        "floorp-pwa-window-style-root",
+      ) as HTMLElement | null;
       if (!styleRoot) {
         styleRoot = document!.createElement("div");
         styleRoot.id = "floorp-pwa-window-style-root";
         document!.head.appendChild(styleRoot);
       }
       render(this.createStyleElement(), styleRoot);
-      return () => {
+      addDisposer(() => {
         render(null, styleRoot!);
         styleRoot?.remove();
-      };
+      });
     }, import.meta.hot);
   }
 
@@ -364,13 +376,20 @@ export class PwaWindowSupport {
           originalAllowedBy(condition, allow);
         };
         customTitlebar.__floorpSsbPatched = true;
+        const patchedAllowedBy = customTitlebar.allowedBy;
+        createRootHMR(() => {
+          addDisposer(() => {
+            if (customTitlebar.allowedBy === patchedAllowedBy) {
+              customTitlebar.allowedBy = originalAllowedBy;
+              delete customTitlebar.__floorpSsbPatched;
+            }
+          });
+        }, import.meta.hot);
       }
 
       createRootHMR(() => {
-        effect(() => {
-          const showToolbar = this.shouldShowToolbar();
+        rootEffect(() => {
           customTitlebar.allowedBy("non-popup", this.shouldUseCustomTitlebar());
-          this.updateToolbarVisibility(showToolbar);
         });
       }, import.meta.hot);
     } catch (error) {
@@ -390,28 +409,9 @@ export class PwaWindowSupport {
   }
 
   private createStyleElement() {
-    const showToolbar = this.shouldShowToolbar();
-
     return (
       <style>
         {PwaWindowStyle}
-        {!showToolbar
-          ? `
-           #status-bar, #PersonalToolbar, #titlebar {
-             display: none;
-           }
-           #nav-bar-customization-target,
-           #urlbar-container,
-           #nav-bar .titlebar-spacer,
-           #nav-bar toolbartabstop {
-             display: none !important;
-           }
-           #nav-bar {
-             display: flex !important;
-             min-height: 28px !important;
-           }
-         `
-          : ""}
       </style>
     );
   }
@@ -433,65 +433,6 @@ export class PwaWindowSupport {
     } catch (error) {
       console.error(
         "[PwaWindowSupport] Failed to disable urlbar interactions:",
-        error,
-      );
-    }
-  }
-
-  private updateToolbarVisibility(showToolbar: boolean): void {
-    try {
-      const doc = globalThis.document;
-      if (!doc) {
-        return;
-      }
-
-      const elements = [
-        doc.getElementById("status-bar"),
-        doc.getElementById("PersonalToolbar"),
-      ];
-
-      for (const element of elements) {
-        if (!element) {
-          continue;
-        }
-
-        element.removeAttribute("hidden");
-        element.removeAttribute("collapsed");
-        element.removeAttribute("style");
-
-        if (!showToolbar) {
-          element.setAttribute("hidden", "true");
-          element.setAttribute("collapsed", "true");
-          element.setAttribute("style", "display: none;");
-        }
-      }
-
-      const navBar = doc.getElementById("nav-bar");
-      if (navBar) {
-        navBar.removeAttribute("hidden");
-        navBar.removeAttribute("collapsed");
-        if (showToolbar) {
-          navBar.removeAttribute("style");
-        } else {
-          navBar.setAttribute("style", "display: flex;");
-        }
-      }
-
-      const titlebar = doc.getElementById("titlebar");
-      if (titlebar) {
-        if (showToolbar) {
-          titlebar.removeAttribute("hidden");
-          titlebar.removeAttribute("collapsed");
-          titlebar.removeAttribute("style");
-        } else {
-          titlebar.setAttribute("hidden", "true");
-          titlebar.setAttribute("collapsed", "true");
-          titlebar.setAttribute("style", "display: none;");
-        }
-      }
-    } catch (error) {
-      console.error(
-        "[PwaWindowSupport] Failed to update toolbar visibility:",
         error,
       );
     }

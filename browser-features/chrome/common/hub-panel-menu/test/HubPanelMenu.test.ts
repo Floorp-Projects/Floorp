@@ -2,7 +2,11 @@
 // @colocated-env browser
 
 import { h, render } from "preact";
-import { assert, assertEquals, runTests } from "../../../test/utils/test_harness.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+} from "../../../test/utils/test_harness.ts";
 import { HubPanelMenu } from "../HubPanelMenu.tsx";
 
 const PANEL_UI_BUTTON_ID = "PanelUI-menu-button";
@@ -454,8 +458,7 @@ function testStaticRenderWithCommandHandler(): void {
 
   // Check that the element has the command handler attached
   // In preact-xul, onCommand becomes a command event listener
-  const _hasCommandListener =
-    rendered!.getAttribute("command") !== null ||
+  const _hasCommandListener = rendered!.getAttribute("command") !== null ||
     rendered!.getAttribute("oncommand") !== null;
 
   // Note: preact-xul handles events differently, so we just verify the element renders

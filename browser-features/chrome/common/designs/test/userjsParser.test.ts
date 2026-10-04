@@ -4,8 +4,8 @@
 import { applyUserJS } from "../utils/userjs-parser.ts";
 import {
   assert,
-  type TestCase,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 // Prefix all test prefs to avoid collisions

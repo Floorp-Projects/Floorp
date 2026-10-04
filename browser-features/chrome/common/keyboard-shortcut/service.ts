@@ -6,17 +6,35 @@
 import { _config, getConfig, isEnabled, setEnabled } from "./config.ts";
 import { KeyboardShortcutController } from "./controller.ts";
 import { createRootHMR } from "#features-chrome/utils/base";
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import type { KeyboardShortcutConfig } from "./type.ts";
+import type { KeyboardShortcutFocusStoreReader } from "./editable-focus.ts";
+
+const FOCUS_PARENT_MODULE =
+  "resource://noraneko/actors/NRKeyboardShortcutFocusParent.sys.mjs";
+
+function loadRemoteFocusStore(): KeyboardShortcutFocusStoreReader | null {
+  try {
+    const actorModule = ChromeUtils.importESModule(FOCUS_PARENT_MODULE) as {
+      nrKeyboardShortcutFocusStore?: KeyboardShortcutFocusStoreReader;
+    };
+    return actorModule.nrKeyboardShortcutFocusStore ?? null;
+  } catch (_error) {
+    // Missing remote state deliberately preserves the pre-guard behavior.
+    return null;
+  }
+}
 
 export class KeyboardShortcutService {
   private controllers: Map<Window, KeyboardShortcutController> = new Map();
   private lastConfigString = "";
+  private readonly remoteFocusStore: KeyboardShortcutFocusStoreReader | null;
 
-  constructor() {
+  constructor(remoteFocusStore = loadRemoteFocusStore()) {
+    this.remoteFocusStore = remoteFocusStore;
     this.initialize();
 
-    effect(() => {
+    rootEffect(() => {
       const config = getConfig();
       const configString = JSON.stringify(config);
       const enabled = isEnabled();
@@ -31,7 +49,7 @@ export class KeyboardShortcutService {
       this.lastConfigString = configString;
     });
 
-    effect(() => {
+    rootEffect(() => {
       const enabled = isEnabled();
       if (enabled) {
         this.attachToAllWindows();
@@ -62,7 +80,10 @@ export class KeyboardShortcutService {
     }
 
     if (isEnabled()) {
-      const controller = new KeyboardShortcutController(win);
+      const controller = new KeyboardShortcutController(
+        win,
+        this.remoteFocusStore,
+      );
       this.controllers.set(win, controller);
 
       // Mark the window as having a controller attached

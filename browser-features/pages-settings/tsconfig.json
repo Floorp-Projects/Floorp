@@ -18,6 +18,9 @@
       ],
       "#libs/*": [
         "../../libs/*"
+      ],
+      "#features-chrome/*": [
+        "../chrome/*"
       ]
     },
     "types": [

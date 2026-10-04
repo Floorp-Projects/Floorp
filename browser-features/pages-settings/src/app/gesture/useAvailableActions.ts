@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ActionOption {
@@ -108,18 +108,16 @@ export const GESTURE_ACTIONS = [
   "floorp-split-view-remove-pane",
 ] as const;
 
-export const useAvailableActions = () => {
+export const useAvailableActions = (
+  actionIds: readonly string[] = GESTURE_ACTIONS,
+) => {
   const { t } = useTranslation();
-  const [actions, setActions] = useState<ActionOption[]>([]);
-
-  useEffect(() => {
-    const translatedActions = GESTURE_ACTIONS.map((id) => ({
-      id,
-      name: t(`mouseGesture.actions.${id}`, id),
-    }));
-
-    setActions(translatedActions);
-  }, [t]);
-
-  return actions;
+  return useMemo<ActionOption[]>(
+    () =>
+      actionIds.map((id) => ({
+        id,
+        name: t(`mouseGesture.actions.${id}`, id),
+      })),
+    [actionIds, t],
+  );
 };

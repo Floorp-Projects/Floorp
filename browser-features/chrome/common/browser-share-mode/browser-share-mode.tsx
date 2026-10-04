@@ -18,6 +18,7 @@ export function ShareModeElement() {
         label="Toggle Share Mode"
         type="checkbox"
         id="toggle_sharemode"
+        data-floorp-context-menu-key="floorp.share-mode.toggle"
         checked={shareModeEnabled.value || undefined}
         onCommand={() => (shareModeEnabled.value = !shareModeEnabled.value)}
         accesskey="S"

@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "Über Floorp",
+    "version": "Version",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Nach Updates suchen",
+      "checking": "Auf Updates prüfen…",
+      "checkFailed": "Konnte nicht nach Updates suchen. Versuche es später erneut.",
+      "upToDate": "Sie sind auf dem neusten Stand.",
+      "downloading": "Update wird heruntergeladen... {{progress}}",
+      "applying": "Installiere Update…",
+      "readyToRestart": "Update bereit — zum Anwenden neu starten.",
+      "restarting": "Wird neu gestartet…",
+      "policyDisabled": "Updates werden von Ihrer Organisation verwaltet.",
+      "downloadFailed": "Download fehlgeschlagen. Bitte erneut versuchen.",
+      "noUpdater": "Updates werden extern verwaltet.",
+      "available": "Update wird heruntergeladen... {{version}}",
+      "tryAgain": "Erneut versuchen",
+      "restartToApply": "Neustarten, um Update anzuwenden"
+    },
+    "community": {
+      "title": "Treten Sie der Community bei"
+    },
+    "help": {
+      "title": "Hilfe & Support",
+      "support": "Support"
+    },
+    "sponsor": {
+      "title": "Unterstütze das Projekt",
+      "button": "Sponsor werden"
+    },
+    "links": {
+      "releaseNotes": "Versionshinweise",
+      "help": "Floorp-Hilfe",
+      "feedback": "Feedback abgeben",
+      "licensing": "Lizenz",
+      "terms": "Nutzungsbedingungen",
+      "privacy": "Datenschutzerklärung"
+    },
+    "trademark": "Der Name „Floorp“ ist in Japan eine eingetragene Marke."
+  }
+}

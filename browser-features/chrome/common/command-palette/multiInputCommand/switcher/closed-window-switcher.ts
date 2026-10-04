@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type {
-  PaletteCommand,
-  CommandStepChoice,
-} from "../../types.ts";
+import type { CommandStepChoice, PaletteCommand } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
@@ -14,23 +11,26 @@ export function loadClosedWindows(): Promise<CommandStepChoice[]> {
     const closedWindows = (
       globalThis.SessionStore as unknown as { getClosedWindowData(): unknown[] }
     ).getClosedWindowData();
-    if (!Array.isArray(closedWindows) || closedWindows.length === 0) return Promise.resolve([]);
+    if (!Array.isArray(closedWindows) || closedWindows.length === 0) {
+      return Promise.resolve([]);
+    }
 
-    return Promise.resolve(closedWindows.map((entry: unknown, index: number) => {
-      const e = entry as {
-        title?: string;
-        tabs?: Array<{ title?: string }>;
-      };
-      const tabCount = e.tabs?.length ?? 0;
-      return {
-        label: e.title || "Untitled Window",
-        value: String(index),
-        description:
-          tabCount === 0
+    return Promise.resolve(
+      closedWindows.map((entry: unknown, index: number) => {
+        const e = entry as {
+          title?: string;
+          tabs?: Array<{ title?: string }>;
+        };
+        const tabCount = e.tabs?.length ?? 0;
+        return {
+          label: e.title || "Untitled Window",
+          value: String(index),
+          description: tabCount === 0
             ? "0 tabs"
             : `${tabCount} tabs • ${e.tabs?.[0]?.title ?? ""}`,
-      };
-    }));
+        };
+      }),
+    );
   } catch (e) {
     console.error("[ClosedWindowSwitcher] Failed to load closed windows", e);
     return Promise.resolve([]);
@@ -52,8 +52,14 @@ export const closedWindowSwitcherCommand: PaletteCommand = {
     "undo close window",
     "restore window",
     "recently closed",
-    ...getEnglishStepCommandKeywords("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.closedWindowSwitcher",
+      "commandPalette.closedWindowSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.closedWindowSwitcher",
+      "commandPalette.closedWindowSwitcherDescription",
+    ),
     ...getJapaneseReadings("floorp-closed-window-switcher"),
   ],
   steps: [

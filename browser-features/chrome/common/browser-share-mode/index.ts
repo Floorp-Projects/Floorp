@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { h, render } from "preact";
+import { h, render } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { ShareModeElement } from "./browser-share-mode";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
@@ -19,8 +20,11 @@ export default class BrowserShareMode extends NoraComponentBase {
       return;
     }
 
-    // Wait for DOM to be ready if needed
+    // The event may run after this feature's synchronous setup scope ended.
+    let disposed = false;
+    let disposeMenu: (() => void) | undefined;
     const tryInit = () => {
+      if (disposed) return;
       const menuPopup = document!.getElementById("menu_ToolsPopup");
       if (!menuPopup) {
         this.logger!.warn(
@@ -28,8 +32,13 @@ export default class BrowserShareMode extends NoraComponentBase {
         );
         return;
       }
-      this.injectMenu(menuPopup);
+      disposeMenu = this.injectMenu(menuPopup);
     };
+    addDisposer(() => {
+      disposed = true;
+      document.removeEventListener("DOMContentLoaded", tryInit);
+      disposeMenu?.();
+    });
 
     if (document!.readyState === "loading") {
       document!.addEventListener("DOMContentLoaded", tryInit, { once: true });
@@ -38,12 +47,13 @@ export default class BrowserShareMode extends NoraComponentBase {
     }
   }
 
-  private injectMenu(menuPopup: Element) {
+  private injectMenu(menuPopup: Element): (() => void) | undefined {
     const existingMenuitem = menuPopup.querySelector("#toggle_sharemode");
     if (existingMenuitem) {
       this.logger!.info(
-        "Share mode menu item already exists; reusing existing node for render update.",
+        "Share mode menu item already exists; preserving its owner.",
       );
+      return;
     }
 
     const marker = document!.getElementById("menu_openFirefoxView");
@@ -58,8 +68,11 @@ export default class BrowserShareMode extends NoraComponentBase {
     }
 
     try {
-      render(h(ShareModeElement, null), menuPopup);
+      const dispose = render(h(ShareModeElement, null), menuPopup, {
+        marker: marker?.parentElement === menuPopup ? marker : null,
+      });
       this.logger!.info("Browser share mode menu item rendered successfully.");
+      return dispose;
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       this.logger!.error("Failed to render share mode menu item", reason);

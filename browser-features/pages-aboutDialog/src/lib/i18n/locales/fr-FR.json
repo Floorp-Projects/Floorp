@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "À propos de Floorp",
+    "version": "Version",
+    "channel": {
+      "nightly": "Alpha",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "Vérifier les mises à jour",
+      "checking": "Vérification des mises à jour…",
+      "checkFailed": "Échec de la vérification. Merci de\nréessayer ultérieurement.",
+      "upToDate": "Vous êtes à jour.",
+      "downloading": "Téléchargement de la mise à jour… {{progress}}",
+      "applying": "Installation de la mise à jour…",
+      "readyToRestart": "La mise à jour est prête — redémarrez pour l'appliquer.",
+      "restarting": "Redémarrage…",
+      "policyDisabled": "Les mises à jour sont gérées par votre organisation.",
+      "downloadFailed": "Échec du téléchargement. Veuillez réessayer.",
+      "noUpdater": "Les mises à jour sont gérées de manière externe.",
+      "available": "Téléchargement de la mise à jour {{version}}",
+      "tryAgain": "Réessayer",
+      "restartToApply": "Redémarrer pour appliquer la mise à jour"
+    },
+    "community": {
+      "title": "Rejoindre la communauté"
+    },
+    "help": {
+      "title": "Aide & Support",
+      "support": "Support"
+    },
+    "sponsor": {
+      "title": "Soutenir le Projet",
+      "button": "Devenir sponsor"
+    },
+    "links": {
+      "releaseNotes": "Notes de version",
+      "help": "Aide de Floorp",
+      "feedback": "Envoyer un commentaire",
+      "licensing": "Licence",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité"
+    },
+    "trademark": "Le nom Floorp est une marque déposée au Japon."
+  }
+}

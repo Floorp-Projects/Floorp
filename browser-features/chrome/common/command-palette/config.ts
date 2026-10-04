@@ -3,14 +3,16 @@
 import { signal } from "@preact/signals";
 import type { Signal } from "@preact/signals";
 import {
+  addDisposer,
   createRootHMR,
   rootEffect,
-  addDisposer,
 } from "@nora/preact-xul/lifetime";
 
 export const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
-export const COMMAND_PALETTE_RECENT_PREF = "floorp.commandPalette.recentCommands";
-export const COMMAND_PALETTE_FREQUENCY_PREF = "floorp.commandPalette.commandFrequency";
+export const COMMAND_PALETTE_RECENT_PREF =
+  "floorp.commandPalette.recentCommands";
+export const COMMAND_PALETTE_FREQUENCY_PREF =
+  "floorp.commandPalette.commandFrequency";
 
 export interface CommandPaletteConfig {
   enabled: boolean;
@@ -92,9 +94,10 @@ function createRecentCommandsSignal(): Signal<string[]> {
   });
 
   const recentObserver = () => {
-    sig.value = parseRecentCommands(
+    const next = parseRecentCommands(
       Services.prefs.getStringPref(COMMAND_PALETTE_RECENT_PREF, "[]"),
     );
+    if (JSON.stringify(next) !== JSON.stringify(sig.peek())) sig.value = next;
   };
 
   Services.prefs.addObserver(COMMAND_PALETTE_RECENT_PREF, recentObserver);
@@ -106,7 +109,9 @@ function createRecentCommandsSignal(): Signal<string[]> {
 }
 
 export const _enabled = createRootHMR(createEnabledSignal, import.meta.hot);
-export const _setEnabled = (value: boolean) => { _enabled.value = value; };
+export const _setEnabled = (value: boolean) => {
+  _enabled.value = value;
+};
 export const _recentCommands = createRootHMR(
   createRecentCommandsSignal,
   import.meta.hot,
@@ -116,7 +121,9 @@ export const _setRecentCommands = (value: string[]) => {
 };
 
 export const isEnabled = () => _enabled.value;
-export const setEnabled = (value: boolean) => { _enabled.value = value; };
+export const setEnabled = (value: boolean) => {
+  _enabled.value = value;
+};
 export const getRecentCommands = () => _recentCommands.value;
 
 export function addRecentCommand(id: string) {
@@ -156,9 +163,10 @@ function createFrequencySignal(): Signal<Record<string, number>> {
   });
 
   const freqObserver = () => {
-    sig.value = parseFrequency(
+    const next = parseFrequency(
       Services.prefs.getStringPref(COMMAND_PALETTE_FREQUENCY_PREF, "{}"),
     );
+    if (JSON.stringify(next) !== JSON.stringify(sig.peek())) sig.value = next;
   };
 
   Services.prefs.addObserver(COMMAND_PALETTE_FREQUENCY_PREF, freqObserver);

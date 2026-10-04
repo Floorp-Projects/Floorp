@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useState, useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { PopupToolbarElement } from "./popup-block-element.tsx";
 import { configStore } from "../data/config.ts";
@@ -70,7 +70,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
   const [restoreError, setRestoreError] = useState<string | null>(null);
 
   useEffect(() => {
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       setTexts(getTranslations());
     });
   }, []);
@@ -231,7 +231,9 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
                         >
                           <xul:image
                             class="workspaceRestoreItemIcon"
-                            src={props.ctx.iconCtx.getWorkspaceIconUrl(item.icon)}
+                            src={props.ctx.iconCtx.getWorkspaceIconUrl(
+                              item.icon,
+                            )}
                           />
                           <xul:vbox
                             class="workspaceRestoreItemContent"
@@ -288,9 +290,7 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
               class={`toolbarbutton-1 chromeclass-toolbar-additional workspaceRestoreToggle${
                 isRestoreMode ? " workspaceRestoreToggle-active" : ""
               }`}
-              title={isRestoreMode
-                ? texts.restoreCancel
-                : texts.restoreTooltip}
+              title={isRestoreMode ? texts.restoreCancel : texts.restoreTooltip}
               closemenu="none"
               onCommand={() => {
                 void toggleRestoreMode();

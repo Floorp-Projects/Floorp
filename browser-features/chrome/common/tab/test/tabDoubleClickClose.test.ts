@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { createRoot } from "@nora/preact-xul/lifetime";
+
 import { TabDoubleClickClose } from "../doubleClickClose/index.ts";
 import { config } from "../../designs/configs.ts";
 import {
@@ -10,14 +12,19 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInPreactEffect(construct: () => void): (() => void) | undefined {
-  construct();
-  return undefined;
+const ownedTestRoots: Array<() => void> = [];
+
+function constructInPreactRoot(construct: () => void): () => void {
+  return createRoot((dispose) => {
+    ownedTestRoots.push(dispose);
+    construct();
+    return dispose;
+  });
 }
 
 function withTabConfigPatch(
   patch: {
-    tabDubleClickToClose?: boolean;
+    tabDoubleClickToClose?: boolean;
   },
   run: () => void,
 ): void {
@@ -29,13 +36,14 @@ function withTabConfigPatch(
       ...prev,
       tab: {
         ...prev.tab,
-        tabDubleClickToClose:
-          patch.tabDubleClickToClose ?? prev.tab.tabDubleClickToClose,
+        tabDoubleClickToClose: patch.tabDoubleClickToClose ??
+          prev.tab.tabDoubleClickToClose,
       },
     };
 
     run();
   } finally {
+    for (const dispose of ownedTestRoots.splice(0)) dispose();
     config.value = original;
   }
 }
@@ -48,18 +56,10 @@ function testTabDoubleClickCloseClassIsDefined(): void {
 }
 
 function testTabDoubleClickCloseConstructorHandlesMissingReactiveContext(): void {
-  try {
+  const dispose = constructInPreactRoot(() => {
     new TabDoubleClickClose();
-  } catch (e) {
-    // preact effects are self-contained and don't require an owner context;
-    // unexpected errors from the constructor should be investigated
-    const msg = e instanceof Error ? e.message : String(e);
-    assert(
-      msg.includes("effect") ||
-        msg.includes("signal"),
-      `Unexpected error: ${msg}`,
-    );
-  }
+  });
+  dispose();
 }
 
 function testTabDoubleClickCloseSyncsPrefWhenEnabled(): void {
@@ -67,8 +67,8 @@ function testTabDoubleClickCloseSyncsPrefWhenEnabled(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
-      constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
+      constructInPreactRoot(() => {
         new TabDoubleClickClose();
       });
       assertEquals(
@@ -87,8 +87,8 @@ function testTabDoubleClickCloseSyncsPrefWhenDisabled(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: false }, () => {
-      constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: false }, () => {
+      constructInPreactRoot(() => {
         new TabDoubleClickClose();
       });
       assertEquals(
@@ -107,8 +107,8 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: false }, () => {
-      const dispose = constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: false }, () => {
+      const dispose = constructInPreactRoot(() => {
         new TabDoubleClickClose();
       });
 
@@ -117,7 +117,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
         ...config.value,
         tab: {
           ...config.value.tab,
-          tabDubleClickToClose: true,
+          tabDoubleClickToClose: true,
         },
       };
 
@@ -132,7 +132,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
         ...config.value,
         tab: {
           ...config.value.tab,
-          tabDubleClickToClose: false,
+          tabDoubleClickToClose: false,
         },
       };
 
@@ -142,7 +142,16 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
         "pref should update to false when config changes to false",
       );
 
-      dispose?.();
+      dispose();
+      config.value = {
+        ...config.value,
+        tab: { ...config.value.tab, tabDoubleClickToClose: true },
+      };
+      assertEquals(
+        Services.prefs.getBoolPref(prefName, false),
+        false,
+        "disposed tab preference subscriptions must stop updating Firefox",
+      );
     });
   } finally {
     Services.prefs.setBoolPref(prefName, originalPref);
@@ -154,15 +163,15 @@ function testTabDoubleClickCloseHandlesMultipleInstances(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
-      const dispose = constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
+      const dispose = constructInPreactRoot(() => {
         // Create multiple instances - they should all sync the same pref
         const instance1 = new TabDoubleClickClose();
         const instance2 = new TabDoubleClickClose();
 
         assert(
           instance1 !== undefined && instance2 !== undefined,
-          "Multiple instances should be created successfully"
+          "Multiple instances should be created successfully",
         );
       });
 
@@ -185,8 +194,8 @@ function testTabDoubleClickCloseHandlesPrefErrors(): void {
 
   try {
     // Test with invalid config state
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
-      constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
+      constructInPreactRoot(() => {
         // Even if pref setting fails, the constructor should not throw
         try {
           new TabDoubleClickClose();
@@ -213,7 +222,8 @@ const tests: TestCase[] = [
     fn: testTabDoubleClickCloseClassIsDefined,
   },
   {
-    name: "TabDoubleClickClose constructor handles missing reactive context gracefully",
+    name:
+      "TabDoubleClickClose constructor handles missing reactive context gracefully",
     fn: testTabDoubleClickCloseConstructorHandlesMissingReactiveContext,
   },
   {

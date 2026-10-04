@@ -653,7 +653,8 @@ const testSetShareModeEnabledWithUndefinedCallback = withStateRestored(() => {
   shareModeEnabled.value = false;
 
   // Callback that returns same value
-  shareModeEnabled.value = shareModeEnabled.value;
+  const current = shareModeEnabled.value;
+  shareModeEnabled.value = current;
   assertEquals(
     shareModeEnabled.value,
     false,

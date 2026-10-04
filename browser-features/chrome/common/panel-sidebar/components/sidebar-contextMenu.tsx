@@ -181,6 +181,7 @@ export class SidebarContextMenuElem {
         >
           <xul:menuitem
             id="unloadWebpanelMenu"
+            data-floorp-context-menu-key="floorp.webpanel.unload"
             class="needLoadedWebpanel"
             label={texts.unload}
             accesskey="U"
@@ -188,9 +189,13 @@ export class SidebarContextMenuElem {
           />
           {contextPanel.value?.type === "web" && (
             <>
-              <xul:menuseparator class="context-webpanel-separator" />
+              <xul:menuseparator
+                data-floorp-context-menu-key="floorp.webpanel.separator-media"
+                class="context-webpanel-separator"
+              />
               <xul:menuitem
                 id="muteMenu"
+                data-floorp-context-menu-key="floorp.webpanel.mute"
                 class="needLoadedWebpanel"
                 label={texts.mute}
                 accesskey="M"
@@ -198,6 +203,7 @@ export class SidebarContextMenuElem {
               />
               <xul:menu
                 id="changeZoomLevelMenu"
+                data-floorp-context-menu-key="floorp.webpanel.zoom"
                 class="needLoadedWebpanel needRunningExtensionsPanel"
                 label={texts.changeZoom}
                 accesskey="Z"
@@ -205,18 +211,21 @@ export class SidebarContextMenuElem {
                 <xul:menupopup id="changeZoomLevelPopup">
                   <xul:menuitem
                     id="zoomInMenu"
+                    data-floorp-context-menu-key="floorp.webpanel.zoom-in"
                     label={texts.zoomIn}
                     accesskey="I"
                     onCommand={() => this.handleChangeZoomLevelCommand("in")}
                   />
                   <xul:menuitem
                     id="zoomOutMenu"
+                    data-floorp-context-menu-key="floorp.webpanel.zoom-out"
                     label={texts.zoomOut}
                     accesskey="O"
                     onCommand={() => this.handleChangeZoomLevelCommand("out")}
                   />
                   <xul:menuitem
                     id="resetZoomMenu"
+                    data-floorp-context-menu-key="floorp.webpanel.zoom-reset"
                     label={texts.resetZoom}
                     accesskey="R"
                     onCommand={() => this.handleChangeZoomLevelCommand("reset")}
@@ -225,15 +234,20 @@ export class SidebarContextMenuElem {
               </xul:menu>
               <xul:menuitem
                 id="changeUAWebpanelMenu"
+                data-floorp-context-menu-key="floorp.webpanel.change-user-agent"
                 label={texts.changeUA}
                 accesskey="R"
                 onCommand={() => this.handleChangeUserAgentCommand()}
               />
             </>
           )}
-          <xul:menuseparator class="context-webpanel-separator" />
+          <xul:menuseparator
+            data-floorp-context-menu-key="floorp.webpanel.separator-delete"
+            class="context-webpanel-separator"
+          />
           <xul:menuitem
             id="deleteWebpanelMenu"
+            data-floorp-context-menu-key="floorp.webpanel.delete"
             label={texts.delete}
             accesskey="D"
             onCommand={() => this.handleDeleteCommand()}

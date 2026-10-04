@@ -28,13 +28,13 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="p-6 space-y-3">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("about.aboutBrowser")}</h1>
-        <p className="text-sm mb-8">{t("about.browserDescription")}</p>
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("about.aboutBrowser")}</h1>
+        <p className="floorp-page-description">{t("about.browserDescription")}</p>
       </div>
 
-      <div className="flex flex-col gap-8 pl-6">
+      <div className="floorp-settings-sections">
         <Card>
           <CardHeader>
             <CardTitle>{t("about.versionInfo")}</CardTitle>
@@ -43,7 +43,7 @@ export default function Page() {
             <div className="flex items-center gap-4">
               <img
                 src="chrome://branding/content/about-logo@2x.png"
-                alt="Browser Logo"
+                alt={t("about.noraneko.logoAlt")}
                 className="w-11 h-11"
               />
               <p className="text-xl">
@@ -55,11 +55,8 @@ export default function Page() {
                 })}
               </p>
             </div>
-            <p>
-              Noraneko is a browser as testhead of Floorp 12. Floorp is based on
-              Firefox & Noraneko.
-            </p>
-            <p>Made by Noraneko Community with ❤</p>
+            <p>{t("about.noraneko.description")}</p>
+            <p>{t("about.noraneko.communityCredit")}</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -105,7 +102,7 @@ export default function Page() {
                 className="flex items-center gap-2"
               >
                 <SiGithub className="size-4" />
-                GitHub Repository: Floorp-Projects/Floorp
+                {t("about.noraneko.repositoryLabel")}
                 <ExternalLink className="size-4" />
               </a>
             </Button>

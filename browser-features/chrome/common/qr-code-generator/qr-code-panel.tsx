@@ -14,7 +14,7 @@ export function QRCodePanel(): ComponentChild {
   const title = useSignal(i18next.t("qrcode-generate-page-action-title"));
 
   useEffect(() => {
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       title.value = i18next.t("qrcode-generate-page-action-title");
     });
   }, []);

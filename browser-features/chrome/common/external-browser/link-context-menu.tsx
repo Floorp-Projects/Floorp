@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "preact";
+import { render } from "@nora/preact-xul";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
@@ -12,6 +12,15 @@ import type { ExternalBrowser } from "./types.ts";
 const MENU_ID = "context_openLinkInExternalBrowser";
 const MENU_POPUP_ID = "context_openLinkInExternalBrowser_popup";
 const LINK_OPEN_MENU_ID = "context-openlink";
+
+type UnloadTarget = Pick<
+  EventTarget,
+  "addEventListener" | "removeEventListener"
+>;
+
+export type ExternalBrowserLinkContextMenuOptions = {
+  unloadTarget?: UnloadTarget;
+};
 
 // Helper function for i18n translation
 const t = (key: string): string => (i18next.t as (k: string) => string)(key);
@@ -24,8 +33,12 @@ export class ExternalBrowserLinkContextMenu {
   private observer: MutationObserver | null = null;
   private readonly contentContextMenu: XULElement | null = null;
   private readonly boundUpdateVisibility = () => this.updateVisibility();
+  private readonly unloadTarget: UnloadTarget;
+  private readonly boundCleanup = () => this.cleanup();
 
-  constructor() {
+  constructor(options: ExternalBrowserLinkContextMenuOptions = {}) {
+    this.unloadTarget = options.unloadTarget ?? globalThis;
+
     if (typeof document === "undefined") {
       return;
     }
@@ -41,7 +54,9 @@ export class ExternalBrowserLinkContextMenu {
     const marker = document?.getElementById(LINK_OPEN_MENU_ID) ?? undefined;
 
     try {
-      render(this.menu(), this.contentContextMenu as unknown as Element);
+      render(() => this.menu(), this.contentContextMenu as unknown as Element, {
+        marker,
+      });
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -71,11 +86,9 @@ export class ExternalBrowserLinkContextMenu {
       this.boundUpdateVisibility,
     );
 
-    globalThis.addEventListener(
+    this.unloadTarget.addEventListener(
       "unload",
-      () => {
-        this.cleanup();
-      },
+      this.boundCleanup,
       { once: true },
     );
 
@@ -85,6 +98,7 @@ export class ExternalBrowserLinkContextMenu {
   }
 
   private cleanup(): void {
+    this.unloadTarget.removeEventListener("unload", this.boundCleanup);
     this.observer?.disconnect();
     this.observer = null;
     this.contentContextMenu?.removeEventListener(
@@ -113,7 +127,9 @@ export class ExternalBrowserLinkContextMenu {
   }
 
   private updateVisibility(): void {
-    const menu = document?.getElementById(MENU_ID) as unknown as XULElement | null;
+    const menu = document?.getElementById(MENU_ID) as unknown as
+      | XULElement
+      | null;
     const openLink = document?.getElementById(LINK_OPEN_MENU_ID) as
       | XULElement
       | null;
@@ -139,7 +155,11 @@ export class ExternalBrowserLinkContextMenu {
 
   private menu() {
     return (
-      <xul:menu id={MENU_ID} label={t("externalBrowser.menu.openLinkIn")}>
+      <xul:menu
+        id={MENU_ID}
+        label={t("externalBrowser.menu.openLinkIn")}
+        data-floorp-context-menu-key="floorp.external-browser.open-link"
+      >
         <xul:menupopup
           id={MENU_POPUP_ID}
           onPopupShowing={() => this.populateMenu()}
@@ -149,7 +169,9 @@ export class ExternalBrowserLinkContextMenu {
   }
 
   private async populateMenu(): Promise<void> {
-    const popup = document?.getElementById(MENU_POPUP_ID) as unknown as XULElement | null;
+    const popup = document?.getElementById(MENU_POPUP_ID) as unknown as
+      | XULElement
+      | null;
     if (!popup) {
       return;
     }
@@ -192,6 +214,7 @@ export class ExternalBrowserLinkContextMenu {
       t("externalBrowser.menu.defaultBrowser"),
       false,
       () => this.openInBrowser(url),
+      "floorp.external-browser.link.default",
     );
     if (defaultItem) {
       popup.appendChild(defaultItem);
@@ -200,6 +223,10 @@ export class ExternalBrowserLinkContextMenu {
     // Add separator
     const separator = document?.createXULElement?.("menuseparator");
     if (separator) {
+      separator.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.external-browser.link.separator",
+      );
       popup.appendChild(separator);
     }
 
@@ -209,6 +236,9 @@ export class ExternalBrowserLinkContextMenu {
         browserInfo.name,
         false,
         () => this.openInBrowser(url, browserInfo.id),
+        `floorp.external-browser.link.browser.${
+          encodeURIComponent(String(browserInfo.id))
+        }`,
       );
       if (menuItem) {
         popup.appendChild(menuItem);
@@ -220,6 +250,7 @@ export class ExternalBrowserLinkContextMenu {
     label: string,
     disabled: boolean,
     onClick?: () => void,
+    contextMenuKey?: string,
   ): XULElement | null {
     const menuitem = document?.createXULElement?.("menuitem") as
       | XULElement
@@ -228,6 +259,9 @@ export class ExternalBrowserLinkContextMenu {
       return null;
     }
     menuitem.setAttribute("label", label);
+    if (contextMenuKey) {
+      menuitem.setAttribute("data-floorp-context-menu-key", contextMenuKey);
+    }
     if (disabled) {
       menuitem.setAttribute("disabled", "true");
     }

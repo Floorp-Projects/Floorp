@@ -20,17 +20,16 @@ export default class CommandPalette extends NoraComponentBase {
       styleEl.id = "command-palette-style";
       styleEl.textContent = style;
       document.head?.appendChild(styleEl);
+      addDisposer(() => styleEl.remove());
     }
 
-    // Render the palette overlay via safeRender — appends a display:contents
-    // wrapper so existing main-window children are not disturbed.
+    commandPaletteService.attachToWindow(window);
+
+    // Mount independently while preserving native main-window children.
     const mainWindow = document.getElementById("main-window");
     if (mainWindow) {
       const dispose = safeRender(h(CommandPaletteUI, {}), mainWindow);
       addDisposer(dispose);
     }
-
-    // Attach service — creates controller and manages lifecycle
-    commandPaletteService.attachToWindow(window);
   }
 }

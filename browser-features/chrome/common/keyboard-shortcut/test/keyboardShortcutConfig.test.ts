@@ -4,7 +4,6 @@
 import {
   assertEquals,
   assertNotEquals,
-  assert,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 import type { ShortcutConfig } from "../type.ts";
@@ -17,6 +16,7 @@ import {
   KEYBOARD_SHORTCUT_CONFIG_PREF,
   setEnabled,
   setConfig,
+  parseConfig,
 } from "../config.ts";
 
 // ---------------------------------------------------------------------------
@@ -341,10 +341,11 @@ function testDefaultConfigStructure(): void {
   assertEquals(defaultConfig.enabled, true, "default config should be enabled");
   assertEquals(
     Object.keys(defaultConfig.shortcuts).length,
-    1,
-    "default config should have one shortcut",
+    2,
+    "default config should have command-palette and Zen shortcuts",
   );
-  const shortcut = Object.values(defaultConfig.shortcuts)[0];
+  assertEquals(defaultConfig.schemaVersion, 2, "default config should be v2");
+  const shortcut = defaultConfig.shortcuts["floorp-toggle-command-palette"];
   assertEquals(
     shortcut.action,
     "floorp-toggle-command-palette",
@@ -362,10 +363,13 @@ function testStrDefaultConfigIsParseable(): void {
   );
   assertEquals(
     Object.keys(parsed.shortcuts).length,
-    1,
-    "parsed default config should have one shortcut (command palette)",
+    2,
+    "parsed default config should have command-palette and Zen shortcuts",
   );
-  const parsedShortcut = Object.values(parsed.shortcuts)[0] as ShortcutConfig;
+  assertEquals(parsed.schemaVersion, 2, "parsed default config should be v2");
+  const parsedShortcut = parsed.shortcuts[
+    "floorp-toggle-command-palette"
+  ] as ShortcutConfig;
   assertEquals(
     parsedShortcut.action,
     "floorp-toggle-command-palette",
@@ -435,81 +439,23 @@ function testNormalizeConfigWithPartialConfig(): void {
 // ---------------------------------------------------------------------------
 
 function testParseConfigHandlesInvalidJson(): void {
-  const hadConfig = Services.prefs.prefHasUserValue(
-    KEYBOARD_SHORTCUT_CONFIG_PREF,
+  const parsed = parseConfig("invalid-json{{{");
+  assertEquals(parsed.schemaVersion, 2, "invalid JSON should recover to v2");
+  assertEquals(
+    Object.keys(parsed.shortcuts).length,
+    2,
+    "invalid JSON should recover to fresh F2 and Zen defaults",
   );
-  const savedConfig = hadConfig
-    ? Services.prefs.getStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF)
-    : null;
-
-  try {
-    // Set invalid JSON and apply it via setConfig.
-    // parseConfig catches JSON.parse errors and returns defaultConfig,
-    // then the SolidJS effect writes the normalized default back to the pref.
-    Services.prefs.setStringPref(
-      KEYBOARD_SHORTCUT_CONFIG_PREF,
-      "invalid-json{{{",
-    );
-    setConfig({
-      enabled: true,
-      shortcuts: {},
-    });
-
-    // After setConfig, the pref should contain valid JSON (the default config),
-    // because parseConfig returned defaultConfig and the reactive effect wrote it back.
-    const currentPref = Services.prefs.getStringPref(
-      KEYBOARD_SHORTCUT_CONFIG_PREF,
-      strDefaultConfig,
-    );
-    const parsed = JSON.parse(currentPref);
-    assertEquals(
-      parsed.enabled,
-      true,
-      "invalid JSON should result in default config being written back",
-    );
-    assertEquals(
-      Object.keys(parsed.shortcuts).length,
-      0,
-      "invalid JSON should result in empty shortcuts in default config",
-    );
-  } finally {
-    if (hadConfig && savedConfig !== null) {
-      Services.prefs.setStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF, savedConfig);
-    } else {
-      Services.prefs.clearUserPref(KEYBOARD_SHORTCUT_CONFIG_PREF);
-    }
-  }
 }
 
 function testParseConfigHandlesMalformedObject(): void {
-  const hadConfig = Services.prefs.prefHasUserValue(
-    KEYBOARD_SHORTCUT_CONFIG_PREF,
+  const parsed = parseConfig(JSON.stringify({ invalidField: "test" }));
+  assertEquals(parsed.schemaVersion, 2, "malformed object should migrate to v2");
+  assertEquals(
+    Object.keys(parsed.shortcuts).length,
+    2,
+    "malformed object should recover missing shortcuts from defaults",
   );
-  const savedConfig = hadConfig
-    ? Services.prefs.getStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF)
-    : null;
-
-  try {
-    // Set valid JSON but missing required fields
-    Services.prefs.setStringPref(
-      KEYBOARD_SHORTCUT_CONFIG_PREF,
-      JSON.stringify({ invalidField: "test" }),
-    );
-    const currentPref = Services.prefs.getStringPref(
-      KEYBOARD_SHORTCUT_CONFIG_PREF,
-      strDefaultConfig,
-    );
-    assert(
-      currentPref.includes("invalidField"),
-      "pref should preserve the malformed object",
-    );
-  } finally {
-    if (hadConfig && savedConfig !== null) {
-      Services.prefs.setStringPref(KEYBOARD_SHORTCUT_CONFIG_PREF, savedConfig);
-    } else {
-      Services.prefs.clearUserPref(KEYBOARD_SHORTCUT_CONFIG_PREF);
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------

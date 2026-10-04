@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { DesignFormData } from "@/types/pref.ts";
 import { useTheme } from "@/components/theme-provider";
 import { useTranslation } from "react-i18next";
 
@@ -15,7 +16,7 @@ import ProtonFixDark from "@/app/design/images/designs/Floorp_UI_ProtonFix_Dark.
 import FluerialDark from "@/app/design/images/designs/Floorp_UI_Fluerial_Dark.svg";
 
 export const useInterfaceDesigns = (): {
-  value: string;
+  value: DesignFormData["design"];
   title: string;
   image: string;
 }[] => {

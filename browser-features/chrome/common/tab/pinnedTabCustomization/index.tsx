@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import style from "./style.css?inline";
-import { render } from "preact";
+import { render } from "@nora/preact-xul";
 
 export class TabPinnedTabCustomization {
   private dispose: (() => void) | null = null;
-  private styleContainer: HTMLElement | null = null;
 
   private StyleElement() {
     return <style>{style}</style>;
@@ -26,19 +25,8 @@ export class TabPinnedTabCustomization {
         return;
       }
 
-      if (!this.styleContainer) {
-        const container = document.createElement("span");
-        head.appendChild(container);
-        this.styleContainer = container;
-      }
-
       try {
-        render(this.StyleElement(), this.styleContainer);
-        this.dispose = () => {
-          render(null, this.styleContainer!);
-          this.styleContainer?.remove();
-          this.styleContainer = null;
-        };
+        this.dispose = render(() => this.StyleElement(), head);
       } catch (error) {
         const reason = error instanceof Error
           ? error
@@ -55,9 +43,13 @@ export class TabPinnedTabCustomization {
   }
 
   constructor() {
-    effect(() => {
+    rootEffect(() => {
       const showTitleEnabled = config.value.tab.tabPinTitle;
       this.toggleTitleVisibility(showTitleEnabled);
+      return () => {
+        this.dispose?.();
+        this.dispose = null;
+      };
     });
   }
 }

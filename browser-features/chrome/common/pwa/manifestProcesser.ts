@@ -7,11 +7,11 @@ import type { Browser, Icon, Manifest } from "./type.js";
 import { IconProcesser } from "./iconProcesser";
 
 const { ManifestObtainer } = ChromeUtils.importESModule(
-  "resource://gre/modules/ManifestObtainer.sys.mjs",
+  "moz-src:///dom/manifest/ManifestObtainer.sys.mjs",
 );
 
 const { ManifestProcessor } = ChromeUtils.importESModule(
-  "resource://gre/modules/ManifestProcessor.sys.mjs",
+  "moz-src:///dom/manifest/ManifestProcessor.sys.mjs",
 );
 
 export class ManifestProcesser {

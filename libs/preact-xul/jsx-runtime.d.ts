@@ -1,4 +1,4 @@
-import { JSX } from "preact";
+import type { JSX } from "preact";
 
 declare module "preact" {
   namespace JSX {
@@ -35,7 +35,7 @@ declare module "preact" {
       class?: string;
 
       // allow additional XUL-specific attributes without explicit typing
-      [key: string]: any;
+      [key: string]: unknown;
     };
     interface XULBrowserElement extends XULElementBase {
       contextmenu?: string;
@@ -220,6 +220,7 @@ declare module "preact" {
         keycode?: string;
         key?: string;
         command?: string;
+        onCommand?: () => void;
       };
       "xul:commandset": {
         id?: string;

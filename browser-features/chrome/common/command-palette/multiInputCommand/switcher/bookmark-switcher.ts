@@ -2,24 +2,23 @@
 
 import i18next from "i18next";
 import type {
-  PaletteCommand,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "../../types.ts";
 import type { BookmarkTreeNode, PlacesUtilsModule } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import { loadContainerChoices } from "#features-chrome/common/command-palette/utils/containerChoices.ts";
+import {
+  createTriggeringPrincipal,
+  parseUserContextChoice,
+  resolvePaletteTarget,
+} from "#features-chrome/common/command-palette/utils/targetContext.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
-
-interface ChromeWindow extends Window {
-  gBrowser?: {
-    selectedBrowser?: { contentPrincipal?: unknown };
-    loadURI?(uri: nsIURI, options: { triggeringPrincipal?: unknown }): void;
-  };
-}
 
 function buildPath(parentPath: string, folderTitle: string): string {
   const fullPath = parentPath ? `${parentPath} > ${folderTitle}` : folderTitle;
@@ -91,36 +90,24 @@ export async function loadBookmarks(): Promise<
       hasMore,
       loadMore: hasMore
         ? (): Promise<{
-            choices: CommandStepChoice[];
-            hasMore: boolean;
-          }> => {
-            const nextBatch = snapshot.slice(
-              offset,
-              offset + PAGE_SIZE,
-            );
-            offset += nextBatch.length;
-            return Promise.resolve({
-              choices: nextBatch,
-              hasMore: offset < snapshot.length,
-            });
-          }
+          choices: CommandStepChoice[];
+          hasMore: boolean;
+        }> => {
+          const nextBatch = snapshot.slice(
+            offset,
+            offset + PAGE_SIZE,
+          );
+          offset += nextBatch.length;
+          return Promise.resolve({
+            choices: nextBatch,
+            hasMore: offset < snapshot.length,
+          });
+        }
         : undefined,
     };
   } catch (err) {
     console.error("[BookmarkSwitcher] Failed to load bookmarks", err);
     return [];
-  }
-}
-
-function navigateToUrl(win: Window, url: string): void {
-  try {
-    const { gBrowser } = win as unknown as ChromeWindow;
-    const principal = gBrowser?.selectedBrowser?.contentPrincipal;
-    gBrowser?.loadURI?.(Services.io.newURI(url), {
-      triggeringPrincipal: principal,
-    });
-  } catch (e) {
-    console.error("[BookmarkSwitcher] Failed to navigate", e);
   }
 }
 
@@ -141,8 +128,14 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     "favorite",
     "favourite",
     ...getJapaneseReadings("floorp-bookmark-switcher"),
-    ...getEnglishStepCommandKeywords("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.bookmarkSwitcher", "commandPalette.bookmarkSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.bookmarkSwitcher",
+      "commandPalette.bookmarkSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.bookmarkSwitcher",
+      "commandPalette.bookmarkSwitcherDescription",
+    ),
   ],
   steps: [
     {
@@ -155,10 +148,142 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
       }),
       choicesLoader: loadBookmarks,
     },
+    {
+      id: "where",
+      label: i18next.t("commandPalette.bookmarkSwitcherWhereLabel", {
+        defaultValue: "Where to open",
+      }),
+      placeholder: i18next.t(
+        "commandPalette.bookmarkSwitcherWherePlaceholder",
+        {
+          defaultValue: "Select where to open...",
+        },
+      ),
+      choices: [
+        {
+          label: i18next.t("commandPalette.bookmarkSwitcherWhereNewTab", {
+            defaultValue: "New Tab",
+          }),
+          value: "new-tab",
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereNewTabDesc",
+            {
+              defaultValue: "Open in a new foreground tab",
+            },
+          ),
+        },
+        {
+          label: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereBackgroundTab",
+            {
+              defaultValue: "Background Tab",
+            },
+          ),
+          value: "background-tab",
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereBackgroundTabDesc",
+            {
+              defaultValue: "Open in a new background tab",
+            },
+          ),
+        },
+        {
+          label: i18next.t("commandPalette.bookmarkSwitcherWhereCurrentTab", {
+            defaultValue: "Current Tab",
+          }),
+          value: "current-tab",
+          description: i18next.t(
+            "commandPalette.bookmarkSwitcherWhereCurrentTabDesc",
+            {
+              defaultValue: "Navigate the current tab",
+            },
+          ),
+        },
+      ],
+    },
+    {
+      id: "container",
+      label: i18next.t("commandPalette.bookmarkSwitcherContainerStepLabel", {
+        defaultValue: "Open in container",
+      }),
+      placeholder: i18next.t(
+        "commandPalette.bookmarkSwitcherContainerStepPlaceholder",
+        {
+          defaultValue: "Choose a container...",
+        },
+      ),
+      choicesLoader: loadContainerChoices,
+      shouldInclude: (inputs) => inputs.where !== "current-tab",
+    },
   ],
-  fn: (_win: Window, args?: Record<string, string>) => {
+  fn: (targetWindow: Window, args?: Record<string, string>) => {
     const url = args?.bookmark;
     if (!url) return;
-    navigateToUrl(_win, url);
+
+    const where = args?.where ?? "new-tab";
+    if (where === "current-tab" && args?.container !== undefined) {
+      console.error(
+        "[BookmarkSwitcher] Rejected a container override for the current tab",
+      );
+      return;
+    }
+
+    try {
+      const target = resolvePaletteTarget(targetWindow);
+      if (!target) {
+        console.error("[BookmarkSwitcher] Target is unavailable");
+        return;
+      }
+
+      const containerChoice = args?.container ?? "workspace";
+      const contextChoice = parseUserContextChoice(
+        containerChoice,
+        target.workspaces?.getCurrentWorkspaceUserContextId() ?? 0,
+      );
+      if (!contextChoice) {
+        console.error("[BookmarkSwitcher] Container is invalid");
+        return;
+      }
+
+      const { explicit, userContextId } = contextChoice;
+      const principal = where === "current-tab"
+        ? target.principal
+        : createTriggeringPrincipal(target, userContextId);
+      const addTab = (inBackground: boolean): XULElement => {
+        const createTab = () =>
+          target.gBrowser.addTab(url, {
+            triggeringPrincipal: principal,
+            inBackground,
+            userContextId,
+          });
+        return explicit && target.workspaces
+          ? target.workspaces.withExplicitTabUserContext(
+            userContextId,
+            createTab,
+          )
+          : createTab();
+      };
+
+      switch (where) {
+        case "current-tab":
+          target.browser.loadURI?.(Services.io.newURI(url), {
+            triggeringPrincipal: principal,
+          });
+          break;
+
+        case "background-tab":
+          addTab(true);
+          break;
+
+        case "new-tab":
+        default: {
+          const tab = addTab(false);
+          target.gBrowser.selectedTab = tab;
+          break;
+        }
+      }
+    } catch (e) {
+      console.error("[BookmarkSwitcher] Failed to open bookmark", e);
+    }
   },
 };

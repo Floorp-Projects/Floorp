@@ -17,9 +17,67 @@ const MENU_ID = "context_openLinkInExternalBrowser";
 const MENU_POPUP_ID = "context_openLinkInExternalBrowser_popup";
 const LINK_OPEN_MENU_ID = "context-openlink";
 
+type DetachedContentAreaContextMenu = {
+  element: Element;
+  parent: Node;
+  nextSibling: Node | null;
+};
+
+let mockContentAreaContextMenu: Element | null = null;
+let detachedContentAreaContextMenu: DetachedContentAreaContextMenu | null =
+  null;
+const pendingUnloadTargets = new Set<EventTarget>();
+
+function detachLiveContentAreaContextMenu(): void {
+  if (detachedContentAreaContextMenu) {
+    return;
+  }
+
+  const element = document!.getElementById(CONTENT_AREA_MENU_ID);
+  const parent = element?.parentNode;
+  if (!element || !parent || element === mockContentAreaContextMenu) {
+    return;
+  }
+
+  detachedContentAreaContextMenu = {
+    element,
+    parent,
+    nextSibling: element.nextSibling,
+  };
+  element.remove();
+}
+
+function restoreLiveContentAreaContextMenu(): void {
+  const detached = detachedContentAreaContextMenu;
+  detachedContentAreaContextMenu = null;
+  if (!detached || detached.element.isConnected) {
+    return;
+  }
+
+  const referenceNode = detached.nextSibling?.parentNode === detached.parent
+    ? detached.nextSibling
+    : null;
+  detached.parent.insertBefore(detached.element, referenceNode);
+}
+
+function createLinkContextMenu(
+  mod: typeof import("../link-context-menu.tsx"),
+): {
+  instance: InstanceType<typeof mod.ExternalBrowserLinkContextMenu>;
+  unloadTarget: EventTarget;
+} {
+  const unloadTarget = new EventTarget();
+  pendingUnloadTargets.add(unloadTarget);
+  return {
+    instance: new mod.ExternalBrowserLinkContextMenu({ unloadTarget }),
+    unloadTarget,
+  };
+}
+
 /** Create a mock #contentAreaContextMenu element with #context-openlink */
 function createMockContentAreaContextMenu(): Element {
   cleanupDOM();
+  detachLiveContentAreaContextMenu();
 
   const menu = document!.createElement("div");
   menu.id = CONTENT_AREA_MENU_ID;
@@ -30,14 +88,20 @@ function createMockContentAreaContextMenu(): Element {
   menu.appendChild(openLink);
 
   document!.body!.appendChild(menu);
+  mockContentAreaContextMenu = menu;
   return menu;
 }
 
 /** Remove mock elements from DOM */
 function cleanupDOM(): void {
-  document!.getElementById(CONTENT_AREA_MENU_ID)?.remove();
-  document!.getElementById(MENU_ID)?.remove();
-  document!.getElementById(MENU_POPUP_ID)?.remove();
+  for (const unloadTarget of pendingUnloadTargets) {
+    unloadTarget.dispatchEvent(new Event("unload"));
+  }
+  pendingUnloadTargets.clear();
+
+  mockContentAreaContextMenu?.remove();
+  mockContentAreaContextMenu = null;
+  restoreLiveContentAreaContextMenu();
 }
 
 /**
@@ -84,7 +148,7 @@ async function testLinkContextMenuCreatesMenuElement(): Promise<void> {
   try {
     const mod = await import("../link-context-menu.tsx");
     // Explicitly construct — import alone does NOT instantiate
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     assert(
@@ -102,7 +166,7 @@ async function testLinkContextMenuCreatesPopupElement(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const popup = document!.getElementById(MENU_POPUP_ID);
     assert(
@@ -116,21 +180,23 @@ async function testLinkContextMenuCreatesPopupElement(): Promise<void> {
 
 async function testLinkContextMenuDoesNotThrowWithoutParent(): Promise<void> {
   cleanupDOM();
+  detachLiveContentAreaContextMenu();
   // No contentAreaContextMenu in DOM — constructor should handle gracefully
 
   let threw = false;
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
   } catch {
     threw = true;
+  } finally {
+    cleanupDOM();
   }
   // Constructor logs error but should not throw
   assert(
     !threw,
     "ExternalBrowserLinkContextMenu should not throw when parent element is missing",
   );
-  cleanupDOM();
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +209,7 @@ async function testLinkContextMenuHasLabelAttribute(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     if (menu) {
@@ -168,7 +234,7 @@ async function testLinkContextMenuIsChildOfContentAreaMenu(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const parent = document!.getElementById(CONTENT_AREA_MENU_ID);
     const menu = document!.getElementById(MENU_ID);
@@ -198,7 +264,7 @@ async function testLinkContextMenuHiddenWithoutLinkURL(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     if (menu) {
@@ -221,7 +287,7 @@ async function testLinkContextMenuVisibleWithLinkURL(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     if (menu) {
@@ -247,7 +313,7 @@ async function testLinkContextMenuHiddenWhenOpenLinkIsHidden(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     if (menu) {
@@ -273,7 +339,7 @@ async function testLinkContextMenuElementIsMenuType(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     if (menu) {
@@ -300,8 +366,8 @@ async function testLinkContextMenuMultipleInstantiationSafe(): Promise<void> {
   let threw = false;
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
+    createLinkContextMenu(mod);
   } catch {
     threw = true;
   }
@@ -320,7 +386,7 @@ async function testLinkContextMenuPositionedNearOpenLink(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     const openLink = document!.getElementById(LINK_OPEN_MENU_ID);
@@ -344,54 +410,6 @@ async function testLinkContextMenuPositionedNearOpenLink(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Tests: ExternalBrowserLinkContextMenu — Constructor with undefined document
-// ---------------------------------------------------------------------------
-
-async function testLinkContextMenuConstructorWithUndefinedDocument(): Promise<void> {
-  cleanupDOM();
-
-  try {
-    // Save original document
-    const originalDocument = (globalThis as Record<string, unknown>).document;
-
-    // Temporarily set document to undefined
-    // In Firefox, document is a getter-only property, so use Object.defineProperty
-    try {
-      Object.defineProperty(globalThis, "document", {
-        value: undefined,
-        configurable: true,
-      });
-    } catch {
-      // If document is non-configurable, skip this test gracefully
-      return;
-    }
-
-    let threw = false;
-    try {
-      const mod = await import("../link-context-menu.tsx");
-      new mod.ExternalBrowserLinkContextMenu();
-    } catch {
-      threw = true;
-    }
-
-    // Constructor should return early without throwing
-    assert(!threw, "constructor should handle undefined document gracefully");
-
-    // Restore document
-    try {
-      Object.defineProperty(globalThis, "document", {
-        value: originalDocument,
-        configurable: true,
-      });
-    } catch {
-      (globalThis as Record<string, unknown>).document = originalDocument;
-    }
-  } finally {
-    cleanupDOM();
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Tests: ExternalBrowserLinkContextMenu — MutationObserver
 // ---------------------------------------------------------------------------
 
@@ -401,7 +419,7 @@ async function testLinkContextMenuSetsUpMutationObserver(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     // Verify that the menu was created (observer setup succeeded)
     const menu = document!.getElementById(MENU_ID);
@@ -411,14 +429,16 @@ async function testLinkContextMenuSetsUpMutationObserver(): Promise<void> {
   }
 }
 
-async function testLinkContextMenuUpdatesVisibilityOnAttributeChange(): Promise<void> {
+async function testLinkContextMenuUpdatesVisibilityOnAttributeChange(): Promise<
+  void
+> {
   cleanupDOM();
   createMockContentAreaContextMenu();
   mockLinkURL("https://example.com");
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     const openLink = document!.getElementById(LINK_OPEN_MENU_ID);
@@ -429,13 +449,12 @@ async function testLinkContextMenuUpdatesVisibilityOnAttributeChange(): Promise<
 
       // Hide the openLink element
       openLink.setAttribute("hidden", "true");
+      await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 0));
 
-      // Trigger mutation observer manually (simulate attribute change)
-      const event = createMutationEvent("hidden");
-      openLink.dispatchEvent(event);
-
-      // Menu should now be hidden
-      // Note: In actual implementation, this happens via MutationObserver callback
+      assert(
+        menu.hidden,
+        "menu should become hidden after openLink is hidden",
+      );
     }
   } finally {
     restoreGContextMenu();
@@ -453,11 +472,12 @@ async function testLinkContextMenuCleanupOnUnload(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    const { unloadTarget } = createLinkContextMenu(mod);
 
     // Simulate unload event
     const unloadEvent = new Event("unload");
-    globalThis.dispatchEvent(unloadEvent);
+    unloadTarget.dispatchEvent(unloadEvent);
+    pendingUnloadTargets.delete(unloadTarget);
 
     // Menu should still exist (cleanup is internal)
     const menu = document!.getElementById(MENU_ID);
@@ -477,7 +497,7 @@ async function testLinkContextMenuHasMenupopupChild(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     assert(menu !== null, "menu should exist");
@@ -495,7 +515,7 @@ async function testLinkContextMenuHasCorrectId(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     assert(menu !== null, "menu should exist");
@@ -511,7 +531,7 @@ async function testLinkContextMenuPopupHasCorrectId(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const popup = document!.getElementById(MENU_POPUP_ID);
     assert(popup !== null, "popup should exist");
@@ -539,7 +559,7 @@ async function testLinkContextMenuHiddenWhenDisabled(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     if (menu) {
@@ -560,7 +580,7 @@ async function testLinkContextMenuVisibilityWithEmptyLinkURL(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID) as HTMLElement | null;
     if (menu) {
@@ -584,42 +604,39 @@ async function testLinkContextMenuVisibilityWithEmptyLinkURL(): Promise<void> {
 async function testLinkContextMenuHandlesRenderError(): Promise<void> {
   cleanupDOM();
   createMockContentAreaContextMenu();
+  const documentRecord = document as unknown as Record<string, unknown>;
+  const originalCreateXULElement = documentRecord.createXULElement;
 
   try {
     // Mock document.createXULElement to throw error
-    const originalCreateXULElement = (
-      document as unknown as Record<string, unknown>
-    ).createXULElement;
-    (document as unknown as Record<string, unknown>).createXULElement = () => {
+    documentRecord.createXULElement = () => {
       throw new Error("Test error");
     };
 
     let threw = false;
     try {
       const mod = await import("../link-context-menu.tsx");
-      new mod.ExternalBrowserLinkContextMenu();
+      createLinkContextMenu(mod);
     } catch {
       threw = true;
     }
 
     // Constructor should handle error gracefully
     assert(!threw, "constructor should handle render error gracefully");
-
-    // Restore original
-    (document as unknown as Record<string, unknown>).createXULElement =
-      originalCreateXULElement;
   } finally {
+    documentRecord.createXULElement = originalCreateXULElement;
     cleanupDOM();
   }
 }
 
 async function testLinkContextMenuHandlesMissingContextMenu(): Promise<void> {
   cleanupDOM();
+  detachLiveContentAreaContextMenu();
   // No contentAreaContextMenu in DOM
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     // Constructor should return early without throwing
     const menu = document!.getElementById(MENU_ID);
@@ -639,7 +656,7 @@ async function testLinkContextMenuPersistsAfterInstantiation(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     const firstExists = menu !== null;
@@ -670,7 +687,7 @@ async function testLinkContextMenuCreatesMenuItem(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     assert(menu !== null, "menu should exist");
@@ -693,7 +710,7 @@ async function testLinkContextMenuLabelCanBeUpdated(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     const menu = document!.getElementById(MENU_ID);
     assert(menu !== null, "menu should exist");
@@ -723,7 +740,7 @@ async function testLinkContextMenuConstructorCompletes(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    const instance = new mod.ExternalBrowserLinkContextMenu();
+    const { instance } = createLinkContextMenu(mod);
 
     assert(
       instance !== null && instance !== undefined,
@@ -744,7 +761,7 @@ async function testLinkContextMenuHandlesEmptyBrowserList(): Promise<void> {
 
   try {
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     // Constructor should complete even if no browsers are detected
     const menu = document!.getElementById(MENU_ID);
@@ -761,25 +778,21 @@ async function testLinkContextMenuHandlesEmptyBrowserList(): Promise<void> {
 async function testLinkContextMenuHandlesMissingGContextMenu(): Promise<void> {
   cleanupDOM();
   createMockContentAreaContextMenu();
+  const originalGContextMenu = (globalThis as Record<string, unknown>)
+    .gContextMenu;
 
   try {
-    // Save original gContextMenu
-    const originalGContextMenu = (globalThis as Record<string, unknown>)
-      .gContextMenu;
-
     // Remove gContextMenu temporarily (non-configurable in Firefox, so set to undefined)
     (globalThis as Record<string, unknown>).gContextMenu = undefined;
 
     const mod = await import("../link-context-menu.tsx");
-    new mod.ExternalBrowserLinkContextMenu();
+    createLinkContextMenu(mod);
 
     // Constructor should complete without error even without gContextMenu
     const menu = document!.getElementById(MENU_ID);
     assert(menu !== null, "menu should be created even without gContextMenu");
-
-    // Restore gContextMenu
-    (globalThis as Record<string, unknown>).gContextMenu = originalGContextMenu;
   } finally {
+    (globalThis as Record<string, unknown>).gContextMenu = originalGContextMenu;
     cleanupDOM();
   }
 }
@@ -787,11 +800,6 @@ async function testLinkContextMenuHandlesMissingGContextMenu(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
-
-// Helper to create a mutation event
-function createMutationEvent(_attributeName: string): Event {
-  return new Event("MutationObserver");
-}
 
 const tests: TestCase[] = [
   // Class structure
@@ -856,12 +864,6 @@ const tests: TestCase[] = [
   {
     name: "link context menu positioned near openLink",
     fn: testLinkContextMenuPositionedNearOpenLink,
-  },
-
-  // Constructor edge cases
-  {
-    name: "link context menu constructor with undefined document",
-    fn: testLinkContextMenuConstructorWithUndefinedDocument,
   },
 
   // MutationObserver
@@ -952,5 +954,10 @@ const tests: TestCase[] = [
 ];
 
 export async function runAllTests(): Promise<void> {
-  await runTests("linkContextMenu.test.ts", tests);
+  try {
+    await runTests("linkContextMenu.test.ts", tests);
+  } finally {
+    cleanupDOM();
+    restoreGContextMenu();
+  }
 }

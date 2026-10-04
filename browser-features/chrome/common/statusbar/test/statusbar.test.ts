@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { StatusBarManager } from "../statusbar-manager.tsx";
+import { createRoot } from "@nora/preact-xul/lifetime";
 
 import {
   assert,
@@ -83,6 +84,40 @@ function testShowStatusBarReflectsPref(): void {
   });
 }
 
+function testPrefObserverSurvivesSignalUpdates(): void {
+  withPrefRestore(() => {
+    Services.prefs.setBoolPref(PREF_KEY, false);
+    const owned = createRoot((dispose) => ({
+      manager: new StatusBarManager(),
+      dispose,
+    }));
+    try {
+      owned.manager.showStatusBar.value = true;
+      Services.prefs.setBoolPref(PREF_KEY, false);
+      assertEquals(
+        owned.manager.showStatusBar.value,
+        false,
+        "external pref changes remain observed after a signal update",
+      );
+      Services.prefs.setBoolPref(PREF_KEY, true);
+      assertEquals(
+        owned.manager.showStatusBar.value,
+        true,
+        "external pref changes still update the manager after a toggle",
+      );
+      owned.dispose();
+      Services.prefs.setBoolPref(PREF_KEY, false);
+      assertEquals(
+        owned.manager.showStatusBar.value,
+        true,
+        "the pref observer stops only when its owner is disposed",
+      );
+    } finally {
+      owned.dispose();
+    }
+  });
+}
+
 function testSetShowStatusBarUpdatesPref(): void {
   withPrefRestore(() => {
     Services.prefs.setBoolPref(PREF_KEY, false);
@@ -134,7 +169,11 @@ function testSignalRoundTrip(): void {
     );
 
     manager.showStatusBar.value = true;
-    assertEquals(manager.showStatusBar.value, true, "signal should be true again");
+    assertEquals(
+      manager.showStatusBar.value,
+      true,
+      "signal should be true again",
+    );
     assertEquals(
       Services.prefs.getBoolPref(PREF_KEY, false),
       true,
@@ -703,10 +742,14 @@ function testShowStatusBarControlsVisibility(): void {
 
           // When showStatusBar is true, element should be visible
           manager.showStatusBar.value = true;
-          const _displayTrue = (mockStatusbar as unknown as { style: { display: string } }).style.display;
+          const _displayTrue =
+            (mockStatusbar as unknown as { style: { display: string } }).style
+              .display;
 
           manager.showStatusBar.value = false;
-          const _displayFalse = (mockStatusbar as unknown as { style: { display: string } }).style.display;
+          const _displayFalse =
+            (mockStatusbar as unknown as { style: { display: string } }).style
+              .display;
 
           // The style is controlled by the component, not directly by manager
           // but the signal should be updated
@@ -857,6 +900,10 @@ export async function runAllTests(): Promise<void> {
     },
 
     // Pref observer
+    {
+      name: "pref observer survives signal updates until owner disposal",
+      fn: testPrefObserverSurvivesSignalUpdates,
+    },
     {
       name: "pref observer handles same value update",
       fn: testPrefObserverHandlesSameValueUpdate,

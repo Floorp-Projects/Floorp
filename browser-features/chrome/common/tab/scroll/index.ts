@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { effect } from "@preact/signals";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 
 type XULTabElement = XULElement & {
   onwheel?: EventHandler;
@@ -33,12 +33,19 @@ export class TabScroll {
       "#tabbrowser-tabs",
     ) as XULTabElement;
     if (tabBrowserTabs) {
-      tabBrowserTabs.on_wheel = (event: WheelEvent) => {
+      const previousOnWheel = tabBrowserTabs.on_wheel;
+      const onWheel = (event: WheelEvent) => {
         this.handleOnWheel(event, tabBrowserTabs);
       };
+      tabBrowserTabs.on_wheel = onWheel;
+      addDisposer(() => {
+        if (tabBrowserTabs.on_wheel === onWheel) {
+          tabBrowserTabs.on_wheel = previousOnWheel;
+        }
+      });
     }
 
-    effect(() => {
+    rootEffect(() => {
       const isEnable = config.value.tab.tabScroll.enabled;
       Services.prefs.setBoolPref("toolkit.tabbox.switchByScrolling", isEnable);
     });

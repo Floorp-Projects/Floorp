@@ -1,114 +1,125 @@
 // SPDX-License-Identifier: MPL-2.0
-//
-// Stage 2 shim: Preact+signals equivalent of solid-xul's lifecycle utilities.
-//
-// Two functions only (ミオ + ムゥ判定):
-//   1. createRootHMR — HMR lifetime morphism injection
-//   2. createNodeDisposer — DOM lifetime → effect dispose 連動 (browser-action.tsx用)
-//
-// NOT implemented (自然変換成立で不要):
-//   createSignal / createEffect / createMemo / onCleanup — 直書き換え
-//   For / Show / Portal — preact native で代替
-//   Scope / Owner / runWithOwner / getOwner — 全 callsite が直書き換え可 (Stage 1 判定)
-
 import type { ViteHotContext } from "vite/types/hot.js";
 import { effect } from "@preact/signals";
 
 type Disposer = () => void;
+type Scope = { disposers: Disposer[]; disposed: boolean };
+let currentScope: Scope | null = null;
+const hotRoots = new WeakMap<ViteHotContext, Set<Disposer>>();
 
-// Context stack for tracking disposers inside createRootHMR fn
-let _currentDisposers: Disposer[] | null = null;
-
-/**
- * Register a disposer to be called on HMR reload.
- * Call inside createRootHMR's fn — typically wraps each effect() call.
- */
-export function addDisposer(d: Disposer): void {
-  _currentDisposers?.push(d);
+/** Register synchronous setup cleanup with the active root, if there is one. */
+export function addDisposer(dispose: Disposer): void {
+  if (currentScope?.disposed) dispose();
+  else currentScope?.disposers.push(dispose);
 }
 
-/**
- * Preact+signals equivalent of solid-xul's createRootHMR.
- *
- * - Runs fn() synchronously (matching Solid's createRoot behavior)
- * - Collects disposers registered via addDisposer() or rootEffect() inside fn
- * - On HMR reload (hot.dispose), calls all collected disposers
- *
- * Usage:
- *   createRootHMR(() => {
- *     rootEffect(() => { ... });  // ← HMR-tracked effect
- *     addDisposer(() => cleanup());  // ← manual disposer
- *   }, import.meta.hot);
- */
-export function createRootHMR<T>(fn: () => T, hot?: ViteHotContext): T {
-  const disposers: Disposer[] = [];
-  const prev = _currentDisposers;
-  _currentDisposers = disposers;
-  let result: T;
+function disposeAll(disposers: Disposer[]): void {
+  for (const dispose of disposers.splice(0).reverse()) {
+    try {
+      dispose();
+    } catch (error) {
+      // A failing feature cleanup must not leak every remaining observer/root.
+      console.error("[@nora/preact-xul] cleanup failed", error);
+    }
+  }
+}
+
+/** Synchronous lifetime scope for effects, observers and inserted render roots. */
+export function createRoot<T>(fn: (dispose: Disposer) => T): T {
+  const scope: Scope = { disposers: [], disposed: false };
+  const dispose = () => {
+    if (scope.disposed) return;
+    scope.disposed = true;
+    disposeAll(scope.disposers);
+  };
+  const parent = currentScope;
+  addDisposer(dispose);
+  currentScope = scope;
   try {
-    result = fn();
-  } finally {
-    _currentDisposers = prev;
-  }
-  if (hot) {
-    hot.dispose(() => {
-      disposers.forEach((d) => d());
-      disposers.length = 0;
-    });
-  }
-  return result!;
-}
-
-/**
- * HMR-tracked effect. Wraps @preact/signals effect() and registers
- * the disposer with the current createRootHMR scope.
- *
- * Use this instead of bare effect() inside createRootHMR fn:
- *   createRootHMR(() => {
- *     rootEffect(() => { ... });  // ← disposer auto-registered
- *   }, import.meta.hot);
- */
-export function rootEffect(fn: Parameters<typeof effect>[0]): Disposer {
-  const d = effect(fn);
-  addDisposer(d);
-  return d;
-}
-
-/**
- * Attaches a disposer to a DOM node's lifecycle via MutationObserver.
- *
- * Needed for browser-action.tsx: CustomizableUI.createWidget passes an onCreated
- * callback that fires outside any reactive scope. We cannot getOwner() there.
- * Instead, bind the effect disposer to the node — when Chromium removes the node,
- * the effect is disposed automatically.
- *
- * @param node - The XUL/DOM node whose removal should trigger dispose
- * @param dispose - Disposer to call when node is removed from DOM
- */
-export function createNodeDisposer(node: Element, dispose: Disposer): void {
-  // Check if already disconnected
-  if (!node.isConnected) {
+    return fn(dispose);
+  } catch (error) {
     dispose();
-    return;
+    throw error;
+  } finally {
+    currentScope = parent;
   }
+}
 
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const removed of mutation.removedNodes) {
-        if (removed === node || (removed as Element).contains?.(node)) {
-          dispose();
-          observer.disconnect();
-          return;
-        }
+/** Drain all roots for one module; NoraComponentBase can own its HMR callback. */
+export function disposeRoot(hot: ViteHotContext): void {
+  const roots = hotRoots.get(hot);
+  hotRoots.delete(hot);
+  if (roots) disposeAll(Array.from(roots));
+}
+
+export function createRootHMR<T>(
+  fn: (dispose: Disposer) => T,
+  hot?: ViteHotContext,
+): T {
+  return createRoot((dispose) => {
+    if (hot) {
+      let roots = hotRoots.get(hot);
+      if (!roots) hotRoots.set(hot, roots = new Set());
+      roots.add(dispose);
+      addDisposer(() => roots.delete(dispose));
+      // Vite stores one dispose callback per module. Register once so multiple
+      // roots do not overwrite one another or NoraComponentBase's callback.
+      if (
+        !hot.data.__preactXulExternalDisposeOwner &&
+        !hot.data.__preactXulDisposeRegistered
+      ) {
+        hot.data.__preactXulDisposeRegistered = true;
+        hot.dispose(() => {
+          try {
+            disposeRoot(hot);
+          } finally {
+            hot.data.__preactXulDisposeRegistered = false;
+          }
+        });
       }
     }
+    return fn(dispose);
   });
+}
 
-  // Observe the closest parent that won't be removed itself
-  const parent = node.parentElement ?? (document?.body as Element | null);
-  if (!parent) {
-    console.warn("createNodeDisposer: no observable parent, disposer leaked");
-    return;
-  }
-  observer.observe(parent, { childList: true, subtree: true });
+/** Track the effect's subscription and its returned cleanup with this root. */
+export function rootEffect(fn: Parameters<typeof effect>[0]): Disposer {
+  const dispose = effect(fn);
+  addDisposer(dispose);
+  return dispose;
+}
+
+/**
+ * Dispose after a node (or an ancestor) leaves its document. CustomizableUI calls
+ * onCreated before insertion, and moves widgets between toolbars: wait for an
+ * initial attachment and inspect connectivity after each mutation batch.
+ */
+export function createNodeDisposer(node: Element, cleanup: Disposer): Disposer {
+  const doc = node.ownerDocument;
+  const view = doc.defaultView;
+  let connected = node.isConnected;
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    observer.disconnect();
+    view?.removeEventListener("unload", dispose);
+    cleanup();
+  };
+  const observer = new MutationObserver((mutations) => {
+    if (node.isConnected) {
+      connected = true;
+      return;
+    }
+    const removed = mutations.some((mutation) =>
+      Array.from(mutation.removedNodes).some((ancestor) =>
+        ancestor?.contains(node)
+      )
+    );
+    if (connected || removed) dispose();
+  });
+  observer.observe(doc, { childList: true, subtree: true });
+  view?.addEventListener("unload", dispose, { once: true });
+  addDisposer(dispose);
+  return dispose;
 }

@@ -1,22 +1,24 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { shareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import { toggleZenModeForWindow } from "#features-chrome/common/zen-mode/zen-mode.tsx";
 import {
-  setPersistedGroupLayout,
   getSplitViewGroupIdForTabs,
+  setPersistedGroupLayout,
 } from "#features-chrome/common/split-view/patches/session-restore.js";
 import { applyLayoutAttribute } from "#features-chrome/common/split-view/layout.js";
 import { updateHandles } from "#features-chrome/common/split-view/components/split-view-splitters.js";
 import type { SplitViewLayout } from "#features-chrome/common/split-view/data/types.js";
 import {
-  toggleUserInterface,
-  toggleNavigationPanel,
   enableRestMode,
+  toggleNavigationPanel,
+  toggleUserInterface,
 } from "./ui-toggle.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
     const targetDoc = win?.document ?? document;
-    return (targetDoc?.getElementById(id) as unknown as XULElement | null) ?? null;
+    return (targetDoc?.getElementById(id) as unknown as XULElement | null) ??
+      null;
   } catch {
     return null;
   }
@@ -89,13 +91,16 @@ function applyThreePaneLayout(
   if (!activeSplitView) return;
 
   const groupId = getSplitViewGroupIdForTabs(
-    activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+    activeSplitView
+      .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
   );
   if (groupId) {
     setPersistedGroupLayout(groupId, targetLayout);
   }
 
-  const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+  const logger = console.createInstance({
+    prefix: "[mouse-gesture:split-view]",
+  });
   applyLayoutAttribute(logger, targetLayout, 3);
   const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
   if (panels) {
@@ -507,11 +512,8 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-toggle-zen-mode",
-    fn: (_win) => {
-      Services.prefs.setBoolPref(
-        "floorp.zenmode.enabled",
-        !Services.prefs.getBoolPref("floorp.zenmode.enabled", false),
-      );
+    fn: (win) => {
+      toggleZenModeForWindow(win);
     },
   },
   {
@@ -528,7 +530,9 @@ export const actions: GestureActionRegistration[] = [
   },
   {
     name: "floorp-toggle-share-mode",
-    fn: () => { shareModeEnabled.value = !shareModeEnabled.value; },
+    fn: () => {
+      shareModeEnabled.value = !shareModeEnabled.value;
+    },
   },
   {
     name: "floorp-copy-page-url-as-markdown",
@@ -738,7 +742,8 @@ export const actions: GestureActionRegistration[] = [
           applyThreePaneLayout(win, "grid-3pane-top-main");
         } else {
           const groupId = getSplitViewGroupIdForTabs(
-            activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+            activeSplitView
+              .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
           );
           if (groupId) {
             setPersistedGroupLayout(groupId, "vertical");
@@ -762,15 +767,20 @@ export const actions: GestureActionRegistration[] = [
       const newActiveSplitView = gBrowser.activeSplitView;
       if (newActiveSplitView?.tabs) {
         const groupId = getSplitViewGroupIdForTabs(
-          newActiveSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+          newActiveSplitView
+            .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
         );
         if (groupId) {
           setPersistedGroupLayout(groupId, "vertical");
         }
       }
-      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      const logger = console.createInstance({
+        prefix: "[mouse-gesture:split-view]",
+      });
       applyLayoutAttribute(logger, "vertical", 2);
-      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      const panels = gBrowser.tabpanels?.splitViewPanels as
+        | string[]
+        | undefined;
       if (panels) {
         updateHandles(panels, "vertical");
       }
@@ -824,7 +834,8 @@ export const actions: GestureActionRegistration[] = [
           applyThreePaneLayout(win, "grid-3pane-bottom-main");
         } else {
           const groupId = getSplitViewGroupIdForTabs(
-            activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+            activeSplitView
+              .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
           );
           if (groupId) {
             setPersistedGroupLayout(groupId, "vertical");
@@ -848,15 +859,20 @@ export const actions: GestureActionRegistration[] = [
       const newActiveSplitView = gBrowser.activeSplitView;
       if (newActiveSplitView?.tabs) {
         const groupId = getSplitViewGroupIdForTabs(
-          newActiveSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+          newActiveSplitView
+            .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
         );
         if (groupId) {
           setPersistedGroupLayout(groupId, "vertical");
         }
       }
-      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      const logger = console.createInstance({
+        prefix: "[mouse-gesture:split-view]",
+      });
       applyLayoutAttribute(logger, "vertical", 2);
-      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      const panels = gBrowser.tabpanels?.splitViewPanels as
+        | string[]
+        | undefined;
       if (panels) {
         updateHandles(panels, "vertical");
       }
@@ -997,11 +1013,12 @@ export const actions: GestureActionRegistration[] = [
       }
       const currentLayout =
         (container.getAttribute("split-view-layout") as SplitViewLayout) ??
-        "horizontal";
+          "horizontal";
       const currentIdx = cycle.indexOf(currentLayout);
-      const nextIdx = (currentIdx === -1
-        ? (currentLayout.startsWith("grid-3pane-") ? 2 : 0)
-        : (currentIdx + 1)) % cycle.length;
+      const nextIdx =
+        (currentIdx === -1
+          ? (currentLayout.startsWith("grid-3pane-") ? 2 : 0)
+          : (currentIdx + 1)) % cycle.length;
       const nextLayout = cycle[nextIdx]!;
 
       console.debug(
@@ -1017,16 +1034,21 @@ export const actions: GestureActionRegistration[] = [
 
       // Persist the new layout so it survives re-activation and session restore.
       const groupId = getSplitViewGroupIdForTabs(
-        activeSplitView.tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
+        activeSplitView
+          .tabs as import("#features-chrome/common/split-view/data/types.js").SplitViewTab[],
       );
       if (groupId) {
         setPersistedGroupLayout(groupId, nextLayout);
       }
 
       // Apply layout properly through the layout pipeline (handles, grid styles).
-      const logger = console.createInstance({ prefix: "[mouse-gesture:split-view]" });
+      const logger = console.createInstance({
+        prefix: "[mouse-gesture:split-view]",
+      });
       applyLayoutAttribute(logger, nextLayout, paneCount);
-      const panels = gBrowser.tabpanels?.splitViewPanels as string[] | undefined;
+      const panels = gBrowser.tabpanels?.splitViewPanels as
+        | string[]
+        | undefined;
       if (panels) {
         updateHandles(panels, nextLayout);
       }

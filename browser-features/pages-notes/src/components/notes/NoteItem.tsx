@@ -68,6 +68,7 @@ export const NoteItem = memo(function NoteItem({ note, isSelected, onSelect, onD
         >
             <button
                 type="button"
+                data-testid="notes-row"
                 role="option"
                 aria-selected={isSelected}
                 className={`w-full flex flex-col px-2 py-1.5 rounded-lg border transition-colors text-sm ${isReorderMode
@@ -95,6 +96,7 @@ export const NoteItem = memo(function NoteItem({ note, isSelected, onSelect, onD
                     {!isReorderMode && (
                         <button
                             type="button"
+                            data-testid="notes-delete"
                             className="btn btn-xs btn-ghost btn-circle opacity-0 hover:opacity-100 focus-visible:opacity-100 shrink-0"
                             onClick={(e) => {
                                 e.stopPropagation();

@@ -8,10 +8,10 @@
  */
 
 import type {
+  ClickElementOptions,
+  GetTextOptions,
   InputElementOptions,
   SelectOptionOptions,
-  GetTextOptions,
-  ClickElementOptions,
   WebScraperContext,
 } from "./types.ts";
 import { HighlightManager } from "./HighlightManager.ts";
@@ -172,8 +172,12 @@ export class DOMOperations {
     return this.writeOps.setChecked(selector, checked);
   }
 
-  uploadFile(selector: string, filePath: string): Promise<boolean> {
-    return this.writeOps.uploadFile(selector, filePath);
+  uploadFile(
+    selector: string,
+    fileData: number[],
+    fileName: string,
+  ): Promise<boolean> {
+    return this.writeOps.uploadFile(selector, fileData, fileName);
   }
 
   setCookieString(
@@ -274,7 +278,6 @@ export class DOMOperations {
       return false;
     }
   }
-
 
   dispatchTextInput(selector: string, text: string): boolean {
     return this.writeOps.dispatchTextInput(selector, text);

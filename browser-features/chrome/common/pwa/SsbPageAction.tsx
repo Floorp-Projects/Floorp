@@ -5,7 +5,8 @@
 
 import { signal } from "@preact/signals";
 import type { Signal } from "@preact/signals";
-import { render } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import type { PwaService } from "./pwaService.ts";
 import type { Browser } from "./type.ts";
 import {
@@ -53,26 +54,32 @@ export class SsbPageAction {
     const ssbPageAction = document?.getElementById("page-action-buttons");
     if (!starButtonBox || !ssbPageAction) return;
 
-    // Render before the marker (starButtonBox) — insert a container before it
-    const renderContainer = document?.createElement("span") as HTMLElement;
-    ssbPageAction.insertBefore(renderContainer, starButtonBox);
     const RenderWrapper = () => this.Render();
-    render(<RenderWrapper />, renderContainer);
+    addDisposer(safeRender(<RenderWrapper />, ssbPageAction, starButtonBox));
+    if (document?.head) {
+      const StyleWrapper = () => this.Style();
+      addDisposer(safeRender(<StyleWrapper />, document.head));
+    }
 
-    // Render style into head
-    const styleContainer = document?.createElement("span") as HTMLElement;
-    document?.head?.appendChild(styleContainer);
-    const StyleWrapper = () => this.Style();
-    render(<StyleWrapper />, styleContainer);
-
+    const onManifestChange = () => this.onCheckPageHasManifest();
     Services.obs.addObserver(
-      () => this.onCheckPageHasManifest(),
+      onManifestChange,
       "nora-pwa-check-page-has-manifest",
     );
     globalThis.gBrowser.tabContainer.addEventListener(
       "TabSelect",
-      () => this.onCheckPageHasManifest(),
+      onManifestChange,
     );
+    addDisposer(() => {
+      Services.obs.removeObserver(
+        onManifestChange,
+        "nora-pwa-check-page-has-manifest",
+      );
+      globalThis.gBrowser.tabContainer.removeEventListener(
+        "TabSelect",
+        onManifestChange,
+      );
+    });
 
     addI18nObserver(() => {
       this.translations.value = {
@@ -149,8 +156,7 @@ export class SsbPageAction {
     const manifest = await this.pwaService.getManifest(
       selectedBrowser as Browser,
     );
-    this.title.value =
-      manifest?.name ?? selectedBrowser.currentURI?.spec ?? "";
+    this.title.value = manifest?.name ?? selectedBrowser.currentURI?.spec ?? "";
     this.description.value = selectedBrowser.currentURI?.host ?? "";
   };
 
@@ -177,9 +183,11 @@ export class SsbPageAction {
   }
 
   private closePopup = () => {
-    const panel = document?.getElementById("ssb-panel") as unknown as XULElement & {
-      hidePopup: () => void;
-    };
+    const panel = document?.getElementById("ssb-panel") as unknown as
+      & XULElement
+      & {
+        hidePopup: () => void;
+      };
     if (panel) {
       panel.hidePopup();
     }

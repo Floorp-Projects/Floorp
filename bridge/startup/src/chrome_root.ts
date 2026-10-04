@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { runTestBootstrapWithFailureReporting } from "./test_bootstrap_failure.ts";
+import { claimTestRunOwnership } from "./test_run_owner.ts";
+
 const HTTP_LOADER_PREF = "nora.dev.allow_http_loader";
 
 async function importWithRetry(
@@ -45,11 +48,14 @@ function assertHttpLoaderAllowed(): void {
   );
 }
 
-// import.meta.env.MODE
-setStartupMarker("nora.startup.mode", import.meta.env.MODE);
-setStartupMarker("nora.startup.loader", "");
-setStartupMarker("nora.startup.test", "");
-setStartupMarker("nora.startup.error", "");
+const isTestOwner = import.meta.env.MODE === "test" &&
+  claimTestRunOwnership(Services.ppmm.sharedData);
+if (import.meta.env.MODE !== "test" || isTestOwner) {
+  setStartupMarker("nora.startup.mode", import.meta.env.MODE);
+  setStartupMarker("nora.startup.loader", "");
+  setStartupMarker("nora.startup.test", "");
+  setStartupMarker("nora.startup.error", "");
+}
 if (import.meta.env.MODE === "dev") {
   assertHttpLoaderAllowed();
   try {
@@ -65,31 +71,52 @@ if (import.meta.env.MODE === "dev") {
     throw error;
   }
 } else if (import.meta.env.MODE === "test") {
-  assertHttpLoaderAllowed();
-  try {
+  if (!isTestOwner) {
+    // Test-created windows need the features under test, but must not consume
+    // the host control request, run tests, or overwrite the owner's diagnostics.
+    assertHttpLoaderAllowed();
     const loaderModule = await importWithRetry(
       "http://localhost:5181/loader/index.ts",
     );
     await loaderModule.default();
-    setStartupMarker("nora.startup.loader", "loaded");
+  } else {
+    await runTestBootstrapWithFailureReporting(
+      {
+        getStringPref: (name, fallback) =>
+          Services.prefs.getStringPref(name, fallback),
+        setStringPref: (name, value) =>
+          Services.prefs.setStringPref(name, value),
+        // Gecko accepts null to flush the default prefs.js, but the generated
+        // nsIPrefService type still declares this parameter as nsIFile only.
+        savePrefFile: (prefFile) =>
+          Services.prefs.savePrefFile(prefFile as unknown as nsIFile),
+      },
+      async () => {
+        assertHttpLoaderAllowed();
 
-    const testModule = await importWithRetry(
-      "http://localhost:5181/loader/test/index.ts",
+        const loaderModule = await importWithRetry(
+          "http://localhost:5181/loader/index.ts",
+        );
+        await loaderModule.default();
+        setStartupMarker("nora.startup.loader", "loaded");
+
+        const testModule = await importWithRetry(
+          "http://localhost:5181/loader/test/index.ts",
+        );
+        await testModule.default();
+        setStartupMarker("nora.startup.test", "loaded");
+
+        // Keep the browser alive after test completion so the host-side
+        // test runner has time to collect results from prefs.js.
+        // Without this the browser may shut down before the runner reads
+        // the final state. Use setInterval (not an unresolved Promise) to
+        // avoid blocking the event loop.
+        // The interval is cleared after 10 minutes as a safety net.
+        const keepaliveId = setInterval(() => {}, 60_000);
+        setTimeout(() => clearInterval(keepaliveId), 600_000);
+      },
+      (error) => setStartupMarker("nora.startup.error", error),
     );
-    await testModule.default();
-    setStartupMarker("nora.startup.test", "loaded");
-
-    // Keep the browser alive after test completion so the host-side
-    // test runner has time to collect results from prefs.js.
-    // Without this the browser may shut down before the runner reads
-    // the final state. Use setInterval (not an unresolved Promise) to
-    // avoid blocking the event loop.
-    // The interval is cleared after 10 minutes as a safety net.
-    const keepaliveId = setInterval(() => {}, 60_000);
-    setTimeout(() => clearInterval(keepaliveId), 600_000);
-  } catch (error) {
-    setStartupMarker("nora.startup.error", String(error).slice(0, 300));
-    throw error;
   }
 } else {
   //@ts-expect-error TS cannot find the module from chrome that is inner in Firefox

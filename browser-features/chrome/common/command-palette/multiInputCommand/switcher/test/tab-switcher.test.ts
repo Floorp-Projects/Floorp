@@ -7,7 +7,7 @@ import {
   runTests,
   type TestCase,
 } from "../../../../../test/utils/test_harness.ts";
-import { tabSwitcherCommand, loadTabs } from "../tab-switcher.ts";
+import { loadTabs, tabSwitcherCommand } from "../tab-switcher.ts";
 import { getPaletteCommands } from "../../../command-registry.ts";
 import type { PaletteCommand } from "../../../types.ts";
 
@@ -15,7 +15,11 @@ const rawTests: TestCase[] = [
   {
     name: "tabSwitcherCommand has correct id",
     fn() {
-      assertEquals(tabSwitcherCommand.id, "floorp-tab-switcher", "id should be floorp-tab-switcher");
+      assertEquals(
+        tabSwitcherCommand.id,
+        "floorp-tab-switcher",
+        "id should be floorp-tab-switcher",
+      );
     },
   },
   {
@@ -46,7 +50,11 @@ const rawTests: TestCase[] = [
   {
     name: "tabSwitcherCommand has correct category",
     fn() {
-      assertEquals(tabSwitcherCommand.category, "switcher", "category should be switcher");
+      assertEquals(
+        tabSwitcherCommand.category,
+        "switcher",
+        "category should be switcher",
+      );
     },
   },
   {
@@ -56,7 +64,11 @@ const rawTests: TestCase[] = [
         Array.isArray(tabSwitcherCommand.steps),
         "steps should be an array",
       );
-      assertEquals(tabSwitcherCommand.steps!.length, 1, "should have exactly 1 step");
+      assertEquals(
+        tabSwitcherCommand.steps!.length,
+        1,
+        "should have exactly 1 step",
+      );
     },
   },
   {
@@ -109,7 +121,8 @@ const rawTests: TestCase[] = [
           "loadTabs result.choices should be an array",
         );
         assert(
-          typeof (result as { defaultIndex: unknown }).defaultIndex === "number",
+          typeof (result as { defaultIndex: unknown }).defaultIndex ===
+            "number",
           "loadTabs result.defaultIndex should be a number",
         );
       }
@@ -136,7 +149,9 @@ const rawTests: TestCase[] = [
     name: "tabSwitcherCommand is registered in palette",
     fn() {
       const commands = getPaletteCommands();
-      const found = commands.some((cmd: PaletteCommand) => cmd.id === "floorp-tab-switcher");
+      const found = commands.some((cmd: PaletteCommand) =>
+        cmd.id === "floorp-tab-switcher"
+      );
       assert(
         found,
         "floorp-tab-switcher should be registered in palette commands",
@@ -153,6 +168,6 @@ function assertDoesNotThrow(fn: () => void): void {
   }
 }
 
-export function runAllTests() {
-  runTests("tab-switcher.test.ts", rawTests);
+export async function runAllTests(): Promise<void> {
+  await runTests("tab-switcher.test.ts", rawTests);
 }

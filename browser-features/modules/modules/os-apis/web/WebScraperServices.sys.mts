@@ -18,10 +18,8 @@ import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
 import { CookieHelper } from "./shared/CookieHelper.sys.mts";
 import { NetworkIdleHelper } from "./shared/NetworkIdleHelper.sys.mts";
+import { prepareUploadFile } from "./shared/UploadFileReader.sys.mts";
 
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs",
-);
 const { HiddenFrame } = ChromeUtils.importESModule(
   "resource://gre/modules/HiddenFrame.sys.mjs",
 );
@@ -179,8 +177,8 @@ class webScraper {
    *
    * This method:
    * - Validates the browser instance exists
-   * - Sets up proper security principals and origin attributes
-   * - Loads the URL with appropriate remote type configuration
+   * - Sets up the triggering security principal
+   * - Loads the URL in the browser instance
    * - Monitors page load progress and resolves when navigation is complete
    * - Handles various edge cases like inner-frame events and same-document changes
    *
@@ -196,19 +194,8 @@ class webScraper {
     }
 
     const principal = Services.scriptSecurityManager.getSystemPrincipal();
-    const oa = E10SUtils.predictOriginAttributes({
-      browser,
-    });
     const loadURIOptions = {
       triggeringPrincipal: principal,
-      remoteType: E10SUtils.getRemoteTypeForURI(
-        url,
-        true,
-        false,
-        E10SUtils.DEFAULT_REMOTE_TYPE,
-        null,
-        oa,
-      ),
     };
 
     const uri = Services.io.newURI(url);
@@ -235,7 +222,9 @@ class webScraper {
       // Timeout guard: prevent hanging if page load never completes
       timeoutId = setTimeout(() => {
         if (resolved) return;
-        console.warn("[WebScraperServices] navigate timed out after 30 seconds");
+        console.warn(
+          "[WebScraperServices] navigate timed out after 30 seconds",
+        );
         resolved = true;
         PROGRESS_LISTENERS.delete(progressListener);
         try {
@@ -395,16 +384,17 @@ class webScraper {
     options:
       | boolean
       | {
-          mode?: "full" | "scoped" | "visible";
-          selector?: string;
-          viewportMargin?: number;
-          enableFingerprints?: boolean;
-          includeSelectorMap?: boolean;
-        } = false,
+        mode?: "full" | "scoped" | "visible";
+        selector?: string;
+        viewportMargin?: number;
+        enableFingerprints?: boolean;
+        includeSelectorMap?: boolean;
+      } = false,
   ): Promise<string | null> {
     // Normalize: boolean old-style { includeSelectorMap }
-    const data =
-      typeof options === "boolean" ? { includeSelectorMap: options } : options;
+    const data = typeof options === "boolean"
+      ? { includeSelectorMap: options }
+      : options;
     return this.withActor(instanceId, "WebScraper:GetText", data);
   }
 
@@ -429,17 +419,23 @@ class webScraper {
     instanceId: string,
     options: { interestingOnly?: boolean; root?: string } = {},
   ): Promise<unknown> {
-    return this.withActor(instanceId, "WebScraper:GetAccessibilityTree", options);
+    return this.withActor(
+      instanceId,
+      "WebScraper:GetAccessibilityTree",
+      options,
+    );
   }
 
   public getArticle(
     instanceId: string,
-  ): Promise<{
-    title: string;
-    byline: string;
-    markdown: string;
-    length: number;
-  } | null> {
+  ): Promise<
+    {
+      title: string;
+      byline: string;
+      markdown: string;
+      length: number;
+    } | null
+  > {
     return this.withActor(instanceId, "WebScraper:GetArticle");
   }
 
@@ -466,7 +462,9 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<string[]> {
-    return this.withActor<string[]>(instanceId, "WebScraper:GetElements", { selector }) as Promise<string[]>;
+    return this.withActor<string[]>(instanceId, "WebScraper:GetElements", {
+      selector,
+    }) as Promise<string[]>;
   }
 
   /**  Get Element By Text Content
@@ -486,7 +484,9 @@ class webScraper {
     instanceId: string,
     textContent: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:GetElementByText", { textContent });
+    return this.withActor(instanceId, "WebScraper:GetElementByText", {
+      textContent,
+    });
   }
 
   /** Get Element Text Content
@@ -506,7 +506,9 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:GetElementTextContent", { selector });
+    return this.withActor(instanceId, "WebScraper:GetElementTextContent", {
+      selector,
+    });
   }
 
   /**
@@ -527,7 +529,9 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:GetElementText", { selector });
+    return this.withActor(instanceId, "WebScraper:GetElementText", {
+      selector,
+    });
   }
 
   /**
@@ -546,7 +550,9 @@ class webScraper {
     instanceId: string,
     fingerprint: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:ResolveFingerprint", { fingerprint });
+    return this.withActor(instanceId, "WebScraper:ResolveFingerprint", {
+      fingerprint,
+    });
   }
 
   /**
@@ -558,7 +564,12 @@ class webScraper {
    * @throws Error - If the browser instance is not found
    */
   public clearEffects(instanceId: string): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:ClearEffects", undefined, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:ClearEffects",
+      undefined,
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -579,7 +590,12 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:ClickElement", { selector }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:ClickElement",
+      { selector },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -604,7 +620,11 @@ class webScraper {
     timeout = 5000,
     state: WaitForElementState = "attached",
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:WaitForElement", { selector, timeout, state }, false) as Promise<boolean>;
+    return this.withActor(instanceId, "WebScraper:WaitForElement", {
+      selector,
+      timeout,
+      state,
+    }, false) as Promise<boolean>;
   }
 
   /**
@@ -654,7 +674,9 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:TakeElementScreenshot", { selector });
+    return this.withActor(instanceId, "WebScraper:TakeElementScreenshot", {
+      selector,
+    });
   }
 
   /**
@@ -688,7 +710,9 @@ class webScraper {
     instanceId: string,
     rect?: { x?: number; y?: number; width?: number; height?: number },
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:TakeRegionScreenshot", { rect });
+    return this.withActor(instanceId, "WebScraper:TakeRegionScreenshot", {
+      rect,
+    });
   }
 
   /**
@@ -733,18 +757,32 @@ class webScraper {
    * Press a key or key combination.
    */
   public pressKey(instanceId: string, key: string): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:PressKey", { key }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:PressKey",
+      { key },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
    * Upload a file through input[type=file]
    */
-  public uploadFile(
+  public async uploadFile(
     instanceId: string,
     selector: string,
     filePath: string,
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:UploadFile", { selector, filePath }, false) as Promise<boolean>;
+    const upload = await prepareUploadFile(filePath);
+    if (!upload) {
+      return false;
+    }
+    return this.withActor(
+      instanceId,
+      "WebScraper:UploadFile",
+      { selector, ...upload },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -770,7 +808,10 @@ class webScraper {
     selector: string,
     attributeName: string,
   ): Promise<string | null> {
-    return this.withActor(instanceId, "WebScraper:GetAttribute", { selector, attributeName });
+    return this.withActor(instanceId, "WebScraper:GetAttribute", {
+      selector,
+      attributeName,
+    });
   }
 
   /**
@@ -784,7 +825,12 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:IsVisible", { selector }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:IsVisible",
+      { selector },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -798,7 +844,12 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:IsEnabled", { selector }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:IsEnabled",
+      { selector },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -812,14 +863,24 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:ClearInput", { selector }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:ClearInput",
+      { selector },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
    * Submits form associated with the selector element or the form itself
    */
   public submit(instanceId: string, selector: string): Promise<boolean> {
-    return this.withActor(instanceId, "WebScraper:Submit", { selector }, false) as Promise<boolean>;
+    return this.withActor(
+      instanceId,
+      "WebScraper:Submit",
+      { selector },
+      false,
+    ) as Promise<boolean>;
   }
 
   /**
@@ -835,7 +896,10 @@ class webScraper {
     selector: string,
     value: string,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:SelectOption", { selector, optionValue: value });
+    return this.withActor(instanceId, "WebScraper:SelectOption", {
+      selector,
+      optionValue: value,
+    });
   }
 
   /**
@@ -851,7 +915,10 @@ class webScraper {
     selector: string,
     checked: boolean,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:SetChecked", { selector, checked });
+    return this.withActor(instanceId, "WebScraper:SetChecked", {
+      selector,
+      checked,
+    });
   }
 
   /**
@@ -875,7 +942,9 @@ class webScraper {
     instanceId: string,
     selector: string,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:ScrollToElement", { selector });
+    return this.withActor(instanceId, "WebScraper:ScrollToElement", {
+      selector,
+    });
   }
 
   /**
@@ -988,7 +1057,10 @@ class webScraper {
         try {
           const actor = await this._getActorForBrowser(instanceId, 80, 100);
           if (actor) {
-            const cookieString = CookieHelper.buildCookieString(cookie, uri.host);
+            const cookieString = CookieHelper.buildCookieString(
+              cookie,
+              uri.host,
+            );
             const result = await actor
               .sendQuery("WebScraper:SetCookieString", {
                 cookieString,
@@ -1045,11 +1117,11 @@ class webScraper {
     options:
       | number
       | {
-          timeout?: number;
-          maxInflight?: number;
-          idleDuration?: number;
-          ignorePatterns?: string[];
-        } = {},
+        timeout?: number;
+        maxInflight?: number;
+        idleDuration?: number;
+        ignorePatterns?: string[];
+      } = {},
   ): Promise<boolean | null> {
     const browser = this._browserInstances.get(instanceId);
     if (!browser) {
@@ -1072,7 +1144,10 @@ class webScraper {
     selector: string,
     html: string,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:SetInnerHTML", { selector, innerHTML: html });
+    return this.withActor(instanceId, "WebScraper:SetInnerHTML", {
+      selector,
+      innerHTML: html,
+    });
   }
 
   /**
@@ -1083,7 +1158,10 @@ class webScraper {
     selector: string,
     text: string,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:SetTextContent", { selector, textContent: text });
+    return this.withActor(instanceId, "WebScraper:SetTextContent", {
+      selector,
+      textContent: text,
+    });
   }
 
   /**
@@ -1117,7 +1195,10 @@ class webScraper {
     selector: string,
     text: string,
   ): Promise<boolean | null> {
-    return this.withActor(instanceId, "WebScraper:DispatchTextInput", { selector, text });
+    return this.withActor(instanceId, "WebScraper:DispatchTextInput", {
+      selector,
+      text,
+    });
   }
 
   /**
@@ -1128,7 +1209,15 @@ class webScraper {
   public evaluate(
     instanceId: string,
     script: string,
-  ): Promise<{ success: boolean; result?: unknown; resultType?: string; error?: string; errorType?: string } | null> {
+  ): Promise<
+    {
+      success: boolean;
+      result?: unknown;
+      resultType?: string;
+      error?: string;
+      errorType?: string;
+    } | null
+  > {
     return this.withActor(
       instanceId,
       "WebScraper:Evaluate",

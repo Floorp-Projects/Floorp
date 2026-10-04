@@ -6,6 +6,21 @@
 import { signal } from "@preact/signals";
 import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 
+type StatusBarGlobals = typeof globalThis & {
+  FirefoxViewHandler?: {
+    openToolbarMouseEvent?: (event: MouseEvent) => void;
+  };
+  gTabsPanel?: {
+    showAllTabsPanel?: (event: MouseEvent, anchorId: string) => void;
+  };
+  DownloadsIndicatorView?: {
+    onCommand?: (event: MouseEvent) => void;
+  };
+  PanelUI?: {
+    showSubView?: (viewId: string, anchor: Element) => void;
+  };
+};
+
 export class StatusBarManager {
   showStatusBar = signal(
     Services.prefs.getBoolPref("noraneko.statusbar.enable", false),
@@ -22,12 +37,12 @@ export class StatusBarManager {
         "noraneko.statusbar.enable",
         this.showStatusBar.value,
       );
-      return () => {
-        Services.prefs.removeObserver(
-          "noraneko.statusbar.enable",
-          this.observerStatusbarPref,
-        );
-      };
+    });
+    addDisposer(() => {
+      Services.prefs.removeObserver(
+        "noraneko.statusbar.enable",
+        this.observerStatusbarPref,
+      );
     });
 
     if (!globalThis.gFloorp) {
@@ -38,15 +53,15 @@ export class StatusBarManager {
         this.showStatusBar.value = v;
       },
     };
-    addDisposer(() => {
-      globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
-    });
   }
 
   init() {
     globalThis.CustomizableUI.registerArea("nora-statusbar", {
       type: globalThis.CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: ["screenshot-button", "fullscreen-button"],
+    });
+    addDisposer(() => {
+      globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
 
     const statusbarNode = document?.getElementById("nora-statusbar");
@@ -70,7 +85,7 @@ export class StatusBarManager {
     }
 
     // Set up button press handler
-    statusbarNode.addEventListener("mousedown", (event) => {
+    const onMouseDown = (event: MouseEvent) => {
       if (!event.target) {
         // Event target is null
         return;
@@ -85,8 +100,7 @@ export class StatusBarManager {
       }
 
       try {
-        // deno-lint-ignore no-explicit-any
-        const gThis = globalThis as any;
+        const gThis = globalThis as StatusBarGlobals;
         switch (toolbarButton.id) {
           case "firefox-view-button":
             gThis.FirefoxViewHandler?.openToolbarMouseEvent?.(event);
@@ -101,10 +115,14 @@ export class StatusBarManager {
             gThis.PanelUI?.showSubView?.("appMenu-libraryView", toolbarButton);
             break;
         }
-      } catch(e) {
+      } catch (e) {
         console.error("[StatusBarManager] Error handling button press:", e);
       }
-    });
+    };
+    statusbarNode.addEventListener("mousedown", onMouseDown);
+    addDisposer(() =>
+      statusbarNode.removeEventListener("mousedown", onMouseDown)
+    );
 
     rootEffect(() => {
       const statuspanelLabel = document?.querySelector("#statuspanel-label");
@@ -150,8 +168,14 @@ export class StatusBarManager {
         }
       } else {
         statuspanel?.appendChild(statuspanelLabel);
-        observer.disconnect();
       }
+      return () => {
+        observer.disconnect();
+        // Keep Firefox's label alive when the Preact toolbar is unmounted.
+        if (statuspanelLabel.parentNode === statusText) {
+          statuspanel?.appendChild(statuspanelLabel);
+        }
+      };
     });
   }
 

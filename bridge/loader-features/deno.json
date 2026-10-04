@@ -22,7 +22,7 @@
     "pathe": "npm:pathe@^2.0.3",
     "unplugin-swc": "npm:unplugin-swc@^1.5.9",
     "uuid": "npm:uuid@^13.0.0",
-    "vite": "npm:vite@^8",
+    "vite": "npm:vite@^7.3.0",
     "vite-plugin-istanbul": "npm:vite-plugin-istanbul@^7.2.1",
     "vite-tsconfig-paths": "npm:vite-tsconfig-paths@^6.0.3",
     "chroma-js": "npm:chroma-js@^3.2.0",

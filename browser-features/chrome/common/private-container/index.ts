@@ -5,6 +5,7 @@
 
 import { h } from "preact";
 import { safeRender } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { FloorpPrivateContainer } from "./browser-private-container";
 import { ContextMenu } from "./context-menu";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
@@ -47,11 +48,16 @@ export default class PrivateContainer extends NoraComponentBase {
       }
 
       try {
-        safeRender(h(ContextMenu, null), tabContextMenu, marker ?? null);
+        addDisposer(safeRender(
+          h(ContextMenu, null),
+          tabContextMenu,
+          marker?.parentElement === tabContextMenu ? marker : undefined,
+        ));
         this.logger.info("Private container menu item rendered successfully.");
       } catch (error) {
-        const reason =
-          error instanceof Error ? error : new Error(String(error));
+        const reason = error instanceof Error
+          ? error
+          : new Error(String(error));
         this.logger.error(
           "Failed to render private container menu item",
           reason,

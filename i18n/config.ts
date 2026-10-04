@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { parse } from "@std/toml";
-import { createRootHMR } from "@nora/preact-xul/lifetime";
+import { createRootHMR, rootEffect } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
-import { effect, signal } from "@preact/signals";
+import { signal } from "@preact/signals";
 import type { Resources } from "./default.d.ts";
 
 const { I18nUtils } = ChromeUtils.importESModule(
@@ -84,7 +84,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
             // callers can still handle the rejection if they expect it.
             try {
               console.error("Failed to change language", e);
-            // deno-lint-ignore no-empty
+              // deno-lint-ignore no-empty
             } catch {}
             throw e;
           }
@@ -98,7 +98,7 @@ export function initI18N(namespace: string[], defaultNamespace: string) {
           "Failed to register translation provider on I18nUtils",
           e,
         );
-      // deno-lint-ignore no-empty
+        // deno-lint-ignore no-empty
       } catch {}
     }
   });
@@ -130,7 +130,7 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
  * @description For HMR, please run this function in `createRootHMR`
  * @example
  * ```ts
- * import { createRootHMR } from "@nora/preact-xul/lifetime";
+ * import { createRootHMR, rootEffect } from "@nora/preact-xul/lifetime";
  *
  * createRootHMR(
  *   () => {
@@ -141,7 +141,7 @@ I18nUtils.addLocaleChangeListener(async (newLocale: string) => {
  * ```
  */
 export function addI18nObserver(observer: (locale: string) => void) {
-  effect(() => {
+  return rootEffect(() => {
     observer(lang.value);
   });
 }

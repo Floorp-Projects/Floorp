@@ -3,8 +3,8 @@
 
 import {
   getOldInterfaceConfig,
-  getOldTabbarStyleConfig,
   getOldTabbarPositionConfig,
+  getOldTabbarStyleConfig,
 } from "../utils/old-config-migrator.ts";
 import {
   assertEquals,

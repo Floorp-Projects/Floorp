@@ -4,6 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import {
+  effectiveReleaseNotesMode,
+  releaseNotesAudience,
+  RELEASE_NOTES_PREFS,
+  shouldShowReleaseNotesChoice,
+} from "../common/release-notes.ts";
+
+// Keep the existing browser UI during the Firefox 157 transition. Locking the
+// preferences masks a profile's prior Nova opt-in without deleting it.
+for (
+  const pref of [
+    "browser.nova.enabled",
+    "browser.newtabpage.activity-stream.nova.enabled",
+  ]
+) {
+  Services.prefs.getDefaultBranch("").setBoolPref(pref, false);
+  Services.prefs.lockPref(pref);
+}
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
@@ -15,6 +34,23 @@ const { NoranekoConstants } = ChromeUtils.importESModule(
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
+
+function installFloorpIPProtectionUIEarly(): boolean {
+  try {
+    const { FloorpIPProtectionUI } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/ipprotection/FloorpIPProtectionUI.sys.mjs",
+    );
+    return FloorpIPProtectionUI.installEarly();
+  } catch (error) {
+    console.error(
+      "[FloorpIPProtectionUI] Failed to install the early runtime adapter:",
+      error,
+    );
+    return false;
+  }
+}
+
+const isFloorpIPProtectionUIReady = installFloorpIPProtectionUIEarly();
 
 export const env = Services.env;
 export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
@@ -74,6 +110,17 @@ function initializeVersionInfo(): void {
     isUpdated = true;
   }
 
+  if (!Services.prefs.prefHasUserValue(RELEASE_NOTES_PREFS.audience)) {
+    Services.prefs.setStringPref(
+      RELEASE_NOTES_PREFS.audience,
+      releaseNotesAudience(
+        isFirstRun,
+        oldVersionPref,
+        Services.prefs.getBoolPref("floorp.browser.welcome.page.shown", false),
+      ),
+    );
+  }
+
   Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
 }
 
@@ -84,7 +131,10 @@ export function onFinalUIStartup(): void {
     console.error("Failed to create default userChrome files:", error);
   });
 
-  openReleaseNotesInRecentWindow();
+  openReleaseNotesInRecentWindow()
+    .catch(console.error)
+    .then(showReleaseNotesChoice)
+    .catch(console.error);
 
   // int OS Modules
   ChromeUtils.importESModule(
@@ -102,12 +152,19 @@ export function onFinalUIStartup(): void {
 
 async function openReleaseNotesInRecentWindow(): Promise<void> {
   const { SessionStore } = await ChromeUtils.importESModule(
-    "resource:///modules/sessionstore/SessionStore.sys.mjs",
+    "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
   );
 
   await SessionStore.promiseInitialized;
 
-  if (!isUpdated) {
+  if (
+    !isUpdated ||
+    effectiveReleaseNotesMode(
+      Services.prefs.getStringPref(RELEASE_NOTES_PREFS.mode, "blocking"),
+      Services.prefs.getBoolPref(RELEASE_NOTES_PREFS.confirmed, false),
+    ) ===
+      "disabled"
+  ) {
     return;
   }
 
@@ -168,28 +225,31 @@ async function openReleaseNotesInRecentWindow(): Promise<void> {
     );
   }
 
-  try {
-    const welcomeTab = tabBrowser.addTab("about:welcome?upgrade=12", {
-      relatedToCurrent: false,
-      inBackground: true,
-      skipAnimation: false,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+  tabBrowser.selectedTab = newTab;
+}
 
-    if (currentWorkspaceID) {
-      welcomeTab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, currentWorkspaceID);
-    }
-  } catch (e) {
-    console.error("[NoranekoStartup] Failed to open welcome tab", e);
+function showReleaseNotesChoice(): void {
+  if (
+    !shouldShowReleaseNotesChoice(
+      Services.prefs.getStringPref(RELEASE_NOTES_PREFS.audience, "existing"),
+      Services.prefs.getBoolPref(RELEASE_NOTES_PREFS.confirmed, false),
+      Services.prefs.getBoolPref(RELEASE_NOTES_PREFS.promptShown, false),
+    )
+  ) {
+    return;
   }
 
-  recentWindow.addEventListener(
-    "DOMContentLoaded",
-    () => {
-      tabBrowser.selectedTab = newTab;
-    },
-    { once: true },
-  );
+  const recentWindow = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as Window | null;
+  if (!recentWindow) return;
+  const tab = recentWindow.gBrowser.addTab("about:welcome?releaseNotes=1", {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+  const workspaceID = recentWindow.workspacesFuncs?.getSelectedWorkspaceID?.();
+  if (workspaceID) tab.setAttribute("floorpWorkspaceId", workspaceID);
+  recentWindow.gBrowser.selectedTab = tab;
+  Services.prefs.setBoolPref(RELEASE_NOTES_PREFS.promptShown, true);
 }
 
 async function createDefaultUserChromeFiles(): Promise<void> {
@@ -458,6 +518,11 @@ async function initializeExperiments() {
     "resource://noraneko/modules/experiments/Experiments.sys.mjs",
   );
   await Experiments.init();
+
+  const { FloorpIPProtectionGate } = await ChromeUtils.importESModule(
+    "resource://noraneko/modules/ipprotection/FloorpIPProtectionGate.sys.mjs",
+  );
+  FloorpIPProtectionGate.apply(isFloorpIPProtectionUIReady);
 }
 
 (async () => {

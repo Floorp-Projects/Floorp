@@ -2,15 +2,15 @@
 
 import i18next from "i18next";
 import type {
-  PaletteCommand,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "../../types.ts";
 import type {
   ChromeWindow,
+  HistoryPlacesUtilsModule,
   SqliteConnection,
   SqliteModule,
-  HistoryPlacesUtilsModule,
 } from "./types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
@@ -43,8 +43,8 @@ async function queryHistory(
 
     if (!conn) return [];
 
-    const sevenDaysAgoMicroseconds =
-      (Date.now() - 7 * 24 * 60 * 60 * 1000) * 1000;
+    const sevenDaysAgoMicroseconds = (Date.now() - 7 * 24 * 60 * 60 * 1000) *
+      1000;
 
     const rows = await conn.executeCached(
       `SELECT p.url, p.title, p.visit_count,
@@ -95,18 +95,18 @@ export function loadHistory(): Promise<
       hasMore: hasExtra,
       loadMore: hasExtra
         ? async (): Promise<{
-            choices: CommandStepChoice[];
-            hasMore: boolean;
-          }> => {
-            const nextPage = await queryHistory(offset, PAGE_SIZE + 1);
-            const hasMoreResults = nextPage.length > PAGE_SIZE;
-            if (hasMoreResults) {
-              nextPage.pop();
-            }
-            offset += nextPage.length;
-
-            return { choices: nextPage, hasMore: hasMoreResults };
+          choices: CommandStepChoice[];
+          hasMore: boolean;
+        }> => {
+          const nextPage = await queryHistory(offset, PAGE_SIZE + 1);
+          const hasMoreResults = nextPage.length > PAGE_SIZE;
+          if (hasMoreResults) {
+            nextPage.pop();
           }
+          offset += nextPage.length;
+
+          return { choices: nextPage, hasMore: hasMoreResults };
+        }
         : undefined,
     };
   })();
@@ -139,8 +139,14 @@ export const historySwitcherCommand: PaletteCommand = {
     "recent pages",
     "visited",
     "open history",
-    ...getEnglishStepCommandKeywords("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.historySwitcher",
+      "commandPalette.historySwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.historySwitcher",
+      "commandPalette.historySwitcherDescription",
+    ),
     ...getJapaneseReadings("floorp-history-switcher"),
   ],
   steps: [

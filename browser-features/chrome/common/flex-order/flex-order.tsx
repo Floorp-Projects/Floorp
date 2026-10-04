@@ -4,38 +4,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { render } from "@nora/preact-xul";
+import {
+  addDisposer,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
 import { signal } from "@preact/signals";
-import { addDisposer, createRootHMR, rootEffect } from "@nora/preact-xul/lifetime";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
+import hoverStyle from "./hover-offset.css?inline";
 
 type Orders = {
-  fxSidebar: number;
-  fxSidebarSplitter: number;
-  browserBox: number;
   floorpSidebarSplitter: number;
   floorpSidebar: number;
   floorpSidebarSelectBox: number;
-  verticaltabbarSplitter?: number;
-  verticaltabbar?: number;
 };
 
 // deno-lint-ignore no-namespace
 export namespace gFlexOrder {
-  const fxSidebarPosition = "sidebar.position_start";
-  const fxSidebarId = "sidebar-box";
-  const fxSidebarSplitterId = "sidebar-splitter";
-
   const floorpSidebarId = "panel-sidebar-box";
   const floorpSidebarSplitterId = "panel-sidebar-splitter";
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
-  const browserBoxId = "tabbrowser-tabbox";
+  let hoverOffsetFrame: number | undefined;
 
   const orders = createRootHMR(
     () =>
       signal<Orders>({
-        fxSidebar: -1,
-        fxSidebarSplitter: -1,
-        browserBox: -1,
         floorpSidebarSplitter: -1,
         floorpSidebar: -1,
         floorpSidebarSelectBox: -1,
@@ -44,90 +37,178 @@ export namespace gFlexOrder {
   );
 
   export function init() {
-    const fxSidebarPositionPref = Services.prefs.getBoolPref(fxSidebarPosition);
-    const floorpSidebarPositionPref = panelSidebarConfig.value.position_start;
-
-    applyFlexOrder(fxSidebarPositionPref, floorpSidebarPositionPref);
     renderOrderStyle();
-
-    const onPrefChange = () => {
-      const fxPref = Services.prefs.getBoolPref(fxSidebarPosition);
-      const floorpPref = panelSidebarConfig.value.position_start;
-      applyFlexOrder(fxPref, floorpPref);
-      renderOrderStyle();
-    };
-
-    Services.prefs.addObserver(fxSidebarPosition, onPrefChange);
-    addDisposer(() => {
-      Services.prefs.removeObserver(fxSidebarPosition, onPrefChange);
-    });
+    observePanelWidths();
 
     rootEffect(() => {
-      const fxPref = Services.prefs.getBoolPref(fxSidebarPosition);
-      const floorpPref = panelSidebarConfig.value.position_start;
-      applyFlexOrder(fxPref, floorpPref);
-      renderOrderStyle();
+      const floorpSidebarPositionPref = panelSidebarConfig.value.position_start;
+      applyFlexOrder(floorpSidebarPositionPref);
     });
   }
 
-  export function applyFlexOrder(
-    fxSidebarPositionPref: boolean,
-    floorpSidebarPositionPref: boolean,
-  ) {
-    if (fxSidebarPositionPref && floorpSidebarPositionPref) {
-      // Fx's sidebar -> browser -> Floorp's sidebar
+  export function applyFlexOrder(floorpSidebarPositionPref: boolean) {
+    if (floorpSidebarPositionPref) {
+      // Keep Floorp's sidebar on the far right without overriding Firefox's
+      // ordering for its sidebar launcher, content, or AI window.
       orders.value = {
-        fxSidebar: 0,
-        fxSidebarSplitter: 1,
-        browserBox: 2,
-        floorpSidebarSplitter: 3,
-        floorpSidebar: 4,
-        floorpSidebarSelectBox: 5,
-      };
-    } else if (fxSidebarPositionPref && !floorpSidebarPositionPref) {
-      // Floorp sidebar -> Fx's sidebar -> browser
-      orders.value = {
-        floorpSidebarSelectBox: 0,
-        floorpSidebar: 1,
-        floorpSidebarSplitter: 2,
-        fxSidebar: 3,
-        fxSidebarSplitter: 4,
-        browserBox: 5,
-      };
-    } else if (!fxSidebarPositionPref && floorpSidebarPositionPref) {
-      // browser -> Vertical tab bar -> Fx's sidebar -> Floorp's sidebar
-      orders.value = {
-        browserBox: 0,
-        verticaltabbarSplitter: 1,
-        verticaltabbar: 2,
-        fxSidebar: 3,
-        fxSidebarSplitter: 4,
-        floorpSidebarSplitter: 5,
-        floorpSidebar: 6,
-        floorpSidebarSelectBox: 7,
+        floorpSidebarSplitter: 1000,
+        floorpSidebar: 1001,
+        floorpSidebarSelectBox: 1002,
       };
     } else {
-      // Floorp's sidebar -> browser -> Vertical tab bar -> Fx's sidebar
+      // Negative orders keep Floorp's sidebar on the far left while Firefox
+      // remains the single owner of all upstream browser child ordering.
       orders.value = {
-        floorpSidebarSelectBox: 0,
-        floorpSidebar: 1,
-        floorpSidebarSplitter: 2,
-        browserBox: 3,
-        verticaltabbarSplitter: 4,
-        verticaltabbar: 5,
-        fxSidebar: 6,
-        fxSidebarSplitter: 7,
+        floorpSidebarSelectBox: -3,
+        floorpSidebar: -2,
+        floorpSidebarSplitter: -1,
       };
     }
+    updateHoverOffset();
+    scheduleHoverOffsetUpdate();
+  }
+
+  // Flex order and child insertion can change the rendered panel width only
+  // after the current style/layout pass. Measure once more on the next frame
+  // so Firefox's hover launcher uses the post-layout width in narrow windows.
+  function scheduleHoverOffsetUpdate() {
+    if (hoverOffsetFrame !== undefined) {
+      cancelAnimationFrame(hoverOffsetFrame);
+    }
+    hoverOffsetFrame = requestAnimationFrame(() => {
+      hoverOffsetFrame = undefined;
+      updateHoverOffset();
+    });
+  }
+
+  // Firefox anchors its absolute hover launcher to #browser's edge. Floorp's
+  // in-flow panels can occupy that edge, so reserve their actual rendered size.
+  // Never remeasure while the launcher is expanded. Once it has collapsed,
+  // measure Floorp's panels again because flex sizing may have changed.
+  function updateHoverOffset() {
+    const browser = document?.getElementById("browser");
+    if (!browser) return;
+    const launcher = document.getElementById("sidebar-container");
+    if (
+      document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
+      (launcher?.hasAttribute("sidebar-launcher-expanded") ||
+        launcher?.hasAttribute("sidebar-ongoing-animations"))
+    ) {
+      // Expanding Firefox's launcher can let a flex-shrunk Floorp panel grow.
+      // Keep the collapsed measurement so the hover target does not move.
+      return;
+    }
+    const atEnd = orders.peek().floorpSidebar > 0;
+    const browserRect = browser.getBoundingClientRect();
+    let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
+    let hasVisiblePanel = false;
+    for (
+      const id of [
+        floorpSidebarSelectBoxId,
+        floorpSidebarId,
+        floorpSidebarSplitterId,
+      ]
+    ) {
+      const element = document.getElementById(id);
+      if (!element) continue;
+      const style = getComputedStyle(element);
+      if (
+        !style || style.display === "none" || style.position === "absolute" ||
+        style.position === "fixed"
+      ) continue;
+      const rect = element.getBoundingClientRect();
+      occupiedEdge = atEnd
+        ? Math.min(occupiedEdge, rect.left)
+        : Math.max(occupiedEdge, rect.right);
+      hasVisiblePanel = true;
+    }
+    const width = hasVisiblePanel
+      ? Math.max(
+        0,
+        atEnd
+          ? browserRect.right - occupiedEdge
+          : occupiedEdge - browserRect.left,
+      )
+      : 0;
+    browser.style.setProperty(
+      "--floorp-panel-start-width",
+      `${atEnd ? 0 : width}px`,
+    );
+    browser.style.setProperty(
+      "--floorp-panel-end-width",
+      `${atEnd ? width : 0}px`,
+    );
+  }
+
+  function observePanelWidths() {
+    const browser = document?.getElementById("browser");
+    if (!browser) return;
+    const resizeObserver = new ResizeObserver(updateHoverOffset);
+    const panelObserver = new MutationObserver(updateHoverOffset);
+    const launcherObserver = new MutationObserver(() => {
+      const launcher = document.getElementById("sidebar-container");
+      if (
+        !launcher?.hasAttribute("sidebar-launcher-expanded") &&
+        !launcher?.hasAttribute("sidebar-ongoing-animations")
+      ) {
+        scheduleHoverOffsetUpdate();
+      }
+    });
+    const observe = () => {
+      resizeObserver.disconnect();
+      panelObserver.disconnect();
+      launcherObserver.disconnect();
+      for (
+        const id of [
+          floorpSidebarSelectBoxId,
+          floorpSidebarId,
+          floorpSidebarSplitterId,
+        ]
+      ) {
+        const element = document.getElementById(id);
+        if (element) {
+          resizeObserver.observe(element);
+          panelObserver.observe(element, {
+            attributes: true,
+            attributeFilter: ["data-floating", "hidden"],
+          });
+        }
+      }
+      const launcher = document.getElementById("sidebar-container");
+      if (launcher) {
+        launcherObserver.observe(launcher, {
+          attributes: true,
+          attributeFilter: [
+            "sidebar-positionend",
+            "sidebar-launcher-expanded",
+            "sidebar-ongoing-animations",
+          ],
+        });
+      }
+      updateHoverOffset();
+      scheduleHoverOffsetUpdate();
+    };
+    const childrenObserver = new MutationObserver(observe);
+    childrenObserver.observe(browser, { childList: true });
+    observe();
+    addDisposer(() => {
+      resizeObserver.disconnect();
+      panelObserver.disconnect();
+      launcherObserver.disconnect();
+      childrenObserver.disconnect();
+      if (hoverOffsetFrame !== undefined) {
+        cancelAnimationFrame(hoverOffsetFrame);
+        hoverOffsetFrame = undefined;
+      }
+      browser.style.removeProperty("--floorp-panel-start-width");
+      browser.style.removeProperty("--floorp-panel-end-width");
+    });
   }
 
   function renderOrderStyle() {
     render(() => (
-      <style>
+      <style id="floorp-flex-order-style">
         {`
-      #${fxSidebarId} {
-        order: ${orders.value.fxSidebar} !important;
-      }
       #${floorpSidebarId} {
         order: ${orders.value.floorpSidebar} !important;
       }
@@ -137,12 +218,7 @@ export namespace gFlexOrder {
       #${floorpSidebarSplitterId} {
         order: ${orders.value.floorpSidebarSplitter} !important;
       }
-      #${fxSidebarSplitterId} {
-        order: ${orders.value.fxSidebarSplitter} !important;
-      }
-      #${browserBoxId} {
-        order: ${orders.value.browserBox} !important;
-      }
+      ${hoverStyle}
     `}
       </style>
     ), document?.head);

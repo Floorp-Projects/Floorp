@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Recharger l'onglet"
+  },
   "undo-closed-tab": {
     "label": "Annuler l'onglet fermé",
     "tooltiptext": "Rouvrir le dernier onglet fermé {{shortcut}}"
@@ -92,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Ouvrir le lien dans un autre espace de travail",
       "noOtherWorkspace": "Aucun autre espace de travail disponible"
     },
@@ -110,20 +114,33 @@
     "menu": {
       "webapps": "Applications Web",
       "install-current": "Installer la page actuelle en tant que Progressive Web App",
-      "open-installed": "Afficher les applications installées"
+      "open-current": "Ouvrir l'application dans le conteneur sélectionné",
+      "open-installed": "Afficher les applications installées",
+      "container": "Conteneur"
     },
     "page-action": {
       "title": "Ouvrir l'application",
       "install": "Installer l'application",
       "open": "Ouvrir l'application",
       "cancel": "Annuler",
-      "site-icon": "Icône du site"
+      "site-icon": "Icône du site",
+      "container": "Conteneur",
+      "no-container": "Aucun conteneur"
+    },
+    "window": {
+      "container-tooltip": "Conteneur : {{name}}",
+      "container-fallback": "Conteneur #{{id}}"
     }
   },
   "privateContainer": {
     "openInPrivateContainer": "Ouvrir dans un conteneur privé",
     "reopenInPrivateContainer": "Réouvrir dans un conteneur privé",
     "name": "Conteneur privé"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Modifier l'URL de l'onglet",
+    "inputLabel": "URL de l'onglet",
+    "keyboardAction": "Éditer l'URL de l'onglet"
   },
   "mouseGesture": {
     "actions": {
@@ -198,8 +215,8 @@
       "gecko-reverse-sidebar": "Inverser la position de la barre latérale",
       "gecko-hide-sidebar": "Masquer la barre latérale",
       "gecko-toggle-sidebar": "Afficher/masquer la barre latérale",
-      "gecko-scroll-up": "Haut de page",
-      "gecko-scroll-down": "Bas de page",
+      "gecko-scroll-up": "Défiler vers le haut",
+      "gecko-scroll-down": "Défiler vers le bas",
       "gecko-scroll-line-up": "Défiler vers le haut",
       "gecko-scroll-line-down": "Défiler vers le bas",
       "gecko-scroll-right": "Défiler vers la droite",
@@ -416,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Ouvrir en vue partagée",
+      "paneLimit": "Ouvrir dans la vue fractionnée (jusqu'à {{max}} onglets)",
       "addPane": "Ajouter le volet à la vue fractionnée",
       "moveToPane": "Déplacer dans le volet",
       "moveToPaneN": "Volet {{n}} ({{title}})"
@@ -439,6 +457,35 @@
     "label": "Mode Calme",
     "tooltiptext": "Permuter le mode Zen",
     "menu-label": "Permuter le mode Zen"
+  },
+  "ipProtection": {
+    "title": "Floorp VPN",
+    "toolbar": {
+      "activeTooltip": "Floorp VPN est activé pour le trafic web dans Floorp",
+      "inactiveTooltip": "Floorp VPN est désactivé - le trafic web dans Floorp n'est pas protégé",
+      "excludedTooltip": "Floorp VPN est désactivé pour ce site - le trafic web vers ce site n'est pas protégé",
+      "pausedTooltip": "Floorp VPN est suspendu - le trafic web dans Floorp n'est pas protégé",
+      "errorTooltip": "Floorp VPN - erreur de connexion ; le trafic web dans Floorp n'est pas protégé",
+      "helpTooltip": "Ouvrir la page de support de Floorp VPN"
+    },
+    "scope": {
+      "summary": "Lorsqu'il est activé,  Floorp VPN peut protéger le trafic web de Floorp. Son champ d'application n'inclut pas votre système d'exploitation ni les autres applications.",
+      "fullDisclosure": "Cette fonctionnalité utilise un compte Mozilla et l'infrastructure des services Mozilla. Floorp est un projet indépendant qui n'est ni affilié à Mozilla, ni approuvé ni parrainé par cette dernière. Sa disponibilité dépend de votre région, de l'état de votre compte et des conditions d'éligibilité aux services de Mozilla."
+    },
+    "unauthenticated": {
+      "title": "Essayez le VPN intégré à Floorp"
+    },
+    "settings": {
+      "promoHeading": "Essayez le VPN intégré à Floorp",
+      "promoMessage": "Protégez le trafic web dans Floorp après vous être connecté et avoir vérifié la disponibilité du service."
+    },
+    "terms": {
+      "prefix": "En poursuivant, vous acceptez de ",
+      "termsOfUse": "Conditions d'utilisation de Mozilla Firefox",
+      "conjunction": " et reconnaissez ",
+      "privacyNotice": "Politique de confidentialité de Mozilla Firefox",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Palette de commandes",
@@ -471,6 +518,10 @@
     "stepIndicator": "Étape {{current}} sur {{total}}",
     "backToCommands": "Retour aux commandes",
     "openUrl": "Ouvrir l'URL",
+    "openUrlContainerStepLabel": "Ouvrir dans un conteneur",
+    "openUrlContainerStepPlaceholder": "Choisissez un conteneur...",
+    "openUrlContainerWorkspaceDefault": "Espace de travail par défaut",
+    "openUrlContainerWorkspaceDefaultDesc": "Utilise le contexte par défaut de l'espace de travail",
     "openUrlDescription": "Ouvrir le lien dans un nouvel onglet",
     "openUrlStepLabel": "Saisir l'URL à ouvrir",
     "openUrlStepPlaceholder": "https://example.com",
@@ -535,7 +586,17 @@
     "bookmarkSwitcher": "Changer de marque-page",
     "bookmarkSwitcherDescription": "Ouvrir une page enregistrée dans les favoris",
     "bookmarkSwitcherStepLabel": "Sélectionner un favori",
-    "bookmarkSwitcherStepPlaceholder": "Rechercher ou choisir un marque-page..."
+    "bookmarkSwitcherStepPlaceholder": "Rechercher ou choisir un marque-page...",
+    "bookmarkSwitcherContainerStepLabel": "Ouvrir dans un conteneur",
+    "bookmarkSwitcherContainerStepPlaceholder": "Choisissez un conteneur...",
+    "bookmarkSwitcherWhereBackgroundTab": "Onglet d'arrière-plan",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Ouvrir dans un nouvel onglet d'arrière-plan",
+    "bookmarkSwitcherWhereCurrentTab": "Onglet actuel",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Naviguer dans l'onglet en cours",
+    "bookmarkSwitcherWhereLabel": "Où ouvrir",
+    "bookmarkSwitcherWhereNewTab": "Nouvel onglet",
+    "bookmarkSwitcherWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
+    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir..."
   },
   "commandPaletteReadings": {}
 }

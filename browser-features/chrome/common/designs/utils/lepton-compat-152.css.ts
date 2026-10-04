@@ -17,12 +17,15 @@
  *      symptoms — they hit any chrome component that reads `--lwt-accent-color`
  *      / `--in-content-page-background` / `--arrowpanel-background` once the
  *      built-in-theme block stops matching.
- *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases and
- *      palette restoration that mirrors Lepton's intended colors. Applied
- *      only to the `lepton` / `photon` / `protonfix` designs.
- *   3. `FLOORP_ICON_PATCHES` — Floorp-only icon rules extracted from the
- *      vendored leptonChrome.css so the daily upstream sync cannot delete
- *      them. Lepton-family only (the IDs are Lepton-scoped).
+ *   2. `LEPTON_COMPAT_152_CSS` — Lepton-only tab/toolbox variable aliases,
+ *      palette restoration, and native-sidebar positioning compatibility.
+ *      Applied only to the `lepton` / `photon` / `protonfix` designs.
+ *
+ * The Floorp-only icon rules that used to live here as `FLOORP_ICON_PATCHES`
+ * moved to the chrome-extras stylesheets
+ * (`ui-custom/styles/css/options/chrome-extras/{icon-disabled,icon-menu}.css`),
+ * which are design-agnostic and driven by the `uiCustomization.chromeExtras`
+ * settings instead of Lepton prefs. See `designs/chrome-extras.ts`.
  *
  * ## Design rule: never clobber a theme-provided value
  *
@@ -33,6 +36,8 @@
  * collapsed to one color. Every rule below now either:
  *   - sets a value ONLY when none is provided (a guarded alias, no
  *     `!important`), or
+ *   - puts an LWT fallback in a low-priority cascade layer so a theme-provided
+ *     value wins, or
  *   - narrows the selector to the no-theme case (`:root:not([lwtheme])`)
  *     so a loaded LWT is never touched.
  *
@@ -80,13 +85,27 @@ export const GECKO_152_COLOR_FIX_CSS = `
     --in-content-page-background: rgb(31, 30, 38);
   }
 }
-/* An LWT-provided accent wins for in-content surfaces — but ONLY when the
- * theme actually sets one. var(..., <keep>) via @property is not available
- * cross-version, so guard by scoping to the LWT selector and reading the
- * accent directly. No !important: this is equal-specificity source-order. */
-:root:is(:-moz-lwtheme, [lwtheme]),
-:root:is(:-moz-lwtheme, [lwtheme]) dialog {
-  --in-content-page-background: var(--lwt-accent-color);
+/* LWT in-content surface — use a safe, content-appropriate token.
+ * The previous revision read --lwt-accent-color directly, which is the
+ * *frame* color (XP Modern: rgb(9,96,224) blue). Painting that onto
+ * in-content surfaces made Customize Floorp solid blue (#2503) and, when the
+ * accent was missing/transparent, left dialogs black (#2403/#2502).
+ * Prefer a content canvas / toolbar value instead. The fallback is in a
+ * low-priority layer so a theme rule that legitimately sets its own
+ * --in-content-page-background still wins, even though this sheet is loaded
+ * after the theme's sheets. */
+/* Capture the effective root value unlayered so a theme-provided value is
+ * carried onto dialogs; the dialog override below then references it. */
+:root:is(:-moz-lwtheme, [lwtheme]) {
+  --floorp-lwt-in-content-page-background: var(--in-content-page-background);
+}
+@layer floorp-compat {
+  :root:is(:-moz-lwtheme, [lwtheme]) dialog {
+    --in-content-page-background: var(
+      --floorp-lwt-in-content-page-background,
+      var(--background-color-canvas, var(--toolbar-background-color, Canvas))
+    );
+  }
 }
 
 /*= Panel background default (the "transparent panel" symptom) ==============
@@ -189,6 +208,21 @@ export const LEPTON_COMPAT_152_CSS = `
  * which is the bug we are fixing. The toolbox itself stays transparent; the
  * token alias above is enough for any Lepton rule that reads the accent. */
 
+/* Customize Floorp is a content surface, not the theme frame. Gecko paints
+ * LWT header images on the chrome document body, while Lepton leaves the
+ * customization container transparent. With a theme such as Windows XP
+ * Modern that exposes a blue frame accent, that transparency lets the frame
+ * color fill the entire customization page. Keep the toolbox transparent so
+ * the theme still paints its tabs and toolbar, but give the customization
+ * surface the theme's content-safe toolbar/panel color. */
+:root:is(:-moz-lwtheme, [lwtheme])[customizing] #customization-container {
+  background-color: var(
+    --toolbar-background-color,
+    var(--panel-background-color, -moz-dialog)
+  ) !important;
+  background-image: none !important;
+}
+
 /*= Primary button accent (Lepton blue) =====================================
  * Lepton declares these inside the built-in-theme block that no longer
  * matches on 152. Re-declare them for the no-theme case so primary buttons
@@ -202,112 +236,29 @@ export const LEPTON_COMPAT_152_CSS = `
   --in-content-primary-button-background-hover: var(--blue-50, #0a84ff);
   --in-content-primary-button-background-active: var(--blue-40, #4595ff);
 }
-`;
 
-/**
- * Floorp-specific icon rules extracted from
- * `skin/lepton/css/leptonChrome.css` lines 14596–14672.
+/*= Right-positioned native sidebar (Issue #2556) ============================
+ * Gecko 152 exposes the native sidebar's end position on #sidebar-box as the
+ * presence-only [sidebar-positionend] attribute. Vendored Lepton still keys
+ * its overlap layout's direction flip to the former [positionend] attribute,
+ * so its inline-start offset is applied on the wrong side and pushes a right
+ * sidebar partly outside the window.
  *
- * Upstream Lepton does not know about these Floorp-only element IDs
- * (PWA/SSB, UserCSSLoader, webpanel, share mode, etc.). They were living
- * inside the vendored file, which means the daily `update_lepton.yml`
- * workflow would silently delete them whenever upstream restructured that
- * region. Hosting them here makes them independent of upstream syncs.
- *
- * The rules are duplicated verbatim from the vendored source (same `url()`
- * references resolve identically because this sheet is injected into the
- * same document and the relative `../icons` path is rewritten by
- * `replaceIconPaths()` at registration time). Duplicating intentionally
- * rather than deleting the vendored copy: the vendored copy disappears on
- * the next upstream sync, at which point this becomes the single source.
- */
-export const FLOORP_ICON_PATCHES = `
-/*= Floorp Browser (icon patches, extracted from leptonChrome.css) ==========*/
-#ssbPageAction-image {
-  list-style-image: url("../icons/pwa-install.svg");
-}
-#ssbPageAction-image[open-ssb="true"] {
-  list-style-image: url("../icons/pwa-launch.svg");
-}
-@media -moz-pref("userChrome.icon.panel") {
-  #rebootappmenu {
-    list-style-image: url("../icons/refresh-cw.svg");
-  }
-  #openprofiledir {
-    list-style-image: var(--uc-folder-icon);
-  }
-  #appMenu-ssb-button {
-    list-style-image: url("../icons/pwa-manage.svg");
-  }
-  #appMenu-install-or-open-ssb-current-page-button {
-    list-style-image: url("../icons/pwa-install.svg");
-  }
-  #appMenu-install-or-open-ssb-current-page-button[open-ssb="true"] {
-    list-style-image: url("../icons/pwa-launch.svg");
-  }
-}
-@media -moz-pref("userChrome.icon.menu") {
-  #toggle_sharemode {
-    --menuitem-image: url("chrome://branding/content/about-logo-private.png");
-  }
-  #usercssloader-menu {
-    --menuitem-image: url("../icons/developer.svg");
-  }
-  #usercssloader-menupopup > menu[data-l10n-id="css-menu"] {
-    --menuitem-image: url("../icons/document-css.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="rebuild-css"] {
-    --menuitem-image: url("chrome://global/skin/icons/reload.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="make-browsercss-file"] {
-    --menuitem-image: url("../icons/edit-active.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="open-css-folder"] {
-    --menuitem-image: var(--uc-folder-icon);
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userChromeCss-editor"] {
-    --menuitem-image: url("chrome://browser/skin/window.svg");
-  }
-  #usercssloader-submenupopup > menuitem[data-l10n-id="edit-userContentCss-editor"] {
-    --menuitem-image: url("chrome://global/skin/icons/page-portrait.svg");
-  }
-  #context_toggleToPrivateContainer,
-  #open_in_private_container {
-    --menuitem-image: url("../icons/private-favicon.svg");
-  }
-  #toggle_statusBar {
-    --menuitem-image: url("../icons/pulse-square.svg");
-  }
-  #muteMenu {
-    --menuitem-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
-    stroke: transparent !important;
-  }
-  #unloadWebpanelMenu {
-    --menuitem-image: var(--uc-tab-unload-icon);
-  }
-  #changeUAWebpanelMenu {
-    --menuitem-image: url("../icons/command-responsivemode.svg");
-    fill-opacity: 0;
-  }
-  #deleteWebpanelMenu {
-    --menuitem-image: url("chrome://global/skin/icons/delete.svg");
-  }
-  #run-ssb-contextmenu {
-    --menuitem-image: url("../icons/pwa-launch.svg");
-  }
-  #uninstall-ssb-contextmenu {
-    --menuitem-image: url("../icons/pwa-remove.svg");
+ * Keep the legacy attribute in the selector for older Gecko versions. These
+ * are boolean presence attributes, so intentionally do not match a value. */
+@media -moz-pref("userChrome.sidebar.overlap") {
+  #sidebar-box:is([positionend], [sidebar-positionend]) {
+    direction: rtl;
   }
 }
 `;
 
 /**
- * Combined Lepton-family stylesheet: color fix + Lepton-specific compat +
- * Floorp icon patches. Injected after Lepton's own sheets.
+ * Combined Lepton-family stylesheet: color fix + Lepton-specific compat.
+ * Injected after Lepton's own sheets.
+ *
+ * The Floorp icon patches that used to be appended here now live in the
+ * design-agnostic chrome-extras stylesheets.
  */
-export const LEPTON_COMPAT_CSS =
-  GECKO_152_COLOR_FIX_CSS +
-  "\n" +
-  LEPTON_COMPAT_152_CSS +
-  "\n" +
-  FLOORP_ICON_PATCHES;
+export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS + "\n" +
+  LEPTON_COMPAT_152_CSS;

@@ -6,33 +6,46 @@
 import { checkPaddingEnabled } from "./titilebar-padding.ts";
 import { config } from "../../designs/configs.ts";
 import { TabbarStyleModifyCSSElement } from "./tabbar-style-element.tsx";
-import { render } from "preact";
+import { render } from "@nora/preact-xul";
 
 // deno-lint-ignore no-namespace
 export namespace gTabbarStyleFunctions {
+  let disposeStyle: (() => void) | null = null;
   function getPanelUIMenuButton(): XULElement | null {
-    return document?.querySelector("#PanelUI-menu-button") as unknown as XULElement | null;
+    return document?.querySelector("#PanelUI-menu-button") as unknown as
+      | XULElement
+      | null;
   }
   function getTabbarElement(): XULElement | null {
-    return document?.querySelector("#TabsToolbar") as unknown as XULElement | null;
+    return document?.querySelector("#TabsToolbar") as unknown as
+      | XULElement
+      | null;
   }
   function getNavbarElement(): XULElement | null {
     return document?.querySelector("#nav-bar") as unknown as XULElement | null;
   }
   function getNavigatorToolboxtabbarElement(): XULElement | null {
-    return document?.querySelector("#navigator-toolbox") as unknown as XULElement | null;
+    return document?.querySelector("#navigator-toolbox") as unknown as
+      | XULElement
+      | null;
   }
   function getBrowserElement(): XULElement | null {
     return document?.querySelector("#browser") as unknown as XULElement | null;
   }
   function getUrlbarContainer(): XULElement | null {
-    return document?.querySelector("#urlbar-container") as unknown as XULElement | null;
+    return document?.querySelector("#urlbar-container") as unknown as
+      | XULElement
+      | null;
   }
   function getSidebarVerticalTab(): XULElement | null {
-    return document?.querySelector("#vertical-tabs") as unknown as XULElement | null;
+    return document?.querySelector("#vertical-tabs") as unknown as
+      | XULElement
+      | null;
   }
 
   export function revertToDefaultStyle() {
+    disposeStyle?.();
+    disposeStyle = null;
     const tabbarElement = getTabbarElement();
     const navigatorToolbox = getNavigatorToolboxtabbarElement();
     const urlbarContainer = getUrlbarContainer();
@@ -148,22 +161,16 @@ export namespace gTabbarStyleFunctions {
     revertToDefaultStyle();
     makeSidebarVerticalTabDrag();
 
-    // Use a dedicated container rather than document.head directly.
-    // preact.render() replaces *all* children of the container with VDOM;
-    // mounting directly on document.head would destroy Firefox-internal
-    // <link>/<meta> nodes and cause "getElementById(...) is null" crashes.
-    let styleRoot = document?.getElementById(
-      "floorp-tabbar-style-root",
-    ) as HTMLElement | null;
-    if (!styleRoot) {
-      styleRoot = document!.createElement("div");
-      styleRoot.id = "floorp-tabbar-style-root";
-      document!.head.appendChild(styleRoot);
+    const head = document?.head;
+    if (head) {
+      disposeStyle = render(
+        () =>
+          TabbarStyleModifyCSSElement({
+            style: config.value.tabbar.tabbarPosition,
+          }),
+        head,
+      );
     }
-    render(
-      TabbarStyleModifyCSSElement({ style: config.value.tabbar.tabbarPosition }),
-      styleRoot,
-    );
 
     switch (config.value.tabbar.tabbarPosition) {
       case "hide-horizontal-tabbar":

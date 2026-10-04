@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "note": "Append-only Floorp Notes Sync key/approval revocation registry. An approval listed here is invalid immediately; entries are never removed.",
+  "revocations": []
+}

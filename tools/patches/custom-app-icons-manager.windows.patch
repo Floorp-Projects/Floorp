@@ -1,0 +1,529 @@
+diff --git a/moz-src/browser/components/shell/CustomIconManager.sys.mjs b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
+index 9a89d2b669a..f38cdc13cf9 100644
+--- a/moz-src/browser/components/shell/CustomIconManager.sys.mjs
++++ b/moz-src/browser/components/shell/CustomIconManager.sys.mjs
+@@ -8,93 +8,55 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ const PREF_ICON_ID = "browser.shell.customIcon.id";
+ const PREF_ENABLED = "browser.shell.customIcon.enabled";
+ // True once we have ever created the shortcut.
+ const PREF_PER_USER_START_MENU_SHORTCUT_CREATED =
+   "browser.shell.customIcon.perUserStartMenuShortcutCreated";
+
+ /**
+- * Inlined catalog of selectable icons. Each entry has:
++ * Floorp's selectable browser icons.
+  *
+- *   iconResourceId: the Win32 resource ID of an icon embedded in firefox.exe
+- *     at build time (declared in toolkit/xre/nsNativeAppSupportWin.h and
+- *     browser/app/splash.rc). This is what gets applied: shortcuts reference
+- *     it as firefox.exe,-<iconResourceId> and live windows load it directly.
+- *     The catalog-id -> resource-id mapping is ABI: never remap or reuse an id
+- *     once it has shipped, even if the icon is retired from the picker.
+- *   preview: a chrome:// URI resolving to the same .ico shipped in omni.ja
+- *     (see browser/components/shell/jar.mn). Used only to render a thumbnail in
+- *     the about:settings picker; never used to apply the icon. PE resources are
+- *     not addressable by a URL, hence the separate display asset.
+- *   l10nId: Fluent id for the icon's about:settings label.
+- *   gated: if true, the icon is a "Bonus" icon, offered only once the browser is
+- *     both the default browser and pinned to the taskbar. This is purely an
+- *     about:settings policy (the UI disables the option); CustomIconManager
+- *     itself does not enforce it.
+- *
+- * Theme-aware icons (e.g. Minimal, a monochrome silhouette that's only legible
+- * against a matching background) instead carry a `variants` object keyed by
+- * color scheme ("dark"/"light"), each with its own iconResourceId + preview.
+- * `iconResourceId`/`preview` are read through resolveResourceId()/resolvePreview()
+- * so callers don't special-case theme-aware entries: the applied resource is
+- * chosen by the OS theme (the taskbar background), while the about:settings
+- * preview is chosen by the document's own color scheme (the surface it renders
+- * on). These differ only when the browser theme is overridden away from the OS.
++ * The upstream implementation embeds every selectable image into the browser
++ * executable as a Win32 resource. Floorp's Runtime is distributed as a
++ * prebuilt artifact, so the Floorp overlay keeps the same public feature but
++ * uses the bundled PNG as the source for both shortcuts and live windows.
++ * ShellService.writeShortcutIcon converts it to a Windows .ico in the active
++ * profile, while nsIWindowsUIUtils applies the decoded image to open windows.
+  */
+ export const ICON_CATALOG = Object.freeze({
+   default: Object.freeze({
+-    // The executable's own icon. "default" is the no-override state, selected by
+-    // reverting (clearing the pref), so this resource id is never applied
+-    // directly; the entry exists to give the picker a label and a preview. The
+-    // preview is icon64 (rather than icon32) so it stays crisp on hi-dpi.
+     iconResourceId: 0,
+     preview: "chrome://branding/content/icon64.png",
+     l10nId: "appearance-browser-icon-default",
+   }),
+-  retro2004: Object.freeze({
+-    iconResourceId: 1100, // IDI_CUSTOM_RETRO2004
+-    preview: "chrome://browser/content/icons/retro2004.ico",
+-    l10nId: "appearance-browser-icon-retro2004",
+-  }),
+-  retro2017: Object.freeze({
+-    iconResourceId: 1101, // IDI_CUSTOM_RETRO2017
+-    preview: "chrome://browser/content/icons/retro2017.ico",
+-    l10nId: "appearance-browser-icon-retro2017",
+-  }),
+-  pride: Object.freeze({
+-    iconResourceId: 1106, // IDI_CUSTOM_PRIDE
+-    preview: "chrome://browser/content/icons/pride.ico",
+-    l10nId: "appearance-browser-icon-pride",
+-  }),
+-  minimal: Object.freeze({
+-    l10nId: "appearance-browser-icon-minimal",
+-    variants: Object.freeze({
+-      dark: Object.freeze({
+-        iconResourceId: 1102, // IDI_CUSTOM_MINIMAL_DARK
+-        preview: "chrome://browser/content/icons/minimal-dark.ico",
+-      }),
+-      light: Object.freeze({
+-        iconResourceId: 1103, // IDI_CUSTOM_MINIMAL_LIGHT
+-        preview: "chrome://browser/content/icons/minimal-light.ico",
+-      }),
+-    }),
+-  }),
+-  kit: Object.freeze({
+-    iconResourceId: 1107, // IDI_CUSTOM_KIT
+-    preview: "chrome://browser/content/icons/kit.ico",
+-    l10nId: "appearance-browser-icon-kit",
+-    gated: true,
+-  }),
+-  pixelated: Object.freeze({
+-    iconResourceId: 1104, // IDI_CUSTOM_PIXELATED
+-    preview: "chrome://browser/content/icons/pixelated.ico",
+-    l10nId: "appearance-browser-icon-pixelated",
+-    gated: true,
+-  }),
+-  momo: Object.freeze({
+-    iconResourceId: 1105, // IDI_CUSTOM_MOMO
+-    preview: "chrome://browser/content/icons/momo.ico",
+-    l10nId: "appearance-browser-icon-momo",
+-    gated: true,
+-  }),
++  floorp01000110: Object.freeze({ preview: "chrome://browser/content/icons/floorp-01000110.png", l10nId: "appearance-browser-icon-01000110" }),
++  floorp84: Object.freeze({ preview: "chrome://browser/content/icons/floorp-84.png", l10nId: "appearance-browser-icon-84" }),
++  floorpAero: Object.freeze({ preview: "chrome://browser/content/icons/floorp-aero.png", l10nId: "appearance-browser-icon-aero" }),
++  floorpAsagao: Object.freeze({ preview: "chrome://browser/content/icons/floorp-asagao.png", l10nId: "appearance-browser-icon-asagao" }),
++  floorpBotan: Object.freeze({ preview: "chrome://browser/content/icons/floorp-botan.png", l10nId: "appearance-browser-icon-botan" }),
++  floorpCurve: Object.freeze({ preview: "chrome://browser/content/icons/floorp-curve.png", l10nId: "appearance-browser-icon-curve" }),
++  floorpDaidai: Object.freeze({ preview: "chrome://browser/content/icons/floorp-daidai.png", l10nId: "appearance-browser-icon-daidai" }),
++  floorpDisco: Object.freeze({ preview: "chrome://browser/content/icons/floorp-disco.png", l10nId: "appearance-browser-icon-disco" }),
++  floorpEarlyBird: Object.freeze({ preview: "chrome://browser/content/icons/floorp-early-bird.png", l10nId: "appearance-browser-icon-early-bird" }),
++  floorpExplorer: Object.freeze({ preview: "chrome://browser/content/icons/floorp-explorer.png", l10nId: "appearance-browser-icon-explorer" }),
++  floorpFloat: Object.freeze({ preview: "chrome://browser/content/icons/floorp-float.png", l10nId: "appearance-browser-icon-float" }),
++  floorpFloor: Object.freeze({ preview: "chrome://browser/content/icons/floorp-floor.png", l10nId: "appearance-browser-icon-floor" }),
++  floorpFloorple: Object.freeze({ preview: "chrome://browser/content/icons/floorp-floorple.png", l10nId: "appearance-browser-icon-floorple" }),
++  floorpFloorpleGradient: Object.freeze({ preview: "chrome://browser/content/icons/floorp-floorple-gradient.png", l10nId: "appearance-browser-icon-floorple-gradient" }),
++  floorpHarenohi: Object.freeze({ preview: "chrome://browser/content/icons/floorp-harenohi.png", l10nId: "appearance-browser-icon-harenohi" }),
++  floorpHello: Object.freeze({ preview: "chrome://browser/content/icons/floorp-hello.png", l10nId: "appearance-browser-icon-hello" }),
++  floorpMetal: Object.freeze({ preview: "chrome://browser/content/icons/floorp-metal.png", l10nId: "appearance-browser-icon-metal" }),
++  floorpMidnight: Object.freeze({ preview: "chrome://browser/content/icons/floorp-midnight.png", l10nId: "appearance-browser-icon-midnight" }),
++  floorpMoegi: Object.freeze({ preview: "chrome://browser/content/icons/floorp-moegi.png", l10nId: "appearance-browser-icon-moegi" }),
++  floorpNani: Object.freeze({ preview: "chrome://browser/content/icons/floorp-nani.png", l10nId: "appearance-browser-icon-nani" }),
++  floorpNightOwl: Object.freeze({ preview: "chrome://browser/content/icons/floorp-night-owl.png", l10nId: "appearance-browser-icon-night-owl" }),
++  floorpObsidian: Object.freeze({ preview: "chrome://browser/content/icons/floorp-obsidian.png", l10nId: "appearance-browser-icon-obsidian" }),
++  floorpPastel: Object.freeze({ preview: "chrome://browser/content/icons/floorp-pastel.png", l10nId: "appearance-browser-icon-pastel" }),
++  floorpPowerUp: Object.freeze({ preview: "chrome://browser/content/icons/floorp-power-up.png", l10nId: "appearance-browser-icon-power-up" }),
++  floorpQuartz: Object.freeze({ preview: "chrome://browser/content/icons/floorp-quartz.png", l10nId: "appearance-browser-icon-quartz" }),
++  floorpSimple: Object.freeze({ preview: "chrome://browser/content/icons/floorp-simple.png", l10nId: "appearance-browser-icon-simple" }),
++  floorpTranslatedIntoKorean: Object.freeze({ preview: "chrome://browser/content/icons/floorp-translated-into-korean.png", l10nId: "appearance-browser-icon-translated-into-korean" }),
++  floorpTsuyukusa: Object.freeze({ preview: "chrome://browser/content/icons/floorp-tsuyukusa.png", l10nId: "appearance-browser-icon-tsuyukusa" }),
++  floorpUguisu: Object.freeze({ preview: "chrome://browser/content/icons/floorp-uguisu.png", l10nId: "appearance-browser-icon-uguisu" }),
++  floorpWave: Object.freeze({ preview: "chrome://browser/content/icons/floorp-wave.png", l10nId: "appearance-browser-icon-wave" }),
+ });
+
+ /**
+@@ -100,22 +62,22 @@ export const ICON_CATALOG = Object.freeze({
+  *
+  * @param {object} entry A catalog entry.
+  * @param {"dark"|"light"} scheme
+- * @returns {object} An object with iconResourceId + preview.
++ * @returns {object} An object with preview.
+  */
+ function resolveVariant(entry, scheme) {
+   return entry.variants ? entry.variants[scheme] : entry;
+ }
+
+ /**
+- * The embedded resource ID to apply for an entry, given the OS color scheme.
+- * Exported for tests; the manager itself resolves against the OS taskbar theme.
++ * Kept as a compatibility export for callers of the upstream module. Floorp
++ * applies image containers instead of executable resource IDs.
+  *
+  * @param {object} entry A catalog entry.
+  * @param {"dark"|"light"} scheme The OS color scheme.
+  * @returns {number}
+  */
+ export function resolveResourceId(entry, scheme) {
+-  return resolveVariant(entry, scheme).iconResourceId;
++  return resolveVariant(entry, scheme).iconResourceId || 0;
+ }
+
+ /**
+@@ -139,13 +101,24 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
+     Ci.nsIWindowsShellService,
+   ],
+   WinTaskbar: ["@mozilla.org/windows-taskbar;1", Ci.nsIWinTaskbar],
++  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", Ci.nsIWindowsUIUtils],
+ });
+
+ ChromeUtils.defineESModuleGetters(lazy, {
+   SelectableProfileService:
+     "resource:///modules/profiles/SelectableProfileService.sys.mjs",
++  PrivateBrowsingUtils:
++    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
++  TaskbarTabsUtils:
++    "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+ });
+
++ChromeUtils.defineLazyGetter(lazy, "ShellServiceModule", () =>
++  ChromeUtils.importESModule(
++    "moz-src:///browser/components/shell/ShellService.sys.mjs"
++  )
++);
++
+ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
+   return console.createInstance({
+     prefix: "CustomIconManager",
+@@ -159,10 +132,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
+ });
+
+ /**
+- * Absolute path to the currently running browser executable. Custom icons are
+- * embedded as resources in this executable, so it is both the icon source for
+- * applying a custom icon and (with index 0) the default-icon source when
+- * reverting Windows shortcuts.
++ * Absolute path to the currently running browser executable.
+  *
+  * @returns {string}
+  */
+@@ -171,19 +141,16 @@ function browserExePath() {
+ }
+
+ /**
+- * Apply the given executable icon to every Windows .lnk file that this install
++ * Apply the given icon source to every Windows .lnk file that this install
+  * owns (taskbar pin, per-user Desktop, per-user Start Menu).
+  *
+  * Per-shortcut failures are logged but do not abort the rest of the
+  * iteration; partial success is permitted.
+  *
+- * @param {string} iconPath Absolute path to the icon source (the executable).
+- * @param {number} iconResourceId Resource ID of the icon within iconPath (e.g.
+- *        1100 for IDI_CUSTOM_RETRO2004), or 0 for the executable's default icon.
+- *        setShortcutsIcon owns the Win32 encoding of this reference.
++ * @param {string} iconPath Absolute path to an .ico file or executable.
+  * @returns {Promise<boolean>} True if at least one shortcut was updated.
+  */
+-async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
++async function applyIconToWindowsShortcuts(iconPath) {
+   let aumid = lazy.WinTaskbar.defaultGroupId;
+   let shortcuts = [];
+   try {
+@@ -210,7 +177,7 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
+     await lazy.ShellService.setShortcutsIcon(
+       shortcuts,
+       iconPath,
+-      iconResourceId
++      0
+     );
+   } catch (ex) {
+     if (ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+@@ -225,28 +192,131 @@ async function applyIconToWindowsShortcuts(iconPath, iconResourceId) {
+   }
+
+   lazy.logConsole.debug(
+-    `Set icon resource ${iconResourceId} from "${iconPath}" on ` +
++    `Set icon from "${iconPath}" on ` +
+       `${shortcuts.length} shortcut(s).`
+   );
+   return true;
+ }
+
+ /**
+- * Push the runtime icon override to every top-level Windows window in this
+- * process (excepting private browsing windows and web application windows).
+- * A resource ID of 0 reverts windows to the default executable icon.
++ * Return the profile-local .ico used by Windows shortcuts for an icon id.
++ *
++ * @param {string} id Catalog id.
++ * @returns {nsIFile}
++ */
++function profileIconFile(id) {
++  let folder = Services.dirsvc.get("ProfD", Ci.nsIFile);
++  folder.append("floorp-custom-icons");
++  if (!folder.exists()) {
++    folder.create(Ci.nsIFile.DIRECTORY_TYPE, 0o700);
++  }
++  let file = folder.clone();
++  file.append(`${id}.ico`);
++  return file;
++}
++
++const gImageCache = new Map();
++
++/**
++ * Decode the bundled preview image for an icon. The image is kept as an
++ * imgIContainer so it can be used both for WM_SETICON and for .ico encoding.
++ *
++ * @param {string} id Catalog id.
++ * @param {"dark"|"light"} scheme OS color scheme.
++ * @returns {Promise<imgIContainer>}
++ */
++async function iconImage(id, scheme) {
++  let cacheKey = `${id}:${scheme}`;
++  if (!gImageCache.has(cacheKey)) {
++    let entry = ICON_CATALOG[id] || ICON_CATALOG.default;
++    let uri = Services.io.newURI(resolvePreview(entry, scheme));
++    let promise = lazy.TaskbarTabsUtils._imageFromLocalURI(uri).catch(ex => {
++      if (gImageCache.get(cacheKey) === promise) {
++        gImageCache.delete(cacheKey);
++      }
++      throw ex;
++    });
++    gImageCache.set(cacheKey, promise);
++  }
++  return gImageCache.get(cacheKey);
++}
++
++/**
++ * Write an image to a profile-local .ico file. This avoids requiring the
++ * Runtime executable to be relinked with additional Win32 resources.
+  *
+- * @param {number} iconResourceId Win32 resource ID of an icon embedded in the
+- *        executable, or 0 to clear.
++ * @param {string} id Catalog id.
++ * @param {imgIContainer} image Decoded icon image.
++ * @returns {Promise<nsIFile>}
+  */
+-function applyRuntimeWindowsIcon(iconResourceId) {
++async function writeProfileIcon(id, image) {
++  let file = profileIconFile(id);
++  await lazy.ShellServiceModule.ShellService.writeShortcutIcon(file, image);
++  return file;
++}
++
++/**
++ * Apply the image to one browser window. Private and taskbar-tab windows own
++ * their own visual identity and must keep it.
++ *
++ * @param {Window} win Browser window.
++ * @param {imgIContainer} image Decoded icon image.
++ */
++function applyWindowIcon(win, image) {
++  if (!win || win.closed) {
++    return;
++  }
+   try {
+-    lazy.WinTaskbar.setAllWindowIcons(iconResourceId);
++    if (
++      lazy.PrivateBrowsingUtils.isWindowPrivate(win) ||
++      lazy.TaskbarTabsUtils.isTaskbarTabWindow(win) ||
++      win.document.documentElement.hasAttribute("ai-window")
++    ) {
++      return;
++    }
++    lazy.WindowsUIUtils.setWindowIcon(win, image, image);
+   } catch (ex) {
+-    lazy.logConsole.error("setAllWindowIcons failed", ex);
++    lazy.logConsole.warn("setWindowIcon failed", ex);
+   }
+ }
+
++/**
++ * Push the decoded image to all currently open browser windows.
++ *
++ * @param {string} id Catalog id.
++ * @param {"dark"|"light"} scheme OS color scheme.
++ * @returns {Promise<void>}
++ */
++async function applyRuntimeWindowsIcon(id, scheme) {
++  let image = await iconImage(id, scheme);
++  let windows = Services.wm.getEnumerator(null);
++  while (windows.hasMoreElements()) {
++    applyWindowIcon(windows.getNext(), image);
++  }
++}
++
++/**
++ * Clear the custom runtime icon and restore the executable's native icon.
++ */
++function revertRuntimeWindowsIcon() {
++  try {
++    lazy.WinTaskbar.setAllWindowIcons(0);
++  } catch (ex) {
++    lazy.logConsole.error("Restoring the default runtime icon failed", ex);
++  }
++}
++
++/**
++ * Apply the decoded image to a newly initialized browser window.
++ *
++ * @param {Window} win Browser window.
++ * @param {string} id Catalog id.
++ * @param {"dark"|"light"} scheme OS color scheme.
++ */
++async function applyRuntimeWindowIcon(win, id, scheme) {
++  applyWindowIcon(win, await iconImage(id, scheme));
++}
++
+ // Values of the Personalize\SystemUsesLightTheme registry value (the OS "Windows
+ // mode" that governs the taskbar). Exported so tests can drive osColorScheme().
+ export const OS_LIGHT = 1;
+@@ -312,8 +382,8 @@ export const CustomIconManager = {
+    * Make the icon identified by `id` the active custom icon for this
+    * install. On Windows this:
+    *
+-   *   1. Updates every per-user .lnk this install owns to reference the
+-   *      embedded icon resource (firefox.exe,-<resource-id>).
++   *   1. Encodes the bundled image as a profile-local .ico and updates every
++   *      per-user .lnk this install owns to reference it.
+    *   2. Records the choice in a pref.
+    *   3. Pushes the icon to live windows via WM_SETICON.
+    *
+@@ -340,17 +410,14 @@ export const CustomIconManager = {
+     }
+
+     // Captured before the pref is written so re-applies of the already-active
+-    // icon (the theme observer, the startup reconcile) can be distinguished
+-    // from a genuine change to a different icon.
++    // icon can be distinguished from a genuine change to a different icon.
+     let previousId = this.currentId;
+
+     let scheme = osColorScheme();
+-    let iconResourceId = resolveResourceId(entry, scheme);
++    let image = await iconImage(id, scheme);
++    let iconFile = await writeProfileIcon(id, image);
+
+-    let updated = await applyIconToWindowsShortcuts(
+-      browserExePath(),
+-      iconResourceId
+-    );
++    let updated = await applyIconToWindowsShortcuts(iconFile.path);
+     if (!updated) {
+       lazy.logConsole.warn(
+         `apply("${id}"): no Windows shortcuts were updated. The running ` +
+@@ -360,7 +427,8 @@ export const CustomIconManager = {
+     }
+
+     Services.prefs.setStringPref(PREF_ICON_ID, id);
+-    applyRuntimeWindowsIcon(iconResourceId);
++    await applyRuntimeWindowsIcon(id, scheme);
++    this.refreshTaskbarButtons();
+     gLastAppliedScheme = scheme;
+
+     if (id !== previousId) {
+@@ -383,10 +451,12 @@ export const CustomIconManager = {
+
+     let previousId = this.currentId;
+
+-    await applyIconToWindowsShortcuts(browserExePath(), 0);
++    await applyIconToWindowsShortcuts(browserExePath());
+
+     Services.prefs.clearUserPref(PREF_ICON_ID);
+-    applyRuntimeWindowsIcon(0);
++    revertRuntimeWindowsIcon();
++    this.refreshTaskbarButtons();
++    gLastAppliedScheme = null;
+
+     // Reverting is a change to the "default" icon, recorded only when a real
+     // (catalog-known, non-default) custom icon was active. This excludes both a
+@@ -399,13 +469,11 @@ export const CustomIconManager = {
+   },
+
+   /**
+-   * Eagerly register the runtime icon override before any browser windows
+-   * are created, so that the first window picks up the custom icon at
+-   * construction time rather than flashing the default icon.
+-   *
+-   * Synchronous and does no I/O: reads the pref, resolves it against the
+-   * catalog, and pushes the resource ID to WinTaskbar. If the id is no longer
+-   * in the catalog, ensureAppliedOrRevert() reconciles later.
++   * Register observers before browser windows are created and begin decoding
++   * the selected image. Existing windows receive the image immediately when
++   * decoding completes; the delayed-startup observer handles new windows.
++   * This path intentionally does not rewrite profile files or shortcuts.
++   * Unknown ids are reconciled later by ensureAppliedOrRevert().
+    *
+    * Intended to be called from a browser-before-ui-startup hook.
+    */
+@@ -420,7 +488,14 @@ export const CustomIconManager = {
+     if (!entry) {
+       return;
+     }
+-    applyRuntimeWindowsIcon(resolveResourceId(entry, osColorScheme()));
++    let scheme = osColorScheme();
++    applyRuntimeWindowsIcon(this.currentId, scheme)
++      .then(() => {
++        gLastAppliedScheme = scheme;
++      })
++      .catch(ex =>
++        lazy.logConsole.error("Applying startup custom icon failed", ex)
++      );
+   },
+
+   /**
+@@ -434,6 +509,7 @@ export const CustomIconManager = {
+     }
+     lazy.logConsole.debug("Adding observers");
+     Services.obs.addObserver(this, "look-and-feel-changed");
++    Services.obs.addObserver(this, "browser-delayed-startup-finished");
+     Services.obs.addObserver(this, "xpcom-shutdown");
+     Services.obs.addObserver(this, "sps-profiles-updated");
+     gObserversRegistered = true;
+@@ -449,6 +525,7 @@ export const CustomIconManager = {
+     }
+     lazy.logConsole.debug("Removing observers");
+     Services.obs.removeObserver(this, "look-and-feel-changed");
++    Services.obs.removeObserver(this, "browser-delayed-startup-finished");
+     Services.obs.removeObserver(this, "xpcom-shutdown");
+     Services.obs.removeObserver(this, "sps-profiles-updated");
+     gObserversRegistered = false;
+@@ -473,6 +550,15 @@ export const CustomIconManager = {
+         }
+         break;
+       }
++      case "browser-delayed-startup-finished": {
++        let id = this.currentId;
++        if (id && ICON_CATALOG[id]) {
++          applyRuntimeWindowIcon(_subject, id, osColorScheme()).catch(ex =>
++            lazy.logConsole.error("Applying icon to a new window failed", ex)
++          );
++        }
++        break;
++      }
+       case "sps-profiles-updated": {
+         // The selectable profiles issued an update, which might mean that our icon
+         // needs to change. If the writer is remote, then re-evaluate which icon
+@@ -529,7 +615,9 @@ export const CustomIconManager = {
+         // a remote profile cleared it. In that case, we can assume that the other
+         // profile did most of the reversion work, but we'll go ahead and update
+         // the icon we're setting for windows at runtime to the default.
+-        applyRuntimeWindowsIcon(0);
++        revertRuntimeWindowsIcon();
++        this.refreshTaskbarButtons();
++        gLastAppliedScheme = null;
+       }
+       return;
+     }
+@@ -541,15 +629,11 @@ export const CustomIconManager = {
+       return;
+     }
+
+-    if (entry.variants) {
+-      // The OS theme may have flipped while the browser was closed, so re-apply
+-      // the matching variant to shortcuts + runtime, and start watching for
+-      // further changes.
+-      await this.apply(id);
+-      return;
+-    }
+-
+-    applyRuntimeWindowsIcon(resolveResourceId(entry, osColorScheme()));
++    // Shortcut state was persisted when the icon was selected. Startup and
++    // remote-profile reconciliation only need to update this process's windows.
++    let scheme = osColorScheme();
++    await applyRuntimeWindowsIcon(id, scheme);
++    gLastAppliedScheme = scheme;
+   },
+
+   /**

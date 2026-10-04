@@ -34,7 +34,7 @@ export function SsbContainerSelect(
   );
 
   useEffect(() => {
-    addI18nObserver(() => {
+    return addI18nObserver(() => {
       containerLabel.value = i18next.t(
         props.labelKey ?? "ssb.page-action.container",
       );

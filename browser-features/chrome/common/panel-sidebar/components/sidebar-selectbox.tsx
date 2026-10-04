@@ -18,7 +18,7 @@ export function SidebarSelectbox(props: { ctx: CPanelSidebar }) {
     >
       <WorkspacesPanels />
       {panelSidebarData.value.map((panel: Panel) => (
-        <PanelSidebarButton panel={panel} ctx={props.ctx} />
+        <PanelSidebarButton key={panel.id} panel={panel} ctx={props.ctx} />
       ))}
       <xul:toolbarbutton
         id="panel-sidebar-add"

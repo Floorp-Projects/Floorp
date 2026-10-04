@@ -12,7 +12,7 @@ export const isResizeCooldown: Signal<boolean> = signal<boolean>(false);
 export const setIsResizeCooldown = (v: boolean): void => {
   isResizeCooldown.value = v;
 };
-let resizeCooldownTimer: number | null = null;
+let resizeCooldownTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
 export function FloatingSplitter() {
   const onHorizontalMouseDown = (e: MouseEvent) => {
@@ -47,12 +47,12 @@ export function FloatingSplitter() {
       "floating-splitter-left",
     );
 
-    let frameRequested = false;
+    let frameId: number | undefined;
     let pendingWidth = startWidth;
     let pendingLeft = startLeft;
 
     const applyFrame = () => {
-      frameRequested = false;
+      frameId = undefined;
       sidebarBox.style.setProperty("width", `${pendingWidth}px`);
       if (isLeftSide) {
         sidebarBox.style.setProperty("left", `${pendingLeft}px`);
@@ -78,13 +78,16 @@ export function FloatingSplitter() {
         const desiredWidth = startWidth + deltaX;
         pendingWidth = Math.max(minW, Math.min(desiredWidth, maxW));
       }
-      if (!frameRequested) {
-        frameRequested = true;
-        document?.defaultView?.requestAnimationFrame(applyFrame);
+      if (frameId === undefined) {
+        frameId = globalThis.requestAnimationFrame(applyFrame);
       }
     };
 
     const onMouseUp = () => {
+      if (frameId !== undefined) {
+        globalThis.cancelAnimationFrame(frameId);
+        applyFrame();
+      }
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
@@ -139,12 +142,12 @@ export function FloatingSplitter() {
       "floating-splitter-top",
     );
 
-    let frameRequested = false;
+    let frameId: number | undefined;
     let pendingHeight = startHeight;
     let pendingTop = startTop;
 
     const applyFrame = () => {
-      frameRequested = false;
+      frameId = undefined;
       sidebarBox.style.setProperty("height", `${pendingHeight}px`);
       if (isTopSide) {
         sidebarBox.style.setProperty("top", `${pendingTop}px`);
@@ -170,13 +173,16 @@ export function FloatingSplitter() {
         const desiredHeight = startHeight + deltaY;
         pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
       }
-      if (!frameRequested) {
-        frameRequested = true;
-        document?.defaultView?.requestAnimationFrame(applyFrame);
+      if (frameId === undefined) {
+        frameId = globalThis.requestAnimationFrame(applyFrame);
       }
     };
 
     const onMouseUp = () => {
+      if (frameId !== undefined) {
+        globalThis.cancelAnimationFrame(frameId);
+        applyFrame();
+      }
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);
@@ -248,14 +254,14 @@ export function FloatingSplitter() {
       "floating-splitter-corner-bottomleft",
     );
 
-    let frameRequested = false;
+    let frameId: number | undefined;
     let pendingWidth = startWidth;
     let pendingHeight = startHeight;
     let pendingLeft = startLeft;
     let pendingTop = startTop;
 
     const applyFrame = () => {
-      frameRequested = false;
+      frameId = undefined;
       sidebarBox.style.setProperty("width", `${pendingWidth}px`);
       sidebarBox.style.setProperty("height", `${pendingHeight}px`);
       if (isTopLeft || isBottomLeft) {
@@ -307,13 +313,16 @@ export function FloatingSplitter() {
         pendingHeight = Math.max(minH, Math.min(desiredHeight, maxH));
       }
 
-      if (!frameRequested) {
-        frameRequested = true;
-        document?.defaultView?.requestAnimationFrame(applyFrame);
+      if (frameId === undefined) {
+        frameId = globalThis.requestAnimationFrame(applyFrame);
       }
     };
 
     const onMouseUp = () => {
+      if (frameId !== undefined) {
+        globalThis.cancelAnimationFrame(frameId);
+        applyFrame();
+      }
       setIsFloatingDragging(false);
       document?.removeEventListener("mousemove", onMouseMove);
       document?.removeEventListener("mouseup", onMouseUp);

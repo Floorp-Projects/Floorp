@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import { MULTIROW_TABBAR_BASE_CSS } from "./multirow-tabbar-css.ts";
 import { getTabsToolbar, resolveTabsContainer } from "./dom-utils.ts";
 import { PinnedTabController } from "./pinned-tab-controller.ts";
@@ -37,7 +37,7 @@ export class MultirowTabbarClass {
       return;
     }
 
-    effect(() => {
+    rootEffect(() => {
       const isMultirowStyle = config.value.tabbar.tabbarStyle === "multirow";
 
       if (isMultirowStyle && !this.isEnabled) {
@@ -157,6 +157,21 @@ export class MultirowTabbarClass {
   }
 
   private cleanup(): void {
+    // HMR/dispose path: ensure the drag-drop manager's monkey-patches and
+    // capture-phase listeners are torn down. Without this, hot-updating the
+    // tabbar leaves stale drop-method overrides and duplicate capture-phase
+    // listeners on `gBrowser.tabContainer`, which is the root cause of "old
+    // behavior persists after edit" symptoms.
+    if (this.isEnabled) {
+      try {
+        this.disableMultiRowTabs();
+      } catch (e) {
+        console.error(
+          "[MultirowTabbar] Failed to disable multi-row tabs during cleanup:",
+          e,
+        );
+      }
+    }
     if (this.agentSheetUri) {
       try {
         const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(

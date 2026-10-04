@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { getGBrowser, type SplitViewGBrowser, type SplitViewTab } from "../data/types.js";
+import {
+  getGBrowser,
+  type SplitViewGBrowser,
+  type SplitViewTab,
+} from "../data/types.js";
 import { findTabByPanelId } from "../utils/find-tab.js";
 
 /**
@@ -308,7 +312,9 @@ export function scheduleSequentialSplitTabSelectionForLoad(
       const tab = findTabForPanelId(gb, id);
       if (tab) {
         gb.selectedTab = tab;
-        logger.debug(`[splitPaneCycle] select ${id} (${index + 1}/${ids.length})`);
+        logger.debug(
+          `[splitPaneCycle] select ${id} (${index + 1}/${ids.length})`,
+        );
       }
       index++;
       const aboutToRestore = index === ids.length;

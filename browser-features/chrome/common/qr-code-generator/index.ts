@@ -1,4 +1,4 @@
-import { h, render } from "preact";
+import { h } from "preact";
 import { safeRender } from "@nora/preact-xul";
 import { QRCodePageActionButton } from "./qr-code-button.tsx";
 import { QRCodePanel } from "./qr-code-panel.tsx";

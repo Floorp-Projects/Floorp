@@ -1,0 +1,80 @@
+---
+title: "Modules Overview"
+sidebar_label: "Overview"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Modules Overview
+
+The `browser-features/modules/` directory contains Floorp's Firefox ESM (ECMAScript Module) layer. This is where system-level modules and Window Actor registrations live, bridging Gecko's native module system with Floorp's browser chrome and page features.
+
+### Architectural Position
+
+The ESM Modules layer sits between the patched Gecko base and the Bridge/Chrome UI layers. It is responsible for registering Window Actors that facilitate message passing between parent and child processes, and for wiring up system-level services that Floorp's UI features depend on (`browser-features/modules/modules/BrowserGlue.sys.mts`).
+
+The layer below is the Firefox Base layer, which consists of patched Gecko and pref overrides (`static/gecko/pref/override.ini`). The layer above is the Bridge layer, whose startup component selects between dev/test HTTP loaders and the production `chrome://` code path (`bridge/startup/src/chrome_root.ts`).
+
+### BrowserGlue System Module
+
+The primary file in this directory is `BrowserGlue.sys.mts`. This system module serves as Floorp's entry point for Firefox ESM module initialization and Window Actor registration (`browser-features/modules/modules/BrowserGlue.sys.mts`).
+
+The loader entrypoint in the Bridge layer imports BrowserGlue, initializes i18n, records loader state, filters enabled modules, and runs module lifecycle hooks (`bridge/loader-features/loader/index.ts`). This means BrowserGlue is consumed early in the startup sequence, before individual chrome features are loaded.
+
+### Window Actor Registration
+
+Floorp registers its Window Actors through the `ActorManagerParent.addJSWindowActors` API. This call is made at line 397 of `BrowserGlue.sys.mts` and registers a total of 22 actors (`browser-features/modules/modules/BrowserGlue.sys.mts`).
+
+:::caution
+The API name `ActorManagerParent.addActors` appears in older references but is a known drift string. The current registration API is `ActorManagerParent.addJSWindowActors` (`browser-features/modules/modules/BrowserGlue.sys.mts`).
+:::
+
+#### Registered Actors
+
+All 22 Window Actors are defined in `browser-features/modules/modules/BrowserGlue.sys.mts`. Each actor handles IPC between the parent process and one or more child processes (content, extension, or similar). The actors and their definition locations are:
+
+| Actor | Source Line |
+|---|---|
+| `NRSettings` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 35 |
+| `NRAboutPreferences` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 24 |
+| `NRPanelSidebar` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 69 |
+| `NRTabManager` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 85 |
+| `NRSyncManager` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 101 |
+| `NRAppConstants` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 117 |
+| `NRRestartBrowser` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 133 |
+| `NRWorkspaces` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 149 |
+| `NRProgressiveWebApp` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 165 |
+| `NRPwaManager` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 181 |
+| `NRChromeModal` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 197 |
+| `NRProfileManager` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 208 |
+| `NRStartPage` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 230 |
+| `NRWelcomePage` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 245 |
+| `NRSearchEngine` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 262 |
+| `NRWebScraper` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 286 |
+| `NROSAutomotor` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 304 |
+| `NRI18n` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 321 |
+| `NRChromeWebStore` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 338 |
+| `NRPluginStore` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 358 |
+| `NRMouseGestureScroll` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 381 |
+| `NRExperimemmt` | `browser-features/modules/modules/BrowserGlue.sys.mts` line 53 |
+
+### Relationship to Chrome Features
+
+Many of the registered Window Actors correspond directly to chrome features discovered in the `browser-features/chrome/common/` directory. For example:
+
+- `NRPanelSidebar` corresponds to the panel-sidebar chrome feature (`browser-features/chrome/common/panel-sidebar/index.ts`).
+- `NRWorkspaces` corresponds to the workspaces chrome feature (`browser-features/chrome/common/workspaces/index.ts`).
+- `NRProfileManager` corresponds to the profile-manager chrome feature (`browser-features/chrome/common/profile-manager/index.ts`).
+- `NRMouseGestureScroll` corresponds to the mouse-gesture chrome feature (`browser-features/chrome/common/mouse-gesture/index.ts`).
+- `NRPwaManager` and `NRProgressiveWebApp` correspond to the PWA chrome feature (`browser-features/chrome/common/pwa/index.ts`).
+
+The chrome features themselves are discovered by glob pattern `./*/index.ts` from the common module registry (`browser-features/chrome/common/mod.ts`). The loader module registry builds common and static module maps from these chrome feature entry globs (`bridge/loader-features/loader/modules.ts`).
+
+### Loader Integration
+
+The Bridge loader orchestrates module loading in a specific sequence. The entrypoint imports BrowserGlue first, then initializes i18n, records loader state, filters enabled modules, and finally runs module lifecycle hooks (`bridge/loader-features/loader/index.ts`). Module load-state resolution and `onModuleLoaded` promises are provided by the modules-hooks layer (`bridge/loader-features/loader/modules-hooks.ts`).
+
+In development, the loader is served from a Vite dev server on port 5181 (`bridge/loader-features/vite.config.ts`). The startup bridge selects between the dev loader URL, the test loader URL, and the production `chrome://noraneko/content/core.js` path (`bridge/startup/src/chrome_root.ts`).
+
+### Settings Page Integration
+
+Several Window Actors back settings UI routes. The settings application is a React/Tailwind full-page browser UI (`browser-features/pages-settings/vite.config.ts`) that bootstraps with theme, i18n, and hash-based routing (`browser-features/pages-settings/src/main.tsx`). Routes are defined for dashboard, design, sidebar, workspaces, PWA, Floorp OS, accounts, gestures, shortcuts, and updates (`browser-features/pages-settings/src/App.tsx`). For instance, the `NRSettings` actor and `NRAboutPreferences` actor support the preferences and settings infrastructure that these routes consume.

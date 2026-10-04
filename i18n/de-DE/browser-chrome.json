@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Tab neu laden"
+  },
   "undo-closed-tab": {
     "label": "Tab wiederherstellen",
     "tooltiptext": "Letzten geschlossenen Tab wieder öffnen {{shortcut}}"
@@ -92,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tab in anderen Arbeitsbereich verschieben",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Link in anderem Arbeitsbereich öffnen",
       "noOtherWorkspace": "Keine anderen Arbeitsbereiche verfügbar"
     },
@@ -110,20 +114,33 @@
     "menu": {
       "webapps": "Web-Apps",
       "install-current": "Aktuelle Seite als Progressive Web App installieren",
-      "open-installed": "Installierte Apps öffnen"
+      "open-current": "App im ausgewählten Container öffnen",
+      "open-installed": "Installierte Apps öffnen",
+      "container": "Container"
     },
     "page-action": {
       "title": "Anwendung öffnen",
       "install": "Anwendung installieren",
       "open": "Anwendung öffnen",
       "cancel": "Abbrechen",
-      "site-icon": "Webseitensymbol"
+      "site-icon": "Webseitensymbol",
+      "container": "Container",
+      "no-container": "Kein Container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
     "openInPrivateContainer": "In privatem Container öffnen",
     "reopenInPrivateContainer": "In privatem Container erneut öffnen",
     "name": "Privater Container"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Tab-URL bearbeiten",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Tab-URL bearbeiten"
   },
   "mouseGesture": {
     "actions": {
@@ -198,8 +215,8 @@
       "gecko-reverse-sidebar": "Seitenleistenposition wechseln",
       "gecko-hide-sidebar": "Seitenleiste ausblenden",
       "gecko-toggle-sidebar": "Seitenleiste umschalten",
-      "gecko-scroll-up": "Page Up",
-      "gecko-scroll-down": "Page Down",
+      "gecko-scroll-up": "Nach oben scrollen",
+      "gecko-scroll-down": "Nach unten scrollen",
       "gecko-scroll-line-up": "Nach oben scrollen",
       "gecko-scroll-line-down": "Nach unten scrollen",
       "gecko-scroll-right": "Nach rechts scrollen",
@@ -214,15 +231,15 @@
       "floorp-open-hub": "Floorp-Hub öffnen",
       "floorp-toggle-share-mode": "Freigabemodus umschalten",
       "floorp-copy-page-url-as-markdown": "Seiten-URL als Markdown kopieren",
-      "floorp-split-view-open-left": "Split View Left",
-      "floorp-split-view-open-right": "Split View Right",
-      "floorp-split-view-open-top": "Split View Top",
-      "floorp-split-view-open-bottom": "Split View Bottom",
-      "floorp-split-view-close": "Close Split View",
-      "floorp-split-view-swap-panes": "Swap Split Panes",
-      "floorp-split-view-cycle-layout": "Cycle Split Layout",
+      "floorp-split-view-open-left": "Geteilte Ansicht links",
+      "floorp-split-view-open-right": "Geteilte Ansicht rechts",
+      "floorp-split-view-open-top": "Geteilte Ansicht oben",
+      "floorp-split-view-open-bottom": "Geteilte Ansicht unten",
+      "floorp-split-view-close": "Geteilte Ansicht schließen",
+      "floorp-split-view-swap-panes": "Bereiche tauschen",
+      "floorp-split-view-cycle-layout": "Layout durchschalten",
       "floorp-split-view-add-pane": "Bereich zur geteilten Ansicht hinzufügen",
-      "floorp-split-view-remove-pane": "Remove Pane from Split View"
+      "floorp-split-view-remove-pane": "Bereich aus geteilter Ansicht entfernen"
     },
     "descriptions": {
       "gecko-back": "Zur vorherigen Seite zurückgehen",
@@ -244,15 +261,15 @@
       "floorp-open-hub": "Öffnet die Floorp-Hub-Seite",
       "floorp-toggle-share-mode": "Schaltet den Freigabemodus um, um die Benutzeroberfläche für Bildschirmfreigaben und Präsentationen zu minimieren",
       "floorp-copy-page-url-as-markdown": "Kopiert den aktuellen Seitentitel und die URL als Markdown-Linkformat: [Titel](URL)",
-      "floorp-split-view-open-left": "Open the current tab in a split view on the left side",
-      "floorp-split-view-open-right": "Open the current tab in a split view on the right side",
-      "floorp-split-view-open-top": "Open the current tab in a split view on the top side",
-      "floorp-split-view-open-bottom": "Open the current tab in a split view on the bottom side",
-      "floorp-split-view-close": "Close the active split view and return to single tab view",
-      "floorp-split-view-swap-panes": "Swap the positions of panes in the active split view",
-      "floorp-split-view-cycle-layout": "Cycle through available split view layouts (horizontal, vertical, grid)",
-      "floorp-split-view-add-pane": "Add a new pane to the active split view",
-      "floorp-split-view-remove-pane": "Remove the last pane from the active split view"
+      "floorp-split-view-open-left": "Öffnet den aktuellen Tab in einer geteilten Ansicht auf der linken Seite",
+      "floorp-split-view-open-right": "Öffnet den aktuellen Tab in einer geteilten Ansicht auf der rechten Seite",
+      "floorp-split-view-open-top": "Öffnet den aktuellen Tab in einer geteilten Ansicht im oberen Bereich",
+      "floorp-split-view-open-bottom": "Öffnet den aktuellen Tab in einer geteilten Ansicht im unteren Bereich",
+      "floorp-split-view-close": "Schließt die aktive geteilte Ansicht und kehrt zur Einzeltab-Ansicht zurück",
+      "floorp-split-view-swap-panes": "Tauscht die Positionen der Bereiche in der aktiven geteilten Ansicht",
+      "floorp-split-view-cycle-layout": "Schaltet durch die verfügbaren Layouts der geteilten Ansicht (horizontal, vertikal, Raster)",
+      "floorp-split-view-add-pane": "Fügt der aktiven geteilten Ansicht einen neuen Bereich hinzu",
+      "floorp-split-view-remove-pane": "Entfernt den letzten Bereich aus der aktiven geteilten Ansicht"
     }
   },
   "qrCode": {
@@ -416,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "In geteilter Ansicht öffnen",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Bereich zur geteilten Ansicht hinzufügen",
       "moveToPane": "In Bereich verschieben",
       "moveToPaneN": "Bereich {{n}} ({{title}})"
@@ -439,6 +457,35 @@
     "label": "Zen-Modus",
     "tooltiptext": "Zen-Modus umschalten",
     "menu-label": "Zen-Modus umschalten"
+  },
+  "ipProtection": {
+    "title": "Browser-VPN",
+    "toolbar": {
+      "activeTooltip": "Das Browser-VPN ist für den entsprechenden Web-Datenverkehr in Floorp aktiviert",
+      "inactiveTooltip": "Das Browser-VPN ist deaktiviert – der Web-Datenverkehr beim Surfen im Internet ist nicht geschützt",
+      "excludedTooltip": "Das Browser-VPN ist für diese Website deaktiviert – diese Website ist nicht geschützt",
+      "pausedTooltip": "Browser VPN ist pausiert — Web-Datenverkehr ist nicht geschützt",
+      "errorTooltip": "Browser-VPN – Verbindungsfehler; der betreffende Web-Datenverkehr ist nicht geschützt",
+      "helpTooltip": "Browser-VPN-Supportseite im Browser öffnen"
+    },
+    "scope": {
+      "summary": "Wenn „Browser-VPN“ aktiviert ist, kann es den entsprechenden Web-Datenverkehr in Floorp schützen. Ihr Betriebssystem und andere Apps fallen nicht in den Geltungsbereich dieser Funktion.",
+      "fullDisclosure": "Diese Funktion nutzt ein Mozilla-Konto und die Infrastruktur der Mozilla-Dienste. Floorp ist ein unabhängiges Projekt und steht in keiner Verbindung zu Mozilla und wird weder von Mozilla unterstützt noch gesponsert. Die Verfügbarkeit hängt von Ihrer Region, Ihrem Kontostatus und den Zugangsvoraussetzungen für Mozilla-Dienste ab."
+    },
+    "unauthenticated": {
+      "title": "Browser VPN testen"
+    },
+    "settings": {
+      "promoHeading": "Browser VPN testen",
+      "promoMessage": "Schützen Sie den berechtigten Web-Datenverkehr in Floorp, nachdem Sie sich angemeldet und die Verfügbarkeit des Dienstes bestätigt haben."
+    },
+    "terms": {
+      "prefix": "Durch Fortfahren stimmen Sie den ",
+      "termsOfUse": "Nutzungsbedingungen für Mozilla Firefox",
+      "conjunction": " zu und bestätigen den ",
+      "privacyNotice": "Mozilla Firefox Datenschutzhinweis",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Befehlspalette",
@@ -471,6 +518,10 @@
     "stepIndicator": "Schritt {{current}} von {{total}}",
     "backToCommands": "Zurück zu den Befehlen",
     "openUrl": "URL öffnen",
+    "openUrlContainerStepLabel": "In Container öffnen",
+    "openUrlContainerStepPlaceholder": "Wähle einen Container...",
+    "openUrlContainerWorkspaceDefault": "Arbeitsbereich-Standard",
+    "openUrlContainerWorkspaceDefaultDesc": "Verwendet den Standard-Kontext des Arbeitsbereiches",
     "openUrlDescription": "URL in einem neuen Tab öffnen",
     "openUrlStepLabel": "URL zum Öffnen eingeben",
     "openUrlStepPlaceholder": "https://example.com",
@@ -535,7 +586,17 @@
     "bookmarkSwitcher": "Lesezeichen wechseln",
     "bookmarkSwitcherDescription": "Eine mit Lesezeichen versehene Seite öffnen",
     "bookmarkSwitcherStepLabel": "Lesezeichen auswählen",
-    "bookmarkSwitcherStepPlaceholder": "Lesezeichen suchen oder auswählen..."
+    "bookmarkSwitcherStepPlaceholder": "Lesezeichen suchen oder auswählen...",
+    "bookmarkSwitcherContainerStepLabel": "In Container öffnen",
+    "bookmarkSwitcherContainerStepPlaceholder": "Wähle einen Container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Hintergrund-Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "In einem neuen Hintergrund-Tab öffnen",
+    "bookmarkSwitcherWhereCurrentTab": "Aktueller Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Im aktuellen Tab öffnen",
+    "bookmarkSwitcherWhereLabel": "Ort zum Öffnen",
+    "bookmarkSwitcherWhereNewTab": "Neuer Tab",
+    "bookmarkSwitcherWhereNewTabDesc": "In einem neuen Vordergrund-Tab öffnen",
+    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen..."
   },
   "commandPaletteReadings": {}
 }

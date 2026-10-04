@@ -14,14 +14,37 @@ import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.js"
 import {
   type Panels,
   type PanelSidebarConfig,
-  zPanels,
   zPanelSidebarConfig,
+  zPanelSidebarData,
 } from "../utils/type.js";
-import { createRootHMR } from "#features-chrome/utils/base";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import { isRight } from "fp-ts/Either";
 
-function getPanelSidebarData(stringData: string) {
-  return JSON.parse(stringData).data || {};
+function defaultPanelSidebarData(): Panels {
+  const result = zPanelSidebarData.decode(
+    JSON.parse(strDefaultData) as unknown,
+  );
+  return isRight(result) ? result.right.data : [];
+}
+
+export function parsePanelSidebarData(stringData: string): Panels {
+  try {
+    const result = zPanelSidebarData.decode(
+      JSON.parse(stringData) as unknown,
+    );
+    if (isRight(result)) {
+      return result.right.data;
+    }
+    console.warn(
+      "[PanelSidebar] Invalid panel data; restoring defaults.",
+    );
+  } catch (error) {
+    console.warn(
+      "[PanelSidebar] Failed to parse panel data; restoring defaults.",
+      error,
+    );
+  }
+  return defaultPanelSidebarData();
 }
 
 function getPanelSidebarConfigParsed(stringData: string): unknown {
@@ -34,15 +57,14 @@ function getPanelSidebarConfigParsed(stringData: string): unknown {
 }
 
 function createPanelSidebarData(): Signal<Panels> {
-  const dataResult = zPanels.decode(
-    getPanelSidebarData(
+  const sig = signal<Panels>(
+    parsePanelSidebarData(
       Services.prefs.getStringPref(
         PanelSidebarStaticNames.panelSidebarDataPrefName,
         strDefaultData,
       ),
     ),
   );
-  const sig = signal<Panels>(isRight(dataResult) ? dataResult.right : []);
 
   // sync signal → pref
   const disposeEffect = effect(() => {
@@ -54,24 +76,20 @@ function createPanelSidebarData(): Signal<Panels> {
 
   // sync pref → signal
   const observer = () => {
-    const result = zPanels.decode(
-      getPanelSidebarData(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarDataPrefName,
-          strDefaultData,
-        ),
+    const next = parsePanelSidebarData(
+      Services.prefs.getStringPref(
+        PanelSidebarStaticNames.panelSidebarDataPrefName,
+        strDefaultData,
       ),
     );
-    if (isRight(result)) {
-      sig.value = result.right;
-    }
+    if (JSON.stringify(sig.peek()) !== JSON.stringify(next)) sig.value = next;
   };
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
     observer,
   );
 
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarDataPrefName,
       observer,
@@ -90,8 +108,9 @@ export const panelSidebarData: Signal<Panels> = createRootHMR(
 export const setPanelSidebarData = (
   v: Panels | ((prev: Panels) => Panels),
 ): void => {
-  panelSidebarData.value =
-    typeof v === "function" ? v(panelSidebarData.value) : v;
+  panelSidebarData.value = typeof v === "function"
+    ? v(panelSidebarData.value)
+    : v;
 };
 
 function createSelectedPanelId(): Signal<string | null> {
@@ -99,7 +118,7 @@ function createSelectedPanelId(): Signal<string | null> {
   const disposeEffect = effect(() => {
     globalThis.gFloorpPanelSidebarCurrentPanel = sig.value;
   });
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     disposeEffect();
   });
   return sig;
@@ -145,7 +164,10 @@ function createPanelSidebarConfig(): Signal<PanelSidebarConfig> {
         ),
       ),
     );
-    if (isRight(result)) {
+    if (
+      isRight(result) &&
+      JSON.stringify(sig.peek()) !== JSON.stringify(result.right)
+    ) {
       sig.value = result.right;
     }
   };
@@ -155,7 +177,7 @@ function createPanelSidebarConfig(): Signal<PanelSidebarConfig> {
     observer,
   );
 
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
       observer,
@@ -171,8 +193,14 @@ export const panelSidebarConfig: Signal<PanelSidebarConfig> = createRootHMR(
   createPanelSidebarConfig,
   import.meta.hot,
 );
-export const setPanelSidebarConfig = (v: PanelSidebarConfig): void => {
-  panelSidebarConfig.value = v;
+export const setPanelSidebarConfig = (
+  v:
+    | PanelSidebarConfig
+    | ((previous: PanelSidebarConfig) => PanelSidebarConfig),
+): void => {
+  panelSidebarConfig.value = typeof v === "function"
+    ? v(panelSidebarConfig.peek())
+    : v;
 };
 
 /** Floating state */
@@ -222,7 +250,7 @@ function createIsPanelSidebarEnabled(): Signal<boolean> {
     observer,
   );
 
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
       observer,

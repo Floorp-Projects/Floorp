@@ -32,6 +32,19 @@ export type TestCase = {
   fn: () => void | Promise<void>;
 };
 
+type TestProgress = {
+  moduleName: string;
+  testName: string;
+  status: "running" | "passed" | "failed" | "done";
+  index: number;
+  total: number;
+  startedAtMs: number;
+};
+
+declare global {
+  var __NORA_TEST_PROGRESS__: TestProgress | undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Assertions
 // ---------------------------------------------------------------------------
@@ -110,14 +123,52 @@ export async function runTests(
 ): Promise<void> {
   const failures: string[] = [];
 
-  for (const test of tests) {
+  for (const [index, test] of tests.entries()) {
+    globalThis.__NORA_TEST_PROGRESS__ = {
+      moduleName,
+      testName: test.name,
+      status: "running",
+      index: index + 1,
+      total: tests.length,
+      startedAtMs: Date.now(),
+    };
+
     try {
       await test.fn();
+      const startedAtMs = globalThis.__NORA_TEST_PROGRESS__?.startedAtMs ??
+        Date.now();
+      globalThis.__NORA_TEST_PROGRESS__ = {
+        moduleName,
+        testName: test.name,
+        status: "passed",
+        index: index + 1,
+        total: tests.length,
+        startedAtMs,
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(`${test.name}: ${message}`);
+      const startedAtMs = globalThis.__NORA_TEST_PROGRESS__?.startedAtMs ??
+        Date.now();
+      globalThis.__NORA_TEST_PROGRESS__ = {
+        moduleName,
+        testName: test.name,
+        status: "failed",
+        index: index + 1,
+        total: tests.length,
+        startedAtMs,
+      };
     }
   }
+
+  globalThis.__NORA_TEST_PROGRESS__ = {
+    moduleName,
+    testName: "",
+    status: "done",
+    index: tests.length,
+    total: tests.length,
+    startedAtMs: Date.now(),
+  };
 
   if (failures.length > 0) {
     throw new Error(`${moduleName} failures: ${failures.join(" | ")}`);

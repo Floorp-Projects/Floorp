@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 
 export class TabDoubleClickClose {
   constructor() {
-    effect(() => {
-      const option = config.value.tab.tabDubleClickToClose;
+    rootEffect(() => {
+      const option = config.value.tab.tabDoubleClickToClose;
       Services.prefs.setBoolPref("browser.tabs.closeTabByDblclick", option);
     });
   }

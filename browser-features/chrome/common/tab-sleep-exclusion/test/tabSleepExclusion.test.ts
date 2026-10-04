@@ -1543,6 +1543,7 @@ function testApplyToAllTabsWithTabsThrowingErrors(): void {
 }
 
 export async function runAllTests(): Promise<void> {
+  const originalGBrowser = globalThis.gBrowser;
   const tests: TestCase[] = [
     { name: "default settings contract", fn: testDefaultSettingsContract },
     {
@@ -1808,5 +1809,9 @@ export async function runAllTests(): Promise<void> {
     },
   ];
 
-  await runTests("tabSleepExclusion.test.ts", tests);
+  try {
+    await runTests("tabSleepExclusion.test.ts", tests);
+  } finally {
+    globalThis.gBrowser = originalGBrowser;
+  }
 }

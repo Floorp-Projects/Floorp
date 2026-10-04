@@ -91,11 +91,21 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
 
   // Toolbar buttons
   // toolbarbuttons.css:768-769 -> 775-776
-  ["--toolbarbutton-hover-background", "--toolbarbutton-background-color-hover"],
+  [
+    "--toolbarbutton-hover-background",
+    "--toolbarbutton-background-color-hover",
+  ],
   [
     "--toolbarbutton-active-background",
     "--toolbarbutton-background-color-active",
   ],
+  // toolbarbuttons.css:13,17 — the padding tokens were renamed too. Vendored
+  // Lepton still reads the legacy names inside `calc()` chains (e.g. its
+  // `--uc-toolbarbutton-hide-size`), so without these aliases those `calc()`
+  // expressions are invalid and the autohide back/forward button rules
+  // silently do nothing.
+  ["--toolbarbutton-outer-padding", "--toolbarbutton-padding-outer"],
+  ["--toolbarbutton-inner-padding", "--toolbarbutton-padding-inner"],
 
   // Panels / arrow panels (arrowpanel-* folded into panel-* in 152)
   // toolkit/themes/shared/popup.css:10 -> --panel-background-color

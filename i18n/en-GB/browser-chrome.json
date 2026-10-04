@@ -1,4 +1,7 @@
 {
+  "tab-refresh": {
+    "reload": "Reload tab"
+  },
   "undo-closed-tab": {
     "label": "Undo Closed Tab",
     "tooltiptext": "Reopen the last closed tab {{shortcut}}"
@@ -18,7 +21,7 @@
       "container": "Container",
       "no-container": "No Container",
       "icon": "Icon",
-      "edit-title": "Edit Workspace Title",
+      "edit-title": "Edit Workspace",
       "save": "Save changes",
       "cancel": "Cancel"
     },
@@ -69,7 +72,7 @@
       "archive": "Archive Workspace"
     },
     "popup": {
-      "create-new": "Create new Workspace...",
+      "create-new": "Create New Workspace...",
       "manage": "Manage Workspaces",
       "restore": "Show Archived Workspaces",
       "restore-cancel": "Exit Restore Mode",
@@ -92,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Move Tab to Another Workspace",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Open Link in Another Workspace",
       "noOtherWorkspace": "No other workspaces available"
     },
@@ -110,20 +114,33 @@
     "menu": {
       "webapps": "Web Apps",
       "install-current": "Install Current Page as Progressive Web App",
-      "open-installed": "Open Installed Apps"
+      "open-current": "Open app in selected container",
+      "open-installed": "Open Installed Apps",
+      "container": "Container"
     },
     "page-action": {
       "title": "Open Application",
       "install": "Install Application",
       "open": "Open Application",
       "cancel": "Cancel",
-      "site-icon": "Site icon"
+      "site-icon": "Site icon",
+      "container": "Container",
+      "no-container": "No container"
+    },
+    "window": {
+      "container-tooltip": "Container: {{name}}",
+      "container-fallback": "Container #{{id}}"
     }
   },
   "privateContainer": {
     "openInPrivateContainer": "Open in Private Container",
     "reopenInPrivateContainer": "Reopen in Private Container",
     "name": "Private Container"
+  },
+  "tabInlineEdit": {
+    "contextMenu": "Edit Tab URL",
+    "inputLabel": "Tab URL",
+    "keyboardAction": "Edit Tab URL"
   },
   "mouseGesture": {
     "actions": {
@@ -198,8 +215,8 @@
       "gecko-reverse-sidebar": "Reverse Sidebar Position",
       "gecko-hide-sidebar": "Hide Sidebar",
       "gecko-toggle-sidebar": "Toggle Sidebar",
-      "gecko-scroll-up": "Page Up",
-      "gecko-scroll-down": "Page Down",
+      "gecko-scroll-up": "Scroll Up",
+      "gecko-scroll-down": "Scroll Down",
       "gecko-scroll-line-up": "Scroll Up",
       "gecko-scroll-line-down": "Scroll Down",
       "gecko-scroll-right": "Scroll Right",
@@ -410,12 +427,13 @@
   },
   "hub": {
     "menu": {
-      "title": "Floorp Hub Title"
+      "title": "Floorp Hub"
     }
   },
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Open in Split View",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"
@@ -439,6 +457,35 @@
     "label": "Zen Mode",
     "tooltiptext": "Toggle Zen Mode",
     "menu-label": "Toggle Zen Mode"
+  },
+  "ipProtection": {
+    "title": "Browser VPN",
+    "toolbar": {
+      "activeTooltip": "Browser VPN is on for eligible web browsing traffic in Floorp",
+      "inactiveTooltip": "Browser VPN is off — web browsing traffic is not protected",
+      "excludedTooltip": "Browser VPN is off for this site — this site is not protected",
+      "pausedTooltip": "Browser VPN is paused — web browsing traffic is not protected",
+      "errorTooltip": "Browser VPN — connection error; eligible web browsing traffic is not protected",
+      "helpTooltip": "Open Browser VPN support page"
+    },
+    "scope": {
+      "summary": "When active, Browser VPN can protect eligible web browsing traffic in Floorp. Its scope does not include your operating system or other apps.",
+      "fullDisclosure": "This feature uses a Mozilla account and Mozilla service infrastructure. Floorp is an independent project and is not affiliated with, endorsed by, or sponsored by Mozilla. Availability depends on your region, account status, and Mozilla’s service eligibility requirements."
+    },
+    "unauthenticated": {
+      "title": "Try Browser VPN"
+    },
+    "settings": {
+      "promoHeading": "Try Browser VPN",
+      "promoMessage": "Protect eligible web browsing traffic in Floorp after signing in and confirming service availability."
+    },
+    "terms": {
+      "prefix": "By continuing, you agree to ",
+      "termsOfUse": "Mozilla Firefox Terms of Use",
+      "conjunction": " and acknowledge ",
+      "privacyNotice": "Mozilla Firefox Privacy Notice",
+      "suffix": "."
+    }
   },
   "commandPalette": {
     "dialogLabel": "Command Palette",
@@ -471,6 +518,10 @@
     "stepIndicator": "Step {{current}} of {{total}}",
     "backToCommands": "Back to commands",
     "openUrl": "Open URL",
+    "openUrlContainerStepLabel": "Open in container",
+    "openUrlContainerStepPlaceholder": "Choose a container...",
+    "openUrlContainerWorkspaceDefault": "Workspace Default",
+    "openUrlContainerWorkspaceDefaultDesc": "Uses the workspace's default context",
     "openUrlDescription": "Open a URL in a new tab",
     "openUrlStepLabel": "Enter URL to open",
     "openUrlStepPlaceholder": "https://example.com",
@@ -535,7 +586,17 @@
     "bookmarkSwitcher": "Switch Bookmark",
     "bookmarkSwitcherDescription": "Open a bookmarked page",
     "bookmarkSwitcherStepLabel": "Select a bookmark",
-    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark..."
+    "bookmarkSwitcherStepPlaceholder": "Search or choose a bookmark...",
+    "bookmarkSwitcherContainerStepLabel": "Open in container",
+    "bookmarkSwitcherContainerStepPlaceholder": "Choose a container...",
+    "bookmarkSwitcherWhereBackgroundTab": "Background Tab",
+    "bookmarkSwitcherWhereBackgroundTabDesc": "Open in a new background tab",
+    "bookmarkSwitcherWhereCurrentTab": "Current Tab",
+    "bookmarkSwitcherWhereCurrentTabDesc": "Navigate the current tab",
+    "bookmarkSwitcherWhereLabel": "Where to open",
+    "bookmarkSwitcherWhereNewTab": "New Tab",
+    "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
+    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
   },
   "commandPaletteReadings": {}
 }

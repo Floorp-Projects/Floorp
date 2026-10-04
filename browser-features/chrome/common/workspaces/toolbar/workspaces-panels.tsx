@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useState, useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import Workspaces from "../index.ts";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { configStore, enabled } from "../data/config.ts";
@@ -34,12 +34,14 @@ type WorkspacePanelButtonProps = {
 
 const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
   const data = workspacesDataStore.data;
-  const workspace = data instanceof Map ? data.get(props.workspaceId) : undefined;
-  const iconUrl =
-    props.ctx.iconCtx.getWorkspaceIconUrl(
-      (workspace as { icon?: string } | undefined)?.icon,
-    ) ?? DEFAULT_ICON;
-  const workspaceName = (workspace as { name?: string } | undefined)?.name ?? "";
+  const workspace = data instanceof Map
+    ? data.get(props.workspaceId)
+    : undefined;
+  const iconUrl = props.ctx.iconCtx.getWorkspaceIconUrl(
+    (workspace as { icon?: string } | undefined)?.icon,
+  ) ?? DEFAULT_ICON;
+  const workspaceName = (workspace as { name?: string } | undefined)?.name ??
+    "";
   const isSelected = selectedWorkspaceID.value === props.workspaceId;
 
   const handleActivate = () => {
@@ -137,7 +139,7 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
         tabIndex={0}
         title={workspaceName}
         aria-label={workspaceName}
-        draggable={true}
+        draggable
         onClick={handleActivate}
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
@@ -193,7 +195,7 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
   );
 
   useEffect(() => {
-    addI18nObserver(() => setTexts(getTranslations()));
+    return addI18nObserver(() => setTexts(getTranslations()));
   }, []);
 
   // Resolve ctx: provided prop → live lookup → poll until available

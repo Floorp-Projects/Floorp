@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { effect } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import style from "./style.css?inline";
 import { safeRender } from "@nora/preact-xul";
 
@@ -63,7 +63,7 @@ export class TabSizeSpecification {
     }
 
     try {
-      safeRender(styleElement, head);
+      return safeRender(styleElement, head);
     } catch (error) {
       const reason = error instanceof Error ? error : new Error(String(error));
       console.error(
@@ -93,10 +93,10 @@ export class TabSizeSpecification {
       return;
     }
 
-    effect(() => {
+    rootEffect(() => {
       const minH = config.value.tab.tabMinHeight;
       const minW = config.value.tab.tabMinWidth;
-      this.setTabSizeSpecification(minH, minW);
+      return this.setTabSizeSpecification(minH, minW);
     });
   }
 }

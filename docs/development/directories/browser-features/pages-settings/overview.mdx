@@ -1,0 +1,34 @@
+---
+title: "Settings Pages Overview"
+sidebar_label: "Overview"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Overview
+
+Floorp settings pages are implemented as a dedicated React and Tailwind application. This application represents the "Pages" architecture layer, which provides full-page browser UIs as defined in `browser-features/pages-settings/vite.config.ts`.
+
+The application is bootstrapped in `browser-features/pages-settings/src/main.tsx`. This entrypoint initializes the React settings app, configuring the theme, internationalization (i18n), and establishing hash-based routing for navigation between different settings views.
+
+## Routing Architecture
+
+The routing structure for the settings application is defined in `browser-features/pages-settings/src/App.tsx`. It uses hash-based routing to map specific URL paths to their corresponding React components.
+
+### Route Definitions
+
+The following routes are registered in the settings application:
+
+- `/`: Redirects the user using the `Navigate` component (`browser-features/pages-settings/src/App.tsx`).
+- `/search`: Renders the search page from `@/app/search/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/overview/home`: Renders the dashboard page from `@/app/dashboard/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/design`: Renders the design settings page from `@/app/design/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/design/lepton`: Renders the Lepton settings component from `@/app/design/components/LeptonSettings.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/sidebar`: Renders the sidebar settings page from `@/app/sidebar/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/workspaces`: Renders the workspaces settings page from `@/app/workspaces/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/webapps`: Renders the Progressive Web App (PWA) settings page from `@/app/pwa/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/floorp-os`: Renders the Floorp OS settings page from `@/app/floorp-os/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/accounts`: Renders the accounts settings page from `@/app/accounts/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/gesture`: Renders the gesture settings page from `@/app/gesture/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/features/shortcuts`: Renders the keyboard shortcut settings page from `@/app/keyboard-shortcut/page.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/about/browser`: Renders the browser about page from `./app/about/noraneko.tsx` (`browser-features/pages-settings/src/App.tsx`).
+- `/about/updates`: Renders the updates page from `@/app/updates/page.tsx` (`browser-features/pages-settings/src/App.tsx`).

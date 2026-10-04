@@ -15,15 +15,15 @@
         "titlePlaceholder": "標題",
         "loading": "載入筆記中……",
         "delete": "刪除",
-        "empty": "No notes yet. Click \"New Note\" to create one.",
-        "deleteConfirmTitle": "Delete Note",
-        "deleteConfirmMessage": "Are you sure you want to delete this note? This action cannot be undone.",
+        "empty": "目前沒有筆記。點擊「新增筆記」來建立。",
+        "deleteConfirmTitle": "刪除筆記",
+        "deleteConfirmMessage": "您確定要刪除此筆記嗎？此操作無法撤銷。",
         "deleteConfirm": "刪除",
         "deleteCancel": "取消",
-        "noteList": "Notes list",
-        "search": "Search notes",
-        "clearSearch": "Clear search",
-        "noSearchResults": "No notes match your search"
+        "noteList": "筆記清單",
+        "search": "搜尋筆記",
+        "clearSearch": "清除搜尋",
+        "noSearchResults": "沒有筆記符合搜尋條件"
     },
     "editor": {
         "bold": "粗體",
@@ -39,27 +39,27 @@
         "heading1": "一級標題",
         "heading2": "二級標題",
         "heading3": "三級標題",
-        "undo": "Undo",
-        "redo": "Redo",
+        "undo": "復原",
+        "redo": "重做",
         "history": "歷史",
-        "toolbar": "Formatting toolbar",
-        "headings": "Headings",
-        "textFormatting": "Text formatting",
-        "lists": "Lists",
-        "alignment": "Alignment",
-        "contentArea": "Note content",
-        "placeholder": "Start writing...",
-        "image": "Insert image"
+        "toolbar": "格式工具列",
+        "headings": "標題",
+        "textFormatting": "文字格式",
+        "lists": "清單",
+        "alignment": "對齊",
+        "contentArea": "筆記內文",
+        "placeholder": "開始書寫……",
+        "image": "插入圖片"
     },
     "common": {
         "close": "關閉",
-        "confirm": "Confirm",
+        "confirm": "確認",
         "cancel": "取消"
     },
     "save": {
-        "saving": "Saving...",
-        "saved": "Saved",
-        "error": "Save failed"
+        "saving": "正在儲存……",
+        "saved": "已儲存",
+        "error": "儲存失敗"
     },
     "error": {
         "loadFailed": "載入筆記資料失敗",

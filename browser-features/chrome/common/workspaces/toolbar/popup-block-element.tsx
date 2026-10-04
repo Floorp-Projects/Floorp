@@ -98,7 +98,7 @@ export function PopupToolbarElement(props: {
       data-workspaceId={props.workspaceId}
       data-has-container={hasContainer ? "true" : "false"}
       data-container-color={containerColorName ?? ""}
-      draggable={true}
+      draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}

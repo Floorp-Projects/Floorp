@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  createRootHMR,
   noraComponent,
   NoraComponentBase,
 } from "#features-chrome/utils/base";
@@ -19,79 +20,78 @@ import { SiteSpecificBrowserManager } from "./ssbManager.ts";
 @noraComponent("Pwa", import.meta.hot)
 export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
+  private initialized = false;
 
   init() {
     if (!enabled.value) return;
-    const manifestProcesser = new ManifestProcesser();
-    const dataManager = new DataManager();
-    const ssbManager = new SiteSpecificBrowserManager(
-      manifestProcesser,
-      dataManager,
-    );
-    const ctx = new PwaService(ssbManager, manifestProcesser, dataManager);
+    // Finder can open a PWA window before Firefox has installed gBrowser on
+    // that window. Initializing the manager earlier aborts the whole module.
+    if (globalThis.gBrowser) {
+      this.initialize();
+      return;
+    }
 
-    new SsbPageAction(ctx);
-    new SsbPanelView(ctx);
-    new PwaWindowSupport(ctx);
-
-    Pwa.ctx = ctx;
-    // Check if a startup SSB id was stored by the command line handler.
-    // Run it immediately (init is invoked after the browser UI is ready in
-    // NoraComponent lifecycle) and clear the pref to avoid repeated launches.
-    (async () => {
-      // Mac migration: disable PWA if no apps are installed
-      const { AppConstants } = ChromeUtils.importESModule(
-        "resource://gre/modules/AppConstants.sys.mjs",
+    const onDelayedStartup = (subject: nsISupports | null) => {
+      if (subject !== window) return;
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
       );
-      if (AppConstants.platform === "macosx") {
+      this.initialize();
+    };
+    Services.obs.addObserver(
+      onDelayedStartup,
+      "browser-delayed-startup-finished",
+    );
+    globalThis.addEventListener("unload", () => {
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+    }, { once: true });
+  }
+
+  private initialize(): void {
+    if (this.initialized || !globalThis.gBrowser || window.closed) return;
+    this.initialized = true;
+    createRootHMR(() => {
+      const manifestProcesser = new ManifestProcesser();
+      const dataManager = new DataManager();
+      const ssbManager = new SiteSpecificBrowserManager(
+        manifestProcesser,
+        dataManager,
+      );
+      const ctx = new PwaService(ssbManager, manifestProcesser, dataManager);
+
+      new SsbPageAction(ctx);
+      new SsbPanelView(ctx);
+      new PwaWindowSupport(ctx);
+
+      Pwa.ctx = ctx;
+      // Check if a startup SSB id was stored by the command line handler.
+      // Run it immediately (init is invoked after the browser UI is ready in
+      // NoraComponent lifecycle) and clear the pref to avoid repeated launches.
+      (async () => {
+        console.debug("Checking for startup SSB id...");
         try {
-          const migrationChecked = Services.prefs.getBoolPref(
-            "floorp.browser.ssb.mac_migration_checked",
-            false,
-          );
-          if (!migrationChecked) {
-            const apps = await dataManager.getCurrentSsbData();
-            if (Object.keys(apps).length === 0) {
-              Services.prefs.setBoolPref("floorp.browser.ssb.enabled", false);
-              // Since we disabled the feature, we should probably stop here
-              // But strictly speaking, we are in the init() so the UI is already created.
-              // A weird state, but it will be disabled effectively on next run or if components check enabled.value reactively.
-              // Given PwaWindowSupport checks enabled status implicitly or by existence, it might be fine.
-              // Actually, PwaWindowSupport doesn't check 'enabled.value' in constructor, it checks taskbartab attr.
-              // But SsbPageAction etc might be visible.
-              // However, typically this init runs once. If we disable it, the reactive config in config.ts will update.
-              // Let's verify config.ts reactive behavior.
-              // config.ts has a listener.
+          const id = Services.prefs.getCharPref("floorp.ssb.startup.id", "");
+          if (id) {
+            const ssbObj = await ctx.getSsbObj(id);
+            if (ssbObj) {
+              await ctx.runSsbByUrl(ssbObj.start_url, ssbObj.userContextId);
             }
-            Services.prefs.setBoolPref(
-              "floorp.browser.ssb.mac_migration_checked",
-              true,
-            );
+            try {
+              Services.prefs.clearUserPref("floorp.ssb.startup.id");
+            } catch (e) {
+              console.error("Failed to clear floorp.ssb.startup.id", e);
+            }
           }
         } catch (e) {
-          console.error("Failed to run PWA migration for Mac", e);
+          // If the pref doesn't exist or any error occurs, ignore it so startup
+          // proceeds normally.
+          console.debug("No startup SSB id or failed to start SSB:", e);
         }
-      }
-
-      console.debug("Checking for startup SSB id...");
-      try {
-        const id = Services.prefs.getCharPref("floorp.ssb.startup.id", "");
-        if (id) {
-          const ssbObj = await ctx.getSsbObj(id);
-          if (ssbObj) {
-            await ctx.runSsbByUrl(ssbObj.start_url, ssbObj.userContextId);
-          }
-          try {
-            Services.prefs.clearUserPref("floorp.ssb.startup.id");
-          } catch (e) {
-            console.error("Failed to clear floorp.ssb.startup.id", e);
-          }
-        }
-      } catch (e) {
-        // If the pref doesn't exist or any error occurs, ignore it so startup
-        // proceeds normally.
-        console.debug("No startup SSB id or failed to start SSB:", e);
-      }
-    })();
+      })();
+    }, import.meta.hot);
   }
 }

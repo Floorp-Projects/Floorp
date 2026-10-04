@@ -3,25 +3,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  addDisposer,
-  noraComponent,
-  NoraComponentBase,
-} from "#features-chrome/utils/base";
+import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
+import { addDisposer } from "@nora/preact-xul/lifetime";
+import { ContextMenuController } from "./controller.ts";
+
+export * from "./config.ts";
+export * from "./types.ts";
 
 @noraComponent("ContextMenu", import.meta.hot)
 export default class ContextMenu extends NoraComponentBase {
-  init() {
-    ContextMenuUtils.contentAreaContextMenu()?.addEventListener(
+  // NoraComponentBase invokes init() from its constructor. `declare` avoids a
+  // derived-class field initializer overwriting the controller created there.
+  declare private controller: ContextMenuController | null | undefined;
+  declare private cleanupController: (() => void) | undefined;
+
+  init(): void {
+    if (this.controller) return;
+    const contentAreaContextMenu = ContextMenuUtils.contentAreaContextMenu();
+    contentAreaContextMenu?.addEventListener(
       "popupshowing",
       ContextMenuUtils.onPopupShowing,
     );
-    addDisposer(() => {
-      ContextMenuUtils.contentAreaContextMenu()?.removeEventListener(
+    this.controller = new ContextMenuController({ window });
+    this.controller.attach();
+
+    const cleanup = () => {
+      globalThis.removeEventListener("unload", cleanup);
+      if (this.cleanupController !== cleanup) return;
+      contentAreaContextMenu?.removeEventListener(
         "popupshowing",
         ContextMenuUtils.onPopupShowing,
       );
-    });
+      this.controller?.destroy();
+      this.controller = null;
+      this.cleanupController = undefined;
+    };
+    this.cleanupController = cleanup;
+    globalThis.addEventListener("unload", cleanup, { once: true });
+    addDisposer(cleanup);
   }
 }

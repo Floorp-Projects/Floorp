@@ -7,9 +7,13 @@ import type { WorkspacesService } from "./workspacesService.ts";
 import { workspacesDataStore } from "./data/data.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { addDisposer } from "@nora/preact-xul/lifetime";
+import { getWorkspaceMenuAccessKey } from "./utils/menu-accesskey.ts";
 
 const translationKeys = {
   moveTabToAnotherWorkspace: "workspaces.menu.moveTabToAnotherWorkspace",
+  moveTabToAnotherWorkspaceAccessKey:
+    "workspaces.menu.moveTabToAnotherWorkspaceAccessKey",
   invalidWorkspaceID: "workspaces.error.invalidWorkspaceID",
 };
 
@@ -42,18 +46,27 @@ export class WorkspacesTabContextMenu {
 
     try {
       // Build XUL elements directly to support marker-based insertion.
-      const menuEl = document?.createXULElement("menu") as unknown as XULElement;
+      const menuEl = document?.createXULElement(
+        "menu",
+      ) as unknown as XULElement;
       menuEl.id = "context_MoveTabToOtherWorkspace";
       menuEl.setAttribute(
         "label",
         getTranslatedText(translationKeys.moveTabToAnotherWorkspace),
       );
-      menuEl.setAttribute("accesskey", "D");
+      menuEl.setAttribute(
+        "data-floorp-context-menu-key",
+        "floorp.workspaces.move-tab",
+      );
+      addDisposer(() => menuEl.remove());
 
-      const popupEl = document?.createXULElement("menupopup") as unknown as XULElement;
+      const popupEl = document?.createXULElement(
+        "menupopup",
+      ) as unknown as XULElement;
       popupEl.id = "WorkspacesTabContextMenu";
-      popupEl.addEventListener("popupshowing", () =>
-        this.createTabworkspacesContextMenuItems(),
+      popupEl.addEventListener(
+        "popupshowing",
+        () => this.createTabworkspacesContextMenuItems(),
       );
       menuEl.appendChild(popupEl);
 
@@ -70,8 +83,39 @@ export class WorkspacesTabContextMenu {
       );
     }
 
+    this.updateContextMenu();
     addI18nObserver(() => {
       this.updateContextMenu();
+    });
+
+    const onPopupShown = (event: Event) => {
+      if (event.target === parentElem) {
+        this.updateContextMenu();
+      }
+    };
+    parentElem.addEventListener("popupshown", onPopupShown);
+
+    // Native Fluent strings are lazy, and selection changes hide/show commands.
+    const observer = new MutationObserver((mutations) => {
+      if (
+        mutations.some(({ target, type }) =>
+          (type === "childList" && target === parentElem) ||
+          (target instanceof Element && target.parentElement === parentElem &&
+            target.id !== "context_MoveTabToOtherWorkspace")
+        )
+      ) {
+        this.updateContextMenu();
+      }
+    });
+    observer.observe(parentElem, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["accesskey", "hidden", "collapsed", "style", "class"],
+    });
+    addDisposer(() => {
+      parentElem.removeEventListener("popupshown", onPopupShown);
+      observer.disconnect();
     });
   }
 
@@ -84,6 +128,15 @@ export class WorkspacesTabContextMenu {
         "label",
         getTranslatedText(translationKeys.moveTabToAnotherWorkspace),
       );
+      const accessKey = getWorkspaceMenuAccessKey(
+        menuElem,
+        getTranslatedText(translationKeys.moveTabToAnotherWorkspaceAccessKey),
+      );
+      if (accessKey) {
+        menuElem.setAttribute("accesskey", accessKey);
+      } else {
+        menuElem.removeAttribute("accesskey");
+      }
     }
   }
 
@@ -112,7 +165,9 @@ export class WorkspacesTabContextMenu {
     for (const workspaceId of excludeHasTabWorkspaceIdWorkspaces) {
       if (!this.ctx.isWorkspaceID(workspaceId)) {
         console.error(
-          `${getTranslatedText(translationKeys.invalidWorkspaceID)}: ${workspaceId}`,
+          `${
+            getTranslatedText(translationKeys.invalidWorkspaceID)
+          }: ${workspaceId}`,
         );
         continue;
       }
@@ -128,6 +183,12 @@ export class WorkspacesTabContextMenu {
       }
       menuitem.classList.add("menuitem-iconic");
       menuitem.setAttribute("label", workspace.name);
+      menuitem.setAttribute(
+        "data-floorp-context-menu-key",
+        `floorp.workspaces.tab.target.${
+          encodeURIComponent(String(workspaceId))
+        }`,
+      );
       const iconUrl = this.ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       if (iconUrl) {
         menuitem.setAttribute("image", iconUrl);

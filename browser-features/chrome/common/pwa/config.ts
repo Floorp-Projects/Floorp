@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { signal, effect } from "@preact/signals";
-import { type Signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 import { type TPwaConfig, zPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
 import { isRight } from "fp-ts/Either";
@@ -60,12 +60,12 @@ class PwaConfig {
 
     this.config = signal<TPwaConfig>(initialConfig);
 
-    effect(() => {
+    const disposeEnabled = effect(() => {
       const v = this.enabled.value;
       Services.prefs.setBoolPref("floorp.browser.ssb.enabled", v);
     });
 
-    effect(() => {
+    const disposeConfig = effect(() => {
       const v = this.config.value;
       Services.prefs.setStringPref(
         "floorp.browser.ssb.config",
@@ -74,19 +74,36 @@ class PwaConfig {
     });
 
     const enabledObserver = () => {
-      this.enabled.value = Services.prefs.getBoolPref("floorp.browser.ssb.enabled");
+      this.enabled.value = Services.prefs.getBoolPref(
+        "floorp.browser.ssb.enabled",
+      );
     };
     Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
 
     const configObserver = () => {
-      this.config.value = loadConfig(
+      const next = loadConfig(
         Services.prefs.getStringPref(
           "floorp.browser.ssb.config",
           strDefaultConfig,
         ),
       );
+      if (JSON.stringify(this.config.peek()) !== JSON.stringify(next)) {
+        this.config.value = next;
+      }
     };
     Services.prefs.addObserver("floorp.browser.ssb.config", configObserver);
+    import.meta.hot?.dispose(() => {
+      disposeEnabled();
+      disposeConfig();
+      Services.prefs.removeObserver(
+        "floorp.browser.ssb.enabled",
+        enabledObserver,
+      );
+      Services.prefs.removeObserver(
+        "floorp.browser.ssb.config",
+        configObserver,
+      );
+    });
   }
 
   public static getInstance(): PwaConfig {
@@ -99,6 +116,10 @@ class PwaConfig {
 
 const pwaConfig = PwaConfig.getInstance();
 export const enabled = pwaConfig.enabled;
-export const setEnabled = (value: boolean) => { pwaConfig.enabled.value = value; };
+export const setEnabled = (value: boolean) => {
+  pwaConfig.enabled.value = value;
+};
 export const config = pwaConfig.config;
-export const setConfig = (value: TPwaConfig) => { pwaConfig.config.value = value; }
+export const setConfig = (value: TPwaConfig) => {
+  pwaConfig.config.value = value;
+};

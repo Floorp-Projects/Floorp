@@ -6,10 +6,10 @@
 import type { DOMOpsDeps } from "./DOMDeps.ts";
 import type { RawContentWindow } from "./types.ts";
 import {
+  deepQuerySelector,
   unwrapDocument,
   unwrapElement,
   unwrapWindow,
-  deepQuerySelector,
 } from "./utils.ts";
 
 const { setTimeout: timerSetTimeout } = ChromeUtils.importESModule(
@@ -93,8 +93,8 @@ export class DOMWriteOperations {
     const rawWin = unwrapWindow(win);
     const rawDoc = this.document
       ? unwrapDocument(
-          this.document as Document & Partial<{ wrappedJSObject: Document }>,
-        )
+        this.document as Document & Partial<{ wrappedJSObject: Document }>,
+      )
       : null;
     if (!rawWin || !rawDoc) return null;
     const rawElement = unwrapElement(
@@ -137,8 +137,9 @@ export class DOMWriteOperations {
             value: truncatedValue,
           },
         );
-        const highlightOptions =
-          this.deps.highlightManager.getHighlightOptions("Input");
+        const highlightOptions = this.deps.highlightManager.getHighlightOptions(
+          "Input",
+        );
 
         this.deps.highlightManager
           .applyHighlight(element, highlightOptions, elementInfo)
@@ -163,15 +164,15 @@ export class DOMWriteOperations {
       );
 
       const typingMode = options.typingMode === true;
-      const typingDelay =
-        typeof options.typingDelayMs === "number"
-          ? Math.max(0, options.typingDelayMs)
-          : 25;
+      const typingDelay = typeof options.typingDelayMs === "number"
+        ? Math.max(0, options.typingDelayMs)
+        : 25;
 
       const rawWin = unwrapWindow(win);
       const rawElement = unwrapElement(
-        element as HTMLInputElement &
-          Partial<{ wrappedJSObject: HTMLInputElement }>,
+        element as
+          & HTMLInputElement
+          & Partial<{ wrappedJSObject: HTMLInputElement }>,
       );
       if (!rawWin) return false;
 
@@ -203,11 +204,9 @@ export class DOMWriteOperations {
         }
       };
 
-      const setValue = setter
-        ? (v: string) => setter(v)
-        : (v: string) => {
-            rawElement.value = v;
-          };
+      const setValue = setter ? (v: string) => setter(v) : (v: string) => {
+        rawElement.value = v;
+      };
 
       if (typingMode) {
         setValue("");
@@ -316,7 +315,7 @@ export class DOMWriteOperations {
       if (!targetOpt) {
         const lower = value.toLowerCase();
         targetOpt = options.find((opt) =>
-          (opt.textContent ?? "").toLowerCase().includes(lower),
+          (opt.textContent ?? "").toLowerCase().includes(lower)
         );
       }
       if (!targetOpt) return false;
@@ -328,8 +327,9 @@ export class DOMWriteOperations {
             value: targetOpt.value,
           },
         );
-        const highlightOptions =
-          this.deps.highlightManager.getHighlightOptions("Input");
+        const highlightOptions = this.deps.highlightManager.getHighlightOptions(
+          "Input",
+        );
 
         this.deps.highlightManager
           .applyHighlight(element, highlightOptions, elementInfo)
@@ -339,8 +339,9 @@ export class DOMWriteOperations {
       this.deps.eventDispatcher.scrollIntoViewIfNeeded(element);
       this.deps.eventDispatcher.focusElementSoft(element);
 
-      const setter =
-        this.deps.eventDispatcher.getNativeSelectValueSetter(element);
+      const setter = this.deps.eventDispatcher.getNativeSelectValueSetter(
+        element,
+      );
       if (setter) {
         setter(targetOpt.value);
       } else {
@@ -388,8 +389,9 @@ export class DOMWriteOperations {
 
       // Reflect state for attribute-based checks/serializations on both wrappers
       const rawElement = unwrapElement(
-        element as HTMLInputElement &
-          Partial<{ wrappedJSObject: HTMLInputElement }>,
+        element as
+          & HTMLInputElement
+          & Partial<{ wrappedJSObject: HTMLInputElement }>,
       );
 
       const syncAttrs = (target: HTMLInputElement) => {
@@ -419,8 +421,9 @@ export class DOMWriteOperations {
         const win = this.contentWindow;
         const rawWin = unwrapWindow(win);
         const rawElement = unwrapElement(
-          element as HTMLInputElement &
-            Partial<{ wrappedJSObject: HTMLInputElement }>,
+          element as
+            & HTMLInputElement
+            & Partial<{ wrappedJSObject: HTMLInputElement }>,
         );
         if (rawWin) {
           const MouseEv = rawWin.MouseEvent ?? globalThis.MouseEvent;
@@ -440,11 +443,12 @@ export class DOMWriteOperations {
     }
   }
 
-  async uploadFile(selector: string, filePath: string): Promise<boolean> {
+  async uploadFile(
+    selector: string,
+    fileData: number[],
+    fileName: string,
+  ): Promise<boolean> {
     try {
-      // SECURITY WARNING: This method accepts file paths from external sources.
-      // The parent process validates paths, but callers should only use trusted paths.
-
       const element = this.deepQuery(selector) as HTMLInputElement | null;
 
       if (!element || element.tagName !== "INPUT" || element.type !== "file") {
@@ -458,7 +462,7 @@ export class DOMWriteOperations {
         "uploadFile",
         {
           value: this.deps.translationHelper.truncate(
-            filePath.split(/[\\/]/).pop() ?? filePath,
+            fileName,
             30,
           ),
         },
@@ -479,27 +483,10 @@ export class DOMWriteOperations {
           fileInput as Element & Partial<{ wrappedJSObject: Element }>,
         ) as MozFileInput;
 
-        // Read file via parent process (IOUtils can only be used in parent process)
-        const result = (await this.deps.context.sendQuery(
-          "WebScraper:ReadFile",
-          {
-            filePath,
-          },
-        )) as {
-          success: boolean;
-          data?: number[];
-          fileName?: string;
-          error?: string;
-        };
-
-        if (!result.success || !result.data || !result.fileName) {
-          console.error("[NRWebScraper] Failed to read file:", result.error);
-          return false;
-        }
-
-        // Convert array back to Uint8Array
-        const fileData = new Uint8Array(result.data);
-        const fileName = result.fileName;
+        // The trusted parent-side service reads the selected file before the
+        // message reaches this untrusted content process. Never accept a path
+        // here or send one back to NRWebScraperParent.
+        const fileBytes = new Uint8Array(fileData);
 
         // Detect MIME type from extension
         const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -519,9 +506,11 @@ export class DOMWriteOperations {
           js: "text/javascript",
           zip: "application/zip",
           doc: "application/msword",
-          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          docx:
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           xls: "application/vnd.ms-excel",
-          xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          xlsx:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         };
         const mimeType = mimeTypes[ext] ?? "application/octet-stream";
 
@@ -536,7 +525,7 @@ export class DOMWriteOperations {
 
         // Clone the file data array into content window's context using Cu.cloneInto
         // This is necessary because both the Uint8Array and the array wrapper are privileged objects
-        const clonedBlobParts = Cu.cloneInto([fileData], rawWin);
+        const clonedBlobParts = Cu.cloneInto([fileBytes], rawWin);
         const clonedBlobOptions = Cu.cloneInto({ type: mimeType }, rawWin);
 
         // Use content window's constructors to avoid security wrapper issues
@@ -577,7 +566,7 @@ export class DOMWriteOperations {
         rawElement.dispatchEvent(new ContentEvent("change", eventOptions));
       } catch (e) {
         console.error(
-          "DOMWriteOperations: Failed to create file from path:",
+          "DOMWriteOperations: Failed to create upload file:",
           e,
         );
         return false;

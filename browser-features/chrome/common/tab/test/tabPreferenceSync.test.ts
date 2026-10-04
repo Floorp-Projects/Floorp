@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { createRoot } from "@nora/preact-xul/lifetime";
+
 import { TabDoubleClickClose } from "../doubleClickClose/index.ts";
 import { TabOpenPosition } from "../openPosition/index.ts";
 import { TabScroll } from "../scroll/index.ts";
@@ -11,13 +13,19 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInPreactEffect(construct: () => void): void {
-  construct();
+const ownedTestRoots: Array<() => void> = [];
+
+function constructInPreactRoot(construct: () => void): () => void {
+  return createRoot((dispose) => {
+    ownedTestRoots.push(dispose);
+    construct();
+    return dispose;
+  });
 }
 
 function withTabConfigPatch(
   patch: {
-    tabDubleClickToClose?: boolean;
+    tabDoubleClickToClose?: boolean;
     tabOpenPosition?: number;
     tabScrollEnabled?: boolean;
   },
@@ -31,8 +39,8 @@ function withTabConfigPatch(
       ...prev,
       tab: {
         ...prev.tab,
-        tabDubleClickToClose:
-          patch.tabDubleClickToClose ?? prev.tab.tabDubleClickToClose,
+        tabDoubleClickToClose: patch.tabDoubleClickToClose ??
+          prev.tab.tabDoubleClickToClose,
         tabOpenPosition: patch.tabOpenPosition ?? prev.tab.tabOpenPosition,
         tabScroll: {
           ...prev.tab.tabScroll,
@@ -43,6 +51,7 @@ function withTabConfigPatch(
 
     run();
   } finally {
+    for (const dispose of ownedTestRoots.splice(0)) dispose();
     config.value = original;
   }
 }
@@ -52,8 +61,8 @@ function testTabDoubleClickCloseSyncsPrefWhenConstructed(): void {
   const originalPref = Services.prefs.getBoolPref(prefName, false);
 
   try {
-    withTabConfigPatch({ tabDubleClickToClose: true }, () => {
-      constructInPreactEffect(() => {
+    withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
+      constructInPreactRoot(() => {
         new TabDoubleClickClose();
       });
       assertEquals(
@@ -73,7 +82,7 @@ function testTabOpenPositionSyncsPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 2 }, () => {
-      constructInPreactEffect(() => {
+      constructInPreactRoot(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -93,7 +102,7 @@ function testTabScrollSyncsSwitchByScrollingPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: true }, () => {
-      constructInPreactEffect(() => {
+      constructInPreactRoot(() => {
         new TabScroll();
       });
       assertEquals(

@@ -3,15 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** Nav/toolbar surface color (Gecko 152+). Falls back to legacy --toolbar-bgcolor. */
+/** Nav/toolbar surface color. Prefer the legacy token selected tabs still track. */
 export const TOOLBAR_SURFACE =
-  "var(--toolbar-background-color, var(--toolbar-bgcolor))";
+  "var(--toolbar-bgcolor, var(--toolbar-background-color))";
 
 /**
  * Fluerial-only: selected tab layout + rounded bottom corners.
  * Restores --tab-block-margin top gap (TAB_COLOR_LIKE_TOOLBAR fills .tab-content).
  */
 export const FLUERIAL_TAB_CORNER_CSS = `
+/* The native group line lives inside .tab-background. Fluerial shrinks that
+ * background on hover and paints the selected .tab-content above it. Anchor
+ * the line to the stable .tab-stack instead, and let it paint above the fill
+ * without raising the entire background over the tab's label and controls. */
+#TabsToolbar #tabbrowser-tabs[orient="horizontal"] tab-group
+  .tabbrowser-tab > .tab-stack > .tab-background {
+  position: static !important;
+  z-index: auto !important;
+}
+
+#TabsToolbar #tabbrowser-tabs[orient="horizontal"] tab-group
+  .tabbrowser-tab > .tab-stack > .tab-background > .tab-group-line {
+  z-index: 1;
+}
+
 #TabsToolbar
   #tabbrowser-tabs
   .tabbrowser-tab:is([visuallyselected], [multiselected])

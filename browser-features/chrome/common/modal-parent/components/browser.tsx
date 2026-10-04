@@ -19,15 +19,18 @@ export function ModalBrowser() {
       flex="1"
       style={{
         "width": modalSize.value.width ? `${modalSize.value.width}px` : "800px",
-        "height": modalSize.value.height ? `${modalSize.value.height}px` : "600px",
+        "height": modalSize.value.height
+          ? `${modalSize.value.height}px`
+          : "600px",
         "max-width": modalSize.value.maxWidth
           ? `${modalSize.value.maxWidth}px`
           : "none",
         "max-height": modalSize.value.maxHeight
           ? `${modalSize.value.maxHeight}px`
-          : "none",
+          : "calc(100vh - 32px)",
         "position": "fixed",
-        "top": "125px",
+        "top": "50%",
+        "transform": "translateY(-50%)",
         "border-radius": "10px",
       }}
     />

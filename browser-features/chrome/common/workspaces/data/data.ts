@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { signal, effect } from "@preact/signals";
+import { signal } from "@preact/signals";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import type { Signal } from "@preact/signals";
 import {
   type TWorkspaceID,
@@ -12,7 +13,7 @@ import {
   zWorkspacesServicesStoreData,
 } from "../utils/type.ts";
 import { WORKSPACE_DATA_PREF_NAME } from "../utils/workspaces-static-names.ts";
-import { createRootHMR } from "#features-chrome/utils/base";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import { isRight } from "fp-ts/Either";
 
 function getDefaultStore() {
@@ -42,7 +43,7 @@ function getDefaultStore() {
 function createWorkspacesData(): Signal<TWorkspacesStoreData> {
   const store = signal<TWorkspacesStoreData>(getDefaultStore());
 
-  effect(() => {
+  rootEffect(() => {
     const data = store.value;
     Services.prefs.setStringPref(
       WORKSPACE_DATA_PREF_NAME,
@@ -57,12 +58,22 @@ function createWorkspacesData(): Signal<TWorkspacesStoreData> {
         (k, v) => (k == "data" ? new Map(v) : v),
       ),
     );
-    if (isRight(result)) {
+    if (
+      isRight(result) &&
+      JSON.stringify(
+          store.peek(),
+          (key, value) => key === "data" ? [...value] : value,
+        ) !==
+        JSON.stringify(
+          result.right,
+          (key, value) => key === "data" ? [...value] : value,
+        )
+    ) {
       store.value = result.right;
     }
   };
   Services.prefs.addObserver(WORKSPACE_DATA_PREF_NAME, observer);
-  import.meta.hot?.dispose(() => {
+  addDisposer(() => {
     Services.prefs.removeObserver(WORKSPACE_DATA_PREF_NAME, observer);
   });
 
@@ -86,29 +97,48 @@ export const workspacesDataStore: {
   readonly order: TWorkspacesStoreData["order"];
   readonly defaultID: TWorkspacesStoreData["defaultID"];
 } = {
-  get data() { return _workspacesDataSignal.value.data; },
-  get order() { return _workspacesDataSignal.value.order; },
-  get defaultID() { return _workspacesDataSignal.value.defaultID; },
+  get data() {
+    return _workspacesDataSignal.value.data;
+  },
+  get order() {
+    return _workspacesDataSignal.value.order;
+  },
+  get defaultID() {
+    return _workspacesDataSignal.value.defaultID;
+  },
 };
 
 /**
  * Compatibility setter that mirrors Solid's SetStoreFunction path API.
  * setWorkspacesDataStore("order", prev => [...prev, id]) still works.
  */
+type WorkspaceUpdate =
+  | Partial<TWorkspacesStoreData>
+  | ((previous: TWorkspacesStoreData) => Partial<TWorkspacesStoreData>);
+export function setWorkspacesDataStore(update: WorkspaceUpdate): void;
 export function setWorkspacesDataStore<K extends keyof TWorkspacesStoreData>(
   key: K,
   updater:
-    | ((prev: TWorkspacesStoreData[K]) => TWorkspacesStoreData[K])
-    | TWorkspacesStoreData[K],
+    | TWorkspacesStoreData[K]
+    | ((previous: TWorkspacesStoreData[K]) => TWorkspacesStoreData[K]),
+): void;
+export function setWorkspacesDataStore<K extends keyof TWorkspacesStoreData>(
+  key: K | WorkspaceUpdate,
+  updater?:
+    | TWorkspacesStoreData[K]
+    | ((previous: TWorkspacesStoreData[K]) => TWorkspacesStoreData[K]),
 ): void {
-  const current = _workspacesDataSignal.value;
-  const newVal =
-    typeof updater === "function"
-      ? (updater as (prev: TWorkspacesStoreData[K]) => TWorkspacesStoreData[K])(
-          current[key],
-        )
-      : updater;
-  _workspacesDataSignal.value = { ...current, [key]: newVal };
+  const current = _workspacesDataSignal.peek();
+  if (typeof key !== "string") {
+    _workspacesDataSignal.value = {
+      ...current,
+      ...(typeof key === "function" ? key(current) : key),
+    };
+    return;
+  }
+  if (updater === undefined) return;
+  const value = typeof updater === "function" ? updater(current[key]) : updater;
+  _workspacesDataSignal.value = { ...current, [key]: value };
 }
 
 /**

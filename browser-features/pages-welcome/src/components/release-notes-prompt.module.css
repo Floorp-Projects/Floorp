@@ -1,0 +1,59 @@
+.frame .intro {
+  margin-block: -8px 24px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-start: 28px;
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--floorp-line);
+}
+
+/* The consent text and actions scroll together, including at increased zoom. */
+.frame section[id="release-notes-content"] {
+  padding-block-end: 40px;
+}
+
+.frame [role="note"] p {
+  margin-block: 8px 12px;
+}
+
+@media (min-width: 1101px) and (max-height: 1000px) {
+  .frame section[id="release-notes-content"] {
+    padding-block: 24px;
+  }
+
+  .frame h2 {
+    margin-block-end: 16px;
+  }
+
+  .frame .intro {
+    margin-block: 0 16px;
+  }
+
+  .frame [data-part="item"] {
+    padding: 12px;
+  }
+
+  .frame [data-part="item"][data-state="checked"] {
+    padding: 11px;
+  }
+
+  .frame [role="note"] {
+    margin-block: 16px;
+  }
+
+  .actions {
+    margin-block-start: 20px;
+    padding-block-start: 20px;
+  }
+}
+
+@media (max-width: 520px) {
+  .actions > button {
+    flex: 1 1 100%;
+  }
+}

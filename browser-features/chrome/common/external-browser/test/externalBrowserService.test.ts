@@ -152,8 +152,9 @@ function testServiceHasClearCache(): void {
 async function testSingletonReturnsSameInstance(): Promise<void> {
   // The module-level singleton should be the same across imports.
   // We verify the object identity by checking a property of the reference.
-  const { externalBrowserService: secondRef } =
-    await import("../external-browser-service.ts");
+  const { externalBrowserService: secondRef } = await import(
+    "../external-browser-service.ts"
+  );
   assertEquals(
     externalBrowserService,
     secondRef,

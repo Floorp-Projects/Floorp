@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
+import { usePageTheme } from "../../../../libs/ui/use-page-theme.ts";
 
 type Theme = "dark" | "light" | "system";
 
@@ -27,25 +28,7 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light");
-  const root = globalThis.document.documentElement;
-
-  useEffect(() => {
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-    setResolvedTheme(theme);
-  }, [theme]);
+  const resolvedTheme = usePageTheme(theme);
 
   const value = {
     theme,

@@ -33,7 +33,8 @@
         "updates": "Pembaruan & Eksperimen",
         "debug": "Awakutu",
         "mouseGesture": "Gestur Tetikus",
-        "keyboardShortcut": "Keyboard Shortcuts",
+        "keyboardShortcut": "Pintasan Kibor",
+        "performance": "Performa",
         "search": {
             "title": "Telusuri Pengaturan",
             "resultsFor": "Hasil pencarian untuk \"{{query}}\"",
@@ -124,21 +125,31 @@
             "openNext": "Buka di samping tab saat ini",
             "other": "Pengaturan Tab Lainnya",
             "doubleClickToClose": "Tutup tab dengan klik ganda",
+            "tabDragToSplitCreate": "Allow creating split view by dragging tabs",
             "minWidth": "Lebar tab minimal",
             "minWidthError": "Lebar tab harus di antara {{min}} dan {{max}} piksel.",
             "minHeight": "Tinggi tab minimal",
             "minHeightError": "Tinggi tab harus di antara {{min}} dan {{max}} piksel."
         },
-        "lepton-preferences": {
-            "title": "Pengaturan Lepton",
-            "description": "Atur preferensi lanjutan tema Lepton",
-            "configureLepton": "Atur Lepton",
+        "tabWindowBehavior": {
+            "title": "Tab and window behavior",
+            "description": "Control where links open and distinguish browser windows from Windows taskbar tab previews.",
+            "openLinks": "Open links that request a new window",
+            "openLinksDescription": "Choose whether links that request a new window open in the current window, a new window, or a new tab.",
+            "openCurrentWindowOrTab": "Current window or tab",
+            "openNewWindow": "Jendela baru",
+            "openNewTab": "Tab baru",
+            "taskbarPreviews": "Tampilkan pratinjau tab di bilah tugas",
+            "taskbarPreviewsDescription": "Ini hanya mengubah tampilan bilah tugas Windows. Ini tidak membuat jendela peramban baru.",
+            "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
+        },
+        "chrome-extras": {
+            "title": "Pengaturan Ekstensi UI",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
-                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi.",
-                "leptonRepository": "Lepton adalah tema CSS untuk Firefox.",
-                "visitRepository": "Kunjungi Halaman Repositori"
+                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi."
             },
             "autohide": {
                 "title": "Sembunyikan Pengaturan Otomatis",
@@ -162,30 +173,31 @@
             },
             "icon": {
                 "title": "Pengaturan Ikon",
-                "disabled": "Nonaktifkan menu konteks dan ikon menu panel Lepton",
-                "menu": "Aktifkan ion menu konteks Lepton"
+                "disabled": "Nonaktifkan ikon menu konteks dan menu panel",
+                "menu": "Aktifkan ikon menu konteks"
             },
             "centered": {
                 "title": "Centered Settings",
                 "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
+                "urlbar": "Ratakan teks di Bilah Alamat ke tengah",
                 "bookmarkbar": "Tengahkan item Bilah Markah"
             },
             "urlView": {
-                "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "title": "Pengaturan Tampilan URL",
+                "moveIconToLeft": "Pindahkan ikon bilah alamat ke sisi kiri",
                 "goButtonWhenTyping": "Saat mengetik, tampilkan tombol \"Kunjungi\"",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "alwaysShowPageActions": "Selalu tampilkan tindakan halaman di bilah alamat"
             },
             "tabbar": {
-                "title": "Tab Bar Settings",
+                "title": "Pengaturan Bilah Tab",
                 "asTitlebar": "Bilah Tab di Bilah Judul",
                 "oneLiner": "Gabungkan Bilah Tab dan Bilah Alat"
             },
             "sidebar": {
-                "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
-            }
+                "title": "Pengaturan Bilah Samping",
+                "overlap": "Tampilkan bilah samping di atas konten situs web"
+            },
+            "configure": "Buka pengaturan ekstensi UI"
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",
@@ -201,6 +213,15 @@
             "exampleDomain": "Matches any URL containing this domain",
             "exampleWildcard": "Matches all subdomains of google.com",
             "exampleFullUrl": "Matches Gmail URLs only"
+        },
+        "tabStacks": {
+            "unavailableInVerticalTabs": "Tab bertumpuk tidak tersedia pada tata letak tab vertikal. Pengaturan Anda tetap tersimpan dan berlaku saat kembali ke tata letak tab horizontal.",
+            "title": "Tab Stacks",
+            "description": "Group tabs into stacks, shown as a chip in the tab bar with a second row of stacked tabs underneath.",
+            "enableOrDisable": "(Non)Aktifkan",
+            "enableTabStacks": "Enable tab stacks",
+            "enableTabStacksDescription": "Tab stacks present grouped tabs as a chip in the tab bar. A restart of {{productName}} is required after changing this setting.",
+            "needRestartDescriptionForEnableAndDisable": "A restart of {{productName}} is required to completely enable or disable the tab stacks feature."
         },
         "uiCustomization": {
             "title": "Kustomisasi UI",
@@ -299,9 +320,35 @@
         "openSourceLicense": "{{productName}} adalah perangkat lunak sumber terbuka di bawah Lisensi Publik Mozilla 2.0, yang dimungkinkan oleh proyek sumber terbuka Firefox dan perangkat lunak sumber terbuka lainnya.",
         "openSourceLicenseNotice": "Lisensi Sumber Terbuka",
         "versionInfo": "Versi",
-        "license": "Lisensi"
+        "license": "Lisensi",
+        "noraneko": {
+            "logoAlt": "Logo Peramban",
+            "description": "Noraneko adalah peramban sebagai tempat pengujian Floorp 12. Floorp dikembangkan berdasarkan Firefox dan Noraneko.",
+            "communityCredit": "Dibuat oleh komunitas Noraneko dengan ❤",
+            "repositoryLabel": "Repositori GitHub: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Read about our funding and this setting (Japanese)",
+            "title": "Release notes after updates",
+            "description": "Choose how Floorp opens release notes after an update.",
+            "disabled": {
+                "label": "Do not open automatically",
+                "description": "Release notes will not open after updates. Your blocker settings apply when you visit the blog."
+            },
+            "blocking": {
+                "label": "Open with your blocker settings",
+                "description": "Open release notes without restricting your extensions. This does not install or enable an ad blocker."
+            },
+            "support": {
+                "label": "Open and allow ads to support Floorp (recommended)",
+                "description": "Prevent uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery from filtering the Floorp blog."
+            },
+            "supportMessage": "Advertising revenue from release notes supports Floorp development and operation. Thank you for supporting us in a way that works for you.",
+            "scope": "This exception applies to all HTTPS visits to blog.floorp.app, including manually opened pages. It also affects tracking protection and custom filters in the five listed extensions. Other extensions are not restricted by this setting. Other protection tools may still block ads. Reload open blog pages after changing this setting.",
+            "error": "Could not load or save this setting. Please reopen this page and try again."
+        },
         "title": "Pembaruan & Eksperimen",
         "description": "Kelola pengaturan pembaruan dan fitur-fitur eksperimental.",
         "experiments": {
@@ -439,6 +486,8 @@
         "otherSettings": "Pengaturan Lainnya",
         "showToolbar": "Tampilkan Bilah Alat",
         "showToolbarDescription": "Tampilkan bilah alat di jendela Aplikasi Web Progresif",
+        "keepRunningAfterBrowserQuit": "Jaga Aplikasi Web tetap terbuka setelah menutup {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Tutup jendela peramban dan biarkan Aplikasi Web yang sedang berjalan tetap terbuka. Matikan opsi ini untuk menutup semuanya sekaligus. Menutup Aplikasi Web hanya akan menutup aplikasi tersebut. Memulai ulang {{productName}} atau keluar dari akun akan menutup semua aplikasi.",
         "installedApps": "Aplikasi Terpasang",
         "noInstalledApps": "Tidak ada PWA terpasang",
         "removeApp": "Hapus Aplikasi",
@@ -448,8 +497,20 @@
         "uninstallConfirmation": "Copot pemasangan Aplikasi Web",
         "uninstallWarning": "Yakin ingin mencopot \"{{name}}\"?",
         "cancel": "Batal",
+        "close": "Tutup",
         "rename": "Ganti nama",
-        "uninstall": "Copot"
+        "uninstall": "Copot",
+        "container": "Kontainer",
+        "noContainer": "Tanpa Kontainer",
+        "setContainer": "Set Container",
+        "containerDescription": "Pilih Kontainer Firefox untuk membuka aplikasi ini. Kontainer memisahkan kuki dan data situs.",
+        "containerDeleted": "Kontainer dihapus",
+        "resetContainer": "Setel Ulang",
+        "save": "Simpan",
+        "errorRenaming": "Tidak bisa mengganti nama Aplikasi Web ini.",
+        "errorUninstalling": "Tidak bisa menghapus Aplikasi Web ini.",
+        "errorSettingContainer": "Gagal mengatur kontainer",
+        "nativeContainerFixed": "Aplikasi Web macOS ini tetap menggunakan kontainer terpilih saat dipasang. Penggantian kontainer belum didukung. Data login dan situs tetap tersimpan."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -495,6 +556,8 @@
     },
     "mouseGesture": {
         "description": "Kendalikan peramban Anda dengan gerakan tetikus.",
+        "saving": "Saving mouse gesture settings…",
+        "saveError": "Mouse gesture settings could not be saved. Your previous settings are still active.",
         "generalSettings": "Pengaturan Umum",
         "generalSettingsDescription": "Pengaturan gestur tetikus dasar",
         "enabled": "Aktifkan gestur tetikus",
@@ -525,12 +588,16 @@
         "action": "Tindakan",
         "actionDescription": "Deskripsi gestur",
         "rockerGesturesEnabled": "Enable rocker gestures",
-        "rockerGesturesDescription": "Right-click and move left to go back, right-click and move right to go forward. (Experimental)",
+        "rockerGesturesDescription": "Klik kanan dan geser ke kiri untuk kembali, klik kanan dan geser ke kanan untuk maju. (Fitur percobaan)",
         "rockerLeftRight": "Left → Right",
         "rockerLeftRightDescription": "Hold left button, then click right button",
         "rockerRightLeft": "Right → Left",
         "rockerRightLeftDescription": "Hold right button, then click left button",
         "wheelGesturesEnabled": "Aktifkan gestur roda tetikus",
+        "wheelScrollUp": "Gulir ke Atas",
+        "wheelScrollUpDescription": "Action when scrolling the wheel up while holding the right button",
+        "wheelScrollDown": "Gulir ke Bawah",
+        "wheelScrollDownDescription": "Action when scrolling the wheel down while holding the right button",
         "actions": {
             "gecko-back": "Go Back",
             "gecko-forward": "Go Forward",
@@ -607,7 +674,25 @@
             "gecko-workspace-next": "Switch to Next Workspace",
             "gecko-workspace-previous": "Switch to Previous Workspace",
             "floorp-toggle-zen-mode": "Toggle Zen Mode",
-            "floorp-toggle-command-palette": "Toggle Command Palette"
+            "gecko-close-other-tabs": "Tutup Tab Lain",
+            "gecko-close-tabs-to-start": "Tutup Tab di Kiri",
+            "gecko-close-tabs-to-end": "Tutup Tab di Kanan",
+            "gecko-scroll-line-up": "Gulir ke Atas",
+            "gecko-scroll-line-down": "Gulir ke Bawah",
+            "floorp-toggle-command-palette": "Toggle Command Palette",
+            "floorp-open-settings": "Buka Pengaturan",
+            "floorp-open-hub": "Buka Floorp Hub",
+            "floorp-toggle-share-mode": "Toggle Share Mode",
+            "floorp-copy-page-url-as-markdown": "Salin URL Halaman sebagai Markdown",
+            "floorp-split-view-open-left": "Split View Left",
+            "floorp-split-view-open-right": "Split View Right",
+            "floorp-split-view-open-top": "Split View Top",
+            "floorp-split-view-open-bottom": "Split View Bottom",
+            "floorp-split-view-close": "Close Split View",
+            "floorp-split-view-swap-panes": "Swap Split Panes",
+            "floorp-split-view-cycle-layout": "Cycle Split Layout",
+            "floorp-split-view-add-pane": "Add Pane to Split View",
+            "floorp-split-view-remove-pane": "Remove Pane from Split View"
         },
         "edit": "Sunting",
         "duplicate": "Gandakan",
@@ -642,6 +727,9 @@
         "action": "Action",
         "shortcut": "Shortcut",
         "actions": "Actions",
+        "actionLabels": {
+            "floorp-edit-tab-url": "Edit Tab URL"
+        },
         "notSet": "Not set",
         "add": "Add",
         "edit": "Edit",
@@ -681,5 +769,55 @@
             "cancel": "Batal",
             "cancelDescription": "Batalkan penyuntingan"
         }
+    },
+    "performance": {
+        "title": "Performa",
+        "description": "Pengaturan yang memengaruhi penggunaan sumber daya sistem dari peramban.",
+        "idleReclaim": {
+            "title": "Idle memory reclaim",
+            "description": "Experimental and off by default. When enabled, attempts to reduce memory use after a period without keyboard or mouse input. The amount reclaimed depends on the pages in use.",
+            "enable": "Reclaim memory while the browser is idle",
+            "idleThreshold": "Idle time before reclaiming (seconds)",
+            "minInterval": "Minimum interval between reclaims (seconds)",
+            "minResident": "Only reclaim when memory usage exceeds (MB)",
+            "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
+            "saveFailed": "Could not save this setting. The previous value has been restored."
+        }
+    },
+    "ui": {
+        "skipToContent": "Skip to content",
+        "loading": "Memuat …",
+        "setupProgress": "Setup progress",
+        "stepNavigation": "Setup navigation",
+        "settingsNavigation": "Settings navigation",
+        "openNavigation": "Open navigation",
+        "closeNavigation": "Close navigation",
+        "saveError": "Could not save. Please try again.",
+        "retry": "Coba lagi",
+        "loadError": "Could not load settings. Please reload this page."
+    },
+    "settingsHome": {
+        "title": "Make Floorp yours",
+        "description": "Adjust the look and controls to suit the way you browse.",
+        "open": "Explore settings",
+        "manage": "Manage your browser",
+        "descriptions": {
+            "tabAndAppearance": "Adjust themes and tab appearance",
+            "workspaces": "Switch between work and personal tabs",
+            "browserSidebar": "Open another site alongside your page",
+            "mouseGesture": "Assign actions to mouse movements",
+            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
+            "performance": "Adjust memory usage"
+        },
+        "resources": {
+            "privacy": "Tentang privasi",
+            "extensions": "Kelola ekstensi",
+            "help": "Dapatkan bantuan"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Tampilan dan perilaku",
+        "reset": "Atur ulang ruang kerja",
+        "help": "Cara menggunakan"
     }
 }

@@ -1,0 +1,48 @@
+---
+title: "BrowserGlue & Window Actors"
+sidebar_label: "BrowserGlue"
+floorp_commit: "69f56f067cbdc722e290f2dfebb9c3e3f3ef60e9"
+generated: true
+---
+## Overview
+
+Floorp extends the Firefox browser process through an ECMAScript module named `BrowserGlue.sys.mts`. This module acts as a central hub for parent-process initialization and is responsible for registering custom JavaScript Window Actors. These actors facilitate structured message passing between the parent process and child processes, enabling Floorp-specific features to interact with browser chrome and content.
+
+## Window Actor Registration
+
+The module registers Floorp-specific window actors using the `ActorManagerParent.addJSWindowActors` API. According to the source, 22 actors are registered within this file (`browser-features/modules/modules/BrowserGlue.sys.mts`).
+
+## Registered Actors
+
+The following actors are defined and registered within `BrowserGlue.sys.mts`:
+
+- **NRAboutPreferences** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRAppConstants** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRChromeModal** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRChromeWebStore** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRExperimemmt** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRI18n** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRMouseGestureScroll** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NROSAutomotor** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRPanelSidebar** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRPluginStore** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRProfileManager** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRProgressiveWebApp** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRPwaManager** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRRestartBrowser** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRSearchEngine** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRSettings** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRStartPage** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRSyncManager** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRTabManager** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRWebScraper** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRWelcomePage** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+- **NRWorkspaces** (`browser-features/modules/modules/BrowserGlue.sys.mts`)
+
+## Loader Integration
+
+The bridge loader imports `BrowserGlue` to initialize internationalization, record loader state, filter enabled modules, and run module lifecycle hooks (`bridge/loader-features/loader/index.ts`). This integration ensures that the parent process is prepared for the subsequent loading of Chrome UI features and pages.
+
+## Architecture Context
+
+In the Floorp architecture, the ESM Modules layer sits above the patched Gecko base and provides the foundation for the Bridge and Chrome UI layers (`browser-features/modules/modules/BrowserGlue.sys.mts`). By managing Window Actor registration here, Floorp establishes a robust communication channel that the Bridge layer can rely on when loading features dynamically.

@@ -18,9 +18,10 @@ import type {
 } from "#features-chrome/common/modal-parent/utils/type.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { DEFAULT_PANEL_WIDTH, parsePanelWidth } from "../utils/panel-width.ts";
 
 const { ContextualIdentityService } = ChromeUtils.importESModule(
-  "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
 );
 
 type Container = {
@@ -180,7 +181,7 @@ export class PanelSidebarAddModal {
         id: "width",
         type: "number",
         label: texts.width,
-        value: 450,
+        value: DEFAULT_PANEL_WIDTH,
         required: true,
       },
     ];
@@ -276,7 +277,7 @@ export class PanelSidebarAddModal {
             let panel: Panel = {
               type,
               id: crypto.randomUUID(),
-              width: Number(result.width) || 450,
+              width: parsePanelWidth(result.width),
               url: undefined,
               icon: undefined,
               userContextId: undefined,

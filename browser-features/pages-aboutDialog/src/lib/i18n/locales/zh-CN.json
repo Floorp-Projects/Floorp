@@ -1,0 +1,46 @@
+{
+  "aboutDialog": {
+    "ariaLabel": "关于 Floorp",
+    "version": "版本",
+    "channel": {
+      "nightly": "Nightly",
+      "esr": "ESR"
+    },
+    "update": {
+      "idle": "检查更新",
+      "checking": "检查更新中…",
+      "checkFailed": "无法检查更新，请稍后再试。",
+      "upToDate": "当前已是最新版本。",
+      "downloading": "正在下载更新… {{progress}}",
+      "applying": "正在安装更新…",
+      "readyToRestart": "更新已准备就绪——重启即可应用。",
+      "restarting": "重启中…",
+      "policyDisabled": "更新由您的操作系统管理。",
+      "downloadFailed": "下载失败，请重试。",
+      "noUpdater": "更新由外部管理。",
+      "available": "下载更新 {{version}}",
+      "tryAgain": "重试",
+      "restartToApply": "重启以应用更新"
+    },
+    "community": {
+      "title": "加入社区"
+    },
+    "help": {
+      "title": "帮助与支持",
+      "support": "支持"
+    },
+    "sponsor": {
+      "title": "支持此项目",
+      "button": "成为赞助商"
+    },
+    "links": {
+      "releaseNotes": "新版变化",
+      "help": "Floorp 帮助",
+      "feedback": "提交反馈",
+      "licensing": "许可协议",
+      "terms": "使用条款",
+      "privacy": "隐私声明"
+    },
+    "trademark": "“Floorp”是日本的注册商标。"
+  }
+}

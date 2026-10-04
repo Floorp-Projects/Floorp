@@ -34,6 +34,7 @@
         "debug": "디버그",
         "mouseGesture": "마우스 제스처",
         "keyboardShortcut": "키보드 단축키",
+        "performance": "성능",
         "search": {
             "title": "검색 설정",
             "resultsFor": "\"{{query}}\" 검색 결과",
@@ -124,21 +125,31 @@
             "openNext": "현재 탭 옆에서 열기",
             "other": "기타 탭 설정",
             "doubleClickToClose": "탭을 두 번 클릭하여 닫기",
+            "tabDragToSplitCreate": "탭을 드래그하여 분할 화면을 열도록 허용",
             "minWidth": "최소 탭 너비",
             "minWidthError": "탭 너비는 {{min}} ~ {{max}} 픽셀 사이여야 합니다.",
             "minHeight": "최소 탭 높이",
             "minHeightError": "탭 높이는 {{min}} ~ {{max}} 픽셀 사이여야 합니다."
         },
-        "lepton-preferences": {
-            "title": "Lepton 설정",
-            "description": "고급 Lepton 테마 환경 설정 구성",
-            "configureLepton": "Lepton 구성",
+        "tabWindowBehavior": {
+            "title": "탭 및 창 동작",
+            "description": "링크가 열리는 위치를 제어하고 브라우저 창과 Windows 작업 표시줄의 탭 미리보기를 구별할 수 있습니다.",
+            "openLinks": "새 창을 요청하는 링크 열기",
+            "openLinksDescription": "새 창에서 열기를 요청하는 링크를 현재 창에서 열지, 새 창에서 열지, 새 탭에서 열지 선택합니다.",
+            "openCurrentWindowOrTab": "현재 창 또는 탭",
+            "openNewWindow": "새 창",
+            "openNewTab": "새 탭",
+            "taskbarPreviews": "작업 표시줄에 탭 미리보기 표시",
+            "taskbarPreviewsDescription": "이 설정은 Windows 작업 표시줄의 표시 방식만 변경합니다. 별도의 브라우저 창을 더 만들지는 않습니다.",
+            "taskbarPreviewsUnavailable": "이 설정은 Windows에서만 이용할 수 있습니다."
+        },
+        "chrome-extras": {
+            "title": "UI 확장 설정",
+            "description": "현재 선택한 디자인에서 추가로 UI 조정",
             "back": "뒤로 가기",
             "experimentalWarning": {
                 "title": "⚠️ 실험 기능",
-                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다.",
-                "leptonRepository": "Lepton은 Firefox용 CSS 테마입니다.",
-                "visitRepository": "리포지토리 페이지 방문"
+                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다."
             },
             "autohide": {
                 "title": "자동 숨기기 설정",
@@ -162,8 +173,8 @@
             },
             "icon": {
                 "title": "아이콘 설정",
-                "disabled": "Lepton의 컨텍스트 메뉴 및 패널 메뉴 아이콘 비활성화하기",
-                "menu": "Lepton의 컨텍스트 메뉴 아이콘 활성화하기"
+                "disabled": "컨텍스트 메뉴 및 패널 메뉴 아이콘 비활성화하기",
+                "menu": "컨텍스트 메뉴 아이콘 활성화하기"
             },
             "centered": {
                 "title": "중앙 설정",
@@ -185,7 +196,8 @@
             "sidebar": {
                 "title": "사이드바 설정",
                 "overlap": "웹사이트 콘텐츠 위에 사이드바 표시"
-            }
+            },
+            "configure": "UI 확장 설정 열기"
         },
         "tabSleepExclusion": {
             "title": "탭 절전 제외",
@@ -201,6 +213,15 @@
             "exampleDomain": "이 도메인이 포함된 모든 URL과 일치합니다.",
             "exampleWildcard": "google.com의 모든 하위 도메인과 일치합니다.",
             "exampleFullUrl": "Gmail URL만 일치"
+        },
+        "tabStacks": {
+            "unavailableInVerticalTabs": "세로 탭에서는 탭 쌓기를 이용할 수 없습니다. 설정 내용은 저장되며 가로 탭으로 돌아가면 적용됩니다.",
+            "title": "탭 쌓기",
+            "description": "탭을 묶어 쌓습니다. 탭 표시줄의 칩 아래 두 번째 행에 쌓인 탭이 나타납니다.",
+            "enableOrDisable": "활성화/비활성화",
+            "enableTabStacks": "탭 쌓기 활성화",
+            "enableTabStacksDescription": "탭을 쌓으면 탭 그룹을 탭 표시줄의 칩으로 나타냅니다. 이 설정을 변경한 뒤에는 {{productName}}를 다시 시작해야 합니다.",
+            "needRestartDescriptionForEnableAndDisable": "탭 쌓기 기능을 완전히 활성화 또는 비활성화하려면 {{productName}}를 다시 시작해야 합니다."
         },
         "uiCustomization": {
             "title": "UI 맞춤 설정",
@@ -237,7 +258,7 @@
                 "position": "위치 (실험)",
                 "top": "위",
                 "bottom": "아래",
-                "focusExpand": "초점에서 북마크 표시줄 확장"
+                "focusExpand": "포커스하면 북마크 표시줄 확장"
             }
         }
     },
@@ -299,9 +320,35 @@
         "openSourceLicense": "{{productName}} 는 Mozilla Public License 2.0에 따라 제공되는 오픈 소스 소프트웨어로, Firefox 오픈 소스 프로젝트 및 기타 오픈 소스 소프트웨어에 의해 만들어졌습니다.",
         "openSourceLicenseNotice": "오픈 소스 라이센스",
         "versionInfo": "버전",
-        "license": "라이센스"
+        "license": "라이센스",
+        "noraneko": {
+            "logoAlt": "브라우저 로고",
+            "description": "Noraneko는 Floorp 12의 테스트 브라우저입니다. Floorp는 Firefox와 Noraneko를 기반으로 합니다.",
+            "communityCredit": "Noraneko 커뮤니티에서 ❤을 담아 개발",
+            "repositoryLabel": "GitHub 저장소: Floorp-Projects/Floorp"
+        }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "이 설정과 자금 마련에 대해 자세히 알아보기 (일본어)",
+            "title": "업데이트 후 릴리스 노트",
+            "description": "업데이트 후 Floorp가 릴리스 노트를 여는 방식을 선택합니다.",
+            "disabled": {
+                "label": "자동으로 열지 않기",
+                "description": "업데이트 후 릴리스 노트를 열지 않습니다. 블로그에 방문할 때 차단기 설정을 적용합니다."
+            },
+            "blocking": {
+                "label": "차단기 설정을 유지한 채 열기",
+                "description": "확장을 제한하지 않고 릴리스 노트를 엽니다. 이 설정이 광고 차단기를 자동으로 설치하거나 활성화하지는 않습니다."
+            },
+            "support": {
+                "label": "Floorp를 돕기 위해 광고를 허용하고 열기 (권장)",
+                "description": "uBlock Origin, AdGuard, Adblock Plus, AdBlock, Ghostery가 Floorp 블로그의 광고를 차단하지 않도록 합니다."
+            },
+            "supportMessage": "릴리스 노트의 광고 수익을 바탕으로 Floorp를 개발하고 운영할 수 있습니다. 여러분께 맞는 방식으로 저희를 지원해 주셔서 감사드립니다.",
+            "scope": "이 예외는 수동으로 열린 페이지를 포함하여 blog.floorp.app에 대한 모든 HTTPS 접속에 적용됩니다. 또한 나열된 5가지 확장의 추적 보호 기능 및 사용자 필터에도 영향을 미칩니다. 다른 확장은 이 설정의 제한을 받지 않습니다. 다른 보호 도구는 여전히 광고를 차단할 수 있습니다. 이 설정을 변경한 뒤에는 열린 블로그 페이지를 새로고침하세요.",
+            "error": "이 설정을 불러오거나 저장할 수 있습니다. 이 페이지를 닫았다 연 뒤 다시 시도해 주세요."
+        },
         "title": "업데이트 및 실험",
         "description": "업데이트 설정 및 실험적 기능 참여를 관리합니다.",
         "experiments": {
@@ -439,6 +486,8 @@
         "otherSettings": "기타 설정",
         "showToolbar": "도구 모음 표시",
         "showToolbarDescription": "프로그레시브 웹 앱 창에 툴바 표시",
+        "keepRunningAfterBrowserQuit": "{{productName}} 종료 후에도 웹 앱 계속 실행하기",
+        "keepRunningAfterBrowserQuitDescription": "브라우저 창을 닫아도 웹 앱을 열린 채로 유지합니다. 이 설정을 끄면 창을 닫을 때 웹 앱이 함께 종료됩니다. 웹 앱을 종료하면 해당 앱만 닫습니다. {{productName}}에서 로그아웃하거나 다시 시작하면 모든 앱이 닫힙니다.",
         "installedApps": "설치된 앱",
         "noInstalledApps": "프로그레시브 웹 앱이 설치되지 않음",
         "removeApp": "앱 삭제",
@@ -448,8 +497,20 @@
         "uninstallConfirmation": "웹 앱 제거",
         "uninstallWarning": "\"{{name}} \"를 제거하시겠습니까?",
         "cancel": "취소",
+        "close": "닫기",
         "rename": "이름 변경",
-        "uninstall": "삭제"
+        "uninstall": "삭제",
+        "container": "컨테이너",
+        "noContainer": "컨테이너 없음",
+        "setContainer": "컨테이너 설정",
+        "containerDescription": "앱을 어떤 Firefox 컨테이너에서 열지 선택하세요. 컨테이너는 쿠키와 사이트 데이터를 격리합니다.",
+        "containerDeleted": "컨테이너 삭제됨",
+        "resetContainer": "초기화",
+        "save": "저장",
+        "errorRenaming": "이 웹 앱의 이름을 변경하지 못했습니다.",
+        "errorUninstalling": "이 웹을 제거하지 못했습니다.",
+        "errorSettingContainer": "컨테이너 설정 실패",
+        "nativeContainerFixed": "이 macOS 웹 앱은 설치할 때 선택한 컨테이너를 유지합니다. 컨테이너 변경 기능은 아직 지원되지 않습니다. 현재 로그인과 사이트 데이터는 그대로 유지됩니다."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -495,6 +556,8 @@
     },
     "mouseGesture": {
         "description": "마우스를 움직여 브라우저를 제어하세요.",
+        "saving": "마우스 제스처 설정 저장 중…",
+        "saveError": "마우스 제스처 설정을 저장할 수 없습니다. 여전히 이전 설정을 적용합니다.",
         "generalSettings": "일반 설정",
         "generalSettingsDescription": "기본 마우스 제스처 설정",
         "enabled": "마우스 제스처 사용",
@@ -531,6 +594,10 @@
         "rockerRightLeft": "우 → 좌",
         "rockerRightLeftDescription": "오른쪽 버튼을 누른 채, 좌클릭합니다.",
         "wheelGesturesEnabled": "휠 제스처 활성화",
+        "wheelScrollUp": "위로 스크롤",
+        "wheelScrollUpDescription": "오른쪽 버튼을 누른 채로 휠을 위로 스크롤할 때의 동작",
+        "wheelScrollDown": "아래로 스크롤",
+        "wheelScrollDownDescription": "오른쪽 버튼을 누른 채로 휠을 아래로 스크롤할 때의 동작",
         "actions": {
             "gecko-back": "뒤로",
             "gecko-forward": "앞으로",
@@ -607,7 +674,25 @@
             "gecko-workspace-next": "다음 워크스페이스로 전환",
             "gecko-workspace-previous": "이전 워크스페이스로 전환",
             "floorp-toggle-zen-mode": "Zen 모드 전환",
-            "floorp-toggle-command-palette": "명령 팔레트 전환"
+            "gecko-close-other-tabs": "다른 탭 닫기",
+            "gecko-close-tabs-to-start": "왼쪽 탭 닫기",
+            "gecko-close-tabs-to-end": "오른쪽 탭 닫기",
+            "gecko-scroll-line-up": "위로 스크롤",
+            "gecko-scroll-line-down": "아래로 스크롤",
+            "floorp-toggle-command-palette": "명령 팔레트 전환",
+            "floorp-open-settings": "설정 열기",
+            "floorp-open-hub": "Floorp Hub 열기",
+            "floorp-toggle-share-mode": "공유 모드 전환",
+            "floorp-copy-page-url-as-markdown": "페이지 URL을 마크다운으로 복사",
+            "floorp-split-view-open-left": "왼쪽에서 분할 화면 열기",
+            "floorp-split-view-open-right": "오른쪽에서 분할 화면 열기",
+            "floorp-split-view-open-top": "위쪽에서 분할 화면 열기",
+            "floorp-split-view-open-bottom": "아래쪽에서 분할 화면 열기",
+            "floorp-split-view-close": "분할 화면 종료",
+            "floorp-split-view-swap-panes": "분할 창 맞바꾸기",
+            "floorp-split-view-cycle-layout": "분할 레이아웃 순환",
+            "floorp-split-view-add-pane": "분할 화면 창에 추가",
+            "floorp-split-view-remove-pane": "분할 화면에서 창 제거"
         },
         "edit": "수정",
         "duplicate": "복제",
@@ -642,6 +727,9 @@
         "action": "동작",
         "shortcut": "단축키",
         "actions": "동작",
+        "actionLabels": {
+            "floorp-edit-tab-url": "탭 URL 편집"
+        },
         "notSet": "설정되지 않음",
         "add": "추가",
         "edit": "수정",
@@ -681,5 +769,55 @@
             "cancel": "취소",
             "cancelDescription": "변경 취소"
         }
+    },
+    "performance": {
+        "title": "성능",
+        "description": "브라우저가 시스템 자원을 관리하는 방식에 영향을 주는 설정입니다.",
+        "idleReclaim": {
+            "title": "유휴 메모리 회수",
+            "description": "실험적 기능이며 기본적으로 꺼져 있습니다. 설정을 켜면, 일정 시간 동안 키보드나 마우스 입력이 없을 경우 메모리 사용량을 줄이려 시도합니다. 회수되는 메모리 양은 사용 중인 페이지 수에 따라 달라집니다.",
+            "enable": "브라우저가 유휴 상태일 때 메모리를 회수합니다",
+            "idleThreshold": "회수 전까지 유휴 시간 (초)",
+            "minInterval": "회수 간 최소 간격 (초)",
+            "minResident": "회수를 시작할 메모리 사용량 기준 (MB)",
+            "cost": "동영상 재생, 통화, 화면 공유도 회수를 막지 않습니다. 회수로 인해 사용을 재개할 때를 포함해, 브라우저가 멈출 수 있습니다. 간격을 짧게 설정할수록 더 자주 회수합니다.",
+            "saveFailed": "이 설정을 저장할 수 있습니다. 이전 값이 복원되었습니다."
+        }
+    },
+    "ui": {
+        "skipToContent": "본문으로 건너뛰기",
+        "loading": "로딩중...",
+        "setupProgress": "설치 진행도",
+        "stepNavigation": "설치 내비게이션",
+        "settingsNavigation": "설정 내비게이션",
+        "openNavigation": "내비게이션 열기",
+        "closeNavigation": "내비게이션 닫기",
+        "saveError": "저장하지 못했습니다. 다시 시도하세요.",
+        "retry": "다시 시도",
+        "loadError": "설정을 불러오지 못했습니다. 페이지를 새로고침해 주세요."
+    },
+    "settingsHome": {
+        "title": "Floorp 내게 맞추기",
+        "description": "외관과 조작 설정을 자신에 맞게 조정하세요.",
+        "open": "설정 둘러보기",
+        "manage": "내 브라우저 관리하기",
+        "descriptions": {
+            "tabAndAppearance": "테마와 탭 표시 조정하기",
+            "workspaces": "업무용과 개인용 탭 전환하기",
+            "browserSidebar": "페이지 옆에 나란히 다른 사이트 열기",
+            "mouseGesture": "마우스 움직임에 동작 할당하기",
+            "keyboardShortcuts": "키보드 단축키에 동작 할당하기",
+            "performance": "메모리 사용량 조정하기"
+        },
+        "resources": {
+            "privacy": "개인정보 안내",
+            "extensions": "확장 관리",
+            "help": "도움 받기"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "모양과 동작",
+        "reset": "워크스페이스 초기화",
+        "help": "사용하는 방법"
     }
 }

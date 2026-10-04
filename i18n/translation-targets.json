@@ -30,6 +30,13 @@
       "f18n_path": "welcome/"
     },
     {
+      "name": "about-dialog",
+      "type": "file",
+      "source_path": "browser-features/pages-aboutDialog/src/lib/i18n/locales",
+      "source_file": "en-US.json",
+      "f18n_path": "about-dialog/"
+    },
+    {
       "name": "stub-win64-installer",
       "type": "file",
       "source_path": "static/installers/stub-win64-installer/src/lib/i18n/locales",

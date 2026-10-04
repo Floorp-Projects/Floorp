@@ -45,9 +45,7 @@
   visibility: visible !important;
 }
 
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel
-  browser:is([blank], [pendingpaint]) {
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel browser:is([blank], [pendingpaint]) {
   opacity: 1 !important;
 }
 
@@ -65,13 +63,7 @@
  * Explicitly collapse them so only .split-view-panel and our handles
  * participate in the layout.
  */
-#tabbrowser-tabpanels[data-floorp-split]
-  > :not(
-    .split-view-panel,
-    .split-view-splitter,
-    .floorp-split-handle,
-    .floorp-grid-handle
-  ) {
+#tabbrowser-tabpanels[data-floorp-split] > :not(.split-view-panel, .split-view-splitter, .floorp-split-handle, .floorp-grid-handle) {
   display: none !important;
 }
 
@@ -219,19 +211,15 @@
 }
 
 /* 3-pane grid handles for right-main layout */
-#tabbrowser-tabpanels[split-view-layout="grid-3pane-right-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"] {
+#tabbrowser-tabpanels[split-view-layout="grid-3pane-right-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"] {
   left: 0;
   right: calc(100% - var(--floorp-grid-col-ratio, 50%) + 4px);
 }
 
 /* 3-pane grid handles for top-main layout */
-#tabbrowser-tabpanels[split-view-layout="grid-3pane-top-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-col"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-col"] {
+#tabbrowser-tabpanels[split-view-layout="grid-3pane-top-main"] .floorp-grid-handle[data-orientation="grid-3pane-col"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] .floorp-grid-handle[data-orientation="grid-3pane-col"] {
   top: calc(var(--floorp-grid-row-ratio, 50%) + 4px);
   bottom: 0;
   left: calc(var(--floorp-grid-col-ratio, 50%) - 4px);
@@ -240,10 +228,8 @@
   cursor: col-resize;
 }
 
-#tabbrowser-tabpanels[split-view-layout="grid-3pane-top-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"] {
+#tabbrowser-tabpanels[split-view-layout="grid-3pane-top-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"] {
   left: 0;
   right: 0;
   top: calc(var(--floorp-grid-row-ratio, 50%) - 4px);
@@ -253,10 +239,8 @@
 }
 
 /* 3-pane grid handles for bottom-main layout */
-#tabbrowser-tabpanels[split-view-layout="grid-3pane-bottom-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-col"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-col"] {
+#tabbrowser-tabpanels[split-view-layout="grid-3pane-bottom-main"] .floorp-grid-handle[data-orientation="grid-3pane-col"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] .floorp-grid-handle[data-orientation="grid-3pane-col"] {
   top: 0;
   bottom: calc(100% - var(--floorp-grid-row-ratio, 50%) + 4px);
   left: calc(var(--floorp-grid-col-ratio, 50%) - 4px);
@@ -265,10 +249,8 @@
   cursor: col-resize;
 }
 
-#tabbrowser-tabpanels[split-view-layout="grid-3pane-bottom-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  .floorp-grid-handle[data-orientation="grid-3pane-row"] {
+#tabbrowser-tabpanels[split-view-layout="grid-3pane-bottom-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] .floorp-grid-handle[data-orientation="grid-3pane-row"] {
   left: 0;
   right: 0;
   top: calc(var(--floorp-grid-row-ratio, 50%) - 4px);
@@ -299,10 +281,8 @@
   flex-direction: column;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="vertical"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="vertical"]
-  > .split-view-panel {
+#tabbrowser-tabpanels[splitview][split-view-layout="vertical"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="vertical"] > .split-view-panel {
   --panel-min-height: 100px;
   min-height: var(--panel-min-height);
   max-height: calc(100% - var(--panel-min-height));
@@ -336,82 +316,58 @@
 }
 
 /* Collapse non-split-view children so they don't participate in grid layout */
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > :not(.split-view-panel, .floorp-grid-handle),
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > :not(.split-view-panel, .floorp-grid-handle) {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > :not(.split-view-panel, .floorp-grid-handle),
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > :not(.split-view-panel, .floorp-grid-handle) {
   display: none !important;
 }
 
 /* Explicitly place split-view panels into grid cells using the column attribute */
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="0"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="0"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel[column="0"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel[column="0"] {
   grid-row: 1;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="1"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="1"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel[column="1"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel[column="1"] {
   grid-row: 1;
   grid-column: 2;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="2"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="2"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel[column="2"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel[column="2"] {
   grid-row: 2;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="3"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel[column="3"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel[column="3"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel[column="3"] {
   grid-row: 2;
   grid-column: 2;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="0"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="0"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="0"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="0"] {
   grid-row: 1 / span 2;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="1"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="1"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="1"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="1"] {
   grid-row: 1;
   grid-column: 2;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="2"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel[column="2"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="2"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > .split-view-panel[column="2"] {
   grid-row: 2;
   grid-column: 2;
 }
@@ -425,26 +381,20 @@
   grid-template-rows: 1fr 1fr;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="0"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="0"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="0"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="0"] {
   grid-row: 1;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="1"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="1"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="1"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="1"] {
   grid-row: 2;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="2"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel[column="2"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="2"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > .split-view-panel[column="2"] {
   grid-row: 1 / span 2;
   grid-column: 2;
 }
@@ -458,26 +408,20 @@
   grid-template-rows: 1fr 1fr;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="0"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="0"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="0"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="0"] {
   grid-row: 1;
   grid-column: 1 / span 2;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="1"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="1"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="1"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="1"] {
   grid-row: 2;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="2"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel[column="2"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="2"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > .split-view-panel[column="2"] {
   grid-row: 2;
   grid-column: 2;
 }
@@ -491,51 +435,35 @@
   grid-template-rows: 1fr 1fr;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="0"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="0"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="0"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="0"] {
   grid-row: 1;
   grid-column: 1;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="1"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="1"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="1"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="1"] {
   grid-row: 1;
   grid-column: 2;
 }
 
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="2"],
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel[column="2"] {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="2"],
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel[column="2"] {
   grid-row: 2;
   grid-column: 1 / span 2;
 }
 
 /* Remove flex-specific constraints that break grid cell sizing */
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > .split-view-panel,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > .split-view-panel,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > .split-view-panel,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > .split-view-panel,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel {
   max-width: unset !important;
   min-width: unset !important;
   max-height: unset !important;
@@ -547,36 +475,16 @@
 }
 
 /* Ensure the browserContainer fills the grid cell */
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"]
-  > .split-view-panel
-  > .browserContainer,
-#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"]
-  > .split-view-panel
-  > .browserContainer {
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-2x2"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-left-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-right-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-top-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[splitview][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-2x2"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-left-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-right-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-top-main"] > .split-view-panel > .browserContainer,
+#tabbrowser-tabpanels[data-floorp-split][split-view-layout="grid-3pane-bottom-main"] > .split-view-panel > .browserContainer {
   min-height: 0;
   min-width: 0;
 }
@@ -653,34 +561,14 @@
  */
 #TabsToolbar[splitview-multibar] #pinned-tabs-container,
 #TabsToolbar[splitview-multibar] #tabbrowser-arrowscrollbox,
-:root:not([uidensity="compact"])
-  #TabsToolbar[splitview-multibar]
-  #pinned-tabs-container,
-:root:not([uidensity="compact"])
-  #TabsToolbar[splitview-multibar]
-  #tabbrowser-arrowscrollbox,
-#TabsToolbar[splitview-multibar]
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-#TabsToolbar[splitview-multibar]
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-#TabsToolbar[splitview-multibar]
-  #pinned-tabs-container[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content,
-#TabsToolbar[splitview-multibar]
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"],
-#TabsToolbar[splitview-multibar]
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-stack,
-#TabsToolbar[splitview-multibar]
-  #tabbrowser-arrowscrollbox[overflowing="true"]
-  > .tabbrowser-tab[pinned="true"]
-  .tab-content {
+:root:not([uidensity="compact"]) #TabsToolbar[splitview-multibar] #pinned-tabs-container,
+:root:not([uidensity="compact"]) #TabsToolbar[splitview-multibar] #tabbrowser-arrowscrollbox,
+#TabsToolbar[splitview-multibar] #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"],
+#TabsToolbar[splitview-multibar] #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-stack,
+#TabsToolbar[splitview-multibar] #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-content,
+#TabsToolbar[splitview-multibar] #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"],
+#TabsToolbar[splitview-multibar] #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-stack,
+#TabsToolbar[splitview-multibar] #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-content {
   max-height: unset !important;
   height: unset !important;
 }
@@ -689,54 +577,8 @@
  * split-view state transitions. Covers both active split-view panels and
  * persisted split-tab markers so this works even when a non-split tab is selected.
  */
-:root:is(
-    :has(
-      #tabbrowser-tabpanels[data-floorp-split],
-      #tabbrowser-tabpanels[splitview],
-      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-    ),
-    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  )
-  :is(
-    #TabsToolbar:not([multibar]) #pinned-tabs-container,
-    #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox,
-    #TabsToolbar:not([multibar])
-      #pinned-tabs-container[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"],
-    #TabsToolbar:not([multibar])
-      #pinned-tabs-container[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"]
-      .tab-stack,
-    #TabsToolbar:not([multibar])
-      #pinned-tabs-container[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"]
-      .tab-content,
-    #TabsToolbar:not([multibar])
-      #tabbrowser-arrowscrollbox[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"],
-    #TabsToolbar:not([multibar])
-      #tabbrowser-arrowscrollbox[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"]
-      .tab-stack,
-    #TabsToolbar:not([multibar])
-      #tabbrowser-arrowscrollbox[overflowing="true"]
-      > .tabbrowser-tab[pinned="true"]
-      .tab-content
-  ),
-:root:not([uidensity="compact"]):is(
-    :has(
-      #tabbrowser-tabpanels[data-floorp-split],
-      #tabbrowser-tabpanels[splitview],
-      #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId],
-      #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]
-    ),
-    :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])
-  )
-  :is(
-    #TabsToolbar:not([multibar]) #pinned-tabs-container,
-    #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox
-  ) {
+:root:is(:has(#tabbrowser-tabpanels[data-floorp-split], #tabbrowser-tabpanels[splitview], #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]), :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])) :is(#TabsToolbar:not([multibar]) #pinned-tabs-container, #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox, #TabsToolbar:not([multibar]) #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"], #TabsToolbar:not([multibar]) #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-stack, #TabsToolbar:not([multibar]) #pinned-tabs-container[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-content, #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"], #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-stack, #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox[overflowing="true"] > .tabbrowser-tab[pinned="true"] .tab-content),
+:root:not([uidensity="compact"]):is(:has(#tabbrowser-tabpanels[data-floorp-split], #tabbrowser-tabpanels[splitview], #tabbrowser-tabs .tabbrowser-tab[floorpSplitViewGroupId], #tabbrowser-tabs .tabbrowser-tab[floorpsplitviewgroupid]), :has(#tabbrowser-tabs .tabbrowser-tab[data-floorp-split-tab])) :is(#TabsToolbar:not([multibar]) #pinned-tabs-container, #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox) {
   max-height: unset !important;
   height: unset !important;
 }
@@ -747,21 +589,7 @@
  * The splitview-multibar attribute persists while any split tab remains (even
  * when a non-split tab is selected), so the override stays active until all
  * split tabs are gone. Scoped to horizontal tab strips only. */
-#TabsToolbar[splitview-multibar]
-  #tabbrowser-tabs:not([orient="vertical"])
-  .tabbrowser-tab:not([pinned]) {
-  min-width: unset !important;
-}
-
-/* When split view is active, remove Floorp's custom tab min-width override
- * so that Firefox's native tab sizing can shrink tabs to fit in the strip.
- * Without this, large tabMinWidth values (e.g. 200px) cause tabs to overlap.
- * The splitview-multibar attribute is set only while split view is active
- * and removed on deactivation, so user's tab width preference is restored.
- * Scoped to horizontal tab strips only — vertical tabs have their own layout. */
-#TabsToolbar[splitview-multibar]
-  #tabbrowser-tabs:not([orient="vertical"])
-  .tabbrowser-tab:not([pinned]) {
+#TabsToolbar[splitview-multibar] #tabbrowser-tabs:not([orient="vertical"]) .tabbrowser-tab:not([pinned]) {
   min-width: unset !important;
 }
 
@@ -813,7 +641,8 @@
   border-radius: 999px;
   border: 1px solid
     color-mix(in srgb, var(--focus-outline-color) 24%, transparent);
-  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 90%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color,
+    var(--toolbar-bgcolor)) 90%, transparent);
   box-shadow: 0 1px 3px color-mix(in srgb, black 12%, transparent);
   display: flex;
   align-items: center;
@@ -821,12 +650,11 @@
   box-sizing: border-box;
 }
 
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel:hover
-  > .floorp-pane-drag-grip {
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel:hover > .floorp-pane-drag-grip {
   opacity: 1;
   transform: translateX(-50%) translateY(1px);
-  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 96%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color,
+    var(--toolbar-bgcolor)) 96%, transparent);
   box-shadow: 0 2px 6px color-mix(in srgb, black 18%, transparent);
 }
 
@@ -855,34 +683,27 @@
 }
 
 #tabbrowser-tabpanels[data-floorp-dragging="pane-reorder"] > .split-view-panel {
-  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 10%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color,
+    var(--toolbar-bgcolor)) 10%, transparent);
 }
 
-#tabbrowser-tabpanels[data-floorp-dragging="pane-reorder"]
-  > .split-view-panel
-  > .floorp-pane-drag-grip {
+#tabbrowser-tabpanels[data-floorp-dragging="pane-reorder"] > .split-view-panel > .floorp-pane-drag-grip {
   opacity: 0.35;
 }
 
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel[data-floorp-drag-source] {
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel[data-floorp-drag-source] {
   opacity: 0.78;
   box-shadow: inset 0 0 0 2px var(--focus-outline-color) !important;
 }
 
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel[data-floorp-drop-target] {
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel[data-floorp-drop-target] {
   background: color-mix(in srgb, var(--focus-outline-color) 10%, transparent);
   box-shadow: inset 0 0 0 3px
     color-mix(in srgb, var(--focus-outline-color) 72%, transparent) !important;
 }
 
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel[data-floorp-drop-target]
-  > .floorp-pane-drag-grip,
-#tabbrowser-tabpanels[data-floorp-split]
-  > .split-view-panel[data-floorp-drag-source]
-  > .floorp-pane-drag-grip {
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel[data-floorp-drop-target] > .floorp-pane-drag-grip,
+#tabbrowser-tabpanels[data-floorp-split] > .split-view-panel[data-floorp-drag-source] > .floorp-pane-drag-grip {
   opacity: 1;
 }
 
@@ -989,7 +810,8 @@
   padding: 28px 36px;
   border: 2px dashed color-mix(in srgb, currentColor 24%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--toolbar-background-color, var(--toolbar-bgcolor)) 92%, transparent);
+  background: color-mix(in srgb, var(--toolbar-background-color,
+    var(--toolbar-bgcolor)) 92%, transparent);
   display: none;
   flex-direction: column;
   align-items: center;
@@ -1006,7 +828,8 @@
 #floorp-new-window-drop-zone[drag-hover] {
   border-style: solid;
   border-color: AccentColor;
-  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-background-color, var(--toolbar-bgcolor)));
+  background: color-mix(in srgb, AccentColor 8%, var(--toolbar-background-color,
+    var(--toolbar-bgcolor)));
 }
 
 .floorp-new-window-zone-icon {

@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { effect } from "@preact/signals";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import {
   isFloating,
+  isPanelSidebarEnabled,
   panelSidebarConfig,
   selectedPanelId,
   setIsFloatingDragging,
@@ -14,16 +15,7 @@ import {
 } from "../data/data.ts";
 import { STATIC_PANEL_DATA } from "../data/static-panels.ts";
 import { isResizeCooldown } from "./floating-splitter.tsx";
-import type { Panel } from "../utils/type.ts";
-
-declare global {
-  interface Window {
-    gFloorpPanelSidebar?: {
-      getPanelData: (id: string) => Panel | undefined;
-      showPanel: (panel: Panel) => void;
-    };
-  }
-}
+import { PanelNavigator } from "../panel-navigator.ts";
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -42,46 +34,76 @@ export class PanelSidebarFloating {
   private parentHeightTargetId = "browser";
   private userResizedHeight = false;
   private isDraggingHeader = false;
+  private floatingSetupFrame: number | undefined;
 
   constructor() {
-    effect(() => {
-      if (isFloating.value) {
-        if (!this.userResizedHeight) {
-          this.applyHeightToSidebarBox();
+    const exec1 = () => {
+      rootEffect(() => {
+        const floating = isFloating.value;
+        const enabled = isPanelSidebarEnabled.value;
+        if (floating && enabled) {
+          this.scheduleFloatingSetup();
+        } else {
+          this.teardownFloatingState();
         }
-        this.initResizeObserver();
-        this.initDragHeader();
-        this.applyStoredPositionToSidebarBox();
-        document?.addEventListener(
-          "mousedown",
-          this.handleOutsideClick,
-          true,
-        );
-      } else {
-        this.removeFloatingStyles();
-        this.resizeObserver?.disconnect();
-        document?.removeEventListener(
-          "mousedown",
-          this.handleOutsideClick,
-          true,
-        );
-        this.userResizedHeight = false;
-        this.restoreActivePanel();
-      }
-    });
+      });
+    };
 
-    effect(() => {
-      const position = panelSidebarConfig.value.position_start;
-      if (position) {
-        document
-          ?.getElementById("panel-sidebar-box")
-          ?.setAttribute("data-floating-splitter-side", "start");
-      } else {
-        document
-          ?.getElementById("panel-sidebar-box")
-          ?.setAttribute("data-floating-splitter-side", "end");
+    const exec2 = () => {
+      rootEffect(() => {
+        const position = panelSidebarConfig.value.position_start;
+        if (position) {
+          document
+            ?.getElementById("panel-sidebar-box")
+            ?.setAttribute("data-floating-splitter-side", "start");
+        } else {
+          document
+            ?.getElementById("panel-sidebar-box")
+            ?.setAttribute("data-floating-splitter-side", "end");
+        }
+      });
+    };
+
+    exec1();
+    exec2();
+    addDisposer(() => this.teardownFloatingState());
+  }
+
+  private scheduleFloatingSetup() {
+    if (this.floatingSetupFrame !== undefined) {
+      cancelAnimationFrame(this.floatingSetupFrame);
+    }
+    this.floatingSetupFrame = requestAnimationFrame(() => {
+      this.floatingSetupFrame = undefined;
+      if (!isFloating.value || !isPanelSidebarEnabled.value) return;
+      if (!document?.getElementById("panel-sidebar-box")) return;
+      if (!this.userResizedHeight) {
+        this.applyHeightToSidebarBox();
       }
+      this.resizeObserver?.disconnect();
+      this.initResizeObserver();
+      this.initDragHeader();
+      this.applyStoredPositionToSidebarBox();
+      document.removeEventListener("mousedown", this.handleOutsideClick, true);
+      document.addEventListener("mousedown", this.handleOutsideClick, true);
     });
+  }
+
+  private teardownFloatingState() {
+    if (this.floatingSetupFrame !== undefined) {
+      cancelAnimationFrame(this.floatingSetupFrame);
+      this.floatingSetupFrame = undefined;
+    }
+    this.removeFloatingStyles();
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    document?.removeEventListener(
+      "mousedown",
+      this.handleOutsideClick,
+      true,
+    );
+    this.userResizedHeight = false;
+    this.restoreActivePanel();
   }
 
   private initResizeObserver() {
@@ -286,7 +308,6 @@ export class PanelSidebarFloating {
     }
   }
 
-
   private getBrowserHeight() {
     return (
       document?.getElementById(this.parentHeightTargetId)?.clientHeight ?? 0
@@ -390,14 +411,14 @@ export class PanelSidebarFloating {
     const splitter = document?.getElementById("panel-sidebar-splitter");
     const browsers = sidebarBox?.querySelectorAll(".sidebar-panel-browser");
 
-    const clickedBrowser = (event.target as unknown as XULElement).ownerDocument
+    const clickedBrowser = (event.target as XULElement).ownerDocument
       ?.activeElement;
     const clickedBrowserIsSidebarBrowser = Array.from(browsers ?? []).some(
       (browser) => browser === clickedBrowser,
     );
     const clickedElementIsChromeSidebar = Object.values(STATIC_PANEL_DATA).some(
       (panel) =>
-        panel.url === (clickedBrowser as unknown as XULElement).ownerDocument?.documentURI,
+        panel.url === (clickedBrowser as XULElement).ownerDocument?.documentURI,
     );
     const clickedElementIsWebTypeBrowser = clickedBrowser?.baseURI?.startsWith(
       `${AppConstants.BROWSER_CHROME_URL}?floorpWebPanelId`,
@@ -419,28 +440,10 @@ export class PanelSidebarFloating {
   };
 
   private restoreActivePanel() {
-    const currentPanelId = selectedPanelId.value;
-
-    if (currentPanelId) {
-      try {
-        const panelSidebarInstance = globalThis
-          .gFloorpPanelSidebar as Window["gFloorpPanelSidebar"];
-        if (panelSidebarInstance) {
-          setSelectedPanelId(null);
-
-          setTimeout(() => {
-            setSelectedPanelId(currentPanelId);
-            if (panelSidebarInstance.showPanel) {
-              const panel = panelSidebarInstance.getPanelData(currentPanelId);
-              if (panel) {
-                panelSidebarInstance.showPanel(panel);
-              }
-            }
-          }, 50);
-        }
-      } catch (e) {
-        console.error("Failed to restore panel:", e);
-      }
+    const controller = PanelNavigator.gPanelSidebar;
+    const panel = controller?.getPanelData(selectedPanelId.value ?? "");
+    if (panel) {
+      controller?.setSidebarWidth(panel);
     }
   }
 }

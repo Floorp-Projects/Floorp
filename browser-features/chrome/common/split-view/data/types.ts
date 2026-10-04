@@ -64,9 +64,14 @@ export interface SplitViewGBrowser {
 }
 
 /** TabContextMenu global. */
+export interface SplitViewContextTab extends SplitViewTab {
+  pinned: boolean;
+  hasAttribute(name: string): boolean;
+}
+
 export interface TabContextMenuGlobal {
-  contextTab: SplitViewTab & { multiselected?: boolean };
-  contextTabs: SplitViewTab[];
+  contextTab: SplitViewContextTab & { multiselected?: boolean };
+  contextTabs: SplitViewContextTab[];
 }
 
 /** Type-safe accessor for gBrowser. */
