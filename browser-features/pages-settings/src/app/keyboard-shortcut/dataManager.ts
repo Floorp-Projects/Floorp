@@ -159,3 +159,17 @@ export const useKeyboardShortcutConfig = () => {
     deleteShortcut,
   };
 };
+
+/**
+ * Formats a ShortcutConfig into a human-readable string (e.g. "Alt+Ctrl+F2").
+ * Mirrors the chrome-side `shortcutToString` so the settings UI can display
+ * the same key combination the browser will actually react to.
+ */
+export function shortcutToString(shortcut: ShortcutConfig): string {
+  const modifiers: string[] = [];
+  if (shortcut.modifiers.alt) modifiers.push("Alt");
+  if (shortcut.modifiers.ctrl) modifiers.push("Ctrl");
+  if (shortcut.modifiers.meta) modifiers.push("Meta");
+  if (shortcut.modifiers.shift) modifiers.push("Shift");
+  return [...modifiers, shortcut.key.toUpperCase()].join("+");
+}

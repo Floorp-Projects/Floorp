@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import { CHROME_EXTRAS_KEYS } from "./chrome-extras.ts";
 
 /**
- * The 25 chrome-extras toggles. Declared as a separate `t.partial` on the
+ * The chrome-extras toggles. Declared as a separate `t.partial` on the
  * `uiCustomization` intersection rather than inside its main `t.type`, so the
  * many places that build a `TFloorpDesignConfigs` literal (tests, defaults) keep
  * compiling: `t.partial` makes the whole category optional, and io-ts preserves
