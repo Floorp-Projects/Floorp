@@ -1,80 +1,12 @@
-/* Floorp chrome-extras: sidebarOverlap + autohideSidebar
- * Ported from vendored Lepton (leptonChrome.css 26968-27033, 2 block(s)).
- *
- * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
- * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
- * That also drops Floorp's dependency on the vendored file, which
- * update_lepton.yml re-syncs from upstream every day.
- *
- * This combination preserves Lepton's collapsed and expanded widths
- *
- * when both Floorp sidebar toggles are enabled.
- */
-
-/* leptonChrome.css:26968-27002 — extra conditions dropped: userChrome.sidebar.overlap */
-#sidebar-header,
-#sidebar {
-  min-width: var(--uc-sidebar-width) !important;
-  max-width: var(--uc-sidebar-width) !important;
-  will-change: min-width, max-width;
+/* Hover animation never changes panel or content geometry. */
+:root[floorp-firefox-sidebar-overlay][floorp-firefox-sidebar-hover] #sidebar-box {
+  opacity: 0;
 }
-#sidebar-box:is(:hover, :focus-within),
-#sidebar-box:has(#sidebar-switcher-target.active) {
-  --uc-sidebar-shadow-width: calc(var(--uc-sidebar-activate-width) - var(--uc-sidebar-width));
+:root[floorp-firefox-sidebar-overlay][floorp-firefox-sidebar-hover] #sidebar-box[data-floorp-sidebar-expanded] {
+  opacity: 1;
 }
-#sidebar-box:is(:hover, :focus-within) > #sidebar-header,
-#sidebar-box:is(:hover, :focus-within) > #sidebar,
-#sidebar-box:has(#sidebar-switcher-target.active) > #sidebar-header,
-#sidebar-box:has(#sidebar-switcher-target.active) > #sidebar {
-  min-width: var(--uc-sidebar-activate-width) !important;
-  max-width: var(--uc-sidebar-activate-width) !important;
-}
-:root[inFullscreen="true"] #sidebar-box {
-  --uc-sidebar-shadow-width: var(--uc-sidebar-fullscreen-width);
-  margin-inline-start: var(--uc-sidebar-activate-width-reverse) !important;
-  padding-inline-start: var(--uc-sidebar-fullscreen-width);
-  will-change: padding-inline-start, opacity, box-shadow, visibility;
-}
-:root[inFullscreen="true"] #sidebar-box:is(:hover, :focus-within) {
-  --uc-sidebar-shadow-width: var(--uc-sidebar-activate-width);
-  padding-inline-start: var(--uc-sidebar-activate-width);
-}
-:root[inFullscreen="true"] #sidebar-box #sidebar-header,
-:root[inFullscreen="true"] #sidebar-box #sidebar {
-  min-width: calc(var(--uc-sidebar-activate-width)) !important;
-  max-width: calc(var(--uc-sidebar-activate-width)) !important;
-  will-change: unset;
-}
-
-/* leptonChrome.css:27003-27033 — extra conditions dropped: userChrome.sidebar.overlap */
 @media (prefers-reduced-motion: no-preference) {
-  #sidebar-header,
-  #sidebar {
-    transition: min-width var(--uc-autohide-sidebar-speed) var(--animation-easing-function)
-      var(--uc-autohide-sidebar-delay) !important;
-  }
-  #sidebar-box:is(:hover, :focus-within),
-  #sidebar-box:has(#sidebar-switcher-target.active) {
-    transition: margin-inline-start var(--uc-autohide-sidebar-speed) var(--animation-easing-function),
-      opacity var(--uc-autohide-sidebar-speed) ease-in-out,
-      box-shadow var(--uc-autohide-sidebar-speed) var(--animation-easing-function) var(--uc-autohide-sidebar-speed),
-      visibility 0s linear !important;
-  }
-  #sidebar-box:is(:hover, :focus-within) > #sidebar-header,
-  #sidebar-box:is(:hover, :focus-within) > #sidebar,
-  #sidebar-box:has(#sidebar-switcher-target.active) > #sidebar-header,
-  #sidebar-box:has(#sidebar-switcher-target.active) > #sidebar {
-    transition-delay: 0ms !important;
-  }
-  :root[inFullscreen="true"] #sidebar-box {
-    transition: padding-inline-start var(--uc-autohide-fullscreen-sidebar-speed) var(--animation-easing-function)
-        var(--uc-autohide-sidebar-delay),
-      opacity var(--uc-autohide-fullscreen-sidebar-speed) ease-in-out,
-      box-shadow calc(var(--uc-autohide-fullscreen-sidebar-speed) + 0.05s) var(--animation-easing-function),
-      visibility 0s linear !important;
-  }
-  :root[inFullscreen="true"] #sidebar-box:is(:hover, :focus-within),
-  :root[inFullscreen="true"] #sidebar-box:has(#sidebar-switcher-target.active) {
-    transition-delay: 0ms !important;
+  :root[floorp-firefox-sidebar-overlay][floorp-firefox-sidebar-hover] #sidebar-box {
+    transition: opacity 140ms ease;
   }
 }

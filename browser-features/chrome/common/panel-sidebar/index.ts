@@ -10,6 +10,7 @@ import { migratePanelSidebarData } from "./data/migration";
 import { WebsitePanelWindowChild } from "./website-panel-window-child";
 import { PanelSidebarAddModal } from "./components/panel-sidebar-modal";
 import { PanelSidebarFloating } from "./components/floating";
+import { PanelSidebarHover } from "./components/overlay-hover";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
 //TODO: refactor needed
@@ -29,5 +30,6 @@ export default class PanelSidebar extends NoraComponentBase {
     new SidebarContextMenuElem(ctx);
     PanelSidebarAddModal.getInstance();
     PanelSidebarFloating.getInstance();
+    new PanelSidebarHover(ctx);
   }
 }

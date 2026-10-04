@@ -424,6 +424,13 @@
         "searchResultsDescription": "Search results for \"{{query}}\". Only {{productName}} settings are searched; Firefox settings are not included."
     },
     "panelSidebar": {
+        "overlay": "Display over the page",
+        "overlayDescription": "Open the sidebar over the website without changing the website's size.",
+        "openOnHover": "Open on mouse hover",
+        "openOnHoverDescription": "Hover over a panel icon to preview it. Move away to hide it, or click the icon to keep it open. This also enables display over the page.",
+        "firefoxTitle": "Firefox Sidebar",
+        "firefoxDescription": "Configure the Firefox sidebar for bookmarks, history, and extensions. These options also apply to the sidebar settings in UI Extensions.",
+        "firefoxHoverDescription": "Hover over the sidebar edge to open the last selected tool. Move away to hide it, or click the edge to keep it open. A focused sidebar stays open. This also enables display over the page.",
         "title": "Panel Sidebar",
         "description": "Panel Sidebar is a feature that allows you to display various tools, websites, and extensions on the side of the window. Here, you can customize, add, delete, and manage panels.",
         "basicSettings": "Basic Settings",

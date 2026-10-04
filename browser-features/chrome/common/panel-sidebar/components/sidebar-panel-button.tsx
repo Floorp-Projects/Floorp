@@ -7,6 +7,7 @@ import { createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
+  isPanelSidebarVisible,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
@@ -104,6 +105,18 @@ export function PanelSidebarButton(props: {
         class={`${props.panel.type} panel-sidebar-panel`}
         data-checked={selectedPanelId() === props.panel.id}
         data-panel-id={props.panel.id}
+        role="button"
+        tabindex={0}
+        aria-label={props.panel.url || props.panel.extensionId ||
+          props.panel.id}
+        aria-expanded={selectedPanelId() === props.panel.id &&
+          isPanelSidebarVisible()}
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            gPanelSidebar.changePanel(props.panel.id);
+          }
+        }}
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
         }}

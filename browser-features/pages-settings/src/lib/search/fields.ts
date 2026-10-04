@@ -128,6 +128,30 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "titleKey": "panelSidebar.autoUnloadOnClose",
   },
   {
+    "id": "panel-overlay",
+    "route": "/features/sidebar",
+    "titleKey": "panelSidebar.overlay",
+    "descriptionKey": "panelSidebar.overlayDescription",
+  },
+  {
+    "id": "panel-hover",
+    "route": "/features/sidebar",
+    "titleKey": "panelSidebar.openOnHover",
+    "descriptionKey": "panelSidebar.openOnHoverDescription",
+  },
+  {
+    "id": "firefox-sidebar-overlay",
+    "route": "/features/sidebar",
+    "titleKey": "panelSidebar.firefoxTitle",
+    "descriptionKey": "panelSidebar.overlayDescription",
+  },
+  {
+    "id": "firefox-sidebar-hover",
+    "route": "/features/sidebar",
+    "titleKey": "panelSidebar.firefoxTitle",
+    "descriptionKey": "panelSidebar.firefoxHoverDescription",
+  },
+  {
     "id": "global-width",
     "route": "/features/sidebar",
     "titleKey": "panelSidebar.globalWidth",

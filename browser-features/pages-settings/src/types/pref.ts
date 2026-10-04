@@ -135,6 +135,8 @@ export type AccountsFormData = t.TypeOf<typeof zAccountsFormData>;
 /* Panel Sidebar */
 export const zPanelSidebarFormData = t.type({
   enabled: t.boolean,
+  overlay: t.boolean,
+  openOnHover: t.boolean,
   autoUnload: t.boolean,
   position_start: t.boolean,
   displayed: t.boolean,

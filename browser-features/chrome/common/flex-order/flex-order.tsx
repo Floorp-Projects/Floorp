@@ -83,6 +83,13 @@ export namespace gFlexOrder {
   function updateHoverOffset() {
     const browser = document?.getElementById("browser");
     if (!browser) return;
+    browser.style.setProperty(
+      "--floorp-panel-sidebar-rail-width",
+      `${
+        document.getElementById(floorpSidebarSelectBoxId)
+          ?.getBoundingClientRect().width ?? 0
+      }px`,
+    );
     const launcher = document.getElementById("sidebar-container");
     if (
       document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
@@ -165,7 +172,7 @@ export namespace gFlexOrder {
           resizeObserver.observe(element);
           panelObserver.observe(element, {
             attributes: true,
-            attributeFilter: ["data-floating", "hidden"],
+            attributeFilter: ["data-floating", "data-overlay", "hidden"],
           });
         }
       }
@@ -197,6 +204,7 @@ export namespace gFlexOrder {
       }
       browser.style.removeProperty("--floorp-panel-start-width");
       browser.style.removeProperty("--floorp-panel-end-width");
+      browser.style.removeProperty("--floorp-panel-sidebar-rail-width");
     });
   }
 

@@ -645,7 +645,7 @@ function testSidebarLayoutVariants(): void {
     CHROME_EXTRAS_CSS.autohideSidebar.includes(
       "min-width: var(--uc-sidebar-width)",
     ),
-    "auto-hide keeps the collapsed sidebar width",
+    "standalone auto-hide keeps the legacy collapsed sidebar width",
   );
   assert(
     !CHROME_EXTRAS_CSS.sidebarOverlap.includes(
@@ -679,7 +679,7 @@ function testRightSidebarMarkerCompatibility(): void {
   }
 }
 
-function testCombinedSidebarUsesCollapsedWidth(): void {
+function testCombinedSidebarPreservesPanelWidth(): void {
   const style = document.createElement("style");
   style.textContent = cssFor({
     autohideSidebar: true,
@@ -688,9 +688,15 @@ function testCombinedSidebarUsesCollapsedWidth(): void {
   });
   const sidebarBox = document.createXULElement("box");
   sidebarBox.id = "sidebar-box";
+  sidebarBox.style.width = "350px";
   const sidebar = document.createXULElement("box");
   sidebar.id = "sidebar";
   sidebarBox.appendChild(sidebar);
+  const root = document.documentElement;
+  const wasOverlay = root.hasAttribute("floorp-firefox-sidebar-overlay");
+  const wasHover = root.hasAttribute("floorp-firefox-sidebar-hover");
+  root.setAttribute("floorp-firefox-sidebar-overlay", "");
+  root.setAttribute("floorp-firefox-sidebar-hover", "");
   document.head.appendChild(style);
   document.documentElement.appendChild(sidebarBox);
   try {
@@ -698,19 +704,33 @@ function testCombinedSidebarUsesCollapsedWidth(): void {
     const sidebarStyle = getComputedStyle(sidebar);
     assert(boxStyle !== null, "sidebar box must have computed styles");
     assert(sidebarStyle !== null, "sidebar content must have computed styles");
+    const width = sidebarBox.getBoundingClientRect().width;
     assertEquals(
-      boxStyle.minWidth,
-      "40px",
-      "combined mode keeps the sidebar box collapsed until hover",
+      boxStyle.visibility,
+      "hidden",
+      "hover collapse hides the panel",
+    );
+    assert(width > 40, "hover collapse must keep the native panel's width");
+    sidebarBox.setAttribute("data-floorp-sidebar-expanded", "");
+    assertEquals(
+      getComputedStyle(sidebarBox)?.visibility,
+      "visible",
+      "hover reveals the panel",
     );
     assertEquals(
-      sidebarStyle.minWidth,
-      "40px",
-      "combined mode keeps the sidebar content collapsed until hover",
+      sidebarBox.getBoundingClientRect().width,
+      width,
+      "hover reveal must preserve panel layout",
+    );
+    assert(
+      sidebarStyle.minWidth !== "40px",
+      "hover must not clamp the embedded document's width",
     );
   } finally {
     sidebarBox.remove();
     style.remove();
+    root.toggleAttribute("floorp-firefox-sidebar-overlay", wasOverlay);
+    root.toggleAttribute("floorp-firefox-sidebar-hover", wasHover);
   }
 }
 
@@ -1205,8 +1225,8 @@ export async function runAllTests(): Promise<void> {
       fn: testRightSidebarMarkerCompatibility,
     },
     {
-      name: "combined sidebar remains collapsed until hover",
-      fn: testCombinedSidebarUsesCollapsedWidth,
+      name: "combined sidebar preserves its document width during hover",
+      fn: testCombinedSidebarPreservesPanelWidth,
     },
     {
       name: "icon menu is skipped when icons disabled",

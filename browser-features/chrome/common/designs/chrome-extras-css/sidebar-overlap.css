@@ -1,51 +1,81 @@
-/* Floorp chrome-extras: sidebarOverlap
- * Ported from vendored Lepton (leptonChrome.css 25195-25211, 1 block(s)).
- *
- * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
- * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
- * That also drops Floorp's dependency on the vendored file, which
- * update_lepton.yml re-syncs from upstream every day.
- *
- * Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and
- *
- * combined layout rules are injected separately by chrome-extras.ts.
- */
-
-/* leptonChrome.css:25195-25211 */
-#sidebar-box:is([positionend], [sidebar-positionend]) {
-  direction: rtl;
-}
-#sidebar-header,
-#sidebar {
-  background-color: var(--sidebar-background-color) !important;
-  color: var(--sidebar-text-color) !important;
-  overflow: hidden;
-}
-#sidebar-header {
-  font-size: unset !important;
-}
-#sidebar-header > #sidebar-switcher-target {
-  font-size: 1.333em;
+/* Floorp native Firefox sidebar overlay. The native controller keeps ownership
+ * of panel documents, width persistence, commands and sidebar positioning. */
+:root[floorp-firefox-sidebar-overlay] #browser,
+:root[floorp-firefox-sidebar-hover] #browser {
+  position: relative;
 }
 
-/* leptonChrome.css:25178-25194 (shared by both sidebar toggles) */
-#sidebar-box {
-  --uc-sidebar-shadow-color: #28282f;
-  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
-  position: relative !important;
-  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px var(--uc-sidebar-shadow-color);
-}
-#sidebar-box:is([positionend], [sidebar-positionend]) {
-  --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));
-}
-#sidebar {
-  display: block;
-}
-#main-window > body > box {
-  z-index: 2 !important;
+:root[floorp-firefox-sidebar-overlay] #sidebar-box:not([hidden]) {
+  position: absolute !important;
+  left: var(--floorp-firefox-sidebar-left, 0px) !important;
+  right: auto !important;
+  top: var(--floorp-firefox-sidebar-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--floorp-firefox-sidebar-height, 100%) !important;
+  min-width: min(160px, var(--floorp-firefox-sidebar-available-width, 75vw))
+    !important;
+  max-width: var(--floorp-firefox-sidebar-available-width, 75vw) !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  background-color: var(--sidebar-background-color,
+    var(--toolbar-background-color));
+  box-shadow: 0 2px 12px color-mix(in srgb, black 25%, transparent);
+  z-index: 6 !important;
 }
 
-/* leptonChrome.css:25174-25176 (shared with sidebar-overlap.css) */
-#sidebar-splitter {
+:root[floorp-firefox-sidebar-overlay] #sidebar-splitter {
   display: none !important;
+}
+
+/* Keep logical positioning in Firefox; the measured physical anchor above also
+ * handles [sidebar-positionend], legacy [positionend], and RTL windows. */
+:root[floorp-firefox-sidebar-overlay] #sidebar-box[sidebar-positionend] {
+  direction: inherit;
+}
+
+#floorp-firefox-sidebar-overlay-resizer {
+  position: absolute;
+  inset-block: 0;
+  right: -3px;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 1;
+  touch-action: none;
+}
+#sidebar-box[data-floorp-sidebar-right] > #floorp-firefox-sidebar-overlay-resizer {
+  right: auto;
+  left: -3px;
+}
+#floorp-firefox-sidebar-overlay-resizer:is(:hover, :focus-visible) {
+  background-color: var(--focus-outline-color);
+}
+#floorp-firefox-sidebar-overlay-resizer[hidden] {
+  display: none;
+}
+/* The launcher's pre-hover occupied space is reserved explicitly. Native panel
+ * opening may reveal the launcher; that reveal must not resize web content. */
+:root[floorp-firefox-sidebar-overlay] #sidebar-container {
+  position: absolute !important;
+  left: var(--floorp-firefox-launcher-left, 0px) !important;
+  right: auto !important;
+  inset-block-start: var(--floorp-firefox-sidebar-top, 0px) !important;
+  inset-block-end: auto !important;
+  height: var(--floorp-firefox-sidebar-height, 100%) !important;
+  margin: 0 !important;
+  z-index: 7;
+}
+:root[floorp-firefox-sidebar-overlay] #sidebar-launcher-splitter {
+  display: none !important;
+}
+:root[floorp-firefox-sidebar-overlay] #tabbrowser-tabbox {
+  margin-left: var(--floorp-firefox-launcher-reserve-start, 0px) !important;
+  margin-right: var(--floorp-firefox-launcher-reserve-end, 0px) !important;
+}
+
+:root[inDOMFullscreen][floorp-firefox-sidebar-overlay] #tabbrowser-tabbox {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+:root[inDOMFullscreen][floorp-firefox-sidebar-overlay] #sidebar-box {
+  visibility: collapse !important;
 }

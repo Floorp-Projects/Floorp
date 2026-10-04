@@ -75,6 +75,42 @@ export function BasicSettings() {
         <CardContent>
           <div className="space-y-4">
             <div className={styles.row}>
+              <div className="space-y-1">
+                <label htmlFor="panel-overlay" className="text-sm font-medium">
+                  {t("panelSidebar.overlay")}
+                </label>
+                <p className="text-sm text-base-content/70">
+                  {t("panelSidebar.overlayDescription")}
+                </p>
+              </div>
+              <Switch
+                id="panel-overlay"
+                checked={!!watchAll.overlay}
+                onChange={(e) => {
+                  setValue("overlay", e.target.checked);
+                  if (!e.target.checked) setValue("openOnHover", false);
+                }}
+              />
+            </div>
+            <div className={styles.row}>
+              <div className="space-y-1">
+                <label htmlFor="panel-hover" className="text-sm font-medium">
+                  {t("panelSidebar.openOnHover")}
+                </label>
+                <p className="text-sm text-base-content/70">
+                  {t("panelSidebar.openOnHoverDescription")}
+                </p>
+              </div>
+              <Switch
+                id="panel-hover"
+                checked={!!watchAll.openOnHover}
+                onChange={(e) => {
+                  if (e.target.checked) setValue("overlay", true);
+                  setValue("openOnHover", e.target.checked);
+                }}
+              />
+            </div>
+            <div className={styles.row}>
               <label
                 htmlFor="auto-unload"
                 className="text-sm font-medium leading-none"
