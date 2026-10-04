@@ -212,6 +212,15 @@ function entryDir(uuid: string, version: string): string {
   if (!/^\d+(\.\d+){1,3}$/.test(version)) throw new Error(`bad version: ${version}`);
   return PathUtils.join(dropDir(uuid), version);
 }
+
+/** Inspection never writes into the files approved for startup restoration. */
+function inspectionPath(uuid: string, sha256: string, file: string): string {
+  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error(`bad sha256: ${sha256}`);
+  if (!/^[A-Za-z0-9._-]+$/.test(file) || file === "." || file === "..") {
+    throw new Error(`bad file name: ${file}`);
+  }
+  return PathUtils.join(dropDir(uuid), "inspected", sha256, file);
+}
 /**
  * profile/noraneko-drops/<uuid>/deps/<name>/<version>/
  *
@@ -240,8 +249,8 @@ function resAlias(uuid: string, version: string): string {
 }
 
 /** manifest.json は bytes のまま持つ(判はその bytes に対して押されている) */
-async function fetchDropManifest(reg: Registry, uuid: string, semver?: string): Promise<{ manifest: DropManifest; bytes: Uint8Array }> {
-  const resp = await fetch(`${reg.base}/${dropPath(uuid, semver)}/manifest.json`, { cache: "no-store" });
+async function fetchDropManifest(reg: Registry, uuid: string, semver?: string, fetchImpl: typeof fetch = fetch): Promise<{ manifest: DropManifest; bytes: Uint8Array }> {
+  const resp = await fetchImpl(`${reg.base}/${dropPath(uuid, semver)}/manifest.json`, { cache: "no-store" });
   if (!resp.ok) throw new Error(`no drop ${uuid} in ${reg.name} (${resp.status})`);
   const bytes = new Uint8Array(await resp.arrayBuffer());
   const m = JSON.parse(new TextDecoder().decode(bytes)) as DropManifest;
@@ -253,15 +262,15 @@ async function fetchDropManifest(reg: Registry, uuid: string, semver?: string): 
   return { manifest: m, bytes };
 }
 /** registry の指定があればそこ。無ければ一覧に順に訊いて、最初に持っていたところ */
-async function findDrop(uuid: string, registryName?: string): Promise<{ reg: Registry; manifest: DropManifest; bytes: Uint8Array }> {
+async function findDrop(uuid: string, registryName?: string, fetchImpl: typeof fetch = fetch): Promise<{ reg: Registry; manifest: DropManifest; bytes: Uint8Array }> {
   if (registryName) {
     const reg = registryByName(registryName);
-    return { reg, ...(await fetchDropManifest(reg, uuid)) };
+    return { reg, ...(await fetchDropManifest(reg, uuid, undefined, fetchImpl)) };
   }
   const misses: string[] = [];
   for (const reg of listRegistries()) {
     try {
-      return { reg, ...(await fetchDropManifest(reg, uuid)) };
+      return { reg, ...(await fetchDropManifest(reg, uuid, undefined, fetchImpl)) };
     } catch (e) {
       misses.push(String((e as Error)?.message ?? e));
     }
@@ -337,9 +346,9 @@ function readZipEntries(path: string): Map<string, string> {
 }
 
 /** registry の判を確かめる。無ければ ok=false で理由を書く。止めはしない */
-async function checkAttestations(reg: Registry, uuid: string, manifestBytes: Uint8Array, semver?: string) {
+async function checkAttestations(reg: Registry, uuid: string, manifestBytes: Uint8Array, semver?: string, fetchImpl: typeof fetch = fetch) {
   const { verifyKeylessBundle } = ChromeUtils.importESModule("resource://noraneko/modules/sigstore/Sigstore.sys.mjs");
-  const r = await fetch(`${reg.base}/${dropPath(uuid, semver)}/manifest.json.sigstore.json`, { cache: "no-store" });
+  const r = await fetchImpl(`${reg.base}/${dropPath(uuid, semver)}/manifest.json.sigstore.json`, { cache: "no-store" });
   if (!r.ok) {
     return [{ who: "registry", identity: reg.identity, issuer: reg.issuer, ok: false, reason: "registry の判(manifest.json.sigstore.json)が無い" }];
   }
@@ -350,23 +359,24 @@ async function checkAttestations(reg: Registry, uuid: string, manifestBytes: Uin
  * 1. 見る: 落として sha256 を確かめ、判を確かめ、中身を読む。実行はしない。
  * ref は uuid。registry は指定が無ければ一覧に順に訊く。
  */
-export async function inspectDrop(ref: string, registryName?: string): Promise<DropInspection> {
+export async function inspectDrop(ref: string, registryName?: string, fetchImpl: typeof fetch = fetch): Promise<DropInspection> {
   const uuid = parseUuid(ref);
-  const { reg, manifest: m, bytes: manifestBytes } = await findDrop(uuid, registryName);
+  const { reg, manifest: m, bytes: manifestBytes } = await findDrop(uuid, registryName, fetchImpl);
   console.log(`[noraneko-drops] inspect ${uuid} (${m.name}) @ ${reg.name}: manifest`);
-  const attestations = await checkAttestations(reg, uuid, manifestBytes);
+  const attestations = await checkAttestations(reg, uuid, manifestBytes, undefined, fetchImpl);
   const dir = dropDir(uuid);
   await IOUtils.makeDirectory(dir, { createAncestors: true, ignoreExisting: true });
   const entries: DropInspection["entries"] = [];
   for (const e of m.entries) {
     if (!/^[A-Za-z0-9._-]+$/.test(e.file)) throw new Error(`bad file name: ${e.file}`);
     const url = `${reg.base}/${uuid}/${e.file}`;
-    const resp = await fetch(url, { cache: "no-store" });
+    const resp = await fetchImpl(url, { cache: "no-store" });
     if (!resp.ok) throw new Error(`download failed: ${url} (${resp.status})`);
     const bytes = new Uint8Array(await resp.arrayBuffer());
-    const edir = entryDir(uuid, e.version);
+    entryDir(uuid, e.version); // Validate the eventual installed version as well.
+    const path = inspectionPath(uuid, e.sha256, e.file);
+    const edir = PathUtils.parent(path)!;
     await IOUtils.makeDirectory(edir, { createAncestors: true, ignoreExisting: true });
-    const path = PathUtils.join(edir, e.file);
     await IOUtils.write(path, bytes, { tmpPath: `${path}.tmp` });
     const digest = await IOUtils.computeHexDigest(path, "sha256");
     if (digest !== e.sha256) {
@@ -422,13 +432,13 @@ export async function inspectDrop(ref: string, registryName?: string): Promise<D
   let icon: string | null = null;
   if (m.icon) {
     const holder = m.entries.find((e) => e.file === m.icon!.in) ?? m.entries[0];
-    if (holder) icon = readZipImage(PathUtils.join(entryDir(uuid, holder.version), holder.file), "icon.png");
+    if (holder) icon = readZipImage(inspectionPath(uuid, holder.sha256, holder.file), "icon.png");
   }
   const shots: { file: string; dataUri: string }[] = [];
   for (const shot of m.shots ?? []) {
     const holder = m.entries.find((e) => e.file === shot.in);
     if (!holder) continue;
-    const dataUri = readZipImage(PathUtils.join(entryDir(uuid, holder.version), holder.file), shot.file);
+    const dataUri = readZipImage(inspectionPath(uuid, holder.sha256, holder.file), shot.file);
     if (dataUri) shots.push({ file: shot.file, dataUri });
   }
 
@@ -436,17 +446,17 @@ export async function inspectDrop(ref: string, registryName?: string): Promise<D
   const deps: InspectedDep[] = [];
   for (const d of m.deps ?? []) {
     const du = parseUuid(d.uuid);
-    const { manifest: dm, bytes: dbytes } = await fetchDropManifest(reg, du, d.version);
-    const dattest = await checkAttestations(reg, du, dbytes, d.version);
-    const ddir = depDir(uuid, d.name, d.version);
-    await IOUtils.makeDirectory(ddir, { createAncestors: true, ignoreExisting: true });
+    const { manifest: dm, bytes: dbytes } = await fetchDropManifest(reg, du, d.version, fetchImpl);
+    const dattest = await checkAttestations(reg, du, dbytes, d.version, fetchImpl);
+    depDir(uuid, d.name, d.version);
     const dentries: InspectedDep["entries"] = [];
     for (const e of dm.entries) {
       if (!/^[A-Za-z0-9._-]+$/.test(e.file)) throw new Error(`bad file name: ${e.file}`);
       const url = `${reg.base}/${dropPath(du, d.version)}/${e.file}`;
-      const resp = await fetch(url, { cache: "no-store" });
+      const resp = await fetchImpl(url, { cache: "no-store" });
       if (!resp.ok) throw new Error(`download failed: ${url} (${resp.status})`);
-      const path = PathUtils.join(ddir, e.file);
+      const path = inspectionPath(uuid, e.sha256, e.file);
+      await IOUtils.makeDirectory(PathUtils.parent(path)!, { createAncestors: true, ignoreExisting: true });
       await IOUtils.write(path, new Uint8Array(await resp.arrayBuffer()), { tmpPath: `${path}.tmp` });
       if ((await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) {
         await IOUtils.remove(path);
@@ -465,10 +475,23 @@ export async function inspectDrop(ref: string, registryName?: string): Promise<D
  * resource:// の別名を、その xpi の root に向ける(path が null なら外す)。
  * **いつも張り直す**: 同じ別名が、もう消えた file を指したまま残っていることがある。
  */
-function setAlias(alias: string, path: string | null): void {
-  const res = Services.io.getProtocolHandler("resource")!.QueryInterface!(
+function resourceHandler(): nsIResProtocolHandler {
+  return Services.io.getProtocolHandler("resource")!.QueryInterface!(
     Ci.nsIResProtocolHandler,
   );
+}
+
+function restoreAlias(alias: string, uri: nsIURI | null): void {
+  const res = resourceHandler();
+  if (uri) {
+    res.setSubstitutionWithFlags(alias, uri, Ci.nsISubstitutingProtocolHandler.ALLOW_CONTENT_ACCESS!);
+  } else {
+    res.setSubstitution(alias, null as unknown as nsIURI);
+  }
+}
+
+function setAlias(alias: string, path: string | null): void {
+  const res = resourceHandler();
   if (res.hasSubstitution(alias)) res.setSubstitution(alias, null as unknown as nsIURI);
   if (path === null) return;
   res.setSubstitutionWithFlags(
@@ -488,15 +511,41 @@ async function installFile(uuid: string, version: string, path: string): Promise
   // (importESModule は jar:file: を信用しない。content process にも同じ別名が届く)
   const alias = resAlias(uuid, version);
   const root = `resource://${alias}/`;
+  const res = resourceHandler();
+  const previousAlias = res.hasSubstitution(alias) ? res.getSubstitution(alias) : null;
+  const NoraActors = ChromeUtils.importESModule("resource://noraneko/modules/NoraActors.sys.mjs");
+  let installedId: string | undefined;
+  let attemptedActor: string | undefined;
+  let previousActorRoot: string | undefined;
   setAlias(alias, path);
   try {
-    const addon = await AddonManager.installTemporaryAddon(file);
-    const NoraActors = ChromeUtils.importESModule("resource://noraneko/modules/NoraActors.sys.mjs");
+    // A missing/malformed actor must fail before the extension can start running.
     const reg = await NoraActors.readActorJson(root);
+    previousActorRoot = NoraActors.registeredRoot(reg.name);
+    const addon = await AddonManager.installTemporaryAddon(file);
+    installedId = addon.id;
+    attemptedActor = reg.name;
     NoraActors.register(root, reg);
     console.log(`[noraneko-drops] ${addon.id} ${addon.version}: actor ${reg.name} ← ${root}`);
     return { id: addon.id, actor: reg.name };
   } catch (e) {
+    if (attemptedActor) NoraActors.unregister(attemptedActor);
+    if (installedId) {
+      try {
+        const addon = await AddonManager.getAddonByID(installedId);
+        if (addon?.temporarilyInstalled) await addon.uninstall();
+      } catch (rollbackError) {
+        console.error("[noraneko-drops] failed to roll back add-on:", rollbackError);
+      }
+    }
+    restoreAlias(alias, previousAlias);
+    if (previousActorRoot) {
+      try {
+        NoraActors.register(previousActorRoot, await NoraActors.readActorJson(previousActorRoot));
+      } catch (rollbackError) {
+        console.error("[noraneko-drops] failed to restore actor:", rollbackError);
+      }
+    }
     // "Extension is invalid" は manifest の error を additionalErrors に持っている。見えないと直せない
     const err = e as { message?: string; additionalErrors?: string[] };
     const details = Array.isArray(err?.additionalErrors) ? err.additionalErrors.join(" | ") : "";
@@ -518,7 +567,7 @@ export async function verifyDrop(inspected: DropInspection): Promise<{ ok: boole
   let checked = 0;
   for (const d of inspected.deps ?? []) {
     for (const e of d.entries) {
-      const path = PathUtils.join(depDir(uuid, d.name, d.version), e.file);
+      const path = inspectionPath(uuid, e.sha256, e.file);
       checked++;
       if (!(await IOUtils.exists(path)) || (await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) {
         bad.push(`${d.name}/${e.file}`);
@@ -526,7 +575,7 @@ export async function verifyDrop(inspected: DropInspection): Promise<{ ok: boole
     }
   }
   for (const e of inspected.manifest.entries) {
-    const path = PathUtils.join(entryDir(uuid, e.version), e.file);
+    const path = inspectionPath(uuid, e.sha256, e.file);
     checked++;
     if (!(await IOUtils.exists(path)) || (await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) {
       bad.push(e.file);
@@ -539,58 +588,145 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
   const uuid = parseUuid(inspected.uuid);
   const m = inspected.manifest;
   const dir = dropDir(uuid);
+  const previous = readInstalled()[uuid];
+  const verified = await verifyDrop(inspected);
+  if (!verified.ok) throw new Error("sha256 mismatch at install: " + verified.bad.join(", "));
+
+  // Prepare every file before executing any entry. Approved versions are immutable:
+  // Gecko caches modules by versioned URL, so changed bytes require a new version.
+  const prepared: { source: string; path: string; sha256: string; approved: boolean }[] = [];
+  const deps: NonNullable<InstalledDrop["deps"]> = [];
+  for (const d of inspected.deps ?? []) {
+    for (const e of d.entries) {
+      prepared.push({
+        source: inspectionPath(uuid, e.sha256, e.file),
+        path: PathUtils.join(depDir(uuid, d.name, d.version), e.file),
+        sha256: e.sha256,
+        approved: previous?.deps?.some((old) => old.name === d.name && old.version === d.version && old.file === e.file) ?? false,
+      });
+      deps.push({ name: d.name, uuid: d.uuid, version: d.version, lib: d.lib, wasm: d.wasm, file: e.file });
+    }
+  }
+  for (const e of m.entries) {
+    prepared.push({
+      source: inspectionPath(uuid, e.sha256, e.file),
+      path: PathUtils.join(entryDir(uuid, e.version), e.file),
+      sha256: e.sha256,
+      approved: previous?.files.some((file, i) => file === e.file && previous.versions[i] === e.version) ?? false,
+    });
+  }
+  for (const file of prepared) {
+    if (file.approved && await IOUtils.exists(file.path) &&
+        await IOUtils.computeHexDigest(file.path, "sha256") !== file.sha256) {
+      throw new Error("installed version has different bytes; publish a new version: " + file.path);
+    }
+  }
+
   const ids: string[] = [];
   const files: string[] = [];
   const versions: string[] = [];
   const actors: string[] = [];
-  const deps: InstalledDrop["deps"] = [];
-  for (const d of inspected.deps ?? []) {
-    for (const e of d.entries) {
-      const path = PathUtils.join(depDir(uuid, d.name, d.version), e.file);
-      // 無いときは、無いと言う。**戻すと、落としてあった dep の bytes も一緒に消える**ので、
-      // 戻したあとに前の inspection のまま入れると、ここに来る(下の entries と同じ形に)
-      if (!(await IOUtils.exists(path))) throw new Error(`見てから入れて: ${d.name}/${e.file} が無い`);
-      if ((await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) throw new Error(`sha256 mismatch at install: ${d.name}/${e.file}`);
-      mountDep(d, path);
-      deps.push({ name: d.name, uuid: d.uuid, version: d.version, lib: d.lib, wasm: d.wasm, file: e.file });
-      console.log(`[noraneko-drops] dep ${d.name} ${d.version} ← ${path}`);
+  const createdFiles: string[] = [];
+  const aliases = new Map<string, nsIURI | null>();
+  const rememberAlias = (alias: string) => {
+    if (aliases.has(alias)) return;
+    const res = resourceHandler();
+    aliases.set(alias, res.hasSubstitution(alias) ? res.getSubstitution(alias) : null);
+  };
+  try {
+    for (const file of prepared) {
+      if (await IOUtils.exists(file.path) &&
+          await IOUtils.computeHexDigest(file.path, "sha256") === file.sha256) continue;
+      await IOUtils.makeDirectory(PathUtils.parent(file.path)!, { createAncestors: true, ignoreExisting: true });
+      if (!(await IOUtils.exists(file.path))) createdFiles.push(file.path);
+      await IOUtils.write(file.path, await IOUtils.read(file.source), { tmpPath: file.path + ".tmp" });
     }
-    // この drop が使わなくなった版は置いていかない(版が path に入るので、
-    // 上書きされずに残る。消してよいのは、いま入れた版以外のもの)
-    const kept = PathUtils.filename(depDir(uuid, d.name, d.version));
-    for (const other of await IOUtils.getChildren(PathUtils.join(dir, "deps", d.name)).catch(() => [])) {
-      if (PathUtils.filename(other) !== kept) await IOUtils.remove(other, { recursive: true, ignoreAbsent: true });
+    for (const d of deps) {
+      rememberAlias(depAlias(d));
+      mountDep(d, PathUtils.join(depDir(uuid, d.name, d.version), d.file));
     }
-  }
-  for (const e of m.entries) {
-    const path = PathUtils.join(entryDir(uuid, e.version), e.file);
-    if (!(await IOUtils.exists(path))) throw new Error(`見てから入れて: ${e.file} が無い`);
-    if ((await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) {
-      throw new Error(`sha256 mismatch at install: ${e.file}`);
+    for (const e of m.entries) {
+      rememberAlias(resAlias(uuid, e.version));
+      const r = await installFile(uuid, e.version, PathUtils.join(entryDir(uuid, e.version), e.file));
+      ids.push(r.id);
+      actors.push(r.actor);
+      files.push(e.file);
+      versions.push(e.version);
     }
-    const r = await installFile(uuid, e.version, path);
-    ids.push(r.id);
-    actors.push(r.actor);
-    files.push(e.file);
-    versions.push(e.version);
-    console.log(`[noraneko-drops] installed ${e.id} ${e.version} from ${m.name} (${uuid})`);
+    const all = readInstalled();
+    all[uuid] = { name: m.name, ids, files, versions, actors, deps, at: Date.now(), note: m.note, registry: inspected.registry.name };
+    writeInstalled(all);
+  } catch (error) {
+    const NoraActors = ChromeUtils.importESModule("resource://noraneko/modules/NoraActors.sys.mjs");
+    for (const actor of actors) NoraActors.unregister(actor);
+    for (const id of ids) {
+      try {
+        const addon = await AddonManager.getAddonByID(id);
+        if (addon?.temporarilyInstalled) await addon.uninstall();
+      } catch (rollbackError) {
+        console.error("[noraneko-drops] failed to roll back add-on:", rollbackError);
+      }
+    }
+    for (const [alias, uri] of aliases) restoreAlias(alias, uri);
+    if (previous) {
+      for (const [i, file] of previous.files.entries()) {
+        try {
+          const version = previous.versions[i];
+          const versioned = PathUtils.join(entryDir(uuid, version), file);
+          const flat = PathUtils.join(dir, file);
+          await installFile(uuid, version, await IOUtils.exists(versioned) ? versioned : flat);
+        } catch (rollbackError) {
+          console.error("[noraneko-drops] failed to restore prior installation:", rollbackError);
+        }
+      }
+    }
+    for (const path of createdFiles) {
+      await IOUtils.remove(path, { ignoreAbsent: true }).catch((rollbackError: unknown) => {
+        console.error("[noraneko-drops] failed to remove uninstalled file:", rollbackError);
+      });
+    }
+    throw error;
   }
-  // 使わなくなった版は置いていかない(deps と同じ理由で、上書きされずに残るので)。
-  // 版の無い path に置かれていた前の形のものも、ここで片づく
-  const keep = new Set(versions);
-  const flat = new Set(files);
-  for (const child of await IOUtils.getChildren(dir).catch(() => [])) {
-    const name = PathUtils.filename(child);
-    if (name === "deps" || keep.has(name)) continue;
-    if (!flat.has(name) && !/^\d+(\.\d+){1,3}$/.test(name)) continue;
-    // file が消えるなら、それを指していた別名も外す
-    if (/^\d+(\.\d+){1,3}$/.test(name)) setAlias(resAlias(uuid, name), null);
-    await IOUtils.remove(child, { recursive: true, ignoreAbsent: true });
+
+  // Cleanup cannot turn a completed, recorded installation into a reported failure.
+  // Rebind shared dependency aliases before removing this consumer's old copies.
+  try {
+    for (const dep of previous?.deps ?? []) {
+      if (deps.some((d) => d.uuid === dep.uuid && d.version === dep.version)) continue;
+      await retainDependencyAlias(dep, uuid, readInstalled());
+      await IOUtils.remove(depDir(uuid, dep.name, dep.version), { recursive: true, ignoreAbsent: true });
+    }
+    const keep = new Set(versions);
+    const flat = new Set(files);
+    for (const child of await IOUtils.getChildren(dir)) {
+      const name = PathUtils.filename(child);
+      if (name === "deps" || name === "inspected" || keep.has(name)) continue;
+      if (!flat.has(name) && !/^\d+(\.\d+){1,3}$/.test(name)) continue;
+      if (/^\d+(\.\d+){1,3}$/.test(name)) setAlias(resAlias(uuid, name), null);
+      await IOUtils.remove(child, { recursive: true, ignoreAbsent: true });
+    }
+  } catch (error) {
+    console.warn("[noraneko-drops] could not clean up old installed files:", error);
   }
-  const all = readInstalled();
-  all[uuid] = { name: m.name, ids, files, versions, actors, deps, at: Date.now(), note: m.note, registry: inspected.registry.name };
-  writeInstalled(all);
   return ids;
+}
+
+/** A shared alias must point to a surviving consumer before its current copy is removed. */
+async function retainDependencyAlias(dep: DepRef, removedUuid: string, all: Record<string, InstalledDrop>): Promise<void> {
+  for (const [uuid, drop] of Object.entries(all)) {
+    if (uuid === removedUuid) continue;
+    for (const other of drop.deps ?? []) {
+      if (other.uuid !== dep.uuid || other.version !== dep.version) continue;
+      const versioned = PathUtils.join(depDir(uuid, other.name, other.version), other.file);
+      const flat = PathUtils.join(dropDir(uuid), "deps", other.name, other.file);
+      const path = await IOUtils.exists(versioned) ? versioned : flat;
+      if (await IOUtils.exists(path)) {
+        mountDep(other, path);
+        return;
+      }
+    }
+  }
+  setAlias(depAlias(dep), null);
 }
 
 /** コードの束を外す(built-in に戻る)。手元の xpi も消す。 */
@@ -634,8 +770,7 @@ export async function removeDrop(ref: string): Promise<void> {
   // installFile が張った別名を外す(版ごとに一つ。残すと次の版まで jar: を指したままになる)
   for (const v of d.versions ?? []) setAlias(resAlias(uuid, v), null);
   for (const dep of d.deps ?? []) {
-    const stillUsed = Object.entries(all).some(([u, o]) => u !== uuid && (o.deps ?? []).some((x) => x.uuid === dep.uuid && x.version === dep.version));
-    if (!stillUsed) setAlias(depAlias(dep), null);
+    await retainDependencyAlias(dep, uuid, all);
   }
   await IOUtils.remove(dropDir(uuid), { recursive: true, ignoreAbsent: true });
   delete all[uuid];
