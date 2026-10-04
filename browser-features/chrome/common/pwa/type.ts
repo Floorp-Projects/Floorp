@@ -85,3 +85,32 @@ export interface CustomTitlebarAPI {
 export type FloorpChromeWindow = Window & {
   CustomTitlebar?: CustomTitlebarAPI;
 };
+
+export type ViewSourceArgs = {
+  browser?: XULBrowserElement;
+  URL?: string;
+  outerWindowID?: number;
+};
+
+export interface ViewSourceTabBrowser {
+  addTab(url: string, options?: Record<string, unknown>): XULElement;
+  getBrowserForTab(tab: XULElement): XULBrowserElement;
+  hideTab(tab: XULElement): void;
+  replaceTabsWithWindow(tab: XULElement): void;
+}
+
+export interface ViewSourceUtils {
+  viewPartialSourceInBrowser(
+    browsingContext: BrowsingContext,
+    getBrowser: () => Promise<XULBrowserElement>,
+  ): Promise<void>;
+  __floorpSsbPatched?: boolean;
+}
+
+export type ViewSourceWindow = Window & {
+  BrowserCommands: {
+    viewSourceOfDocument(args: ViewSourceArgs): Promise<void>;
+  };
+  gViewSourceUtils: ViewSourceUtils;
+  gBrowser: ViewSourceTabBrowser;
+};

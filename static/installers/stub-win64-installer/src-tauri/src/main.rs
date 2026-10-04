@@ -436,6 +436,12 @@ async fn download_file(url: &str, path: &PathBuf) -> Result<(), String> {
         .await
         .map_err(|e| format!("File write error: {}", e))?;
 
+    // tokio's write_all can return while the last chunk is still being written
+    // in the background, so wait for it before the signature check reads the file.
+    file.flush()
+        .await
+        .map_err(|e| format!("File write error: {}", e))?;
+
     Ok(())
 }
 
