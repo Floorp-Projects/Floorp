@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
+import ssbSchema from "./ssb.schema.json" with { type: "json" };
 import type {
   LegacyPWAEntry,
   Manifest,
@@ -13,16 +14,11 @@ const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs",
 );
 
-// Schema URL for validation
-const SSB_SCHEMA_URL = "resource://noraneko/modules/pwa/ssb.schema.json";
-
 /**
  * Get JSON Schema validator for SSB data
  */
-async function getSchemaValidator() {
-  const response = await fetch(SSB_SCHEMA_URL);
-  const schema = await response.json();
-  return new JsonSchema!.Validator(schema);
+function getSchemaValidator() {
+  return new JsonSchema!.Validator(ssbSchema);
 }
 
 export class DataManager {
@@ -210,7 +206,9 @@ export class DataManager {
 
   private async overrideCurrentSsbData(ssbData: object) {
     await this.ensureStoreDirectory();
-    await IOUtils.writeJSON(this.ssbStoreFile, ssbData);
+    await IOUtils.writeJSON(this.ssbStoreFile, ssbData, {
+      tmpPath: `${this.ssbStoreFile}.tmp`,
+    });
   }
 
   public async saveSsbData(manifest: Manifest) {

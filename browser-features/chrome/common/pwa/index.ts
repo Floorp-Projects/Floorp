@@ -61,8 +61,10 @@ export default class Pwa extends NoraComponentBase {
     );
     const ctx = new PwaService(ssbManager, manifestProcesser, dataManager);
 
-    new SsbPageAction(ctx);
-    new SsbPanelView(ctx);
+    if (!document.documentElement.hasAttribute("taskbartab")) {
+      new SsbPageAction(ctx);
+      new SsbPanelView(ctx);
+    }
     new PwaWindowSupport(ctx);
 
     Pwa.ctx = ctx;

@@ -190,7 +190,9 @@ export class DataManager {
 
   private async overrideCurrentSsbData(ssbData: object) {
     await this.ensureStoreDirectory();
-    await IOUtils.writeJSON(this.ssbStoreFile, ssbData);
+    await IOUtils.writeJSON(this.ssbStoreFile, ssbData, {
+      tmpPath: `${this.ssbStoreFile}.tmp`,
+    });
   }
 
   public async saveSsbData(manifest: Manifest) {

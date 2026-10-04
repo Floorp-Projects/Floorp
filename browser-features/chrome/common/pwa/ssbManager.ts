@@ -8,6 +8,7 @@ import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
 import type { Browser, Manifest, SsbSupport } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
+import { refreshLauncherForStoreMove } from "#libs/pwa/launcherUpdate.ts";
 import {
   getUserContextIdForBrowser,
   isContainerExperimentEnabled,
@@ -80,6 +81,9 @@ export class SiteSpecificBrowserManager {
     // A native mutation closes the PWA window. Handle management requests
     // from the window that owns the data manager's pending store writes.
     const ownerWindow = Cu.getGlobalForObject(dataManager) as Window;
+    if (ownerWindow.document.documentElement.hasAttribute("taskbartab")) {
+      return;
+    }
     const tabBrowser = ownerWindow.gBrowser;
     tabBrowser.addTabsProgressListener(this.listener);
 
@@ -487,6 +491,16 @@ export class SiteSpecificBrowserManager {
       );
     }
 
+    if (AppConstants.platform === "linux" && SupportClass) {
+      return await refreshLauncherForStoreMove(
+        new SupportClass(),
+        this.dataManager,
+        DataManagerClass.buildKey(ssbObj.start_url, ssbObj.userContextId ?? 0),
+        ssbObj,
+        updatedManifest,
+      );
+    }
+
     await this.uninstall(ssbObj);
     await this.install(updatedManifest);
 
@@ -549,7 +563,17 @@ export class SiteSpecificBrowserManager {
         }
       }
 
-      const moved = await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      // Linux launchers include the container display name and badged icon.
+      // Keep their on-disk state aligned with the store even if either write fails.
+      const moved = AppConstants.platform === "linux" && SupportClass
+        ? await refreshLauncherForStoreMove(
+          new SupportClass(),
+          this.dataManager,
+          oldKey,
+          ssbObj,
+          updatedManifest,
+        )
+        : await this.dataManager.moveSsbKey(oldKey, updatedManifest);
       if (moved && AppConstants.platform === "macosx") {
         try {
           const { AppRegistry } = ChromeUtils.importESModule(
