@@ -1,7 +1,7 @@
 import type { Manifest } from "../type.ts";
 import { getSsbDisplayName } from "../containerDisplay.sys.mts";
 import {
-  escapeDesktopExecToken,
+  buildDesktopExecCommand,
   isOwnedLinuxDesktopEntry,
   resolveLinuxDataHome,
   sanitizeDesktopEntryValue,
@@ -227,15 +227,13 @@ export class LinuxSupport {
     );
     // Reproduce the old encoder only to identify files we may migrate. Never
     // write its result to a new launcher.
-    const encode = legacy
-      ? (token: string) =>
-        /^[\w@%+=:,./-]+$/.test(token)
-          ? token
-          : `"${token.replace(/(["\\$`])/g, "\\$1")}"`
-      : escapeDesktopExecToken;
-    const execCommand = tokens
-      .map(encode)
-      .join(" ");
+    const encodeLegacyToken = (token: string) =>
+      /^[\w@%+=:,./-]+$/.test(token)
+        ? token
+        : `"${token.replace(/(["\\$`])/g, "\\$1")}"`;
+    const execCommand = legacy
+      ? tokens.map(encodeLegacyToken).join(" ")
+      : buildDesktopExecCommand(tokens);
     console.debug(`[LinuxSupport] Built exec command: ${execCommand}`);
     return execCommand;
   }
@@ -261,6 +259,22 @@ export class LinuxSupport {
     await IOUtils.remove(legacy.desktopPath, { ignoreAbsent: true });
     await IOUtils.remove(legacy.iconPath, { ignoreAbsent: true });
     await IOUtils.remove(legacy.svgIconPath, { ignoreAbsent: true });
+  }
+
+  private static async requireOwnedLauncher(
+    ssb: Manifest,
+    paths: LinuxPathInfo,
+  ): Promise<void> {
+    if (!await IOUtils.exists(paths.desktopPath)) return;
+    if (
+      !isOwnedLinuxDesktopEntry(
+        await IOUtils.readUTF8(paths.desktopPath),
+        ssb.id,
+        [this.buildExecCommand(ssb), this.buildExecCommand(ssb, true)],
+      )
+    ) {
+      throw new Error("Cannot verify ownership of existing PWA launcher");
+    }
   }
 
   private static buildDesktopEntry(
@@ -309,6 +323,7 @@ export class LinuxSupport {
     const paths = LinuxSupport.getPathInfo(ssb);
     // Validate Exec arguments before touching an existing launcher or icon.
     const execCommand = LinuxSupport.buildExecCommand(ssb);
+    await LinuxSupport.requireOwnedLauncher(ssb, paths);
     await LinuxSupport.ensureDirectories(paths);
 
     let iconPath: string | null = null;
@@ -324,6 +339,7 @@ export class LinuxSupport {
           container,
           ssb.userContextId ?? 0,
           128,
+          strictIcon,
         );
         if (
           type?.includes("svg") &&
@@ -401,6 +417,7 @@ export class LinuxSupport {
       `[LinuxSupport] Uninstalling SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     const paths = LinuxSupport.getPathInfo(ssb);
+    await LinuxSupport.requireOwnedLauncher(ssb, paths);
 
     console.debug(
       `[LinuxSupport] Removing desktop entry: ${paths.desktopPath}`,

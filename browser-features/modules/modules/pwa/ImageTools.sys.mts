@@ -328,6 +328,7 @@ export const ImageTools = {
     container: imgIContainer,
     userContextId: number,
     size = 128,
+    strict = false,
   ): Promise<imgIContainer> {
     if (!PwaContainerExperiment.isEnabled()) {
       return container;
@@ -357,6 +358,7 @@ export const ImageTools = {
       );
     } catch (error) {
       console.warn("[ImageTools] Failed to apply container badge:", error);
+      if (strict) throw error;
       return container;
     }
   },
@@ -494,8 +496,9 @@ function guessMimeTypeFromDataURI(dataURI: nsIURI): string | null {
   }
 
   const semicolonIndex = metadata.indexOf(";");
-  const mime =
-    semicolonIndex === -1 ? metadata : metadata.substring(0, semicolonIndex);
+  const mime = semicolonIndex === -1
+    ? metadata
+    : metadata.substring(0, semicolonIndex);
 
   if (!mime) {
     return null;

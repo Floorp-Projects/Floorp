@@ -152,6 +152,136 @@ export async function runAllTests(): Promise<void> {
     },
     {
       name:
+        "a container badge rendering failure rejects and restores a refresh",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const { ImageTools } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
+          );
+          const { Experiments } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+          );
+          const { ContextualIdentityService } = ChromeUtils.importESModule(
+            "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+          );
+          const overrides = [
+            { target: Experiments, key: "getVariant", value: () => "enabled" },
+            {
+              target: ContextualIdentityService,
+              key: "getPublicIdentities",
+              value: () => [{ userContextId: 901, color: "blue" }],
+            },
+            {
+              target: ImageTools,
+              key: "scaleImage",
+              value: () => Promise.reject(new Error("Injected badge failure")),
+            },
+          ].map((override) => ({
+            ...override,
+            descriptor: Object.getOwnPropertyDescriptor(
+              override.target,
+              override.key,
+            ),
+          }));
+          const files = paths(root);
+          await support.install(manifest);
+          const original = await IOUtils.readUTF8(files.desktop);
+          try {
+            for (const override of overrides) {
+              Object.defineProperty(override.target, override.key, {
+                configurable: true,
+                writable: true,
+                value: override.value,
+              });
+            }
+            const { container } = await ImageTools.loadImage(
+              Services.io.newURI(manifest.icon),
+            );
+            assertEquals(
+              await ImageTools.applyContainerBadgeToIcon(container, 901),
+              container,
+              "Default callers retain the original fallback behavior",
+            );
+            let rejected = false;
+            let storeCalled = false;
+            try {
+              await refreshLauncherForStoreMove(
+                support,
+                {
+                  moveSsbKey: () => {
+                    storeCalled = true;
+                    return Promise.resolve(true);
+                  },
+                },
+                manifest.start_url,
+                manifest,
+                { ...manifest, userContextId: 901 },
+              );
+            } catch {
+              rejected = true;
+            }
+            assert(rejected, "Badge failure rejects the refresh");
+            assert(!storeCalled, "Badge failure leaves the store untouched");
+            assertEquals(
+              await IOUtils.readUTF8(files.desktop),
+              original,
+              "Old launcher is restored",
+            );
+            assert(await IOUtils.exists(files.svg), "Old SVG survives");
+          } finally {
+            for (const override of overrides) {
+              if (override.descriptor) {
+                Object.defineProperty(
+                  override.target,
+                  override.key,
+                  override.descriptor,
+                );
+              } else {
+                Reflect.deleteProperty(override.target, override.key);
+              }
+            }
+          }
+        }),
+    },
+    {
+      name:
+        "install and uninstall preserve another profile's destination launcher",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const foreignEntry = (await IOUtils.readUTF8(files.desktop))
+            .replace("Exec=", "Exec=another-profile ");
+          await IOUtils.writeUTF8(files.desktop, foreignEntry);
+          const icon = await IOUtils.readUTF8(files.svg);
+          for (
+            const mutate of [
+              () => support.install({ ...manifest, name: "Changed" }),
+              () => support.uninstall(manifest),
+            ]
+          ) {
+            let rejected = false;
+            try {
+              await mutate();
+            } catch {
+              rejected = true;
+            }
+            assert(rejected, "Unverified ownership rejects the operation");
+            assertEquals(
+              await IOUtils.readUTF8(files.desktop),
+              foreignEntry,
+              "Other profile's launcher is unchanged",
+            );
+            assertEquals(
+              await IOUtils.readUTF8(files.svg),
+              icon,
+              "Other profile's icon is unchanged",
+            );
+          }
+        }),
+    },
+    {
+      name:
         "XDG migration removes only a launcher owned by this app and profile",
       fn: () =>
         withSandbox(async (root, support) => {

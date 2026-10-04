@@ -1,5 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
+  buildDesktopExecCommand,
   escapeDesktopExecToken,
   isOwnedLinuxDesktopEntry,
   resolveLinuxDataHome,
@@ -105,4 +106,29 @@ Deno.test("legacy desktop migration requires this app and exact profile-bound co
       false,
     );
   }
+});
+
+Deno.test("Exec commands use env only for literal percent in the executable", () => {
+  assertEquals(
+    buildDesktopExecCommand(["/opt/floorp", "--profile", "/home/user/100%"]),
+    "/opt/floorp --profile /home/user/100%%",
+  );
+  assertEquals(
+    buildDesktopExecCommand(["/opt/floorp100%", "--start-ssb", "app"]),
+    "/usr/bin/env -- /opt/floorp100%% --start-ssb app",
+  );
+  assertEquals(
+    buildDesktopExecCommand(["/opt/floorp 100% 日本語", "--profile", "a$b"]),
+    '/usr/bin/env -- "/opt/floorp 100%% 日本語" --profile "a\\\\$b"',
+  );
+  assertEquals(
+    buildDesktopExecCommand(["flatpak", "run", "one.ablaze.floorp"]),
+    "flatpak run one.ablaze.floorp",
+  );
+  assertThrows(() => buildDesktopExecCommand([]), Error);
+  assertThrows(() => buildDesktopExecCommand(["/opt/floorp=100%"]), Error);
+  assertEquals(
+    buildDesktopExecCommand(["/opt/floorp=stable"]),
+    "/opt/floorp=stable",
+  );
 });

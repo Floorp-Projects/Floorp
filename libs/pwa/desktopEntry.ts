@@ -54,6 +54,21 @@ export function escapeDesktopExecToken(token: string): string {
   return `"${escapedQuoted}"`;
 }
 
+/** Build an Exec value that GIO can resolve before expanding field codes. */
+export function buildDesktopExecCommand(tokens: readonly string[]): string {
+  const executable = tokens[0];
+  if (!executable || (executable.includes("%") && executable.includes("="))) {
+    // Passing a path with '=' through env would misinterpret it as an assignment.
+    throw new Error("Unsupported desktop executable path");
+  }
+  // GIO checks the first token before unescaping %% and would look for a
+  // nonexistent executable. env receives the expanded path as an argument.
+  const command = executable.includes("%")
+    ? ["/usr/bin/env", "--", ...tokens]
+    : tokens;
+  return command.map(escapeDesktopExecToken).join(" ");
+}
+
 /** Only recognize a Floorp-generated launcher for this app and exact command. */
 export function isOwnedLinuxDesktopEntry(
   contents: string,
