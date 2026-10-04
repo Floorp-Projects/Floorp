@@ -10,6 +10,7 @@ import {
   nextSyncState,
   parsePayload,
   parseSyncState,
+  receivedSyncState,
   selectForSync,
 } from "../../src/lib/sync.ts";
 import type { Clip } from "../../src/types/clip.ts";
@@ -39,6 +40,67 @@ function testNewOnEitherSideIsKept(): void {
   const local = [clip("a", 1)];
   const remote = [clip("b", 2)];
   assertEquals(ids(mergeClips(local, remote, {}, [])), "a,b", "both are kept");
+}
+
+function testReceivedClipCanBeDeletedRemotely(): void {
+  const previous = { clips: {}, gone: {} };
+  const remote = [clip("new-remote", 1)];
+  const held = mergeClips([], remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 10);
+  assertEquals(
+    ids(mergeClips(held, [], baseOf(received), [])),
+    "",
+    "a live incoming clip is shared before our next local edit",
+  );
+}
+
+function testDeletingReceivedClipLeavesATombstone(): void {
+  const previous = { clips: {}, gone: {} };
+  const remote = [clip("new-remote", 1)];
+  const held = mergeClips([], remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 10);
+  const afterDeletion = nextSyncState(received, [], [], 20);
+  assertEquals(afterDeletion.gone["new-remote"], 20, "deletion is remembered");
+  assertEquals(
+    ids(mergeClips([], remote, baseOf(afterDeletion), [])),
+    "",
+    "an old remote payload cannot restore our deletion",
+  );
+}
+
+function testReceivedPinCanBeDeletedRemotely(): void {
+  const previous = { clips: { a: 1 }, gone: {} };
+  const remote = [clip("a", 1, { updatedAt: 2, pinned: true })];
+  const held = mergeClips([clip("a", 1)], remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 10);
+  assertEquals(
+    ids(mergeClips(held, [], baseOf(received), [])),
+    "",
+    "a received pin is not mistaken for an unpublished local change",
+  );
+}
+
+function testReceivedStateKeepsUnpublishedLocalEdit(): void {
+  const previous = { clips: { a: 1 }, gone: {} };
+  const remote = [clip("a", 1, { updatedAt: 2 })];
+  const local = [clip("a", 1, { updatedAt: 3, pinned: true })];
+  const held = mergeClips(local, remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 10);
+  assertEquals(received.clips.a, 2, "only the received timestamp is shared");
+  assertEquals(
+    ids(mergeClips(held, [], baseOf(received), [])),
+    "a",
+    "our unpublished pin still wins over a remote deletion",
+  );
+}
+
+function testReceivingRejectedClipKeepsItsTombstone(): void {
+  const previous = { clips: {}, gone: { a: 10 } };
+  const remote = [clip("a", 1)];
+  const held = mergeClips([], remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 20);
+  assertEquals(received.gone.a, 10, "a rejected stale clip stays deleted");
+  assertEquals("a" in received.clips, false, "the rejected clip is not shared");
 }
 
 function testDeletionOnTheOtherSideIsRespected(): void {
@@ -274,6 +336,26 @@ function testNothingDroppedMeansNothingNamed(): void {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name: "a live received clip can be deleted remotely",
+      fn: testReceivedClipCanBeDeletedRemotely,
+    },
+    {
+      name: "deleting a received clip leaves a tombstone",
+      fn: testDeletingReceivedClipLeavesATombstone,
+    },
+    {
+      name: "a received pin can be deleted remotely",
+      fn: testReceivedPinCanBeDeletedRemotely,
+    },
+    {
+      name: "received state keeps an unpublished local edit",
+      fn: testReceivedStateKeepsUnpublishedLocalEdit,
+    },
+    {
+      name: "receiving a rejected clip keeps its tombstone",
+      fn: testReceivingRejectedClipKeepsItsTombstone,
+    },
     { name: "new on either side is kept", fn: testNewOnEitherSideIsKept },
     {
       name: "deletion on the other side is respected",

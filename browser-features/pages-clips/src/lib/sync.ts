@@ -212,6 +212,30 @@ export function nextSyncState(
 }
 
 /**
+ * Remember a received payload after its merge has reached durable storage.
+ *
+ * A clip learned from another device is shared too, even before we publish
+ * anything ourselves. Without recording it, its next absence looks like an
+ * unknown id instead of a deletion, and deleting it here leaves no tombstone.
+ * Keep the received timestamp as the base so an unpublished local edit still
+ * counts as changed. A remote clip rejected by the merge must stay deleted.
+ */
+export function receivedSyncState(
+  previous: SyncState,
+  received: Clip[],
+  merged: Clip[],
+  now: number = Date.now(),
+): SyncState {
+  const held = new Set(merged.map((clip) => clip.id));
+  return nextSyncState(
+    previous,
+    received.filter((clip) => held.has(clip.id)),
+    merged,
+    now,
+  );
+}
+
+/**
  * Merge what is here with what came from another device.
  *
  * The base is what the two sides last agreed on, so a clip missing from one

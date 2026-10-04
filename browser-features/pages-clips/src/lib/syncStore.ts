@@ -6,9 +6,11 @@ import {
   nextSyncState,
   parsePayload,
   parseSyncState,
+  receivedSyncState,
   selectForSync,
   serializePayload,
   serializeSyncState,
+  type SyncState,
 } from "@/lib/sync.ts";
 import type { Clip } from "@/types/clip.ts";
 
@@ -25,16 +27,29 @@ export function isWritingSync(): boolean {
 }
 
 /** Merge whatever is in the synced pref into the clips we hold. */
-export async function pullAndMerge(local: Clip[]): Promise<Clip[] | null> {
+export async function pullAndMerge(
+  local: Clip[],
+): Promise<{ clips: Clip[]; state: SyncState } | null> {
   try {
     const payload = parsePayload(await rpc.getStringPref(DATA_PREF));
     if (!payload) return null;
     const state = parseSyncState(await rpc.getStringPref(SYNC_STATE_PREF));
-    return mergeClips(local, payload.clips, baseOf(state), payload.stayed);
+    const clips = mergeClips(
+      local,
+      payload.clips,
+      baseOf(state),
+      payload.stayed,
+    );
+    return { clips, state: receivedSyncState(state, payload.clips, clips) };
   } catch (e) {
     console.error("[Floorp Clips] Failed to read the synced clips:", e);
     return null;
   }
+}
+
+/** Call only after the merged clips have been saved successfully. */
+export async function rememberMerge(state: SyncState): Promise<void> {
+  await rpc.setStringPref(SYNC_STATE_PREF, serializeSyncState(state));
 }
 
 /**

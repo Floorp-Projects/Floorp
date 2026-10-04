@@ -5,12 +5,7 @@ import { ClipItem } from "@/components/clips/ClipItem.tsx";
 import { ClipComposer } from "@/components/clips/ClipComposer.tsx";
 import { ClipPreview } from "@/components/clips/ClipPreview.tsx";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
-import {
-  deleteClips,
-  getAllClips,
-  putClip,
-  replaceAll,
-} from "@/lib/db.ts";
+import { deleteClips, getAllClips, putClip, replaceAll } from "@/lib/db.ts";
 import {
   clipFromText,
   clipsFromFiles,
@@ -36,7 +31,12 @@ import {
   PENDING_PREF,
   savePageState,
 } from "@/lib/settings.ts";
-import { isWritingSync, pullAndMerge, push } from "@/lib/syncStore.ts";
+import {
+  isWritingSync,
+  pullAndMerge,
+  push,
+  rememberMerge,
+} from "@/lib/syncStore.ts";
 import { watchClipboard } from "@/lib/clipboardWatch.ts";
 import type { Clip } from "@/types/clip.ts";
 
@@ -122,12 +122,13 @@ function App() {
   const mergeIn = useCallback(
     () =>
       inTurn(async () => {
-        const merged = await pullAndMerge(clipsRef.current);
-        if (!merged) return null;
-        await replaceAll(merged);
-        setClips(merged);
-        clipsRef.current = merged;
-        return merged;
+        const incoming = await pullAndMerge(clipsRef.current);
+        if (!incoming) return null;
+        await replaceAll(incoming.clips);
+        await rememberMerge(incoming.state);
+        setClips(incoming.clips);
+        clipsRef.current = incoming.clips;
+        return incoming.clips;
       }),
     [inTurn],
   );
@@ -161,10 +162,11 @@ function App() {
         }
 
         if (loaded.mode === "sync") {
-          const merged = await pullAndMerge(current);
-          if (merged) {
-            await replaceAll(merged);
-            current = merged;
+          const incoming = await pullAndMerge(current);
+          if (incoming) {
+            await replaceAll(incoming.clips);
+            await rememberMerge(incoming.state);
+            current = incoming.clips;
           }
         }
 
@@ -322,7 +324,12 @@ function App() {
       }
     };
     return addPrefObservers(
-      [MODE_PREF, MAX_ITEMS_PREF, CLEAR_ON_EXIT_PREF, FILE_ACTION_PREF],
+      [
+        MODE_PREF,
+        { name: MAX_ITEMS_PREF, kind: "int" },
+        { name: CLEAR_ON_EXIT_PREF, kind: "bool" },
+        FILE_ACTION_PREF,
+      ],
       () => void onChanged(),
     );
   }, [isLoading, mergeIn, inTurn]);

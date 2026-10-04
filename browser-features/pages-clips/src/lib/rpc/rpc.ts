@@ -4,6 +4,8 @@ import type {
   NRSettingsParentFunctions,
 } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
+import { createPrefPoller } from "./prefObserver.ts";
+import type { ObservedPref, PrefKind } from "../../types/prefObserver.ts";
 
 // The chrome globals. Only reachable when this page runs as a chrome:// page;
 // in dev the actors stand in for them, so nothing here is touched.
@@ -257,7 +259,7 @@ export async function openLinkInTab(url: string): Promise<void> {
 export type PrefChangeCallback = (prefName: string) => void;
 
 /**
- * Watch a string preference. Returns the function that stops watching.
+ * Watch a preference. Returns the function that stops watching.
  *
  * In production this is a real pref observer. The dev bridge cannot carry
  * observers, so there it polls — which is also all this needs, since a change
@@ -266,22 +268,16 @@ export type PrefChangeCallback = (prefName: string) => void;
 export function addPrefObserver(
   prefName: string,
   callback: PrefChangeCallback,
+  kind: PrefKind = "string",
 ): () => void {
   if (isDevServer) {
-    let last: string | null = null;
-    void rpc.getStringPref(prefName).then((v) => (last = v)).catch(() => {});
-    const timer = setInterval(async () => {
-      try {
-        const current = await rpc.getStringPref(prefName);
-        if (current !== last) {
-          last = current;
-          callback(prefName);
-        }
-      } catch {
-        // The pref may not exist yet.
-      }
-    }, 2000);
-    return () => clearInterval(timer);
+    const poller = createPrefPoller({ name: prefName, kind }, rpc, callback);
+    void poller.poll();
+    const timer = setInterval(() => void poller.poll(), 2000);
+    return () => {
+      poller.stop();
+      clearInterval(timer);
+    };
   }
 
   const observer = {
@@ -295,9 +291,13 @@ export function addPrefObserver(
 
 /** Watch several preferences with one callback. */
 export function addPrefObservers(
-  prefNames: string[],
+  prefNames: readonly (string | ObservedPref)[],
   callback: PrefChangeCallback,
 ): () => void {
-  const stops = prefNames.map((name) => addPrefObserver(name, callback));
+  const stops = prefNames.map((pref) =>
+    typeof pref === "string"
+      ? addPrefObserver(pref, callback)
+      : addPrefObserver(pref.name, callback, pref.kind)
+  );
   return () => stops.forEach((stop) => stop());
 }
