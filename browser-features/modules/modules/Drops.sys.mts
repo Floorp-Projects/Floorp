@@ -225,7 +225,10 @@ function inspectionPath(uuid: string, sha256: string, file: string): string {
 /** Publish only verified bytes, so a concurrent failed inspection cannot replace a candidate. */
 async function saveInspectedArchive(path: string, bytes: Uint8Array, sha256: string): Promise<void> {
   await IOUtils.makeDirectory(PathUtils.parent(path)!, { createAncestors: true, ignoreExisting: true });
-  const temporary = `${path}.${Services.uuid.generateUUID()}.download`;
+  // Keep temporary names out of the hash directory to avoid duplicating the
+  // archive name and pushing otherwise valid profile paths past Windows limits.
+  const cacheDir = PathUtils.parent(PathUtils.parent(path)!)!;
+  const temporary = PathUtils.join(cacheDir, `${Services.uuid.generateUUID()}.download`);
   try {
     await IOUtils.write(temporary, bytes);
     if (await IOUtils.computeHexDigest(temporary, "sha256") !== sha256) {

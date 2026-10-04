@@ -96,8 +96,10 @@ async function fixture(
       id,
       version,
       event: "DOMContentLoaded",
+      // Gecko accepts unmatched strings; a non-sequence reliably rejects the
+      // WebIDL options conversion after the temporary add-on has installed.
       matches: options.invalidActor
-        ? ["not-a-match-pattern"]
+        ? {}
         : ["https://floorp-drops-test.invalid/*"],
       methods: [],
       includeParent: false,
@@ -282,6 +284,13 @@ async function testSharedDependencySurvivesRemoval(): Promise<void> {
 async function testActorFailureRollsBackAddon(): Promise<void> {
   for (const missingActor of [false, true]) {
     const uuid = newUuid();
+    let installed = false;
+    const listener = {
+      onInstalled(addon: { id: string }): void {
+        if (addon.id === uuid + "@floorp-drops-test.invalid") installed = true;
+      },
+    };
+    AddonManager.addAddonListener(listener);
     try {
       const seen = await inspect(
         await fixture(uuid, "1.0.0", {
@@ -290,6 +299,11 @@ async function testActorFailureRollsBackAddon(): Promise<void> {
         }),
       );
       await rejects(() => installDrop(seen));
+      assertEquals(
+        installed,
+        !missingActor,
+        "invalid actor options fail after add-on activation; missing metadata fails before it",
+      );
       assertEquals(
         await AddonManager.getAddonByID(seen.manifest.entries[0].id),
         null,
@@ -314,6 +328,7 @@ async function testActorFailureRollsBackAddon(): Promise<void> {
         "failed actor must be unregistered",
       );
     } finally {
+      AddonManager.removeAddonListener(listener);
       await cleanup([uuid]);
     }
   }
