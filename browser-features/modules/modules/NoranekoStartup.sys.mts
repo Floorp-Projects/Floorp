@@ -11,6 +11,18 @@ import {
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
 
+// Keep the existing browser UI during the Firefox 157 transition. Locking the
+// preferences masks a profile's prior Nova opt-in without deleting it.
+for (
+  const pref of [
+    "browser.nova.enabled",
+    "browser.newtabpage.activity-stream.nova.enabled",
+  ]
+) {
+  Services.prefs.getDefaultBranch("").setBoolPref(pref, false);
+  Services.prefs.lockPref(pref);
+}
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );

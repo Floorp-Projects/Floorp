@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウインドウは作成されません。",
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
-        "lepton-preferences": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
-            "configureLepton": "Lepton の設定",
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
-                "visitRepository": "リポジトリのページを開く"
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。"
             },
             "autohide": {
                 "title": "自動非表示の設定",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
-                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
@@ -488,6 +486,8 @@
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウインドウにツールバーを表示します",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "インストール済みのアプリ",
         "noInstalledApps": "プログレッシブウェブアプリがインストールされていません",
         "removeApp": "アプリを削除",
@@ -507,7 +507,10 @@
         "containerDeleted": "コンテナーが削除されました",
         "resetContainer": "リセット",
         "save": "保存",
-        "errorSettingContainer": "コンテナーの設定に失敗しました"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "コンテナーの設定に失敗しました",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

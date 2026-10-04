@@ -12,6 +12,10 @@ import { Header } from "@/header/header.tsx";
 import useHashSync from "@/hooks/useHashSync.ts";
 import { StandardUIProvider } from "../../../libs/ui/standard-provider.tsx";
 import { useSettingFocus } from "@/hooks/useSettingFocus.ts";
+import {
+  ContextMenuAvailabilityGate,
+  ContextMenuAvailabilityProvider,
+} from "@/lib/experiments/context-menu-availability.tsx";
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
@@ -23,17 +27,26 @@ const About = lazy(() => import("./app/about/noraneko.tsx"));
 const ProfileAndAccount = lazy(() => import("@/app/accounts/page.tsx"));
 const MouseGesture = lazy(() => import("@/app/gesture/page.tsx"));
 const KeyboardShortcut = lazy(() => import("@/app/keyboard-shortcut/page.tsx"));
+const ContextMenuSettings = lazy(() => import("@/app/context-menu/page.tsx"));
 const Updates = lazy(() => import("@/app/updates/page.tsx"));
 const Performance = lazy(() => import("@/app/performance/page.tsx"));
-const LeptonSettings = lazy(() =>
-  import("@/app/design/components/LeptonSettings.tsx").then((module) => ({
-    default: module.LeptonSettings,
+const ChromeExtrasSettings = lazy(() =>
+  import("@/app/design/components/ChromeExtrasSettings.tsx").then((module) => ({
+    default: module.ChromeExtrasSettings,
   }))
 );
 const SearchPage = lazy(() => import("@/app/search/page.tsx"));
 const Drops = lazy(() => import("@/app/drops/page.tsx"));
 
 export default function App() {
+  return (
+    <ContextMenuAvailabilityProvider>
+      <SettingsApp />
+    </ContextMenuAvailabilityProvider>
+  );
+}
+
+function SettingsApp() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   useEffect(() => {
@@ -74,11 +87,23 @@ export default function App() {
                   <Route path="/overview/home" element={<Dashboard />} />
                   <Route path="/features/design" element={<Design />} />
                   <Route
-                    path="/features/design/lepton"
-                    element={<LeptonSettings />}
+                    path="/features/design/chrome-extras"
+                    element={<ChromeExtrasSettings />}
                   />
-                  <Route path="/features/sidebar" element={<PanelSidebar />} />
-                  <Route path="/features/workspaces" element={<Workspaces />} />
+                  <Route
+                    path="/features/design/lepton"
+                    element={
+                      <Navigate to="/features/design/chrome-extras" replace />
+                    }
+                  />
+                  <Route
+                    path="/features/sidebar"
+                    element={<PanelSidebar />}
+                  />
+                  <Route
+                    path="/features/workspaces"
+                    element={<Workspaces />}
+                  />
                   <Route
                     path="/features/webapps"
                     element={<ProgressiveWebApp />}
@@ -92,6 +117,14 @@ export default function App() {
                   <Route
                     path="/features/shortcuts"
                     element={<KeyboardShortcut />}
+                  />
+                  <Route
+                    path="/features/context-menu"
+                    element={
+                      <ContextMenuAvailabilityGate>
+                        <ContextMenuSettings />
+                      </ContextMenuAvailabilityGate>
+                    }
                   />
                   <Route
                     path="/features/performance"

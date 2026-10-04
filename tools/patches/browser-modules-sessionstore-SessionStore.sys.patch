@@ -1,8 +1,8 @@
 diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
-index 52fc8030..7c0c52c1 100644
+index 4947351aad5..85dfdcafb5f 100644
 --- a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
 +++ b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
-@@ -138,6 +138,13 @@ const RESTORE_TAB_CONTENT_REASON = {
+@@ -221,6 +221,13 @@ const RESTORE_TAB_CONTENT_REASON = {
  // 'browser.startup.page' preference value to resume the previous session.
  const BROWSER_STARTUP_RESUME_SESSION = 3;
  
@@ -16,7 +16,7 @@ index 52fc8030..7c0c52c1 100644
  // Used by SessionHistoryListener.
  const kNoIndex = Number.MAX_SAFE_INTEGER;
  const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
-@@ -563,6 +570,7 @@ class _SessionStore {
+@@ -687,6 +694,7 @@ class _SessionStore {
      if (state) {
        // Initialize the splitViewId counter and migrate any string-based splitViewIds
        this.#initSplitViewIds(state);
@@ -24,7 +24,7 @@ index 52fc8030..7c0c52c1 100644
  
        try {
          // If we're doing a DEFERRED session, then we want to pull pinned tabs
-@@ -3218,6 +3226,7 @@ class _SessionStore {
+@@ -3395,6 +3403,7 @@ class _SessionStore {
      // Initialize counter and migrate splitViewIds from persisted given state
      this.#maxSplitViewId = 0;
      this.#initSplitViewIds(state);
@@ -32,7 +32,7 @@ index 52fc8030..7c0c52c1 100644
  
      this.#browserSetState = true;
  
-@@ -5332,6 +5341,239 @@ class _SessionStore {
+@@ -5707,6 +5716,239 @@ class _SessionStore {
      return tabData;
    }
  
@@ -272,7 +272,7 @@ index 52fc8030..7c0c52c1 100644
    #initSplitViewIds(state) {
      if (this.#maxSplitViewId > 0) {
        this.#log.error(
-@@ -5468,6 +5710,9 @@ class _SessionStore {
+@@ -5845,6 +6087,9 @@ class _SessionStore {
        winData.tabs = [];
      }
  
@@ -282,7 +282,7 @@ index 52fc8030..7c0c52c1 100644
      // See SessionStore.#restoreTabs for a description of what
      // selectTab represents.
      let selectTab = 0;
-@@ -5788,6 +6033,8 @@ class _SessionStore {
+@@ -6168,6 +6413,8 @@ class _SessionStore {
        return;
      }
  
@@ -291,8 +291,8 @@ index 52fc8030..7c0c52c1 100644
      // Restore closed windows if any.
      if (root._closedWindows) {
        this.#closedWindows = root._closedWindows;
-@@ -6950,6 +7197,10 @@ class _SessionStore {
-    * @returns boolean
+@@ -7360,6 +7607,10 @@ class _SessionStore {
+    *          Whether the tab state is worth saving
     */
    #shouldSaveTabState(aTabState) {
 +    if (isFloorpPrivateContainerTabState(aTabState)) {
@@ -302,12 +302,26 @@ index 52fc8030..7c0c52c1 100644
      // If the tab has only a transient about: history entry, no other
      // session history, and no userTypedValue, then we don't actually want to
      // store this tab's data.
-@@ -7132,6 +7383,12 @@ class _SessionStore {
+@@ -7487,7 +7738,9 @@ class _SessionStore {
+   #prepDataForDeferredRestore(startupState) {
+     // Make sure that we don't modify the global state as provided by
+     // SessionStartup.state.
+     let state = Cu.cloneInto(startupState, {});
++    this._sanitizeFloorpPrivateContainerRootState(state);
++
+     let hasPinnedTabs = false;
+     let defaultState = {
+       windows: [],
+@@ -7545,6 +7798,16 @@ class _SessionStore {
            // We don't want to increment tIndex here.
            continue;
          } else if (window.tabs[tIndex].groupId) {
 +          let tabToAdd = window.tabs[tIndex];
 +          if (!this.#shouldSaveTabState(tabToAdd)) {
++            if (isFloorpPrivateContainerTabState(tabToAdd)) {
++              this._sanitizeFloorpPrivateContainerWindowState(window);
++              continue;
++            }
 +            tIndex++;
 +            continue;
 +          }
@@ -315,7 +329,7 @@ index 52fc8030..7c0c52c1 100644
            // Convert any open groups into saved groups.
            let groupStateToSave = window.groups.find(
              groupState => groupState.id == window.tabs[tIndex].groupId
-@@ -7145,7 +7402,6 @@ class _SessionStore {
+@@ -7558,7 +7821,6 @@ class _SessionStore {
              groupToSave.removeAfterRestore = true;
              groupsToSave.set(groupStateToSave.id, groupToSave);
            }
@@ -323,7 +337,7 @@ index 52fc8030..7c0c52c1 100644
            groupToSave.tabs.push(this.formatTabStateForSavedGroup(tabToAdd));
          } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
            // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
-@@ -7246,6 +7502,24 @@ class _SessionStore {
+@@ -7659,6 +7921,24 @@ class _SessionStore {
            continue;
          }
        }

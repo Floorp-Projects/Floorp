@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Isso altera apenas a exibição da barra de tarefas do Windows. Não cria janelas adicionais do navegador.",
             "taskbarPreviewsUnavailable": "Essa opção está disponível apenas no Windows."
         },
-        "lepton-preferences": {
-            "title": "Configurações do Lepton",
-            "description": "Configurar as preferências avançadas do tema Lepton",
-            "configureLepton": "Configurar o Lepton",
+        "chrome-extras": {
+            "title": "Configurações de extensão da interface do usuário",
+            "description": "Aplicar ajustes opcionais na interface do usuário sobre o design selecionado no momento",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Recursos experimentais",
-                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas.",
-                "leptonRepository": "O Lepton é um tema CSS para o Firefox.",
-                "visitRepository": "Visitar a página do repositório"
+                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas."
             },
             "autohide": {
                 "title": "Ocultar configurações automaticamente",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "Configurações dos ícones",
-                "disabled": "Desativar o menu de contexto do Lepton e os ícones do menu do painel",
-                "menu": "Habilitar os ícones do menu de contexto do Lepton"
+                "disabled": "Desativar os ícones do menu de contexto e do menu do painel",
+                "menu": "Ativar ícones do menu de contexto"
             },
             "centered": {
                 "title": "Configurações centralizadas",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Configurações da barra lateral",
                 "overlap": "Mostrar barra lateral sobre o conteúdo do site"
-            }
+            },
+            "configure": "Abrir as configurações da extensão da interface do usuário"
         },
         "tabSleepExclusion": {
             "title": "Exclusão do modo de inatividade",
@@ -488,6 +486,8 @@
         "otherSettings": "Outras configurações",
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
+        "keepRunningAfterBrowserQuit": "Manter aplicativos web em execução após encerrar o {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Feche as janelas do navegador e mantenha abertos os aplicativos da Web em execução. Desative essa opção para fechá-los ao mesmo tempo. Ao fechar um aplicativo da Web, apenas esse aplicativo é encerrado. Reiniciar o {{productName}} ou fazer logout fecha todos os aplicativos.",
         "installedApps": "Aplicativos instalados",
         "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
@@ -507,7 +507,10 @@
         "containerDeleted": "Contêiner excluído",
         "resetContainer": "Redefinir",
         "save": "Salvar",
-        "errorSettingContainer": "Falha ao definir contêiner"
+        "errorRenaming": "Não foi possível renomear este aplicativo web.",
+        "errorUninstalling": "Não foi possível desinstalar este aplicativo web.",
+        "errorSettingContainer": "Falha ao definir contêiner",
+        "nativeContainerFixed": "Este aplicativo web para macOS mantém o contêiner escolhido no momento da instalação. Ainda não é possível alterá-lo. Os dados atuais de login e do site foram mantidos."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

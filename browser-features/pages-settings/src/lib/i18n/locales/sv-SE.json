@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Detta ändrar bara hur Windows aktivitetsfältet visas. Det skapar inte ytterligare webbläsarfönster.",
             "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
         },
-        "lepton-preferences": {
-            "title": "Lepton inställningar",
-            "description": "Konfigurera avancerade Lepton temainställningar",
-            "configureLepton": "Konfigurera Lepton",
+        "chrome-extras": {
+            "title": "UI tilläggsinställningar",
+            "description": "Tillämpa valfria justeringar av användargränssnittet utöver den för närvarande valda designen",
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
-                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå.",
-                "leptonRepository": "Lepton är ett css-tema för Firefox.",
-                "visitRepository": "Besök förråd sidan"
+                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå."
             },
             "autohide": {
                 "title": "Dölj inställningar automatiskt",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "Ikon inställningar",
-                "disabled": "Inaktivera Leptons sammanhangsmeny och panelmenyikoner",
-                "menu": "Aktivera Leptons sammanhangsberoende menyikoner"
+                "disabled": "Inaktivera kontextmenyn och panelmenyikoner",
+                "menu": "Aktivera kontextmeny ikoner"
             },
             "centered": {
                 "title": "Centrerade inställningar",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Sidofält inställningar",
                 "overlap": "Visa sidofält över webbplatsens innehåll"
-            }
+            },
+            "configure": "Öppna UI tilläggsinställningar"
         },
         "tabSleepExclusion": {
             "title": "Flik sömn uteslutning",
@@ -217,7 +215,7 @@
             "exampleFullUrl": "Matchar endast Gmail-URL: er"
         },
         "tabStacks": {
-            "unavailableInVerticalTabs": "Tab stacks are unavailable with vertical tabs. Your setting is kept and applies when you return to horizontal tabs.",
+            "unavailableInVerticalTabs": "Flikstaplar fungerar inte med vertikala flikar. Din inställning sparas och gäller när du återgår till horisontella flikar.",
             "title": "Flikstaplar",
             "description": "Gruppera flikar i staplar, vilket visas som en ikon i flikfältet med en andra rad av staplade flikar under.",
             "enableOrDisable": "Aktivera/inaktivera",
@@ -488,6 +486,8 @@
         "otherSettings": "Andra inställningar",
         "showToolbar": "Visa verktygsfält",
         "showToolbarDescription": "Visa verktygsfältet i progressiva webbapp-fönster",
+        "keepRunningAfterBrowserQuit": "Håll webbappar igång efter att {{productName}} har avslutats",
+        "keepRunningAfterBrowserQuitDescription": "Stäng webbläsarfönstren och låt de aktiva webbapparna förbli öppna. Inaktivera den här inställningen om du vill stänga dem samtidigt. När du stänger en webbapp stängs endast den appen. Om du startar om {{productName}} eller loggar ut stängs alla appar.",
         "installedApps": "Installerade appar",
         "noInstalledApps": "Inga progressiva webbappar installerade",
         "removeApp": "Ta bort app",
@@ -507,7 +507,10 @@
         "containerDeleted": "Behållare borttagen",
         "resetContainer": "Återställ",
         "save": "Spara",
-        "errorSettingContainer": "Misslyckades att ställa in behållaren"
+        "errorRenaming": "Kunde inte byta namn på den här webbappen.",
+        "errorUninstalling": "Kunde inte avinstallera den här webbappen.",
+        "errorSettingContainer": "Misslyckades att ställa in behållaren",
+        "nativeContainerFixed": "Denna macOS webbapp behåller den behållare som valdes vid installationen. Det går ännu inte att byta behållare. Aktuella inloggningsuppgifter och webbplatsdata har bevarats."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -782,39 +785,39 @@
         }
     },
     "ui": {
-        "skipToContent": "Skip to content",
+        "skipToContent": "Hoppa till innehåll",
         "loading": "Laddar…",
-        "setupProgress": "Setup progress",
-        "stepNavigation": "Setup navigation",
-        "settingsNavigation": "Settings navigation",
-        "openNavigation": "Open navigation",
-        "closeNavigation": "Close navigation",
-        "saveError": "Could not save. Please try again.",
+        "setupProgress": "Installationsförlopp",
+        "stepNavigation": "Konfigurera navigering",
+        "settingsNavigation": "Inställningar navigering",
+        "openNavigation": "Öppna navigering",
+        "closeNavigation": "Stäng navigering",
+        "saveError": "Kunde inte spara. Försök igen.",
         "retry": "Försök igen",
-        "loadError": "Could not load settings. Please reload this page."
+        "loadError": "Kunde inte ladda inställningarna. Ladda om sidan."
     },
     "settingsHome": {
-        "title": "Make Floorp yours",
-        "description": "Adjust the look and controls to suit the way you browse.",
-        "open": "Explore settings",
-        "manage": "Manage your browser",
+        "title": "Gör Floorp till din egen",
+        "description": "Anpassa utseendet och kontrollerna efter hur du brukar surfa.",
+        "open": "Utforska inställningarna",
+        "manage": "Hantera din webbläsare",
         "descriptions": {
-            "tabAndAppearance": "Adjust themes and tab appearance",
-            "workspaces": "Switch between work and personal tabs",
-            "browserSidebar": "Open another site alongside your page",
-            "mouseGesture": "Assign actions to mouse movements",
-            "keyboardShortcuts": "Assign actions to keyboard shortcuts",
-            "performance": "Adjust memory usage"
+            "tabAndAppearance": "Justera teman och flikarnas utseende",
+            "workspaces": "Växla mellan arbete och privata flikar",
+            "browserSidebar": "Öppna en annan webbplats vid sidan av din sida",
+            "mouseGesture": "Tilldela åtgärder till musrörelser",
+            "keyboardShortcuts": "Tilldela åtgärder till tangentbordsgenvägar",
+            "performance": "Justera minnesanvändning"
         },
         "resources": {
-            "privacy": "About privacy",
-            "extensions": "Manage extensions",
-            "help": "Get help"
+            "privacy": "Om integritet",
+            "extensions": "Hantera tillägg",
+            "help": "Få hjälp"
         }
     },
     "workspaceRefresh": {
-        "behavior": "Appearance and behavior",
-        "reset": "Reset workspaces",
-        "help": "How to use"
+        "behavior": "Utseende och beteende",
+        "reset": "Återställ arbetsytor",
+        "help": "Hur man använder"
     }
 }

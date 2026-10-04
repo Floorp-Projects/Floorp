@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "Ini hanya mengubah tampilan bilah tugas Windows. Ini tidak membuat jendela peramban baru.",
             "taskbarPreviewsUnavailable": "Opsi ini hanya tersedia di Windows."
         },
-        "lepton-preferences": {
-            "title": "Pengaturan Lepton",
-            "description": "Atur preferensi lanjutan tema Lepton",
-            "configureLepton": "Atur Lepton",
+        "chrome-extras": {
+            "title": "Pengaturan Ekstensi UI",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Kembali",
             "experimentalWarning": {
                 "title": "⚠️ Fitur Eksperimental",
-                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi.",
-                "leptonRepository": "Lepton adalah tema CSS untuk Firefox.",
-                "visitRepository": "Kunjungi Halaman Repositori"
+                "description": "Pengaturan ini bersifat eksperimental dan tidak didukung secara resmi. Masalah dapat terjadi."
             },
             "autohide": {
                 "title": "Sembunyikan Pengaturan Otomatis",
@@ -176,30 +173,31 @@
             },
             "icon": {
                 "title": "Pengaturan Ikon",
-                "disabled": "Nonaktifkan menu konteks dan ikon menu panel Lepton",
-                "menu": "Aktifkan ion menu konteks Lepton"
+                "disabled": "Nonaktifkan ikon menu konteks dan menu panel",
+                "menu": "Aktifkan ikon menu konteks"
             },
             "centered": {
                 "title": "Centered Settings",
                 "tab": "Center labels in tabs",
-                "urlbar": "Center text in the Address Bar",
+                "urlbar": "Ratakan teks di Bilah Alamat ke tengah",
                 "bookmarkbar": "Tengahkan item Bilah Markah"
             },
             "urlView": {
-                "title": "URL View Settings",
-                "moveIconToLeft": "Move Address Bar icons to the left side",
+                "title": "Pengaturan Tampilan URL",
+                "moveIconToLeft": "Pindahkan ikon bilah alamat ke sisi kiri",
                 "goButtonWhenTyping": "Saat mengetik, tampilkan tombol \"Kunjungi\"",
-                "alwaysShowPageActions": "Always show page actions in the Address Bar"
+                "alwaysShowPageActions": "Selalu tampilkan tindakan halaman di bilah alamat"
             },
             "tabbar": {
-                "title": "Tab Bar Settings",
+                "title": "Pengaturan Bilah Tab",
                 "asTitlebar": "Bilah Tab di Bilah Judul",
                 "oneLiner": "Gabungkan Bilah Tab dan Bilah Alat"
             },
             "sidebar": {
-                "title": "Sidebar Settings",
-                "overlap": "Show Sidebar over website content"
-            }
+                "title": "Pengaturan Bilah Samping",
+                "overlap": "Tampilkan bilah samping di atas konten situs web"
+            },
+            "configure": "Buka pengaturan ekstensi UI"
         },
         "tabSleepExclusion": {
             "title": "Pengecualian Tab Tidur",
@@ -488,6 +486,8 @@
         "otherSettings": "Pengaturan Lainnya",
         "showToolbar": "Tampilkan Bilah Alat",
         "showToolbarDescription": "Tampilkan bilah alat di jendela Aplikasi Web Progresif",
+        "keepRunningAfterBrowserQuit": "Jaga Aplikasi Web tetap terbuka setelah menutup {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Tutup jendela peramban dan biarkan Aplikasi Web yang sedang berjalan tetap terbuka. Matikan opsi ini untuk menutup semuanya sekaligus. Menutup Aplikasi Web hanya akan menutup aplikasi tersebut. Memulai ulang {{productName}} atau keluar dari akun akan menutup semua aplikasi.",
         "installedApps": "Aplikasi Terpasang",
         "noInstalledApps": "Tidak ada PWA terpasang",
         "removeApp": "Hapus Aplikasi",
@@ -507,7 +507,10 @@
         "containerDeleted": "Kontainer dihapus",
         "resetContainer": "Setel Ulang",
         "save": "Simpan",
-        "errorSettingContainer": "Gagal mengatur kontainer"
+        "errorRenaming": "Tidak bisa mengganti nama Aplikasi Web ini.",
+        "errorUninstalling": "Tidak bisa menghapus Aplikasi Web ini.",
+        "errorSettingContainer": "Gagal mengatur kontainer",
+        "nativeContainerFixed": "Aplikasi Web macOS ini tetap menggunakan kontainer terpilih saat dipasang. Penggantian kontainer belum didukung. Data login dan situs tetap tersimpan."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

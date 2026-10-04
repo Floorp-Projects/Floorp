@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Lepton Ayarları",
-            "description": "Gelişmiş Lepton tema tercihlerini yapılandırma",
-            "configureLepton": "Lepton'u Yapılandırma",
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Geri",
             "experimentalWarning": {
                 "title": "⚠️ Deneysel Özellikler",
-                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir.",
-                "leptonRepository": "Lepton, Firefox için bir css temasıdır.",
-                "visitRepository": "Depo Sayfasını Ziyaret Edin"
+                "description": "Bu ayarlar deneyseldir ve resmi olarak desteklenmemektedir. Bazı sorunlar meydana gelebilir."
             },
             "autohide": {
                 "title": "Otomatik Gizleme Ayarları",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "Simge Ayarları",
-                "disabled": "Lepton'un içerik menüsünü ve panel menü simgelerini devre dışı bırakın",
-                "menu": "Lepton'un içerik menüsü simgelerini etkinleştirin"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Ortaya Hizalama Ayarları",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Kenar Çubuğu Ayarları",
                 "overlap": "Kenar Çubuğunu web sitesi içeriğinin üzerinde göster"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",
@@ -488,6 +486,8 @@
         "otherSettings": "Diğer Ayarlar",
         "showToolbar": "Araç Çubuğunu Göster",
         "showToolbarDescription": "Progressive Web App pencerelerinde araç çubuğunu göster",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Yüklü Uygulamalar",
         "noInstalledApps": "Yüklü Progressive Web Uygulaması yok",
         "removeApp": "Uygulamayı Kaldır",
@@ -507,7 +507,10 @@
         "containerDeleted": "Container deleted",
         "resetContainer": "Sıfırla",
         "save": "Kaydet",
-        "errorSettingContainer": "Failed to set container"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Failed to set container",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

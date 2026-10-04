@@ -11,7 +11,11 @@ import { Button, type ButtonProps } from "@/components/common/button.tsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { rpc } from "@/lib/rpc/rpc.ts";
-import { experimentsRpc } from "@/lib/rpc/experiments.ts";
+import {
+  EXPERIMENTS_POLICY_PREF,
+  experimentsRpc,
+  notifyExperimentsChanged,
+} from "@/lib/rpc/experiments.ts";
 import {
   CheckCircle2,
   FlaskConical,
@@ -23,8 +27,6 @@ import {
 } from "lucide-react";
 import { ConfirmModal } from "@/components/common/ConfirmModal.tsx";
 import { ReleaseNotesSettings } from "./ReleaseNotesSettings.tsx";
-
-const EXPERIMENTS_POLICY_PREF = "floorp.experiments.participationPolicy";
 
 interface ActiveExperiment {
   id: string;
@@ -128,6 +130,7 @@ export default function Page() {
     const value = e.target.value;
     try {
       await rpc.setStringPref(EXPERIMENTS_POLICY_PREF, value);
+      notifyExperimentsChanged();
       setParticipationPolicy(value);
       await experimentsRpc.reinitializeExperiments();
       await loadExperiments();
@@ -308,9 +311,12 @@ export default function Page() {
               {t("updates.experiments.description")}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 mb-4">
             <div className="space-y-2">
-              <label className="floorp-field-label" htmlFor="experiments-policy">
+              <label
+                className="floorp-field-label"
+                htmlFor="experiments-policy"
+              >
                 <span className="floorp-field-text">
                   {t("updates.experiments.policyLabel")}
                 </span>
@@ -326,7 +332,7 @@ export default function Page() {
               </p>
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-start gap-4 pt-4 border-t border-base-content/10">
+          <CardFooter className="flex-col items-start pt-4 border-t border-base-content/10 space-y-4">
             <h3 className="text-sm font-medium">
               {t("updates.experiments.troubleshooting")}
             </h3>
@@ -540,7 +546,9 @@ export default function Page() {
                               </p>
                             )}
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-base-content/50">
-                              <span className="break-all">ID: {experiment.id}</span>
+                              <span className="break-all">
+                                ID: {experiment.id}
+                              </span>
                               {experiment.currentVariantId && (
                                 <span className="break-all">
                                   Variant: {experiment.currentVariantId}

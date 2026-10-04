@@ -1,0 +1,63 @@
+name: "(P) Refresh PPA package index cache"
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha256:
+        description: "SHA-256 of the Packages.gz already uploaded to the PPA"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
+      CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+    steps:
+      - name: Verify origin, purge cache, and verify public index
+        run: |
+          set -euo pipefail
+          if [[ ! "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "Expected a 64-character lowercase SHA-256 digest." >&2
+            exit 1
+          fi
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ZONE_ID" ]; then
+            echo "CLOUDFLARE_API_TOKEN_FOR_PURGE and CLOUDFLARE_ZONE_ID must be configured." >&2
+            exit 1
+          fi
+
+          url="https://ppa.floorp.app/amd64/Packages.gz"
+          index=$(mktemp)
+          trap 'rm -f "$index"' EXIT
+
+          # A unique query fetches the current origin file instead of the old CDN entry.
+          curl -sSfL --retry 3 -o "$index" "$url?verify=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          origin_sha=$(sha256sum "$index" | cut -d' ' -f1)
+          if [ "$origin_sha" != "$EXPECTED_SHA256" ]; then
+            echo "Origin Packages.gz differs from the expected published index." >&2
+            exit 1
+          fi
+
+          payload=$(printf '{"files":["%s"]}' "$url")
+          curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$payload" | python3 -c 'import json, sys; sys.exit(0 if json.load(sys.stdin).get("success") is True else 1)'
+
+          for attempt in $(seq 1 120); do
+            if curl -sSfL -o "$index" "$url"; then
+              public_sha=$(sha256sum "$index" | cut -d' ' -f1)
+              if [ "$public_sha" = "$EXPECTED_SHA256" ]; then
+                echo "Public Packages.gz matches the published index."
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "Public Packages.gz did not update within 10 minutes." >&2
+          exit 1

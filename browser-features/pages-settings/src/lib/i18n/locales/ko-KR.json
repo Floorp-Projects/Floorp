@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "이 설정은 Windows 작업 표시줄의 표시 방식만 변경합니다. 별도의 브라우저 창을 더 만들지는 않습니다.",
             "taskbarPreviewsUnavailable": "이 설정은 Windows에서만 이용할 수 있습니다."
         },
-        "lepton-preferences": {
-            "title": "Lepton 설정",
-            "description": "고급 Lepton 테마 환경 설정 구성",
-            "configureLepton": "Lepton 구성",
+        "chrome-extras": {
+            "title": "UI 확장 설정",
+            "description": "현재 선택한 디자인에서 추가로 UI 조정",
             "back": "뒤로 가기",
             "experimentalWarning": {
                 "title": "⚠️ 실험 기능",
-                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다.",
-                "leptonRepository": "Lepton은 Firefox용 CSS 테마입니다.",
-                "visitRepository": "리포지토리 페이지 방문"
+                "description": "이러한 설정은 실험적이며 공식적으로 지원되지 않습니다. 문제가 발생할 수 있습니다."
             },
             "autohide": {
                 "title": "자동 숨기기 설정",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "아이콘 설정",
-                "disabled": "Lepton의 컨텍스트 메뉴 및 패널 메뉴 아이콘 비활성화하기",
-                "menu": "Lepton의 컨텍스트 메뉴 아이콘 활성화하기"
+                "disabled": "컨텍스트 메뉴 및 패널 메뉴 아이콘 비활성화하기",
+                "menu": "컨텍스트 메뉴 아이콘 활성화하기"
             },
             "centered": {
                 "title": "중앙 설정",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "사이드바 설정",
                 "overlap": "웹사이트 콘텐츠 위에 사이드바 표시"
-            }
+            },
+            "configure": "UI 확장 설정 열기"
         },
         "tabSleepExclusion": {
             "title": "탭 절전 제외",
@@ -488,6 +486,8 @@
         "otherSettings": "기타 설정",
         "showToolbar": "도구 모음 표시",
         "showToolbarDescription": "프로그레시브 웹 앱 창에 툴바 표시",
+        "keepRunningAfterBrowserQuit": "{{productName}} 종료 후에도 웹 앱 계속 실행하기",
+        "keepRunningAfterBrowserQuitDescription": "브라우저 창을 닫아도 웹 앱을 열린 채로 유지합니다. 이 설정을 끄면 창을 닫을 때 웹 앱이 함께 종료됩니다. 웹 앱을 종료하면 해당 앱만 닫습니다. {{productName}}에서 로그아웃하거나 다시 시작하면 모든 앱이 닫힙니다.",
         "installedApps": "설치된 앱",
         "noInstalledApps": "프로그레시브 웹 앱이 설치되지 않음",
         "removeApp": "앱 삭제",
@@ -507,7 +507,10 @@
         "containerDeleted": "컨테이너 삭제됨",
         "resetContainer": "초기화",
         "save": "저장",
-        "errorSettingContainer": "컨테이너 설정 실패"
+        "errorRenaming": "이 웹 앱의 이름을 변경하지 못했습니다.",
+        "errorUninstalling": "이 웹을 제거하지 못했습니다.",
+        "errorSettingContainer": "컨테이너 설정 실패",
+        "nativeContainerFixed": "이 macOS 웹 앱은 설치할 때 선택한 컨테이너를 유지합니다. 컨테이너 변경 기능은 아직 지원되지 않습니다. 현재 로그인과 사이트 데이터는 그대로 유지됩니다."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "This changes only the Windows taskbar display. It does not create additional browser windows.",
             "taskbarPreviewsUnavailable": "This option is available on Windows only."
         },
-        "lepton-preferences": {
-            "title": "Налаштування Lepton",
-            "description": "Configure advanced Lepton theme preferences",
-            "configureLepton": "Configure Lepton",
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "Назад",
             "experimentalWarning": {
                 "title": "⚠️ Експериментальні можливості",
-                "description": "Ці налаштування є експериментальними і офіційно не підтримуються. Можуть виникнути проблеми.",
-                "leptonRepository": "Lepton — це тема css для Firefox.",
-                "visitRepository": "Visit Repository Page"
+                "description": "Ці налаштування є експериментальними і офіційно не підтримуються. Можуть виникнути проблеми."
             },
             "autohide": {
                 "title": "Auto-hide Settings",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "Налаштування значків",
-                "disabled": "Вимкнути іконки контекстного меню та меню панелі Lepton",
-                "menu": "Увімкнути іконки контекстного меню Lepton"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "Centered Settings",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "Sidebar Settings",
                 "overlap": "Показати бічну панель над вмістом сайту"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "Tab Sleep Exclusion",
@@ -488,6 +486,8 @@
         "otherSettings": "Інші налаштування",
         "showToolbar": "Показати панель інструментів",
         "showToolbarDescription": "Відображати панель інструментів у вікнах прогресивних вебзастосунків",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "Встановлені застосунки",
         "noInstalledApps": "Не встановлено жодного прогресивного вебзастосунку",
         "removeApp": "Видалити застосунок",
@@ -507,7 +507,10 @@
         "containerDeleted": "Container deleted",
         "resetContainer": "Reset",
         "save": "Зберегти",
-        "errorSettingContainer": "Failed to set container"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "Failed to set container",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "9c051c5de2783c683e0f7ef3f399bd694072b8d8"
+floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
 generated: true
 ---
 # Architecture Overview
@@ -26,16 +26,17 @@ The startup bridge is owned by `bridge/startup/src/chrome_root.ts:51-52`. It sel
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:18` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:41` on port 5181.
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:541`. The current inventory lists 23 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:561`. The current inventory lists 24 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
 - `NRChromeModal`
 - `NRChromeWebStore`
+- `NRContextMenu`
 - `NRExperimemmt`
 - `NRI18n`
 - `NRKeyboardShortcutFocus`
@@ -104,7 +105,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 15 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 17 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 
@@ -124,7 +125,7 @@ The docs pipeline treats Floorp OS API as a special integration layer for local 
 
 ## Commands And CI
 
-Deno task inventory comes from `deno.json` and currently lists 29 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
+Deno task inventory comes from `deno.json` and currently lists 31 tasks. The feles-build command inventory comes from `tools/feles-build.ts` and currently lists 5 commands.
 
 CI workflows recorded in the docs inventory:
 
@@ -142,6 +143,7 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
+- `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

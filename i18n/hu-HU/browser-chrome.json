@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Lap Áthelyezése egy Másik Munkaterületre",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Link Megnyitása egy Másik Munkaterületen",
       "noOtherWorkspace": "Más munkaterület nem áll rendelkezésre"
     },

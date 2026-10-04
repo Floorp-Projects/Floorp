@@ -113,7 +113,7 @@ jobs:
       - name: Install PPA tooling
         run: |
           sudo apt-get update
-          sudo apt-get install -y dpkg-dev ftp gnupg apt-utils lftp
+          sudo apt-get install -y dpkg-dev ftp gnupg apt-utils lftp jq
 
       - name: Publish Linux DEB to PPA
         env:
@@ -123,8 +123,8 @@ jobs:
           PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
           PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
           PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
-          CF_API_TOKEN: ${{ secrets.CLOULDFLARE_API_TOKEN_FOR_PURGE }}
-          CF_ZONE_ID: ${{ secrets.CLOULDFLARE_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_FOR_PURGE }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
         run: |
           set -euo pipefail
           echo "::add-mask::$KEYMASK"
@@ -214,21 +214,80 @@ jobs:
           echo "[publish_ppa] finish_script preview (credentials masked):"
           redact_script "$WORKDIR/finish_script.txt" || true
 
-          cd "$WORKDIR/publish"
-          echo "[publish_ppa] Working directory ls (pre-ftp init):"
-          ls -la .
-          echo "[publish_ppa] Starting FTP init script (lftp debug)..."
-          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<'LFTPEOF' || true
+          # Download the existing archive into a separate directory. On a retry the
+          # new DEB may already exist remotely; mget aborts on a local name collision
+          # and can then fail to fetch later versions without stopping the script.
+          mkdir -p "$WORKDIR/archive"
+          cd "$WORKDIR/archive"
+          echo "[publish_ppa] Listing existing remote DEBs..."
+          lftp -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" > "$WORKDIR/remote-debs.txt" <<'LFTPEOF'
             set ftp:passive-mode true
             set ftp:prefer-epsv false
             set net:timeout 30
             set net:max-retries 3
+            set cmd:fail-exit true
+            cd amd64
+            cls -1B floorp-*.deb
+            quit
+          LFTPEOF
+
+          if [ ! -s "$WORKDIR/remote-debs.txt" ]; then
+            echo "[publish_ppa] ERROR: The remote DEB listing is empty." >&2
+            exit 1
+          fi
+          while IFS= read -r name; do
+            if [[ ! "$name" =~ ^floorp-[a-zA-Z0-9.+~_-]+\.deb$ ]]; then
+              echo "[publish_ppa] ERROR: Unexpected remote DEB filename: $name" >&2
+              exit 1
+            fi
+          done < "$WORKDIR/remote-debs.txt"
+          sort "$WORKDIR/remote-debs.txt" > "$WORKDIR/expected-remote-debs.txt"
+          if [ -n "$(uniq -d "$WORKDIR/expected-remote-debs.txt")" ]; then
+            echo "[publish_ppa] ERROR: Duplicate names in remote DEB listing." >&2
+            exit 1
+          fi
+
+          echo "[publish_ppa] Downloading $(wc -l < "$WORKDIR/expected-remote-debs.txt") existing DEBs..."
+          lftp -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<'LFTPEOF'
+            set ftp:passive-mode true
+            set ftp:prefer-epsv false
+            set net:timeout 30
+            set net:max-retries 3
+            set cmd:fail-exit true
             cd amd64
             mget floorp-*.deb
             quit
           LFTPEOF
 
+          find "$WORKDIR/archive" -maxdepth 1 -type f -name 'floorp-*.deb' -printf '%f\n' | sort > "$WORKDIR/downloaded-debs.txt"
+          if ! diff -u "$WORKDIR/expected-remote-debs.txt" "$WORKDIR/downloaded-debs.txt"; then
+            echo "[publish_ppa] ERROR: Some remote DEBs were not downloaded; refusing to publish an incomplete index." >&2
+            exit 1
+          fi
+
+          DEB_NAME="${DEB_FILE##*/}"
+          if [ -f "$WORKDIR/archive/$DEB_NAME" ] && ! cmp -s "$DEB_FILE" "$WORKDIR/archive/$DEB_NAME"; then
+            echo "[publish_ppa] ERROR: The remote $DEB_NAME differs from the release artifact." >&2
+            exit 1
+          fi
+          for archive_deb in "$WORKDIR/archive"/floorp-*.deb; do
+            [ "${archive_deb##*/}" = "$DEB_NAME" ] || mv "$archive_deb" "$WORKDIR/publish/"
+          done
+          cd "$WORKDIR/publish"
+          printf '%s\n' "$DEB_NAME" >> "$WORKDIR/remote-debs.txt"
+          sort -u "$WORKDIR/remote-debs.txt" > "$WORKDIR/expected-published-debs.txt"
+          find . -maxdepth 1 -type f -name 'floorp-*.deb' -printf '%f\n' | sort > "$WORKDIR/published-debs.txt"
+          if ! diff -u "$WORKDIR/expected-published-debs.txt" "$WORKDIR/published-debs.txt"; then
+            echo "[publish_ppa] ERROR: Publish directory is missing a DEB." >&2
+            exit 1
+          fi
+
           dpkg-scanpackages --multiversion . > Packages
+          awk '/^Filename: / { sub(/^\.\//, "", $2); print $2 }' Packages | sort > "$WORKDIR/indexed-debs.txt"
+          if ! diff -u "$WORKDIR/expected-published-debs.txt" "$WORKDIR/indexed-debs.txt"; then
+            echo "[publish_ppa] ERROR: Packages omits an existing DEB; refusing to publish an incomplete index." >&2
+            exit 1
+          fi
           gzip -k -f Packages
           apt-ftparchive release . > Release
           gpg --default-key "$GPG_SSB" -abs -o - Release > Release.gpg
@@ -244,13 +303,14 @@ jobs:
 
           echo "[publish_ppa] Starting FTP finish script (lftp debug)..."
           DEB_NAME="${DEB_FILE##*/}"
-          lftp -d -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<LFTPEOF || true
+          lftp -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<LFTPEOF
             set ftp:passive-mode true
             set ftp:prefer-epsv false
             set net:timeout 30
             set net:max-retries 3
             set net:reconnect-interval-base 5
             set net:reconnect-interval-multiplier 1
+            set cmd:fail-exit true
             cd amd64
             put $DEB_NAME -o tmp.$DEB_NAME
             mv tmp.$DEB_NAME $DEB_NAME
@@ -265,15 +325,27 @@ jobs:
             quit
           LFTPEOF
 
+          # Check the freshly uploaded index before changing the public cache.
+          ORIGIN_TMP=$(mktemp)
+          curl -sSfL -o "$ORIGIN_TMP" "$CHECK_URL?verify=$EXPECTED_SHA256"
+          ORIGIN_SHA=$(sha256sum "$ORIGIN_TMP" | cut -d' ' -f1)
+          rm -f "$ORIGIN_TMP"
+          if [ "$ORIGIN_SHA" != "$EXPECTED_SHA256" ]; then
+            echo "[publish_ppa] ERROR: The uploaded Packages.gz does not match the generated index." >&2
+            exit 1
+          fi
+
           # If Cloudflare credentials are provided, request a URL purge for Packages.gz
           if [ -n "${CF_API_TOKEN:-}" ] && [ -n "${CF_ZONE_ID:-}" ]; then
             echo "[publish_ppa] Cloudflare credentials found — requesting purge for $CHECK_URL"
             PAYLOAD=$(printf '{"files":["%s"]}' "$CHECK_URL")
-            if curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
-              -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data "$PAYLOAD" >/dev/null 2>&1; then
-              echo "[publish_ppa] Cloudflare purge request sent (response logged)."
+            if curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+              -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data "$PAYLOAD" \
+              | jq -e '.success == true' >/dev/null; then
+              echo "[publish_ppa] Cloudflare purge accepted."
             else
-              echo "[publish_ppa] Cloudflare purge request failed (non-fatal)."
+              echo "[publish_ppa] ERROR: Cloudflare purge was rejected." >&2
+              exit 1
             fi
             # Give the CDN a moment
             sleep 3

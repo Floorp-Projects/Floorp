@@ -133,7 +133,8 @@ let originalSystemUsesDarkTheme = -1;
 /**
  * Parse a CSS color string into an `[r, g, b]` tuple. Supports `rgb(...)`,
  * `rgba(...)` (alpha composited over an opaque white background), and
- * `#rgb` / `#rrggbb` hex. Returns `null` for transparent / unparseable.
+ * `#rgb` / `#rrggbb` hex, and Gecko 157's computed `color(srgb ...)`.
+ * Returns `null` for transparent / unparseable.
  */
 function parseRgbColor(raw: string): RgbTuple | null {
   const value = raw.trim().toLowerCase();
@@ -170,6 +171,25 @@ function parseRgbColor(raw: string): RgbTuple | null {
     if (a <= 0) return null;
     if (a >= 1) return [r, g, b];
     // Composite over opaque white to get a comparable opaque color.
+    return [
+      Math.round(r * a + 255 * (1 - a)),
+      Math.round(g * a + 255 * (1 - a)),
+      Math.round(b * a + 255 * (1 - a)),
+    ];
+  }
+
+  // Gecko 157 serializes computed toolbar colors as color(srgb r g b).
+  // Components are unit-interval numbers, unlike rgb()'s 0..255 channels.
+  const srgbMatch = value.match(
+    /^color\(\s*srgb\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)$/,
+  );
+  if (srgbMatch) {
+    const channel = (index: number) =>
+      Math.round(Math.min(1, Math.max(0, parseFloat(srgbMatch[index]))) * 255);
+    const a = srgbMatch[4] === undefined ? 1 : parseFloat(srgbMatch[4]);
+    if (a <= 0) return null;
+    const r = channel(1), g = channel(2), b = channel(3);
+    if (a >= 1) return [r, g, b];
     return [
       Math.round(r * a + 255 * (1 - a)),
       Math.round(g * a + 255 * (1 - a)),
@@ -548,6 +568,14 @@ function restoreOriginalDarkPref(): void {
 // Tests
 // ---------------------------------------------------------------------------
 
+function testSignedSrgbChannels(): void {
+  const color = parseRgbColor("color(srgb -0.1 +0.5 1.1)");
+  assert(
+    color !== null && colorsApproxEqual(color, [0, 128, 255], 0),
+    "signed out-of-gamut sRGB channels should be clamped",
+  );
+}
+
 async function testDesignMatrix(): Promise<void> {
   captureOriginalDarkPref();
 
@@ -625,6 +653,7 @@ async function testCurrentStateSharesOneSurface(): Promise<void> {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    { name: "signed sRGB channels are clamped", fn: testSignedSrgbChannels },
     {
       name: "current state shares one surface color",
       fn: testCurrentStateSharesOneSurface,

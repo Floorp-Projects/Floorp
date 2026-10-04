@@ -143,16 +143,13 @@
             "taskbarPreviewsDescription": "此更改僅會變更 Windows 工作列的顯示，並不會建立額外的瀏覽器視窗。",
             "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
         },
-        "lepton-preferences": {
-            "title": "Lepton 設定",
-            "description": "Lepton 進階主題偏好設定",
-            "configureLepton": "設定 Lepton",
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
-                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
-                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
-                "visitRepository": "訪問儲存庫頁面"
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。"
             },
             "autohide": {
                 "title": "自動隱藏設定",
@@ -176,8 +173,8 @@
             },
             "icon": {
                 "title": "圖示設定",
-                "disabled": "停用 Lepton 的選單項目以及面板的圖示",
-                "menu": "啟用 Lepton 的選單項目圖示"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "居中設定",
@@ -199,7 +196,8 @@
             "sidebar": {
                 "title": "側邊欄設定",
                 "overlap": "在網站內容上顯示側邊欄"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "排除分頁睡眠",
@@ -488,6 +486,8 @@
         "otherSettings": "其他設定",
         "showToolbar": "顯示工具列",
         "showToolbarDescription": "在 PWA 應用程式視窗中顯示工具列",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "已安裝的 PWA 應用程式",
         "noInstalledApps": "未安裝任何 PWA 應用程式",
         "removeApp": "移除 PWA 應用程式",
@@ -507,7 +507,10 @@
         "containerDeleted": "容器已刪除",
         "resetContainer": "重設",
         "save": "儲存",
-        "errorSettingContainer": "無法設定容器"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "無法設定容器",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",

@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Déplacer un onglet vers un autre espace de travail",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Ouvrir le lien dans un autre espace de travail",
       "noOtherWorkspace": "Aucun autre espace de travail disponible"
     },
@@ -432,7 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Ouvrir en vue partagée",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "Ouvrir dans la vue fractionnée (jusqu'à {{max}} onglets)",
       "addPane": "Ajouter le volet à la vue fractionnée",
       "moveToPane": "Déplacer dans le volet",
       "moveToPaneN": "Volet {{n}} ({{title}})"

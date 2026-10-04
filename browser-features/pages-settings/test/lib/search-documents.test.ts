@@ -27,7 +27,11 @@ const tests: TestCase[] = [
         resources: {
           "en-US": {
             translations: {
-              pages: { workspaces: "Workspaces" },
+              pages: { workspaces: "Workspaces", contextMenu: "Context menus" },
+              contextMenu: {
+                description: "Choose and arrange browser menu items",
+                independentProfile: "Independent profile",
+              },
               workspaces: {
                 title: "Workspaces",
                 toolbar: "Show workspace name on toolbar",
@@ -62,6 +66,19 @@ const tests: TestCase[] = [
         workspace!.route,
         "/features/workspaces",
         "Existing deep link remains stable",
+      );
+      const contextMenu = documents.find((document) =>
+        document.id === "context-menu"
+      );
+      assert(contextMenu, "Context menu settings are indexed");
+      assertEquals(
+        contextMenu.route,
+        "/features/context-menu",
+        "Context menu search opens the lazy settings route",
+      );
+      assert(
+        contextMenu.textContent.includes("Independent profile"),
+        "Context menu controls are searchable without mounting the editor",
       );
       const field = documents.find((document) =>
         document.route === "/features/workspaces?setting=show-name"

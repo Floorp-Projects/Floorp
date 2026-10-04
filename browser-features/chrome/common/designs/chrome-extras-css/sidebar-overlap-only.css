@@ -1,0 +1,32 @@
+/* Floorp chrome-extras: sidebarOverlap (without auto-hide)
+ * Ported from vendored Lepton (leptonChrome.css 25212-25233, 2 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ */
+
+/* leptonChrome.css:25212-25227 */
+#sidebar-box,
+#sidebar-header,
+#sidebar {
+  min-width: var(--uc-sidebar-activate-width) !important;
+  max-width: var(--uc-sidebar-activate-width) !important;
+}
+#sidebar-box {
+  margin-inline-start: var(--uc-sidebar-activate-width-reverse) !important;
+  will-change: padding-inline;
+  --uc-sidebar-shadow-width: var(--uc-sidebar-activate-width);
+}
+#sidebar-box:not([hidden="true"]) {
+  padding-inline-start: var(--uc-sidebar-activate-width) !important;
+}
+
+/* leptonChrome.css:25228-25233 */
+@media (prefers-reduced-motion: no-preference) {
+  #sidebar-box {
+    transition: padding-inline-start 0.25s var(--animation-easing-function), opacity 0.25s ease-in-out,
+      box-shadow 0s linear, visibility 0s linear !important;
+  }
+}

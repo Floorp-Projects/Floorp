@@ -1,12 +1,12 @@
 ---
 title: "Source Inventory"
 sidebar_label: "Source Inventory"
-floorp_commit: "9c051c5de2783c683e0f7ef3f399bd694072b8d8"
+floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
 generated: true
 ---
 # Source Inventory
 
-Inventory generated from Floorp commit `9c051c5de2783c683e0f7ef3f399bd694072b8d8`.
+Inventory generated from Floorp commit `78943ae3ded11ca5305a5f0160013c5da6339350`.
 
 ## Source Precedence
 
@@ -47,15 +47,15 @@ Inventory generated from Floorp commit `9c051c5de2783c683e0f7ef3f399bd694072b8d8
 
 ## Command Sources
 
-- Deno tasks: `deno.json` (29 tasks)
+- Deno tasks: `deno.json` (31 tasks)
 - feles-build CLI: `tools/feles-build.ts` (5 commands)
 
 ## Feature Catalog Sources
 
 - Common chrome features: `browser-features/chrome/common` (35 entries)
 - Static chrome features: `browser-features/chrome/static` (3 entries)
-- Settings routes: `browser-features/pages-settings/src/App.tsx` (15 routes)
-- Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts` (23 actors)
+- Settings routes: `browser-features/pages-settings/src/App.tsx` (17 routes)
+- Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts` (24 actors)
 - Floorp OS API routes: `browser-features/modules/modules/os-server` (120 routes)
 
 ## CI Sources
@@ -74,6 +74,7 @@ Inventory generated from Floorp commit `9c051c5de2783c683e0f7ef3f399bd694072b8d8
 - `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
+- `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

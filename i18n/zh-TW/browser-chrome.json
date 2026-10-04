@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "將分頁移至另一個工作空間",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "在其他工作空間中開啟鏈接",
       "noOtherWorkspace": "沒有其他可用的工作空間"
     },
