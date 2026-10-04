@@ -1,4 +1,4 @@
-import { rpc } from "@/lib/rpc/rpc.ts";
+import { rpc } from "./rpc/rpc.ts";
 
 /**
  * How Clips behaves.

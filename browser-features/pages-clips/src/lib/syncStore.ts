@@ -1,5 +1,5 @@
-import { rpc } from "@/lib/rpc/rpc.ts";
-import { DATA_PREF, SYNC_STATE_PREF } from "@/lib/settings.ts";
+import { rpc } from "./rpc/rpc.ts";
+import { DATA_PREF, SYNC_STATE_PREF } from "./settings.ts";
 import {
   baseOf,
   mergeClips,
@@ -11,8 +11,8 @@ import {
   serializePayload,
   serializeSyncState,
   type SyncState,
-} from "@/lib/sync.ts";
-import type { Clip } from "@/types/clip.ts";
+} from "./sync.ts";
+import type { Clip } from "../types/clip.ts";
 
 /**
  * True while this page is the one writing the synced pref.
