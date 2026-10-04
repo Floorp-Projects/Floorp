@@ -80,6 +80,24 @@ function testReceivedPinCanBeDeletedRemotely(): void {
   );
 }
 
+function testStaleReceivedPayloadDoesNotLowerTheBase(): void {
+  const previous = { clips: { a: 10 }, gone: {} };
+  const local = [clip("a", 1, { updatedAt: 10, pinned: true })];
+  const remote = [clip("a", 1, { updatedAt: 5 })];
+  const held = mergeClips(local, remote, baseOf(previous), []);
+  const received = receivedSyncState(previous, remote, held, 20);
+  assertEquals(
+    received.clips.a,
+    10,
+    "the agreed timestamp cannot move backward",
+  );
+  assertEquals(
+    ids(mergeClips(held, [], baseOf(received), [])),
+    "",
+    "a stale payload does not turn the agreed clip into a local edit",
+  );
+}
+
 function testReceivedStateKeepsUnpublishedLocalEdit(): void {
   const previous = { clips: { a: 1 }, gone: {} };
   const remote = [clip("a", 1, { updatedAt: 2 })];
@@ -347,6 +365,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "a received pin can be deleted remotely",
       fn: testReceivedPinCanBeDeletedRemotely,
+    },
+    {
+      name: "a stale received payload does not lower the base",
+      fn: testStaleReceivedPayloadDoesNotLowerTheBase,
     },
     {
       name: "received state keeps an unpublished local edit",

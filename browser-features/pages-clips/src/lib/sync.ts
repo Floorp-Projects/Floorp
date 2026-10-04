@@ -227,9 +227,16 @@ export function receivedSyncState(
   now: number = Date.now(),
 ): SyncState {
   const held = new Set(merged.map((clip) => clip.id));
+  const previousBase = baseOf(previous);
   return nextSyncState(
     previous,
-    received.filter((clip) => held.has(clip.id)),
+    received.filter((clip) => held.has(clip.id)).map((clip) => ({
+      ...clip,
+      // A delayed payload cannot undo an agreement we already recorded.
+      // Otherwise the held version looks like an unpublished local edit and
+      // incorrectly survives the other device's next deletion.
+      updatedAt: Math.max(clip.updatedAt, previousBase[clip.id] ?? 0),
+    })),
     merged,
     now,
   );
