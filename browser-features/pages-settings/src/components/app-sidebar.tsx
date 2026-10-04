@@ -5,6 +5,7 @@ import {
   BadgeInfo,
   Briefcase,
   Clipboard,
+  Command,
   Cpu,
   Gauge,
   Grip,
@@ -113,6 +114,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }]
       : []),
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
+    {
+      title: t("pages.commandPalette"),
+      url: "/features/command-palette",
+      icon: Command,
+    },
     // Floorp OS entry is conditional based on pref floorp.os.hidden
     ...(isFloorpOSVisible
       ? [

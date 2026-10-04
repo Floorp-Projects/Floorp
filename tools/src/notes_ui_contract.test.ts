@@ -18,6 +18,7 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
   for (
     const hook of [
       "notes-add",
+      "notes-export",
       "notes-search",
       "notes-title",
       "notes-body",

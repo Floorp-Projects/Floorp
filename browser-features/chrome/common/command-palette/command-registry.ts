@@ -314,7 +314,7 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export { isHistoryCommand, isBookmarkCommand };
+export { isHistoryCommand, isBookmarkCommand, isTabCommand };
 
 /**
  * Search browsing history for the given query.
