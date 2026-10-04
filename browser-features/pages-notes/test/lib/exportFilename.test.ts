@@ -51,6 +51,11 @@ function testEmptyTitleUsesFallback(): void {
     "Untitled.md",
     "title that sanitises to nothing uses the fallback",
   );
+  assertEquals(
+    toExportFilename(".".repeat(100) + "note", "Untitled"),
+    "Untitled.md",
+    "title that becomes empty after truncation uses the fallback",
+  );
 }
 
 function testTrailingDotsAndSpaces(): void {
@@ -74,7 +79,7 @@ function testReservedDeviceName(): void {
   );
   assertEquals(
     toExportFilename("CON.txt", "Untitled"),
-    "CON.txt_.md",
+    "CON_.txt.md",
     "Windows resolves device names up to the first dot",
   );
 }
@@ -82,15 +87,45 @@ function testReservedDeviceName(): void {
 function testLengthCap(): void {
   const long = "x".repeat(200);
   const result = toExportFilename(long, "Untitled");
-  assertEquals(result.length, 103, "stem is capped at 100 characters plus '.md'");
+  assertEquals(
+    result.length,
+    103,
+    "stem is capped at 100 characters plus '.md'",
+  );
 }
 
 function testTruncationDoesNotSplitSurrogatePairs(): void {
-  const result = toExportFilename("a".repeat(99) + "\u{1F600}", "Untitled");
+  const result = toExportFilename(
+    "a".repeat(99) + "\u{1F600}".repeat(2),
+    "Untitled",
+  );
+  assertEquals(
+    result,
+    "a".repeat(99) + "\u{1F600}.md",
+    "truncate at a complete code point",
+  );
   assertEquals(
     /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/.test(result),
     false,
     "truncation must not leave a lone surrogate in the filename",
+  );
+}
+
+function testMultibyteFilenameByteLimit(): void {
+  assertEquals(
+    toExportFilename("日".repeat(100), "Untitled"),
+    "日".repeat(84) + ".md",
+    "Japanese titles fit in a 255-byte filename including the extension",
+  );
+  assertEquals(
+    toExportFilename("\u{1F600}".repeat(100), "Untitled"),
+    "\u{1F600}".repeat(63) + ".md",
+    "emoji titles stop at a complete code point at the byte limit",
+  );
+  assertEquals(
+    toExportFilename("日".repeat(100), "Untitled", "markdown"),
+    "日".repeat(82) + ".markdown",
+    "the full extension is counted toward the byte limit",
   );
 }
 
@@ -106,13 +141,23 @@ export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "simple title", fn: testSimpleTitle },
     { name: "forbidden characters", fn: testForbiddenCharacters },
-    { name: "control characters and whitespace", fn: testControlCharactersAndWhitespace },
+    {
+      name: "control characters and whitespace",
+      fn: testControlCharactersAndWhitespace,
+    },
     { name: "bidi override", fn: testBidiOverrideIsNeutralised },
     { name: "empty title uses fallback", fn: testEmptyTitleUsesFallback },
     { name: "trailing dots and spaces", fn: testTrailingDotsAndSpaces },
     { name: "reserved device name", fn: testReservedDeviceName },
     { name: "length cap", fn: testLengthCap },
-    { name: "surrogate-safe truncation", fn: testTruncationDoesNotSplitSurrogatePairs },
+    {
+      name: "surrogate-safe truncation",
+      fn: testTruncationDoesNotSplitSurrogatePairs,
+    },
+    {
+      name: "multibyte filename byte limit",
+      fn: testMultibyteFilenameByteLimit,
+    },
     { name: "custom extension", fn: testCustomExtension },
   ];
 
