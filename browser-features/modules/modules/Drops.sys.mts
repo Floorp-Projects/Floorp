@@ -621,10 +621,20 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
           }
         }
       }
+      // Names determine the physical directory independently of the global UUID
+      // alias. A renamed/replaced library must not overwrite this consumer's
+      // approved file at the same name/version/file path either.
+      const previousDep = previous?.deps?.find((old) => old.name === d.name && old.version === d.version && old.file === e.file);
+      let approvedPath: string | undefined;
+      if (previousDep) {
+        const versioned = PathUtils.join(depDir(uuid, previousDep.name, previousDep.version), previousDep.file);
+        approvedPath = await IOUtils.exists(versioned) ? versioned : PathUtils.join(dir, "deps", previousDep.name, previousDep.file);
+      }
       prepared.push({
         source: inspectionPath(uuid, e.sha256, e.file),
         path: PathUtils.join(depDir(uuid, d.name, d.version), e.file),
         sha256: e.sha256,
+        approvedPath,
       });
       deps.push({ name: d.name, uuid: d.uuid, version: d.version, lib: d.lib, wasm: d.wasm, file: e.file });
     }
@@ -715,7 +725,9 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
     for (const dep of previous?.deps ?? []) {
       if (deps.some((d) => d.uuid === dep.uuid && d.version === dep.version)) continue;
       await retainDependencyAlias(dep, uuid, readInstalled());
-      await IOUtils.remove(depDir(uuid, dep.name, dep.version), { recursive: true, ignoreAbsent: true });
+      if (!deps.some((d) => d.name === dep.name && d.version === dep.version)) {
+        await IOUtils.remove(depDir(uuid, dep.name, dep.version), { recursive: true, ignoreAbsent: true });
+      }
     }
     const keep = new Set(versions);
     const flat = new Set(files);

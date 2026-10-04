@@ -513,8 +513,86 @@ async function testLegacyFlatInstallationKeepsItsApprovedSource(): Promise<
   }
 }
 
+async function testDependencyPathCannotReplaceApprovedBytes(): Promise<void> {
+  const uuid = newUuid(), oldLibrary = newUuid(), newLibrary = newUuid();
+  const oldDependency: DepRef = {
+    name: "shared",
+    uuid: oldLibrary,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  const newDependency = { ...oldDependency, uuid: newLibrary };
+  try {
+    await installDrop(
+      await inspect(
+        await fixture(uuid, "1.0.0", { dependency: oldDependency }),
+        [await fixture(oldLibrary)],
+      ),
+    );
+    const path = PathUtils.join(
+      directory(uuid),
+      "deps",
+      "shared",
+      "1.0.0",
+      "fixture.xpi",
+    );
+    const approvedHash = await IOUtils.computeHexDigest(path, "sha256");
+    const changed = await inspect(
+      await fixture(uuid, "2.0.0", { dependency: newDependency }),
+      [await fixture(newLibrary, "1.0.0", { marker: "/* changed library */" })],
+    );
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      approvedHash,
+      "UUID changes must not replace bytes at an approved dependency path",
+    );
+    assertEquals(
+      listDrops()[uuid].versions[0],
+      "1.0.0",
+      "rejected dependency replacement preserves prior installation",
+    );
+
+    // A new logical identity may reuse identical bytes. Cleanup must keep the
+    // physical directory used by that newly committed identity.
+    const identicalLibrary = await fixture(oldLibrary);
+    identicalLibrary.manifest.uuid = newLibrary;
+    await installDrop(
+      await inspect(
+        await fixture(uuid, "2.0.0", { dependency: newDependency }),
+        [identicalLibrary],
+      ),
+    );
+    const target = resources().getSubstitution(alias(newLibrary, "1.0.0", true))
+      .QueryInterface!(Ci.nsIJARURI).JARFile.QueryInterface!(Ci.nsIFileURL)
+      .file;
+    assert(
+      target.exists(),
+      "cleanup must preserve the directory still used by the new library identity",
+    );
+    assertEquals(
+      await IOUtils.computeHexDigest(target.path, "sha256"),
+      approvedHash,
+      "identity replacement keeps identical approved bytes",
+    );
+    assertEquals(
+      resources().hasSubstitution(alias(oldLibrary, "1.0.0", true)),
+      false,
+      "unused prior identity alias is removed",
+    );
+  } finally {
+    await cleanup([uuid]);
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name:
+        "dependency physical paths retain approved bytes across UUID changes",
+      fn: testDependencyPathCannotReplaceApprovedBytes,
+    },
     {
       name: "legacy flat installs retain the approved source on failure",
       fn: testLegacyFlatInstallationKeepsItsApprovedSource,
