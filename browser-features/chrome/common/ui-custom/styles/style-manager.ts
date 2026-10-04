@@ -10,6 +10,7 @@ import {
 } from "#features-chrome/common/designs/configs.ts";
 import {
   buildChromeExtrasCSS,
+  CHROME_EXTRAS_SIDEBAR_HEADER_PREF,
   CHROME_EXTRAS_STYLE_ID,
 } from "#features-chrome/common/designs/chrome-extras.ts";
 
@@ -188,8 +189,22 @@ export class StyleManager {
    */
   private setupChromeExtrasEffects() {
     createEffect(() => {
+      const settings = getChromeExtrasSettings();
+      // Revamped headers live in sidebar documents, including webext-panels.
+      // Keep their Runtime CSS in sync on every design and after startup.
+      if (
+        Services.prefs.getBoolPref(
+          CHROME_EXTRAS_SIDEBAR_HEADER_PREF,
+          !settings.hiddenSidebarHeader,
+        ) !== settings.hiddenSidebarHeader
+      ) {
+        Services.prefs.setBoolPref(
+          CHROME_EXTRAS_SIDEBAR_HEADER_PREF,
+          settings.hiddenSidebarHeader,
+        );
+      }
       const css = buildChromeExtrasCSS(
-        getChromeExtrasSettings(),
+        settings,
         config().globalConfigs.userInterface,
       );
       this.applyStyle(CHROME_EXTRAS_STYLE_ID, css, true);
