@@ -33,6 +33,16 @@
   direction: inherit;
 }
 
+/* Lepton's legacy auto-hide preference also constrains the embedded browser to
+ * a 40px lane. Overlay collapse keeps the full document width, including when
+ * the panel is pinned open and the pointer has moved away. */
+:root[floorp-firefox-sidebar-overlay] #sidebar-box :is(#sidebar-header, #sidebar) {
+  min-width: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
 #floorp-firefox-sidebar-overlay-resizer {
   position: absolute;
   inset-block: 0;

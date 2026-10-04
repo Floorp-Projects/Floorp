@@ -72,6 +72,23 @@ function assertViewport(before: DOMRect, message: string): void {
   );
 }
 
+function assertSidebarContentWidth(message: string): void {
+  const browser = element("sidebar");
+  const stack = browser.parentElement;
+  assert(stack, "native sidebar browser must have a layout parent");
+  const width = browser.getBoundingClientRect().width;
+  const parentWidth = stack.getBoundingClientRect().width;
+  const panelWidth = element("sidebar-box").getBoundingClientRect().width;
+  assert(
+    Math.abs(width - parentWidth) < 1,
+    `${message}: embedded document must fill its parent (${width}/${parentWidth})`,
+  );
+  assert(
+    width >= panelWidth - 24,
+    `${message}: embedded document must follow panel width (${width}/${panelWidth})`,
+  );
+}
+
 async function setModes(overlay: boolean, hoverMode: boolean): Promise<void> {
   updateChromeExtrasSetting("sidebarOverlap", overlay);
   updateChromeExtrasSetting("autohideSidebar", hoverMode);
@@ -153,6 +170,7 @@ async function testOverlayGeometry(): Promise<void> {
           before,
           `native overlay ${visibility} at ${start ? "start" : "end"}`,
         );
+        assertSidebarContentWidth("native overlay opening");
         const panel = element("sidebar-box").getBoundingClientRect();
         const content = element("tabbrowser-tabbox").getBoundingClientRect();
         assert(
@@ -172,6 +190,7 @@ async function testOverlayGeometry(): Promise<void> {
           "overlay panel must remain resizable",
         );
         assertViewport(before, "overlay resize must preserve website geometry");
+        assertSidebarContentWidth("native overlay resize");
         native.hide({ dismissPanel: false });
         await settle();
         assertViewport(before, "native close must preserve website geometry");
@@ -203,6 +222,7 @@ async function testHoverAndPin(): Promise<void> {
       "hover must not steal keyboard focus",
     );
     assertViewport(before, "hover opening must preserve website geometry");
+    assertSidebarContentWidth("native hover opening");
     const width = element("sidebar-box").getBoundingClientRect().width;
     hover(false);
     focusContent();
@@ -217,6 +237,7 @@ async function testHoverAndPin(): Promise<void> {
       "hover collapse must preserve embedded document width",
     );
     assertViewport(before, "hover collapse must preserve website geometry");
+    assertSidebarContentWidth("native hover collapse");
 
     hover(true);
     await waitFor(
@@ -234,6 +255,7 @@ async function testHoverAndPin(): Promise<void> {
       firefoxSidebarOverlay?.expanded,
       "pinned panel must stay open after leaving",
     );
+    assertSidebarContentWidth("native pin after the pointer leaves");
     const trigger = element("floorp-firefox-sidebar-edge-toggle");
     trigger.focus();
     trigger.dispatchEvent(
