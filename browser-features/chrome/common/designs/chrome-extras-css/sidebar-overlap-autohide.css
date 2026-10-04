@@ -7,6 +7,6 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   :root[floorp-firefox-sidebar-overlay][floorp-firefox-sidebar-hover] #sidebar-box {
-    transition: opacity 140ms ease;
+    transition: opacity 140ms ease !important;
   }
 }

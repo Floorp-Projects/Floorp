@@ -16,6 +16,10 @@
     !important;
   max-width: var(--floorp-firefox-sidebar-available-width, 75vw) !important;
   margin: 0 !important;
+  /* Lepton's overlay-only layout uses a full panel width as inline padding.
+   * The native panel now occupies that width itself. */
+  padding-inline: 0 !important;
+  transition: none !important;
   box-sizing: border-box;
   background-color: var(--sidebar-background-color,
     var(--toolbar-background-color));
@@ -41,6 +45,7 @@
   max-width: none !important;
   width: 100% !important;
   box-sizing: border-box;
+  transition: none !important;
 }
 
 #floorp-firefox-sidebar-overlay-resizer {
