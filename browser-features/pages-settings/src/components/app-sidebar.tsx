@@ -12,6 +12,7 @@ import {
   Menu,
   MousePointer,
   Option,
+  PackageOpen,
   PanelLeft,
   PencilRuler,
   RefreshCw,
@@ -101,6 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }]
       : []),
     { title: t("pages.webApps"), url: "/features/webapps", icon: Grip },
+    { title: t("pages.drops"), url: "/features/drops", icon: PackageOpen },
     {
       title: t("pages.commandPalette"),
       url: "/features/command-palette",

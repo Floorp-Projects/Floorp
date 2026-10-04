@@ -1,0 +1,718 @@
+// SPDX-License-Identifier: MPL-2.0
+// @colocated-env browser
+
+import { zipSync } from "fflate";
+import {
+  type DepRef,
+  type DropEntry,
+  type DropInspection,
+  type DropManifest,
+  inspectDrop,
+  installDrop,
+  listDrops,
+  listRegistries,
+  removeDrop,
+  verifyDrop,
+} from "../Drops.sys.mts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+  type TestCase,
+} from "../../../chrome/test/utils/test_harness.ts";
+
+const { AddonManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs",
+);
+const encoder = new TextEncoder();
+
+interface Fixture {
+  manifest: DropManifest;
+  bytes: Map<string, Uint8Array>;
+}
+
+function newUuid(): string {
+  return Services.uuid.generateUUID().toString().replace(/[{}]/g, "");
+}
+
+function directory(uuid: string): string {
+  return PathUtils.join(PathUtils.profileDir, "noraneko-drops", uuid);
+}
+
+function actorName(uuid: string, suffix = ""): string {
+  return "DropsTest" + uuid.replaceAll("-", "") + suffix;
+}
+
+function alias(uuid: string, version: string, dependency = false): string {
+  return ("noraneko-" + (dependency ? "dep-" : "drop-") + uuid + "-" + version)
+    .replace(/[^a-z0-9]/gi, "-").toLowerCase();
+}
+
+function resources(): nsIResProtocolHandler {
+  return Services.io.getProtocolHandler("resource")!.QueryInterface!(
+    Ci.nsIResProtocolHandler,
+  );
+}
+
+async function digest(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  const result = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return [...result].map((value) => value.toString(16).padStart(2, "0")).join(
+    "",
+  );
+}
+
+async function fixture(
+  uuid: string,
+  version = "1.0.0",
+  options: {
+    dependency?: DepRef;
+    invalidActor?: boolean;
+    missingActor?: boolean;
+    marker?: string;
+    suffix?: string;
+  } = {},
+): Promise<Fixture> {
+  const suffix = options.suffix ?? "";
+  const name = actorName(uuid, suffix);
+  const id = uuid + suffix + "@floorp-drops-test.invalid";
+  const archive: Record<string, Uint8Array> = {
+    "manifest.json": encoder.encode(JSON.stringify({
+      manifest_version: 2,
+      name: "Floorp Drops lifecycle fixture",
+      version,
+      browser_specific_settings: { gecko: { id } },
+    })),
+    "parent.sys.mjs": encoder.encode(
+      "export class " + name + "Parent extends JSWindowActorParent {}",
+    ),
+    "child.sys.mjs": encoder.encode(
+      "export class " + name + "Child extends JSWindowActorChild {}",
+    ),
+    "content.js": encoder.encode(options.marker ?? "/* approved fixture */"),
+  };
+  if (!options.missingActor) {
+    archive["actor.json"] = encoder.encode(JSON.stringify({
+      name,
+      id,
+      version,
+      event: "DOMContentLoaded",
+      // Gecko accepts unmatched strings; a non-sequence reliably rejects the
+      // WebIDL options conversion after the temporary add-on has installed.
+      matches: options.invalidActor
+        ? {}
+        : ["https://floorp-drops-test.invalid/*"],
+      methods: [],
+      includeParent: false,
+    }));
+  }
+  const bytes = zipSync(archive, { mtime: new Date("2020-01-01T00:00:00Z") });
+  const file = "fixture" + suffix + ".xpi";
+  const entry: DropEntry = {
+    id,
+    name: "fixture",
+    version,
+    file,
+    size: bytes.length,
+    sha256: await digest(new Uint8Array(bytes)),
+  };
+  return {
+    manifest: {
+      uuid,
+      name: "fixture",
+      entries: [entry],
+      deps: options.dependency ? [options.dependency] : [],
+    },
+    bytes: new Map([[file, bytes]]),
+  };
+}
+
+function fixtureFetch(fixtures: Fixture[]): typeof fetch {
+  return (input) => {
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.href
+      : input.url;
+    if (url.endsWith(".sigstore.json")) {
+      return Promise.resolve(new Response("", { status: 404 }));
+    }
+    for (const f of fixtures) {
+      const base = "/" + f.manifest.uuid;
+      const versioned = base + "/v/" + f.manifest.entries[0].version;
+      if (
+        url.endsWith(base + "/manifest.json") ||
+        url.endsWith(versioned + "/manifest.json")
+      ) {
+        return Promise.resolve(Response.json(f.manifest));
+      }
+      for (const [file, bytes] of f.bytes) {
+        if (
+          url.endsWith(base + "/" + file) ||
+          url.endsWith(versioned + "/" + file)
+        ) {
+          return Promise.resolve(new Response(new Uint8Array(bytes)));
+        }
+      }
+    }
+    throw new Error("Unexpected fixture fetch: " + url);
+  };
+}
+
+async function inspect(
+  f: Fixture,
+  libraries: Fixture[] = [],
+): Promise<DropInspection> {
+  return await inspectDrop(
+    f.manifest.uuid,
+    listRegistries()[0].name,
+    fixtureFetch([f, ...libraries]),
+  );
+}
+
+async function rejects(fn: () => Promise<unknown>): Promise<void> {
+  let rejected = false;
+  try {
+    await fn();
+  } catch {
+    rejected = true;
+  }
+  assert(rejected, "operation should reject");
+}
+
+async function cleanup(uuids: string[]): Promise<void> {
+  for (const uuid of uuids) {
+    await removeDrop(uuid);
+    await IOUtils.remove(directory(uuid), {
+      recursive: true,
+      ignoreAbsent: true,
+    });
+  }
+}
+
+async function testInspectionPreservesApprovedBytes(): Promise<void> {
+  const uuid = newUuid();
+  try {
+    const original = await fixture(uuid);
+    const originalInspection = await inspect(original);
+    await installDrop(originalInspection);
+    const path = PathUtils.join(directory(uuid), "1.0.0", "fixture.xpi");
+    const approvedHash = await IOUtils.computeHexDigest(path, "sha256");
+    const changed = await fixture(uuid, "1.0.0", { marker: "/* changed */" });
+    const seen = await inspect(changed);
+    assertEquals(
+      (await verifyDrop(seen)).ok,
+      true,
+      "new candidate should verify",
+    );
+    assertEquals(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      approvedHash,
+      "inspection must preserve approved bytes",
+    );
+    await rejects(() => installDrop(seen));
+    assertEquals(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      approvedHash,
+      "version reuse must not replace approved bytes",
+    );
+    changed.manifest.entries[0].sha256 = original.manifest.entries[0].sha256;
+    await rejects(() => inspect(changed));
+    assertEquals(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      approvedHash,
+      "failed inspection must not delete approved bytes",
+    );
+    assert(listDrops()[uuid], "approved installation must remain listed");
+    assertEquals(
+      (await verifyDrop(originalInspection)).ok,
+      true,
+      "a failed inspection must preserve an already verified candidate",
+    );
+  } finally {
+    await cleanup([uuid]);
+  }
+}
+
+async function testSharedDependencySurvivesRemoval(): Promise<void> {
+  for (const removeLast of [true, false]) {
+    const first = newUuid(), second = newUuid(), libraryUuid = newUuid();
+    const library = await fixture(libraryUuid);
+    const dependency: DepRef = {
+      name: "shared",
+      uuid: libraryUuid,
+      version: "1.0.0",
+      lib: true,
+      wasm: false,
+    };
+    try {
+      await installDrop(
+        await inspect(await fixture(first, "1.0.0", { dependency }), [library]),
+      );
+      await installDrop(
+        await inspect(await fixture(second, "1.0.0", { dependency }), [
+          library,
+        ]),
+      );
+      const removed = removeLast ? second : first;
+      const remaining = removeLast ? first : second;
+      await removeDrop(removed);
+      const depAlias = alias(libraryUuid, "1.0.0", true);
+      const uri = resources().getSubstitution(depAlias).QueryInterface!(
+        Ci.nsIJARURI,
+      );
+      const file = uri.JARFile.QueryInterface!(Ci.nsIFileURL).file;
+      assert(
+        file.exists(),
+        "shared dependency alias must target an existing file",
+      );
+      assert(
+        file.path.includes(remaining),
+        "shared dependency must use the surviving consumer's copy",
+      );
+      await removeDrop(remaining);
+      assertEquals(
+        resources().hasSubstitution(depAlias),
+        false,
+        "final removal clears dependency alias",
+      );
+    } finally {
+      await cleanup([first, second]);
+    }
+  }
+}
+
+async function testActorFailureRollsBackAddon(): Promise<void> {
+  for (const missingActor of [false, true]) {
+    const uuid = newUuid();
+    let installed = false;
+    const listener = {
+      onInstalled(addon: { id: string }): void {
+        if (addon.id === uuid + "@floorp-drops-test.invalid") installed = true;
+      },
+    };
+    AddonManager.addAddonListener(listener);
+    try {
+      const seen = await inspect(
+        await fixture(uuid, "1.0.0", {
+          invalidActor: !missingActor,
+          missingActor,
+        }),
+      );
+      await rejects(() => installDrop(seen));
+      assertEquals(
+        installed,
+        !missingActor,
+        "invalid actor options fail after add-on activation; missing metadata fails before it",
+      );
+      assertEquals(
+        await AddonManager.getAddonByID(seen.manifest.entries[0].id),
+        null,
+        "failed actor setup must not leave a temporary add-on",
+      );
+      assertEquals(
+        listDrops()[uuid],
+        undefined,
+        "failed install must not be listed",
+      );
+      assertEquals(
+        resources().hasSubstitution(alias(uuid, "1.0.0")),
+        false,
+        "failed install must not leave a resource alias",
+      );
+      const { isRegistered } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/NoraActors.sys.mjs",
+      );
+      assertEquals(
+        isRegistered(actorName(uuid)),
+        false,
+        "failed actor must be unregistered",
+      );
+    } finally {
+      AddonManager.removeAddonListener(listener);
+      await cleanup([uuid]);
+    }
+  }
+}
+
+async function testSharedDependencyRejectsChangedBytes(): Promise<void> {
+  const first = newUuid(), second = newUuid(), libraryUuid = newUuid();
+  const dependency: DepRef = {
+    name: "shared",
+    uuid: libraryUuid,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  try {
+    await installDrop(
+      await inspect(
+        await fixture(first, "1.0.0", { dependency }),
+        [await fixture(libraryUuid)],
+      ),
+    );
+    const depAlias = alias(libraryUuid, "1.0.0", true);
+    const originalTarget = resources().getSubstitution(depAlias).spec;
+    const candidate = await inspect(
+      await fixture(second, "1.0.0", { dependency }),
+      [
+        await fixture(libraryUuid, "1.0.0", {
+          marker: "/* changed library */",
+        }),
+      ],
+    );
+    await rejects(() => installDrop(candidate));
+    assertEquals(
+      listDrops()[second],
+      undefined,
+      "conflicting consumer must not be installed",
+    );
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      originalTarget,
+      "shared dependency must retain its approved bytes",
+    );
+    assert(listDrops()[first], "original consumer must remain installed");
+  } finally {
+    await cleanup([first, second]);
+  }
+}
+
+async function testLaterEntryFailureRestoresPreviousVersion(): Promise<void> {
+  const uuid = newUuid();
+  const installedVersions: string[] = [];
+  const listener = {
+    onInstalled(addon: { id: string; version: string }): void {
+      if (addon.id === uuid + "@floorp-drops-test.invalid") {
+        installedVersions.push(addon.version);
+      }
+    },
+  };
+  try {
+    await installDrop(await inspect(await fixture(uuid)));
+    AddonManager.addAddonListener(listener);
+    const candidate = await fixture(uuid, "2.0.0");
+    const broken = await fixture(uuid, "2.0.1", {
+      invalidActor: true,
+      suffix: "Broken",
+    });
+    candidate.manifest.entries.push(...broken.manifest.entries);
+    for (const [file, bytes] of broken.bytes) candidate.bytes.set(file, bytes);
+    await rejects(async () => installDrop(await inspect(candidate)));
+    assert(
+      installedVersions.includes("2.0.0"),
+      "first candidate must install before the later entry fails",
+    );
+    const oldAddon = await AddonManager.getAddonByID(
+      uuid + "@floorp-drops-test.invalid",
+    );
+    assertEquals(oldAddon?.version, "1.0.0", "prior add-on must be restored");
+    assertEquals(
+      listDrops()[uuid].versions[0],
+      "1.0.0",
+      "prior installed row must survive",
+    );
+    assertEquals(
+      await AddonManager.getAddonByID(
+        uuid + "Broken@floorp-drops-test.invalid",
+      ),
+      null,
+      "failing later add-on must be removed",
+    );
+    assertEquals(
+      resources().hasSubstitution(alias(uuid, "2.0.0")),
+      false,
+      "earlier candidate alias must be removed",
+    );
+    assertEquals(
+      resources().hasSubstitution(alias(uuid, "2.0.1")),
+      false,
+      "failing candidate alias must be removed",
+    );
+    assertEquals(
+      resources().hasSubstitution(alias(uuid, "1.0.0")),
+      true,
+      "prior alias must be restored",
+    );
+    const { registeredRoot } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/NoraActors.sys.mjs",
+    );
+    assertEquals(
+      registeredRoot(actorName(uuid)),
+      "resource://" + alias(uuid, "1.0.0") + "/",
+      "prior actor must be registered again",
+    );
+  } finally {
+    AddonManager.removeAddonListener(listener);
+    await cleanup([uuid]);
+  }
+}
+
+async function testLegacyFlatInstallationKeepsItsApprovedSource(): Promise<
+  void
+> {
+  const uuid = newUuid();
+  const { FileUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/FileUtils.sys.mjs",
+  );
+  try {
+    const original = await fixture(uuid);
+    await installDrop(await inspect(original));
+    const versioned = PathUtils.join(directory(uuid), "1.0.0", "fixture.xpi");
+    const flat = PathUtils.join(directory(uuid), "fixture.xpi");
+    const addon = await AddonManager.getAddonByID(
+      original.manifest.entries[0].id,
+    );
+    await addon!.uninstall();
+    await IOUtils.move(versioned, flat);
+    const flatUri = Services.io.newURI(
+      "jar:" + Services.io.newFileURI(new FileUtils.File(flat)).spec + "!/",
+    );
+    resources().setSubstitutionWithFlags(
+      alias(uuid, "1.0.0"),
+      flatUri,
+      Ci.nsISubstitutingProtocolHandler.ALLOW_CONTENT_ACCESS!,
+    );
+    await AddonManager.installTemporaryAddon(new FileUtils.File(flat));
+    const approvedHash = await IOUtils.computeHexDigest(flat, "sha256");
+
+    const changed = await inspect(
+      await fixture(uuid, "1.0.0", { marker: "/* changed */" }),
+    );
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      await IOUtils.computeHexDigest(flat, "sha256"),
+      approvedHash,
+      "legacy approved bytes must be immutable",
+    );
+    assertEquals(
+      await IOUtils.exists(versioned),
+      false,
+      "rejected version reuse must not create a candidate installed path",
+    );
+
+    // Reusing identical approved bytes is allowed, but a later failure must
+    // restore the original flat source, not the newly prepared versioned copy.
+    const candidate = await fixture(uuid);
+    const broken = await fixture(uuid, "2.0.1", {
+      invalidActor: true,
+      suffix: "Broken",
+    });
+    candidate.manifest.entries.push(...broken.manifest.entries);
+    for (const [file, bytes] of broken.bytes) candidate.bytes.set(file, bytes);
+    await rejects(async () => installDrop(await inspect(candidate)));
+    const root = resources().getSubstitution(alias(uuid, "1.0.0"))
+      .QueryInterface!(Ci.nsIJARURI);
+    const restoredFile = root.JARFile.QueryInterface!(Ci.nsIFileURL).file;
+    assertEquals(
+      restoredFile.path,
+      flat,
+      "rollback must restore the original flat path",
+    );
+    assert(
+      restoredFile.exists(),
+      "rollback resource must still exist after candidate cleanup",
+    );
+    assertEquals(
+      await IOUtils.computeHexDigest(flat, "sha256"),
+      approvedHash,
+      "rollback preserves legacy approved bytes",
+    );
+    assertEquals(
+      (await AddonManager.getAddonByID(original.manifest.entries[0].id))
+        ?.version,
+      "1.0.0",
+      "legacy add-on must be restored",
+    );
+  } finally {
+    await cleanup([uuid]);
+  }
+}
+
+async function testDependencyPathCannotReplaceApprovedBytes(): Promise<void> {
+  const uuid = newUuid(), oldLibrary = newUuid(), newLibrary = newUuid();
+  const oldDependency: DepRef = {
+    name: "shared",
+    uuid: oldLibrary,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  const newDependency = { ...oldDependency, uuid: newLibrary };
+  try {
+    await installDrop(
+      await inspect(
+        await fixture(uuid, "1.0.0", { dependency: oldDependency }),
+        [await fixture(oldLibrary)],
+      ),
+    );
+    const path = PathUtils.join(
+      directory(uuid),
+      "deps",
+      "shared",
+      "1.0.0",
+      "fixture.xpi",
+    );
+    const approvedHash = await IOUtils.computeHexDigest(path, "sha256");
+    const changed = await inspect(
+      await fixture(uuid, "2.0.0", { dependency: newDependency }),
+      [await fixture(newLibrary, "1.0.0", { marker: "/* changed library */" })],
+    );
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      await IOUtils.computeHexDigest(path, "sha256"),
+      approvedHash,
+      "UUID changes must not replace bytes at an approved dependency path",
+    );
+    assertEquals(
+      listDrops()[uuid].versions[0],
+      "1.0.0",
+      "rejected dependency replacement preserves prior installation",
+    );
+
+    // A new logical identity may reuse identical bytes. Cleanup must keep the
+    // physical directory used by that newly committed identity.
+    const identicalLibrary = await fixture(oldLibrary);
+    identicalLibrary.manifest.uuid = newLibrary;
+    await installDrop(
+      await inspect(
+        await fixture(uuid, "2.0.0", { dependency: newDependency }),
+        [identicalLibrary],
+      ),
+    );
+    const target = resources().getSubstitution(alias(newLibrary, "1.0.0", true))
+      .QueryInterface!(Ci.nsIJARURI).JARFile.QueryInterface!(Ci.nsIFileURL)
+      .file;
+    assert(
+      target.exists(),
+      "cleanup must preserve the directory still used by the new library identity",
+    );
+    assertEquals(
+      await IOUtils.computeHexDigest(target.path, "sha256"),
+      approvedHash,
+      "identity replacement keeps identical approved bytes",
+    );
+    assertEquals(
+      resources().hasSubstitution(alias(oldLibrary, "1.0.0", true)),
+      false,
+      "unused prior identity alias is removed",
+    );
+  } finally {
+    await cleanup([uuid]);
+  }
+}
+
+async function testSharedMultiEntryLibraryMatchesCorrespondingArchives(): Promise<
+  void
+> {
+  const first = newUuid(), second = newUuid(), libraryUuid = newUuid();
+  const dependency: DepRef = {
+    name: "shared",
+    uuid: libraryUuid,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  const makeLibrary = async (changedSecond = false): Promise<Fixture> => {
+    const library = await fixture(libraryUuid, "1.0.0", { suffix: "A" });
+    const other = await fixture(libraryUuid, "1.0.0", {
+      suffix: "B",
+      marker: changedSecond ? "/* changed B */" : "/* original B */",
+    });
+    library.manifest.entries.push(...other.manifest.entries);
+    for (const [file, bytes] of other.bytes) library.bytes.set(file, bytes);
+    return library;
+  };
+  try {
+    const firstFixture = await fixture(first, "1.0.0", { dependency });
+    const library = await makeLibrary();
+    assert(
+      library.manifest.entries[0].sha256 !== library.manifest.entries[1].sha256,
+      "regression fixture must contain distinct archive bytes",
+    );
+    await installDrop(await inspect(firstFixture, [library]));
+    await installDrop(await inspect(firstFixture, [await makeLibrary()]));
+    await installDrop(
+      await inspect(
+        await fixture(second, "1.0.0", { dependency }),
+        [await makeLibrary()],
+      ),
+    );
+    const depAlias = alias(libraryUuid, "1.0.0", true);
+    const approvedTarget = resources().getSubstitution(depAlias).spec;
+    const secondUpdate = await fixture(second, "2.0.0", { dependency });
+    const changed = await inspect(secondUpdate, [await makeLibrary(true)]);
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      approvedTarget,
+      "changing corresponding archive bytes must not rebind the shared alias",
+    );
+
+    const renamed = await makeLibrary();
+    const oldFile = renamed.manifest.entries[0].file;
+    const archive = renamed.bytes.get(oldFile)!;
+    renamed.bytes.delete(oldFile);
+    renamed.manifest.entries[0].file = "renamed.xpi";
+    renamed.bytes.set("renamed.xpi", archive);
+    await rejects(async () =>
+      installDrop(await inspect(secondUpdate, [renamed]))
+    );
+
+    const reordered = await makeLibrary();
+    reordered.manifest.entries.reverse();
+    await rejects(async () =>
+      installDrop(await inspect(secondUpdate, [reordered]))
+    );
+    assertEquals(
+      listDrops()[second].versions[0],
+      "1.0.0",
+      "conflicting multi-entry library changes must preserve the installed consumer",
+    );
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      approvedTarget,
+      "entry identity conflicts must preserve the shared alias",
+    );
+  } finally {
+    await cleanup([first, second]);
+  }
+}
+
+export async function runAllTests(): Promise<void> {
+  const tests: TestCase[] = [
+    {
+      name: "multi-entry libraries compare corresponding approved archives",
+      fn: testSharedMultiEntryLibraryMatchesCorrespondingArchives,
+    },
+    {
+      name:
+        "dependency physical paths retain approved bytes across UUID changes",
+      fn: testDependencyPathCannotReplaceApprovedBytes,
+    },
+    {
+      name: "legacy flat installs retain the approved source on failure",
+      fn: testLegacyFlatInstallationKeepsItsApprovedSource,
+    },
+    {
+      name: "inspection preserves approved bytes even on failure",
+      fn: testInspectionPreservesApprovedBytes,
+    },
+    {
+      name: "shared dependencies survive either consumer removal order",
+      fn: testSharedDependencySurvivesRemoval,
+    },
+    {
+      name: "actor setup failures leave no unmanaged add-ons",
+      fn: testActorFailureRollsBackAddon,
+    },
+    {
+      name: "shared dependency UUID and version keep approved bytes",
+      fn: testSharedDependencyRejectsChangedBytes,
+    },
+    {
+      name: "later entry failure restores previous installed version",
+      fn: testLaterEntryFailureRestoresPreviousVersion,
+    },
+  ];
+  await runTests("DropsLifecycle.test.mts", tests);
+}
