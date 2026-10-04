@@ -78,6 +78,12 @@ function withTabIndicatorFixture(
   const tabs = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
   tabs.id = "tabbrowser-tabs";
   tabs.style.fontWeight = "400";
+  const mainWindow = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "div",
+  );
+  mainWindow.id = "main-window";
+  mainWindow.appendChild(tabs);
   const baseStyle = document.createElementNS(
     "http://www.w3.org/1999/xhtml",
     "style",
@@ -93,7 +99,7 @@ function withTabIndicatorFixture(
     "http://www.w3.org/1999/xhtml",
     "style",
   );
-  shadow.append(baseStyle, style, tabs);
+  shadow.append(baseStyle, style, mainWindow);
   document.documentElement.appendChild(host);
   try {
     fn(tabs, style);
@@ -270,6 +276,71 @@ function testTabAttentionToggleIsReversible(): void {
       "700",
       "attention title weight returns",
     );
+  });
+}
+
+function testHiddenCloseButtonOverridesLeptonClippedTabs(): void {
+  withTabIndicatorFixture((tabs, style) => {
+    tabs.setAttribute("closebuttons", "activetab");
+    const vendorStyle = document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "style",
+    );
+    // Exact two-ID display selectors from Lepton's close_button_at_hover rule.
+    // They beat a one-ID hide rule on background tabs and show it on hover.
+    vendorStyle.textContent = `
+      #tabbrowser-tabs[closebuttons="activetab"]
+        > #pinned-tabs-container
+        > .tabbrowser-tab:not([pinned])
+        > .tab-stack
+        > .tab-content
+        > .tab-close-button:not([selected]),
+      #tabbrowser-tabs[closebuttons="activetab"]
+        > #tabbrowser-arrowscrollbox
+        > .tabbrowser-tab:not([pinned])
+        > .tab-stack
+        > .tab-content
+        > .tab-close-button:not([selected]) {
+        display: inline-flex !important;
+        display: -moz-inline-box !important;
+      }
+    `;
+    tabs.before(vendorStyle);
+    const buttons = ["tabbrowser-arrowscrollbox", "pinned-tabs-container"].map(
+      (id) => {
+        const container = document.createElementNS(
+          "http://www.w3.org/1999/xhtml",
+          "div",
+        );
+        container.id = id;
+        tabs.appendChild(container);
+        const tab = tabIndicator(container, "tabbrowser-tab");
+        const stack = tabIndicator(tab, "tab-stack");
+        const content = tabIndicator(stack, "tab-content");
+        return tabIndicator(content, "tab-close-button");
+      },
+    );
+    const before = buttons.map((button) => indicatorStyle(button).display);
+    assert(
+      before.every((display) => display !== "none"),
+      "Lepton shows background close buttons",
+    );
+    style.textContent = cssFor({ hiddenTabCloseButton: true });
+    for (const button of buttons) {
+      assertEquals(
+        indicatorStyle(button).display,
+        "none",
+        "close button hiding wins over Lepton's two-ID rule",
+      );
+    }
+    style.textContent = cssFor({});
+    buttons.forEach((button, index) => {
+      assertEquals(
+        indicatorStyle(button).display,
+        before[index],
+        "disabling the setting restores Lepton's close button display",
+      );
+    });
   });
 }
 
@@ -1095,6 +1166,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "tab attention toggle is reversible",
       fn: testTabAttentionToggleIsReversible,
+    },
+    {
+      name: "hidden close button overrides Lepton clipped tabs",
+      fn: testHiddenCloseButtonOverridesLeptonClippedTabs,
     },
     { name: "no lepton pref gate", fn: testNoLeptonPrefGate },
     {
