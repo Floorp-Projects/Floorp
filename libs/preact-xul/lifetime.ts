@@ -57,6 +57,14 @@ export function createRootHMR<T>(
   hot?: ViteHotContext,
 ): T {
   return createRoot((dispose) => {
+    // Browser-window lifetime also owns production roots, where import.meta.hot
+    // is absent. In particular, service-owned prefs observers must release the
+    // closing chrome realm instead of keeping its signals and DOM reachable.
+    const view = typeof document === "undefined" ? null : document.defaultView;
+    if (view) {
+      view.addEventListener("unload", dispose, { once: true });
+      addDisposer(() => view.removeEventListener("unload", dispose));
+    }
     if (hot) {
       let roots = hotRoots.get(hot);
       if (!roots) hotRoots.set(hot, roots = new Set());
@@ -68,7 +76,6 @@ export function createRootHMR<T>(
         !hot.data.__preactXulExternalDisposeOwner &&
         !hot.data.__preactXulDisposeRegistered
       ) {
-        hot.data.__preactXulDisposeRegistered = true;
         hot.dispose(() => {
           try {
             disposeRoot(hot);
@@ -76,6 +83,8 @@ export function createRootHMR<T>(
             hot.data.__preactXulDisposeRegistered = false;
           }
         });
+        // A failed registration must leave the module eligible to retry.
+        hot.data.__preactXulDisposeRegistered = true;
       }
     }
     return fn(dispose);
@@ -95,8 +104,8 @@ export function rootEffect(fn: Parameters<typeof effect>[0]): Disposer {
  * initial attachment and inspect connectivity after each mutation batch.
  */
 export function createNodeDisposer(node: Element, cleanup: Disposer): Disposer {
-  const doc = node.ownerDocument;
-  const view = doc.defaultView;
+  let doc = node.ownerDocument;
+  let view = doc.defaultView;
   let connected = node.isConnected;
   let disposed = false;
   const dispose = () => {
@@ -109,6 +118,7 @@ export function createNodeDisposer(node: Element, cleanup: Disposer): Disposer {
   const observer = new MutationObserver((mutations) => {
     if (node.isConnected) {
       connected = true;
+      if (node.ownerDocument !== doc) observeDocument(node.ownerDocument);
       return;
     }
     const removed = mutations.some((mutation) =>
@@ -118,8 +128,15 @@ export function createNodeDisposer(node: Element, cleanup: Disposer): Disposer {
     );
     if (connected || removed) dispose();
   });
-  observer.observe(doc, { childList: true, subtree: true });
-  view?.addEventListener("unload", dispose, { once: true });
+  const observeDocument = (next: Document) => {
+    observer.disconnect();
+    view?.removeEventListener("unload", dispose);
+    doc = next;
+    view = doc.defaultView;
+    observer.observe(doc, { childList: true, subtree: true });
+    view?.addEventListener("unload", dispose, { once: true });
+  };
+  observeDocument(doc);
   addDisposer(dispose);
   return dispose;
 }

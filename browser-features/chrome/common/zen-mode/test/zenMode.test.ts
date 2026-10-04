@@ -3,6 +3,7 @@
 
 import { createRoot } from "@nora/preact-xul/lifetime";
 import { render } from "@nora/preact-xul";
+import { act } from "preact/test-utils";
 import {
   attachZenModeToWindow,
   destroyZenModeForWindow,
@@ -462,7 +463,7 @@ const tests: TestCase[] = [
   {
     name: "menu reflects and toggles its owning window controller",
     async fn() {
-      await withSeed(false, () => {
+      await withSeed(false, async () => {
         const controller = attachZenModeToWindow(window);
         assert(controller !== null, "real window controller should exist");
         const originalEnabled = controller.enabled();
@@ -486,7 +487,9 @@ const tests: TestCase[] = [
             "Z",
             "menu item should retain its access key",
           );
-          menuitem.dispatchEvent(new Event("command", { bubbles: true }));
+          await act(() => {
+            menuitem.dispatchEvent(new Event("command", { bubbles: true }));
+          });
           assertEquals(
             controller.enabled(),
             true,
@@ -495,6 +498,27 @@ const tests: TestCase[] = [
           assert(
             menuitem.hasAttribute("checked"),
             "menu checked state should react to its controller",
+          );
+          assert(
+            menuitem.matches(":checked"),
+            "the native XUL menu item is checked when enabled",
+          );
+          await act(() => {
+            menuitem.dispatchEvent(new Event("command", { bubbles: true }));
+          });
+          assertEquals(controller.enabled(), false, "second command disables");
+          assert(
+            !menuitem.hasAttribute("checked"),
+            "menu checked attribute should be removed when disabled",
+          );
+          assert(
+            !menuitem.matches(":checked"),
+            "the native XUL menu item is unchecked when disabled",
+          );
+          assertEquals(
+            container.querySelector("#toggle_zenmode"),
+            menuitem,
+            "signal updates should preserve the native menu item",
           );
         } finally {
           dispose();

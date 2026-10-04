@@ -7,9 +7,11 @@ import { config } from "#features-chrome/common/designs/configs.ts";
 import { rootEffect } from "@nora/preact-xul/lifetime";
 
 export class TabDoubleClickClose {
-  constructor() {
+  constructor(
+    readOption: () => boolean = () => config.value.tab.tabDoubleClickToClose,
+  ) {
     rootEffect(() => {
-      const option = config.value.tab.tabDoubleClickToClose;
+      const option = readOption();
       Services.prefs.setBoolPref("browser.tabs.closeTabByDblclick", option);
     });
   }

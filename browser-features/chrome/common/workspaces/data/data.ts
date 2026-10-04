@@ -129,16 +129,26 @@ export function setWorkspacesDataStore<K extends keyof TWorkspacesStoreData>(
     | ((previous: TWorkspacesStoreData[K]) => TWorkspacesStoreData[K]),
 ): void {
   const current = _workspacesDataSignal.peek();
+  let next: TWorkspacesStoreData;
   if (typeof key !== "string") {
-    _workspacesDataSignal.value = {
+    next = {
       ...current,
       ...(typeof key === "function" ? key(current) : key),
     };
-    return;
+  } else {
+    if (updater === undefined) return;
+    const value = typeof updater === "function"
+      ? updater(current[key])
+      : updater;
+    next = { ...current, [key]: value };
   }
-  if (updater === undefined) return;
-  const value = typeof updater === "function" ? updater(current[key]) : updater;
-  _workspacesDataSignal.value = { ...current, [key]: value };
+  // The preference round trip used to normalize every update. Do this before
+  // publishing as well: an own undefined icon must become absent even when the
+  // serialized preference is unchanged and Gecko sends no observer notification.
+  _workspacesDataSignal.value = JSON.parse(
+    JSON.stringify(next, (key, value) => key === "data" ? [...value] : value),
+    (key, value) => key === "data" ? new Map(value) : value,
+  ) as TWorkspacesStoreData;
 }
 
 /**

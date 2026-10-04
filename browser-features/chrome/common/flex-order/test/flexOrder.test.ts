@@ -3,6 +3,7 @@
 
 import { gFlexOrder } from "../flex-order.tsx";
 import { createRoot } from "@nora/preact-xul/lifetime";
+import { act } from "preact/test-utils";
 
 import {
   assert,
@@ -83,9 +84,9 @@ function testInitRendersFlexOrderStyle(): void {
   cleanupFlexOrderStyle();
 }
 
-function testFloorpSidebarAtRight(): void {
+async function testFloorpSidebarAtRight(): Promise<void> {
   initializeFlexOrder();
-  gFlexOrder.applyFlexOrder(true);
+  await act(() => gFlexOrder.applyFlexOrder(true));
 
   const styleText = findFlexOrderStyleText();
   assert(styleText !== undefined, "flex-order style should remain rendered");
@@ -107,9 +108,9 @@ function testFloorpSidebarAtRight(): void {
   cleanupFlexOrderStyle();
 }
 
-function testFloorpSidebarAtLeft(): void {
+async function testFloorpSidebarAtLeft(): Promise<void> {
   initializeFlexOrder();
-  gFlexOrder.applyFlexOrder(false);
+  await act(() => gFlexOrder.applyFlexOrder(false));
 
   const styleText = findFlexOrderStyleText();
   assert(styleText !== undefined, "flex-order style should remain rendered");
@@ -155,7 +156,7 @@ function testFirefoxOrderingIsNotOverridden(): void {
   cleanupFlexOrderStyle();
 }
 
-function testFirefoxSidebarGroupRemainsCoherent(): void {
+async function testFirefoxSidebarGroupRemainsCoherent(): Promise<void> {
   initializeFlexOrder();
   const sidebarController = (globalThis as unknown as {
     SidebarController?: { setPosition(): void };
@@ -210,7 +211,7 @@ function testFirefoxSidebarGroupRemainsCoherent(): void {
 
       const firefoxOrders = firefoxOwnedIds.map(getComputedOrder);
       for (const floorpAtRight of [true, false]) {
-        gFlexOrder.applyFlexOrder(floorpAtRight);
+        await act(() => gFlexOrder.applyFlexOrder(floorpAtRight));
         const floorpOrders = floorpIds.map(getComputedOrder);
         if (floorpAtRight) {
           assert(
@@ -232,18 +233,24 @@ function testFirefoxSidebarGroupRemainsCoherent(): void {
       Services.prefs.clearUserPref(positionPref);
     }
     sidebarController.setPosition();
-    gFlexOrder.applyFlexOrder(originalFloorpPosition);
+    await act(() => gFlexOrder.applyFlexOrder(originalFloorpPosition));
     cleanupFlexOrderStyle();
   }
 }
 
-function testPositionCanBeUpdatedWithoutRenderingAnotherStyle(): void {
+async function testPositionCanBeUpdatedWithoutRenderingAnotherStyle(): Promise<void> {
   initializeFlexOrder();
+  const originalStyle = document.getElementById(flexOrderStyleId);
 
-  gFlexOrder.applyFlexOrder(true);
-  gFlexOrder.applyFlexOrder(false);
+  await act(() => gFlexOrder.applyFlexOrder(true));
+  await act(() => gFlexOrder.applyFlexOrder(false));
   const styleText = findFlexOrderStyleText();
   assert(styleText !== undefined, "flex-order style should remain rendered");
+  assertEquals(
+    document.getElementById(flexOrderStyleId),
+    originalStyle,
+    "position updates should retain the same style element",
+  );
   assertEquals(
     getRenderedOrder(styleText, "#panel-sidebar-box"),
     -2,
@@ -292,6 +299,6 @@ export async function runAllTests(): Promise<void> {
   } finally {
     cleanupFlexOrderStyle();
     if (originalStyle) document.head.appendChild(originalStyle);
-    gFlexOrder.applyFlexOrder(originalFloorpAtRight);
+    await act(() => gFlexOrder.applyFlexOrder(originalFloorpAtRight));
   }
 }

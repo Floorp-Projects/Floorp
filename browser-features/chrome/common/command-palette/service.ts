@@ -5,111 +5,94 @@ import { CommandPaletteController } from "./controller.ts";
 import { signal } from "@preact/signals";
 import {
   addDisposer,
+  createRoot,
   createRootHMR,
   rootEffect,
 } from "@nora/preact-xul/lifetime";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 
 export class CommandPaletteService {
-  private controllers: Map<Window, CommandPaletteController> = new Map();
-
+  private controller: CommandPaletteController | null = null;
   private controllerRevision = signal(0);
-  private unloadCallbacks = new Map<Window, () => void>();
+  private disposed = true;
+  private disposeRoot: (() => void) | null = null;
 
-  constructor() {
-    addDisposer(() => this.destroyAllControllers());
-    this.registerAction();
-    this.initialize();
-
-    // rootEffect registers its dispose with the enclosing createRootHMR scope
-    // so the effect is torn down on HMR reload.
-    rootEffect(() => {
-      const enabled = isEnabled(); // reads _enabled.value → tracked
-      if (enabled) {
-        this.attachToAllWindows();
-      } else {
-        this.destroyAllControllers();
-      }
+  constructor(private readonly targetWindow: Window = window) {
+    if (targetWindow.closed) return;
+    this.disposed = false;
+    this.disposeRoot = createRoot((dispose) => {
+      targetWindow.addEventListener("unload", dispose, { once: true });
+      addDisposer(() => {
+        this.disposed = true;
+        targetWindow.removeEventListener("unload", dispose);
+        this.destroyController();
+      });
+      this.registerAction();
+      rootEffect(() => {
+        if (isEnabled()) this.attachToWindow(targetWindow);
+        else this.destroyController();
+      });
+      return dispose;
     });
   }
 
   private registerAction(): void {
-    gestureActions.registerAction({
-      name: "floorp-toggle-command-palette",
-      fn: (win) => {
-        const controller = this.controllers.get(win);
-        if (controller) {
-          controller.togglePalette();
+    const name = "floorp-toggle-command-palette";
+    const previous = gestureActions.getAllActions().get(name);
+    const action = {
+      name,
+      fn: (win: Window) => {
+        if (!this.disposed && win === this.targetWindow && !win.closed) {
+          this.controller?.togglePalette();
         }
       },
+    };
+    gestureActions.registerAction(action);
+    addDisposer(() => {
+      const actions = gestureActions.getAllActions();
+      // Do not remove a replacement installed by a newer module owner.
+      if (actions.get(name) !== action) return;
+      if (previous) actions.set(name, previous);
+      else actions.delete(name);
     });
   }
 
-  private initialize(): void {
-    if (isEnabled()) {
-      this.attachToAllWindows();
-    }
-  }
-
-  private attachToAllWindows(): void {
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const win = windows.getNext() as Window;
-      this.attachToWindow(win);
-    }
-  }
-
   public attachToWindow(win: Window): void {
-    // deno-lint-ignore no-explicit-any
-    if ((win as any).__commandPaletteControllerAttached === true) return;
-    if (this.controllers.has(win)) return;
-
-    if (isEnabled()) {
-      const controller = new CommandPaletteController(win);
-      this.controllers.set(win, controller);
-      this.controllerRevision.value = this.controllerRevision.peek() + 1;
-
-      // deno-lint-ignore no-explicit-any
-      (win as any).__commandPaletteControllerAttached = true;
-
-      const onUnload = () => {
-        controller.destroy();
-        this.controllers.delete(win);
-        this.unloadCallbacks.delete(win);
-        this.controllerRevision.value = this.controllerRevision.peek() + 1;
-        try {
-          // deno-lint-ignore no-explicit-any
-          delete (win as any).__commandPaletteControllerAttached;
-        } catch {
-          // Window might be already gone
-        }
-      };
-
-      this.unloadCallbacks.set(win, onUnload);
-      win.addEventListener("unload", onUnload, { once: true });
-    }
+    if (
+      this.disposed || win !== this.targetWindow || win.closed ||
+      this.controller || !isEnabled()
+    ) return;
+    this.controller = new CommandPaletteController(win);
+    this.controllerRevision.value = this.controllerRevision.peek() + 1;
+    // Diagnostic only; each realm owns the controller consumed by its own UI.
+    (win as Window & { __commandPaletteControllerAttached?: boolean })
+      .__commandPaletteControllerAttached = true;
   }
 
   public getController(win: Window): CommandPaletteController | undefined {
     this.controllerRevision.value;
-    return this.controllers.get(win);
+    return !this.disposed && win === this.targetWindow
+      ? this.controller ?? undefined
+      : undefined;
   }
 
-  private destroyAllControllers(): void {
-    for (const [win, controller] of this.controllers.entries()) {
-      const onUnload = this.unloadCallbacks.get(win);
-      if (onUnload) win.removeEventListener("unload", onUnload);
+  private destroyController(): void {
+    if (!this.controller) return;
+    const controller = this.controller;
+    this.controller = null;
+    try {
       controller.destroy();
-      try {
-        // deno-lint-ignore no-explicit-any
-        delete (win as any).__commandPaletteControllerAttached;
-      } catch {
-        // Window might be already gone
-      }
+    } finally {
+      delete (this.targetWindow as Window & {
+        __commandPaletteControllerAttached?: boolean;
+      }).__commandPaletteControllerAttached;
+      this.controllerRevision.value = this.controllerRevision.peek() + 1;
     }
-    this.controllers.clear();
-    this.unloadCallbacks.clear();
-    this.controllerRevision.value = this.controllerRevision.peek() + 1;
+  }
+
+  public destroy(): void {
+    this.disposeRoot?.();
+    this.disposeRoot = null;
   }
 }
 

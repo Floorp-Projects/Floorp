@@ -31,9 +31,18 @@ async function dismissDialog() {
   );
   await pause();
 }
-export async function route(path: string, selector: string) {
+async function goHome() {
   await dismissDialog();
   await click('a[href="/overview/home"]');
+  // React Router transitions may take longer than click()'s brief pause. Wait
+  // for the home page to commit so returning really remounts the old route.
+  await until(
+    () => document.querySelector("#settings-destinations"),
+    "Home route did not render before returning to settings",
+  );
+}
+export async function route(path: string, selector: string) {
+  await goHome();
   await click(`a[href="/${path}"]`);
   await until(
     () => document.querySelector(selector),
@@ -101,6 +110,7 @@ export async function runPageTests() {
       "Legacy double-click preference loads and saves under the corrected key",
     fn: async () => {
       const original = prefs.get(DESIGN);
+      assert(typeof original === "string", "Design fixture settings exist");
       try {
         for (const enabled of [true, false]) {
           const saved = JSON.parse(String(original));
@@ -511,8 +521,9 @@ export async function runPageTests() {
     tests.push({
       name: `${path} failed load disables editing without overwriting settings`,
       fn: async () => {
-        await click('a[href="/overview/home"]');
+        await goHome();
         const before = prefs.get(key);
+        let failedControl: Element | null = null;
         faults.read = key;
         try {
           await click(`a[href="/features/${path}"]`);
@@ -520,8 +531,9 @@ export async function runPageTests() {
             () => document.querySelector("[role=alert]"),
             "Load error missing",
           );
+          failedControl = element(selector);
           assert(
-            element(selector).matches(":disabled"),
+            failedControl.matches(":disabled"),
             "Editing enabled after failed load",
           );
           assertEquals(
@@ -533,6 +545,19 @@ export async function runPageTests() {
           faults.read = "";
         }
         await route(`features/${path}`, selector);
+        assert(
+          element(selector) !== failedControl,
+          "Recovery must remount the failed page",
+        );
+        assert(
+          !element(selector).matches(":disabled"),
+          "Editing stays disabled after a successful reload",
+        );
+        assertEquals(
+          prefs.get(key),
+          before,
+          "Recovery must load the saved settings without overwriting them",
+        );
       },
     });
   }

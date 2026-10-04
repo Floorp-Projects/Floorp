@@ -16,12 +16,19 @@ import {
 
 const PREF_KEY = "noraneko.statusbar.enable";
 
-function withPrefRestore(run: () => void | Promise<void>): void {
+function withPrefRestore(run: () => void): void {
   const originalValue = Services.prefs.getBoolPref(PREF_KEY, false);
+  const hadUserValue = Services.prefs.prefHasUserValue(PREF_KEY);
+  let dispose = () => {};
   try {
-    run();
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      run();
+    });
   } finally {
-    Services.prefs.setBoolPref(PREF_KEY, originalValue);
+    dispose();
+    if (hadUserValue) Services.prefs.setBoolPref(PREF_KEY, originalValue);
+    else Services.prefs.clearUserPref(PREF_KEY);
   }
 }
 
@@ -306,29 +313,43 @@ function testInitIsIdempotent(): void {
 // Tests – StatusBar class (index.ts)
 // ---------------------------------------------------------------------------
 
-function testStatusBarClassConstruction(): void {
-  withPrefRestore(async () => {
-    // The StatusBar class should be constructable
-    const statusBarClass = await import("../index.ts");
-    assert(
-      statusBarClass !== null,
-      "StatusBar module should be importable",
-    );
-  });
+async function testStatusBarClassConstruction(): Promise<void> {
+  // The StatusBar class should be constructable
+  const statusBarClass = await import("../index.ts");
+  assert(
+    statusBarClass !== null,
+    "StatusBar module should be importable",
+  );
 }
 
 function testStatusBarInitCreatesManager(): void {
-  withPrefRestore(async () => {
-    // Reset global state
-    const { manager: _oldManager } = await import("../index.ts");
-    const _statusBarClass = await import("../index.ts");
-
-    // After importing StatusBar, the manager should be initialized
+  const original = globalThis.gFloorp?.statusBar;
+  withPrefRestore(() => {
+    const manager = new StatusBarManager();
+    manager.init();
     assert(
-      globalThis.gFloorp?.statusBar !== undefined,
-      "gFloorp.statusBar should be defined after StatusBar init",
+      globalThis.gFloorp?.statusBar !== undefined &&
+        globalThis.gFloorp.statusBar !== original,
+      "explicit manager initialization should publish its own API",
+    );
+    const nextShow = !manager.showStatusBar.value;
+    globalThis.gFloorp.statusBar.setShow(nextShow);
+    assertEquals(
+      manager.showStatusBar.value,
+      nextShow,
+      "the initialized API updates its own manager",
+    );
+    assertEquals(
+      Services.prefs.getBoolPref(PREF_KEY, false),
+      nextShow,
+      "the initialized API persists the new value",
     );
   });
+  assertEquals(
+    globalThis.gFloorp?.statusBar,
+    original,
+    "temporary initialization restores the live statusbar API",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -683,15 +704,25 @@ function testStatuspanelAttributeChangeHandling(): void {
 
 function testGlobalFloorpCleanup(): void {
   withPrefRestore(() => {
-    const _manager = new StatusBarManager();
-
-    // The manager should register cleanup for CustomizableUI
-    // We can't directly test cleanup without proper disposal mechanism,
-    // but we can verify the registration happened
-    assert(
-      globalThis.gFloorp?.statusBar !== undefined,
-      "global binding should be set up",
-    );
+    const original = globalThis.gFloorp?.statusBar;
+    const dispose = createRoot((cleanup) => {
+      new StatusBarManager();
+      return cleanup;
+    });
+    try {
+      assert(
+        globalThis.gFloorp?.statusBar !== original,
+        "new API owns the binding",
+      );
+      dispose();
+      assertEquals(
+        globalThis.gFloorp?.statusBar,
+        original,
+        "disposing a temporary manager restores the live owner's API",
+      );
+    } finally {
+      dispose();
+    }
   });
 }
 
@@ -847,7 +878,7 @@ export async function runAllTests(): Promise<void> {
       fn: testStatusBarClassConstruction,
     },
     {
-      name: "StatusBar init creates manager",
+      name: "explicit StatusBar manager init publishes and restores its API",
       fn: testStatusBarInitCreatesManager,
     },
 

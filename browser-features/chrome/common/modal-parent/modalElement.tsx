@@ -28,7 +28,9 @@ export function attachModalBackdropListener(
 export class ModalElement {
   private static instance: ModalElement;
   private initialized: boolean = false;
-  private currentManager: ModalManager | null = null;
+  private currentManager:
+    | Pick<ModalManager, "hide" | "handleBackdropClick">
+    | null = null;
 
   private constructor() {
     // Private constructor for singleton
@@ -41,11 +43,14 @@ export class ModalElement {
     return ModalElement.instance;
   }
 
-  public initializeModal(modalManager: ModalManager): void {
+  public initializeModal(
+    modalManager: Pick<ModalManager, "hide" | "handleBackdropClick">,
+    targetParent = ModalManager.parentElement,
+    head = document?.head,
+  ): void {
     this.currentManager = modalManager;
     if (this.initialized) return;
 
-    const head = document?.head;
     if (!head) {
       console.warn(
         "[ModalElement] document.head is unavailable; skip modal style injection.",
@@ -53,7 +58,6 @@ export class ModalElement {
       return;
     }
 
-    const targetParent = ModalManager.parentElement;
     if (!targetParent) {
       console.error(
         "[ModalElement] Modal parent element not found; modal cannot be initialized.",
@@ -61,39 +65,30 @@ export class ModalElement {
       return;
     }
 
-    createRootHMR(() => {
-      try {
-        addDisposer(safeRender(<style>{style}</style>, head));
-      } catch (error) {
-        const reason = error instanceof Error
-          ? error
-          : new Error(String(error));
-        console.error("[ModalElement] Failed to render modal styles.", reason);
-      }
-    }, import.meta.hot);
-
-    createRootHMR(() => {
-      try {
-        addDisposer(safeRender(
+    try {
+      createRootHMR(() => {
+        safeRender(<style>{style}</style>, head);
+        safeRender(
           <Modal
             targetParent={targetParent}
             onBackdropClick={(e) => this.currentManager?.handleBackdropClick(e)}
           />,
           targetParent,
-        ));
+        );
         const detachBackdrop = attachModalBackdropListener(
           targetParent,
           () => this.currentManager,
         );
         addDisposer(detachBackdrop);
-      } catch (error) {
-        const reason = error instanceof Error
-          ? error
-          : new Error(String(error));
-        console.error("[ModalElement] Failed to render modal root.", reason);
-      }
-    }, import.meta.hot);
-
-    this.initialized = true;
+        this.initialized = true;
+        addDisposer(() => {
+          this.initialized = false;
+          this.currentManager = null;
+        });
+      }, import.meta.hot);
+    } catch (error) {
+      // createRootHMR disposes partial styles/UI before a later retry.
+      console.error("[ModalElement] Failed to render modal root.", error);
+    }
   }
 }

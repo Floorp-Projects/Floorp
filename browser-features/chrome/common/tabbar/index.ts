@@ -6,15 +6,14 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { MultirowTabbarClass } from "./multirow-tabbar/multirow-tabbar";
 import { TabbarStyleClass } from "./tabbbar-style/tabbar-style";
+import { initializeTabbarWhenReady } from "./lifecycle.ts";
 
 @noraComponent("TabBar", import.meta.hot)
 export default class TabBar extends NoraComponentBase {
   init() {
-    globalThis.SessionStore.promiseInitialized.then(() => {
-      globalThis.setTimeout(() => {
-        new TabbarStyleClass();
-        new MultirowTabbarClass();
-      }, 1000);
+    initializeTabbarWhenReady(globalThis.SessionStore.promiseInitialized, () => {
+      new TabbarStyleClass();
+      new MultirowTabbarClass();
     });
   }
 }

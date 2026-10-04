@@ -697,7 +697,7 @@ export function ZenModeMenuElement(props: { targetWindow: Window }) {
       type="checkbox"
       id="toggle_zenmode"
       data-floorp-context-menu-key="floorp.zen-mode.toggle"
-      checked={controller?.enabled() || undefined}
+      checked={controller?.enabled() ?? false}
       onCommand={handleCommand}
       accesskey="Z"
     />

@@ -120,10 +120,14 @@ export function DonwloadBar() {
                   data-l10n-id="downloads-panel-items"
                   data-l10n-attrs="style"
                   context="downloadsContextMenu"
-                  onmouseover="DownloadsView.onDownloadMouseOver(event);"
-                  onmouseout="DownloadsView.onDownloadMouseOut(event);"
-                  oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
-                  ondragstart="DownloadsView.onDownloadDragStart(event);"
+                  onMouseOver={(event) =>
+                    DownloadsView.onDownloadMouseOver(event)}
+                  onMouseOut={(event) =>
+                    DownloadsView.onDownloadMouseOut(event)}
+                  onContextMenu={(event) =>
+                    DownloadsView.onDownloadContextMenu(event)}
+                  onDragStart={(event) =>
+                    DownloadsView.onDownloadDragStart(event)}
                 />
                 <xul:description
                   id="emptyDownloads"
@@ -149,8 +153,8 @@ export function DonwloadBar() {
                   id="downloadsSummary"
                   align="center"
                   orient="horizontal"
-                  onkeydown="DownloadsSummary.onKeyDown(event);"
-                  onclick="DownloadsSummary.onClick(event);"
+                  onKeyDown={(event) => DownloadsSummary.onKeyDown(event)}
+                  onClick={(event) => DownloadsSummary.onClick(event)}
                 >
                   <xul:image class="downloadTypeIcon" />
                   <xul:vbox pack="center" flex="1" class="downloadContainer">

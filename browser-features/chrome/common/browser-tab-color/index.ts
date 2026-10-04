@@ -37,12 +37,17 @@ export default class BrowserTabColor extends NoraComponentBase {
       },
     } satisfies Pick<nsIWebProgressListener, "onLocationChange">;
 
-    manager = new TabColorManager();
+    const previousManager = manager;
+    const ownedManager = new TabColorManager();
+    manager = ownedManager;
+    addDisposer(() => {
+      if (manager === ownedManager) manager = previousManager;
+    });
     gBrowser.addTabsProgressListener(listener);
     gBrowser.tabContainer.addEventListener("TabSelect", this.changeTabColor);
 
     rootEffect(() => {
-      if (manager.enableTabColor.value) {
+      if (ownedManager.enableTabColor.value) {
         this.changeTabColor();
       } else {
         document?.getElementById("floorp-toolbar-bgcolor")?.remove();
@@ -58,7 +63,7 @@ export default class BrowserTabColor extends NoraComponentBase {
         );
       }
     });
-    manager.init();
+    ownedManager.init();
   }
 
   changeTabColor() {

@@ -22,6 +22,7 @@ type StatusBarGlobals = typeof globalThis & {
 };
 
 export class StatusBarManager {
+  private initialized = false;
   showStatusBar = signal(
     Services.prefs.getBoolPref("noraneko.statusbar.enable", false),
   );
@@ -48,20 +49,27 @@ export class StatusBarManager {
     if (!globalThis.gFloorp) {
       globalThis.gFloorp = {};
     }
-    globalThis.gFloorp.statusBar = {
+    const previousStatusBar = globalThis.gFloorp.statusBar;
+    const statusBar = {
       setShow: (v: boolean) => {
         this.showStatusBar.value = v;
       },
     };
+    globalThis.gFloorp.statusBar = statusBar;
+    addDisposer(() => {
+      if (globalThis.gFloorp?.statusBar === statusBar) {
+        globalThis.gFloorp.statusBar = previousStatusBar;
+      }
+    });
   }
 
   init() {
+    if (this.initialized) return;
+    // Areas are shared across browser windows and retain user placements.
+    // Disposing one window's view must not unregister the process-wide area.
     globalThis.CustomizableUI.registerArea("nora-statusbar", {
       type: globalThis.CustomizableUI.TYPE_TOOLBAR,
       defaultPlacements: ["screenshot-button", "fullscreen-button"],
-    });
-    addDisposer(() => {
-      globalThis.CustomizableUI.unregisterArea("nora-statusbar", true);
     });
 
     const statusbarNode = document?.getElementById("nora-statusbar");
@@ -71,6 +79,8 @@ export class StatusBarManager {
       );
       return;
     }
+    this.initialized = true;
+    addDisposer(() => this.initialized = false);
 
     globalThis.CustomizableUI.registerToolbarNode(statusbarNode);
 

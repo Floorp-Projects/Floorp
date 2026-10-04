@@ -183,6 +183,14 @@ declare namespace globalThis {
     contextMenu?: unknown;
     onDownloadAdded?(download: unknown): void;
     onDownloadAdded_hook?(download: unknown): void;
+    onDownloadMouseOver(event: MouseEvent): void;
+    onDownloadMouseOut(event: MouseEvent): void;
+    onDownloadContextMenu(event: MouseEvent): void;
+    onDownloadDragStart(event: DragEvent): void;
+  };
+  var DownloadsSummary: {
+    onKeyDown(event: KeyboardEvent): void;
+    onClick(event: MouseEvent): void;
   };
   var SidebarController: {
     currentID: string;

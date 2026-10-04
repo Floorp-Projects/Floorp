@@ -107,15 +107,21 @@ export async function runAllTests(): Promise<void> {
           executable: "/Applications/Floorp.app/Contents/MacOS/floorp",
         };
         const support = new TestMacOSSupport(options);
-        const bundle = await getMacAppBundle(ssb, options);
-        const renamed = { ...ssb, name: "Renamed Native App" };
+        // Windows cannot create filenames containing < or >. Only that host
+        // needs a portable name; macOS retains the original name and all hosts
+        // exercise metadata preservation. XML escaping is tested below.
+        const app = Services.appinfo.OS === "WINNT"
+          ? { ...ssb, name: "A & B App / 日本語" }
+          : ssb;
+        const bundle = await getMacAppBundle(app, options);
+        const renamed = { ...app, name: "Renamed Native App" };
         const renamedBundle = await getMacAppBundle(renamed, options);
         const store = new TestStore(
           PathUtils.join(root, "profile", "ssb", "ssb.json"),
         );
         try {
           Services.prefs.setBoolPref(pref, false);
-          await support.install(ssb, store);
+          await support.install(app, store);
           const markerPath = PathUtils.join(
             bundle.path,
             ...markerDirectory.split("/"),
@@ -130,7 +136,7 @@ export async function runAllTests(): Promise<void> {
             version: 4,
             integration: "app-shim",
             profileDir: options.profileDir,
-            ssb,
+            ssb: app,
           });
           const marker = await IOUtils.readUTF8(markerPath);
           const plistPath = PathUtils.join(

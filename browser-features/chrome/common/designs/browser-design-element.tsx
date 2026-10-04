@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useRef } from "preact/hooks";
 import { useComputed, useSignalEffect } from "@preact/signals";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
@@ -32,58 +31,33 @@ export function replaceIconPaths(
   return css.replaceAll(/\.\.\/icons/g, iconBasePath);
 }
 
-export function BrowserDesignElement() {
-  const getCSS = () => getCSSFromConfig(config.value);
-
-  // Apply UserJS preferences
-  useSignalEffect(() => {
-    const { userjs } = getCSS();
-    if (userjs) {
-      applyUserJS(userjs);
-    }
-  });
-
-  // The Lepton-family designs still load pref-gated vendor CSS. Mirror the
-  // migrated settings after applying user.js so turning a toggle off also
-  // turns off the corresponding legacy rule.
-  useSignalEffect(() => {
-    const design = config.value.globalConfigs.userInterface;
-    const settings = getChromeExtrasSettings();
-    if (design === "lepton" || design === "photon" || design === "protonfix") {
-      syncLegacyChromeExtrasPrefs(settings);
-    }
-  });
-
-  const tabColorSheet = useRef<nsIURI | null>(null);
-
+/** Own the process-wide sheets required by this mounted design consumer. */
+export function useBrowserDesignAgentStyles(
+  getCSS: () => ReturnType<typeof getCSSFromConfig>,
+) {
   // Register content CSS using StyleSheetService (AGENT_SHEET)
   // These styles apply to all documents including web content
   useSignalEffect(() => {
     const { styles, stylesRaw, iconBasePath, useTabColorAsToolbarColor } =
       getCSS();
+    // Gecko keeps one entry per registration, including duplicate URIs. Every
+    // mounted consumer acquires its own entries and releases exactly those.
     const registeredURIs: nsIURI[] = [];
 
     if (useTabColorAsToolbarColor === true) {
-      if (!tabColorSheet.current) {
-        try {
-          const dataUri = `data:text/css;charset=utf-8,${
-            encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
-          }`;
-          const uri = Services.io.newURI(dataUri);
-          sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-          tabColorSheet.current = uri;
-        } catch (error) {
-          console.error(
-            `[BrowserDesignElement] Failed to register tab color CSS:`,
-            error,
-          );
-        }
+      try {
+        const dataUri = `data:text/css;charset=utf-8,${
+          encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
+        }`;
+        const uri = Services.io.newURI(dataUri);
+        sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+        registeredURIs.push(uri);
+      } catch (error) {
+        console.error(
+          `[BrowserDesignElement] Failed to register tab color CSS:`,
+          error,
+        );
       }
-    } else if (tabColorSheet.current) {
-      if (sss.sheetRegistered(tabColorSheet.current, AGENT_SHEET)) {
-        sss.unregisterSheet(tabColorSheet.current, AGENT_SHEET);
-      }
-      tabColorSheet.current = null;
     }
 
     // Development mode: Use raw CSS with icon path replacement (content styles only)
@@ -101,10 +75,8 @@ export function BrowserDesignElement() {
           }`;
           const uri = Services.io.newURI(dataUri);
 
-          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
-            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-            registeredURIs.push(uri);
-          }
+          sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+          registeredURIs.push(uri);
         } catch (error) {
           console.error(
             `[BrowserDesignElement] Failed to register raw CSS ${i + 1}:`,
@@ -118,10 +90,8 @@ export function BrowserDesignElement() {
         try {
           const uri = Services.io.newURI(styleUrl);
 
-          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
-            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-            registeredURIs.push(uri);
-          }
+          sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+          registeredURIs.push(uri);
         } catch (error) {
           console.error(
             `[BrowserDesignElement] Failed to register CSS: ${styleUrl}`,
@@ -147,6 +117,31 @@ export function BrowserDesignElement() {
       }
     };
   });
+}
+
+export function BrowserDesignElement() {
+  const getCSS = () => getCSSFromConfig(config.value);
+
+  // Apply UserJS preferences
+  useSignalEffect(() => {
+    const { userjs } = getCSS();
+    if (userjs) {
+      applyUserJS(userjs);
+    }
+  });
+
+  // The Lepton-family designs still load pref-gated vendor CSS. Mirror the
+  // migrated settings after applying user.js so turning a toggle off also
+  // turns off the corresponding legacy rule.
+  useSignalEffect(() => {
+    const design = config.value.globalConfigs.userInterface;
+    const settings = getChromeExtrasSettings();
+    if (design === "lepton" || design === "photon" || design === "protonfix") {
+      syncLegacyChromeExtrasPrefs(settings);
+    }
+  });
+
+  useBrowserDesignAgentStyles(getCSS);
 
   // Compute Chrome-only styles - URL-based (applied via DOM, not AGENT_SHEET)
   const chromeStyleUrls = useComputed(() => getCSS().chromeStyles ?? []);

@@ -167,7 +167,10 @@ export function safeRender(
     nodeType: 1,
     ownerDocument: doc,
     parentNode: container,
-    namespaceURI: HTML_NS,
+    namespaceURI: container.namespaceURI === XUL_NS ||
+        container.localName === "foreignObject"
+      ? HTML_NS
+      : container.namespaceURI,
     get childNodes() {
       return Array.from(container.childNodes).filter((node) => nodes.has(node));
     },
@@ -190,13 +193,33 @@ export function safeRender(
   const dispose = () => {
     if (disposed) return;
     disposed = true;
+    const errors: unknown[] = [];
+    const previousError = hookedOptions.__e;
+    // Preact reports ref/effect cleanup failures through its error hook. An
+    // unhandled throw there aborts sibling traversal, leaving subscriptions
+    // alive after their DOM has disappeared. Finish unmounting before rethrowing.
+    // This override lasts only for this synchronous unmount and preserves every
+    // existing error hook (including signals' tracking cleanup).
+    hookedOptions.__e = (error, vnode, oldVNode, info) => {
+      try {
+        if (previousError) previousError(error, vnode, oldVNode, info);
+        else throw error;
+      } catch (unhandled) {
+        errors.push(unhandled);
+      }
+    };
     try {
       preactRender(null, renderRoot);
     } finally {
+      hookedOptions.__e = previousError;
       for (const node of Array.from(container.childNodes)) {
         if (nodes.has(node)) container.removeChild(node);
       }
       anchor.remove();
+    }
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) {
+      throw new AggregateError(errors, "Preact root cleanup failed");
     }
   };
   try {

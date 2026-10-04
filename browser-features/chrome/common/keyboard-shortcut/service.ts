@@ -6,7 +6,7 @@
 import { _config, getConfig, isEnabled, setEnabled } from "./config.ts";
 import { KeyboardShortcutController } from "./controller.ts";
 import { createRootHMR } from "#features-chrome/utils/base";
-import { rootEffect } from "@nora/preact-xul/lifetime";
+import { addDisposer, createRoot, rootEffect } from "@nora/preact-xul/lifetime";
 import type { KeyboardShortcutConfig } from "./type.ts";
 import type { KeyboardShortcutFocusStoreReader } from "./editable-focus.ts";
 
@@ -26,110 +26,71 @@ function loadRemoteFocusStore(): KeyboardShortcutFocusStoreReader | null {
 }
 
 export class KeyboardShortcutService {
-  private controllers: Map<Window, KeyboardShortcutController> = new Map();
+  private controller: KeyboardShortcutController | null = null;
+  private disposed = true;
+  private disposeRoot: (() => void) | null = null;
   private lastConfigString = "";
   private readonly remoteFocusStore: KeyboardShortcutFocusStoreReader | null;
 
-  constructor(remoteFocusStore = loadRemoteFocusStore()) {
+  constructor(
+    remoteFocusStore = loadRemoteFocusStore(),
+    private readonly targetWindow: Window = window,
+  ) {
     this.remoteFocusStore = remoteFocusStore;
-    this.initialize();
-
-    rootEffect(() => {
-      const config = getConfig();
-      const configString = JSON.stringify(config);
-      const enabled = isEnabled();
-
-      if (this.lastConfigString && this.lastConfigString !== configString) {
-        this.destroyAllControllers();
-        if (enabled) {
-          this.attachToAllWindows();
+    if (targetWindow.closed) return;
+    this.disposed = false;
+    this.disposeRoot = createRoot((dispose) => {
+      targetWindow.addEventListener("unload", dispose, { once: true });
+      addDisposer(() => {
+        this.disposed = true;
+        targetWindow.removeEventListener("unload", dispose);
+        this.destroyController();
+      });
+      rootEffect(() => {
+        const configString = JSON.stringify(getConfig());
+        const enabled = isEnabled();
+        if (this.disposed || targetWindow.closed) return;
+        if (this.lastConfigString && this.lastConfigString !== configString) {
+          this.destroyController();
         }
-      }
-
-      this.lastConfigString = configString;
+        this.lastConfigString = configString;
+        if (enabled) this.attachToWindow(targetWindow);
+        else this.destroyController();
+      });
+      return dispose;
     });
-
-    rootEffect(() => {
-      const enabled = isEnabled();
-      if (enabled) {
-        this.attachToAllWindows();
-      } else {
-        this.destroyAllControllers();
-      }
-    });
-  }
-
-  private attachToAllWindows(): void {
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const win = windows.getNext() as Window;
-      this.attachToWindow(win);
-    }
   }
 
   public attachToWindow(win: Window): void {
-    // Check if this window already has a controller registered from ANY context
-    // This prevents duplicate controllers when multiple JS contexts try to attach to the same window
-    // deno-lint-ignore no-explicit-any
-    if ((win as any).__keyboardShortcutControllerAttached === true) {
-      return;
-    }
-
-    if (this.controllers.has(win)) {
-      return;
-    }
-
-    if (isEnabled()) {
-      const controller = new KeyboardShortcutController(
-        win,
-        this.remoteFocusStore,
-      );
-      this.controllers.set(win, controller);
-
-      // Mark the window as having a controller attached
-      // deno-lint-ignore no-explicit-any
-      (win as any).__keyboardShortcutControllerAttached = true;
-
-      const onUnload = () => {
-        controller.destroy();
-        this.controllers.delete(win);
-        // Clean up the marker when the window is closed
-        try {
-          // deno-lint-ignore no-explicit-any
-          delete (win as any).__keyboardShortcutControllerAttached;
-        } catch (_e) {
-          // Window might be already gone
-        }
-        try {
-          win.removeEventListener("unload", onUnload);
-        } catch (_e) {
-          // Window might be already gone
-        }
-      };
-
-      win.addEventListener("unload", onUnload, { once: true });
-    }
+    if (
+      this.disposed || win !== this.targetWindow || win.closed ||
+      this.controller || !isEnabled()
+    ) return;
+    this.controller = new KeyboardShortcutController(
+      win,
+      this.remoteFocusStore,
+    );
+    // Diagnostic only: another window's realm must not reserve this window.
+    (win as Window & { __keyboardShortcutControllerAttached?: boolean })
+      .__keyboardShortcutControllerAttached = true;
   }
 
-  private destroyAllControllers(): void {
-    for (const [win, controller] of this.controllers.entries()) {
+  private destroyController(): void {
+    if (!this.controller) return;
+    const controller = this.controller;
+    this.controller = null;
+    try {
       controller.destroy();
-      // Clean up the marker
-      try {
-        // deno-lint-ignore no-explicit-any
-        delete (win as any).__keyboardShortcutControllerAttached;
-      } catch (_e) {
-        // Window might be already gone
-      }
+    } finally {
+      delete (this.targetWindow as Window & {
+        __keyboardShortcutControllerAttached?: boolean;
+      }).__keyboardShortcutControllerAttached;
     }
-    this.controllers.clear();
   }
 
-  private initialize(): void {
-    this.lastConfigString = JSON.stringify(getConfig());
-    if (isEnabled()) {
-      this.attachToAllWindows();
-    }
+  public destroy(): void {
+    this.disposeRoot?.();
+    this.disposeRoot = null;
   }
 
   public isEnabled(): boolean {
@@ -137,13 +98,8 @@ export class KeyboardShortcutService {
   }
 
   public setEnabled(value: boolean): void {
+    if (this.disposed) return;
     setEnabled(value);
-
-    if (value) {
-      this.attachToAllWindows();
-    } else {
-      this.destroyAllControllers();
-    }
   }
 
   public getConfig(): KeyboardShortcutConfig {
@@ -151,12 +107,8 @@ export class KeyboardShortcutService {
   }
 
   public updateConfig(newConfig: KeyboardShortcutConfig): void {
+    if (this.disposed) return;
     setConfig(newConfig);
-
-    this.destroyAllControllers();
-    if (isEnabled()) {
-      this.attachToAllWindows();
-    }
   }
 }
 

@@ -88,7 +88,7 @@ export function SsbContainerSelect(
               label={option.label}
               value={String(option.userContextId)}
               closemenu="none"
-              checked={option.userContextId === selectedId ? true : undefined}
+              checked={option.userContextId === selectedId}
               onCommand={handleItemCommand(option.userContextId)}
             />
           ))}

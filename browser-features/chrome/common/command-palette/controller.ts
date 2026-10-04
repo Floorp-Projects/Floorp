@@ -38,10 +38,17 @@ function looksLikeUrl(query: string): boolean {
 
 export class CommandPaletteController {
   private eventListenersAttached = false;
+  private disposed = false;
   private targetWindow: Window;
   readonly state: PaletteState = createPaletteState();
 
-  constructor(win: Window = globalThis as unknown as Window) {
+  constructor(
+    win: Window = globalThis as unknown as Window,
+    private readonly searchProviders = {
+      history: searchHistoryCommands,
+      bookmarks: searchBookmarkCommands,
+    },
+  ) {
     this.targetWindow = win;
     this.init();
   }
@@ -58,6 +65,8 @@ export class CommandPaletteController {
   }
 
   public destroy(): void {
+    if (this.disposed) return;
+    this.disposed = true;
     this.stepChoicesLoadGeneration++;
     if (this.eventListenersAttached) {
       this.targetWindow.removeEventListener(
@@ -67,22 +76,14 @@ export class CommandPaletteController {
       );
       this.eventListenersAttached = false;
     }
+    this.cancelPendingSearch();
     this.clearAnimOutTimer();
-    if (this.historySearchTimer) {
-      clearTimeout(this.historySearchTimer);
-      this.historySearchTimer = null;
-    }
-    if (this.bookmarkSearchTimer) {
-      clearTimeout(this.bookmarkSearchTimer);
-      this.bookmarkSearchTimer = null;
-    }
-    if (this.state.isVisible()) {
-      this.hidePalette();
-    }
+    this.state.setIsVisible(false);
+    this.state.setIsAnimatingOut(false);
   }
 
   public togglePalette(): void {
-    if (!isEnabled()) return;
+    if (this.disposed || !isEnabled()) return;
     if (this.state.isAnimatingOut()) return;
 
     if (this.state.isVisible()) {
@@ -321,6 +322,8 @@ export class CommandPaletteController {
   }
 
   private showPalette(): void {
+    if (this.disposed) return;
+    this.cancelPendingSearch();
     this.state.reset();
     this.state.setFilteredCommands(this.buildInitialCommandList());
     this.state.setIsVisible(true);
@@ -336,9 +339,11 @@ export class CommandPaletteController {
       );
       SearchService.getDefault()
         .then((engine: { name?: string }) => {
+          if (this.disposed) return;
           this.defaultEngineName = engine?.name ?? null;
         })
         .catch(() => {
+          if (this.disposed) return;
           this.defaultEngineName = null;
         });
     } catch {
@@ -351,12 +356,29 @@ export class CommandPaletteController {
   private historySearchTimer: ReturnType<typeof setTimeout> | null = null;
   private bookmarkSearchTimer: ReturnType<typeof setTimeout> | null = null;
   private currentSearchQuery: string = "";
+  private searchGeneration = 0;
   private stepChoicesLoadGeneration = 0;
 
   public hidePalette(): void {
+    if (this.disposed) return;
     this.stepChoicesLoadGeneration++;
+    this.cancelPendingSearch();
     this.state.setIsAnimatingOut(true);
     this.state.setIsVisible(false);
+
+    // Safety fallback: reset isAnimatingOut even if transitionend never fires
+    // (prefers-reduced-motion, element removed, etc.)
+    this.clearAnimOutTimer();
+    this.animOutTimer = this.targetWindow.setTimeout(() => {
+      if (!this.disposed && this.state.isAnimatingOut()) {
+        this.state.setIsAnimatingOut(false);
+      }
+      this.animOutTimer = null;
+    }, 300);
+  }
+
+  private cancelPendingSearch(): void {
+    this.searchGeneration++;
     this.debouncedUpdateSearch.cancel();
 
     if (this.historySearchTimer) {
@@ -367,16 +389,6 @@ export class CommandPaletteController {
       clearTimeout(this.bookmarkSearchTimer);
       this.bookmarkSearchTimer = null;
     }
-
-    // Safety fallback: reset isAnimatingOut even if transitionend never fires
-    // (prefers-reduced-motion, element removed, etc.)
-    this.clearAnimOutTimer();
-    this.animOutTimer = this.targetWindow.setTimeout(() => {
-      if (this.state.isAnimatingOut()) {
-        this.state.setIsAnimatingOut(false);
-      }
-      this.animOutTimer = null;
-    }, 300);
   }
 
   private clearAnimOutTimer(): void {
@@ -387,6 +399,7 @@ export class CommandPaletteController {
   }
 
   public executeCommand(cmd: PaletteCommand): void {
+    if (this.disposed) return;
     // If the command has steps, enter input mode instead of executing immediately
     if (cmd.steps && cmd.steps.length > 0) {
       this.enterInputMode(cmd);
@@ -687,6 +700,7 @@ export class CommandPaletteController {
   }
 
   private enterInputMode(cmd: PaletteCommand): void {
+    this.cancelPendingSearch();
     this.state.setMode("input");
     this.state.setActiveCommand(cmd);
     this.state.setCurrentStepIndex(0);
@@ -843,7 +857,8 @@ export class CommandPaletteController {
 
   // --- Search ---
 
-  private doUpdateSearch(query: string): void {
+  private doUpdateSearch(query: string, generation: number): void {
+    if (this.disposed || generation !== this.searchGeneration) return;
     // In input mode, don't search — just update query state
     if (this.state.mode() === "input") {
       this.state.setQuery(query);
@@ -988,19 +1003,25 @@ export class CommandPaletteController {
 
     if (trimmed && !shareModeEnabled.value) {
       this.bookmarkSearchTimer = setTimeout(() => {
-        this.performBookmarkSearch(trimmed);
+        this.performBookmarkSearch(trimmed, generation);
       }, 100);
       this.historySearchTimer = setTimeout(() => {
-        this.performHistorySearch(trimmed);
+        this.performHistorySearch(trimmed, generation);
       }, 200);
     }
   }
 
-  private async performHistorySearch(query: string): Promise<void> {
+  private async performHistorySearch(
+    query: string,
+    generation: number,
+  ): Promise<void> {
+    if (this.disposed || generation !== this.searchGeneration) return;
     try {
-      const results = await searchHistoryCommands(query, 10);
-      // Only apply if query hasn't changed since we started
-      if (query !== this.currentSearchQuery) return;
+      const results = await this.searchProviders.history(query, 10);
+      if (
+        this.disposed || generation !== this.searchGeneration ||
+        query !== this.currentSearchQuery
+      ) return;
 
       const currentResults = this.state.filteredCommands();
       const existingIds = new Set(currentResults.map((c) => c.id));
@@ -1010,22 +1031,29 @@ export class CommandPaletteController {
         this.state.setFilteredCommands([...currentResults, ...newResults]);
       }
     } catch (e) {
+      if (this.disposed || generation !== this.searchGeneration) return;
       console.error("[command-palette] History search failed:", e);
     }
   }
 
-  private async performBookmarkSearch(query: string): Promise<void> {
+  private async performBookmarkSearch(
+    query: string,
+    generation: number,
+  ): Promise<void> {
+    if (this.disposed || generation !== this.searchGeneration) return;
     console.debug("[command-palette] performBookmarkSearch called");
     try {
-      const results = await searchBookmarkCommands(query, 10);
+      const results = await this.searchProviders.bookmarks(query, 10);
       console.debug(
         "[command-palette] Bookmark search returned:",
         results.length,
         "results",
       );
 
-      // Only apply if query hasn't changed since we started
-      if (query !== this.currentSearchQuery) {
+      if (
+        this.disposed || generation !== this.searchGeneration ||
+        query !== this.currentSearchQuery
+      ) {
         console.debug("[command-palette] Bookmark search stale");
         return;
       }
@@ -1066,26 +1094,34 @@ export class CommandPaletteController {
         );
       }
     } catch (e) {
+      if (this.disposed || generation !== this.searchGeneration) return;
       console.error("[command-palette] Bookmark search failed:", e);
     }
   }
 
-  private debouncedUpdateSearch = debounce((query: string) => {
-    this.doUpdateSearch(query);
-  }, 30);
+  private debouncedUpdateSearch = debounce(
+    (query: string, generation: number) => {
+      this.doUpdateSearch(query, generation);
+    },
+    30,
+  );
 
   public updateSearch(query: string): void {
+    if (this.disposed) return;
+    // Invalidate in-flight results immediately, before the next debounce runs.
+    this.cancelPendingSearch();
+    const generation = this.searchGeneration;
     // Step values must be current when Enter is pressed immediately after an
     // input event; command search is the only path that needs debouncing.
     if (this.state.mode() === "input") {
-      this.doUpdateSearch(query);
+      this.doUpdateSearch(query, generation);
       return;
     }
 
     if (query.trim()) {
-      this.debouncedUpdateSearch(query);
+      this.debouncedUpdateSearch(query, generation);
     } else {
-      this.doUpdateSearch(query);
+      this.doUpdateSearch(query, generation);
     }
   }
 

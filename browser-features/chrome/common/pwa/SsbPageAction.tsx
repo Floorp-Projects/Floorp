@@ -31,6 +31,9 @@ type Translations = {
 };
 
 export class SsbPageAction {
+  private disposed = false;
+  private manifestRequest = 0;
+  private panelInstallRequest = 0;
   private isInstalling: Signal<boolean> = signal(false);
   private icon: Signal<string> = signal("");
   private title: Signal<string> = signal("");
@@ -53,6 +56,9 @@ export class SsbPageAction {
     const starButtonBox = document?.getElementById("star-button-box");
     const ssbPageAction = document?.getElementById("page-action-buttons");
     if (!starButtonBox || !ssbPageAction) return;
+    addDisposer(() => {
+      this.disposed = true;
+    });
 
     const RenderWrapper = () => this.Render();
     addDisposer(safeRender(<RenderWrapper />, ssbPageAction, starButtonBox));
@@ -95,15 +101,23 @@ export class SsbPageAction {
   }
 
   private async onCheckPageHasManifest() {
+    const request = ++this.manifestRequest;
     const browser = globalThis.gBrowser.selectedBrowser as Browser;
+    const pageUrl = browser.currentURI.spec;
+    const isCurrent = () =>
+      !this.disposed && request === this.manifestRequest &&
+      globalThis.gBrowser.selectedBrowser === browser &&
+      browser.currentURI.spec === pageUrl;
 
     const canBeInstallAsPwa = await this.pwaService
       .checkBrowserCanBeInstallAsPwa(browser);
-    this.canBeInstallAsPwa.value = canBeInstallAsPwa;
+    if (!isCurrent()) return;
 
     const isInstalled = await this.pwaService.checkCurrentPageIsInstalled(
       browser,
     );
+    if (!isCurrent()) return;
+    this.canBeInstallAsPwa.value = canBeInstallAsPwa;
     this.isInstalled.value = isInstalled;
     this.shouldShowPageAction.value = canBeInstallAsPwa || isInstalled;
     this.pwaService.updateUIElements(isInstalled);
@@ -113,11 +127,20 @@ export class SsbPageAction {
     browser: Browser,
     userContextId: number,
   ) {
+    const request = ++this.panelInstallRequest;
+    const pageUrl = browser.currentURI.spec;
     const installed = await this.pwaService.checkPageIsInstalledForContainer(
       browser,
       userContextId,
     );
-    this.panelIsInstalled.value = installed;
+    if (
+      !this.disposed && request === this.panelInstallRequest &&
+      globalThis.gBrowser.selectedBrowser === browser &&
+      browser.currentURI.spec === pageUrl &&
+      this.selectedContainerId.value === userContextId
+    ) {
+      this.panelIsInstalled.value = installed;
+    }
   }
 
   private onContainerSelect = (userContextId: number) => {

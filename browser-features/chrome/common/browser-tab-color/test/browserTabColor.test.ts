@@ -7,6 +7,7 @@ import {
   assertNotEquals,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
+import { createRoot } from "@nora/preact-xul/lifetime";
 
 // ---------------------------------------------------------------------------
 // Module under test — imported lazily so the harness can set up globals first
@@ -18,6 +19,74 @@ import {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+const testDisposers: Array<() => void> = [];
+
+// Async imports finish before setup enters a synchronous lifetime scope.
+function ownSetup<T>(setup: () => T): T {
+  return createRoot((dispose) => {
+    testDisposers.push(dispose);
+    return setup();
+  });
+}
+
+function disposeTestRoots(): void {
+  for (const dispose of testDisposers.splice(0).reverse()) dispose();
+}
+
+async function withRestoredGlobals(run: TestCase["fn"]): Promise<void> {
+  const feature = await import("../index.ts");
+  const originalManager = feature.manager;
+  const originalFloorp = globalThis.gFloorp;
+  const floorpDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "gFloorp",
+  );
+  const browserDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "gBrowser",
+  );
+  const tabColorDescriptor = originalFloorp &&
+    Object.getOwnPropertyDescriptor(originalFloorp, "tabColor");
+  const background = document.getElementById("floorp-toolbar-bgcolor");
+  const backgroundParent = background?.parentNode;
+  const backgroundNext = background?.nextSibling;
+  const restore = (
+    target: object,
+    key: string,
+    descriptor: PropertyDescriptor | undefined,
+  ) => {
+    if (descriptor) Object.defineProperty(target, key, descriptor);
+    else Reflect.deleteProperty(target, key);
+  };
+  try {
+    await run();
+  } finally {
+    // Tear down against the same mock globals used during setup.
+    disposeTestRoots();
+    if (originalFloorp) restore(originalFloorp, "tabColor", tabColorDescriptor);
+    restore(globalThis, "gFloorp", floorpDescriptor);
+    restore(globalThis, "gBrowser", browserDescriptor);
+    const currentBackground = document.getElementById("floorp-toolbar-bgcolor");
+    if (currentBackground !== background) currentBackground?.remove();
+    if (background && backgroundParent && !background.isConnected) {
+      backgroundParent.insertBefore(
+        background,
+        backgroundNext?.parentNode === backgroundParent ? backgroundNext : null,
+      );
+    }
+    assertEquals(
+      globalThis.gFloorp,
+      originalFloorp,
+      "restore the live gFloorp object",
+    );
+    assertEquals(
+      feature.manager,
+      originalManager,
+      "restore the live feature manager",
+    );
+  }
+}
 
 /** Set up globalThis.gFloorp so TabColorManager constructor does not throw */
 function setupGlobals(): void {
@@ -40,9 +109,8 @@ async function testConstructorCreatesGlobalGFloorp(): Promise<void> {
     "gFloorp should not exist before construction",
   );
 
-  setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
 
   assertNotEquals(
     globalThis.gFloorp as typeof globalThis.gFloorp | undefined,
@@ -60,7 +128,7 @@ async function testConstructorPreservesExistingGFloorp(): Promise<void> {
   setupGlobals();
   const existing = globalThis.gFloorp;
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  new TabColorManager();
+  ownSetup(() => new TabColorManager());
   assertEquals(
     globalThis.gFloorp === existing,
     true,
@@ -71,7 +139,7 @@ async function testConstructorPreservesExistingGFloorp(): Promise<void> {
 async function testConstructorSetsTabColorSetEnable(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   const gFloorp = globalThis.gFloorp;
   const tabColor = gFloorp.tabColor!;
 
@@ -109,7 +177,7 @@ async function testConstructorSetsTabColorSetEnable(): Promise<void> {
 async function testEnableTabColorDefaultReflectsConfig(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   // The default value comes from config().globalConfigs.faviconColor
   const value = mgr.enableTabColor.value;
   assertEquals(
@@ -122,7 +190,7 @@ async function testEnableTabColorDefaultReflectsConfig(): Promise<void> {
 async function testSetEnableTabColorToggles(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
 
   mgr.enableTabColor.value = true;
   assertEquals(
@@ -142,7 +210,7 @@ async function testSetEnableTabColorToggles(): Promise<void> {
 async function testSetEnableTabColorWithCallback(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   mgr.enableTabColor.value = false;
 
   mgr.enableTabColor.value = !mgr.enableTabColor.value;
@@ -163,7 +231,7 @@ async function testSetEnableTabColorWithCallback(): Promise<void> {
 async function testSetEnableTabColorIdempotent(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
 
   mgr.enableTabColor.value = true;
   mgr.enableTabColor.value = true;
@@ -185,7 +253,7 @@ async function testSetEnableTabColorIdempotent(): Promise<void> {
 async function testMultipleToggleCycles(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   mgr.enableTabColor.value = false;
 
   for (let i = 0; i < 10; i++) {
@@ -208,7 +276,7 @@ async function testMultipleToggleCycles(): Promise<void> {
 async function testCallbackReceivesCorrectPreviousValue(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   mgr.enableTabColor.value = false;
 
   {
@@ -241,8 +309,8 @@ async function testCallbackReceivesCorrectPreviousValue(): Promise<void> {
 async function testMultipleInstancesShareGlobalGFloorp(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr1 = new TabColorManager();
-  const mgr2 = new TabColorManager();
+  const mgr1 = ownSetup(() => new TabColorManager());
+  const mgr2 = ownSetup(() => new TabColorManager());
 
   // Both should reference the same globalThis.gFloorp
   const gFloorp = globalThis.gFloorp;
@@ -270,7 +338,7 @@ async function testMultipleInstancesShareGlobalGFloorp(): Promise<void> {
 async function testInitMethodExists(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   assertEquals(
     typeof mgr.init,
     "function",
@@ -281,11 +349,11 @@ async function testInitMethodExists(): Promise<void> {
 async function testInitDoesNotThrow(): Promise<void> {
   setupGlobals();
   const { TabColorManager } = await import("../tabcolor-manager.tsx");
-  const mgr = new TabColorManager();
+  const mgr = ownSetup(() => new TabColorManager());
   // init() sets up a createEffect — should not throw in browser env
   let threw = false;
   try {
-    mgr.init();
+    ownSetup(() => mgr.init());
   } catch {
     threw = true;
   }
@@ -309,7 +377,11 @@ async function testGetTextColorLightColorsReturnBlack(): Promise<void> {
     assert(chroma.valid(color), color + " should be valid");
     const luminance = chroma(color).luminance();
     const result = luminance >= 0.5 ? "black" : "white";
-    assertEquals(result, "black", color + " lum=" + luminance.toFixed(3) + " should return black");
+    assertEquals(
+      result,
+      "black",
+      color + " lum=" + luminance.toFixed(3) + " should return black",
+    );
   }
 }
 
@@ -320,13 +392,21 @@ async function testGetTextColorDarkColorsReturnWhite(): Promise<void> {
     assert(chroma.valid(color), color + " should be valid");
     const luminance = chroma(color).luminance();
     const result = luminance >= 0.5 ? "black" : "white";
-    assertEquals(result, "white", color + " lum=" + luminance.toFixed(3) + " should return white");
+    assertEquals(
+      result,
+      "white",
+      color + " lum=" + luminance.toFixed(3) + " should return white",
+    );
   }
 }
 
 async function testGetTextColorInvalidColorNotValid(): Promise<void> {
   const chroma = (await import("chroma-js")).default;
-  assertEquals(chroma.valid("not-a-color"), false, "not-a-color should be invalid");
+  assertEquals(
+    chroma.valid("not-a-color"),
+    false,
+    "not-a-color should be invalid",
+  );
   assertEquals(chroma.valid("xyz"), false, "xyz should be invalid");
 }
 
@@ -335,7 +415,10 @@ async function testGetTextColorBoundaryExactly05(): Promise<void> {
   const midGray = chroma.mix("#000000", "#ffffff", 0.5).hex();
   const luminance = chroma(midGray).luminance();
   const result = luminance >= 0.5 ? "black" : "white";
-  assert(result === "black" || result === "white", "should return a valid color");
+  assert(
+    result === "black" || result === "white",
+    "should return a valid color",
+  );
 }
 
 async function testGetTextColorHexFormats(): Promise<void> {
@@ -361,7 +444,7 @@ async function testGetTextColorNamedColors(): Promise<void> {
 async function testBrowserTabColorHasInitMethod(): Promise<void> {
   setupGlobals();
   const { default: BrowserTabColor } = await import("../index.ts");
-  const instance = new BrowserTabColor();
+  const instance = ownSetup(() => new BrowserTabColor());
   assertEquals(
     typeof instance.init,
     "function",
@@ -372,7 +455,7 @@ async function testBrowserTabColorHasInitMethod(): Promise<void> {
 async function testBrowserTabColorHasChangeTabColorMethod(): Promise<void> {
   setupGlobals();
   const { default: BrowserTabColor } = await import("../index.ts");
-  const instance = new BrowserTabColor();
+  const instance = ownSetup(() => new BrowserTabColor());
   assertEquals(
     typeof instance.changeTabColor,
     "function",
@@ -382,11 +465,11 @@ async function testBrowserTabColorHasChangeTabColorMethod(): Promise<void> {
 
 async function testBrowserTabColorChangeTabColorWhenDisabled(): Promise<void> {
   setupGlobals();
-  const { default: BrowserTabColor, manager } = await import("../index.ts");
-  const instance = new BrowserTabColor();
+  const feature = await import("../index.ts");
+  const instance = ownSetup(() => new feature.default());
 
   // Ensure tab color is disabled
-  if (manager) manager.enableTabColor.value = false;
+  feature.manager.enableTabColor.value = false;
 
   // Should not throw when disabled
   let threw = false;
@@ -446,21 +529,25 @@ async function testManagerIsUndefinedInitially(): Promise<void> {
 // Tests: BrowserTabColor.init() with mock gBrowser
 // ---------------------------------------------------------------------------
 
-async function testBrowserTabColorInitEarlyReturnWithoutGBrowser(): Promise<void> {
+async function testBrowserTabColorInitEarlyReturnWithoutGBrowser(): Promise<
+  void
+> {
   setupGlobals();
   // Ensure gBrowser is NOT available
   (globalThis as Record<string, unknown>).gBrowser = undefined;
-  const { default: BrowserTabColor, manager: _mgrBefore } = await import("../index.ts");
-
-  const instance = new BrowserTabColor();
+  const { default: BrowserTabColor } = await import("../index.ts");
   // init should return early without gBrowser - should not throw
   let threw = false;
   try {
-    instance.init();
+    ownSetup(() => new BrowserTabColor());
   } catch {
     threw = true;
   }
-  assertEquals(threw, false, "init should not throw when gBrowser is unavailable");
+  assertEquals(
+    threw,
+    false,
+    "init should not throw when gBrowser is unavailable",
+  );
 }
 
 async function testBrowserTabColorInitWithMockGBrowser(): Promise<void> {
@@ -492,23 +579,31 @@ async function testBrowserTabColorInitWithMockGBrowser(): Promise<void> {
   };
 
   const { default: BrowserTabColor } = await import("../index.ts");
-  const instance = new BrowserTabColor();
-
   let threw = false;
   try {
-    instance.init();
+    ownSetup(() => new BrowserTabColor());
   } catch {
     threw = true;
   }
   assertEquals(threw, false, "init should not throw with mock gBrowser");
 
   // Verify that a progress listener was registered
-  assert(listeners.length > 0, "should have registered a tabs progress listener");
+  assert(
+    listeners.length > 0,
+    "should have registered a tabs progress listener",
+  );
 
   // Verify TabSelect event listener was registered
   assert(
     "TabSelect" in eventListeners,
     "should have registered TabSelect event listener",
+  );
+  disposeTestRoots();
+  assertEquals(listeners.length, 0, "disposing removes the progress listener");
+  assertEquals(
+    eventListeners.TabSelect.length,
+    0,
+    "disposing removes TabSelect",
   );
 }
 
@@ -525,11 +620,13 @@ async function testBrowserTabColorInitSetsManager(): Promise<void> {
   };
 
   const mod = await import("../index.ts");
-  const instance = new mod.default();
-  instance.init();
+  ownSetup(() => new mod.default());
 
   assert(mod.manager !== undefined, "manager should be set after init");
-  assert("value" in mod.manager.enableTabColor, "manager should have enableTabColor signal");
+  assert(
+    "value" in mod.manager.enableTabColor,
+    "manager should have enableTabColor signal",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -660,5 +757,11 @@ export async function runAllTests(): Promise<void> {
   ];
 
   const { runTests } = await import("../../../test/utils/test_harness.ts");
-  await runTests("browserTabColor.test.ts", tests);
+  await runTests(
+    "browserTabColor.test.ts",
+    tests.map((test) => ({
+      ...test,
+      fn: () => withRestoredGlobals(test.fn),
+    })),
+  );
 }

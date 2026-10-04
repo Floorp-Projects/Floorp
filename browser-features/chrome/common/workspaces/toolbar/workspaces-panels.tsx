@@ -193,6 +193,7 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
   const [ctx, setCtx] = useState<WorkspacesService | null>(
     props.ctx ?? Workspaces.getCtx(),
   );
+  const shouldShow = enabled.value && Boolean(configStore.manageOnBms);
 
   useEffect(() => {
     return addI18nObserver(() => setTexts(getTranslations()));
@@ -204,7 +205,6 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
       setCtx(props.ctx);
       return;
     }
-    const shouldShow = enabled.value && Boolean(configStore.manageOnBms);
     if (!shouldShow) {
       setCtx(null);
       return;
@@ -222,10 +222,7 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
       }
     }, 500);
     return () => globalThis.clearInterval(intervalId);
-  }, [props.ctx]);
-
-  // shouldShow reads signals → component auto-subscribes and re-renders
-  const shouldShow = enabled.value && Boolean(configStore.manageOnBms);
+  }, [props.ctx, shouldShow]);
 
   const handleCreateWorkspace = () => ctx?.createNoNameWorkspace();
 
@@ -239,7 +236,11 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
         flex="0"
       >
         {workspacesDataStore.order.map((workspaceId) => (
-          <WorkspacePanelButton workspaceId={workspaceId} ctx={ctx} />
+          <WorkspacePanelButton
+            key={workspaceId}
+            workspaceId={workspaceId}
+            ctx={ctx}
+          />
         ))}
         <ControlButton
           id="workspaces-panel-create"

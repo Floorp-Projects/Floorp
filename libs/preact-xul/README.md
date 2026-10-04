@@ -24,6 +24,11 @@ other custom event names retain their case. Event handlers must be functions,
 not inline JavaScript strings. On `xul:key`, the reserved Preact `key` also
 becomes the native keyboard-shortcut attribute.
 
+Pass an explicit boolean to controlled `checked` props, including `false` when
+clearing a checkbox or radio item. Preact treats `null` or `undefined` as
+uncontrolled and can leave the previous check in place; the string `"false"`
+also leaves a native XUL boolean attribute present.
+
 ## Lifetimes
 
 `createRoot(fn)` passes an idempotent disposer to its synchronous setup
@@ -35,13 +40,18 @@ running.
 `createRootHMR(fn, hot)` groups all module roots under one Vite dispose
 callback. When `hot.data.__preactXulExternalDisposeOwner` is set, the module
 owner must call `disposeRoot(hot)` from its own HMR callback. This avoids
-overwriting that callback.
+overwriting that callback. These roots also dispose when their browser document
+unloads, including production builds where no hot context exists. Manual or HMR
+disposal removes the unload listener immediately.
 
 Setup scopes do not propagate across asynchronous work or later component
 renders. Use Preact `useEffect`/`useLayoutEffect` cleanup inside components, or
 explicitly retain the returned disposer for asynchronous resources.
 `createNodeDisposer` handles widgets initially created while detached, moves
-between connected parents, ancestor removal, and document unload.
+between connected parents or documents, ancestor removal, and document unload.
+Render-root disposal completes sibling cleanup before reporting unhandled ref or
+effect-cleanup failures, so one failing callback cannot retain the remaining
+subscriptions.
 
 ## Compatibility boundary and verification
 
@@ -59,6 +69,8 @@ The colocated renderer and lifetime tests are also exposed through
 `solidXulNullProps.test.ts` checks native attribute removal, style updates and
 event-listener replacement. Tests cover signals, native node identity, refs,
 keyed reordering, multiple insertion roots, namespaces, keyboard shortcuts,
-cleanup and simulated HMR disposal. These tests do not replace end-to-end
-feature testing, the actual Vite HMR flow, or testing against the pinned Floorp
-runtime.
+cleanup and simulated HMR disposal. The adversarial suite additionally checks
+portals, event capture, render-error recovery, SVG destinations, document
+adoption, HMR registration failures, and unmount failures. These tests do not
+replace end-to-end feature testing, the actual Vite HMR flow, or testing against
+the pinned Floorp runtime.

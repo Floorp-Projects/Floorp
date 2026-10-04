@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { createRoot } from "@nora/preact-xul/lifetime";
+import { signal } from "@preact/signals";
 
 import { TabDoubleClickClose } from "../doubleClickClose/index.ts";
 import { config } from "../../designs/configs.ts";
@@ -108,18 +109,15 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
 
   try {
     withTabConfigPatch({ tabDoubleClickToClose: false }, () => {
+      // The running browser already owns a Tab subscription to the global
+      // config. An independent source lets this test observe only its root.
+      const enabled = signal(false);
       const dispose = constructInPreactRoot(() => {
-        new TabDoubleClickClose();
+        new TabDoubleClickClose(() => enabled.value);
       });
 
       // Toggle from false to true
-      config.value = {
-        ...config.value,
-        tab: {
-          ...config.value.tab,
-          tabDoubleClickToClose: true,
-        },
-      };
+      enabled.value = true;
 
       assertEquals(
         Services.prefs.getBoolPref(prefName, false),
@@ -128,13 +126,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
       );
 
       // Toggle from true to false
-      config.value = {
-        ...config.value,
-        tab: {
-          ...config.value.tab,
-          tabDoubleClickToClose: false,
-        },
-      };
+      enabled.value = false;
 
       assertEquals(
         Services.prefs.getBoolPref(prefName, false),
@@ -143,10 +135,7 @@ function testTabDoubleClickCloseReactsToConfigChanges(): void {
       );
 
       dispose();
-      config.value = {
-        ...config.value,
-        tab: { ...config.value.tab, tabDoubleClickToClose: true },
-      };
+      enabled.value = true;
       assertEquals(
         Services.prefs.getBoolPref(prefName, false),
         false,

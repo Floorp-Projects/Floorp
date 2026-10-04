@@ -19,6 +19,10 @@ export type NativeStackBrowser = TabBrowser & {
   tabContainer: XULElement & { verticalMode: boolean };
   addTabGroup(tabs: StackTab[], options: { label: string }): StackGroup;
   addToMultiSelectedTabs(tab: StackTab): void;
+  replaceTabsWithWindow(
+    tab: StackTab,
+    options?: Record<string, unknown>,
+  ): Window | null;
   addTabSplitView(
     tabs: StackTab[],
     options: { insertBefore: StackTab },

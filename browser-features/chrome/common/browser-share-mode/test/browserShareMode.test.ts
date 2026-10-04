@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import {
-  shareModeEnabled,
-} from "../browser-share-mode.tsx";
+import { ShareModeElement, shareModeEnabled } from "../browser-share-mode.tsx";
 import BrowserShareMode from "../index.ts";
+import { h, safeRender } from "@nora/preact-xul";
+import { createRoot } from "@nora/preact-xul/lifetime";
+import { act } from "preact/test-utils";
 
 import {
   assert,
@@ -128,7 +129,11 @@ const testMultipleToggleCycles = withStateRestored(() => {
   );
 
   shareModeEnabled.value = !shareModeEnabled.value;
-  assertEquals(shareModeEnabled.value, true, "One more toggle should make it true");
+  assertEquals(
+    shareModeEnabled.value,
+    true,
+    "One more toggle should make it true",
+  );
 });
 
 const testSetShareModeEnabledIdempotent = withStateRestored(() => {
@@ -681,10 +686,18 @@ const testSetShareModeEnabledWithUndefinedCallback = withStateRestored(() => {
 const testShareModeSignalBooleanValues = withStateRestored(() => {
   // Test explicit boolean values
   shareModeEnabled.value = true;
-  assertEquals(shareModeEnabled.value, true, "signal should be explicitly true");
+  assertEquals(
+    shareModeEnabled.value,
+    true,
+    "signal should be explicitly true",
+  );
 
   shareModeEnabled.value = false;
-  assertEquals(shareModeEnabled.value, false, "signal should be explicitly false");
+  assertEquals(
+    shareModeEnabled.value,
+    false,
+    "signal should be explicitly false",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -841,8 +854,64 @@ function testMarkerValidationLogic(): void {
 // Test runner
 // ---------------------------------------------------------------------------
 
+async function testNativeCheckedStateClears(): Promise<void> {
+  const original = shareModeEnabled.value;
+  const popup = document.createXULElement("menupopup");
+  document.documentElement.appendChild(popup);
+  let dispose = () => {};
+  try {
+    shareModeEnabled.value = false;
+    await act(() => {
+      dispose = safeRender(() => h(ShareModeElement, {}), popup);
+    });
+    const item = popup.querySelector("#toggle_sharemode");
+    assert(item, "isolated share-mode menu item exists");
+    assertEquals(
+      item.namespaceURI,
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+      "menu item is native XUL",
+    );
+    for (let cycle = 0; cycle < 2; cycle++) {
+      await act(() => {
+        item.dispatchEvent(new Event("command"));
+      });
+      assertEquals(shareModeEnabled.value, true, "command enables share mode");
+      assert(
+        item.hasAttribute("checked") && item.matches(":checked"),
+        "enabled item has native checked state",
+      );
+      await act(() => {
+        item.dispatchEvent(new Event("command"));
+      });
+      assertEquals(
+        shareModeEnabled.value,
+        false,
+        "second command disables share mode",
+      );
+      assert(
+        !item.hasAttribute("checked") && !item.matches(":checked"),
+        "disabling removes the native checked state",
+      );
+      assertEquals(
+        popup.querySelector("#toggle_sharemode"),
+        item,
+        "toggles retain the same native node",
+      );
+    }
+  } finally {
+    dispose();
+    popup.remove();
+    shareModeEnabled.value = original;
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name:
+        "native share-mode checkbox clears on repeated true-to-false transitions",
+      fn: testNativeCheckedStateClears,
+    },
     // Signal basics
     {
       name: "shareModeEnabled signal is readable",
@@ -1004,5 +1073,66 @@ export async function runAllTests(): Promise<void> {
   ];
 
   const { runTests } = await import("../../../test/utils/test_harness.ts");
-  await runTests("browserShareMode.test.ts", tests);
+  // Keep real browser nodes connected in their original positions. Only hide
+  // their IDs while the old fixture helpers create and remove their own nodes.
+  const nativeNodes = [
+    "menu_ToolsPopup",
+    "menu_openFirefoxView",
+    "toggle_sharemode",
+  ]
+    .flatMap((id) =>
+      Array.from(document.querySelectorAll(`[id="${id}"]`)).map((element) => ({
+        element,
+        id,
+        parent: element.parentNode,
+        next: element.nextSibling,
+      }))
+    );
+  for (const { element } of nativeNodes) element.removeAttribute("id");
+  try {
+    await runTests(
+      "browserShareMode.test.ts",
+      tests.map((test) => ({
+        ...test,
+        async fn() {
+          const readyState = Object.getOwnPropertyDescriptor(
+            document,
+            "readyState",
+          );
+          let dispose = () => {};
+          try {
+            await createRoot((cleanup) => {
+              dispose = cleanup;
+              return test.fn();
+            });
+          } finally {
+            dispose();
+            cleanupDOM();
+            if (readyState) {
+              Object.defineProperty(document, "readyState", readyState);
+            } else Reflect.deleteProperty(document, "readyState");
+          }
+        },
+      })),
+    );
+  } finally {
+    cleanupDOM();
+    for (const { element, id } of nativeNodes) element.id = id;
+    for (const { element, id, parent, next } of nativeNodes) {
+      assertEquals(
+        element.parentNode,
+        parent,
+        `${id}: native parent is preserved`,
+      );
+      // The share-mode item's next sibling can be its conditional style node,
+      // which is legitimately replaced when the original mode was enabled.
+      if (id !== "toggle_sharemode") {
+        assertEquals(
+          element.nextSibling,
+          next,
+          `${id}: native position is preserved`,
+        );
+      }
+    }
+  }
 }

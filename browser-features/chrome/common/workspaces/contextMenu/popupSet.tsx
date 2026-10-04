@@ -8,82 +8,68 @@ import { signal } from "@preact/signals";
 import type { WorkspacesService } from "../workspacesService.ts";
 import { ContextMenu } from "./contextMenu.tsx";
 import type { TWorkspaceID } from "../utils/type.ts";
+import { workspacesDataStore } from "../data/data.ts";
 
 type ChromeDocument = Document & { popupNode?: Element | null };
 
 export class WorkspacesPopupContextMenu {
   ctx: WorkspacesService;
-  private show = signal(false);
+  private contextWorkspaceID = signal<TWorkspaceID | null>(null);
 
   constructor(ctx: WorkspacesService) {
     this.ctx = ctx;
     ContextMenuUtils.addToolbarContentMenuPopupSet(() => this.PopupSet());
   }
 
-  contextWorkspaceID: TWorkspaceID | null = null;
-  needDisableBefore = false;
-  needDisableAfter = false;
-
   /**
    * Create context menu items for workspaces.
    * @param event The event.
    */
   private createWorkspacesContextMenuItems(event: Event) {
-    //delete already exsist items
-    const menuElem = document?.getElementById(
-      "workspaces-toolbar-item-context-menu",
-    );
-    while (menuElem?.firstChild) {
-      const firstChild = menuElem.firstChild as unknown as XULElement;
-      firstChild.remove();
-    }
-
     // Use popupNode if available (set by panel sidebar), otherwise explicitOriginalTarget (toolbar)
     const chromeDoc = document as ChromeDocument;
-    let eventTargetElement = (chromeDoc.popupNode ?? event.explicitOriginalTarget) as unknown as XULElement;
+    let eventTargetElement = (chromeDoc.popupNode ??
+      event.explicitOriginalTarget) as unknown as XULElement;
 
     // Traverse up to find the workspace div if we got a child element
-    while (eventTargetElement && !eventTargetElement.id?.startsWith("workspace-")) {
-      eventTargetElement = eventTargetElement.parentElement as unknown as XULElement;
+    while (
+      eventTargetElement && !eventTargetElement.id?.startsWith("workspace-")
+    ) {
+      eventTargetElement = eventTargetElement
+        .parentElement as unknown as XULElement;
     }
 
     // Extract workspace ID with validation
-    const contextWorkspaceId = eventTargetElement?.id?.replace("workspace-", "") ?? "";
+    const contextWorkspaceId =
+      eventTargetElement?.id?.replace("workspace-", "") ?? "";
     if (this.ctx.isWorkspaceID(contextWorkspaceId)) {
-      this.contextWorkspaceID = contextWorkspaceId;
+      this.contextWorkspaceID.value = contextWorkspaceId;
+    } else {
+      this.contextWorkspaceID.value = null;
+      event.preventDefault();
     }
-
-    const beforeSiblingElem =
-      eventTargetElement.previousElementSibling?.getAttribute(
-        "data-workspaceId",
-      ) || null;
-    const afterSiblingElem =
-      eventTargetElement.nextElementSibling?.getAttribute("data-workspaceId") ||
-      null;
-
-    const isAfterSiblingExist = afterSiblingElem != null;
-    this.needDisableBefore = beforeSiblingElem === null;
-    this.needDisableAfter = !isAfterSiblingExist;
   }
 
   private PopupSet() {
+    const workspaceId = this.contextWorkspaceID.value;
+    const order = workspacesDataStore.order;
+    const index = workspaceId === null ? -1 : order.indexOf(workspaceId);
     return (
       <xul:popupset>
         <xul:menupopup
           id="workspaces-toolbar-item-context-menu"
           onPopupShowing={(event) => {
             this.createWorkspacesContextMenuItems(event);
-            this.show.value = true;
           }}
           onPopupHiding={() => {
-            this.show.value = false;
+            this.contextWorkspaceID.value = null;
           }}
         >
-          {this.show.value && (
+          {workspaceId !== null && (
             <ContextMenu
-              disableBefore={this.needDisableBefore}
-              disableAfter={this.needDisableAfter}
-              contextWorkspaceId={this.contextWorkspaceID!}
+              disableBefore={index <= 0}
+              disableAfter={index < 0 || index === order.length - 1}
+              contextWorkspaceId={workspaceId}
               ctx={this.ctx}
             />
           )}

@@ -33,6 +33,56 @@ async function waitFor(check: () => boolean, message: string): Promise<void> {
   assert(check(), message);
 }
 
+async function waitForBrowserStartup(
+  target: Window,
+  message = "Second browser window starts",
+  adoptedTab?: StackTab,
+): Promise<void> {
+  const browserWindow = target as Window & {
+    gBrowser?: NativeStackBrowser;
+    gBrowserInit?: { delayedStartupFinished: boolean };
+  };
+  const started = performance.now();
+  const timeoutMs = 30_000;
+  let painted = false;
+  const onPaint = () => painted = true;
+  target.addEventListener("MozAfterPaint", onPaint);
+  try {
+    while (!target.closed && performance.now() - started < timeoutMs) {
+      // Firefox delays both remote-tab adoption and delayed startup until the
+      // new window's first MozAfterPaint. Allow that startup work its own budget.
+      if (
+        browserWindow.gBrowserInit?.delayedStartupFinished &&
+        (!adoptedTab || !adoptedTab.isConnected)
+      ) return;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    assert(
+      false,
+      `${message}: ${
+        JSON.stringify({
+          elapsedMs: Math.round(performance.now() - started),
+          closed: target.closed,
+          painted,
+          sourceTabConnected: adoptedTab?.isConnected,
+          sourceTabClosing: adoptedTab?.closing,
+          sourceHasDragData: !!adoptedTab?._dragData,
+          ...(target.closed ? {} : {
+            readyState: target.document?.readyState,
+            location: target.document?.documentURI,
+            hasGBrowser: !!browserWindow.gBrowser,
+            hasBrowserInit: !!browserWindow.gBrowserInit,
+            delayedStartupFinished: browserWindow.gBrowserInit
+              ?.delayedStartupFinished,
+          }),
+        })
+      }`,
+    );
+  } finally {
+    target.removeEventListener("MozAfterPaint", onPaint);
+  }
+}
+
 async function testNativeInteractions(): Promise<void> {
   const gb = getGBrowser() as NativeStackBrowser;
   const originalTab = gb.selectedTab;
@@ -46,6 +96,8 @@ async function testNativeInteractions(): Promise<void> {
   const created: StackTab[] = [];
   let dispose: (() => void) | undefined;
   let otherWindow: Window | undefined;
+  const detachedWindows = new Set<Window>();
+  let restoreDetachMethod: (() => void) | undefined;
   try {
     config.value = {
       ...config.value,
@@ -344,10 +396,7 @@ async function testNativeInteractions(): Promise<void> {
       gBrowser?: NativeStackBrowser;
       gBrowserInit?: { delayedStartupFinished: boolean };
     };
-    await waitFor(
-      () => !!foreign.gBrowserInit?.delayedStartupFinished,
-      "Second browser window starts",
-    );
+    await waitForBrowserStartup(otherWindow);
     const destination = foreign.gBrowser!;
     gb.selectedTab = tabs[0];
     await tick();
@@ -441,23 +490,80 @@ async function testNativeInteractions(): Promise<void> {
     Object.defineProperty(event, "screen", {
       value: screenManager.screenForRect(screenX, screenY, 1, 1),
     });
-    detach.source.dispatchEvent(event);
-    await waitFor(
-      () => !tabs[5].isConnected,
+    const originalDetach = gb.replaceTabsWithWindow;
+    const detachDescriptor = Object.getOwnPropertyDescriptor(
+      gb,
+      "replaceTabsWithWindow",
+    );
+    let nativeDetachCalls = 0;
+    const trackDetach: typeof originalDetach = function (
+      this: NativeStackBrowser,
+      tab,
+      options,
+    ) {
+      nativeDetachCalls++;
+      const result = originalDetach.call(this, tab, options);
+      if (result) {
+        // Track immediately, including startup/adoption failures. Never select
+        // an unrelated window from the process-wide window enumerator.
+        detachedWindows.add(result);
+        otherWindow = result;
+      }
+      return result;
+    };
+    restoreDetachMethod = () => {
+      if (gb.replaceTabsWithWindow !== trackDetach) return;
+      if (detachDescriptor) {
+        Object.defineProperty(gb, "replaceTabsWithWindow", detachDescriptor);
+      } else {
+        Reflect.deleteProperty(gb, "replaceTabsWithWindow");
+      }
+    };
+    gb.replaceTabsWithWindow = trackDetach;
+    try {
+      detach.source.dispatchEvent(event);
+    } finally {
+      restoreDetachMethod();
+    }
+    assertEquals(
+      nativeDetachCalls,
+      1,
+      `Native dragend reaches window creation: ${
+        JSON.stringify({
+          dropEffect: detach.dt.dropEffect,
+          userCancelled: Reflect.get(detach.dt, "mozUserCancelled"),
+          allowDetach: Services.prefs.getBoolPref(
+            "browser.tabs.allowTabDetach",
+          ),
+          customizing: Reflect.get(gb.tabContainer, "_isCustomizing"),
+          sameWindowAnimation: tabs[5].hasAttribute("tabdrop-samewindow"),
+          hasDragData: !!tabs[5]._dragData,
+          screenX,
+          screenY,
+        })
+      }`,
+    );
+    const detachedWindow = [...detachedWindows][0];
+    assert(detachedWindow, "Detach created a second browser window");
+    await waitForBrowserStartup(
+      detachedWindow,
+      "Native dragend detaches a stack tab into a new window",
+      tabs[5],
+    );
+    assert(
+      !tabs[5].isConnected,
       "Native dragend detaches a stack tab into a new window",
     );
-    const windows = Services.wm.getEnumerator("navigator:browser");
-    while (windows.hasMoreElements()) {
-      const candidate = windows.getNext() as unknown as Window;
-      if (candidate !== window && !candidate.closed) otherWindow = candidate;
-    }
-    assert(otherWindow, "Detach created a second browser window");
     assert(
       tabs[9].isConnected && tabs[9].group === group,
       "Proxy detach leaves other previously selected tabs in the source stack",
     );
   } finally {
-    otherWindow?.close();
+    restoreDetachMethod?.();
+    if (otherWindow && !otherWindow.closed) otherWindow.close();
+    for (const detachedWindow of detachedWindows) {
+      if (!detachedWindow.closed) detachedWindow.close();
+    }
     for (const tab of created) {
       if (tab.isConnected && !tab.closing) {
         gb.removeTab(tab, { animate: false });
