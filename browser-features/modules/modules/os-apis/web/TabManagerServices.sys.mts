@@ -7,6 +7,10 @@
  */
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
+import type {
+  ClickElementOptions,
+  ClickElementResult,
+} from "../../../actors/webscraper/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
@@ -935,12 +939,7 @@ class TabManager {
   public async clickElement(
     instanceId: string,
     selector: string,
-    options?: {
-      button?: "left" | "right" | "middle";
-      clickCount?: number;
-      force?: boolean;
-      stabilityTimeout?: number;
-    },
+    options: ClickElementOptions = {},
   ): Promise<boolean | null> {
     this._focusInstance(instanceId);
     const result = await this._queryActor<boolean>(
@@ -953,6 +952,19 @@ class TabManager {
     );
 
     return result;
+  }
+
+  public async clickElementWithResult(
+    instanceId: string,
+    selector: string,
+    options: ClickElementOptions = {},
+  ): Promise<ClickElementResult | null> {
+    this._focusInstance(instanceId);
+    return await this._queryActor<ClickElementResult>(
+      instanceId,
+      "WebScraper:ClickElementWithResult",
+      { selector, ...options },
+    );
   }
 
   public waitForElement(

@@ -29,6 +29,10 @@ import type {
   ValueResponse,
   WaitForElementState,
 } from "./types.ts";
+import type {
+  ClickElementOptions,
+  ClickElementResult,
+} from "../../../actors/webscraper/types.ts";
 
 const FINGERPRINT_REGEX = /^[a-z0-9]{8}([a-z0-9]{8})?$/;
 const MAX_TIMEOUT_MS = 60_000;
@@ -407,17 +411,38 @@ export function registerCommonAutomationRoutes(
   );
 
   // Click element (selector or fingerprint, with optional click options)
-  ns.post<{ fingerprint?: string }, { ok: boolean } | ErrorResponse>(
+  ns.post<
+    { selector?: string; fingerprint?: string; includeResult?: boolean } & ClickElementOptions,
+    { ok: boolean } | ClickElementResult | ErrorResponse
+  >(
     "/instances/:id/click",
     safeRoute(async (ctx: RouterContext) => {
-      const json = ctx.json() as {
-        selector?: string;
-        fingerprint?: string;
-        button?: "left" | "right" | "middle";
-        clickCount?: number;
-        force?: boolean;
-        stabilityTimeout?: number;
-      } | null;
+      const json = ctx.json() as
+        | {
+          selector?: string;
+          fingerprint?: string;
+          includeResult?: boolean;
+        } & ClickElementOptions
+        | null;
+      // A transport timeout cannot cancel an action already queued in an actor.
+      if (
+        (json?.includeResult !== undefined &&
+          typeof json.includeResult !== "boolean") ||
+        (json?.timeout !== undefined &&
+          (typeof json.timeout !== "number" || !Number.isFinite(json.timeout) ||
+            json.timeout < 0)) ||
+        (json?.stabilityTimeout !== undefined &&
+          (typeof json.stabilityTimeout !== "number" ||
+            !Number.isFinite(json.stabilityTimeout) ||
+            json.stabilityTimeout < 0)) ||
+        (json?.force !== undefined && typeof json.force !== "boolean") ||
+        (json?.button !== undefined &&
+          !["left", "middle", "right"].includes(json.button)) ||
+        (json?.clickCount !== undefined && json.clickCount !== 1 &&
+          json.clickCount !== 2)
+      ) {
+        return { status: 400, body: { error: "Invalid click options" } };
+      }
       const service = getService();
       const resolved = await resolveSelectorOrFingerprint(
         service,
@@ -426,16 +451,38 @@ export function registerCommonAutomationRoutes(
         json?.fingerprint,
       );
       if (!resolved.ok) return resolved.error;
-      const okClicked = await service.clickElement(
-        ctx.params.id,
-        resolved.selector,
-        {
-          button: json?.button,
-          clickCount: json?.clickCount,
-          force: json?.force,
-          stabilityTimeout: json?.stabilityTimeout,
-        },
-      );
+      const options: ClickElementOptions = {
+        button: json?.button,
+        clickCount: json?.clickCount,
+        force: json?.force,
+        timeout: json?.timeout === undefined
+          ? undefined
+          : Math.min(MAX_TIMEOUT_MS, json.timeout),
+        stabilityTimeout: json?.stabilityTimeout,
+      };
+      if (json?.includeResult) {
+        if (!service.clickElementWithResult) {
+          return { status: 501, body: { error: "click diagnostics not supported" } };
+        }
+        const result = await service.clickElementWithResult(
+          ctx.params.id,
+          resolved.selector,
+          options,
+        );
+        return {
+          status: 200,
+          body: result ?? {
+            ok: false,
+            status: "unknown",
+            reason: "actor-result-unavailable",
+            phase: null,
+            inputStarted: null,
+            activationStarted: null,
+            backend: "window-synthesizeMouseEvent",
+          },
+        };
+      }
+      const okClicked = await service.clickElement(ctx.params.id, resolved.selector, options);
       return { status: 200, body: { ok: okClicked ?? false } };
     }),
   );

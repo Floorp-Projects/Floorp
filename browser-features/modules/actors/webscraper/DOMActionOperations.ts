@@ -4,8 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { DOMOpsDeps } from "./DOMDeps.ts";
-import type { ClickElementOptions } from "./types.ts";
-import { unwrapElement, unwrapWindow, deepQuerySelector } from "./utils.ts";
+import type {
+  ClickElementOptions,
+  ClickElementResult,
+  ClickStabilityAnchor,
+  PrivilegedMouseWindow,
+} from "./types.ts";
+import {
+  deepQuerySelector,
+  deepQuerySelectorAll,
+  unwrapElement,
+  unwrapWindow,
+} from "./utils.ts";
 
 const { setTimeout: timerSetTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
@@ -31,213 +41,283 @@ export class DOMActionOperations {
     return doc ? deepQuerySelector(doc, selector) : null;
   }
 
-  /**
-   * Playwright-style click with actionability checks and coordinate-based events.
-   *
-   * Steps:
-   * 1. Find element
-   * 2. Actionability check (visibility, size)
-   * 3. Scroll into view
-   * 4. Wait for position stability (CSS transitions)
-   * 5. Fire coordinate-based mouse events via nsIDOMWindowUtils
-   *
-   * Falls back to DOM .click() if nsIDOMWindowUtils is unavailable.
-   *
-   * Note: hit-test via elementFromPoint is intentionally omitted — in Firefox
-   * JSWindowActorChild (Xray context), elementFromPoint returns ancestor elements
-   * due to a pointer-events Xray quirk. sendMouseEvent uses the native rendering
-   * engine's hit-testing which correctly finds the target element.
-   */
+  /** Wait for one actionable target, then dispatch one native mouse sequence. */
   async clickElement(
     selector: string,
     options: ClickElementOptions = {},
   ): Promise<boolean> {
-    const {
-      button = "left",
-      clickCount = 1,
-      force = false,
-      timeout = 5000,
-      stabilityTimeout = 100,
-    } = options;
-    const startTime = Date.now();
-    const MAX_RETRIES = 3;
-
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      if (Date.now() - startTime > timeout) return false;
-
-      try {
-        const el = this.deepQuery(selector) as HTMLElement | null;
-        if (!el) {
-          await this.delay(100);
-          continue;
-        }
-
-        // Liveness check
-        try {
-          void el.nodeType;
-        } catch {
-          continue;
-        }
-
-        // Highlight
-        const elementTagName = el.tagName?.toLowerCase() || "element";
-        const elementTextRaw = el.textContent?.trim() || "";
-        const truncatedText = this.deps.translationHelper.truncate(
-          elementTextRaw,
-          30,
-        );
-        const elementInfo =
-          elementTextRaw.length > 0
-            ? await this.deps.translationHelper.translate(
-                "clickElementWithText",
-                { tag: elementTagName, text: truncatedText },
-              )
-            : await this.deps.translationHelper.translate(
-                "clickElementNoText",
-                { tag: elementTagName },
-              );
-        const hlOpts = this.deps.highlightManager.getHighlightOptions("Click");
-        this.deps.highlightManager
-          .applyHighlight(el, hlOpts, elementInfo)
-          .catch(() => {});
-
-        if (!force) {
-          // Actionability check
-          if (!this.checkActionability(el)) {
-            await this.delay(100);
-            continue;
-          }
-
-          // Scroll into view
-          el.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
-          await this.delay(50);
-
-          // Wait for stable position (skip if stabilityTimeout is 0)
-          if (stabilityTimeout > 0) {
-            const remaining = Math.min(
-              1000,
-              timeout - (Date.now() - startTime),
-            );
-            const stable = await this.waitForStable(el, remaining, stabilityTimeout);
-            if (!stable) continue;
-          }
-
-        }
-
-        // Compute click coordinates once (after any stability wait)
-        const rect = el.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-
-        if (!force) {
-          // Note: hit-test via elementFromPoint is intentionally omitted.
-          // In Firefox JSWindowActorChild (Xray context), elementFromPoint returns
-          // ancestor elements for interactive children (pointer-events quirk), and
-          // Node.contains() comparisons across Xray/raw wrapper boundaries are
-          // unreliable. The coordinate-based sendMouseEvent below uses the native
-          // rendering engine's hit-testing which is not affected by this quirk.
-        }
-
-        // Attempt coordinate-based click via nsIDOMWindowUtils
-        if (this.performMouseClick(x, y, button, clickCount)) {
-          return true;
-        }
-
-        // Fallback: legacy DOM click path
-        this.deps.eventDispatcher.scrollIntoViewIfNeeded(el);
-        this.deps.eventDispatcher.focusElementSoft(el);
-        this.deps.eventDispatcher.dispatchPointerClickSequence(el, x, y, 0);
-        const rawElement = unwrapElement(
-          el as HTMLElement & Partial<{ wrappedJSObject: HTMLElement }>,
-        );
-        try {
-          rawElement.click();
-        } catch {
-          // ignore
-        }
-        return true;
-      } catch (e) {
-        console.error("DOMActionOperations: Error clicking element:", e);
-        return false;
-      }
-    }
-
-    return false;
+    return (await this.clickElementWithResult(selector, options)).ok;
   }
 
-  /**
-   * Fires a coordinate-based mouse event sequence via nsIDOMWindowUtils.
-   * Returns true if successful, false if the API is unavailable.
-   */
+  async clickElementWithResult(
+    selector: string,
+    options: ClickElementOptions = {},
+  ): Promise<ClickElementResult> {
+    const result: ClickElementResult = {
+      ok: false,
+      status: "refused",
+      reason: "deadline-exceeded",
+      phase: "prepare",
+      inputStarted: false,
+      activationStarted: false,
+      backend: "window-synthesizeMouseEvent",
+    };
+    const finish = (status: ClickElementResult["status"], reason: string) => {
+      result.status = status;
+      result.reason = reason;
+      result.ok = status === "dispatched";
+      return result;
+    };
+    try {
+      const {
+        button = "left",
+        clickCount = 1,
+        force = false,
+        timeout = 5000,
+        stabilityTimeout = 100,
+      } = options;
+      const win = this.contentWindow;
+      const doc = this.document;
+      if (
+        !Number.isFinite(timeout) || timeout < 0 ||
+        !Number.isFinite(stabilityTimeout) || stabilityTimeout < 0 ||
+        !Number.isInteger(clickCount) || clickCount < 1 || clickCount > 2 ||
+        !["left", "right", "middle"].includes(button) ||
+        typeof force !== "boolean"
+      ) {
+        return finish("refused", "invalid-options");
+      }
+      if (!win || !doc) return finish("refused", "document-unavailable");
+      const mouseWindow = win as unknown as PrivilegedMouseWindow;
+      if (typeof mouseWindow.synthesizeMouseEvent !== "function") {
+        return finish("unsupported", "native-input-unavailable");
+      }
+      const now = () => win.performance.now();
+      const deadline = now() + Math.min(timeout, 60_000);
+      let scrolled: Element | null = null;
+      let anchor: ClickStabilityAnchor | null = null;
+
+      result.phase = "wait";
+      while (now() < deadline) {
+        if (this.document !== doc || this.contentWindow !== win) {
+          return finish("refused", "document-changed");
+        }
+        const matches = deepQuerySelectorAll(doc, selector);
+        if (matches.length > 1) return finish("refused", "ambiguous-selector");
+        const el = matches[0];
+        if (
+          !el || !el.isConnected || el.ownerDocument !== doc ||
+          (!force && !this.checkActionability(el))
+        ) {
+          anchor = null;
+          await this.delay(Math.min(25, Math.max(0, deadline - now())));
+          continue;
+        }
+        if (!force && scrolled !== el) {
+          el.scrollIntoView({ block: "center", behavior: "instant" });
+          scrolled = el;
+          anchor = null;
+        }
+        const rect = el.getBoundingClientRect();
+        if (!force && !this.receivesPointerEvents(el, rect)) {
+          anchor = null;
+          await this.delay(Math.min(25, Math.max(0, deadline - now())));
+          continue;
+        }
+        if (!force && stabilityTimeout > 0) {
+          if (
+            !anchor || anchor.element !== el ||
+            !this.sameRect(anchor.rect, rect)
+          ) {
+            anchor = { element: el, rect, at: now() };
+          }
+          if (now() - anchor.at < stabilityTimeout) {
+            await this.delay(Math.min(25, Math.max(0, deadline - now())));
+            continue;
+          }
+        }
+        const recheck = () => {
+          if (
+            now() >= deadline || this.document !== doc ||
+            this.contentWindow !== win ||
+            !el.isConnected || el.ownerDocument !== doc
+          ) return false;
+          const current = deepQuerySelectorAll(doc, selector);
+          return current.length === 1 && current[0] === el &&
+            (force || (this.checkActionability(el) &&
+              this.sameRect(rect, el.getBoundingClientRect()) &&
+              this.receivesPointerEvents(el, rect))) && now() < deadline;
+        };
+        if (!recheck()) {
+          anchor = null;
+          await this.delay(Math.min(25, Math.max(0, deadline - now())));
+          continue;
+        }
+        const sent = this.deps.highlightManager.withControlOverlaySuspended(() =>
+          this.performMouseClick(
+            mouseWindow,
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2,
+            button,
+            clickCount,
+            recheck,
+            result,
+          )
+        );
+        if (sent.ok) {
+          void (async () => {
+            if (!el.isConnected) return;
+            const tag = el.tagName?.toLowerCase() || "element";
+            const text = this.deps.translationHelper.truncate(
+              el.textContent?.trim() || "",
+              30,
+            );
+            const info = await this.deps.translationHelper.translate(
+              text ? "clickElementWithText" : "clickElementNoText",
+              text ? { tag, text } : { tag },
+            );
+            if (!el.isConnected) return;
+            await this.deps.highlightManager.applyHighlight(
+              el,
+              {
+                ...this.deps.highlightManager.getHighlightOptions("Click"),
+                focus: false,
+                scrollBehavior: "none",
+              },
+              info,
+            );
+          })().catch(() => {});
+        }
+        return sent;
+      }
+    } catch (e) {
+      console.error("[DOMActionOperations] Error clicking element:", e);
+      return finish("unknown", `click-error: ${String(e)}`);
+    }
+    return finish("refused", "deadline-exceeded");
+  }
+
   private performMouseClick(
+    win: PrivilegedMouseWindow,
     x: number,
     y: number,
     button: "left" | "right" | "middle",
     clickCount: number,
-  ): boolean {
-    const domWindowUtils = (
-      this.contentWindow as unknown as { windowUtils?: nsIDOMWindowUtils }
-    )?.windowUtils;
-    if (!domWindowUtils) return false;
-
+    recheck: () => boolean,
+    result: ClickElementResult,
+  ): ClickElementResult {
+    if (typeof win.synthesizeMouseEvent !== "function") {
+      return {
+        ...result,
+        status: "unsupported",
+        reason: "native-input-unavailable",
+      };
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      return { ...result, status: "refused", reason: "invalid-coordinates" };
+    }
     const buttonMap = { left: 0, middle: 1, right: 2 };
     const btn = buttonMap[button];
+    const buttons = { left: 1, middle: 4, right: 2 }[button];
+    const options = { toWindow: true, isAsyncEnabled: false };
 
     try {
-      // Move cursor to target
-      domWindowUtils.sendMouseEvent("mousemove", x, y, 0, 0, 0);
-
-      // mousedown → mouseup × clickCount
+      result.phase = "mousemove";
+      result.inputStarted = true;
+      win.synthesizeMouseEvent("mousemove", x, y, {
+        button: btn,
+        buttons: 0,
+        clickCount: 0,
+      }, options);
       for (let i = 0; i < clickCount; i++) {
-        domWindowUtils.sendMouseEvent("mousedown", x, y, btn, i + 1, 0);
-        domWindowUtils.sendMouseEvent("mouseup", x, y, btn, i + 1, 0);
+        if (!recheck()) {
+          return {
+            ...result,
+            status: result.activationStarted ? "unknown" : "refused",
+            reason: result.activationStarted
+              ? "eligibility-changed-after-activation"
+              : "eligibility-changed-before-mousedown",
+          };
+        }
+        result.phase = "mousedown";
+        result.activationStarted = true;
+        win.synthesizeMouseEvent("mousedown", x, y, {
+          button: btn,
+          buttons,
+          clickCount: i + 1,
+        }, options);
+        result.phase = "mouseup";
+        win.synthesizeMouseEvent("mouseup", x, y, {
+          button: btn,
+          buttons: 0,
+          clickCount: i + 1,
+        }, options);
       }
-      return true;
+      return {
+        ...result,
+        ok: true,
+        status: "dispatched",
+        reason: "native-sequence-complete",
+        phase: "complete",
+      };
     } catch (e) {
-      console.error("DOMActionOperations: sendMouseEvent failed:", e);
-      return false;
+      console.error("[DOMActionOperations] Native mouse delivery failed:", e);
+      return {
+        ...result,
+        status: "unknown",
+        reason: `native-input-error: ${String(e)}`,
+      };
     }
   }
 
-  /**
-   * Playwright-style actionability check.
-   */
-  private checkActionability(el: HTMLElement): boolean {
+  private checkActionability(el: Element): boolean {
     const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return false;
+    if (
+      rect.width <= 0 || rect.height <= 0 || el.matches(":disabled") ||
+      el.closest('[aria-disabled="true"]')
+    ) return false;
 
     const style = this.contentWindow?.getComputedStyle(el);
     if (!style) return false;
     if (style.getPropertyValue("display") === "none") return false;
     if (style.getPropertyValue("visibility") === "hidden") return false;
     if (style.getPropertyValue("opacity") === "0") return false;
-    // Note: pointer-events check omitted — getPropertyValue("pointer-events")
-    // may return "none" for interactive elements in Firefox content process actors
-    // even when the element is genuinely clickable (Xray wrapper/computed style quirk).
-
     return true;
   }
 
-  /**
-   * Waits until the element's position/size stabilizes (CSS animation done).
-   * Uses a single before/after snapshot instead of polling to avoid Firefox's
-   * background-tab interval throttling (which clamps setInterval to ~1000ms).
-   */
-  private async waitForStable(
-    el: HTMLElement,
-    timeout: number,
-    delay: number = 100,
-  ): Promise<boolean> {
-    const initialRect = el.getBoundingClientRect();
-    await new Promise<void>((resolve) =>
-      timerSetTimeout(resolve, Math.min(delay, timeout)),
+  private receivesPointerEvents(el: Element, rect: DOMRect): boolean {
+    return this.deps.highlightManager.withControlOverlaySuspended(() =>
+      this.hitTestTarget(el, rect)
     );
-    const finalRect = el.getBoundingClientRect();
-    const dx = Math.abs(finalRect.x - initialRect.x);
-    const dy = Math.abs(finalRect.y - initialRect.y);
-    const dw = Math.abs(finalRect.width - initialRect.width);
-    const dh = Math.abs(finalRect.height - initialRect.height);
-    return dx < 2 && dy < 2 && dw < 2 && dh < 2;
+  }
+
+  private hitTestTarget(el: Element, rect: DOMRect): boolean {
+    const x = rect.x + rect.width / 2;
+    const y = rect.y + rect.height / 2;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+    // Document hit testing retargets shadow descendants to their host. Walk
+    // through the hit hosts, preserving the outer hit test so an overlay
+    // outside a shadow root still blocks the target.
+    let hit = this.document?.elementFromPoint(x, y) ?? null;
+    while (hit?.shadowRoot) {
+      const inner = hit.shadowRoot.elementFromPoint(x, y);
+      if (!inner || inner === hit) break;
+      hit = inner;
+    }
+    while (hit) {
+      if (el.contains(hit)) return true;
+      const root = hit.getRootNode();
+      hit = hit.assignedSlot ?? hit.parentElement ??
+        (root.nodeType === 11 && "host" in root
+          ? (root as ShadowRoot).host
+          : null);
+    }
+    return false;
+  }
+
+  private sameRect(a: DOMRect, b: DOMRect): boolean {
+    return [a.x - b.x, a.y - b.y, a.width - b.width, a.height - b.height]
+      .every((difference) => Math.abs(difference) < 2);
   }
 
   private delay(ms: number): Promise<void> {
