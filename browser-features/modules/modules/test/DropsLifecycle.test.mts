@@ -191,7 +191,8 @@ async function testInspectionPreservesApprovedBytes(): Promise<void> {
   const uuid = newUuid();
   try {
     const original = await fixture(uuid);
-    await installDrop(await inspect(original));
+    const originalInspection = await inspect(original);
+    await installDrop(originalInspection);
     const path = PathUtils.join(directory(uuid), "1.0.0", "fixture.xpi");
     const approvedHash = await IOUtils.computeHexDigest(path, "sha256");
     const changed = await fixture(uuid, "1.0.0", { marker: "/* changed */" });
@@ -212,7 +213,7 @@ async function testInspectionPreservesApprovedBytes(): Promise<void> {
       approvedHash,
       "version reuse must not replace approved bytes",
     );
-    changed.manifest.entries[0].sha256 = "0".repeat(64);
+    changed.manifest.entries[0].sha256 = original.manifest.entries[0].sha256;
     await rejects(() => inspect(changed));
     assertEquals(
       await IOUtils.computeHexDigest(path, "sha256"),
@@ -220,6 +221,11 @@ async function testInspectionPreservesApprovedBytes(): Promise<void> {
       "failed inspection must not delete approved bytes",
     );
     assert(listDrops()[uuid], "approved installation must remain listed");
+    assertEquals(
+      (await verifyDrop(originalInspection)).ok,
+      true,
+      "a failed inspection must preserve an already verified candidate",
+    );
   } finally {
     await cleanup([uuid]);
   }

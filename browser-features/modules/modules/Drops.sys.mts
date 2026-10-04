@@ -221,6 +221,22 @@ function inspectionPath(uuid: string, sha256: string, file: string): string {
   }
   return PathUtils.join(dropDir(uuid), "inspected", sha256, file);
 }
+
+/** Publish only verified bytes, so a concurrent failed inspection cannot replace a candidate. */
+async function saveInspectedArchive(path: string, bytes: Uint8Array, sha256: string): Promise<void> {
+  await IOUtils.makeDirectory(PathUtils.parent(path)!, { createAncestors: true, ignoreExisting: true });
+  const temporary = `${path}.${Services.uuid.generateUUID()}.download`;
+  try {
+    await IOUtils.write(temporary, bytes);
+    if (await IOUtils.computeHexDigest(temporary, "sha256") !== sha256) {
+      throw new Error(`sha256 mismatch: ${PathUtils.filename(path)}`);
+    }
+    if (await IOUtils.exists(path) && await IOUtils.computeHexDigest(path, "sha256") === sha256) return;
+    await IOUtils.move(temporary, path, { noOverwrite: false });
+  } finally {
+    await IOUtils.remove(temporary, { ignoreAbsent: true });
+  }
+}
 /**
  * profile/noraneko-drops/<uuid>/deps/<name>/<version>/
  *
@@ -375,14 +391,7 @@ export async function inspectDrop(ref: string, registryName?: string, fetchImpl:
     const bytes = new Uint8Array(await resp.arrayBuffer());
     entryDir(uuid, e.version); // Validate the eventual installed version as well.
     const path = inspectionPath(uuid, e.sha256, e.file);
-    const edir = PathUtils.parent(path)!;
-    await IOUtils.makeDirectory(edir, { createAncestors: true, ignoreExisting: true });
-    await IOUtils.write(path, bytes, { tmpPath: `${path}.tmp` });
-    const digest = await IOUtils.computeHexDigest(path, "sha256");
-    if (digest !== e.sha256) {
-      await IOUtils.remove(path);
-      throw new Error(`sha256 mismatch: ${e.file}`);
-    }
+    await saveInspectedArchive(path, bytes, e.sha256);
     console.log(`[noraneko-drops] inspect ${m.name}: ${e.file} sha256 ok, reading zip`);
     const files = readZipEntries(path);
     console.log(`[noraneko-drops] inspect ${m.name}: ${e.file} ${files.size} entries`);
@@ -456,12 +465,7 @@ export async function inspectDrop(ref: string, registryName?: string, fetchImpl:
       const resp = await fetchImpl(url, { cache: "no-store" });
       if (!resp.ok) throw new Error(`download failed: ${url} (${resp.status})`);
       const path = inspectionPath(uuid, e.sha256, e.file);
-      await IOUtils.makeDirectory(PathUtils.parent(path)!, { createAncestors: true, ignoreExisting: true });
-      await IOUtils.write(path, new Uint8Array(await resp.arrayBuffer()), { tmpPath: `${path}.tmp` });
-      if ((await IOUtils.computeHexDigest(path, "sha256")) !== e.sha256) {
-        await IOUtils.remove(path);
-        throw new Error(`sha256 mismatch: ${d.name}/${e.file}`);
-      }
+      await saveInspectedArchive(path, new Uint8Array(await resp.arrayBuffer()), e.sha256);
       const files = readZipEntries(path);
       dentries.push({ file: e.file, version: e.version, sha256: e.sha256, files: [...files.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([p, text]) => ({ path: p, text })) });
     }
