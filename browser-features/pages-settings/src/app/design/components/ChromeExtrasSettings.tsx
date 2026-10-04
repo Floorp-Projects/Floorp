@@ -261,6 +261,79 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               />
             </div>
             <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-close-button">
+                {t("design.chrome-extras.hidden.tabCloseButton")}
+              </label>
+              <Switch
+                id="hidden-tab-close-button"
+                checked={settings.hiddenTabCloseButton}
+                onChange={(e) =>
+                  handleSettingChange("hiddenTabCloseButton", e.target.checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-audio-indicator">
+                {t("design.chrome-extras.hidden.tabAudioIndicator")}
+              </label>
+              <Switch
+                id="hidden-tab-audio-indicator"
+                checked={settings.hiddenTabAudioIndicator}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "hiddenTabAudioIndicator",
+                    e.target.checked,
+                  )}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <label htmlFor="hidden-tab-sharing-indicator">
+                  {t("design.chrome-extras.hidden.tabSharingIndicator")}
+                </label>
+                <p
+                  id="hidden-tab-sharing-indicator-note"
+                  className="text-sm text-muted-foreground"
+                >
+                  {t("design.chrome-extras.hidden.tabSharingIndicatorNote")}
+                </p>
+              </div>
+              <Switch
+                id="hidden-tab-sharing-indicator"
+                aria-describedby="hidden-tab-sharing-indicator-note"
+                checked={settings.hiddenTabSharingIndicator}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "hiddenTabSharingIndicator",
+                    e.target.checked,
+                  )}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-note-icon">
+                {t("design.chrome-extras.hidden.tabNoteIcon")}
+              </label>
+              <Switch
+                id="hidden-tab-note-icon"
+                checked={settings.hiddenTabNoteIcon}
+                onChange={(e) =>
+                  handleSettingChange("hiddenTabNoteIcon", e.target.checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="hidden-tab-attention-indicator">
+                {t("design.chrome-extras.hidden.tabAttentionIndicator")}
+              </label>
+              <Switch
+                id="hidden-tab-attention-indicator"
+                checked={settings.hiddenTabAttentionIndicator}
+                onChange={(e) =>
+                  handleSettingChange(
+                    "hiddenTabAttentionIndicator",
+                    e.target.checked,
+                  )}
+              />
+            </div>
+            <div className="flex items-center justify-between">
               <label htmlFor="hidden-tabbar">
                 {t("design.chrome-extras.hidden.tabbar")}
               </label>
