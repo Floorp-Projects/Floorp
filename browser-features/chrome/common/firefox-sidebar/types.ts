@@ -18,3 +18,17 @@ export type SidebarOverlaySettings = {
   overlay: boolean;
   hover: boolean;
 };
+
+export type SidebarOpeningRequest = {
+  token: number;
+  generation: number;
+  commandID: string;
+  launcherWasHidden: boolean;
+  hoverOwned: boolean;
+  cancelled: boolean;
+  cancel(): void;
+};
+
+export type NativeSidebarBrowser = HTMLElement & {
+  contentWindow: Window | null;
+};

@@ -3,7 +3,9 @@
 import i18next from "i18next";
 import { createSignal } from "solid-js";
 import type {
+  NativeSidebarBrowser,
   NativeSidebarController,
+  SidebarOpeningRequest,
   SidebarOverlaySettings,
 } from "./types.ts";
 
@@ -41,9 +43,8 @@ export class FirefoxSidebarOverlayController {
   private ready = false;
   private hovered = false;
   private escaped = false;
-  private opening = false;
-  private hoverOpeningCommand: string | undefined;
-  private openingLauncherWasHidden = false;
+  private opening: SidebarOpeningRequest | undefined;
+  private openingToken = 0;
   private ignoreNextNativeClose = false;
   private requestGeneration = 0;
   private resizing = false;
@@ -154,7 +155,7 @@ export class FirefoxSidebarOverlayController {
       ) return;
       this.escaped = false;
       const pinned = !this.pinned;
-      if (pinned) this.hoverOpeningCommand = undefined;
+      if (pinned && this.opening) this.opening.hoverOwned = false;
       this.setState(pinned || this.hovered, pinned);
       if (pinned) void this.showPanel();
       else {
@@ -184,12 +185,46 @@ export class FirefoxSidebarOverlayController {
       } else this.scheduleClose();
     }, true);
     this.listen(document, "focusout", () => this.scheduleClose(), true);
-    this.listen(box, "SidebarShown", () => {
-      if (this.settings.hover && !this.opening) {
+    const nativeShowStarted = () => {
+      if (
+        this.settings.hover && !this.opening &&
+        !document.documentElement.hasAttribute("inDOMFullscreen")
+      ) {
         this.escaped = false;
         this.clearTimers();
         this.setState(true, true);
       }
+    };
+    // Use the start event for explicit native commands. SidebarShown is a load
+    // completion event and may belong to an older, cancelled hover request.
+    this.listen(box, "sidebar-show", nativeShowStarted);
+    const nativeBrowser = document.getElementById("sidebar") as
+      | NativeSidebarBrowser
+      | null;
+    let removeWillShow: (() => void) | undefined;
+    const bindWillShow = () => {
+      removeWillShow?.();
+      const contentWindow = nativeBrowser?.contentWindow;
+      contentWindow?.addEventListener("SidebarWillShow", nativeShowStarted);
+      removeWillShow = () =>
+        contentWindow?.removeEventListener(
+          "SidebarWillShow",
+          nativeShowStarted,
+        );
+    };
+    // The legacy sidebar has no sidebar-show event. Its document Window changes
+    // when a different native panel loads, so reattach the listener after load.
+    if (nativeBrowser) {
+      bindWillShow();
+      this.listen(nativeBrowser, "load", bindWillShow, true);
+      this.listeners.push(() => removeWillShow?.());
+    }
+    this.listen(box, "SidebarShown", () => {
+      this.trigger?.setAttribute(
+        "aria-expanded",
+        String(this.expanded && this.native.isOpen),
+      );
+      this.scheduleGeometry();
     });
     this.listen(document, "keydown", (event) => {
       const key = event as KeyboardEvent;
@@ -266,13 +301,10 @@ export class FirefoxSidebarOverlayController {
           // Native close buttons remain authoritative. Require a new hover gesture
           // before reopening, including when the pointer is still over the rail.
           this.escaped = true;
-          this.requestGeneration++;
+          this.invalidateOpening();
           this.setState(false, false);
           this.clearTimers();
-        } else if (this.native.isOpen && !this.opening && this.settings.hover) {
-          this.escaped = false;
-          this.setState(true, true);
-        }
+        } else this.ignoreNextNativeClose = false;
       }
       if (document.documentElement.hasAttribute("inDOMFullscreen")) {
         this.invalidateOpening();
@@ -439,29 +471,43 @@ export class FirefoxSidebarOverlayController {
         sidebar.visible !== false
       )?.[0];
     if (!commandID) return;
-    const generation = this.requestGeneration;
-    this.hoverOpeningCommand = this.pinned ? undefined : commandID;
-    this.openingLauncherWasHidden = Boolean(this.launcher?.hidden);
-    this.opening = true;
+    const cancellation = Promise.withResolvers<void>();
+    const request: SidebarOpeningRequest = {
+      token: ++this.openingToken,
+      generation: this.requestGeneration,
+      commandID,
+      launcherWasHidden: Boolean(this.launcher?.hidden),
+      hoverOwned: !this.pinned,
+      cancelled: false,
+      cancel: cancellation.resolve,
+    };
+    this.opening = request;
     try {
-      await this.native.showInitially(commandID);
-      if (this.disposed || generation !== this.requestGeneration) {
-        this.closeOwnedOpening();
-      } else {
-        this.trigger?.setAttribute(
-          "aria-expanded",
-          String(this.expanded && this.native.isOpen),
-        );
-        this.scheduleClose();
-        this.scheduleGeometry();
-      }
+      const nativeOpening = this.native.showInitially(commandID).then(
+        (shown) => {
+          // A cancelled native load can still reveal its panel later. It only owns
+          // that panel until a newer opening request has taken over.
+          if (request.cancelled && request.token === this.openingToken) {
+            this.closeOwnedOpening(request);
+          }
+          return shown;
+        },
+      );
+      await Promise.race([nativeOpening, cancellation.promise]);
+      if (request.cancelled || this.opening !== request) return;
+      this.trigger?.setAttribute(
+        "aria-expanded",
+        String(this.expanded && this.native.isOpen),
+      );
+      this.scheduleClose();
+      this.scheduleGeometry();
     } catch (error) {
-      console.error("[FirefoxSidebar]", error);
+      if (!request.cancelled) console.error("[FirefoxSidebar]", error);
     } finally {
-      this.opening = false;
-      this.hoverOpeningCommand = undefined;
+      if (this.opening === request) this.opening = undefined;
       if (
-        generation !== this.requestGeneration &&
+        request.generation !== this.requestGeneration &&
+        request.token === this.openingToken &&
         !this.disposed && this.settings.overlay && this.settings.hover &&
         !this.escaped && !this.native.isOpen &&
         !document.documentElement.hasAttribute("inDOMFullscreen") &&
@@ -475,15 +521,22 @@ export class FirefoxSidebarOverlayController {
 
   private invalidateOpening(): void {
     this.requestGeneration++;
+    const request = this.opening;
+    if (!request) return;
+    request.cancelled = true;
     // _show() unhides the native box before its document finishes loading.
     // Close that transient opening before removing overlay positioning.
-    this.closeOwnedOpening();
+    this.closeOwnedOpening(request);
+    // Gecko can leave the load Promise pending forever when hide interrupts it
+    // before its first load event. Release our ownership without awaiting it.
+    this.opening = undefined;
+    request.cancel();
   }
 
-  private closeOwnedOpening(): void {
+  private closeOwnedOpening(request: SidebarOpeningRequest): void {
     if (
-      !this.opening || !this.hoverOpeningCommand || !this.native.isOpen ||
-      this.native.currentID !== this.hoverOpeningCommand
+      !request.hoverOwned || this.pinned || !this.native.isOpen ||
+      this.native.currentID !== request.commandID
     ) return;
     this.ignoreNextNativeClose = true;
     this.native.hide({ dismissPanel: false });
@@ -491,7 +544,7 @@ export class FirefoxSidebarOverlayController {
     // Automatic native opening may have revealed a launcher the user had hidden.
     // Restore it through the native toolbar action while it is still overlaid.
     if (
-      this.openingLauncherWasHidden && this.launcher && !this.launcher.hidden
+      request.launcherWasHidden && this.launcher && !this.launcher.hidden
     ) {
       void this.native.handleToolbarButtonClick?.().catch((error: unknown) =>
         console.error("[FirefoxSidebar]", error)

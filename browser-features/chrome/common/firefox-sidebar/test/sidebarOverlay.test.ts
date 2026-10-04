@@ -390,12 +390,20 @@ async function testPendingOpenInvalidation(): Promise<void> {
         let completed = false;
         native.showInitially = async (command) => {
           requested = true;
-          // Gecko unhides the panel synchronously before waiting for its load.
-          const early = earlyReveal
-            ? originalShow.call(native, command)
-            : undefined;
+          if (earlyReveal) {
+            // Gecko can leave this Promise pending forever if hide interrupts
+            // its first load. Our held completion intentionally does not await it.
+            void originalShow.call(native, command);
+          }
           await new Promise<void>((resolve) => release = resolve);
-          const shown = await (early ?? originalShow.call(native, command));
+          const shown = earlyReveal
+            ? true
+            : await originalShow.call(native, command);
+          if (earlyReveal) {
+            element("sidebar-box").dispatchEvent(
+              new CustomEvent("SidebarShown", { bubbles: true }),
+            );
+          }
           completed = true;
           return shown;
         };
@@ -422,24 +430,53 @@ async function testPendingOpenInvalidation(): Promise<void> {
           before,
           "disabling overlay during native loading must not briefly dock the panel",
         );
-        release?.();
-        await waitFor(
-          () => completed && !native.isOpen,
-          "stale native opening must not create a docked sidebar",
-        );
-        assert(
-          !native.isOpen,
-          "a completed obsolete hover request must stay closed",
-        );
+        if (earlyReveal) {
+          native.showInitially = originalShow;
+          await setModes(true, true);
+          hover(false);
+          hover(true);
+          await waitFor(
+            () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
+            "a cancelled pending load must not block a new hover request",
+          );
+          await settle();
+          release?.();
+          await waitFor(
+            () => completed,
+            "old held completion must be released",
+          );
+          await settle();
+          assert(
+            native.isOpen && firefoxSidebarOverlay?.expanded &&
+              !firefoxSidebarOverlay.pinned,
+            "old completion must neither close nor pin a newer hover request",
+          );
+          native.hide({ dismissPanel: false });
+          await settle();
+          await setModes(false, false);
+        } else {
+          release?.();
+          await waitFor(
+            () => completed && !native.isOpen,
+            "stale native opening must not create a docked sidebar",
+          );
+          assert(
+            !native.isOpen,
+            "a completed obsolete hover request must stay closed",
+          );
+        }
         hover(false);
       }
 
       let completed = false;
       native.showInitially = async (command) => {
-        const shown = originalShow.call(native, command);
+        void originalShow.call(native, command);
         await new Promise<void>((resolve) => release = resolve);
+        element("sidebar-box").dispatchEvent(
+          new CustomEvent("SidebarShown", { bubbles: true }),
+        );
         completed = true;
-        return shown;
+        return true;
       };
       await setModes(true, true);
       hover(true);
@@ -453,10 +490,24 @@ async function testPendingOpenInvalidation(): Promise<void> {
         !firefoxSidebarOverlay?.expanded,
         "native close must cancel hover even during loading",
       );
+      native.showInitially = originalShow;
+      hover(false);
+      hover(true);
+      await waitFor(
+        () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
+        "native close during loading must allow a new hover gesture",
+      );
+      await settle();
       release?.();
       await waitFor(
-        () => completed && !native.isOpen,
-        "native close must survive the old load completion",
+        () => completed,
+        "held native-close completion must be released",
+      );
+      await settle();
+      assert(
+        native.isOpen && firefoxSidebarOverlay?.expanded &&
+          !firefoxSidebarOverlay.pinned,
+        "a cancelled close completion must preserve the newer unpinned panel",
       );
     } finally {
       release?.();
