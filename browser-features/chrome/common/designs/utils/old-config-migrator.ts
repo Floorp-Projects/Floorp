@@ -21,7 +21,9 @@ import {
  * fallback follows the selected design unless the user set the pref directly.
  * Every other key defaults to `false` in the bundled user.js.
  */
-export const LEGACY_CHROME_EXTRAS_PREFS: Record<ChromeExtrasKey, string> = {
+export const LEGACY_CHROME_EXTRAS_PREFS: Partial<
+  Record<ChromeExtrasKey, string>
+> = {
   autohideTab: "userChrome.autohide.tab",
   autohideNavbar: "userChrome.autohide.navbar",
   autohideSidebar: "userChrome.autohide.sidebar",
@@ -95,6 +97,8 @@ export function getOldChromeExtrasConfig(
   const result: ChromeExtrasSettings = { ...CHROME_EXTRAS_DEFAULTS };
   for (const key of Object.keys(result) as ChromeExtrasKey[]) {
     const pref = LEGACY_CHROME_EXTRAS_PREFS[key];
+    // Floorp-only toggles have no legacy pref to seed from.
+    if (!pref) continue;
     if (key === "iconMenu" && !Services.prefs.prefHasUserValue(pref)) {
       result.iconMenu = isLeptonFamilyDesign(design);
       continue;
@@ -128,11 +132,10 @@ export function syncLegacyChromeExtrasPrefs(
   settings: ChromeExtrasSettings,
 ): void {
   for (const key of CHROME_EXTRAS_KEYS) {
+    const legacyPref = LEGACY_CHROME_EXTRAS_PREFS[key];
+    if (!legacyPref) continue;
     const value = settings[key];
-    const prefs = [
-      LEGACY_CHROME_EXTRAS_PREFS[key],
-      ...(LEGACY_ALIASES[key] ?? []),
-    ];
+    const prefs = [legacyPref, ...(LEGACY_ALIASES[key] ?? [])];
     for (const pref of prefs) {
       if (
         !Services.prefs.prefHasUserValue(pref) ||
