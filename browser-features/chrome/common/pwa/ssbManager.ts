@@ -8,6 +8,7 @@ import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
 import type { Browser, Manifest, SsbSupport } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
+import { refreshLauncherForStoreMove } from "#libs/pwa/launcherUpdate.ts";
 import {
   getUserContextIdForBrowser,
   isContainerExperimentEnabled,
@@ -31,6 +32,16 @@ if (AppConstants.platform === "win") {
     "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
   );
   SupportClass = LinuxSupport;
+}
+
+async function withLinuxMutation<T>(operation: () => Promise<T>): Promise<T> {
+  if (AppConstants.platform === "linux") {
+    const { LinuxSupport } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+    );
+    return await LinuxSupport.withMutation(operation);
+  }
+  return await operation();
 }
 
 export function resolveEffectiveUserContextId(
@@ -75,11 +86,14 @@ export class SiteSpecificBrowserManager {
     public readonly dataManager: DataManager,
   ) {
     this.ssbRunner = new SsbRunner(dataManager, this);
-    SiteSpecificBrowserManager.instance = this;
 
     // A native mutation closes the PWA window. Handle management requests
     // from the window that owns the data manager's pending store writes.
     const ownerWindow = Cu.getGlobalForObject(dataManager) as Window;
+    if (ownerWindow.document.documentElement.hasAttribute("taskbartab")) {
+      return;
+    }
+    SiteSpecificBrowserManager.instance = this;
     const tabBrowser = ownerWindow.gBrowser;
     tabBrowser.addTabsProgressListener(this.listener);
 
@@ -171,6 +185,18 @@ export class SiteSpecificBrowserManager {
   public async installOrRunCurrentPageAsSsb(
     browser: Browser,
     asPwa = true,
+    installUserContextId?: number,
+  ) {
+    const requestedUrl = browser.currentURI.spec;
+    return await withLinuxMutation(async () => {
+      if (!browserStillShowsUrl(browser, requestedUrl)) return;
+      await this.installOrRunCurrentPage(browser, asPwa, installUserContextId);
+    });
+  }
+
+  private async installOrRunCurrentPage(
+    browser: Browser,
+    asPwa: boolean,
     installUserContextId?: number,
   ) {
     const effectiveUserContextId = this.getEffectiveUserContextId(
@@ -394,11 +420,13 @@ export class SiteSpecificBrowserManager {
   }
 
   public async uninstallById(id: string) {
-    const ssbObj = await this.getSsbObj(id);
-    if (!ssbObj) {
-      return;
-    }
-    await this.uninstall(ssbObj);
+    await withLinuxMutation(async () => {
+      const ssbObj = await this.getSsbObj(id);
+      if (!ssbObj) {
+        return;
+      }
+      await this.uninstall(ssbObj);
+    });
   }
 
   private async getIdByUrl(url: string, userContextId: number = 0) {
@@ -465,6 +493,13 @@ export class SiteSpecificBrowserManager {
   }
 
   public async renameSsb(id: string, newName: string): Promise<boolean> {
+    return await withLinuxMutation(() => this.renameInstalledSsb(id, newName));
+  }
+
+  private async renameInstalledSsb(
+    id: string,
+    newName: string,
+  ): Promise<boolean> {
     const ssbObj = await this.getSsbObj(id);
     if (!ssbObj) {
       return false;
@@ -484,6 +519,16 @@ export class SiteSpecificBrowserManager {
         ssbObj,
         updatedManifest,
         this.dataManager,
+      );
+    }
+
+    if (AppConstants.platform === "linux" && SupportClass) {
+      return await refreshLauncherForStoreMove(
+        new SupportClass(),
+        this.dataManager,
+        DataManagerClass.buildKey(ssbObj.start_url, ssbObj.userContextId ?? 0),
+        ssbObj,
+        updatedManifest,
       );
     }
 
@@ -549,7 +594,17 @@ export class SiteSpecificBrowserManager {
         }
       }
 
-      const moved = await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      // Linux launchers include the container display name and badged icon.
+      // Keep their on-disk state aligned with the store even if either write fails.
+      const moved = AppConstants.platform === "linux" && SupportClass
+        ? await refreshLauncherForStoreMove(
+          new SupportClass(),
+          this.dataManager,
+          oldKey,
+          ssbObj,
+          updatedManifest,
+        )
+        : await this.dataManager.moveSsbKey(oldKey, updatedManifest);
       if (moved && AppConstants.platform === "macosx") {
         try {
           const { AppRegistry } = ChromeUtils.importESModule(
@@ -575,7 +630,7 @@ export class SiteSpecificBrowserManager {
       );
       return await NativeAppRuntime.withMutation(id, update) ?? false;
     }
-    return await update();
+    return await withLinuxMutation(update);
   }
 
   public useOSIntegration() {
