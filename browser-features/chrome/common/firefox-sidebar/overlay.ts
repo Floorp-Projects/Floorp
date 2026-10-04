@@ -51,8 +51,8 @@ export class FirefoxSidebarOverlayController {
   private resizing = false;
   private resizeCleanup: (() => void) | undefined;
   private railSpace = 0;
-  private openTimer: number | undefined;
-  private closeTimer: number | undefined;
+  private openTimer: ReturnType<typeof globalThis.setTimeout> | undefined;
+  private closeTimer: ReturnType<typeof globalThis.setTimeout> | undefined;
   private frame: number | undefined;
   private readonly popups = new Set<Element>();
   private resizeObserver: ResizeObserver | undefined;
