@@ -336,6 +336,50 @@ async function testRetentionAndFullscreen(): Promise<void> {
   });
 }
 
+async function testPinnedSidebarRestoresAfterFullscreen(): Promise<void> {
+  await withSidebar(async () => {
+    await setModes(true, true);
+    hover(true);
+    await waitFor(
+      () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
+      "native sidebar must open before pinning",
+    );
+    element("floorp-firefox-sidebar-edge-toggle").dispatchEvent(
+      new MouseEvent("click", { bubbles: true, detail: 1 }),
+    );
+    hover(false);
+    focusContent();
+    assert(
+      firefoxSidebarOverlay?.pinned,
+      "native sidebar must be pinned before entering fullscreen",
+    );
+    const before = viewport();
+    document.documentElement.setAttribute("inDOMFullscreen", "true");
+    await settle();
+    assert(
+      firefoxSidebarOverlay.pinned && !firefoxSidebarOverlay.expanded,
+      "fullscreen must hide the panel while preserving its pin",
+    );
+    assertEquals(
+      getComputedStyle(element("sidebar-box"))?.visibility,
+      "collapse",
+      "fullscreen must hide pinned native content",
+    );
+    document.documentElement.removeAttribute("inDOMFullscreen");
+    await settle();
+    assert(
+      native.isOpen && firefoxSidebarOverlay.pinned &&
+        firefoxSidebarOverlay.expanded,
+      "leaving fullscreen must restore a pinned native panel",
+    );
+    assertViewport(
+      before,
+      "restoring a pinned native panel must preserve the website viewport",
+    );
+    assertSidebarContentWidth("native pinned panel after fullscreen");
+  });
+}
+
 async function testPendingOpenInvalidation(): Promise<void> {
   await withSidebar(async () => {
     const originalShow = native.showInitially;
@@ -481,6 +525,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "obsolete asynchronous native hover opening is cancelled",
       fn: testPendingOpenInvalidation,
+    },
+    {
+      name: "pinned native sidebar survives DOM fullscreen",
+      fn: testPinnedSidebarRestoresAfterFullscreen,
     },
     {
       name: "failed native hover opening waits for a new gesture",

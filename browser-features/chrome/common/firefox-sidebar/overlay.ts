@@ -277,7 +277,15 @@ export class FirefoxSidebarOverlayController {
       if (document.documentElement.hasAttribute("inDOMFullscreen")) {
         this.invalidateOpening();
         this.clearTimers();
-        this.setState(false, false);
+        this.setState(false, this.pinned);
+      } else if (
+        records.some((record) =>
+          record.target === document.documentElement &&
+          record.attributeName === "inDOMFullscreen"
+        ) &&
+        this.settings.hover && this.pinned && this.native.isOpen
+      ) {
+        this.setState(true, true);
       }
       this.scheduleGeometry();
     });
