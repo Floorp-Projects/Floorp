@@ -3,10 +3,14 @@ import type { ViewSourceArgs, ViewSourceWindow } from "./type.ts";
 const { BrowserWindowTracker } = ChromeUtils.importESModule(
   "resource:///modules/BrowserWindowTracker.sys.mjs",
 );
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+);
 
-async function getBrowserWindow(): Promise<ViewSourceWindow> {
-  return (BrowserWindowTracker.getTopWindow() ??
-    await BrowserWindowTracker.promiseOpenWindow()) as ViewSourceWindow;
+async function getBrowserWindow(source: Window): Promise<ViewSourceWindow> {
+  const options = { private: PrivateBrowsingUtils.isWindowPrivate(source) };
+  return (BrowserWindowTracker.getTopWindow(options) ??
+    await BrowserWindowTracker.promiseOpenWindow(options)) as ViewSourceWindow;
 }
 
 function opensInTab(): boolean {
@@ -41,7 +45,7 @@ export function redirectViewSourceToBrowserWindow(
   viewSourceUtils.__floorpSsbPatched = true;
 
   win.BrowserCommands.viewSourceOfDocument = async (args: ViewSourceArgs) => {
-    const target = await getBrowserWindow();
+    const target = await getBrowserWindow(win);
     await target.BrowserCommands.viewSourceOfDocument(args);
     if (
       opensInTab() &&
@@ -57,6 +61,6 @@ export function redirectViewSourceToBrowserWindow(
   viewSourceUtils.viewPartialSourceInBrowser = (browsingContext) =>
     viewPartialSource(
       browsingContext,
-      async () => openSourceBrowser(await getBrowserWindow()),
+      async () => openSourceBrowser(await getBrowserWindow(win)),
     );
 }
