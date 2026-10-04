@@ -169,25 +169,28 @@ export class NRPwaManagerParent extends JSWindowActorParent {
         const { LinuxSupport } = ChromeUtils.importESModule(
           "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
         );
-        const store = DataStoreProvider.getDataManager();
-        // Read through the shared store so legacy keys are migrated before
-        // choosing the key that the launcher refresh will move.
-        const apps: Record<string, Manifest> = await store.getCurrentSsbData();
-        const entry = Object.entries(apps).find(([, app]) => app.id === id);
-        if (!entry) return "not-found";
-        const [oldKey, oldManifest] = entry;
-        const newKey = this.buildKey(oldManifest.start_url, userContextId);
-        if (newKey !== oldKey && apps[newKey]) return "container-conflict";
-        const updated = { ...oldManifest, userContextId };
-        return await refreshLauncherForStoreMove(
-            new LinuxSupport(),
-            store,
-            oldKey,
-            oldManifest,
-            updated,
-          )
-          ? "ok"
-          : "failed";
+        return await LinuxSupport.withMutation(async () => {
+          const store = DataStoreProvider.getDataManager();
+          // Read inside the shared queue so rollback cannot restore a snapshot
+          // from before another actor or browser window completed a mutation.
+          const apps: Record<string, Manifest> = await store
+            .getCurrentSsbData();
+          const entry = Object.entries(apps).find(([, app]) => app.id === id);
+          if (!entry) return "not-found";
+          const [oldKey, oldManifest] = entry;
+          const newKey = this.buildKey(oldManifest.start_url, userContextId);
+          if (newKey !== oldKey && apps[newKey]) return "container-conflict";
+          const updated = { ...oldManifest, userContextId };
+          return await refreshLauncherForStoreMove(
+              new LinuxSupport(),
+              store,
+              oldKey,
+              oldManifest,
+              updated,
+            )
+            ? "ok"
+            : "failed";
+        });
       }
       const ssbData = await this.readSsbData();
       // Find the app by id

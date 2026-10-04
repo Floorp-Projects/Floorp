@@ -70,6 +70,15 @@ export class LinuxSupport {
 
   private static linuxTaskbarInstance?: nsIFloorpLinuxTaskbar | null;
   private static cachedHomeDir: string | null = null;
+  private static mutationQueue: Promise<void> = Promise.resolve();
+
+  /** Serialize launcher and store changes across actors and browser windows. */
+  static withMutation<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.mutationQueue.then(operation);
+    // A failed operation must not prevent subsequent mutations from running.
+    this.mutationQueue = result.then(() => {}, () => {});
+    return result;
+  }
 
   private static get linuxTaskbar(): nsIFloorpLinuxTaskbar | null {
     if (this.linuxTaskbarInstance !== undefined) {

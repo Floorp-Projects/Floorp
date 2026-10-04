@@ -157,6 +157,49 @@ export async function runAllTests(): Promise<void> {
   }
   await runTests("NRPwaManagerParent.test.mts", [
     {
+      name: "concurrent settings actors keep the launcher and store in sync",
+      fn: () =>
+        withSandbox(async (root, store, _support, actor) => {
+          const secondActor = Object.create(
+            NRPwaManagerParent.prototype,
+          ) as NRPwaManagerParent;
+          Object.defineProperty(secondActor, "installedAppsStoreFile", {
+            value: paths(root).store,
+          });
+          const originalDesktop = await IOUtils.readUTF8(paths(root).desktop);
+          const results = await Promise.all([
+            setContainer(actor, 1),
+            setContainer(secondActor, 0),
+          ]);
+          assertEquals(results[0], "ok", "The first settings request succeeds");
+          assertEquals(
+            results[1],
+            "ok",
+            "The queued settings request succeeds",
+          );
+          const current = await store.getCurrentSsbData();
+          assertEquals(
+            current[`${manifest.start_url}:0`]?.id,
+            manifest.id,
+            "The final store entry uses the last requested container",
+          );
+          assert(
+            !current[`${manifest.start_url}:1`],
+            "No stale intermediate key remains",
+          );
+          assertEquals(
+            await IOUtils.readUTF8(paths(root).desktop),
+            originalDesktop,
+            "The final desktop entry matches the default-context store entry",
+          );
+          assert(await IOUtils.exists(paths(root).svg), "The SVG is restored");
+          assert(
+            !await IOUtils.exists(paths(root).png),
+            "The badge is removed",
+          );
+        }),
+    },
+    {
       name:
         "settings container changes refresh the launcher and store in both directions",
       fn: () =>
@@ -268,6 +311,22 @@ export async function runAllTests(): Promise<void> {
           } finally {
             restoreScale();
           }
+
+          assertEquals(
+            await setContainer(actor, 1),
+            "ok",
+            "A thrown refresh failure does not block the next queued request",
+          );
+          assertEquals(
+            await setContainer(actor, 0),
+            "ok",
+            "The queue still accepts the following reset",
+          );
+          assertEquals(
+            await snapshot(root),
+            before,
+            "Successful requests after failure restore a consistent default app",
+          );
 
           let attemptedMove = false;
           const restoreMove = override(store, "moveSsbKey", async () => {

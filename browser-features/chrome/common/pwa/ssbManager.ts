@@ -34,6 +34,16 @@ if (AppConstants.platform === "win") {
   SupportClass = LinuxSupport;
 }
 
+async function withLinuxMutation<T>(operation: () => Promise<T>): Promise<T> {
+  if (AppConstants.platform === "linux") {
+    const { LinuxSupport } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+    );
+    return await LinuxSupport.withMutation(operation);
+  }
+  return await operation();
+}
+
 export function resolveEffectiveUserContextId(
   browser: Browser,
   explicitUserContextId: number | undefined,
@@ -175,6 +185,18 @@ export class SiteSpecificBrowserManager {
   public async installOrRunCurrentPageAsSsb(
     browser: Browser,
     asPwa = true,
+    installUserContextId?: number,
+  ) {
+    const requestedUrl = browser.currentURI.spec;
+    return await withLinuxMutation(async () => {
+      if (!browserStillShowsUrl(browser, requestedUrl)) return;
+      await this.installOrRunCurrentPage(browser, asPwa, installUserContextId);
+    });
+  }
+
+  private async installOrRunCurrentPage(
+    browser: Browser,
+    asPwa: boolean,
     installUserContextId?: number,
   ) {
     const effectiveUserContextId = this.getEffectiveUserContextId(
@@ -398,11 +420,13 @@ export class SiteSpecificBrowserManager {
   }
 
   public async uninstallById(id: string) {
-    const ssbObj = await this.getSsbObj(id);
-    if (!ssbObj) {
-      return;
-    }
-    await this.uninstall(ssbObj);
+    await withLinuxMutation(async () => {
+      const ssbObj = await this.getSsbObj(id);
+      if (!ssbObj) {
+        return;
+      }
+      await this.uninstall(ssbObj);
+    });
   }
 
   private async getIdByUrl(url: string, userContextId: number = 0) {
@@ -469,6 +493,13 @@ export class SiteSpecificBrowserManager {
   }
 
   public async renameSsb(id: string, newName: string): Promise<boolean> {
+    return await withLinuxMutation(() => this.renameInstalledSsb(id, newName));
+  }
+
+  private async renameInstalledSsb(
+    id: string,
+    newName: string,
+  ): Promise<boolean> {
     const ssbObj = await this.getSsbObj(id);
     if (!ssbObj) {
       return false;
@@ -599,7 +630,7 @@ export class SiteSpecificBrowserManager {
       );
       return await NativeAppRuntime.withMutation(id, update) ?? false;
     }
-    return await update();
+    return await withLinuxMutation(update);
   }
 
   public useOSIntegration() {
