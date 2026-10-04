@@ -6,6 +6,7 @@ import {
   AppWindow,
   BadgeInfo,
   Briefcase,
+  Command,
   Gauge,
   House,
   Keyboard,
@@ -119,6 +120,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: Gauge,
     priority: 55,
     textKey: "performance",
+  },
+  {
+    id: "command-palette",
+    route: "/features/command-palette",
+    titleKey: "pages.commandPalette",
+    descriptionKey: "commandPalette.description",
+    icon: Command,
+    priority: 62,
+    textKey: "commandPalette",
   },
   {
     id: "accounts",
