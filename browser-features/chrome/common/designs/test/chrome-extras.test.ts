@@ -68,6 +68,211 @@ function stripComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
+/** Use Gecko's style engine without changing the live tab strip or its styles. */
+function withTabIndicatorFixture(
+  fn: (tabs: HTMLElement, style: HTMLElement) => void,
+): void {
+  const host = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  host.style.cssText = "position: fixed; inset: -10000px auto auto -10000px";
+  const shadow = host.attachShadow({ mode: "closed" });
+  const tabs = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  tabs.id = "tabbrowser-tabs";
+  tabs.style.fontWeight = "400";
+  const baseStyle = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "style",
+  );
+  // Lepton's !important audio rule is more specific than a plain class rule.
+  // Keep it here to exercise the cascade that the hiding sheet must override.
+  baseStyle.textContent = `
+    .tab-audio-button:not([sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
+      display: flex !important;
+    }
+  `;
+  const style = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "style",
+  );
+  shadow.append(baseStyle, style, tabs);
+  document.documentElement.appendChild(host);
+  try {
+    fn(tabs, style);
+  } finally {
+    host.remove();
+  }
+}
+
+function tabIndicator(
+  tabs: HTMLElement,
+  className: string,
+  attributes: readonly string[] = [],
+): HTMLSpanElement {
+  const indicator = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "span",
+  );
+  indicator.className = className;
+  indicator.style.display = "block";
+  for (const attribute of attributes) indicator.setAttribute(attribute, "true");
+  tabs.appendChild(indicator);
+  return indicator;
+}
+
+function indicatorStyle(indicator: HTMLElement): CSSStyleDeclaration {
+  const style = getComputedStyle(indicator);
+  assert(style !== null, "attached tab indicator must have computed styles");
+  return style;
+}
+
+function testHiddenAudioPreservesCrashedAndOtherBadges(): void {
+  withTabIndicatorFixture((tabs, style) => {
+    const audioStates = ["soundplaying", "muted", "activemedia-blocked"];
+    const audio = audioStates.flatMap((state) => [
+      tabIndicator(tabs, "tab-audio-button", [state]),
+      tabIndicator(tabs, "tab-icon-overlay", [state]),
+    ]);
+    const preserved = [
+      tabIndicator(tabs, "tab-audio-button", ["pinned", "crashed", "selected"]),
+      tabIndicator(tabs, "tab-icon-overlay", ["pinned", "crashed", "selected"]),
+      ...audioStates.flatMap((state) => [
+        tabIndicator(tabs, "tab-audio-button", ["crashed", state]),
+        tabIndicator(tabs, "tab-icon-overlay", ["crashed", state]),
+      ]),
+      tabIndicator(tabs, "tab-icon-overlay", ["pinned"]),
+      tabIndicator(tabs, "tab-icon-overlay", ["sharing"]),
+      tabIndicator(tabs, "tab-sharing-icon-overlay", ["sharing"]),
+      tabIndicator(tabs, "tab-icon-overlay", ["pictureinpicture"]),
+      tabIndicator(tabs, "tab-note-icon"),
+    ];
+    const all = [...audio, ...preserved];
+    const before = all.map((indicator) => indicatorStyle(indicator).display);
+    assert(
+      before.every((display) => display !== "none"),
+      "fixtures start visible",
+    );
+
+    style.textContent = cssFor({ hiddenTabAudioIndicator: true });
+    for (const indicator of audio) {
+      assertEquals(
+        indicatorStyle(indicator).display,
+        "none",
+        `${indicator.outerHTML} hides even against Lepton's audio rule`,
+      );
+    }
+    for (const indicator of preserved) {
+      assertEquals(
+        indicatorStyle(indicator).display,
+        before[all.indexOf(indicator)],
+        `${indicator.outerHTML} survives hiding audio indicators`,
+      );
+    }
+    style.textContent = cssFor({ hiddenTabAudioIndicator: false });
+    all.forEach((indicator, index) => {
+      assertEquals(
+        indicatorStyle(indicator).display,
+        before[index],
+        "turning off hidden audio restores the original display",
+      );
+    });
+  });
+}
+
+function testTabBadgeTogglesAreIndependentAndReversible(): void {
+  withTabIndicatorFixture((tabs, style) => {
+    const cases = [
+      ["hiddenTabCloseButton", "tab-close-button"],
+      ["hiddenTabSharingIndicator", "tab-sharing-icon-overlay"],
+      ["hiddenTabNoteIcon", "tab-note-icon"],
+      ["hiddenTabNoteIcon", "tab-note-icon-overlay"],
+    ] as const;
+    const indicators = cases.map(([, className]) =>
+      tabIndicator(tabs, className)
+    );
+    const audio = tabIndicator(tabs, "tab-audio-button", ["soundplaying"]);
+    for (const [key] of cases) {
+      style.textContent = cssFor({ [key]: true });
+      cases.forEach(([indicatorKey], index) => {
+        assertEquals(
+          indicatorStyle(indicators[index]).display,
+          indicatorKey === key ? "none" : "block",
+          `${key} only hides its own tab badge or button`,
+        );
+      });
+      assertEquals(
+        indicatorStyle(audio).display,
+        "flex",
+        "audio is preserved",
+      );
+      style.textContent = cssFor({});
+      for (const indicator of indicators) {
+        assertEquals(
+          indicatorStyle(indicator).display,
+          "block",
+          `${key} restores its badge or button when disabled`,
+        );
+      }
+    }
+  });
+}
+
+function testTabAttentionToggleIsReversible(): void {
+  withTabIndicatorFixture((tabs, style) => {
+    const attention = tabIndicator(tabs, "tab-content", ["attention"]);
+    const titleChanged = tabIndicator(tabs, "tab-content", ["titlechanged"]);
+    const ordinary = tabIndicator(tabs, "tab-content");
+    const contents = [attention, titleChanged, ordinary];
+    for (const content of contents) {
+      content.style.backgroundImage = "linear-gradient(red, blue)";
+    }
+    const label = tabIndicator(tabs, "tab-label", ["attention"]);
+    const ordinaryLabel = tabIndicator(tabs, "tab-label");
+    label.style.fontWeight = ordinaryLabel.style.fontWeight = "700";
+    const background = indicatorStyle(ordinary).backgroundImage;
+    assert(
+      background !== "none",
+      "fixture starts with an attention background",
+    );
+
+    style.textContent = cssFor({ hiddenTabAttentionIndicator: true });
+    for (const content of [attention, titleChanged]) {
+      assertEquals(
+        indicatorStyle(content).backgroundImage,
+        "none",
+        "attention dot hides",
+      );
+    }
+    assertEquals(
+      indicatorStyle(label).fontWeight,
+      "400",
+      "attention title loses bold weight",
+    );
+    assertEquals(
+      indicatorStyle(ordinary).backgroundImage,
+      background,
+      "ordinary background survives",
+    );
+    assertEquals(
+      indicatorStyle(ordinaryLabel).fontWeight,
+      "700",
+      "ordinary title weight survives",
+    );
+
+    style.textContent = cssFor({});
+    for (const content of contents) {
+      assertEquals(
+        indicatorStyle(content).backgroundImage,
+        background,
+        "attention background returns",
+      );
+    }
+    assertEquals(
+      indicatorStyle(label).fontWeight,
+      "700",
+      "attention title weight returns",
+    );
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests — the key set
 // ---------------------------------------------------------------------------
@@ -879,6 +1084,18 @@ export async function runAllTests(): Promise<void> {
     { name: "every key has css", fn: testEveryKeyHasCss },
     { name: "defaults are all off", fn: testDefaultsAreAllOff },
     { name: "style id is stable", fn: testStyleIdIsStable },
+    {
+      name: "hidden audio preserves crashed and unrelated tab badges",
+      fn: testHiddenAudioPreservesCrashedAndOtherBadges,
+    },
+    {
+      name: "tab badge toggles are independent and reversible",
+      fn: testTabBadgeTogglesAreIndependentAndReversible,
+    },
+    {
+      name: "tab attention toggle is reversible",
+      fn: testTabAttentionToggleIsReversible,
+    },
     { name: "no lepton pref gate", fn: testNoLeptonPrefGate },
     {
       name: "every used uc token is defined or has a fallback",

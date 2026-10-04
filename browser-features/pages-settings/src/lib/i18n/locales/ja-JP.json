@@ -164,6 +164,12 @@
             "hidden": {
                 "title": "非表示の設定",
                 "tabIcon": "タブのアイコンを隠す",
+                "tabCloseButton": "タブの閉じるボタンを隠す",
+                "tabAudioIndicator": "タブの音声インジケーターを隠す",
+                "tabSharingIndicator": "タブのカメラ・マイク・画面共有インジケーターを隠す",
+                "tabSharingIndicatorNote": "共有状態は引き続きアドレスバーに表示されます。この設定を有効にした場合は、録画・録音の状態をアドレスバーで確認してください。",
+                "tabNoteIcon": "タブのノートアイコンを隠す",
+                "tabAttentionIndicator": "タブの注意喚起表示を隠す",
                 "tabbar": "タブバーを隠す",
                 "navbar": "ツールバーを隠す",
                 "sidebarHeader": "サイドバーのヘッダーを隠す",

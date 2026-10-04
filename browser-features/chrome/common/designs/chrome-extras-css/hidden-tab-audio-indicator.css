@@ -4,7 +4,7 @@
 
 /* Floorp chrome-extras: hiddenTabAudioIndicator. Keeps the crashed-tab badge.
  * The ID outranks Lepton's `!important` audio button rule. */
-#tabbrowser-tabs .tab-audio-button,
+#tabbrowser-tabs .tab-audio-button:not([crashed]),
 #tabbrowser-tabs .tab-icon-overlay:not([crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
   display: none !important;
 }
