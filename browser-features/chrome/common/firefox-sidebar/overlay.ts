@@ -240,7 +240,7 @@ export class FirefoxSidebarOverlayController {
       if (
         key.defaultPrevented ||
         !this.settings.hover || key.key !== "Escape" || !this.expanded ||
-        this.popups.size
+        this.hasPopup()
       ) return;
       this.escaped = true;
       this.clearTimers();
@@ -430,6 +430,15 @@ export class FirefoxSidebarOverlayController {
     return document.hasFocus() && this.contains(document.activeElement);
   }
 
+  private hasPopup(): boolean {
+    // Extension menus and chrome fixtures can remove an open popup without
+    // firing popuphidden. Detached menus must not keep the sidebar expanded.
+    for (const popup of this.popups) {
+      if (!popup.isConnected) this.popups.delete(popup);
+    }
+    return this.popups.size > 0;
+  }
+
   private setState(expanded: boolean, pinned: boolean): void {
     this.state[1]({ expanded, pinned });
     this.box?.toggleAttribute("data-floorp-sidebar-expanded", expanded);
@@ -576,7 +585,7 @@ export class FirefoxSidebarOverlayController {
     this.closeTimer = globalThis.setTimeout(() => {
       this.closeTimer = undefined;
       if (
-        this.hovered || this.focused() || this.pinned || this.popups.size ||
+        this.hovered || this.focused() || this.pinned || this.hasPopup() ||
         this.resizing
       ) return;
       this.setState(false, false);

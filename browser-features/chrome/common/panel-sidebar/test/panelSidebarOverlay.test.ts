@@ -199,6 +199,13 @@ async function testOverlayPreservesPageViewport(): Promise<void> {
 
 async function testHoverPreviewRetainsBrowserAndCanPin(): Promise<void> {
   await withOverlay(async () => {
+    // Native popup builders can remove their popup without a popuphidden event.
+    // A prior menu must not prevent a subsequent preview from retracting.
+    const removedPopup = document.createXULElement("menupopup");
+    document.documentElement.append(removedPopup);
+    removedPopup.dispatchEvent(new Event("popupshown", { bubbles: true }));
+    removedPopup.dispatchEvent(new Event("popuphiding", { bubbles: true }));
+    removedPopup.remove();
     const viewport = element("tabbrowser-tabbox").getBoundingClientRect().width;
     enterPanel();
     await waitForOpen();

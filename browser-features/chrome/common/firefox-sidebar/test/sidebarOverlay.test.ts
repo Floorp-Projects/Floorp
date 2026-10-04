@@ -380,6 +380,47 @@ async function testPinnedSidebarRestoresAfterFullscreen(): Promise<void> {
   });
 }
 
+async function testRemovedPopupDoesNotRetainPanel(): Promise<void> {
+  await withSidebar(async () => {
+    const popup = document.createXULElement("menupopup");
+    document.documentElement.appendChild(popup);
+    // Native builders or extensions can dispose a menu after popuphiding without
+    // sending popuphidden, including before hover mode is enabled.
+    popup.dispatchEvent(new Event("popupshown", { bubbles: true }));
+    popup.dispatchEvent(new Event("popuphiding", { bubbles: true }));
+    popup.remove();
+    await setModes(true, true);
+    hover(true);
+    await waitFor(
+      () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
+      "hover must open after an earlier popup was removed",
+    );
+    hover(false);
+    focusContent();
+    await waitFor(
+      () => !firefoxSidebarOverlay?.expanded,
+      "a removed popup must not retain a native hover panel",
+    );
+    assert(native.isOpen, "popup cleanup must preserve the native document");
+
+    hover(true);
+    await waitFor(
+      () => Boolean(firefoxSidebarOverlay?.expanded),
+      "hover must reveal the native panel for the keyboard check",
+    );
+    document.documentElement.appendChild(popup);
+    popup.dispatchEvent(new Event("popupshown", { bubbles: true }));
+    popup.remove();
+    element("floorp-firefox-sidebar-edge-toggle").dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+    assert(
+      !firefoxSidebarOverlay?.expanded,
+      "a removed popup must not consume the panel Escape action",
+    );
+  });
+}
+
 async function testPendingOpenInvalidation(): Promise<void> {
   await withSidebar(async () => {
     const originalShow = native.showInitially;
@@ -617,6 +658,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "pinned native sidebar survives DOM fullscreen",
       fn: testPinnedSidebarRestoresAfterFullscreen,
+    },
+    {
+      name: "removed popups release native hover panels and Escape",
+      fn: testRemovedPopupDoesNotRetainPanel,
     },
     {
       name: "failed native hover opening waits for a new gesture",

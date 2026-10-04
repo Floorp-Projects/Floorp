@@ -229,6 +229,11 @@ export class PanelSidebarHover {
   }
 
   private hasPopup(): boolean {
+    // A popup can be removed without dispatching popuphidden. Detached menus
+    // must not keep later hover previews open indefinitely.
+    for (const popup of this.popups) {
+      if (!popup.isConnected) this.popups.delete(popup);
+    }
     return this.popups.size > 0 ||
       document.querySelector(
           "panel[panelopen], menupopup[state='open'], menupopup[state='showing']",
