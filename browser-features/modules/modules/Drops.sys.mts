@@ -593,36 +593,55 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
   const m = inspected.manifest;
   const dir = dropDir(uuid);
   const previous = readInstalled()[uuid];
+  // Keep the actual approved source before candidate preparation can create a
+  // versioned path. Older installations may still use the flat layout.
+  const previousEntryPaths = await Promise.all((previous?.files ?? []).map(async (file, i) => {
+    const versioned = PathUtils.join(entryDir(uuid, previous.versions[i]), file);
+    return await IOUtils.exists(versioned) ? versioned : PathUtils.join(dir, file);
+  }));
   const verified = await verifyDrop(inspected);
   if (!verified.ok) throw new Error("sha256 mismatch at install: " + verified.bad.join(", "));
 
   // Prepare every file before executing any entry. Approved versions are immutable:
   // Gecko caches modules by versioned URL, so changed bytes require a new version.
-  const prepared: { source: string; path: string; sha256: string; approved: boolean }[] = [];
+  const prepared: { source: string; path: string; sha256: string; approvedPath?: string }[] = [];
   const deps: NonNullable<InstalledDrop["deps"]> = [];
   for (const d of inspected.deps ?? []) {
     for (const e of d.entries) {
+      // The alias is shared by UUID/version across consumers and registries. A new
+      // consumer must not change the bytes an existing consumer already approved.
+      for (const [consumer, installed] of Object.entries(readInstalled())) {
+        for (const shared of installed.deps ?? []) {
+          if (shared.uuid !== d.uuid || shared.version !== d.version) continue;
+          const versioned = PathUtils.join(depDir(consumer, shared.name, shared.version), shared.file);
+          const flat = PathUtils.join(dropDir(consumer), "deps", shared.name, shared.file);
+          const path = await IOUtils.exists(versioned) ? versioned : flat;
+          if (!(await IOUtils.exists(path)) || await IOUtils.computeHexDigest(path, "sha256") !== e.sha256) {
+            throw new Error(`shared dependency version has different or missing bytes: ${d.name} ${d.version}`);
+          }
+        }
+      }
       prepared.push({
         source: inspectionPath(uuid, e.sha256, e.file),
         path: PathUtils.join(depDir(uuid, d.name, d.version), e.file),
         sha256: e.sha256,
-        approved: previous?.deps?.some((old) => old.name === d.name && old.version === d.version && old.file === e.file) ?? false,
       });
       deps.push({ name: d.name, uuid: d.uuid, version: d.version, lib: d.lib, wasm: d.wasm, file: e.file });
     }
   }
   for (const e of m.entries) {
+    const previousIndex = previous?.files.findIndex((file, i) => file === e.file && previous.versions[i] === e.version) ?? -1;
     prepared.push({
       source: inspectionPath(uuid, e.sha256, e.file),
       path: PathUtils.join(entryDir(uuid, e.version), e.file),
       sha256: e.sha256,
-      approved: previous?.files.some((file, i) => file === e.file && previous.versions[i] === e.version) ?? false,
+      approvedPath: previousEntryPaths[previousIndex],
     });
   }
   for (const file of prepared) {
-    if (file.approved && await IOUtils.exists(file.path) &&
-        await IOUtils.computeHexDigest(file.path, "sha256") !== file.sha256) {
-      throw new Error("installed version has different bytes; publish a new version: " + file.path);
+    if (file.approvedPath && (!(await IOUtils.exists(file.approvedPath)) ||
+        await IOUtils.computeHexDigest(file.approvedPath, "sha256") !== file.sha256)) {
+      throw new Error("installed version has different or missing bytes; publish a new version: " + file.approvedPath);
     }
   }
 
@@ -673,12 +692,10 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
     }
     for (const [alias, uri] of aliases) restoreAlias(alias, uri);
     if (previous) {
-      for (const [i, file] of previous.files.entries()) {
+      for (const [i, path] of previousEntryPaths.entries()) {
         try {
           const version = previous.versions[i];
-          const versioned = PathUtils.join(entryDir(uuid, version), file);
-          const flat = PathUtils.join(dir, file);
-          await installFile(uuid, version, await IOUtils.exists(versioned) ? versioned : flat);
+          await installFile(uuid, version, path);
         } catch (rollbackError) {
           console.error("[noraneko-drops] failed to restore prior installation:", rollbackError);
         }

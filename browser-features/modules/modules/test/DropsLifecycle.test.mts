@@ -103,7 +103,7 @@ async function fixture(
       includeParent: false,
     }));
   }
-  const bytes = zipSync(archive);
+  const bytes = zipSync(archive, { mtime: new Date("2020-01-01T00:00:00Z") });
   const file = "fixture" + suffix + ".xpi";
   const entry: DropEntry = {
     id,
@@ -319,10 +319,62 @@ async function testActorFailureRollsBackAddon(): Promise<void> {
   }
 }
 
+async function testSharedDependencyRejectsChangedBytes(): Promise<void> {
+  const first = newUuid(), second = newUuid(), libraryUuid = newUuid();
+  const dependency: DepRef = {
+    name: "shared",
+    uuid: libraryUuid,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  try {
+    await installDrop(
+      await inspect(
+        await fixture(first, "1.0.0", { dependency }),
+        [await fixture(libraryUuid)],
+      ),
+    );
+    const depAlias = alias(libraryUuid, "1.0.0", true);
+    const originalTarget = resources().getSubstitution(depAlias).spec;
+    const candidate = await inspect(
+      await fixture(second, "1.0.0", { dependency }),
+      [
+        await fixture(libraryUuid, "1.0.0", {
+          marker: "/* changed library */",
+        }),
+      ],
+    );
+    await rejects(() => installDrop(candidate));
+    assertEquals(
+      listDrops()[second],
+      undefined,
+      "conflicting consumer must not be installed",
+    );
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      originalTarget,
+      "shared dependency must retain its approved bytes",
+    );
+    assert(listDrops()[first], "original consumer must remain installed");
+  } finally {
+    await cleanup([first, second]);
+  }
+}
+
 async function testLaterEntryFailureRestoresPreviousVersion(): Promise<void> {
   const uuid = newUuid();
+  const installedVersions: string[] = [];
+  const listener = {
+    onInstalled(addon: { id: string; version: string }): void {
+      if (addon.id === uuid + "@floorp-drops-test.invalid") {
+        installedVersions.push(addon.version);
+      }
+    },
+  };
   try {
     await installDrop(await inspect(await fixture(uuid)));
+    AddonManager.addAddonListener(listener);
     const candidate = await fixture(uuid, "2.0.0");
     const broken = await fixture(uuid, "2.0.1", {
       invalidActor: true,
@@ -331,6 +383,10 @@ async function testLaterEntryFailureRestoresPreviousVersion(): Promise<void> {
     candidate.manifest.entries.push(...broken.manifest.entries);
     for (const [file, bytes] of broken.bytes) candidate.bytes.set(file, bytes);
     await rejects(async () => installDrop(await inspect(candidate)));
+    assert(
+      installedVersions.includes("2.0.0"),
+      "first candidate must install before the later entry fails",
+    );
     const oldAddon = await AddonManager.getAddonByID(
       uuid + "@floorp-drops-test.invalid",
     );
@@ -362,6 +418,96 @@ async function testLaterEntryFailureRestoresPreviousVersion(): Promise<void> {
       true,
       "prior alias must be restored",
     );
+    const { registeredRoot } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/NoraActors.sys.mjs",
+    );
+    assertEquals(
+      registeredRoot(actorName(uuid)),
+      "resource://" + alias(uuid, "1.0.0") + "/",
+      "prior actor must be registered again",
+    );
+  } finally {
+    AddonManager.removeAddonListener(listener);
+    await cleanup([uuid]);
+  }
+}
+
+async function testLegacyFlatInstallationKeepsItsApprovedSource(): Promise<
+  void
+> {
+  const uuid = newUuid();
+  const { FileUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/FileUtils.sys.mjs",
+  );
+  try {
+    const original = await fixture(uuid);
+    await installDrop(await inspect(original));
+    const versioned = PathUtils.join(directory(uuid), "1.0.0", "fixture.xpi");
+    const flat = PathUtils.join(directory(uuid), "fixture.xpi");
+    const addon = await AddonManager.getAddonByID(
+      original.manifest.entries[0].id,
+    );
+    await addon!.uninstall();
+    await IOUtils.move(versioned, flat);
+    const flatUri = Services.io.newURI(
+      "jar:" + Services.io.newFileURI(new FileUtils.File(flat)).spec + "!/",
+    );
+    resources().setSubstitutionWithFlags(
+      alias(uuid, "1.0.0"),
+      flatUri,
+      Ci.nsISubstitutingProtocolHandler.ALLOW_CONTENT_ACCESS!,
+    );
+    await AddonManager.installTemporaryAddon(new FileUtils.File(flat));
+    const approvedHash = await IOUtils.computeHexDigest(flat, "sha256");
+
+    const changed = await inspect(
+      await fixture(uuid, "1.0.0", { marker: "/* changed */" }),
+    );
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      await IOUtils.computeHexDigest(flat, "sha256"),
+      approvedHash,
+      "legacy approved bytes must be immutable",
+    );
+    assertEquals(
+      await IOUtils.exists(versioned),
+      false,
+      "rejected version reuse must not create a candidate installed path",
+    );
+
+    // Reusing identical approved bytes is allowed, but a later failure must
+    // restore the original flat source, not the newly prepared versioned copy.
+    const candidate = await fixture(uuid);
+    const broken = await fixture(uuid, "2.0.1", {
+      invalidActor: true,
+      suffix: "Broken",
+    });
+    candidate.manifest.entries.push(...broken.manifest.entries);
+    for (const [file, bytes] of broken.bytes) candidate.bytes.set(file, bytes);
+    await rejects(async () => installDrop(await inspect(candidate)));
+    const root = resources().getSubstitution(alias(uuid, "1.0.0"))
+      .QueryInterface!(Ci.nsIJARURI);
+    const restoredFile = root.JARFile.QueryInterface!(Ci.nsIFileURL).file;
+    assertEquals(
+      restoredFile.path,
+      flat,
+      "rollback must restore the original flat path",
+    );
+    assert(
+      restoredFile.exists(),
+      "rollback resource must still exist after candidate cleanup",
+    );
+    assertEquals(
+      await IOUtils.computeHexDigest(flat, "sha256"),
+      approvedHash,
+      "rollback preserves legacy approved bytes",
+    );
+    assertEquals(
+      (await AddonManager.getAddonByID(original.manifest.entries[0].id))
+        ?.version,
+      "1.0.0",
+      "legacy add-on must be restored",
+    );
   } finally {
     await cleanup([uuid]);
   }
@@ -369,6 +515,10 @@ async function testLaterEntryFailureRestoresPreviousVersion(): Promise<void> {
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name: "legacy flat installs retain the approved source on failure",
+      fn: testLegacyFlatInstallationKeepsItsApprovedSource,
+    },
     {
       name: "inspection preserves approved bytes even on failure",
       fn: testInspectionPreservesApprovedBytes,
@@ -380,6 +530,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "actor setup failures leave no unmanaged add-ons",
       fn: testActorFailureRollsBackAddon,
+    },
+    {
+      name: "shared dependency UUID and version keep approved bytes",
+      fn: testSharedDependencyRejectsChangedBytes,
     },
     {
       name: "later entry failure restores previous installed version",
