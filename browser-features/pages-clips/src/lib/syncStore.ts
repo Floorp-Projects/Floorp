@@ -49,7 +49,13 @@ export async function pullAndMerge(
 
 /** Call only after the merged clips have been saved successfully. */
 export async function rememberMerge(state: SyncState): Promise<void> {
-  await rpc.setStringPref(SYNC_STATE_PREF, serializeSyncState(state));
+  try {
+    await rpc.setStringPref(SYNC_STATE_PREF, serializeSyncState(state));
+  } catch (error) {
+    // IndexedDB already holds the merge. A bookkeeping-pref failure must not
+    // prevent the caller from updating its UI/ref to that durable snapshot.
+    console.error("[Floorp Clips] Failed to remember the synced state:", error);
+  }
 }
 
 /**
