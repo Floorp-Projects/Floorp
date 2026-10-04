@@ -35,6 +35,7 @@ const ChromeExtrasSettings = lazy(() =>
     default: module.ChromeExtrasSettings,
   }))
 );
+const CommandPalette = lazy(() => import("@/app/command-palette/page.tsx"));
 const SearchPage = lazy(() => import("@/app/search/page.tsx"));
 const Drops = lazy(() => import("@/app/drops/page.tsx"));
 
@@ -107,6 +108,10 @@ function SettingsApp() {
                   <Route
                     path="/features/webapps"
                     element={<ProgressiveWebApp />}
+                  />
+                  <Route
+                    path="/features/command-palette"
+                    element={<CommandPalette />}
                   />
                   <Route path="/features/floorp-os" element={<FloorpOS />} />
                   <Route

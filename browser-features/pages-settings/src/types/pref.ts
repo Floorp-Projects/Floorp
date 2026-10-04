@@ -95,6 +95,26 @@ export const zWorkspacesFormData = t.type({
 
 export type WorkspacesFormData = t.TypeOf<typeof zWorkspacesFormData>;
 
+/* Command Palette */
+export const zCommandPaletteFormData = t.type({
+  enabled: t.boolean,
+  width: t.number,
+  maxHeight: t.number,
+  offsetTop: t.number,
+  horizontalAlign: t.keyof({ center: null, left: null, right: null }),
+  fontSize: t.number,
+  showTabs: t.boolean,
+  showHistory: t.boolean,
+  showBookmarks: t.boolean,
+  categoryPriority: t.array(t.string),
+  maxResultsPerCategory: t.number,
+  maxBookmarkSuggestions: t.number,
+  maxHistorySuggestions: t.number,
+  maxTabsResults: t.number,
+});
+
+export type CommandPaletteFormData = t.TypeOf<typeof zCommandPaletteFormData>;
+
 /* About */
 export type ConstantsData = {
   MOZ_APP_VERSION: string;
