@@ -6,6 +6,7 @@ import {
   AppWindow,
   BadgeInfo,
   Briefcase,
+  Clipboard,
   Command,
   Gauge,
   House,
@@ -66,6 +67,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: List,
     priority: 40,
     textKey: "panelSidebar",
+  },
+  {
+    id: "clips",
+    route: "/features/clips",
+    titleKey: "pages.clips",
+    descriptionKey: "clips.description",
+    icon: Clipboard,
+    priority: 65,
+    textKey: "clips",
   },
   {
     id: "workspaces",

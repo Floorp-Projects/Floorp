@@ -1,0 +1,45 @@
+{
+  "title": {
+    "default": "{{productName}} Clips"
+  },
+  "clips": {
+    "loading": "Loading clips...",
+    "empty": "Nothing clipped yet. Add a link, some text, an image or a file — it stays here until you are done with it.",
+    "noPinned": "No pinned clips yet.",
+    "noResults": "Nothing here matches that.",
+    "searchPlaceholder": "Search clips",
+    "pinnedOnly": "Pinned only",
+    "showAll": "Show all",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "copy": "Copy",
+    "copied": "Copied",
+    "delete": "Delete",
+    "addCurrentTab": "Add the current page",
+    "attach": "Attach an image or a file",
+    "inputPlaceholder": "Type a clip, or drop one",
+    "add": "Add",
+    "dropHere": "Drop to clip",
+    "file": "File",
+    "cleanup": "Clean up",
+    "deleteConfirmTitle": "Delete clip",
+    "deleteConfirmMessage": "Delete this clip? This cannot be undone.",
+    "cleanupConfirmTitle": "Clean up clips",
+    "imageFailed": "That image could not be clipped.",
+    "fileGone": "That file is not where it was. Only the preview is left.",
+    "revealFile": "Show in the file manager",
+    "launchFile": "Open with the default app",
+    "notSynced_one": "{{count}} older clip is staying on this device — the synced space is full.",
+    "notSynced_other": "{{count}} older clips are staying on this device — the synced space is full.",
+    "cleanupConfirmMessage_one": "This will delete {{count}} clip that is not pinned. This cannot be undone.",
+    "cleanupConfirmMessage_other": "This will delete {{count}} clips that are not pinned. This cannot be undone.",
+    "andMore_one": "and {{count}} more",
+    "andMore_other": "and {{count}} more",
+    "image": "Image"
+  },
+  "common": {
+    "confirm": "OK",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}

@@ -24,6 +24,7 @@ import {
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 import { isRight } from "fp-ts/Either";
+import { clipsEnabled, withClipsPanel } from "../../clips/clips-panel-list.ts";
 
 function defaultPanelSidebarData(): Panels {
   const result = zPanelSidebarData.decode(
@@ -54,21 +55,27 @@ export function parsePanelSidebarData(stringData: string): Panels {
 
 function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    parsePanelSidebarData(
-      Services.prefs.getStringPref(
-        PanelSidebarStaticNames.panelSidebarDataPrefName,
-        strDefaultData,
-      ),
-    ),
-  );
-  const observer = () => {
-    setPanelSidebarData(
+    withClipsPanel(
       parsePanelSidebarData(
         Services.prefs.getStringPref(
           PanelSidebarStaticNames.panelSidebarDataPrefName,
           strDefaultData,
         ),
       ),
+      clipsEnabled(),
+    ).panels,
+  );
+  const observer = () => {
+    setPanelSidebarData(
+      withClipsPanel(
+        parsePanelSidebarData(
+          Services.prefs.getStringPref(
+            PanelSidebarStaticNames.panelSidebarDataPrefName,
+            strDefaultData,
+          ),
+        ),
+        clipsEnabled(),
+      ).panels,
     );
   };
   Services.prefs.addObserver(

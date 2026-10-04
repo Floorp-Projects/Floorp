@@ -16,10 +16,15 @@ import {
   ContextMenuAvailabilityGate,
   ContextMenuAvailabilityProvider,
 } from "@/lib/experiments/context-menu-availability.tsx";
+import {
+  ClipsAvailabilityGate,
+  ClipsAvailabilityProvider,
+} from "@/lib/experiments/clips-availability.tsx";
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
 const PanelSidebar = lazy(() => import("@/app/sidebar/page.tsx"));
+const Clips = lazy(() => import("@/app/clips/page.tsx"));
 const Workspaces = lazy(() => import("@/app/workspaces/page.tsx"));
 const ProgressiveWebApp = lazy(() => import("@/app/pwa/page.tsx"));
 const FloorpOS = lazy(() => import("@/app/floorp-os/page.tsx"));
@@ -41,7 +46,9 @@ const SearchPage = lazy(() => import("@/app/search/page.tsx"));
 export default function App() {
   return (
     <ContextMenuAvailabilityProvider>
-      <SettingsApp />
+      <ClipsAvailabilityProvider>
+        <SettingsApp />
+      </ClipsAvailabilityProvider>
     </ContextMenuAvailabilityProvider>
   );
 }
@@ -99,6 +106,14 @@ function SettingsApp() {
                   <Route
                     path="/features/sidebar"
                     element={<PanelSidebar />}
+                  />
+                  <Route
+                    path="/features/clips"
+                    element={
+                      <ClipsAvailabilityGate>
+                        <Clips />
+                      </ClipsAvailabilityGate>
+                    }
                   />
                   <Route
                     path="/features/workspaces"

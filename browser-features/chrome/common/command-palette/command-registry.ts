@@ -77,6 +77,9 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-show-previous-search-result": "search",
   "gecko-search-the-web": "search",
 
+  "floorp-open-clips": "sidebar",
+  "floorp-clip-this-page": "page",
+
   "gecko-show-bookmark-sidebar": "sidebar",
   "gecko-show-history-sidebar": "sidebar",
   "gecko-show-synced-tabs-sidebar": "sidebar",

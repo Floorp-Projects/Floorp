@@ -15,6 +15,10 @@ import {
   useContextMenuAvailability,
 } from "@/lib/experiments/context-menu-availability.tsx";
 import {
+  CLIPS_SETTINGS_ROUTE,
+  useClipsAvailability,
+} from "@/lib/experiments/clips-availability.tsx";
+import {
   buildSearchDocuments,
   normalizeSearchText,
   type SettingsSearchDocument,
@@ -155,6 +159,7 @@ export default function SearchPage() {
   const { t, i18n } = useTranslation();
   const query = useSearchQuery();
   const contextMenuAvailable = useContextMenuAvailability() === "available";
+  const clipsAvailable = useClipsAvailability() === true;
 
   const documents = useMemo(
     () => buildSearchDocuments(i18n),
@@ -165,12 +170,14 @@ export default function SearchPage() {
     () =>
       buildSearchResults(
         documents.filter((document) =>
-          contextMenuAvailable ||
-          document.route.split("?")[0] !== CONTEXT_MENU_SETTINGS_ROUTE
+          (contextMenuAvailable ||
+            document.route.split("?")[0] !== CONTEXT_MENU_SETTINGS_ROUTE) &&
+          (clipsAvailable ||
+            document.route.split("?")[0] !== CLIPS_SETTINGS_ROUTE)
         ),
         query,
       ),
-    [contextMenuAvailable, documents, query],
+    [clipsAvailable, contextMenuAvailable, documents, query],
   );
 
   const hasQuery = normalizeSearchText(query).length > 0;

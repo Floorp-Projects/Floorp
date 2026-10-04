@@ -168,6 +168,17 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "titleKey": "panelSidebar.container",
   },
   {
+    "id": "clips-max-items",
+    "route": "/features/clips",
+    "titleKey": "clips.maxItems",
+    "descriptionKey": "clips.maxItemsDescription",
+  },
+  {
+    "id": "clips-clear-on-exit",
+    "route": "/features/clips",
+    "titleKey": "clips.clearOnExit",
+  },
+  {
     "id": "enable-workspaces",
     "route": "/features/workspaces",
     "titleKey": "workspaces.enableWorkspaces",

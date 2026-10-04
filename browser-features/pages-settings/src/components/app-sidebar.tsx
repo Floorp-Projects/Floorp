@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   BadgeInfo,
   Briefcase,
+  Clipboard,
   Command,
   Cpu,
   Gauge,
@@ -32,6 +33,10 @@ import {
   CONTEXT_MENU_SETTINGS_ROUTE,
   useContextMenuAvailability,
 } from "@/lib/experiments/context-menu-availability.tsx";
+import {
+  CLIPS_SETTINGS_ROUTE,
+  useClipsAvailability,
+} from "@/lib/experiments/clips-availability.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
@@ -44,6 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isFloorpOSVisible, setIsFloorpOSVisible] = useState<boolean | null>(
     null,
   );
+  const isClipsVisible = useClipsAvailability() === true;
 
   useEffect(() => {
     let mounted = true;
@@ -78,6 +84,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/sidebar",
       icon: PanelLeft,
     },
+    ...(isClipsVisible
+      ? [{
+        title: t("pages.clips"),
+        url: CLIPS_SETTINGS_ROUTE,
+        icon: Clipboard,
+      }]
+      : []),
     {
       title: t("pages.mouseGesture"),
       url: "/features/gesture",
@@ -126,7 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/features/accounts",
       icon: UserRoundPen,
     },
-  ], [contextMenuAvailable, isFloorpOSVisible, t]);
+  ], [contextMenuAvailable, isFloorpOSVisible, isClipsVisible, t]);
 
   const about: Feature[] = [
     {

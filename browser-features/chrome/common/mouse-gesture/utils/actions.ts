@@ -13,6 +13,11 @@ import {
   toggleNavigationPanel,
   enableRestMode,
 } from "./ui-toggle.ts";
+import {
+  clipCurrentPage,
+  openClipsPanel,
+} from "#features-chrome/common/clips/clips-actions.ts";
+import { clipsEnabled } from "#features-chrome/common/clips/clips-panel-list.ts";
 
 const getXulElement = (id: string, win?: Window): XULElement | null => {
   try {
@@ -332,6 +337,19 @@ export const actions: GestureActionRegistration[] = [
     name: "floorp-toggle-navigation-panel",
     fn: (win) => toggleNavigationPanel(win.document!),
   },
+  // Clips rides a Flasco (see FloorpClipsGate); no pref, no actions.
+  ...(clipsEnabled()
+    ? [
+      {
+        name: "floorp-open-clips",
+        fn: (win: Window) => openClipsPanel(win),
+      },
+      {
+        name: "floorp-clip-this-page",
+        fn: (win: Window) => clipCurrentPage(win),
+      },
+    ]
+    : []),
   {
     name: "gecko-stop",
     fn: (win) => win.gBrowser.selectedBrowser.stop(),

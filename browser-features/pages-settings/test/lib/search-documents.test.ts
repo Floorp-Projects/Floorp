@@ -27,7 +27,17 @@ const tests: TestCase[] = [
         resources: {
           "en-US": {
             translations: {
-              pages: { workspaces: "Workspaces", contextMenu: "Context menus" },
+              pages: {
+                workspaces: "Workspaces",
+                contextMenu: "Context menus",
+                clips: "Clips",
+              },
+              clips: {
+                description: "Save clipboard history locally",
+                maxItems: "How many clips to keep",
+                maxItemsDescription: "Pinned clips are not counted",
+                clearOnExit: "Delete unpinned clips when Floorp closes",
+              },
               contextMenu: {
                 description: "Choose and arrange browser menu items",
                 independentProfile: "Independent profile",
@@ -79,6 +89,23 @@ const tests: TestCase[] = [
       assert(
         contextMenu.textContent.includes("Independent profile"),
         "Context menu controls are searchable without mounting the editor",
+      );
+      const clips = documents.find((document) => document.id === "clips");
+      assert(clips, "Clips settings are indexed without mounting their page");
+      assertEquals(
+        clips.route,
+        "/features/clips",
+        "Clips lazy route is indexed",
+      );
+      assert(
+        clips.textContent.includes("Save clipboard history locally"),
+        "Clips translations are indexed through textKey",
+      );
+      assert(
+        documents.some((document) =>
+          document.route === "/features/clips?setting=clips-max-items"
+        ),
+        "Clips search links focus the existing input id",
       );
       const field = documents.find((document) =>
         document.route === "/features/workspaces?setting=show-name"

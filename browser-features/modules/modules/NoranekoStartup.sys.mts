@@ -523,6 +523,11 @@ async function initializeExperiments() {
     "resource://noraneko/modules/ipprotection/FloorpIPProtectionGate.sys.mjs",
   );
   FloorpIPProtectionGate.apply(isFloorpIPProtectionUIReady);
+
+  const { FloorpClipsGate } = await ChromeUtils.importESModule(
+    "resource://noraneko/modules/clips/FloorpClipsGate.sys.mjs",
+  );
+  FloorpClipsGate.apply();
 }
 
 (async () => {
