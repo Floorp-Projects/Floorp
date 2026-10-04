@@ -64,19 +64,32 @@ async function withRevampedSidebar(test: () => Promise<void>): Promise<void> {
   const pref = "sidebar.revamp";
   const hadUserPref = Services.prefs.prefHasUserValue(pref);
   const previousPref = Services.prefs.getBoolPref(pref, false);
+  const bookmarksPref = "sidebar.updatedBookmarks.enabled";
+  const hadBookmarksPref = Services.prefs.prefHasUserValue(bookmarksPref);
+  const previousBookmarksPref = Services.prefs.getBoolPref(
+    bookmarksPref,
+    false,
+  );
   const previousID = SidebarController.currentID;
   const wasOpen = SidebarController.isOpen;
   const previousHistoryURL = SidebarController.sidebars.get(
     "viewHistorySidebar",
   )?.url;
+  const previousBookmarksURL = SidebarController.sidebars.get(
+    "viewBookmarksSidebar",
+  )?.url;
   try {
+    Services.prefs.setBoolPref(bookmarksPref, true);
     Services.prefs.setBoolPref(pref, true);
     await waitFor(
       () =>
         SidebarController.sidebars.get("viewHistorySidebar")?.url.endsWith(
-          "sidebar-history.html",
-        ) === true,
-      "revamped History must become available",
+            "sidebar-history.html",
+          ) === true &&
+        SidebarController.sidebars.get("viewBookmarksSidebar")?.url.endsWith(
+            "sidebar-bookmarks.html",
+          ) === true,
+      "revamped History and Bookmarks must become available",
     );
     await setHidden(false);
     await test();
@@ -87,10 +100,15 @@ async function withRevampedSidebar(test: () => Promise<void>): Promise<void> {
     setConfig(before);
     if (hadUserPref) Services.prefs.setBoolPref(pref, previousPref);
     else Services.prefs.clearUserPref(pref);
+    if (hadBookmarksPref) {
+      Services.prefs.setBoolPref(bookmarksPref, previousBookmarksPref);
+    } else Services.prefs.clearUserPref(bookmarksPref);
     await waitFor(
       () =>
         SidebarController.sidebars.get("viewHistorySidebar")?.url ===
-          previousHistoryURL,
+          previousHistoryURL &&
+        SidebarController.sidebars.get("viewBookmarksSidebar")?.url ===
+          previousBookmarksURL,
       "restore the original sidebar implementation",
     );
     if (wasOpen && previousID && SidebarController.sidebars.has(previousID)) {
@@ -279,6 +297,7 @@ async function testHistorySearchAndOptions(): Promise<void> {
       await search(reopened, token);
       await waitFor(
         () =>
+          reopened.controller.searchQuery === token &&
           Array.from(reopened.lists).flatMap((list) => Array.from(list.rowEls))
             .some((row) => row.mainEl?.href === url),
         "reopened History still searches",
