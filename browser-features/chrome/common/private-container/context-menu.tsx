@@ -16,6 +16,7 @@ export function ContextMenu() {
   return (
     <xul:menuitem
       id="context_toggleToPrivateContainer"
+      data-floorp-context-menu-key="floorp.private-container.reopen-tab"
       label={label()}
       onCommand={() => {
         FloorpPrivateContainer.reopenInPrivateContainer();

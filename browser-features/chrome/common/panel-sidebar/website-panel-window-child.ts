@@ -188,11 +188,17 @@ export class WebsitePanelWindowChild {
     const style = document!.createElement("style");
     style.id = "floorp-webpanel-styles";
     style.textContent = `
-      #main-window { min-height: 100%; }
+      /* taskbartab windows normally reserve 804px for their toolbar. Web panels
+         hide that toolbar and must use the embedded browser's viewport. */
+      #main-window {
+        min-width: 0 !important;
+        min-height: 100%;
+      }
       #browser[data-is-child] {
         flex: 1 !important;
         min-height: 100%;
       }
+      #browser[data-is-child] > #sidebar-container,
       #browser[data-is-child] > #sidebar-main,
       #browser[data-is-child] > #sidebar-box,
       #browser[data-is-child] > #sidebar-splitter,

@@ -11,6 +11,10 @@ import {
 } from "@/components/common/card.tsx";
 import { cn } from "@/lib/utils.ts";
 import {
+  CONTEXT_MENU_SETTINGS_ROUTE,
+  useContextMenuAvailability,
+} from "@/lib/experiments/context-menu-availability.tsx";
+import {
   buildSearchDocuments,
   normalizeSearchText,
   type SettingsSearchDocument,
@@ -55,7 +59,7 @@ function highlightText(text: string, query: string): ReactNode {
     parts.push(
       <mark
         key={`${matchStart}-`}
-        className="rounded bg-primary/20 px-1 py-0.5 text-primary-foreground"
+        className="rounded bg-primary/20 px-1 py-0.5 text-base-content"
       >
         {matched}
       </mark>,
@@ -150,6 +154,7 @@ function buildSearchResults(
 export default function SearchPage() {
   const { t, i18n } = useTranslation();
   const query = useSearchQuery();
+  const contextMenuAvailable = useContextMenuAvailability() === "available";
 
   const documents = useMemo(
     () => buildSearchDocuments(i18n),
@@ -157,16 +162,23 @@ export default function SearchPage() {
   );
 
   const results = useMemo(
-    () => buildSearchResults(documents, query),
-    [documents, query],
+    () =>
+      buildSearchResults(
+        documents.filter((document) =>
+          contextMenuAvailable ||
+          document.route.split("?")[0] !== CONTEXT_MENU_SETTINGS_ROUTE
+        ),
+        query,
+      ),
+    [contextMenuAvailable, documents, query],
   );
 
   const hasQuery = normalizeSearchText(query).length > 0;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("pages.search.title")}</h1>
+    <div className="floorp-settings-page">
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("pages.search.title")}</h1>
         {hasQuery
           ? (
             <>

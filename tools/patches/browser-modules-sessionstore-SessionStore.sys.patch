@@ -1,8 +1,8 @@
-diff --git a/browser/modules/sessionstore/SessionStore.sys.mjs b/browser/modules/sessionstore/SessionStore.sys.mjs
-index 11191a8..9cf32a0 100644
---- ./browser/modules/sessionstore/SessionStore.sys.mjs
-+++ ./browser/modules/sessionstore/SessionStore.sys.mjs
-@@ -156,6 +156,13 @@ const RESTORE_TAB_CONTENT_REASON = {
+diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+index 4947351aad5..85dfdcafb5f 100644
+--- a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -221,6 +221,13 @@ const RESTORE_TAB_CONTENT_REASON = {
  // 'browser.startup.page' preference value to resume the previous session.
  const BROWSER_STARTUP_RESUME_SESSION = 3;
  
@@ -16,25 +16,25 @@ index 11191a8..9cf32a0 100644
  // Used by SessionHistoryListener.
  const kNoIndex = Number.MAX_SAFE_INTEGER;
  const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
-@@ -1348,6 +1355,7 @@ var SessionStoreInternal = {
+@@ -687,6 +694,7 @@ class _SessionStore {
      if (state) {
        // Initialize the splitViewId counter and migrate any string-based splitViewIds
-       this._initSplitViewIds(state);
+       this.#initSplitViewIds(state);
 +      this._sanitizeFloorpPrivateContainerRootState(state);
  
        try {
          // If we're doing a DEFERRED session, then we want to pull pinned tabs
-@@ -3982,6 +3990,7 @@ var SessionStoreInternal = {
+@@ -3395,6 +3403,7 @@ class _SessionStore {
      // Initialize counter and migrate splitViewIds from persisted given state
-     this._maxSplitViewId = 0;
-     this._initSplitViewIds(state);
+     this.#maxSplitViewId = 0;
+     this.#initSplitViewIds(state);
 +    this._sanitizeFloorpPrivateContainerRootState(state);
  
-     this._browserSetState = true;
+     this.#browserSetState = true;
  
-@@ -5893,6 +5902,239 @@ var SessionStoreInternal = {
+@@ -5707,6 +5716,239 @@ class _SessionStore {
      return tabData;
-   },
+   }
  
 +  _sanitizeFloorpPrivateContainerSplitViews(tabStates, splitViews) {
 +    let splitViewTabCounts = new Map();
@@ -66,7 +66,7 @@ index 11191a8..9cf32a0 100644
 +      splitView.numberOfTabs = numberOfTabs;
 +      return splitView;
 +    });
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerTabGroups(tabGroups) {
 +    if (!Array.isArray(tabGroups)) {
@@ -92,7 +92,7 @@ index 11191a8..9cf32a0 100644
 +      );
 +      return tabGroup;
 +    });
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerClosedData(winData) {
 +    if (!winData) {
@@ -107,7 +107,7 @@ index 11191a8..9cf32a0 100644
 +    winData.closedGroups = this._sanitizeFloorpPrivateContainerTabGroups(
 +      winData.closedGroups
 +    );
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerWindowState(winData) {
 +    if (!winData || !Array.isArray(winData.tabs)) {
@@ -159,7 +159,7 @@ index 11191a8..9cf32a0 100644
 +      winData.splitViews
 +    );
 +    return true;
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerClosedWindowState(winData) {
 +    let removedOpenTab =
@@ -189,7 +189,7 @@ index 11191a8..9cf32a0 100644
 +      delete winData.title;
 +    }
 +    return true;
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerOpenWindows(root) {
 +    if (!Array.isArray(root.windows)) {
@@ -245,7 +245,7 @@ index 11191a8..9cf32a0 100644
 +
 +    root.windows = windows;
 +    root.selectedWindow = selectedIndex + 1;
-+  },
++  }
 +
 +  _sanitizeFloorpPrivateContainerRootState(state) {
 +    for (let root of [
@@ -267,22 +267,22 @@ index 11191a8..9cf32a0 100644
 +        root.savedGroups
 +      );
 +    }
-+  },
++  }
 +
-   _initSplitViewIds(state) {
-     if (this._maxSplitViewId > 0) {
-       this._log.error(
-@@ -6029,6 +6271,9 @@ var SessionStoreInternal = {
+   #initSplitViewIds(state) {
+     if (this.#maxSplitViewId > 0) {
+       this.#log.error(
+@@ -5845,6 +6087,9 @@ class _SessionStore {
        winData.tabs = [];
      }
  
 +    this._sanitizeFloorpPrivateContainerWindowState(winData);
 +    this._sanitizeFloorpPrivateContainerClosedData(winData);
 +
-     // See SessionStoreInternal.restoreTabs for a description of what
+     // See SessionStore.#restoreTabs for a description of what
      // selectTab represents.
      let selectTab = 0;
-@@ -6349,6 +6594,8 @@ var SessionStoreInternal = {
+@@ -6168,6 +6413,8 @@ class _SessionStore {
        return;
      }
  
@@ -290,11 +290,11 @@ index 11191a8..9cf32a0 100644
 +
      // Restore closed windows if any.
      if (root._closedWindows) {
-       this._closedWindows = root._closedWindows;
-@@ -7511,6 +7758,10 @@ var SessionStoreInternal = {
-    * @returns boolean
+       this.#closedWindows = root._closedWindows;
+@@ -7360,6 +7607,10 @@ class _SessionStore {
+    *          Whether the tab state is worth saving
     */
-   _shouldSaveTabState: function ssi_shouldSaveTabState(aTabState) {
+   #shouldSaveTabState(aTabState) {
 +    if (isFloorpPrivateContainerTabState(aTabState)) {
 +      return false;
 +    }
@@ -302,12 +302,26 @@ index 11191a8..9cf32a0 100644
      // If the tab has only a transient about: history entry, no other
      // session history, and no userTypedValue, then we don't actually want to
      // store this tab's data.
-@@ -7649,6 +7900,12 @@ var SessionStoreInternal = {
+@@ -7487,7 +7738,9 @@ class _SessionStore {
+   #prepDataForDeferredRestore(startupState) {
+     // Make sure that we don't modify the global state as provided by
+     // SessionStartup.state.
+     let state = Cu.cloneInto(startupState, {});
++    this._sanitizeFloorpPrivateContainerRootState(state);
++
+     let hasPinnedTabs = false;
+     let defaultState = {
+       windows: [],
+@@ -7545,6 +7798,16 @@ class _SessionStore {
            // We don't want to increment tIndex here.
            continue;
          } else if (window.tabs[tIndex].groupId) {
 +          let tabToAdd = window.tabs[tIndex];
-+          if (!this._shouldSaveTabState(tabToAdd)) {
++          if (!this.#shouldSaveTabState(tabToAdd)) {
++            if (isFloorpPrivateContainerTabState(tabToAdd)) {
++              this._sanitizeFloorpPrivateContainerWindowState(window);
++              continue;
++            }
 +            tIndex++;
 +            continue;
 +          }
@@ -315,15 +329,15 @@ index 11191a8..9cf32a0 100644
            // Convert any open groups into saved groups.
            let groupStateToSave = window.groups.find(
              groupState => groupState.id == window.tabs[tIndex].groupId
-@@ -7662,7 +7919,6 @@ var SessionStoreInternal = {
+@@ -7558,7 +7821,6 @@ class _SessionStore {
              groupToSave.removeAfterRestore = true;
              groupsToSave.set(groupStateToSave.id, groupToSave);
            }
 -          let tabToAdd = window.tabs[tIndex];
-           groupToSave.tabs.push(this._formatTabStateForSavedGroup(tabToAdd));
+           groupToSave.tabs.push(this.formatTabStateForSavedGroup(tabToAdd));
          } else if (!window.tabs[tIndex].hidden && PERSIST_SESSIONS) {
            // Add any previously open tabs that aren't pinned or hidden to the recently closed tabs list
-@@ -7763,6 +8019,24 @@ var SessionStoreInternal = {
+@@ -7659,6 +7921,24 @@ class _SessionStore {
            continue;
          }
        }

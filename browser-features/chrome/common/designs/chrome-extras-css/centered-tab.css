@@ -1,0 +1,21 @@
+/* Floorp chrome-extras: centeredTab
+ * Ported from vendored Lepton (leptonChrome.css 26021-26029, 1 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * The `centered.tab.label`, `tab.close_button_at_hover` and `counter.tab`
+ *
+ * variants are Lepton-only sub-options and are not ported.
+ */
+
+/* leptonChrome.css:26021-26029 */
+.tab-icon-stack {
+  margin-inline-start: auto;
+}
+.tab-label-container {
+  max-width: min-content;
+  margin-inline-end: auto;
+}

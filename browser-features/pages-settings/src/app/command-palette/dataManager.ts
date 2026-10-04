@@ -5,16 +5,23 @@ const COMMAND_PALETTE_ENABLED_PREF = "floorp.commandPalette.enabled";
 const COMMAND_PALETTE_WIDTH_PREF = "floorp.commandPalette.width";
 const COMMAND_PALETTE_MAX_HEIGHT_PREF = "floorp.commandPalette.maxHeight";
 const COMMAND_PALETTE_OFFSET_TOP_PREF = "floorp.commandPalette.offsetTop";
-const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF = "floorp.commandPalette.horizontalAlign";
+const COMMAND_PALETTE_HORIZONTAL_ALIGN_PREF =
+  "floorp.commandPalette.horizontalAlign";
 const COMMAND_PALETTE_FONT_SIZE_PREF = "floorp.commandPalette.fontSize";
 const COMMAND_PALETTE_SHOW_TABS_PREF = "floorp.commandPalette.showTabs";
 const COMMAND_PALETTE_SHOW_HISTORY_PREF = "floorp.commandPalette.showHistory";
-const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF = "floorp.commandPalette.showBookmarks";
-const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF = "floorp.commandPalette.categoryPriority";
-const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF = "floorp.commandPalette.maxResultsPerCategory";
-const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF = "floorp.commandPalette.maxBookmarkSuggestions";
-const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF = "floorp.commandPalette.maxHistorySuggestions";
-const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF = "floorp.commandPalette.maxTabsResults";
+const COMMAND_PALETTE_SHOW_BOOKMARKS_PREF =
+  "floorp.commandPalette.showBookmarks";
+const COMMAND_PALETTE_CATEGORY_PRIORITY_PREF =
+  "floorp.commandPalette.categoryPriority";
+const COMMAND_PALETTE_MAX_RESULTS_PER_CATEGORY_PREF =
+  "floorp.commandPalette.maxResultsPerCategory";
+const COMMAND_PALETTE_MAX_BOOKMARK_SUGGESTIONS_PREF =
+  "floorp.commandPalette.maxBookmarkSuggestions";
+const COMMAND_PALETTE_MAX_HISTORY_SUGGESTIONS_PREF =
+  "floorp.commandPalette.maxHistorySuggestions";
+const COMMAND_PALETTE_MAX_TABS_RESULTS_PREF =
+  "floorp.commandPalette.maxTabsResults";
 
 // KEEP IN SYNC with the chrome-side command-palette config:
 // - browser-features/chrome/common/command-palette/config.ts
@@ -195,14 +202,22 @@ export async function saveCommandPaletteSettings(
     if (settings.maxHeight !== undefined) {
       await rpc.setIntPref(
         COMMAND_PALETTE_MAX_HEIGHT_PREF,
-        clampInt(Number(settings.maxHeight), MAX_HEIGHT_BOUNDS, DEFAULT_MAX_HEIGHT),
+        clampInt(
+          Number(settings.maxHeight),
+          MAX_HEIGHT_BOUNDS,
+          DEFAULT_MAX_HEIGHT,
+        ),
       );
     }
 
     if (settings.offsetTop !== undefined) {
       await rpc.setIntPref(
         COMMAND_PALETTE_OFFSET_TOP_PREF,
-        clampInt(Number(settings.offsetTop), OFFSET_TOP_BOUNDS, DEFAULT_OFFSET_TOP),
+        clampInt(
+          Number(settings.offsetTop),
+          OFFSET_TOP_BOUNDS,
+          DEFAULT_OFFSET_TOP,
+        ),
       );
     }
 
@@ -219,7 +234,11 @@ export async function saveCommandPaletteSettings(
     if (settings.fontSize !== undefined) {
       await rpc.setIntPref(
         COMMAND_PALETTE_FONT_SIZE_PREF,
-        clampInt(Number(settings.fontSize), FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
+        clampInt(
+          Number(settings.fontSize),
+          FONT_SIZE_BOUNDS,
+          DEFAULT_FONT_SIZE,
+        ),
       );
     }
 
@@ -299,7 +318,9 @@ export async function saveCommandPaletteSettings(
   }
 }
 
-export async function getCommandPaletteSettings(): Promise<CommandPaletteFormData | null> {
+export async function getCommandPaletteSettings(): Promise<
+  CommandPaletteFormData | null
+> {
   try {
     const enabled = await rpc.getBoolPref(COMMAND_PALETTE_ENABLED_PREF);
     const width = await rpc.getIntPref(COMMAND_PALETTE_WIDTH_PREF);
@@ -310,7 +331,9 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     );
     const fontSize = await rpc.getIntPref(COMMAND_PALETTE_FONT_SIZE_PREF);
     const showTabs = await rpc.getBoolPref(COMMAND_PALETTE_SHOW_TABS_PREF);
-    const showHistory = await rpc.getBoolPref(COMMAND_PALETTE_SHOW_HISTORY_PREF);
+    const showHistory = await rpc.getBoolPref(
+      COMMAND_PALETTE_SHOW_HISTORY_PREF,
+    );
     const showBookmarks = await rpc.getBoolPref(
       COMMAND_PALETTE_SHOW_BOOKMARKS_PREF,
     );
@@ -333,18 +356,32 @@ export async function getCommandPaletteSettings(): Promise<CommandPaletteFormDat
     return {
       enabled: enabled === null ? true : enabled,
       width: clampInt(width ?? DEFAULT_WIDTH, WIDTH_BOUNDS, DEFAULT_WIDTH),
-      maxHeight: clampInt(maxHeight ?? DEFAULT_MAX_HEIGHT, MAX_HEIGHT_BOUNDS, DEFAULT_MAX_HEIGHT),
-      offsetTop: clampInt(offsetTop ?? DEFAULT_OFFSET_TOP, OFFSET_TOP_BOUNDS, DEFAULT_OFFSET_TOP),
+      maxHeight: clampInt(
+        maxHeight ?? DEFAULT_MAX_HEIGHT,
+        MAX_HEIGHT_BOUNDS,
+        DEFAULT_MAX_HEIGHT,
+      ),
+      offsetTop: clampInt(
+        offsetTop ?? DEFAULT_OFFSET_TOP,
+        OFFSET_TOP_BOUNDS,
+        DEFAULT_OFFSET_TOP,
+      ),
       horizontalAlign: horizontalAlign !== null &&
           (VALID_HORIZONTAL_ALIGNS as readonly string[]).includes(
             horizontalAlign,
           )
         ? (horizontalAlign as CommandPaletteFormData["horizontalAlign"])
         : DEFAULT_HORIZONTAL_ALIGN,
-      fontSize: clampInt(fontSize ?? DEFAULT_FONT_SIZE, FONT_SIZE_BOUNDS, DEFAULT_FONT_SIZE),
+      fontSize: clampInt(
+        fontSize ?? DEFAULT_FONT_SIZE,
+        FONT_SIZE_BOUNDS,
+        DEFAULT_FONT_SIZE,
+      ),
       showTabs: showTabs === null ? DEFAULT_SHOW_TABS : showTabs,
       showHistory: showHistory === null ? DEFAULT_SHOW_HISTORY : showHistory,
-      showBookmarks: showBookmarks === null ? DEFAULT_SHOW_BOOKMARKS : showBookmarks,
+      showBookmarks: showBookmarks === null
+        ? DEFAULT_SHOW_BOOKMARKS
+        : showBookmarks,
       categoryPriority: parseCategoryPriority(categoryPriorityRaw),
       maxResultsPerCategory: clampInt(
         maxResultsPerCategoryRaw ?? DEFAULT_MAX_RESULTS_PER_CATEGORY,
@@ -488,16 +525,25 @@ export async function loadShortcuts(): Promise<CommandPaletteShortcut[]> {
     // cannot be removed there, so cleaning them here keeps the pref consistent
     // with the reserved display. @s, @t, @b and @h are built-in and need no
     // pref entry.
-    const cleaned = parsed.filter((s) => !isReservedShortcutPrefix(s.prefix));
+    // Older versions allowed whitespace inside prefixes, but those entries
+    // cannot be executed and would prevent subsequent valid shortcut saves.
+    const cleaned = parsed.filter((s) =>
+      isValidShortcutPrefix(s.prefix) && !isReservedShortcutPrefix(s.prefix)
+    );
     if (cleaned.length !== parsed.length) {
       // Best-effort; failures are logged by saveShortcuts itself.
-      saveShortcuts(cleaned);
+      await saveShortcuts(cleaned);
     }
     return cleaned;
   } catch (error) {
     console.error("[command-palette] Failed to load shortcuts:", error);
     return [];
   }
+}
+
+/** A prefix must be one nonempty token; @ introduces it in the palette. */
+export function isValidShortcutPrefix(prefix: string): boolean {
+  return prefix.length > 0 && !/[@\s]/u.test(prefix);
 }
 
 /**
@@ -508,6 +554,11 @@ export async function saveShortcuts(
   shortcuts: CommandPaletteShortcut[],
 ): Promise<void> {
   try {
+    if (shortcuts.some((shortcut) => !isValidShortcutPrefix(shortcut.prefix))) {
+      throw new Error(
+        "Shortcut prefixes must be nonempty tokens without @ or whitespace",
+      );
+    }
     await rpc.setStringPref(
       COMMAND_PALETTE_SHORTCUTS_PREF,
       JSON.stringify(shortcuts),

@@ -7,79 +7,65 @@ import {
 import { Switch } from "@/components/common/switch.tsx";
 import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
-import { useFormContext } from "react-hook-form";
-import { Palette } from "lucide-react";
+import { useFormContext, useWatch } from "react-hook-form";
+import type { DesignFormData } from "@/types/pref.ts";
+import styles from "../design.module.css";
+import { Check } from "lucide-react";
 
 export function Interface() {
   const { t } = useTranslation();
-  const { getValues, setValue } = useFormContext();
-  const interfaceOptions = useInterfaceDesigns();
-
+  const { control, setValue } = useFormContext<DesignFormData>();
+  const design = useWatch({ control, name: "design" });
+  const faviconColor = useWatch({ control, name: "faviconColor" });
+  const options = useInterfaceDesigns();
   return (
-    <Card>
+    <Card className={styles.section}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Palette className="size-5" />
-          {t("design.interface")}
-        </CardTitle>
+        <CardTitle>{t("design.interface")}</CardTitle>
+        <p className={styles.description}>{t("design.interfaceDescription")}</p>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          <div>
-            <p className="text-sm text-base-content/70 mb-4">
-              {t("design.interfaceDescription")}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {interfaceOptions.map((option) => (
-                <label
-                  key={option.value}
-                  tabIndex={0}
-                  className={`flex flex-col items-center rounded p-2 cursor-pointer relative border-1 transition-colors ${getValues("design") === option.value
-                    ? "bg-primary/10 text-base-content dark:bg-primary/15 border-primary/30 ring-1 ring-primary/20"
-                    : "border-secondary/10 hover:bg-base-200 focus-within:bg-base-200 focus-within:border-primary/20 focus:bg-base-200 focus:border-primary/20"
-                    }`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      setValue("design", option.value);
-                      e.preventDefault();
-                    }
-                  }}
-                >
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-40 h-24 mb-2 object-contain drop-shadow-sm"
-                  />
-                  <span className="text-sm font-medium">{option.title}</span>
-                  <input
-                    type="radio"
-                    name="design"
-                    value={option.value}
-                    checked={getValues("design") === option.value}
-                    onChange={() => setValue("design", option.value)}
-                    className="opacity-0 absolute top-2 right-2 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-base font-medium mb-2">
-              {t("design.otherInterfaceSettings")}
-            </h3>
-            <div className="flex items-center justify-between gap-2">
-              <div className="space-y-1">
-                <label htmlFor="favicon-color">
-                  {t("design.useFaviconColorToBackgroundOfNavigationBar")}
-                </label>
-              </div>
-              <Switch
-                id="favicon-color"
-                checked={!!getValues("faviconColor")}
-                onChange={(e) => setValue("faviconColor", e.target.checked)}
-              />
-            </div>
+        <fieldset className={styles.choices}>
+          <legend className={styles.srOnly}>{t("design.interface")}</legend>
+          {options.map((option) => (
+            <label
+              key={option.value}
+              className={styles.choice}
+              data-selected={design === option.value}
+            >
+              <span className={styles.choiceMedia}>
+                <img className={styles.choiceImage} src={option.image} alt="" />
+              </span>
+              <span className={styles.choiceLabel}>
+                <input
+                  type="radio"
+                  className={styles.srOnly}
+                  name="design"
+                  value={option.value}
+                  checked={design === option.value}
+                  onChange={() => setValue("design", option.value)}
+                />
+                <span>{option.title}</span>
+                <span className={styles.choiceIndicator} aria-hidden="true">
+                  {design === option.value && (
+                    <Check size={14} strokeWidth={2.5} />
+                  )}
+                </span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+        <div className={styles.extra}>
+          <h3>{t("design.otherInterfaceSettings")}</h3>
+          <div className={styles.row}>
+            <label htmlFor="favicon-color">
+              {t("design.useFaviconColorToBackgroundOfNavigationBar")}
+            </label>
+            <Switch
+              id="favicon-color"
+              checked={!!faviconColor}
+              onChange={(e) => setValue("faviconColor", e.target.checked)}
+            />
           </div>
         </div>
       </CardContent>

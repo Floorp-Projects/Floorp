@@ -4,29 +4,29 @@ import i18next from "i18next";
 import { debounce } from "@solid-primitives/scheduled";
 import { createPaletteState, type PaletteState } from "./data/state.ts";
 import {
-  isEnabled,
   addRecentCommand,
-  getFrequencies,
-  getRecentCommands,
-  incrementFrequency,
-  getShowTabs,
-  getShowHistory,
-  getShowBookmarks,
   getCategoryPriority,
-  getMaxResultsPerCategory,
+  getFrequencies,
   getMaxBookmarkSuggestions,
   getMaxHistorySuggestions,
+  getMaxResultsPerCategory,
   getMaxTabsResults,
+  getRecentCommands,
   getShortcuts,
+  getShowBookmarks,
+  getShowHistory,
+  getShowTabs,
+  incrementFrequency,
+  isEnabled,
   RESERVED_SHORTCUT_PREFIXES,
 } from "./config.ts";
 import {
-  getPaletteCommands,
   getCommand,
+  getPaletteCommands,
+  isTabCommand,
+  searchBookmarkCommands,
   searchCommands,
   searchHistoryCommands,
-  searchBookmarkCommands,
-  isTabCommand,
 } from "./command-registry.ts";
 import { shareModeEnabled } from "../browser-share-mode/browser-share-mode.tsx";
 import { fuzzyScore, fuzzySearch } from "./fuzzy.ts";
@@ -39,11 +39,11 @@ import {
   truncateByCategory,
 } from "./category-priority.ts";
 import type {
+  CommandPaletteShortcut,
   CommandStep,
   CommandStepChoice,
   PaletteCommand,
   StepChoicesResult,
-  CommandPaletteShortcut,
 } from "./types.ts";
 import {
   isPaletteTargetAvailable,
@@ -889,8 +889,12 @@ export class CommandPaletteController {
     cmd: PaletteCommand,
     args: Record<string, string>,
   ): void {
-    addRecentCommand(cmd.id);
-    incrementFrequency(cmd.id);
+    // Shortcut wrappers record usage under the underlying command id, just
+    // as they do when executeCommand invokes a command without input steps.
+    if (cmd.category !== "shortcut") {
+      addRecentCommand(cmd.id);
+      incrementFrequency(cmd.id);
+    }
     this.hidePalette();
     try {
       cmd.fn(this.targetWindow, args);
@@ -952,8 +956,7 @@ export class CommandPaletteController {
         }
         if (list.length > 1) {
           list.sort(
-            (a, b) =>
-              (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0),
+            (a, b) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0),
           );
         }
       }
@@ -965,7 +968,7 @@ export class CommandPaletteController {
     const recentList = groups.get("recent") ?? [];
     const otherCategories = [...groups.keys()].filter((c) => c !== "recent");
     otherCategories.sort((a, b) =>
-      compareByPriority({ category: a }, { category: b }, priorityList),
+      compareByPriority({ category: a }, { category: b }, priorityList)
     );
 
     // `recent` is pinned first here; `CommandList.tsx` also places `recent`
@@ -1159,7 +1162,7 @@ export class CommandPaletteController {
       );
 
     return resolved.map(({ s, aliased }) =>
-      this.buildPlainShortcutCommand(s, aliased),
+      this.buildPlainShortcutCommand(s, aliased)
     );
   }
 
@@ -1181,7 +1184,8 @@ export class CommandPaletteController {
       description: aliased.label,
       category: "shortcut",
       keywords: [s.prefix, `@${s.prefix}`],
-      fn: (win) => {
+      steps: aliased.steps,
+      fn: (win, args) => {
         const cmd = getCommand(s.commandId, win);
         if (cmd) {
           // Record usage under the REAL command id so the aliased command's
@@ -1189,7 +1193,7 @@ export class CommandPaletteController {
           addRecentCommand(s.commandId);
           incrementFrequency(s.commandId);
           try {
-            cmd.fn(win);
+            cmd.fn(win, args);
           } catch (e) {
             console.error(
               "[command-palette] Shortcut action failed:",
@@ -1265,9 +1269,7 @@ export class CommandPaletteController {
             // fall back to their defaults (e.g. search-web: default engine +
             // new tab).
             const firstStepId = firstStep?.id;
-            const args = firstStepId
-              ? { [firstStepId]: argsPart }
-              : undefined;
+            const args = firstStepId ? { [firstStepId]: argsPart } : undefined;
             cmd.fn(win, args);
           } catch (e) {
             console.error(
@@ -1360,9 +1362,12 @@ export class CommandPaletteController {
         defaultValue: "@b",
         prefix: "b",
       }),
-      description: i18next.t("commandPalette.shortcuts.reservedBookmarkSearch", {
-        defaultValue: "Search Bookmarks",
-      }),
+      description: i18next.t(
+        "commandPalette.shortcuts.reservedBookmarkSearch",
+        {
+          defaultValue: "Search Bookmarks",
+        },
+      ),
       category: "shortcut",
       keywords: ["b", "@b"],
       fn: (win) => {
@@ -1424,6 +1429,9 @@ export class CommandPaletteController {
       return;
     }
 
+    // Each applied query owns its asynchronous results. Query equality alone
+    // cannot reject an old A result after the user searches A, then B, then A.
+    this.searchGeneration++;
     const hasTrailingSpace = /\s$/.test(query);
     const trimmed = query.trim();
     const results: PaletteCommand[] = [];
@@ -1444,7 +1452,9 @@ export class CommandPaletteController {
       // "@s <query>" commits to the dedicated web-search mode.
       const spaceIdx = afterAt.search(/\s/);
       const prefixPart = spaceIdx === -1 ? afterAt : afterAt.slice(0, spaceIdx);
-      const argsPart = spaceIdx === -1 ? "" : afterAt.slice(spaceIdx + 1).trim();
+      const argsPart = spaceIdx === -1
+        ? ""
+        : afterAt.slice(spaceIdx + 1).trim();
 
       // @t — built-in open-tabs search mode. The "t" prefix is reserved (see
       // RESERVED_SHORTCUT_PREFIXES in config.ts) and always wins over any
@@ -1737,14 +1747,25 @@ export class CommandPaletteController {
     // the lowest priority automatically) are NOT touched by the helper.
     const priorityList = getCategoryPriority();
     const maxPerCategory = getMaxResultsPerCategory();
-    const sorted = this.applyPriorityTiebreak(filteredByTabs, trimmed, priorityList);
+    const sorted = this.applyPriorityTiebreak(
+      filteredByTabs,
+      trimmed,
+      priorityList,
+    );
     // `recent` is a multi-item pseudo-category (recently-used commands shown on
     // empty query). Exempt it from per-category truncation so users always see
     // their full recents list regardless of the limit. Mirrors the PSEUDO_TOP
     // policy in `appendSuggestionResults`.
     const recentItems = sorted.filter((c) => c.category === "recent");
     const nonRecent = sorted.filter((c) => c.category !== "recent");
-    results.push(...recentItems, ...truncateByCategory(nonRecent, maxPerCategory, this.buildCategoryLimitOverrides()));
+    results.push(
+      ...recentItems,
+      ...truncateByCategory(
+        nonRecent,
+        maxPerCategory,
+        this.buildCategoryLimitOverrides(),
+      ),
+    );
 
     // Show search engine suggestion at the bottom of the list as a fallback.
     // Placing it at the bottom keeps the first matched command selected by

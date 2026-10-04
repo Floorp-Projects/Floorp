@@ -60,11 +60,11 @@ export class NRPwaManagerChild extends JSWindowActorChild {
   }
 
   NRRenameSsb(id: string, newName: string) {
-    this.sendAsyncMessage("PwaManager:RenameSsb", { id, newName });
+    return this.sendQuery("PwaManager:RenameSsb", { id, newName });
   }
 
   NRUninstallSsb(id: string) {
-    this.sendAsyncMessage("PwaManager:UninstallSsb", { id });
+    return this.sendQuery("PwaManager:UninstallSsb", { id });
   }
 
   NRGetContainers(callback: (containersJson: string) => void = () => {}) {
@@ -76,7 +76,7 @@ export class NRPwaManagerChild extends JSWindowActorChild {
   }
 
   NRSetSsbContainer(id: string, userContextId: number) {
-    this.sendAsyncMessage("PwaManager:SetContainer", { id, userContextId });
+    return this.sendQuery("PwaManager:SetContainer", { id, userContextId });
   }
 
   resolveGetInstalledApps: // deno-lint-ignore no-explicit-any

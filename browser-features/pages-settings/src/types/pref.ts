@@ -64,7 +64,7 @@ export const zDesignFormData = t.type({
   tabScroll: t.boolean,
   tabScrollReverse: t.boolean,
   tabScrollWrap: t.boolean,
-  tabDubleClickToClose: t.boolean,
+  tabDoubleClickToClose: t.boolean,
   tabDragToSplitCreate: t.boolean,
 
   // UI customization

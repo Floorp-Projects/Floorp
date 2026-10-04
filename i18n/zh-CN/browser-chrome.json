@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "移动标签页到另一个工作区",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "在另一工作区打开链接",
       "noOtherWorkspace": "无可用的工作区"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "打开分屏显示",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "将窗格添加至分屏视图",
       "moveToPane": "移至窗格",
       "moveToPaneN": "窗格 {{n}} ({{title}})"

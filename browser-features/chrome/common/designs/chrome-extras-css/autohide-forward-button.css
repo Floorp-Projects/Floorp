@@ -1,0 +1,26 @@
+/* Floorp chrome-extras: autohideForwardButton
+ * Ported from vendored Lepton (leptonChrome.css 26092-26107, 2 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ */
+
+/* leptonChrome.css:26092-26098 */
+:root:not([customizing="true"]) #forward-button[disabled="true"] {
+  margin-left: var(--uc-toolbarbutton-hide-size) !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* leptonChrome.css:26099-26107 */
+@media (prefers-reduced-motion: no-preference) {
+  #forward-button {
+    transition-property: background-color, opacity, margin-left !important;
+  }
+  #forward-button[disabled="true"] {
+    transition: background-color 1s var(--animation-easing-function), opacity 1s var(--animation-easing-function),
+      margin-left 0.5s ease !important;
+  }
+}

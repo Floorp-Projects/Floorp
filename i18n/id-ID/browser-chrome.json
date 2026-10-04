@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Pindahkan Tab ke Ruang Kerja Lain",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Buka Tautan di Ruang Kerja Lain",
       "noOtherWorkspace": "Tidak ada ruang kerja lain yang tersedia"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Open in Split View",
+      "paneLimit": "Buka dalam Tampilan Terpisah (maksimal {{max}} tab)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"

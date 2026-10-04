@@ -1,7 +1,7 @@
 ---
 title: "Common Chrome Feature Catalog"
 sidebar_label: "Common Chrome"
-floorp_commit: "145eca89ab58c45ed05f3baf611eee4563a8351d"
+floorp_commit: "3be0487b4ee9b16c5fb8970b1e79ac0475d11148"
 generated: true
 ---
 # Common Chrome Feature Catalog
@@ -17,11 +17,12 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | browser-tab-color | `browser-features/chrome/common/browser-tab-color/index.ts` | `default class BrowserTabColor`, `init` | Owns the browser tab color feature through the BrowserTabColor chrome component and wires `tabcolor-manager`. |
 | chrome-css | `browser-features/chrome/common/chrome-css/index.ts` | `default class ChromeCSS`, `init` | Owns the chrome css feature through the ChromeCSS chrome component and wires `service`. |
 | command-palette | `browser-features/chrome/common/command-palette/index.ts` | `default class CommandPalette`, `init` | Owns the command palette feature through the CommandPalette chrome component and wires `service`, `components/CommandPalette`, `style.css?inline`. |
-| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component and wires `controller`, `config`. |
 | designs | `browser-features/chrome/common/designs/index.ts` | `default class Designs`, `init` | Owns the designs feature through the Designs chrome component and wires `browser-design-element`. |
 | external-browser | `browser-features/chrome/common/external-browser/index.ts` | `default class ExternalBrowser`, `init` | Owns the external browser feature through the ExternalBrowser chrome component and wires `tab-context-menu`, `link-context-menu`. |
 | flex-order | `browser-features/chrome/common/flex-order/index.ts` | `default class FlexOrder`, `init` | Owns the flex order feature through the FlexOrder chrome component and wires `flex-order`. |
 | hub-panel-menu | `browser-features/chrome/common/hub-panel-menu/index.ts` | `default class HubPanelMenuComponent`, `init` | Owns the hub panel menu feature through the HubPanelMenuComponent chrome component and wires `HubPanelMenu`. |
+| idle-memory-reclaim | `browser-features/chrome/common/idle-memory-reclaim/index.ts` | `default class IdleMemoryReclaim`, `init` | Owns the idle memory reclaim feature through the IdleMemoryReclaim chrome component. |
 | keyboard-shortcut | `browser-features/chrome/common/keyboard-shortcut/index.ts` | `default class KeyboardShortcut`, `init` | Owns the keyboard shortcut feature through the KeyboardShortcut chrome component and wires `service`, `config`. |
 | modal-parent | `browser-features/chrome/common/modal-parent/index.ts` | `default class ModalParent`, `init` | Owns the modal parent feature through the ModalParent chrome component and wires `modalManager`, `modalElement`, `data/data`. |
 | mouse-gesture | `browser-features/chrome/common/mouse-gesture/index.ts` | `default class MouseGesture`, `init` | Owns the mouse gesture feature through the MouseGesture chrome component and wires `service`, `config`, `components/GestureDisplay`. |
@@ -38,7 +39,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 | tab-inline-edit | `browser-features/chrome/common/tab-inline-edit/index.ts` | `default class TabInlineEdit`, `init` | Owns the tab inline edit feature through the TabInlineEdit chrome component and wires `controller`. |
 | tab-refresh | `browser-features/chrome/common/tab-refresh/index.ts` | `default class TabRefresh`, `init` | Owns the tab refresh feature through the TabRefresh chrome component and wires `controller`. |
 | tab-sleep-exclusion | `browser-features/chrome/common/tab-sleep-exclusion/index.ts` | `default class TabSleepExclusion`, `init` | Owns the tab sleep exclusion feature through the TabSleepExclusion chrome component. |
-| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacks`, `init` | Owns the tab stacks feature through the TabStacks chrome component and wires `stack-bar`. |
+| tab-stacks | `browser-features/chrome/common/tab-stacks/index.ts` | `default class TabStacks`, `init` | Owns the tab stacks feature through the TabStacks chrome component and wires `stack-bar`, `proxy-drag`. |
 | tab-strip-wheel-guard | `browser-features/chrome/common/tab-strip-wheel-guard/index.ts` | `default class TabStripWheelGuard`, `init` | Owns the tab strip wheel guard feature through the TabStripWheelGuard chrome component and wires `classifier`. |
 | tabbar | `browser-features/chrome/common/tabbar/index.ts` | `default class TabBar`, `init` | Owns the tabbar feature through the TabBar chrome component and wires `multirow-tabbar/multirow-tabbar`, `tabbbar-style/tabbar-style`. |
 | ui-custom | `browser-features/chrome/common/ui-custom/index.ts` | `default class UICustomization`, `init`, `initBeforeSessionStoreInit` | Owns the ui custom feature through the UICustomization chrome component and wires `styles/style-manager`, `layout/dom-manipulator`. |

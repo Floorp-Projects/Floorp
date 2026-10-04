@@ -12,6 +12,7 @@ import {
   DEFAULT_CATEGORY_PRIORITY,
   getCommandPaletteSettings,
   isReservedShortcutPrefix,
+  isValidShortcutPrefix,
   loadSelectableCommands,
   loadShortcuts,
   parseSelectableCommands,
@@ -1138,7 +1139,40 @@ async function testLoadSelectableCommandsParsesValid(): Promise<void> {
   }
 }
 
+async function testRejectWhitespaceShortcutPrefixes(): Promise<void> {
+  const valid = [{ prefix: "web", commandId: "floorp-search-web" }];
+  Services.prefs.setStringPref(SHORTCUTS_PREF, JSON.stringify([
+    { prefix: "old alias", commandId: "floorp-search-web" },
+    ...valid,
+  ]));
+  assertEquals(JSON.stringify(await loadShortcuts()), JSON.stringify(valid), "Loading migrates unusable legacy aliases");
+  const next = [...valid, { prefix: "docs", commandId: "floorp-open-hub" }];
+  await saveShortcuts(next);
+  assertEquals(JSON.stringify(await loadShortcuts()), JSON.stringify(next), "A valid edit persists after migration");
+  await saveShortcuts(valid);
+  for (
+    const prefix of [
+      "two words",
+      "two\twords",
+      "two\nwords",
+      "two\u3000words",
+      "",
+      "@web",
+    ]
+  ) {
+    assertEquals(isValidShortcutPrefix(prefix), false, `Invalid prefix: ${JSON.stringify(prefix)}`);
+    await saveShortcuts([{ prefix, commandId: "floorp-search-web" }]);
+    assertEquals(
+      JSON.stringify(await loadShortcuts()),
+      JSON.stringify(valid),
+      "Invalid aliases must not overwrite saved shortcuts",
+    );
+  }
+  assertEquals(isValidShortcutPrefix("検索"), true, "Unicode prefixes without whitespace are valid");
+}
+
 const tests: TestCase[] = [
+  { name: "saveShortcuts rejects invalid token prefixes without overwriting saved shortcuts", fn: testRejectWhitespaceShortcutPrefixes },
   { name: "getCommandPaletteSettings returns full defaults when pref is unset", fn: testGetReturnsDefaultsWhenPrefUnset },
   { name: "getCommandPaletteSettings returns { enabled: true }", fn: testGetReturnsEnabledTrue },
   { name: "getCommandPaletteSettings returns { enabled: false }", fn: testGetReturnsEnabledFalse },

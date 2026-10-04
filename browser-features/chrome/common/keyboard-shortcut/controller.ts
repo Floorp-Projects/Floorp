@@ -9,8 +9,13 @@ import type { ShortcutConfig } from "./type.ts";
 import {
   isBarePrintableKeyEvent,
   isKeyboardShortcutTypingContext,
+  isPrintableKeyValue,
   type KeyboardShortcutFocusStoreReader,
 } from "./editable-focus.ts";
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs",
+);
 
 export class KeyboardShortcutController {
   private eventListenersAttached = false;
@@ -27,6 +32,7 @@ export class KeyboardShortcutController {
   constructor(
     win: Window = globalThis as unknown as Window,
     remoteFocusStore: KeyboardShortcutFocusStoreReader | null = null,
+    private readonly platform: string = AppConstants.platform,
   ) {
     this.targetWindow = win;
     this.remoteFocusStore = remoteFocusStore;
@@ -38,6 +44,7 @@ export class KeyboardShortcutController {
 
     this.targetWindow.addEventListener("keydown", this.handleKeyDown, true);
     this.targetWindow.addEventListener("keyup", this.handleKeyUp, true);
+    this.targetWindow.addEventListener("blur", this.handleBlur, true);
     this.eventListenersAttached = true;
   }
 
@@ -49,6 +56,7 @@ export class KeyboardShortcutController {
         true,
       );
       this.targetWindow.removeEventListener("keyup", this.handleKeyUp, true);
+      this.targetWindow.removeEventListener("blur", this.handleBlur, true);
       this.eventListenersAttached = false;
     }
     this.resetState();
@@ -65,7 +73,12 @@ export class KeyboardShortcutController {
 
   private handleKeyDown = (event: KeyboardEvent): void => {
     if (!isEnabled()) return;
-    if (event.repeat || event.getModifierState?.("AltGraph")) return;
+    if (event.repeat || event.isComposing) return;
+    // Gecko reports Option as AltGraph on macOS, including Ctrl+Option and
+    // Cmd+Option shortcuts. AltGr must still be reserved for text on other OSes.
+    if (
+      event.getModifierState?.("AltGraph") && this.platform !== "macosx"
+    ) return;
 
     this.pressedModifiers = {
       alt: event.altKey,
@@ -80,7 +93,10 @@ export class KeyboardShortcutController {
     if (!code) return;
 
     if (
-      isBarePrintableKeyEvent(event) &&
+      (isBarePrintableKeyEvent(event) ||
+        (this.platform === "macosx" && event.altKey &&
+          !event.ctrlKey && !event.metaKey &&
+          (isPrintableKeyValue(event.key) || event.key === "Dead"))) &&
       isKeyboardShortcutTypingContext(
         this.targetWindow,
         this.remoteFocusStore,
@@ -117,6 +133,13 @@ export class KeyboardShortcutController {
     };
   };
 
+  private handleBlur = (): void => {
+    // A key released after the browser loses focus does not deliver keyup to
+    // this window. Discard the snapshot so a stale key cannot satisfy the
+    // next shortcut after focus returns.
+    this.resetState();
+  };
+
   private checkAndExecuteShortcut(code: string): boolean {
     const config = getConfig();
     const shortcuts = config.shortcuts;
@@ -132,7 +155,10 @@ export class KeyboardShortcutController {
     return false;
   }
 
-  private isShortcutMatch(shortcut: ShortcutConfig, currentCode: string): boolean {
+  private isShortcutMatch(
+    shortcut: ShortcutConfig,
+    currentCode: string,
+  ): boolean {
     if (
       shortcut.modifiers.alt !== this.pressedModifiers.alt ||
       shortcut.modifiers.ctrl !== this.pressedModifiers.ctrl ||

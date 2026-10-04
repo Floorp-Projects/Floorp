@@ -43,7 +43,6 @@ const BLOCKED_TAB_ATTRIBUTES = [
   "grouped",
   "hidden",
   "muted",
-  "pending",
   "pictureinpicture",
   "pinned",
   "progress",
@@ -531,6 +530,8 @@ export class HoverReloadController {
     }
 
     try {
+      // Firefox's reloadTab restores a lazy browser on demand. Only call it
+      // on activation so hovering an unloaded tab keeps it unloaded.
       this.browser.reloadTab(tab);
     } catch (error) {
       console.error("[tab-refresh] Failed to reload tab:", error);

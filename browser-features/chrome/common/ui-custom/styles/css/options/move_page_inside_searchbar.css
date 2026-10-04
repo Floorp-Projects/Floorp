@@ -2,6 +2,31 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-findbar{
-  order: -1;
+.browserContainer {
+  /*
+   * Firefox 156 lays out browser chrome with an explicit grid, so `order` no
+   * longer moves the explicitly positioned findbar. Keep every upstream grid
+   * area intact while moving the central findbar row above notifications,
+   * Responsive Design Mode, and the page content.
+   */
+  grid-template-areas:
+    "devtools-side-start      devtools-side-start-splitter findbar                  devtools-side-end-splitter  devtools-side-end"
+    "devtools-side-start      devtools-side-start-splitter notificationbox          devtools-side-end-splitter  devtools-side-end"
+    "devtools-side-start      devtools-side-start-splitter rdm-toolbar              devtools-side-end-splitter  devtools-side-end"
+    "devtools-side-start      devtools-side-start-splitter browserstack             devtools-side-end-splitter  devtools-side-end"
+    "devtools-bottom-splitter devtools-bottom-splitter     devtools-bottom-splitter devtools-bottom-splitter    devtools-bottom-splitter"
+    "devtools-bottom          devtools-bottom              devtools-bottom          devtools-bottom             devtools-bottom";
+  grid-template-rows:
+    /* findbar */
+    auto
+    /* notificationbox */
+    auto
+    /* rdm toolbar */
+    var(--rdm-toolbar-height, 0)
+    /* browserstack */
+    minmax(var(--content-area-min-size), 1fr)
+    /* bottom DevTools splitter */
+    auto
+    /* bottom DevTools */
+    auto;
 }

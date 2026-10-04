@@ -25,7 +25,7 @@
     "@std/streams": "jsr:@std/streams@^1.0.14",
     "@std/toml": "npm:@jsr/std__toml@^1.0.11",
     "fflate": "npm:fflate@^0.8.3",
-    "vite": "npm:rolldown-vite@^7.3.0"
+    "vite": "npm:vite@^7.3.0"
   },
   "compilerOptions": {
     "lib": [
@@ -57,6 +57,8 @@
   ],
   "tasks": {
     "feles-build": "deno run -A tools/feles-build.ts",
+    "app-shim:build": "deno run --allow-read --allow-write --allow-run --allow-env tools/app-shim/build.ts",
+    "app-shim:test": "deno test --allow-read --allow-write --allow-run=git libs/pwa/appRegistry.test.ts libs/pwa/bundleRecovery.test.ts",
     "act": "deno run -A tools/act/run-package-workflow.ts",
     "dev-tool": "deno run -A tools/dev-tool.ts",
     "docs-pipeline": "deno run --allow-read --allow-write --allow-env --allow-net --allow-run tools/docs-pipeline/mod.ts",

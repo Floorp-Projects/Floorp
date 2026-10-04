@@ -10,11 +10,12 @@ import {
 } from "@/components/common/card.tsx";
 import { Input } from "@/components/common/input.tsx";
 import {
+  type CommandPaletteShortcut,
+  isReservedShortcutPrefix,
+  isValidShortcutPrefix,
   loadSelectableCommands,
   loadShortcuts,
   saveShortcuts,
-  isReservedShortcutPrefix,
-  type CommandPaletteShortcut,
   type SelectableCommand,
 } from "../dataManager.ts";
 
@@ -75,10 +76,22 @@ export function ShortcutList() {
 
   /** Built-in shortcuts that cannot be changed or removed from this UI. */
   const reservedRows = [
-    { prefix: "s", commandLabel: t("commandPalette.shortcuts.reservedWebSearch") },
-    { prefix: "t", commandLabel: t("commandPalette.shortcuts.reservedTabSearch") },
-    { prefix: "b", commandLabel: t("commandPalette.shortcuts.reservedBookmarkSearch") },
-    { prefix: "h", commandLabel: t("commandPalette.shortcuts.reservedHistorySearch") },
+    {
+      prefix: "s",
+      commandLabel: t("commandPalette.shortcuts.reservedWebSearch"),
+    },
+    {
+      prefix: "t",
+      commandLabel: t("commandPalette.shortcuts.reservedTabSearch"),
+    },
+    {
+      prefix: "b",
+      commandLabel: t("commandPalette.shortcuts.reservedBookmarkSearch"),
+    },
+    {
+      prefix: "h",
+      commandLabel: t("commandPalette.shortcuts.reservedHistorySearch"),
+    },
   ];
 
   /** User-defined shortcuts, excluding reserved prefixes. */
@@ -112,6 +125,10 @@ export function ShortcutList() {
       setError(t("commandPalette.shortcuts.errorAt"));
       return;
     }
+    if (!isValidShortcutPrefix(prefix)) {
+      setError(t("commandPalette.shortcuts.errorWhitespace"));
+      return;
+    }
     // Reserved check comes before the duplicate check: when a stale reserved
     // entry ("s"/"t") lingers in the pref (invisible in this UI), the reserved
     // error must surface instead of a misleading duplicate error.
@@ -138,7 +155,9 @@ export function ShortcutList() {
     persist(shortcuts.filter((shortcut) => shortcut.prefix !== prefix));
   };
 
-  const handlePrefixKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+  const handlePrefixKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ): void => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAdd();
@@ -218,7 +237,9 @@ export function ShortcutList() {
                   <Input
                     id="command-palette-shortcut-prefix"
                     type="text"
-                    placeholder={t("commandPalette.shortcuts.prefixPlaceholder")}
+                    placeholder={t(
+                      "commandPalette.shortcuts.prefixPlaceholder",
+                    )}
                     value={newPrefix}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setNewPrefix(e.target.value)}
@@ -245,14 +266,12 @@ export function ShortcutList() {
                     {[...grouped.entries()].map(([category, commands]) => (
                       <optgroup
                         key={category}
-                        label={
-                          category.length > 0
-                            ? t(
-                              `commandPalette.categoryNames.${category}`,
-                              { defaultValue: category },
-                            )
-                            : t("commandPalette.shortcuts.uncategorized")
-                        }
+                        label={category.length > 0
+                          ? t(
+                            `commandPalette.categoryNames.${category}`,
+                            { defaultValue: category },
+                          )
+                          : t("commandPalette.shortcuts.uncategorized")}
                       >
                         {commands.map((command) => (
                           <option key={command.id} value={command.id}>
@@ -274,9 +293,7 @@ export function ShortcutList() {
                   </button>
                 </div>
               </div>
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
           )
           : (

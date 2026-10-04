@@ -39,6 +39,26 @@ Currently, the following integration features are available on the Windows platf
 - Launching in dedicated windows
 - Icon integration
 
+On macOS, launcher bundles are created in `~/Applications/Floorp Apps/`.
+Each bundle contains an executable launcher, `Info.plist`, and a 512px ICNS icon.
+The launcher passes the installing profile and SSB ID to Floorp. Bundle identity
+includes the profile, so copied SSB IDs in different profiles do not collide.
+Opening an existing PWA from Floorp also creates or repairs its launcher.
+Renaming or uninstalling a PWA updates or removes its owned bundle.
+
+This is launcher integration: it does not automatically pin apps to the Dock
+or provide a separate native process/Dock identity for each running PWA.
+On macOS, verify Finder launch with Floorp both running and closed, manual Dock
+pinning, icon display, rename/uninstall, and two profiles before release.
+File-generation tests on other platforms do not verify Launch Services behavior.
+
+PWA regression tests are colocated under `test/` and under
+`browser-features/modules/modules/pwa/supports/test/`. They cover toolbar
+preferences (including existing configurations and live changes), legacy SSB
+data migration, launcher metadata, profile isolation, bundle repair/removal,
+and fallback icon encoding. Run with `deno task test --near <directory>` in
+an isolated test profile.
+
 ## Directory Structure
 
 ```plaintext

@@ -19,6 +19,15 @@ deno task test:smoke                # Smoke tests
 deno task dev-tool                  # Development utility CLI
 ```
 
+## Runtime changes
+
+Runtime changes must be maintained as patches, not direct edits to a sibling
+Floorp-Runtime checkout. Cross-platform source patches belong in
+`.github/patches/floorp-runtime/common/` and are applied by `package.yml`.
+Validate them against the source commit in `floorp-runtime.lock.json` in isolation.
+The package workflow uses prebuilt native artifacts; changes requiring native
+recompilation cannot be delivered through source patches in that step alone.
+
 ## Architecture (5 Layers)
 
 ```text

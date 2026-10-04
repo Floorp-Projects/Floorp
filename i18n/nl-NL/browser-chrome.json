@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Tabblad verplaatsen naar een andere workspace",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Open link in een andere workspace",
       "noOtherWorkspace": "Geen andere workspace beschikbaar"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Openen in gesplitste weergave",
+      "paneLimit": "Openen in Split View (tot {{max}} tabbladen)",
       "addPane": "Venster toevoegen aan gesplitste weergave",
       "moveToPane": "Verplaatsen naar venster",
       "moveToPaneN": "Venster {{n}} ({{title}})"

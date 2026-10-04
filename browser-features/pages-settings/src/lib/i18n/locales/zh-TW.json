@@ -34,6 +34,7 @@
         "debug": "偵錯",
         "mouseGesture": "滑鼠手勢",
         "keyboardShortcut": "鍵盤快捷鍵",
+        "performance": "效能",
         "search": {
             "title": "搜尋設定",
             "resultsFor": "搜尋 {{query}} 的結果",
@@ -142,16 +143,13 @@
             "taskbarPreviewsDescription": "此更改僅會變更 Windows 工作列的顯示，並不會建立額外的瀏覽器視窗。",
             "taskbarPreviewsUnavailable": "僅在 Windows 上提供此選項。"
         },
-        "lepton-preferences": {
-            "title": "Lepton 設定",
-            "description": "Lepton 進階主題偏好設定",
-            "configureLepton": "設定 Lepton",
+        "chrome-extras": {
+            "title": "UI Extension Settings",
+            "description": "Apply optional UI tweaks on top of the currently selected design",
             "back": "返回",
             "experimentalWarning": {
                 "title": "⚠️ 測試功能",
-                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。",
-                "leptonRepository": "Lepton 是 Firefox 的 css 主題。",
-                "visitRepository": "訪問儲存庫頁面"
+                "description": "這些設定為實驗性且未獲得官方支援。可能會發生問題。"
             },
             "autohide": {
                 "title": "自動隱藏設定",
@@ -175,8 +173,8 @@
             },
             "icon": {
                 "title": "圖示設定",
-                "disabled": "停用 Lepton 的選單項目以及面板的圖示",
-                "menu": "啟用 Lepton 的選單項目圖示"
+                "disabled": "Disable context menu and panel menu icons",
+                "menu": "Enable context menu icons"
             },
             "centered": {
                 "title": "居中設定",
@@ -198,7 +196,8 @@
             "sidebar": {
                 "title": "側邊欄設定",
                 "overlap": "在網站內容上顯示側邊欄"
-            }
+            },
+            "configure": "Open UI extension settings"
         },
         "tabSleepExclusion": {
             "title": "排除分頁睡眠",
@@ -216,6 +215,7 @@
             "exampleFullUrl": "僅匹配 Gmail URL"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "在垂直分頁模式下，分頁堆無法使用。你的設定會被保留，並在切換回水平分頁模式時生效。",
             "title": "分頁堆",
             "description": "將分頁分組堆疊，在分頁列中以一圖示顯示，下方則排列其他分頁堆。",
             "enableOrDisable": "啟用/停用",
@@ -329,6 +329,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "了解我們的資金來源及此計畫的背景（日文）",
+            "title": "歷來更新版本說明",
+            "description": "選擇 Floorp 在更新後如何開啟版本說明。",
+            "disabled": {
+                "label": "不要自動開啟",
+                "description": "版本說明將不會在更新後自動開啟。攔截設定在你造訪官方部落格時也會生效。"
+            },
+            "blocking": {
+                "label": "以你的廣告攔截器設定開啟",
+                "description": "在不限制擴充功能的情況下開啟版本說明。此操作不會開啟或安裝廣告攔截器。"
+            },
+            "support": {
+                "label": "開啟並顯示廣告來支持 Floorp（建議）",
+                "description": "阻止 uBlock Origin、AdGuard、Adblock Plus、AdBlock 及 Ghostery 過濾 Floorp 部落格的內容。"
+            },
+            "supportMessage": "版本說明中的廣告收入全部用於支持 Floorp 的開發與營運。感謝你以適合自己的方式支持我們。",
+            "scope": "此例外適用於所有透過 HTTPS 存取 blog.floorp.app 的情況，包括手動開啟的頁面。此設定亦會影響所列五款擴充功能中的追蹤防護與自訂篩選器。其他擴充功能不受此設定限制。其他防護工具仍可能阻擋廣告。變更此設定後，請重新載入已開啟的部落格頁面。",
+            "error": "無法載入或儲存此設定。請重新開啟此頁面並再次嘗試。"
+        },
         "title": "更新與實驗功能",
         "description": "管理更新設定和實驗功能參與。",
         "experiments": {
@@ -466,6 +486,8 @@
         "otherSettings": "其他設定",
         "showToolbar": "顯示工具列",
         "showToolbarDescription": "在 PWA 應用程式視窗中顯示工具列",
+        "keepRunningAfterBrowserQuit": "Keep Web Apps running after quitting {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Close browser windows and keep running Web Apps open. Turn this off to quit them together. Quitting a Web App closes only that app. Restarting {{productName}} or logging out closes all apps.",
         "installedApps": "已安裝的 PWA 應用程式",
         "noInstalledApps": "未安裝任何 PWA 應用程式",
         "removeApp": "移除 PWA 應用程式",
@@ -485,7 +507,10 @@
         "containerDeleted": "容器已刪除",
         "resetContainer": "重設",
         "save": "儲存",
-        "errorSettingContainer": "無法設定容器"
+        "errorRenaming": "Could not rename this Web App.",
+        "errorUninstalling": "Could not uninstall this Web App.",
+        "errorSettingContainer": "無法設定容器",
+        "nativeContainerFixed": "This macOS Web App keeps the container chosen when it was installed. Changing its container is not supported yet. Its current login and site data have been kept."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -744,5 +769,55 @@
             "cancel": "取消",
             "cancelDescription": "取消編輯"
         }
+    },
+    "performance": {
+        "title": "效能",
+        "description": "影響瀏覽器使用系統資源之設定。",
+        "idleReclaim": {
+            "title": "閒置記憶體回收",
+            "description": "此功能屬實驗性質且預設為關閉。啟用後，系統會在一段時間內未偵測到鍵盤或滑鼠輸入時，嘗試減少記憶體使用量。回收的記憶體量取決於當前使用的頁面。",
+            "enable": "在瀏覽器閒置時回收記憶體",
+            "idleThreshold": "回收前的閒置時間（秒）",
+            "minInterval": "重新回收之間的最小間隔（秒）",
+            "minResident": "僅在記憶體使用超過 (MB) 時才進行回收",
+            "cost": "影片播放、通話及螢幕共享不會阻止記憶體回收。這可能會暫停瀏覽器，也包括你重新開始使用瀏覽器時。間隔時間越短，回收的頻率就越高。",
+            "saveFailed": "無法儲存此設定。已還原至先前的值。"
+        }
+    },
+    "ui": {
+        "skipToContent": "跳轉至內容",
+        "loading": "正在載入…",
+        "setupProgress": "安裝進度",
+        "stepNavigation": "安裝導覽",
+        "settingsNavigation": "設定導覽",
+        "openNavigation": "開啟導覽選單",
+        "closeNavigation": "關閉導覽選單",
+        "saveError": "無法儲存。請重試。",
+        "retry": "重試",
+        "loadError": "無法載入設定。請重新載入此頁面。"
+    },
+    "settingsHome": {
+        "title": "讓 Floorp 成為你想要的樣子",
+        "description": "根據瀏覽習慣來調整外觀與控制方式。",
+        "open": "探索設定",
+        "manage": "管理你的瀏覽器",
+        "descriptions": {
+            "tabAndAppearance": "調整主題與分頁外觀",
+            "workspaces": "在工作與個人分頁之間切換",
+            "browserSidebar": "在你的網頁旁開啟另一個網站",
+            "mouseGesture": "將動作指派給滑鼠手勢",
+            "keyboardShortcuts": "將動作指派給快捷鍵",
+            "performance": "調整記憶體使用量"
+        },
+        "resources": {
+            "privacy": "關於隱私",
+            "extensions": "擴充套件管理",
+            "help": "取得幫助"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "外觀與行為",
+        "reset": "重置工作空間",
+        "help": "如何使用"
     }
 }

@@ -8,13 +8,24 @@ import {
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 import { CommandPaletteController } from "../controller.ts";
-import type { PaletteCommand, CommandStep } from "#features-chrome/common/command-palette/types.ts";
+import type {
+  BookmarkItem,
+  CommandStep,
+  PaletteCommand,
+  PlacesUtilsModule,
+} from "#features-chrome/common/command-palette/types.ts";
 import {
   getCommand,
   getPaletteCommands,
   isTabCommand,
 } from "#features-chrome/common/command-palette/command-registry.ts";
-import { setShortcuts } from "#features-chrome/common/command-palette/config.ts";
+import {
+  COMMAND_PALETTE_FREQUENCY_PREF,
+  COMMAND_PALETTE_RECENT_PREF,
+  getFrequencies,
+  getRecentCommands,
+  setShortcuts,
+} from "#features-chrome/common/command-palette/config.ts";
 import { getTabCommands } from "#features-chrome/common/command-palette/tab-provider.ts";
 
 function makeStepCommand(
@@ -157,18 +168,29 @@ interface ShortcutsPrefSnapshot {
 }
 
 function snapshotShortcutsPref(): ShortcutsPrefSnapshot {
-  const hadUserValue = Services.prefs.prefHasUserValue(SHORTCUTS_PREF);
+  return snapshotStringPref(SHORTCUTS_PREF);
+}
+
+function snapshotStringPref(pref: string): ShortcutsPrefSnapshot {
+  const hadUserValue = Services.prefs.prefHasUserValue(pref);
   return {
     hadUserValue,
-    value: hadUserValue ? Services.prefs.getStringPref(SHORTCUTS_PREF) : null,
+    value: hadUserValue ? Services.prefs.getStringPref(pref) : null,
   };
 }
 
 function restoreShortcutsPref(snapshot: ShortcutsPrefSnapshot): void {
+  restoreStringPref(SHORTCUTS_PREF, snapshot);
+}
+
+function restoreStringPref(
+  pref: string,
+  snapshot: ShortcutsPrefSnapshot,
+): void {
   if (snapshot.hadUserValue && snapshot.value !== null) {
-    Services.prefs.setStringPref(SHORTCUTS_PREF, snapshot.value);
-  } else if (Services.prefs.prefHasUserValue(SHORTCUTS_PREF)) {
-    Services.prefs.clearUserPref(SHORTCUTS_PREF);
+    Services.prefs.setStringPref(pref, snapshot.value);
+  } else if (Services.prefs.prefHasUserValue(pref)) {
+    Services.prefs.clearUserPref(pref);
   }
 }
 
@@ -194,6 +216,157 @@ function userShortcutRows(commands: PaletteCommand[]): PaletteCommand[] {
 }
 
 const shortcutTests: TestCase[] = [
+  ...["@", "@we", "@web"].map((query): TestCase => ({
+    name:
+      `${query} web-search alias collects and forwards input steps with real-command usage`,
+    async fn() {
+      const command = getCommand("floorp-search-web", window);
+      assert(command?.steps, "web search must be registered with input steps");
+      const engineStep = command.steps.find((step) => step.id === "engine");
+      assert(engineStep, "web search must provide the engine step");
+      const originalFn = command.fn;
+      const originalLoader = engineStep.choicesLoader;
+      const snapshots = [
+        SHORTCUTS_PREF,
+        COMMAND_PALETTE_RECENT_PREF,
+        COMMAND_PALETTE_FREQUENCY_PREF,
+      ].map((pref) => ({ pref, snapshot: snapshotStringPref(pref) }));
+      const executions: { win: Window; args?: Record<string, string> }[] = [];
+      let loaderQuery: string | undefined;
+      let ctrl: CommandPaletteController | undefined;
+      try {
+        // Stub only the final action and engine service; keep the registered
+        // command's real steps, validators, choices and registry lookup.
+        command.fn = (win, args) => executions.push({ win, args });
+        engineStep.choicesLoader = (_win, args) => {
+          loaderQuery = args?.query;
+          return Promise.resolve([{
+            label: "Test engine",
+            value: "test-engine",
+          }]);
+        };
+        Services.prefs.setStringPref(COMMAND_PALETTE_RECENT_PREF, "[]");
+        Services.prefs.setStringPref(COMMAND_PALETTE_FREQUENCY_PREF, "{}");
+        setShortcuts([{ prefix: "web", commandId: command.id }]);
+        ctrl = createController();
+        ctrl.updateSearch(query);
+        await flushDebounce();
+        const alias = userShortcutRows(ctrl.state.filteredCommands()).find(
+          (row) => row.id === "__shortcut:web:floorp-search-web",
+        );
+        assert(alias, "the real web-search target should produce an alias row");
+        ctrl.executeCommand(alias);
+        assertEquals(
+          ctrl.state.mode(),
+          "input",
+          "alias should enter input mode",
+        );
+        assertEquals(
+          executions.length,
+          0,
+          "selecting the alias must not execute early",
+        );
+        assertEquals(
+          getFrequencies()[command.id],
+          undefined,
+          "input entry must not count as usage",
+        );
+
+        ctrl.advanceStep();
+        assert(
+          ctrl.state.stepError(),
+          "the original empty-query validator must run",
+        );
+        assertEquals(
+          ctrl.state.currentStepIndex(),
+          0,
+          "invalid query must stay on its step",
+        );
+        ctrl.updateSearch("floorp shortcut regression");
+        ctrl.advanceStep();
+        await Promise.resolve();
+        assertEquals(
+          loaderQuery,
+          "floorp shortcut regression",
+          "loader must receive saved input",
+        );
+        assertEquals(
+          ctrl.state.currentStepIndex(),
+          1,
+          "query should advance to engine selection",
+        );
+        ctrl.advanceStep();
+        assertEquals(
+          ctrl.state.currentStepIndex(),
+          2,
+          "engine should advance to destination selection",
+        );
+        const destinationIndex = ctrl.state.filteredStepChoices().findIndex(
+          (choice) => choice.value === "background-tab",
+        );
+        assert(
+          destinationIndex >= 0,
+          "original destination choices must remain available",
+        );
+        ctrl.state.setSelectedChoiceIndex(destinationIndex);
+        ctrl.advanceStep();
+
+        assertEquals(
+          executions.length,
+          1,
+          "completed alias should execute the registered target once",
+        );
+        assertEquals(
+          executions[0].win,
+          window,
+          "target window must be forwarded",
+        );
+        assertEquals(
+          executions[0].args?.query,
+          "floorp shortcut regression",
+          "search terms must be forwarded",
+        );
+        assertEquals(
+          executions[0].args?.engine,
+          "test-engine",
+          "selected engine must be forwarded",
+        );
+        assertEquals(
+          executions[0].args?.where,
+          "background-tab",
+          "selected destination must be forwarded",
+        );
+        assertEquals(
+          getFrequencies()[command.id],
+          1,
+          "real command should be counted exactly once",
+        );
+        assertEquals(
+          getFrequencies()[alias.id],
+          undefined,
+          "alias id must not be counted",
+        );
+        assertEquals(
+          getRecentCommands().length,
+          1,
+          "only one recent command should be recorded",
+        );
+        assertEquals(
+          getRecentCommands()[0],
+          command.id,
+          "recency must use the registered command id",
+        );
+      } finally {
+        ctrl?.destroy();
+        command.fn = originalFn;
+        engineStep.choicesLoader = originalLoader;
+        for (const { pref, snapshot } of snapshots) {
+          restoreStringPref(pref, snapshot);
+        }
+      }
+    },
+  })),
+
   // --- "@" alone lists every shortcut in declaration order ---
   {
     name: "@ alone lists all shortcuts in declaration order",
@@ -558,7 +731,9 @@ const shortcutTests: TestCase[] = [
         assert(rows.length >= 1, "should have at least 1 shortcut row");
         assert(
           !rows[0].id.endsWith(":args"),
-          `id "${rows[0].id}" should NOT have :args suffix for non-step command`,
+          `id "${
+            rows[0].id
+          }" should NOT have :args suffix for non-step command`,
         );
       } finally {
         restoreShortcutsPref(shortcutsPrefSnapshot);
@@ -679,7 +854,8 @@ const shortcutTests: TestCase[] = [
   // starts with "s" (e.g. "@st") remain visible below the reserved row while
   // the user keeps typing to narrow the list (fzf-style).
   {
-    name: "@s alone lists user shortcuts starting with @s (e.g. @st) below __reserved:s",
+    name:
+      "@s alone lists user shortcuts starting with @s (e.g. @st) below __reserved:s",
     async fn() {
       if (!getCommand("floorp-search-web", window)) {
         return; // floorp-search-web not registered in this environment — skip
@@ -782,7 +958,8 @@ const tabSearchTests: TestCase[] = [
   // starting with "@t") so typing continues to narrow the list. "@t "
   // (trailing space) or "@t <query>" commits to the tab list below.
   {
-    name: "@t alone (no trailing space) shows only the reserved __reserved:t row",
+    name:
+      "@t alone (no trailing space) shows only the reserved __reserved:t row",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([]);
@@ -1085,7 +1262,8 @@ const tabSearchTests: TestCase[] = [
 const reservedListTests: TestCase[] = [
   // --- "@" alone shows the reserved rows even with an empty shortcuts pref ---
   {
-    name: "@ alone lists reserved rows (__reserved:s/__reserved:t) with empty pref",
+    name:
+      "@ alone lists reserved rows (__reserved:s/__reserved:t) with empty pref",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([]);
@@ -1275,7 +1453,8 @@ const reservedListTests: TestCase[] = [
 
   // --- Selecting __reserved:t transitions into @t tab mode without hiding the palette ---
   {
-    name: "executing __reserved:t transitions to @t tab mode (palette stays open)",
+    name:
+      "executing __reserved:t transitions to @t tab mode (palette stays open)",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       const expectedTabs = getTabCommands(window);
@@ -1346,7 +1525,8 @@ const reservedListTests: TestCase[] = [
   // whether the UI is mounted. The inserted input is removed in `finally` so
   // the test leaves the document as it found it.
   {
-    name: "__reserved:s/__reserved:t mirror query into #command-palette-search input",
+    name:
+      "__reserved:s/__reserved:t mirror query into #command-palette-search input",
     async fn() {
       if (!getCommand("floorp-search-web", window)) {
         return; // floorp-search-web not registered in this environment — skip
@@ -1516,7 +1696,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
 
   // --- "@b " (trailing space) commits to async bookmark search ---
   {
-    name: "@b with a trailing space commits to async bookmark search (recent bookmarks)",
+    name:
+      "@b with a trailing space commits to async bookmark search (recent bookmarks)",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([]);
@@ -1587,7 +1768,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
 
   // --- "@h " (trailing space) commits to async history search ---
   {
-    name: "@h with a trailing space commits to async history search (recent visits)",
+    name:
+      "@h with a trailing space commits to async history search (recent visits)",
     async fn() {
       const shortcutsPrefSnapshot = snapshotShortcutsPref();
       setShortcuts([]);
@@ -1913,7 +2095,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
   // ~70ms of the 100ms timer), so a removed clear would always leak the
   // marker. The same marker pattern is used: title/url contain "foo" only.
   {
-    name: "@b <query> deleted back to @b clears the pending search (no stale leak)",
+    name:
+      "@b <query> deleted back to @b clears the pending search (no stale leak)",
     async fn() {
       const markerUrl = `https://stale-foo-${Date.now()}.example/`;
       const markerTitle = `cp-stale-foo-${Date.now()}`;
@@ -1958,7 +2141,9 @@ const bookmarkHistorySearchTests: TestCase[] = [
         await flushDebounce();
         await flushAsyncSearch();
         assert(
-          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          ctrl.state.filteredCommands().some((c) =>
+            c.description === markerUrl
+          ),
           `"@b foo" should surface the marker bookmark (${markerUrl})`,
         );
         // Phase B: re-arm the committed search, then delete back to "@b"
@@ -2020,7 +2205,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
   // above: flushDebounce leaves the armed timer un-fired (~70ms remaining),
   // and the marker's title/url contain ONLY the first query's term ("foo").
   {
-    name: "@b <query> replaced by @t x clears the pending search (no stale leak into the tab list)",
+    name:
+      "@b <query> replaced by @t x clears the pending search (no stale leak into the tab list)",
     async fn() {
       const markerUrl = `https://stale-foo-${Date.now()}.example/`;
       const markerTitle = `cp-stale-foo-${Date.now()}`;
@@ -2065,7 +2251,9 @@ const bookmarkHistorySearchTests: TestCase[] = [
         await flushDebounce();
         await flushAsyncSearch();
         assert(
-          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          ctrl.state.filteredCommands().some((c) =>
+            c.description === markerUrl
+          ),
           `"@b foo" should surface the marker bookmark (${markerUrl})`,
         );
         // Phase B: re-arm the committed search, then replace the whole query
@@ -2109,7 +2297,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
   },
 
   {
-    name: "@b <query> replaced by @s x clears the pending search (no stale leak into the web-search list)",
+    name:
+      "@b <query> replaced by @s x clears the pending search (no stale leak into the web-search list)",
     async fn() {
       const markerUrl = `https://stale-foo-${Date.now()}.example/`;
       const markerTitle = `cp-stale-foo-${Date.now()}`;
@@ -2152,7 +2341,9 @@ const bookmarkHistorySearchTests: TestCase[] = [
         await flushDebounce();
         await flushAsyncSearch();
         assert(
-          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          ctrl.state.filteredCommands().some((c) =>
+            c.description === markerUrl
+          ),
           `"@b foo" should surface the marker bookmark (${markerUrl})`,
         );
         // Phase B: re-arm the committed search, then replace the whole query
@@ -2278,6 +2469,113 @@ const bookmarkHistorySearchTests: TestCase[] = [
     },
   },
 
+  ...[false, true].map((reopen): TestCase => ({
+    name: reopen
+      ? "reopening the same bookmark query ignores the previous lifecycle's deferred result"
+      : "bookmark query A then B then A ignores the first A's deferred result",
+    async fn() {
+      const { PlacesUtils } = ChromeUtils.importESModule(
+        "resource://gre/modules/PlacesUtils.sys.mjs",
+      ) as PlacesUtilsModule;
+      // Resolve the lazy getter before snapshotting its descriptor. Gecko's
+      // Bookmarks API object is frozen, so its search method cannot be assigned.
+      const originalBookmarks = PlacesUtils.bookmarks;
+      const bookmarksDescriptor = Object.getOwnPropertyDescriptor(
+        PlacesUtils,
+        "bookmarks",
+      );
+      assert(
+        bookmarksDescriptor?.configurable,
+        "PlacesUtils.bookmarks must support a temporary test facade",
+      );
+      const stale = createDeferred<BookmarkItem[]>();
+      const current = createDeferred<BookmarkItem[]>();
+      const query = "palette-generation-regression";
+      let searchCount = 0;
+      const ctrl = createController();
+      ctrl.state.setIsVisible(true);
+      const bookmark = (name: string): BookmarkItem => ({
+        guid: name,
+        title: `${query} ${name}`,
+        url: `https://${name}.example/`,
+        type: originalBookmarks.TYPE_BOOKMARK,
+        parentGuid: "unfiled_____",
+        dateAdded: null,
+        lastModified: null,
+      });
+      try {
+        const bookmarksFacade = Object.create(originalBookmarks, {
+          search: {
+            value: (term: string): Promise<BookmarkItem[]> => {
+              if (term !== query) return originalBookmarks.search(term);
+              searchCount++;
+              return searchCount === 1 ? stale.promise : current.promise;
+            },
+          },
+        });
+        Object.defineProperty(PlacesUtils, "bookmarks", {
+          value: bookmarksFacade,
+          configurable: true,
+          enumerable: bookmarksDescriptor.enumerable,
+          writable: true,
+        });
+        ctrl.updateSearch(`@b ${query}`);
+        await flushDebounce();
+        await sleep(150);
+        assertEquals(
+          searchCount,
+          1,
+          "first lookup must be in flight before hiding",
+        );
+        if (reopen) {
+          ctrl.hidePalette();
+          ctrl.state.setIsVisible(true);
+        } else {
+          ctrl.updateSearch("@t ");
+          await flushDebounce();
+        }
+        ctrl.updateSearch(`@b ${query}`);
+        await flushDebounce();
+        await sleep(150);
+        assertEquals(
+          searchCount,
+          2,
+          "returning to the same query must start a new lookup",
+        );
+
+        stale.resolve([bookmark("stale")]);
+        await sleep(0);
+        assertEquals(
+          ctrl.state.filteredCommands().filter((row) =>
+            row.category === "bookmark-suggestions"
+          ).length,
+          0,
+          "the previous same-query lookup must not be appended",
+        );
+        current.resolve([bookmark("current")]);
+        await sleep(0);
+        const suggestions = ctrl.state.filteredCommands().filter(
+          (row) => row.category === "bookmark-suggestions",
+        );
+        assertEquals(
+          suggestions.length,
+          1,
+          "current lookup should still apply exactly once",
+        );
+        assertEquals(
+          suggestions[0].description,
+          "https://current.example/",
+          "only the current lookup's result should be visible",
+        );
+      } finally {
+        ctrl.destroy();
+        stale.resolve([]);
+        current.resolve([]);
+        Object.defineProperty(PlacesUtils, "bookmarks", bookmarksDescriptor);
+      }
+    },
+  })),
+
   // --- hide/reopen while the deferred @b/@h Places lookup is in flight ---
   //
   // hidePalette() resets currentSearchQuery to "" AND clears the pending
@@ -2294,7 +2592,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
   // Without the `currentSearchQuery = ""` reset the re-typed query string
   // would still match and the stale marker would leak into the reopened list.
   {
-    name: "hidePalette while the @b Places lookup is in flight drops the stale result",
+    name:
+      "hidePalette while the @b Places lookup is in flight drops the stale result",
     async fn() {
       const markerUrl = `https://stalemarker-${Date.now()}.example/`;
       const markerTitle = `cp-stalemarker-${Date.now()}`;
@@ -2338,7 +2637,9 @@ const bookmarkHistorySearchTests: TestCase[] = [
         await flushDebounce();
         await flushAsyncSearch();
         assert(
-          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          ctrl.state.filteredCommands().some((c) =>
+            c.description === markerUrl
+          ),
           `"@b stalemarker" should surface the marker bookmark (${markerUrl})`,
         );
         // Phase B: re-arm the committed search, then wait past the 100ms
@@ -2378,7 +2679,8 @@ const bookmarkHistorySearchTests: TestCase[] = [
     },
   },
   {
-    name: "hidePalette while the @h Places lookup is in flight drops the stale result",
+    name:
+      "hidePalette while the @h Places lookup is in flight drops the stale result",
     async fn() {
       const markerUrl = `https://stalemarker-${Date.now()}.example/`;
       const mod = ChromeUtils.importESModule(
@@ -2415,7 +2717,9 @@ const bookmarkHistorySearchTests: TestCase[] = [
         await flushDebounce();
         await flushAsyncSearch();
         assert(
-          ctrl.state.filteredCommands().some((c) => c.description === markerUrl),
+          ctrl.state.filteredCommands().some((c) =>
+            c.description === markerUrl
+          ),
           `"@h stalemarker" should surface the marker visit (${markerUrl})`,
         );
         // Phase B: re-arm, wait past the 200ms history search timer so the
@@ -2497,7 +2801,11 @@ const rawTests: TestCase[] = [
       assertEquals(ctrl.state.currentStepIndex(), 0, "step index should be 0");
       // assertEquals compares objects by reference, so assert emptiness
       // structurally instead of against a fresh `{}`.
-      assertEquals(Object.keys(ctrl.state.stepInputs()).length, 0, "step inputs should be empty");
+      assertEquals(
+        Object.keys(ctrl.state.stepInputs()).length,
+        0,
+        "step inputs should be empty",
+      );
       assertEquals(ctrl.state.stepError(), null, "step error should be null");
     },
   },
@@ -2887,8 +3195,16 @@ const rawTests: TestCase[] = [
       ctrl.updateSearch("alp");
       // Non-empty queries are debounced; flush before asserting the filter.
       await flushDebounce();
-      assertEquals(ctrl.state.filteredStepChoices().length, 1, "should filter to 1 choice");
-      assertEquals(ctrl.state.filteredStepChoices()[0].value, "a", "filtered choice should be Alpha");
+      assertEquals(
+        ctrl.state.filteredStepChoices().length,
+        1,
+        "should filter to 1 choice",
+      );
+      assertEquals(
+        ctrl.state.filteredStepChoices()[0].value,
+        "a",
+        "filtered choice should be Alpha",
+      );
     },
   },
   {
@@ -2899,7 +3215,11 @@ const rawTests: TestCase[] = [
       ctrl.updateSearch("alp");
       // Non-empty queries are debounced; flush before asserting the filter.
       await flushDebounce();
-      assertEquals(ctrl.state.filteredStepChoices().length, 1, "should be filtered");
+      assertEquals(
+        ctrl.state.filteredStepChoices().length,
+        1,
+        "should be filtered",
+      );
       ctrl.updateSearch("");
       assertEquals(
         ctrl.state.filteredStepChoices().length,

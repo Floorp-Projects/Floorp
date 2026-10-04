@@ -1,146 +1,119 @@
 import { rpc } from "@/lib/rpc/rpc.ts";
 import type { DesignFormData } from "@/types/pref.ts";
+import {
+  CHROME_EXTRAS_DEFAULTS,
+  type ChromeExtrasKey,
+  type ChromeExtrasSettings,
+} from "#features-chrome/common/designs/chrome-extras.ts";
 
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
 const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
 
-// Lepton Settings Interface
-export interface LeptonFormData {
-  // Auto-hide settings
-  autohideTab: boolean;
-  autohideNavbar: boolean;
-  autohideSidebar: boolean;
-  autohideBackButton: boolean;
-  autohideForwardButton: boolean;
-  autohidePageAction: boolean;
+/** The single pref every design setting lives in. */
+const DESIGN_CONFIGS_PREF = "floorp.design.configs";
 
-  // Hide settings
-  hiddenTabIcon: boolean;
-  hiddenTabbar: boolean;
-  hiddenNavbar: boolean;
-  hiddenSidebarHeader: boolean;
-  hiddenUrlbarIconbox: boolean;
-  hiddenBookmarkbarIcon: boolean;
-  hiddenBookmarkbarLabel: boolean;
-  hiddenDisabledMenu: boolean;
+/**
+ * The 25 chrome-extras toggles ("UI 拡張設定").
+ *
+ * These used to be stored as individual `userChrome.*` bool prefs, which is why
+ * they only worked on the Lepton-family designs. They now live in
+ * `floorp.design.configs` → `uiCustomization.chromeExtras`, so `style-manager.ts`
+ * can apply them on every design. `getOldChromeExtrasConfig()` seeds this from
+ * the old prefs on the first run after the upgrade.
+ */
+const CHROME_EXTRAS_KEYS = Object.keys(
+  CHROME_EXTRAS_DEFAULTS,
+) as ChromeExtrasKey[];
 
-  // Icon settings
-  iconDisabled: boolean;
-  iconMenu: boolean;
-
-  // Centered settings
-  centeredTab: boolean;
-  centeredUrlbar: boolean;
-  centeredBookmarkbar: boolean;
-
-  // URL View settings
-  urlViewMoveIconToLeft: boolean;
-  urlViewGoButtonWhenTyping: boolean;
-  urlViewAlwaysShowPageActions: boolean;
-
-  // Tab Bar settings
-  tabbarAsTitlebar: boolean;
-  tabbarOneLiner: boolean;
-
-  // Sidebar settings
-  sidebarOverlap: boolean;
-}
-
-// Lepton preference keys mapping
-const LEPTON_PREFS = {
-  autohideTab: "userChrome.autohide.tab",
-  autohideNavbar: "userChrome.autohide.navbar",
-  autohideSidebar: "userChrome.autohide.sidebar",
-  autohideBackButton: "userChrome.autohide.back_button",
-  autohideForwardButton: "userChrome.autohide.forward_button",
-  autohidePageAction: "userChrome.autohide.page_action",
-  hiddenTabIcon: "userChrome.hidden.tab_icon",
-  hiddenTabbar: "userChrome.hidden.tabbar",
-  hiddenNavbar: "userChrome.hidden.navbar",
-  hiddenSidebarHeader: "userChrome.hidden.sidebar_header",
-  hiddenUrlbarIconbox: "userChrome.hidden.urlbar_iconbox",
-  hiddenBookmarkbarIcon: "userChrome.hidden.bookmarkbar_icon",
-  hiddenBookmarkbarLabel: "userChrome.hidden.bookmarkbar_label",
-  hiddenDisabledMenu: "userChrome.hidden.disabled_menu",
-  iconDisabled: "userChrome.icon.disabled",
-  iconMenu: "userChrome.icon.menu",
-  centeredTab: "userChrome.centered.tab",
-  centeredUrlbar: "userChrome.centered.urlbar",
-  centeredBookmarkbar: "userChrome.centered.bookmarkbar",
-  urlViewMoveIconToLeft: "userChrome.urlView.move_icon_to_left",
-  urlViewGoButtonWhenTyping: "userChrome.urlView.go_button_when_typing",
-  urlViewAlwaysShowPageActions: "userChrome.urlView.always_show_page_actions",
-  tabbarAsTitlebar: "userChrome.tabbar.as_titlebar",
-  tabbarOneLiner: "userChrome.tabbar.one_liner",
-  sidebarOverlap: "userChrome.sidebar.overlap",
-} as const;
-
-export async function saveLeptonSettings(
-  settings: LeptonFormData,
-): Promise<void> {
-  const promises = Object.entries(settings).map(([key, value]) => {
-    const prefKey = LEPTON_PREFS[key as keyof LeptonFormData];
-    if (prefKey) {
-      return rpc.setBoolPref(prefKey, value);
-    }
-    return Promise.resolve();
-  });
-
-  await Promise.all(promises);
-}
-
-export async function getLeptonSettings(): Promise<LeptonFormData> {
-  const defaultSettings: LeptonFormData = {
-    autohideTab: false,
-    autohideNavbar: false,
-    autohideSidebar: false,
-    autohideBackButton: false,
-    autohideForwardButton: false,
-    autohidePageAction: false,
-    hiddenTabIcon: false,
-    hiddenTabbar: false,
-    hiddenNavbar: false,
-    hiddenSidebarHeader: false,
-    hiddenUrlbarIconbox: false,
-    hiddenBookmarkbarIcon: false,
-    hiddenBookmarkbarLabel: false,
-    hiddenDisabledMenu: false,
-    iconDisabled: false,
-    iconMenu: false,
-    centeredTab: false,
-    centeredUrlbar: false,
-    centeredBookmarkbar: false,
-    urlViewMoveIconToLeft: false,
-    urlViewGoButtonWhenTyping: false,
-    urlViewAlwaysShowPageActions: false,
-    tabbarAsTitlebar: false,
-    tabbarOneLiner: false,
-    sidebarOverlap: false,
+type StoredConfig = {
+  uiCustomization?: {
+    chromeExtras?: Partial<Record<ChromeExtrasKey, unknown>>;
   };
+};
 
-  const results = await Promise.all(
-    Object.entries(LEPTON_PREFS).map(async ([key, prefKey]) => {
-      const value = await rpc.getBoolPref(prefKey);
-      return [key, value ?? defaultSettings[key as keyof LeptonFormData]] as [
-        string,
-        boolean,
-      ];
-    }),
-  );
+let designConfigWriteQueue: Promise<unknown> = Promise.resolve();
 
-  const settings: LeptonFormData = { ...defaultSettings };
-  results.forEach(([key, value]) => {
-    settings[key as keyof LeptonFormData] = value;
+function queueDesignConfigWrite<T>(write: () => Promise<T>): Promise<T> {
+  const pending = designConfigWriteQueue.then(write, write);
+  designConfigWriteQueue = pending.catch(() => undefined);
+  return pending;
+}
+
+async function readDesignConfigs(): Promise<StoredConfig | null> {
+  const raw = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+  if (!raw) {
+    return null;
+  }
+  const parsed: unknown = JSON.parse(raw);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("[ChromeExtras] Invalid design configs");
+  }
+  return parsed as StoredConfig;
+}
+
+/**
+ * Read the chrome-extras toggles, filling in the defaults for anything the
+ * stored config does not have.
+ */
+export async function getChromeExtras(): Promise<ChromeExtrasSettings> {
+  await designConfigWriteQueue;
+  const config = await readDesignConfigs();
+  if (!config) {
+    throw new Error("[ChromeExtras] Design configs are unavailable");
+  }
+  const stored = config.uiCustomization?.chromeExtras;
+  const result: ChromeExtrasSettings = { ...CHROME_EXTRAS_DEFAULTS };
+  if (stored) {
+    for (const key of CHROME_EXTRAS_KEYS) {
+      const value = stored[key];
+      if (typeof value === "boolean") {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Merge the chrome-extras toggles back into `floorp.design.configs`.
+ *
+ * A read-modify-write of just this category: the rest of the design config is
+ * owned by `saveDesignSettings()` below, which spreads `oldData.uiCustomization`
+ * and therefore preserves `chromeExtras` untouched.
+ */
+export function saveChromeExtras(
+  settings: ChromeExtrasSettings,
+): Promise<void> {
+  return queueDesignConfigWrite(async () => {
+    const config = await readDesignConfigs();
+    if (!config) {
+      throw new Error("[ChromeExtras] Design configs are unavailable");
+    }
+    const newData = {
+      ...config,
+      uiCustomization: {
+        ...config.uiCustomization,
+        chromeExtras: { ...CHROME_EXTRAS_DEFAULTS, ...settings },
+      },
+    };
+    await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
   });
-
-  return settings;
 }
 
 interface SaveDesignSettingsOptions {
   hasTabStyleChanged?: boolean;
 }
 
-export async function saveDesignSettings(
+export function saveDesignSettings(
+  settings: DesignFormData,
+  options: SaveDesignSettingsOptions = {},
+): Promise<null | void> {
+  return queueDesignConfigWrite(() =>
+    saveDesignSettingsUnqueued(settings, options)
+  );
+}
+
+async function saveDesignSettingsUnqueued(
   settings: DesignFormData,
   options: SaveDesignSettingsOptions = {},
 ): Promise<null | void> {
@@ -148,7 +121,7 @@ export async function saveDesignSettings(
     return;
   }
 
-  const result = await rpc.getStringPref("floorp.design.configs");
+  const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
   if (!result) {
     return null;
   }
@@ -183,37 +156,44 @@ export async function saveDesignSettings(
       tabMinHeight: settings.tabMinHeight,
       tabMinWidth: settings.tabMinWidth,
       tabPinTitle: settings.tabPinTitle,
-      tabDubleClickToClose: settings.tabDubleClickToClose,
+      tabDoubleClickToClose: settings.tabDoubleClickToClose,
     },
     uiCustomization: {
       ...oldData.uiCustomization,
       navbar: {
+        ...oldData.uiCustomization.navbar,
         position: settings.navbarPosition,
         searchBarTop: settings.searchBarTop,
       },
       display: {
+        ...oldData.uiCustomization.display,
         disableFullscreenNotification: settings.disableFullscreenNotification,
         deleteBrowserBorder: settings.deleteBrowserBorder,
       },
       special: {
+        ...oldData.uiCustomization.special,
         optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
         hideForwardBackwardButton: settings.hideForwardBackwardButton,
         stgLikeWorkspaces: settings.stgLikeWorkspaces,
       },
       multirowTab: {
+        ...oldData.uiCustomization.multirowTab,
         newtabInsideEnabled: settings.multirowTabNewtabInside,
       },
       bookmarkBar: {
+        ...oldData.uiCustomization.bookmarkBar,
         focusExpand: settings.bookmarkBarFocusExpand,
         position: settings.bookmarkBarPosition,
       },
       qrCode: {
+        ...oldData.uiCustomization.qrCode,
         disableButton: settings.disableQRCodeButton,
       },
       disableFloorpStart: settings.disableFloorpStart,
     },
   };
-  rpc.setStringPref("floorp.design.configs", JSON.stringify(newData));
+  delete newData.tab.tabDubleClickToClose;
+  await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
   await rpc.setBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
     settings.tabDragToSplitCreate,
@@ -232,7 +212,8 @@ export async function saveDesignSettings(
 }
 
 export async function getDesignSettings(): Promise<DesignFormData | null> {
-  const result = await rpc.getStringPref("floorp.design.configs");
+  await designConfigWriteQueue;
+  const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
   if (!result) {
     return null;
   }
@@ -252,7 +233,9 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
       DEFAULT_SPLIT_VIEW_DND_CREATE,
     tabScrollReverse: data.tab.tabScroll.reverse,
     tabScrollWrap: data.tab.tabScroll.wrap,
-    tabDubleClickToClose: data.tab.tabDubleClickToClose,
+    tabDoubleClickToClose: typeof data.tab.tabDoubleClickToClose === "boolean"
+      ? data.tab.tabDoubleClickToClose
+      : data.tab.tabDubleClickToClose === true,
     tabScroll: data.tab.tabScroll.enabled,
     faviconColor: data.globalConfigs.faviconColor,
     maxRowEnabled: data.tabbar.multiRowTabBar.maxRowEnabled,

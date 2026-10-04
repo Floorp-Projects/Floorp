@@ -1,8 +1,97 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+@import "../../../libs/ui/page.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.floorp-standard-ui {
+  --floorp-canvas: var(--chakra-colors-bg);
+  --floorp-subtle: var(--chakra-colors-bg-muted);
+  --floorp-surface: var(--chakra-colors-bg-panel);
+  --floorp-ink: var(--chakra-colors-fg);
+  --floorp-muted: var(--chakra-colors-fg-muted);
+  --floorp-line: var(--chakra-colors-border);
+  --floorp-control-border: var(--chakra-colors-border-emphasized);
+  --floorp-action: var(--chakra-colors-purple-fg);
+  --floorp-brand: var(--chakra-colors-purple-solid);
+  --floorp-focus: var(--chakra-colors-purple-focus-ring);
+  --global-font-body: var(--floorp-font);
+  --global-color-border: var(--chakra-colors-border);
+  color: var(--floorp-ink);
+  line-height: 1.5;
+}
+.floorp-settings-body.floorp-standard-ui {
+  background: var(--floorp-canvas);
+}
+.floorp-standard-ui .floorp-page-heading {
+  font-size: 28px;
+  font-weight: 700;
+}
+.floorp-standard-ui .floorp-page-description {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.floorp-settings-body {
+  --settings-gutter: clamp(40px,3vw,64px);
+}
+.floorp-settings-main {
+  max-inline-size: calc(1280px + 2 * var(--settings-gutter));
+  margin-inline: 0;
+  padding: 20px var(--settings-gutter) 56px;
+}
+.floorp-settings-header {
+  padding: 28px var(--settings-gutter);
+  border-block-end: 0;
+}
+.floorp-settings-header > :last-child {
+  inline-size: min(100%,600px);
+  max-inline-size: 600px;
+  margin-inline: 0;
+  min-inline-size: 0;
+}
+@media (max-width:1100px) {
+  .floorp-settings-body {
+    --settings-gutter: 32px;
+  }
+  .floorp-settings-header {
+    padding-block: 24px 16px;
+  }
+  .floorp-settings-main {
+    padding-block-start: 16px;
+  }
+}
+@media (max-width:600px) {
+  .floorp-settings-body {
+    --settings-gutter: 20px;
+  }
+  .floorp-settings-header {
+    gap: 8px;
+  }
 }
 
 @theme {
-  --link-text-color: #007aff;
+  --link-text-color: var(--floorp-action);
+}
+
+@theme inline {
+  --color-background: var(--floorp-canvas);
+  --color-foreground: var(--floorp-ink);
+  --color-muted: var(--floorp-subtle);
+  --color-muted-foreground: var(--floorp-muted);
+  --color-border: var(--floorp-line);
+  --color-input: var(--floorp-line);
+  --color-ring: var(--floorp-focus);
+  --color-destructive: var(--floorp-danger);
+  --color-base-100: var(--floorp-canvas);
+  --color-base-200: var(--floorp-subtle);
+  --color-base-300: var(--floorp-line);
+  --color-base-content: var(--floorp-ink);
+  --color-primary: var(--floorp-action);
+  --color-primary-content: var(--floorp-on-purple);
+  --color-secondary: var(--floorp-action);
+  --color-secondary-content: var(--floorp-surface);
+  --color-accent: var(--floorp-action);
+  --color-error: var(--floorp-danger);
+  --color-warning: var(--floorp-warning);
+  --color-success: var(--floorp-success);
+  --color-info: var(--floorp-action);
 }

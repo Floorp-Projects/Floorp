@@ -33,8 +33,9 @@
         "updates": "更新と実験",
         "debug": "デバッグ",
         "mouseGesture": "マウスジェスチャー",
+        "contextMenu": "コンテキストメニュー",
         "keyboardShortcut": "キーボードショートカット",
-        "commandPalette": "コマンドパレット",
+        "performance": "パフォーマンス",
         "search": {
             "title": "検索の設定",
             "resultsFor": "[{{query}}] の検索結果",
@@ -43,7 +44,8 @@
             "open": "[{{title}}] を開く",
             "matchedText": "一致したテキスト",
             "results": "検索結果"
-        }
+        },
+        "commandPalette": "コマンドパレット"
     },
     "home": {
         "welcome": "ようこそ、 {{name}} さん 👋",
@@ -143,16 +145,13 @@
             "taskbarPreviewsDescription": "Windows のタスクバーの表示のみを変更します。追加のブラウザーウィンドウは作成されません。",
             "taskbarPreviewsUnavailable": "このオプションは Windows でのみ利用可能です。"
         },
-        "lepton-preferences": {
-            "title": "Lepton の設定",
-            "description": "Lepton テーマの高度な設定を変更します",
-            "configureLepton": "Lepton の設定",
+        "chrome-extras": {
+            "title": "UI 拡張設定",
+            "description": "現在選択されているデザインに追加の UI 調整を適用します",
             "back": "戻る",
             "experimentalWarning": {
                 "title": "⚠️ 実験的な機能",
-                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。",
-                "leptonRepository": "Lepton は Firefox 用の CSS テーマです。",
-                "visitRepository": "リポジトリのページを開く"
+                "description": "これらの設定は実験的なもので、公式にはサポートされていません。問題が発生する可能性があります。"
             },
             "autohide": {
                 "title": "自動非表示の設定",
@@ -176,8 +175,8 @@
             },
             "icon": {
                 "title": "アイコンの設定",
-                "disabled": "Lepton によるコンテキストメニューとパネルメニューのアイコン表示を無効にする",
-                "menu": "Lepton によるコンテキストメニューのアイコン表示を有効にする"
+                "disabled": "コンテキストメニューとパネルメニューのアイコン表示を無効にする",
+                "menu": "コンテキストメニューのアイコン表示を有効にする"
             },
             "centered": {
                 "title": "中央揃えの設定",
@@ -199,7 +198,8 @@
             "sidebar": {
                 "title": "サイドバーの設定",
                 "overlap": "サイドバーをウェブサイトに重ねて表示"
-            }
+            },
+            "configure": "UI 拡張設定を開く"
         },
         "tabSleepExclusion": {
             "title": "タブスリープの除外",
@@ -217,6 +217,7 @@
             "exampleFullUrl": "Gmail の URL のみに反応"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "タブスタックは垂直タブでは利用できません。設定内容は保持され、水平タブに変更した際に適用されます。",
             "title": "タブスタック",
             "description": "タブをスタックにまとめます。スタックはタブバー上のチップとして表示され、その下の 2 段目にスタックされたタブが並びます。",
             "enableOrDisable": "有効化/無効化",
@@ -330,6 +331,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "この設定とご支援についての詳細を読む",
+            "title": "更新後のリリースノート",
+            "description": "Floorp の更新後にリリースノートを開く方法を選択します。",
+            "disabled": {
+                "label": "自動で開かない",
+                "description": "更新後にリリースノートを開きません。ブログを閲覧する際は、お使いのブロッカーの設定が適用されます。"
+            },
+            "blocking": {
+                "label": "ブロッカーの設定を維持して開く",
+                "description": "お使いの拡張機能をそのままにリリースノートを開きます。広告ブロッカーを自動でインストールまたは有効化することはありません。"
+            },
+            "support": {
+                "label": "Floorp を支援するために、広告を許可して開く (おすすめ)",
+                "description": "uBlock Origin、AdGuard、Adblock Plus、AdBlock、Ghostery が、Floorp ブログをフィルタリングするのを防ぎます。"
+            },
+            "supportMessage": "リリースノートからの広告収入は、Floorpの開発と運営を支えています。皆様のご都合に沿った形でのご支援に、心より感謝申し上げます。",
+            "scope": "この制限は、手動で開いた場合を含む blog.floorp.app 上のすべての HTTPS ページに適用され、広告ブロックやトラッキング保護、カスタムフィルター機能に影響します。他の拡張機能はこの設定による制限を受けません。他の保護ツールによって広告がブロックされる場合があります。設定を変更した後は、開いているブログページを再読み込みしてください。",
+            "error": "設定の読み込み、または保存に失敗しました。このページを再度開いて、もう一度お試しください。"
+        },
         "title": "更新と実験",
         "description": "更新に関する設定と実験的な機能への参加を管理します。",
         "experiments": {
@@ -467,6 +488,8 @@
         "otherSettings": "その他の設定",
         "showToolbar": "ツールバーを表示",
         "showToolbarDescription": "プログレッシブウェブアプリのウィンドウにツールバーを表示します",
+        "keepRunningAfterBrowserQuit": "{{productName}} の終了後もウェブアプリを起動し続ける",
+        "keepRunningAfterBrowserQuitDescription": "ブラウザーのウィンドウを閉じても、実行中のウェブアプリは開いたままになります。無効にすると、ウェブアプリも一緒に終了します。ウェブアプリを終了すると、そのアプリのみが閉じられます。 {{productName}} を再起動するか、ログアウトすると、すべてのアプリが閉じられます。",
         "installedApps": "インストール済みのアプリ",
         "noInstalledApps": "プログレッシブウェブアプリがインストールされていません",
         "removeApp": "アプリを削除",
@@ -486,7 +509,10 @@
         "containerDeleted": "コンテナーが削除されました",
         "resetContainer": "リセット",
         "save": "保存",
-        "errorSettingContainer": "コンテナーの設定に失敗しました"
+        "errorRenaming": "このウェブアプリの名前を変更できませんでした。",
+        "errorUninstalling": "このウェブアプリをアンインストールできませんでした。",
+        "errorSettingContainer": "コンテナーの設定に失敗しました",
+        "nativeContainerFixed": "この macOS ウェブアプリは、インストール時に使用されていたコンテナーを維持します。現時点では後からコンテナーを変更できません。現在のログイン情報とサイトデータは保持されています。"
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -689,6 +715,92 @@
         "emptyPatternError": "ジェスチャーパターンを設定してください",
         "duplicatePatternError": "このジェスチャーパターンは既に存在します"
     },
+    "contextMenu": {
+        "description": "ブラウザーのコンテキストメニュー項目を並べ替えたり、非表示にしたりできます。ウェブサイトが独自に提供するメニューは変更しません。",
+        "general": "一般",
+        "generalDescription": "カスタムレイアウトを有効にするか、すべてのブラウザーメニューを初期状態に戻します。",
+        "enable": "カスタマイズしたコンテキストメニューを使用する",
+        "enableDescription": "対応するブラウザーメニューに、以下で設定したレイアウトを適用します。",
+        "resetAll": "すべてのコンテキストメニューをリセット",
+        "resetAllDescription": "保存された並び順、表示状態、独立プロファイルの設定をすべて削除します。",
+        "cancel": "キャンセル",
+        "confirmReset": "すべてリセット",
+        "saving": "コンテキストメニューの変更を保存しています…",
+        "saveError": "コンテキストメニューの変更を保存できませんでした。最後に保存されたレイアウトが引き続き使用されます。",
+        "saveConflict": "別の Floorp Hub ウィンドウで設定が変更されました。最新の保存内容を読み込み直したため、もう一度操作してください。",
+        "loadError": "保存済み設定の一部を読み込めませんでした。既存の設定を保護するため編集を無効にしています。ページを再読み込みして再試行してください。",
+        "invalidConfigError": "保存済みのコンテキストメニュー設定が破損しています。編集は無効ですが、「すべてリセット」で安全な初期設定へ置き換えられます。",
+        "unsupportedConfigError": "このコンテキストメニュー設定は新しいバージョンの Floorp で作成されています。設定を保護するため、編集とリセットを無効にしています。",
+        "repairConflict": "修復する前に保存済み設定が変更されました。Floorp Hub を再読み込みして最新の内容を確認してください。",
+        "loadingCatalog": "利用可能なブラウザーメニューを取得しています…",
+        "catalogUnavailable": "メニュー項目をまだ取得できません",
+        "catalogErrorDescription": "ブラウザーからコンテキストメニューの一覧を取得できませんでした。この機能の有効化と全設定のリセットは引き続き行えます。",
+        "catalogRefreshError": "コンテキストメニューの一覧を更新できませんでした。以前に読み込んだ一覧を引き続き表示しています。",
+        "emptyCatalogDescription": "対応するブラウザーのコンテキストメニューを一度開いてから、再試行してください。この機能の有効化と全設定のリセットは引き続き行えます。",
+        "retry": "再試行",
+        "refreshCatalog": "一覧を再取得",
+        "menuSelection": "メニューとコンテキスト",
+        "menuSelectionDescription": "編集するブラウザーメニューと、そのコンテキストのプロファイルを選択します。",
+        "surface": "ブラウザーメニュー",
+        "profile": "コンテキストプロファイル",
+        "container": "メニュー階層",
+        "noProfiles": "このメニューには編集可能なコンテキストがありません。",
+        "independentProfile": "このコンテキストで独立したレイアウトを使用する",
+        "independentProfileOnDescription": "変更はこのコンテキストプロファイルにのみ適用されます。",
+        "independentProfileOffDescription": "このコンテキストはブラウザーメニューの共通レイアウトを使用します。",
+        "resetProfile": "プロファイルをリセット",
+        "items": "メニュー項目",
+        "editingIndependent": "矢印ボタンまたは「移動先…」で項目を並べ替えられます。「現在の条件」ではドラッグも利用できます。表示スイッチは、このコンテキストで安全に非表示にできる項目だけに表示されます。",
+        "editingShared": "矢印ボタンまたは「移動先…」で項目を並べ替えられます。「現在の条件」ではドラッグも利用できます。表示スイッチは、共通レイアウトで安全に非表示にできる項目だけに表示されます。",
+        "incompleteContainer": "Firefox からこのメニューの一部だけが報告されました。報告されていない保存済み項目は変更せず保持します。",
+        "capabilityHelp": "「Firefox 側で条件付き」は、最後に確認した右クリック条件では Firefox が隠していた項目です。「すべての項目」では表示され、ほかの項目との並び順を設定できます。「並べ替え不可」の項目は元の位置に固定され、移動や移動先の指定はできません。",
+        "viewMode": "表示する項目",
+        "viewCurrent": "現在の条件",
+        "viewAll": "すべての項目",
+        "viewCurrentDescription": "最後に確認した右クリック条件で利用できる項目だけを表示します。この表示ではドラッグでも並べ替えられます。",
+        "viewAllDescription": "Firefox 側で条件付きの項目を含む、既知のすべての項目を表示し、項目の間へ正確に配置できます。",
+        "allModeDragHelp": "「すべての項目」ではドラッグできません。条件付き項目の間も含め、矢印ボタンまたは「移動先…」で正確に配置できます。",
+        "noCurrentItems": "現在の Firefox の条件で利用できるメニュー項目はありません。",
+        "searchItems": "メニュー項目を検索",
+        "noItems": "このメニュー階層には編集可能な項目がありません。",
+        "noMatchingItems": "検索に一致するメニュー項目はありません。",
+        "separator": "区切り線",
+        "nativeHidden": "Firefox 側で条件付き",
+        "notMovable": "並べ替え不可",
+        "separatorVisibilityAutomatic": "表示は自動",
+        "visibilityFixed": "表示固定",
+        "dragItem": "{{label}} をドラッグして並べ替え",
+        "cannotDragItem": "{{label}} の並び順は固定されています",
+        "moveItem": "{{label}} を移動",
+        "moveItemUp": "{{label}} を上へ移動",
+        "moveItemDown": "{{label}} を下へ移動",
+        "moveUp": "上へ移動",
+        "moveDown": "下へ移動",
+        "moveToDestination": "移動先…",
+        "moveDestinationFor": "{{label}} の移動先を選択",
+        "placementInstruction": "「{{label}}」を置く位置を選択してください。",
+        "cancelMove": "移動をキャンセル",
+        "moveBefore": "{{label}} の前へ移動",
+        "moveToEnd": "末尾へ移動",
+        "movedBefore": "「{{label}}」を「{{target}}」の前へ移動しました。",
+        "movedToEnd": "「{{label}}」を末尾へ移動しました。",
+        "openSubmenu": "{{label}} のサブメニューを編集",
+        "editSubmenu": "サブメニューを編集",
+        "itemVisibility": "{{label}} を表示",
+        "itemVisibilityUnavailable": "{{label}} の表示状態は変更できません",
+        "kind": {
+            "command": "コマンド",
+            "submenu": "サブメニュー",
+            "separator": "区切り線",
+            "group": "グループ"
+        },
+        "source": {
+            "firefox": "Firefox",
+            "floorp": "Floorp",
+            "extension": "拡張機能",
+            "unknown": "その他"
+        }
+    },
     "keyboardShortcut": {
         "description": "ブラウザーのさまざまな操作に使用するキーボードショートカットをカスタマイズします。",
         "basicSettings": "基本設定",
@@ -745,6 +857,56 @@
             "cancel": "キャンセル",
             "cancelDescription": "編集をキャンセル"
         }
+    },
+    "performance": {
+        "title": "パフォーマンス",
+        "description": "ブラウザーによるシステムリソースの使用方法に影響する設定を変更します。",
+        "idleReclaim": {
+            "title": "待機時のメモリー解放",
+            "description": "実験的な機能であり、既定では無効です。有効にすると、キーボードやマウスの入力が一定時間ない場合、メモリー使用量の削減を試みます。解放されるメモリー使用量は、使用中のページによって異なります。",
+            "enable": "ブラウザーが待機状態の間にメモリーを解放する",
+            "idleThreshold": "解放までの待機時間 (秒)",
+            "minInterval": "再度解放するまでの最小の間隔 (秒)",
+            "minResident": "メモリー使用量が次を超えた場合にのみ解放する (MB)",
+            "cost": "動画再生、通話、画面共有は解放を妨げません。解放処理により、使用を再開する際などにブラウザーの動作が一時停止する場合があります。間隔を短くするほど解放頻度が高まります。",
+            "saveFailed": "この設定を保存できませんでした。以前の値が復元されました。"
+        }
+    },
+    "ui": {
+        "skipToContent": "本文へ移動",
+        "loading": "読み込み中...",
+        "setupProgress": "セットアップの進捗",
+        "stepNavigation": "セットアップのナビゲーション",
+        "settingsNavigation": "設定のナビゲーション",
+        "openNavigation": "ナビゲーションを開く",
+        "closeNavigation": "ナビゲーションを閉じる",
+        "saveError": "保存できませんでした。もう一度お試しください。",
+        "retry": "やりなおす",
+        "loadError": "設定を読み込めませんでした。このページを再読み込みしてください。"
+    },
+    "settingsHome": {
+        "title": "Floorp を自分好みに",
+        "description": "見た目や操作方法を、自分の使いやすい形に調整しましょう。",
+        "open": "設定を見る",
+        "manage": "ブラウザーの管理",
+        "descriptions": {
+            "tabAndAppearance": "テーマとタブの外観を調整します",
+            "workspaces": "仕事とプライベートでタブバーを切り替えられます",
+            "browserSidebar": "現在のページの横に別のサイトを開けます",
+            "mouseGesture": "マウスの動きにアクションを割り当てられます",
+            "keyboardShortcuts": "キーボードショートカットにアクションを割り当てられます",
+            "performance": "メモリー使用量を調整します"
+        },
+        "resources": {
+            "privacy": "プライバシーについて",
+            "extensions": "拡張機能を管理",
+            "help": "ヘルプを見る"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "外観と動作",
+        "reset": "ワークスペースをリセット",
+        "help": "使い方"
     },
     "commandPalette": {
         "description": "ブラウザーのコマンド、タブ、ブックマーク、履歴などにすばやくアクセスできる検索ボックスです。",
@@ -847,7 +1009,8 @@
             "reservedTabSearch": "開いているタブを検索",
             "reservedBookmarkSearch": "ブックマークを検索",
             "reservedHistorySearch": "履歴を検索",
-            "errorReserved": "このプレフィックスは予約済みのため使用できません。"
+            "errorReserved": "このプレフィックスは予約済みのため使用できません。",
+            "errorWhitespace": "プレフィックスに空白を含めることはできません。"
         }
     }
 }

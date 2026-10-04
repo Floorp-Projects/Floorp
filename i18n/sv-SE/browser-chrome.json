@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Flytta flik till en annan arbetsyta",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Öppna länk i en annan arbetsyta",
       "noOtherWorkspace": "Inga andra arbetsytor tillgängliga"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Öppna i delad vy",
+      "paneLimit": "Öppna i delad vy (upp till {{max}} flikar)",
       "addPane": "Lägg till panel till delad vy",
       "moveToPane": "Flytta till panel",
       "moveToPaneN": "Panel {{n}} ({{title}})"

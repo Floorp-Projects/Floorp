@@ -1,0 +1,41 @@
+/* Floorp chrome-extras: autohidePageAction
+ * Ported from vendored Lepton (leptonChrome.css 26109-26139, 3 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * The extra transition block gated on `userChrome.decoration.animate` is
+ *
+ * not ported (Lepton-only sub-option).
+ */
+
+/* leptonChrome.css:26109-26120 */
+#page-action-buttons > .urlbar-page-action {
+  margin-inline-end: calc(-16px - 2 * var(--urlbar-icon-padding));
+  opacity: 0;
+}
+#urlbar-container:is(:hover, :focus-within) #page-action-buttons > .urlbar-page-action,
+.urlbar-page-action[open],
+.urlbar-page-action[open] ~ .urlbar-page-action {
+  margin-inline-end: 0px !important;
+  opacity: 1;
+}
+
+/* leptonChrome.css:26121-26126 */
+@media (prefers-reduced-motion: no-preference) {
+  #page-action-buttons > .urlbar-page-action {
+    transition: margin-inline-end 50ms var(--animation-easing-function) 900ms,
+      opacity 1.5s var(--animation-easing-function) 600ms !important;
+  }
+}
+
+/* leptonChrome.css:26133-26139 */
+@media (prefers-reduced-motion: no-preference) {
+  #urlbar-container:is(:hover, :focus-within) #page-action-buttons > .urlbar-page-action,
+  .urlbar-page-action[open],
+  .urlbar-page-action[open] ~ .urlbar-page-action {
+    transition-delay: 0s !important;
+  }
+}
