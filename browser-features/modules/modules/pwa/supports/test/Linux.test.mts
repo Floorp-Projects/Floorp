@@ -249,15 +249,44 @@ export async function runAllTests(): Promise<void> {
       fn: () =>
         withSandbox(async (root, support) => {
           const files = paths(root);
+          const legacy = paths(root, true);
           await support.install(manifest);
-          const foreignEntry = (await IOUtils.readUTF8(files.desktop))
-            .replace("Exec=", "Exec=another-profile ");
+          const originalEntry = await IOUtils.readUTF8(files.desktop);
+          const foreignEntry = originalEntry.replace(
+            "Exec=",
+            "Exec=another-profile ",
+          );
           await IOUtils.writeUTF8(files.desktop, foreignEntry);
           const icon = await IOUtils.readUTF8(files.svg);
+          await IOUtils.makeDirectory(PathUtils.parent(legacy.desktop)!, {
+            createAncestors: true,
+          });
+          await IOUtils.makeDirectory(PathUtils.parent(legacy.svg)!, {
+            createAncestors: true,
+          });
+          const preservedFiles = [
+            [files.desktop, foreignEntry],
+            [files.svg, icon],
+            [files.png, "foreign current PNG"],
+            // Even an owned legacy entry must survive an unverified current
+            // launcher: uninstall must return before any legacy cleanup.
+            [legacy.desktop, originalEntry],
+            [legacy.svg, icon],
+            [legacy.png, "foreign legacy PNG"],
+          ];
+          for (const [path, content] of preservedFiles) {
+            await IOUtils.writeUTF8(path, content);
+          }
           for (
-            const mutate of [
-              () => support.install({ ...manifest, name: "Changed" }),
-              () => support.uninstall(manifest),
+            const { mutate, shouldReject } of [
+              {
+                mutate: () => support.install({ ...manifest, name: "Changed" }),
+                shouldReject: true,
+              },
+              {
+                mutate: () => support.uninstall(manifest),
+                shouldReject: false,
+              },
             ]
           ) {
             let rejected = false;
@@ -266,17 +295,18 @@ export async function runAllTests(): Promise<void> {
             } catch {
               rejected = true;
             }
-            assert(rejected, "Unverified ownership rejects the operation");
             assertEquals(
-              await IOUtils.readUTF8(files.desktop),
-              foreignEntry,
-              "Other profile's launcher is unchanged",
+              rejected,
+              shouldReject,
+              "Install rejects foreign ownership; uninstall permits store removal",
             );
-            assertEquals(
-              await IOUtils.readUTF8(files.svg),
-              icon,
-              "Other profile's icon is unchanged",
-            );
+            for (const [path, content] of preservedFiles) {
+              assertEquals(
+                await IOUtils.readUTF8(path),
+                content,
+                `Current and legacy assets remain unchanged: ${path}`,
+              );
+            }
           }
         }),
     },

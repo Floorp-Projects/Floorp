@@ -86,7 +86,6 @@ export class SiteSpecificBrowserManager {
     public readonly dataManager: DataManager,
   ) {
     this.ssbRunner = new SsbRunner(dataManager, this);
-    SiteSpecificBrowserManager.instance = this;
 
     // A native mutation closes the PWA window. Handle management requests
     // from the window that owns the data manager's pending store writes.
@@ -94,6 +93,7 @@ export class SiteSpecificBrowserManager {
     if (ownerWindow.document.documentElement.hasAttribute("taskbartab")) {
       return;
     }
+    SiteSpecificBrowserManager.instance = this;
     const tabBrowser = ownerWindow.gBrowser;
     tabBrowser.addTabsProgressListener(this.listener);
 

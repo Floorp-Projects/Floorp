@@ -426,7 +426,17 @@ export class LinuxSupport {
       `[LinuxSupport] Uninstalling SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     const paths = LinuxSupport.getPathInfo(ssb);
-    await LinuxSupport.requireOwnedLauncher(ssb, paths);
+    try {
+      await LinuxSupport.requireOwnedLauncher(ssb, paths);
+    } catch (error) {
+      // An executable move or another profile may make ownership unverifiable.
+      // Allow the caller to remove its store entry without touching any files.
+      console.warn(
+        "[LinuxSupport] Preserving launcher files whose ownership cannot be verified",
+        error,
+      );
+      return;
+    }
 
     console.debug(
       `[LinuxSupport] Removing desktop entry: ${paths.desktopPath}`,
