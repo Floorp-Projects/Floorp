@@ -688,7 +688,7 @@ function testCombinedSidebarPreservesPanelWidth(): void {
   });
   const sidebarBox = document.createXULElement("box");
   sidebarBox.id = "sidebar-box";
-  sidebarBox.style.width = "350px";
+  sidebarBox.setAttribute("style", "width: 350px");
   const sidebar = document.createXULElement("box");
   sidebar.id = "sidebar";
   sidebarBox.appendChild(sidebar);
