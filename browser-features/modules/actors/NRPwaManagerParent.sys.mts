@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { refreshLauncherForStoreMove } from "#libs/pwa/launcherUpdate.ts";
+import type { Manifest } from "../modules/pwa/type.ts";
+
 const { PwaContainerExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/PwaContainerExperiment.sys.mjs",
 );
@@ -159,6 +162,33 @@ export class NRPwaManagerParent extends JSWindowActorParent {
     userContextId: number,
   ): Promise<string> {
     try {
+      if (Services.appinfo.OS === "Linux") {
+        const { DataStoreProvider } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/DataStore.sys.mjs",
+        );
+        const { LinuxSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+        );
+        const store = DataStoreProvider.getDataManager();
+        // Read through the shared store so legacy keys are migrated before
+        // choosing the key that the launcher refresh will move.
+        const apps: Record<string, Manifest> = await store.getCurrentSsbData();
+        const entry = Object.entries(apps).find(([, app]) => app.id === id);
+        if (!entry) return "not-found";
+        const [oldKey, oldManifest] = entry;
+        const newKey = this.buildKey(oldManifest.start_url, userContextId);
+        if (newKey !== oldKey && apps[newKey]) return "container-conflict";
+        const updated = { ...oldManifest, userContextId };
+        return await refreshLauncherForStoreMove(
+            new LinuxSupport(),
+            store,
+            oldKey,
+            oldManifest,
+            updated,
+          )
+          ? "ok"
+          : "failed";
+      }
       const ssbData = await this.readSsbData();
       // Find the app by id
       let foundKey: string | null = null;
