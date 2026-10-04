@@ -45,6 +45,13 @@ const FIXTURE = `<!doctype html>
   const output = document.getElementById('events');
   const events = [];
   output.value = '[]';
+  let reportRevision = 0;
+  const report = state => {
+    void fetch('/fixture-report', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ page: location.href, revision: ++reportRevision, state }),
+    }).catch(() => {});
+  };
   const makeButton = (generation = 'original') => {
     // GetText fingerprints block tags; a button's display:block CSS does not
     // make it a fingerprinted Markdown block.
@@ -96,6 +103,70 @@ const FIXTURE = `<!doctype html>
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.1);z-index:99';
     root.appendChild(overlay);
+  }
+  if (scenario === 'detached-control-overlay') {
+    const observer = new MutationObserver(() => {
+      const overlay = document.getElementById('nr-webscraper-control-overlay');
+      const label = document.querySelector('.nr-webscraper-control-overlay__label');
+      if (!overlay || !label) return;
+      observer.disconnect();
+      const before = {
+        value: document.body.style.getPropertyValue('pointer-events'),
+        priority: document.body.style.getPropertyPriority('pointer-events'),
+      };
+      // Simulate a page rerender that removes the two injected nodes, while
+      // leaving the body and its automation-owned style declaration intact.
+      overlay.remove();
+      label.remove();
+      report({ controlOverlayRemoved: true, before, after: {
+        value: document.body.style.getPropertyValue('pointer-events'),
+        priority: document.body.style.getPropertyPriority('pointer-events'),
+      }});
+    });
+    observer.observe(document.body, { childList: true });
+  }
+  if (scenario === 'post-click-focus-scroll') {
+    document.body.style.minHeight = '3000px';
+    const nextInput = document.createElement('input');
+    nextInput.id = 'next-input';
+    nextInput.style.cssText = 'position:fixed;left:80px;top:220px;width:160px';
+    document.body.appendChild(nextInput);
+    const stateOutput = document.createElement('output');
+    stateOutput.id = 'post-click-state';
+    stateOutput.hidden = true;
+    document.body.appendChild(stateOutput);
+    let expected = null;
+    let clickOverlay = null;
+    const current = () => ({
+      focusId: document.activeElement?.id || '', scrollX, scrollY,
+    });
+    const capture = () => {
+      clickOverlay ||= document.querySelector(
+        '.nr-webscraper-highlight-overlay.nr-webscraper-highlight-overlay--click.nr-webscraper-highlight-overlay--visible',
+      );
+      const state = JSON.stringify({
+        expected, current: current(), highlightSeen: !!clickOverlay,
+        highlightComplete: !!clickOverlay && !clickOverlay.isConnected,
+      });
+      if (stateOutput.textContent !== state) {
+        stateOutput.textContent = state;
+        report(JSON.parse(state));
+      }
+    };
+    // Observe the real overlay lifecycle, including its removal after cleanup.
+    // No polling through APIs that create a competing inspection highlight.
+    new MutationObserver(capture).observe(document.body, {
+      childList: true, subtree: true, attributes: true,
+    });
+    document.addEventListener('focusin', capture, true);
+    window.addEventListener('scroll', capture, true);
+    target.addEventListener('click', () => {
+      nextInput.focus({ preventScroll: true });
+      window.scrollTo({ top: 700, left: 0, behavior: 'instant' });
+      expected = current();
+      capture();
+    });
+    capture();
   }
   for (const type of ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick', 'auxclick', 'contextmenu']) {
     document.addEventListener(type, event => {
@@ -201,15 +272,36 @@ export async function main(argv = Deno.args): Promise<number> {
     return { status: response.status, body: record(await response.json()) };
   };
 
+  const fixtureReports = new Map<
+    string,
+    { revision: number; state: JsonRecord }
+  >();
   const server = Deno.serve(
     { hostname: "127.0.0.1", port: 0, onListen() {} },
-    () =>
-      new Response(FIXTURE, {
+    async (incoming) => {
+      if (
+        new URL(incoming.url).pathname === "/fixture-report" &&
+        incoming.method === "POST"
+      ) {
+        const report = record(await incoming.json());
+        assert(typeof report.page === "string", "Fixture report page");
+        assert(typeof report.revision === "number", "Fixture report revision");
+        const previous = fixtureReports.get(report.page);
+        if (!previous || report.revision > previous.revision) {
+          fixtureReports.set(report.page, {
+            revision: report.revision,
+            state: record(report.state),
+          });
+        }
+        return new Response(null, { status: 204 });
+      }
+      return new Response(FIXTURE, {
         headers: {
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store",
         },
-      }),
+      });
+    },
   );
   const fixtureUrl = `http://127.0.0.1:${server.addr.port}/`;
   let passed = 0;
@@ -274,7 +366,7 @@ export async function main(argv = Deno.args): Promise<number> {
               );
               equal(ready.status, 200, "Read fixture readiness marker");
               lastReady = ready.body.value;
-              if (lastReady === targetUrl) return;
+              if (lastReady === targetUrl) return targetUrl;
             }
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
@@ -337,6 +429,107 @@ export async function main(argv = Deno.args): Promise<number> {
             );
           },
         );
+
+        await run(
+          `${service}: completed click highlight preserves handler focus and scroll`,
+          async () => {
+            const page = await setup("post-click-focus-scroll");
+            dispatched(await click({ includeResult: true }));
+            const deadline = performance.now() + 12_000;
+            let state: JsonRecord = {};
+            while (performance.now() < deadline) {
+              // The page reports directly to its private fixture server. API
+              // DOM reads can create competing inspection highlights, and the
+              // tabs HTML endpoint does not currently forward scoped options.
+              state = fixtureReports.get(page)?.state ?? {};
+              if (state.highlightComplete === true) break;
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            equal(
+              state.highlightSeen,
+              true,
+              "Real Click overlay was displayed",
+            );
+            equal(
+              state.highlightComplete,
+              true,
+              "Real Click overlay finished its lifecycle",
+            );
+            const expected = record(state.expected);
+            equal(
+              expected.focusId,
+              "next-input",
+              "Click handler focused the next input",
+            );
+            equal(
+              expected.scrollY,
+              700,
+              "Click handler scrolled to its destination",
+            );
+            equal(
+              state.current,
+              expected,
+              "Completed highlight preserves handler focus and scroll",
+            );
+            equal(
+              count(await events(), "click"),
+              1,
+              "Only one native click was dispatched",
+            );
+          },
+        );
+
+        if (service === "tabs") {
+          await run(
+            "tabs: detached control overlay does not strand native clicks",
+            async () => {
+              const page = await setup("detached-control-overlay");
+              const deadline = performance.now() + 10_000;
+              let state: JsonRecord = {};
+              while (performance.now() < deadline) {
+                state = fixtureReports.get(page)?.state ?? {};
+                if (state.controlOverlayRemoved === true) break;
+                await new Promise((resolve) => setTimeout(resolve, 100));
+              }
+              equal(
+                state.controlOverlayRemoved,
+                true,
+                "Page removed the real owned overlay and label",
+              );
+              equal(
+                state.before,
+                { value: "none", priority: "important" },
+                "Automation had installed body pointer blocking",
+              );
+              equal(
+                state.after,
+                state.before,
+                "Page rerender did not change body pointer styles",
+              );
+              dispatched(await click({ includeResult: true }));
+              const observed = await events();
+              equal(
+                count(observed, "mousedown"),
+                1,
+                "One native mousedown after overlay detaches",
+              );
+              equal(
+                count(observed, "mouseup"),
+                1,
+                "One native mouseup after overlay detaches",
+              );
+              equal(
+                count(observed, "click"),
+                1,
+                "One native click after overlay detaches",
+              );
+              assert(
+                observed.every((event) => event.trusted),
+                "Detached-overlay input must stay trusted",
+              );
+            },
+          );
+        }
 
         for (
           const [button, presses, clicks, doubleClicks, auxClicks] of [

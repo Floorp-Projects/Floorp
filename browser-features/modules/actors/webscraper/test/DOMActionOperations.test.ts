@@ -8,7 +8,9 @@ import {
 } from "../../../../chrome/test/utils/test_harness.ts";
 import { DOMActionOperations } from "../DOMActionOperations.ts";
 import type { DOMOpsDeps } from "../DOMDeps.ts";
+import { HighlightManager } from "../HighlightManager.ts";
 import type {
+  HighlightOptionsInput,
   MouseSynthesisData,
   MouseSynthesisOptions,
   PrivilegedMouseWindow,
@@ -167,6 +169,50 @@ async function testSingleDeliveryIgnoresPreventDefaultReturn(): Promise<void> {
       d.x === 80 && d.y === 60 && d.options?.toWindow === true
     ),
   );
+  assertEquals(f.state.legacyCalls, 0);
+}
+
+async function testDeferredHighlightPreservesPageInteraction(): Promise<void> {
+  const f = fixture();
+  const translation = Promise.withResolvers<string>();
+  const highlighted = Promise.withResolvers<void>();
+  const appliedOptions: HighlightOptionsInput[] = [];
+  f.deps.translationHelper.translate = () => translation.promise;
+  // Use the real Click preset and override merging, whose defaults focus the
+  // target and scroll smoothly unless the click operation opts out.
+  f.deps.highlightManager.getHighlightOptions =
+    HighlightManager.prototype.getHighlightOptions;
+  f.deps.highlightManager.applyHighlight = (_target, options = {}) => {
+    appliedOptions.push(options);
+    f.state.highlights++;
+    highlighted.resolve();
+    return Promise.resolve(true);
+  };
+
+  const result = await f.ops.clickElementWithResult("#target", {
+    timeout: 200,
+    stabilityTimeout: 0,
+  });
+  assertEquals(result.status, "dispatched");
+  assertEquals(f.state.highlights, 0);
+  assertEquals(f.state.deliveries.map((delivery) => delivery.type), [
+    "mousemove",
+    "mousedown",
+    "mouseup",
+  ]);
+  const completedDeliveries = [...f.state.deliveries];
+  const completedScrolls = f.state.scrolls;
+
+  // Translation finishes after the API returns, when page handlers or the
+  // caller may already have moved focus and scrolled to their next target.
+  translation.resolve("Activate");
+  await highlighted.promise;
+  assertEquals(f.state.highlights, 1);
+  assertEquals(appliedOptions[0].action, "Click");
+  assertEquals(appliedOptions[0].focus, false);
+  assertEquals(appliedOptions[0].scrollBehavior, "none");
+  assertEquals(f.state.deliveries, completedDeliveries);
+  assertEquals(f.state.scrolls, completedScrolls);
   assertEquals(f.state.legacyCalls, 0);
 }
 
@@ -528,6 +574,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "single native sequence ignores preventDefault return",
       fn: testSingleDeliveryIgnoresPreventDefaultReturn,
+    },
+    {
+      name: "deferred click highlight cannot focus scroll or deliver more input",
+      fn: testDeferredHighlightPreservesPageInteraction,
     },
     {
       name: "late target is awaited beyond three attempts",

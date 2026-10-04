@@ -39,6 +39,7 @@ rechecks eligibility before the second pair. The managed tab's own control
 overlay is suspended only during synchronous hit testing and input; website
 overlays remain part of the actionability check. The control overlay continues
 to block user interaction between polling waits.
+Post-click visual feedback does not move focus or scroll the page.
 
 Without `includeResult`, the response stays `{ "ok": true }` or
 `{ "ok": false }`. Existing `clickElement()` service calls still return a

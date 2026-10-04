@@ -13,6 +13,15 @@ function assertEquals<T>(actual: T, expected: T): void {
   browserAssertEquals(actual, expected, `expected ${expected}, got ${actual}`);
 }
 
+function assertPointerStyle(
+  element: HTMLElement,
+  value: string,
+  priority = "",
+): void {
+  assertEquals(element.style.getPropertyValue("pointer-events"), value);
+  assertEquals(element.style.getPropertyPriority("pointer-events"), priority);
+}
+
 function fixture(value = "", priority = "") {
   const doc = document.implementation.createHTMLDocument(
     "control overlay test",
@@ -201,6 +210,167 @@ const tests: TestCase[] = [
         f.doc.body.style.getPropertyPriority("pointer-events"),
         "important",
       );
+    },
+  },
+  {
+    name: "detached overlay still suspends and restores owned body blocking",
+    fn() {
+      const f = fixture("auto", "important");
+      try {
+        f.overlay.remove();
+        f.manager.withControlOverlaySuspended(() => {
+          assertPointerStyle(f.doc.body, "auto", "important");
+          assertPointerStyle(f.label, "none", "important");
+        });
+        assertPointerStyle(f.doc.body, "none", "important");
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(f.doc.body, "auto", "important");
+    },
+  },
+  {
+    name: "detachment during delivery still restores blocking after exceptions",
+    fn() {
+      const f = fixture("auto");
+      try {
+        let caught = false;
+        try {
+          f.manager.withControlOverlaySuspended(() => {
+            f.overlay.remove();
+            assertPointerStyle(f.doc.body, "auto");
+            throw new Error("delivery failed after page rerender");
+          });
+        } catch {
+          caught = true;
+        }
+        assert(caught, "original delivery exception should propagate");
+        assertPointerStyle(f.doc.body, "none", "important");
+        f.manager.withControlOverlaySuspended(() => {
+          assertPointerStyle(f.doc.body, "auto");
+        });
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(f.doc.body, "auto");
+    },
+  },
+  {
+    name:
+      "cleanup releases body styles after page content replaces the overlay",
+    fn() {
+      const f = fixture("auto", "important");
+      f.doc.body.innerHTML = "<button>Page replacement</button>";
+      f.manager.hideControlOverlay();
+      assertPointerStyle(f.doc.body, "auto", "important");
+      assertEquals(f.doc.body.style.getPropertyValue("overflow"), "");
+      assertEquals(
+        f.doc.documentElement.style.getPropertyValue("overflow"),
+        "",
+      );
+      f.manager.withControlOverlaySuspended(() => {
+        assertPointerStyle(f.doc.body, "auto", "important");
+      });
+      f.manager.destroy();
+      assertPointerStyle(f.doc.body, "auto", "important");
+    },
+  },
+  {
+    name: "re-show after detachment preserves original and updated page styles",
+    fn() {
+      const f = fixture("auto", "important");
+      try {
+        for (let i = 0; i < 2; i++) {
+          f.doc.getElementById("nr-webscraper-control-overlay")?.remove();
+          f.manager.showControlOverlay();
+          assertEquals(
+            f.doc.querySelectorAll(".nr-webscraper-control-overlay__label")
+              .length,
+            1,
+          );
+          f.manager.withControlOverlaySuspended(() => {
+            assertPointerStyle(f.doc.body, "auto", "important");
+          });
+          assertPointerStyle(f.doc.body, "none", "important");
+        }
+        f.doc.getElementById("nr-webscraper-control-overlay")?.remove();
+        f.doc.body.style.setProperty("pointer-events", "auto");
+        f.manager.showControlOverlay();
+        f.manager.withControlOverlaySuspended(() => {
+          assertPointerStyle(f.doc.body, "auto");
+        });
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(f.doc.body, "auto");
+    },
+  },
+  {
+    name: "cleanup of a detached overlay during delivery does not reblock body",
+    fn() {
+      const f = fixture("auto");
+      try {
+        f.manager.withControlOverlaySuspended(() => {
+          f.doc.body.innerHTML = "";
+          f.manager.hideControlOverlay();
+          assertPointerStyle(f.doc.body, "auto");
+        });
+        assertPointerStyle(f.doc.body, "auto");
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(f.doc.body, "auto");
+    },
+  },
+  {
+    name: "re-show during suspension remains suspended until delivery finishes",
+    fn() {
+      const f = fixture("auto", "important");
+      try {
+        f.manager.withControlOverlaySuspended(() => {
+          f.overlay.remove();
+          f.manager.showControlOverlay();
+          assertPointerStyle(f.doc.body, "auto", "important");
+          const nextOverlay = f.doc.getElementById(
+            "nr-webscraper-control-overlay",
+          );
+          assert(
+            nextOverlay && nextOverlay !== f.overlay,
+            "overlay should be replaced",
+          );
+          assertPointerStyle(nextOverlay as HTMLElement, "none", "important");
+        });
+        assertPointerStyle(f.doc.body, "none", "important");
+        const nextOverlay = f.doc.getElementById(
+          "nr-webscraper-control-overlay",
+        );
+        assert(nextOverlay, "replacement overlay should remain active");
+        assertPointerStyle(nextOverlay as HTMLElement, "");
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(f.doc.body, "auto", "important");
+    },
+  },
+  {
+    name: "re-show on a replacement body releases the old body declaration",
+    fn() {
+      const f = fixture("auto", "important");
+      const previousBody = f.doc.body;
+      const nextBody = f.doc.createElement("body");
+      nextBody.style.setProperty("pointer-events", "auto");
+      previousBody.replaceWith(nextBody);
+      try {
+        f.manager.showControlOverlay();
+        assertPointerStyle(previousBody, "auto", "important");
+        assertPointerStyle(nextBody, "none", "important");
+        f.manager.withControlOverlaySuspended(() => {
+          assertPointerStyle(nextBody, "auto");
+        });
+      } finally {
+        f.manager.destroy();
+      }
+      assertPointerStyle(nextBody, "auto");
     },
   },
 ];

@@ -179,7 +179,11 @@ export class DOMActionOperations {
             if (!el.isConnected) return;
             await this.deps.highlightManager.applyHighlight(
               el,
-              this.deps.highlightManager.getHighlightOptions("Click"),
+              {
+                ...this.deps.highlightManager.getHighlightOptions("Click"),
+                focus: false,
+                scrollBehavior: "none",
+              },
               info,
             );
           })().catch(() => {});

@@ -953,6 +953,7 @@ getActionIconEmoji(action: string): string {
       return;
     }
 
+    this.controlOverlayLabel?.remove();
     this.ensureHighlightStyle();
 
     const overlay = doc.createElement("div");
@@ -971,12 +972,31 @@ getActionIconEmoji(action: string): string {
     const html = doc.documentElement as HTMLElement | null;
     if (body) {
       body.style.setProperty("overflow", "hidden", "important");
-      this.controlOverlayBodyPointerEvents = {
-        element: body,
-        value: body.style.getPropertyValue("pointer-events"),
-        priority: body.style.getPropertyPriority("pointer-events"),
-      };
-      body.style.setProperty("pointer-events", "none", "important");
+      // A page can remove the overlay without removing our body declaration.
+      // Reusing that body must retain the original page value, not capture our
+      // own blocking declaration as the value to restore on cleanup.
+      if (this.controlOverlayBodyPointerEvents?.element !== body) {
+        this.restoreControlOverlayBodyPointerEvents();
+        this.controlOverlayBodyPointerEvents = {
+          element: body,
+          value: body.style.getPropertyValue("pointer-events"),
+          priority: body.style.getPropertyPriority("pointer-events"),
+        };
+      } else if (
+        !this.controlOverlaySuspended &&
+        (body.style.getPropertyValue("pointer-events") !== "none" ||
+          body.style.getPropertyPriority("pointer-events") !== "important")
+      ) {
+        this.controlOverlayBodyPointerEvents.value = body.style.getPropertyValue(
+          "pointer-events",
+        );
+        this.controlOverlayBodyPointerEvents.priority = body.style.getPropertyPriority(
+          "pointer-events",
+        );
+      }
+      if (!this.controlOverlaySuspended) {
+        body.style.setProperty("pointer-events", "none", "important");
+      }
     }
     if (html) {
       html.style.setProperty("overflow", "hidden", "important");
@@ -987,6 +1007,10 @@ getActionIconEmoji(action: string): string {
 
     this.controlOverlay = overlay;
     this.controlOverlayLabel = label;
+    if (this.controlOverlaySuspended) {
+      overlay.style.setProperty("pointer-events", "none", "important");
+      label.style.setProperty("pointer-events", "none", "important");
+    }
 
     // Notify Parent Actor to block context menu at chrome level
     try {
@@ -1003,20 +1027,24 @@ getActionIconEmoji(action: string): string {
    */
   withControlOverlaySuspended<T>(callback: () => T): T {
     const overlay = this.controlOverlay;
-    if (!overlay?.isConnected || this.controlOverlaySuspended) {
+    const label = this.controlOverlayLabel;
+    const bodyState = this.controlOverlayBodyPointerEvents;
+    if (
+      this.controlOverlaySuspended ||
+      (!overlay && !label && !bodyState)
+    ) {
       return callback();
     }
 
-    const label = this.controlOverlayLabel;
-    const bodyState = this.controlOverlayBodyPointerEvents;
-    const overlayValue = overlay.style.getPropertyValue("pointer-events");
-    const overlayPriority = overlay.style.getPropertyPriority("pointer-events");
+    const overlayValue = overlay?.style.getPropertyValue("pointer-events") ?? "";
+    const overlayPriority = overlay?.style.getPropertyPriority("pointer-events") ??
+      "";
     const labelValue = label?.style.getPropertyValue("pointer-events") ?? "";
     const labelPriority = label?.style.getPropertyPriority("pointer-events") ?? "";
     this.controlOverlaySuspended = true;
 
     try {
-      overlay.style.setProperty("pointer-events", "none", "important");
+      overlay?.style.setProperty("pointer-events", "none", "important");
       label?.style.setProperty("pointer-events", "none", "important");
       if (bodyState) {
         const style = bodyState.element.style;
@@ -1033,18 +1061,40 @@ getActionIconEmoji(action: string): string {
       return callback();
     } finally {
       this.controlOverlaySuspended = false;
-      // Navigation or cleanup during native dispatch may retire this overlay.
-      if (this.controlOverlay === overlay && overlay.isConnected) {
-        if (bodyState && this.controlOverlayBodyPointerEvents === bodyState) {
-          const style = bodyState.element.style;
-          bodyState.value = style.getPropertyValue("pointer-events");
-          bodyState.priority = style.getPropertyPriority("pointer-events");
-          style.setProperty("pointer-events", "none", "important");
-        }
+      // Body ownership survives page-driven removal of our overlay. Explicit
+      // cleanup retires the saved state and must not have blocking reinstated.
+      const activeBodyState = this.controlOverlayBodyPointerEvents;
+      if (activeBodyState) {
+        const style = activeBodyState.element.style;
+        activeBodyState.value = style.getPropertyValue("pointer-events");
+        activeBodyState.priority = style.getPropertyPriority("pointer-events");
+        style.setProperty("pointer-events", "none", "important");
+      }
+      if (overlay && this.controlOverlay === overlay) {
         overlay.style.setProperty("pointer-events", overlayValue, overlayPriority);
+      } else {
+        this.controlOverlay?.style.removeProperty("pointer-events");
+      }
+      if (this.controlOverlayLabel === label) {
         label?.style.setProperty("pointer-events", labelValue, labelPriority);
+      } else {
+        this.controlOverlayLabel?.style.removeProperty("pointer-events");
       }
     }
+  }
+
+  private restoreControlOverlayBodyPointerEvents(): void {
+    const bodyState = this.controlOverlayBodyPointerEvents;
+    if (!bodyState) return;
+    const style = bodyState.element.style;
+    if (
+      !this.controlOverlaySuspended &&
+      style.getPropertyValue("pointer-events") === "none" &&
+      style.getPropertyPriority("pointer-events") === "important"
+    ) {
+      style.setProperty("pointer-events", bodyState.value, bodyState.priority);
+    }
+    this.controlOverlayBodyPointerEvents = null;
   }
 
   /**
@@ -1052,7 +1102,6 @@ getActionIconEmoji(action: string): string {
    */
   hideControlOverlay(): void {
     const doc = this.document;
-    if (!doc) return;
 
     // No event listeners to remove - using CSS only
     this.controlOverlayHandlers = null;
@@ -1064,27 +1113,15 @@ getActionIconEmoji(action: string): string {
       // ignore errors
     }
 
-    if (this.controlOverlay?.isConnected) {
-      const body = doc.body;
-      const html = doc.documentElement as HTMLElement | null;
-      if (body) {
-        body.style.removeProperty("overflow");
-        const bodyState = this.controlOverlayBodyPointerEvents;
-        if (
-          bodyState?.element === body && !this.controlOverlaySuspended &&
-          body.style.getPropertyValue("pointer-events") === "none" &&
-          body.style.getPropertyPriority("pointer-events") === "important"
-        ) {
-          body.style.setProperty(
-            "pointer-events",
-            bodyState.value,
-            bodyState.priority,
-          );
-        }
-      }
-      this.controlOverlayBodyPointerEvents = null;
-      if (html) html.style.removeProperty("overflow");
+    const bodyState = this.controlOverlayBodyPointerEvents;
+    if (bodyState || this.controlOverlay) {
+      bodyState?.element.style.removeProperty("overflow");
+      const html = doc?.documentElement as HTMLElement | null | undefined;
+      html?.style.removeProperty("overflow");
+    }
+    this.restoreControlOverlayBodyPointerEvents();
 
+    if (this.controlOverlay?.isConnected) {
       this.controlOverlay.style.setProperty(
         "transition",
         "opacity 300ms ease-out",
@@ -1098,8 +1135,8 @@ getActionIconEmoji(action: string): string {
           // ignore
         }
       }, 300);
-      this.controlOverlay = null;
     }
+    this.controlOverlay = null;
 
     if (this.controlOverlayLabel?.isConnected) {
       this.controlOverlayLabel.style.setProperty(
@@ -1115,8 +1152,8 @@ getActionIconEmoji(action: string): string {
           // ignore
         }
       }, 200);
-      this.controlOverlayLabel = null;
     }
+    this.controlOverlayLabel = null;
   }
 
   /**
