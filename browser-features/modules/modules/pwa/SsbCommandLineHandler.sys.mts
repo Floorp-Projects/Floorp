@@ -156,6 +156,53 @@ export class SsbRunnerUtils {
     args.appendElement(url);
     args.appendElement(extraOptions);
 
+    if (
+      AppConstants.platform === "linux" &&
+      Number.isSafeInteger(ssb.userContextId) &&
+      (ssb.userContextId ?? 0) > 0
+    ) {
+      const { Experiments } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+      );
+      const { ContextualIdentityService } = ChromeUtils.importESModule(
+        "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+      );
+      // Command-line startup can run before Experiments.init(). Use the same
+      // enrollment gate as PwaContainerExperiment, with the persisted assignment
+      // only while the in-memory experiment manifest is unavailable.
+      const experiment = "pwa_container_support";
+      const enrolled = Experiments.getVariant(experiment) !== null ||
+        (!Experiments.manifestAvailable &&
+          Experiments.getCachedEnrollment(experiment).variantId !== null);
+      const exists = ContextualIdentityService.getPublicIdentities().some(
+        (identity: { userContextId: number }) =>
+          identity.userContextId === ssb.userContextId,
+      );
+      if (enrolled && exists) {
+        // Match Gecko's TaskbarTabsWindowManager argument contract. The bag
+        // drives the PWA UI, but argument 5 selects the initial browser's
+        // container before any navigation; migrating the tab later is too late.
+        const context = Cc["@mozilla.org/supports-PRUint32;1"].createInstance(
+          Ci.nsISupportsPRUint32,
+        );
+        context.data = ssb.userContextId!;
+        for (
+          const value of [
+            null,
+            null,
+            undefined,
+            context,
+            null,
+            null,
+            Services.scriptSecurityManager.getSystemPrincipal(),
+          ]
+        ) {
+          // nsIMutableArray accepts null slots; its generated type omits them.
+          args.appendElement(value as nsISupports);
+        }
+      }
+    }
+
     return args;
   }
 
