@@ -21,6 +21,10 @@ import { SaveStatus } from "./components/common/SaveStatus.tsx";
 import { NoteSearch } from "./components/notes/NoteSearch.tsx";
 import type { Note } from "./types/note.ts";
 import { extractPlainText } from "./lib/extractText.ts";
+import { AlertCircle, Download } from "lucide-react";
+import { noteToMarkdown } from "./lib/exportMarkdown.ts";
+import { toExportFilename } from "./lib/exportFilename.ts";
+import { saveTextFile } from "./lib/fileSink.ts";
 
 type SaveStatusType = "idle" | "saving" | "saved" | "error";
 
@@ -34,6 +38,7 @@ function App() {
   const [saveStatus, setSaveStatus] = useState<SaveStatusType>("idle");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [exportError, setExportError] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -60,6 +65,13 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [saveStatus]);
+
+  // Auto-clear the export error after 4 seconds
+  useEffect(() => {
+    if (!exportError) return;
+    const timer = setTimeout(() => setExportError(false), 4000);
+    return () => clearTimeout(timer);
+  }, [exportError]);
 
   useEffect(() => {
     const loadNotes = async () => {
@@ -387,6 +399,33 @@ function App() {
     setTitle(note.title);
   }, [title]);
 
+  const handleExport = useCallback(async () => {
+    if (!selectedNote) {
+      return;
+    }
+    // Prefer the live title input over the persisted value: the title is only
+    // written back to state on blur, and the header calls preventDefault on
+    // mousedown, so clicking this button never blurs the input.
+    const note = { title, content: selectedNote.content };
+    setExportError(false);
+    try {
+      // The return value says whether the user cancelled. There is deliberately
+      // no success indicator: in production the OS dialog is the confirmation,
+      // and in dev the browser's own download UI is.
+      await saveTextFile({
+        text: noteToMarkdown(note),
+        suggestedName: toExportFilename(note.title, t("notes.emptyTitle")),
+        defaultExtension: "md",
+        filterLabel: "Markdown",
+        filterPattern: "*.md",
+        dialogTitle: t("notes.export"),
+      });
+    } catch (error) {
+      console.error("[Floorp Notes] Failed to export note:", error);
+      setExportError(true);
+    }
+  }, [selectedNote, title, t]);
+
   const handleEditorChange = useCallback((json: JSONContent) => {
     updateCurrentNote(JSON.stringify(json));
   }, [updateCurrentNote]);
@@ -403,8 +442,29 @@ function App() {
             {t("title.default")}
           </h1>
           <SaveStatus status={saveStatus} />
+          {exportError && (
+            <div
+              className="flex items-center gap-1 text-xs text-error"
+              role="status"
+              aria-live="polite"
+            >
+              <AlertCircle className="h-3 w-3" />
+              <span>{t("error.exportFailed")}</span>
+            </div>
+          )}
         </div>
         <div className="flex gap-1">
+          <button
+            type="button"
+            className="btn btn-xs btn-ghost"
+            data-testid="notes-export"
+            title={t("notes.export")}
+            aria-label={t("notes.export")}
+            disabled={!selectedNote}
+            onClick={handleExport}
+          >
+            <Download size={14} />
+          </button>
           <button
             type="button"
             className={`btn btn-xs ${
