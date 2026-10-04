@@ -586,8 +586,89 @@ async function testDependencyPathCannotReplaceApprovedBytes(): Promise<void> {
   }
 }
 
+async function testSharedMultiEntryLibraryMatchesCorrespondingArchives(): Promise<
+  void
+> {
+  const first = newUuid(), second = newUuid(), libraryUuid = newUuid();
+  const dependency: DepRef = {
+    name: "shared",
+    uuid: libraryUuid,
+    version: "1.0.0",
+    lib: true,
+    wasm: false,
+  };
+  const makeLibrary = async (changedSecond = false): Promise<Fixture> => {
+    const library = await fixture(libraryUuid, "1.0.0", { suffix: "A" });
+    const other = await fixture(libraryUuid, "1.0.0", {
+      suffix: "B",
+      marker: changedSecond ? "/* changed B */" : "/* original B */",
+    });
+    library.manifest.entries.push(...other.manifest.entries);
+    for (const [file, bytes] of other.bytes) library.bytes.set(file, bytes);
+    return library;
+  };
+  try {
+    const firstFixture = await fixture(first, "1.0.0", { dependency });
+    const library = await makeLibrary();
+    assert(
+      library.manifest.entries[0].sha256 !== library.manifest.entries[1].sha256,
+      "regression fixture must contain distinct archive bytes",
+    );
+    await installDrop(await inspect(firstFixture, [library]));
+    await installDrop(await inspect(firstFixture, [await makeLibrary()]));
+    await installDrop(
+      await inspect(
+        await fixture(second, "1.0.0", { dependency }),
+        [await makeLibrary()],
+      ),
+    );
+    const depAlias = alias(libraryUuid, "1.0.0", true);
+    const approvedTarget = resources().getSubstitution(depAlias).spec;
+    const secondUpdate = await fixture(second, "2.0.0", { dependency });
+    const changed = await inspect(secondUpdate, [await makeLibrary(true)]);
+    await rejects(() => installDrop(changed));
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      approvedTarget,
+      "changing corresponding archive bytes must not rebind the shared alias",
+    );
+
+    const renamed = await makeLibrary();
+    const oldFile = renamed.manifest.entries[0].file;
+    const archive = renamed.bytes.get(oldFile)!;
+    renamed.bytes.delete(oldFile);
+    renamed.manifest.entries[0].file = "renamed.xpi";
+    renamed.bytes.set("renamed.xpi", archive);
+    await rejects(async () =>
+      installDrop(await inspect(secondUpdate, [renamed]))
+    );
+
+    const reordered = await makeLibrary();
+    reordered.manifest.entries.reverse();
+    await rejects(async () =>
+      installDrop(await inspect(secondUpdate, [reordered]))
+    );
+    assertEquals(
+      listDrops()[second].versions[0],
+      "1.0.0",
+      "conflicting multi-entry library changes must preserve the installed consumer",
+    );
+    assertEquals(
+      resources().getSubstitution(depAlias).spec,
+      approvedTarget,
+      "entry identity conflicts must preserve the shared alias",
+    );
+  } finally {
+    await cleanup([first, second]);
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name: "multi-entry libraries compare corresponding approved archives",
+      fn: testSharedMultiEntryLibraryMatchesCorrespondingArchives,
+    },
     {
       name:
         "dependency physical paths retain approved bytes across UUID changes",

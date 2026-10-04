@@ -607,12 +607,28 @@ export async function installDrop(inspected: DropInspection): Promise<string[]> 
   const prepared: { source: string; path: string; sha256: string; approvedPath?: string }[] = [];
   const deps: NonNullable<InstalledDrop["deps"]> = [];
   for (const d of inspected.deps ?? []) {
+    const sharedConsumers = Object.entries(readInstalled()).map(([consumer, installed]) => ({
+      consumer,
+      entries: (installed.deps ?? []).filter((shared) => shared.uuid === d.uuid && shared.version === d.version),
+    })).filter(({ entries }) => entries.length > 0);
+    const incomingFiles = new Set(d.entries.map((e) => e.file));
+    for (const { entries } of sharedConsumers) {
+      const approvedFiles = new Set(entries.map((shared) => shared.file));
+      // Filenames identify archives within one library. Changing the set would
+      // evade corresponding-file checks; changing the last archive would rebind
+      // the library's single resource alias to a different approved archive.
+      if (approvedFiles.size !== incomingFiles.size ||
+          [...approvedFiles].some((file) => !incomingFiles.has(file)) ||
+          entries.at(-1)?.file !== d.entries.at(-1)?.file) {
+        throw new Error(`shared dependency version has different entries: ${d.name} ${d.version}`);
+      }
+    }
     for (const e of d.entries) {
       // The alias is shared by UUID/version across consumers and registries. A new
       // consumer must not change the bytes an existing consumer already approved.
-      for (const [consumer, installed] of Object.entries(readInstalled())) {
-        for (const shared of installed.deps ?? []) {
-          if (shared.uuid !== d.uuid || shared.version !== d.version) continue;
+      for (const { consumer, entries } of sharedConsumers) {
+        for (const shared of entries) {
+          if (shared.file !== e.file) continue;
           const versioned = PathUtils.join(depDir(consumer, shared.name, shared.version), shared.file);
           const flat = PathUtils.join(dropDir(consumer), "deps", shared.name, shared.file);
           const path = await IOUtils.exists(versioned) ? versioned : flat;
