@@ -75,6 +75,12 @@ The Bridge loader orchestrates module loading in a specific sequence. The entryp
 
 In development, the loader is served from a Vite dev server on port 5181 (`bridge/loader-features/vite.config.ts`). The startup bridge selects between the dev loader URL, the test loader URL, and the production `chrome://noraneko/content/core.js` path (`bridge/startup/src/chrome_root.ts`).
 
+### Drops lifecycle
+
+`browser-features/modules/modules/Drops.sys.mts` supports the Drops shelf at `about:hub#/features/drops`. Inspection downloads and hashes archives into a separate content-addressed `inspected` directory under the Drop's profile directory. These files are candidates only: opening a detail page or cancelling its permission prompt does not replace an approved installed archive. Installation verifies the inspected files again, copies them into versioned installed directories, and registers temporary add-ons and their Window Actors. Changed bytes for an already installed version are rejected because Gecko caches the actor modules by their versioned resource URL.
+
+Each installed Drop retains its own dependency archive copies. Resource aliases shared by several Drops are rebound to a surviving consumer before a consumer's files are removed. An installation failure removes add-ons and actors created during that attempt and attempts to restore the previously installed version. Startup restores approved archives from the installed directories; it does not activate files from the inspection cache (`browser-features/modules/modules/Drops.sys.mts`, `browser-features/modules/modules/NoraActors.sys.mts`). Colocated coverage for inspection integrity, shared dependency removal, and failed updates is in `browser-features/modules/modules/test/DropsLifecycle.test.mts`.
+
 ### Settings Page Integration
 
 Several Window Actors back settings UI routes. The settings application is a React/Tailwind full-page browser UI (`browser-features/pages-settings/vite.config.ts`) that bootstraps with theme, i18n, and hash-based routing (`browser-features/pages-settings/src/main.tsx`). Routes are defined for dashboard, design, sidebar, workspaces, PWA, Floorp OS, accounts, gestures, shortcuts, and updates (`browser-features/pages-settings/src/App.tsx`). For instance, the `NRSettings` actor and `NRAboutPreferences` actor support the preferences and settings infrastructure that these routes consume.

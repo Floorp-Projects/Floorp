@@ -6003,6 +6003,7 @@
       "browser-features/modules": {
         "dependencies": [
           "jsr:@types/gecko@*",
+          "npm:@freedomofpress/sigstore-browser@~0.1.14",
           "npm:@jsr/std__fs@^1.0.20",
           "npm:birpc@4",
           "npm:fflate@~0.8.2",
