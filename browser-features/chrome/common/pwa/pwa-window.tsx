@@ -8,13 +8,14 @@ import { createEffect, createSignal } from "solid-js";
 import { config } from "./config.ts";
 import PwaWindowStyle from "./pwa-window-style.css?inline";
 import type { PwaService } from "./pwaService.ts";
-import type { FloorpChromeWindow } from "./type.ts";
+import type { FloorpChromeWindow, ViewSourceWindow } from "./type.ts";
 import {
   getSsbWindowTitle,
   SsbWindowContainerIndicator,
 } from "./SsbWindowContainerIndicator.tsx";
 import { isContainerExperimentEnabled } from "./containerUtils.ts";
 import { updatePwaToolbarVisibility } from "./toolbarVisibility.ts";
+import { redirectViewSourceToBrowserWindow } from "./viewSourceRedirect.ts";
 
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
@@ -102,6 +103,7 @@ export class PwaWindowSupport {
   private initializeWindow(): void {
     globalThis.floorpSsbWindow = true;
     this.configureTitlebarBehavior();
+    this.configureViewSource();
     createRootHMR(() => {
       createEffect(() => {
         updatePwaToolbarVisibility(document, this.shouldShowToolbar());
@@ -365,6 +367,17 @@ export class PwaWindowSupport {
     } catch (error) {
       console.error(
         "[PwaWindowSupport] Failed to configure titlebar behavior:",
+        error,
+      );
+    }
+  }
+
+  private configureViewSource(): void {
+    try {
+      redirectViewSourceToBrowserWindow(window as unknown as ViewSourceWindow);
+    } catch (error) {
+      console.error(
+        "[PwaWindowSupport] Failed to redirect view source:",
         error,
       );
     }
