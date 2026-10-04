@@ -33,17 +33,17 @@ export class StatusBarManager {
       "noraneko.statusbar.enable",
       this.observerStatusbarPref,
     );
+    onCleanup(() => {
+      Services.prefs.removeObserver(
+        "noraneko.statusbar.enable",
+        this.observerStatusbarPref,
+      );
+    });
     createEffect(() => {
       Services.prefs.setBoolPref(
         "noraneko.statusbar.enable",
         this.showStatusBar(),
       );
-      onCleanup(() => {
-        Services.prefs.removeObserver(
-          "noraneko.statusbar.enable",
-          this.observerStatusbarPref,
-        );
-      });
     });
 
     if (!globalThis.gFloorp) {
