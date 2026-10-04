@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import { debounce } from "@solid-primitives/scheduled";
+import { debounce } from "es-toolkit";
 import { createPaletteState, type PaletteState } from "./data/state.ts";
 import {
   addRecentCommand,
@@ -357,7 +357,7 @@ export class CommandPaletteController {
     this.stepChoicesLoadGeneration++;
     this.state.setIsAnimatingOut(true);
     this.state.setIsVisible(false);
-    this.debouncedUpdateSearch.clear();
+    this.debouncedUpdateSearch.cancel();
 
     if (this.historySearchTimer) {
       clearTimeout(this.historySearchTimer);
@@ -589,7 +589,7 @@ export class CommandPaletteController {
               ? result.loadMore
               : undefined;
             this.state.setHasMoreChoices(hasMore);
-            this.state.setLoadMoreCallback(() => loadMore ?? null);
+            this.state.setLoadMoreCallback(loadMore ?? null);
             this.state.setStepChoicesLoading(false);
           }
         })
@@ -986,7 +986,7 @@ export class CommandPaletteController {
       this.bookmarkSearchTimer = null;
     }
 
-    if (trimmed && !shareModeEnabled()) {
+    if (trimmed && !shareModeEnabled.value) {
       this.bookmarkSearchTimer = setTimeout(() => {
         this.performBookmarkSearch(trimmed);
       }, 100);

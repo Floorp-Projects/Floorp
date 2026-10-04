@@ -2,8 +2,8 @@
 
 import i18next from "i18next";
 import type {
-  PaletteCommand,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
@@ -93,8 +93,14 @@ export const tabSwitcherCommand: PaletteCommand = {
     "tab",
     "change tab",
     "go to tab",
-    ...getEnglishStepCommandKeywords("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.tabSwitcher",
+      "commandPalette.tabSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.tabSwitcher",
+      "commandPalette.tabSwitcherDescription",
+    ),
     ...getJapaneseReadings("floorp-tab-switcher"),
   ],
   steps: [

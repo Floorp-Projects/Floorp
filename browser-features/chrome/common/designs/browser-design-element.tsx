@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, For, onCleanup, Show } from "solid-js";
+import { useRef } from "preact/hooks";
+import { useComputed, useSignalEffect } from "@preact/signals";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config, getChromeExtrasSettings } from "./configs.ts";
@@ -32,10 +33,10 @@ export function replaceIconPaths(
 }
 
 export function BrowserDesignElement() {
-  const getCSS = () => getCSSFromConfig(config());
+  const getCSS = () => getCSSFromConfig(config.value);
 
   // Apply UserJS preferences
-  createEffect(() => {
+  useSignalEffect(() => {
     const { userjs } = getCSS();
     if (userjs) {
       applyUserJS(userjs);
@@ -45,32 +46,32 @@ export function BrowserDesignElement() {
   // The Lepton-family designs still load pref-gated vendor CSS. Mirror the
   // migrated settings after applying user.js so turning a toggle off also
   // turns off the corresponding legacy rule.
-  createEffect(() => {
-    const design = config().globalConfigs.userInterface;
+  useSignalEffect(() => {
+    const design = config.value.globalConfigs.userInterface;
     const settings = getChromeExtrasSettings();
     if (design === "lepton" || design === "photon" || design === "protonfix") {
       syncLegacyChromeExtrasPrefs(settings);
     }
   });
 
-  let tabColorSheetURI: nsIURI | null = null;
+  const tabColorSheet = useRef<nsIURI | null>(null);
 
   // Register content CSS using StyleSheetService (AGENT_SHEET)
   // These styles apply to all documents including web content
-  createEffect(() => {
+  useSignalEffect(() => {
     const { styles, stylesRaw, iconBasePath, useTabColorAsToolbarColor } =
       getCSS();
     const registeredURIs: nsIURI[] = [];
 
     if (useTabColorAsToolbarColor === true) {
-      if (!tabColorSheetURI) {
+      if (!tabColorSheet.current) {
         try {
           const dataUri = `data:text/css;charset=utf-8,${
             encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
           }`;
           const uri = Services.io.newURI(dataUri);
           sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-          tabColorSheetURI = uri;
+          tabColorSheet.current = uri;
         } catch (error) {
           console.error(
             `[BrowserDesignElement] Failed to register tab color CSS:`,
@@ -78,11 +79,11 @@ export function BrowserDesignElement() {
           );
         }
       }
-    } else if (tabColorSheetURI) {
-      if (sss.sheetRegistered(tabColorSheetURI, AGENT_SHEET)) {
-        sss.unregisterSheet(tabColorSheetURI, AGENT_SHEET);
+    } else if (tabColorSheet.current) {
+      if (sss.sheetRegistered(tabColorSheet.current, AGENT_SHEET)) {
+        sss.unregisterSheet(tabColorSheet.current, AGENT_SHEET);
       }
-      tabColorSheetURI = null;
+      tabColorSheet.current = null;
     }
 
     // Development mode: Use raw CSS with icon path replacement (content styles only)
@@ -131,7 +132,7 @@ export function BrowserDesignElement() {
     }
 
     // Cleanup: Unregister sheets when component unmounts or styles change
-    onCleanup(() => {
+    return () => {
       for (const uri of registeredURIs) {
         try {
           if (sss.sheetRegistered(uri, AGENT_SHEET)) {
@@ -144,13 +145,14 @@ export function BrowserDesignElement() {
           );
         }
       }
-    });
+    };
   });
 
-  const chromeStyleUrls = createMemo(() => getCSS().chromeStyles ?? []);
+  // Compute Chrome-only styles - URL-based (applied via DOM, not AGENT_SHEET)
+  const chromeStyleUrls = useComputed(() => getCSS().chromeStyles ?? []);
 
   // Inline Chrome-only CSS (dev bundles + production supplementary rules)
-  const chromeInlineStyleContent = createMemo(() => {
+  const chromeInlineStyleContent = useComputed(() => {
     const { chromeStylesRaw, iconBasePath } = getCSS();
     if (!chromeStylesRaw?.length) {
       return "";
@@ -169,12 +171,12 @@ export function BrowserDesignElement() {
           still override. */
       }
       <style>{GECKO_152_VAR_ALIASES_CSS}</style>
-      <For each={chromeStyleUrls()}>
-        {(url) => <link rel="stylesheet" href={url} />}
-      </For>
-      <Show when={chromeInlineStyleContent()}>
-        <style>{chromeInlineStyleContent()}</style>
-      </Show>
+      {chromeStyleUrls.value.map((url) => (
+        <link key={url} rel="stylesheet" href={url} />
+      ))}
+      {chromeInlineStyleContent.value && (
+        <style>{chromeInlineStyleContent.value}</style>
+      )}
     </>
   );
 }

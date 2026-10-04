@@ -3,8 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
-import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
+import { render } from "@nora/preact-xul";
+import {
+  addDisposer,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
+import { signal } from "@preact/signals";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
 import hoverStyle from "./hover-offset.css?inline";
 
@@ -21,9 +26,9 @@ export namespace gFlexOrder {
   const floorpSidebarSelectBoxId = "panel-sidebar-select-box";
   let hoverOffsetFrame: number | undefined;
 
-  const [orders, setOrders] = createRootHMR(
+  const orders = createRootHMR(
     () =>
-      createSignal<Orders>({
+      signal<Orders>({
         floorpSidebarSplitter: -1,
         floorpSidebar: -1,
         floorpSidebarSelectBox: -1,
@@ -35,8 +40,8 @@ export namespace gFlexOrder {
     renderOrderStyle();
     observePanelWidths();
 
-    createEffect(() => {
-      const floorpSidebarPositionPref = panelSidebarConfig().position_start;
+    rootEffect(() => {
+      const floorpSidebarPositionPref = panelSidebarConfig.value.position_start;
       applyFlexOrder(floorpSidebarPositionPref);
     });
   }
@@ -45,19 +50,19 @@ export namespace gFlexOrder {
     if (floorpSidebarPositionPref) {
       // Keep Floorp's sidebar on the far right without overriding Firefox's
       // ordering for its sidebar launcher, content, or AI window.
-      setOrders({
+      orders.value = {
         floorpSidebarSplitter: 1000,
         floorpSidebar: 1001,
         floorpSidebarSelectBox: 1002,
-      });
+      };
     } else {
       // Negative orders keep Floorp's sidebar on the far left while Firefox
       // remains the single owner of all upstream browser child ordering.
-      setOrders({
+      orders.value = {
         floorpSidebarSelectBox: -3,
         floorpSidebar: -2,
         floorpSidebarSplitter: -1,
-      });
+      };
     }
     updateHoverOffset();
     scheduleHoverOffsetUpdate();
@@ -93,7 +98,7 @@ export namespace gFlexOrder {
       // Keep the collapsed measurement so the hover target does not move.
       return;
     }
-    const atEnd = untrack(orders).floorpSidebar > 0;
+    const atEnd = orders.peek().floorpSidebar > 0;
     const browserRect = browser.getBoundingClientRect();
     let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
     let hasVisiblePanel = false;
@@ -186,7 +191,7 @@ export namespace gFlexOrder {
     const childrenObserver = new MutationObserver(observe);
     childrenObserver.observe(browser, { childList: true });
     observe();
-    onCleanup(() => {
+    addDisposer(() => {
       resizeObserver.disconnect();
       panelObserver.disconnect();
       launcherObserver.disconnect();
@@ -202,16 +207,16 @@ export namespace gFlexOrder {
 
   function renderOrderStyle() {
     render(() => (
-      <style id="floorp-flex-order-style" jsx>
+      <style id="floorp-flex-order-style">
         {`
       #${floorpSidebarId} {
-        order: ${orders().floorpSidebar} !important;
+        order: ${orders.value.floorpSidebar} !important;
       }
       #${floorpSidebarSelectBoxId} {
-        order: ${orders().floorpSidebarSelectBox} !important;
+        order: ${orders.value.floorpSidebarSelectBox} !important;
       }
       #${floorpSidebarSplitterId} {
-        order: ${orders().floorpSidebarSplitter} !important;
+        order: ${orders.value.floorpSidebarSplitter} !important;
       }
       ${hoverStyle}
     `}

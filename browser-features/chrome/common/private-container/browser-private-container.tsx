@@ -5,14 +5,14 @@
 
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { PrivateContainer } from "./PrivateContainer.ts";
-import { createRootHMR } from "@nora/solid-xul";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 
 export class FloorpPrivateContainer {
   private get privateContainerMenuItem() {
-    return document?.querySelector("#open_in_private_container") as XULElement;
+    return document?.querySelector("#open_in_private_container") as unknown as XULElement;
   }
   private get openLinkMenuItem() {
-    return document?.querySelector("#context-openlink") as XULElement;
+    return document?.querySelector("#context-openlink") as unknown as XULElement;
   }
 
   constructor() {

@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  createRootHMR,
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { SsbPageAction } from "./SsbPageAction.tsx";
 import { SsbPanelView } from "./SsbPanelView.tsx";
 import { enabled } from "./config.ts";
@@ -16,13 +17,13 @@ import { ManifestProcesser } from "./manifestProcesser.ts";
 import { DataManager } from "./dataStore.ts";
 import { SiteSpecificBrowserManager } from "./ssbManager.ts";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Pwa", import.meta.hot)
 export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
   private initialized = false;
 
   init() {
-    if (!enabled()) return;
+    if (!enabled.value) return;
     // Finder can open a PWA window before Firefox has installed gBrowser on
     // that window. Initializing the manager earlier aborts the whole module.
     if (globalThis.gBrowser) {
@@ -53,42 +54,44 @@ export default class Pwa extends NoraComponentBase {
   private initialize(): void {
     if (this.initialized || !globalThis.gBrowser || window.closed) return;
     this.initialized = true;
-    const manifestProcesser = new ManifestProcesser();
-    const dataManager = new DataManager();
-    const ssbManager = new SiteSpecificBrowserManager(
-      manifestProcesser,
-      dataManager,
-    );
-    const ctx = new PwaService(ssbManager, manifestProcesser, dataManager);
+    createRootHMR(() => {
+      const manifestProcesser = new ManifestProcesser();
+      const dataManager = new DataManager();
+      const ssbManager = new SiteSpecificBrowserManager(
+        manifestProcesser,
+        dataManager,
+      );
+      const ctx = new PwaService(ssbManager, manifestProcesser, dataManager);
 
-    new SsbPageAction(ctx);
-    new SsbPanelView(ctx);
-    new PwaWindowSupport(ctx);
+      new SsbPageAction(ctx);
+      new SsbPanelView(ctx);
+      new PwaWindowSupport(ctx);
 
-    Pwa.ctx = ctx;
-    // Check if a startup SSB id was stored by the command line handler.
-    // Run it immediately (init is invoked after the browser UI is ready in
-    // NoraComponent lifecycle) and clear the pref to avoid repeated launches.
-    (async () => {
-      console.debug("Checking for startup SSB id...");
-      try {
-        const id = Services.prefs.getCharPref("floorp.ssb.startup.id", "");
-        if (id) {
-          const ssbObj = await ctx.getSsbObj(id);
-          if (ssbObj) {
-            await ctx.runSsbByUrl(ssbObj.start_url, ssbObj.userContextId);
+      Pwa.ctx = ctx;
+      // Check if a startup SSB id was stored by the command line handler.
+      // Run it immediately (init is invoked after the browser UI is ready in
+      // NoraComponent lifecycle) and clear the pref to avoid repeated launches.
+      (async () => {
+        console.debug("Checking for startup SSB id...");
+        try {
+          const id = Services.prefs.getCharPref("floorp.ssb.startup.id", "");
+          if (id) {
+            const ssbObj = await ctx.getSsbObj(id);
+            if (ssbObj) {
+              await ctx.runSsbByUrl(ssbObj.start_url, ssbObj.userContextId);
+            }
+            try {
+              Services.prefs.clearUserPref("floorp.ssb.startup.id");
+            } catch (e) {
+              console.error("Failed to clear floorp.ssb.startup.id", e);
+            }
           }
-          try {
-            Services.prefs.clearUserPref("floorp.ssb.startup.id");
-          } catch (e) {
-            console.error("Failed to clear floorp.ssb.startup.id", e);
-          }
+        } catch (e) {
+          // If the pref doesn't exist or any error occurs, ignore it so startup
+          // proceeds normally.
+          console.debug("No startup SSB id or failed to start SSB:", e);
         }
-      } catch (e) {
-        // If the pref doesn't exist or any error occurs, ignore it so startup
-        // proceeds normally.
-        console.debug("No startup SSB id or failed to start SSB:", e);
-      }
-    })();
+      })();
+    }, import.meta.hot);
   }
 }

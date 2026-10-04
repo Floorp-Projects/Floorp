@@ -81,7 +81,7 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @param workspaceId The workspace id.
    */
   public deleteWorkspace(id: TWorkspaceID): void {
-    const currentID = selectedWorkspaceID();
+    const currentID = selectedWorkspaceID.value;
     const defaultID = workspacesDataStore.defaultID as TWorkspaceID;
     const fallbackID = defaultID !== id && this.isWorkspaceID(defaultID)
       ? defaultID
@@ -138,7 +138,7 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
   }
 
   public getSelectedWorkspaceID(): TWorkspaceID {
-    const selected = selectedWorkspaceID();
+    const selected = selectedWorkspaceID.value;
     if (selected === null) {
       return this.getDefaultWorkspaceID();
     }

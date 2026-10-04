@@ -3,13 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import {
-  createEffect,
-  createRoot,
-  getOwner,
-  onCleanup,
-  runWithOwner,
-} from "solid-js";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import { selectedWorkspaceID } from "./data/data.ts";
 import type {
   PanelMultiViewParentElement,
@@ -43,6 +37,7 @@ export class WorkspacesTabManager {
   // bulk tab removal (workspace deletion) so that closing tabs one-by-one
   // does not interfere with the deletion flow (fixes #2247).
   private suppressTabCloseHandling = false;
+  private disposed = false;
   private readonly firefoxReplacementTracker = new FirefoxTabReplacementTracker<
     XULElement
   >();
@@ -60,6 +55,7 @@ export class WorkspacesTabManager {
         }
       ).SessionStore.promiseAllWindowsRestored
         .then(() => {
+          if (this.disposed) return;
           this.initializeWorkspace();
           globalThis.addEventListener(
             "TabClose",
@@ -68,6 +64,7 @@ export class WorkspacesTabManager {
           globalThis.addEventListener("TabOpen", this.boundHandleTabOpen);
         })
         .catch((error: Error) => {
+          if (this.disposed) return;
           console.error("Error waiting for windows restore:", error);
           this.initializeWorkspace();
           globalThis.addEventListener(
@@ -80,21 +77,20 @@ export class WorkspacesTabManager {
 
     initWorkspace();
 
-    const owner = getOwner?.();
     const exec = () =>
-      createEffect(() => {
-        if (!enabled()) {
+      rootEffect(() => {
+        if (!enabled.value) {
           return;
         }
 
-        if (selectedWorkspaceID()) {
+        if (selectedWorkspaceID.value) {
           this.updateTabsVisibility();
         }
       });
-    if (owner) runWithOwner(owner, exec);
-    else createRoot(exec);
+    exec();
 
-    onCleanup(() => {
+    addDisposer(() => {
+      this.disposed = true;
       this.cleanup();
     });
   }

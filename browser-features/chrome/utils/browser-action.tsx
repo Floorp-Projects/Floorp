@@ -2,8 +2,9 @@
 
 // NOTICE: Do not add toolbar buttons code here. Create new folder or file for new toolbar buttons.
 
-import { render } from "@nora/solid-xul";
-import { createRoot, getOwner, type JSXElement } from "solid-js";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
+import type { ComponentChild } from "preact";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -11,21 +12,27 @@ const { CustomizableUI } = ChromeUtils.importESModule(
 
 // deno-lint-ignore no-namespace
 export namespace BrowserActionUtils {
+  const mounts = new Map<string, () => void>();
+  function mount(key: string, content: ComponentChild, parent: Element) {
+    mounts.get(key)?.();
+    const dispose = safeRender(content, parent);
+    mounts.set(key, dispose);
+    addDisposer(() => {
+      dispose();
+      if (mounts.get(key) === dispose) mounts.delete(key);
+    });
+  }
   export function createToolbarClickActionButton(
     widgetId: string,
     l10nId: string | null,
     onCommandFunc: () => void,
-    styleElement: JSXElement | null = null,
+    styleElement: ComponentChild | null = null,
     area: TCustomizableUIArea | null = CustomizableUI.AREA_NAVBAR,
     position: number | null = 0,
     onCreatedFunc: null | ((aNode: XULElement) => void) = null,
   ) {
-    // Add style Element for toolbar button icon.
-    // This render is runnning every open browser window.
-    if (styleElement) {
-      render(() => styleElement, document?.head, {
-        marker: document?.head?.lastChild as Element,
-      });
+    if (styleElement && document?.head) {
+      mount(`${widgetId}-style`, styleElement, document.head);
     }
 
     // Create toolbar button only once per profile. Subsequent window opens reuse
@@ -46,6 +53,9 @@ export namespace BrowserActionUtils {
           onCommandFunc?.();
         },
         onCreated: (aNode: XULElement) => {
+          // Note: no reactive owner needed in preact/signals — effects are self-contained.
+          // Callers that set up reactive effects inside onCreatedFunc should use
+          // createNodeDisposer(aNode, dispose) to tie cleanup to the node's lifetime.
           onCreatedFunc?.(aNode);
         },
         defaultArea: area ?? undefined,
@@ -66,8 +76,7 @@ export namespace BrowserActionUtils {
         return;
       }
 
-      const hasUserCustomized =
-        typeof Services !== "undefined" &&
+      const hasUserCustomized = typeof Services !== "undefined" &&
         Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
 
       if (hasUserCustomized) {
@@ -86,23 +95,19 @@ export namespace BrowserActionUtils {
     widgetId: string,
     l10nId: string,
     targetViewId: string,
-    popupElement: JSXElement,
+    popupElement: ComponentChild,
     onViewShowingFunc?: ((event: Event) => void) | null,
     onCreatedFunc?: ((aNode: XULElement) => void) | null,
     area: string = CustomizableUI.AREA_NAVBAR,
-    styleElement: JSXElement | null = null,
+    styleElement: ComponentChild | null = null,
     position: number | null = 0,
   ) {
-    if (styleElement) {
-      render(() => styleElement, document?.head, {
-        marker: document?.head?.lastChild as Element,
-      });
+    if (styleElement && document?.head) {
+      mount(`${widgetId}-style`, styleElement, document.head);
     }
-
-    if (popupElement) {
-      render(() => popupElement, document?.getElementById("mainPopupSet"), {
-        marker: document?.getElementById("mainPopupSet")?.lastChild as Element,
-      });
+    const popupSet = document?.getElementById("mainPopupSet");
+    if (popupElement && popupSet) {
+      mount(`${widgetId}-popup`, popupElement, popupSet);
     }
 
     const widget = CustomizableUI.getWidget(widgetId);
@@ -110,7 +115,9 @@ export namespace BrowserActionUtils {
       return;
     }
 
-    const owner = getOwner();
+    // Note: solid-js required getOwner()/createRoot(fn, owner) to pass reactive
+    // context through the async CustomizableUI.createWidget callback boundary.
+    // In preact/signals, effects are independently tracked — no owner needed.
     (async () => {
       CustomizableUI.createWidget({
         id: widgetId,
@@ -120,10 +127,10 @@ export namespace BrowserActionUtils {
         label: document?.l10n?.formatValue(l10nId) ?? "",
         removable: true,
         onCreated: (aNode: XULElement) => {
-          createRoot(() => onCreatedFunc?.(aNode), owner);
+          onCreatedFunc?.(aNode);
         },
         onViewShowing: (event: Event) => {
-          createRoot(() => onViewShowingFunc?.(event), owner);
+          onViewShowingFunc?.(event);
         },
         defaultArea: area,
       });
@@ -139,8 +146,7 @@ export namespace BrowserActionUtils {
         return;
       }
 
-      const hasUserCustomized =
-        typeof Services !== "undefined" &&
+      const hasUserCustomized = typeof Services !== "undefined" &&
         Services.prefs?.prefHasUserValue?.("browser.uiCustomization.state");
 
       if (hasUserCustomized) {

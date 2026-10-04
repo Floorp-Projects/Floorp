@@ -6,7 +6,8 @@
 import type { TWorkspaceID } from "../utils/type";
 import type { WorkspacesService } from "../workspacesService";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { signal } from "@preact/signals";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const translationKeys = {
@@ -30,29 +31,30 @@ const getTranslations = () => ({
   archive: translate(translationKeys.archive),
 });
 
+// Module-level signal: translations are shared across all ContextMenu instances.
+const texts = signal(getTranslations());
+createRootHMR(() =>
+  addI18nObserver(() => {
+    texts.value = getTranslations();
+  }), import.meta.hot);
+
 export function ContextMenu(props: {
   disableBefore: boolean;
   disableAfter: boolean;
   contextWorkspaceId: TWorkspaceID;
   ctx: WorkspacesService;
 }) {
-  const [texts, setTexts] = createSignal(getTranslations());
-
-  addI18nObserver(() => {
-    setTexts(getTranslations());
-  });
-
   return (
     <>
       <xul:menuitem
         data-floorp-context-menu-key="floorp.workspaces.move-up"
-        label={texts().moveUp}
+        label={texts.value.moveUp}
         disabled={props.disableBefore}
         onCommand={() => props.ctx.reorderWorkspaceUp(props.contextWorkspaceId)}
       />
       <xul:menuitem
         data-floorp-context-menu-key="floorp.workspaces.move-down"
-        label={texts().moveDown}
+        label={texts.value.moveDown}
         disabled={props.disableAfter}
         onCommand={() =>
           props.ctx.reorderWorkspaceDown(props.contextWorkspaceId)}
@@ -63,12 +65,12 @@ export function ContextMenu(props: {
       />
       <xul:menuitem
         data-floorp-context-menu-key="floorp.workspaces.delete"
-        label={texts().delete}
+        label={texts.value.delete}
         onCommand={() => props.ctx.deleteWorkspace(props.contextWorkspaceId)}
       />
       <xul:menuitem
         data-floorp-context-menu-key="floorp.workspaces.manage"
-        label={texts().manage}
+        label={texts.value.manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
       />
@@ -78,7 +80,7 @@ export function ContextMenu(props: {
       />
       <xul:menuitem
         data-floorp-context-menu-key="floorp.workspaces.archive"
-        label={texts().archive}
+        label={texts.value.archive}
         onCommand={async () => {
           await props.ctx.archiveWorkspace(props.contextWorkspaceId);
         }}

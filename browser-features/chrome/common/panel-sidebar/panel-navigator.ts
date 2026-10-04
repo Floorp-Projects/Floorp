@@ -39,7 +39,7 @@ export namespace PanelNavigator {
     addonEnabled
       ? gWebsitePanel.goIndexPagePanel(sideBarId)
       : goHome(
-          gPanelSidebar!.getBrowserElement(sideBarId) as XULElement,
+          gPanelSidebar!.getBrowserElement(sideBarId) as unknown as XULElement,
           sideBarId,
         );
   }

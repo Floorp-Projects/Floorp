@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
 import { getGBrowser } from "../data/types.js";
 import { applyLayoutAttribute } from "../layout.js";
 import { updateHandles } from "../components/split-view-splitters.js";
@@ -17,9 +16,9 @@ import { resolveLayoutForSplitTabs } from "./session-restore.js";
  */
 export function initSplitViewEvents(
   logger: ConsoleInstance,
-): void {
+): () => void {
   const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  if (!tabContainer) return () => {};
 
   const onSplitViewActivate = (e: Event): void => {
     // Re-apply layout AFTER the entire event cascade has settled.
@@ -42,23 +41,28 @@ export function initSplitViewEvents(
       if (!tabpanels) return;
 
       const panels = gBrowser?.tabpanels?.splitViewPanels;
-      console.debug("[event-listeners:onSplitViewActivate:rAF]", "panel check", {
-        eventTabsLength: tabs.length,
-        splitViewPanelsLength: panels?.length ?? 0,
-        panelIds: panels?.join(", ") ?? "(none)",
-        match: tabs.length === panels?.length,
-      });
+      console.debug(
+        "[event-listeners:onSplitViewActivate:rAF]",
+        "panel check",
+        {
+          eventTabsLength: tabs.length,
+          splitViewPanelsLength: panels?.length ?? 0,
+          panelIds: panels?.join(", ") ?? "(none)",
+          match: tabs.length === panels?.length,
+        },
+      );
       if (!panels || panels.length < 2) return;
 
       const layout = resolveLayoutForSplitTabs(tabs);
-      const currentLayoutAttr =
-        tabpanels.getAttribute("split-view-layout") ?? "";
+      const currentLayoutAttr = tabpanels.getAttribute("split-view-layout") ??
+        "";
       const expectedLayoutResolved = getEffectiveSplitViewLayout(
         layout,
         panels.length,
       );
-      const expectedLayout =
-        expectedLayoutResolved === "horizontal" ? "" : expectedLayoutResolved;
+      const expectedLayout = expectedLayoutResolved === "horizontal"
+        ? ""
+        : expectedLayoutResolved;
 
       console.debug("[event-listeners:onSplitViewActivate:rAF]", "evaluating", {
         resolvedLayout: layout,
@@ -73,15 +77,23 @@ export function initSplitViewEvents(
           ".floorp-split-handle, .floorp-grid-handle",
         ).length;
         if (handleCount > 0) {
-          console.debug("[event-listeners:onSplitViewActivate:rAF]", "skipping (already correct)");
+          console.debug(
+            "[event-listeners:onSplitViewActivate:rAF]",
+            "skipping (already correct)",
+          );
           logger.debug(
-            `[onSplitViewActivate:rAF] layout already correct (${expectedLayout || "horizontal"}), handles=${handleCount}, skipping`,
+            `[onSplitViewActivate:rAF] layout already correct (${
+              expectedLayout || "horizontal"
+            }), handles=${handleCount}, skipping`,
           );
           return;
         }
       }
 
-      console.debug("[event-listeners:onSplitViewActivate:rAF]", "re-applying layout");
+      console.debug(
+        "[event-listeners:onSplitViewActivate:rAF]",
+        "re-applying layout",
+      );
       logger.debug(
         `[onSplitViewActivate:rAF] re-applying layout=${layout}, panels=${panels.length} (current="${currentLayoutAttr}", expected="${expectedLayout}")`,
       );
@@ -105,7 +117,10 @@ export function initSplitViewEvents(
     onSplitViewDeactivate,
   );
 
-  onCleanup(() => {
+  logger.debug(
+    "[events] TabSplitViewActivate/Deactivate listeners attached",
+  );
+  return () => {
     tabContainer.removeEventListener(
       "TabSplitViewActivate",
       onSplitViewActivate,
@@ -114,9 +129,5 @@ export function initSplitViewEvents(
       "TabSplitViewDeactivate",
       onSplitViewDeactivate,
     );
-  });
-
-  logger.debug(
-    "[events] TabSplitViewActivate/Deactivate listeners attached",
-  );
+  };
 }

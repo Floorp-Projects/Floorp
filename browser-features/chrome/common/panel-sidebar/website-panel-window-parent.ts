@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { setPanelSidebarData } from "./data/data.ts";
+import type { Panel } from "./utils/type.ts";
 import {
   getPanelDataById,
   getWebPanelChromeWindow,
@@ -84,7 +85,7 @@ export class WebsitePanel {
   }
 
   private persistZoomLevel(webpanelId: string, zoomLevel: number) {
-    setPanelSidebarData((prev) => {
+    setPanelSidebarData((prev: Panel[]) => {
       Object.values(prev).forEach((panel) => {
         if (panel.id === webpanelId) {
           panel.zoomLevel = zoomLevel;

@@ -32,7 +32,8 @@ spacer:is([part="overflow-start-indicator"], [part="overflow-end-indicator"]),
 .tabbrowser-tab[selected="true"] {
   -moz-window-dragging: drag;
   --tab-max-width: 100vw;
-  min-width: calc(var(--uc-tabbar-width, 100vw) - var(--uc-window-control-space)) !important;
+  min-width: calc(var(--uc-tabbar-width, 100vw) -
+    var(--uc-window-control-space)) !important;
   max-width: var(--tab-max-width) !important;
 }
 
@@ -59,7 +60,8 @@ spacer:is([part="overflow-start-indicator"], [part="overflow-end-indicator"]),
 
 #tabbrowser-tabs {
   --tab-overflow-pinned-tabs-width: 0 !important;
-  padding-inline: 0 !important; /* Original: var(--tab-overflow-pinned-tabs-width) 0; */
+  padding-inline: 0
+    !important; /* Original: var(--tab-overflow-pinned-tabs-width) 0; */
 }
 
 .tab-throbber[pinned],

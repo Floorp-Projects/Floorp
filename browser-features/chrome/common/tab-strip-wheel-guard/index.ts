@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { classifyWheelEvent, emptyWheelGuardState } from "./classifier.ts";
 import {
   type InstalledWheelGuard,
   TAB_STRIP_WHEEL_GUARD_PREF,
+  WHEEL_GUARD_SUPPORTED_MASK,
   type WheelGuardEnvironment,
   type WheelGuardGlobalObject,
   type WheelGuardReadout,
-  WHEEL_GUARD_SUPPORTED_MASK,
 } from "./types.ts";
 
 interface NativeArrowScrollbox extends Element {
@@ -121,7 +121,7 @@ export function installWheelGuard(
   };
 }
 
-@noraComponent(import.meta.hot)
+@noraComponent("TabStripWheelGuard", import.meta.hot)
 export default class TabStripWheelGuard extends NoraComponentBase {
   init(): void {
     let prefValue = 0;
@@ -151,6 +151,6 @@ export default class TabStripWheelGuard extends NoraComponentBase {
     if (!installed) {
       return;
     }
-    onCleanup(() => installed.destroy());
+    addDisposer(() => installed.destroy());
   }
 }

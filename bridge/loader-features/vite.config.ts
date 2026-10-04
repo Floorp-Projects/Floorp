@@ -3,7 +3,7 @@
 import { defineConfig } from "vite";
 import { realpathSync } from "node:fs";
 import path from "node:path";
-import solidPlugin from "vite-plugin-solid";
+
 import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
@@ -37,6 +37,7 @@ const reactRouterDomDir = realpathSync(
 export default defineConfig({
   cacheDir: "../../node_modules/.vite/loader-features",
   publicDir: r("public"),
+
   server: {
     port: 5181,
     strictPort: true,
@@ -121,7 +122,7 @@ export default defineConfig({
     // deno(),
 
     swc.vite({
-      exclude: ["*solid-xul*", "*solid-js*", REACT_UI_PATH],
+      exclude: [/node_modules/, "**/*.tsx", REACT_UI_PATH],
       jsc: {
         target: "esnext",
         parser: {
@@ -131,6 +132,27 @@ export default defineConfig({
         transform: {
           decoratorMetadata: true,
           decoratorVersion: "2022-03",
+        },
+      },
+    }),
+
+    // unplugin-swc disables Vite's esbuild transform; compile chrome JSX here
+    // while keeping the shared settings UI on its separate React transform.
+    swc.vite({
+      include: /\.[jt]sx$/,
+      exclude: [/node_modules/, REACT_UI_PATH],
+      jsc: {
+        target: "esnext",
+        parser: { syntax: "typescript", tsx: true, decorators: true },
+        transform: {
+          decoratorVersion: "2022-03",
+          react: {
+            runtime: "automatic",
+            importSource: "preact",
+            throwIfNamespace: false,
+            development: false,
+            refresh: false,
+          },
         },
       },
     }),
@@ -157,16 +179,6 @@ export default defineConfig({
       },
     }),
 
-    solidPlugin({
-      exclude: REACT_UI_PATH,
-      solid: {
-        generate: "universal",
-        moduleName: "@nora/solid-xul",
-        contextToCustomElements: false,
-        hydratable: true,
-      },
-      hot: false,
-    }),
 
     // HMR支援プラグイン
     {
@@ -231,11 +243,11 @@ export default defineConfig({
       "react-router-dom",
       "react/jsx-runtime",
       "tailwind-merge",
-      "solid-js",
-      "solid-js/web",
-      "solid-js/store",
-      "solid-js/html",
-      "solid-js/h",
+      "preact",
+      "preact/hooks",
+      "preact/compat",
+      "@preact/signals",
+      "@preact/signals-core",
     ],
   },
 
@@ -243,11 +255,11 @@ export default defineConfig({
     dedupe: [
       "react",
       "react-dom",
-      "solid-js",
-      "solid-js/web",
-      "solid-js/store",
-      "solid-js/html",
-      "solid-js/h",
+      "preact",
+      "preact/hooks",
+      "preact/compat",
+      "@preact/signals",
+      "@preact/signals-core",
     ],
     preserveSymlinks: true,
     alias: [
@@ -260,8 +272,12 @@ export default defineConfig({
       },
       { find: "@nora/skin", replacement: r("../../browser-features/skin") },
       {
-        find: "@nora/solid-xul",
-        replacement: r("../../libs/solid-xul/index.ts"),
+        find: "@nora/preact-xul/lifetime",
+        replacement: r("../../libs/preact-xul/lifetime.ts"),
+      },
+      {
+        find: "@nora/preact-xul",
+        replacement: r("../../libs/preact-xul/index.ts"),
       },
       { find: "@std/toml", replacement: "@jsr/std__toml" },
       {

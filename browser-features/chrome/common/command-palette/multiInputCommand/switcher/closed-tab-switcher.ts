@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type {
-  PaletteCommand,
-  CommandStepChoice,
-} from "../../types.ts";
+import type { CommandStepChoice, PaletteCommand } from "../../types.ts";
 import { getJapaneseReadings } from "../../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
@@ -12,7 +9,9 @@ import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/comman
 export function loadClosedTabs(): Promise<CommandStepChoice[]> {
   try {
     const entries = globalThis.SessionStore.getClosedTabData(globalThis.window);
-    if (!Array.isArray(entries) || entries.length === 0) return Promise.resolve([]);
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return Promise.resolve([]);
+    }
 
     const choices: CommandStepChoice[] = entries.map(
       (entry: unknown, index: number) => {
@@ -47,8 +46,14 @@ export const closedTabSwitcherCommand: PaletteCommand = {
     "undo close tab",
     "restore tab",
     "recently closed",
-    ...getEnglishStepCommandKeywords("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.closedTabSwitcher",
+      "commandPalette.closedTabSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.closedTabSwitcher",
+      "commandPalette.closedTabSwitcherDescription",
+    ),
     ...getJapaneseReadings("floorp-closed-tab-switcher"),
   ],
   steps: [

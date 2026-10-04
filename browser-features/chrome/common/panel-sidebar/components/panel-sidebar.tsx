@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
+import { h } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
@@ -17,7 +18,6 @@ import {
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
-import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 import "../utils/webRequest.ts";
@@ -43,9 +43,8 @@ export class CPanelSidebar {
   }
 
   constructor() {
-    this.owner = getOwner();
     const exec = () => {
-      createEffect(() => {
+      rootEffect(() => {
         // Only clear selection marker from sidebar panels (not workspaces).
         const currentCheckedPanels = Array.from(
           document?.querySelectorAll(
@@ -57,7 +56,7 @@ export class CPanelSidebar {
           panel.removeAttribute("data-checked");
         });
 
-        const currentPanel = this.getPanelData(selectedPanelId() ?? "");
+        const currentPanel = this.getPanelData(selectedPanelId.value ?? "");
         if (currentPanel) {
           document
             // Select by data-panel-id to avoid touching workspace entries.
@@ -68,11 +67,12 @@ export class CPanelSidebar {
         }
       });
     };
-    if (this.owner) runWithOwner(this.owner, exec);
-    else createRoot(exec);
+    exec();
+    addDisposer(() => {
+      for (const dispose of this.panelDisposers.values()) dispose();
+      this.panelDisposers.clear();
+    });
   }
-
-  private owner: Owner | null = null;
 
   public getBrowserElement(id: string) {
     return document?.getElementById(`sidebar-panel-${id}`) as unknown as
@@ -88,7 +88,7 @@ export class CPanelSidebar {
   }
 
   public getPanelData(id: string): Panel | undefined {
-    return panelSidebarData().find((panel) => panel.id === id);
+    return panelSidebarData.value.find((panel) => panel.id === id);
   }
 
   private createBrowserComponent(panel: Panel) {
@@ -130,22 +130,11 @@ export class CPanelSidebar {
       this.panelDisposers.delete(panel.id);
     }
 
-    const exec = () => {
-      const dispose = render(
-        () => this.createBrowserComponent(panel),
-        this.parentElement as XULElement,
-        {
-          hotCtx: import.meta.hot,
-        },
-      );
-      if (typeof dispose === "function") {
-        this.panelDisposers.set(panel.id, dispose);
-      }
-    };
-    if (this.owner) runWithOwner(this.owner, exec);
-    else createRoot(exec);
-
-    this.initBrowser(panel);
+    const dispose = safeRender(
+      h(() => this.createBrowserComponent(panel), {}),
+      this.parentElement as unknown as Element,
+    );
+    this.panelDisposers.set(panel.id, dispose);
   }
 
   private initBrowser(panel: Panel) {
@@ -175,9 +164,9 @@ export class CPanelSidebar {
   }
 
   public changePanel(panelId: string): void {
-    if (panelId === selectedPanelId()) {
+    if (panelId === selectedPanelId.value) {
       setSelectedPanelId(null);
-      if (panelSidebarConfig().autoUnload) {
+      if (panelSidebarConfig.value.autoUnload) {
         this.unloadPanel(panelId);
       }
       return;
@@ -205,8 +194,8 @@ export class CPanelSidebar {
 
   public saveCurrentSidebarWidth() {
     // Floating dimensions belong to panelSidebarConfig, never to panel.width.
-    if (isFloating()) return;
-    const panelId = selectedPanelId();
+    if (isFloating.value) return;
+    const panelId = selectedPanelId.value;
     // Persist the rendered size only after a completed, visible docked resize.
     const currentWidth = this.sidebarElement?.getBoundingClientRect().width;
     if (panelId && currentWidth && Number.isFinite(currentWidth)) {
@@ -221,9 +210,9 @@ export class CPanelSidebar {
   }
 
   public setSidebarWidth(panel: Panel) {
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
     const dockedWidth = panel.width !== 0 ? panel.width : config.globalWidth;
-    const width = isFloating()
+    const width = isFloating.value
       ? config.floatingWidth ?? dockedWidth
       : dockedWidth;
     this.sidebarElement?.style.setProperty(

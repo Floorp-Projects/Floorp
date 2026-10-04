@@ -37,10 +37,10 @@ function element(id: string): HTMLElement {
 async function withPanel(test: () => Promise<void>): Promise<void> {
   const controller = PanelNavigator.gPanelSidebar;
   assert(controller, "panel sidebar should be initialized");
-  const config = panelSidebarConfig();
-  const panels = panelSidebarData();
-  const selected = selectedPanelId();
-  const floating = isFloating();
+  const config = panelSidebarConfig.value;
+  const panels = panelSidebarData.value;
+  const selected = selectedPanelId.value;
+  const floating = isFloating.value;
   try {
     setIsFloating(false);
     setPanelSidebarData([...panels, {
@@ -155,7 +155,7 @@ async function testFeatureToggleWithVerticalTabs(): Promise<void> {
     const verticalPref = "sidebar.verticalTabs";
     const hadVerticalPref = Services.prefs.prefHasUserValue(verticalPref);
     const savedVerticalPref = Services.prefs.getBoolPref(verticalPref, false);
-    const enabled = isPanelSidebarEnabled();
+    const enabled = isPanelSidebarEnabled.value;
     try {
       Services.prefs.setBoolPref(verticalPref, true);
       await nextFrame();
@@ -208,7 +208,7 @@ async function testFeatureToggleWithVerticalTabs(): Promise<void> {
 
 async function testFloatingFeatureToggleRestoresBehavior(): Promise<void> {
   await withPanel(async () => {
-    const enabled = isPanelSidebarEnabled();
+    const enabled = isPanelSidebarEnabled.value;
     try {
       setPanelSidebarConfig((config) => ({
         ...config,
@@ -272,7 +272,7 @@ async function testFloatingFeatureToggleRestoresBehavior(): Promise<void> {
       await nextFrame();
       document.dispatchEvent(new MouseEvent("mouseup"));
       assert(
-        (panelSidebarConfig().floatingPositionLeft ?? before.left) >
+        (panelSidebarConfig.value.floatingPositionLeft ?? before.left) >
           before.left,
         "re-enabled floating panel header should remain draggable",
       );
@@ -454,7 +454,7 @@ async function testFloatingResizePersists(): Promise<void> {
       "floating resize should flush the final frame",
     );
     assertApprox(
-      panelSidebarConfig().floatingWidth ?? 0,
+      panelSidebarConfig.value.floatingWidth ?? 0,
       width,
       1,
       "floating configuration should persist the final width",
@@ -462,13 +462,13 @@ async function testFloatingResizePersists(): Promise<void> {
     assertDockedWidth(400);
     resizeFloatingHandle("floating-splitter-corner-bottomright", 20, 30);
     assertApprox(
-      panelSidebarConfig().floatingWidth ?? 0,
+      panelSidebarConfig.value.floatingWidth ?? 0,
       width + 20,
       1,
       "diagonal resize should save floating width",
     );
     assertApprox(
-      panelSidebarConfig().floatingHeight ?? 0,
+      panelSidebarConfig.value.floatingHeight ?? 0,
       before.height + 30,
       1,
       "diagonal resize should save floating height",
@@ -476,7 +476,7 @@ async function testFloatingResizePersists(): Promise<void> {
     assertDockedWidth(400);
     await nextFrame();
     const browser = element("browser");
-    const property = panelSidebarConfig().position_start
+    const property = panelSidebarConfig.value.position_start
       ? "--floorp-panel-end-width"
       : "--floorp-panel-start-width";
     assertApprox(
@@ -507,13 +507,13 @@ async function testVerticalFloatingResizePreservesGlobalWidth(): Promise<void> {
     resizeFloatingHandle("floating-splitter-bottom", 0, 40);
     assertDockedWidth(0);
     assertApprox(
-      panelSidebarConfig().floatingWidth ?? 0,
+      panelSidebarConfig.value.floatingWidth ?? 0,
       520,
       1,
       "vertical resize should keep the floating width",
     );
     assertApprox(
-      panelSidebarConfig().floatingHeight ?? 0,
+      panelSidebarConfig.value.floatingHeight ?? 0,
       340,
       1,
       "vertical resize should persist the final height",

@@ -5,13 +5,13 @@
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { ContextMenuController } from "./controller.ts";
 
 export * from "./config.ts";
 export * from "./types.ts";
 
-@noraComponent(import.meta.hot)
+@noraComponent("ContextMenu", import.meta.hot)
 export default class ContextMenu extends NoraComponentBase {
   // NoraComponentBase invokes init() from its constructor. `declare` avoids a
   // derived-class field initializer overwriting the controller created there.
@@ -41,6 +41,6 @@ export default class ContextMenu extends NoraComponentBase {
     };
     this.cleanupController = cleanup;
     globalThis.addEventListener("unload", cleanup, { once: true });
-    onCleanup(cleanup);
+    addDisposer(cleanup);
   }
 }

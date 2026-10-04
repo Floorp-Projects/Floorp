@@ -39,7 +39,7 @@ function testOnPopupShowingDoesNotThrow(): void {
   assert(!threw, "onPopupShowing should not throw when invoked");
 }
 
-function testAddContextBoxCreatesMenuitem(): void {
+async function testAddContextBoxCreatesMenuitem(): Promise<void> {
   // Create mock elements needed by addContextBox
   const contextMenu = ContextMenuUtils.contentAreaContextMenu();
   if (!contextMenu) {
@@ -58,10 +58,11 @@ function testAddContextBoxCreatesMenuitem(): void {
   contextMenu.appendChild(renderMarker);
 
   let _functionCalled = false;
-  let checkedCalled = false;
+  let checkCount = 0;
+  let dispose: (() => void) | undefined;
 
   try {
-    ContextMenuUtils.addContextBox(
+    dispose = ContextMenuUtils.addContextBox(
       "test-context-menuitem",
       "test.label",
       "test-context-render-marker",
@@ -70,15 +71,31 @@ function testAddContextBoxCreatesMenuitem(): void {
       },
       "test-context-check-target",
       () => {
-        checkedCalled = true;
+        checkCount++;
       },
     );
     // Verify the checked function was called during setup (contextMenuObserverFunc runs)
     assert(
-      checkedCalled,
+      checkCount === 1,
       "checkedFunction should be called during addContextBox setup",
     );
+    checkTarget.setAttribute("hidden", "true");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(
+      checkCount,
+      2,
+      "target changes update visibility after insertion",
+    );
+    dispose?.();
+    checkTarget.removeAttribute("hidden");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assertEquals(checkCount, 2, "disposed menu stops observing its source");
+    assert(
+      !document.getElementById("test-context-menuitem"),
+      "scope disposal removes the owned item",
+    );
   } finally {
+    dispose?.();
     checkTarget.remove();
     renderMarker.remove();
     document?.getElementById("test-context-menuitem")?.remove();
@@ -88,7 +105,9 @@ function testAddContextBoxCreatesMenuitem(): void {
 function testAddToolbarContentMenuPopupSetDoesNotThrow(): void {
   let threw = false;
   try {
-    ContextMenuUtils.addToolbarContentMenuPopupSet(() => null as unknown as Element);
+    ContextMenuUtils.addToolbarContentMenuPopupSet(() =>
+      null as unknown as Element
+    );
   } catch {
     threw = true;
   }

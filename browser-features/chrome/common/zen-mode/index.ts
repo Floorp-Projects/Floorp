@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createRoot, onCleanup } from "solid-js";
+import { render } from "@nora/preact-xul";
+import { addDisposer, createRoot } from "@nora/preact-xul/lifetime";
+import { h } from "preact";
 import {
   noraComponent,
   NoraComponentBase,
@@ -24,7 +25,7 @@ const TOOLBAR_BUTTON_ID = "zen-mode-button";
 const TOOLBAR_TOOLTIP_ID = "zen-mode-button-tooltip";
 const TOOLBAR_ICON_STYLE_ID = "floorp-zen-mode-icon-style";
 
-@noraComponent(import.meta.hot)
+@noraComponent("ZenMode", import.meta.hot)
 export default class ZenMode extends NoraComponentBase {
   init() {
     this.logger.info("Initializing Zen Mode");
@@ -150,7 +151,7 @@ export default class ZenMode extends NoraComponentBase {
       try {
         menuDispose = createRoot((dispose) => {
           render(
-            () => ZenModeMenuElement({ targetWindow }),
+            () => h(ZenModeMenuElement, { targetWindow }),
             menuPopup,
             {
               marker: marker?.parentElement === menuPopup ? marker : undefined,
@@ -266,6 +267,6 @@ export default class ZenMode extends NoraComponentBase {
     };
 
     targetWindow.addEventListener("unload", cleanup, { once: true });
-    onCleanup(cleanup);
+    addDisposer(cleanup);
   }
 }

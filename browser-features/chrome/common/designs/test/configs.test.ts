@@ -2,19 +2,19 @@
 // @colocated-env browser
 
 import {
-  deepMerge,
-  isPlainObject,
-  getOldUICustomizationConfig,
+  addUICustomizationCategory,
   createDefaultOldObjectConfigs,
+  deepMerge,
   getOldConfigs,
+  getOldUICustomizationConfig,
   getUICustomizationSetting,
+  isPlainObject,
   setUICustomizationConfig,
   updateUICustomizationSetting,
-  addUICustomizationCategory,
 } from "../configs.ts";
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
@@ -398,7 +398,10 @@ export async function runAllTests(): Promise<void> {
     { name: "isPlainObject date", fn: testIsPlainObjectDate },
     { name: "isPlainObject regexp", fn: testIsPlainObjectRegExp },
     { name: "isPlainObject function", fn: testIsPlainObjectFunction },
-    { name: "isPlainObject with prototype", fn: testIsPlainObjectWithPrototype },
+    {
+      name: "isPlainObject with prototype",
+      fn: testIsPlainObjectWithPrototype,
+    },
     // deepMerge
     {
       name: "deepMerge override primitive",
@@ -419,7 +422,10 @@ export async function runAllTests(): Promise<void> {
     { name: "deepMerge array override", fn: testDeepMergeArrayOverride },
     { name: "deepMerge null override", fn: testDeepMergeNullOverride },
     { name: "deepMerge empty object", fn: testDeepMergeEmptyObject },
-    { name: "deepMerge circular reference safe", fn: testDeepMergeCircularReferenceSafe },
+    {
+      name: "deepMerge circular reference safe",
+      fn: testDeepMergeCircularReferenceSafe,
+    },
     // getOldUICustomizationConfig
     {
       name: "UI customization default navbar",
@@ -469,18 +475,45 @@ export async function runAllTests(): Promise<void> {
       name: "get setting missing key",
       fn: testGetUICustomizationMissingSetting,
     },
-    { name: "get setting error handling", fn: testGetUICustomizationSettingErrorHandling },
+    {
+      name: "get setting error handling",
+      fn: testGetUICustomizationSettingErrorHandling,
+    },
     // setUICustomizationConfig
-    { name: "set UI customization config navbar", fn: testSetUICustomizationConfigNavbar },
-    { name: "set UI customization config display", fn: testSetUICustomizationConfigDisplay },
+    {
+      name: "set UI customization config navbar",
+      fn: testSetUICustomizationConfigNavbar,
+    },
+    {
+      name: "set UI customization config display",
+      fn: testSetUICustomizationConfigDisplay,
+    },
     // updateUICustomizationSetting
-    { name: "update navbar position", fn: testUpdateUICustomizationSettingNavbarPosition },
-    { name: "update search bar top", fn: testUpdateUICustomizationSettingSearchBarTop },
-    { name: "update bookmark bar position", fn: testUpdateUICustomizationSettingBookmarkBarPosition },
-    { name: "update special bool", fn: testUpdateUICustomizationSettingSpecialBool },
+    {
+      name: "update navbar position",
+      fn: testUpdateUICustomizationSettingNavbarPosition,
+    },
+    {
+      name: "update search bar top",
+      fn: testUpdateUICustomizationSettingSearchBarTop,
+    },
+    {
+      name: "update bookmark bar position",
+      fn: testUpdateUICustomizationSettingBookmarkBarPosition,
+    },
+    {
+      name: "update special bool",
+      fn: testUpdateUICustomizationSettingSpecialBool,
+    },
     // addUICustomizationCategory
-    { name: "add UI customization category", fn: testAddUICustomizationCategory },
-    { name: "add UI customization category overwrites", fn: testAddUICustomizationCategoryOverwrites },
+    {
+      name: "add UI customization category",
+      fn: testAddUICustomizationCategory,
+    },
+    {
+      name: "add UI customization category overwrites",
+      fn: testAddUICustomizationCategoryOverwrites,
+    },
   ]);
 }
 
@@ -489,12 +522,22 @@ export async function runAllTests(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 function testSetUICustomizationConfigNavbar(): void {
-  const originalPosition = getUICustomizationSetting("navbar", "position", "top");
-  setUICustomizationConfig("navbar", { position: "bottom", searchBarTop: true });
+  const originalPosition = getUICustomizationSetting(
+    "navbar",
+    "position",
+    "top",
+  );
+  setUICustomizationConfig("navbar", {
+    position: "bottom",
+    searchBarTop: true,
+  });
   const result = getUICustomizationSetting("navbar", "position", "top");
   assertEquals(result, "bottom", "navbar position should be updated");
   // Restore original
-  setUICustomizationConfig("navbar", { position: originalPosition as "top" | "bottom", searchBarTop: false });
+  setUICustomizationConfig("navbar", {
+    position: originalPosition as "top" | "bottom",
+    searchBarTop: false,
+  });
 }
 
 function testSetUICustomizationConfigDisplay(): void {
@@ -502,8 +545,16 @@ function testSetUICustomizationConfigDisplay(): void {
     disableFullscreenNotification: true,
     deleteBrowserBorder: true,
   });
-  const result1 = getUICustomizationSetting("display", "disableFullscreenNotification", false);
-  const result2 = getUICustomizationSetting("display", "deleteBrowserBorder", false);
+  const result1 = getUICustomizationSetting(
+    "display",
+    "disableFullscreenNotification",
+    false,
+  );
+  const result2 = getUICustomizationSetting(
+    "display",
+    "deleteBrowserBorder",
+    false,
+  );
   assertEquals(result1, true, "disableFullscreenNotification should be true");
   assertEquals(result2, true, "deleteBrowserBorder should be true");
   // Restore
@@ -523,7 +574,11 @@ function testUpdateUICustomizationSettingNavbarPosition(): void {
   const result = getUICustomizationSetting("navbar", "position", "top");
   assertEquals(result, "bottom", "navbar position should be updated to bottom");
   // Restore
-  updateUICustomizationSetting("navbar", "position", originalValue as "top" | "bottom");
+  updateUICustomizationSetting(
+    "navbar",
+    "position",
+    originalValue as "top" | "bottom",
+  );
 }
 
 function testUpdateUICustomizationSettingSearchBarTop(): void {
@@ -544,7 +599,11 @@ function testUpdateUICustomizationSettingBookmarkBarPosition(): void {
 
 function testUpdateUICustomizationSettingSpecialBool(): void {
   updateUICustomizationSetting("special", "optimizeForTreeStyleTab", true);
-  const result = getUICustomizationSetting("special", "optimizeForTreeStyleTab", false);
+  const result = getUICustomizationSetting(
+    "special",
+    "optimizeForTreeStyleTab",
+    false,
+  );
   assertEquals(result, true, "optimizeForTreeStyleTab should be updated");
   // Restore
   updateUICustomizationSetting("special", "optimizeForTreeStyleTab", false);
@@ -560,7 +619,11 @@ function testAddUICustomizationCategory(): void {
 
   addUICustomizationCategory(categoryName, categorySettings);
 
-  const result1 = getUICustomizationSetting(categoryName, "testSetting", "default");
+  const result1 = getUICustomizationSetting(
+    categoryName,
+    "testSetting",
+    "default",
+  );
   const result2 = getUICustomizationSetting(categoryName, "numberSetting", 0);
 
   assertEquals(result1, "testValue", "testSetting should be added");
@@ -578,7 +641,11 @@ function testAddUICustomizationCategoryOverwrites(): void {
 
   addUICustomizationCategory(categoryName, updatedSettings);
   result = getUICustomizationSetting(categoryName, "key", "default");
-  const newResult = getUICustomizationSetting(categoryName, "newKey", "default");
+  const newResult = getUICustomizationSetting(
+    categoryName,
+    "newKey",
+    "default",
+  );
 
   assertEquals(result, "updated", "setting should be overwritten");
   assertEquals(newResult, "new", "new setting should be added");
@@ -605,7 +672,11 @@ function testDeepMergeCircularReferenceSafe(): void {
 
   try {
     const result = deepMerge({ safe: { x: 1 } }, override);
-    assertEquals((result as Record<string, unknown>).safe as Record<string, unknown>, { x: 1 }, "safe merge should work");
+    assertEquals(
+      (result as Record<string, unknown>).safe as Record<string, unknown>,
+      { x: 1 },
+      "safe merge should work",
+    );
   } catch {
     // If it throws, that's also acceptable behavior for circular refs
     assert(true, "circular reference handled (either merged or threw)");

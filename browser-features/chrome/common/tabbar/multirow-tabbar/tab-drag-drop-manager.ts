@@ -370,7 +370,7 @@ export class TabDragDropManager {
       return selectedTab;
     }
 
-    return tab as XULElement;
+    return tab as unknown as XULElement;
   }
 
   private performTabDragOver = (event: DragEvent): void => {
@@ -511,7 +511,7 @@ export class TabDragDropManager {
       draggedTab.parentNode?.parentNode?.parentNode?.nodeName === "tab-group"
     ) {
       const tabGroup = draggedTab.parentNode.parentNode
-        .parentNode as XULElement;
+        .parentNode as unknown as XULElement;
       const atEnd = this.lastKnownIndex === allTabs.length;
       const tabToMoveTo =
         allTabs[atEnd ? allTabs.length - 1 : this.lastKnownIndex];
@@ -687,13 +687,16 @@ export class TabDragDropManager {
         gBrowser.moveTabToExistingGroup(t, this.groupToInsertTo);
 
         if (tabInGroupToMoveTo) {
-          gBrowser.moveTabBefore(t, tabInGroupToMoveTo as XULElement);
+          gBrowser.moveTabBefore(
+            t,
+            tabInGroupToMoveTo as unknown as XULElement,
+          );
         } else {
           const lastTab = this.groupToInsertTo.querySelector(
             "tab:last-of-type",
           );
           if (lastTab) {
-            gBrowser.moveTabAfter(t, lastTab as XULElement);
+            gBrowser.moveTabAfter(t, lastTab as unknown as XULElement);
           }
         }
       }

@@ -3,19 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import style from "./style.css?inline";
 import { SidebarHeader } from "./sidebar-header";
 import { SidebarSelectbox } from "./sidebar-selectbox";
 import { SidebarSplitter } from "./sidebar-splitter";
-import {
-  createEffect,
-  createRoot,
-  getOwner,
-  on,
-  runWithOwner,
-  Show,
-} from "solid-js";
 import {
   isFloating,
   isPanelSidebarEnabled,
@@ -25,9 +18,40 @@ import { FloatingSplitter } from "./floating-splitter";
 import { BrowserBox } from "./browser-box";
 import type { CPanelSidebar } from "./panel-sidebar";
 
+type SidebarContentProps = { ctx: CPanelSidebar };
+
+function SidebarContent({ ctx }: SidebarContentProps) {
+  const enabled = isPanelSidebarEnabled.value;
+  const floating = isFloating.value;
+
+  if (!enabled) {
+    return null;
+  }
+
+  return (
+    <>
+      <xul:vbox
+        id="panel-sidebar-box"
+        class="chromeclass-extrachrome chromeclass-directories instant customization-target"
+        data-floating={floating.toString()}
+        popover="manual"
+      >
+        <SidebarHeader ctx={ctx} />
+        <BrowserBox />
+        {floating && <FloatingSplitter />}
+      </xul:vbox>
+      {!floating && (
+        <SidebarSplitter onResizeEnd={() => ctx.saveCurrentSidebarWidth()} />
+      )}
+      <SidebarSelectbox ctx={ctx} />
+    </>
+  );
+}
+
 export class PanelSidebarElem {
   ctx: CPanelSidebar;
   private readonly sidebarReady: Promise<void>;
+  private disposed = false;
 
   private get documentElement() {
     return document?.documentElement as unknown as XULElement;
@@ -40,53 +64,48 @@ export class PanelSidebarElem {
 
     // Wait for the sidebar controller to be initialized
     // This is a workaround to avoid Extension Sidebar Panels not being loaded
-    const owner = getOwner();
     const SidebarController = (globalThis as unknown as {
       SidebarController: { promiseInitialized: Promise<void> };
     }).SidebarController;
+    let disposeSidebar = () => {};
+    addDisposer(() => {
+      this.disposed = true;
+      disposeSidebar();
+    });
     this.sidebarReady = SidebarController.promiseInitialized.then(() => {
-      const exec = () =>
-        render(() => this.sidebar(), parentElem, {
-          marker: beforeElem as unknown as XULElement,
-        });
-      if (owner) runWithOwner(owner, exec);
-      else createRoot(exec);
+      if (this.disposed || !parentElem) return;
+      disposeSidebar = safeRender(
+        <SidebarContent ctx={this.ctx} />,
+        parentElem,
+        beforeElem?.parentElement === parentElem ? beforeElem : undefined,
+      );
     });
 
-    render(() => this.style(), document?.head);
+    if (document?.head) {
+      addDisposer(safeRender(<style>{style}</style>, document.head));
+    }
 
-    const execEffect = () =>
-      createEffect(() => {
-        if (selectedPanelId() === null) {
-          this.documentElement?.style.setProperty(
-            "--panel-sidebar-display",
-            "none",
-          );
-        } else {
-          this.documentElement?.style.setProperty(
-            "--panel-sidebar-display",
-            "flex",
-          );
-        }
-      });
-    if (owner) runWithOwner(owner, execEffect);
-    else createRoot(execEffect);
-
-    const execEnabledEffect = () => {
-      createEffect(
-        on(isPanelSidebarEnabled, (enabled, wasEnabled) => {
-          if (!enabled || wasEnabled !== false) return;
-          void this.restoreSelectedPanel();
-        }),
+    rootEffect(() => {
+      this.documentElement?.style.setProperty(
+        "--panel-sidebar-display",
+        selectedPanelId.value === null ? "none" : "flex",
       );
-    };
-    if (owner) runWithOwner(owner, execEnabledEffect);
-    else createRoot(execEnabledEffect);
+    });
+
+    let wasEnabled = isPanelSidebarEnabled.peek();
+    rootEffect(() => {
+      const enabled = isPanelSidebarEnabled.value;
+      const shouldRestore = enabled && !wasEnabled;
+      wasEnabled = enabled;
+      if (shouldRestore) void this.restoreSelectedPanel();
+    });
 
     this.setVerticalTabBgColor();
-    Services.prefs.addObserver("sidebar.verticalTabs", () => {
-      this.setVerticalTabBgColor();
-    });
+    const onVerticalTabs = () => this.setVerticalTabBgColor();
+    Services.prefs.addObserver("sidebar.verticalTabs", onVerticalTabs);
+    addDisposer(() =>
+      Services.prefs.removeObserver("sidebar.verticalTabs", onVerticalTabs)
+    );
   }
 
   private async restoreSelectedPanel() {
@@ -94,8 +113,8 @@ export class PanelSidebarElem {
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve())
     );
-    if (!isPanelSidebarEnabled()) return;
-    const panel = this.ctx.getPanelData(selectedPanelId() ?? "");
+    if (this.disposed || !isPanelSidebarEnabled.value) return;
+    const panel = this.ctx.getPanelData(selectedPanelId.value ?? "");
     if (!panel) return;
     this.ctx.setSidebarWidth(panel);
     this.ctx.showPanel(panel);
@@ -120,35 +139,6 @@ export class PanelSidebarElem {
       newValue
         ? "var(--toolbox-bgcolor, var(--toolbox-background-color, var(--toolbar-bgcolor, var(--toolbar-background-color))))"
         : "var(--toolbar-bgcolor, var(--toolbar-background-color))",
-    );
-  }
-
-  private style() {
-    return <style>{style}</style>;
-  }
-
-  private sidebar() {
-    return (
-      <Show when={isPanelSidebarEnabled()}>
-        <xul:vbox
-          id="panel-sidebar-box"
-          class="chromeclass-extrachrome chromeclass-directories instant customization-target"
-          data-floating={isFloating().toString()}
-          popover="manual"
-        >
-          <SidebarHeader ctx={this.ctx} />
-          <BrowserBox />
-          <Show when={isFloating()}>
-            <FloatingSplitter />
-          </Show>
-        </xul:vbox>
-        <Show when={!isFloating()}>
-          <SidebarSplitter
-            onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
-          />
-        </Show>
-        <SidebarSelectbox ctx={this.ctx} />
-      </Show>
     );
   }
 }

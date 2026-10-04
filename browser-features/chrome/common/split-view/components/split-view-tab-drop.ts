@@ -382,7 +382,7 @@ function onDragOver(event: DragEvent): void {
 
   const draggedTab = activeDragTransaction?.tab ?? null;
   const activeSplitView = findExistingSplitView();
-  const maxPanes = splitViewConfig().maxPanes;
+  const maxPanes = splitViewConfig.value.maxPanes;
 
   if (draggedTab?.splitview) return;
   if (activeSplitView && activeSplitView.tabs.length >= maxPanes) return;
@@ -474,7 +474,7 @@ function runDeferredSplitViewCreation(
   // snapshot — the wrapper may have been destroyed or mutated by Firefox's
   // own drag-end handling that ran between cleanup() and this callback.
   const currentSplitView = findExistingSplitView();
-  const currentMaxPanes = splitViewConfig().maxPanes;
+  const currentMaxPanes = splitViewConfig.value.maxPanes;
 
   try {
     if (tab.splitview) return;

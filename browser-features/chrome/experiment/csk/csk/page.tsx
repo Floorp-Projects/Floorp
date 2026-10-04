@@ -4,7 +4,6 @@ import {
   commands,
   csk_category,
 } from "@nora/shared/custom-shortcut-key/commands";
-import { For } from "solid-js";
 import {
   cskData,
   cskDatumToString,
@@ -32,60 +31,56 @@ export function CustomShortcutKeyPage() {
           Floorp Daylight を再起動してください。
         </xul:description>
         <xul:checkbox label="Firefox のキーボードショートカットを無効にする" />
-        <For each={csk_category}>
-          {(category) => (
-            <>
-              <div
-                data-l10n-id={"floorp-custom-actions-" + category}
-                style={{
-                  "padding-top": "20px",
-                }}
-              >
-                {category}
-              </div>
-              <For each={Object.entries(commands)}>
-                {([key, value]) =>
-                  value.type === category ? (
-                    <div style={{ display: "flex", "padding-top": "5px" }}>
-                      <label
-                        style={{ "flex-grow": "1" }}
-                        data-l10n-id={
-                          "floorp-custom-actions-" +
-                          key.replace("floorp-", "").replace("gecko-", "")
-                        }
-                      >
-                        {key}
-                      </label>
-                      <input
-                        value={
-                          currentFocus() === key && editingStatus() !== null
-                            ? editingStatus()!
-                            : cskDatumToString(cskData(), key)
-                        }
-                        onFocus={(_ev) => {
-                          setCurrentFocus(key);
-                        }}
-                        onBlur={(_ev) => {
-                          setEditingStatus(null);
-                          if (currentFocus() === key) {
-                            setCurrentFocus(null);
-                          }
-                        }}
-                        readonly
-                        placeholder="Type a shortcut"
-                        style={{
-                          "border-radius": "5px",
-                          border: "1px solid gray",
-                          padding: "6px 10px",
-                        }}
-                      />
-                    </div>
-                  ) : undefined
-                }
-              </For>
-            </>
-          )}
-        </For>
+        {csk_category.map((category) => (
+          <>
+            <div
+              data-l10n-id={"floorp-custom-actions-" + category}
+              style={{
+                paddingTop: "20px",
+              }}
+            >
+              {category}
+            </div>
+            {Object.entries(commands).map(([key, value]) =>
+              value.type === category ? (
+                <div style={{ display: "flex", paddingTop: "5px" }}>
+                  <label
+                    style={{ flexGrow: "1" }}
+                    data-l10n-id={
+                      "floorp-custom-actions-" +
+                      key.replace("floorp-", "").replace("gecko-", "")
+                    }
+                  >
+                    {key}
+                  </label>
+                  <input
+                    value={
+                      currentFocus.value === key && editingStatus.value !== null
+                        ? editingStatus.value!
+                        : cskDatumToString(cskData.value, key)
+                    }
+                    onFocus={(_ev) => {
+                      setCurrentFocus(key);
+                    }}
+                    onBlur={(_ev) => {
+                      setEditingStatus(null);
+                      if (currentFocus.value === key) {
+                        setCurrentFocus(null);
+                      }
+                    }}
+                    readOnly
+                    placeholder="Type a shortcut"
+                    style={{
+                      borderRadius: "5px",
+                      border: "1px solid gray",
+                      padding: "6px 10px",
+                    }}
+                  />
+                </div>
+              ) : null
+            )}
+          </>
+        ))}
       </xul:hbox>
     </>
   );

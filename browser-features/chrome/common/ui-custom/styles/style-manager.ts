@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect } from "solid-js";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import {
   config,
   getChromeExtrasSettings,
@@ -31,6 +31,10 @@ export class StyleManager {
   private styleElements: Map<string, HTMLStyleElement> = new Map();
 
   setupStyleEffects() {
+    addDisposer(() => {
+      for (const element of this.styleElements.values()) element.remove();
+      this.styleElements.clear();
+    });
     this.setupNavbarEffects();
     this.setupSearchbarEffects();
     this.setupDisplayEffects();
@@ -43,68 +47,68 @@ export class StyleManager {
   }
 
   private setupNavbarEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       this.applyStyle(
         "floorp-navvarcss",
         navbarBottomCSS,
-        config().uiCustomization.navbar.position === "bottom",
+        config.value.uiCustomization.navbar.position === "bottom",
       );
     });
   }
 
   private setupSearchbarEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       this.applyStyle(
         "floorp-searchbartop",
         movePageInsideSearchbarCSS,
-        config().uiCustomization.navbar.searchBarTop,
+        config.value.uiCustomization.navbar.searchBarTop,
       );
     });
   }
 
   private setupDisplayEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       this.applyStyle(
         "floorp-DFSN",
         disableFullScreenNotificationCSS,
-        config().uiCustomization.display.disableFullscreenNotification,
+        config.value.uiCustomization.display.disableFullscreenNotification,
       );
 
       this.applyStyle(
         "floorp-DB",
         deleteBorderCSS,
-        config().uiCustomization.display.deleteBrowserBorder,
+        config.value.uiCustomization.display.deleteBrowserBorder,
       );
     });
   }
 
   private setupSpecialEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       this.applyStyle(
         "floorp-optimizefortreestyletab",
         treestyletabCSS,
-        config().uiCustomization.special.optimizeForTreeStyleTab,
+        config.value.uiCustomization.special.optimizeForTreeStyleTab,
       );
 
       this.applyStyle(
         "floorp-hideForwardBackwardButton",
         msbuttonCSS,
-        config().uiCustomization.special.hideForwardBackwardButton,
+        config.value.uiCustomization.special.hideForwardBackwardButton,
       );
 
       this.applyStyle(
         "floorp-STG-like-floorp-workspaces",
         stgLikeFloorpWorkspacesCSS,
-        config().uiCustomization.special.stgLikeWorkspaces,
+        config.value.uiCustomization.special.stgLikeWorkspaces,
       );
     });
   }
 
   private setupMultirowTabEffects() {
-    createEffect(() => {
-      const isMultirowStyle = config().tabbar.tabbarStyle === "multirow";
+    rootEffect(() => {
+      const isMultirowStyle = config.value.tabbar.tabbarStyle === "multirow";
       const newtabInsideEnabled =
-        config().uiCustomization.multirowTab.newtabInsideEnabled;
+        config.value.uiCustomization.multirowTab.newtabInsideEnabled;
 
       this.applyStyle(
         "floorp-newtabbuttoninmultirowtabbbar",
@@ -133,17 +137,18 @@ export class StyleManager {
   }
 
   private setupBookmarkBarEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       this.applyStyle(
         "floorp-bookmarkbar-focus-expand",
         bookmarkbarFocusExpandCSS,
-        config().uiCustomization.bookmarkBar?.focusExpand ?? false,
+        config.value.uiCustomization.bookmarkBar?.focusExpand ?? false,
       );
 
       this.applyStyle(
         "floorp-bookmarkbar-bottom",
         bookmarkbarBottomCSS,
-        (config().uiCustomization.bookmarkBar?.position ?? "top") === "bottom",
+        (config.value.uiCustomization.bookmarkBar?.position ?? "top") ===
+          "bottom",
       );
     });
   }
@@ -187,16 +192,16 @@ export class StyleManager {
    * Re-appending on every design change puts chrome-extras back on top.
    */
   private setupChromeExtrasEffects() {
-    createEffect(() => {
+    rootEffect(() => {
       const css = buildChromeExtrasCSS(
         getChromeExtrasSettings(),
-        config().globalConfigs.userInterface,
+        config.value.globalConfigs.userInterface,
       );
       this.applyStyle(CHROME_EXTRAS_STYLE_ID, css, true);
     });
 
-    createEffect(() => {
-      void config().globalConfigs.userInterface;
+    rootEffect(() => {
+      void config.value.globalConfigs.userInterface;
       this.reappendStyle(CHROME_EXTRAS_STYLE_ID);
     });
   }

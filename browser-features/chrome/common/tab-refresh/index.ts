@@ -5,7 +5,7 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import {
   installHoverReloadController,
   uninstallHoverReloadController,
@@ -30,7 +30,7 @@ function currentBrowser(): HoverReloadBrowser | null {
     null;
 }
 
-@noraComponent(import.meta.hot)
+@noraComponent("TabRefresh", import.meta.hot)
 export default class TabRefresh extends NoraComponentBase {
   init(): void {
     const browser = currentBrowser();
@@ -48,6 +48,6 @@ export default class TabRefresh extends NoraComponentBase {
     });
 
     addI18nObserver(() => controller.setLabel(localizedLabel()));
-    onCleanup(() => uninstallHoverReloadController(controller));
+    addDisposer(() => uninstallHoverReloadController(controller));
   }
 }

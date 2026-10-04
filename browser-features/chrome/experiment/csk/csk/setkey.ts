@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { createEffect, createSignal } from "solid-js";
+import { effect, signal } from "@preact/signals";
 import {
   type CSKCommands,
   type CSKData,
@@ -9,26 +9,29 @@ import {
 import type { commands } from "@nora/shared/custom-shortcut-key/commands";
 import { checkIsSystemShortcut } from "@nora/shared/custom-shortcut-key/utils";
 
-export const [editingStatus, setEditingStatus] = createSignal<string | null>(
-  null,
-);
-export const [currentFocus, setCurrentFocus] = createSignal<
-  keyof typeof commands | null
->(null);
+export const editingStatus = signal<string | null>(null);
+export const setEditingStatus = (v: string | null): void => {
+  editingStatus.value = v;
+};
 
-createEffect(() => {
-  // console.log(currentFocus() !== null);
+export const currentFocus = signal<keyof typeof commands | null>(null);
+export const setCurrentFocus = (v: keyof typeof commands | null): void => {
+  currentFocus.value = v;
+};
+
+effect(() => {
+  // console.log(currentFocus.value !== null);
   Services.obs.notifyObservers(
     {},
     "nora-csk",
     JSON.stringify({
       type: "disable-csk",
-      data: currentFocus() !== null,
+      data: currentFocus.value !== null,
     } as CSKCommands),
   );
 });
 
-export const [cskData, setCSKData] = createSignal(
+export const cskData = signal(
   //TODO: safely catch
   zCSKData.parse(
     JSON.parse(
@@ -48,10 +51,10 @@ export function cskDatumToString(data: CSKData, key: keyof CSKData) {
   return "";
 }
 
-createEffect(() => {
+effect(() => {
   Services.prefs.setStringPref(
     "floorp.browser.nora.csk.data",
-    JSON.stringify(cskData()),
+    JSON.stringify(cskData.value),
   );
   Services.obs.notifyObservers(
     {},
@@ -74,22 +77,22 @@ export function initSetKey() {
       return;
     }
 
-    const focus = currentFocus();
+    const focus = currentFocus.value;
 
     if (!(alt || ctrl || shift || meta)) {
       if (key === "Delete" || key === "Backspace") {
         if (focus) {
           ev.preventDefault();
-          const temp = cskData();
+          const temp = cskData.value;
           for (const key of Object.keys(temp)) {
             if (key === focus) {
               delete temp[key];
-              setCSKData(temp);
-              setEditingStatus(cskDatumToString(cskData(), focus));
+              cskData.value = temp;
+              setEditingStatus(cskDatumToString(cskData.value, focus));
               break;
             }
           }
-          console.log(cskData());
+          console.log(cskData.value);
         }
         return;
       }
@@ -107,8 +110,8 @@ export function initSetKey() {
           console.warn(`This Event is registered in System: ${ev}`);
           return;
         }
-        setCSKData({
-          ...cskData(),
+        cskData.value = {
+          ...cskData.value,
           [focus]: {
             key: key,
             modifiers: {
@@ -118,8 +121,8 @@ export function initSetKey() {
               shift,
             },
           },
-        });
-        setEditingStatus(cskDatumToString(cskData(), focus));
+        };
+        setEditingStatus(cskDatumToString(cskData.value, focus));
       }
     }
   });

@@ -2,7 +2,7 @@
 // @colocated-env browser
 
 import { gFlexOrder } from "../flex-order.tsx";
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 
 import {
   assert,

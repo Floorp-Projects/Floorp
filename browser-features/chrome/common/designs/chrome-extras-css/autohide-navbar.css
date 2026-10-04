@@ -32,7 +32,8 @@
  * `margin-bottom: 0` is what Lepton uses when `hiddenNavbar` is also on. */
 #nav-bar:not([customizing]) {
   margin-bottom: calc(
-    -1 * (16px + 2 * (var(--toolbarbutton-inner-padding) + var(--toolbarbutton-outer-padding)))
+    -1 * (16px + 2 * (var(--toolbarbutton-inner-padding) +
+    var(--toolbarbutton-outer-padding)))
   );
   opacity: 0;
   will-change: margin-bottom, opacity;

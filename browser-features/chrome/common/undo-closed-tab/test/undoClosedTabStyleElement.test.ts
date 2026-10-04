@@ -2,7 +2,7 @@
 // @colocated-env browser
 
 import { StyleElement } from "../styleElem.tsx";
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
 import {
   assert,
   assertEquals,
@@ -14,8 +14,8 @@ import {
 function renderAndGetCss(): { css: string; cleanup: () => void } {
   const container = document.createElement("div");
   document.head!.appendChild(container);
-  render(() => StyleElement(), container);
-  // SolidJS renders <style> inside the container
+  render(h(StyleElement, null), container);
+  // Preact renders <style> inside the container
   const styleEl =
     container.querySelector("style") ?? container.querySelector("div");
   const css = styleEl?.textContent ?? "";
@@ -46,8 +46,11 @@ function testRenderedStyleContainsUndoSelector(): void {
   const head = document?.head;
   assert(head !== null && head !== undefined, "document.head should exist");
 
-  render(() => StyleElement(), head);
-  const styleNodes = head.querySelectorAll("style");
+  // Use a dedicated sub-container so preact's render doesn't replace head's children
+  const sub = document.createElement("div");
+  head.appendChild(sub);
+  render(h(StyleElement, null), sub);
+  const styleNodes = sub.querySelectorAll("style");
   const latestStyle = styleNodes.item(styleNodes.length - 1);
 
   try {
@@ -57,7 +60,7 @@ function testRenderedStyleContainsUndoSelector(): void {
       "rendered style should include #undo-closed-tab selector",
     );
   } finally {
-    latestStyle?.remove();
+    sub.remove();
   }
 }
 
@@ -189,24 +192,27 @@ function testStyleElementMultipleRenderBehavior(): void {
 
   const initialCount = head.querySelectorAll("style").length;
 
-  render(() => StyleElement(), head);
+  // Use separate sub-containers so each preact render is additive, not destructive
+  const sub1 = document.createElement("div");
+  head.appendChild(sub1);
+  render(h(StyleElement, null), sub1);
   const afterFirstRender = head.querySelectorAll("style").length;
   assert(
     afterFirstRender >= initialCount,
     "First render should add at least one style element",
   );
 
-  render(() => StyleElement(), head);
+  const sub2 = document.createElement("div");
+  head.appendChild(sub2);
+  render(h(StyleElement, null), sub2);
   const afterSecondRender = head.querySelectorAll("style").length;
   assert(
     afterSecondRender >= afterFirstRender,
     "Second render should not remove existing styles",
   );
 
-  const allStyles = head.querySelectorAll("style");
-  for (let i = initialCount; i < allStyles.length; i++) {
-    allStyles.item(i)?.remove();
-  }
+  sub1.remove();
+  sub2.remove();
 }
 
 function testStyleElementCssSelectorValidity(): void {

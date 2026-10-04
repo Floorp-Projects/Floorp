@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import {
   noraComponent,
@@ -124,13 +124,13 @@ export class TabInlineEditLifecycle {
   }
 }
 
-@noraComponent(import.meta.hot)
+@noraComponent("TabInlineEdit", import.meta.hot)
 export default class TabInlineEdit extends NoraComponentBase {
   init(): void {
     const lifecycle = new TabInlineEditLifecycle(
       globalThis as unknown as Window,
     );
     addI18nObserver(() => lifecycle.updateLocalizedLabels());
-    onCleanup(() => lifecycle.destroy());
+    addDisposer(() => lifecycle.destroy());
   }
 }

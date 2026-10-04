@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createRootHMR, render } from "@nora/solid-xul";
-import { onCleanup } from "solid-js";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 import { Modal } from "./components/modal.tsx";
 import style from "./style.css?inline";
 import { ModalManager } from "./modalManager.tsx";
@@ -63,7 +63,7 @@ export class ModalElement {
 
     createRootHMR(() => {
       try {
-        render(() => <style>{style}</style>, head);
+        addDisposer(safeRender(<style>{style}</style>, head));
       } catch (error) {
         const reason = error instanceof Error
           ? error
@@ -74,21 +74,18 @@ export class ModalElement {
 
     createRootHMR(() => {
       try {
-        render(
-          () => (
-            <Modal
-              targetParent={targetParent}
-              onBackdropClick={(e) =>
-                this.currentManager?.handleBackdropClick(e)}
-            />
-          ),
+        addDisposer(safeRender(
+          <Modal
+            targetParent={targetParent}
+            onBackdropClick={(e) => this.currentManager?.handleBackdropClick(e)}
+          />,
           targetParent,
-        );
+        ));
         const detachBackdrop = attachModalBackdropListener(
           targetParent,
           () => this.currentManager,
         );
-        onCleanup(detachBackdrop);
+        addDisposer(detachBackdrop);
       } catch (error) {
         const reason = error instanceof Error
           ? error

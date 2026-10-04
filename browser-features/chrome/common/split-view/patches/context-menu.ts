@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import type { SplitViewTab } from "../data/types.js";
@@ -18,12 +18,12 @@ const t = (key: string, opts?: Record<string, string>): string =>
 /**
  * Extends the native split-view entry and adds pane management actions.
  */
-export function initContextMenu(logger: ConsoleInstance): void {
+export function initContextMenu(logger: ConsoleInstance): () => void {
   const tabMenu = document?.getElementById("tabContextMenu");
   const openInSplitItem = document?.getElementById(
     "context_moveTabToSplitView",
   ) as XULElement | null;
-  if (!tabMenu || !openInSplitItem) return;
+  if (!tabMenu || !openInSplitItem) return () => {};
 
   // Remove the former duplicate when this module is hot-reloaded.
   document?.getElementById("floorp_openInSplitView")?.remove();
@@ -50,7 +50,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     // Native popupshowing runs first and resolves the right-clicked tab's
     // contextTabs. Do not substitute a selection from elsewhere in the strip.
     const contextTabs = getTabContextMenu()?.contextTabs ?? [];
-    const maxPanes = splitViewConfig().maxPanes;
+    const maxPanes = splitViewConfig.value.maxPanes;
     openInSplitItem.removeAttribute("tooltiptext");
     const splitViewEnabled = Services.prefs.getBoolPref(
       "browser.tabs.splitView.enabled",
@@ -90,7 +90,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
     // === Add Pane to Split View ===
     const shouldShowAddPane = hasSplitViewTab &&
       activeSplitView &&
-      activeSplitView.tabs.length < splitViewConfig().maxPanes;
+      activeSplitView.tabs.length < splitViewConfig.value.maxPanes;
 
     let addPaneItem = document?.getElementById(
       "floorp_addPaneToSplitView",
@@ -199,7 +199,7 @@ export function initContextMenu(logger: ConsoleInstance): void {
       !Services.prefs.getBoolPref("browser.tabs.splitView.enabled", false) ||
       !canOpenContextTabsInSplitView(
         getTabContextMenu()?.contextTabs ?? [],
-        splitViewConfig().maxPanes,
+        splitViewConfig.value.maxPanes,
       )
     ) {
       event.preventDefault();
@@ -209,12 +209,14 @@ export function initContextMenu(logger: ConsoleInstance): void {
   tabMenu.addEventListener("popupshowing", onTabContextMenu);
   // Capture also runs before native handlers attached directly to the item.
   openInSplitItem.addEventListener("command", onOpenCommand, true);
-  onCleanup(() => {
+  const dispose = () => {
     tabMenu.removeEventListener("popupshowing", onTabContextMenu);
     openInSplitItem.removeEventListener("command", onOpenCommand, true);
     openInSplitItem.removeAttribute("tooltiptext");
-  });
+  };
+  addDisposer(dispose);
   logger.debug("[patch] context menu listener attached");
+  return dispose;
 }
 
 // ===== Move to Pane helpers =====

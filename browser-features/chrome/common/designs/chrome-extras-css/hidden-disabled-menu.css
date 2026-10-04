@@ -18,7 +18,8 @@ menuitem:not(#context-back, #context-forward)[disabled="true"] {
 }
 
 /* leptonChrome.css:27241-27247 */
-@media (-moz-pref("widget.macos.native-context-menus")), (-moz-pref("widget.gtk.native-context-menus")) {
+@media (-moz-pref("widget.macos.native-context-menus")),
+  (-moz-pref("widget.gtk.native-context-menus")) {
   #context-back[disabled="true"],
   #context-forward[disabled="true"] {
     visibility: collapse !important;

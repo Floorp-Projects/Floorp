@@ -4,9 +4,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 import {
+  addDisposer,
+  createRootHMR,
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { WorkspacesTabManager } from "./workspacesTabManager.tsx";
 import { WorkspaceIcons } from "./utils/workspace-icons.ts";
 import { WorkspacesService } from "./workspacesService.ts";
@@ -17,11 +19,10 @@ import { WorkspacesDataManager } from "./workspacesDataManagerBase.tsx";
 import { enabled } from "./data/config.ts";
 import { WorkspacesTabContextMenu } from "./tabContextMenu.tsx";
 import { migrateWorkspacesData } from "./data/migrate/migration.ts";
-import { createRoot, getOwner, onCleanup, runWithOwner } from "solid-js";
 import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.ts";
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 
-@noraComponent(import.meta.hot)
+@noraComponent("Workspaces", import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
   static windowWorkspacesMap: WeakMap<Window, WorkspacesService> =
     new WeakMap();
@@ -29,20 +30,24 @@ export default class Workspaces extends NoraComponentBase {
   static getCtx(targetWindow?: Window): WorkspacesService | null {
     const requestedWindow = targetWindow ??
       (typeof window !== "undefined" ? window : null);
-    if (!requestedWindow || !enabled()) {
+    if (!requestedWindow || !enabled.value) {
       return null;
     }
     return this.windowWorkspacesMap.get(requestedWindow) || null;
   }
 
   init(): void {
-    if (!enabled()) {
+    if (!enabled.value) {
       return;
     }
 
-    const owner = getOwner();
+    let disposed = false;
+    addDisposer(() => {
+      disposed = true;
+    });
     migrateWorkspacesData().then(() => {
-      const exec = () => {
+      if (disposed) return;
+      createRootHMR(() => {
         const iconCtx = new WorkspaceIcons();
         const dataManagerCtx = new WorkspacesDataManager();
         const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
@@ -64,7 +69,7 @@ export default class Workspaces extends NoraComponentBase {
 
         Services.obs.addObserver(observer, WORKSPACES_INIT_OBSERVER_TOPIC);
 
-        onCleanup(() => {
+        addDisposer(() => {
           try {
             Services.obs.removeObserver(
               observer,
@@ -84,9 +89,7 @@ export default class Workspaces extends NoraComponentBase {
         new WorkspacesPopupContextMenu(ctx);
         new WorkspacesTabContextMenu(ctx);
         new WorkspacesLinkContextMenu(ctx);
-      };
-      if (owner) runWithOwner(owner, exec);
-      else createRoot(exec);
+      }, import.meta.hot);
     });
   }
 }

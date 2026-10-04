@@ -57,11 +57,13 @@ import {
 
 // Verify new 3-pane layouts survive round-trip through parseGroupLayoutStore
 {
-  for (const layout of [
-    "grid-3pane-right-main",
-    "grid-3pane-top-main",
-    "grid-3pane-bottom-main",
-  ] as const) {
+  for (
+    const layout of [
+      "grid-3pane-right-main",
+      "grid-3pane-top-main",
+      "grid-3pane-bottom-main",
+    ] as const
+  ) {
     const raw = JSON.stringify({
       groups: [{ groupId: "g", layout }],
     });

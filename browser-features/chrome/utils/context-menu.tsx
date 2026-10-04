@@ -1,18 +1,14 @@
-import { render } from "@nora/solid-xul";
+import type { ComponentChild } from "preact";
+import { safeRender } from "@nora/preact-xul";
+import { addDisposer, createRoot } from "@nora/preact-xul/lifetime";
+import { useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
-import type { JSXElement } from "solid-js";
-import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
-import { createRootHMR } from "@nora/solid-xul";
 import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "#features-chrome/common/context-menu/style.ts";
+import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 // deno-lint-ignore no-namespace
 export namespace ContextMenuUtils {
-  const checkItems: (() => void)[] = [];
-  const contextMenuObserver: MutationObserver = new MutationObserver(() => {
-    contextMenuObserverFunc();
-  });
-
   function windowModalDialogElem(): XULElement | null {
     return document?.querySelector("#window-modal-dialog") as XULElement | null;
   }
@@ -46,13 +42,11 @@ export namespace ContextMenuUtils {
     checkedFunction: () => void,
     semanticKey?: string,
   ) {
-    const contextMenu = ContextMenu(id, l10n, runFunction, semanticKey);
-    const targetNode = document?.getElementById(checkID) as unknown as
-      | XULElement
-      | null;
+    const container = contentAreaContextMenu();
+    const targetNode = document?.getElementById(checkID) as XULElement | null;
     const renderElement = document?.getElementById(
       renderElementId,
-    ) as unknown as XULElement | null;
+    ) as XULElement | null;
 
     if (!targetNode || !renderElement) {
       console.warn(
@@ -62,24 +56,32 @@ export namespace ContextMenuUtils {
       return;
     }
 
-    render(() => contextMenu, contentAreaContextMenu(), {
-      marker: renderElement,
+    if (!container) return;
+    return createRoot((dispose) => {
+      safeRender(
+        ContextMenu(id, l10n, runFunction, semanticKey),
+        container as unknown as Element,
+        {
+          marker:
+            renderElement.parentElement === (container as unknown as Element)
+              ? renderElement
+              : undefined,
+        },
+      );
+      const observer = new MutationObserver(checkedFunction);
+      observer.observe(targetNode, { attributes: true });
+      addDisposer(() => observer.disconnect());
+      checkedFunction();
+      return dispose;
     });
-    contextMenuObserver.observe(targetNode, { attributes: true });
-    checkItems.push(checkedFunction);
-    contextMenuObserverFunc();
   }
 
-  function contextMenuObserverFunc() {
-    for (const checkItem of checkItems) {
-      checkItem();
+  export function addToolbarContentMenuPopupSet(
+    JSXElem: () => ComponentChild,
+  ) {
+    if (document?.body) {
+      safeRender(JSXElem, document.body);
     }
-  }
-
-  export function addToolbarContentMenuPopupSet(JSXElem: () => JSXElement) {
-    render(JSXElem, document?.body, {
-      marker: windowModalDialogElem() ?? undefined,
-    });
   }
 
   export function onPopupShowing() {
@@ -132,25 +134,51 @@ export namespace ContextMenuUtils {
   }
 }
 
+// Internal preact component for reactive label via @preact/signals
+function ContextMenuEl(
+  { id, l10n, runFunction, semanticKey }: {
+    id: string;
+    l10n: string;
+    runFunction: () => void;
+    semanticKey?: string;
+  },
+) {
+  const label = useSignal(i18next.t(l10n));
+
+  useEffect(() => {
+    // Register i18n observer once on mount
+    return addI18nObserver(() => {
+      label.value = i18next.t(l10n);
+    });
+  }, []);
+
+  return (
+    <xul:menuitem
+      label={label.value}
+      id={id}
+      data-floorp-context-menu-key={semanticKey}
+      onCommand={runFunction}
+    />
+  );
+}
+
+/**
+ * Returns a preact VNode for a XUL menuitem with reactive i18n label.
+ * When rendered by preact as a component, the label updates automatically
+ * when the application language changes.
+ */
 export function ContextMenu(
   id: string,
   l10n: string,
   runFunction: () => void,
   semanticKey?: string,
-) {
-  const [label, setLabel] = createSignal(i18next.t(l10n));
-
-  createRootHMR(() => {
-    addI18nObserver(() => {
-      setLabel(i18next.t(l10n));
-    });
-  }, import.meta.hot);
+): ComponentChild {
   return (
-    <xul:menuitem
-      label={label()}
+    <ContextMenuEl
       id={id}
-      data-floorp-context-menu-key={semanticKey}
-      onCommand={runFunction}
+      l10n={l10n}
+      runFunction={runFunction}
+      semanticKey={semanticKey}
     />
   );
 }

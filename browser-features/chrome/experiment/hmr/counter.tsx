@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { createSignal } from "solid-js";
+import { signal } from "@preact/signals";
 
 export function Counter() {
-  const [count, setCount] = createSignal(0);
-  setInterval(() => setCount(count() + 1), 1000);
+  const count = signal(0);
+  setInterval(() => { count.value = count.value + 1; }, 1000);
   return (
     <>
       <div
@@ -13,7 +13,7 @@ export function Counter() {
           globalThis.alert("click!");
         }}
       >
-        Count aa hmr: {count()}
+        Count aa hmr: {count}
       </div>
     </>
   );

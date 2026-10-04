@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import { TabColorManager } from "./tabcolor-manager";
 import chroma from "chroma-js";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
@@ -14,7 +13,7 @@ const { ManifestObtainer } = ChromeUtils.importESModule(
 
 export let manager: TabColorManager;
 
-@noraComponent(import.meta.hot)
+@noraComponent("BrowserTabColor", import.meta.hot)
 export default class BrowserTabColor extends NoraComponentBase {
   init() {
     // Check if gBrowser is available
@@ -42,15 +41,15 @@ export default class BrowserTabColor extends NoraComponentBase {
     gBrowser.addTabsProgressListener(listener);
     gBrowser.tabContainer.addEventListener("TabSelect", this.changeTabColor);
 
-    createEffect(() => {
-      if (manager.enableTabColor()) {
+    rootEffect(() => {
+      if (manager.enableTabColor.value) {
         this.changeTabColor();
       } else {
         document?.getElementById("floorp-toolbar-bgcolor")?.remove();
       }
     });
 
-    onCleanup(() => {
+    addDisposer(() => {
       if (gBrowser) {
         gBrowser.removeTabsProgressListener(listener);
         gBrowser.tabContainer.removeEventListener(
@@ -63,7 +62,7 @@ export default class BrowserTabColor extends NoraComponentBase {
   }
 
   changeTabColor() {
-    if (!manager.enableTabColor()) return;
+    if (!manager.enableTabColor.value) return;
     getManifest().then((res) => {
       document?.getElementById("floorp-toolbar-bgcolor")?.remove();
       if (res != null) {

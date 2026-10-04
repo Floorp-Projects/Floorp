@@ -877,7 +877,7 @@ export async function collectDocsInventory(): Promise<DocsInventory> {
         {
           name: "Chrome UI",
           source: { path: "browser-features/chrome/common/mod.ts" },
-          summary: "SolidJS browser chrome features discovered by glob.",
+          summary: "Preact and Signals browser chrome features discovered by glob.",
         },
         {
           name: "Pages",

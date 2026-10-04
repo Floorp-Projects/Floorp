@@ -2,9 +2,13 @@
 
 import type { ViteHotContext } from "vite/types/hot";
 import { kebabCase } from "es-toolkit/string";
-import type { ClassDecorator } from "./decorator";
-import { createRootHMR, disposeRoot } from "@nora/solid-xul";
-import { onCleanup } from "solid-js";
+import type { ClassDecorator } from "./decorator.d.ts";
+import {
+  addDisposer,
+  createRootHMR,
+  disposeRoot,
+} from "@nora/preact-xul/lifetime";
+export { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 
 // U+2063 before `@` needed
 //https://github.com/microsoft/TypeScript/issues/47679
@@ -17,10 +21,12 @@ import { onCleanup } from "solid-js";
  * @see {@link file://./../../vite.config.ts vite.config.ts} noraneko_component_hmr_support
  */
 export function noraComponent(
-  aViteHotContext: ViteHotContext | undefined,
+  nameOrHot: string | ViteHotContext | undefined,
+  hot?: ViteHotContext,
 ): ClassDecorator<NoraComponentBase> {
+  const aViteHotContext = typeof nameOrHot === "string" ? hot : nameOrHot;
   return (_clazz, ctx) => {
-    const name = ctx.name;
+    const name = typeof nameOrHot === "string" ? nameOrHot : ctx.name;
     if (typeof name !== "string" || !name) {
       throw new Error("NoraComponent classes must have a name");
     }
@@ -44,12 +50,12 @@ export function noraComponent(
       // dispose callback per module — see vite #16283 — so we register once at
       // decoration time rather than per-instance in the constructor).
       // This guarantees that when the module is hot-updated, every live
-      // instance's Solid root is torn down BEFORE the accept callback creates
+      // instance's Preact root is torn down BEFORE the accept callback creates
       // a fresh instance. Without this, monkey-patched state (e.g.
       // TabDragDropManager's tabContainer listeners) leaks across HMR updates.
       if (!aViteHotContext.data.__noraDisposeRegistered) {
         aViteHotContext.data.__noraDisposeRegistered = true;
-        aViteHotContext.data.__solidXulExternalDisposeOwner = true;
+        aViteHotContext.data.__preactXulExternalDisposeOwner = true;
         aViteHotContext.dispose(() => {
           const hotCtx = aViteHotContext!;
           const classNames = _classNamesByHotCtx.get(hotCtx);
@@ -60,15 +66,15 @@ export function noraComponent(
             }
             _classNamesByHotCtx.delete(hotCtx);
           }
-          // Drain all Solid roots sharing this hot context. disposeRoot runs
-          // every registered disposer, which fires each instance's onCleanup
+          // Drain all Preact roots sharing this hot context. disposeRoot runs
+          // every registered disposer, which fires each instance's addDisposer
           // (removing DOM nodes, event listeners, monkey-patches, etc.).
           disposeRoot(hotCtx);
           hotCtx.data.__noraDisposeRegistered = false;
-          hotCtx.data.__solidXulDisposeRegistered = false;
-          hotCtx.data.__solidXulExternalDisposeOwner = false;
+          hotCtx.data.__preactXulDisposeRegistered = false;
+          hotCtx.data.__preactXulExternalDisposeOwner = false;
           nora_component_base_console.debug(
-            "hot.dispose: drained nora instances and solid roots for",
+            "hot.dispose: drained nora instances and Preact roots for",
             classNames ? Array.from(classNames) : [],
           );
         });
@@ -121,11 +127,11 @@ export abstract class NoraComponentBase {
     });
     this.logger = _console;
 
-    // Run init with solid-js HMR support
+    // Run init with Preact HMR support
     createRootHMR(() => {
       this.init();
-      onCleanup(() => {
-        nora_component_base_console.debug(`onCleanup ${name}`);
+      addDisposer(() => {
+        nora_component_base_console.debug(`addDisposer ${name}`);
         const instances = _noraInstancesByName.get(name);
         instances?.delete(this);
         if (instances?.size === 0) {

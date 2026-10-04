@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect } from "solid-js";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import { config } from "#features-chrome/common/designs/configs.ts";
 
 const DOM_LAYOUT_MANAGER_DEBUG_PREFIX = "[DOMLayoutManager]";
@@ -64,8 +64,7 @@ function mirrorRecordToTarget(
   record: ListenerRecord,
   explicitTarget?: EventTarget | null,
 ): void {
-  const target =
-    explicitTarget ??
+  const target = explicitTarget ??
     toolboxMirrorState.mirrorTarget ??
     toolboxMirrorState.toolbox;
   const { toolbox } = toolboxMirrorState;
@@ -91,8 +90,7 @@ function unmirrorRecordFromTarget(
   record: ListenerRecord,
   explicitTarget?: EventTarget | null,
 ): void {
-  const target =
-    explicitTarget ??
+  const target = explicitTarget ??
     toolboxMirrorState.mirrorTarget ??
     toolboxMirrorState.toolbox;
   const { toolbox } = toolboxMirrorState;
@@ -121,7 +119,7 @@ function tryInstallNavigatorToolboxMirror(): boolean {
 
   const toolbox = document?.getElementById(
     "navigator-toolbox",
-  ) as XULElement | null;
+  ) as unknown as XULElement | null;
   if (!toolbox) {
     return false;
   }
@@ -357,8 +355,7 @@ function isXULButton(element: Element | null): boolean {
   }
 
   // Check if it's a URL bar button (star-button, reload-button, etc.)
-  const isUrlbarButton =
-    id.includes("button") ||
+  const isUrlbarButton = id.includes("button") ||
     id.includes("star") ||
     id.includes("reload") ||
     id.includes("stop") ||
@@ -377,14 +374,14 @@ function isStarButton(element: Element | null): XULElement | null {
   }
 
   const targetId = element.id || "";
-  const isStarButtonById =
-    targetId === "star-button" || targetId === "star-button-box";
+  const isStarButtonById = targetId === "star-button" ||
+    targetId === "star-button-box";
   const starButtonElement = element.closest(
     "#star-button, #star-button-box",
-  ) as XULElement | null;
+  ) as unknown as XULElement | null;
 
   if (isStarButtonById || starButtonElement) {
-    return (starButtonElement || element) as XULElement | null;
+    return (starButtonElement || element) as unknown as XULElement | null;
   }
 
   return null;
@@ -488,16 +485,19 @@ function forwardEventToNavigatorToolbox(
       if (originalTarget && isXULButton(originalTarget)) {
         const button = originalTarget.closest(
           "toolbarbutton, button",
-        ) as XULElement | null;
+        ) as unknown as XULElement | null;
         if (button && button.id) {
           // Try to call doCommand() first, which is the standard way to trigger XUL button actions
           let doCommandSucceeded = false;
           try {
             if (
-              typeof (button as XULElement & { doCommand?: () => void })
+              typeof (button as unknown as XULElement & {
+                doCommand?: () => void;
+              })
                 .doCommand === "function"
             ) {
-              (button as XULElement & { doCommand: () => void }).doCommand();
+              (button as unknown as XULElement & { doCommand: () => void })
+                .doCommand();
               doCommandSucceeded = true;
             }
           } catch {
@@ -722,11 +722,11 @@ function loadBookmarkURI(uri: string, mouseEvent: MouseEvent): boolean {
   try {
     // Determine how to open the bookmark based on modifier keys
     // Ctrl/Cmd/Shift opens in new tab
-    const openInNewTab =
-      mouseEvent.ctrlKey || mouseEvent.metaKey || mouseEvent.shiftKey;
+    const openInNewTab = mouseEvent.ctrlKey || mouseEvent.metaKey ||
+      mouseEvent.shiftKey;
 
-    const principal =
-      services.Services.scriptSecurityManager?.getSystemPrincipal();
+    const principal = services.Services.scriptSecurityManager
+      ?.getSystemPrincipal();
     const uriObject = services.Services.io?.newURI(uri);
 
     if (openInNewTab && win.gBrowser.addTab) {
@@ -764,7 +764,7 @@ function handleBookmarkCommandEvent(event: Event): boolean {
   }
 
   // Get bookmark URI from the button's _placesNode property
-  const bookmarkButton = target as XULElement & {
+  const bookmarkButton = target as unknown as XULElement & {
     _placesNode?: { uri?: string };
   };
   const uri = bookmarkButton._placesNode?.uri;
@@ -787,6 +787,7 @@ function handleBookmarkCommandEvent(event: Event): boolean {
 
 export class DOMLayoutManager {
   private static readonly DEBUG_PREFIX = DOM_LAYOUT_MANAGER_DEBUG_PREFIX;
+  private disposed = false;
 
   // Store original navbar position for proper restoration
   private originalNavbarParent: Element | null = null;
@@ -808,27 +809,37 @@ export class DOMLayoutManager {
   }> = [];
 
   private get navBar(): XULElement {
-    const element = document?.getElementById("nav-bar") as unknown as XULElement;
+    const element = document?.getElementById(
+      "nav-bar",
+    ) as unknown as XULElement;
     return element;
   }
 
   private get fullscreenWrapper(): XULElement {
-    const element = document?.getElementById("a11y-announcement") as unknown as XULElement;
+    const element = document?.getElementById(
+      "a11y-announcement",
+    ) as unknown as XULElement;
     return element;
   }
 
   private get navigatorToolbox(): XULElement {
-    const element = document?.getElementById("navigator-toolbox") as unknown as XULElement;
+    const element = document?.getElementById(
+      "navigator-toolbox",
+    ) as unknown as XULElement;
     return element;
   }
 
   private get personalToolbar(): XULElement {
-    const element = document?.getElementById("PersonalToolbar") as unknown as XULElement;
+    const element = document?.getElementById(
+      "PersonalToolbar",
+    ) as unknown as XULElement;
     return element;
   }
 
   private get appContent(): XULElement {
-    const element = document?.getElementById("appcontent") as unknown as XULElement;
+    const element = document?.getElementById(
+      "appcontent",
+    ) as unknown as XULElement;
     return element;
   }
 
@@ -839,6 +850,19 @@ export class DOMLayoutManager {
   private bookmarkBarForwarderHandler: ((event: Event) => void) | null = null;
 
   setupDOMEffects() {
+    if (this.disposed) return;
+    addDisposer(() => {
+      this.disposed = true;
+      this.cancelNavbarBottomScheduling();
+      if (this.urlbarFixIntervalId !== null) {
+        clearInterval(this.urlbarFixIntervalId);
+        this.urlbarFixIntervalId = null;
+      }
+      this.urlbarMutationObserver?.disconnect();
+      this.urlbarMutationObserver = null;
+      this.detachFallbackNavbarHandlers();
+      this.detachBookmarkBarEventForwarder();
+    });
     this.setupNavbarPosition();
     this.setupBookmarkBarPosition();
   }
@@ -857,8 +881,8 @@ export class DOMLayoutManager {
   }
 
   private setupNavbarPosition() {
-    createEffect(() => {
-      const currentPosition = config().uiCustomization.navbar.position;
+    rootEffect(() => {
+      const currentPosition = config.value.uiCustomization.navbar.position;
       try {
         if (currentPosition === "bottom") {
           this.moveNavbarToBottom();
@@ -948,7 +972,7 @@ export class DOMLayoutManager {
     if (this.isNavbarAtBottom) {
       return;
     }
-    if (config().uiCustomization.navbar.position !== "bottom") {
+    if (config.value.uiCustomization.navbar.position !== "bottom") {
       return;
     }
 
@@ -956,15 +980,16 @@ export class DOMLayoutManager {
     const fullscreenWrapper = this.fullscreenWrapper;
     const statusbar = document?.getElementById(
       "nora-statusbar",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
 
     if (!navbar) {
       console.warn(`${DOMLayoutManager.DEBUG_PREFIX} navbar element not found`);
       return;
     }
 
-    const insertionAnchor =
-      statusbar && statusbar.isConnected ? statusbar : fullscreenWrapper;
+    const insertionAnchor = statusbar && statusbar.isConnected
+      ? statusbar
+      : fullscreenWrapper;
 
     if (!insertionAnchor) {
       console.warn(
@@ -1007,14 +1032,16 @@ export class DOMLayoutManager {
         );
         if (tabbarManage) {
           // Save original inline style attribute so we can restore it later
-          this.originalTabbarManageContainerStyle =
-            tabbarManage.getAttribute("style");
+          this.originalTabbarManageContainerStyle = tabbarManage.getAttribute(
+            "style",
+          );
           // Set display:none via attribute to avoid typing/library issues
           const newStyle = (
             this.originalTabbarManageContainerStyle ?? ""
           ).trim();
-          const appended =
-            newStyle.length > 0 ? `${newStyle};display:none;` : "display:none;";
+          const appended = newStyle.length > 0
+            ? `${newStyle};display:none;`
+            : "display:none;";
           tabbarManage.setAttribute("style", appended);
         }
       } catch (error: unknown) {
@@ -1157,8 +1184,8 @@ export class DOMLayoutManager {
       if (!(event instanceof KeyboardEvent)) {
         return;
       }
-      const isLikeLeftClick =
-        event.key === "Enter" || event.key === " " || event.key === "Spacebar";
+      const isLikeLeftClick = event.key === "Enter" || event.key === " " ||
+        event.key === "Spacebar";
       if (!isLikeLeftClick) {
         return;
       }
@@ -1267,6 +1294,7 @@ export class DOMLayoutManager {
 
     sessionStore.promiseInitialized
       .then(() => {
+        if (this.disposed) return;
         this.retryFixUrlbarInputContainer();
         this.startUrlbarPositionPolling();
         this.startUrlbarMutationObserver();
@@ -1280,6 +1308,7 @@ export class DOMLayoutManager {
   }
 
   private retryFixUrlbarInputContainer(attempt = 0) {
+    if (this.disposed) return;
     const MAX_ATTEMPTS = 10;
     const urlbarView = document?.querySelector(".urlbarView");
     const urlbarInputContainer = document?.querySelector(
@@ -1386,6 +1415,7 @@ export class DOMLayoutManager {
 
   /** Ensure the urlbar input container is placed after .urlbarView. Returns true if layout is correct. */
   private ensureUrlbarOrder(): boolean {
+    if (this.disposed) return false;
     const urlbarView = document?.querySelector(".urlbarView");
     const urlbarInputContainer = document?.querySelector(
       ".urlbar-input-container",
@@ -1452,8 +1482,7 @@ export class DOMLayoutManager {
             };
           };
 
-          const delayedPromise =
-            firefoxWindow.delayedStartupPromise ??
+          const delayedPromise = firefoxWindow.delayedStartupPromise ??
             firefoxWindow.gBrowserInit?.delayedStartupPromise;
 
           if (delayedPromise && typeof delayedPromise.then === "function") {
@@ -1595,12 +1624,12 @@ export class DOMLayoutManager {
   }
 
   private setupBookmarkBarPosition() {
-    createEffect(() => {
+    rootEffect(() => {
       const currentPosition =
-        config().uiCustomization.bookmarkBar?.position ?? "top";
+        config.value.uiCustomization.bookmarkBar?.position ?? "top";
       // Track navbar position to ensure bookmark bar is placed correctly
       // This creates a dependency so effect re-runs when navbar position changes
-      const _navbarPosition = config().uiCustomization.navbar.position;
+      const _navbarPosition = config.value.uiCustomization.navbar.position;
       try {
         if (currentPosition === "bottom") {
           this.moveBookmarkBarToBottom();
@@ -1625,7 +1654,7 @@ export class DOMLayoutManager {
     const fullscreenWrapper = this.fullscreenWrapper;
     const statusbar = document?.getElementById(
       "nora-statusbar",
-    ) as XULElement | null;
+    ) as unknown as XULElement | null;
     const navbar = this.navBar;
 
     if (!bookmarkBar) {
@@ -1637,12 +1666,12 @@ export class DOMLayoutManager {
 
     // Find insertion anchor: navbar (if at bottom) > statusbar > fullscreenWrapper
     // Check if navbar is actually at bottom by checking its parent and position
-    const navbarAtBottom =
-      navbar &&
+    const navbarAtBottom = navbar &&
       navbar.isConnected &&
       (this.isNavbarAtBottom ||
         (navbar.parentElement !== null &&
-          (navbar.parentElement as unknown as XULElement | null) !== this.navigatorToolbox));
+          (navbar.parentElement as unknown as XULElement | null) !==
+            this.navigatorToolbox));
 
     let insertionAnchor: XULElement | null = null;
     if (navbar && navbar.isConnected && navbarAtBottom) {

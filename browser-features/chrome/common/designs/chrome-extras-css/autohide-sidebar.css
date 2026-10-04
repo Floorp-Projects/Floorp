@@ -26,7 +26,8 @@
   --uc-sidebar-shadow-color: #28282f;
   z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
   position: relative !important;
-  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px var(--uc-sidebar-shadow-color);
+  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px
+    var(--uc-sidebar-shadow-color);
 }
 #sidebar-box:is([positionend], [sidebar-positionend]) {
   --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));

@@ -26,7 +26,8 @@
 /* leptonChrome.css:25228-25233 */
 @media (prefers-reduced-motion: no-preference) {
   #sidebar-box {
-    transition: padding-inline-start 0.25s var(--animation-easing-function), opacity 0.25s ease-in-out,
+    transition: padding-inline-start 0.25s var(--animation-easing-function),
+      opacity 0.25s ease-in-out,
       box-shadow 0s linear, visibility 0s linear !important;
   }
 }

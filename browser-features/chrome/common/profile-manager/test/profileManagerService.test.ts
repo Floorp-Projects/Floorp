@@ -304,7 +304,7 @@ function testMenuPopupHasCorrectId(): void {
 
   // The element should have id="profile-manager-popup"
   // In Solid/JSX, this is a property
-  const _hasId = ((element as Record<string, unknown>).props as Record<string, unknown> | undefined)?.id !== undefined;
+  const _hasId = ((element as unknown as Record<string, unknown>).props as Record<string, unknown> | undefined)?.id !== undefined;
   assert(true, "MenuPopup should have id property");
 }
 

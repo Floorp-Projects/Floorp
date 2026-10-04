@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { config } from "#features-chrome/common/designs/configs.ts";
-import { createEffect } from "solid-js";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import style from "./style.css?inline";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { render } from "@nora/preact-xul";
 
 export class TabPinnedTabCustomization {
   private dispose: (() => void) | null = null;
@@ -24,31 +24,32 @@ export class TabPinnedTabCustomization {
         );
         return;
       }
-      createRootHMR((dispose) => {
-        try {
-          render(() => this.StyleElement(), head);
-        } catch (error) {
-          const reason = error instanceof Error
-            ? error
-            : new Error(String(error));
-          console.error(
-            "[TabPinnedTabCustomization] Failed to render style element.",
-            reason,
-          );
-          return;
-        }
 
-        this.dispose = dispose;
-      }, import.meta.hot);
+      try {
+        this.dispose = render(() => this.StyleElement(), head);
+      } catch (error) {
+        const reason = error instanceof Error
+          ? error
+          : new Error(String(error));
+        console.error(
+          "[TabPinnedTabCustomization] Failed to render style element.",
+          reason,
+        );
+      }
     } else {
       this.dispose?.();
+      this.dispose = null;
     }
   }
 
   constructor() {
-    createEffect(() => {
-      const showTitleEnabled = config().tab.tabPinTitle;
+    rootEffect(() => {
+      const showTitleEnabled = config.value.tab.tabPinTitle;
       this.toggleTitleVisibility(showTitleEnabled);
+      return () => {
+        this.dispose?.();
+        this.dispose = null;
+      };
     });
   }
 }

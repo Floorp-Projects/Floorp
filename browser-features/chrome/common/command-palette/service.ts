@@ -2,19 +2,29 @@
 
 import { isEnabled } from "./config.ts";
 import { CommandPaletteController } from "./controller.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect } from "solid-js";
+import { signal } from "@preact/signals";
+import {
+  addDisposer,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 
 export class CommandPaletteService {
   private controllers: Map<Window, CommandPaletteController> = new Map();
 
+  private controllerRevision = signal(0);
+  private unloadCallbacks = new Map<Window, () => void>();
+
   constructor() {
+    addDisposer(() => this.destroyAllControllers());
     this.registerAction();
     this.initialize();
 
-    createEffect(() => {
-      const enabled = isEnabled();
+    // rootEffect registers its dispose with the enclosing createRootHMR scope
+    // so the effect is torn down on HMR reload.
+    rootEffect(() => {
+      const enabled = isEnabled(); // reads _enabled.value → tracked
       if (enabled) {
         this.attachToAllWindows();
       } else {
@@ -57,6 +67,7 @@ export class CommandPaletteService {
     if (isEnabled()) {
       const controller = new CommandPaletteController(win);
       this.controllers.set(win, controller);
+      this.controllerRevision.value = this.controllerRevision.peek() + 1;
 
       // deno-lint-ignore no-explicit-any
       (win as any).__commandPaletteControllerAttached = true;
@@ -64,6 +75,8 @@ export class CommandPaletteService {
       const onUnload = () => {
         controller.destroy();
         this.controllers.delete(win);
+        this.unloadCallbacks.delete(win);
+        this.controllerRevision.value = this.controllerRevision.peek() + 1;
         try {
           // deno-lint-ignore no-explicit-any
           delete (win as any).__commandPaletteControllerAttached;
@@ -72,16 +85,20 @@ export class CommandPaletteService {
         }
       };
 
+      this.unloadCallbacks.set(win, onUnload);
       win.addEventListener("unload", onUnload, { once: true });
     }
   }
 
   public getController(win: Window): CommandPaletteController | undefined {
+    this.controllerRevision.value;
     return this.controllers.get(win);
   }
 
   private destroyAllControllers(): void {
     for (const [win, controller] of this.controllers.entries()) {
+      const onUnload = this.unloadCallbacks.get(win);
+      if (onUnload) win.removeEventListener("unload", onUnload);
       controller.destroy();
       try {
         // deno-lint-ignore no-explicit-any
@@ -91,6 +108,8 @@ export class CommandPaletteService {
       }
     }
     this.controllers.clear();
+    this.unloadCallbacks.clear();
+    this.controllerRevision.value = this.controllerRevision.peek() + 1;
   }
 }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import i18next from "i18next";
-import type { PaletteCommand, CommandStepChoice } from "../types.ts";
+import type { CommandStepChoice, PaletteCommand } from "../types.ts";
 import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "../utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "../utils/budouxSegmenter.ts";
@@ -26,7 +26,11 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
       label: i18next.t("commandPalette.reopenInContainerNoContainer", {
         defaultValue: "No Container",
       }) + (currentUserContextId === 0
-        ? ` ${i18next.t("commandPalette.reopenInContainerCurrentSuffix", { defaultValue: "(current)" })}`
+        ? ` ${
+          i18next.t("commandPalette.reopenInContainerCurrentSuffix", {
+            defaultValue: "(current)",
+          })
+        }`
         : ""),
       value: "0",
       description: i18next.t(
@@ -47,21 +51,33 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
         const userContextId = (container as { userContextId: number })
           .userContextId;
         // getUserContextLabel handles both l10nId (built-in) and name (user-created)
-        const label =
-          ContextualIdentityService.getUserContextLabel(userContextId);
+        const label = ContextualIdentityService.getUserContextLabel(
+          userContextId,
+        );
         const isCurrent = userContextId === currentUserContextId;
         return {
-          label: (label || "Unknown") + (isCurrent
-            ? ` ${i18next.t("commandPalette.reopenInContainerCurrentSuffix", { defaultValue: "(current)" })}`
-            : ""),
+          label: (label || "Unknown") +
+            (isCurrent
+              ? ` ${
+                i18next.t("commandPalette.reopenInContainerCurrentSuffix", {
+                  defaultValue: "(current)",
+                })
+              }`
+              : ""),
           value: String(userContextId),
-          description: `${(container as { color: string }).color} • ${(container as { icon: string }).icon}`,
+          description: `${(container as { color: string }).color} • ${
+            (container as { icon: string }).icon
+          }`,
         };
       });
 
     return [noContainer, ...containerChoices];
   } catch (err) {
-    console.error("[ReopenInContainer]", "reopenInContainer loader failed", err);
+    console.error(
+      "[ReopenInContainer]",
+      "reopenInContainer loader failed",
+      err,
+    );
     return [];
   }
 }
@@ -82,8 +98,14 @@ export const reopenInContainerCommand: PaletteCommand = {
     "identity",
     "reopen in",
     ...getJapaneseReadings("floorp-reopen-in-container"),
-    ...getEnglishStepCommandKeywords("commandPalette.reopenInContainer", "commandPalette.reopenInContainerDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.reopenInContainer", "commandPalette.reopenInContainerDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.reopenInContainer",
+      "commandPalette.reopenInContainerDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.reopenInContainer",
+      "commandPalette.reopenInContainerDescription",
+    ),
   ],
   steps: [
     {

@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type Accessor, createSignal, type Setter } from "solid-js";
+import { signal, useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
 import zenModeStyle from "./zen-mode.css?inline";
@@ -75,9 +76,9 @@ function persistSeed(enabled: boolean): void {
  * The preference is read once, at construction, and is never observed.
  */
 export class ZenModeController {
-  public readonly enabled: Accessor<boolean>;
+  public readonly enabled: () => boolean;
 
-  private readonly setEnabledSignal: Setter<boolean>;
+  private readonly enabledSignal = signal(false);
   private readonly document: Document;
   private readonly root: HTMLElement;
   private readonly onDestroyed: ControllerDestroyedCallback;
@@ -109,9 +110,8 @@ export class ZenModeController {
     this.root = root;
     this.onDestroyed = onDestroyed;
 
-    const [enabled, setEnabled] = createSignal(readPersistedSeed());
-    this.enabled = enabled;
-    this.setEnabledSignal = setEnabled;
+    this.enabledSignal.value = readPersistedSeed();
+    this.enabled = () => this.enabledSignal.value;
 
     try {
       this.initialize();
@@ -221,7 +221,7 @@ export class ZenModeController {
   }
 
   private setLocalEnabled(enabled: boolean): void {
-    this.setEnabledSignal(enabled);
+    this.enabledSignal.value = enabled;
     this.applyEnabledState(enabled);
   }
 
@@ -674,15 +674,16 @@ export function destroyZenModeForWindow(
 
 export function ZenModeMenuElement(props: { targetWindow: Window }) {
   const controller = attachZenModeToWindow(props.targetWindow);
-  const [label, setLabel] = createSignal(
+  const label = useSignal(
     i18next.t("zen-mode.menu-label", { defaultValue: "Toggle Zen Mode" }),
   );
 
-  addI18nObserver(() => {
-    setLabel(
-      i18next.t("zen-mode.menu-label", { defaultValue: "Toggle Zen Mode" }),
-    );
-  });
+  useEffect(() =>
+    addI18nObserver(() => {
+      label.value = i18next.t("zen-mode.menu-label", {
+        defaultValue: "Toggle Zen Mode",
+      });
+    }), []);
 
   const handleCommand = (event?: Event) => {
     const menuitem = event?.currentTarget as Element | null;
@@ -692,7 +693,7 @@ export function ZenModeMenuElement(props: { targetWindow: Window }) {
 
   return (
     <xul:menuitem
-      label={label()}
+      label={label.value}
       type="checkbox"
       id="toggle_zenmode"
       data-floorp-context-menu-key="floorp.zen-mode.toggle"

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createRoot } from "solid-js";
-import { render } from "@nora/solid-xul";
+import { createRoot } from "@nora/preact-xul/lifetime";
+import { render } from "@nora/preact-xul";
 import {
   attachZenModeToWindow,
   destroyZenModeForWindow,

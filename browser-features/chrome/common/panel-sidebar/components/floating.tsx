@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import { addDisposer, rootEffect } from "@nora/preact-xul/lifetime";
 import {
   isFloating,
   isPanelSidebarEnabled,
@@ -37,11 +37,10 @@ export class PanelSidebarFloating {
   private floatingSetupFrame: number | undefined;
 
   constructor() {
-    const owner = getOwner();
     const exec1 = () => {
-      createEffect(() => {
-        const floating = isFloating();
-        const enabled = isPanelSidebarEnabled();
+      rootEffect(() => {
+        const floating = isFloating.value;
+        const enabled = isPanelSidebarEnabled.value;
         if (floating && enabled) {
           this.scheduleFloatingSetup();
         } else {
@@ -51,8 +50,8 @@ export class PanelSidebarFloating {
     };
 
     const exec2 = () => {
-      createEffect(() => {
-        const position = panelSidebarConfig().position_start;
+      rootEffect(() => {
+        const position = panelSidebarConfig.value.position_start;
         if (position) {
           document
             ?.getElementById("panel-sidebar-box")
@@ -65,13 +64,9 @@ export class PanelSidebarFloating {
       });
     };
 
-    if (owner) {
-      runWithOwner(owner, exec1);
-      runWithOwner(owner, exec2);
-    } else {
-      createRoot(exec1);
-      createRoot(exec2);
-    }
+    exec1();
+    exec2();
+    addDisposer(() => this.teardownFloatingState());
   }
 
   private scheduleFloatingSetup() {
@@ -80,7 +75,7 @@ export class PanelSidebarFloating {
     }
     this.floatingSetupFrame = requestAnimationFrame(() => {
       this.floatingSetupFrame = undefined;
-      if (!isFloating() || !isPanelSidebarEnabled()) return;
+      if (!isFloating.value || !isPanelSidebarEnabled.value) return;
       if (!document?.getElementById("panel-sidebar-box")) return;
       if (!this.userResizedHeight) {
         this.applyHeightToSidebarBox();
@@ -125,7 +120,7 @@ export class PanelSidebarFloating {
       for (const entry of entries) {
         if (
           entry.target.id === this.parentHeightTargetId &&
-          isFloating() &&
+          isFloating.value &&
           !this.userResizedHeight
         ) {
           this.applyHeightToSidebarBox();
@@ -268,7 +263,7 @@ export class PanelSidebarFloating {
       10,
     );
 
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
     setPanelSidebarConfig({
       ...config,
       floatingPositionLeft: left,
@@ -325,7 +320,7 @@ export class PanelSidebarFloating {
     ) as unknown as XULElement;
     if (!sidebarBox) return;
 
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
 
     const width = sidebarBox.getBoundingClientRect().width;
     const height = sidebarBox.getBoundingClientRect().height;
@@ -338,7 +333,7 @@ export class PanelSidebarFloating {
   }
 
   private applyStoredPositionToSidebarBox() {
-    const config = panelSidebarConfig();
+    const config = panelSidebarConfig.value;
     const sidebarBox = document?.getElementById(
       "panel-sidebar-box",
     ) as unknown as XULElement;
@@ -376,7 +371,7 @@ export class PanelSidebarFloating {
       sidebarBox.style.setProperty("top", `${top}px`);
     } else {
       // position_start に応じてデフォルトの左右を調整
-      const isStart = panelSidebarConfig().position_start;
+      const isStart = panelSidebarConfig.value.position_start;
       const currentWidth = sidebarBox.getBoundingClientRect().width || 400;
       const browserW = document?.getElementById("browser")?.clientWidth ??
         globalThis.innerWidth;
@@ -403,11 +398,11 @@ export class PanelSidebarFloating {
   }
 
   private handleOutsideClick = (event: MouseEvent) => {
-    if (!isFloating()) {
+    if (!isFloating.value) {
       return;
     }
 
-    if (isResizeCooldown() || this.isDraggingHeader) {
+    if (isResizeCooldown.value || this.isDraggingHeader) {
       return;
     }
 
@@ -446,7 +441,7 @@ export class PanelSidebarFloating {
 
   private restoreActivePanel() {
     const controller = PanelNavigator.gPanelSidebar;
-    const panel = controller?.getPanelData(selectedPanelId() ?? "");
+    const panel = controller?.getPanelData(selectedPanelId.value ?? "");
     if (panel) {
       controller?.setSidebarWidth(panel);
     }

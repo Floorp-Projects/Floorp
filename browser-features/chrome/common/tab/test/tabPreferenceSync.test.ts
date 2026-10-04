@@ -1,24 +1,26 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { createRoot } from "@nora/preact-xul/lifetime";
+
 import { TabDoubleClickClose } from "../doubleClickClose/index.ts";
 import { TabOpenPosition } from "../openPosition/index.ts";
 import { TabScroll } from "../scroll/index.ts";
-import { config, setConfig } from "../../designs/configs.ts";
-import { createRoot } from "solid-js";
+import { config } from "../../designs/configs.ts";
 import {
   assertEquals,
   runTests,
   type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
-function constructInSolidRoot(construct: () => void): void {
-  let dispose: (() => void) | undefined;
-  createRoot((cleanup) => {
-    dispose = cleanup;
+const ownedTestRoots: Array<() => void> = [];
+
+function constructInPreactRoot(construct: () => void): () => void {
+  return createRoot((dispose) => {
+    ownedTestRoots.push(dispose);
     construct();
+    return dispose;
   });
-  dispose?.();
 }
 
 function withTabConfigPatch(
@@ -29,26 +31,28 @@ function withTabConfigPatch(
   },
   run: () => void,
 ): void {
-  const original = JSON.parse(JSON.stringify(config()));
+  const original = JSON.parse(JSON.stringify(config.value));
 
   try {
-    setConfig((prev) => ({
+    const prev = config.value;
+    config.value = {
       ...prev,
       tab: {
         ...prev.tab,
-        tabDoubleClickToClose:
-          patch.tabDoubleClickToClose ?? prev.tab.tabDoubleClickToClose,
+        tabDoubleClickToClose: patch.tabDoubleClickToClose ??
+          prev.tab.tabDoubleClickToClose,
         tabOpenPosition: patch.tabOpenPosition ?? prev.tab.tabOpenPosition,
         tabScroll: {
           ...prev.tab.tabScroll,
           enabled: patch.tabScrollEnabled ?? prev.tab.tabScroll.enabled,
         },
       },
-    }));
+    };
 
     run();
   } finally {
-    setConfig(original);
+    for (const dispose of ownedTestRoots.splice(0)) dispose();
+    config.value = original;
   }
 }
 
@@ -58,7 +62,7 @@ function testTabDoubleClickCloseSyncsPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabDoubleClickToClose: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactRoot(() => {
         new TabDoubleClickClose();
       });
       assertEquals(
@@ -78,7 +82,7 @@ function testTabOpenPositionSyncsPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabOpenPosition: 2 }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactRoot(() => {
         new TabOpenPosition();
       });
       assertEquals(
@@ -98,7 +102,7 @@ function testTabScrollSyncsSwitchByScrollingPrefWhenConstructed(): void {
 
   try {
     withTabConfigPatch({ tabScrollEnabled: true }, () => {
-      constructInSolidRoot(() => {
+      constructInPreactRoot(() => {
         new TabScroll();
       });
       assertEquals(

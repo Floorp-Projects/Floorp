@@ -13,8 +13,12 @@ import {
 } from "./config.ts";
 import { MouseGestureController } from "./controller.ts";
 import { handleContextMenuAfterMouseUp } from "./context-menu-policy.ts";
-import { createRootHMR } from "@nora/solid-xul";
-import { createEffect, createRoot, onCleanup } from "solid-js";
+import {
+  addDisposer,
+  createRoot,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
 import type { MouseGestureWindow } from "./types.ts";
 
 /** Each browser window owns the service and controller loaded in its realm. */
@@ -31,7 +35,7 @@ export class MouseGestureService {
 
     this.disposeRoot = createRoot((dispose) => {
       targetWindow.addEventListener("unload", dispose, { once: true });
-      onCleanup(() => {
+      addDisposer(() => {
         this.disposed = true;
         targetWindow.removeEventListener("unload", dispose);
         this.destroyController();
@@ -39,7 +43,7 @@ export class MouseGestureService {
 
       // config.ts already observes both preferences. Keep a single local
       // subscription instead of a second process-wide preference observer.
-      createEffect(() => {
+      rootEffect(() => {
         const configString = JSON.stringify(getConfig());
         const enabled = isEnabled();
         if (this.disposed || targetWindow.closed) return;
@@ -56,7 +60,7 @@ export class MouseGestureService {
     });
 
     // The enclosing createRootHMR disposes this service on a module update.
-    onCleanup(() => this.destroy());
+    addDisposer(() => this.destroy());
   }
 
   public attachToWindow(win: Window): void {

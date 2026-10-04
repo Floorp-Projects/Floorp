@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
+floorp_commit: "77a1ff1821200f9adef04dd2fe4c1ae7da4c8046"
 generated: true
 ---
 # Architecture Overview
@@ -15,7 +15,7 @@ Floorp layers Firefox/Gecko configuration, privileged Firefox ESM modules, the s
 | Firefox Base | `static/gecko/pref/override.ini` | Patched Gecko and pref overrides. |
 | ESM Modules | `browser-features/modules/modules/BrowserGlue.sys.mts` | Firefox ESM modules and Window Actor registration. |
 | Bridge | `bridge/startup/src/chrome_root.ts` | Startup bridge that selects dev/test HTTP loaders or chrome:// production code. |
-| Chrome UI | `browser-features/chrome/common/mod.ts` | SolidJS browser chrome features discovered by glob. |
+| Chrome UI | `browser-features/chrome/common/mod.ts` | Preact and Signals browser chrome features discovered by glob. |
 | Pages | `browser-features/pages-settings/vite.config.ts` | React/Tailwind full-page browser UIs. |
 
 ## Startup And Loader Flow
@@ -26,7 +26,7 @@ The startup bridge is owned by `bridge/startup/src/chrome_root.ts:51-52`. It sel
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:41` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:42` on port 5181.
 
 ## Privileged Modules And Window Actors
 

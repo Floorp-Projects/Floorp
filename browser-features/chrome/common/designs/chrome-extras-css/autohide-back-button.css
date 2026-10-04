@@ -26,7 +26,8 @@
     transition-property: background-color, opacity, margin-left !important;
   }
   #back-button[disabled="true"] {
-    transition: background-color 1s var(--animation-easing-function), opacity 1s var(--animation-easing-function),
+    transition: background-color 1s var(--animation-easing-function), opacity 1s
+      var(--animation-easing-function),
       margin-left 0.5s ease !important;
   }
 }

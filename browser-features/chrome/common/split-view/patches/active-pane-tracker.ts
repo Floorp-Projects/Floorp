@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
 import {
   getGBrowser,
   type SplitViewGBrowser,
@@ -207,7 +206,11 @@ export function ensureSplitPanelsActiveClassFromState(): void {
     !hasLiveSplitPanelsState(ids.length, root.hasAttribute("data-floorp-split"))
   ) {
     log.debug(
-      `[ensureActiveClass] skip ids=${ids?.length ?? "undef"} root=${!!root} floorpSplit=${root?.hasAttribute("data-floorp-split") ?? false}`,
+      `[ensureActiveClass] skip ids=${
+        ids?.length ?? "undef"
+      } root=${!!root} floorpSplit=${
+        root?.hasAttribute("data-floorp-split") ?? false
+      }`,
     );
     return;
   }
@@ -224,7 +227,9 @@ export function ensureSplitPanelsActiveClassFromState(): void {
     if (!child.classList.contains("split-view-panel")) {
       skippedNotPanel++;
       log.debug(
-        `[ensureActiveClass] id=${id} missing .split-view-panel class list=[${[...child.classList].join(", ")}]`,
+        `[ensureActiveClass] id=${id} missing .split-view-panel class list=[${
+          [...child.classList].join(", ")
+        }]`,
       );
       continue;
     }
@@ -259,9 +264,13 @@ export function refreshActiveSplitPaneIndicator(): void {
   const activeIndex = splitTabs.indexOf(selectedTab);
 
   log.debug(
-    `[refreshIndicator] splitTabs=${splitTabs.length} source=${gBrowser.activeSplitView ? "wrapper" : "splitViewPanels"} ` +
+    `[refreshIndicator] splitTabs=${splitTabs.length} source=${
+      gBrowser.activeSplitView ? "wrapper" : "splitViewPanels"
+    } ` +
       `activeIndex=${activeIndex} ` +
-      `selectedLabel="${(selectedTab as SplitViewTab)?.label?.slice(0, 40) ?? ""}"`,
+      `selectedLabel="${
+        (selectedTab as SplitViewTab)?.label?.slice(0, 40) ?? ""
+      }"`,
   );
 
   if (activeIndex === -1) {
@@ -279,9 +288,9 @@ export function refreshActiveSplitPaneIndicator(): void {
 /**
  * Tracks split view selection changes and keeps pane presentation state in sync.
  */
-export function initActivePaneTracker(logger: ConsoleInstance): void {
+export function initActivePaneTracker(logger: ConsoleInstance): () => void {
   const tabContainer = getGBrowser()?.tabContainer;
-  if (!tabContainer) return;
+  if (!tabContainer) return () => {};
 
   const scheduleAfterTabSelect = (): void => {
     requestAnimationFrame(() => {
@@ -331,7 +340,9 @@ export function initActivePaneTracker(logger: ConsoleInstance): void {
     attachSplitPanelClassObserver(tp);
   }
 
-  onCleanup(() => {
+  logger.debug("[active-pane-tracker] listeners attached");
+
+  return () => {
     detachSplitPanelClassObserver();
     tabContainer.removeEventListener("TabSelect", scheduleAfterTabSelect);
     tabContainer.removeEventListener(
@@ -339,7 +350,5 @@ export function initActivePaneTracker(logger: ConsoleInstance): void {
       scheduleAfterSplitActivate,
     );
     tabContainer.removeEventListener("TabSplitViewDeactivate", onDeactivate);
-  });
-
-  logger.debug("[active-pane-tracker] listeners attached");
+  };
 }

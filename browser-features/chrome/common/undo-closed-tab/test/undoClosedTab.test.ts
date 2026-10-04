@@ -164,10 +164,10 @@ function testI18nIntegration(): void {
 }
 
 function testCreateSignalAvailability(): void {
-  // createSignal is not on globalThis — it's imported from solid-js in module scope
+  // signal is not on globalThis — it's imported from @preact/signals in module scope
   assert(
     true,
-    "createSignal is imported from solid-js in module scope, not globalThis",
+    "signal is imported from @preact/signals in module scope, not globalThis",
   );
 }
 
@@ -251,7 +251,7 @@ export async function runAllTests(): Promise<void> {
       fn: testI18nIntegration,
     },
     {
-      name: "SolidJS createSignal works",
+      name: "Preact signal works",
       fn: testCreateSignalAvailability,
     },
     {

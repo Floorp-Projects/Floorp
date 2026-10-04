@@ -138,7 +138,7 @@ async function testPanelSubmit(): Promise<void> {
   actor.submit(request, expected);
   assertEquals(await shown, expected, "panel submit returns public result");
   assert(
-    panelSidebarData().some((panel: Panel) =>
+    panelSidebarData.value.some((panel: Panel) =>
       panel.url === "https://example.com"
     ),
     "real panel caller applies submitted result",
@@ -166,7 +166,7 @@ async function testPanelZeroWidthSubmit(): Promise<void> {
   const expected = panelResult("https://global-width.example", "0");
   actor.submit(request, expected);
   assertEquals(await shown, expected, "zero-width panel submit completes");
-  const addedPanel = panelSidebarData().find((panel: Panel) =>
+  const addedPanel = panelSidebarData.value.find((panel: Panel) =>
     panel.url === "https://global-width.example"
   );
   assert(addedPanel !== undefined, "zero-width panel is added");
@@ -192,7 +192,7 @@ async function testPanelRapidReplacement(): Promise<void> {
   actor.submit(secondRequest, expected);
   assertEquals(await second, expected, "replacement panel remains active");
   assert(
-    !panelSidebarData().some((panel: Panel) =>
+    !panelSidebarData.value.some((panel: Panel) =>
       panel.url === "https://stale.example"
     ),
     "stale panel result is not applied",
@@ -210,7 +210,7 @@ const tests: TestCase[] = [
 
 export async function runAllTests(): Promise<void> {
   const savedManager = parentState.modalManager;
-  const savedPanels = [...panelSidebarData()];
+  const savedPanels = [...panelSidebarData.value];
   try {
     await runTests("modalCallerRequestLifecycle.test.ts", tests);
   } finally {

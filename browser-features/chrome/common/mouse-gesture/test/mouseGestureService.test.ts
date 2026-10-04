@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 import { assertEquals, runTests } from "../../../test/utils/test_harness.ts";
 import {
   getConfig,

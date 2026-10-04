@@ -27,7 +27,6 @@ import {
   config,
   deepMerge,
   getChromeExtrasSettings,
-  setConfig,
   updateChromeExtrasSetting,
 } from "../configs.ts";
 import {
@@ -45,7 +44,7 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import { zFloorpDesignConfigs } from "../type.ts";
 import { isRight } from "fp-ts/Either";
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -693,9 +692,9 @@ function testLegacyLeptonPrefsFollowNewSettings(): void {
 
 /** Exercise the mounted design effect, not just the compatibility helper. */
 async function testLiveLeptonToggleTurnsOffOldRule(): Promise<void> {
-  const before = config();
+  const before = config.value;
   try {
-    setConfig((prev) => ({
+    config.value = ((prev: typeof before) => ({
       ...prev,
       globalConfigs: { ...prev.globalConfigs, userInterface: "lepton" },
       uiCustomization: {
@@ -706,7 +705,7 @@ async function testLiveLeptonToggleTurnsOffOldRule(): Promise<void> {
           iconDisabled: false,
         },
       },
-    }));
+    }))(config.peek());
     await new Promise((resolve) => setTimeout(resolve, 0));
     assertEquals(
       Services.prefs.getBoolPref("userChrome.icon.menu"),
@@ -740,7 +739,7 @@ async function testLiveLeptonToggleTurnsOffOldRule(): Promise<void> {
       "the mounted style manager must remove base icons when disabled",
     );
   } finally {
-    setConfig(before);
+    config.value = before;
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }

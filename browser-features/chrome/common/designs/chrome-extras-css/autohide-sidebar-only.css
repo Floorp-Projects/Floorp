@@ -36,16 +36,20 @@
 /* leptonChrome.css:27060-27081 */
 @media (prefers-reduced-motion: no-preference) {
   #sidebar-box {
-    transition: min-width var(--uc-autohide-sidebar-speed) var(--animation-easing-function)
-        var(--uc-autohide-sidebar-delay),
-      max-width var(--uc-autohide-sidebar-speed) var(--animation-easing-function) var(--uc-autohide-sidebar-delay) !important;
+    transition: min-width var(--uc-autohide-sidebar-speed)
+      var(--animation-easing-function)
+      var(--uc-autohide-sidebar-delay),
+      max-width var(--uc-autohide-sidebar-speed)
+      var(--animation-easing-function) var(--uc-autohide-sidebar-delay)
+      !important;
   }
   #sidebar-box:is(:hover, :focus-within),
   #sidebar-box:has(#sidebar-switcher-target.active) {
     transition-delay: 0ms !important;
   }
   :root[inFullscreen="true"] #sidebar-box {
-    transition: margin-inline-start var(--uc-autohide-fullscreen-sidebar-speed) var(--animation-easing-function)
+    transition: margin-inline-start var(--uc-autohide-fullscreen-sidebar-speed)
+      var(--animation-easing-function)
       var(--uc-autohide-sidebar-delay) !important;
   }
   :root[inFullscreen="true"] #sidebar-box:is([positionend], [sidebar-positionend]) {

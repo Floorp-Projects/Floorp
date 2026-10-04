@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import {
   noraComponent,
   NoraComponentBase,
 } from "#features-chrome/utils/base.ts";
 import {
-  emptyDragSession,
   type DragSessionState,
+  emptyDragSession,
   reduceDragSession,
 } from "./drag-session.ts";
 
@@ -27,7 +27,7 @@ const IS_MAC = /mac/i.test(navigator.platform ?? "");
  * toggles tab multi-selection, and web apps (Figma, Miro, maps) use
  * Cmd+drag for canvas panning — a bare-Cmd drag start is ambiguous.
  */
-@noraComponent(import.meta.hot)
+@noraComponent("WindowDrag", import.meta.hot)
 export default class WindowDrag extends NoraComponentBase {
   init(): void {
     // The loader instantiates this class once per browser window, so the
@@ -102,7 +102,7 @@ export default class WindowDrag extends NoraComponentBase {
     addEventListener("keyup", onKeyUp, true);
     addEventListener("blur", onBlur);
 
-    onCleanup(() => {
+    addDisposer(() => {
       removeEventListener("mousedown", onMouseDown, true);
       removeEventListener("mousemove", onMouseMove, true);
       removeEventListener("mouseup", endDrag, true);

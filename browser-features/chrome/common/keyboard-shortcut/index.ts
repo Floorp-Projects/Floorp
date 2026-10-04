@@ -6,7 +6,7 @@
 import {
   noraComponent,
   NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+} from "#features-chrome/utils/base";
 import { keyboardShortcutService } from "./service.ts";
 export { keyboardShortcutService } from "./service.ts";
 export type {
@@ -23,7 +23,7 @@ export {
   stringToShortcut,
 } from "./config.ts";
 
-@noraComponent(import.meta.hot)
+@noraComponent("KeyboardShortcut", import.meta.hot)
 export default class KeyboardShortcut extends NoraComponentBase {
   static ctx: typeof keyboardShortcutService | null = null;
   init(): void {

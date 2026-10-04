@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /* @refresh reload */
-import type {} from "@nora/solid-xul/jsx-runtime";
 
 export function category() {
   return (

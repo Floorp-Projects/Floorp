@@ -3,40 +3,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { render } from "@nora/solid-xul";
-import { createRoot, getOwner, type Owner, runWithOwner } from "solid-js";
+import { render } from "@nora/preact-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import { ContextMenu } from "./context-menu.tsx";
 import { StatusBarElem } from "./statusbar.tsx";
 import { StatusBarManager } from "./statusbar-manager.tsx";
-import {
-  noraComponent,
-  NoraComponentBase,
-} from "#features-chrome/utils/base.ts";
+import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 
 export let manager: StatusBarManager;
-let statusbarOwner: Owner | null = null;
 
-@noraComponent(import.meta.hot)
+@noraComponent("StatusBar", import.meta.hot)
 export default class StatusBar extends NoraComponentBase {
   init() {
-    statusbarOwner = getOwner();
     manager = new StatusBarManager();
     if (typeof document !== "undefined" && document?.body) {
-      const exec = () =>
-        render(StatusBarElem, document?.body, {
-          marker:
-            document?.getElementById("customization-container") ?? undefined,
-        });
-      if (statusbarOwner) runWithOwner(statusbarOwner, exec);
-      else createRoot(exec);
+      const customizationContainer = document.getElementById(
+        "customization-container",
+      );
+      render(StatusBarElem, document.body, { marker: customizationContainer });
       const mainPopupSet = document?.getElementById("mainPopupSet");
-      mainPopupSet?.addEventListener("popupshowing", onPopupShowing);
+      let disposeContextMenu: (() => void) | undefined;
+      const handlePopupShowing = (event: Event) => {
+        disposeContextMenu ??= onPopupShowing(event);
+      };
+      mainPopupSet?.addEventListener("popupshowing", handlePopupShowing);
+      addDisposer(() => {
+        mainPopupSet?.removeEventListener("popupshowing", handlePopupShowing);
+        disposeContextMenu?.();
+      });
     }
     manager.init();
   }
 }
 
-function onPopupShowing(event: Event) {
+function onPopupShowing(event: Event): (() => void) | undefined {
   if (
     typeof document !== "undefined" &&
     document?.getElementById("toggle_statusBar")
@@ -54,13 +54,9 @@ function onPopupShowing(event: Event) {
       if (typeof document !== "undefined") {
         const separator = document?.getElementById("viewToolbarsMenuSeparator");
         if (separator && separator.parentElement) {
-          const exec = () =>
-            render(ContextMenu, separator.parentElement, {
-              marker: separator,
-              hotCtx: import.meta.hot,
-            });
-          if (statusbarOwner) runWithOwner(statusbarOwner, exec);
-          else createRoot(exec);
+          return render(ContextMenu, separator.parentElement, {
+            marker: separator,
+          });
         }
       }
       break;

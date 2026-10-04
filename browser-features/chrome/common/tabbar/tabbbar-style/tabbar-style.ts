@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import { rootEffect } from "@nora/preact-xul/lifetime";
 import { gTabbarStyleFunctions } from "./tabbbar-style-functions";
 
 export class TabbarStyleClass {
@@ -19,14 +19,9 @@ export class TabbarStyleClass {
       "floorp-tabbar-window-manage-container",
     );
 
-    gTabbarStyleFunctions.applyTabbarStyle();
-
-    const owner = getOwner?.();
-    const exec = () =>
-      createEffect(() => {
-        gTabbarStyleFunctions.applyTabbarStyle();
-      });
-    if (owner) runWithOwner(owner, exec);
-    else createRoot(exec);
+    rootEffect(() => {
+      gTabbarStyleFunctions.applyTabbarStyle();
+      return () => gTabbarStyleFunctions.revertToDefaultStyle();
+    });
   }
 }

@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Show } from "solid-js";
 import {
   isFloating,
   selectedPanelId,
@@ -17,50 +16,53 @@ export function SidebarHeader(props: { ctx: CPanelSidebar }) {
   const gPanelSidebar = props.ctx;
   (PanelNavigator as { gPanelSidebar: CPanelSidebar }).gPanelSidebar =
     gPanelSidebar;
+  const panelId = selectedPanelId.value ?? "";
+  const isWebPanel =
+    gPanelSidebar.getPanelData(panelId)?.type === "web";
   return (
     <xul:box id="panel-sidebar-header" align="center">
-      <Show
-        when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===
-          "web"}
-      >
-        <xul:toolbarbutton
-          id="panel-sidebar-back"
-          class="panel-sidebar-actions toolbarbutton-1 chromeclass-toolbar-additional"
-          onCommand={() => PanelNavigator.back(selectedPanelId() ?? "")}
-        />
-        <xul:toolbarbutton
-          id="panel-sidebar-forward"
-          onCommand={() => PanelNavigator.forward(selectedPanelId() ?? "")}
-          class="panel-sidebar-actions"
-        />
-        <xul:toolbarbutton
-          id="panel-sidebar-reload"
-          onCommand={() => PanelNavigator.reload(selectedPanelId() ?? "")}
-          class="panel-sidebar-actions"
-        />
-        <xul:toolbarbutton
-          id="panel-sidebar-go-index"
-          onCommand={() => PanelNavigator.goIndexPage(selectedPanelId() ?? "")}
-          class="panel-sidebar-actions"
-        />
-      </Show>
+      {isWebPanel && (
+        <>
+          <xul:toolbarbutton
+            id="panel-sidebar-back"
+            class="panel-sidebar-actions toolbarbutton-1 chromeclass-toolbar-additional"
+            onCommand={() =>
+              PanelNavigator.back(selectedPanelId.value ?? "")}
+          />
+          <xul:toolbarbutton
+            id="panel-sidebar-forward"
+            onCommand={() =>
+              PanelNavigator.forward(selectedPanelId.value ?? "")}
+            class="panel-sidebar-actions"
+          />
+          <xul:toolbarbutton
+            id="panel-sidebar-reload"
+            onCommand={() =>
+              PanelNavigator.reload(selectedPanelId.value ?? "")}
+            class="panel-sidebar-actions"
+          />
+          <xul:toolbarbutton
+            id="panel-sidebar-go-index"
+            onCommand={() =>
+              PanelNavigator.goIndexPage(selectedPanelId.value ?? "")}
+            class="panel-sidebar-actions"
+          />
+        </>
+      )}
       <xul:spacer flex="1" />
       <xul:toolbarbutton
         id="panel-sidebar-float"
-        onCommand={() => setIsFloating(!isFloating())}
+        onCommand={() => setIsFloating(!isFloating.value)}
         class="panel-sidebar-actions"
       />
-      <Show
-        when={gPanelSidebar.getPanelData(selectedPanelId() ?? "")?.type ===
-          "web"}
-      >
+      {isWebPanel && (
         <xul:toolbarbutton
           id="panel-sidebar-open-in-main-window"
           onCommand={() =>
-            gPanelSidebar.openInMainWindow(selectedPanelId() ?? "")}
+            gPanelSidebar.openInMainWindow(selectedPanelId.value ?? "")}
           class="panel-sidebar-actions"
         />
-      </Show>
+      )}
       <xul:toolbarbutton
         id="panel-sidebar-close"
         onCommand={() => setSelectedPanelId(null)}

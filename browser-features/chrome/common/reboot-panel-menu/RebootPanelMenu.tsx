@@ -3,9 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSignal, onCleanup } from "solid-js";
-import type { JSX } from "solid-js";
-import { createRootHMR, render } from "@nora/solid-xul";
+import { signal, useSignal } from "@preact/signals";
+import { useEffect } from "preact/hooks";
+import type { ComponentChild } from "preact";
+import { h } from "preact";
+import { render } from "@nora/preact-xul";
+import { addDisposer, createRootHMR } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
@@ -36,14 +39,14 @@ type RestartInSafeModeDeps = {
 };
 
 export class RebootPanelMenu {
-  private isOpen = createSignal<boolean>(false);
+  private isOpen = signal<boolean>(false);
   private isRendered = false;
+  private disposeRender: (() => void) | undefined;
 
   constructor() {
     if (!this.panelUIButton) return;
 
     createRootHMR(() => {
-      const [, setIsOpen] = this.isOpen;
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (
@@ -52,7 +55,7 @@ export class RebootPanelMenu {
           ) {
             const isOpened =
               this.panelUIButton?.getAttribute("open") === "true";
-            setIsOpen(isOpened);
+            this.isOpen.value = isOpened;
 
             if (isOpened && !this.isRendered) {
               this.renderPanel();
@@ -65,7 +68,10 @@ export class RebootPanelMenu {
         attributes: true,
       });
 
-      onCleanup(() => observer.disconnect());
+      addDisposer(() => {
+        observer.disconnect();
+        this.disposeRender?.();
+      });
     }, import.meta.hot);
   }
 
@@ -91,9 +97,11 @@ export class RebootPanelMenu {
     if (!this.parentElement || !this.beforeElement) return;
 
     this.isRendered = true;
-    render(() => <RebootPanelMenu.Render />, this.parentElement, {
-      marker: this.beforeElement,
-    });
+    this.disposeRender = render(
+      h(RebootPanelMenu.Render, null),
+      this.parentElement!,
+      { marker: this.beforeElement },
+    );
   }
 
   private static async showRebootPanelSubView(
@@ -139,29 +147,31 @@ export class RebootPanelMenu {
     deps.notifyObservers(deps.subject, "restart-in-safe-mode");
   }
 
-  public static Render(): JSX.Element {
-    const [translations, setTranslations] = createSignal({
+  public static Render(): ComponentChild {
+    const translations = useSignal({
       reboot: i18next.t("reboot.menu.title"),
       normalRestart: i18next.t("reboot.menu.normal-restart"),
       restartWithCacheClear: i18next.t("reboot.menu.restart-cache-clear"),
       restartInSafeMode: i18next.t("reboot.menu.restart-safe-mode"),
     });
 
-    addI18nObserver(() => {
-      setTranslations({
-        reboot: i18next.t("reboot.menu.title"),
-        normalRestart: i18next.t("reboot.menu.normal-restart"),
-        restartWithCacheClear: i18next.t("reboot.menu.restart-cache-clear"),
-        restartInSafeMode: i18next.t("reboot.menu.restart-safe-mode"),
+    useEffect(() => {
+      return addI18nObserver(() => {
+        translations.value = {
+          reboot: i18next.t("reboot.menu.title"),
+          normalRestart: i18next.t("reboot.menu.normal-restart"),
+          restartWithCacheClear: i18next.t("reboot.menu.restart-cache-clear"),
+          restartInSafeMode: i18next.t("reboot.menu.restart-safe-mode"),
+        };
       });
-    });
+    }, []);
 
     return (
       <>
         <xul:toolbarbutton
           id="appMenu-restart-button"
           class="subviewbutton subviewbutton-nav"
-          label={translations().reboot}
+          label={translations.value.reboot}
           closemenu="none"
           onCommand={() => RebootPanelMenu.showRebootPanelSubView()}
         />
@@ -170,20 +180,20 @@ export class RebootPanelMenu {
             <xul:toolbarbutton
               id="appMenu-restart-normal-button"
               class="subviewbutton"
-              label={translations().normalRestart}
+              label={translations.value.normalRestart}
               onCommand={() => RebootPanelMenu.handleRestart()}
             />
             <xul:toolbarseparator />
             <xul:toolbarbutton
               id="appMenu-restart-cache-clear-button"
               class="subviewbutton"
-              label={translations().restartWithCacheClear}
+              label={translations.value.restartWithCacheClear}
               onCommand={() => RebootPanelMenu.handleRestartWithCacheClear()}
             />
             <xul:toolbarbutton
               id="appMenu-restart-safe-mode-button"
               class="subviewbutton"
-              label={translations().restartInSafeMode}
+              label={translations.value.restartInSafeMode}
               onCommand={() => RebootPanelMenu.handleRestartInSafeMode()}
             />
           </xul:vbox>

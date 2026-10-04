@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
-import { onCleanup } from "solid-js";
+import { addDisposer } from "@nora/preact-xul/lifetime";
 import {
   BYTES_PER_MB,
   DEFAULT_SETTINGS,
@@ -197,7 +197,7 @@ export function isIdleEnough(
  * and input has been idle. Playback and calls do not reset input inactivity;
  * an already started reclaim can also delay input when the user returns.
  */
-@noraComponent(import.meta.hot)
+@noraComponent("IdleMemoryReclaim", import.meta.hot)
 export default class IdleMemoryReclaim extends NoraComponentBase {
   private settings: IdleMemoryReclaimSettings = { ...DEFAULT_SETTINGS };
   /** Seconds passed to addIdleObserver; removal needs the same value. */
@@ -216,7 +216,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     this.setupPrefObserver();
     this.setupIdleObserver();
     this.setupPollTimer();
-    onCleanup(() => this.teardown());
+    addDisposer(() => this.teardown());
   }
 
   /** Loads settings from the pref, falling back to defaults on failure. */

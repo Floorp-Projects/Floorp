@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 import TabStacks, { ENABLED_PREF } from "../index.ts";
 import {
   getGBrowser,
@@ -12,7 +12,7 @@ import {
   syncActiveGroup,
   TAB_DROP_TYPE,
 } from "../stack-bar.tsx";
-import { config, setConfig } from "../../designs/configs.ts";
+import { config } from "../../designs/configs.ts";
 import {
   assert,
   assertEquals,
@@ -36,7 +36,7 @@ async function waitFor(check: () => boolean, message: string): Promise<void> {
 async function testNativeInteractions(): Promise<void> {
   const gb = getGBrowser() as NativeStackBrowser;
   const originalTab = gb.selectedTab;
-  const originalConfig = structuredClone(config());
+  const originalConfig = structuredClone(config.value);
   const prefNames = [ENABLED_PREF, "sidebar.verticalTabs", "sidebar.revamp"];
   const prefs = prefNames.map((name) => ({
     name,
@@ -47,10 +47,10 @@ async function testNativeInteractions(): Promise<void> {
   let dispose: (() => void) | undefined;
   let otherWindow: Window | undefined;
   try {
-    setConfig((prev) => ({
-      ...prev,
-      tabbar: { ...prev.tabbar, tabbarStyle: "horizontal" },
-    }));
+    config.value = {
+      ...config.value,
+      tabbar: { ...config.value.tabbar, tabbarStyle: "horizontal" },
+    };
     Services.prefs.setBoolPref("sidebar.verticalTabs", false);
     Services.prefs.setBoolPref("sidebar.revamp", false);
     Services.prefs.setBoolPref(ENABLED_PREF, true);
@@ -466,7 +466,7 @@ async function testNativeInteractions(): Promise<void> {
     if (originalTab.isConnected) gb.selectedTab = originalTab;
     syncActiveGroup();
     dispose?.();
-    setConfig(originalConfig);
+    config.value = originalConfig;
     for (const pref of prefs) {
       if (pref.user) Services.prefs.setBoolPref(pref.name, pref.value);
       else Services.prefs.clearUserPref(pref.name);

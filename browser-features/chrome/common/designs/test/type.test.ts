@@ -2,10 +2,10 @@
 // @colocated-env browser
 
 import { zFloorpDesignConfigs } from "../type.ts";
-import { isRight, isLeft } from "fp-ts/Either";
+import { isLeft, isRight } from "fp-ts/Either";
 import {
-  assertEquals,
   assert,
+  assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
 

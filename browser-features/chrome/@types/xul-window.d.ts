@@ -166,6 +166,7 @@ declare namespace globalThis {
     persistTabAttribute?(attrName: string): void;
   };
   var DownloadsPanel: {
+    showDownloadsHistory(): void;
     show(): Promise<void>;
     richListBox?: Element;
     panel?: Element;

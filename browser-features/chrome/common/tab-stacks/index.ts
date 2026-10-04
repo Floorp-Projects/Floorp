@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
-import { render } from "@nora/solid-xul";
+import { addDisposer } from "@nora/preact-xul/lifetime";
+import { h, safeRender } from "@nora/preact-xul";
 import {
   noraComponent,
   NoraComponentBase,
@@ -272,7 +272,7 @@ export function updateGroupChips(
  * from row 1 (the chip represents the stack) and the active group's tabs
  * render as proxies in a second bar under the tab strip.
  */
-@noraComponent(import.meta.hot)
+@noraComponent("TabStacks", import.meta.hot)
 export default class TabStacks extends NoraComponentBase {
   init(): void {
     if (typeof document === "undefined" || typeof window === "undefined") {
@@ -295,10 +295,8 @@ export default class TabStacks extends NoraComponentBase {
       return;
     }
 
-    render(StackStyleElement, document.head, {
-      hotCtx: import.meta.hot,
-    });
-    render(StackBar, toolbox, { marker: navBar, hotCtx: import.meta.hot });
+    addDisposer(safeRender(h(StackStyleElement, {}), document.head));
+    addDisposer(safeRender(h(StackBar, {}), toolbox, navBar));
 
     const tabsContainer = gb.tabContainer as unknown as Element;
 
@@ -316,7 +314,7 @@ export default class TabStacks extends NoraComponentBase {
       attributes: true,
       attributeFilter: ["orient"],
     });
-    onCleanup(() => orientationObserver.disconnect());
+    addDisposer(() => orientationObserver.disconnect());
 
     // ==== shared drag state ====
     let tabDragActive = false;
@@ -324,7 +322,7 @@ export default class TabStacks extends NoraComponentBase {
     let lastTabDropTime = 0;
     let lastProxyStripScroll = 0;
     let endDragTimer: ReturnType<typeof setTimeout> | null = null;
-    onCleanup(() => {
+    addDisposer(() => {
       if (endDragTimer !== null) clearTimeout(endDragTimer);
       proxyDragLifecycle.dispose();
     });
@@ -346,7 +344,7 @@ export default class TabStacks extends NoraComponentBase {
     for (const type of TAB_EVENTS) {
       addEventListener(type, onTabEvent);
     }
-    onCleanup(() => {
+    addDisposer(() => {
       for (const type of TAB_EVENTS) {
         removeEventListener(type, onTabEvent);
       }
@@ -428,7 +426,7 @@ export default class TabStacks extends NoraComponentBase {
     };
     addEventListener("mousedown", onChipPress, true);
     addEventListener("click", onChipPress, true);
-    onCleanup(() => {
+    addDisposer(() => {
       removeEventListener("mousedown", onChipPress, true);
       removeEventListener("click", onChipPress, true);
     });
@@ -464,7 +462,7 @@ export default class TabStacks extends NoraComponentBase {
     };
     document.addEventListener("popupshowing", onTabContextShowing, true);
     document.addEventListener("popuphidden", onTabContextHidden, true);
-    onCleanup(() => {
+    addDisposer(() => {
       document?.removeEventListener("popupshowing", onTabContextShowing, true);
       document?.removeEventListener("popuphidden", onTabContextHidden, true);
     });
@@ -499,7 +497,7 @@ export default class TabStacks extends NoraComponentBase {
     };
     document.addEventListener("popupshowing", onTabContextShowingLate);
     document.addEventListener("popuphidden", onTabContextHiddenLate);
-    onCleanup(() => {
+    addDisposer(() => {
       document?.removeEventListener("popupshowing", onTabContextShowingLate);
       document?.removeEventListener("popuphidden", onTabContextHiddenLate);
     });
@@ -544,41 +542,52 @@ export default class TabStacks extends NoraComponentBase {
         dualLabelItems.push({ item, stack: stackLabel, group: groupLabel });
         return item;
       };
-      makeItem("floorp.tab-stacks.reload", "Reload Stack", "Reload Group", () => {
-        const group = menuGroup;
-        if (!group) return;
-        try {
-          for (const t of [...group.tabs]) gb.reloadTab?.(t);
-        } catch (e) {
-          console.error("[tab-stacks] reload stack failed:", e);
-        }
-      });
+      makeItem(
+        "floorp.tab-stacks.reload",
+        "Reload Stack",
+        "Reload Group",
+        () => {
+          const group = menuGroup;
+          if (!group) return;
+          try {
+            for (const t of [...group.tabs]) gb.reloadTab?.(t);
+          } catch (e) {
+            console.error("[tab-stacks] reload stack failed:", e);
+          }
+        },
+      );
       makeItem(
         "floorp.tab-stacks.new-tab",
         "New Tab in Stack",
         "New Tab in Group",
         () => {
-        const group = menuGroup;
-        if (!group) return;
-        try {
-          const url = (globalThis as unknown as {
-            BROWSER_NEW_TAB_URL?: string;
-          }).BROWSER_NEW_TAB_URL ?? "about:newtab";
-          const tab = gb.addTab(url, {
-            triggeringPrincipal: Services.scriptSecurityManager
-              .getSystemPrincipal(),
-            skipAnimation: true,
-          });
-          group.addTabs([tab]);
-          gb.selectedTab = tab;
-        } catch (e) {
-          console.error("[tab-stacks] new tab in stack failed:", e);
-        }
-      });
-      makeItem("floorp.tab-stacks.manage", "Manage Stack…", "Manage Group…", () => {
-        // Native group editor: rename, colour and group actions.
-        if (menuGroup) gb.tabGroupMenu?.openEditModal(menuGroup);
-      });
+          const group = menuGroup;
+          if (!group) return;
+          try {
+            const url = (globalThis as unknown as {
+              BROWSER_NEW_TAB_URL?: string;
+            }).BROWSER_NEW_TAB_URL ?? "about:newtab";
+            const tab = gb.addTab(url, {
+              triggeringPrincipal: Services.scriptSecurityManager
+                .getSystemPrincipal(),
+              skipAnimation: true,
+            });
+            group.addTabs([tab]);
+            gb.selectedTab = tab;
+          } catch (e) {
+            console.error("[tab-stacks] new tab in stack failed:", e);
+          }
+        },
+      );
+      makeItem(
+        "floorp.tab-stacks.manage",
+        "Manage Stack…",
+        "Manage Group…",
+        () => {
+          // Native group editor: rename, colour and group actions.
+          if (menuGroup) gb.tabGroupMenu?.openEditModal(menuGroup);
+        },
+      );
       const kindSeparator = createXULElement("menuseparator");
       kindSeparator.setAttribute(
         "data-floorp-context-menu-key",
@@ -601,16 +610,21 @@ export default class TabStacks extends NoraComponentBase {
         bumpStacksVersion();
       });
       kindMenu.appendChild(kindItem);
-      makeItem("floorp.tab-stacks.ungroup", "Ungroup Stack", "Ungroup Tabs", () => {
-        // Dissolve the stack, keep every tab in the strip.
-        const group = menuGroup;
-        if (!group || !gb.ungroupTab) return;
-        try {
-          for (const t of [...group.tabs]) gb.ungroupTab(t);
-        } catch (e) {
-          console.error("[tab-stacks] ungroup stack failed:", e);
-        }
-      });
+      makeItem(
+        "floorp.tab-stacks.ungroup",
+        "Ungroup Stack",
+        "Ungroup Tabs",
+        () => {
+          // Dissolve the stack, keep every tab in the strip.
+          const group = menuGroup;
+          if (!group || !gb.ungroupTab) return;
+          try {
+            for (const t of [...group.tabs]) gb.ungroupTab(t);
+          } catch (e) {
+            console.error("[tab-stacks] ungroup stack failed:", e);
+          }
+        },
+      );
       const closeSeparator = createXULElement("menuseparator");
       closeSeparator.setAttribute(
         "data-floorp-context-menu-key",
@@ -653,7 +667,7 @@ export default class TabStacks extends NoraComponentBase {
       kindMenu.openPopupAtScreen(event.screenX, event.screenY, true);
     };
     addEventListener("contextmenu", onLabelContextMenu, true);
-    onCleanup(() => {
+    addDisposer(() => {
       removeEventListener("contextmenu", onLabelContextMenu, true);
       kindMenu?.remove();
     });
@@ -1108,7 +1122,7 @@ export default class TabStacks extends NoraComponentBase {
     addEventListener("dragend", endTabDrag, true);
     addEventListener(PROXY_DRAG_END_EVENT, endTabDrag);
     addEventListener("TabGrouped", onTabGroupedDuringDrag);
-    onCleanup(() => {
+    addDisposer(() => {
       removeEventListener("dragstart", onTabDragStart, true);
       removeEventListener("drop", onAnyDrop, true);
       removeEventListener("drop", onChipDrop, true);
@@ -1141,7 +1155,7 @@ export default class TabStacks extends NoraComponentBase {
       attributes: true,
       attributeFilter: ["label", "selected", "image"],
     });
-    onCleanup(() => {
+    addDisposer(() => {
       observer.disconnect();
       if (refreshTimer) clearTimeout(refreshTimer);
     });
@@ -1187,7 +1201,7 @@ export default class TabStacks extends NoraComponentBase {
       capture: true,
       passive: true,
     });
-    onCleanup(() =>
+    addDisposer(() =>
       tabsContainer.removeEventListener("wheel", armRecentreLatch, true)
     );
     if (asb && !asb.__floorpEnsureWrapped) {
@@ -1216,7 +1230,7 @@ export default class TabStacks extends NoraComponentBase {
         return orig(el, instant);
       };
       asb.__floorpEnsureWrapped = true;
-      onCleanup(() => {
+      addDisposer(() => {
         asb.ensureElementIsVisible = orig;
         asb.__floorpEnsureWrapped = false;
       });
@@ -1291,7 +1305,7 @@ export default class TabStacks extends NoraComponentBase {
       tabsContainer.addEventListener(ev, refreshCloseSuccessor);
     }
     refreshCloseSuccessor();
-    onCleanup(() => {
+    addDisposer(() => {
       for (const ev of SUCCESSOR_EVENTS) {
         tabsContainer.removeEventListener(ev, refreshCloseSuccessor);
       }

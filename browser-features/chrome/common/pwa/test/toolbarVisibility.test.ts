@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createEffect, createRoot } from "solid-js";
+import { effect } from "@preact/signals";
 import { config } from "../config.ts";
 import { updatePwaToolbarVisibility } from "../toolbarVisibility.ts";
 import styles from "../pwa-window-style.css?inline";
@@ -40,12 +40,9 @@ export async function runAllTests(): Promise<void> {
           pref,
           '{"showToolbar":false,"futureKey":"keep"}',
         );
-        createRoot((cleanup) => {
-          dispose = cleanup;
-          createEffect(() =>
-            updatePwaToolbarVisibility(doc, config().showToolbar)
-          );
-        });
+        dispose = effect(() =>
+          updatePwaToolbarVisibility(doc, config.value.showToolbar)
+        );
         const display = () => doc.defaultView!.getComputedStyle(nav)!.display;
         assertEquals(
           display(),
@@ -63,7 +60,7 @@ export async function runAllTests(): Promise<void> {
         assertEquals(display(), "none", "live disable hides toolbar again");
         Services.prefs.setStringPref(pref, "{}");
         assertEquals(
-          config().showToolbar,
+          config.value.showToolbar,
           true,
           "missing setting uses new-install default",
         );

@@ -3,8 +3,8 @@
 import {
   loadDefaultJapaneseParser,
   loadDefaultSimplifiedChineseParser,
-  loadDefaultTraditionalChineseParser,
   loadDefaultThaiParser,
+  loadDefaultTraditionalChineseParser,
   type Parser,
 } from "budoux";
 import i18next from "i18next";

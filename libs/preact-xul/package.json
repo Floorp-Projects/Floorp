@@ -1,0 +1,13 @@
+{
+  "name": "@nora/preact-xul",
+  "version": "0.0.1",
+  "description": "Preact XUL support",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "preact": "^10.26.9"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

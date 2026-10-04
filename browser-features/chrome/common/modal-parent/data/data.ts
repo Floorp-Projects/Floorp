@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { type Accessor, createSignal, type Setter } from "solid-js";
-import { createRootHMR } from "@nora/solid-xul";
+import { signal } from "@preact/signals";
+import { createRootHMR } from "@nora/preact-xul/lifetime";
 
 export type ModalSize = {
   width?: number;
@@ -18,22 +18,14 @@ const defaultModalSize: ModalSize = {
   height: 800,
 };
 
-function createModalVisibility(): [Accessor<boolean>, Setter<boolean>] {
-  return createSignal<boolean>(false);
-}
-
-function createModalSize(): [Accessor<ModalSize>, Setter<ModalSize>] {
-  return createSignal<ModalSize>(defaultModalSize);
-}
-
 /** Modal visibility state */
-export const [isModalVisible, setModalVisible] = createRootHMR(
-  createModalVisibility,
+export const isModalVisible = createRootHMR(
+  () => signal<boolean>(false),
   import.meta.hot,
 );
 
 /** Modal size state */
-export const [modalSize, setModalSize] = createRootHMR(
-  createModalSize,
+export const modalSize = createRootHMR(
+  () => signal<ModalSize>(defaultModalSize),
   import.meta.hot,
 );

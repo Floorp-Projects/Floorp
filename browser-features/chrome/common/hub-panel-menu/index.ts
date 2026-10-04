@@ -6,7 +6,7 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { HubPanelMenu } from "./HubPanelMenu";
 
-@noraComponent(import.meta.hot)
+@noraComponent("HubPanelMenuComponent", import.meta.hot)
 export default class HubPanelMenuComponent extends NoraComponentBase {
   private hubPanelMenu: HubPanelMenu | null = null;
 

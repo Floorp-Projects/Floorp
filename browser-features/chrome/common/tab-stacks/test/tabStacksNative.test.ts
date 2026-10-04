@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 import TabStacks, { ENABLED_PREF, GROUP_KINDS_PREF } from "../index.ts";
 import { getGBrowser, STACK_ATTR, syncActiveGroup } from "../stack-bar.tsx";
-import { config, setConfig } from "../../designs/configs.ts";
+import { config } from "../../designs/configs.ts";
 import {
   assert,
   assertEquals,
@@ -33,7 +33,7 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
     (globalThis as unknown as { SidebarController: StackTestSidebar })
       .SidebarController;
   const originalSidebar = sidebar.getUIState();
-  const originalConfig = structuredClone(config());
+  const originalConfig = structuredClone(config.value);
   const originalTab = gb.selectedTab;
   const prefNames = [
     ENABLED_PREF,
@@ -67,13 +67,13 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
       feature.init();
     });
 
-    setConfig((prev) => ({
-      ...prev,
+    config.value = {
+      ...config.value,
       tabbar: {
-        ...prev.tabbar,
+        ...config.value.tabbar,
         tabbarStyle: "horizontal",
       },
-    }));
+    };
     Services.prefs.setBoolPref("sidebar.revamp", false);
     Services.prefs.setBoolPref("sidebar.verticalTabs", false);
     await waitFor(
@@ -198,10 +198,10 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
 
       const savedKinds = Services.prefs.getStringPref(GROUP_KINDS_PREF, "{}");
       for (const expanded of [true, false]) {
-        setConfig((prev) => ({
-          ...prev,
-          tabbar: { ...prev.tabbar, tabbarStyle: "vertical" },
-        }));
+        config.value = {
+          ...config.value,
+          tabbar: { ...config.value.tabbar, tabbarStyle: "vertical" },
+        };
         Services.prefs.setBoolPref("sidebar.revamp", true);
         Services.prefs.setBoolPref("sidebar.verticalTabs", true);
         await waitFor(
@@ -273,10 +273,10 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
         );
         group.collapsed = false;
         gb.selectedTab = tabs[0];
-        setConfig((prev) => ({
-          ...prev,
-          tabbar: { ...prev.tabbar, tabbarStyle: "horizontal" },
-        }));
+        config.value = {
+          ...config.value,
+          tabbar: { ...config.value.tabbar, tabbarStyle: "horizontal" },
+        };
         Services.prefs.setBoolPref("sidebar.verticalTabs", false);
         await waitFor(
           () =>
@@ -410,7 +410,7 @@ async function testNativeStackSplitLifecycle(): Promise<void> {
     if (originalTab.isConnected) gb.selectedTab = originalTab;
     syncActiveGroup();
     dispose?.();
-    setConfig(originalConfig);
+    config.value = originalConfig;
     for (const pref of savedPrefs) {
       if (!pref.user) Services.prefs.clearUserPref(pref.name);
       else if (pref.bool) {

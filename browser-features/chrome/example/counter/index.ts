@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { render } from "@nora/solid-xul";
+import { h, render } from "preact";
 import { Counter } from "./Counter";
 
-render(Counter, document.getElementById("appcontent")?.nextSibling, {
-  hotCtx: import.meta.hot,
-});
+const container = document.getElementById("appcontent")?.nextSibling;
+if (container) {
+  render(h(Counter, null), container as Element);
+}
 
 if (import.meta.hot) {
   import.meta.hot.accept();

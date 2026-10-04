@@ -3,13 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { onCleanup } from "solid-js";
-import {
-  type ModalSize,
-  modalSize,
-  setModalSize,
-  setModalVisible,
-} from "./data/data.ts";
+import { addDisposer } from "@nora/preact-xul/lifetime";
+import { isModalVisible, type ModalSize, modalSize } from "./data/data.ts";
 import type {
   ModalCancelRequest,
   ModalRequestIdentity,
@@ -121,9 +116,13 @@ function defaultEnvironment(): ModalManagerEnvironment {
         "NRChromeModal",
       );
     },
-    getSize: modalSize,
-    setVisible: setModalVisible,
-    setSize: (size) => setModalSize(size),
+    getSize: () => modalSize.value,
+    setVisible: (visible) => {
+      isModalVisible.value = visible;
+    },
+    setSize: (size) => {
+      modalSize.value = size;
+    },
     focusWindow: () => globalThis.focus(),
     notifyHidden: () => {
       try {
@@ -226,7 +225,7 @@ export class ModalManager {
       }
     };
     this.environment.addKeydownListener(this.handleKeydown);
-    onCleanup(() => this.dispose());
+    addDisposer(() => this.dispose());
   }
 
   public show(

@@ -3,30 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { useEffect } from "preact/hooks";
 import { manager } from "./index.ts";
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { useSignal } from "@preact/signals";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 
 const TRANSLATION_KEY = "statusbar.toggle";
 
 export function ContextMenu() {
-  const [label, setLabel] = createSignal(i18next.t(TRANSLATION_KEY));
+  const label = useSignal(i18next.t(TRANSLATION_KEY));
 
-  addI18nObserver(() => {
-    setLabel(i18next.t(TRANSLATION_KEY, { mark: "(S)" }));
-  });
+  useEffect(() => addI18nObserver(() => {
+    label.value = i18next.t(TRANSLATION_KEY, { mark: "(S)" });
+  }), []);
 
   return (
     <xul:menuitem
-      label={label()}
+      label={label.value}
       type="checkbox"
       id="toggle_statusBar"
       data-floorp-context-menu-key="floorp.statusbar.toggle"
       data-toolbar-id="nora-statusbar"
-      checked={manager.showStatusBar()}
-      onCommand={() =>
-        manager.setShowStatusBar((prevValue: boolean) => !prevValue)}
+      checked={manager.showStatusBar.value}
+      onCommand={() => {
+        manager.showStatusBar.value = !manager.showStatusBar.value;
+      }}
     />
   );
 }

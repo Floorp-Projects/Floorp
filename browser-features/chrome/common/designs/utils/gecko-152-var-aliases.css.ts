@@ -91,7 +91,10 @@ export const GECKO_152_RENAMED_VARS: ReadonlyArray<
 
   // Toolbar buttons
   // toolbarbuttons.css:768-769 -> 775-776
-  ["--toolbarbutton-hover-background", "--toolbarbutton-background-color-hover"],
+  [
+    "--toolbarbutton-hover-background",
+    "--toolbarbutton-background-color-hover",
+  ],
   [
     "--toolbarbutton-active-background",
     "--toolbarbutton-background-color-active",

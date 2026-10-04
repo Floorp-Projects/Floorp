@@ -26,8 +26,9 @@ export function computeDropZone(
 
 /** Map a drop zone to a split view layout. */
 export function zoneToLayout(zone: DropZone): "horizontal" | "vertical" {
-  if (zone === "left" || zone === "right" || zone === "center")
+  if (zone === "left" || zone === "right" || zone === "center") {
     return "horizontal";
+  }
   return "vertical";
 }
 

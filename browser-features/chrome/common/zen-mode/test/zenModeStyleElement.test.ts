@@ -7,7 +7,7 @@ import {
   destroyZenModeForWindow,
   ZEN_MODE_STYLE_ID,
 } from "../zen-mode.tsx";
-import { render } from "@nora/solid-xul";
+import { render } from "@nora/preact-xul";
 import {
   assert,
   assertEquals,

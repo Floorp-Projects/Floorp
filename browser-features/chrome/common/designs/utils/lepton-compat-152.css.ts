@@ -260,5 +260,5 @@ export const LEPTON_COMPAT_152_CSS = `
  * The Floorp icon patches that used to be appended here now live in the
  * design-agnostic chrome-extras stylesheets.
  */
-export const LEPTON_COMPAT_CSS =
-  GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS;
+export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS + "\n" +
+  LEPTON_COMPAT_152_CSS;

@@ -3,13 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
+import { signal } from "@preact/signals";
 import {
   CHROME_EXTRAS_DEFAULTS,
   type ChromeExtrasKey,
@@ -23,7 +17,11 @@ import {
 } from "./utils/old-config-migrator";
 import { type TFloorpDesignConfigs, zFloorpDesignConfigs } from "./type.ts";
 import {} from "#features-chrome/utils/base";
-import { createRootHMR } from "@nora/solid-xul";
+import {
+  addDisposer,
+  createRootHMR,
+  rootEffect,
+} from "@nora/preact-xul/lifetime";
 import { isRight } from "fp-ts/Either";
 
 export function isPlainObject(
@@ -276,10 +274,7 @@ const oldObjectConfigs = createDefaultOldObjectConfigs();
 
 export const getOldConfigs = JSON.stringify(oldObjectConfigs);
 
-function createConfig(): [
-  Accessor<TFloorpDesignConfigs>,
-  Setter<TFloorpDesignConfigs>,
-] {
+function createConfig() {
   const defaultConfigResult = zFloorpDesignConfigs.decode(
     JSON.parse(getOldConfigs),
   );
@@ -309,7 +304,7 @@ function createConfig(): [
     console.error("Failed to parse initial design configs, using defaults:", e);
   }
 
-  const [config, setConfig] = createSignal(initialConfig);
+  const cfg = signal(initialConfig);
 
   function updateConfigFromPref() {
     try {
@@ -318,7 +313,10 @@ function createConfig(): [
         getOldConfigs,
       );
       const parsedConfig = JSON.parse(configStr);
-      const merged = deepMerge(defaultConfig, migrateDesignConfig(parsedConfig));
+      const merged = deepMerge(
+        defaultConfig,
+        migrateDesignConfig(parsedConfig),
+      );
       // Ensure backward compatibility: set default position if missing
       if (
         merged.uiCustomization?.bookmarkBar &&
@@ -327,19 +325,22 @@ function createConfig(): [
         merged.uiCustomization.bookmarkBar.position = "top";
       }
       const mergedResult = zFloorpDesignConfigs.decode(merged);
-      if (isRight(mergedResult)) {
-        setConfig(mergedResult.right);
+      if (
+        isRight(mergedResult) &&
+        JSON.stringify(mergedResult.right) !== JSON.stringify(cfg.peek())
+      ) {
+        cfg.value = mergedResult.right;
       }
     } catch (e) {
       console.error("Failed to parse design configs:", e);
     }
   }
 
-  createEffect(() => {
+  rootEffect(() => {
     try {
       Services.prefs.setStringPref(
         "floorp.design.configs",
-        JSON.stringify(config()),
+        JSON.stringify(cfg.value),
       );
     } catch (e) {
       console.error("Failed to save design configs:", e);
@@ -349,7 +350,7 @@ function createConfig(): [
   try {
     Services.prefs.addObserver("floorp.design.configs", updateConfigFromPref);
 
-    onCleanup(() => {
+    addDisposer(() => {
       try {
         Services.prefs.removeObserver(
           "floorp.design.configs",
@@ -363,10 +364,10 @@ function createConfig(): [
     console.error("Failed to add observer:", e);
   }
 
-  return [config, setConfig];
+  return cfg;
 }
 
-export const [config, setConfig] = createRootHMR(createConfig, import.meta.hot);
+export const config = createRootHMR(createConfig, import.meta.hot);
 
 if (!globalThis.gFloorp) {
   globalThis.gFloorp = {};
@@ -379,12 +380,11 @@ function setGlobalDesignConfig<
   K extends keyof TFloorpDesignConfigs["globalConfigs"],
 >(key: K, value: TFloorpDesignConfigs["globalConfigs"][K]) {
   try {
-    setConfig((prev) => {
-      const newConfig = Object.assign({}, prev);
-      newConfig.globalConfigs = Object.assign({}, prev.globalConfigs);
-      newConfig.globalConfigs[key] = value;
-      return newConfig;
-    });
+    const prev = config.value;
+    const newConfig = Object.assign({}, prev);
+    newConfig.globalConfigs = Object.assign({}, prev.globalConfigs);
+    newConfig.globalConfigs[key] = value;
+    config.value = newConfig;
   } catch (e) {
     console.error(
       `Failed to set global design config for key ${String(key)}:`,
@@ -403,12 +403,11 @@ export function setUICustomizationConfig<
   K extends keyof TFloorpDesignConfigs["uiCustomization"],
 >(category: K, value: TFloorpDesignConfigs["uiCustomization"][K]) {
   try {
-    setConfig((prev) => {
-      const newConfig = Object.assign({}, prev);
-      newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
-      newConfig.uiCustomization[category] = value;
-      return newConfig;
-    });
+    const prev = config.value;
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+    newConfig.uiCustomization[category] = value;
+    config.value = newConfig;
   } catch (e) {
     console.error(
       `Failed to set UI customization config for category ${String(category)}:`,
@@ -426,23 +425,24 @@ export function updateUICustomizationSetting<
   value: TFloorpDesignConfigs["uiCustomization"][K][SK],
 ) {
   try {
-    setConfig((prev) => {
-      const newConfig = Object.assign({}, prev);
-      newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+    const prev = config.value;
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
 
-      newConfig.uiCustomization[category] = Object.assign(
-        {},
-        prev.uiCustomization[category],
-      );
-      newConfig.uiCustomization[category][setting] = value;
+    newConfig.uiCustomization[category] = Object.assign(
+      {},
+      prev.uiCustomization[category],
+    );
+    newConfig.uiCustomization[category][setting] = value;
 
-      return newConfig;
-    });
+    config.value = newConfig;
   } catch (e) {
     console.error(
-      `Failed to update UI customization setting ${String(category)}.${String(
-        setting,
-      )}:`,
+      `Failed to update UI customization setting ${String(category)}.${
+        String(
+          setting,
+        )
+      }:`,
       e,
     );
   }
@@ -453,12 +453,11 @@ export function addUICustomizationCategory<T extends Record<string, unknown>>(
   categorySettings: T,
 ) {
   try {
-    setConfig((prev) => {
-      const newConfig = Object.assign({}, prev);
-      newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
-      newConfig.uiCustomization[categoryName] = categorySettings;
-      return newConfig;
-    });
+    const prev = config.value;
+    const newConfig = Object.assign({}, prev);
+    newConfig.uiCustomization = Object.assign({}, prev.uiCustomization);
+    newConfig.uiCustomization[categoryName] = categorySettings;
+    config.value = newConfig;
   } catch (e) {
     console.error(
       `Failed to add UI customization category ${categoryName}:`,
@@ -473,7 +472,7 @@ export function getUICustomizationSetting<T>(
   defaultValue: T,
 ): T {
   try {
-    const currentConfig = config();
+    const currentConfig = config.value;
     const uiCustomization = currentConfig.uiCustomization as Record<
       string,
       Record<string, unknown>
@@ -508,10 +507,12 @@ export function getUICustomizationSetting<T>(
  * after the config was written).
  */
 export function getChromeExtrasSettings(): ChromeExtrasSettings {
-  const stored = config().uiCustomization.chromeExtras;
+  const stored = config.value.uiCustomization.chromeExtras;
   const result = { ...CHROME_EXTRAS_DEFAULTS };
   if (stored) {
-    for (const key of Object.keys(CHROME_EXTRAS_DEFAULTS) as ChromeExtrasKey[]) {
+    for (
+      const key of Object.keys(CHROME_EXTRAS_DEFAULTS) as ChromeExtrasKey[]
+    ) {
       const value = stored[key];
       if (typeof value === "boolean") {
         result[key] = value;
@@ -535,15 +536,17 @@ export function updateChromeExtrasSetting(
   value: boolean,
 ): void {
   try {
-    setConfig((prev) => {
+    config.value = ((prev: TFloorpDesignConfigs) => {
       const newConfig = Object.assign({}, prev);
       const uiCustomization = Object.assign({}, prev.uiCustomization);
       const stored = (uiCustomization.chromeExtras ??
         CHROME_EXTRAS_DEFAULTS) as Record<string, boolean>;
-      uiCustomization.chromeExtras = Object.assign({}, stored, { [key]: value });
+      uiCustomization.chromeExtras = Object.assign({}, stored, {
+        [key]: value,
+      });
       newConfig.uiCustomization = uiCustomization;
       return newConfig;
-    });
+    })(config.peek());
   } catch (e) {
     console.error(
       `Failed to update chrome extras setting "${String(key)}":`,

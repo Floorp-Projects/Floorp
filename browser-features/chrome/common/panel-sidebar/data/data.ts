@@ -3,13 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Setter,
-} from "solid-js";
+import { effect, signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
 import {
   defaultEnabled,
   strDefaultConfig,
@@ -22,7 +17,7 @@ import {
   zPanelSidebarConfig,
   zPanelSidebarData,
 } from "../utils/type.js";
-import { createRootHMR } from "@nora/solid-xul";
+import { addDisposer, createRootHMR } from "#features-chrome/utils/base";
 import { isRight } from "fp-ts/Either";
 
 function defaultPanelSidebarData(): Panels {
@@ -52,8 +47,17 @@ export function parsePanelSidebarData(stringData: string): Panels {
   return defaultPanelSidebarData();
 }
 
-function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
-  const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
+function getPanelSidebarConfigParsed(stringData: string): unknown {
+  try {
+    return JSON.parse(stringData);
+  } catch (e) {
+    console.error("Failed to parse panel sidebar config:", e);
+    return {};
+  }
+}
+
+function createPanelSidebarData(): Signal<Panels> {
+  const sig = signal<Panels>(
     parsePanelSidebarData(
       Services.prefs.getStringPref(
         PanelSidebarStaticNames.panelSidebarDataPrefName,
@@ -61,103 +65,110 @@ function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
       ),
     ),
   );
+
+  // sync signal → pref
+  const disposeEffect = effect(() => {
+    Services.prefs.setStringPref(
+      PanelSidebarStaticNames.panelSidebarDataPrefName,
+      JSON.stringify({ data: sig.value }),
+    );
+  });
+
+  // sync pref → signal
   const observer = () => {
-    setPanelSidebarData(
-      parsePanelSidebarData(
-        Services.prefs.getStringPref(
-          PanelSidebarStaticNames.panelSidebarDataPrefName,
-          strDefaultData,
-        ),
+    const next = parsePanelSidebarData(
+      Services.prefs.getStringPref(
+        PanelSidebarStaticNames.panelSidebarDataPrefName,
+        strDefaultData,
       ),
     );
+    if (JSON.stringify(sig.peek()) !== JSON.stringify(next)) sig.value = next;
   };
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
     observer,
   );
-  onCleanup(() => {
+
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarDataPrefName,
       observer,
     );
+    disposeEffect();
   });
 
-  createEffect(() => {
-    Services.prefs.setStringPref(
-      PanelSidebarStaticNames.panelSidebarDataPrefName,
-      JSON.stringify({ data: panelSidebarData() }),
-    );
-  });
-  return [panelSidebarData, setPanelSidebarData];
+  return sig;
 }
 
 /** PanelSidebar data */
-export const [panelSidebarData, setPanelSidebarData] = createRootHMR(
+export const panelSidebarData: Signal<Panels> = createRootHMR(
   createPanelSidebarData,
   import.meta.hot,
 );
+export const setPanelSidebarData = (
+  v: Panels | ((prev: Panels) => Panels),
+): void => {
+  panelSidebarData.value = typeof v === "function"
+    ? v(panelSidebarData.value)
+    : v;
+};
 
-function createSelectedPanelId(): [
-  Accessor<string | null>,
-  Setter<string | null>,
-] {
-  const [selectedPanelId, setSelectedPanelId] = createSignal<string | null>(
-    null,
-  );
-  createEffect(() => {
-    globalThis.gFloorpPanelSidebarCurrentPanel = selectedPanelId();
+function createSelectedPanelId(): Signal<string | null> {
+  const sig = signal<string | null>(null);
+  const disposeEffect = effect(() => {
+    globalThis.gFloorpPanelSidebarCurrentPanel = sig.value;
   });
-  return [selectedPanelId, setSelectedPanelId];
+  addDisposer(() => {
+    disposeEffect();
+  });
+  return sig;
 }
 
 /** Selected Panel */
-export const [selectedPanelId, setSelectedPanelId] = createRootHMR(
+export const selectedPanelId: Signal<string | null> = createRootHMR(
   createSelectedPanelId,
   import.meta.hot,
 );
+export const setSelectedPanelId = (v: string | null): void => {
+  selectedPanelId.value = v;
+};
 
-function createPanelSidebarConfig(): [
-  Accessor<PanelSidebarConfig>,
-  Setter<PanelSidebarConfig>,
-] {
+function createPanelSidebarConfig(): Signal<PanelSidebarConfig> {
   const configResult = zPanelSidebarConfig.decode(
-    getPanelSidebarConfig(
+    getPanelSidebarConfigParsed(
       Services.prefs.getStringPref(
         PanelSidebarStaticNames.panelSidebarConfigPrefName,
         strDefaultConfig,
       ),
     ),
   );
-  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
-    PanelSidebarConfig
-  >(
+  const sig = signal<PanelSidebarConfig>(
     isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
   );
-  createEffect(() => {
+
+  // sync signal → pref
+  const disposeEffect = effect(() => {
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
-      JSON.stringify(panelSidebarConfig()),
+      JSON.stringify(sig.value),
     );
   });
-  function getPanelSidebarConfig(stringData: string) {
-    try {
-      return JSON.parse(stringData);
-    } catch (e) {
-      console.error("Failed to parse panel sidebar config:", e);
-      return {};
-    }
-  }
+
+  // sync pref → signal
   const observer = () => {
     const result = zPanelSidebarConfig.decode(
-      getPanelSidebarConfig(
+      getPanelSidebarConfigParsed(
         Services.prefs.getStringPref(
           PanelSidebarStaticNames.panelSidebarConfigPrefName,
           strDefaultConfig,
         ),
       ),
     );
-    if (isRight(result)) {
-      setPanelSidebarConfig(result.right);
+    if (
+      isRight(result) &&
+      JSON.stringify(sig.peek()) !== JSON.stringify(result.right)
+    ) {
+      sig.value = result.right;
     }
   };
 
@@ -165,71 +176,96 @@ function createPanelSidebarConfig(): [
     PanelSidebarStaticNames.panelSidebarConfigPrefName,
     observer,
   );
-  onCleanup(() => {
+
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
       observer,
     );
+    disposeEffect();
   });
-  return [panelSidebarConfig, setPanelSidebarConfig];
+
+  return sig;
 }
 
 /** Get PanelSidebar Config data */
-export const [panelSidebarConfig, setPanelSidebarConfig] = createRootHMR(
+export const panelSidebarConfig: Signal<PanelSidebarConfig> = createRootHMR(
   createPanelSidebarConfig,
   import.meta.hot,
 );
+export const setPanelSidebarConfig = (
+  v:
+    | PanelSidebarConfig
+    | ((previous: PanelSidebarConfig) => PanelSidebarConfig),
+): void => {
+  panelSidebarConfig.value = typeof v === "function"
+    ? v(panelSidebarConfig.peek())
+    : v;
+};
 
 /** Floating state */
-export const [isFloating, setIsFloating] = createRootHMR(
-  () => createSignal(false),
+export const isFloating: Signal<boolean> = createRootHMR(
+  () => signal(false),
   import.meta.hot,
 );
+export const setIsFloating = (v: boolean): void => {
+  isFloating.value = v;
+};
 
 /** Floating DraggingState */
-export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
-  () => createSignal<boolean>(false),
+export const isFloatingDragging: Signal<boolean> = createRootHMR(
+  () => signal<boolean>(false),
   import.meta.hot,
 );
+export const setIsFloatingDragging = (v: boolean): void => {
+  isFloatingDragging.value = v;
+};
 
-function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
-    boolean
-  >(
+function createIsPanelSidebarEnabled(): Signal<boolean> {
+  const sig = signal<boolean>(
     Services.prefs.getBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
       defaultEnabled,
     ),
   );
-  createEffect(() => {
+
+  // sync signal → pref
+  const disposeEffect = effect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-      isPanelSidebarEnabled(),
+      sig.value,
     );
   });
-  const observer = () =>
-    setIsPanelSidebarEnabled(
-      Services.prefs.getBoolPref(
-        PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-        defaultEnabled,
-      ),
+
+  // sync pref → signal
+  const observer = () => {
+    sig.value = Services.prefs.getBoolPref(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      defaultEnabled,
     );
+  };
+
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarEnabledPrefName,
     observer,
   );
-  onCleanup(() => {
+
+  addDisposer(() => {
     Services.prefs.removeObserver(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
       observer,
     );
+    disposeEffect();
   });
 
-  return [isPanelSidebarEnabled, setIsPanelSidebarEnabled];
+  return sig;
 }
 
 /** Panel Sidebar Enabled */
-export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createRootHMR(
+export const isPanelSidebarEnabled: Signal<boolean> = createRootHMR(
   createIsPanelSidebarEnabled,
   import.meta.hot,
 );
+export const setIsPanelSidebarEnabled = (v: boolean): void => {
+  isPanelSidebarEnabled.value = v;
+};

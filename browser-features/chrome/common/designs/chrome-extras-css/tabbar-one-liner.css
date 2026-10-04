@@ -39,8 +39,10 @@
 
 #nav-bar {
   --uc-navbar-double-block: calc(2 * var(--uc-navbar-block, 0px));
-  height: calc(var(--uc-tabbar-height) - var(--uc-navbar-double-block)) !important;
-  margin-top: calc(var(--uc-tabbar-hide-height) + var(--uc-navbar-double-block)) !important;
+  height: calc(var(--uc-tabbar-height) - var(--uc-navbar-double-block))
+    !important;
+  margin-top: calc(var(--uc-tabbar-hide-height) + var(--uc-navbar-double-block))
+    !important;
   margin-bottom: var(--uc-navbar-block, 0px) !important;
 }
 
@@ -76,12 +78,14 @@
 
 #urlbar-container {
   min-width: calc(
-    var(--uc-oneliner-urlbar-base-width, 50px) + 24px + 2 * var(--toolbarbutton-inner-padding)
+    var(--uc-oneliner-urlbar-base-width, 50px) + 24px + 2 *
+    var(--toolbarbutton-inner-padding)
   ) !important;
 }
 
 #urlbar[breakout][breakout-extend] {
-  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding))) !important;
+  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)))
+    !important;
 }
 
 #PersonalToolbar {

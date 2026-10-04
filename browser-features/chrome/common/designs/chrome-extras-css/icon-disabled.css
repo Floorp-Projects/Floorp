@@ -138,9 +138,7 @@
 }
 
 /* leptonChrome.css:27551-27557 — extra conditions dropped: userChrome.icon.panel */
-.toolbaritem-combined-buttons:not(.unified-extensions-item)
-  > .subviewbutton:not(.subviewbutton-iconic)
-  > .toolbarbutton-text {
+.toolbaritem-combined-buttons:not(.unified-extensions-item) > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
   padding-inline-start: 0 !important;
 }
 
@@ -220,7 +218,8 @@
 /* leptonChrome.css:27631-27636 — extra conditions dropped: userChrome.icon.panel */
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
-  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace)) !important;
+  stroke: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace))
+    !important;
 }
 
 /* leptonChrome.css:27637-27642 — extra conditions dropped: userChrome.icon.panel */
@@ -268,8 +267,7 @@
 }
 
 /* leptonChrome.css:27681-27690 — extra conditions dropped: userChrome.icon.panel */
-#appMenu-fxa-status2:is([fxastatus="signedin"], [fxastatus="unverified"], [fxastatus="login-failed"])
-  #appMenu-fxa-label2::before {
+#appMenu-fxa-status2:is([fxastatus="signedin"], [fxastatus="unverified"], [fxastatus="login-failed"]) #appMenu-fxa-label2::before {
   /* url("https://profile.accounts.firefox.com/v1/avatar/a") */
   content: "";
   border-radius: 50% !important;
@@ -313,7 +311,8 @@
 }
 #appMenu-zoom-controls2,
 #appMenu-zoom-controls {
-  padding-inline-start: var(--arrowpanel-menuimageblank-padding-horizontal) !important;
+  padding-inline-start: var(--arrowpanel-menuimageblank-padding-horizontal)
+    !important;
 }
 
 /* leptonChrome.css:27748-27752 — extra conditions dropped: userChrome.icon.panel */
@@ -444,7 +443,8 @@
   #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
   #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
   .syncNowBtn[syncstatus="active"] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg") !important;
+    list-style-image: url("chrome://browser/skin/tabbrowser/hourglass.svg")
+      !important;
   }
 }
 
@@ -488,7 +488,8 @@
 /* leptonChrome.css:27965-27972 — extra conditions dropped: userChrome.icon.panel */
 .PanelUI-remotetabs-notabsforclient-label {
   margin-inline-start: calc(
-    var(--arrowpanel-menuicon-padding) + var(--arrowpanel-menuitem-padding-inline)
+    var(--arrowpanel-menuicon-padding) +
+    var(--arrowpanel-menuitem-padding-inline)
   ) !important;
   padding-inline-start: var(--arrowpanel-menublank-padding) !important;
 }
@@ -819,7 +820,8 @@ panelMenuBookmarkThisPage[starred] {
 /* leptonChrome.css:28296-28304 — extra conditions dropped: userChrome.icon.panel */
 @media (-moz-pref("layout.css.osx-font-smoothing.enabled")) {
   #BMB_bookmarksShowAllTop {
-    list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg") !important;
+    list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg")
+      !important;
   }
   #BMB_bookmarksShowAllTop > .menu-iconic-left {
     display: flex !important;

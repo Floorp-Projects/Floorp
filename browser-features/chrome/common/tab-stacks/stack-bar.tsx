@@ -3,14 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Show,
-} from "solid-js";
+import { signal } from "@preact/signals";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import styles from "./styles.css?inline";
 import { proxyDragLifecycle } from "./proxy-drag.ts";
 import type {
@@ -91,12 +85,14 @@ export const isVerticalTabMode = (
 ): boolean => tabContainer?.getAttribute?.("orient") === "vertical";
 
 /** Bumped on any tab/group mutation so proxies re-read live tab state. */
-const [version, setVersion] = createSignal(0);
-export const bumpStacksVersion = () => setVersion((v) => v + 1);
+const version = signal(0);
+export const bumpStacksVersion = () => {
+  version.value += 1;
+};
 
-const [activeGroup, setActiveGroup] = createSignal<StackGroup | null>(null);
+const activeGroup = signal<StackGroup | null>(null);
 
-export const getActiveGroup = () => activeGroup();
+export const getActiveGroup = () => activeGroup.value;
 
 /**
  * The stack bar shows the group of the currently selected tab — but only
@@ -110,7 +106,7 @@ export const syncActiveGroup = () => {
   const isOurs = !isVerticalTabMode(gb?.tabContainer) && group &&
     (group as unknown as Element).getAttribute?.(STACK_ATTR) === "true" &&
     group.style?.display !== "none";
-  setActiveGroup(isOurs ? group : null);
+  activeGroup.value = isOurs ? group : null;
 };
 
 /** Remember the last selected tab per group so chip clicks feel right. */
@@ -186,11 +182,12 @@ const scrollPositions = new WeakMap<StackGroup, number>();
 const SCROLL_STEP_PX = 48;
 
 function StackTabProxy(props: { tab: StackTab }) {
-  const split = createMemo(() => {
-    version();
-    const panes = props.tab.splitview?.tabs.filter((tab) =>
-      tab.group === props.tab.group && !tab.closing
-    ) ?? [];
+  version.value;
+  const split = (() => {
+    const panes =
+      props.tab.splitview?.tabs.filter((tab) =>
+        tab.group === props.tab.group && !tab.closing
+      ) ?? [];
     const index = panes.indexOf(props.tab);
     if (panes.length < 2 || index < 0) {
       return null;
@@ -201,21 +198,16 @@ function StackTabProxy(props: { tab: StackTab }) {
         : index === panes.length - 1
         ? "last"
         : "middle",
-      active: panes.some((tab) =>
-        tab === getGBrowser()?.selectedTab
-      ),
+      active: panes.some((tab) => tab === getGBrowser()?.selectedTab),
     };
-  });
+  })();
   const label = () => {
-    version();
     return props.tab.label;
   };
   const icon = () => {
-    version();
     return props.tab.getAttribute("image") || DEFAULT_FAVICON;
   };
   const selected = () => {
-    version();
     return props.tab.selected ? "true" : "false";
   };
 
@@ -224,12 +216,12 @@ function StackTabProxy(props: { tab: StackTab }) {
       class="floorp-stack-tab"
       align="center"
       data-selected={selected()}
-      data-split-position={split()?.position}
-      data-split-active={split()?.active ? "true" : undefined}
+      data-split-position={split?.position}
+      data-split-active={split?.active ? "true" : undefined}
       data-floorp-drag-id={getTabDragId(props.tab)}
       tooltiptext={label()}
       context="tabContextMenu"
-      draggable="true"
+      draggable
       onDragStart={(event: DragEvent) => {
         // Use the same native entry point as the all-tabs list. Native tab
         // data MUST be the first flavor for cross-window drops and detach.
@@ -319,14 +311,13 @@ function StackTabProxy(props: { tab: StackTab }) {
 }
 
 function StackRow(props: { group: StackGroup }) {
-  const tabs = createMemo(() => {
-    version();
-    return [...props.group.tabs];
-  });
+  version.value;
+  const tabs = [...props.group.tabs];
+  const scrollerRef = useRef<HTMLElement | null>(null);
 
   const addTabToActiveGroup = () => {
     const gb = getGBrowser();
-    const group = activeGroup();
+    const group = activeGroup.value;
     if (!gb || !group) return;
     try {
       const newTabUrl =
@@ -345,15 +336,15 @@ function StackRow(props: { group: StackGroup }) {
   };
 
   const scrollBy = (dir: number) => () => {
-    const scroller = document?.getElementById("floorp-stack-scroller");
+    const scroller = scrollerRef.current;
     scroller?.scrollBy({ left: dir * SCROLL_STEP_PX, behavior: "smooth" });
   };
 
   // The scroller is overflow-x:auto with a hidden scrollbar; this single
   // wheel handler drives horizontal scrolling so a vertical wheel over the
   // bar does not fight the tab strip's own vertical listeners.
-  onMount(() => {
-    const scroller = document?.getElementById("floorp-stack-scroller");
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
     if (!scroller) return;
     scroller.scrollLeft = scrollPositions.get(props.group) ?? 0;
     const savePosition = () =>
@@ -386,12 +377,12 @@ function StackRow(props: { group: StackGroup }) {
       savePosition();
     };
     scroller.addEventListener("wheel", onWheel, { passive: false });
-    onCleanup(() => {
+    return () => {
       savePosition();
       scroller.removeEventListener("scroll", savePosition);
       scroller.removeEventListener("wheel", onWheel);
-    });
-  });
+    };
+  }, [props.group]);
 
   return (
     <xul:hbox id="floorp-stack-bar" align="center">
@@ -401,9 +392,14 @@ function StackRow(props: { group: StackGroup }) {
         tooltiptext="Scroll tabs left"
         onClick={scrollBy(-1)}
       />
-      <xul:hbox id="floorp-stack-scroller">
+      <xul:hbox id="floorp-stack-scroller" ref={scrollerRef}>
         <xul:hbox id="floorp-stack-items" align="center">
-          <For each={tabs()}>{(tab) => <StackTabProxy tab={tab} />}</For>
+          {tabs.map((tab) => (
+            <StackTabProxy
+              key={getTabDragId(tab)}
+              tab={tab}
+            />
+          ))}
         </xul:hbox>
       </xul:hbox>
       <xul:toolbarbutton
@@ -428,9 +424,6 @@ function StackRow(props: { group: StackGroup }) {
 }
 
 export function StackBar() {
-  return (
-    <Show when={activeGroup()} keyed>
-      {(group) => <StackRow group={group} />}
-    </Show>
-  );
+  const group = activeGroup.value;
+  return group ? <StackRow key={group.id} group={group} /> : null;
 }

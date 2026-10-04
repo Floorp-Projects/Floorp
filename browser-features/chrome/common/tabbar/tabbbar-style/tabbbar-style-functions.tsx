@@ -6,33 +6,46 @@
 import { checkPaddingEnabled } from "./titilebar-padding.ts";
 import { config } from "../../designs/configs.ts";
 import { TabbarStyleModifyCSSElement } from "./tabbar-style-element.tsx";
-import { render } from "@nora/solid-xul";
+import { render } from "@nora/preact-xul";
 
 // deno-lint-ignore no-namespace
 export namespace gTabbarStyleFunctions {
+  let disposeStyle: (() => void) | null = null;
   function getPanelUIMenuButton(): XULElement | null {
-    return document?.querySelector("#PanelUI-menu-button") as XULElement | null;
+    return document?.querySelector("#PanelUI-menu-button") as unknown as
+      | XULElement
+      | null;
   }
   function getTabbarElement(): XULElement | null {
-    return document?.querySelector("#TabsToolbar") as XULElement | null;
+    return document?.querySelector("#TabsToolbar") as unknown as
+      | XULElement
+      | null;
   }
   function getNavbarElement(): XULElement | null {
-    return document?.querySelector("#nav-bar") as XULElement | null;
+    return document?.querySelector("#nav-bar") as unknown as XULElement | null;
   }
   function getNavigatorToolboxtabbarElement(): XULElement | null {
-    return document?.querySelector("#navigator-toolbox") as XULElement | null;
+    return document?.querySelector("#navigator-toolbox") as unknown as
+      | XULElement
+      | null;
   }
   function getBrowserElement(): XULElement | null {
-    return document?.querySelector("#browser") as XULElement | null;
+    return document?.querySelector("#browser") as unknown as XULElement | null;
   }
   function getUrlbarContainer(): XULElement | null {
-    return document?.querySelector("#urlbar-container") as XULElement | null;
+    return document?.querySelector("#urlbar-container") as unknown as
+      | XULElement
+      | null;
   }
   function getSidebarVerticalTab(): XULElement | null {
-    return document?.querySelector("#vertical-tabs") as XULElement | null;
+    return document?.querySelector("#vertical-tabs") as unknown as
+      | XULElement
+      | null;
   }
 
   export function revertToDefaultStyle() {
+    disposeStyle?.();
+    disposeStyle = null;
     const tabbarElement = getTabbarElement();
     const navigatorToolbox = getNavigatorToolboxtabbarElement();
     const urlbarContainer = getUrlbarContainer();
@@ -88,7 +101,7 @@ export namespace gTabbarStyleFunctions {
     const navbarElement = getNavbarElement();
     const windowManageContainer = document?.querySelector(
       "#floorp-tabbar-window-manage-container",
-    ) as XULElement;
+    ) as unknown as XULElement;
 
     tabbarElement?.setAttribute("hidden", "true");
     navbarElement?.appendChild(windowManageContainer);
@@ -147,17 +160,19 @@ export namespace gTabbarStyleFunctions {
   export function applyTabbarStyle() {
     revertToDefaultStyle();
     makeSidebarVerticalTabDrag();
-    render(
-      () =>
-        TabbarStyleModifyCSSElement({ style: config().tabbar.tabbarPosition }),
-      document?.head,
-      {
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        hotCtx: import.meta.hot,
-      },
-    );
 
-    switch (config().tabbar.tabbarPosition) {
+    const head = document?.head;
+    if (head) {
+      disposeStyle = render(
+        () =>
+          TabbarStyleModifyCSSElement({
+            style: config.value.tabbar.tabbarPosition,
+          }),
+        head,
+      );
+    }
+
+    switch (config.value.tabbar.tabbarPosition) {
       case "hide-horizontal-tabbar":
         hideHorizontalTabbar();
         break;

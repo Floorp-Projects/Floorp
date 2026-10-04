@@ -29,11 +29,12 @@ export function reorderSplitTabsForDesiredOrder(
 }
 
 function describeTabLine(tab: SplitViewTab, idx: number): string {
-  const spec =
-    (tab.linkedBrowser as { currentURI?: { spec?: string } } | null)
-      ?.currentURI?.spec ?? "";
+  const spec = (tab.linkedBrowser as { currentURI?: { spec?: string } } | null)
+    ?.currentURI?.spec ?? "";
   const lab = (tab.label || "").slice(0, 36);
-  return `[${idx}] linkedPanel=${tab.linkedPanel} label="${lab}" spec=${spec.slice(0, 56)}`;
+  return `[${idx}] linkedPanel=${tab.linkedPanel} label="${lab}" spec=${
+    spec.slice(0, 56)
+  }`;
 }
 
 function logTabsSnapshot(
@@ -100,25 +101,33 @@ export function swapPanesByTab(
 
   logTabsSnapshot(logger, "reordered.intended", reordered);
   logger.debug(
-    `[swapPanesByTab] intended linkedPanels left-to-right=[${reordered.map((t) => t.linkedPanel).join(", ")}]`,
+    `[swapPanesByTab] intended linkedPanels left-to-right=[${
+      reordered.map((t) => t.linkedPanel).join(", ")
+    }]`,
   );
 
   const stripBefore = linkedPanelsInStripOrder(gBrowser);
   logger.debug(
-    `[swapPanesByTab] tabStrip.splitTabs.linkedPanels.before=[${stripBefore.join(", ")}]`,
+    `[swapPanesByTab] tabStrip.splitTabs.linkedPanels.before=[${
+      stripBefore.join(", ")
+    }]`,
   );
 
   reorderSplitTabsForDesiredOrder(gBrowser, reordered);
 
   const stripAfter = linkedPanelsInStripOrder(gBrowser);
   logger.debug(
-    `[swapPanesByTab] tabStrip.splitTabs.linkedPanels.afterMove=[${stripAfter.join(", ")}]`,
+    `[swapPanesByTab] tabStrip.splitTabs.linkedPanels.afterMove=[${
+      stripAfter.join(", ")
+    }]`,
   );
   const expectedPanels = reordered.map((t) => t.linkedPanel);
   if (stripAfter.join(",") !== expectedPanels.join(",")) {
     logger.warn(
       `[swapPanesByTab] tab strip order !== reordered linkedPanels: ` +
-        `strip=[${stripAfter.join(", ")}] expected=[${expectedPanels.join(", ")}]`,
+        `strip=[${stripAfter.join(", ")}] expected=[${
+          expectedPanels.join(", ")
+        }]`,
     );
   }
 
@@ -130,6 +139,8 @@ export function swapPanesByTab(
   gBrowser.showSplitViewPanels(reordered);
 
   logger.debug(
-    `[swapPanesByTab] after showSplitViewPanels wrapper.tabs=[${activeSplitView.tabs.map((t) => t.linkedPanel).join(", ")}]`,
+    `[swapPanesByTab] after showSplitViewPanels wrapper.tabs=[${
+      activeSplitView.tabs.map((t) => t.linkedPanel).join(", ")
+    }]`,
   );
 }

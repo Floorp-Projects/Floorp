@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, getOwner, runWithOwner } from "solid-js";
+import { effect } from "@preact/signals";
+import { useEffect } from "preact/hooks";
 import { isFloatingDragging } from "../data/data";
 
 export function BrowserBox() {
-  const owner = getOwner?.();
-  const exec = () =>
-    createEffect(() => {
-      if (isFloatingDragging()) {
+  useEffect(() => {
+    return effect(() => {
+      if (isFloatingDragging.value) {
         document
           ?.getElementById("panel-sidebar-browser-box-wrapper")
           ?.classList.add("warp");
@@ -20,8 +20,8 @@ export function BrowserBox() {
           ?.classList.remove("warp");
       }
     });
-  if (owner) runWithOwner(owner, exec);
-  else createRoot(exec);
+  }, []);
+
   return (
     <>
       <xul:box id="panel-sidebar-browser-box-wrapper" />

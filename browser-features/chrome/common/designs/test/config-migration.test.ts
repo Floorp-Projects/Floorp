@@ -98,7 +98,7 @@ export async function runAllTests() {
             Services.prefs.setStringPref(name, JSON.stringify(saved));
             await new Promise((resolve) => setTimeout(resolve, 30));
             assertEquals(
-              config().tab.tabDoubleClickToClose,
+              config.value.tab.tabDoubleClickToClose,
               enabled,
               "Observer loaded legacy value",
             );

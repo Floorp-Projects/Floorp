@@ -872,7 +872,7 @@ async function testAddContextBoxSuccessfulExecution(): Promise<void> {
     threw = true;
   }
 
-  // addContextBox calls render() from @nora/solid-xul which may throw in test env.
+  // addContextBox calls render() from @nora/preact-xul which may throw in test env.
   // It also calls contextMenuObserverFunc() which calls checkedFunction.
   // If render throws, the checkedFunction may not be called.
   assert(
@@ -915,7 +915,7 @@ async function testAddContextBoxCallsCheckedFunctionViaObserver(): Promise<
       checkedFunction,
     );
   } catch {
-    // Expected in test environment - render() from @nora/solid-xul may throw
+    // Expected in test environment - render() from @nora/preact-xul may throw
   }
 
   // The checkedFunction may or may not be called depending on whether
@@ -1104,13 +1104,13 @@ async function testContextMenuComponentHasCorrectProperties(): Promise<void> {
 }
 
 async function testDownloadBarCommandsHaveUniqueSemanticKeys(): Promise<void> {
-  const [{ render }, { DonwloadBar }] = await Promise.all([
-    import("@nora/solid-xul"),
+  const [{ safeRender, h }, { DonwloadBar }] = await Promise.all([
+    import("@nora/preact-xul"),
     import("#features-chrome/static/downloadbar/downloadbar.tsx"),
   ]);
   const host = document!.createElement("div");
   document!.body!.appendChild(host);
-  const dispose = render(() => DonwloadBar(), host);
+  const dispose = safeRender(h(DonwloadBar, {}), host);
 
   try {
     const popup = host.querySelector('[id="downloadsContextMenu"]');

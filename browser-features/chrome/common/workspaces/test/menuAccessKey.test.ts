@@ -5,7 +5,7 @@ import { getWorkspaceMenuAccessKey } from "../utils/menu-accesskey.ts";
 import { WorkspacesTabContextMenu } from "../tabContextMenu.tsx";
 import type { WorkspacesService } from "../workspacesService.ts";
 import type { TabContextMenuPopup } from "./menu-accesskey-test-types.ts";
-import { createRoot } from "solid-js";
+import { createRoot } from "@nora/preact-xul/lifetime";
 import i18next from "i18next";
 import { setLanguage } from "#i18n/config-browser-chrome.ts";
 import {
