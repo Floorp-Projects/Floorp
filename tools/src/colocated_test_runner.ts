@@ -15,6 +15,7 @@ import {
   type TestLayer,
 } from "./colocated_test_utils.ts";
 import { sleep } from "./async_utils.ts";
+import { startPageTestServers } from "./page_test_servers.ts";
 import {
   type BrowserTestCollection,
   type BrowserTestResult,
@@ -2094,6 +2095,7 @@ async function main(): Promise<number> {
   let windowsAutoStartState: WindowsAutoStartState | null = null;
   let windowsProcessDeps: WindowsProcessControlDeps | null = null;
   let ownedRunId: string | undefined;
+  let stopPageTestServers: (() => Promise<void>) | undefined;
 
   const writeLine = (level: LogLevel, message: string) => {
     const timestamp = new Date().toISOString();
@@ -2197,6 +2199,7 @@ async function main(): Promise<number> {
     }
 
     let runId: string | undefined;
+    stopPageTestServers = await startPageTestServers(targetRels);
     if (!runningBeforeConnect) {
       runId = createRunId();
       ownedRunId = runId;
@@ -2443,6 +2446,12 @@ async function main(): Promise<number> {
     writeLine("ERROR", `Unexpected error: ${errorToMessage(error)}`);
     exitCode = 1;
   } finally {
+    try {
+      await stopPageTestServers?.();
+    } catch (error) {
+      writeLine("ERROR", `Failed to stop UI test servers: ${errorToMessage(error)}`);
+      exitCode = 1;
+    }
     if (autoStartedBrowser) {
       try {
         await stopAutoStartedBrowser(

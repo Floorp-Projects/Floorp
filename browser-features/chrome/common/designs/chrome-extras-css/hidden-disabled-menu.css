@@ -1,0 +1,26 @@
+/* Floorp chrome-extras: hiddenDisabledMenu
+ * Ported from vendored Lepton (leptonChrome.css 27235-27247, 2 block(s)).
+ *
+ * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
+ * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
+ * That also drops Floorp's dependency on the vendored file, which
+ * update_lepton.yml re-syncs from upstream every day.
+ *
+ * The `widget.*.native-context-menus` branches are kept verbatim — those
+ *
+ * are genuine Gecko prefs, not Lepton toggles.
+ */
+
+/* leptonChrome.css:27235-27240 */
+menu[disabled="true"],
+menuitem:not(#context-back, #context-forward)[disabled="true"] {
+  visibility: collapse !important;
+}
+
+/* leptonChrome.css:27241-27247 */
+@media (-moz-pref("widget.macos.native-context-menus")), (-moz-pref("widget.gtk.native-context-menus")) {
+  #context-back[disabled="true"],
+  #context-forward[disabled="true"] {
+    visibility: collapse !important;
+  }
+}

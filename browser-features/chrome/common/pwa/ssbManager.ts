@@ -6,7 +6,7 @@
 import type { ManifestProcesser } from "./manifestProcesser.ts";
 import type { DataManager } from "./dataStore.ts";
 import { DataManager as DataManagerClass } from "./dataStore.ts";
-import type { Browser, Manifest } from "./type.ts";
+import type { Browser, Manifest, SsbSupport } from "./type.ts";
 import { SsbRunner } from "./ssbRunner.ts";
 import {
   getUserContextIdForBrowser,
@@ -20,8 +20,7 @@ const { TaskbarExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
 );
 
-// deno-lint-ignore no-explicit-any
-let SupportClass: any | null = null;
+let SupportClass: (new () => SsbSupport) | null = null;
 if (AppConstants.platform === "win") {
   const { WindowsSupport } = ChromeUtils.importESModule(
     "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
@@ -60,6 +59,13 @@ function browserStillShowsUrl(browser: Browser, expectedUrl: string): boolean {
   }
 }
 
+type AppManagementRequest = {
+  id: string;
+  newName?: string;
+  claimed?: boolean;
+  complete?: (success: boolean) => void;
+};
+
 export class SiteSpecificBrowserManager {
   private ssbRunner: SsbRunner;
   static instance: SiteSpecificBrowserManager | null = null;
@@ -71,20 +77,56 @@ export class SiteSpecificBrowserManager {
     this.ssbRunner = new SsbRunner(dataManager, this);
     SiteSpecificBrowserManager.instance = this;
 
-    globalThis.gBrowser.addTabsProgressListener(this.listener);
+    // A native mutation closes the PWA window. Handle management requests
+    // from the window that owns the data manager's pending store writes.
+    const ownerWindow = Cu.getGlobalForObject(dataManager) as Window;
+    const tabBrowser = ownerWindow.gBrowser;
+    tabBrowser.addTabsProgressListener(this.listener);
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.renameSsb(
-        subject?.wrappedJSObject?.id as string,
-        subject?.wrappedJSObject?.newName as string,
-      );
-    }, "nora-ssb-rename");
+    const canHandleManagementRequest = () =>
+      !ownerWindow.closed &&
+      !ownerWindow.document.documentElement.hasAttribute("taskbartab");
 
-    // deno-lint-ignore no-explicit-any
-    Services.obs.addObserver(async (subject: any) => {
-      await this.uninstallById(subject?.wrappedJSObject?.id as string);
-    }, "nora-ssb-uninstall");
+    const renameObserver = async (subject: nsISupports | null) => {
+      const request =
+        (subject as { wrappedJSObject?: AppManagementRequest } | null)
+          ?.wrappedJSObject;
+      if (!request || request.claimed || !canHandleManagementRequest()) return;
+      request.claimed = true;
+      try {
+        const renamed = await this.renameSsb(request.id, request.newName ?? "");
+        request.complete?.(renamed);
+      } catch (error) {
+        console.error("[SiteSpecificBrowserManager] Rename failed:", error);
+        request.complete?.(false);
+      }
+    };
+
+    const uninstallObserver = async (subject: nsISupports | null) => {
+      const request =
+        (subject as { wrappedJSObject?: AppManagementRequest } | null)
+          ?.wrappedJSObject;
+      if (!request || request.claimed || !canHandleManagementRequest()) return;
+      request.claimed = true;
+      try {
+        await this.uninstallById(request.id);
+        request.complete?.(true);
+      } catch (error) {
+        console.error("[SiteSpecificBrowserManager] Uninstall failed:", error);
+        request.complete?.(false);
+      }
+    };
+
+    Services.obs.addObserver(renameObserver, "nora-ssb-rename");
+    Services.obs.addObserver(uninstallObserver, "nora-ssb-uninstall");
+    ownerWindow.addEventListener("unload", () => {
+      Services.obs.removeObserver(renameObserver, "nora-ssb-rename");
+      Services.obs.removeObserver(uninstallObserver, "nora-ssb-uninstall");
+      tabBrowser.removeTabsProgressListener(this.listener);
+      if (SiteSpecificBrowserManager.instance === this) {
+        SiteSpecificBrowserManager.instance = null;
+      }
+    }, { once: true });
   }
 
   private listener = {
@@ -291,22 +333,28 @@ export class SiteSpecificBrowserManager {
   }
 
   private async install(manifest: Manifest) {
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      // The macOS queue covers launcher creation and the corresponding store write.
+      await new MacOSSupport().install(manifest, this.dataManager);
+      return;
+    }
     if (SupportClass) {
       if (AppConstants.platform === "win") {
         // Windows install (taskbar integration) is controlled by A/B test
         if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass(this);
+          const windowsSupport = new SupportClass();
           await windowsSupport.install(manifest);
         } else {
           console.debug(
             "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
           );
         }
-      } else if (AppConstants.platform === "linux") {
-        // Linux install (.desktop file generation) is NOT controlled by A/B test
-        // This is excluded from A/B test as per requirements
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.install(manifest);
+      } else {
+        // Launcher file generation is independent of taskbar experiments.
+        await new SupportClass().install(manifest);
       }
     }
 
@@ -314,22 +362,26 @@ export class SiteSpecificBrowserManager {
   }
 
   private async uninstall(manifest: Manifest) {
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      await new MacOSSupport().uninstall(manifest, this.dataManager);
+      return;
+    }
     if (SupportClass) {
       if (AppConstants.platform === "win") {
         // Windows uninstall (taskbar integration) is controlled by A/B test
         if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass(this);
+          const windowsSupport = new SupportClass();
           await windowsSupport.uninstall(manifest);
         } else {
           console.debug(
             "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
           );
         }
-      } else if (AppConstants.platform === "linux") {
-        // Linux uninstall (.desktop file removal) is NOT controlled by A/B test
-        // This is excluded from A/B test as per requirements
-        const linuxSupport = new SupportClass(this);
-        await linuxSupport.uninstall(manifest);
+      } else {
+        await new SupportClass().uninstall(manifest);
       }
     }
 
@@ -424,6 +476,17 @@ export class SiteSpecificBrowserManager {
       short_name: newName,
     };
 
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      return await new MacOSSupport().rename(
+        ssbObj,
+        updatedManifest,
+        this.dataManager,
+      );
+    }
+
     await this.uninstall(ssbObj);
     await this.install(updatedManifest);
 
@@ -445,33 +508,74 @@ export class SiteSpecificBrowserManager {
       return false;
     }
 
-    const ssbObj = await this.getSsbObj(id);
-    if (!ssbObj) {
-      return false;
+    if (!Number.isSafeInteger(userContextId) || userContextId < 0) return false;
+    if (AppConstants.platform === "macosx") {
+      const { MacOSSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+      );
+      if (await new MacOSSupport().findNativeAppBundle({ id })) return false;
     }
-
-    const oldKey = DataManagerClass.buildKey(
-      ssbObj.start_url,
-      ssbObj.userContextId ?? 0,
-    );
-
-    const updatedManifest: Manifest = {
-      ...ssbObj,
-      userContextId: userContextId > 0 ? userContextId : undefined,
-    };
-
-    const newKey = DataManagerClass.buildKey(
-      ssbObj.start_url,
-      userContextId > 0 ? userContextId : 0,
-    );
-    if (newKey !== oldKey) {
-      const currentSsbData = await this.dataManager.getCurrentSsbData();
-      if (currentSsbData[newKey]) {
+    const update = async () => {
+      const ssbObj = await this.getSsbObj(id);
+      if (!ssbObj) {
         return false;
       }
-    }
 
-    return await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      if (AppConstants.platform === "macosx") {
+        const { MacOSSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/MacOS.sys.mjs",
+        );
+        if (await new MacOSSupport().findNativeAppBundle(ssbObj)) return false;
+      }
+
+      const oldKey = DataManagerClass.buildKey(
+        ssbObj.start_url,
+        ssbObj.userContextId ?? 0,
+      );
+
+      const updatedManifest: Manifest = {
+        ...ssbObj,
+        userContextId: userContextId > 0 ? userContextId : undefined,
+      };
+
+      const newKey = DataManagerClass.buildKey(
+        ssbObj.start_url,
+        userContextId > 0 ? userContextId : 0,
+      );
+      if (newKey !== oldKey) {
+        const currentSsbData = await this.dataManager.getCurrentSsbData();
+        if (currentSsbData[newKey]) {
+          return false;
+        }
+      }
+
+      const moved = await this.dataManager.moveSsbKey(oldKey, updatedManifest);
+      if (moved && AppConstants.platform === "macosx") {
+        try {
+          const { AppRegistry } = ChromeUtils.importESModule(
+            "resource://noraneko/modules/pwa/AppRegistry.sys.mjs",
+          );
+          await AppRegistry.getForProfile().updateLegacyUserContext(
+            id,
+            ssbObj.userContextId ?? 0,
+            userContextId,
+          );
+        } catch (error) {
+          console.warn(
+            "[SiteSpecificBrowserManager] Could not reconcile optional launcher metadata:",
+            error,
+          );
+        }
+      }
+      return moved;
+    };
+    if (AppConstants.platform === "macosx") {
+      const { NativeAppRuntime } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
+      );
+      return await NativeAppRuntime.withMutation(id, update) ?? false;
+    }
+    return await update();
   }
 
   public useOSIntegration() {

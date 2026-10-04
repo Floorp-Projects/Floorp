@@ -1,0 +1,156 @@
+.page {
+  container-type: inline-size;
+}
+.sections {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+}
+.section {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 40px;
+  position: relative;
+  padding: 32px 0;
+  margin-block-end: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--floorp-line);
+  pointer-events: none;
+}
+.section > div {
+  padding: 0;
+  min-width: 0;
+}
+.section > div:first-child {
+  border-block-end: 0;
+  margin-block-end: 0;
+}
+.section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.section h2 svg {
+  display: none;
+}
+.section h3 {
+  font-weight: 650;
+}
+.description {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--floorp-muted);
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 60px;
+}
+.row > :first-child {
+  min-width: 0;
+}
+.row > :last-child {
+  flex-shrink: 0;
+}
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  min-height: 60px;
+}
+.field > :first-child {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.field > :last-child {
+  width: 240px;
+  max-width: 100%;
+  min-width: 0;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.table {
+  width: 100%;
+  min-width: 36rem;
+}
+.table th:last-child,
+.table td:last-child {
+  text-align: end;
+}
+.table td:last-child > div {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.identity > :first-child {
+  flex-shrink: 0;
+}
+.identity > :last-child,
+.details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  color: var(--link-text-color);
+}
+.link:hover {
+  text-decoration: underline;
+}
+.link svg {
+  flex-shrink: 0;
+}
+.appItem {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--floorp-line);
+  border-radius: 12px;
+}
+.appItem > :last-child {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+@container (max-width: 900px) {
+  .section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-block: 28px;
+  }
+}

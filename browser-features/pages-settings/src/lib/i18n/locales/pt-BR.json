@@ -34,6 +34,7 @@
         "debug": "Depurar",
         "mouseGesture": "Gestos do mouse",
         "keyboardShortcut": "Atalhos de teclado",
+        "performance": "Desempenho",
         "search": {
             "title": "Configurações de pesquisa",
             "resultsFor": "Resultados da pesquisa para \"{{query}}\"",
@@ -142,16 +143,13 @@
             "taskbarPreviewsDescription": "Isso altera apenas a exibição da barra de tarefas do Windows. Não cria janelas adicionais do navegador.",
             "taskbarPreviewsUnavailable": "Essa opção está disponível apenas no Windows."
         },
-        "lepton-preferences": {
-            "title": "Configurações do Lepton",
-            "description": "Configurar as preferências avançadas do tema Lepton",
-            "configureLepton": "Configurar o Lepton",
+        "chrome-extras": {
+            "title": "Configurações de extensão da interface do usuário",
+            "description": "Aplicar ajustes opcionais na interface do usuário sobre o design selecionado no momento",
             "back": "Voltar",
             "experimentalWarning": {
                 "title": "⚠️ Recursos experimentais",
-                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas.",
-                "leptonRepository": "O Lepton é um tema CSS para o Firefox.",
-                "visitRepository": "Visitar a página do repositório"
+                "description": "Essas configurações são experimentais e não têm suporte oficial. Podem ocorrer problemas."
             },
             "autohide": {
                 "title": "Ocultar configurações automaticamente",
@@ -175,8 +173,8 @@
             },
             "icon": {
                 "title": "Configurações dos ícones",
-                "disabled": "Desativar o menu de contexto do Lepton e os ícones do menu do painel",
-                "menu": "Habilitar os ícones do menu de contexto do Lepton"
+                "disabled": "Desativar os ícones do menu de contexto e do menu do painel",
+                "menu": "Ativar ícones do menu de contexto"
             },
             "centered": {
                 "title": "Configurações centralizadas",
@@ -198,7 +196,8 @@
             "sidebar": {
                 "title": "Configurações da barra lateral",
                 "overlap": "Mostrar barra lateral sobre o conteúdo do site"
-            }
+            },
+            "configure": "Abrir as configurações da extensão da interface do usuário"
         },
         "tabSleepExclusion": {
             "title": "Exclusão do modo de inatividade",
@@ -216,6 +215,7 @@
             "exampleFullUrl": "Corresponder apenas a URLs do Gmail"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "As pilhas de abas não estão disponíveis com abas verticais. Sua configuração é mantida e será aplicada quando você voltar às abas horizontais.",
             "title": "Pilhas de abas",
             "description": "Agrupe as abas em pilhas, exibidas como um ícone na barra de abas, com uma segunda fileira de abas empilhadas logo abaixo.",
             "enableOrDisable": "Ativar/Desativar",
@@ -329,6 +329,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Leia sobre nosso financiamento e esta configuração (em japonês)",
+            "title": "Notas da versão após atualizações",
+            "description": "Escolha como o Floorp abre as notas da versão após uma atualização.",
+            "disabled": {
+                "label": "Não abrir automaticamente",
+                "description": "As notas da versão não abrirão após as atualizações. Suas configurações de bloqueio se aplicam quando você visita o blog."
+            },
+            "blocking": {
+                "label": "Abrir com as configurações do bloqueador",
+                "description": "Abrir notas de lançamento sem restringir suas extensões. Isso não instala nem ativa um bloqueador de anúncios."
+            },
+            "support": {
+                "label": "Abrir e permitir a exibição de anúncios para apoiar o Floorp (recomendado)",
+                "description": "Impedir que o uBlock Origin, o AdGuard, o Adblock Plus, o AdBlock e o Ghostery filtrem o blog do Floorp."
+            },
+            "supportMessage": "A receita publicitária das notas da versão ajuda a financiar o desenvolvimento e a operação do Floorp. Agradecemos por nos apoiar da maneira que for mais conveniente para você.",
+            "scope": "Essa exceção se aplica a todas as visitas em HTTPS ao blog.floorp.app, incluindo páginas abertas manualmente. Ela também afeta a proteção contra rastreamento e os filtros personalizados nas cinco extensões listadas. Outras extensões não são restringidas por essa configuração. Outras ferramentas de proteção ainda podem bloquear anúncios. Atualize as páginas do blog abertas após alterar essa configuração.",
+            "error": "Não foi possível carregar ou salvar esta configuração. Por favor, reabra esta página e tente novamente."
+        },
         "title": "Atualizações e testes",
         "description": "Gerencie as configurações de atualização e a participação em recursos experimentais.",
         "experiments": {
@@ -466,6 +486,8 @@
         "otherSettings": "Outras configurações",
         "showToolbar": "Exibir barra de ferramentas",
         "showToolbarDescription": "Exibe a barra de ferramentas em janelas de aplicativos Web progressivos",
+        "keepRunningAfterBrowserQuit": "Manter aplicativos web em execução após encerrar o {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Feche as janelas do navegador e mantenha abertos os aplicativos da Web em execução. Desative essa opção para fechá-los ao mesmo tempo. Ao fechar um aplicativo da Web, apenas esse aplicativo é encerrado. Reiniciar o {{productName}} ou fazer logout fecha todos os aplicativos.",
         "installedApps": "Aplicativos instalados",
         "noInstalledApps": "Nenhum aplicativo Web progressivo instalado",
         "removeApp": "Remover aplicativo",
@@ -485,7 +507,10 @@
         "containerDeleted": "Contêiner excluído",
         "resetContainer": "Redefinir",
         "save": "Salvar",
-        "errorSettingContainer": "Falha ao definir contêiner"
+        "errorRenaming": "Não foi possível renomear este aplicativo web.",
+        "errorUninstalling": "Não foi possível desinstalar este aplicativo web.",
+        "errorSettingContainer": "Falha ao definir contêiner",
+        "nativeContainerFixed": "Este aplicativo web para macOS mantém o contêiner escolhido no momento da instalação. Ainda não é possível alterá-lo. Os dados atuais de login e do site foram mantidos."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -744,5 +769,55 @@
             "cancel": "Cancelar",
             "cancelDescription": "Cancelar edição"
         }
+    },
+    "performance": {
+        "title": "Desempenho",
+        "description": "Configurações que afetam como o navegador utiliza os recursos do sistema.",
+        "idleReclaim": {
+            "title": "Recuperação de memória ociosa",
+            "description": "Experimental e desativado por padrão. Quando ativado, tenta reduzir o uso de memória após um período sem teclado ou entrada do mouse. A quantidade recuperada depende das páginas em uso.",
+            "enable": "Recuperar memória enquanto o navegador estiver inativo",
+            "idleThreshold": "Tempo ocioso antes da recuperação (segundos)",
+            "minInterval": "Intervalo mínimo entre as tentativas de recuperação (segundos)",
+            "minResident": "Recuperar apenas quando o uso de memória exceder (MB)",
+            "cost": "A reprodução de vídeos, as chamadas e o compartilhamento de tela não impedem a liberação de memória. A liberação de memória pode pausar o navegador, inclusive quando você retoma o uso dele. Intervalos mais curtos aumentam a frequência desse processo.",
+            "saveFailed": "Não foi possível salvar esta configuração. O valor anterior foi restaurado."
+        }
+    },
+    "ui": {
+        "skipToContent": "Pular para o conteúdo",
+        "loading": "Carregando…",
+        "setupProgress": "Andamento da configuração",
+        "stepNavigation": "Configurar navegação",
+        "settingsNavigation": "Navegação pelas configurações",
+        "openNavigation": "Abrir navegação",
+        "closeNavigation": "Fechar navegação",
+        "saveError": "Não foi possível salvar. Por favor, tente novamente.",
+        "retry": "Repetir",
+        "loadError": "Não foi possível carregar as configurações. Por favor, atualize esta página."
+    },
+    "settingsHome": {
+        "title": "Faça o Floorp seu",
+        "description": "Ajuste a aparência e os controles de acordo com a sua maneira de navegar.",
+        "open": "Mostrar configurações",
+        "manage": "Gerencie seu navegador",
+        "descriptions": {
+            "tabAndAppearance": "Ajustar temas e a aparência das abas",
+            "workspaces": "Alternar entre as abas de trabalho e as pessoais",
+            "browserSidebar": "Abra outro site ao lado da sua página",
+            "mouseGesture": "Atribuir ações aos movimentos do mouse",
+            "keyboardShortcuts": "Atribuir ações aos atalhos de teclado",
+            "performance": "Ajustar uso de memória"
+        },
+        "resources": {
+            "privacy": "Sobre privacidade",
+            "extensions": "Gerenciar extensões",
+            "help": "Obter ajuda"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Aparência e comportamento",
+        "reset": "Redefinir áreas de trabalho",
+        "help": "Como usar"
     }
 }

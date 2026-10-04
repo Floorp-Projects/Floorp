@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { Experiment } from "#modules/modules/experiments/Experiments.sys.mts";
+import type { Experiment } from "../modules/experiments/types.ts";
+import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
+import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -10,6 +12,17 @@ export interface PrefSetParams {
   prefName: string;
   prefType: "string" | "boolean" | "number";
   prefValue: string | boolean | number;
+}
+
+export interface PrefCompareAndSetResult<T> {
+  updated: boolean;
+  currentValue: T | null;
+  typeMismatch?: boolean;
+}
+
+export interface PrefReadResult<T> {
+  value: T | null;
+  typeMismatch: boolean;
 }
 
 export interface ActiveExperiment {
@@ -45,6 +58,7 @@ export interface ActiveTabInfo {
 }
 
 export interface NRSettingsParentFunctions {
+  getWebAppLifecycleSettings(): Promise<AppLifecycleSettings>;
   getBoolPref(prefName: string): Promise<boolean | null>;
   getIntPref(prefName: string): Promise<number | null>;
   getStringPref(prefName: string): Promise<string | null>;
@@ -72,6 +86,30 @@ export interface NRClipsParentFunctions {
   launchFile(path: string): Promise<boolean>;
   /** When this browser session started; used by "clear on exit". */
   getSessionStartTime(): Promise<number>;
+}
+
+export interface NRSettingsAtomicPreferenceFunctions {
+  getBoolPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<boolean>>;
+  getStringPrefState(
+    prefName: string,
+  ): Promise<PrefReadResult<string>>;
+  compareAndSetBoolPref(
+    prefName: string,
+    expectedValue: boolean | null,
+    prefValue: boolean,
+  ): Promise<PrefCompareAndSetResult<boolean>>;
+  compareAndSetStringPref(
+    prefName: string,
+    expectedValue: string | null,
+    prefValue: string,
+  ): Promise<PrefCompareAndSetResult<string>>;
+}
+
+export interface NRContextMenuSettingsFunctions {
+  getContextMenuCatalog(): Promise<ContextMenuCatalogSnapshot>;
+  getContextMenuCatalogRevision(): Promise<number>;
 }
 
 export interface NRExperimemmtParentFunctions {

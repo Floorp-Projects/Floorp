@@ -34,6 +34,7 @@
         "debug": "Débogage",
         "mouseGesture": "Gestes de la souris",
         "keyboardShortcut": "Raccourcis clavier",
+        "performance": "Performance",
         "search": {
             "title": "Paramètres de recherche",
             "resultsFor": "Résultats de la recherche pour \"{{query}}\"",
@@ -142,16 +143,13 @@
             "taskbarPreviewsDescription": "Cela ne change que l'affichage de la barre des tâches de Windows. Il ne crée pas de fenêtres de navigateur additionnelles.",
             "taskbarPreviewsUnavailable": "Cette option n'est disponible que sous Windows."
         },
-        "lepton-preferences": {
-            "title": "Paramètres de Lepton…",
-            "description": "Configurer les préférences avancées du thème Lepton",
-            "configureLepton": "Configurer Lepton",
+        "chrome-extras": {
+            "title": "Paramètres d'extension d'interface utilisateur",
+            "description": "Appliquer les modifications facultatives de l'interface utilisateur au-dessus du design actuellement sélectionné",
             "back": "Précédent",
             "experimentalWarning": {
                 "title": "⚠️ Fonctionnalités expérimentales",
-                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir.",
-                "leptonRepository": "Lepton est un thème css pour Firefox.",
-                "visitRepository": "Visiter la page du dépôt"
+                "description": "Ces paramètres sont expérimentaux et ne sont pas officiellement pris en charge. Des problèmes peuvent survenir."
             },
             "autohide": {
                 "title": "Masquer automatiquement les paramètres",
@@ -175,8 +173,8 @@
             },
             "icon": {
                 "title": "Paramètres d'icône",
-                "disabled": "Désactiver le menu contextuel de Lepton et les icônes de menu du panneau",
-                "menu": "Activer les icônes du menu contextuel de Lepton"
+                "disabled": "Désactiver les icônes du menu contextuel et du menu du panneau",
+                "menu": "Activer les icônes du menu contextuel"
             },
             "centered": {
                 "title": "Paramètres centrés",
@@ -198,7 +196,8 @@
             "sidebar": {
                 "title": "Paramètres de la barre latérale",
                 "overlap": "Afficher la barre latérale sur le contenu du site web"
-            }
+            },
+            "configure": "Ouvrir les paramètres de l'extension d'interface utilisateur"
         },
         "tabSleepExclusion": {
             "title": "Exclusion de mise en veille par onglet",
@@ -216,6 +215,7 @@
             "exampleFullUrl": "Correspond uniquement aux URL de Gmail"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Les piles d'onglets sont indisponibles avec les onglets verticaux. Votre paramètre est conservé et s'applique lorsque vous revenez aux onglets horizontaux.",
             "title": "Piles d'onglets",
             "description": "Regroupez les onglets dans des piles, représentées sous la forme d'une icône dans la barre d'onglets, avec une deuxième rangée d'onglets empilés en dessous.",
             "enableOrDisable": "Activer/Désactiver",
@@ -329,6 +329,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "En savoir plus sur notre financement et ce réglage (japonais)",
+            "title": "Notes de mise à jour après les mises à jour",
+            "description": "Choisissez la manière dont Floorp ouvre les notes de mise à jour après une mise à jour.",
+            "disabled": {
+                "label": "Ne pas ouvrir automatiquement",
+                "description": "Les notes de mise à jour ne s'ouvrent pas après les mises à jour. Vos paramètres de blocage s'appliquent lorsque vous consultez le blog."
+            },
+            "blocking": {
+                "label": "Ouvrir avec vos paramètres de blocage",
+                "description": "Consultez les notes de mise à jour sans restreindre vos extensions. Cela n'installe ni n'active aucun bloqueur de publicités."
+            },
+            "support": {
+                "label": "Ouvrir et autoriser les publicités pour supporter Floorp (recommandé)",
+                "description": "Empêchez uBlock Origin, AdGuard, Adblock Plus, AdBlock et Ghostery de filtrer le blog Floorp."
+            },
+            "supportMessage": "Les recettes publicitaires générées par les notes de mise à jour permettent de financer le développement et l'exploitation de Floorp. Merci de nous soutenir de la manière qui vous convient le mieux.",
+            "scope": "Cette exception s'applique à toutes les visites via HTTPS sur blog.floorp.app, y compris les pages ouvertes manuellement. Elle affecte également la protection contre le suivi et les filtres personnalisés des cinq extensions répertoriées. Les autres extensions ne sont pas concernées par ce paramètre. D'autres outils de protection peuvent toutefois continuer à bloquer les publicités. Veuillez actualiser les pages du blog ouvertes après avoir modifié ce paramètre.",
+            "error": "Impossible de charger ou d'enregistrer ce paramètre. Veuillez rouvrir cette page et réessayer."
+        },
         "title": "Mises à jour et expérimentations",
         "description": "Gérer les paramètres de mise à jour et la participation aux fonctionnalités expérimentales.",
         "experiments": {
@@ -466,6 +486,8 @@
         "otherSettings": "Paramètres supplémentaires",
         "showToolbar": "Afficher la barre d'outils",
         "showToolbarDescription": "Afficher la barre d'outils dans les fenêtres d'applications Web",
+        "keepRunningAfterBrowserQuit": "Maintenir les applications Web en cours d'exécution après avoir quitté {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Fermez les fenêtres du navigateur et laissez les applications Web en cours d'exécution ouvertes. Désactivez cette option pour les fermer toutes en même temps. La fermeture d'une application Web ferme uniquement celle-ci. Le redémarrage de {{productName}} ou la déconnexion entraîne la fermeture de toutes les applications.",
         "installedApps": "Applications installées",
         "noInstalledApps": "Aucune application Web installée",
         "removeApp": "Supprimer l'application",
@@ -485,7 +507,10 @@
         "containerDeleted": "Conteneur supprimé",
         "resetContainer": "Réinitialiser",
         "save": "Enregistrer",
-        "errorSettingContainer": "Échec de la définition du conteneur"
+        "errorRenaming": "Impossible de renommer cette application Web.",
+        "errorUninstalling": "Impossible de désinstaller cette application Web.",
+        "errorSettingContainer": "Échec de la définition du conteneur",
+        "nativeContainerFixed": "Cette application Web macOS conserve le conteneur sélectionné lors de son installation. La modification de ce conteneur n'est pas encore prise en charge. Les données de connexion et les données du site actuelles ont été conservées."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -744,5 +769,55 @@
             "cancel": "Annuler",
             "cancelDescription": "Annuler la modification"
         }
+    },
+    "performance": {
+        "title": "Performance",
+        "description": "Paramètres qui influent la façon dont le navigateur utilise les ressources du système.",
+        "idleReclaim": {
+            "title": "Récupération de la mémoire inutilisée",
+            "description": "Expérimental et désactivé par défaut. Lorsqu'elle est active, la fonction tente de réduire l'utilisation de la mémoire après une période sans saisie du clavier ou de la souris. La quantité de mémoire récupérée dépend des pages utilisées.",
+            "enable": "Libérer de la mémoire lorsque le navigateur est inactif",
+            "idleThreshold": "Temps d'inactivité avant la récupération (en secondes)",
+            "minInterval": "Intervalle minimum entre deux tentatives de récupérations (en secondes)",
+            "minResident": "Récupération uniquement lorsque l'utilisation de la mémoire excède (MB)",
+            "cost": "La lecture de vidéos, les appels et le partage d'écran n'empêchent pas la récupération de mémoire. La récupération de mémoire peut mettre le navigateur en pause, y compris lorsque vous recommencez à l'utiliser. Des intervalles plus courts augmentent la fréquence de ce phénomène.",
+            "saveFailed": "Impossible d'enregistrer ce paramètre. La valeur précédente a été restaurée."
+        }
+    },
+    "ui": {
+        "skipToContent": "Passer directement au contenu",
+        "loading": "Chargement…",
+        "setupProgress": "Progression de l'installation",
+        "stepNavigation": "Configuration de la navigation",
+        "settingsNavigation": "Réglages de navigation",
+        "openNavigation": "Ouvrir la navigation",
+        "closeNavigation": "Fermer la navigation",
+        "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
+        "retry": "Réessayer",
+        "loadError": "Impossible de charger les paramètres. Veuillez actualiser cette page."
+    },
+    "settingsHome": {
+        "title": "Faites de Floorp le vôtre",
+        "description": "Ajustez l'apparence et les contrôles en fonction de la façon dont vous naviguez.",
+        "open": "Explorer les réglages",
+        "manage": "Gérer votre navigateur",
+        "descriptions": {
+            "tabAndAppearance": "Personnaliser les thèmes et l'apparence des onglets",
+            "workspaces": "Basculer entre les onglets professionnels et personnels",
+            "browserSidebar": "Ouvrir un autre site à côté de votre page",
+            "mouseGesture": "Assigner des actions aux mouvements de la souris",
+            "keyboardShortcuts": "Assigner des actions aux raccourcis clavier",
+            "performance": "Ajuster l'utilisation de la mémoire"
+        },
+        "resources": {
+            "privacy": "À propos de la confidentialité",
+            "extensions": "Gérer les extensions",
+            "help": "Obtenir de l'aide"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Apparence et comportement",
+        "reset": "Réinitialiser les espaces de travail",
+        "help": "Comment l'utiliser"
     }
 }

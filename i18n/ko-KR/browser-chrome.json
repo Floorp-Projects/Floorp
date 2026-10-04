@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "탭을 다른 워크스페이스로 이동",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "다른 워크스페이스에서 링크 열기",
       "noOtherWorkspace": "사용 가능한 워크스페이스가 없습니다"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "분할 화면에서 열기",
+      "paneLimit": "분할 화면에서 열기 (최대 탭 {{max}}개)",
       "addPane": "분할 화면 창에 추가",
       "moveToPane": "창으로 이동",
       "moveToPaneN": "{{n}} 창 ({{title}})"

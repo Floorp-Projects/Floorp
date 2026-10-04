@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Lap Áthelyezése egy Másik Munkaterületre",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Link Megnyitása egy Másik Munkaterületen",
       "noOtherWorkspace": "Más munkaterület nem áll rendelkezésre"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Open in Split View",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"

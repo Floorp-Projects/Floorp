@@ -167,10 +167,10 @@ export function extractSettingsRoutes(
   const routes: SettingsRouteEntry[] = [];
   for (
     const match of appText.matchAll(
-      /<Route\s+path="([^"]+)"\s+element=\{<([A-Za-z0-9_]+)(?:\s+[^>]*)?\s*\/>\}/g,
+      /<Route\s+path="([^"]+)"\s+element=\{\s*(?:<([A-Za-z0-9_]+)>\s*)?<([A-Za-z0-9_]+)(?:\s+[^>]*)?\s*\/>\s*(?:<\/\2>\s*)?\}/g,
     )
   ) {
-    const component = match[2];
+    const component = match[3];
     const route = match[1].startsWith("/") ? match[1] : `/${match[1]}`;
     routes.push({
       route,
@@ -200,7 +200,7 @@ export function extractBridgeLoader(
     devLoaderUrl,
     testLoaderUrl,
     productionLoader,
-    source: source(pathFromRoot, chromeRootText, devLoaderUrl),
+    source: source(pathFromRoot, chromeRootText, "const isTestOwner"),
   };
 }
 

@@ -102,7 +102,7 @@ scoop install extras/floorp
 
 Scoop repository provided by [@SegoCode](https://github.com/SegoCode)
 
-**Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". However, the installer for the Daylight build is not signed.**
+**Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano".**
 
 #### macOS
 
@@ -176,6 +176,8 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 ---
 
 ## 🌟 Contributing
+
+Please also check [`CONTRIBUTING.md`](https://github.com/Floorp-Projects/Floorp/blob/main/.github/CONTRIBUTING.md) for more details on how to contribute.
 
 ### 🧰 How to Start Development
 

@@ -76,7 +76,15 @@ export function localFile(filePath: string): ClipFile | null {
 // Preferences
 // ──────────────────────────────────────────────────────────
 
-const directPrefFunctions: NRSettingsParentFunctions = {
+const directPrefFunctions: Pick<
+  NRSettingsParentFunctions,
+  | "getBoolPref"
+  | "getIntPref"
+  | "getStringPref"
+  | "setBoolPref"
+  | "setIntPref"
+  | "setStringPref"
+> = {
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
       return Promise.resolve(null);
@@ -110,7 +118,7 @@ const directPrefFunctions: NRSettingsParentFunctions = {
 };
 
 export const rpc = isDevServer
-  ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
+  ? createBirpc<typeof directPrefFunctions, Record<string, never>>(
     {},
     {
       post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),

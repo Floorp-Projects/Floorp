@@ -34,6 +34,7 @@
         "debug": "Debug",
         "mouseGesture": "Muis gebaren",
         "keyboardShortcut": "Sneltoetsen",
+        "performance": "Prestaties",
         "search": {
             "title": "Zoekinstellingen",
             "resultsFor": "Zoekresultaten voor \"{{query}}\"",
@@ -142,16 +143,13 @@
             "taskbarPreviewsDescription": "Dit verandert alleen de weergave op de Windows-taakbalk. Het maakt geen extra browservensters aan.",
             "taskbarPreviewsUnavailable": "Deze optie is uitsluitend beschikbaar voor Windows."
         },
-        "lepton-preferences": {
-            "title": "Lepton Instellingen",
-            "description": "Geavanceerde Lepton-thema-instellingen configureren",
-            "configureLepton": "Lepton configureren",
+        "chrome-extras": {
+            "title": "Instellingen UI-uitbreidingen",
+            "description": "Pas optionele UI-aanpassingen toe op het huidige geselecteerde ontwerp",
             "back": "Terug",
             "experimentalWarning": {
                 "title": "⚠️ Experimentele functies",
-                "description": "Deze instellingen zijn experimenteel en worden niet officieel ondersteund. Er kunnen problemen optreden.",
-                "leptonRepository": "Lepton is een css thema voor Firefox.",
-                "visitRepository": "Repositorypagina bezoeken"
+                "description": "Deze instellingen zijn experimenteel en worden niet officieel ondersteund. Er kunnen problemen optreden."
             },
             "autohide": {
                 "title": "Instellingen automatisch verbergen",
@@ -175,8 +173,8 @@
             },
             "icon": {
                 "title": "Pictograminstellingen",
-                "disabled": "Lepton-pictogrammen voor snelmenu en paneelmenu uitschakelen",
-                "menu": "Lepton-pictogrammen voor snelmenu inschakelen"
+                "disabled": "Pictogrammen van contextmenu en paneelmenu uitschakelen",
+                "menu": "Pictogrammen contextmenu inschakelen"
             },
             "centered": {
                 "title": "Gecentreerde instellingen",
@@ -198,7 +196,8 @@
             "sidebar": {
                 "title": "Zijbalk instellingen",
                 "overlap": "Zijbalk over website-inhoud tonen"
-            }
+            },
+            "configure": "Open UI-extensie instellingen"
         },
         "tabSleepExclusion": {
             "title": "Tabbladslaapstand-uitzonderingen",
@@ -216,6 +215,7 @@
             "exampleFullUrl": "Geldt alleen voor Gmail-URL's"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Tabgroepen zijn niet beschikbaar bij verticale tabbladen. Je instelling blijft behouden en wordt weer toegepast zodra je terugkeert naar horizontale tabbladen.",
             "title": "Gestapelde tabbladen",
             "description": "Groepeer tabbladen in stapels. Dit wordt getoond als een chip in de tabbladbalk met een tweede rij gestapelde tabbladen eronder.",
             "enableOrDisable": "Inschakelen/Uitschakelen",
@@ -329,6 +329,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Lees meer over onze financiering en deze instelling (Japans)",
+            "title": "Releaseopmerkingen na updates",
+            "description": "Kies hoe Floorp releaseopmerkingen opent na een update.",
+            "disabled": {
+                "label": "Niet automatisch openen",
+                "description": "Releaseopmerkingen worden niet geopend na updates. Uw instellingen voor blokkering zijn van toepassing wanneer u de blog bezoekt."
+            },
+            "blocking": {
+                "label": "Openen met je blocker-instellingen",
+                "description": "Releaseopmerkingen openen zonder je extensies te beperken. Dit installeert of activeert geen advertentieblokker."
+            },
+            "support": {
+                "label": "Openen en advertenties toestaan om Floorp te steunen (aanbevolen)",
+                "description": "Voorkom dat uBlock Origin, AdGuard, Adblock Plus, AdBlock en Ghostery de Floorp-blog filteren."
+            },
+            "supportMessage": "Advertentie-inkomsten uit releaseopmerkingen ondersteunen de ontwikkeling en exploitatie van Floorp. Bedankt dat je ons steunt op een manier die voor jou werkt.",
+            "scope": "Deze uitzondering is van toepassing op alle HTTPS-bezoeken aan blog.floorp.app, inclusief handmatig geopende pagina's. Het heeft ook invloed op de trackingbescherming en aangepaste filters in de vijf vermelde extensies. Andere extensies worden niet beperkt door deze instelling. Andere beschermingsmiddelen kunnen nog steeds advertenties blokkeren. Herlaad geopende blogpagina's na het wijzigen van deze instelling.",
+            "error": "Kon deze instelling niet laden of opslaan. Open deze pagina opnieuw en probeer het nog een keer."
+        },
         "title": "Updates en experimenten",
         "description": "Beheer de update-instellingen en de deelname aan experimentele functies.",
         "experiments": {
@@ -466,6 +486,8 @@
         "otherSettings": "Overige instellingen",
         "showToolbar": "Werkbalk weergeven",
         "showToolbarDescription": "De werkbalk weergeven in vensters van Progressive Web Apps",
+        "keepRunningAfterBrowserQuit": "Web-apps blijven uitvoeren na het afsluiten van {{productName}}",
+        "keepRunningAfterBrowserQuitDescription": "Sluit browservensters en houd actieve web-apps geopend. Schakel dit uit om ze samen af te sluiten. Het afsluiten van een web-app sluit alleen die app. Bij het opnieuw starten van {{productName}} of het uitloggen worden alle apps gesloten.",
         "installedApps": "Geïnstalleerde apps",
         "noInstalledApps": "Er zijn geen Progressive Web Apps geïnstalleerd",
         "removeApp": "App verwijderen",
@@ -485,7 +507,10 @@
         "containerDeleted": "Container verwijderd",
         "resetContainer": "Opnieuw instellen",
         "save": "Opslaan",
-        "errorSettingContainer": "Container instellen mislukt"
+        "errorRenaming": "Kan deze web-app niet hernoemen.",
+        "errorUninstalling": "Kan deze web-app niet verwijderen.",
+        "errorSettingContainer": "Container instellen mislukt",
+        "nativeContainerFixed": "Deze macOS web-app behoudt de container die bij de installatie is gekozen. Het wijzigen van de container wordt nog niet ondersteund. De huidige inlog- en websitegegevens zijn behouden."
     },
     "floorpOS": {
         "title": "Floorp OS",
@@ -744,5 +769,55 @@
             "cancel": "",
             "cancelDescription": "Bewerking annuleren"
         }
+    },
+    "performance": {
+        "title": "Prestaties",
+        "description": "Instellingen die invloed hebben op hoe de browser systeembronnen gebruikt.",
+        "idleReclaim": {
+            "title": "Geheugen vrijmaken bij inactiviteit",
+            "description": "Experimenteel en standaard uitgeschakeld. Wanneer ingeschakeld, wordt geprobeerd het geheugengebruik te verminderen na een periode zonder toetsenbord- of muisinvoer. De hoeveelheid vrijgemaakt geheugen hangt af van de pagina's die je gebruikt.",
+            "enable": "Geheugen vrijmaken wanneer de browser inactief is",
+            "idleThreshold": "Inactiviteitstijd voor vrijmaken (seconden)",
+            "minInterval": "Minimaal interval tussen vrijgaven (seconden)",
+            "minResident": "Alleen vrijmaken wanneer geheugengebruik hoger is dan (MB)",
+            "cost": "Het afspelen van video's, oproepen en het delen van je scherm voorkomen het vrijmaken van geheugen niet. Het vrijmaken kan de browser tijdelijk laten haperen, ook wanneer je deze weer gaat gebruiken. Kortere intervallen verhogen de frequentie hiervan.",
+            "saveFailed": "Kon deze instelling niet opslaan. De vorige waarde is hersteld."
+        }
+    },
+    "ui": {
+        "skipToContent": "Ga naar de inhoud",
+        "loading": "Laden…",
+        "setupProgress": "Voortgang installatie",
+        "stepNavigation": "Navigatie configureren",
+        "settingsNavigation": "Instellingen-navigatie",
+        "openNavigation": "Navigatie openen",
+        "closeNavigation": "Navigatie sluiten",
+        "saveError": "Opslaan mislukt. Probeer het opnieuw.",
+        "retry": "Opnieuw proberen",
+        "loadError": "Instellingen laden mislukt. Probeer de pagina opnieuw te laden."
+    },
+    "settingsHome": {
+        "title": "Personaliseer Floorp",
+        "description": "Pas het uiterlijk en de knoppen aan de manier waarop je surft aan.",
+        "open": "Instellingen verkennen",
+        "manage": "Beheer je browser",
+        "descriptions": {
+            "tabAndAppearance": "Thema's en tabbladuiterlijk aanpassen",
+            "workspaces": "Wisselen tussen werk- en privétabbladen",
+            "browserSidebar": "Open een andere site naast je pagina",
+            "mouseGesture": "Wijs acties toe aan muisbewegingen",
+            "keyboardShortcuts": "Acties toewijzen aan sneltoetsen",
+            "performance": "Geheugengebruik aanpassen"
+        },
+        "resources": {
+            "privacy": "Over privacy",
+            "extensions": "Beheer extensies",
+            "help": "Hulp krijgen"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Uiterlijk en gedrag",
+        "reset": "Werkruimten herstellen",
+        "help": "Hoe te gebruiken"
     }
 }

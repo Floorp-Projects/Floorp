@@ -6,7 +6,6 @@ import {
   ENABLED_PREF,
   getGroupKind,
   GROUP_KINDS_PREF,
-  isSplitViewGroup,
   readGroupKinds,
   setGroupKind,
   updateGroupChips,
@@ -18,9 +17,9 @@ import {
   getGroupDisplayTitle,
   getTabDragId,
   rememberSelection,
+  STACK_ATTR,
   type StackGroup,
   type StackTab,
-  STACK_ATTR,
   syncActiveGroup,
   type TabBrowser,
 } from "../stack-bar.tsx";
@@ -157,7 +156,11 @@ function withFakeBrowser<T>(
 
 function testGroupKindPrefs(): void {
   const prefs = makePrefs();
-  assertEquals(getGroupKind("g1", prefs), "stack", "unknown id defaults to stack");
+  assertEquals(
+    getGroupKind("g1", prefs),
+    "stack",
+    "unknown id defaults to stack",
+  );
   assertEquals(
     Object.keys(readGroupKinds(prefs)).length,
     0,
@@ -165,7 +168,11 @@ function testGroupKindPrefs(): void {
   );
 
   setGroupKind("g1", "group", prefs);
-  assertEquals(getGroupKind("g1", prefs), "group", "explicit group choice persists");
+  assertEquals(
+    getGroupKind("g1", prefs),
+    "group",
+    "explicit group choice persists",
+  );
   assertEquals(
     JSON.stringify(readGroupKinds(prefs)),
     '{"g1":"group"}',
@@ -237,7 +244,11 @@ function testDecorateGroupAutoNamesUnnamed(): void {
   decorateGroup(first, "stack", gb);
   decorateGroup(second, "stack", gb);
 
-  assertEquals(first.label, "New Stack", "first unnamed group becomes New Stack");
+  assertEquals(
+    first.label,
+    "New Stack",
+    "first unnamed group becomes New Stack",
+  );
   assertEquals(
     second.label,
     "New Stack 1",
@@ -308,22 +319,6 @@ function testDecorateGroupGroupCountReachable(): void {
   );
 }
 
-function testIsSplitViewGroup(): void {
-  const normal = createGroup([createTab("A")], "Normal");
-  assertEquals(
-    isSplitViewGroup(normal),
-    false,
-    "ordinary group is not a split-view group",
-  );
-
-  const split = createGroup([createTab("B", { split: true })], "Split");
-  assertEquals(
-    isSplitViewGroup(split),
-    true,
-    "group owning a split-view tab is excluded",
-  );
-}
-
 function testUpdateGroupChipsClassifies(): void {
   const normal = createGroup([createTab("A"), createTab("B")], "Stack");
   const split = createGroup([createTab("C", { split: true })], "Split");
@@ -338,8 +333,8 @@ function testUpdateGroupChipsClassifies(): void {
   );
   assertEquals(
     split.hasAttribute(STACK_ATTR),
-    false,
-    "split-view group is left native",
+    true,
+    "split panes do not change the containing group's kind",
   );
 }
 
@@ -463,17 +458,46 @@ function testEnabledPrefConstant(): void {
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     { name: "group kind pref round-trips", fn: testGroupKindPrefs },
-    { name: "stack decoration marks chip with title/count", fn: testDecorateGroupStackKind },
-    { name: "unnamed stacks get stable auto-names", fn: testDecorateGroupAutoNamesUnnamed },
-    { name: "stack decoration forces expanded groups", fn: testDecorateGroupForcesExpand },
-    { name: "plain-group decoration restores native state", fn: testDecorateGroupGroupKind },
-    { name: "plain-group badge counts reachable tabs", fn: testDecorateGroupGroupCountReachable },
-    { name: "split-view groups are detected", fn: testIsSplitViewGroup },
-    { name: "updateGroupChips classifies every group", fn: testUpdateGroupChipsClassifies },
-    { name: "display title picks reachable anchor", fn: testGetGroupDisplayTitle },
-    { name: "activate selects reachable members", fn: testActivateGroupPicksReachable },
-    { name: "active group requires ownership and visibility", fn: testSyncActiveGroupOwnership },
-    { name: "drag ids round-trip through gBrowser.tabs", fn: testDragIdRoundTrip },
+    {
+      name: "stack decoration marks chip with title/count",
+      fn: testDecorateGroupStackKind,
+    },
+    {
+      name: "unnamed stacks get stable auto-names",
+      fn: testDecorateGroupAutoNamesUnnamed,
+    },
+    {
+      name: "stack decoration forces expanded groups",
+      fn: testDecorateGroupForcesExpand,
+    },
+    {
+      name: "plain-group decoration restores native state",
+      fn: testDecorateGroupGroupKind,
+    },
+    {
+      name: "plain-group badge counts reachable tabs",
+      fn: testDecorateGroupGroupCountReachable,
+    },
+    {
+      name: "updateGroupChips classifies every group",
+      fn: testUpdateGroupChipsClassifies,
+    },
+    {
+      name: "display title picks reachable anchor",
+      fn: testGetGroupDisplayTitle,
+    },
+    {
+      name: "activate selects reachable members",
+      fn: testActivateGroupPicksReachable,
+    },
+    {
+      name: "active group requires ownership and visibility",
+      fn: testSyncActiveGroupOwnership,
+    },
+    {
+      name: "drag ids round-trip through gBrowser.tabs",
+      fn: testDragIdRoundTrip,
+    },
     { name: "enabled pref constant is stable", fn: testEnabledPrefConstant },
   ];
   await runTests("tabStacksFoundation.test.ts", tests);

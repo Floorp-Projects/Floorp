@@ -14,6 +14,7 @@ import {
   SsbWindowContainerIndicator,
 } from "./SsbWindowContainerIndicator.tsx";
 import { isContainerExperimentEnabled } from "./containerUtils.ts";
+import { updatePwaToolbarVisibility } from "./toolbarVisibility.ts";
 
 export class PwaWindowSupport {
   private ssbId = createSignal<string | null>(null);
@@ -101,7 +102,11 @@ export class PwaWindowSupport {
   private initializeWindow(): void {
     globalThis.floorpSsbWindow = true;
     this.configureTitlebarBehavior();
-    this.updateToolbarVisibility(this.shouldShowToolbar());
+    createRootHMR(() => {
+      createEffect(() => {
+        updatePwaToolbarVisibility(document, this.shouldShowToolbar());
+      });
+    }, import.meta.hot);
   }
 
   private setupSignals(ssbIdAttr: string): void {
@@ -192,13 +197,6 @@ export class PwaWindowSupport {
     }
 
     await this.ensureContainerIndicator(userContextId);
-
-    createRootHMR(() => {
-      createEffect(() => {
-        this.shouldShowToolbar();
-        this.updateToolbarVisibility(this.shouldShowToolbar());
-      });
-    }, import.meta.hot);
   }
 
   private async ensureContainerIndicator(
@@ -361,9 +359,7 @@ export class PwaWindowSupport {
 
       createRootHMR(() => {
         createEffect(() => {
-          const showToolbar = this.shouldShowToolbar();
           customTitlebar.allowedBy("non-popup", this.shouldUseCustomTitlebar());
-          this.updateToolbarVisibility(showToolbar);
         });
       }, import.meta.hot);
     } catch (error) {
@@ -383,28 +379,9 @@ export class PwaWindowSupport {
   }
 
   private createStyleElement() {
-    const showToolbar = this.shouldShowToolbar();
-
     return (
       <style>
         {PwaWindowStyle}
-        {!showToolbar
-          ? `
-           #status-bar, #PersonalToolbar, #titlebar {
-             display: none;
-           }
-           #nav-bar-customization-target,
-           #urlbar-container,
-           #nav-bar .titlebar-spacer,
-           #nav-bar toolbartabstop {
-             display: none !important;
-           }
-           #nav-bar {
-             display: flex !important;
-             min-height: 28px !important;
-           }
-         `
-          : ""}
       </style>
     );
   }
@@ -426,65 +403,6 @@ export class PwaWindowSupport {
     } catch (error) {
       console.error(
         "[PwaWindowSupport] Failed to disable urlbar interactions:",
-        error,
-      );
-    }
-  }
-
-  private updateToolbarVisibility(showToolbar: boolean): void {
-    try {
-      const doc = globalThis.document;
-      if (!doc) {
-        return;
-      }
-
-      const elements = [
-        doc.getElementById("status-bar"),
-        doc.getElementById("PersonalToolbar"),
-      ];
-
-      for (const element of elements) {
-        if (!element) {
-          continue;
-        }
-
-        element.removeAttribute("hidden");
-        element.removeAttribute("collapsed");
-        element.removeAttribute("style");
-
-        if (!showToolbar) {
-          element.setAttribute("hidden", "true");
-          element.setAttribute("collapsed", "true");
-          element.setAttribute("style", "display: none;");
-        }
-      }
-
-      const navBar = doc.getElementById("nav-bar");
-      if (navBar) {
-        navBar.removeAttribute("hidden");
-        navBar.removeAttribute("collapsed");
-        if (showToolbar) {
-          navBar.removeAttribute("style");
-        } else {
-          navBar.setAttribute("style", "display: flex;");
-        }
-      }
-
-      const titlebar = doc.getElementById("titlebar");
-      if (titlebar) {
-        if (showToolbar) {
-          titlebar.removeAttribute("hidden");
-          titlebar.removeAttribute("collapsed");
-          titlebar.removeAttribute("style");
-        } else {
-          titlebar.setAttribute("hidden", "true");
-          titlebar.setAttribute("collapsed", "true");
-          titlebar.setAttribute("style", "display: none;");
-        }
-      }
-    } catch (error) {
-      console.error(
-        "[PwaWindowSupport] Failed to update toolbar visibility:",
         error,
       );
     }

@@ -21,6 +21,7 @@ import type {
 import { PanelSidebarAddModal } from "../components/panel-sidebar-modal.tsx";
 import { panelSidebarData, setPanelSidebarData } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
+import { DEFAULT_PANEL_WIDTH, parsePanelWidth } from "../utils/panel-width.ts";
 
 class CallerActor implements ModalActorLike {
   readonly requests: ModalShowRequest[] = [];
@@ -77,14 +78,50 @@ function createCaller(parent: ModalParent): PanelSidebarAddModal {
   return caller;
 }
 
-function panelResult(url: string): TFormResult {
+function panelResult(url: string, width: string | number = "450"): TFormResult {
   return {
     type: "web",
-    width: "450",
+    width,
     url,
     userContextId: "0",
     userAgent: "false",
   };
+}
+
+function testPanelWidthParsing(): void {
+  assertEquals(parsePanelWidth("0"), 0, "string zero remains the sentinel");
+  assertEquals(parsePanelWidth(0), 0, "numeric zero remains the sentinel");
+  assertEquals(parsePanelWidth("320.5"), 320.5, "positive widths are parsed");
+  assertEquals(
+    parsePanelWidth(""),
+    DEFAULT_PANEL_WIDTH,
+    "an empty value uses the default",
+  );
+  assertEquals(
+    parsePanelWidth("   "),
+    DEFAULT_PANEL_WIDTH,
+    "whitespace uses the default",
+  );
+  assertEquals(
+    parsePanelWidth("invalid"),
+    DEFAULT_PANEL_WIDTH,
+    "non-numeric text uses the default",
+  );
+  assertEquals(
+    parsePanelWidth(Number.NaN),
+    DEFAULT_PANEL_WIDTH,
+    "NaN uses the default",
+  );
+  assertEquals(
+    parsePanelWidth(Number.POSITIVE_INFINITY),
+    DEFAULT_PANEL_WIDTH,
+    "infinity uses the default",
+  );
+  assertEquals(
+    parsePanelWidth(-1),
+    DEFAULT_PANEL_WIDTH,
+    "negative widths use the default",
+  );
 }
 
 const parent = ModalParent.getInstance();
@@ -119,6 +156,24 @@ async function testPanelCancelReturnsNull(): Promise<void> {
   manager.dispose();
 }
 
+async function testPanelZeroWidthSubmit(): Promise<void> {
+  const actor = new CallerActor();
+  const manager = createManager(actor);
+  parentState.modalManager = manager;
+  const shown = createCaller(parent).showAddPanelModal();
+  const request = actor.requests[0];
+  assert(request !== undefined, "zero-width panel caller reaches modal actor");
+  const expected = panelResult("https://global-width.example", "0");
+  actor.submit(request, expected);
+  assertEquals(await shown, expected, "zero-width panel submit completes");
+  const addedPanel = panelSidebarData().find((panel: Panel) =>
+    panel.url === "https://global-width.example"
+  );
+  assert(addedPanel !== undefined, "zero-width panel is added");
+  assertEquals(addedPanel.width, 0, "submitted zero width is stored unchanged");
+  manager.dispose();
+}
+
 async function testPanelRapidReplacement(): Promise<void> {
   const actor = new CallerActor();
   const manager = createManager(actor);
@@ -146,8 +201,10 @@ async function testPanelRapidReplacement(): Promise<void> {
 }
 
 const tests: TestCase[] = [
+  { name: "panel width parsing", fn: testPanelWidthParsing },
   { name: "panel submit", fn: testPanelSubmit },
   { name: "panel cancel returns null", fn: testPanelCancelReturnsNull },
+  { name: "panel zero width submit", fn: testPanelZeroWidthSubmit },
   { name: "panel rapid replacement", fn: testPanelRapidReplacement },
 ];
 

@@ -31,7 +31,25 @@ export class NRWelcomePageChild extends JSWindowActorChild {
       Cu.exportFunction(this.setDefaultBrowser.bind(this), window, {
         defineAs: "NRSetDefaultBrowser",
       });
+      Cu.exportFunction(this.dismissWelcomePage.bind(this), window, {
+        defineAs: "NRDismissWelcomePage",
+      });
+      Cu.exportFunction(this.openExternalLink.bind(this), window, {
+        defineAs: "NROpenExternalLink",
+      });
     }
+  }
+
+  openExternalLink(url: string) {
+    if (typeof url !== "string") {
+      return;
+    }
+    try {
+      if (!/^https?:$/i.test(new URL(url).protocol)) return;
+    } catch {
+      return;
+    }
+    this.sendAsyncMessage("WelcomePage:openExternalLink", { url });
   }
 
   getLocaleInfo(callback: (localeInfo: string) => void = () => {}) {
@@ -93,6 +111,10 @@ export class NRWelcomePageChild extends JSWindowActorChild {
   }
 
   resolveSetDefaultBrowser: ((response: string) => void) | null = null;
+
+  dismissWelcomePage() {
+    this.sendAsyncMessage("WelcomePage:dismiss");
+  }
 
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {

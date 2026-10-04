@@ -34,6 +34,7 @@
         "debug": "Felsökning",
         "mouseGesture": "Musgester",
         "keyboardShortcut": "Tangentbordsgenvägar",
+        "performance": "Prestanda",
         "search": {
             "title": "Sökinställningar",
             "resultsFor": "Sökresultat för \"{{query}}\"",
@@ -142,16 +143,13 @@
             "taskbarPreviewsDescription": "Detta ändrar bara hur Windows aktivitetsfältet visas. Det skapar inte ytterligare webbläsarfönster.",
             "taskbarPreviewsUnavailable": "Det här alternativet är endast tillgängligt för Windows."
         },
-        "lepton-preferences": {
-            "title": "Lepton inställningar",
-            "description": "Konfigurera avancerade Lepton temainställningar",
-            "configureLepton": "Konfigurera Lepton",
+        "chrome-extras": {
+            "title": "UI tilläggsinställningar",
+            "description": "Tillämpa valfria justeringar av användargränssnittet utöver den för närvarande valda designen",
             "back": "Tillbaka",
             "experimentalWarning": {
                 "title": "⚠️ Experimentella funktioner",
-                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå.",
-                "leptonRepository": "Lepton är ett css-tema för Firefox.",
-                "visitRepository": "Besök förråd sidan"
+                "description": "Dessa inställningar är experimentella och stöds inte officiellt. Problem kan uppstå."
             },
             "autohide": {
                 "title": "Dölj inställningar automatiskt",
@@ -175,8 +173,8 @@
             },
             "icon": {
                 "title": "Ikon inställningar",
-                "disabled": "Inaktivera Leptons sammanhangsmeny och panelmenyikoner",
-                "menu": "Aktivera Leptons sammanhangsberoende menyikoner"
+                "disabled": "Inaktivera kontextmenyn och panelmenyikoner",
+                "menu": "Aktivera kontextmeny ikoner"
             },
             "centered": {
                 "title": "Centrerade inställningar",
@@ -198,7 +196,8 @@
             "sidebar": {
                 "title": "Sidofält inställningar",
                 "overlap": "Visa sidofält över webbplatsens innehåll"
-            }
+            },
+            "configure": "Öppna UI tilläggsinställningar"
         },
         "tabSleepExclusion": {
             "title": "Flik sömn uteslutning",
@@ -216,6 +215,7 @@
             "exampleFullUrl": "Matchar endast Gmail-URL: er"
         },
         "tabStacks": {
+            "unavailableInVerticalTabs": "Flikstaplar fungerar inte med vertikala flikar. Din inställning sparas och gäller när du återgår till horisontella flikar.",
             "title": "Flikstaplar",
             "description": "Gruppera flikar i staplar, vilket visas som en ikon i flikfältet med en andra rad av staplade flikar under.",
             "enableOrDisable": "Aktivera/inaktivera",
@@ -329,6 +329,26 @@
         }
     },
     "updates": {
+        "releaseNotes": {
+            "learnMore": "Läs mer om vår finansiering och denna verksamhetsmiljö (japanska)",
+            "title": "Släpp anteckningar efter uppdateringar",
+            "description": "Välj hur Floorp ska öppna versionsinformation efter en uppdatering.",
+            "disabled": {
+                "label": "Öppnas inte automatiskt",
+                "description": "Släpp anteckningar kommer inte att öppnas efter uppdateringar. Dina blockerarinställningar gäller när du besöker bloggen."
+            },
+            "blocking": {
+                "label": "Öppna med dina blockeringsinställningar",
+                "description": "Öppna versionsinformation utan att begränsa dina tillägg. Detta installerar eller aktiverar inte en annonsblockerare."
+            },
+            "support": {
+                "label": "Öppna och tillåt annonser för att stödja Floorp (rekommenderas)",
+                "description": "Förhindra uBlock Origin, AdGuard, Adblock Plus, AdBlock och Ghostery från att filtrera Floorp blogg."
+            },
+            "supportMessage": "Reklam intäkter från versionsfakta stöder Floorp utveckling och drift. Tack för att stödja oss på ett sätt som fungerar för dig.",
+            "scope": "Detta undantag gäller alla HTTPS-besök på blog.floorp.app, inklusive sidor som öppnas manuellt. Det påverkar även spårningsskyddet och anpassade filter i de fem angivna tilläggen. Övriga tillägg påverkas inte av den här inställningen. Andra skyddsverktyg kan fortfarande blockera annonser. Ladda om öppna bloggsidor efter att du har ändrat den här inställningen.",
+            "error": "Kunde inte ladda eller spara den här inställningen. Öppna den här sidan igen och försök igen."
+        },
         "title": "Uppdateringar och experiment",
         "description": "Hantera uppdateringsinställningar och deltagande i experimentella funktioner.",
         "experiments": {
@@ -466,6 +486,8 @@
         "otherSettings": "Andra inställningar",
         "showToolbar": "Visa verktygsfält",
         "showToolbarDescription": "Visa verktygsfältet i progressiva webbapp-fönster",
+        "keepRunningAfterBrowserQuit": "Håll webbappar igång efter att {{productName}} har avslutats",
+        "keepRunningAfterBrowserQuitDescription": "Stäng webbläsarfönstren och låt de aktiva webbapparna förbli öppna. Inaktivera den här inställningen om du vill stänga dem samtidigt. När du stänger en webbapp stängs endast den appen. Om du startar om {{productName}} eller loggar ut stängs alla appar.",
         "installedApps": "Installerade appar",
         "noInstalledApps": "Inga progressiva webbappar installerade",
         "removeApp": "Ta bort app",
@@ -485,7 +507,10 @@
         "containerDeleted": "Behållare borttagen",
         "resetContainer": "Återställ",
         "save": "Spara",
-        "errorSettingContainer": "Misslyckades att ställa in behållaren"
+        "errorRenaming": "Kunde inte byta namn på den här webbappen.",
+        "errorUninstalling": "Kunde inte avinstallera den här webbappen.",
+        "errorSettingContainer": "Misslyckades att ställa in behållaren",
+        "nativeContainerFixed": "Denna macOS webbapp behåller den behållare som valdes vid installationen. Det går ännu inte att byta behållare. Aktuella inloggningsuppgifter och webbplatsdata har bevarats."
     },
     "floorpOS": {
         "title": "{{productName}} OS",
@@ -744,5 +769,55 @@
             "cancel": "Avbryt",
             "cancelDescription": "Avbryt redigering"
         }
+    },
+    "performance": {
+        "title": "Prestanda",
+        "description": "Inställningar som påverkar hur webbläsaren använder systemresurser.",
+        "idleReclaim": {
+            "title": "Återvinning av ledigt minne",
+            "description": "Experimentell funktion och avstängd som standard. När funktionen är aktiverad försöker systemet minska minnesanvändningen efter en viss tid utan tangentbords eller musinmatning. Hur mycket minne som frigörs beror på vilka sidor som används.",
+            "enable": "Återvinn minne när webbläsaren är inaktiv",
+            "idleThreshold": "Väntetid innan återvinning (sekunder)",
+            "minInterval": "Minsta intervall mellan återvinning (sekunder)",
+            "minResident": "Återanvänd endast när minnesanvändningen överstiger (MB)",
+            "cost": "Videouppspelning, samtal och skärmdelning hindrar inte återanvändning. Återanvändningen kan pausa webbläsaren, även när du återupptar användningen. Kortare intervall ökar frekvensen.",
+            "saveFailed": "Kunde inte spara denna inställning. Det tidigare värdet har återställts."
+        }
+    },
+    "ui": {
+        "skipToContent": "Hoppa till innehåll",
+        "loading": "Laddar…",
+        "setupProgress": "Installationsförlopp",
+        "stepNavigation": "Konfigurera navigering",
+        "settingsNavigation": "Inställningar navigering",
+        "openNavigation": "Öppna navigering",
+        "closeNavigation": "Stäng navigering",
+        "saveError": "Kunde inte spara. Försök igen.",
+        "retry": "Försök igen",
+        "loadError": "Kunde inte ladda inställningarna. Ladda om sidan."
+    },
+    "settingsHome": {
+        "title": "Gör Floorp till din egen",
+        "description": "Anpassa utseendet och kontrollerna efter hur du brukar surfa.",
+        "open": "Utforska inställningarna",
+        "manage": "Hantera din webbläsare",
+        "descriptions": {
+            "tabAndAppearance": "Justera teman och flikarnas utseende",
+            "workspaces": "Växla mellan arbete och privata flikar",
+            "browserSidebar": "Öppna en annan webbplats vid sidan av din sida",
+            "mouseGesture": "Tilldela åtgärder till musrörelser",
+            "keyboardShortcuts": "Tilldela åtgärder till tangentbordsgenvägar",
+            "performance": "Justera minnesanvändning"
+        },
+        "resources": {
+            "privacy": "Om integritet",
+            "extensions": "Hantera tillägg",
+            "help": "Få hjälp"
+        }
+    },
+    "workspaceRefresh": {
+        "behavior": "Utseende och beteende",
+        "reset": "Återställ arbetsytor",
+        "help": "Hur man använder"
     }
 }

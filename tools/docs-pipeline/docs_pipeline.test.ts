@@ -94,8 +94,34 @@ Deno.test("extractSettingsRoutes normalizes displayed route paths", () => {
   );
 });
 
+Deno.test("extractSettingsRoutes preserves pages behind a route guard", () => {
+  const routes = extractSettingsRoutes(`
+import ContextMenuSettings from "@/app/context-menu/page.tsx";
+<Route
+  path="/features/context-menu"
+  element={
+    <AvailabilityGate>
+      <ContextMenuSettings />
+    </AvailabilityGate>
+  }
+/>
+<Route path="/overview/home" element={<Dashboard />} />
+  `);
+
+  assertEquals(routes.map(({ route, component }) => ({ route, component })), [
+    {
+      route: "/features/context-menu",
+      component: "@/app/context-menu/page.tsx",
+    },
+    { route: "/overview/home", component: "Dashboard" },
+  ]);
+  assertEquals(routes[0].source.line, 4);
+});
+
 Deno.test("extractBridgeLoader reads loader URLs from chrome root source", () => {
   const loader = extractBridgeLoader(`
+    const isTestOwner = import.meta.env.MODE === "test" &&
+      claimTestRunOwnership(Services.ppmm.sharedData);
     const dev = "http://localhost:5181/loader/index.ts";
     const test = "http://localhost:5181/loader/test/index.ts";
     const prod = "chrome://noraneko/content/core.js";
@@ -107,6 +133,7 @@ Deno.test("extractBridgeLoader reads loader URLs from chrome root source", () =>
     "http://localhost:5181/loader/test/index.ts",
   );
   assertEquals(loader.productionLoader, "chrome://noraneko/content/core.js");
+  assertEquals(loader.source.line, 2);
 });
 
 Deno.test("extractWindowActors reads addJSWindowActors and actor count", () => {

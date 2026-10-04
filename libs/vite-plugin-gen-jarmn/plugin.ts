@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { generateJarManifest } from "./gen_jarmanifest.ts";
-import type { Plugin } from "rolldown";
+import type { JarManifestPlugin } from "./types.ts";
 import fs from "node:fs";
 
 export function genJarmnPlugin(
@@ -39,5 +39,5 @@ export function genJarmnPlugin(
         source: `JAR_MANIFESTS += ["jar.mn"]`,
       });
     },
-  } satisfies Plugin;
+  } satisfies JarManifestPlugin;
 }

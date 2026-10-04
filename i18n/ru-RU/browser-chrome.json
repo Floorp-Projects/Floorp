@@ -95,6 +95,7 @@
     },
     "menu": {
       "moveTabToAnotherWorkspace": "Переместить вкладку в другое рабочее пространство",
+      "moveTabToAnotherWorkspaceAccessKey": "K",
       "openLinkInWorkspace": "Открыть ссылку в другом рабочем пространстве",
       "noOtherWorkspace": "Нет других рабочих пространств"
     },
@@ -432,6 +433,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "Открыть в режиме раздельного просмотра",
+      "paneLimit": "Open in Split View (up to {{max}} tabs)",
       "addPane": "Add Pane to Split View",
       "moveToPane": "Move to Pane",
       "moveToPaneN": "Pane {{n}} ({{title}})"

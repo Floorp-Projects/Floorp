@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import { Clipboard, Sliders } from "lucide-react";
 import {
@@ -58,14 +59,14 @@ export default function Page() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col items-start pl-6">
-        <h1 className="text-3xl font-bold mb-2">{t("clips.title")}</h1>
-        <p className="text-sm mb-8">{t("clips.description")}</p>
+    <div className={`floorp-settings-page ${styles.page}`}>
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">{t("clips.title")}</h1>
+        <p className="floorp-page-description">{t("clips.description")}</p>
       </div>
 
-      <div className="space-y-8 pl-6">
-        <Card>
+      <div className={styles.sections}>
+        <Card className={styles.section}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clipboard className="size-5" />
@@ -82,7 +83,8 @@ export default function Page() {
                   value={mode}
                   checked={settings.mode === mode}
                   disabled={isLoading}
-                  onChange={() => setModeToConfirm(mode)}
+                  onChange={() =>
+                    setModeToConfirm(mode)}
                 />
                 <span>
                   <span className="block text-sm font-medium">
@@ -100,7 +102,7 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={styles.section}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sliders className="size-5" />
@@ -141,7 +143,7 @@ export default function Page() {
               />
             </div>
 
-            <div className="flex items-center justify-between gap-2">
+            <div className={styles.row}>
               <label
                 htmlFor="clips-clear-on-exit"
                 className="text-sm font-medium leading-none"

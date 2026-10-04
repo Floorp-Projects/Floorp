@@ -1,0 +1,353 @@
+/* The home grid responds to the available content width, after navigation. */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  container-type: inline-size;
+}
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-block-end: 8px;
+}
+.greeting > div:last-child {
+  min-width: 0;
+}
+.greeting h1 {
+  font-size: clamp(25px,2vw,34px);
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: -.04em;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.home h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  margin-bottom: 20px;
+}
+.destinations {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  column-gap: 40px;
+  row-gap: 32px;
+}
+.destination {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding-bottom: 24px;
+  color: var(--floorp-ink);
+  text-decoration: none;
+}
+.destination::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: var(--floorp-line);
+  pointer-events: none;
+}
+.destinationCopy {
+  display: block;
+}
+.destination strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -.025em;
+}
+.destination strong svg {
+  flex-shrink: 0;
+  transition: transform .16s;
+}
+.destination small {
+  display: block;
+  color: var(--floorp-muted);
+  font-size: 15px;
+  line-height: 1.65;
+  margin-top: 8px;
+}
+.destination:hover strong svg {
+  transform: translateX(4px);
+  color: var(--floorp-action);
+}
+.destination:focus-visible,
+.resources a:focus-visible {
+  outline: 3px solid var(--floorp-focus);
+  outline-offset: 4px;
+}
+.preview {
+  height: 154px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--floorp-action);
+  background: color-mix(in srgb,var(--floorp-subtle) 55%,var(--floorp-canvas));
+  transition: background .16s;
+}
+.destination:hover .preview {
+  background: var(--floorp-subtle);
+}
+.miniBrowser {
+  width: 100%;
+  background: var(--floorp-canvas);
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px var(--floorp-line);
+  overflow: hidden;
+}
+.miniTabs {
+  height: 28px;
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  padding: 6px 8px 0;
+  background: var(--floorp-subtle);
+}
+.miniTabs i {
+  height: 17px;
+  flex: 1;
+  background: var(--floorp-line);
+  border-radius: 4px 4px 0 0;
+}
+.miniTabs i:first-child {
+  background: var(--floorp-brand);
+}
+.swatches {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.swatches i {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--floorp-brand);
+}
+.swatches i:nth-child(2) {
+  background: #bba8ed;
+}
+.swatches i:nth-child(3) {
+  background: #343438;
+}
+.workspaceStack {
+  width: 100%;
+  height: 100px;
+  position: relative;
+}
+.workspaceStack .miniBrowser {
+  position: absolute;
+  width: 85%;
+  padding-top: 8px;
+}
+.workspaceStack svg {
+  margin: 0 8px 4px;
+}
+.workspaceStack .miniBrowser:last-child {
+  right: 0;
+  bottom: 0;
+  box-shadow: 0 4px 12px #21113f15,0 0 0 1px var(--floorp-line);
+}
+.workspaceStack .miniTabs {
+  height: 20px;
+}
+.workspaceStack .miniTabs i {
+  height: 12px;
+}
+.miniSplit {
+  display: flex;
+  height: 62px;
+  gap: 10px;
+}
+.miniSplit aside {
+  background: var(--floorp-brand);
+  width: 24px;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+}
+.miniSplit aside i {
+  width: 8px;
+  height: 8px;
+  background: #ffffffbb;
+  border-radius: 2px;
+}
+.miniSplit > div {
+  flex: 1;
+  padding: 8px 8px 8px 0;
+}
+.miniSplit b {
+  display: block;
+  height: 22px;
+  background: var(--floorp-line);
+  margin-bottom: 6px;
+}
+.miniSplit > div i {
+  display: block;
+  width: 80%;
+  height: 3px;
+  background: var(--floorp-line);
+  margin-top: 4px;
+}
+.gesture {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gesture svg:last-child {
+  transform: rotate(-15deg);
+  color: var(--floorp-muted);
+}
+.keycaps {
+  display: flex;
+  gap: 6px;
+}
+.keycaps span {
+  min-width: 38px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--floorp-canvas);
+  box-shadow: 0 3px 0 var(--floorp-line),0 0 0 1px var(--floorp-control-border);
+  font-size: 14px;
+  color: var(--floorp-ink);
+  padding: 6px;
+}
+.sleep {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.sleep .miniTabs i:first-child {
+  background: var(--floorp-line);
+}
+.sleepLines {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+.sleepLines i {
+  height: 5px;
+  background: var(--floorp-line);
+  flex: 1;
+}
+
+.preview > .miniBrowser {
+  width: 220px;
+}
+.workspaceStack {
+  width: 250px;
+  height: 115px;
+}
+.workspaceStack .miniBrowser {
+  width: 190px;
+}
+.sleep {
+  width: 220px;
+}
+.resources {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 24px;
+}
+.resources a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 0;
+  color: var(--floorp-ink);
+  font-size: 14px;
+}
+.resources a::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--floorp-line);
+  pointer-events: none;
+}
+.resources a > span {
+  flex: 1;
+}
+.resources a svg {
+  flex-shrink: 0;
+}
+.resources a:hover {
+  color: var(--floorp-action);
+}
+@container (min-width:1160px) {
+  .destinations {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+  .preview {
+    height: 180px;
+  }
+}
+@container (max-width:600px) {
+  .destinations,
+  .resources {
+    grid-template-columns: 1fr;
+  }
+  .resources {
+    gap: 0;
+  }
+  .greeting {
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .avatar {
+    width: 52px;
+    height: 52px;
+  }
+  .greeting h1 {
+    font-size: 25px;
+  }
+  .preview {
+    height: 160px;
+  }
+}
+@media (max-width:600px) {
+  .greeting {
+    flex-direction: column;
+  }
+  .home {
+    gap: 32px;
+  }
+  .home h2 {
+    font-size: 20px;
+  }
+  .destinations {
+    row-gap: 24px;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .preview,
+  .destination strong svg {
+    transition: none;
+  }
+  .destination:hover strong svg {
+    transform: none;
+  }
+}

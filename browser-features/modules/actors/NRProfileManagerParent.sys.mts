@@ -6,6 +6,15 @@
 export class NRProfileManagerParent extends JSWindowActorParent {
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
+      case "NRProfileManager:OpenCurrentProfileDirectory": {
+        try {
+          Services.dirsvc.get("ProfD", Ci.nsIFile).reveal();
+          this.sendAsyncMessage(message.name, { id: message.data?.id, result: true });
+        } catch (error) {
+          this.sendAsyncMessage(message.name, { id: message.data?.id, error: String(error) });
+        }
+        break;
+      }
       case "NRProfileManager:GetFxAccountsInfo": {
         try {
           const FxAccounts = ChromeUtils.importESModule(

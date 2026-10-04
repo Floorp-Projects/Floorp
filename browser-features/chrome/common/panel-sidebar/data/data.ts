@@ -19,48 +19,64 @@ import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.js"
 import {
   type Panels,
   type PanelSidebarConfig,
-  zPanels,
   zPanelSidebarConfig,
+  zPanelSidebarData,
 } from "../utils/type.js";
 import { createRootHMR } from "@nora/solid-xul";
 import { isRight } from "fp-ts/Either";
 import { clipsEnabled, withClipsPanel } from "../../clips/clips-panel-list.ts";
 
-function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
-  function getPanelSidebarData(stringData: string) {
-    return JSON.parse(stringData).data || {};
+function defaultPanelSidebarData(): Panels {
+  const result = zPanelSidebarData.decode(
+    JSON.parse(strDefaultData) as unknown,
+  );
+  return isRight(result) ? result.right.data : [];
+}
+
+export function parsePanelSidebarData(stringData: string): Panels {
+  try {
+    const result = zPanelSidebarData.decode(
+      JSON.parse(stringData) as unknown,
+    );
+    if (isRight(result)) {
+      return result.right.data;
+    }
+    console.warn(
+      "[PanelSidebar] Invalid panel data; restoring defaults.",
+    );
+  } catch (error) {
+    console.warn(
+      "[PanelSidebar] Failed to parse panel data; restoring defaults.",
+      error,
+    );
   }
-  const dataResult = zPanels.decode(
-    getPanelSidebarData(
-      Services.prefs.getStringPref(
-        PanelSidebarStaticNames.panelSidebarDataPrefName,
-        strDefaultData,
-      ),
-    ),
-  );
+  return defaultPanelSidebarData();
+}
+
+function createPanelSidebarData(): [Accessor<Panels>, Setter<Panels>] {
   const [panelSidebarData, setPanelSidebarData] = createSignal<Panels>(
-    // Clips rides a Flasco: keep the stored list in step with its pref.
-    isRight(dataResult)
-      ? withClipsPanel(dataResult.right as Panels, clipsEnabled()).panels
-      : [],
-  );
-  const observer = () => {
-    const result = zPanels.decode(
-      getPanelSidebarData(
+    withClipsPanel(
+      parsePanelSidebarData(
         Services.prefs.getStringPref(
           PanelSidebarStaticNames.panelSidebarDataPrefName,
           strDefaultData,
         ),
       ),
+      clipsEnabled(),
+    ).panels,
+  );
+  const observer = () => {
+    setPanelSidebarData(
+      withClipsPanel(
+        parsePanelSidebarData(
+          Services.prefs.getStringPref(
+            PanelSidebarStaticNames.panelSidebarDataPrefName,
+            strDefaultData,
+          ),
+        ),
+        clipsEnabled(),
+      ).panels,
     );
-    if (isRight(result)) {
-      // A list arriving from elsewhere can still carry Clips while the Flasco
-      // says no, or miss it while it says yes. Keep it in step here too, or
-      // the effect below writes that back to the pref.
-      setPanelSidebarData(
-        withClipsPanel(result.right as Panels, clipsEnabled()).panels,
-      );
-    }
   };
   Services.prefs.addObserver(
     PanelSidebarStaticNames.panelSidebarDataPrefName,
@@ -119,10 +135,11 @@ function createPanelSidebarConfig(): [
       ),
     ),
   );
-  const [panelSidebarConfig, setPanelSidebarConfig] =
-    createSignal<PanelSidebarConfig>(
-      isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
-    );
+  const [panelSidebarConfig, setPanelSidebarConfig] = createSignal<
+    PanelSidebarConfig
+  >(
+    isRight(configResult) ? configResult.right : JSON.parse(strDefaultConfig),
+  );
   createEffect(() => {
     Services.prefs.setStringPref(
       PanelSidebarStaticNames.panelSidebarConfigPrefName,
@@ -183,13 +200,14 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
 );
 
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
-  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] =
-    createSignal<boolean>(
-      Services.prefs.getBoolPref(
-        PanelSidebarStaticNames.panelSidebarEnabledPrefName,
-        defaultEnabled,
-      ),
-    );
+  const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
+    boolean
+  >(
+    Services.prefs.getBoolPref(
+      PanelSidebarStaticNames.panelSidebarEnabledPrefName,
+      defaultEnabled,
+    ),
+  );
   createEffect(() => {
     Services.prefs.setBoolPref(
       PanelSidebarStaticNames.panelSidebarEnabledPrefName,
