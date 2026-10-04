@@ -13,6 +13,10 @@
  */
 
 import type { WaitForElementState } from "../../os-server/shared/types.ts";
+import type {
+  ClickElementOptions,
+  ClickElementResult,
+} from "../../../actors/webscraper/types.ts";
 import { GlobalHTTPTracker } from "./shared/GlobalHTTPTracker.sys.mts";
 import { PROGRESS_LISTENERS } from "./shared/ProgressListeners.sys.mts";
 import { waitForActor } from "./shared/waitForActor.sys.mts";
@@ -589,13 +593,26 @@ class webScraper {
   public clickElement(
     instanceId: string,
     selector: string,
+    options: ClickElementOptions = {},
   ): Promise<boolean> {
     return this.withActor(
       instanceId,
       "WebScraper:ClickElement",
-      { selector },
+      { selector, ...options },
       false,
     ) as Promise<boolean>;
+  }
+
+  public clickElementWithResult(
+    instanceId: string,
+    selector: string,
+    options: ClickElementOptions = {},
+  ): Promise<ClickElementResult | null> {
+    return this.withActor<ClickElementResult>(
+      instanceId,
+      "WebScraper:ClickElementWithResult",
+      { selector, ...options },
+    );
   }
 
   /**

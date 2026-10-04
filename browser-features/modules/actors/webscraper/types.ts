@@ -44,6 +44,7 @@ export interface NRWebScraperMessageData {
   button?: "left" | "right" | "middle";
   clickCount?: number;
   force?: boolean;
+  stabilityTimeout?: number;
   // Accessibility tree options
   interestingOnly?: boolean;
   root?: string;
@@ -208,10 +209,60 @@ export interface ClickElementOptions {
   clickCount?: number;
   /** Skip actionability checks (default: false) */
   force?: boolean;
-  /** Timeout in ms for retries (default: 5000) */
+  /** Maximum time in ms to reach dispatch eligibility (default: 5000) */
   timeout?: number;
   /** Delay in ms for position stability check (default: 100, 0 to skip) */
   stabilityTimeout?: number;
+}
+
+export interface ClickStabilityAnchor {
+  element: Element;
+  rect: DOMRect;
+  at: number;
+}
+
+/** Per-call dispatch diagnostics; this does not verify a website task result. */
+export interface ClickElementResult {
+  ok: boolean;
+  status: "dispatched" | "refused" | "unsupported" | "unknown";
+  reason: string;
+  phase:
+    | "prepare"
+    | "wait"
+    | "mousemove"
+    | "mousedown"
+    | "mouseup"
+    | "complete"
+    | null;
+  inputStarted: boolean | null;
+  activationStarted: boolean | null;
+  backend: "window-synthesizeMouseEvent";
+}
+
+/** ChromeOnly Window input API. Keep the privileged Xray Window wrapper. */
+export interface MouseSynthesisData {
+  button?: number;
+  buttons?: number;
+  clickCount?: number;
+  modifiers?: number;
+  inputSource?: number;
+}
+
+export interface MouseSynthesisOptions {
+  toWindow?: boolean;
+  isAsyncEnabled?: boolean;
+  isDOMEventSynthesized?: boolean;
+  isWidgetEventSynthesized?: boolean;
+}
+
+export interface PrivilegedMouseWindow extends Window {
+  synthesizeMouseEvent?: (
+    type: string,
+    x: number,
+    y: number,
+    data?: MouseSynthesisData,
+    options?: MouseSynthesisOptions,
+  ) => boolean;
 }
 
 // =============================================================================
@@ -299,6 +350,10 @@ export interface WebScraperMessages {
   "WebScraper:ClickElement": {
     request: { selector: string } & ClickElementOptions;
     response: boolean;
+  };
+  "WebScraper:ClickElementWithResult": {
+    request: { selector: string } & ClickElementOptions;
+    response: ClickElementResult;
   };
   "WebScraper:ResolveFingerprint": {
     request: { fingerprint: string };

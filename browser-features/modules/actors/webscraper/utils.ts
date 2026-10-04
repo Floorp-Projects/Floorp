@@ -62,11 +62,12 @@ function deepQuerySelectorImpl(
 ): Element | null {
   if (depth >= MAX_SHADOW_DEPTH) return null;
 
-  const walker =
-    (root as Document).createTreeWalker?.(
-      root instanceof Document ? root.body ?? root.documentElement : root,
-      0x1 /* NodeFilter.SHOW_ELEMENT */,
-    ) ??
+  const walker = (root as Document).createTreeWalker?.(
+    root.nodeType === 9
+      ? (root as Document).body ?? (root as Document).documentElement
+      : root,
+    0x1, /* NodeFilter.SHOW_ELEMENT */
+  ) ??
     (root as Element).ownerDocument?.createTreeWalker?.(
       root,
       0x1,
@@ -112,11 +113,12 @@ function deepQuerySelectorAllImpl(
 ): void {
   if (depth >= MAX_SHADOW_DEPTH) return;
 
-  const walker =
-    (root as Document).createTreeWalker?.(
-      root instanceof Document ? root.body ?? root.documentElement : root,
-      0x1,
-    ) ??
+  const walker = (root as Document).createTreeWalker?.(
+    root.nodeType === 9
+      ? (root as Document).body ?? (root as Document).documentElement
+      : root,
+    0x1,
+  ) ??
     (root as Element).ownerDocument?.createTreeWalker?.(
       root,
       0x1,

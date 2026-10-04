@@ -237,13 +237,18 @@ export class NRWebScraperChild extends JSWindowActorChild {
         }
         break;
       case "WebScraper:ClickElement":
+      case "WebScraper:ClickElementWithResult":
         if (message.data?.selector) {
-          return domOps.clickElement(message.data.selector, {
+          const options = {
             button: message.data.button,
             clickCount: message.data.clickCount,
             force: message.data.force,
             timeout: message.data.timeout,
-          });
+            stabilityTimeout: message.data.stabilityTimeout,
+          };
+          return message.name === "WebScraper:ClickElementWithResult"
+            ? domOps.clickElementWithResult(message.data.selector, options)
+            : domOps.clickElement(message.data.selector, options);
         }
         break;
       case "WebScraper:WaitForElement":

@@ -38,6 +38,12 @@ export class HighlightManager {
   private infoPanelCleanupTimer: number | null = null;
   private controlOverlay: HTMLDivElement | null = null;
   private controlOverlayLabel: HTMLDivElement | null = null;
+  private controlOverlayBodyPointerEvents: {
+    element: HTMLElement;
+    value: string;
+    priority: string;
+  } | null = null;
+  private controlOverlaySuspended = false;
 
   // Control overlay event handlers for cleanup
   private controlOverlayHandlers: {
@@ -965,6 +971,11 @@ getActionIconEmoji(action: string): string {
     const html = doc.documentElement as HTMLElement | null;
     if (body) {
       body.style.setProperty("overflow", "hidden", "important");
+      this.controlOverlayBodyPointerEvents = {
+        element: body,
+        value: body.style.getPropertyValue("pointer-events"),
+        priority: body.style.getPropertyPriority("pointer-events"),
+      };
       body.style.setProperty("pointer-events", "none", "important");
     }
     if (html) {
@@ -982,6 +993,57 @@ getActionIconEmoji(action: string): string {
       void this.context.sendQuery("WebScraper:BlockContextMenu", {});
     } catch {
       // ignore errors
+    }
+  }
+
+  /**
+   * Permit synchronous native hit testing and delivery through our own overlay.
+   * Callbacks must not await: user input stays blocked between action polls.
+   * Site overlays and the site's original pointer-events declarations stay active.
+   */
+  withControlOverlaySuspended<T>(callback: () => T): T {
+    const overlay = this.controlOverlay;
+    if (!overlay?.isConnected || this.controlOverlaySuspended) {
+      return callback();
+    }
+
+    const label = this.controlOverlayLabel;
+    const bodyState = this.controlOverlayBodyPointerEvents;
+    const overlayValue = overlay.style.getPropertyValue("pointer-events");
+    const overlayPriority = overlay.style.getPropertyPriority("pointer-events");
+    const labelValue = label?.style.getPropertyValue("pointer-events") ?? "";
+    const labelPriority = label?.style.getPropertyPriority("pointer-events") ?? "";
+    this.controlOverlaySuspended = true;
+
+    try {
+      overlay.style.setProperty("pointer-events", "none", "important");
+      label?.style.setProperty("pointer-events", "none", "important");
+      if (bodyState) {
+        const style = bodyState.element.style;
+        // Preserve changes made by the page while control was active.
+        if (
+          style.getPropertyValue("pointer-events") !== "none" ||
+          style.getPropertyPriority("pointer-events") !== "important"
+        ) {
+          bodyState.value = style.getPropertyValue("pointer-events");
+          bodyState.priority = style.getPropertyPriority("pointer-events");
+        }
+        style.setProperty("pointer-events", bodyState.value, bodyState.priority);
+      }
+      return callback();
+    } finally {
+      this.controlOverlaySuspended = false;
+      // Navigation or cleanup during native dispatch may retire this overlay.
+      if (this.controlOverlay === overlay && overlay.isConnected) {
+        if (bodyState && this.controlOverlayBodyPointerEvents === bodyState) {
+          const style = bodyState.element.style;
+          bodyState.value = style.getPropertyValue("pointer-events");
+          bodyState.priority = style.getPropertyPriority("pointer-events");
+          style.setProperty("pointer-events", "none", "important");
+        }
+        overlay.style.setProperty("pointer-events", overlayValue, overlayPriority);
+        label?.style.setProperty("pointer-events", labelValue, labelPriority);
+      }
     }
   }
 
@@ -1007,8 +1069,20 @@ getActionIconEmoji(action: string): string {
       const html = doc.documentElement as HTMLElement | null;
       if (body) {
         body.style.removeProperty("overflow");
-        body.style.removeProperty("pointer-events");
+        const bodyState = this.controlOverlayBodyPointerEvents;
+        if (
+          bodyState?.element === body && !this.controlOverlaySuspended &&
+          body.style.getPropertyValue("pointer-events") === "none" &&
+          body.style.getPropertyPriority("pointer-events") === "important"
+        ) {
+          body.style.setProperty(
+            "pointer-events",
+            bodyState.value,
+            bodyState.priority,
+          );
+        }
       }
+      this.controlOverlayBodyPointerEvents = null;
       if (html) html.style.removeProperty("overflow");
 
       this.controlOverlay.style.setProperty(
